@@ -1,0 +1,15 @@
+{
+  "name": "sample-rspack-application",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rspack.config.js",
+  "scripts": {
+    "start": "nx run sample-rspack-application:serve",
+    "build": "cd ../.. && nx run sample-rspack-application:build --skip-nx-cache --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valorkin/zephyr-mono.git"
+  },
+  "private": true
+}

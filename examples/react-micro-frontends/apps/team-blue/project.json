@@ -1,0 +1,91 @@
+{
+  "name": "team-blue",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/react-micro-frontends/apps/team-blue/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/examples/react-micro-frontends/apps/team-blue",
+        "index": "examples/react-micro-frontends/apps/team-blue/src/index.html",
+        "baseHref": "/",
+        "main": "examples/react-micro-frontends/apps/team-blue/src/main.tsx",
+        "tsConfig": "examples/react-micro-frontends/apps/team-blue/tsconfig.app.json",
+        "assets": [],
+        "styles": [
+          "examples/react-micro-frontends/apps/team-blue/src/styles.css"
+        ],
+        "scripts": [],
+        "webpackConfig": "examples/react-micro-frontends/apps/team-blue/webpack.config.js"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "examples/react-micro-frontends/apps/team-blue/src/environments/environment.ts",
+              "with": "examples/react-micro-frontends/apps/team-blue/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "port": 4300,
+        "buildTarget": "team-blue:build",
+        "hmr": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "team-blue:build:development"
+        },
+        "production": {
+          "buildTarget": "team-blue:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "examples/react-micro-frontends/apps/team-blue/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "examples/react-micro-frontends/apps/team-blue/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    }
+  },
+  "tags": []
+}

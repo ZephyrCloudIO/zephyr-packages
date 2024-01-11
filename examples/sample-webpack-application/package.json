@@ -1,0 +1,14 @@
+{
+  "name": "sample-webpack-application",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "nx run sample-webpack-application:serve",
+    "build": "nx run sample-webpack-application:build --skip-nx-cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valorkin/zephyr-mono.git"
+  },
+  "private": true
+}

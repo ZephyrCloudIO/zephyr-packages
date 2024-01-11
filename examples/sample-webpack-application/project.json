@@ -1,0 +1,79 @@
+{
+  "name": "sample-webpack-application",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/sample-webpack-application/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "swc",
+        "outputPath": "dist/examples/sample-webpack-application",
+        "index": "examples/sample-webpack-application/src/index.html",
+        "baseHref": "/",
+        "main": "examples/sample-webpack-application/src/main.tsx",
+        "tsConfig": "examples/sample-webpack-application/tsconfig.app.json",
+        "assets": [
+          "examples/sample-webpack-application/src/favicon.ico",
+          "examples/sample-webpack-application/src/assets"
+        ],
+        "styles": ["examples/sample-webpack-application/src/styles.css"],
+        "scripts": [],
+        "webpackConfig": "examples/sample-webpack-application/webpack.config.js"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "examples/sample-webpack-application/src/environments/environment.ts",
+              "with": "examples/sample-webpack-application/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "sample-webpack-application:build",
+        "hmr": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "sample-webpack-application:build:development"
+        },
+        "production": {
+          "buildTarget": "sample-webpack-application:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "examples/sample-webpack-application/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

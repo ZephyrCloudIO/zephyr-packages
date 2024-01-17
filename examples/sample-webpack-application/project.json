@@ -21,7 +21,7 @@
         ],
         "styles": ["examples/sample-webpack-application/src/styles.css"],
         "scripts": [],
-        "webpackConfig": "examples/sample-webpack-application/webpack.config.js"
+        "webpackConfig": "examples/sample-webpack-application/webpack.config.ts"
       },
       "configurations": {
         "development": {

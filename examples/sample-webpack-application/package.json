@@ -10,5 +10,8 @@
     "type": "git",
     "url": "https://github.com/valorkin/zephyr-mono.git"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@sentry/react": "^7.93.0"
+  }
 }

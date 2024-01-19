@@ -1,0 +1,11 @@
+{
+  "name": "template",
+  "scripts": {
+    "build": "concurrently \"cd host && npm run build\" \"cd remote && npm run build\"",
+    "start": "concurrently \"cd host && npm run start\" \"cd remote && npm run start\"",
+    "lint": "concurrently \"cd host && npm run lint\" \"cd remote && npm run lint\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.1"
+  }
+}

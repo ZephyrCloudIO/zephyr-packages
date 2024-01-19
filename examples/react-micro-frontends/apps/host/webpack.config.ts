@@ -1,7 +1,7 @@
-const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
-const withModuleFederation = require('@nx/react/module-federation');
-const { withZephyr } = require('@ze/ze-webpack-plugin');
+import { withReact } from '@nx/react';
+import { withModuleFederation } from '@nx/react/module-federation';
+import { composePlugins, withNx } from '@nx/webpack';
+import { withZephyr } from 'zephyr-webpack-plugin';
 
 const mfConfig = {
   name: 'host',

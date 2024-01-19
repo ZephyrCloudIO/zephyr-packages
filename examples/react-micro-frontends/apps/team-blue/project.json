@@ -20,7 +20,7 @@
           "examples/react-micro-frontends/apps/team-blue/src/styles.css"
         ],
         "scripts": [],
-        "webpackConfig": "examples/react-micro-frontends/apps/team-blue/webpack.config.js"
+        "webpackConfig": "examples/react-micro-frontends/apps/team-blue/webpack.config.ts"
       },
       "configurations": {
         "development": {

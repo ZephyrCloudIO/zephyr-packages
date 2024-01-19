@@ -9,7 +9,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "compiler": "babel",
+        "compiler": "swc",
         "outputPath": "dist/examples/react-micro-frontends/apps/team-red",
         "index": "examples/react-micro-frontends/apps/team-red/src/index.html",
         "baseHref": "/",
@@ -26,7 +26,7 @@
           "examples/react-micro-frontends/apps/team-red/src/styles.css"
         ],
         "scripts": [],
-        "webpackConfig": "examples/react-micro-frontends/apps/team-red/webpack.config.js"
+        "webpackConfig": "examples/react-micro-frontends/apps/team-red/webpack.config.ts"
       },
       "configurations": {
         "development": {

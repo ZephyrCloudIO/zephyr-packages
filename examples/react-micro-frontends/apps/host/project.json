@@ -24,7 +24,7 @@
         ],
         "styles": ["examples/react-micro-frontends/apps/host/src/styles.css"],
         "scripts": [],
-        "webpackConfig": "examples/react-micro-frontends/apps/host/webpack.config.js"
+        "webpackConfig": "examples/react-micro-frontends/apps/host/webpack.config.ts"
       },
       "configurations": {
         "development": {

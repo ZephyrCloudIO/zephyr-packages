@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Input } from 'antd';
 
-const TextField = props => <Input {...props} />;
+// @ts-ignore
+const TextField = (props => <Input {...props} />) as any;
 
 export default TextField;

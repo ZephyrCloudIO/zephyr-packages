@@ -8,6 +8,12 @@ const mfConfig = {
   exposes: {
     './TeamRedLayout': './src/app/team-red-layout',
   },
+  // remotes:  {
+  //   'team-blue': '^2.0.1',
+  //   'team-green': 'latest',
+  //   'team-green': 'env:latest',
+  // }
+  // dependency resolution and app version
   remotes: ['team-green', 'team-blue'],
 };
 
@@ -21,6 +27,19 @@ export default composePlugins(
     return patch_import_issue(config);
   }
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

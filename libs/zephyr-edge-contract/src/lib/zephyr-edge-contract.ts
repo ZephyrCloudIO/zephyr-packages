@@ -31,24 +31,7 @@ export interface ZeBuildAssetsMap {
 }
 
 export interface SnapshotUploadRes {
-  assets: ZeBuildAsset[];
-}
-
-export interface Snapshot {
   id: string;
-  type: string;
-  creator: {
-    email: string;
-    name: string;
-  };
-  createdAt: number;
-  mfConfig: unknown;
-  assets: Record<string, SnapshotAsset>;
-}
-
-export interface SnapshotAsset {
-  path: string;
-  extname: string;
-  hash: string;
-  size: number;
+  assets: ZeBuildAsset[];
+  message: string;
 }

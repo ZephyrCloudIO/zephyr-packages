@@ -13,7 +13,7 @@
         "outputPath": "dist/examples/sample-rspack-application",
         "main": "examples/sample-rspack-application/src/main.tsx",
         "tsConfig": "examples/sample-rspack-application/tsconfig.app.json",
-        "rspackConfig": "examples/sample-rspack-application/rspack.config.js",
+        "rspackConfig": "examples/sample-rspack-application/rspack.config.ts",
         "assets": [
           "examples/sample-rspack-application/src/favicon.ico",
           "examples/sample-rspack-application/src/assets"

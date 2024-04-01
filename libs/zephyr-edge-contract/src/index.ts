@@ -3,13 +3,7 @@ export {
   getOrgPjAppFromAID,
 } from './lib/utils/create-full-app-name';
 export { createSnapshotId } from './lib/utils/create-snapshot-id';
-export {
-  ZeAppVersion,
-  ZeAppRemoteVersions,
-  ZeAppVersionItem,
-  ZeAppTags,
-  ZeAppTagValue,
-} from './lib/ze-api/app-version';
+export { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';
 
 export { ZeApplicationList } from './lib/ze-api/app-list';
 

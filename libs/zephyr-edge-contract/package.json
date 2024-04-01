@@ -1,6 +1,10 @@
 {
   "name": "zephyr-edge-contract",
   "version": "0.0.1",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "registry": "http://localhost:4873/"
+  },
   "dependencies": {
     "tslib": "^2.3.0",
     "webpack": "5.89.0"

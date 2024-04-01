@@ -1,48 +1,25 @@
-export interface ZeAppVersionItem {
-  // internal version
-  id: string;
-  // hostname
-  url: string;
+export interface ZeAppVersion {
+  application_uid: string;
+  snapshot_id: string;
   // npm-like version
   version: string;
-}
 
-export interface ZeAppTagValue {
-  version: string;
-  author: string | undefined;
-  createdAt: number;
-}
+  remote_entry_url: string;
+  remote_host: string;
 
-export type ZeAppTags = Record<string, ZeAppTagValue>;
-
-export interface ZeAppRemoteVersions {
-  // internal version
-  id: string;
-  // remote app uid
+  // application name
   name: string;
-  // todo: @valorkin should full url to remote entry
-  // domain hostname where remote is deployed
-  versions: ZeAppVersionItem[];
-  tags: ZeAppTags;
-  currentVersion: string;
+  // tag name
+  tag?: string;
+  // env name
+  env?: string;
+
+  createdAt: string;
+  author: string;
 }
 
 // api: app_version response type
-export interface ZeAppVersion {
-  // internal version
-  id: string;
-  // app uid
-  app: string;
-  versions: ZeAppVersionItem[];
-  // npm-like version
-  version: string;
-  // npm-like tags
-  tags: ZeAppTags;
-  // mf-config
-  snapshot: {
-    mfConfig: {
-      // key is mf-config app name
-      remotes: Record<string, ZeAppRemoteVersions | null>;
-    };
-  };
+export interface ZeAppVersionResponse extends ZeAppVersion {
+  // remote versions resolved at build time (versions) or read time (tags, envs)
+  remotes?: ZeAppVersion[];
 }

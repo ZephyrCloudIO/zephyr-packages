@@ -2,7 +2,7 @@
   "name": "sample-rspack-application",
   "version": "1.0.0",
   "description": "",
-  "main": "rspack.config.js",
+  "main": "rspack.config.ts",
   "scripts": {
     "start": "nx run sample-rspack-application:serve",
     "build": "cd ../.. && nx run sample-rspack-application:build --skip-nx-cache --verbose"

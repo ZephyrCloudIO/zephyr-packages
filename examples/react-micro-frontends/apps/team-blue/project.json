@@ -3,6 +3,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "examples/react-micro-frontends/apps/team-blue/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/webpack:webpack",
@@ -65,11 +66,8 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": [
-          "examples/react-micro-frontends/apps/team-blue/**/*.{ts,tsx,js,jsx}"
-        ]
+        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
@@ -86,6 +84,5 @@
         }
       }
     }
-  },
-  "tags": []
+  }
 }

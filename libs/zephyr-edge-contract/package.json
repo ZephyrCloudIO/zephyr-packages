@@ -6,12 +6,17 @@
     "registry": "http://localhost:4873/"
   },
   "dependencies": {
+    "jwt-decode": "^4.0.0",
     "tslib": "^2.3.0",
-    "webpack": "5.89.0"
+    "webpack": "5.89.0",
+    "open": "8.4.0",
+    "uuid": "9.0.1",
+    "node-persist": "4.0.1",
+    "socket.io-client": "4.7.4"
   },
   "devDependencies": {
-    "webpack": "5.89.0",
-    "@types/node": "^20.11.19"
+    "@types/node": "^20.11.19",
+    "webpack": "5.89.0"
   },
   "type": "commonjs",
   "main": "./src/index.js",

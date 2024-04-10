@@ -1,12 +1,7 @@
-import { getItem, init, setItem, clear } from 'node-persist';
+import { getItem, init, setItem, removeItem } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-
-const ZE_PATH = `.zephyr`;
-
-const enum StorageKeys {
-  zetoken = 'ze-token',
-}
+import { StorageKeys, ZE_PATH } from './storage-keys';
 
 const storage = init({
   dir: join(homedir(), ZE_PATH),
@@ -22,7 +17,7 @@ export async function getToken(): Promise<string | undefined> {
   return getItem(StorageKeys.zetoken);
 }
 
-export async function clearAll(): Promise<void> {
+export async function removeToken(): Promise<void> {
   await storage;
-  return clear();
+  await removeItem(StorageKeys.zetoken);
 }

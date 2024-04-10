@@ -1,11 +1,5 @@
 # zephyr-edge-contract
 
-This library was generated with [Nx](https://nx.dev).
+check [zephyr-webpack-plugin](https://www.npmjs.com/package/zephyr-webpack-plugin) for docs
 
-## Building
-
-Run `nx build zephyr-edge-contract` to build the library.
-
-## Running unit tests
-
-Run `nx test zephyr-edge-contract` to execute the unit tests via [Jest](https://jestjs.io).
+this is a set API types and reusable functions for zephyr build plugins

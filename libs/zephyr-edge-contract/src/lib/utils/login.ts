@@ -1,10 +1,13 @@
 import * as open from 'open';
+import * as jose from 'jose';
 import { v4 as uuidv4 } from 'uuid';
-import { jwtDecode } from 'jwt-decode';
 
 import { createSocket, disposeSocket } from './websocket';
-import { getToken, saveToken, clearAll } from './token';
-import { environment } from './environment';
+import { removeToken, getToken, saveToken } from '../node-persist/token';
+import {
+  v2_api_paths,
+  ZEPHYR_API_ENDPOINT,
+} from '../api-contract-negotiation/get-api-contract';
 
 export function generateSessionKey(): string {
   return uuidv4().replace(/-/g, '');
@@ -21,7 +24,7 @@ export async function getPersonalAccessTokenFromWebsocket(
 ): Promise<string> {
   const sessionKey = generateSessionKey();
   if (openBrowser) {
-    const authUrl = getAuthenticationURL({ state: sessionKey });
+    const authUrl = await getAuthenticationURL({ state: sessionKey });
     await open(authUrl);
   }
   return await subscribeToWsEvents(sessionKey);
@@ -33,20 +36,16 @@ export interface AuthOptions {
   scope?: string;
 }
 
-export function getAuthenticationURL(options: AuthOptions): string {
+export async function getAuthenticationURL(
+  options: AuthOptions,
+): Promise<string> {
   const { state } = options;
-
-  const auth0RedirectUrl = new URL(
-    'authorize',
-    environment.ZEPHYR_API_ENDPOINT,
-  );
-
-  const loginUrl = new URL('v2/auth/login', environment.ZEPHYR_API_ENDPOINT);
+  const loginUrl = new URL(v2_api_paths.authorize_link, ZEPHYR_API_ENDPOINT);
   loginUrl.searchParams.append('state', state);
-  loginUrl.searchParams.append('redirect-url', auth0RedirectUrl.href);
 
-  return loginUrl.href;
+  return fetch(loginUrl.href).then((res) => res.text());
 }
+
 /**
  * Check if the user is already authenticated. If not, open a browser window to authenticate.
  * Display a message to the console.
@@ -58,15 +57,15 @@ export async function checkAuth(): Promise<string> {
   if (token) {
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(token)) {
-      console.log('\u2714 You are already logged in'); // Check mark symbol.
+      console.log('[zephyr] You are already logged in');
       return token;
     }
-    await clearAll();
+    await removeToken();
   }
 
   // No valid token found; initiate authentication.
   const newToken = await authenticateUser();
-  console.log('\u2705 You are logged in'); // White check mark with green outline.
+  console.log('[zephyr] You are logged in');
 
   return newToken;
 }
@@ -77,7 +76,7 @@ export async function checkAuth(): Promise<string> {
  * @return boolean indicating if the token is still valid.
  */
 export function isTokenStillValid(token: string): boolean {
-  const decodedToken = jwtDecode(token);
+  const decodedToken = jose.decodeJwt(token);
 
   if (!decodedToken.exp) {
     return false;
@@ -98,20 +97,15 @@ async function authenticateUser(): Promise<string> {
 
 function subscribeToWsEvents(sessionKey: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    const socket = createSocket(environment.ZEPHYR_API_ENDPOINT);
+    const socket = createSocket(ZEPHYR_API_ENDPOINT);
 
-    const cleanup = () => {
-      disposeSocket(socket);
-    };
+    const cleanup = () => disposeSocket(socket);
 
     socket.on('connect', () => {
       // console.debug('WS Connected');
     });
 
-    socket.on('disconnect', () => {
-      // console.debug('WS Disconnected');
-      cleanup();
-    });
+    socket.on('disconnect', () => cleanup());
 
     const roomSocket = socket.emit('joinAccessTokenRoom', {
       state: sessionKey,

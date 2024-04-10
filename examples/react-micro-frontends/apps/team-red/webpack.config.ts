@@ -24,52 +24,6 @@ export default composePlugins(
   withModuleFederation(mfConfig),
   withZephyr(),
   (config) => {
-    return patch_import_issue(config);
+    return config;
   }
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function patch_import_issue(config: any) {
-    config.plugins
-    ?.filter((plugin) => plugin?.constructor.name === 'ModuleFederationPlugin')
-    ?.forEach(mfConfig => {
-      Object.keys(mfConfig._options.remotes)
-      .forEach(remoteName => {
-        mfConfig._options.remotes[remoteName] = mfConfig._options.remotes[remoteName]
-        .replace(`__import__`, `import`)
-      });
-    });
-    return config;
-}
-
-

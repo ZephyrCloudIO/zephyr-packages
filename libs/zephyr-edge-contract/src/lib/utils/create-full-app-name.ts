@@ -13,10 +13,3 @@ export function createFullAppName(options: {
   const app_name = replacer(options.name);
   return [app_name, git_repo, git_org].join('.');
 }
-
-export function getOrgPjAppFromAID(
-  str: string,
-): [org: string, project: string, app: string] {
-  const [org, project, app] = str.split('.');
-  return [org, project, app];
-}

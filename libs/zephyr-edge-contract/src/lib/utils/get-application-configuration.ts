@@ -1,5 +1,5 @@
 import * as jose from 'jose';
-import { getToken } from '../node-persist/token';
+import { cleanTokens, getToken } from '../node-persist/token';
 import {
   v2_api_paths,
   ZEPHYR_API_ENDPOINT,
@@ -36,10 +36,14 @@ async function loadApplicationConfiguration({
   });
   req.catch((v) => console.error(v));
   const response = await req;
+  if (!response.ok && response.status !== 200) {
+    await cleanTokens();
+    const err = new Error('[zephyr]: auth error, please try to build again');
+    err.stack = void 0;
+    throw err;
+  }
+
   const result = await response.json();
-
-  // todo: handle error responses
-
   return Object.assign({}, result.value, {
     jwt_decode: jose.decodeJwt(result.value.jwt),
   });

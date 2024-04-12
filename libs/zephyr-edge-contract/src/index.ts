@@ -16,7 +16,12 @@ export {
   checkAuth,
   isTokenStillValid,
 } from './lib/utils/login';
-export { saveToken, getToken, removeToken } from './lib/node-persist/token';
+export {
+  saveToken,
+  getToken,
+  removeToken,
+  cleanTokens,
+} from './lib/node-persist/token';
 export {
   ZEPHYR_API_ENDPOINT,
   v2_api_paths,

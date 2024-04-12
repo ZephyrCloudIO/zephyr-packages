@@ -1,4 +1,4 @@
-import { getItem, init, setItem, removeItem } from 'node-persist';
+import { getItem, init, setItem, removeItem, clear } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { StorageKeys, ZE_PATH } from './storage-keys';
@@ -20,4 +20,9 @@ export async function getToken(): Promise<string | undefined> {
 export async function removeToken(): Promise<void> {
   await storage;
   await removeItem(StorageKeys.zetoken);
+}
+
+export async function cleanTokens(): Promise<void> {
+  await storage;
+  await clear();
 }

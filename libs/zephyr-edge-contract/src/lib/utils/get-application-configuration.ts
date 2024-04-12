@@ -24,11 +24,11 @@ async function loadApplicationConfiguration({
   const token = await getToken();
   const application_config_url = new URL(
     v2_api_paths.application_configuration,
-    ZEPHYR_API_ENDPOINT,
+    ZEPHYR_API_ENDPOINT
   );
   application_config_url.searchParams.append(
     'application-uid',
-    application_uid,
+    application_uid
   );
 
   const req = fetch(application_config_url, {
@@ -37,6 +37,8 @@ async function loadApplicationConfiguration({
   req.catch((v) => console.error(v));
   const response = await req;
   const result = await response.json();
+
+  // todo: handle error responses
 
   return Object.assign({}, result.value, {
     jwt_decode: jose.decodeJwt(result.value.jwt),

@@ -1,6 +1,6 @@
 export interface Snapshot {
   // app.repo.org
-  app_id: string;
+  application_uid: string;
   // package.json version + descriptor `.(user-(ci|ui?)-user_build_counter)`
   version: string;
   // version.app.repo.org

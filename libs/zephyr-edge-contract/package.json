@@ -1,14 +1,13 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "license": "Apache-2.0",
   "dependencies": {
     "jose": "^5.2.4",
     "tslib": "^2.3.0",
     "webpack": "^5.91.0",
     "open": "^8.4.0",
-    "uuid": "^9.0.1",
-    "node-persist": "^4.0.1",
+    "uuid": "8.3.2",
     "socket.io-client": "^4.7.5"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@
     "serve:team-blue": "nx run team-blue:serve",
     "build:team-blue": "nx run team-blue:build:production --skip-nx-cache",
     "serve:team-green": "nx run team-green:serve",
-    "build:team-green": "nx run team-green:build:production --skip-nx-cache  --watch"
+    "build:team-green": "nx run team-green:build:production --skip-nx-cache  --verbose"
   },
   "private": true,
   "dependencies": {

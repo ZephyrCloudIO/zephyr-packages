@@ -34,3 +34,6 @@ export {
   remoteAppConfig,
   saveAppConfig,
 } from './lib/node-persist/application-configuration';
+
+export {ze_log, ze_error} from './lib/utils/debug';
+export {request} from './lib/utils/ze-http-request';

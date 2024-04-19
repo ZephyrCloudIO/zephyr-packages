@@ -8,10 +8,12 @@
     "webpack": "^5.91.0",
     "open": "^8.4.0",
     "uuid": "8.3.2",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "debug": "^4.3.4"
   },
   "devDependencies": {
-    "@types/node": "^20.11.19"
+    "@types/node": "^20.11.19",
+    "@types/debug": "^4.1.12"
   },
   "type": "commonjs",
   "main": "./src/index.js",

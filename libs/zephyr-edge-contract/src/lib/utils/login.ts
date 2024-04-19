@@ -1,4 +1,4 @@
-import * as open from 'open';
+import open from 'open';
 import * as jose from 'jose';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -8,6 +8,7 @@ import {
   v2_api_paths,
   ZEPHYR_API_ENDPOINT,
 } from '../api-contract-negotiation/get-api-contract';
+import { request } from './ze-http-request';
 
 export function generateSessionKey(): string {
   return uuidv4().replace(/-/g, '');
@@ -43,7 +44,7 @@ export async function getAuthenticationURL(
   const loginUrl = new URL(v2_api_paths.authorize_link, ZEPHYR_API_ENDPOINT);
   loginUrl.searchParams.append('state', state);
 
-  return fetch(loginUrl.href).then((res) => res.text());
+  return request(loginUrl);
 }
 
 /**

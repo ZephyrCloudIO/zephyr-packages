@@ -35,5 +35,5 @@ export {
   saveAppConfig,
 } from './lib/node-persist/application-configuration';
 
-export {ze_log, ze_error} from './lib/utils/debug';
+export {ze_log, ze_error, is_debug_enabled} from './lib/utils/debug';
 export {request} from './lib/utils/ze-http-request';

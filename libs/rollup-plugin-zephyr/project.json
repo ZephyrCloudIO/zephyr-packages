@@ -1,0 +1,43 @@
+{
+  "name": "rollup-plugin-zephyr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/rollup-plugin-zephyr/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "dist\\{projectRoot}",
+        "currentVersionResolver": "git-tag"
+      }
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/rollup-plugin-zephyr",
+        "tsConfig": "libs/rollup-plugin-zephyr/tsconfig.lib.json",
+        "packageJson": "libs/rollup-plugin-zephyr/package.json",
+        "main": "libs/rollup-plugin-zephyr/src/index.ts",
+        "assets": ["libs/rollup-plugin-zephyr/*.md"]
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/rollup-plugin-zephyr/jest.config.ts"
+      }
+    }
+  }
+}

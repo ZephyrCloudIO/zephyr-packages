@@ -1,16 +1,14 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "Apache-2.0",
+  "scripts": {
+    "build": "nx build zephyr-edge-contract"
+  },
   "dependencies": {
-    "jose": "^5.2.4",
     "tslib": "^2.3.0",
-    "node-persist": "^4.0.1",
-    "webpack": "^5.91.0",
-    "open": "^8.4.0",
-    "uuid": "8.3.2",
-    "socket.io-client": "^4.7.5",
-    "debug": "^4.3.4"
+    "debug": "^4.3.4",
+    "node-persist": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
@@ -19,5 +17,6 @@
   },
   "type": "commonjs",
   "main": "./src/index.js",
+  "module": "./src/index.js",
   "typings": "./src/index.d.ts"
 }

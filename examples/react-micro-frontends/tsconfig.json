@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "zephyr-webpack-plugin": ["../../packages/zephyr-webpack-plugin/src/index.ts"]
+      "zephyr-webpack-plugin": ["../../libs/zephyr-webpack-plugin/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

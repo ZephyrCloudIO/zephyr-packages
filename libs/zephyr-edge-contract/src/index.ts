@@ -9,25 +9,12 @@ export { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 export * from './lib/zephyr-edge-contract';
 
 export {
-  type GetPersonalAccessTokenFromWebsocketOptions,
-  type AuthOptions,
-  getPersonalAccessTokenFromWebsocket,
-  getAuthenticationURL,
-  checkAuth,
-  isTokenStillValid,
-} from './lib/utils/login';
-export {
   saveToken,
   getToken,
   removeToken,
   cleanTokens,
 } from './lib/node-persist/token';
-export {
-  ZEPHYR_API_ENDPOINT,
-  v2_api_paths,
-} from './lib/api-contract-negotiation/get-api-contract';
 
-export { getApplicationConfiguration } from './lib/utils/get-application-configuration';
 export {
   ZeApplicationConfig,
   getAppConfig,
@@ -35,5 +22,16 @@ export {
   saveAppConfig,
 } from './lib/node-persist/application-configuration';
 
-export {ze_log, ze_error, is_debug_enabled} from './lib/utils/debug';
-export {request} from './lib/utils/ze-http-request';
+export { ZeWebpackPluginOptions } from './lib/plugin-options/ze-webpack-plugin-options';
+export { ZephyrPluginOptions } from './lib/plugin-options/zephyr-plugin-options';
+
+export {
+  ZEPHYR_API_ENDPOINT,
+  v2_api_paths,
+} from './lib/api-contract-negotiation/get-api-contract';
+
+export { ze_log, ze_error, is_debug_enabled } from './lib/utils/debug';
+export { request } from './lib/utils/ze-http-request';
+
+export { LocalPackageJson } from './lib/ze-api/local-package-json';
+export { ConvertedGraph } from './lib/ze-api/converted-graph';

@@ -3,7 +3,7 @@ import { getToken, request } from 'zephyr-edge-contract';
 
 export async function getBuildId(
   application_uid: string
-): Promise<string | undefined> {
+): Promise<string | void> {
   const { BUILD_ID_ENDPOINT, user_uuid, jwt } =
     await getApplicationConfiguration({
       application_uid,
@@ -21,14 +21,19 @@ export async function getBuildId(
     | string
     | Record<string, string>
     | { status: number; message: string };
-  const resp = await request<BuildIdResp>(new URL(BUILD_ID_ENDPOINT), options);
 
-  if (typeof resp === 'string') {
-    throw new Error(resp);
-  }
-  if (!resp || (typeof resp.status === 'number' && resp.status !== 200)) {
-    throw new Error(resp.message);
-  }
+  try {
+    const resp = await request<BuildIdResp>(new URL(BUILD_ID_ENDPOINT), options);
 
-  return (resp as Record<string, string>)[user_uuid];
+    if (typeof resp === 'string') {
+      throw new Error(resp);
+    }
+    if (!resp || (typeof resp.status === 'number' && resp.status !== 200)) {
+      throw new Error(resp.message);
+    }
+
+    return (resp as Record<string, string>)[user_uuid];
+  } catch (e) {
+    console.error(e);
+  }
 }

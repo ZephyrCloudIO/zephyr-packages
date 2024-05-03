@@ -80,7 +80,7 @@ export function withZephyr() {
         ${err.message}\n`,
         });
       });
-      if (!buildId) return ze_error('Could not get build id');
+      if (!buildId) return ze_error('[zephyr]: Could not get build id');
 
       const pluginOptions = {
         pluginName: 'rollup-plugin-zephyr',

@@ -18,17 +18,21 @@ const storage = init({
   dir: join(homedir(), ZE_PATH),
 });
 
-export async function saveAppConfig(json: ZeApplicationConfig): Promise<void> {
-  await storage;
-  void (await setItem(StorageKeys.ze_app_config_token, json));
+function get_key(application_uid: string): string {
+  return [StorageKeys.ze_app_config_token, application_uid].join('.');
 }
 
-export async function getAppConfig(): Promise<ZeApplicationConfig | undefined> {
+export async function saveAppConfig(application_uid: string, json: ZeApplicationConfig): Promise<void> {
   await storage;
-  return getItem(StorageKeys.ze_app_config_token);
+  void (await setItem(get_key(application_uid), json));
 }
 
-export async function remoteAppConfig(): Promise<void> {
+export async function getAppConfig(application_uid: string): Promise<ZeApplicationConfig | undefined> {
   await storage;
-  await removeItem(StorageKeys.ze_app_config_token);
+  return getItem(get_key(application_uid));
+}
+
+export async function remoteAppConfig(application_uid: string): Promise<void> {
+  await storage;
+  await removeItem(get_key(application_uid));
 }

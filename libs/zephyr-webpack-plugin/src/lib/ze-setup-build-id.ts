@@ -39,8 +39,8 @@ export function setupZephyrConfig(
     });
 
     if (!buildId) {
-      ze_error('Could not get build id');
-      return cb(new Error('Could not get build id'));
+      ze_error('[zephyr]: Could not get build id');
+      return cb(new Error('[zephyr]: Could not get build id'));
     }
 
     zeConfig.buildId = buildId;

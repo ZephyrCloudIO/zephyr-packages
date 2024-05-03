@@ -22,7 +22,7 @@ async function resolve_remote_dependency({
 }): Promise<ResolvedDependency | void> {
   const resolveDependency = new URL(
     v2_api_paths.resolve_dependency_path,
-    ZEPHYR_API_ENDPOINT
+    ZEPHYR_API_ENDPOINT()
   );
   resolveDependency.searchParams.append('name', name);
   resolveDependency.searchParams.append('version', version);

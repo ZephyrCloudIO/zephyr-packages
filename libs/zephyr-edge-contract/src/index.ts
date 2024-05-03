@@ -31,6 +31,7 @@ export {
 } from './lib/api-contract-negotiation/get-api-contract';
 
 export { ze_log, ze_error, is_debug_enabled } from './lib/utils/debug';
+export { safe_json_parse } from './lib/utils/safe-json-parse';
 export { request } from './lib/utils/ze-http-request';
 
 export { LocalPackageJson } from './lib/ze-api/local-package-json';

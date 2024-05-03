@@ -47,7 +47,7 @@ export async function getAuthenticationURL(
   options: AuthOptions
 ): Promise<string> {
   const { state } = options;
-  const loginUrl = new URL(v2_api_paths.authorize_link, ZEPHYR_API_ENDPOINT);
+  const loginUrl = new URL(v2_api_paths.authorize_link, ZEPHYR_API_ENDPOINT());
   loginUrl.searchParams.append('state', state);
 
   return request(loginUrl);
@@ -104,7 +104,7 @@ async function authenticateUser(): Promise<string> {
 
 function subscribeToWsEvents(sessionKey: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    const socket = createSocket(ZEPHYR_API_ENDPOINT);
+    const socket = createSocket(ZEPHYR_API_ENDPOINT());
 
     const cleanup = () => disposeSocket(socket);
 

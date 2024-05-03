@@ -1,4 +1,4 @@
-import { is_debug_enabled } from 'zephyr-edge-contract';
+import { is_debug_enabled, v2_api_paths } from 'zephyr-edge-contract';
 import { request } from 'zephyr-edge-contract';
 import {
   getToken,
@@ -81,7 +81,7 @@ export function logger(options: LoggerOptions) {
       };
 
       log(level, `[zephyr]: ${message}`);
-      const url = new URL(`/v2/application/logs`, ZEPHYR_API_ENDPOINT);
+      const url = new URL(v2_api_paths.application_logs, ZEPHYR_API_ENDPOINT());
       request(url, reqOptions, data).catch(() => void 0);
     });
   };

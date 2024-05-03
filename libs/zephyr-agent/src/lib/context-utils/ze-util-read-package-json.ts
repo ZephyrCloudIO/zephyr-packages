@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { ConfigurationError } from '../custom-errors/configuration-error';
-import { safe_json_parse } from '../sync-utils/safe-json-parse';
+import { safe_json_parse } from 'zephyr-edge-contract';
 
 interface PackageJson {
   name: string;

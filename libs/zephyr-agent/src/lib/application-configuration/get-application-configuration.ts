@@ -13,7 +13,7 @@ import {
 import { isTokenStillValid } from '../auth/login';
 
 interface GetApplicationConfigurationProps {
-  application_uid: string | undefined;
+  application_uid: string;
 }
 
 async function loadApplicationConfiguration({
@@ -25,7 +25,7 @@ async function loadApplicationConfiguration({
   const token = await getToken();
   const application_config_url = new URL(
     v2_api_paths.application_configuration,
-    ZEPHYR_API_ENDPOINT
+    ZEPHYR_API_ENDPOINT()
   );
   application_config_url.searchParams.append(
     'application-uid',
@@ -52,7 +52,7 @@ export async function getApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
   // ze_log('Getting application configuration from node-persist');
-  const storedAppConfig = await getAppConfig();
+  const storedAppConfig = await getAppConfig(application_uid);
   if (storedAppConfig && isTokenStillValid(storedAppConfig.jwt)) {
     return storedAppConfig;
   }
@@ -65,6 +65,6 @@ export async function getApplicationConfiguration({
   if (!loadedAppConfig)
     throw new Error('Failed to load application configuration');
 
-  await saveAppConfig(loadedAppConfig);
+  await saveAppConfig(application_uid, loadedAppConfig);
   return loadedAppConfig;
 }

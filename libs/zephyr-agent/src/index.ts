@@ -22,5 +22,4 @@ export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
 
 export { logger } from './lib/remote-logs/ze-log-event';
 export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
-export { safe_json_parse } from './lib/sync-utils/safe-json-parse';
 export { getBuildId } from './lib/ze-api-requests/get-build-id';

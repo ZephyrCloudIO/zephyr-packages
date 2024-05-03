@@ -22,12 +22,17 @@ function get_key(application_uid: string): string {
   return [StorageKeys.ze_app_config_token, application_uid].join('.');
 }
 
-export async function saveAppConfig(application_uid: string, json: ZeApplicationConfig): Promise<void> {
+export async function saveAppConfig(
+  application_uid: string,
+  json: ZeApplicationConfig
+): Promise<void> {
   await storage;
   void (await setItem(get_key(application_uid), json));
 }
 
-export async function getAppConfig(application_uid: string): Promise<ZeApplicationConfig | undefined> {
+export async function getAppConfig(
+  application_uid: string
+): Promise<ZeApplicationConfig | undefined> {
   await storage;
   return getItem(get_key(application_uid));
 }

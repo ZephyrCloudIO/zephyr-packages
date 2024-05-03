@@ -1,12 +1,12 @@
 {
   "name": "rollup-plugin-zephyr",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "license": "Apache-2.0",
   "dependencies": {
-    "zephyr-agent": "^0.0.10",
+    "zephyr-agent": "^0.0.11",
     "tslib": "^2",
     "rollup": "^4",
-    "zephyr-edge-contract": "^0.0.10"
+    "zephyr-edge-contract": "^0.0.11"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4"

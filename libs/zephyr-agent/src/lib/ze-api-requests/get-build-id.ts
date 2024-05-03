@@ -23,7 +23,10 @@ export async function getBuildId(
     | { status: number; message: string };
 
   try {
-    const resp = await request<BuildIdResp>(new URL(BUILD_ID_ENDPOINT), options);
+    const resp = await request<BuildIdResp>(
+      new URL(BUILD_ID_ENDPOINT),
+      options
+    );
 
     if (typeof resp === 'string') {
       throw new Error(resp);

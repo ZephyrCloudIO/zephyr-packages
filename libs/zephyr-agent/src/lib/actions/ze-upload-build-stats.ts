@@ -9,7 +9,7 @@ import {
 } from 'zephyr-edge-contract';
 
 export async function zeUploadBuildStats(
-  dashData: unknown,
+  dashData: unknown
 ): Promise<{ value: ZeUploadBuildStats } | void> {
   ze_log('[zephyr]: Uploading build stats to Zephyr');
   const token = await getToken();
@@ -24,12 +24,14 @@ export async function zeUploadBuildStats(
         Accept: 'application/json',
       },
     },
-    JSON.stringify(dashData),
+    JSON.stringify(dashData)
   ).catch((err) => {
     ze_error(
-      `[zephyr]: If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr.`,
+      `[zephyr]: If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr.`
     );
-    ze_error(`[zephyr]: Error uploading build stats, deployment is not completed`);
+    ze_error(
+      `[zephyr]: Error uploading build stats, deployment is not completed`
+    );
     ze_error('[zephyr]: Failed to upload build stats', err);
   });
 

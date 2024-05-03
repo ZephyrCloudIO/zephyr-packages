@@ -1,14 +1,14 @@
 {
   "name": "zephyr-webpack-plugin",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "license": "Apache-2.0",
   "dependencies": {
     "is-ci": "^3.0.1",
     "webpack": "^5.91.0",
     "tslib": "^2.3.0",
     "@module-federation/automatic-vendor-federation": "1.2.1",
-    "zephyr-edge-contract": "^0.0.10",
-    "zephyr-agent": "0.0.10"
+    "zephyr-edge-contract": "^0.0.11",
+    "zephyr-agent": "^0.0.11"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4",

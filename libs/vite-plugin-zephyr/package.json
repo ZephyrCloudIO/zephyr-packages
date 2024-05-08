@@ -1,0 +1,15 @@
+{
+  "name": "vite-plugin-zephyr",
+  "version": "0.0.12",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "vite": "^5",
+    "rollup": "^4",
+    "is-ci": "^3.0.1",
+    "zephyr-edge-contract": "^0.0.12",
+    "zephyr-agent": "^0.0.12"
+  },
+  "devDependencies": {
+    "@types/is-ci": "^3.0.4"
+  }
+}

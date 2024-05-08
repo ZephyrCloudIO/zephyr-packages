@@ -9,18 +9,24 @@ export { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 export * from './lib/zephyr-edge-contract';
 
 export {
-  saveToken,
-  getToken,
-  removeToken,
-  cleanTokens,
-} from './lib/node-persist/token';
-
-export {
   ZeApplicationConfig,
   getAppConfig,
   remoteAppConfig,
   saveAppConfig,
 } from './lib/node-persist/application-configuration';
+
+export {
+  getPartialAssetMap,
+  removePartialAssetMap,
+  savePartialAssetMap,
+} from './lib/node-persist/partial-assets-map';
+
+export {
+  saveToken,
+  getToken,
+  removeToken,
+  cleanTokens,
+} from './lib/node-persist/token';
 
 export { ZeWebpackPluginOptions } from './lib/plugin-options/ze-webpack-plugin-options';
 export { ZephyrPluginOptions } from './lib/plugin-options/zephyr-plugin-options';

@@ -1,14 +1,17 @@
 {
   "name": "rollup-plugin-zephyr",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "license": "Apache-2.0",
   "dependencies": {
-    "zephyr-agent": "^0.0.11",
+    "zephyr-agent": "^0.0.12",
     "tslib": "^2",
     "rollup": "^4",
-    "zephyr-edge-contract": "^0.0.11"
+    "zephyr-edge-contract": "^0.0.12"
   },
-  "devDependencies": {
-    "@types/is-ci": "^3.0.4"
-  }
+  "keywords": [
+    "rollup",
+    "rollup-plugin",
+    "zephyr",
+    "deploy"
+  ]
 }

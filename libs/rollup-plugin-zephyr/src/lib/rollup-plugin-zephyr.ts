@@ -135,13 +135,12 @@ export function withZephyr() {
         const asset = assets[filepath];
         const buffer = extractBuffer(asset);
 
-        if (!buffer) {
+        if (!buffer && buffer !== '') {
           logEvent({
             action: 'ze:build:assets:unknown-asset-type',
             level: 'error',
             message: `unknown asset type: ${getAssetType(asset)}`,
           });
-          1;
           return memo;
         }
 

@@ -39,7 +39,7 @@ export async function zeBuildAssetsMap(
     const asset = assets[filepath];
     const buffer = extractBuffer(asset);
 
-    if (!buffer) {
+    if (!buffer && buffer !== '') {
       logEvent({
         action: 'ze:build:assets:unknown-asset-type',
         level: 'error',

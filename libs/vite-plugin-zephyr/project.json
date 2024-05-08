@@ -1,0 +1,43 @@
+{
+  "name": "vite-plugin-zephyr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/vite-plugin-zephyr/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "dist\\{projectRoot}",
+        "currentVersionResolver": "git-tag"
+      }
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/vite-plugin-zephyr",
+        "tsConfig": "libs/vite-plugin-zephyr/tsconfig.lib.json",
+        "packageJson": "libs/vite-plugin-zephyr/package.json",
+        "main": "libs/vite-plugin-zephyr/src/index.ts",
+        "assets": ["libs/vite-plugin-zephyr/*.md"]
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/vite-plugin-zephyr/jest.config.ts"
+      }
+    }
+  }
+}

@@ -5,7 +5,8 @@ import { ze_error, ze_log } from './debug';
 import { cleanTokens } from '../node-persist/token';
 import { safe_json_parse } from './safe-json-parse';
 
-function _redact(str: string): string {
+function _redact(str: string | undefined): string {
+  if (!str) return '';
   return str
     .replace(/Bearer ([^"]+)/gi, 'Bearer [REDACTED]')
     .replace(/jwt":"([^"]+)/gi, 'jwt":"[REDACTED]');

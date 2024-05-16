@@ -31,6 +31,7 @@ export async function uploadFile({
       'x-file-path': asset.path,
       'x-file-meta': JSON.stringify(meta),
       can_write_jwt: jwt,
+      'Content-Type': 'application/octet-stream',
     },
   };
 

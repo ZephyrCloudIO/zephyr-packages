@@ -47,7 +47,7 @@ export async function request<T = unknown>(
                 ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb`
                 : '') +
               (_response ? `\n response: ${_response}` : '') +
-              (data?.length ? `\n payload: ${data}` : '') +
+              //(data?.length ? `\n payload: ${data}` : '') +
               (_options_str ? `\n options: ${_options_str}` : '')
           );
 

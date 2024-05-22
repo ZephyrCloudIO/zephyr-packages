@@ -115,4 +115,5 @@ export interface SnapshotUploadRes {
   id: string;
   assets: ZeBuildAsset[];
   message: string;
+  asset_time?: number;
 }

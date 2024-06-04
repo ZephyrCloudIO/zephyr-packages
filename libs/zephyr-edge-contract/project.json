@@ -8,10 +8,10 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/zephyr-edge-contract",
+        "rootDir": "libs/zephyr-edge-contract/src",
+        "outputPath": "libs/zephyr-edge-contract/dist",
         "main": "libs/zephyr-edge-contract/src/index.ts",
-        "tsConfig": "libs/zephyr-edge-contract/tsconfig.lib.json",
-        "assets": ["libs/zephyr-edge-contract/*.md"]
+        "tsConfig": "libs/zephyr-edge-contract/tsconfig.lib.json"
       }
     },
     "publish": {

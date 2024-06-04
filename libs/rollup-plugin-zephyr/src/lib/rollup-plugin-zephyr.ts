@@ -1,245 +1,156 @@
-import {
-  NormalizedOutputOptions,
-  OutputAsset,
-  OutputBundle,
-  OutputChunk,
-} from 'rollup';
-import {
-  createFullAppName,
-  createSnapshotId,
-  ze_error,
-  ze_log,
-  ZeBuildAssetsMap,
-} from 'zephyr-edge-contract';
+import { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
+import { createApplicationUID, ze_error, ze_log, ZeApplicationConfig, ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
   checkAuth,
   createSnapshot,
+  get_hash_list,
+  get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
-  getZeBuildAsset,
-  logger,
+  update_hash_list,
   zeEnableSnapshotOnEdge,
   zeUploadAssets,
   zeUploadBuildStats,
   zeUploadSnapshot,
 } from 'zephyr-agent';
+import { getAssetsMap } from './utils/get-assets-map';
+import { getDashData } from './utils/get-dash-data';
+
+interface ZephyrPluginState {
+  appConfig: ZeApplicationConfig;
+  buildId: string | void;
+  hash_set: { hash_set: Set<string> };
+  pluginOptions: ZephyrPluginOptions;
+}
+
+const getInputFolder = (options: InputOptions): string => {
+  if (typeof options.input === 'string') return options.input;
+  if (Array.isArray(options.input)) return options.input[0];
+  if (typeof options.input === 'object') return Object.values(options.input)[0];
+  return process.cwd();
+};
 
 export function withZephyr() {
+  let _state: Promise<ZephyrPluginState | void>;
+
   return {
     name: 'with-zephyr',
-    writeBundle: async (
-      options: NormalizedOutputOptions,
-      bundle: OutputBundle
-    ) => {
-      const isCI = false;
-      const _zephyrOptions = { wait_for_index_html: false };
-      const path_to_execution_dir = options.dir;
-      const assets = bundle;
+    buildStart: async (options: InputOptions) => {
+      _state = (async function zephyr_init(): Promise<ZephyrPluginState | void> {
+        ze_log('Setting up zephyr agent configuration.');
 
-      /* hacks end */
+        const isCI = false;
+        const _zephyrOptions = { wait_for_index_html: false };
+        const path_to_execution_dir = getInputFolder(options);
 
-      ze_log('Configuring with Zephyr');
-      const packageJson = getPackageJson(path_to_execution_dir);
-      ze_log('Loaded Package JSON', packageJson);
-      if (!packageJson) return ze_error('Could not find package json');
+        const [packageJson, gitInfo] = await Promise.all([
+          getPackageJson(path_to_execution_dir),
+          getGitInfo(),
+        ]);
 
-      const gitInfo = getGitInfo();
-      ze_log('Loaded Git Info', gitInfo);
-      if (
-        !gitInfo ||
-        !gitInfo?.app.org ||
-        !gitInfo?.app.project ||
-        !packageJson?.name
-      )
-        return ze_error('Could not get git info');
-
-      const application_uid = createFullAppName({
-        org: gitInfo.app.org,
-        project: gitInfo.app.project,
-        name: packageJson?.name,
-      });
-
-      ze_log('Going to check auth token or get it');
-      await checkAuth();
-
-      ze_log('Got auth token, going to get application configuration');
-      const { username, email, EDGE_URL } = await getApplicationConfiguration({
-        application_uid,
-      });
-
-      ze_log('Got application configuration', { username, email, EDGE_URL });
-
-      ze_log('Going to get build id');
-      const buildId = await getBuildId(application_uid).catch((err: Error) => {
-        logEvent({
-          level: 'error',
-          action: 'build:get-build-id:error',
-          message: `error receiving build number for '${email}'\n
-        ${err.message}\n`,
-        });
-      });
-      if (!buildId) return ze_error('[zephyr]: Could not get build id');
-
-      const pluginOptions = {
-        pluginName: 'rollup-plugin-zephyr',
-        application_uid,
-        // todo: isCI
-        buildEnv: 'local',
-        username,
-        app: {
-          name: packageJson.name,
-          version: packageJson.version,
+        const application_uid = createApplicationUID({
           org: gitInfo.app.org,
           project: gitInfo.app.project,
-        },
-        git: gitInfo?.git,
-        isCI: isCI,
-        zeConfig: {
-          user: username,
-          edge_url: EDGE_URL,
-          buildId: buildId,
-        },
-        mfConfig: void 0,
-        wait_for_index_html: _zephyrOptions?.wait_for_index_html,
-      };
+          name: packageJson.name,
+        });
 
-      ze_log('zephyr agent started.');
-      const logEvent = logger(pluginOptions);
+        await checkAuth();
 
+        const [appConfig, buildId, hash_set] = await Promise.all([
+          getApplicationConfiguration({ application_uid }),
+          getBuildId(application_uid),
+          get_hash_list(application_uid),
+        ]);
+
+        const { username, email, EDGE_URL } = appConfig;
+        ze_log('Got application configuration: ', { username, email, EDGE_URL });
+        ze_log(`Got build id: ${buildId}`);
+
+        if (!buildId) return ze_error('[zephyr]: Could not get build id');
+
+        const pluginOptions = {
+          pluginName: 'rollup-plugin-zephyr',
+          application_uid,
+          buildEnv: 'local',
+          username,
+          app: {
+            name: packageJson.name,
+            version: packageJson.version,
+            org: gitInfo.app.org,
+            project: gitInfo.app.project,
+          },
+          git: gitInfo.git,
+          isCI: isCI,
+          zeConfig: {
+            user: username,
+            edge_url: EDGE_URL,
+            buildId: buildId,
+          },
+          mfConfig: void 0,
+          wait_for_index_html: _zephyrOptions?.wait_for_index_html,
+        };
+
+        return {
+          appConfig,
+          buildId,
+          hash_set,
+          pluginOptions,
+        };
+      })();
+    },
+    writeBundle: async (
+      options: NormalizedOutputOptions,
+      bundle: OutputBundle,
+    ) => {
       const zeStart = Date.now();
 
-      // const assetsMap = await zeBuildAssetsMap(pluginOptions, assets);
-      ze_log('Building assets map from webpack assets.');
+      await (async function zephyr_upload(props: { state: Promise<ZephyrPluginState | void>, bundle: OutputBundle }) {
+        ze_log('zephyr agent started.');
+        const { state, bundle } = props;
+        const _state = await state;
 
-      const extractBuffer = (
-        asset: OutputChunk | OutputAsset
-      ): string | undefined => {
-        switch (asset.type) {
-          case 'chunk':
-            return asset.code;
-          case 'asset':
-            return typeof asset.source === 'string'
-              ? asset.source
-              : new TextDecoder().decode(asset.source);
-          default:
-            return void 0;
-        }
-      };
+        if (!_state) return ze_error('[zephyr]: Could not initialize zephyr agent.');
 
-      const getAssetType = (asset: OutputChunk | OutputAsset): string =>
-        asset.type;
+        const { appConfig, hash_set, pluginOptions } = _state;
+        const { username, email } = appConfig;
 
-      const assetsMap = Object.keys(assets).reduce((memo, filepath) => {
-        const asset = assets[filepath];
-        const buffer = extractBuffer(asset);
+        const assetsMap = getAssetsMap(bundle);
+        const snapshot = createSnapshot({
+          options: pluginOptions,
+          assets: assetsMap,
+          username,
+          email,
+        });
 
-        if (!buffer && buffer !== '') {
-          logEvent({
-            action: 'ze:build:assets:unknown-asset-type',
-            level: 'error',
-            message: `unknown asset type: ${getAssetType(asset)}`,
-          });
-          return memo;
-        }
+        const [,, envs] = await Promise.all([
+          zeUploadSnapshot(pluginOptions, snapshot),
+          (async function upload_assets() {
+            const missingAssets = get_missing_assets({ assetsMap, hash_set })
 
-        const assetMap = getZeBuildAsset({ filepath, content: buffer });
-        memo[assetMap.hash] = assetMap;
+            const upload_success = await zeUploadAssets(pluginOptions, {
+              missingAssets,
+              assetsMap,
+              count: Object.keys(bundle).length,
+            });
+            if (upload_success && missingAssets.length) {
+              await update_hash_list(pluginOptions.application_uid, assetsMap);
+            }
+            return upload_success;
+          })(),
+          (async function upload_build_stats_nd_enable_envs() {
+            const dashData = getDashData({ appConfig, pluginOptions });
+            return zeUploadBuildStats(dashData);
+          })(),
+        ]);
 
-        return memo;
-      }, {} as ZeBuildAssetsMap);
+        if (!envs) return ze_error('[zephyr]: Could not get envs');
+        return zeEnableSnapshotOnEdge({ pluginOptions, envs_jwt: envs.value, zeStart });
+      })({ state: _state, bundle });
 
-      const snapshot = createSnapshot({
-        options: pluginOptions,
-        assets: assetsMap,
-        username,
-        email,
-      });
 
-      const missingAssets = await zeUploadSnapshot(
-        pluginOptions,
-        snapshot
-      ).catch((err) => ze_error('Failed to upload snapshot.', err));
-
-      if (typeof missingAssets === 'undefined')
-        return ze_error('Snapshot upload gave no result, exiting');
-
-      const assetsUploadSuccess = await zeUploadAssets(pluginOptions, {
-        missingAssets,
-        assetsMap,
-        count: Object.keys(assets).length,
-      });
-
-      if (!assetsUploadSuccess)
-        return ze_error('Failed to upload assets.', assetsUploadSuccess);
-
-      const version = createSnapshotId(pluginOptions);
-      const dashData = {
-        id: pluginOptions.application_uid,
-        name: packageJson.name,
-        // name: pluginOptions.mfConfig?.name,
-        edge: { url: EDGE_URL },
-        app: Object.assign({}, pluginOptions.app, {
-          buildId: pluginOptions.zeConfig.buildId,
-        }),
-        version,
-        git: pluginOptions.git,
-        // remote: pluginOptions.mfConfig?.filename,
-        // remotes: Object.keys(pluginOptions.mfConfig?.remotes || {}),
-        context: {
-          isCI: pluginOptions.isCI,
-        },
-        dependencies: [],
-        devDependencies: [],
-        optionalDependencies: [],
-        metadata: {},
-        overrides: [
-          /* {
-             "id": "react-dom",
-             "name": "react-dom",
-             "version": "18.2.0",
-             "location": "react-dom",
-             "applicationID": "react-dom"
-           },
-           {
-             "id": "react",
-             "name": "react",
-             "version": "18.2.0",
-             "location": "react",
-             "applicationID": "react"
-           }*/
-        ],
-        consumes: [],
-        modules: [
-          /*          {
-                      "id": "GreenRecos:GreenRecos",
-                      "name": "GreenRecos",
-                      "applicationID": "GreenRecos",
-                      "requires": [
-                        "react"
-                      ],
-                      "file": "./src/app/team-green-recos.tsx"
-                    }*/
-        ],
-        sha: pluginOptions.git.commit,
-        // todo: @deprecate
-        buildHash: pluginOptions.git.commit,
-      };
-
-      const envs = await zeUploadBuildStats(dashData);
-      if (!envs)
-        return ze_error(
-          'Did not receive envs from build stats upload. Exiting.'
-        );
-
-      await zeEnableSnapshotOnEdge(pluginOptions, snapshot, envs.value);
-
-      logEvent({
-        level: 'info',
-        action: 'build:deploy:done',
-        message: `build deployed in ${Date.now() - zeStart}ms`,
-      });
+      console.log('zephyr agent done in', Date.now() - zeStart, 'ms');
     },
   };
 }

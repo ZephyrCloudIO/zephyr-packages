@@ -1,11 +1,10 @@
 import {
-  createFullAppName,
+  createApplicationUID,
   createSnapshotId,
   Snapshot,
   SnapshotAsset,
-  ze_log,
   ZeBuildAssetsMap,
-  ZeWebpackPluginOptions,
+  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import * as isCI from 'is-ci';
 
@@ -15,17 +14,16 @@ export function createSnapshot({
   username,
   email,
 }: {
-  options: ZeWebpackPluginOptions;
+  options: ZephyrPluginOptions;
   assets: ZeBuildAssetsMap;
   username: string;
   email: string;
 }): Snapshot {
-  ze_log('Creating snapshot object.');
   const version_postfix = isCI
     ? `${options.git.branch}.${options.zeConfig.buildId}`
     : `${options.zeConfig.user}.${options.zeConfig.buildId}`;
   return {
-    application_uid: createFullAppName(options.app),
+    application_uid: createApplicationUID(options.app),
     version: `${options.app.version}-${version_postfix}`,
     snapshot_id: createSnapshotId(options),
     domain: options.zeConfig.edge_url,

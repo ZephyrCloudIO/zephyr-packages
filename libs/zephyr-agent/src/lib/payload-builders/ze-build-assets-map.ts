@@ -3,7 +3,7 @@ import {
   Source,
   ze_log,
   ZeBuildAssetsMap,
-  ZeWebpackPluginOptions,
+  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 
 import { getZeBuildAsset } from '../sync-utils/get-ze-build-asset';
@@ -29,7 +29,7 @@ function extractBuffer(asset: Source): Buffer | string | undefined {
 }
 
 export async function zeBuildAssetsMap(
-  pluginOptions: ZeWebpackPluginOptions,
+  pluginOptions: ZephyrPluginOptions,
   assets: Record<string, Source>
 ): Promise<ZeBuildAssetsMap> {
   ze_log('Building assets map from webpack assets.');

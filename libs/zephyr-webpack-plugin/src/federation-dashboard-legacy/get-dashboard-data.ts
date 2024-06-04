@@ -116,6 +116,6 @@ export function getDashboardData({
 
   // todo: extend data
   const res = Object.assign({}, convertedGraph, data_overrides);
-  ze_log('getDashboardData done.', res);
+  ze_log(`getDashboardData done. ${JSON.stringify(res)}`);
   return res;
 }

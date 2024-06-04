@@ -19,7 +19,7 @@
         "assets": [
           {
             "glob": "**/*",
-            "input": "examples/react-micro-frontends/apps/host/src/assets",
+            "input": "examples/react-micro-frontends/apps/team-red/src/assets",
             "output": "."
           }
         ],

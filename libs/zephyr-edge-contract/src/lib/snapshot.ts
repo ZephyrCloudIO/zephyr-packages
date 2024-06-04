@@ -14,8 +14,8 @@ export interface Snapshot {
     org: string;
   };
   git: {
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     branch: string;
     commit: string;
   };

@@ -8,6 +8,7 @@ const open = (str: string) =>
 
 import { createSocket, disposeSocket } from './websocket';
 import {
+  getSecretToken,
   getToken,
   removeToken,
   request,
@@ -59,6 +60,11 @@ export async function getAuthenticationURL(
  * @return The token as a string.
  */
 export async function checkAuth(): Promise<string> {
+  const secret_token = await getSecretToken();
+  if (secret_token) {
+    return secret_token;
+  }
+
   const token = await getToken();
 
   if (token) {

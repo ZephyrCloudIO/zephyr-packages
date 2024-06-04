@@ -3,22 +3,15 @@ import { request, UploadableAsset } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 
 export async function uploadFile({
-  id,
+  hash,
   asset,
   application_uid,
 }: {
-  id: string;
+  hash: string;
   asset: UploadableAsset;
   application_uid: string;
 }): Promise<unknown> {
   const type = 'file';
-  const meta = {
-    path: asset.path,
-    extname: asset.extname,
-    hash: asset.hash,
-    size: asset.size,
-    createdAt: Date.now(),
-  };
 
   const { EDGE_URL, jwt } = await getApplicationConfiguration({
     application_uid,
@@ -29,13 +22,13 @@ export async function uploadFile({
     headers: {
       'x-file-size': asset.size.toString(),
       'x-file-path': asset.path,
-      'x-file-meta': JSON.stringify(meta),
       can_write_jwt: jwt,
     },
   };
 
   const url = new URL('/upload', EDGE_URL);
   url.searchParams.append('type', type);
-  url.searchParams.append('id', id);
+  url.searchParams.append('hash', hash);
+  url.searchParams.append('filename', asset.path);
   return request(url, options, asset.buffer);
 }

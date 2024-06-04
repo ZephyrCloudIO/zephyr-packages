@@ -10,8 +10,6 @@ export { checkAuth, isTokenStillValid } from './lib/auth/login';
 export { getGitInfo } from './lib/context-utils/ze-util-get-git-info';
 export { getPackageJson } from './lib/context-utils/ze-util-read-package-json';
 
-export { ConfigurationError } from './lib/custom-errors/configuration-error';
-
 export {
   onIndexHtmlResolved,
   resolveIndexHtml,
@@ -23,3 +21,9 @@ export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
 export { logger } from './lib/remote-logs/ze-log-event';
 export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
 export { getBuildId } from './lib/ze-api-requests/get-build-id';
+
+export {
+  get_hash_list,
+  update_hash_list,
+} from './lib/dvcs/distributed-hash-control';
+export { get_missing_assets } from './lib/dvcs/get-missing-assets';

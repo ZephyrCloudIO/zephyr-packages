@@ -1,15 +1,33 @@
 export interface ZephyrPluginOptions {
-  // by default read from package.json
-  name?: string;
-  // by default - remoteEntry.js
-  filename?: string;
-  // by default - dependencies from package.json
-  shared?: string[];
-  // by default - empty
-  exposes?: string[];
-  // by default - empty
-  remotes?: string[];
-
-  // hacks, especially for angular
+  pluginName: string;
+  isCI: boolean;
+  buildEnv: string;
+  username: string;
+  zeConfig: {
+    edge_url: string;
+    user: string;
+    buildId: string | undefined;
+  };
+  application_uid: string;
+  app: {
+    org: string;
+    project: string;
+    name: string;
+    version: string;
+  };
+  git: {
+    name?: string;
+    email?: string;
+    branch: string;
+    commit: string;
+  };
+  mfConfig?: {
+    name: string;
+    filename: string;
+    exposes?: Record<string, string>;
+    remotes?: Record<string, string>;
+    shared?: Record<string, unknown>;
+  };
+  // hacks
   wait_for_index_html?: boolean;
 }

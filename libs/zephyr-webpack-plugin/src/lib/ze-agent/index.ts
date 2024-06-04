@@ -1,8 +1,11 @@
 import { Stats, StatsCompilation } from 'webpack';
 import {
   createSnapshot,
+  get_hash_list,
+  get_missing_assets,
   getApplicationConfiguration,
   logger,
+  update_hash_list,
   zeBuildAssetsMap,
   zeEnableSnapshotOnEdge,
   zeUploadAssets,
@@ -14,7 +17,7 @@ import {
   Source,
   ze_error,
   ze_log,
-  ZeWebpackPluginOptions,
+  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 
 import { emitDeploymentDone } from './lifecycle-events';
@@ -23,21 +26,24 @@ import { getDashboardData } from '../../federation-dashboard-legacy/get-dashboar
 export interface ZephyrAgentProps {
   stats: Stats;
   stats_json: StatsCompilation;
-  pluginOptions: ZeWebpackPluginOptions;
+  pluginOptions: ZephyrPluginOptions;
   assets: Record<string, Source>;
 }
 
-export async function zephyr_agent({
+export async function webpack_zephyr_agent({
   stats,
   stats_json,
   assets,
   pluginOptions,
 }: ZephyrAgentProps): Promise<void> {
   ze_log('zephyr agent started.');
-  const logEvent = logger(pluginOptions);
-  const { EDGE_URL, username, email } = await getApplicationConfiguration({
-    application_uid: pluginOptions.application_uid,
-  });
+  const application_uid = pluginOptions.application_uid;
+
+  const [appConfig, hash_set] = await Promise.all([
+    getApplicationConfiguration({ application_uid }),
+    get_hash_list(application_uid),
+  ]);
+  const { EDGE_URL, username, email } = appConfig;
 
   const zeStart = Date.now();
   const assetsMap = await zeBuildAssetsMap(pluginOptions, assets);
@@ -48,12 +54,11 @@ export async function zephyr_agent({
     email,
   });
 
-  const missingAssets = await zeUploadSnapshot(pluginOptions, snapshot).catch(
-    (err) => ze_error('Failed to upload snapshot.', err)
+  await zeUploadSnapshot(pluginOptions, snapshot).catch((err) =>
+    ze_error('Failed to upload snapshot.', err)
   );
 
-  if (typeof missingAssets === 'undefined')
-    return ze_error('Snapshot upload gave no result, exiting');
+  const missingAssets = get_missing_assets({ assetsMap, hash_set });
 
   const assetsUploadSuccess = await zeUploadAssets(pluginOptions, {
     missingAssets,
@@ -63,6 +68,10 @@ export async function zephyr_agent({
 
   if (!assetsUploadSuccess)
     return ze_error('Failed to upload assets.', assetsUploadSuccess);
+
+  if (missingAssets.length) {
+    await update_hash_list(application_uid, assetsMap);
+  }
 
   const dashData = getDashboardData({
     stats,
@@ -76,12 +85,10 @@ export async function zephyr_agent({
   if (!envs)
     return ze_error('Did not receive envs from build stats upload. Exiting.');
 
-  await zeEnableSnapshotOnEdge(pluginOptions, snapshot, envs.value);
-
-  logEvent({
-    level: 'info',
-    action: 'build:deploy:done',
-    message: `build deployed in ${Date.now() - zeStart}ms`,
+  await zeEnableSnapshotOnEdge({
+    pluginOptions,
+    envs_jwt: envs.value,
+    zeStart,
   });
 
   emitDeploymentDone();

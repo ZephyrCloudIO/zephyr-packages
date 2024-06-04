@@ -1,22 +1,14 @@
-import {
-  ze_log,
-  ZeUploadAssetsOptions,
-  ZeWebpackPluginOptions,
-} from 'zephyr-edge-contract';
+import { ze_error, ze_log, ZephyrPluginOptions, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadFile } from '../upload/upload-file';
 
 export async function zeUploadAssets(
-  pluginOptions: ZeWebpackPluginOptions,
-  { missingAssets, assetsMap, count }: ZeUploadAssetsOptions
+  pluginOptions: ZephyrPluginOptions,
+  { missingAssets, assetsMap, count }: ZeUploadAssetsOptions,
 ): Promise<boolean> {
-  ze_log('Uploading assets.');
   const logEvent = logger(pluginOptions);
 
-  if (
-    !missingAssets?.assets ||
-    Object.keys(missingAssets.assets).length === 0
-  ) {
+  if (missingAssets.length === 0) {
     logEvent({
       level: 'info',
       action: 'snapshot:assets:upload:empty',
@@ -28,20 +20,19 @@ export async function zeUploadAssets(
   logEvent({
     level: 'info',
     action: 'snapshot:assets:upload:started',
-    message: `uploading missing assets to zephyr (queued ${missingAssets?.assets?.length} out of ${count})`,
+    message: `uploading missing assets to zephyr (queued ${missingAssets?.length} out of ${count})`,
   });
 
   let totalTime = 0;
   let totalSize = 0;
-  const assets = Object.values(missingAssets.assets);
 
-  return await Promise.all(
-    assets.map(async (asset) => {
+  const res = await Promise.all(
+    missingAssets.map(async (asset) => {
       const start = Date.now();
       const assetWithBuffer = assetsMap[asset.hash];
       const assetSize = assetWithBuffer?.buffer?.length / 1024;
       return await uploadFile({
-        id: asset.hash,
+        hash: asset.hash,
         asset: assetWithBuffer,
         application_uid: pluginOptions.application_uid,
       })
@@ -50,7 +41,7 @@ export async function zeUploadAssets(
           totalTime += fileUploaded;
           totalSize += assetSize;
           ze_log(
-            `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
+            `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`,
           );
         })
         .catch((err) => {
@@ -62,14 +53,14 @@ export async function zeUploadAssets(
 
           throw err;
         });
-    })
+    }),
   )
     .then(() => {
       logEvent({
         level: 'info',
         action: 'snapshot:assets:upload:done',
         message: `uploaded missing assets to zephyr (${
-          missingAssets?.assets?.length
+          missingAssets?.length
         } assets in ${totalTime}ms, ${totalSize.toFixed(2)}kb)`,
       });
       return true;
@@ -82,4 +73,10 @@ export async function zeUploadAssets(
       });
       return false;
     });
+
+  if (!res) {
+    ze_error('Failed to upload assets.', res);
+  }
+
+  return res;
 }

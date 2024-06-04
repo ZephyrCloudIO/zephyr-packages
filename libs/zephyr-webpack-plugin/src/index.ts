@@ -1,5 +1,5 @@
 export { withZephyr } from './lib/with-zephyr';
-export { onDeploymentDone } from './lib/ze-agent/lifecycle-events';
 
 // hacks
+export { onDeploymentDone } from './lib/ze-agent/lifecycle-events';
 export { resolveIndexHtml } from 'zephyr-agent';

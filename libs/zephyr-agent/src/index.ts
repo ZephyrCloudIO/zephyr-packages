@@ -15,12 +15,14 @@ export {
   resolveIndexHtml,
 } from './lib/hacks/resolve-index-html';
 
-export { zeBuildAssetsMap } from './lib/payload-builders/ze-build-assets-map';
+export { zeBuildAssetsMap, buildAssetsMap } from './lib/payload-builders/ze-build-assets-map';
 export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
+export { zeGetDashData, GetDashDataOptions } from './lib/payload-builders/ze-get-dash-data';
 
 export { logger } from './lib/remote-logs/ze-log-event';
 export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
 export { getBuildId } from './lib/ze-api-requests/get-build-id';
+export { upload } from './lib/upload/upload';
 
 export {
   get_hash_list,

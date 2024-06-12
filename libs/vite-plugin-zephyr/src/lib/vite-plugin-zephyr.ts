@@ -2,36 +2,30 @@ import {
   NormalizedOutputOptions,
   OutputAsset,
   OutputBundle,
-  OutputChunk
+  OutputChunk,
 } from 'rollup';
 import * as isCI from 'is-ci';
 import { ResolvedConfig, Plugin } from 'vite';
 
 import {
   createApplicationUID,
-  createSnapshotId,
   getPartialAssetMap,
   removePartialAssetMap,
   ze_error,
   ze_log,
-  ZeBuildAssetsMap,
 } from 'zephyr-edge-contract';
 import {
+  buildAssetsMap,
   checkAuth,
-  createSnapshot,
   get_hash_list,
   get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
-  getZeBuildAsset,
   logger,
-  update_hash_list,
-  zeEnableSnapshotOnEdge,
-  zeUploadAssets,
-  zeUploadBuildStats,
-  zeUploadSnapshot,
+  upload,
+  zeGetDashData,
 } from 'zephyr-agent';
 
 import { load_static_entries } from './load_static_entries';
@@ -163,23 +157,6 @@ async function _zephyr(options: {
 
   const zeStart = Date.now();
 
-  const extractBuffer = (
-    asset: OutputChunk | OutputAsset
-  ): string | undefined => {
-    switch (asset.type) {
-      case 'chunk':
-        return asset.code;
-      case 'asset':
-        return typeof asset.source === 'string'
-          ? asset.source
-          : new TextDecoder().decode(asset.source);
-      default:
-        return void 0;
-    }
-  };
-
-  const getAssetType = (asset: OutputChunk | OutputAsset): string => asset.type;
-
   const partialAssetMap = await getPartialAssetMap(application_uid);
   await removePartialAssetMap(application_uid);
 
@@ -189,116 +166,31 @@ async function _zephyr(options: {
     ...Object.values(partialAssetMap ?? {})
   );
 
-  const assetsMap = Object.keys(assets).reduce((memo, filepath) => {
-    const asset = assets[filepath];
-    const buffer = extractBuffer(asset);
-
-    if (!buffer) {
-      logEvent({
-        action: 'ze:build:assets:unknown-asset-type',
-        level: 'error',
-        message: `unknown asset type: ${getAssetType(asset)}`,
-      });
-      1;
-      return memo;
-    }
-
-    const assetMap = getZeBuildAsset({ filepath, content: buffer });
-    memo[assetMap.hash] = assetMap;
-
-    return memo;
-  }, {} as ZeBuildAssetsMap);
-
-  const snapshot = createSnapshot({
-    options: pluginOptions,
-    assets: Object.assign(
-      {},
-      assetsMap,
-      ...Object.values(partialAssetMap ?? {})
-    ),
-    username,
-    email,
-  });
-
-  await zeUploadSnapshot(pluginOptions, snapshot).catch((err) =>
-    ze_error('Failed to upload snapshot.', err)
-  );
-
+  const assetsMap = buildAssetsMap(assets, extractBuffer, getAssetType);
   const missingAssets = get_missing_assets({ assetsMap, hash_set });
 
-  const assetsUploadSuccess = await zeUploadAssets(pluginOptions, {
-    missingAssets,
+  await upload({
+    pluginOptions,
     assetsMap,
+    missingAssets,
+    getDashData: zeGetDashData,
+    appConfig,
+    zeStart,
     count: Object.keys(assets).length,
   });
-
-  if (!assetsUploadSuccess)
-    return ze_error('Failed to upload assets.', assetsUploadSuccess);
-
-  if (missingAssets.length) {
-    await update_hash_list(application_uid, assetsMap);
-  }
-
-  const version = createSnapshotId(pluginOptions);
-  const dashData = {
-    id: pluginOptions.application_uid,
-    name: packageJson.name,
-    // name: pluginOptions.mfConfig?.name,
-    edge: { url: EDGE_URL },
-    app: Object.assign({}, pluginOptions.app, {
-      buildId: pluginOptions.zeConfig.buildId,
-    }),
-    version,
-    git: pluginOptions.git,
-    // remote: pluginOptions.mfConfig?.filename,
-    // remotes: Object.keys(pluginOptions.mfConfig?.remotes || {}),
-    context: {
-      isCI: pluginOptions.isCI,
-    },
-    dependencies: [],
-    devDependencies: [],
-    optionalDependencies: [],
-    metadata: {},
-    overrides: [
-      /* {
-         "id": "react-dom",
-         "name": "react-dom",
-         "version": "18.2.0",
-         "location": "react-dom",
-         "applicationID": "react-dom"
-       },
-       {
-         "id": "react",
-         "name": "react",
-         "version": "18.2.0",
-         "location": "react",
-         "applicationID": "react"
-       }*/
-    ],
-    consumes: [],
-    modules: [
-      /*          {
-                  "id": "GreenRecos:GreenRecos",
-                  "name": "GreenRecos",
-                  "applicationID": "GreenRecos",
-                  "requires": [
-                    "react"
-                  ],
-                  "file": "./src/app/team-green-recos.tsx"
-                }*/
-    ],
-    sha: pluginOptions.git.commit,
-    // todo: @deprecate
-    buildHash: pluginOptions.git.commit,
-  };
-
-  const envs = await zeUploadBuildStats(dashData);
-  if (!envs)
-    return ze_error('Did not receive envs from build stats upload. Exiting.');
-
-  await zeEnableSnapshotOnEdge({
-    pluginOptions,
-    envs_jwt: envs.value,
-    zeStart,
-  });
 }
+
+function extractBuffer(asset: OutputChunk | OutputAsset): string | undefined {
+  switch (asset.type) {
+    case 'chunk':
+      return asset.code;
+    case 'asset':
+      return typeof asset.source === 'string'
+        ? asset.source
+        : new TextDecoder().decode(asset.source);
+    default:
+      return void 0;
+  }
+}
+
+function getAssetType(asset: OutputChunk | OutputAsset): string { return asset.type; }

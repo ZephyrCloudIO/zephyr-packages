@@ -1,19 +1,18 @@
-import { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
+import {
+  InputOptions,
+  NormalizedOutputOptions,
+  OutputBundle,
+} from 'rollup';
 import { createApplicationUID, ze_error, ze_log, ZeApplicationConfig, ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
   checkAuth,
-  createSnapshot,
   get_hash_list,
   get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
-  update_hash_list,
-  zeEnableSnapshotOnEdge,
-  zeUploadAssets,
-  zeUploadBuildStats,
-  zeUploadSnapshot,
+  upload,
 } from 'zephyr-agent';
 import { getAssetsMap } from './utils/get-assets-map';
 import { getDashData } from './utils/get-dash-data';
@@ -114,41 +113,20 @@ export function withZephyr() {
         if (!_state) return ze_error('[zephyr]: Could not initialize zephyr agent.');
 
         const { appConfig, hash_set, pluginOptions } = _state;
-        const { username, email } = appConfig;
 
         const assetsMap = getAssetsMap(bundle);
-        const snapshot = createSnapshot({
-          options: pluginOptions,
-          assets: assetsMap,
-          username,
-          email,
+        const missingAssets = get_missing_assets({ assetsMap, hash_set });
+        await upload({
+          pluginOptions,
+          assetsMap,
+          missingAssets,
+          getDashData,
+          appConfig,
+          zeStart,
+          count: Object.keys(bundle).length,
         });
 
-        const [,, envs] = await Promise.all([
-          zeUploadSnapshot(pluginOptions, snapshot),
-          (async function upload_assets() {
-            const missingAssets = get_missing_assets({ assetsMap, hash_set })
-
-            const upload_success = await zeUploadAssets(pluginOptions, {
-              missingAssets,
-              assetsMap,
-              count: Object.keys(bundle).length,
-            });
-            if (upload_success && missingAssets.length) {
-              await update_hash_list(pluginOptions.application_uid, assetsMap);
-            }
-            return upload_success;
-          })(),
-          (async function upload_build_stats_nd_enable_envs() {
-            const dashData = getDashData({ appConfig, pluginOptions });
-            return zeUploadBuildStats(dashData);
-          })(),
-        ]);
-
-        if (!envs) return ze_error('[zephyr]: Could not get envs');
-        return zeEnableSnapshotOnEdge({ pluginOptions, envs_jwt: envs.value, zeStart });
       })({ state: _state, bundle });
-
 
       console.log('zephyr agent done in', Date.now() - zeStart, 'ms');
     },

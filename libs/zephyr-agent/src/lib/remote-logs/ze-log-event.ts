@@ -18,7 +18,7 @@ const log = (level: string, msg: unknown): void => {
   return is_debug_enabled ? ze_log(msg) : console.log(msg);
 };
 
-interface LogEventOptions {
+export interface LogEventOptions {
   level: string;
   action: string;
   message: string;
@@ -33,6 +33,10 @@ export interface LoggerOptions {
   isCI: boolean;
   app: Record<string, unknown>;
   git: Record<string, unknown>;
+}
+
+export interface LogEvent {
+  (options: LogEventOptions): void;
 }
 
 export function logger(options: LoggerOptions) {

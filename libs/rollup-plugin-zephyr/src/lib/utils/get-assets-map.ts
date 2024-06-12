@@ -1,6 +1,10 @@
 import { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
-import { getZeBuildAsset } from 'zephyr-agent';
-import { ze_log, ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import { buildAssetsMap } from 'zephyr-agent';
+import { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+
+export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
+  return buildAssetsMap(assets, extractBuffer, getAssetType)
+}
 
 const extractBuffer = (
   asset: OutputChunk | OutputAsset
@@ -17,22 +21,4 @@ const extractBuffer = (
   }
 };
 
-const getAssetType = (asset: OutputChunk | OutputAsset): string =>
-  asset.type;
-
-export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
-  return Object.keys(assets).reduce((memo, filepath) => {
-    const asset = assets[filepath];
-    const buffer = extractBuffer(asset);
-
-    if (!buffer && buffer !== '') {
-      ze_log(`unknown asset type: ${getAssetType(asset)}`);
-      return memo;
-    }
-
-    const assetMap = getZeBuildAsset({ filepath, content: buffer });
-    memo[assetMap.hash] = assetMap;
-
-    return memo;
-  }, {} as ZeBuildAssetsMap);
-}
+const getAssetType = (asset: OutputChunk | OutputAsset): string => asset.type;

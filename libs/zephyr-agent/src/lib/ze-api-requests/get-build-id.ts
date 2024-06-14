@@ -1,5 +1,5 @@
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
-import { getToken, request } from 'zephyr-edge-contract';
+import { getToken, request, ze_error } from 'zephyr-edge-contract';
 
 export async function getBuildId(
   application_uid: string
@@ -36,7 +36,7 @@ export async function getBuildId(
     }
 
     return (resp as Record<string, string>)[user_uuid];
-  } catch (e) {
-    console.error(e);
+  } catch (err: unknown) {
+    ze_error('Failed to get build id', err);
   }
 }

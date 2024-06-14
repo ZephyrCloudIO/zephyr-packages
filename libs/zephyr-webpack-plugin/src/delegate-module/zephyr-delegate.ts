@@ -1,5 +1,5 @@
 import {
-  createFullAppName,
+  createApplicationUID,
   getToken,
   v2_api_paths,
   ZEPHYR_API_ENDPOINT,
@@ -67,7 +67,7 @@ export async function replace_remote_in_mf_config(
   const depsResolutionTask = Object.keys(mfPlugin._options?.remotes).map(
     async (key): Promise<void | DependencyResolutionError> => {
       const [app_name, project_name, org_name] = key.split('.');
-      const application_uid = createFullAppName({
+      const application_uid = createApplicationUID({
         org: org_name ?? config.org,
         project: project_name ?? config.project,
         name: app_name,

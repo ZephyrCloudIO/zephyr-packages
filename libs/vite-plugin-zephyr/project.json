@@ -3,25 +3,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/vite-plugin-zephyr/src",
   "projectType": "library",
-  "release": {
-    "version": {
-      "generatorOptions": {
-        "packageRoot": "dist\\{projectRoot}",
-        "currentVersionResolver": "git-tag"
-      }
-    }
-  },
   "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/vite-plugin-zephyr",
+        "rootDir": "libs/vite-plugin-zephyr/src",
+        "outputPath": "libs/vite-plugin-zephyr/dist",
         "tsConfig": "libs/vite-plugin-zephyr/tsconfig.lib.json",
-        "packageJson": "libs/vite-plugin-zephyr/package.json",
-        "main": "libs/vite-plugin-zephyr/src/index.ts",
-        "assets": ["libs/vite-plugin-zephyr/*.md"]
+        "main": "libs/vite-plugin-zephyr/src/index.ts"
       }
     },
     "nx-release-publish": {

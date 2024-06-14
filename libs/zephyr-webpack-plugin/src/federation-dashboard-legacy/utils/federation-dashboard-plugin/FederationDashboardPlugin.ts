@@ -10,7 +10,7 @@ import {
 import {
   ConvertedGraph,
   ZeUploadBuildStats,
-  ZeWebpackPluginOptions,
+  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 
 import {
@@ -36,7 +36,7 @@ type ModuleFederationPluginOptions =
 interface ProcessWebpackGraphParams {
   stats: Stats;
   stats_json: StatsCompilation;
-  pluginOptions: ZeWebpackPluginOptions;
+  pluginOptions: ZephyrPluginOptions;
 }
 
 export class FederationDashboardPlugin {

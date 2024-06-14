@@ -5,30 +5,27 @@ import {
   OutputChunk,
 } from 'rollup';
 import * as isCI from 'is-ci';
-import { ResolvedConfig } from 'vite';
+import { ResolvedConfig, Plugin } from 'vite';
 
 import {
-  createFullAppName,
-  createSnapshotId,
+  createApplicationUID,
   getPartialAssetMap,
   removePartialAssetMap,
   ze_error,
   ze_log,
-  ZeBuildAssetsMap,
 } from 'zephyr-edge-contract';
 import {
+  buildAssetsMap,
   checkAuth,
-  createSnapshot,
+  get_hash_list,
+  get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
-  getZeBuildAsset,
   logger,
-  zeEnableSnapshotOnEdge,
-  zeUploadAssets,
-  zeUploadBuildStats,
-  zeUploadSnapshot,
+  upload,
+  zeGetDashData,
 } from 'zephyr-agent';
 
 import { load_static_entries } from './load_static_entries';
@@ -41,7 +38,7 @@ interface ZephyrPartialInternalOptions {
   publicDir?: string;
 }
 
-export function withZephyr() {
+export function withZephyr(): Plugin {
   // todo: set correctly
   let bundle: OutputBundle = {};
 
@@ -88,15 +85,15 @@ async function _zephyr(options: {
   assets: OutputBundle;
   vite_internal_options: ZephyrInternalOptions;
 }) {
-  const { assets, vite_internal_options } = options;
+  const { assets: _assets, vite_internal_options } = options;
   const path_to_execution_dir = vite_internal_options.root;
 
   ze_log('Configuring with Zephyr');
-  const packageJson = getPackageJson(path_to_execution_dir);
+  const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded Package JSON', packageJson);
   if (!packageJson) return ze_error('Could not find package json');
 
-  const gitInfo = getGitInfo();
+  const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info', gitInfo);
   if (
     !gitInfo ||
@@ -106,7 +103,7 @@ async function _zephyr(options: {
   )
     return ze_error('Could not get git info');
 
-  const application_uid = createFullAppName({
+  const application_uid = createApplicationUID({
     org: gitInfo.app.org,
     project: gitInfo.app.project,
     name: packageJson?.name,
@@ -115,22 +112,23 @@ async function _zephyr(options: {
   ze_log('Going to check auth token or get it');
   await checkAuth();
 
-  ze_log('Got auth token, going to get application configuration');
-  const { username, email, EDGE_URL } = await getApplicationConfiguration({
-    application_uid,
-  });
+  ze_log('Got auth token, going to get application configuration and build id');
+  const [appConfig, buildId, hash_set] = await Promise.all([
+    getApplicationConfiguration({ application_uid }),
+    getBuildId(application_uid).catch((err: Error) => {
+      logEvent({
+        level: 'error',
+        action: 'build:get-build-id:error',
+        message: `error receiving build number for '${email}'\n
+          ${err.message}\n`,
+      });
+    }),
+    get_hash_list(application_uid),
+  ]);
+  const { username, email, EDGE_URL } = appConfig;
 
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  ze_log('Going to get build id');
-  const buildId = await getBuildId(application_uid).catch((err: Error) => {
-    logEvent({
-      level: 'error',
-      action: 'build:get-build-id:error',
-      message: `error receiving build number for '${email}'\n
-        ${err.message}\n`,
-    });
-  });
   if (!buildId) return ze_error('[zephyr]: Could not get build id');
 
   const pluginOptions = {
@@ -159,135 +157,40 @@ async function _zephyr(options: {
 
   const zeStart = Date.now();
 
-  const extractBuffer = (
-    asset: OutputChunk | OutputAsset
-  ): string | undefined => {
-    switch (asset.type) {
-      case 'chunk':
-        return asset.code;
-      case 'asset':
-        return typeof asset.source === 'string'
-          ? asset.source
-          : new TextDecoder().decode(asset.source);
-      default:
-        return void 0;
-    }
-  };
-
-  const getAssetType = (asset: OutputChunk | OutputAsset): string => asset.type;
-
-  const assetsMap = Object.keys(assets).reduce((memo, filepath) => {
-    const asset = assets[filepath];
-    const buffer = extractBuffer(asset);
-
-    if (!buffer) {
-      logEvent({
-        action: 'ze:build:assets:unknown-asset-type',
-        level: 'error',
-        message: `unknown asset type: ${getAssetType(asset)}`,
-      });
-      1;
-      return memo;
-    }
-
-    const assetMap = getZeBuildAsset({ filepath, content: buffer });
-    memo[assetMap.hash] = assetMap;
-
-    return memo;
-  }, {} as ZeBuildAssetsMap);
-
   const partialAssetMap = await getPartialAssetMap(application_uid);
   await removePartialAssetMap(application_uid);
 
-  const snapshot = createSnapshot({
-    options: pluginOptions,
-    assets: Object.assign(
-      {},
-      assetsMap,
-      ...Object.values(partialAssetMap ?? {})
-    ),
-    username,
-    email,
-  });
-
-  const missingAssets = await zeUploadSnapshot(pluginOptions, snapshot).catch(
-    (err) => ze_error('Failed to upload snapshot.', err)
+  const assets = Object.assign(
+    {},
+    _assets,
+    ...Object.values(partialAssetMap ?? {})
   );
 
-  if (typeof missingAssets === 'undefined')
-    return ze_error('Snapshot upload gave no result, exiting');
+  const assetsMap = buildAssetsMap(assets, extractBuffer, getAssetType);
+  const missingAssets = get_missing_assets({ assetsMap, hash_set });
 
-  const assetsUploadSuccess = await zeUploadAssets(pluginOptions, {
-    missingAssets,
+  await upload({
+    pluginOptions,
     assetsMap,
+    missingAssets,
+    getDashData: zeGetDashData,
+    appConfig,
+    zeStart,
     count: Object.keys(assets).length,
   });
-
-  if (!assetsUploadSuccess)
-    return ze_error('Failed to upload assets.', assetsUploadSuccess);
-
-  const version = createSnapshotId(pluginOptions);
-  const dashData = {
-    id: pluginOptions.application_uid,
-    name: packageJson.name,
-    // name: pluginOptions.mfConfig?.name,
-    edge: { url: EDGE_URL },
-    app: Object.assign({}, pluginOptions.app, {
-      buildId: pluginOptions.zeConfig.buildId,
-    }),
-    version,
-    git: pluginOptions.git,
-    // remote: pluginOptions.mfConfig?.filename,
-    // remotes: Object.keys(pluginOptions.mfConfig?.remotes || {}),
-    context: {
-      isCI: pluginOptions.isCI,
-    },
-    dependencies: [],
-    devDependencies: [],
-    optionalDependencies: [],
-    metadata: {},
-    overrides: [
-      /* {
-         "id": "react-dom",
-         "name": "react-dom",
-         "version": "18.2.0",
-         "location": "react-dom",
-         "applicationID": "react-dom"
-       },
-       {
-         "id": "react",
-         "name": "react",
-         "version": "18.2.0",
-         "location": "react",
-         "applicationID": "react"
-       }*/
-    ],
-    consumes: [],
-    modules: [
-      /*          {
-                  "id": "GreenRecos:GreenRecos",
-                  "name": "GreenRecos",
-                  "applicationID": "GreenRecos",
-                  "requires": [
-                    "react"
-                  ],
-                  "file": "./src/app/team-green-recos.tsx"
-                }*/
-    ],
-    sha: pluginOptions.git.commit,
-    // todo: @deprecate
-    buildHash: pluginOptions.git.commit,
-  };
-
-  const envs = await zeUploadBuildStats(dashData);
-  if (!envs)
-    return ze_error('Did not receive envs from build stats upload. Exiting.');
-
-  await zeEnableSnapshotOnEdge(pluginOptions, snapshot, envs.value);
-
-  logEvent({
-    level: 'info',
-    action: 'build:deploy:done',
-    message: `build deployed in ${Date.now() - zeStart}ms`,
-  });
 }
+
+function extractBuffer(asset: OutputChunk | OutputAsset): string | undefined {
+  switch (asset.type) {
+    case 'chunk':
+      return asset.code;
+    case 'asset':
+      return typeof asset.source === 'string'
+        ? asset.source
+        : new TextDecoder().decode(asset.source);
+    default:
+      return void 0;
+  }
+}
+
+function getAssetType(asset: OutputChunk | OutputAsset): string { return asset.type; }

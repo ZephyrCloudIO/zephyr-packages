@@ -8,11 +8,10 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/zephyr-webpack-plugin",
+        "rootDir": "libs/zephyr-webpack-plugin/src",
+        "outputPath": "libs/zephyr-webpack-plugin/dist",
         "tsConfig": "libs/zephyr-webpack-plugin/tsconfig.lib.json",
-        "packageJson": "libs/zephyr-webpack-plugin/package.json",
-        "main": "libs/zephyr-webpack-plugin/src/index.ts",
-        "assets": ["libs/zephyr-webpack-plugin/*.md"]
+        "main": "libs/zephyr-webpack-plugin/src/index.ts"
       }
     },
     "publish": {

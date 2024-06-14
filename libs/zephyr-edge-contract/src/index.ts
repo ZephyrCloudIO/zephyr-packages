@@ -1,4 +1,4 @@
-export { createFullAppName } from './lib/utils/create-full-app-name';
+export { createApplicationUID } from './lib/utils/create-application-u-i-d';
 export { createSnapshotId } from './lib/utils/create-snapshot-id';
 export { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';
 
@@ -7,6 +7,9 @@ export { ZeApplicationList } from './lib/ze-api/app-list';
 export { Snapshot, SnapshotAsset } from './lib/snapshot';
 export { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 export * from './lib/zephyr-edge-contract';
+
+export * as _hash_cache from './lib/node-persist/hash-cache';
+export * as _fs_cache from './lib/node-persist/fs-cache';
 
 export {
   ZeApplicationConfig,
@@ -21,6 +24,8 @@ export {
   savePartialAssetMap,
 } from './lib/node-persist/partial-assets-map';
 
+export { getSecretToken } from './lib/node-persist/secret-token';
+
 export {
   saveToken,
   getToken,
@@ -28,7 +33,6 @@ export {
   cleanTokens,
 } from './lib/node-persist/token';
 
-export { ZeWebpackPluginOptions } from './lib/plugin-options/ze-webpack-plugin-options';
 export { ZephyrPluginOptions } from './lib/plugin-options/zephyr-plugin-options';
 
 export {

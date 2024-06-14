@@ -2,16 +2,19 @@ import {
   Snapshot,
   ze_log,
   ZeUploadBuildStats,
-  ZeWebpackPluginOptions,
+  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadEnvs } from '../upload/upload-envs';
 
-export async function zeEnableSnapshotOnEdge(
-  pluginOptions: ZeWebpackPluginOptions,
-  snapshot: Snapshot,
-  envs_jwt: ZeUploadBuildStats
-): Promise<void> {
+interface ZeEnableSnapshotOnEdgeProps {
+  pluginOptions: ZephyrPluginOptions,
+  envs_jwt: ZeUploadBuildStats,
+  zeStart: number
+}
+export async function zeEnableSnapshotOnEdge(props: ZeEnableSnapshotOnEdgeProps): Promise<void> {
+  const { pluginOptions, envs_jwt, zeStart } = props;
+
   ze_log('Enabling snapshot on edge');
   const logEvent = logger(pluginOptions);
 
@@ -36,6 +39,13 @@ export async function zeEnableSnapshotOnEdge(
     });
     return;
   }
+
+
+  logEvent({
+    level: 'info',
+    action: 'build:deploy:done',
+    message: `build deployed in ${Date.now() - zeStart}ms`,
+  });
 
   ze_log('Build successfully deployed to edge');
 }

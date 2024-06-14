@@ -2,17 +2,15 @@ import {
   Snapshot,
   SnapshotUploadRes,
   ze_error,
-  ze_log,
-  ZeWebpackPluginOptions,
+  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadSnapshot } from '../upload/upload-snapshot';
 
 export async function zeUploadSnapshot(
-  pluginOptions: ZeWebpackPluginOptions,
+  pluginOptions: ZephyrPluginOptions,
   snapshot: Snapshot
 ): Promise<SnapshotUploadRes | undefined> {
-  ze_log('Uploading snapshot.');
   const { buildEnv } = pluginOptions;
   const logEvent = logger(pluginOptions);
   const snapUploadMs = Date.now();
@@ -23,7 +21,6 @@ export async function zeUploadSnapshot(
     application_uid: pluginOptions.application_uid,
   }).catch((err) => {
     error = err;
-    ze_error('Failed to upload snapshot', err);
   });
 
   if (!edgeTodo || error) {
@@ -41,6 +38,9 @@ export async function zeUploadSnapshot(
     action: 'snapshot:upload:done',
     message: `uploaded ${buildEnv} snapshot in ${Date.now() - snapUploadMs}ms`,
   });
+
+  if (!edgeTodo)
+    ze_error('Snapshot upload gave no result, exiting')
 
   return edgeTodo;
 }

@@ -1,12 +1,15 @@
 {
   "name": "rollup-plugin-zephyr",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "dependencies": {
-    "zephyr-agent": "^0.0.12",
     "tslib": "^2",
     "rollup": "^4",
-    "zephyr-edge-contract": "^0.0.12"
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
   },
   "keywords": [
     "rollup",

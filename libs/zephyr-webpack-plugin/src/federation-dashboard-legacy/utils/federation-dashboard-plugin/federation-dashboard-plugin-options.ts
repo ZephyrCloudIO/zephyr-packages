@@ -11,8 +11,8 @@ export interface FederationDashboardPluginOptions {
   };
   // todo: what if git not configured? - skip for now
   git?: {
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     branch: string;
     commit: string;
   };

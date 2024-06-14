@@ -1,0 +1,30 @@
+{
+  "name": "rollup-sample-lib",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/rollup-sample-lib/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["rollup-plugin-zephyr"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "build": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "dependsOn": ["rollup-plugin-zephyr"],
+        "outputPath": "dist/examples/rollup-sample-lib",
+        "tsConfig": "examples/rollup-sample-lib/tsconfig.lib.json",
+        "project": "examples/rollup-sample-lib/package.json",
+        "entryFile": "examples/rollup-sample-lib/src/index.ts",
+        "external": ["react", "react-dom", "react/jsx-runtime"],
+        "rollupConfig": ["@nx/react/plugins/bundle-rollup", "examples/rollup-sample-lib/rollup.config.js"],
+        "compiler": "babel",
+        "assets": [
+
+        ]
+      }
+    }
+  }
+}

@@ -8,14 +8,14 @@ import { safe_json_parse } from './safe-json-parse';
 function _redact(str: string | undefined): string {
   if (!str) return '';
   return str
-    .replace(/Bearer ([^"]+)/gi, 'Bearer [REDACTED]')
-    .replace(/jwt":"([^"]+)/gi, 'jwt":"[REDACTED]');
+    .replace(/Bearer ([^"|']+)/gi, 'Bearer [REDACTED]')
+    .replace(/"?jwt"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jwt: [REDACTED]');
 }
 
 export async function request<T = unknown>(
   url: URL,
   options?: ClientRequestArgs,
-  data?: unknown & { length: number | undefined }
+  data?: unknown & { length: number | undefined },
 ): Promise<T | string> {
   const _https = url.protocol !== 'https:' ? http : https;
   return new Promise((resolve, reject) => {
@@ -29,7 +29,7 @@ export async function request<T = unknown>(
         if (res.statusCode === 401 || res.statusCode === 403) {
           await cleanTokens();
           const err = new Error(
-            '[zephyr]: auth error, please try to build again'
+            '[zephyr]: auth error, please try to build again',
           );
           err.stack = void 0;
           throw err;
@@ -43,12 +43,11 @@ export async function request<T = unknown>(
 
           const message = _redact(
             `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms` +
-              (data?.length
-                ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb`
-                : '') +
-              (_response ? `\n response: ${_response}` : '') +
-              //(data?.length ? `\n payload: ${data}` : '') +
-              (_options_str ? `\n options: ${_options_str}` : '')
+            (data?.length
+              ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb`
+              : '') +
+            (_response ? `\n response: ${_response}` : '') +
+            (_options_str ? `\n options: ${_options_str}` : ''),
           );
 
           if (_response === 'Not Implemented') return reject(message);
@@ -61,20 +60,21 @@ export async function request<T = unknown>(
               parsed_response?.status > 299)
           ) {
             return reject(
-              `[zephyr]: Error from ${url}: \n ${parsed_response?.message ?? _response}`
+              `[zephyr]: Error from ${url}: \n ${parsed_response?.message ?? _response}`,
             );
           }
 
-          ze_log(message);
+          if (url.pathname.indexOf('application/logs') === -1) ze_log(message);
+
           resolve((parsed_response as T) ?? (_response as string));
         });
-      }
+      },
     );
 
     req.on('error', (e: unknown) => {
       ze_error(
         `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str}`,
-        e
+        e,
       );
       reject(e);
     });

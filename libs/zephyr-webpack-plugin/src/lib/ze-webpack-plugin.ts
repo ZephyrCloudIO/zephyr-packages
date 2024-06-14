@@ -1,6 +1,6 @@
 import type { Compiler } from 'webpack';
 import * as isCI from 'is-ci';
-import { ZeWebpackPluginOptions } from 'zephyr-edge-contract';
+import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 import { setupZephyrConfig } from './ze-setup-build-id';
 import { logBuildSteps } from './ze-setup-build-steps-logging';
@@ -18,7 +18,7 @@ const default_zewebpack_options = {
 };
 
 export class ZeWebpackPlugin {
-  _options = default_zewebpack_options as ZeWebpackPluginOptions;
+  _options = default_zewebpack_options as ZephyrPluginOptions;
 
   constructor(options = {}) {
     this._options = Object.assign(this._options, options ?? {});

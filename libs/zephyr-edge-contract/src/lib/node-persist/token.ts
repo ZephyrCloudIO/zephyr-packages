@@ -9,17 +9,17 @@ const storage = init({
 
 export async function saveToken(token: string): Promise<void> {
   await storage;
-  void (await setItem(StorageKeys.zetoken, token));
+  void (await setItem(StorageKeys.ze_auth_token, token));
 }
 
 export async function getToken(): Promise<string | undefined> {
   await storage;
-  return getItem(StorageKeys.zetoken);
+  return getItem(StorageKeys.ze_auth_token);
 }
 
 export async function removeToken(): Promise<void> {
   await storage;
-  await removeItem(StorageKeys.zetoken);
+  await removeItem(StorageKeys.ze_auth_token);
 }
 
 export async function cleanTokens(): Promise<void> {

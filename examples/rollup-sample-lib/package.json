@@ -1,0 +1,11 @@
+{
+  "name": "rollup-sample-lib",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "nx build rollup-sample-lib --skip-nx-cache"
+  },
+  "devDependencies": {
+    "rollup-plugin-zephyr": "workspace:*"
+  }
+}

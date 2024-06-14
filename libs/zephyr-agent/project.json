@@ -3,25 +3,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/zephyr-agent/src",
   "projectType": "library",
-  "release": {
-    "version": {
-      "generatorOptions": {
-        "packageRoot": "dist\\{projectRoot}",
-        "currentVersionResolver": "git-tag"
-      }
-    }
-  },
   "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/zephyr-agent",
+        "rootDir": "libs/zephyr-agent/src",
+        "outputPath": "libs/zephyr-agent/dist",
         "tsConfig": "libs/zephyr-agent/tsconfig.lib.json",
-        "packageJson": "libs/zephyr-agent/package.json",
-        "main": "libs/zephyr-agent/src/index.ts",
-        "assets": ["libs/zephyr-agent/*.md"]
+        "main": "libs/zephyr-agent/src/index.ts"
       }
     },
     "nx-release-publish": {

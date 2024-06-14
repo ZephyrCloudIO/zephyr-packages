@@ -92,7 +92,7 @@ export interface UploadableAsset {
 }
 
 export interface ZeUploadAssetsOptions {
-  missingAssets: SnapshotUploadRes | undefined;
+  missingAssets: ZeBuildAsset[];
   count: number;
   assetsMap: {
     [key: string]: ZeBuildAsset;
@@ -112,8 +112,9 @@ export interface ZeBuildAssetsMap {
 }
 
 export interface SnapshotUploadRes {
-  id: string;
   assets: ZeBuildAsset[];
-  message: string;
+  assets_v2?: ZeBuildAsset[];
   asset_time?: number;
+  asset_v2_time?: number;
+  message?: string;
 }

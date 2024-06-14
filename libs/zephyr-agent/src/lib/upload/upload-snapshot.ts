@@ -15,7 +15,6 @@ export async function uploadSnapshot({
   body: Snapshot;
   application_uid: string;
 }): Promise<SnapshotUploadRes | undefined> {
-  ze_log('Starting upload of snapshot');
   const { EDGE_URL, jwt } = await getApplicationConfiguration({
     application_uid,
   });
@@ -24,6 +23,7 @@ export async function uploadSnapshot({
   const data = JSON.stringify(body);
   const url = new URL('/upload', EDGE_URL);
   url.searchParams.append('type', type);
+  url.searchParams.append('skip_assets', 'true');
   const options: ClientRequestArgs = {
     method: 'POST',
     headers: {

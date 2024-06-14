@@ -1,7 +1,7 @@
 {
-  "name": "sample-webpack-app",
+  "name": "sample-webpack-application",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "scripts": {
     "start": "nx run sample-webpack-application:serve",
     "build": "nx run sample-webpack-application:build --skip-nx-cache"
@@ -10,10 +10,12 @@
     "type": "git",
     "url": "https://github.com/valorkin/zephyr-mono.git"
   },
-  "private": true,
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@sentry/react": "^7.93.0"
+  },
+  "devDependencies": {
+    "zephyr-webpack-plugin": "workspace:*"
   }
 }

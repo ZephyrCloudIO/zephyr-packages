@@ -1,7 +1,10 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "nx build zephyr-edge-contract"
   },

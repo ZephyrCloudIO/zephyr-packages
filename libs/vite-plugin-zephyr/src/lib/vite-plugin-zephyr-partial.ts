@@ -8,7 +8,7 @@ import {
 import * as isCI from 'is-ci';
 
 import {
-  createFullAppName,
+  createApplicationUID,
   savePartialAssetMap,
   ze_error,
   ze_log,
@@ -17,12 +17,15 @@ import {
 import {
   checkAuth,
   createSnapshot,
+  get_hash_list,
+  get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
   getZeBuildAsset,
   logger,
+  update_hash_list,
   zeUploadAssets,
   zeUploadSnapshot,
 } from 'zephyr-agent';
@@ -92,11 +95,11 @@ async function _zephyr_partial(options: {
   const path_to_execution_dir = vite_internal_options.root;
 
   ze_log('Configuring with Zephyr');
-  const packageJson = getPackageJson(path_to_execution_dir);
+  const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded Package JSON', packageJson);
   if (!packageJson) return ze_error('Could not find package json');
 
-  const gitInfo = getGitInfo();
+  const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info', gitInfo);
   if (
     !gitInfo ||
@@ -106,7 +109,7 @@ async function _zephyr_partial(options: {
   )
     return ze_error('Could not get git info');
 
-  const application_uid = createFullAppName({
+  const application_uid = createApplicationUID({
     org: gitInfo.app.org,
     project: gitInfo.app.project,
     name: packageJson?.name,
@@ -115,22 +118,24 @@ async function _zephyr_partial(options: {
   ze_log('Going to check auth token or get it');
   await checkAuth();
 
-  ze_log('Got auth token, going to get application configuration');
-  const { username, email, EDGE_URL } = await getApplicationConfiguration({
-    application_uid,
-  });
+  ze_log('Got auth token, going to get application configuration and build id');
 
+  const [appConfig, buildId, hash_set] = await Promise.all([
+    getApplicationConfiguration({ application_uid }),
+    getBuildId(application_uid).catch((err) => {
+      logEvent({
+        level: 'error',
+        action: 'build:get-build-id:error',
+        message: `error receiving build number for '${email}'\n
+        ${err.message}\n`,
+      });
+    }),
+    get_hash_list(application_uid),
+  ]);
+
+  const { username, email, EDGE_URL } = appConfig;
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  ze_log('Going to get build id');
-  const buildId = await getBuildId(application_uid).catch((err: Error) => {
-    logEvent({
-      level: 'error',
-      action: 'build:get-build-id:error',
-      message: `error receiving build number for '${email}'\n
-        ${err.message}\n`,
-    });
-  });
   if (!buildId) return ze_error('[zephyr]: Could not get build id');
 
   const pluginOptions = {
@@ -202,12 +207,11 @@ async function _zephyr_partial(options: {
     email,
   });
 
-  const missingAssets = await zeUploadSnapshot(pluginOptions, snapshot).catch(
-    (err) => ze_error('Failed to upload snapshot.', err)
+  await zeUploadSnapshot(pluginOptions, snapshot).catch((err) =>
+    ze_error('Failed to upload snapshot.', err)
   );
 
-  if (typeof missingAssets === 'undefined')
-    return ze_error('Snapshot upload gave no result, exiting');
+  const missingAssets = get_missing_assets({ assetsMap, hash_set });
 
   const assetsUploadSuccess = await zeUploadAssets(pluginOptions, {
     missingAssets,
@@ -217,6 +221,10 @@ async function _zephyr_partial(options: {
 
   if (!assetsUploadSuccess)
     return ze_error('Failed to upload assets.', assetsUploadSuccess);
+
+  if (missingAssets.length) {
+    await update_hash_list(application_uid, assetsMap);
+  }
 
   await savePartialAssetMap(
     application_uid,

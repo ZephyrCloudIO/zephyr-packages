@@ -1,13 +1,18 @@
 {
   "name": "vite-plugin-zephyr",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run vite-plugin-zephyr:build"
+  },
   "dependencies": {
     "vite": "^5",
     "rollup": "^4",
-    "is-ci": "^3.0.1",
-    "zephyr-edge-contract": "^0.0.12",
-    "zephyr-agent": "^0.0.12"
+    "is-ci": "^3",
+    "zephyr-edge-contract": "workspace:*",
+    "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4"

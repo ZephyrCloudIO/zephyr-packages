@@ -422,7 +422,7 @@ export function NxWelcome({ title }: { title: string }) {
         <div className="container">
           <div id="welcome">
             {/*-------------*/}
-            <h1>hello to Zack</h1>
+            <h1>hello to Zack v1.0.6</h1>
             {/*-------------*/}
             <h1>Welcome {title} 👋</h1>
             <button className="button-pill" onClick={() => blowMeUp()}>

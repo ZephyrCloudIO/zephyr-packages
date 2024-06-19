@@ -13,8 +13,12 @@ export function getDashboardData({
   stats_json,
   pluginOptions,
   EDGE_URL,
+  DOMAIN,
+  PLATFORM,
 }: ZephyrAgentProps & {
   EDGE_URL: string;
+  DOMAIN?: string;
+  PLATFORM?: string;
 }): ConvertedGraph | void {
   ze_log('getDashboardData started. create federation dashboard plugin');
   const dashboardPlugin = new FederationDashboardPlugin({
@@ -104,6 +108,8 @@ export function getDashboardData({
     id: pluginOptions.application_uid,
     name: pluginOptions.mfConfig?.name,
     edge: { url: EDGE_URL },
+    domain: DOMAIN,
+    platform: PLATFORM,
     app: Object.assign({}, app, { buildId: pluginOptions.zeConfig.buildId }),
     version,
     git,

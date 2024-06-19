@@ -5,10 +5,9 @@ import { UploaderInterface } from '../interfaces';
 import { UploadOptions } from '../upload';
 import { LogEventOptions, logger } from '../../remote-logs/ze-log-event';
 import { zeUploadBuildStats } from '../../actions';
+import { jwt_secret_key, netlify_api_url } from '../../constants/netlify.constants';
 
 export class NetlifyPagesStrategy implements UploaderInterface {
-  private readonly netlifyApiUrl = 'https://api.netlify.com/api/v1';
-  private readonly jswtSecretKey = 'JWT_SECRET';
   private logEvent!: (opts: LogEventOptions) => void;
 
   async upload(options: UploadOptions): Promise<boolean> {
@@ -21,32 +20,50 @@ export class NetlifyPagesStrategy implements UploaderInterface {
       ze_error('[zephyr]: Could not get envs');
       return false;
     }
+    console.log('envs', envs.value);
 
-    // const jwtSecret = await this.getJwtSecret(site, config.api_token);
-    // await this.validateJwt(options.appConfig.jwt, jwtSecret);
-    envs.value.urls.forEach((url) => {
+    const jwtSecret = await this.getJwtSecret(site, config.api_token);
+    await this.validateJwt(options.appConfig.jwt, jwtSecret as string);
+    
+    const domain = this.resolveDomain(site);
+    const urlReplaceRegexp = new RegExp(`-${new URL(options.appConfig.EDGE_URL).host}$`);
+    const branches = envs.value.urls
+      .map((url) => new URL(url).host)
+      .map((url) => url.replace(urlReplaceRegexp, ''))
+      .map((branch) => this.resolveBranch(branch, domain));
+    
+    const deployedUrl: string[] = [];
+
+    for (const branch of branches) {
+      const url = this.resolveUrl(branch, domain);
       this.logEvent({
         level: 'trace',
         action: 'deploy:url',
         message: `deploying to ${url}`,
       });
-    });
-    //todo: take from envs.value.urls
-    const branch = options.pluginOptions.application_uid.replace(/\./g, '-' );
-    const result = await this.uploadAssets(site, config.api_token, options, {
-      "deploy-previews": true,
-      production: false,
-      branch
-    });
-    if (!result) {
-      this.logEvent({
-        level: 'error',
-        action: 'deploy:edge:failed',
-        message: `failed deploying local build to edge`,
+      const result = await this.uploadAssets(site, config.api_token, options, {
+        "deploy-previews": true,
+        production: false,
+        branch,
+        title: `Deploy ${options.pluginOptions.application_uid} from Zephyr to ${branch} branch`,
       });
-      return false;
+      if (!result) {
+        this.logEvent({
+          level: 'error',
+          action: 'deploy:edge:failed',
+          message: `failed deploying local build to edge`,
+        });
+        return false;
+      }
+      deployedUrl.push(url);
     }
-
+    deployedUrl.forEach((url) => {
+      this.logEvent({
+        level: 'trace',
+        action: 'deploy:url',
+        message: `deployed to ${url}`,
+      });
+    });
 
     this.logEvent({
       level: 'info',
@@ -54,7 +71,7 @@ export class NetlifyPagesStrategy implements UploaderInterface {
       message: `build deployed in ${Date.now() - options.zeStart}ms`,
     });
 
-    ze_log('Build successfully deployed to edge');
+    ze_log('Build successfully deployed to pages deployment preview');
     return true;
   }
 
@@ -66,7 +83,7 @@ export class NetlifyPagesStrategy implements UploaderInterface {
   }
 
   private async getSite(siteId: string, apiToken: string): Promise<Site> {
-    const url = new URL(`${this.netlifyApiUrl}/sites/${siteId}`);
+    const url = new URL(`${netlify_api_url}/sites/${siteId}`);
     const response = await request<Site>(url, { headers: this.getCommonHeaders(apiToken) })
       .catch((err) => {
         ze_error(`[zephyr]: Error getting site ${siteId} \n ${JSON.stringify(err)}`);
@@ -81,10 +98,11 @@ export class NetlifyPagesStrategy implements UploaderInterface {
   }
 
   private async getJwtSecret(site: Site, apiToken: string): Promise<string|null> {
-    const url = new URL(`${this.netlifyApiUrl}/accounts/${site.account_id}/env/${this.jswtSecretKey}`);
+    const url = new URL(`${netlify_api_url}/accounts/${site.account_id}/env/${jwt_secret_key}`);
+    url.searchParams.append('site_id', site.site_id);
     const response = await request<EnvVar>(url, { headers: this.getCommonHeaders(apiToken) })
       .catch((err) => {
-        ze_error(`[zephyr]: Error getting env var ${this.jswtSecretKey} \n ${JSON.stringify(err)}`);
+        ze_error(`[zephyr]: Error getting env var ${jwt_secret_key} \n ${JSON.stringify(err)}`);
         console.error(err);
         return null;
       });
@@ -107,29 +125,21 @@ export class NetlifyPagesStrategy implements UploaderInterface {
 
   private async uploadAssets(site: Site, apiToken: string, options: UploadOptions, deployOpts?: CreateDeployQueryParams): Promise<boolean> {
     const { assetsMap, missingAssets, count } = options;
-    // if (missingAssets.length === 0) {
-    //   this.logEvent({
-    //     level: 'info',
-    //     action: 'snapshot:assets:upload:empty',
-    //     message: `no new assets to upload`,
-    //   });
-    //   return true;
-    // }
+
     this.logEvent({
       level: 'info',
       action: 'snapshot:assets:upload:started',
-      message: `uploading missing assets to zephyr (queued ${missingAssets?.length} out of ${count})`,
+      message: `uploading assets to zephyr (queued ${missingAssets?.length} out of ${count})`,
     });
+  
     let totalTime = 0;
     let totalSize = 0;
     const files: Record<string, string> = {};
     const filesHashMap: Record<string, ZeBuildAsset> = {};
     Object.keys(assetsMap).forEach((key) => {
-      //todo: handle nested files in the future
-      if (assetsMap[key].path.includes('/')) return;
       const asset = assetsMap[key];
       // recalculating hash to make sure it's the same as the one in the Netlify. https://docs.netlify.com/api/get-started/#file-digest-method
-      const hash = getFileContentHash(asset.buffer);
+      const hash = this.getFileContentHash(asset.buffer);
       files[asset.path] = hash;
       filesHashMap[hash] = asset;
     });
@@ -194,7 +204,7 @@ export class NetlifyPagesStrategy implements UploaderInterface {
 
   private async createDeploy(site: Site, apiToken: string, payload: CreateDeployRequest, query?: CreateDeployQueryParams): Promise<DeployResponse> {
     const data = JSON.stringify(payload);
-    const url = new URL(`${this.netlifyApiUrl}/sites/${site.site_id}/deploys`);
+    const url = new URL(`${netlify_api_url}/sites/${site.site_id}/deploys`);
     if (query) {
       Object.keys(query).forEach((key) => {
         const value = (query as unknown as Record<string, string|boolean|number>)[key];
@@ -209,7 +219,7 @@ export class NetlifyPagesStrategy implements UploaderInterface {
   }
 
   private async uploadDeployFile(params: UploadDeployFileParams): Promise<UploadDeployFunctionFileResponse> {
-    const url = new URL(`${this.netlifyApiUrl}/deploys/${params.deployId}/files/${params.path}`);
+    const url = new URL(`${netlify_api_url}/deploys/${params.deployId}/files/${params.path}`);
     const response = await request<UploadDeployFunctionFileResponse>(url, {
       method: 'PUT',
       headers: {
@@ -223,6 +233,23 @@ export class NetlifyPagesStrategy implements UploaderInterface {
       });
     return response as UploadDeployFunctionFileResponse;
   }
+
+  private resolveDomain(site: Site): string {
+    return site.default_domain;
+  }
+  
+  private getFileContentHash(content: string | Buffer): string {
+    const hash = crypto.createHash('sha1').update(content).digest('hex');
+    return hash;
+  }
+
+  private resolveUrl(branch: string, domain: string): string {
+    return `https://${branch}--${domain}`;
+  }
+
+  private resolveBranch(branch: string, domain: string): string {
+    return branch.slice(0, -(domain.length + 2));
+  }
 }
 
 export function netlifyPageStrategy(options: UploadOptions): Promise<boolean> {
@@ -230,10 +257,6 @@ export function netlifyPageStrategy(options: UploadOptions): Promise<boolean> {
   return strategy.upload(options);
 }
 
-function getFileContentHash(content: string | Buffer): string {
-  const hash = crypto.createHash('sha1').update(content).digest('hex');
-  return hash;
-}
 
 interface Site {
   id: string;
@@ -244,6 +267,7 @@ interface Site {
   deploy_preview_custom_domain?: string;
   url: string;
   account_id: string;
+  default_domain: string;
 }
 
 interface EnvVar {

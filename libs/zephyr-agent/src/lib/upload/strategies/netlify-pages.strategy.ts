@@ -7,6 +7,7 @@ import { LogEventOptions, logger } from '../../remote-logs/ze-log-event';
 import { zeUploadBuildStats } from '../../actions';
 import { jwt_secret_key, netlify_api_url } from '../../constants/netlify.constants';
 
+// not used for now
 export class NetlifyPagesStrategy implements UploaderInterface {
   private logEvent!: (opts: LogEventOptions) => void;
 

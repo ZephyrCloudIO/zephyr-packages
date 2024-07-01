@@ -1,5 +1,6 @@
 import * as jose from 'jose';
 import { v4 as uuidv4 } from 'uuid';
+import { ze_log } from 'zephyr-edge-contract';
 const open = (str: string) =>
   new Function(`return import("open")`)().then(
     ({ default: open }: { default: (str: string) => Promise<void> }) =>
@@ -70,7 +71,7 @@ export async function checkAuth(): Promise<string> {
   if (token) {
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(token)) {
-      console.log('[zephyr] You are already logged in');
+      ze_log('You are already logged in');
       return token;
     }
     await removeToken();
@@ -78,7 +79,7 @@ export async function checkAuth(): Promise<string> {
 
   // No valid token found; initiate authentication.
   const newToken = await authenticateUser();
-  console.log('[zephyr] You are logged in');
+  ze_log('You are logged in');
 
   return newToken;
 }

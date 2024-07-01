@@ -67,7 +67,7 @@ export function withZephyr() {
         ze_log('Got application configuration: ', { username, email, EDGE_URL });
         ze_log(`Got build id: ${buildId}`);
 
-        if (!buildId) return ze_error('[zephyr]: Could not get build id');
+        if (!buildId) return ze_error("BU10019", 'Could not get build id.');
 
         const pluginOptions = {
           pluginName: 'rollup-plugin-zephyr',
@@ -106,11 +106,11 @@ export function withZephyr() {
       const zeStart = Date.now();
 
       await (async function zephyr_upload(props: { state: Promise<ZephyrPluginState | void>, bundle: OutputBundle }) {
-        ze_log('zephyr agent started.');
+        ze_log('zephyr agent started...');
         const { state, bundle } = props;
         const _state = await state;
 
-        if (!_state) return ze_error('[zephyr]: Could not initialize zephyr agent.');
+        if (!_state) return ze_error("BU10020", 'Could not initialize Zephyr Agent.');
 
         const { appConfig, hash_set, pluginOptions } = _state;
 

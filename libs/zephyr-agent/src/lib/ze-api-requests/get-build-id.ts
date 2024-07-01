@@ -41,6 +41,6 @@ export async function getBuildId(
 
     return (resp as Record<string, string>)[user_uuid];
   } catch (err: unknown) {
-    ze_error('Failed to get build id', err);
+    ze_error("BU10019", 'Failed to get build id.', err);
   }
 }

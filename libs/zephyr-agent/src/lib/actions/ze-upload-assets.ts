@@ -59,9 +59,8 @@ export async function zeUploadAssets(
       logEvent({
         level: 'info',
         action: 'snapshot:assets:upload:done',
-        message: `uploaded missing assets to zephyr (${
-          missingAssets?.length
-        } assets in ${totalTime}ms, ${totalSize.toFixed(2)}kb)`,
+        message: `uploaded missing assets to zephyr (${missingAssets?.length
+          } assets in ${totalTime}ms, ${totalSize.toFixed(2)}kb)`,
       });
       return true;
     })
@@ -75,7 +74,7 @@ export async function zeUploadAssets(
     });
 
   if (!res) {
-    ze_error('Failed to upload assets.', res);
+    ze_error("DE20017", res);
   }
 
   return res;

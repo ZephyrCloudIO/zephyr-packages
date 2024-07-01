@@ -1,6 +1,7 @@
 import { Configuration } from 'webpack';
 import { replaceRemotesWithDelegates } from './replace-remotes-with-delegates';
 import { DependencyResolutionError } from '../../delegate-module/zephyr-delegate';
+import { brightRedBgName } from 'zephyr-edge-contract';
 
 export async function resolve_remote_dependencies(
   config: Configuration,
@@ -22,7 +23,7 @@ export async function resolve_remote_dependencies(
   if (errors?.length) {
     const [sample_app_name, sample_project_name, sample_org_name] =
       errors[0].split('.');
-    throw new Error(`[zephyr]: Could not resolve remote entry points for urls: \n
+    throw new Error(`${brightRedBgName} Could not resolve remote entry points for urls: \n
       ${errors.map((str) => `\t- ${str}`).join('\n')}\n\n
         Please build them with Zephyr first or add as Unmanaged applications.\n
         Note: you can read application uid as follows:

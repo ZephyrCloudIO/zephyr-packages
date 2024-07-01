@@ -23,7 +23,6 @@ export async function uploadFile({
       'x-file-size': asset.size.toString(),
       'x-file-path': asset.path,
       can_write_jwt: jwt,
-      'Content-Type': 'application/octet-stream',
     },
   };
 

@@ -13,7 +13,6 @@ export * as _fs_cache from './lib/node-persist/fs-cache';
 
 export {
   ZeApplicationConfig,
-  NetlifyIntegrationConfig,
   getAppConfig,
   remoteAppConfig,
   saveAppConfig,

@@ -11,6 +11,7 @@ import {
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
+import { ConfigurationError } from '../custom-errors/configuration-error';
 
 interface GetApplicationConfigurationProps {
   application_uid: string;
@@ -20,7 +21,7 @@ async function loadApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig | void> {
   if (!application_uid) {
-    throw new Error(`[zephyr] Critical error: application_uid is missing`);
+    throw new ConfigurationError(`BU10017`, `application_uid is missing...\n`, `critical`);
   }
   const token = await getToken();
   const application_config_url = new URL(
@@ -37,12 +38,12 @@ async function loadApplicationConfiguration({
     {
       headers: { Authorization: 'Bearer ' + token },
     }
-  ).catch((v) => ze_error('Failed to load application configuration', v));
+  ).catch((v) => ze_error("DE20014", 'Failed to load application configuration', v));
 
   if (!response || typeof response === 'string')
-    return ze_error('Failed to load application configuration', response);
+    return ze_error("DE20014", 'Failed to load application configuration.', response);
 
-  ze_log('Application Configuration loaded', response);
+  ze_log('Application Configuration loaded...', response);
   return Object.assign({}, response.value, {
     jwt_decode: jose.decodeJwt(response.value.jwt),
   });
@@ -57,13 +58,13 @@ export async function getApplicationConfiguration({
     return storedAppConfig;
   }
 
-  ze_log('Loading Application Configuration from API');
+  ze_log('Loading Application Configuration from API...');
   const loadedAppConfig = await loadApplicationConfiguration({
     application_uid,
   });
-  ze_log('Saving Application Configuration to node-persist');
+  ze_log('Saving Application Configuration to node-persist...');
   if (!loadedAppConfig)
-    throw new Error('Failed to load application configuration');
+    throw new ConfigurationError(`DE20014`, `Failed to load application configuration...`, `critical`);
 
   await saveAppConfig(application_uid, loadedAppConfig);
   return loadedAppConfig;

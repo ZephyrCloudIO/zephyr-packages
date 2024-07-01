@@ -4,6 +4,8 @@ import * as https from 'node:https';
 import { ze_error, ze_log } from './debug';
 import { cleanTokens } from '../node-persist/token';
 import { safe_json_parse } from './safe-json-parse';
+import { brightRedBgName } from './debug';
+import { red } from './picocolor';
 
 function _redact(str: string | undefined): string {
   if (!str) return '';
@@ -29,7 +31,7 @@ export async function request<T = unknown>(
         if (res.statusCode === 401 || res.statusCode === 403) {
           await cleanTokens();
           const err = new Error(
-            '[zephyr]: auth error, please try to build again',
+            `${brightRedBgName} ${red(`Error [BU10018]: auth error, please sign in to https://app.zephyr-cloud.io then try to build again. See documentation https://docs.zephyr-cloud.io/guide/error/bu10018`)}`,
           );
           err.stack = void 0;
           throw err;
@@ -60,7 +62,7 @@ export async function request<T = unknown>(
               parsed_response?.status > 299)
           ) {
             return reject(
-              `[zephyr]: Error from ${url}: \n ${parsed_response?.message ?? _response}`,
+              `${brightRedBgName} Error from ${url}: \n ${parsed_response?.message ?? _response}`,
             );
           }
 
@@ -72,9 +74,8 @@ export async function request<T = unknown>(
     );
 
     req.on('error', (e: unknown) => {
-      ze_error(
-        `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str}`,
-        e,
+      ze_error("",
+        `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str} \n Error: ${e}`
       );
       reject(e);
     });

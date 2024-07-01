@@ -66,7 +66,7 @@ async function findClosestPackageJson(
 
     const parentDir = resolve(dir, '..');
     if (parentDir === dir) {
-      throw new ConfigurationError(`No package.json found, in ${startPath}`);
+      throw new PackageJsonNotFoundError(`${startPath}`);
     }
     dir = parentDir;
   } while (startPath !== dir);

@@ -6,12 +6,15 @@ import {
   ze_log,
   ZEPHYR_API_ENDPOINT,
   ZeUploadBuildStats,
+  dimmedName,
+  brightBlueBgName
 } from 'zephyr-edge-contract';
 
 export async function zeUploadBuildStats(
   dashData: unknown,
 ): Promise<{ value: ZeUploadBuildStats } | void> {
-  ze_log('[zephyr]: Uploading build stats to Zephyr');
+  // Add dots here to indicate this is an async operation
+  ze_log(`${dimmedName} Uploading build stats to Zephyr...`);
   const token = await getToken();
   const url = new URL(v2_api_paths.dashboard_path, ZEPHYR_API_ENDPOINT());
   const res = await request<{ value: ZeUploadBuildStats }>(
@@ -27,19 +30,20 @@ export async function zeUploadBuildStats(
     JSON.stringify(dashData),
   ).catch((err) => {
     ze_error(
-      `[zephyr]: If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr. \n
-      [zephyr]: Error uploading build stats, deployment is not completed. \n
-      [zephyr]: Failed to upload build stats to Zephyr. \n
+      "ZE10045",
+      `If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr. \n
+      Error uploading build stats, deployment is not completed. \n
+      Failed to upload build stats to Zephyr... \n
       `, err
     );
   });
 
   if (!res)
-    return ze_error('Did not receive envs from build stats upload. Exiting.');
+    return ze_error('DE10046', 'Did not receive envs from build stats upload. Exiting...');
 
   if (typeof res === 'string')
-    return ze_error('[zephyr]: Failed to upload build stats', res);
+    return ze_error('ZE10045', 'Failed to upload build stats.', res);
 
-  ze_log('[zephyr]: Build stats uploaded to Zephyr');
+  ze_log(`Build stats uploaded to Zephyr...`);
   return res;
 }

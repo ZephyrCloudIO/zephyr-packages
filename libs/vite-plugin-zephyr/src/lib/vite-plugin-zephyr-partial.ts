@@ -94,20 +94,22 @@ async function _zephyr_partial(options: {
   const { assets, vite_internal_options } = options;
   const path_to_execution_dir = vite_internal_options.root;
 
-  ze_log('Configuring with Zephyr');
+  ze_log('Configuring with Zephyr...');
   const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded Package JSON', packageJson);
-  if (!packageJson) return ze_error('Could not find package json');
+  if (!packageJson) return ze_error("BU10010", 'package.json not found.');
 
   const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info', gitInfo);
-  if (
-    !gitInfo ||
-    !gitInfo?.app.org ||
-    !gitInfo?.app.project ||
-    !packageJson?.name
-  )
-    return ze_error('Could not get git info');
+
+  if (!gitInfo || !gitInfo?.app.org ||
+    !gitInfo?.app.project)
+
+    return ze_error("BU10016", `Could not get git info. Can you confirm the current directory has initialized as a git repository?`)
+
+
+  if (!packageJson?.name)
+    return ze_error("BU10013", 'package.json must have a name and version.');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -115,10 +117,10 @@ async function _zephyr_partial(options: {
     name: packageJson?.name,
   });
 
-  ze_log('Going to check auth token or get it');
+  ze_log('Going to check auth token or get it...');
   await checkAuth();
 
-  ze_log('Got auth token, going to get application configuration and build id');
+  ze_log('Got auth token, going to get application configuration and build id...');
 
   const [appConfig, buildId, hash_set] = await Promise.all([
     getApplicationConfiguration({ application_uid }),
@@ -136,7 +138,7 @@ async function _zephyr_partial(options: {
   const { username, email, EDGE_URL } = appConfig;
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  if (!buildId) return ze_error('[zephyr]: Could not get build id');
+  if (!buildId) return ze_error("BU10019", 'Could not get build id.');
 
   const pluginOptions = {
     pluginName: 'rollup-plugin-zephyr',
@@ -159,7 +161,7 @@ async function _zephyr_partial(options: {
     mfConfig: void 0,
   };
 
-  ze_log('zephyr agent started.');
+  ze_log('\n--------\n zephyr agent started. \n ------ \n');
   const logEvent = logger(pluginOptions);
 
   const zeStart = Date.now();
@@ -208,7 +210,7 @@ async function _zephyr_partial(options: {
   });
 
   await zeUploadSnapshot(pluginOptions, snapshot).catch((err) =>
-    ze_error('Failed to upload snapshot.', err)
+    ze_error("DE10018", 'Failed to upload snapshot.', err)
   );
 
   const missingAssets = get_missing_assets({ assetsMap, hash_set });
@@ -220,7 +222,7 @@ async function _zephyr_partial(options: {
   });
 
   if (!assetsUploadSuccess)
-    return ze_error('Failed to upload assets.', assetsUploadSuccess);
+    return ze_error("DE10017", 'Failed to upload assets.', assetsUploadSuccess);
 
   if (missingAssets.length) {
     await update_hash_list(application_uid, assetsMap);

@@ -8,7 +8,10 @@ export async function getBuildId(
     await getApplicationConfiguration({
       application_uid,
     });
+
   const token = await getToken();
+
+
 
   const options = {
     headers: {
@@ -26,17 +29,18 @@ export async function getBuildId(
     const resp = await request<BuildIdResp>(
       new URL(BUILD_ID_ENDPOINT),
       options
-    );
+    )
+
 
     if (typeof resp === 'string') {
-      throw new Error(resp);
+      throw new Error('[get_build_id]: ' + resp);
     }
     if (!resp || (typeof resp.status === 'number' && resp.status !== 200)) {
-      throw new Error(resp.message);
+      throw new Error('[get_build_id]: resp.message: ' + resp.message);
     }
 
     return (resp as Record<string, string>)[user_uuid];
   } catch (err: unknown) {
-    ze_error('Failed to get build id', err);
+    ze_error("BU10019", 'Failed to get build id.', err);
   }
 }

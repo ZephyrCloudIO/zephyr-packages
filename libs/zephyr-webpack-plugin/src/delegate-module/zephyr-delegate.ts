@@ -3,6 +3,8 @@ import {
   getToken,
   v2_api_paths,
   ZEPHYR_API_ENDPOINT,
+  brightRedBgName,
+  ze_error
 } from 'zephyr-edge-contract';
 import { DelegateConfig } from '../lib/dependency-resolution/replace-remotes-with-delegates';
 
@@ -45,8 +47,8 @@ async function resolve_remote_dependency({
       | undefined;
     return response?.value;
   } catch (err) {
-    console.error(
-      `[zephyr] Could not resolve '${name}' with version '${version}'`
+    ze_error("DE20021",
+      `Could not resolve '${name}' with version '${version}'`
     );
   }
 }

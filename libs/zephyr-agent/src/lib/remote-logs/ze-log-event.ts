@@ -4,18 +4,23 @@ import {
   getToken,
   ze_error,
   ze_log,
+  brightBlueBgName,
+  brightRedBgName,
+  brightYellowBgName,
+  color,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 
+
 const log = (level: string, msg: unknown): void => {
   if (level === 'warn') {
-    return is_debug_enabled ? ze_log(msg) : console.warn(msg);
+    return is_debug_enabled ? ze_log(msg) : console.warn(`\n${brightYellowBgName}   ${msg}\n`);
   }
   if (level === 'error') {
-    return is_debug_enabled ? ze_error(msg) : console.error(msg);
+    return is_debug_enabled ? ze_error(msg) : console.error(`\n${brightYellowBgName}  ${msg}\n`);
   }
-  return is_debug_enabled ? ze_log(msg) : console.log(msg);
+  return is_debug_enabled ? ze_log(msg) : console.log(`\n${brightBlueBgName}   ${msg}`);
 };
 
 export interface LogEventOptions {
@@ -84,7 +89,7 @@ export function logger(options: LoggerOptions) {
         },
       };
 
-      log(level, `[zephyr]: ${message}`);
+      log(level, `${message}`);
       const url = new URL(v2_api_paths.application_logs, ZEPHYR_API_ENDPOINT());
       request(url, reqOptions, data).catch(() => void 0);
     });

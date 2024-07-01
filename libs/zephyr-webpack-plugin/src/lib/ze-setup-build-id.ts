@@ -17,6 +17,9 @@ export function setupZephyrConfig(
   compiler.hooks.beforeCompile.tapAsync(pluginName, async (params, cb) => {
     await checkAuth();
 
+    const build_id = await getBuildId(application_uid);
+    // console.log('\n\n-------------------build_id-------\n\n', build_id)
+
     const [appConfig, buildId] = await Promise.all([
       getApplicationConfiguration({ application_uid }),
       getBuildId(application_uid),

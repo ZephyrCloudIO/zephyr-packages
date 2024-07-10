@@ -1,6 +1,8 @@
 import * as process from 'node:process';
 import { Compiler } from 'webpack';
-import { ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
+
+import { ZephyrPluginOptions } from 'zephyr-edge-contract';
+
 import { webpack_zephyr_agent, ZephyrAgentProps } from './ze-agent';
 import { onDeploymentDone } from './ze-agent/lifecycle-events';
 
@@ -19,6 +21,7 @@ export function setupZeDeploy(
         const stats = compilation.getStats();
         const stats_json = compilation.getStats().toJson();
 
+        pluginOptions.outputPath = compiler.outputPath;
         process.nextTick((props: ZephyrAgentProps) => webpack_zephyr_agent(props), {
           stats,
           stats_json,

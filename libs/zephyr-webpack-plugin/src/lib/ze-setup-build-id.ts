@@ -1,10 +1,10 @@
 import { Compiler } from 'webpack';
 import { brightRedBgName, ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
-  checkAuth, get_hash_list,
+  checkAuth,
+  get_hash_list,
   getApplicationConfiguration,
   getBuildId,
-  logger,
 } from 'zephyr-agent';
 
 export function setupZephyrConfig(

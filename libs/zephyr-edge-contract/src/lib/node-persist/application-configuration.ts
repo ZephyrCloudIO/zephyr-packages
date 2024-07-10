@@ -1,7 +1,9 @@
 import { getItem, init, setItem, removeItem } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+
 import { StorageKeys, ZE_PATH } from './storage-keys';
+import { UploadProviderConfig } from './upload-provider-options';
 
 export interface ZeApplicationConfig {
   user_uuid: string;
@@ -12,6 +14,8 @@ export interface ZeApplicationConfig {
   BUILD_ID_ENDPOINT: string;
   EDGE_URL: string;
   jwt: string;
+  uploadConfig: UploadProviderConfig;
+  application_uid: string;
 }
 
 const storage = init({

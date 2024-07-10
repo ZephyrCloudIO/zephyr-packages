@@ -3,8 +3,8 @@ import {
   get_hash_list,
   get_missing_assets,
   getApplicationConfiguration,
-  zeBuildAssetsMap,
   upload,
+  zeBuildAssetsMap,
 } from 'zephyr-agent';
 
 import { Source, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
@@ -32,7 +32,7 @@ export async function webpack_zephyr_agent({
     getApplicationConfiguration({ application_uid }),
     get_hash_list(application_uid),
   ]);
-  const { EDGE_URL, username, email } = appConfig;
+  const { EDGE_URL } = appConfig;
 
   const zeStart = Date.now();
   const assetsMap = await zeBuildAssetsMap(pluginOptions, assets);
@@ -40,8 +40,12 @@ export async function webpack_zephyr_agent({
 
   await upload({
     pluginOptions,
-    assetsMap,
-    missingAssets,
+    assets: {
+      assetsMap,
+      missingAssets,
+      outputPath: pluginOptions.outputPath as string,
+      count: Object.keys(assets).length,
+    },
     getDashData: () => getDashboardData({
       stats,
       stats_json,
@@ -51,7 +55,7 @@ export async function webpack_zephyr_agent({
     }),
     appConfig,
     zeStart,
-    count: Object.keys(assets).length,
+    uploadConfig: appConfig.uploadConfig,
   });
 
   emitDeploymentDone();

@@ -45,14 +45,14 @@ async function loadApplicationConfiguration({
 
   ze_log('Application Configuration loaded...', response);
   return Object.assign({}, response.value, {
-    jwt_decode: jose.decodeJwt(response.value.jwt),
+    jwt_decode: jose.decodeJwt(response.value.jwt), // Is it necessary? It seems this property unused.
   });
 }
 
 export async function getApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
-  // ze_log('Getting application configuration from node-persist');
+  ze_log('Getting application configuration from node-persist');
   const storedAppConfig = await getAppConfig(application_uid);
   if (storedAppConfig && isTokenStillValid(storedAppConfig.jwt)) {
     return storedAppConfig;

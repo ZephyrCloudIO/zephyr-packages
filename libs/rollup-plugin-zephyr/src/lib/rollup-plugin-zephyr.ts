@@ -1,9 +1,11 @@
+import { InputOptions, NormalizedOutputOptions, OutputBundle, } from 'rollup';
 import {
-  InputOptions,
-  NormalizedOutputOptions,
-  OutputBundle,
-} from 'rollup';
-import { createApplicationUID, ze_error, ze_log, ZeApplicationConfig, ZephyrPluginOptions } from 'zephyr-edge-contract';
+  createApplicationUID,
+  ze_error,
+  ze_log,
+  ZeApplicationConfig,
+  ZephyrPluginOptions
+} from 'zephyr-edge-contract';
 import {
   checkAuth,
   get_hash_list,
@@ -118,12 +120,16 @@ export function withZephyr() {
         const missingAssets = get_missing_assets({ assetsMap, hash_set });
         await upload({
           pluginOptions,
-          assetsMap,
-          missingAssets,
+          assets: {
+            assetsMap,
+            missingAssets,
+            outputPath: options.dir as string,
+            count: Object.keys(bundle).length,
+          },
           getDashData,
           appConfig,
           zeStart,
-          count: Object.keys(bundle).length,
+          uploadConfig: appConfig.uploadConfig,
         });
 
       })({ state: _state, bundle });

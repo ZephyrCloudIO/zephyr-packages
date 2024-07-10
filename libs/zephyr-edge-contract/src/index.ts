@@ -4,7 +4,7 @@ export { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';
 
 export { ZeApplicationList } from './lib/ze-api/app-list';
 
-export { Snapshot, SnapshotAsset } from './lib/snapshot';
+export { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
 export { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 export * from './lib/zephyr-edge-contract';
 
@@ -46,3 +46,5 @@ export { request } from './lib/utils/ze-http-request';
 export * as colors from "./lib/utils/picocolor"
 export { LocalPackageJson } from './lib/ze-api/local-package-json';
 export { ConvertedGraph } from './lib/ze-api/converted-graph';
+
+export * from './lib/node-persist/upload-provider-options';

@@ -131,6 +131,7 @@ async function upload(outputPath: string, {api_token, accountId, projectName}: C
     directory: outputPath,
     accountId,
     projectName: projectName as string,
+    sourceMaps: false,
   });
 
   process.env['CLOUDFLARE_API_TOKEN'] = undefined;

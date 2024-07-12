@@ -1,11 +1,6 @@
-import {
-  NormalizedOutputOptions,
-  OutputAsset,
-  OutputBundle,
-  OutputChunk,
-} from 'rollup';
+import { NormalizedOutputOptions, OutputAsset, OutputBundle, OutputChunk, } from 'rollup';
 import * as isCI from 'is-ci';
-import { ResolvedConfig, Plugin } from 'vite';
+import { Plugin, ResolvedConfig } from 'vite';
 
 import {
   createApplicationUID,
@@ -170,12 +165,16 @@ async function _zephyr(options: {
 
   await upload({
     pluginOptions,
-    assetsMap,
-    missingAssets,
+    assets: {
+      assetsMap,
+      missingAssets,
+      outputPath: vite_internal_options.outDir,
+      count: Object.keys(assets).length,
+    },
     getDashData: zeGetDashData,
     appConfig,
     zeStart,
-    count: Object.keys(assets).length,
+    uploadConfig: appConfig.uploadConfig,
   });
 }
 

@@ -30,4 +30,5 @@ export interface ZephyrPluginOptions {
   };
   // hacks
   wait_for_index_html?: boolean;
+  outputPath?: string;
 }

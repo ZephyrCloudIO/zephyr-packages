@@ -42,3 +42,7 @@ export interface SnapshotAsset {
   hash: string;
   size: number;
 }
+
+export interface SnapshotMetadata {
+  pages_url?: string;
+}

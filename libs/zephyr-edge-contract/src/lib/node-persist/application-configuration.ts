@@ -1,7 +1,9 @@
 import { getItem, init, setItem, removeItem } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+
 import { StorageKeys, ZE_PATH } from './storage-keys';
+import { UploadProviderConfig } from './upload-provider-options';
 
 export interface NetlifyIntegrationConfig {
   api_token: string;
@@ -20,6 +22,8 @@ export interface ZeApplicationConfig {
   INTEGRATION_CONFIG?: NetlifyIntegrationConfig & { type?: 'worker' | 'pages' };
   PLATFORM: 'cloudflare' | 'netlify';
   jwt: string;
+  uploadConfig: UploadProviderConfig;
+  application_uid: string;
 }
 
 const storage = init({

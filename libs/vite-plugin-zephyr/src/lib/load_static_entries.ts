@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 interface LoadStaticEntriesOptions {
   root: string;
   bundle: OutputBundle;
+  outDir: string;
 }
 
 const files_to_load: Record<string, boolean> = {
@@ -21,7 +22,7 @@ export async function load_static_entries(
   const { root, bundle } = props;
   const publicAssets: OutputAsset[] = [];
 
-  const root_dist_dir = resolve(root, 'dist');
+  const root_dist_dir = resolve(root, props.outDir);
 
   const loadDir = async (destDir: string) => {
     for (const file of readdirSync(destDir)) {

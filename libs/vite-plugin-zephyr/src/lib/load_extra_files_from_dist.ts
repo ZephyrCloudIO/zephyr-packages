@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 interface LoadExtraFilesFromDistOptions {
   root: string;
   bundle: OutputBundle;
+  outDir: string;
 }
 
 export async function load_extra_files_from_dist(
@@ -15,7 +16,7 @@ export async function load_extra_files_from_dist(
   const { root, bundle } = props;
   const publicAssets: OutputAsset[] = [];
 
-  const root_dist_dir = resolve(root, 'dist');
+  const root_dist_dir = resolve(root, props.outDir);
   const loadDir = async (destDir: string) => {
     for (const file of readdirSync(destDir)) {
       const destFile = resolve(destDir, file);

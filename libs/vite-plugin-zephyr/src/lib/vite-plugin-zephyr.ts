@@ -61,9 +61,11 @@ export function withZephyr(): Plugin {
 
       const _static_assets = await load_static_entries({
         root: vite_internal_options.root,
+        outDir: vite_internal_options.outDir,
         bundle,
       });
       publicAssets.push(..._static_assets);
+      console.log("\n---------_static_assets-------\n", _static_assets)
 
       const assets = Object.assign(
         {},

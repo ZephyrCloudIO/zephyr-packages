@@ -5,9 +5,13 @@ import { withZephyr } from 'vite-plugin-zephyr';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    outDir: "wwwroot",
+  },
+  publicDir: "public",
   plugins: [
     react(),
-    Inspect({ build: true, outputDir: 'dist/.vite-inspect' }),
+    //  Inspect({ build: true, outputDir: 'dist/.vite-inspect' }),
     withZephyr(),
   ],
 });

@@ -72,6 +72,7 @@ export function withZephyrPartial() {
 
       const _extra_assets = await load_extra_files_from_dist({
         root: vite_internal_options.root,
+        outDir: vite_internal_options.outDir,
         bundle,
       });
       publicAssets.push(..._extra_assets);

@@ -32,8 +32,9 @@ export async function webpack_zephyr_agent({
     getApplicationConfiguration({ application_uid }),
     get_hash_list(application_uid),
   ]);
-  const { EDGE_URL } = appConfig;
-
+  const { EDGE_URL, DOMAIN, PLATFORM, INTEGRATION_CONFIG } = appConfig;
+  const TYPE = INTEGRATION_CONFIG?.type;
+  
   const zeStart = Date.now();
   const assetsMap = await zeBuildAssetsMap(pluginOptions, assets);
   const missingAssets = get_missing_assets({ assetsMap, hash_set });
@@ -52,6 +53,9 @@ export async function webpack_zephyr_agent({
       assets,
       pluginOptions,
       EDGE_URL,
+      DOMAIN,
+      PLATFORM,
+      TYPE,
     }),
     appConfig,
     zeStart,

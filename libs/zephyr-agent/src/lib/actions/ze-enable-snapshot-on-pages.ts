@@ -1,5 +1,5 @@
 import { ze_log, ZeUploadBuildStats, request, ze_error, } from 'zephyr-edge-contract';
-import { getApplicationConfiguration } from 'zephyr-agent';
+import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 import type { ClientRequestArgs } from 'node:http';
 
 interface ZeEnableSnapshotOnEdgeProps {

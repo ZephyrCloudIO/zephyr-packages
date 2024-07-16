@@ -43,11 +43,12 @@ export async function cloudflareStrategy(
     email: appConfig.email,
   });
 
-  const [,, envs] = await Promise.all([
+  await Promise.all([
     zeUploadSnapshot(pluginOptions, snapshot),
     uploadAssets({assetsMap, missingAssets, pluginOptions, count}),
-    uploadBuildStatsAndEnableEnvs({appConfig, pluginOptions, getDashData}),
   ]);
+
+  const envs = await uploadBuildStatsAndEnableEnvs({appConfig, pluginOptions, getDashData});
 
   if (!envs) {
     ze_error("DE10016", 'Did not receive envs from build stats upload.');

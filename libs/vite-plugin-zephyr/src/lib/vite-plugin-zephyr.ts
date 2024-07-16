@@ -25,6 +25,7 @@ import {
 
 import { load_static_entries } from './load_static_entries';
 import { ZephyrInternalOptions } from './zephyr-internal-options';
+import { load_public_dir } from './load_public_dir';
 
 interface ZephyrPartialInternalOptions {
   root: string;
@@ -58,6 +59,14 @@ export function withZephyr(): Plugin {
     },
     closeBundle: async () => {
       const publicAssets: OutputAsset[] = [];
+
+      if (vite_internal_options.publicDir) {
+        const _public_assets = await load_public_dir({
+          outDir: vite_internal_options.outDir,
+          publicDir: vite_internal_options.publicDir,
+        });
+        publicAssets.push(..._public_assets);
+      }
 
       const _static_assets = await load_static_entries({
         root: vite_internal_options.root,

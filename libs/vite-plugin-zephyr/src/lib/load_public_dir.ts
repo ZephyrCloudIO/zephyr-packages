@@ -26,7 +26,7 @@ export async function load_public_dir(
       const destFile = resolve(destDir, file);
       const stat = statSync(srcFile);
       if (stat.isDirectory()) {
-        loadDir(srcFile, destFile);
+        await loadDir(srcFile, destFile);
       } else {
         publicAssets.push({
           fileName: normalizePath(relative(outDir, destFile)),

@@ -6,13 +6,15 @@ import {
   ZeBuildAssetsMap,
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import { cloudflareStrategy } from './strategies';
+import { cloudflareStrategy, netlifyStrategy } from './strategies';
 import { GetDashDataOptions } from '../payload-builders';
 
 export function upload(options: UploadOptions) {
   switch (options.uploadConfig.type) {
     case UploadProviderType.CLOUDFLARE:
       return cloudflareStrategy(options);
+    case UploadProviderType.NETLIFY:
+      return netlifyStrategy(options);
   }
 
   throw new Error('Unsupported upload provider.');

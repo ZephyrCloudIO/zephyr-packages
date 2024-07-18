@@ -18,6 +18,9 @@
       "command": "node tools/scripts/publish.mjs zephyr-webpack-plugin {args.ver} {args.tag}",
       "dependsOn": ["build"]
     },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-webpack-plugin@$(npm view zephyr-webpack-plugin@next version) latest"
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]

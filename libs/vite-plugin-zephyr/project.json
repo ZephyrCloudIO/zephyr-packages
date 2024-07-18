@@ -20,6 +20,9 @@
         "packageRoot": "dist\\{projectRoot}"
       }
     },
+    "release": {
+      "command": "pnpm dist-tag add vite-plugin-zephyr@$(npm view vite-plugin-zephyr@next version) latest"
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },

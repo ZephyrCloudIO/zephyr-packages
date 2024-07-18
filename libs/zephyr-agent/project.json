@@ -20,6 +20,9 @@
         "packageRoot": "dist\\{projectRoot}"
       }
     },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-agent@$(npm view zephyr-agent@next version) latest"
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },

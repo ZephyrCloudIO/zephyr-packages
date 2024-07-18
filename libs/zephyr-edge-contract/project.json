@@ -18,6 +18,9 @@
       "command": "node tools/scripts/publish.mjs zephyr-edge-contract {args.ver} {args.tag}",
       "dependsOn": ["build"]
     },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-edge-contract@$(npm view zephyr-edge-contract@next version) latest"
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]

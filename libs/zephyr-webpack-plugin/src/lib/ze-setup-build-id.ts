@@ -1,5 +1,10 @@
 import { Compiler } from 'webpack';
-import { brightRedBgName, ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import {
+  brightRedBgName,
+  ze_error,
+  ze_log,
+  ZephyrPluginOptions,
+} from 'zephyr-edge-contract';
 import {
   checkAuth,
   get_hash_list,
@@ -17,13 +22,10 @@ export function setupZephyrConfig(
   compiler.hooks.beforeCompile.tapAsync(pluginName, async (params, cb) => {
     await checkAuth();
 
-    const build_id = await getBuildId(application_uid);
-    // console.log('\n\n-------------------build_id-------\n\n', build_id)
-
     const [appConfig, buildId] = await Promise.all([
       getApplicationConfiguration({ application_uid }),
       getBuildId(application_uid),
-      get_hash_list(application_uid)
+      get_hash_list(application_uid),
     ]);
 
     const { username, email, EDGE_URL } = appConfig;
@@ -31,8 +33,12 @@ export function setupZephyrConfig(
     ze_log(`Got build id: ${buildId}`);
 
     if (!buildId) {
-      ze_error("DE20022", 'Could not get build id.');
-      return cb(new Error(`${brightRedBgName} Error [DE20022]: Could not get build id. See documentation https://docs.zephyr-cloud.io/guide/error/du20022`));
+      ze_error('DE20022', 'Could not get build id.');
+      return cb(
+        new Error(
+          `${brightRedBgName} Error [DE20022]: Could not get build id. See documentation https://docs.zephyr-cloud.io/guide/error/du20022`
+        )
+      );
     }
 
     zeConfig.user = username;

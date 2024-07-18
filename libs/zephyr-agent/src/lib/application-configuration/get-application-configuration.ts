@@ -21,7 +21,11 @@ async function loadApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig | void> {
   if (!application_uid) {
-    throw new ConfigurationError(`BU10017`, `application_uid is missing...\n`, `critical`);
+    throw new ConfigurationError(
+      `BU10017`,
+      `application_uid is missing...\n`,
+      `critical`
+    );
   }
   const token = await getToken();
   const application_config_url = new URL(
@@ -38,16 +42,25 @@ async function loadApplicationConfiguration({
     {
       headers: { Authorization: 'Bearer ' + token },
     }
-  ).catch((v) => ze_error("DE20014", 'Failed to load application configuration', v));
+  ).catch((v) =>
+    ze_error('DE20014', 'Failed to load application configuration', v)
+  );
 
   if (!response || typeof response === 'string')
-    return ze_error("DE20014", 'Failed to load application configuration.', response);
+    return ze_error(
+      'DE20014',
+      'Failed to load application configuration.',
+      response
+    );
 
   ze_log('Application Configuration loaded...', response);
   return Object.assign({}, response.value, {
+    fetched_at: Date.now(),
     jwt_decode: jose.decodeJwt(response.value.jwt), // Is it necessary? It seems this property unused.
   });
 }
+
+let refetching_app_config = false;
 
 export async function getApplicationConfiguration({
   application_uid,
@@ -55,6 +68,20 @@ export async function getApplicationConfiguration({
   ze_log('Getting application configuration from node-persist');
   const storedAppConfig = await getAppConfig(application_uid);
   if (storedAppConfig && isTokenStillValid(storedAppConfig.jwt)) {
+    if (
+      !refetching_app_config &&
+      (!storedAppConfig?.fetched_at ||
+        Date.now() - storedAppConfig.fetched_at > 60 * 1000)
+    ) {
+      refetching_app_config = true;
+      loadApplicationConfiguration({ application_uid }).then(
+        (reloadedAppConfig) => {
+          refetching_app_config = false;
+          if (!reloadedAppConfig) return;
+          saveAppConfig(application_uid, reloadedAppConfig);
+        }
+      );
+    }
     return storedAppConfig;
   }
 
@@ -64,7 +91,11 @@ export async function getApplicationConfiguration({
   });
   ze_log('Saving Application Configuration to node-persist...');
   if (!loadedAppConfig)
-    throw new ConfigurationError(`DE20014`, `Failed to load application configuration...`, `critical`);
+    throw new ConfigurationError(
+      `DE20014`,
+      `Failed to load application configuration...`,
+      `critical`
+    );
 
   await saveAppConfig(application_uid, loadedAppConfig);
   return loadedAppConfig;

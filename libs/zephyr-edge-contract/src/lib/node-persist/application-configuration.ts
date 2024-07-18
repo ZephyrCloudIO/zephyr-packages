@@ -24,6 +24,7 @@ export interface ZeApplicationConfig {
   jwt: string;
   uploadConfig: UploadProviderConfig;
   application_uid: string;
+  fetched_at?: number;
 }
 
 const storage = init({

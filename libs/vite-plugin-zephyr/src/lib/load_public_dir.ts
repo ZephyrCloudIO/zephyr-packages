@@ -13,8 +13,6 @@ export async function load_public_dir(
   props: LoadPublicDirOptions
 ): Promise<OutputAsset[]> {
   const { publicDir, outDir } = props;
-  console.log("\n-----------------load_public_dir--------------------\n")
-  console.log("\npublicDir", publicDir, "\noutDir", outDir)
   const publicAssets: OutputAsset[] = [];
 
   const loadDir = async (srcDir: string, destDir: string) => {

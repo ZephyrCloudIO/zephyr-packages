@@ -1,4 +1,9 @@
-import { NormalizedOutputOptions, OutputAsset, OutputBundle, OutputChunk, } from 'rollup';
+import {
+  NormalizedOutputOptions,
+  OutputAsset,
+  OutputBundle,
+  OutputChunk,
+} from 'rollup';
 import * as isCI from 'is-ci';
 import { Plugin, ResolvedConfig } from 'vite';
 
@@ -74,7 +79,6 @@ export function withZephyr(): Plugin {
         bundle,
       });
       publicAssets.push(..._static_assets);
-      console.log("\n---------_static_assets-------\n", _static_assets)
 
       const assets = Object.assign(
         {},
@@ -97,16 +101,17 @@ async function _zephyr(options: {
   ze_log('Configuring with Zephyr...');
   const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded package.json.', packageJson);
-  if (!packageJson) return ze_error("BU10010", 'package.json not found.');
+  if (!packageJson) return ze_error('BU10010', 'package.json not found.');
 
   const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info.', gitInfo);
-  if (
-    !gitInfo ||
-    !gitInfo?.app.org ||
-    !gitInfo?.app.project) return ze_error("BU10016", `Could not get git info. \n Can you confirm this directory has initialized as a git repository? `)
+  if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
+    return ze_error(
+      'BU10016',
+      `Could not get git info. \n Can you confirm this directory has initialized as a git repository? `
+    );
   if (!packageJson?.name)
-    return ze_error("BU10013", 'package.json must have a name and version.');
+    return ze_error('BU10013', 'package.json must have a name and version.');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -117,7 +122,9 @@ async function _zephyr(options: {
   ze_log('Going to check auth token or get it...');
   await checkAuth();
 
-  ze_log('Got auth token, going to get application configuration and build id...');
+  ze_log(
+    'Got auth token, going to get application configuration and build id...'
+  );
   const [appConfig, buildId, hash_set] = await Promise.all([
     getApplicationConfiguration({ application_uid }),
     getBuildId(application_uid).catch((err: Error) => {
@@ -134,7 +141,7 @@ async function _zephyr(options: {
 
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  if (!buildId) return ze_error("BU10019", 'Could not get build id.');
+  if (!buildId) return ze_error('BU10019', 'Could not get build id.');
 
   const pluginOptions = {
     pluginName: 'rollup-plugin-zephyr',
@@ -202,4 +209,6 @@ function extractBuffer(asset: OutputChunk | OutputAsset): string | undefined {
   }
 }
 
-function getAssetType(asset: OutputChunk | OutputAsset): string { return asset.type; }
+function getAssetType(asset: OutputChunk | OutputAsset): string {
+  return asset.type;
+}

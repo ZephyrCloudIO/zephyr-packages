@@ -1,16 +1,20 @@
 import { Compiler } from 'webpack';
 import {
-  brightRedBgName,
-  ze_error,
-  ze_log,
-  ZephyrPluginOptions,
-} from 'zephyr-edge-contract';
-import {
   checkAuth,
   get_hash_list,
   getApplicationConfiguration,
   getBuildId,
+  logger,
 } from 'zephyr-agent';
+import {
+  black,
+  blackBright,
+  brightRedBgName,
+  cyanBright,
+  ze_error,
+  ze_log,
+  ZephyrPluginOptions,
+} from 'zephyr-edge-contract';
 
 export function setupZephyrConfig(
   pluginOptions: ZephyrPluginOptions,
@@ -33,13 +37,28 @@ export function setupZephyrConfig(
     ze_log(`Got build id: ${buildId}`);
 
     if (!buildId) {
-      ze_error('DE20022', 'Could not get build id.');
+      ze_error('ZE20022', 'Could not get build id.');
       return cb(
         new Error(
-          `${brightRedBgName} Error [DE20022]: Could not get build id. See documentation https://docs.zephyr-cloud.io/guide/error/du20022`
+          `${brightRedBgName} Error [ZE20022]: Could not get build id. See documentation https://docs.zephyr-cloud.io/guide/error/du20022`
         )
       );
     }
+
+    const logEvent = logger(pluginOptions);
+
+    logEvent(
+      {
+        level: 'info',
+        action: 'build:info:user',
+        message: `Hi ${cyanBright(username)}!`,
+      },
+      {
+        level: 'info',
+        action: 'build:info:id',
+        message: `Building to ${blackBright(application_uid)}${black(`#${buildId}`)}`,
+      }
+    );
 
     zeConfig.user = username;
     zeConfig.edge_url = EDGE_URL;

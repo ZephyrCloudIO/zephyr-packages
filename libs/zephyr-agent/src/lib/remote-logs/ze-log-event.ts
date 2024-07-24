@@ -1,26 +1,33 @@
-import { is_debug_enabled, v2_api_paths } from 'zephyr-edge-contract';
-import { request } from 'zephyr-edge-contract';
 import {
-  getToken,
-  ze_error,
-  ze_log,
+  ZEPHYR_API_ENDPOINT,
   brightBlueBgName,
   brightRedBgName,
   brightYellowBgName,
-  color,
-  ZEPHYR_API_ENDPOINT,
+  getToken,
+  is_debug_enabled,
+  request,
+  v2_api_paths,
+  ze_log,
 } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
-
+import { stripAnsi } from '../util/strip-ansi';
 
 const log = (level: string, msg: unknown): void => {
-  if (level === 'warn') {
-    return is_debug_enabled ? ze_log(msg) : console.warn(`\n${brightYellowBgName}   ${msg}\n`);
+  if (is_debug_enabled) {
+    ze_log(msg);
+    return;
   }
-  if (level === 'error') {
-    return is_debug_enabled ? ze_error(msg) : console.error(`\n${brightYellowBgName}  ${msg}\n`);
+
+  switch (level) {
+    case 'warn':
+      console.warn(`${brightYellowBgName}  ${msg}`);
+      break;
+    case 'error':
+      console.error(`${brightRedBgName}  ${msg}`);
+      break;
+    default:
+      console.log(`${brightBlueBgName}  ${msg}`);
   }
-  return is_debug_enabled ? ze_log(msg) : console.log(`\n${brightBlueBgName}   ${msg}`);
 };
 
 export interface LogEventOptions {
@@ -40,58 +47,57 @@ export interface LoggerOptions {
   git: Record<string, unknown>;
 }
 
-export interface LogEvent {
-  (options: LogEventOptions): void;
-}
+export type LogEvent = (options: LogEventOptions) => void;
 
 export function logger(options: LoggerOptions) {
-  return function logEvent({ level, action, message, meta }: LogEventOptions) {
-    const application_uid = options.application_uid;
+  return function logEvent(...logs: LogEventOptions[]): void {
     Promise.all([
-      getApplicationConfiguration({ application_uid }),
+      getApplicationConfiguration({ application_uid: options.application_uid }),
       getToken(),
-    ]).then(([application_config, token]) => {
-      const { username, user_uuid } = application_config;
-      const zeBuildId = options.zeConfig.buildId;
-      const git = options.git;
-      const createdAt = Date.now();
+    ]).then(([{ username, user_uuid }, token]) => {
+      for (let { level, action, message, meta } of logs) {
+        if (!level && !action) {
+          throw new Error('log level and action type must be provided');
+        }
 
-      if (!level && !action) {
-        throw new Error('log level and action type must be provided');
+        meta = Object.assign({}, meta, {
+          isCI: options.isCI,
+          app: options.app,
+          git: options.git,
+        });
+
+        message = message.trim();
+        const data = JSON.stringify({
+          application_uid: options.application_uid,
+          userId: user_uuid,
+          username,
+          zeBuildId: options.zeConfig.buildId,
+          logLevel: level,
+          actionType: action,
+          git: options.git,
+          message: stripAnsi(message),
+          meta,
+          createdAt: Date.now(),
+        });
+
+        const reqOptions = {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Content-Length': data.length,
+          },
+        };
+
+        log(level, message);
+
+        const url = new URL(
+          v2_api_paths.application_logs,
+          ZEPHYR_API_ENDPOINT()
+        );
+
+        void request(url, reqOptions, data).catch(() => void 0);
       }
-
-      message = `[${options.application_uid}](${username})[${zeBuildId}]: ${message}`;
-      meta = Object.assign({}, meta, {
-        isCI: options.isCI,
-        app: options.app,
-        git: options.git,
-      });
-
-      const data = JSON.stringify({
-        application_uid,
-        userId: user_uuid,
-        username,
-        zeBuildId,
-        logLevel: level,
-        actionType: action,
-        git,
-        message,
-        meta,
-        createdAt,
-      });
-
-      const reqOptions = {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json',
-          'Content-Length': data.length,
-        },
-      };
-
-      log(level, `${message}`);
-      const url = new URL(v2_api_paths.application_logs, ZEPHYR_API_ENDPOINT());
-      request(url, reqOptions, data).catch(() => void 0);
     });
   };
 }

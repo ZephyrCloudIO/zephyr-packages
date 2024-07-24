@@ -1,21 +1,25 @@
-import { InputOptions, NormalizedOutputOptions, OutputBundle, } from 'rollup';
-import {
-  createApplicationUID,
-  ze_error,
-  ze_log,
-  ZeApplicationConfig,
-  ZephyrPluginOptions
-} from 'zephyr-edge-contract';
+import type { InputOptions, NormalizedOutputOptions, OutputBundle, } from 'rollup';
 import {
   checkAuth,
-  get_hash_list,
-  get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
+  get_hash_list,
+  get_missing_assets,
+  logger,
   upload,
 } from 'zephyr-agent';
+import {
+  type ZeApplicationConfig,
+  type ZephyrPluginOptions,
+  black,
+  blackBright,
+  createApplicationUID,
+  cyanBright,
+  ze_error,
+  ze_log
+} from 'zephyr-edge-contract';
 import { getAssetsMap } from './utils/get-assets-map';
 import { getDashData } from './utils/get-dash-data';
 
@@ -69,9 +73,9 @@ export function withZephyr() {
         ze_log('Got application configuration: ', { username, email, EDGE_URL });
         ze_log(`Got build id: ${buildId}`);
 
-        if (!buildId) return ze_error("BU10019", 'Could not get build id.');
+        if (!buildId) return ze_error("ZE10019", 'Could not get build id.');
 
-        const pluginOptions = {
+        const pluginOptions: ZephyrPluginOptions = {
           pluginName: 'rollup-plugin-zephyr',
           application_uid,
           buildEnv: 'local',
@@ -93,6 +97,21 @@ export function withZephyr() {
           wait_for_index_html: _zephyrOptions?.wait_for_index_html,
         };
 
+        const logEvent = logger(pluginOptions);
+
+        logEvent(
+          {
+            level: 'info',
+            action: 'build:info:user',
+            message: `Hi ${cyanBright(username)}!`,
+          },
+          {
+            level: 'info',
+            action: 'build:info:id',
+            message: `Building to ${blackBright(application_uid)}${black(`#${buildId}`)}`,
+          }
+        );
+
         return {
           appConfig,
           buildId,
@@ -112,7 +131,7 @@ export function withZephyr() {
         const { state, bundle } = props;
         const _state = await state;
 
-        if (!_state) return ze_error("BU10020", 'Could not initialize Zephyr Agent.');
+        if (!_state) return ze_error("ZE10020", 'Could not initialize Zephyr Agent.');
 
         const { appConfig, hash_set, pluginOptions } = _state;
 

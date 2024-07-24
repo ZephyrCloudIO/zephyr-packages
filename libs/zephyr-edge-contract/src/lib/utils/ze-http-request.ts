@@ -31,7 +31,7 @@ export async function request<T = unknown>(
         if (res.statusCode === 401 || res.statusCode === 403) {
           await cleanTokens();
           const err = new Error(
-            `${brightRedBgName} ${red(`Error [BU10018]: auth error, please sign in to https://app.zephyr-cloud.io then try to build again. See documentation https://docs.zephyr-cloud.io/guide/error/bu10018`)}`,
+            `${brightRedBgName} ${red(`Error [ZE10018]: auth error, please sign in to https://app.zephyr-cloud.io then try to build again. See documentation https://docs.zephyr-cloud.io/guide/error/bu10018`)}`,
           );
           err.stack = void 0;
           throw err;
@@ -75,7 +75,7 @@ export async function request<T = unknown>(
 
     req.on('error', (e: unknown) => {
       ze_error("",
-        `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str} \n Error: ${e}`
+        `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str} \n ${e}`
       );
       reject(e);
     });

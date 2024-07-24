@@ -10,7 +10,6 @@ export * from './lib/zephyr-edge-contract';
 
 export * as _hash_cache from './lib/node-persist/hash-cache';
 export * as _fs_cache from './lib/node-persist/fs-cache';
-
 export {
   ZeApplicationConfig,
   NetlifyIntegrationConfig,
@@ -18,7 +17,7 @@ export {
   remoteAppConfig,
   saveAppConfig,
 } from './lib/node-persist/application-configuration';
-
+export * from './lib/utils/picocolor';
 export {
   getPartialAssetMap,
   removePartialAssetMap,
@@ -41,7 +40,8 @@ export {
   v2_api_paths,
 } from './lib/api-contract-negotiation/get-api-contract';
 export * as color from "./lib/utils/picocolor"
-export { ze_log, ze_error, is_debug_enabled, brightBlueBgName, brightRedBgName, brightYellowBgName, dimmedName } from './lib/utils/debug';
+export * from './lib/utils/debug-enabled'
+export { ze_log, ze_error, brightBlueBgName, brightRedBgName, brightYellowBgName, dimmedName } from './lib/utils/debug';
 export { safe_json_parse } from './lib/utils/safe-json-parse';
 export { request } from './lib/utils/ze-http-request';
 export * as colors from "./lib/utils/picocolor"

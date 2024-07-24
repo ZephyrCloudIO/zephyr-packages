@@ -1,10 +1,16 @@
-import { ze_error, ze_log, ZephyrPluginOptions, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
+import {
+  yellow,
+  ze_error,
+  ze_log,
+  type ZephyrPluginOptions,
+  type ZeUploadAssetsOptions,
+} from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadFile } from '../upload/upload-file';
 
 export async function zeUploadAssets(
   pluginOptions: ZephyrPluginOptions,
-  { missingAssets, assetsMap, count }: ZeUploadAssetsOptions,
+  { missingAssets, assetsMap, count }: ZeUploadAssetsOptions
 ): Promise<boolean> {
   const logEvent = logger(pluginOptions);
 
@@ -12,8 +18,9 @@ export async function zeUploadAssets(
     logEvent({
       level: 'info',
       action: 'snapshot:assets:upload:empty',
-      message: `no new assets to upload`,
+      message: 'No new assets to upload',
     });
+
     return true;
   }
 
@@ -41,7 +48,7 @@ export async function zeUploadAssets(
           totalTime += fileUploaded;
           totalSize += assetSize;
           ze_log(
-            `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`,
+            `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
           );
         })
         .catch((err) => {
@@ -53,14 +60,15 @@ export async function zeUploadAssets(
 
           throw err;
         });
-    }),
+    })
   )
     .then(() => {
       logEvent({
         level: 'info',
         action: 'snapshot:assets:upload:done',
-        message: `uploaded missing assets to zephyr (${missingAssets?.length
-          } assets in ${totalTime}ms, ${totalSize.toFixed(2)}kb)`,
+        message: `Uploaded missing assets to zephyr (${yellow(
+          missingAssets.length.toString()
+        )} assets in ${yellow(totalTime.toString())}ms, ${yellow(totalSize.toFixed(2))}kb)`,
       });
       return true;
     })
@@ -74,7 +82,7 @@ export async function zeUploadAssets(
     });
 
   if (!res) {
-    ze_error("DE20017", res);
+    ze_error("ZE20017", res);
   }
 
   return res;

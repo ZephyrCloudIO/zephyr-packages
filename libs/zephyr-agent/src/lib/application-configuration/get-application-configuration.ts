@@ -22,7 +22,7 @@ async function loadApplicationConfiguration({
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig | void> {
   if (!application_uid) {
     throw new ConfigurationError(
-      `BU10017`,
+      `ZE10017`,
       `application_uid is missing...\n`,
       `critical`
     );
@@ -43,12 +43,12 @@ async function loadApplicationConfiguration({
       headers: { Authorization: 'Bearer ' + token },
     }
   ).catch((v) =>
-    ze_error('DE20014', 'Failed to load application configuration', v)
+    ze_error('ZE20014', 'Failed to load application configuration', v)
   );
 
   if (!response || typeof response === 'string')
     return ze_error(
-      'DE20014',
+      'ZE20014',
       'Failed to load application configuration.',
       response
     );
@@ -92,11 +92,12 @@ export async function getApplicationConfiguration({
   ze_log('Saving Application Configuration to node-persist...');
   if (!loadedAppConfig)
     throw new ConfigurationError(
-      `DE20014`,
+      `ZE20014`,
       `Failed to load application configuration...`,
       `critical`
     );
 
   await saveAppConfig(application_uid, loadedAppConfig);
+
   return loadedAppConfig;
 }

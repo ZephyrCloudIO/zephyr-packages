@@ -47,7 +47,7 @@ async function resolve_remote_dependency({
       | undefined;
     return response?.value;
   } catch (err) {
-    ze_error("DE20021",
+    ze_error("ZE20021",
       `Could not resolve '${name}' with version '${version}'`
     );
   }

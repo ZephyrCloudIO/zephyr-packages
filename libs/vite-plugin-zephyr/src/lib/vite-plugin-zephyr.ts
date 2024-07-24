@@ -1,36 +1,38 @@
-import {
+import * as isCI from 'is-ci';
+import type {
   NormalizedOutputOptions,
   OutputAsset,
   OutputBundle,
   OutputChunk,
 } from 'rollup';
-import * as isCI from 'is-ci';
-import { Plugin, ResolvedConfig } from 'vite';
-
-import {
-  createApplicationUID,
-  getPartialAssetMap,
-  removePartialAssetMap,
-  ze_error,
-  ze_log,
-} from 'zephyr-edge-contract';
+import type { Plugin, ResolvedConfig } from 'vite';
 import {
   buildAssetsMap,
   checkAuth,
-  get_hash_list,
-  get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
+  get_hash_list,
+  get_missing_assets,
   logger,
   upload,
   zeGetDashData,
 } from 'zephyr-agent';
-
-import { load_static_entries } from './load_static_entries';
-import { ZephyrInternalOptions } from './zephyr-internal-options';
+import {
+  black,
+  blackBright,
+  createApplicationUID,
+  cyanBright,
+  getPartialAssetMap,
+  removePartialAssetMap,
+  ze_error,
+  ze_log,
+  type ZephyrPluginOptions,
+} from 'zephyr-edge-contract';
 import { load_public_dir } from './load_public_dir';
+import { load_static_entries } from './load_static_entries';
+import type { ZephyrInternalOptions } from './zephyr-internal-options';
 
 interface ZephyrPartialInternalOptions {
   root: string;
@@ -101,17 +103,17 @@ async function _zephyr(options: {
   ze_log('Configuring with Zephyr...');
   const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded package.json.', packageJson);
-  if (!packageJson) return ze_error('BU10010', 'package.json not found.');
+  if (!packageJson) return ze_error('ZE10010', 'package.json not found.');
 
   const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info.', gitInfo);
   if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
     return ze_error(
-      'BU10016',
-      `Could not get git info. \n Can you confirm this directory has initialized as a git repository? `
+      'ZE10016',
+      "Could not get git info. \n Can you confirm this directory has initialized as a git repository? "
     );
   if (!packageJson?.name)
-    return ze_error('BU10013', 'package.json must have a name and version.');
+    return ze_error('ZE10013', 'package.json must have a name and version.');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -141,9 +143,9 @@ async function _zephyr(options: {
 
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  if (!buildId) return ze_error('BU10019', 'Could not get build id.');
+  if (!buildId) return ze_error('ZE10019', 'Could not get build id.');
 
-  const pluginOptions = {
+  const pluginOptions: ZephyrPluginOptions = {
     pluginName: 'rollup-plugin-zephyr',
     application_uid,
     buildEnv: 'local',
@@ -166,6 +168,19 @@ async function _zephyr(options: {
 
   ze_log('\nzephyr agent started.\n');
   const logEvent = logger(pluginOptions);
+
+  logEvent(
+    {
+      level: 'info',
+      action: 'build:info:user',
+      message: `Hi ${cyanBright(username)}!`,
+    },
+    {
+      level: 'info',
+      action: 'build:info:id',
+      message: `Building to ${blackBright(application_uid)}${black(`#${buildId}`)}`,
+    }
+  );
 
   const zeStart = Date.now();
 

@@ -51,7 +51,7 @@ export async function cloudflareStrategy(
   const envs = await uploadBuildStatsAndEnableEnvs({appConfig, pluginOptions, getDashData});
 
   if (!envs) {
-    ze_error("DE10016", 'Did not receive envs from build stats upload.');
+    ze_error("ZE10016", 'Did not receive envs from build stats upload.');
 
     return false;
   }

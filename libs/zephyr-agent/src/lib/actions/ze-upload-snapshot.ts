@@ -1,8 +1,10 @@
 import {
-  Snapshot,
-  SnapshotUploadRes,
+  green,
+  yellow,
   ze_error,
-  ZephyrPluginOptions,
+  type Snapshot,
+  type SnapshotUploadRes,
+  type ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadSnapshot } from '../upload/upload-snapshot';
@@ -29,18 +31,18 @@ export async function zeUploadSnapshot(
       action: 'snapshot:upload:failed',
       message: `failed uploading of ${buildEnv} snapshot to zephyr`,
     });
-    ze_error("DE10018", 'Failed to upload snapshot.', error);
+    ze_error("ZE10018", 'Failed to upload snapshot.', error);
     return;
   }
 
   logEvent({
     level: 'info',
     action: 'snapshot:upload:done',
-    message: `uploaded ${buildEnv} snapshot in ${Date.now() - snapUploadMs}ms`,
+    message: `Uploaded ${green(buildEnv)} snapshot in ${yellow(`${Date.now() - snapUploadMs}`)}ms`,
   });
 
   if (!edgeTodo)
-    ze_error("DE10019", 'Snapshot upload gave no result, exiting...\n')
+    ze_error("ZE10019", 'Snapshot upload gave no result, exiting...\n')
 
   return edgeTodo;
 }

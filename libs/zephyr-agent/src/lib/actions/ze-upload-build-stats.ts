@@ -39,7 +39,7 @@ export async function zeUploadBuildStats(
   });
 
   if (!res)
-    return ze_error('DE10046', 'Did not receive envs from build stats upload. Exiting...');
+    return ze_error('ZE10046', 'Did not receive envs from build stats upload. Exiting...');
 
   if (typeof res === 'string')
     return ze_error('ZE10045', 'Failed to upload build stats.', res);

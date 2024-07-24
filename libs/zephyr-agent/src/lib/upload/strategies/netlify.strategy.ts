@@ -40,7 +40,7 @@ export async function netlifyStrategy(
   const envs = await uploadBuildStatsAndEnableEnvs({appConfig, pluginOptions, getDashData});
 
   if (!envs) {
-    ze_error("DE10016", 'Did not receive envs from build stats upload.');
+    ze_error("ZE20016", 'Did not receive envs from build stats upload.');
 
     return false;
   }

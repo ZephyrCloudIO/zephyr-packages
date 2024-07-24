@@ -1,38 +1,41 @@
-import { ResolvedConfig } from 'vite';
-import {
+import * as isCI from 'is-ci';
+import type {
   NormalizedOutputOptions,
   OutputAsset,
   OutputBundle,
   OutputChunk,
 } from 'rollup';
-import * as isCI from 'is-ci';
-
-import {
-  createApplicationUID,
-  savePartialAssetMap,
-  ze_error,
-  ze_log,
-  ZeBuildAssetsMap,
-} from 'zephyr-edge-contract';
+import type { ResolvedConfig } from 'vite';
 import {
   checkAuth,
   createSnapshot,
-  get_hash_list,
-  get_missing_assets,
   getApplicationConfiguration,
   getBuildId,
   getGitInfo,
   getPackageJson,
   getZeBuildAsset,
+  get_hash_list,
+  get_missing_assets,
   logger,
   update_hash_list,
   zeUploadAssets,
   zeUploadSnapshot,
 } from 'zephyr-agent';
-
-import { load_public_dir } from './load_public_dir';
+import {
+  type ZeBuildAssetsMap,
+  type ZephyrPluginOptions,
+  black,
+  blackBright,
+  createApplicationUID,
+  cyanBright,
+  savePartialAssetMap,
+  yellow,
+  ze_error,
+  ze_log,
+} from 'zephyr-edge-contract';
 import { load_extra_files_from_dist } from './load_extra_files_from_dist';
-import { ZephyrInternalOptions } from './zephyr-internal-options';
+import { load_public_dir } from './load_public_dir';
+import type { ZephyrInternalOptions } from './zephyr-internal-options';
 
 export function withZephyrPartial() {
   let bundle: OutputBundle = {};
@@ -98,19 +101,19 @@ async function _zephyr_partial(options: {
   ze_log('Configuring with Zephyr...');
   const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded Package JSON', packageJson);
-  if (!packageJson) return ze_error("BU10010", 'package.json not found.');
+  if (!packageJson) return ze_error('ZE10010', 'package.json not found.');
 
   const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info', gitInfo);
 
-  if (!gitInfo || !gitInfo?.app.org ||
-    !gitInfo?.app.project)
-
-    return ze_error("BU10016", `Could not get git info. Can you confirm the current directory has initialized as a git repository?`)
-
+  if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
+    return ze_error(
+      'ZE10016',
+      'Could not get git info. Can you confirm the current directory has initialized as a git repository?'
+    );
 
   if (!packageJson?.name)
-    return ze_error("BU10013", 'package.json must have a name and version.');
+    return ze_error('ZE10013', 'package.json must have a name and version.');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -121,7 +124,9 @@ async function _zephyr_partial(options: {
   ze_log('Going to check auth token or get it...');
   await checkAuth();
 
-  ze_log('Got auth token, going to get application configuration and build id...');
+  ze_log(
+    'Got auth token, going to get application configuration and build id...'
+  );
 
   const [appConfig, buildId, hash_set] = await Promise.all([
     getApplicationConfiguration({ application_uid }),
@@ -139,9 +144,9 @@ async function _zephyr_partial(options: {
   const { username, email, EDGE_URL } = appConfig;
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  if (!buildId) return ze_error("BU10019", 'Could not get build id.');
+  if (!buildId) return ze_error('ZE10019', 'Could not get build id.');
 
-  const pluginOptions = {
+  const pluginOptions: ZephyrPluginOptions = {
     pluginName: 'rollup-plugin-zephyr',
     application_uid,
     buildEnv: 'local',
@@ -164,6 +169,19 @@ async function _zephyr_partial(options: {
 
   ze_log('\n--------\n zephyr agent started. \n ------ \n');
   const logEvent = logger(pluginOptions);
+
+  logEvent(
+    {
+      level: 'info',
+      action: 'build:info:user',
+      message: `Hi ${cyanBright(username)}!`,
+    },
+    {
+      level: 'info',
+      action: 'build:info:id',
+      message: `Building to ${blackBright(application_uid)}${black(`#${buildId}`)}`,
+    }
+  );
 
   const zeStart = Date.now();
 
@@ -211,7 +229,7 @@ async function _zephyr_partial(options: {
   });
 
   await zeUploadSnapshot(pluginOptions, snapshot).catch((err) =>
-    ze_error("DE10018", 'Failed to upload snapshot.', err)
+    ze_error('ZE10018', 'Failed to upload snapshot.', err)
   );
 
   const missingAssets = get_missing_assets({ assetsMap, hash_set });
@@ -223,7 +241,7 @@ async function _zephyr_partial(options: {
   });
 
   if (!assetsUploadSuccess)
-    return ze_error("DE10017", 'Failed to upload assets.', assetsUploadSuccess);
+    return ze_error('ZE10017', 'Failed to upload assets.', assetsUploadSuccess);
 
   if (missingAssets.length) {
     await update_hash_list(application_uid, assetsMap);
@@ -238,6 +256,6 @@ async function _zephyr_partial(options: {
   logEvent({
     level: 'info',
     action: 'build:deploy:done',
-    message: `build deployed in ${Date.now() - zeStart}ms`,
+    message: `Build deployed in ${yellow(`${Date.now() - zeStart}`)}ms`,
   });
 }

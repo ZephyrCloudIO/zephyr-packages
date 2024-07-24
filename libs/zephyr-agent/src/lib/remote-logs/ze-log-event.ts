@@ -55,18 +55,18 @@ export function logger(options: LoggerOptions) {
       getApplicationConfiguration({ application_uid: options.application_uid }),
       getToken(),
     ]).then(([{ username, user_uuid }, token]) => {
-      for (let { level, action, message, meta } of logs) {
+      for (const { level, action, message, meta } of logs) {
         if (!level && !action) {
           throw new Error('log level and action type must be provided');
         }
 
-        meta = Object.assign({}, meta, {
+        const newMeta = Object.assign({}, meta, {
           isCI: options.isCI,
           app: options.app,
           git: options.git,
         });
 
-        message = message.trim();
+        const newMessage = message.trim();
         const data = JSON.stringify({
           application_uid: options.application_uid,
           userId: user_uuid,
@@ -75,8 +75,8 @@ export function logger(options: LoggerOptions) {
           logLevel: level,
           actionType: action,
           git: options.git,
-          message: stripAnsi(message),
-          meta,
+          message: stripAnsi(newMessage),
+          meta: newMeta,
           createdAt: Date.now(),
         });
 
@@ -89,7 +89,7 @@ export function logger(options: LoggerOptions) {
           },
         };
 
-        log(level, message);
+        log(level, newMessage);
 
         const url = new URL(
           v2_api_paths.application_logs,

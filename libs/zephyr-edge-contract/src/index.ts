@@ -39,13 +39,21 @@ export {
   ZEPHYR_API_ENDPOINT,
   v2_api_paths,
 } from './lib/api-contract-negotiation/get-api-contract';
-export * as color from "./lib/utils/picocolor"
-export * from './lib/utils/debug-enabled'
-export { ze_log, ze_error, brightBlueBgName, brightRedBgName, brightYellowBgName, dimmedName } from './lib/utils/debug';
+export * as color from './lib/utils/picocolor';
+export * from './lib/utils/debug-enabled';
+export {
+  ze_log,
+  ze_error,
+  brightBlueBgName,
+  brightRedBgName,
+  brightYellowBgName,
+  dimmedName,
+} from './lib/utils/debug';
 export { safe_json_parse } from './lib/utils/safe-json-parse';
 export { request } from './lib/utils/ze-http-request';
-export * as colors from "./lib/utils/picocolor"
+export * as colors from './lib/utils/picocolor';
 export { LocalPackageJson } from './lib/ze-api/local-package-json';
 export { ConvertedGraph } from './lib/ze-api/converted-graph';
 
 export * from './lib/node-persist/upload-provider-options';
+export * as appDeployResultCache from './lib/node-persist/app-deploy-result-cache';

@@ -22,12 +22,15 @@ export function setupZeDeploy(
         const stats_json = compilation.getStats().toJson();
 
         pluginOptions.outputPath = compiler.outputPath;
-        process.nextTick((props: ZephyrAgentProps) => webpack_zephyr_agent(props), {
-          stats,
-          stats_json,
-          assets,
-          pluginOptions,
-        });
+        process.nextTick(
+          (props: ZephyrAgentProps) => webpack_zephyr_agent(props),
+          {
+            stats,
+            stats_json,
+            assets,
+            pluginOptions,
+          }
+        );
 
         if (!pluginOptions.wait_for_index_html) {
           await onDeploymentDone();

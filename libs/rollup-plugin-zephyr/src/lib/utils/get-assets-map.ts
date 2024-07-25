@@ -3,7 +3,7 @@ import { buildAssetsMap } from 'zephyr-agent';
 import { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
 export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
-  return buildAssetsMap(assets, extractBuffer, getAssetType)
+  return buildAssetsMap(assets, extractBuffer, getAssetType);
 }
 
 const extractBuffer = (

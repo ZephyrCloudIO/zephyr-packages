@@ -1,16 +1,22 @@
-import { ze_log, ZeUploadBuildStats, request, ze_error, } from 'zephyr-edge-contract';
+import {
+  ze_log,
+  ZeUploadBuildStats,
+  request,
+  ze_error,
+} from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 import type { ClientRequestArgs } from 'node:http';
 
 interface ZeEnableSnapshotOnEdgeProps {
-  pluginOptions: {application_uid: string;};
+  pluginOptions: { application_uid: string };
   envs_jwt: ZeUploadBuildStats;
   pages_url: string;
 }
-export async function zeEnableSnapshotOnPages(
-  {pluginOptions: {application_uid}, envs_jwt, pages_url}: ZeEnableSnapshotOnEdgeProps
-): Promise<void> {
-
+export async function zeEnableSnapshotOnPages({
+  pluginOptions: { application_uid },
+  envs_jwt,
+  pages_url,
+}: ZeEnableSnapshotOnEdgeProps): Promise<void> {
   ze_log('Enabling snapshot on cloudflare pages');
 
   ze_log(`Uploading envs to Zephyr, for ${application_uid}`);

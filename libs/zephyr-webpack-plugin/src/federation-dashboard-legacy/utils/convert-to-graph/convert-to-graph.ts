@@ -95,7 +95,9 @@ export function convertToGraph(
     })),
     modules: Object.values(modulesObj).map((mod) => ({
       ...mod,
-      requires: Array.from(mod.requires.values()).filter(value => typeof value === 'string'),
+      requires: Array.from(mod.requires.values()).filter(
+        (value) => typeof value === 'string'
+      ),
     })),
     environment,
     version,

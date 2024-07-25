@@ -82,7 +82,7 @@ export async function zeUploadAssets(
     });
 
   if (!res) {
-    ze_error("ZE20017", res);
+    ze_error('ZE20017', res);
   }
 
   return res;

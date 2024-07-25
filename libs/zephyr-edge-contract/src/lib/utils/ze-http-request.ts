@@ -17,7 +17,7 @@ function _redact(str: string | undefined): string {
 export async function request<T = unknown>(
   url: URL,
   options?: ClientRequestArgs,
-  data?: unknown & { length: number | undefined },
+  data?: unknown & { length: number | undefined }
 ): Promise<T | string> {
   const _https = url.protocol !== 'https:' ? http : https;
   return new Promise((resolve, reject) => {
@@ -31,7 +31,7 @@ export async function request<T = unknown>(
         if (res.statusCode === 401 || res.statusCode === 403) {
           await cleanTokens();
           const err = new Error(
-            `${brightRedBgName} ${red(`Error [ZE10018]: auth error, please sign in to https://app.zephyr-cloud.io then try to build again. See documentation https://docs.zephyr-cloud.io/guide/error/bu10018`)}`,
+            `${brightRedBgName} ${red(`Error [ZE10018]: auth error, please sign in to https://app.zephyr-cloud.io then try to build again. See documentation https://docs.zephyr-cloud.io/guide/error/bu10018`)}`
           );
           err.stack = void 0;
           throw err;
@@ -45,11 +45,11 @@ export async function request<T = unknown>(
 
           const message = _redact(
             `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms` +
-            (data?.length
-              ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb`
-              : '') +
-            (_response ? `\n response: ${_response}` : '') +
-            (_options_str ? `\n options: ${_options_str}` : ''),
+              (data?.length
+                ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb`
+                : '') +
+              (_response ? `\n response: ${_response}` : '') +
+              (_options_str ? `\n options: ${_options_str}` : '')
           );
 
           if (_response === 'Not Implemented') return reject(message);
@@ -62,7 +62,7 @@ export async function request<T = unknown>(
               parsed_response?.status > 299)
           ) {
             return reject(
-              `${brightRedBgName} Error from ${url}: \n ${parsed_response?.message ?? _response}`,
+              `${brightRedBgName} Error from ${url}: \n ${parsed_response?.message ?? _response}`
             );
           }
 
@@ -70,11 +70,12 @@ export async function request<T = unknown>(
 
           resolve((parsed_response as T) ?? (_response as string));
         });
-      },
+      }
     );
 
     req.on('error', (e: unknown) => {
-      ze_error("",
+      ze_error(
+        '',
         `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str} \n ${e}`
       );
       reject(e);

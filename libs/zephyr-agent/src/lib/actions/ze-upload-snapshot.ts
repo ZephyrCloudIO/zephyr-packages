@@ -31,7 +31,7 @@ export async function zeUploadSnapshot(
       action: 'snapshot:upload:failed',
       message: `failed uploading of ${buildEnv} snapshot to zephyr`,
     });
-    ze_error("ZE10018", 'Failed to upload snapshot.', error);
+    ze_error('ZE10018', 'Failed to upload snapshot.', error);
     return;
   }
 
@@ -42,7 +42,7 @@ export async function zeUploadSnapshot(
   });
 
   if (!edgeTodo)
-    ze_error("ZE10019", 'Snapshot upload gave no result, exiting...\n')
+    ze_error('ZE10019', 'Snapshot upload gave no result, exiting...\n');
 
   return edgeTodo;
 }

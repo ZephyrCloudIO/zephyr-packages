@@ -28,9 +28,9 @@ export interface Snapshot {
   mfConfig?: {
     name: string;
     filename: string;
-    exposes?: Record<string, string>
+    exposes?: Record<string, string>;
     remotes?: Record<string, string>;
-    shared?: Record<string, unknown>
+    shared?: Record<string, unknown>;
   };
   // list of files, where key is file path
   assets: Record<string, SnapshotAsset>;

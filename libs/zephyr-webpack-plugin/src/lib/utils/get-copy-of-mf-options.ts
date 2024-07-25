@@ -2,7 +2,9 @@
 import { Configuration } from 'webpack';
 import { isModuleFederationPlugin } from './is-mf-plugin';
 
-export function getCopyOfMFOptions(config: Configuration): unknown | Array<unknown> {
+export function getCopyOfMFOptions(
+  config: Configuration
+): unknown | Array<unknown> {
   return config.plugins
     ?.filter(isModuleFederationPlugin)
     .map((mf: unknown) => {

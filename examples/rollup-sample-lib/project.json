@@ -19,11 +19,12 @@
         "project": "examples/rollup-sample-lib/package.json",
         "entryFile": "examples/rollup-sample-lib/src/index.ts",
         "external": ["react", "react-dom", "react/jsx-runtime"],
-        "rollupConfig": ["@nx/react/plugins/bundle-rollup", "examples/rollup-sample-lib/rollup.config.js"],
+        "rollupConfig": [
+          "@nx/react/plugins/bundle-rollup",
+          "examples/rollup-sample-lib/rollup.config.js"
+        ],
         "compiler": "babel",
-        "assets": [
-
-        ]
+        "assets": []
       }
     }
   }

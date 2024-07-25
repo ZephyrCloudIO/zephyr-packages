@@ -110,7 +110,7 @@ async function _zephyr(options: {
   if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
     return ze_error(
       'ZE10016',
-      "Could not get git info. \n Can you confirm this directory has initialized as a git repository? "
+      'Could not get git info. \n Can you confirm this directory has initialized as a git repository? '
     );
   if (!packageJson?.name)
     return ze_error('ZE10013', 'package.json must have a name and version.');

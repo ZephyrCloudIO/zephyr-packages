@@ -34,12 +34,12 @@ export async function uploadSnapshot({
   };
 
   const res = await request<SnapshotUploadRes>(url, options, data).catch(
-    (err) => ze_error("ZE10018", 'Failed to upload snapshot.', err)
+    (err) => ze_error('ZE10018', 'Failed to upload snapshot.', err)
   );
   ze_log('Snapshot uploaded...');
 
   if (!res || typeof res === 'string') {
-    ze_error("ZE10018", 'Failed to upload snapshot.', res);
+    ze_error('ZE10018', 'Failed to upload snapshot.', res);
     return;
   }
 

@@ -21,8 +21,8 @@ export function SampleRollupLib(props: SampleRollupLibProps) {
         path="/"
         element={
           <div>
-            This is the examples/rollup-sample-lib/src/lib/rollup-sample-lib root
-            route.
+            This is the examples/rollup-sample-lib/src/lib/rollup-sample-lib
+            root route.
           </div>
         }
       />

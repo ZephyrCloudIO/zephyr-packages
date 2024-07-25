@@ -96,7 +96,7 @@ export function withZephyr() {
               project: gitInfo.app.project,
             },
             git: gitInfo.git,
-            isCI,
+            isCI: isCI,
             zeConfig: {
               user: username,
               edge_url: EDGE_URL,

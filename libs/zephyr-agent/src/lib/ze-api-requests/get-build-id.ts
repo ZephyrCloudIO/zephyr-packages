@@ -11,8 +11,6 @@ export async function getBuildId(
 
   const token = await getToken();
 
-
-
   const options = {
     headers: {
       can_write_jwt: jwt,
@@ -29,8 +27,7 @@ export async function getBuildId(
     const resp = await request<BuildIdResp>(
       new URL(BUILD_ID_ENDPOINT),
       options
-    )
-
+    );
 
     if (typeof resp === 'string') {
       throw new Error('[get_build_id]: ' + resp);
@@ -42,6 +39,6 @@ export async function getBuildId(
     return (resp as Record<string, string>)[user_uuid];
   } catch (err: unknown) {
     // TODO: this error log doesn't print useful information
-    ze_error("ZE10019", 'Failed to get build id.', err);
+    ze_error('ZE10019', 'Failed to get build id.', err);
   }
 }

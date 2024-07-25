@@ -1,7 +1,14 @@
-import { createSnapshotId, ZeApplicationConfig, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import {
+  createSnapshotId,
+  ZeApplicationConfig,
+  ZephyrPluginOptions,
+} from 'zephyr-edge-contract';
 
-export function zeGetDashData({pluginOptions, appConfig}: GetDashDataOptions) {
-  const {EDGE_URL} = appConfig;
+export function zeGetDashData({
+  pluginOptions,
+  appConfig,
+}: GetDashDataOptions) {
+  const { EDGE_URL } = appConfig;
   const version = createSnapshotId(pluginOptions);
 
   return {
@@ -26,10 +33,10 @@ export function zeGetDashData({pluginOptions, appConfig}: GetDashDataOptions) {
     sha: pluginOptions.git.commit,
     // todo: @deprecate
     buildHash: pluginOptions.git.commit,
-  }
+  };
 }
 
 export interface GetDashDataOptions {
-  appConfig: ZeApplicationConfig,
-  pluginOptions: ZephyrPluginOptions
+  appConfig: ZeApplicationConfig;
+  pluginOptions: ZephyrPluginOptions;
 }

@@ -1,4 +1,9 @@
-import { Source, ze_log, ZeBuildAssetsMap, ZephyrPluginOptions, } from 'zephyr-edge-contract';
+import {
+  Source,
+  ze_log,
+  ZeBuildAssetsMap,
+  ZephyrPluginOptions,
+} from 'zephyr-edge-contract';
 
 import { getZeBuildAsset } from '../sync-utils/get-ze-build-asset';
 import { onIndexHtmlResolved } from '../hacks/resolve-index-html';
@@ -55,7 +60,7 @@ export async function zeBuildAssetsMap(
 export function buildAssetsMap<T>(
   assets: Record<string, T>,
   extractBuffer: ExtractBuffer<T>,
-  getAssetType: GetAssetType<T>,
+  getAssetType: GetAssetType<T>
 ) {
   return Object.keys(assets).reduce((memo, filepath) => {
     const asset = assets[filepath];
@@ -65,7 +70,6 @@ export function buildAssetsMap<T>(
       ze_log(`unknown asset type: ${getAssetType(asset)}`);
       return memo;
     }
-
 
     const assetMap = getZeBuildAsset({ filepath, content: buffer });
     memo[assetMap.hash] = assetMap;

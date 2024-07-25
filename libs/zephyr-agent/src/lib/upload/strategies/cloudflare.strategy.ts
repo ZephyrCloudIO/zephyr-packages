@@ -32,7 +32,7 @@ export async function cloudflareStrategy({
   zeStart,
   assets: { assetsMap, missingAssets, count, outputPath },
   uploadConfig,
-}: UploadOptions): Promise<boolean> {
+}: UploadOptions): Promise<ZeUploadBuildStats | undefined> {
   const snapshot = createSnapshot({
     options: pluginOptions,
     assets: assetsMap,
@@ -54,7 +54,7 @@ export async function cloudflareStrategy({
   if (!envs) {
     ze_error('ZE10016', 'Did not receive envs from build stats upload.');
 
-    return false;
+    return;
   }
 
   await zeEnableSnapshotOnEdge({
@@ -71,7 +71,7 @@ export async function cloudflareStrategy({
     envs: envs.value,
   });
 
-  return true;
+  return envs.value;
 }
 
 interface UploadAssetsOptions {

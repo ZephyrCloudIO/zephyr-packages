@@ -6,7 +6,7 @@ import { withZephyr } from 'vite-plugin-zephyr';
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    outDir: "wwwroot",
+    outDir: 'wwwroot',
   },
   plugins: [
     react(),

@@ -4,6 +4,7 @@ import {
   ZeBuildAsset,
   ZeBuildAssetsMap,
   ZephyrPluginOptions,
+  ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
 
 import { update_hash_list } from '../../dvcs/distributed-hash-control';
@@ -16,15 +17,13 @@ import {
 } from '../../actions';
 import { UploadOptions } from '../upload';
 
-export async function netlifyStrategy(
-  {
-    pluginOptions,
-    getDashData,
-    appConfig,
-    zeStart,
-    assets: {assetsMap, missingAssets, count},
-  }: UploadOptions
-): Promise<boolean> {
+export async function netlifyStrategy({
+  pluginOptions,
+  getDashData,
+  appConfig,
+  zeStart,
+  assets: { assetsMap, missingAssets, count },
+}: UploadOptions): Promise<ZeUploadBuildStats | undefined> {
   const snapshot = createSnapshot({
     options: pluginOptions,
     assets: assetsMap,
@@ -34,15 +33,19 @@ export async function netlifyStrategy(
 
   await Promise.all([
     zeUploadSnapshot(pluginOptions, snapshot),
-    uploadAssets({assetsMap, missingAssets, pluginOptions, count}),
+    uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
 
-  const envs = await uploadBuildStatsAndEnableEnvs({appConfig, pluginOptions, getDashData});
+  const envs = await uploadBuildStatsAndEnableEnvs({
+    appConfig,
+    pluginOptions,
+    getDashData,
+  });
 
   if (!envs) {
-    ze_error("ZE20016", 'Did not receive envs from build stats upload.');
+    ze_error('ZE20016', 'Did not receive envs from build stats upload.');
 
-    return false;
+    return undefined;
   }
 
   await zeEnableSnapshotOnEdge({
@@ -51,7 +54,7 @@ export async function netlifyStrategy(
     zeStart,
   });
 
-  return true;
+  return envs.value;
 }
 
 interface UploadAssetsOptions {
@@ -61,7 +64,12 @@ interface UploadAssetsOptions {
   count: number;
 }
 
-async function uploadAssets({assetsMap, missingAssets, pluginOptions, count}: UploadAssetsOptions) {
+async function uploadAssets({
+  assetsMap,
+  missingAssets,
+  pluginOptions,
+  count,
+}: UploadAssetsOptions) {
   const upload_success = await zeUploadAssets(pluginOptions, {
     missingAssets,
     assetsMap,
@@ -80,8 +88,12 @@ interface UploadBuildStatsAndEnableEnvsOptions {
   getDashData: (options: GetDashDataOptions) => unknown;
 }
 
-async function uploadBuildStatsAndEnableEnvs({appConfig, pluginOptions, getDashData}: UploadBuildStatsAndEnableEnvsOptions) {
-  const dashData = getDashData({appConfig, pluginOptions});
+async function uploadBuildStatsAndEnableEnvs({
+  appConfig,
+  pluginOptions,
+  getDashData,
+}: UploadBuildStatsAndEnableEnvsOptions) {
+  const dashData = getDashData({ appConfig, pluginOptions });
 
   return zeUploadBuildStats(dashData);
 }

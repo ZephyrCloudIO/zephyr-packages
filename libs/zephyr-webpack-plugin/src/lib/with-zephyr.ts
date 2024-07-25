@@ -1,6 +1,10 @@
 import { Configuration } from 'webpack';
 
-import { createApplicationUID, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import {
+  createApplicationUID,
+  ze_log,
+  ZephyrPluginOptions,
+} from 'zephyr-edge-contract';
 import { getGitInfo, getPackageJson } from 'zephyr-agent';
 
 import { ZeWebpackPlugin } from './ze-webpack-plugin';

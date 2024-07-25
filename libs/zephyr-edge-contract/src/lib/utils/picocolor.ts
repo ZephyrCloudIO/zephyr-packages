@@ -16,15 +16,16 @@
 //
 // https://github.com/alexeyraspopov/picocolors/blob/b6261487e7b81aaab2440e397a356732cad9e342/picocolors.js#L1
 
-import { is_debug_enabled } from './debug-enabled'
+import { is_debug_enabled } from './debug-enabled';
 
 const { env, stdout } = globalThis?.process ?? {};
 
 const enabled =
   !is_debug_enabled &&
   env &&
-  !env["NO_COLOR"] &&
-  (env["FORCE_COLOR"] || (stdout?.isTTY && !env["CI"] && env["TERM"] !== 'dumb'))
+  !env['NO_COLOR'] &&
+  (env['FORCE_COLOR'] ||
+    (stdout?.isTTY && !env['CI'] && env['TERM'] !== 'dumb'));
 
 // const enabled = env
 

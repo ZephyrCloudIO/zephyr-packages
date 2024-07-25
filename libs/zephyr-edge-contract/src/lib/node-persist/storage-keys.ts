@@ -7,4 +7,5 @@ export const enum StorageKeys {
   ze_secret_token = 'ZE_SECRET_TOKEN',
   ze_fs_cache = 'ze-fs-cache',
   ze_hash_cache = 'ze-hash-cache',
+  ze_app_deploy_result = 'ze-app-deploy-result',
 }

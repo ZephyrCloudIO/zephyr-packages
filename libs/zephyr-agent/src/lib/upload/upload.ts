@@ -1,23 +1,33 @@
 import {
+  appDeployResultCache,
   UploadProviderConfig,
   UploadProviderType,
   ZeApplicationConfig,
   ZeBuildAsset,
   ZeBuildAssetsMap,
   ZephyrPluginOptions,
+  ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
 import { cloudflareStrategy, netlifyStrategy } from './strategies';
 import { GetDashDataOptions } from '../payload-builders';
 
-export function upload(options: UploadOptions) {
+export async function upload(options: UploadOptions) {
+  let deployResult: ZeUploadBuildStats | undefined = undefined;
   switch (options.uploadConfig.type) {
     case UploadProviderType.CLOUDFLARE:
-      return cloudflareStrategy(options);
+      deployResult = await cloudflareStrategy(options);
+      break;
     case UploadProviderType.NETLIFY:
-      return netlifyStrategy(options);
+      deployResult = await netlifyStrategy(options);
+      break;
+    default:
+      throw new Error('Unsupported upload provider.');
   }
 
-  throw new Error('Unsupported upload provider.');
+  if (deployResult) {
+    const { application_uid, ...rest } = getInfoForBuildStats(deployResult);
+    await appDeployResultCache.setAppDeployResult(application_uid, rest);
+  }
 }
 
 export interface UploadOptions {
@@ -34,4 +44,14 @@ export interface AssetsOptions {
   missingAssets: ZeBuildAsset[];
   outputPath: string;
   count: number;
+}
+
+function getInfoForBuildStats(result: ZeUploadBuildStats): {
+  application_uid: string;
+  urls: string[];
+} {
+  return {
+    application_uid: result.app_version.application_uid,
+    urls: result.urls,
+  };
 }

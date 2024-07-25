@@ -19,7 +19,7 @@ interface PackageJson {
 }
 
 export async function getPackageJson(
-  context: string | undefined,
+  context: string | undefined
 ): Promise<PackageJson> {
   let startingPath = context || process.cwd();
   if (fs.statSync(startingPath).isFile()) {
@@ -52,7 +52,7 @@ export async function getPackageJson(
 }
 
 async function findClosestPackageJson(
-  startPath: string,
+  startPath: string
 ): Promise<{ path: string; json: string } | void> {
   let dir = startPath;
   do {

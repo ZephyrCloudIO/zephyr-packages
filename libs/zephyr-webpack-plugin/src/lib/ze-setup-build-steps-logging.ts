@@ -4,7 +4,7 @@ import { ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 export function logBuildSteps(
   pluginOptions: ZephyrPluginOptions,
-  compiler: Compiler,
+  compiler: Compiler
 ): { buildStartedAt: number } {
   const { pluginName, buildEnv } = pluginOptions;
   const logEvent = logger(pluginOptions);

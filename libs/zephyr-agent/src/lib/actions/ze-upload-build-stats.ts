@@ -7,11 +7,11 @@ import {
   ZEPHYR_API_ENDPOINT,
   ZeUploadBuildStats,
   dimmedName,
-  brightBlueBgName
+  brightBlueBgName,
 } from 'zephyr-edge-contract';
 
 export async function zeUploadBuildStats(
-  dashData: unknown,
+  dashData: unknown
 ): Promise<{ value: ZeUploadBuildStats } | void> {
   // Add dots here to indicate this is an async operation
   ze_log(`${dimmedName} Uploading build stats to Zephyr...`);
@@ -27,19 +27,23 @@ export async function zeUploadBuildStats(
         Accept: 'application/json',
       },
     },
-    JSON.stringify(dashData),
+    JSON.stringify(dashData)
   ).catch((err) => {
     ze_error(
-      "ZE10045",
+      'ZE10045',
       `If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr. \n
       Error uploading build stats, deployment is not completed. \n
       Failed to upload build stats to Zephyr... \n
-      `, err
+      `,
+      err
     );
   });
 
   if (!res)
-    return ze_error('ZE10046', 'Did not receive envs from build stats upload. Exiting...');
+    return ze_error(
+      'ZE10046',
+      'Did not receive envs from build stats upload. Exiting...'
+    );
 
   if (typeof res === 'string')
     return ze_error('ZE10045', 'Failed to upload build stats.', res);

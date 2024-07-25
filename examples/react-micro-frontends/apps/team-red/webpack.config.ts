@@ -14,7 +14,7 @@ const mfConfig = {
   //   'team-green': 'env:latest',
   // }
   // dependency resolution and app version
-  remotes: ['team-green', 'team-blue']
+  remotes: ['team-green', 'team-blue'],
 };
 
 // Nx plugins for webpack.

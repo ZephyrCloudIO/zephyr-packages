@@ -11,5 +11,5 @@ module.exports = composePlugins(
   withZephyr(),
   (config) => {
     return config;
-  },
+  }
 );

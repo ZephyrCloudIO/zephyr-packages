@@ -163,7 +163,6 @@ async function upload(
     directory: outputPath,
     accountId,
     projectName: projectName as string,
-    sourceMaps: false,
   });
 
   process.env['CLOUDFLARE_API_TOKEN'] = undefined;

@@ -8,13 +8,27 @@ const mfConfig = {
   exposes: {
     './TeamRedLayout': './src/app/team-red-layout',
   },
-  // remotes:  {
-  //   'team-blue': '^2.0.1',
-  //   'team-green': 'latest',
-  //   'team-green': 'env:latest',
-  // }
-  // dependency resolution and app version
+  // Workaround necessary until Nx upgrade.
+  // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109
   remotes: ['team-green', 'team-blue'],
+  additionalShared: [
+    {
+      libraryName: 'react',
+      sharedConfig: { singleton: true },
+    },
+    {
+      libraryName: 'react-dom',
+      sharedConfig: { singleton: true },
+    },
+    {
+      libraryName: 'react/jsx-runtime',
+      sharedConfig: { singleton: true },
+    },
+    {
+      libraryName: 'react/jsx-dev-runtime',
+      sharedConfig: { singleton: true },
+    },
+  ],
 };
 
 // Nx plugins for webpack.

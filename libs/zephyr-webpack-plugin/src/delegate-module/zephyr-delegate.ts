@@ -3,7 +3,6 @@ import {
   getToken,
   v2_api_paths,
   ZEPHYR_API_ENDPOINT,
-  brightRedBgName,
   ze_error,
 } from 'zephyr-edge-contract';
 import { DelegateConfig } from '../lib/dependency-resolution/replace-remotes-with-delegates';
@@ -84,6 +83,8 @@ export async function replace_remote_in_mf_config(
       });
 
       if (resolvedDependency) {
+        resolvedDependency.library_type =
+          mfPlugin._options?.library?.type ?? 'var';
         const _version = mfPlugin._options.remotes[key];
         if (_version?.indexOf('@') !== -1) {
           const [v_app] = _version.split('@');
@@ -113,6 +114,7 @@ interface ResolvedDependency {
   default_url: string;
   application_uid: string;
   remote_entry_url: string;
+  library_type: string;
 }
 
 export function replace_remote_with_delegate(deps: ResolvedDependency): string {
@@ -125,20 +127,30 @@ export function replace_remote_with_delegate(deps: ResolvedDependency): string {
     .replace(strStart, strNewStart)
     .replace(strEnd, '');
 
-  const { application_uid, remote_entry_url, default_url, remote_name } = deps;
+  const {
+    application_uid,
+    remote_entry_url,
+    default_url,
+    remote_name,
+    library_type,
+  } = deps;
+
   return promiseNewPromise
     .replace('__APPLICATION_UID__', application_uid)
     .replace('__REMOTE_ENTRY_URL__', remote_entry_url)
     .replace('__REMOTE_NAME__', remote_name)
-    .replace('__DEFAULT_URL__', default_url);
+    .replace('__DEFAULT_URL__', default_url)
+    .replace('__LIBRARY_TYPE__', library_type);
 }
 
 function delegate_module_template(): unknown {
   return new Promise((resolve, reject) => {
     const remote_entry_url = '__REMOTE_ENTRY_URL__';
+    const library_type = '__LIBRARY_TYPE__';
     const sessionEdgeURL = window.sessionStorage.getItem('__APPLICATION_UID__');
     let edgeUrl = sessionEdgeURL ?? remote_entry_url;
     let remote_name = '__REMOTE_NAME__';
+
     if (edgeUrl.indexOf('@') !== -1) {
       [remote_name, edgeUrl] = edgeUrl.split('@') as [string, string];
     }
@@ -154,10 +166,15 @@ function delegate_module_template(): unknown {
         if (typeof remoteUrl !== 'string') return;
         const _win = window as unknown as Record<string, unknown>;
 
+        if (typeof _win[remote_name] !== 'undefined') {
+          return resolve(_win[remote_name]);
+        }
+
         if (
           typeof __webpack_require__ !== 'undefined' &&
           typeof __webpack_require__.l === 'function' &&
-          typeof _win[remote_name] !== 'undefined'
+          // @ts-expect-error - library_type is inherited enum type instead of string
+          library_type !== 'module'
         ) {
           __webpack_require__.l(
             remoteUrl,

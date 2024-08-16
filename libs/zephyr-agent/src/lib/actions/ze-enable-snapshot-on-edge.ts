@@ -1,15 +1,11 @@
 import {
   blackBright,
-  blueBright,
   brightBlueBgName,
-  brightYellowBgName,
   cyanBright,
-  gray,
   yellow,
-  yellowBright,
   ze_log,
-  type ZeUploadBuildStats,
   type ZephyrPluginOptions,
+  type ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadEnvs } from '../upload/upload-envs';
@@ -19,9 +15,8 @@ interface ZeEnableSnapshotOnEdgeProps {
   envs_jwt: ZeUploadBuildStats;
   zeStart: number;
 }
-export async function zeEnableSnapshotOnEdge(
-  props: ZeEnableSnapshotOnEdgeProps
-): Promise<void> {
+
+export async function zeEnableSnapshotOnEdge(props: ZeEnableSnapshotOnEdgeProps): Promise<void> {
   const { pluginOptions, envs_jwt, zeStart } = props;
 
   ze_log('Enabling snapshot on edge...');
@@ -43,10 +38,7 @@ export async function zeEnableSnapshotOnEdge(
 
   const urls = envs_jwt.urls
     .reverse()
-    .map(
-      (url, i) =>
-        `${brightBlueBgName}  -> ${i === 0 ? cyanBright(url) : blackBright(url)}`
-    )
+    .map((url, i) => `${brightBlueBgName}  -> ${i === 0 ? cyanBright(url) : blackBright(url)}`)
     .join('\n');
 
   logEvent(

@@ -5,6 +5,7 @@ import {
   ZeApplicationConfig,
   ZeBuildAsset,
   ZeBuildAssetsMap,
+  ZephyrBuildStats,
   ZephyrPluginOptions,
   ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
@@ -34,7 +35,7 @@ export interface UploadOptions {
   appConfig: ZeApplicationConfig;
   assets: AssetsOptions;
   pluginOptions: ZephyrPluginOptions;
-  getDashData: (options: GetDashDataOptions) => unknown;
+  getDashData: (options: GetDashDataOptions) => ZephyrBuildStats;
   zeStart: number;
   uploadConfig: UploadProviderConfig;
 }

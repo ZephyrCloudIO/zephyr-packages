@@ -3,18 +3,14 @@ import {
   ZeApplicationConfig,
   ZeBuildAsset,
   ZeBuildAssetsMap,
+  ZephyrBuildStats,
   ZephyrPluginOptions,
   ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
 
 import { update_hash_list } from '../../dvcs/distributed-hash-control';
 import { createSnapshot, GetDashDataOptions } from '../../payload-builders';
-import {
-  zeEnableSnapshotOnEdge,
-  zeUploadAssets,
-  zeUploadBuildStats,
-  zeUploadSnapshot,
-} from '../../actions';
+import { zeEnableSnapshotOnEdge, zeUploadAssets, zeUploadBuildStats, zeUploadSnapshot } from '../../actions';
 import { UploadOptions } from '../upload';
 
 export async function netlifyStrategy({
@@ -32,7 +28,7 @@ export async function netlifyStrategy({
   });
 
   await Promise.all([
-    zeUploadSnapshot(pluginOptions, snapshot),
+    zeUploadSnapshot({ pluginOptions, snapshot, appConfig }),
     uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
 
@@ -64,12 +60,7 @@ interface UploadAssetsOptions {
   count: number;
 }
 
-async function uploadAssets({
-  assetsMap,
-  missingAssets,
-  pluginOptions,
-  count,
-}: UploadAssetsOptions) {
+async function uploadAssets({ assetsMap, missingAssets, pluginOptions, count }: UploadAssetsOptions) {
   const upload_success = await zeUploadAssets(pluginOptions, {
     missingAssets,
     assetsMap,
@@ -85,14 +76,10 @@ async function uploadAssets({
 interface UploadBuildStatsAndEnableEnvsOptions {
   pluginOptions: ZephyrPluginOptions;
   appConfig: ZeApplicationConfig;
-  getDashData: (options: GetDashDataOptions) => unknown;
+  getDashData: (options: GetDashDataOptions) => ZephyrBuildStats;
 }
 
-async function uploadBuildStatsAndEnableEnvs({
-  appConfig,
-  pluginOptions,
-  getDashData,
-}: UploadBuildStatsAndEnableEnvsOptions) {
+async function uploadBuildStatsAndEnableEnvs({ appConfig, pluginOptions, getDashData }: UploadBuildStatsAndEnableEnvsOptions) {
   const dashData = getDashData({ appConfig, pluginOptions });
 
   return zeUploadBuildStats(dashData);

@@ -1,22 +1,20 @@
 import * as jose from 'jose';
 import { v4 as uuidv4 } from 'uuid';
-import { ze_log } from 'zephyr-edge-contract';
-const open = (str: string) =>
-  new Function(`return import("open")`)().then(
-    ({ default: open }: { default: (str: string) => Promise<void> }) =>
-      open(str)
-  );
-
-import { createSocket, disposeSocket } from './websocket';
 import {
   getSecretToken,
   getToken,
   removeToken,
   request,
   saveToken,
-  v2_api_paths,
+  ZE_API_ENDPOINT,
+  ze_api_gateway,
+  ze_log,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
+import { createSocket, disposeSocket } from './websocket';
+
+const open = (str: string) =>
+  new Function(`return import("open")`)().then(({ default: open }: { default: (str: string) => Promise<void> }) => open(str));
 
 export function generateSessionKey(): string {
   return uuidv4().replace(/-/g, '');
@@ -45,11 +43,10 @@ export interface AuthOptions {
   scope?: string;
 }
 
-export async function getAuthenticationURL(
-  options: AuthOptions
-): Promise<string> {
+export async function getAuthenticationURL(options: AuthOptions): Promise<string> {
   const { state } = options;
-  const loginUrl = new URL(v2_api_paths.authorize_link, ZEPHYR_API_ENDPOINT());
+  // const loginUrl = new URL('/v2/authorize-link', ZEPHYR_API_ENDPOINT());
+  const loginUrl = new URL(ze_api_gateway.auth_link, ZE_API_ENDPOINT());
   loginUrl.searchParams.append('state', state);
 
   return request(loginUrl);

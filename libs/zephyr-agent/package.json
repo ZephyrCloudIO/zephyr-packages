@@ -20,6 +20,6 @@
     "@types/uuid": "^9.0.8"
   },
   "optionalDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^3.69.1"
   }
 }

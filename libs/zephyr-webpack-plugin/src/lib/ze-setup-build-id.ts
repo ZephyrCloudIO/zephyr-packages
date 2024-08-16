@@ -1,25 +1,8 @@
 import { Compiler } from 'webpack';
-import {
-  checkAuth,
-  get_hash_list,
-  getApplicationConfiguration,
-  getBuildId,
-  logger,
-} from 'zephyr-agent';
-import {
-  black,
-  blackBright,
-  brightRedBgName,
-  cyanBright,
-  ze_error,
-  ze_log,
-  ZephyrPluginOptions,
-} from 'zephyr-edge-contract';
+import { checkAuth, get_hash_list, getApplicationConfiguration, getBuildId, logger } from 'zephyr-agent';
+import { black, blackBright, brightRedBgName, cyanBright, yellow, ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
 
-export function setupZephyrConfig(
-  pluginOptions: ZephyrPluginOptions,
-  compiler: Compiler
-): void {
+export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: Compiler): void {
   ze_log('Setting Get Zephyr Config hook');
   const { pluginName, zeConfig, application_uid } = pluginOptions;
 
@@ -56,7 +39,7 @@ export function setupZephyrConfig(
       {
         level: 'info',
         action: 'build:info:id',
-        message: `Building to ${blackBright(application_uid)}${black(`#${buildId}`)}`,
+        message: `Building to ${blackBright(application_uid)}${yellow(`#${buildId}`)}`,
       }
     );
 

@@ -1,10 +1,5 @@
 import * as isCI from 'is-ci';
-import type {
-  NormalizedOutputOptions,
-  OutputAsset,
-  OutputBundle,
-  OutputChunk,
-} from 'rollup';
+import type { NormalizedOutputOptions, OutputAsset, OutputBundle, OutputChunk } from 'rollup';
 import type { ResolvedConfig } from 'vite';
 import {
   checkAuth,
@@ -54,10 +49,7 @@ export function withZephyrPartial() {
       });
     },
 
-    writeBundle: async (
-      options: NormalizedOutputOptions,
-      _bundle: OutputBundle
-    ) => {
+    writeBundle: async (options: NormalizedOutputOptions, _bundle: OutputBundle) => {
       vite_internal_options.dir = options.dir;
       bundle = _bundle;
     },
@@ -80,21 +72,14 @@ export function withZephyrPartial() {
       });
       publicAssets.push(..._extra_assets);
 
-      const assets = Object.assign(
-        {},
-        bundle,
-        ...publicAssets.map((asset) => ({ [asset.fileName]: asset }))
-      );
+      const assets = Object.assign({}, bundle, ...publicAssets.map((asset) => ({ [asset.fileName]: asset })));
 
       await _zephyr_partial({ assets, vite_internal_options });
     },
   };
 }
 
-async function _zephyr_partial(options: {
-  assets: OutputBundle;
-  vite_internal_options: ZephyrInternalOptions;
-}) {
+async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_options: ZephyrInternalOptions }) {
   const { assets, vite_internal_options } = options;
   const path_to_execution_dir = vite_internal_options.root;
 
@@ -107,13 +92,9 @@ async function _zephyr_partial(options: {
   ze_log('Loaded Git Info', gitInfo);
 
   if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
-    return ze_error(
-      'ZE10016',
-      'Could not get git info. Can you confirm the current directory has initialized as a git repository?'
-    );
+    return ze_error('ZE10016', 'Could not get git info. Can you confirm the current directory has initialized as a git repository?');
 
-  if (!packageJson?.name)
-    return ze_error('ZE10013', 'package.json must have a name and version.');
+  if (!packageJson?.name) return ze_error('ZE10013', 'package.json must have a name and version.');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -124,9 +105,7 @@ async function _zephyr_partial(options: {
   ze_log('Going to check auth token or get it...');
   await checkAuth();
 
-  ze_log(
-    'Got auth token, going to get application configuration and build id...'
-  );
+  ze_log('Got auth token, going to get application configuration and build id...');
 
   const [appConfig, buildId, hash_set] = await Promise.all([
     getApplicationConfiguration({ application_uid }),
@@ -179,22 +158,18 @@ async function _zephyr_partial(options: {
     {
       level: 'info',
       action: 'build:info:id',
-      message: `Building to ${blackBright(application_uid)}${black(`#${buildId}`)}`,
+      message: `Building to ${blackBright(application_uid)}${yellow(`#${buildId}`)}`,
     }
   );
 
   const zeStart = Date.now();
 
-  const extractBuffer = (
-    asset: OutputChunk | OutputAsset
-  ): string | undefined => {
+  const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {
     switch (asset.type) {
       case 'chunk':
         return asset.code;
       case 'asset':
-        return typeof asset.source === 'string'
-          ? asset.source
-          : new TextDecoder().decode(asset.source);
+        return typeof asset.source === 'string' ? asset.source : new TextDecoder().decode(asset.source);
       default:
         return void 0;
     }
@@ -228,9 +203,7 @@ async function _zephyr_partial(options: {
     email,
   });
 
-  await zeUploadSnapshot(pluginOptions, snapshot).catch((err) =>
-    ze_error('ZE10018', 'Failed to upload snapshot.', err)
-  );
+  await zeUploadSnapshot({ pluginOptions, snapshot, appConfig }).catch((err) => ze_error('ZE10018', 'Failed to upload snapshot.', err));
 
   const missingAssets = get_missing_assets({ assetsMap, hash_set });
 
@@ -240,18 +213,13 @@ async function _zephyr_partial(options: {
     count: Object.keys(assets).length,
   });
 
-  if (!assetsUploadSuccess)
-    return ze_error('ZE10017', 'Failed to upload assets.', assetsUploadSuccess);
+  if (!assetsUploadSuccess) return ze_error('ZE10017', 'Failed to upload assets.', assetsUploadSuccess);
 
   if (missingAssets.length) {
     await update_hash_list(application_uid, assetsMap);
   }
 
-  await savePartialAssetMap(
-    application_uid,
-    vite_internal_options.configFile ?? 'partial',
-    assetsMap
-  );
+  await savePartialAssetMap(application_uid, vite_internal_options.configFile ?? 'partial', assetsMap);
 
   logEvent({
     level: 'info',

@@ -1,10 +1,11 @@
-export const ZEPHYR_API_ENDPOINT = () =>
-  process.env['ZE_API'] ?? 'https://api.zephyr-cloud.io';
+export const ZEPHYR_API_ENDPOINT = () => process.env['ZE_API'] ?? 'https://api.zephyr-cloud.io';
 
-export const v2_api_paths = {
-  application_logs: '/v2/application/logs',
-  dashboard_path: '/v2/builder-packages-api/upload-from-dashboard-plugin',
-  resolve_dependency_path: '/v2/builder-public-api/resolve',
-  authorize_link: '/v2/authorize-link',
-  application_configuration: '/v2/builder-packages-api/application-config',
+export const ZE_API_ENDPOINT = () => process.env['ZE_API_GATE'] ?? 'https://zeapi.valorkin.dev';
+
+export const ze_api_gateway = {
+  logs: '/logs',
+  build_stats: '/build-stats',
+  auth_link: '/auth-link',
+  resolve: '/resolve',
+  application_config: '/application-config',
 };

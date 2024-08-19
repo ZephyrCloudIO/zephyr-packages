@@ -144,6 +144,7 @@ export function withZephyr() {
             outputPath: options.dir as string,
             count: Object.keys(bundle).length,
           },
+          // @ts-expect-error TODO: fix this types to get legacy and current working
           getDashData,
           appConfig,
           zeStart,

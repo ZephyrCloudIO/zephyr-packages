@@ -1,26 +1,9 @@
 import * as process from 'process';
-import { access, constants, mkdir, writeFile } from 'fs/promises';
-import { dirname, sep } from 'path';
 
-import {
-  blackBright,
-  brightBlueBgName,
-  CloudflareOptions,
-  cyanBright,
-  UploadProviderConfig,
-  yellow,
-  ze_error,
-  ze_log,
-  ZeApplicationConfig,
-  ZeBuildAsset,
-  ZeBuildAssetsMap,
-  ZephyrPluginOptions,
-  ZeUploadBuildStats,
-} from 'zephyr-edge-contract';
+import { yellow, ZeUploadBuildStats } from 'zephyr-edge-contract';
 
-import { update_hash_list } from '../../dvcs/distributed-hash-control';
-import { createSnapshot, GetDashDataOptions } from '../../payload-builders';
-import { zeEnableSnapshotOnEdge, zeEnableSnapshotOnPages, zeUploadAssets, zeUploadBuildStats, zeUploadSnapshot } from '../../actions';
+import { createSnapshot } from '../../payload-builders';
+import { zeUploadSnapshot } from '../../actions';
 import { UploadOptions } from '../upload';
 import { uploadAssets, uploadBuildStatsAndEnableEnvs } from './cloudflare';
 import { logger } from '../../remote-logs/ze-log-event';
@@ -39,7 +22,7 @@ export async function cloudflareStrategy({
     email: appConfig.email,
   });
 
-  await Promise.all([
+  const [versionUrl] = await Promise.all([
     zeUploadSnapshot({ pluginOptions, snapshot, appConfig }),
     uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
@@ -49,6 +32,7 @@ export async function cloudflareStrategy({
       appConfig,
       pluginOptions,
       getDashData,
+      versionUrl,
     })
   );
 

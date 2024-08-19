@@ -9,9 +9,7 @@ interface LoadPublicDirOptions {
   publicDir: string;
 }
 
-export async function load_public_dir(
-  props: LoadPublicDirOptions
-): Promise<OutputAsset[]> {
+export async function load_public_dir(props: LoadPublicDirOptions): Promise<OutputAsset[]> {
   const { publicDir, outDir } = props;
   const publicAssets: OutputAsset[] = [];
 
@@ -32,6 +30,7 @@ export async function load_public_dir(
           needsCodeReference: false,
           source: await promisify(readFile)(srcFile),
           type: 'asset',
+          originalFileName: basename(file),
         });
       }
     }

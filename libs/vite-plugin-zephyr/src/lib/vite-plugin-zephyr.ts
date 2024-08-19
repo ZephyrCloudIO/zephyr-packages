@@ -180,6 +180,7 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
       outputPath: vite_internal_options.outDir,
       count: Object.keys(assets).length,
     },
+    // @ts-expect-error TODO: fix this types to get legacy and current working
     getDashData: zeGetDashData,
     appConfig,
     zeStart,

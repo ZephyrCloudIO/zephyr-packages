@@ -27,7 +27,7 @@ export async function netlifyStrategy({
     email: appConfig.email,
   });
 
-  await Promise.all([
+  const [versionUrl] = await Promise.all([
     zeUploadSnapshot({ pluginOptions, snapshot, appConfig }),
     uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
@@ -36,6 +36,7 @@ export async function netlifyStrategy({
     appConfig,
     pluginOptions,
     getDashData,
+    versionUrl,
   });
 
   if (!envs) {
@@ -77,10 +78,12 @@ interface UploadBuildStatsAndEnableEnvsOptions {
   pluginOptions: ZephyrPluginOptions;
   appConfig: ZeApplicationConfig;
   getDashData: (options: GetDashDataOptions) => ZephyrBuildStats;
+  versionUrl: string;
 }
 
-async function uploadBuildStatsAndEnableEnvs({ appConfig, pluginOptions, getDashData }: UploadBuildStatsAndEnableEnvsOptions) {
+async function uploadBuildStatsAndEnableEnvs({ appConfig, pluginOptions, getDashData, versionUrl }: UploadBuildStatsAndEnableEnvsOptions) {
   const dashData = getDashData({ appConfig, pluginOptions });
+  dashData.edge.versionUrl = versionUrl;
 
   return zeUploadBuildStats(dashData);
 }

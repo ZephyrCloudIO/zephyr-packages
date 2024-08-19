@@ -10,9 +10,7 @@ interface LoadExtraFilesFromDistOptions {
   outDir: string;
 }
 
-export async function load_extra_files_from_dist(
-  props: LoadExtraFilesFromDistOptions
-): Promise<OutputAsset[]> {
+export async function load_extra_files_from_dist(props: LoadExtraFilesFromDistOptions): Promise<OutputAsset[]> {
   const { root, bundle } = props;
   const publicAssets: OutputAsset[] = [];
 
@@ -33,6 +31,7 @@ export async function load_extra_files_from_dist(
           needsCodeReference: false,
           source: await promisify(readFile)(destFile),
           type: 'asset',
+          originalFileName: file,
         });
       }
     }

@@ -39,6 +39,7 @@ export interface ZephyrBuildStats {
   };
   edge: {
     url: string;
+    versionUrl?: string;
   };
   domain?: string | undefined;
   platform?: DeploymentIntegrationPlatform | undefined;

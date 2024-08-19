@@ -16,9 +16,7 @@ const files_to_load: Record<string, boolean> = {
   'q-data.json': true,
 };
 
-export async function load_static_entries(
-  props: LoadStaticEntriesOptions
-): Promise<OutputAsset[]> {
+export async function load_static_entries(props: LoadStaticEntriesOptions): Promise<OutputAsset[]> {
   const { root, bundle } = props;
   const publicAssets: OutputAsset[] = [];
 
@@ -40,6 +38,7 @@ export async function load_static_entries(
           needsCodeReference: false,
           source: await promisify(readFile)(destFile),
           type: 'asset',
+          originalFileName: file,
         });
       }
     }

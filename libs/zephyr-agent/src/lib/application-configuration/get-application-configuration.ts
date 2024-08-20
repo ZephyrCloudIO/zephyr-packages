@@ -23,8 +23,7 @@ async function loadApplicationConfiguration({ application_uid }: GetApplicationC
     throw new ConfigurationError(`ZE10017`, `application_uid is missing...\n`, `critical`);
   }
   const token = await getToken();
-  const application_config_url = new URL(ze_api_gateway.application_config, ZEPHYR_API_ENDPOINT());
-  application_config_url.searchParams.append('application-uid', application_uid);
+  const application_config_url = new URL(`${ze_api_gateway.application_config}/${application_uid}`, ZE_API_ENDPOINT());
 
   const response = await request<{ value: ZeApplicationConfig }>(application_config_url, {
     headers: { Authorization: 'Bearer ' + token },

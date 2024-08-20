@@ -21,8 +21,7 @@ export async function resolve_remote_dependencies(
       return (result as DependencyResolutionError).application_uid;
     });
   if (errors?.length) {
-    const [sample_app_name, sample_project_name, sample_org_name] =
-      errors[0].split('.');
+    const [sample_app_name, sample_project_name, sample_org_name] = errors[0].split('.');
     throw new Error(`${brightRedBgName} Could not resolve remote entry points for urls: \n
       ${errors.map((str) => `\t- ${str}`).join('\n')}\n\n
         Please build them with Zephyr first or add as Unmanaged applications.\n

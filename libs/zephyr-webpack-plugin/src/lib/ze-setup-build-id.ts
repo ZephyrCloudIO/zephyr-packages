@@ -17,12 +17,13 @@ export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: 
 
     const { username, email, EDGE_URL } = appConfig;
     ze_log('Got application configuration', { username, email, EDGE_URL });
-    ze_log(`Got build id: ${buildId}`);
 
     if (!buildId) {
       ze_error('ERR_GET_BUILD_ID', 'Could not get build id.');
       return cb(new CouldNotGetBuildIdError());
     }
+
+    ze_log(`Got build id: ${buildId}`);
 
     const logEvent = logger(pluginOptions);
 

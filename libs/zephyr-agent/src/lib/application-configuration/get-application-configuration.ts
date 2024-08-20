@@ -1,15 +1,14 @@
 import * as jose from 'jose';
 import {
+  ZE_API_ENDPOINT,
+  type ZeApplicationConfig,
   getAppConfig,
   getToken,
   request,
   saveAppConfig,
-  ZEPHYR_API_ENDPOINT,
-  ZE_API_ENDPOINT,
   ze_api_gateway,
   ze_error,
   ze_log,
-  ZeApplicationConfig,
 } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
 import { ConfigurationError } from '../custom-errors/configuration-error';
@@ -20,19 +19,26 @@ interface GetApplicationConfigurationProps {
 
 async function loadApplicationConfiguration({ application_uid }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig | void> {
   if (!application_uid) {
-    throw new ConfigurationError(`ZE10017`, `application_uid is missing...\n`, `critical`);
+    throw new ConfigurationError('ZE10017', 'application_uid is missing...\n', 'critical');
   }
+
   const token = await getToken();
   const application_config_url = new URL(`${ze_api_gateway.application_config}/${application_uid}`, ZE_API_ENDPOINT());
 
   const response = await request<{ value: ZeApplicationConfig }>(application_config_url, {
-    headers: { Authorization: 'Bearer ' + token },
+    headers: { Authorization: `Bearer ${token}` },
   }).catch((v) => ze_error('ERR_LOAD_APP_CONFIG', 'Failed to load application configuration', v));
 
-  if (!response || typeof response === 'string')
-    return ze_error('ERR_LOAD_APP_CONFIG', 'Failed to load application configuration.', response);
+  if (!response) {
+    return undefined;
+  }
+
+  if (typeof response === 'string') {
+    return ze_error('ERR_LOAD_APP_CONFIG', 'Invalid application configuration.', response);
+  }
 
   ze_log('Application Configuration loaded...', response);
+
   return Object.assign({}, response.value, {
     fetched_at: Date.now(),
     jwt_decode: jose.decodeJwt(response.value.jwt), // Is it necessary? It seems this property unused.

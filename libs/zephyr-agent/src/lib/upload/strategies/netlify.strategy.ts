@@ -40,7 +40,7 @@ export async function netlifyStrategy({
   });
 
   if (!envs) {
-    ze_error('ZE20016', 'Did not receive envs from build stats upload.');
+    ze_error('ERR_NOT_RECEIVE_ENVS_FROM_BUILD_STATS', 'Did not receive envs from build stats upload.');
 
     return undefined;
   }

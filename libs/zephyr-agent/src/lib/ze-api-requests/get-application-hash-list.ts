@@ -5,9 +5,7 @@ interface GetApplicationHashListProps {
   application_uid: string;
 }
 
-export async function getApplicationHashList(
-  props: GetApplicationHashListProps
-): Promise<{ hashes: string[] }> {
+export async function getApplicationHashList(props: GetApplicationHashListProps): Promise<{ hashes: string[] }> {
   const { application_uid } = props;
   const { EDGE_URL } = await getApplicationConfiguration({
     application_uid,
@@ -15,13 +13,13 @@ export async function getApplicationHashList(
 
   const url = new URL('/__get_application_hash_list__', EDGE_URL);
   url.searchParams.append('application_uid', application_uid);
-  const res = await request<{ hashes: string[] }>(url, { method: 'GET' }).catch(
-    (err) => ze_error('ZE20020', 'Failed to get application hash list', err)
+  const res = await request<{ hashes: string[] }>(url, { method: 'GET' }).catch((err) =>
+    ze_error('ERR_GET_APPLICATION_HASH_LIST', 'Failed to get application hash list', err)
   );
 
   if (!res || typeof res === 'string') {
     // force res to be part of the string  literal
-    ze_error('ZE20020', `Failed to get application hash list. \n ${res}`);
+    ze_error('ERR_GET_APPLICATION_HASH_LIST', `Failed to get application hash list. \n ${res}`);
     return { hashes: [] };
   }
 

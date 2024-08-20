@@ -86,15 +86,15 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
   ze_log('Configuring with Zephyr...');
   const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded Package JSON', packageJson);
-  if (!packageJson) return ze_error('ZE10010', 'package.json not found.');
+  if (!packageJson) return ze_error('ERR_PACKAGE_JSON_NOT_FOUND');
 
   const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info', gitInfo);
 
   if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
-    return ze_error('ZE10016', 'Could not get git info. Can you confirm the current directory has initialized as a git repository?');
+    return ze_error('ERR_NO_GIT_INFO', 'Can you confirm the current directory has initialized as a git repository?');
 
-  if (!packageJson?.name) return ze_error('ZE10013', 'package.json must have a name and version.');
+  if (!packageJson?.name) return ze_error('ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION', 'package.json must have a name and version.');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -123,7 +123,7 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
   const { username, email, EDGE_URL } = appConfig;
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  if (!buildId) return ze_error('ZE10019', 'Could not get build id.');
+  if (!buildId) return ze_error('ERR_GET_BUILD_ID');
 
   const pluginOptions: ZephyrPluginOptions = {
     pluginName: 'rollup-plugin-zephyr',
@@ -136,7 +136,7 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
       org: gitInfo.app.org,
       project: gitInfo.app.project,
     },
-    git: gitInfo?.git,
+    git: gitInfo.git,
     isCI,
     zeConfig: {
       user: username,
@@ -203,7 +203,9 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
     email,
   });
 
-  await zeUploadSnapshot({ pluginOptions, snapshot, appConfig }).catch((err) => ze_error('ZE10018', 'Failed to upload snapshot.', err));
+  await zeUploadSnapshot({ pluginOptions, snapshot, appConfig }).catch((err) =>
+    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', err)
+  );
 
   const missingAssets = get_missing_assets({ assetsMap, hash_set });
 
@@ -213,7 +215,7 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
     count: Object.keys(assets).length,
   });
 
-  if (!assetsUploadSuccess) return ze_error('ZE10017', 'Failed to upload assets.', assetsUploadSuccess);
+  if (!assetsUploadSuccess) return ze_error('ERR_FAILED_UPLOAD_ASSETS', assetsUploadSuccess);
 
   if (missingAssets.length) {
     await update_hash_list(application_uid, assetsMap);

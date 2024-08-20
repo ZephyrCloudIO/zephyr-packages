@@ -8,7 +8,10 @@ export async function upload(outputPath: string, { api_token, accountId, project
   const wrangler = require('wrangler');
 
   if (!wrangler) {
-    ze_error('Wrangler dependency is needed for Cloudflare deployment. Please install dependencies without --no-optional flag.');
+    ze_error(
+      'ERR_NO_WRANGLER',
+      'Wrangler dependency is needed for Cloudflare deployment. Please install dependencies without --no-optional flag.'
+    );
     throw new Error('Wrangler dependency not installed.');
   }
 

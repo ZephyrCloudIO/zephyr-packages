@@ -4,6 +4,7 @@ import {
   getToken,
   request,
   saveAppConfig,
+  ZEPHYR_API_ENDPOINT,
   ZE_API_ENDPOINT,
   ze_api_gateway,
   ze_error,
@@ -22,13 +23,15 @@ async function loadApplicationConfiguration({ application_uid }: GetApplicationC
     throw new ConfigurationError(`ZE10017`, `application_uid is missing...\n`, `critical`);
   }
   const token = await getToken();
-  const application_config_url = new URL(`${ze_api_gateway.application_config}/${application_uid}`, ZE_API_ENDPOINT());
+  const application_config_url = new URL(ze_api_gateway.application_config, ZEPHYR_API_ENDPOINT());
+  application_config_url.searchParams.append('application-uid', application_uid);
 
   const response = await request<{ value: ZeApplicationConfig }>(application_config_url, {
     headers: { Authorization: 'Bearer ' + token },
-  }).catch((v) => ze_error('ZE20014', 'Failed to load application configuration', v));
+  }).catch((v) => ze_error('ERR_LOAD_APP_CONFIG', 'Failed to load application configuration', v));
 
-  if (!response || typeof response === 'string') return ze_error('ZE20014', 'Failed to load application configuration.', response);
+  if (!response || typeof response === 'string')
+    return ze_error('ERR_LOAD_APP_CONFIG', 'Failed to load application configuration.', response);
 
   ze_log('Application Configuration loaded...', response);
   return Object.assign({}, response.value, {
@@ -41,7 +44,9 @@ let refetching_app_config = false;
 
 export async function getApplicationConfiguration({ application_uid }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
   ze_log('Getting application configuration from node-persist');
+
   const storedAppConfig = await getAppConfig(application_uid);
+
   if (storedAppConfig && isTokenStillValid(storedAppConfig.jwt)) {
     if (!refetching_app_config && (!storedAppConfig?.fetched_at || Date.now() - storedAppConfig.fetched_at > 60 * 1000)) {
       refetching_app_config = true;

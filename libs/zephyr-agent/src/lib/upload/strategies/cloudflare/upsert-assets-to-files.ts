@@ -10,7 +10,7 @@ export async function saveAssetsToFilesIfNotExist(dir: string, assetsMap: ZeBuil
     try {
       await mkdir(dir, { recursive: true });
     } catch (error) {
-      ze_error(`Error creating dist folder: ${(error as Error).message}`);
+      ze_error('ERR_CREATE_DIST_FOLDER', `Error creating dist folder: ${(error as Error).message}`);
       throw new Error('Unable to create dist folder.');
     }
   }

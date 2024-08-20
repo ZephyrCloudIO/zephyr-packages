@@ -1,9 +1,4 @@
-import {
-  ze_log,
-  ZeUploadBuildStats,
-  request,
-  ze_error,
-} from 'zephyr-edge-contract';
+import { ze_log, ZeUploadBuildStats, request, ze_error } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 import type { ClientRequestArgs } from 'node:http';
 
@@ -43,9 +38,9 @@ export async function zeEnableSnapshotOnPages({
 
   const uploadResult = await request(url, options, data);
   if (!uploadResult) {
-    ze_error('failed deploying local build to pages');
+    ze_error('ERR_DEPLOY_LOCAL_BUILD');
     return;
   }
 
-  ze_log('Build successfully deployed to pages');
+  ze_log('Build successfully deployed.');
 }

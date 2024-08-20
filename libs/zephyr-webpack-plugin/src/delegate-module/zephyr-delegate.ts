@@ -31,7 +31,7 @@ async function resolve_remote_dependency({ name, version }: { name: string; vers
     const response = (await res.json()) as { value: ResolvedDependency } | undefined;
     return response?.value;
   } catch (err) {
-    ze_error('ZE20021', `Could not resolve '${name}' with version '${version}'`);
+    ze_error('ERR_NOT_RESOLVE_APP_NAME_WITH_VERSION', `Could not resolve '${name}' with version '${version}'`);
   }
 }
 

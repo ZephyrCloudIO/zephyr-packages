@@ -1,6 +1,6 @@
 import { Compiler } from 'webpack';
-import { checkAuth, get_hash_list, getApplicationConfiguration, getBuildId, logger } from 'zephyr-agent';
-import { black, blackBright, brightRedBgName, cyanBright, yellow, ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { checkAuth, CouldNotGetBuildIdError, get_hash_list, getApplicationConfiguration, getBuildId, logger } from 'zephyr-agent';
+import { cyanBright, yellow, ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: Compiler): void {
   ze_log('Setting Get Zephyr Config hook');
@@ -20,12 +20,8 @@ export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: 
     ze_log(`Got build id: ${buildId}`);
 
     if (!buildId) {
-      ze_error('ZE20022', 'Could not get build id.');
-      return cb(
-        new Error(
-          `${brightRedBgName} Error [ZE20022]: Could not get build id. See documentation https://docs.zephyr-cloud.io/guide/error/du20022`
-        )
-      );
+      ze_error('ERR_GET_BUILD_ID', 'Could not get build id.');
+      return cb(new CouldNotGetBuildIdError());
     }
 
     const logEvent = logger(pluginOptions);
@@ -39,7 +35,7 @@ export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: 
       {
         level: 'info',
         action: 'build:info:id',
-        message: `Building to ${blackBright(application_uid)}${yellow(`#${buildId}`)}`,
+        message: `Building to ${cyanBright(application_uid)}${yellow(`#${buildId}`)}`,
       }
     );
 

@@ -9,12 +9,12 @@
     "build": "nx run zephyr-webpack-plugin:build"
   },
   "dependencies": {
-    "is-ci": "^3.0.1",
-    "webpack": "^5.91.0",
-    "tslib": "^2.3.0",
     "@module-federation/automatic-vendor-federation": "1.2.1",
-    "zephyr-edge-contract": "workspace:*",
-    "zephyr-agent": "workspace:*"
+    "is-ci": "^3.0.1",
+    "tslib": "^2.3.0",
+    "webpack": "^5.93.0",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4",

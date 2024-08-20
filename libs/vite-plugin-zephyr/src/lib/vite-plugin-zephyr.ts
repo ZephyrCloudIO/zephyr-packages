@@ -89,13 +89,13 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
   ze_log('Configuring with Zephyr...');
   const packageJson = await getPackageJson(path_to_execution_dir);
   ze_log('Loaded package.json.', packageJson);
-  if (!packageJson) return ze_error('ZE10010', 'package.json not found.');
+  if (!packageJson) return ze_error('ERR_PACKAGE_JSON_NOT_FOUND');
 
   const gitInfo = await getGitInfo();
   ze_log('Loaded Git Info.', gitInfo);
   if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
-    return ze_error('ZE10016', 'Could not get git info. \n Can you confirm this directory has initialized as a git repository? ');
-  if (!packageJson?.name) return ze_error('ZE10013', 'package.json must have a name and version.');
+    return ze_error('ERR_NO_GIT_INFO', 'Could not get git info. \n Can you confirm this directory has initialized as a git repository? ');
+  if (!packageJson?.name) return ze_error('ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION');
 
   const application_uid = createApplicationUID({
     org: gitInfo.app.org,
@@ -123,7 +123,7 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
 
   ze_log('Got application configuration', { username, email, EDGE_URL });
 
-  if (!buildId) return ze_error('ZE10019', 'Could not get build id.');
+  if (!buildId) return ze_error('ERR_GET_BUILD_ID');
 
   const pluginOptions: ZephyrPluginOptions = {
     pluginName: 'rollup-plugin-zephyr',

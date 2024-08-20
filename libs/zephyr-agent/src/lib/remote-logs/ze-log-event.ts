@@ -11,6 +11,7 @@ import {
 } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 import { stripAnsi } from '../util/strip-ansi';
+import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 const log = (level: string, msg: unknown): void => {
   if (is_debug_enabled) {
@@ -37,19 +38,9 @@ export interface LogEventOptions {
   meta?: Record<string, unknown>;
 }
 
-export interface LoggerOptions {
-  application_uid: string;
-  zeConfig: {
-    buildId: string | undefined;
-  };
-  isCI: boolean;
-  app: Record<string, unknown>;
-  git: Record<string, unknown>;
-}
-
 export type LogEvent = (options: LogEventOptions) => void;
 
-export function logger(options: LoggerOptions) {
+export function logger(options: ZephyrPluginOptions) {
   return function logEvent(...logs: LogEventOptions[]): void {
     Promise.all([getApplicationConfiguration({ application_uid: options.application_uid }), getToken()]).then(
       ([{ username, user_uuid }, token]) => {

@@ -33,7 +33,7 @@ export function getBuildStats({
     pluginOptions,
   });
   if (!convertedGraph) {
-    ze_error('Failed to convert graph to dashboard data');
+    ze_error('ERR_CONVERT_GRAPH_TO_DASHBOARD', 'Failed to convert graph to dashboard data');
     throw new Error('Failed to convert graph to dashboard data');
   }
 

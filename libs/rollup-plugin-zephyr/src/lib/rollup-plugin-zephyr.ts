@@ -75,7 +75,7 @@ export function withZephyr() {
         });
         ze_log(`Got build id: ${buildId}`);
 
-        if (!buildId) return ze_error('ZE10019', 'Could not get build id.');
+        if (!buildId) return ze_error('ERR_GET_BUILD_ID');
 
         const pluginOptions: ZephyrPluginOptions = {
           pluginName: 'rollup-plugin-zephyr',
@@ -130,7 +130,7 @@ export function withZephyr() {
         const { state, bundle } = props;
         const _state = await state;
 
-        if (!_state) return ze_error('ZE10020', 'Could not initialize Zephyr Agent.');
+        if (!_state) return ze_error('ERR_INITIALIZE_ZEPHYR_AGENT');
 
         const { appConfig, hash_set, pluginOptions } = _state;
 

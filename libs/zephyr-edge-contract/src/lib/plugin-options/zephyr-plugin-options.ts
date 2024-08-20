@@ -6,7 +6,7 @@ export interface ZephyrPluginOptions {
   zeConfig: {
     edge_url: string;
     user: string;
-    buildId: string | undefined;
+    buildId: string;
   };
   application_uid: string;
   app: {
@@ -16,8 +16,8 @@ export interface ZephyrPluginOptions {
     version: string;
   };
   git: {
-    name?: string;
-    email?: string;
+    name: string;
+    email: string;
     branch: string;
     commit: string;
   };

@@ -1,13 +1,10 @@
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 import { getToken, request, ze_error } from 'zephyr-edge-contract';
 
-export async function getBuildId(
-  application_uid: string
-): Promise<string | void> {
-  const { BUILD_ID_ENDPOINT, user_uuid, jwt } =
-    await getApplicationConfiguration({
-      application_uid,
-    });
+export async function getBuildId(application_uid: string): Promise<string | void> {
+  const { BUILD_ID_ENDPOINT, user_uuid, jwt } = await getApplicationConfiguration({
+    application_uid,
+  });
 
   const token = await getToken();
 
@@ -18,16 +15,10 @@ export async function getBuildId(
     },
   };
 
-  type BuildIdResp =
-    | string
-    | Record<string, string>
-    | { status: number; message: string };
+  type BuildIdResp = string | Record<string, string> | { status: number; message: string };
 
   try {
-    const resp = await request<BuildIdResp>(
-      new URL(BUILD_ID_ENDPOINT),
-      options
-    );
+    const resp = await request<BuildIdResp>(new URL(BUILD_ID_ENDPOINT), options);
 
     if (typeof resp === 'string') {
       throw new Error('[get_build_id]: ' + resp);
@@ -39,6 +30,6 @@ export async function getBuildId(
     return (resp as Record<string, string>)[user_uuid];
   } catch (err: unknown) {
     // TODO: this error log doesn't print useful information
-    ze_error('ZE10019', 'Failed to get build id.', err);
+    ze_error('ERR_GET_BUILD_ID', err);
   }
 }

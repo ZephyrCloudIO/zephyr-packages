@@ -1,11 +1,5 @@
 import { ClientRequestArgs } from 'node:http';
-import {
-  request,
-  Snapshot,
-  SnapshotUploadRes,
-  ze_error,
-  ze_log,
-} from 'zephyr-edge-contract';
+import { request, Snapshot, SnapshotUploadRes, ze_error, ze_log } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 
 export async function uploadSnapshot({
@@ -33,13 +27,13 @@ export async function uploadSnapshot({
     },
   };
 
-  const res = await request<SnapshotUploadRes>(url, options, data).catch(
-    (err) => ze_error('ZE10018', 'Failed to upload snapshot.', err)
+  const res = await request<SnapshotUploadRes>(url, options, data).catch((err) =>
+    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', err)
   );
   ze_log('Snapshot uploaded...');
 
   if (!res || typeof res === 'string') {
-    ze_error('ZE10018', 'Failed to upload snapshot.', res);
+    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', res);
     return;
   }
 

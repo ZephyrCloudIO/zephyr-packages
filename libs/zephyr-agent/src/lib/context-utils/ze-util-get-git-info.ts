@@ -1,7 +1,7 @@
 import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
 import isCI from 'is-ci';
-import { ze_log, _fs_cache, getSecretToken } from 'zephyr-edge-contract';
+import { ze_log, _fs_cache, getSecretToken, ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 import { GitRemoteConfigurationError } from '../custom-errors/git-remote-configuration-error';
 import { GitUserIdentityError } from '../custom-errors/git-user-identity-error';
@@ -10,16 +10,8 @@ const exec = promisify(execCB);
 const cache_prefix = 'git_info';
 
 export interface GitInfo {
-  git: {
-    name?: string;
-    email?: string;
-    branch: string;
-    commit: string;
-  };
-  app: {
-    org: string;
-    project: string;
-  };
+  app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
+  git: ZephyrPluginOptions['git'];
 }
 
 export async function getGitInfo(): Promise<GitInfo> {
@@ -27,15 +19,13 @@ export async function getGitInfo(): Promise<GitInfo> {
   const cached = await _fs_cache.getCache(cache_key);
   if (cached) return JSON.parse(cached);
 
-  const [username, email, remoteOrigin, branch, commitHash] = await Promise.all(
-    [
-      getGitUsername(),
-      getGitEmail(),
-      getGitRemoteOrigin(),
-      getGitBranch(),
-      getGitCommitHash(),
-    ]
-  );
+  const [username, email, remoteOrigin, branch, commitHash] = await Promise.all([
+    getGitUsername(),
+    getGitEmail(),
+    getGitRemoteOrigin(),
+    getGitBranch(),
+    getGitCommitHash(),
+  ]);
 
   // parse remote origin url to get the organization and repository name
   const urlParts = remoteOrigin
@@ -50,14 +40,8 @@ export async function getGitInfo(): Promise<GitInfo> {
     // Split the path into parts
     ?.split('/');
 
-  const organization =
-    urlParts && urlParts?.length > 1
-      ? urlParts[urlParts.length - 2]?.toLocaleLowerCase()
-      : undefined;
-  const repositoryName =
-    urlParts && urlParts.length > 0
-      ? urlParts[urlParts.length - 1]?.toLocaleLowerCase()
-      : undefined;
+  const organization = urlParts && urlParts?.length > 1 ? urlParts[urlParts.length - 2]?.toLocaleLowerCase() : undefined;
+  const repositoryName = urlParts && urlParts.length > 0 ? urlParts[urlParts.length - 1]?.toLocaleLowerCase() : undefined;
 
   if (!organization || !repositoryName) {
     throw new GitRemoteConfigurationError();
@@ -92,9 +76,7 @@ async function hasSecretToken() {
 async function getGitUsername() {
   const has_secret_token = await hasSecretToken();
   if (isCI || has_secret_token) {
-    return exec("git log -1 --pretty=format:'%an'").then((res) =>
-      res.stdout.trim()
-    );
+    return exec("git log -1 --pretty=format:'%an'").then((res) => res.stdout.trim());
   }
   return exec('git config user.name').then((res) => res.stdout.trim());
 }
@@ -102,23 +84,17 @@ async function getGitUsername() {
 async function getGitEmail() {
   const has_secret_token = await hasSecretToken();
   if (isCI || has_secret_token) {
-    return exec("git log -1 --pretty=format:'%ae'").then((res) =>
-      res.stdout.trim()
-    );
+    return exec("git log -1 --pretty=format:'%ae'").then((res) => res.stdout.trim());
   }
   return exec('git config user.email').then((res) => res.stdout.trim());
 }
 
 async function getGitRemoteOrigin() {
-  return exec('git config --get remote.origin.url').then((res) =>
-    res.stdout.trim()
-  );
+  return exec('git config --get remote.origin.url').then((res) => res.stdout.trim());
 }
 
 async function getGitBranch() {
-  return exec('git rev-parse --abbrev-ref HEAD').then((res) =>
-    res.stdout.trim()
-  );
+  return exec('git rev-parse --abbrev-ref HEAD').then((res) => res.stdout.trim());
 }
 
 async function getGitCommitHash() {

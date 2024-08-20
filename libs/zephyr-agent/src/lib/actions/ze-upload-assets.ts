@@ -1,10 +1,4 @@
-import {
-  yellow,
-  ze_error,
-  ze_log,
-  type ZephyrPluginOptions,
-  type ZeUploadAssetsOptions,
-} from 'zephyr-edge-contract';
+import { yellow, ze_error, ze_log, type ZephyrPluginOptions, type ZeUploadAssetsOptions } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadFile } from '../upload/upload-file';
 
@@ -47,9 +41,7 @@ export async function zeUploadAssets(
           const fileUploaded = Date.now() - start;
           totalTime += fileUploaded;
           totalSize += assetSize;
-          ze_log(
-            `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
-          );
+          ze_log(`file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`);
         })
         .catch((err) => {
           logEvent({
@@ -76,13 +68,13 @@ export async function zeUploadAssets(
       logEvent({
         level: 'error',
         action: 'snapshot:assets:upload:failed',
-        message: `failed uploading missing assets to zephyr \n ${err.message.toString()}`,
+        message: `Event: failed uploading missing assets to zephyr \n ${err.message}`,
       });
       return false;
     });
 
   if (!res) {
-    ze_error('ZE20017', res);
+    ze_error('ERR_FAILED_UPLOAD_ASSETS', res);
   }
 
   return res;

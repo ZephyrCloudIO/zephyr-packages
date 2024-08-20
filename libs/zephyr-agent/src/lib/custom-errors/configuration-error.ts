@@ -5,7 +5,7 @@ export class ConfigurationError extends Error {
   // docs usually locate at this address
   constructor(code: string, message: string, level?: 'normal' | 'critical') {
     super(
-      `${brightRedBgName} ${level === 'critical' ? `Critical error` : `Error`} [${code}]: ${message} \n ${code ? `See documentation on how to debug this error: https://docs.zephyr-cloud.io/guide/error/${code.toLowerCase()}` : ''}`
+      `${brightRedBgName} ${level === 'critical' ? `Critical error` : `Error`} [${code}]: ${message} \n ${code ? `See documentation on how to debug this error: https://docs.zephyr-cloud.io/errors/${code.toLowerCase()}` : ''}`
     );
     this.name = 'ConfigurationError';
     // looks weird right? but vite build logger prints only stack trace,

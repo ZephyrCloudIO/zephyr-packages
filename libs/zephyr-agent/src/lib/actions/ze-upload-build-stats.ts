@@ -28,18 +28,18 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<{ 
     JSON.stringify(dashData)
   ).catch((err) => {
     ze_error(
-      'ZE10045',
-      `If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr. \n
-      Error uploading build stats, deployment is not completed. \n
-      Failed to upload build stats to Zephyr... \n
-      `,
+      'ERR_FAILED_UPLOAD_BUILD_STATS',
+      `
+If you believe this is a mistake please make sure you have access to the organization for this application in Zephyr.
+Error uploading build stats, deployment is not completed....
+      `.trim(),
       err
     );
   });
 
-  if (!res) return ze_error('ZE10046', 'Did not receive envs from build stats upload. Exiting...');
+  if (!res) return ze_error('ERR_NOT_RECEIVE_ENVS_FROM_BUILD_STATS', 'Did not receive envs from build stats upload. Exiting...');
 
-  if (typeof res === 'string') return ze_error('ZE10045', 'Failed to upload build stats.', res);
+  if (typeof res === 'string') return ze_error('ERR_FAILED_UPLOAD_BUILD_STATS', 'Failed to upload build stats.', res);
 
   ze_log(`Build stats uploaded to Zephyr...`);
   return res;

@@ -10,6 +10,8 @@ import {
 } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadSnapshot } from '../upload/upload-snapshot';
+import { ConfigurationError } from '../custom-errors';
+import { SnapshotUploadFailureError, SnapshotUploadNoResultError } from '../custom-errors/snapshot-uploads';
 
 export async function zeUploadSnapshot(props: {
   pluginOptions: ZephyrPluginOptions;
@@ -38,11 +40,11 @@ export async function zeUploadSnapshot(props: {
       message: `failed uploading of ${buildEnv} snapshot to zephyr`,
     });
     if (error) {
-      ze_error('ZE10018', 'Failed to upload snapshot.', error);
-      throw new Error('Error [ZE10018]: Failed to upload snapshot.');
+      ze_error('ERR_SNAPSHOT_UPLOADS_NO_RESULTS');
+      throw new SnapshotUploadNoResultError();
     }
-    ze_error('ZE10018', 'Snapshot upload gave no result, exiting...');
-    throw new Error('Error [ZE10019]: Snapshot upload gave no result, exiting...');
+    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', error);
+    throw new SnapshotUploadFailureError();
   }
 
   logEvent({
@@ -50,6 +52,8 @@ export async function zeUploadSnapshot(props: {
     action: 'snapshot:upload:done',
     message: `Uploaded ${green(buildEnv)} snapshot in ${yellow(`${Date.now() - snapUploadMs}`)}ms`,
   });
+
+  if (!edgeTodo) ze_error('ERR_SNAPSHOT_UPLOADS_NO_RESULTS', 'Snapshot upload gave no result, exiting...\n');
 
   logEvent({
     level: 'trace',

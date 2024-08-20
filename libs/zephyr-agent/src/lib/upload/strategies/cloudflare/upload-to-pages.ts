@@ -20,5 +20,5 @@ async function uploadToPages({ uploadConfig, pluginOptions, outputPath, assetsMa
     .then((outputPath) => upload(outputPath, uploadConfig.providerConfig))
     .then((pages_url) => enablePages(pluginOptions, envs, pages_url))
     .then(() => ze_log('Build deployed to cloudflare pages'))
-    .catch((error) => ze_error(`Error upload to cloudflare pages: ${error.message}`));
+    .catch((error) => ze_error('ERR_UPLOAD_TO_CLOUDFLARE_PAGES', `Error upload to cloudflare pages: ${error.message}`));
 }

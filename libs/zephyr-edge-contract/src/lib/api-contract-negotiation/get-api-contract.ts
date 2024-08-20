@@ -1,6 +1,6 @@
 export const ZEPHYR_API_ENDPOINT = () => process.env['ZE_API'] ?? 'https://api.zephyr-cloud.io';
 
-export const ZE_API_ENDPOINT = () => process.env['ZE_API_GATE'] ?? 'https://zeapi.valorkin.dev';
+export const ZE_API_ENDPOINT = () => process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloud.app';
 
 export const ze_api_gateway = {
   logs: '/logs',

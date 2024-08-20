@@ -31,7 +31,7 @@ export async function resolve_remote_dependencies(
         \t - ${sample_project_name} - git repository name
         \t - ${sample_org_name} - git organization name
 
-        Or join and ask question in our discord: https://discord.gg/EqFbSSt8Hx
+        Or join and ask question in our discord: https://zephyr-cloud.io/discord
       `);
   }
 }

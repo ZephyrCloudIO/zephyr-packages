@@ -22,7 +22,7 @@ export const ErrorCategories = {
 export const Errors = {
   ERR_UNKNOWN: {
     id: '000',
-    message: 'Unknown error. Tell us about it in Discord https://discord.gg/pSxWRVayEu if you see this error',
+    message: 'Unknown error. Tell us about it in Discord https://zephyr-cloud.io/discord if you see this error',
     kind: 'unknown',
   },
   /** package.json not found error */

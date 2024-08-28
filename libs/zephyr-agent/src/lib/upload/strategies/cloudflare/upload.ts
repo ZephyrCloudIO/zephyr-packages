@@ -1,6 +1,14 @@
-import { CloudflareOptions, ze_error } from 'zephyr-edge-contract';
-import process from 'process';
+import { ze_error } from 'zephyr-edge-contract';
+import process from 'node:process';
 
+interface CloudflareOptions {
+  edgeUrl: string;
+  api_token: string;
+  accountId: string;
+  projectName?: string;
+}
+
+/** @deprecated */
 export async function upload(outputPath: string, { api_token, accountId, projectName }: CloudflareOptions): Promise<string> {
   process.env['CLOUDFLARE_API_TOKEN'] = api_token;
 

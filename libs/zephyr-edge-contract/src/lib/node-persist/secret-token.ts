@@ -1,5 +1,9 @@
 import { StorageKeys } from './storage-keys';
 
-export async function getSecretToken(): Promise<string | undefined> {
+export function getSecretToken(): string | undefined {
   return process.env[StorageKeys.ze_secret_token];
+}
+
+export function hasSecretToken() {
+  return !!getSecretToken();
 }

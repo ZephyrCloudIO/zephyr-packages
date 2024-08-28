@@ -148,7 +148,6 @@ export function withZephyr() {
           getDashData,
           appConfig,
           zeStart,
-          uploadConfig: appConfig.uploadConfig,
         });
       })({ state: _state, bundle });
 

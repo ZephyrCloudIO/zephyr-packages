@@ -1,20 +1,20 @@
 import {
   appDeployResultCache,
-  UploadProviderConfig,
   UploadProviderType,
-  ZeApplicationConfig,
-  ZeBuildAsset,
-  ZeBuildAssetsMap,
-  ZephyrBuildStats,
-  ZephyrPluginOptions,
-  ZeUploadBuildStats,
+  type ZeApplicationConfig,
+  type ZeBuildAsset,
+  type ZeBuildAssetsMap,
+  type ZephyrBuildStats,
+  type ZephyrPluginOptions,
+  type ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
 import { cloudflareStrategy, netlifyStrategy } from './strategies';
-import { GetDashDataOptions } from '../payload-builders';
+import type { GetDashDataOptions } from '../payload-builders';
 
 export async function upload(options: UploadOptions) {
   let deployResult: ZeUploadBuildStats | undefined = undefined;
-  switch (options.uploadConfig.type) {
+
+  switch (options.appConfig.PLATFORM) {
     case UploadProviderType.CLOUDFLARE:
       deployResult = await cloudflareStrategy(options);
       break;
@@ -37,7 +37,6 @@ export interface UploadOptions {
   pluginOptions: ZephyrPluginOptions;
   getDashData: (options: GetDashDataOptions) => ZephyrBuildStats;
   zeStart: number;
-  uploadConfig: UploadProviderConfig;
 }
 
 export interface AssetsOptions {

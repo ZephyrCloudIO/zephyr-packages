@@ -1,10 +1,8 @@
-import { Stats, StatsCompilation } from 'webpack';
-import { get_hash_list, get_missing_assets, getApplicationConfiguration, upload, zeBuildAssetsMap } from 'zephyr-agent';
-
-import { Source, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
-
-import { emitDeploymentDone } from './lifecycle-events';
+import type { Stats, StatsCompilation } from 'webpack';
+import { getApplicationConfiguration, get_hash_list, get_missing_assets, upload, zeBuildAssetsMap } from 'zephyr-agent';
+import { type Source, type ZephyrPluginOptions, ze_log } from 'zephyr-edge-contract';
 import { getBuildStats } from '../../federation-dashboard-legacy/get-build-stats';
+import { emitDeploymentDone } from './lifecycle-events';
 
 export interface ZephyrAgentProps {
   stats: Stats;
@@ -18,8 +16,7 @@ export async function webpack_zephyr_agent({ stats, stats_json, assets, pluginOp
   const application_uid = pluginOptions.application_uid;
 
   const [appConfig, hash_set] = await Promise.all([getApplicationConfiguration({ application_uid }), get_hash_list(application_uid)]);
-  const { EDGE_URL, DOMAIN, PLATFORM, INTEGRATION_CONFIG } = appConfig;
-  const TYPE = INTEGRATION_CONFIG?.type;
+  const { EDGE_URL, PLATFORM } = appConfig;
 
   const zeStart = Date.now();
   const assetsMap = await zeBuildAssetsMap(pluginOptions, assets);
@@ -42,13 +39,10 @@ export async function webpack_zephyr_agent({ stats, stats_json, assets, pluginOp
         assets,
         pluginOptions,
         EDGE_URL,
-        DOMAIN,
         PLATFORM,
-        TYPE,
       }),
     appConfig,
     zeStart,
-    uploadConfig: appConfig.uploadConfig,
   });
 
   emitDeploymentDone();

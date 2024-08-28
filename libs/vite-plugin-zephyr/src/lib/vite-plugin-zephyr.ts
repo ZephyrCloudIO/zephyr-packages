@@ -184,7 +184,6 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
     getDashData: zeGetDashData,
     appConfig,
     zeStart,
-    uploadConfig: appConfig.uploadConfig,
   });
 }
 

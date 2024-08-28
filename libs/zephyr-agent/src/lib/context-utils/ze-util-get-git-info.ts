@@ -1,7 +1,7 @@
 import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
 import isCI from 'is-ci';
-import { ze_log, _fs_cache, getSecretToken, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { ze_log, _fs_cache, hasSecretToken, type ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 import { GitRemoteConfigurationError } from '../custom-errors/git-remote-configuration-error';
 import { GitUserIdentityError } from '../custom-errors/git-user-identity-error';
@@ -69,12 +69,8 @@ export async function getGitInfo(): Promise<GitInfo> {
   return gitInfo;
 }
 
-async function hasSecretToken() {
-  return getSecretToken().then((res) => !!res);
-}
-
 async function getGitUsername() {
-  const has_secret_token = await hasSecretToken();
+  const has_secret_token = hasSecretToken();
   if (isCI || has_secret_token) {
     return exec("git log -1 --pretty=format:'%an'").then((res) => res.stdout.trim());
   }
@@ -82,7 +78,7 @@ async function getGitUsername() {
 }
 
 async function getGitEmail() {
-  const has_secret_token = await hasSecretToken();
+  const has_secret_token = hasSecretToken();
   if (isCI || has_secret_token) {
     return exec("git log -1 --pretty=format:'%ae'").then((res) => res.stdout.trim());
   }

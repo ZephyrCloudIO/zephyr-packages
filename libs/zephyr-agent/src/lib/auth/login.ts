@@ -58,7 +58,8 @@ export async function getAuthenticationURL(options: AuthOptions): Promise<string
  * @return The token as a string.
  */
 export async function checkAuth(): Promise<string> {
-  const secret_token = await getSecretToken();
+  const secret_token = getSecretToken();
+
   if (secret_token) {
     return secret_token;
   }

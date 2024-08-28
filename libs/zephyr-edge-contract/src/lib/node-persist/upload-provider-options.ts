@@ -1,6 +1,16 @@
-export interface UploadProviderConfig {
-  type: UploadProviderType;
-  providerConfig: IntegrationConfig;
+// libs/api/builder-packages-api/src/lib/builder-packages-api.service.ts
+export interface ZeApplicationConfig {
+  application_uid: string;
+  AUTH0_CLIENT_ID: string;
+  AUTH0_DOMAIN: string;
+  BUILD_ID_ENDPOINT: string;
+  EDGE_URL: string;
+  email: string;
+  fetched_at?: number;
+  jwt: string;
+  PLATFORM: UploadProviderType;
+  user_uuid: string;
+  username: string;
 }
 
 export enum UploadProviderType {
@@ -10,12 +20,3 @@ export enum UploadProviderType {
   AZURE = 'azure',
   GCP = 'gcp',
 }
-
-export interface CloudflareOptions {
-  edgeUrl: string;
-  api_token: string;
-  accountId: string;
-  projectName?: string;
-}
-
-export type IntegrationConfig = CloudflareOptions;

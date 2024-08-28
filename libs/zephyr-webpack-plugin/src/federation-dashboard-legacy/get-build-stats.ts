@@ -1,7 +1,7 @@
-import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 import * as isCI from 'is-ci';
-import { ConvertedGraph, createSnapshotId, ze_error, ze_log } from 'zephyr-edge-contract';
-import { ZephyrAgentProps } from '../lib/ze-agent';
+import { type ConvertedGraph, createSnapshotId, ze_error, ze_log } from 'zephyr-edge-contract';
+import type { ZephyrAgentProps } from '../lib/ze-agent';
+import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 
 export function getBuildStats({
   stats,

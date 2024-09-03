@@ -39,8 +39,10 @@ Error uploading build stats, deployment is not completed....
 
   if (!res) return ze_error('ERR_NOT_RECEIVE_ENVS_FROM_BUILD_STATS', 'Did not receive envs from build stats upload. Exiting...');
 
-  if (typeof res === 'string') return ze_error('ERR_FAILED_UPLOAD_BUILD_STATS', 'Failed to upload build stats.', res);
+  // Gateway returns string response
+  // if (typeof res === 'string') return ze_error('ERR_FAILED_UPLOAD_BUILD_STATS', 'Failed to upload build stats.', res);
 
   ze_log(`Build stats uploaded to Zephyr...`);
-  return res;
+
+  return;
 }

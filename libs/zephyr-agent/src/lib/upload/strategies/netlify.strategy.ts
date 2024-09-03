@@ -1,5 +1,5 @@
 import {
-  ze_error,
+  yellow,
   ZeApplicationConfig,
   ZeBuildAsset,
   ZeBuildAssetsMap,
@@ -7,10 +7,11 @@ import {
   ZephyrPluginOptions,
   ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
+import { logger } from '../../remote-logs/ze-log-event';
 
 import { update_hash_list } from '../../dvcs/distributed-hash-control';
 import { createSnapshot, GetDashDataOptions } from '../../payload-builders';
-import { zeEnableSnapshotOnEdge, zeUploadAssets, zeUploadBuildStats, zeUploadSnapshot } from '../../actions';
+import { zeUploadAssets, zeUploadBuildStats, zeUploadSnapshot } from '../../actions';
 import { UploadOptions } from '../upload';
 
 export async function netlifyStrategy({
@@ -32,26 +33,20 @@ export async function netlifyStrategy({
     uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
 
-  const envs = await uploadBuildStatsAndEnableEnvs({
+  await uploadBuildStatsAndEnableEnvs({
     appConfig,
     pluginOptions,
     getDashData,
     versionUrl,
   });
 
-  if (!envs) {
-    ze_error('ERR_NOT_RECEIVE_ENVS_FROM_BUILD_STATS', 'Did not receive envs from build stats upload.');
-
-    return undefined;
-  }
-
-  await zeEnableSnapshotOnEdge({
-    pluginOptions,
-    envs_jwt: envs.value,
-    zeStart,
+  logger(pluginOptions)({
+    level: 'info',
+    action: 'build:deploy:done',
+    message: `Build deployed in ${yellow(`${Date.now() - zeStart}`)}ms`,
   });
 
-  return envs.value;
+  return;
 }
 
 interface UploadAssetsOptions {

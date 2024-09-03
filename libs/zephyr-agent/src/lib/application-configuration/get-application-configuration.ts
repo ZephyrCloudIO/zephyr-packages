@@ -48,33 +48,69 @@ async function loadApplicationConfiguration({
   }
 }
 
-let refetching_app_config = false;
-
+/**
+ * Gather all calls until the first returns result:
+ * - no parallel requests to api
+ * - almost all actual data
+ *
+ * Note: not the best solution, but works until we use the same application_uid during execution
+ */
 export async function getApplicationConfiguration({ application_uid }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
   ze_log('Getting application configuration from node-persist');
+  const promise = addToQueue();
+  if (callsQueue.length === 1) {
+    const storedAppConfig = await getAppConfig(application_uid);
+    if (
+      !storedAppConfig ||
+      (storedAppConfig &&
+        (!isTokenStillValid(storedAppConfig.jwt) || !storedAppConfig?.fetched_at || Date.now() - storedAppConfig.fetched_at > 60 * 1000))
+    ) {
+      ze_log('Loading Application Configuration from API...');
+      await loadApplicationConfiguration({ application_uid })
+        .then(async (loadedAppConfig) => {
+          if (!loadedAppConfig) {
+            throw new ConfigurationError(`ZE20014`, `Failed to load application configuration...`, `critical`);
+          }
 
-  const storedAppConfig = await getAppConfig(application_uid);
+          ze_log('Saving Application Configuration to node-persist...');
+          await saveAppConfig(application_uid, loadedAppConfig);
 
-  if (storedAppConfig && isTokenStillValid(storedAppConfig.jwt)) {
-    if (!refetching_app_config && (!storedAppConfig?.fetched_at || Date.now() - storedAppConfig.fetched_at > 60 * 1000)) {
-      refetching_app_config = true;
-      loadApplicationConfiguration({ application_uid }).then((reloadedAppConfig) => {
-        refetching_app_config = false;
-        if (!reloadedAppConfig) return;
-        saveAppConfig(application_uid, reloadedAppConfig);
-      });
+          return loadedAppConfig;
+        })
+        .then((result) => handleQueue(result))
+        .catch((error) => handleQueue(undefined, error));
+    } else {
+      handleQueue(storedAppConfig);
     }
-    return storedAppConfig;
   }
 
-  ze_log('Loading Application Configuration from API...');
-  const loadedAppConfig = await loadApplicationConfiguration({
-    application_uid,
+  return promise;
+}
+
+const callsQueue: ((value?: ZeApplicationConfig, error?: Error) => void)[] = [];
+function addToQueue(): Promise<ZeApplicationConfig> {
+  let resolve!: (value: ZeApplicationConfig) => void;
+  let reject!: (error?: Error) => void;
+  const callback = (value?: ZeApplicationConfig, error?: Error) => {
+    if (value) {
+      resolve(value);
+    }
+
+    reject(error);
+  };
+  callsQueue.push(callback);
+
+  return new Promise<ZeApplicationConfig>((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
   });
-  ze_log('Saving Application Configuration to node-persist...');
-  if (!loadedAppConfig) throw new ConfigurationError(`ZE20014`, `Failed to load application configuration...`, `critical`);
+}
 
-  await saveAppConfig(application_uid, loadedAppConfig);
-
-  return loadedAppConfig;
+function handleQueue(result?: ZeApplicationConfig, error?: Error) {
+  do {
+    const callback = callsQueue.shift();
+    if (callback) {
+      callback(result, error);
+    }
+  } while (callsQueue.length);
 }

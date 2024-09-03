@@ -68,7 +68,7 @@ export async function checkAuth(): Promise<string> {
 
   if (token) {
     // Check if the token has a valid expiration date.
-    if (isTokenStillValid(token)) {
+    if (isTokenStillValid(token, 60)) {
       ze_log('You are already logged in');
       return token;
     }
@@ -85,16 +85,17 @@ export async function checkAuth(): Promise<string> {
 /**
  * Decides whether the token is still valid based on its expiration time.
  * @param token The token to check.
+ * @param gap in seconds
  * @return boolean indicating if the token is still valid.
  */
-export function isTokenStillValid(token: string): boolean {
+export function isTokenStillValid(token: string, gap = 0): boolean {
   const decodedToken = jose.decodeJwt(token);
 
   if (!decodedToken.exp) {
     return false;
   }
 
-  return new Date(decodedToken.exp * 1000) > new Date();
+  return new Date(decodedToken.exp * 1000) > new Date(Date.now() + gap * 1000);
 }
 
 /**

@@ -30,6 +30,8 @@ export async function netlifyStrategy({
     getDashData,
     versionUrl,
   });
+
+  return versionUrl;
 }
 
 interface UploadAssetsOptions {

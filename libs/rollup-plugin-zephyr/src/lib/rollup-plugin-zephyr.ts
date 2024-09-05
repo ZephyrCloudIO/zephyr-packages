@@ -14,13 +14,12 @@ import {
 import {
   type ZeApplicationConfig,
   type ZephyrPluginOptions,
-  black,
-  blackBright,
   createApplicationUID,
   cyanBright,
+  white,
+  yellow,
   ze_error,
   ze_log,
-  yellow,
 } from 'zephyr-edge-contract';
 import { getAssetsMap } from './utils/get-assets-map';
 import { getDashData } from './utils/get-dash-data';
@@ -101,18 +100,12 @@ export function withZephyr() {
 
         const logEvent = logger(pluginOptions);
 
-        logEvent(
-          {
-            level: 'info',
-            action: 'build:info:user',
-            message: `Hi ${cyanBright(username)}!`,
-          },
-          {
-            level: 'info',
-            action: 'build:info:id',
-            message: `Building to ${blackBright(application_uid)}${yellow(`#${buildId}`)}`,
-          }
-        );
+        logEvent({
+          level: 'info',
+          action: 'build:info:user',
+          ignore: true,
+          message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
+        });
 
         return {
           appConfig,

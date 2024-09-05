@@ -59,6 +59,6 @@ export function getBuildStats({
 
   // todo: extend data
   const res = Object.assign({}, convertedGraph, data_overrides);
-  ze_log(`get build stats done. ${JSON.stringify(res)}`);
+  ze_log('get build stats done.', res);
   return res;
 }

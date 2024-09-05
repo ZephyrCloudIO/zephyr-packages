@@ -1,21 +1,13 @@
-import { ClientRequestArgs } from 'node:http';
-import { request, UploadableAsset } from 'zephyr-edge-contract';
-import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
+import type { ClientRequestArgs } from 'node:http';
+import { type UploadableAsset, type ZeApplicationConfig, request } from 'zephyr-edge-contract';
 
-export async function uploadFile({
-  hash,
-  asset,
-  application_uid,
-}: {
+export interface UploadFileProps {
   hash: string;
   asset: UploadableAsset;
-  application_uid: string;
-}): Promise<unknown> {
-  const type = 'file';
+}
 
-  const { EDGE_URL, jwt } = await getApplicationConfiguration({
-    application_uid,
-  });
+export async function uploadFile({ hash, asset }: UploadFileProps, { EDGE_URL, jwt }: ZeApplicationConfig): Promise<unknown> {
+  const type = 'file';
 
   const options: ClientRequestArgs = {
     method: 'POST',

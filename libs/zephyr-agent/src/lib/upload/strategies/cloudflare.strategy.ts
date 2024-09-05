@@ -29,4 +29,6 @@ export async function cloudflareStrategy({
     getDashData,
     versionUrl,
   });
+
+  return versionUrl;
 }

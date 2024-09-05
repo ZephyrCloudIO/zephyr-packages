@@ -1,20 +1,19 @@
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
   ZE_API_ENDPOINT,
-  type ZeApplicationConfig,
   brightBlueBgName,
+  brightGreenBgName,
   brightRedBgName,
   brightYellowBgName,
   getToken,
   is_debug_enabled,
   request,
-  brightGreenBgName,
   ze_api_gateway,
   ze_log,
 } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
-import { stripAnsi } from '../util/strip-ansi';
 import { PromiseLazyLoad } from '../util/promise';
+import { stripAnsi } from '../util/strip-ansi';
 
 export const logFn = (level: string, msg: unknown): void => {
   if (is_debug_enabled) {
@@ -22,25 +21,45 @@ export const logFn = (level: string, msg: unknown): void => {
     return;
   }
 
+  const str = String(msg);
+  const padded = str
+    .split('\n')
+    .map((m) => `${toLevelPrefix(level)}  ${m.trim()}`)
+    .join('\n');
+
   switch (level) {
     case 'warn':
-      console.warn(`${brightYellowBgName}  ${msg}`);
+      console.warn(padded);
       break;
     case 'debug':
-      console.debug(`${brightGreenBgName}  ${msg}`);
+      console.debug(padded);
       break;
     case 'error':
-      console.error(`${brightRedBgName}  ${msg}`);
+      console.error(padded);
       break;
     default:
-      console.log(`${brightBlueBgName}  ${msg}`);
+      console.log(padded);
   }
 };
+
+function toLevelPrefix(level: string) {
+  switch (level) {
+    case 'warn':
+      return brightYellowBgName;
+    case 'debug':
+      return brightGreenBgName;
+    case 'error':
+      return brightRedBgName;
+    default:
+      return brightBlueBgName;
+  }
+}
 
 export interface LogEventOptions {
   level: string;
   action: string;
   message: string;
+  ignore?: boolean;
   meta?: Record<string, unknown>;
 }
 
@@ -63,9 +82,6 @@ export function logger(options: ZephyrPluginOptions): ZeLogger {
         throw new Error('log level and action type must be provided');
       }
 
-      // trims every message
-      log.message = log.message.trim();
-
       logFn(log.level, log.message);
     }
 
@@ -82,18 +98,21 @@ export function logger(options: ZephyrPluginOptions): ZeLogger {
             },
           },
           JSON.stringify(
-            logs.map((log) => ({
-              application_uid: options.application_uid,
-              userId: config.user_uuid,
-              username: config.username,
-              zeBuildId: options.zeConfig.buildId,
-              logLevel: log.level,
-              actionType: log.action,
-              git: options.git,
-              message: stripAnsi(log.message),
-              meta: Object.assign({}, log.meta, { isCI: options.isCI, app: options.app, git: options.git }),
-              createdAt: Date.now(),
-            }))
+            logs
+              // some logs are empty to give newline effect in terminal
+              .filter((l) => l.message.length && !l.ignore)
+              .map((log) => ({
+                application_uid: options.application_uid,
+                userId: config.user_uuid,
+                username: config.username,
+                zeBuildId: options.zeConfig.buildId,
+                logLevel: log.level,
+                actionType: log.action,
+                git: options.git,
+                message: stripAnsi(log.message.trim()),
+                meta: Object.assign({}, log.meta, { isCI: options.isCI, app: options.app, git: options.git }),
+                createdAt: Date.now(),
+              }))
           )
         )
       )

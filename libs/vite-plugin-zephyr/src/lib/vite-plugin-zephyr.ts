@@ -15,16 +15,15 @@ import {
   zeGetDashData,
 } from 'zephyr-agent';
 import {
-  black,
-  blackBright,
+  type ZephyrPluginOptions,
   createApplicationUID,
   cyanBright,
   getPartialAssetMap,
   removePartialAssetMap,
+  white,
   yellow,
   ze_error,
   ze_log,
-  type ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { load_public_dir } from './load_public_dir';
 import { load_static_entries } from './load_static_entries';
@@ -109,14 +108,7 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
   ze_log('Got auth token, going to get application configuration and build id...');
   const [appConfig, buildId, hash_set] = await Promise.all([
     getApplicationConfiguration({ application_uid }),
-    getBuildId(application_uid).catch((err: Error) => {
-      logEvent({
-        level: 'error',
-        action: 'build:get-build-id:error',
-        message: `error receiving build number for '${email}'\n
-          ${err.message}\n`,
-      });
-    }),
+    getBuildId(application_uid),
     get_hash_list(application_uid),
   ]);
   const { username, email, EDGE_URL } = appConfig;
@@ -149,18 +141,12 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
   ze_log('\nzephyr agent started.\n');
   const logEvent = logger(pluginOptions);
 
-  logEvent(
-    {
-      level: 'info',
-      action: 'build:info:user',
-      message: `Hi ${cyanBright(username)}!`,
-    },
-    {
-      level: 'info',
-      action: 'build:info:id',
-      message: `Building to ${blackBright(application_uid)}${yellow(`#${buildId}`)}`,
-    }
-  );
+  logEvent({
+    level: 'info',
+    action: 'build:info:user',
+    ignore: true,
+    message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
+  });
 
   const zeStart = Date.now();
 

@@ -31,7 +31,7 @@ async function loadApplicationConfiguration({
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (typeof response !== 'string') {
+    if (typeof response !== 'string' && response.value) {
       ze_log('Application Configuration loaded...', response);
 
       return {

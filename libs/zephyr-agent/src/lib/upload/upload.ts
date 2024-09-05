@@ -5,6 +5,7 @@ import {
   type ZeBuildAssetsMap,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
+  cyanBright,
   yellow,
 } from 'zephyr-edge-contract';
 import type { GetDashDataOptions } from '../payload-builders';
@@ -12,23 +13,25 @@ import { logger } from '../remote-logs/ze-log-event';
 import { cloudflareStrategy, netlifyStrategy } from './strategies';
 
 export async function upload(options: UploadOptions): Promise<void> {
-  const log = logger(options.pluginOptions);
+  const logEvent = logger(options.pluginOptions);
+
+  let versionUrl: string;
 
   switch (options.appConfig.PLATFORM) {
     case UploadProviderType.CLOUDFLARE:
-      await cloudflareStrategy(options);
+      versionUrl = await cloudflareStrategy(options);
       break;
     case UploadProviderType.NETLIFY:
-      await netlifyStrategy(options);
+      versionUrl = await netlifyStrategy(options);
       break;
     default:
       throw new Error('Unsupported upload provider.');
   }
 
-  log({
-    level: 'info',
-    action: 'build:deploy:done',
-    message: `Build deployed in ${yellow(`${Date.now() - options.zeStart}`)}ms`,
+  logEvent({
+    level: 'trace',
+    action: 'deploy:url',
+    message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(`${Date.now() - options.zeStart}`)}ms.\n\n${cyanBright(versionUrl)}`,
   });
 
   // FIXME: Now only possible if:

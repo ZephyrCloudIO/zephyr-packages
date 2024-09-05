@@ -1,11 +1,11 @@
 import {
+  type ZeUploadBuildStats,
+  type ZephyrPluginOptions,
   blackBright,
   brightBlueBgName,
   cyanBright,
   yellow,
   ze_log,
-  type ZephyrPluginOptions,
-  type ZeUploadBuildStats,
 } from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadEnvs } from '../upload/upload-envs';
@@ -45,7 +45,7 @@ export async function zeEnableSnapshotOnEdge(props: ZeEnableSnapshotOnEdgeProps)
     {
       level: 'info',
       action: 'build:deploy:done',
-      message: `Build deployed in ${yellow(`${Date.now() - zeStart}`)}ms`,
+      message: `Deployment took ${yellow(`${Date.now() - zeStart}`)}ms`,
     },
     {
       level: 'trace',

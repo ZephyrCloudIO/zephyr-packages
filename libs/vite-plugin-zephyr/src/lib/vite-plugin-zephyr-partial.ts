@@ -19,11 +19,10 @@ import {
 import {
   type ZeBuildAssetsMap,
   type ZephyrPluginOptions,
-  black,
-  blackBright,
   createApplicationUID,
   cyanBright,
   savePartialAssetMap,
+  white,
   yellow,
   ze_error,
   ze_log,
@@ -109,14 +108,7 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
 
   const [appConfig, buildId, hash_set] = await Promise.all([
     getApplicationConfiguration({ application_uid }),
-    getBuildId(application_uid).catch((err) => {
-      logEvent({
-        level: 'error',
-        action: 'build:get-build-id:error',
-        message: `error receiving build number for '${email}'\n
-        ${err.message}\n`,
-      });
-    }),
+    getBuildId(application_uid),
     get_hash_list(application_uid),
   ]);
 
@@ -149,18 +141,12 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
   ze_log('\n--------\n zephyr agent started. \n ------ \n');
   const logEvent = logger(pluginOptions);
 
-  logEvent(
-    {
-      level: 'info',
-      action: 'build:info:user',
-      message: `Hi ${cyanBright(username)}!`,
-    },
-    {
-      level: 'info',
-      action: 'build:info:id',
-      message: `Building to ${blackBright(application_uid)}${yellow(`#${buildId}`)}`,
-    }
-  );
+  logEvent({
+    level: 'info',
+    action: 'build:info:user',
+    ignore: true,
+    message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
+  });
 
   const zeStart = Date.now();
 
@@ -226,6 +212,6 @@ async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_op
   logEvent({
     level: 'info',
     action: 'build:deploy:done',
-    message: `Build deployed in ${yellow(`${Date.now() - zeStart}`)}ms`,
+    message: `Deployment took ${yellow(`${Date.now() - zeStart}`)}ms`,
   });
 }

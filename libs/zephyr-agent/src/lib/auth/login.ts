@@ -4,10 +4,10 @@ import {
   ZE_API_ENDPOINT,
   getSecretToken,
   getToken,
-  gray,
   removeToken,
   request,
   saveToken,
+  white,
   ze_api_gateway,
   ze_log,
 } from 'zephyr-edge-contract';
@@ -101,7 +101,7 @@ async function getPersonalAccessTokenFromWebsocket(): Promise<string> {
   } catch (error) {
     logFn(
       'debug',
-      `Could not open browser to authenticate with ZephyrCloud. Please open the link below to authenticate:\n\n${gray(authUrl)}\n`
+      `Could not open browser to authenticate with ZephyrCloud. Please open the link below to authenticate:\n\n${white(authUrl)}\n`
     );
   }
 

@@ -1,4 +1,4 @@
-interface PublishTarget {
+export interface PublishTarget {
   url: string;
   hostname: string;
 }
@@ -13,15 +13,17 @@ export interface PublishRequest {
   user_uuid: string;
   username: string;
   can_write: boolean;
-  // todo: all tags, envs, cname publish targets should be logged in deployment history
+
+  // TODO: all tags, envs, cname publish targets should be logged in deployment history
   targets: {
     // already published at this point
-    version?: PublishTarget;
+    version: PublishTarget;
     // publish each below
-    tags?: PublishTarget[];
-    ens?: PublishTarget[];
-    cnames?: PublishTarget[];
+    tags: PublishTarget[];
+    envs: PublishTarget[];
+    cnames: PublishTarget[];
   };
+
   // this is can_write_jwt
   jwt: string;
 }
@@ -29,5 +31,5 @@ export interface PublishRequest {
 export interface StageZeroPublishRequest {
   application_uid: string;
   snapshot_id: string;
-  target: PublishTarget;
+  targets: PublishTarget[];
 }

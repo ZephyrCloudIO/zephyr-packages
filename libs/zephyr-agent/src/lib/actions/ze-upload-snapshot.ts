@@ -1,4 +1,4 @@
-import { type Snapshot, type ZeApplicationConfig, type ZephyrPluginOptions, gray, green, yellow, ze_error } from 'zephyr-edge-contract';
+import { type Snapshot, type ZeApplicationConfig, type ZephyrPluginOptions, green, yellow, ze_error } from 'zephyr-edge-contract';
 import { SnapshotUploadFailureError, SnapshotUploadNoResultError } from '../custom-errors/snapshot-uploads';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadSnapshot } from '../upload/upload-snapshot';
@@ -48,12 +48,6 @@ export async function zeUploadSnapshot(props: {
   if (!edgeTodo) {
     ze_error('ERR_SNAPSHOT_UPLOADS_NO_RESULTS', 'Snapshot upload gave no result, exiting...\n');
   }
-
-  logEvent({
-    level: 'trace',
-    action: 'deploy:url',
-    message: `New deployment available:\n${gray(versionUrl)}`,
-  });
 
   return versionUrl;
 }

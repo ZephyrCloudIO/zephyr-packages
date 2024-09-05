@@ -9,8 +9,6 @@ interface ServerToClientEvents {
   'access-token-error': (msg: string) => void;
 }
 
-export function createSocket(
-  endpoint: string
-): Socket<ServerToClientEvents, ClientToServerEvents> {
+export function createSocket(endpoint: string): Socket<ServerToClientEvents, ClientToServerEvents> {
   return socketio(endpoint);
 }

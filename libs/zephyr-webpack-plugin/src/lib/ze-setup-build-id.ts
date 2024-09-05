@@ -1,6 +1,6 @@
-import { Compiler } from 'webpack';
-import { checkAuth, CouldNotGetBuildIdError, get_hash_list, getApplicationConfiguration, getBuildId, logger } from 'zephyr-agent';
-import { cyanBright, yellow, ze_error, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { Compiler } from 'webpack';
+import { CouldNotGetBuildIdError, checkAuth, getApplicationConfiguration, getBuildId, get_hash_list, logger } from 'zephyr-agent';
+import { type ZephyrPluginOptions, cyanBright, white, yellow, ze_error, ze_log } from 'zephyr-edge-contract';
 
 export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: Compiler): void {
   ze_log('Setting Get Zephyr Config hook');
@@ -27,18 +27,12 @@ export function setupZephyrConfig(pluginOptions: ZephyrPluginOptions, compiler: 
 
     const logEvent = logger(pluginOptions);
 
-    logEvent(
-      {
-        level: 'info',
-        action: 'build:info:user',
-        message: `Hi ${cyanBright(username)}!`,
-      },
-      {
-        level: 'info',
-        action: 'build:info:id',
-        message: `Building to ${cyanBright(application_uid)}${yellow(`#${buildId}`)}`,
-      }
-    );
+    logEvent({
+      level: 'info',
+      action: 'build:info:user',
+      ignore: true,
+      message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
+    });
 
     zeConfig.user = username;
     zeConfig.edge_url = EDGE_URL;

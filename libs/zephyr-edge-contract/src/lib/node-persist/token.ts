@@ -10,7 +10,7 @@ const storage = init({
 
 export async function saveToken(token: string): Promise<void> {
   await storage;
-  void (await setItem(StorageKeys.ze_auth_token, token));
+  await setItem(StorageKeys.ze_auth_token, token);
 }
 
 export async function getToken(): Promise<string | undefined> {

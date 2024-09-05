@@ -1,9 +1,9 @@
 // light weight utils for decorated console.error + able to toggle different parts of whole module's logging result
 import { debug } from 'debug';
-import { dim, bold, bgCyanBright, black, bgYellowBright, bgRedBright, redBright } from './picocolor';
+import { dim, bold, bgCyanBright, black, bgYellowBright, bgRedBright, redBright, bgGreenBright } from './picocolor';
 import { is_debug_enabled } from './debug-enabled';
 import { err } from './error-formatted-message';
-import { Errors } from './error-codes-messages';
+import type { Errors } from './error-codes-messages';
 
 //TODO: this should be traced and logged into new relic
 //TODO: print different colors to it + Capitalize maybe?
@@ -14,6 +14,8 @@ export const dimmedName = dim(name);
 export const brightBlueBgName = bold(bgCyanBright(black(name)));
 
 export const brightYellowBgName = bold(bgYellowBright(black(name)));
+
+export const brightGreenBgName = bold(bgGreenBright(black(name)));
 
 export const brightRedBgName = bold(bgRedBright(black(name)));
 

@@ -1,4 +1,4 @@
-import { io as socketio, Socket } from 'socket.io-client';
+import { type Socket, io as socketio } from 'socket.io-client';
 
 interface ClientToServerEvents {
   joinAccessTokenRoom: (props: { state: string }) => void;
@@ -13,9 +13,4 @@ export function createSocket(
   endpoint: string
 ): Socket<ServerToClientEvents, ClientToServerEvents> {
   return socketio(endpoint);
-}
-
-export function disposeSocket(socket: Socket): void {
-  socket.disconnect();
-  socket.close();
 }

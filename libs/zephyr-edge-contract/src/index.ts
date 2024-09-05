@@ -13,7 +13,7 @@ export { ZephyrPluginOptions } from './lib/plugin-options/zephyr-plugin-options'
 export { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
 export { createApplicationUID } from './lib/utils/create-application-u-i-d';
 export { createSnapshotId } from './lib/utils/create-snapshot-id';
-export { brightBlueBgName, brightRedBgName, brightYellowBgName, dimmedName, ze_error, ze_log } from './lib/utils/debug';
+export { brightBlueBgName, brightGreenBgName, brightRedBgName, brightYellowBgName, dimmedName, ze_error, ze_log } from './lib/utils/debug';
 export * from './lib/utils/debug-enabled';
 export * from './lib/utils/picocolor';
 export * as color from './lib/utils/picocolor';

@@ -1,20 +1,14 @@
-import * as process from 'process';
-
-import { yellow, ZeUploadBuildStats } from 'zephyr-edge-contract';
-
-import { createSnapshot } from '../../payload-builders';
 import { zeUploadSnapshot } from '../../actions';
-import { UploadOptions } from '../upload';
+import { createSnapshot } from '../../payload-builders';
+import type { UploadOptions } from '../upload';
 import { uploadAssets, uploadBuildStatsAndEnableEnvs } from './cloudflare';
-import { logger } from '../../remote-logs/ze-log-event';
 
 export async function cloudflareStrategy({
   pluginOptions,
   getDashData,
   appConfig,
-  zeStart,
   assets: { assetsMap, missingAssets, count },
-}: UploadOptions): Promise<ZeUploadBuildStats | undefined> {
+}: UploadOptions) {
   const snapshot = createSnapshot({
     options: pluginOptions,
     assets: assetsMap,
@@ -27,35 +21,12 @@ export async function cloudflareStrategy({
     uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
 
-  process.nextTick(() =>
-    uploadBuildStatsAndEnableEnvs({
-      appConfig,
-      pluginOptions,
-      getDashData,
-      versionUrl,
-    })
-  );
-
-  logger(pluginOptions)({
-    level: 'info',
-    action: 'build:deploy:done',
-    message: `Build deployed in ${yellow(`${Date.now() - zeStart}`)}ms`,
+  // Waits for the reply to check upload problems, but the reply is a simply
+  // 200 OK sent before any processing
+  await uploadBuildStatsAndEnableEnvs({
+    appConfig,
+    pluginOptions,
+    getDashData,
+    versionUrl,
   });
-
-  return;
 }
-
-// @todo: should be moved to deployment worker
-/*  await zeEnableSnapshotOnEdge({
-    pluginOptions,
-    envs_jwt: envs.value,
-    zeStart,
-  });
-
-  await uploadToPages({
-    uploadConfig,
-    pluginOptions,
-    outputPath,
-    assetsMap,
-    envs: envs.value,
-  });*/

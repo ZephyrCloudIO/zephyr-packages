@@ -1,26 +1,15 @@
-import {
-  yellow,
-  ZeApplicationConfig,
-  ZeBuildAsset,
-  ZeBuildAssetsMap,
-  ZephyrBuildStats,
-  ZephyrPluginOptions,
-  ZeUploadBuildStats,
-} from 'zephyr-edge-contract';
-import { logger } from '../../remote-logs/ze-log-event';
-
-import { update_hash_list } from '../../dvcs/distributed-hash-control';
-import { createSnapshot, GetDashDataOptions } from '../../payload-builders';
+import type { ZeApplicationConfig, ZeBuildAsset, ZeBuildAssetsMap, ZephyrBuildStats, ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { zeUploadAssets, zeUploadBuildStats, zeUploadSnapshot } from '../../actions';
-import { UploadOptions } from '../upload';
+import { update_hash_list } from '../../dvcs/distributed-hash-control';
+import { type GetDashDataOptions, createSnapshot } from '../../payload-builders';
+import type { UploadOptions } from '../upload';
 
 export async function netlifyStrategy({
   pluginOptions,
   getDashData,
   appConfig,
-  zeStart,
   assets: { assetsMap, missingAssets, count },
-}: UploadOptions): Promise<ZeUploadBuildStats | undefined> {
+}: UploadOptions) {
   const snapshot = createSnapshot({
     options: pluginOptions,
     assets: assetsMap,
@@ -33,20 +22,14 @@ export async function netlifyStrategy({
     uploadAssets({ assetsMap, missingAssets, pluginOptions, count }),
   ]);
 
+  // Waits for the reply to check upload problems, but the reply is a simply
+  // 200 OK sent before any processing
   await uploadBuildStatsAndEnableEnvs({
     appConfig,
     pluginOptions,
     getDashData,
     versionUrl,
   });
-
-  logger(pluginOptions)({
-    level: 'info',
-    action: 'build:deploy:done',
-    message: `Build deployed in ${yellow(`${Date.now() - zeStart}`)}ms`,
-  });
-
-  return;
 }
 
 interface UploadAssetsOptions {

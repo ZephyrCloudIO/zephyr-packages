@@ -1,34 +1,44 @@
 import {
-  appDeployResultCache,
   UploadProviderType,
   type ZeApplicationConfig,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
-  type ZeUploadBuildStats,
+  yellow,
 } from 'zephyr-edge-contract';
-import { cloudflareStrategy, netlifyStrategy } from './strategies';
 import type { GetDashDataOptions } from '../payload-builders';
+import { logger } from '../remote-logs/ze-log-event';
+import { cloudflareStrategy, netlifyStrategy } from './strategies';
 
-export async function upload(options: UploadOptions) {
-  let deployResult: ZeUploadBuildStats | undefined = undefined;
+export async function upload(options: UploadOptions): Promise<void> {
+  const log = logger(options.pluginOptions);
 
   switch (options.appConfig.PLATFORM) {
     case UploadProviderType.CLOUDFLARE:
-      deployResult = await cloudflareStrategy(options);
+      await cloudflareStrategy(options);
       break;
     case UploadProviderType.NETLIFY:
-      deployResult = await netlifyStrategy(options);
+      await netlifyStrategy(options);
       break;
     default:
       throw new Error('Unsupported upload provider.');
   }
 
-  if (deployResult) {
-    const { application_uid, ...rest } = getInfoForBuildStats(deployResult);
-    await appDeployResultCache.setAppDeployResult(application_uid, rest);
-  }
+  log({
+    level: 'info',
+    action: 'build:deploy:done',
+    message: `Build deployed in ${yellow(`${Date.now() - options.zeStart}`)}ms`,
+  });
+
+  // FIXME: Now only possible if:
+  // https://zephyr-cloud.slack.com/archives/C05NRK2SUSE/p1725400546897959
+  // if (deployResult) {
+  //   await appDeployResultCache.setAppDeployResult(result.app_version.application_uid, { urls: result.urls });
+  // }
+
+  // empty line to separate logs from other plugins
+  console.log();
 }
 
 export interface UploadOptions {
@@ -44,14 +54,4 @@ export interface AssetsOptions {
   missingAssets: ZeBuildAsset[];
   outputPath: string;
   count: number;
-}
-
-function getInfoForBuildStats(result: ZeUploadBuildStats): {
-  application_uid: string;
-  urls: string[];
-} {
-  return {
-    application_uid: result.app_version.application_uid,
-    urls: result.urls,
-  };
 }

@@ -52,7 +52,7 @@ export async function zeUploadSnapshot(props: {
   logEvent({
     level: 'trace',
     action: 'deploy:url',
-    message: `Deployment available at ${gray(versionUrl)}!`,
+    message: `New deployment available:\n${gray(versionUrl)}`,
   });
 
   return versionUrl;

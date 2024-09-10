@@ -3,6 +3,7 @@ export interface ZeAppVersion {
   snapshot_id: string;
   // npm-like version
   version: string;
+  version_id: string;
 
   remote_entry_url: string;
   remote_host: string;

@@ -8,9 +8,12 @@
     "build": "nx run vite-plugin-zephyr:build"
   },
   "dependencies": {
-    "vite": "^5",
+    "vite": "^5.4.6",
     "rollup": "^4",
     "is-ci": "^3",
+    "@ast-grep/napi": "0.27.0",
+    "@originjs/vite-plugin-federation": "^1.3.5",
+    "json5": "2.2.3",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-agent": "workspace:*"
   },

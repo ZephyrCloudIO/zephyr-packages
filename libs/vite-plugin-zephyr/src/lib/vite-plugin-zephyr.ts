@@ -1,5 +1,5 @@
 import * as isCI from 'is-ci';
-import type { NormalizedOutputOptions, OutputAsset, OutputBundle, OutputChunk } from 'rollup';
+import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
 import type { Plugin, ResolvedConfig } from 'vite';
 import {
   buildAssetsMap,
@@ -27,7 +27,10 @@ import {
 } from 'zephyr-edge-contract';
 import { load_public_dir } from './load_public_dir';
 import { load_static_entries } from './load_static_entries';
-import type { ZephyrInternalOptions } from './zephyr-internal-options';
+import type { ZephyrInternalOptions } from './types/zephyr-internal-options';
+import { parseRemoteMap, replaceProtocolAndHost } from './remote_map_parser';
+import { resolve_remote_dependency } from './resolve_remote_dependency';
+import federation, { VitePluginFederationOptions } from '@originjs/vite-plugin-federation';
 
 interface ZephyrPartialInternalOptions {
   root: string;
@@ -36,15 +39,33 @@ interface ZephyrPartialInternalOptions {
   publicDir?: string;
 }
 
-export function withZephyr(): Plugin {
-  // todo: set correctly
-  let bundle: OutputBundle = {};
+export function withZephyr(_options?: VitePluginFederationOptions): Plugin {
+  return zephyrPlugin(_options);
+}
+
+function zephyrPlugin(_options?: VitePluginFederationOptions): Plugin {
+  let gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
+  let packageJson: Awaited<ReturnType<typeof getPackageJson>>;
+  let application_uid: string;
 
   const vite_internal_options = {} as ZephyrPartialInternalOptions;
 
   return {
     name: 'with-zephyr',
     enforce: 'post',
+
+    config: (config) => {
+      config.plugins = config.plugins || [];
+
+      // only push the options when options are presented
+      _options &&
+        config.plugins.push(
+          federation({
+            ..._options,
+          })
+        );
+    },
+
     configResolved: async (config: ResolvedConfig) => {
       Object.assign(vite_internal_options, {
         root: config.root,
@@ -52,9 +73,64 @@ export function withZephyr(): Plugin {
         outDir: config.build.outDir,
         publicDir: config.publicDir,
       });
+
+      ze_log('Configuring with Zephyr...');
+      packageJson = await getPackageJson(vite_internal_options.root);
+      ze_log('Loaded package.json.', packageJson);
+      if (!packageJson) return ze_error('ERR_PACKAGE_JSON_NOT_FOUND');
+
+      gitInfo = await getGitInfo();
+      ze_log('Loaded Git Info.', gitInfo);
+      if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
+        return ze_error(
+          'ERR_NO_GIT_INFO',
+          'Could not get git info. \n Can you confirm this directory has initialized as a git repository? '
+        );
+      if (!packageJson?.name) return ze_error('ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION');
+
+      application_uid = createApplicationUID({
+        org: gitInfo.app.org,
+        project: gitInfo.app.project,
+        name: packageJson?.name,
+      });
+
+      ze_log('vite-zephyr-options', vite_internal_options);
     },
-    writeBundle: async (options: NormalizedOutputOptions, _bundle: OutputBundle) => {
-      bundle = _bundle;
+    // Used by Vite dev server for in memory bundles
+    transform: async (code: string) => {
+      // If there is no options getting passed in return undefined and pass the code directly to next step
+      const extractedRemoteMap = _options ? await parseRemoteMap(code) : undefined;
+
+      if (extractedRemoteMap === undefined) {
+        return code;
+      }
+
+      const { remotesMap, startIndex, endIndex } = extractedRemoteMap;
+
+      for (const [remoteName, remoteConfig] of Object.entries(remotesMap)) {
+        const remote_application_uuid = createApplicationUID({
+          org: gitInfo.app.org,
+          project: gitInfo.app.project,
+          name: remoteName,
+        });
+        ze_log('Resolving remote:', remote_application_uuid, remoteName);
+        const remoteDetails = await resolve_remote_dependency({ name: remote_application_uuid, version: '*' });
+        ze_log('Resolved remote:', remoteDetails);
+
+        if (!remoteDetails) {
+          continue;
+        }
+
+        ze_log('Updating remote url:', remoteConfig.url, remoteDetails.remote_entry_url);
+        remoteConfig.url = replaceProtocolAndHost(remoteConfig.url, remoteDetails.remote_entry_url);
+        ze_log('Updated remote url:', remoteConfig.url);
+      }
+
+      ze_log('Writing remotesMap to bundle:', remotesMap);
+
+      const newObjectCode = `const remotesMap = ${JSON.stringify(remotesMap)};`;
+
+      return code.slice(0, startIndex) + newObjectCode + code.slice(endIndex);
     },
     closeBundle: async () => {
       const publicAssets: OutputAsset[] = [];
@@ -70,37 +146,26 @@ export function withZephyr(): Plugin {
       const _static_assets = await load_static_entries({
         root: vite_internal_options.root,
         outDir: vite_internal_options.outDir,
-        bundle,
       });
       publicAssets.push(..._static_assets);
 
-      const assets = Object.assign({}, bundle, ...publicAssets.map((asset) => ({ [asset.fileName]: asset })));
+      const assets = Object.assign({}, ...publicAssets.map((asset) => ({ [asset.fileName]: asset })));
 
-      await _zephyr({ assets, vite_internal_options });
+      await _zephyr({ assets, vite_internal_options, application_uid, packageJson, gitInfo });
     },
   };
 }
 
-async function _zephyr(options: { assets: OutputBundle; vite_internal_options: ZephyrInternalOptions }) {
-  const { assets: _assets, vite_internal_options } = options;
-  const path_to_execution_dir = vite_internal_options.root;
+type ZephyrOptions = {
+  assets: OutputBundle;
+  vite_internal_options: ZephyrInternalOptions;
+  application_uid: string;
+  gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
+  packageJson: Awaited<ReturnType<typeof getPackageJson>>;
+};
 
-  ze_log('Configuring with Zephyr...');
-  const packageJson = await getPackageJson(path_to_execution_dir);
-  ze_log('Loaded package.json.', packageJson);
-  if (!packageJson) return ze_error('ERR_PACKAGE_JSON_NOT_FOUND');
-
-  const gitInfo = await getGitInfo();
-  ze_log('Loaded Git Info.', gitInfo);
-  if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
-    return ze_error('ERR_NO_GIT_INFO', 'Could not get git info. \n Can you confirm this directory has initialized as a git repository? ');
-  if (!packageJson?.name) return ze_error('ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION');
-
-  const application_uid = createApplicationUID({
-    org: gitInfo.app.org,
-    project: gitInfo.app.project,
-    name: packageJson?.name,
-  });
+async function _zephyr(options: ZephyrOptions) {
+  const { assets: _assets, vite_internal_options, application_uid, packageJson, gitInfo } = options;
 
   ze_log('Going to check auth token or get it...');
   await checkAuth();
@@ -118,7 +183,7 @@ async function _zephyr(options: { assets: OutputBundle; vite_internal_options: Z
   if (!buildId) return ze_error('ERR_GET_BUILD_ID');
 
   const pluginOptions: ZephyrPluginOptions = {
-    pluginName: 'rollup-plugin-zephyr',
+    pluginName: 'vite-plugin-zephyr',
     application_uid,
     buildEnv: 'local',
     username,

@@ -1,4 +1,4 @@
-import { OutputAsset, OutputBundle } from 'rollup';
+import { OutputAsset } from 'rollup';
 import { relative, resolve } from 'node:path';
 import { readdirSync, readFile, statSync } from 'node:fs';
 import { normalizePath } from 'vite';
@@ -6,18 +6,11 @@ import { promisify } from 'node:util';
 
 interface LoadStaticEntriesOptions {
   root: string;
-  bundle: OutputBundle;
   outDir: string;
 }
 
-const files_to_load: Record<string, boolean> = {
-  'index.html': true,
-  '404.html': true,
-  'q-data.json': true,
-};
-
 export async function load_static_entries(props: LoadStaticEntriesOptions): Promise<OutputAsset[]> {
-  const { root, bundle } = props;
+  const { root } = props;
   const publicAssets: OutputAsset[] = [];
 
   const root_dist_dir = resolve(root, props.outDir);
@@ -31,16 +24,14 @@ export async function load_static_entries(props: LoadStaticEntriesOptions): Prom
         continue;
       }
       const fileName = normalizePath(relative(root_dist_dir, destFile));
-      if (files_to_load[file]) {
-        publicAssets.push({
-          fileName,
-          name: file,
-          needsCodeReference: false,
-          source: await promisify(readFile)(destFile),
-          type: 'asset',
-          originalFileName: file,
-        });
-      }
+      publicAssets.push({
+        fileName,
+        name: file,
+        needsCodeReference: false,
+        source: await promisify(readFile)(destFile),
+        type: 'asset',
+        originalFileName: file,
+      });
     }
   };
   await loadDir(root_dist_dir);

@@ -18,9 +18,7 @@ interface PackageJson {
   dependencies?: Record<string, string>;
 }
 
-export async function getPackageJson(
-  context: string | undefined
-): Promise<PackageJson> {
+export async function getPackageJson(context: string | undefined): Promise<PackageJson> {
   let startingPath = context || process.cwd();
   if (fs.statSync(startingPath).isFile()) {
     startingPath = resolve(startingPath, '..');
@@ -51,9 +49,7 @@ export async function getPackageJson(
   return parsed_package_json;
 }
 
-async function findClosestPackageJson(
-  startPath: string
-): Promise<{ path: string; json: string } | void> {
+async function findClosestPackageJson(startPath: string): Promise<{ path: string; json: string } | void> {
   let dir = startPath;
   do {
     const packageJsonPath = join(dir, 'package.json');

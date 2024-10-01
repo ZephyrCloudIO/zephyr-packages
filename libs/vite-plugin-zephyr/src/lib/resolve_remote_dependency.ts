@@ -21,6 +21,8 @@ export async function resolve_remote_dependency({ name, version }: { name: strin
       throw new Error(res.statusText);
     }
     const response = (await res.json()) as { value: ResolvedDependency } | undefined;
+
+    ze_log('[Vite]: resolve remote dependency response: ', response);
     return response?.value;
   } catch (err) {
     ze_error('ERR_NOT_RESOLVE_APP_NAME_WITH_VERSION', `Could not resolve '${name}' with version '${version}'`);

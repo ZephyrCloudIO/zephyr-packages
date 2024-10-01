@@ -28,22 +28,18 @@ import {
 import { load_public_dir } from './load_public_dir';
 import { load_static_entries } from './load_static_entries';
 import type { ZephyrInternalOptions } from './types/zephyr-internal-options';
-import { parseRemoteMap, replaceProtocolAndHost } from './remote_map_parser';
+import { parseRemoteMap, RemoteMapExtraction, replaceProtocolAndHost } from './remote_map_parser';
 import { resolve_remote_dependency } from './resolve_remote_dependency';
-import federation, { VitePluginFederationOptions } from '@originjs/vite-plugin-federation';
+import { federation } from '@module-federation/vite';
+import type { ModuleFederationOptions, ZephyrPartialInternalOptions } from './types/zephyr-internal-options';
 
-interface ZephyrPartialInternalOptions {
-  root: string;
-  configFile: string;
-  outDir: string;
-  publicDir?: string;
+// Ensure ModuleFederationOptions extends the module's options
+export function withZephyr(_options: ModuleFederationOptions): Plugin[] {
+  // @ts-expect-error Our library wants vite@5.0.3 but federation wants ^5.4.3
+  return federation(_options).concat(zephyrPlugin(_options));
 }
 
-export function withZephyr(_options?: VitePluginFederationOptions): Plugin {
-  return zephyrPlugin(_options);
-}
-
-function zephyrPlugin(_options?: VitePluginFederationOptions): Plugin {
+function zephyrPlugin(_options: ModuleFederationOptions): Plugin {
   let gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
   let packageJson: Awaited<ReturnType<typeof getPackageJson>>;
   let application_uid: string;
@@ -54,23 +50,10 @@ function zephyrPlugin(_options?: VitePluginFederationOptions): Plugin {
     name: 'with-zephyr',
     enforce: 'post',
 
-    config: (config) => {
-      config.plugins = config.plugins || [];
-
-      // only push the options when options are presented
-      _options &&
-        config.plugins.push(
-          federation({
-            ..._options,
-          })
-        );
-    },
-
     configResolved: async (config: ResolvedConfig) => {
       Object.assign(vite_internal_options, {
         root: config.root,
-        configFile: config.configFile,
-        outDir: config.build.outDir,
+        outDir: config.build?.outDir,
         publicDir: config.publicDir,
       });
 
@@ -96,41 +79,47 @@ function zephyrPlugin(_options?: VitePluginFederationOptions): Plugin {
 
       ze_log('vite-zephyr-options', vite_internal_options);
     },
-    // Used by Vite dev server for in memory bundles
-    transform: async (code: string) => {
-      // If there is no options getting passed in return undefined and pass the code directly to next step
-      const extractedRemoteMap = _options ? await parseRemoteMap(code) : undefined;
+    transform: async (code, id) => {
 
-      if (extractedRemoteMap === undefined) {
+      const extractedRemotes = _options ? parseRemoteMap(code, id) : undefined;
+
+      if (extractedRemotes === undefined) {
         return code;
       }
 
-      const { remotesMap, startIndex, endIndex } = extractedRemoteMap;
+      const { remotesMap, startIndex, endIndex } = extractedRemotes;
 
-      for (const [remoteName, remoteConfig] of Object.entries(remotesMap)) {
+      const remotes: RemoteMapExtraction['remotesMap'] = [];
+      for (const remote of remotesMap) {
+        const { name, entry, type } = remote;
+        ze_log('Remote details:', JSON.stringify(remotesMap));
         const remote_application_uuid = createApplicationUID({
           org: gitInfo.app.org,
           project: gitInfo.app.project,
-          name: remoteName,
+          name: name,
         });
-        ze_log('Resolving remote:', remote_application_uuid, remoteName);
-        const remoteDetails = await resolve_remote_dependency({ name: remote_application_uuid, version: '*' });
+        ze_log('Resolving remote:', remote_application_uuid, name);
+        const remoteDetails = await resolve_remote_dependency({ name: remote_application_uuid, version: name });
         ze_log('Resolved remote:', remoteDetails);
 
         if (!remoteDetails) {
           continue;
         }
 
-        ze_log('Updating remote url:', remoteConfig.url, remoteDetails.remote_entry_url);
-        remoteConfig.url = replaceProtocolAndHost(remoteConfig.url, remoteDetails.remote_entry_url);
-        ze_log('Updated remote url:', remoteConfig.url);
+        const updatedUrl = replaceProtocolAndHost(entry, remoteDetails.remote_entry_url);
+        ze_log('Updating remote url:', entry, 'to ->', updatedUrl);
+        remotes.push({
+          name,
+          type,
+          entryGlobalName: name,
+          entry: updatedUrl,
+        });
+        ze_log('Updated remote url:', entry);
       }
 
-      ze_log('Writing remotesMap to bundle:', remotesMap);
+      ze_log('Writing remotesMap to bundle:', remotes);
 
-      const newObjectCode = `const remotesMap = ${JSON.stringify(remotesMap)};`;
-
-      return code.slice(0, startIndex) + newObjectCode + code.slice(endIndex);
+      return code.slice(0, startIndex) + JSON.stringify(remotes) + code.slice(endIndex);
     },
     closeBundle: async () => {
       const publicAssets: OutputAsset[] = [];

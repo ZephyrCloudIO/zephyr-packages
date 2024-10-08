@@ -33,13 +33,19 @@ import { resolve_remote_dependency } from './resolve_remote_dependency';
 import { federation } from '@module-federation/vite';
 import type { ModuleFederationOptions, ZephyrPartialInternalOptions } from './types/zephyr-internal-options';
 
+// TODO: ideally use the same interface in zephyr-edge-contract as other plugins
 // Ensure ModuleFederationOptions extends the module's options
-export function withZephyr(_options: ModuleFederationOptions): Plugin[] {
-  // @ts-expect-error Our library wants vite@5.0.3 but federation wants ^5.4.3
-  return federation(_options).concat(zephyrPlugin(_options));
+interface VitePluginZephyrOptions {
+  mfConfig?: ModuleFederationOptions;
 }
 
-function zephyrPlugin(_options: ModuleFederationOptions): Plugin {
+export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
+  const mfConfig = _options?.mfConfig;
+  // @ts-expect-error Our library wants vite@5.0.3 but federation wants ^5.4.3
+  return mfConfig ? federation(mfConfig).concat(zephyrPlugin(_options)) : zephyrPlugin(_options);
+}
+
+function zephyrPlugin(_options: VitePluginZephyrOptions): Plugin {
   let gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
   let packageJson: Awaited<ReturnType<typeof getPackageJson>>;
   let application_uid: string;
@@ -80,7 +86,6 @@ function zephyrPlugin(_options: ModuleFederationOptions): Plugin {
       ze_log('vite-zephyr-options', vite_internal_options);
     },
     transform: async (code, id) => {
-
       const extractedRemotes = _options ? parseRemoteMap(code, id) : undefined;
 
       if (extractedRemotes === undefined) {

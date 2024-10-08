@@ -30,7 +30,7 @@ const mfConfig = {
 };
 
 export default defineConfig({
-  plugins: [react(), withZephyr(mfConfig)],
+  plugins: [react(), withZephyr({ mfConfig })],
   build: {
     target: 'chrome89',
   },

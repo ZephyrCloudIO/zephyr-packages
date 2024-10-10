@@ -6,6 +6,7 @@ import { cleanTokens } from '../node-persist/token';
 import { safe_json_parse } from './safe-json-parse';
 import { brightRedBgName } from './debug';
 import { red } from './picocolor';
+import { ZE_API_ENDPOINT, ZE_IS_PREVIEW, ZEPHYR_API_ENDPOINT } from '../api-contract-negotiation/get-api-contract';
 
 function _redact(str: string | undefined): string {
   if (!str) return '';
@@ -17,6 +18,7 @@ export async function request<T = unknown>(
   options?: ClientRequestArgs,
   data?: unknown & { length: number | undefined }
 ): Promise<T | string> {
+  applyApiHostQueryParam(url);
   const _https = url.protocol !== 'https:' ? http : https;
   return new Promise((resolve, reject) => {
     const req_start = Date.now();
@@ -73,4 +75,13 @@ export async function request<T = unknown>(
 
     req.end();
   });
+}
+
+function applyApiHostQueryParam(url: URL) {
+  const is_preview = ZE_IS_PREVIEW();
+  const ze_api_endpoint = ZE_API_ENDPOINT();
+  const zephyr_api_endpoint = ZEPHYR_API_ENDPOINT();
+  if (is_preview && url.host === new URL(ze_api_endpoint).host) {
+    url.searchParams.set('api_host', zephyr_api_endpoint);
+  }
 }

@@ -1,32 +1,51 @@
 import type { ClientRequestArgs } from 'node:http';
-import { request, ze_log, ZeUploadBuildStats } from 'zephyr-edge-contract';
+import { ze_log, ZeErrors, ZeHttpRequest, ZephyrError, ZeUploadBuildStats } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
+import { LogEvent } from '../remote-logs/ze-log-event';
 
 export async function uploadEnvs({
   body,
   application_uid,
+  logEvent,
 }: {
   body: ZeUploadBuildStats;
   application_uid: string;
-}): Promise<unknown> {
+  logEvent: LogEvent;
+}): Promise<void> {
   ze_log(`Uploading envs to Zephyr, for ${application_uid}`);
-  const type = 'envs';
-  const data = JSON.stringify(body);
 
   const { EDGE_URL, jwt } = await getApplicationConfiguration({
     application_uid,
   });
 
-  const url = new URL('/upload', EDGE_URL);
-  url.searchParams.append('type', type);
+  const json = JSON.stringify(body);
+
   const options: ClientRequestArgs = {
     method: 'POST',
     headers: {
       can_write_jwt: jwt,
       'Content-Type': 'application/json',
-      'Content-Length': data.length.toString(),
+      'Content-Length': Buffer.byteLength(json),
     },
   };
 
-  return request(url, options, data);
+  const [ok, cause, data] = await ZeHttpRequest.from<unknown>(
+    {
+      path: '/upload',
+      base: EDGE_URL,
+      query: { type: 'envs' },
+    },
+    options,
+    JSON.stringify(body)
+  );
+
+  if (!ok || !data) {
+    logEvent({
+      level: 'error',
+      action: 'deploy:edge:failed',
+      message: 'failed deploying local build to edge',
+    });
+
+    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, { type: 'envs', cause: cause });
+  }
 }

@@ -1,12 +1,12 @@
 import type { ClientRequestArgs } from 'node:http';
-import { type UploadableAsset, type ZeApplicationConfig, request } from 'zephyr-edge-contract';
+import { type UploadableAsset, type ZeApplicationConfig, ZeErrors, ZeHttpRequest, ZephyrError } from 'zephyr-edge-contract';
 
 export interface UploadFileProps {
   hash: string;
   asset: UploadableAsset;
 }
 
-export async function uploadFile({ hash, asset }: UploadFileProps, { EDGE_URL, jwt }: ZeApplicationConfig): Promise<unknown> {
+export async function uploadFile({ hash, asset }: UploadFileProps, { EDGE_URL, jwt }: ZeApplicationConfig) {
   const type = 'file';
 
   const options: ClientRequestArgs = {
@@ -19,9 +19,20 @@ export async function uploadFile({ hash, asset }: UploadFileProps, { EDGE_URL, j
     },
   };
 
-  const url = new URL('/upload', EDGE_URL);
-  url.searchParams.append('type', type);
-  url.searchParams.append('hash', hash);
-  url.searchParams.append('filename', asset.path);
-  return request(url, options, asset.buffer);
+  const [ok, cause] = await ZeHttpRequest.from(
+    {
+      path: '/upload',
+      base: EDGE_URL,
+      query: { type, hash, filename: asset.path },
+    },
+    options,
+    asset.buffer
+  );
+
+  if (!ok) {
+    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+      type: 'file',
+      cause,
+    });
+  }
 }

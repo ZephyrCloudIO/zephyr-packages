@@ -1,7 +1,7 @@
-import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 import * as isCI from 'is-ci';
-import { ConvertedGraph, createSnapshotId, ze_error, ze_log } from 'zephyr-edge-contract';
+import { ConvertedGraph, createSnapshotId, ze_log, ZeErrors, ZephyrError } from 'zephyr-edge-contract';
 import { ZephyrAgentProps } from '../lib/ze-agent';
+import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 
 export function getDashboardData({
   stats,
@@ -14,7 +14,7 @@ export function getDashboardData({
   EDGE_URL: string;
   PLATFORM?: string;
   TYPE?: string;
-}): ConvertedGraph | void {
+}): ConvertedGraph {
   ze_log('getDashboardData started. create federation dashboard plugin');
   const dashboardPlugin = new FederationDashboardPlugin({
     app: pluginOptions.app,
@@ -30,71 +30,73 @@ export function getDashboardData({
     stats_json,
     pluginOptions,
   });
-  if (!convertedGraph) return ze_error('ERR_CONVERT_GRAPH_TO_DASHBOARD', 'Failed to convert graph to dashboard data');
 
-  /** todo: what we need here:
-   // - dependencies, devDependencies, peerDependencies
-   // - overrides [
-   //   {
-   //     "id": "react-dom",
-   //     "name": "react-dom",
-   //     "version": "18.2.0",
-   //     "location": "react-dom",
-   //     "applicationID": "react-dom"
-   //   },
-   //   {
-   //     "id": "react",
-   //     "name": "react",
-   //     "version": "18.2.0",
-   //     "location": "react",
-   //     "applicationID": "react"
-   //   }
-   // ]
-   // - consumes [
-   //   {
-   //     "consumingApplicationID": "GreenRecos",
-   //     "applicationID": "team-green",
-   //     "name": "GreenRecos",
-   //     "usedIn": [
-   //       {
-   //         "file": "src/app/team-red-layout.tsx",
-   //         "url": "/src/app/team-red-layout.tsx"
-   //       }
-   //     ]
-   //   },
-   //   {
-   //     "consumingApplicationID": "BlueBasket",
-   //     "applicationID": "team-blue",
-   //     "name": "BlueBasket",
-   //     "usedIn": [
-   //       {
-   //         "file": "src/app/team-red-layout.tsx",
-   //         "url": "/src/app/team-red-layout.tsx"
-   //       }
-   //     ]
-   //   },
-   //   {
-   //     "consumingApplicationID": "BlueBuy",
-   //     "applicationID": "team-blue",
-   //     "name": "BlueBuy",
-   //     "usedIn": [
-   //       {
-   //         "file": "src/app/team-red-layout.tsx",
-   //         "url": "/src/app/team-red-layout.tsx"
-   //       }
-   //     ]
-   //   }
-   // ]
-   // - modules [
-   //   {
-   //     "id": "TeamRedLayout:TeamRedLayout",
-   //     "name": "TeamRedLayout",
-   //     "applicationID": "TeamRedLayout",
-   //     "requires": [],
-   //     "file": "./src/app/team-red-layout"
-   //   }
-   // ]
-   */
+  if (!convertedGraph) {
+    throw new ZephyrError(ZeErrors.ERR_CONVERT_GRAPH_TO_DASHBOARD);
+  }
+
+  // todo: what we need here:
+  // - dependencies, devDependencies, peerDependencies
+  // - overrides [
+  //   {
+  //     "id": "react-dom",
+  //     "name": "react-dom",
+  //     "version": "18.2.0",
+  //     "location": "react-dom",
+  //     "applicationID": "react-dom"
+  //   },
+  //   {
+  //     "id": "react",
+  //     "name": "react",
+  //     "version": "18.2.0",
+  //     "location": "react",
+  //     "applicationID": "react"
+  //   }
+  // ]
+  // - consumes [
+  //   {
+  //     "consumingApplicationID": "GreenRecos",
+  //     "applicationID": "team-green",
+  //     "name": "GreenRecos",
+  //     "usedIn": [
+  //       {
+  //         "file": "src/app/team-red-layout.tsx",
+  //         "url": "/src/app/team-red-layout.tsx"
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     "consumingApplicationID": "BlueBasket",
+  //     "applicationID": "team-blue",
+  //     "name": "BlueBasket",
+  //     "usedIn": [
+  //       {
+  //         "file": "src/app/team-red-layout.tsx",
+  //         "url": "/src/app/team-red-layout.tsx"
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     "consumingApplicationID": "BlueBuy",
+  //     "applicationID": "team-blue",
+  //     "name": "BlueBuy",
+  //     "usedIn": [
+  //       {
+  //         "file": "src/app/team-red-layout.tsx",
+  //         "url": "/src/app/team-red-layout.tsx"
+  //       }
+  //     ]
+  //   }
+  // ]
+  // - modules [
+  //   {
+  //     "id": "TeamRedLayout:TeamRedLayout",
+  //     "name": "TeamRedLayout",
+  //     "applicationID": "TeamRedLayout",
+  //     "requires": [],
+  //     "file": "./src/app/team-red-layout"
+  //   }
+  // ]
   const version = createSnapshotId(pluginOptions);
 
   const { app, git } = pluginOptions;

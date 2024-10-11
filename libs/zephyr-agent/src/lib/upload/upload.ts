@@ -39,9 +39,6 @@ export async function upload(options: UploadOptions): Promise<void> {
   // if (deployResult) {
   //   await appDeployResultCache.setAppDeployResult(result.app_version.application_uid, { urls: result.urls });
   // }
-
-  // empty line to separate logs from other plugins
-  console.log();
 }
 
 export interface UploadOptions {

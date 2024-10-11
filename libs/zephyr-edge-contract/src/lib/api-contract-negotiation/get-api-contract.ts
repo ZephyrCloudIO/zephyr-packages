@@ -2,6 +2,8 @@ export const ZEPHYR_API_ENDPOINT = () => process.env['ZE_API'] ?? 'https://api.z
 
 export const ZE_API_ENDPOINT = () => process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloud.app';
 
+export const ZE_API_ENDPOINT_HOST = () => new URL(ZE_API_ENDPOINT()).host;
+
 export const ZE_IS_PREVIEW = () => process.env['ZE_IS_PREVIEW'] === 'true';
 
 export const ze_api_gateway = {

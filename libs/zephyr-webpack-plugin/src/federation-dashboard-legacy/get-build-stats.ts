@@ -1,5 +1,5 @@
 import * as isCI from 'is-ci';
-import { type ConvertedGraph, createSnapshotId, ze_error, ze_log } from 'zephyr-edge-contract';
+import { type ConvertedGraph, createSnapshotId, ze_log, ZeErrors, ZephyrError } from 'zephyr-edge-contract';
 import type { ZephyrAgentProps } from '../lib/ze-agent';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 
@@ -32,9 +32,9 @@ export function getBuildStats({
     stats_json,
     pluginOptions,
   });
+
   if (!convertedGraph) {
-    ze_error('ERR_CONVERT_GRAPH_TO_DASHBOARD', 'Failed to convert graph to dashboard data');
-    throw new Error('Failed to convert graph to dashboard data');
+    throw new ZephyrError(ZeErrors.ERR_CONVERT_GRAPH_TO_DASHBOARD);
   }
 
   const version = createSnapshotId(pluginOptions);

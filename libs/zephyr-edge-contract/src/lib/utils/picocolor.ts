@@ -17,45 +17,32 @@
 // https://github.com/alexeyraspopov/picocolors/blob/b6261487e7b81aaab2440e397a356732cad9e342/picocolors.js#L1
 
 import { is_debug_enabled } from './debug-enabled';
+import { isatty } from 'node:tty';
 
-const { env, stdout } = globalThis?.process ?? {};
-
-const enabled =
-  !is_debug_enabled &&
-  env &&
-  !env['NO_COLOR'] &&
-  (env['FORCE_COLOR'] ||
-    (stdout?.isTTY && !env['CI'] && env['TERM'] !== 'dumb'));
+export const isTTY =
+  (!is_debug_enabled && !process.env['NO_COLOR'] && process.env['FORCE_COLOR']) ||
+  (isatty(process.stdout.fd) && !process.env['CI'] && process.env['TERM'] !== 'dumb');
 
 // const enabled = env
 
-const replaceClose = (
-  str: string,
-  close: string,
-  replace: string,
-  index: number
-): string => {
+const replaceClose = (str: string, close: string, replace: string, index: number): string => {
   const start = str.substring(0, index) + replace;
   const end = str.substring(index + close.length);
   const nextIndex = end.indexOf(close);
-  return ~nextIndex
-    ? start + replaceClose(end, close, replace, nextIndex)
-    : start + end;
+  return ~nextIndex ? start + replaceClose(end, close, replace, nextIndex) : start + end;
 };
 
 const formatter = (open: string, close: string, replace = open) => {
-  if (!enabled) return String;
+  if (!isTTY) return String;
   return (input: string) => {
     const string = '' + input;
     const index = string.indexOf(close, open.length);
-    return ~index
-      ? open + replaceClose(string, close, replace, index) + close
-      : open + string + close;
+    return ~index ? open + replaceClose(string, close, replace, index) + close : open + string + close;
   };
 };
 
 // text styles
-export const reset = enabled ? (s: string) => `\x1b[0m${s}\x1b[0m` : String;
+export const reset = isTTY ? (s: string) => `\x1b[0m${s}\x1b[0m` : String;
 export const bold = formatter('\x1b[1m', '\x1b[22m', '\x1b[22m\x1b[1m');
 export const dim = formatter('\x1b[2m', '\x1b[22m', '\x1b[22m\x1b[2m');
 export const italic = formatter('\x1b[3m', '\x1b[23m');

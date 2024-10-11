@@ -1,4 +1,4 @@
-import { createApplicationUID, getToken, ze_error, ze_api_gateway, ZE_API_ENDPOINT } from 'zephyr-edge-contract';
+import { createApplicationUID, getToken, ZE_API_ENDPOINT, ze_api_gateway, ZeErrors, ZephyrError, ZeUtils } from 'zephyr-edge-contract';
 import { DelegateConfig } from '../lib/dependency-resolution/replace-remotes-with-delegates';
 
 declare const __webpack_require__: {
@@ -8,14 +8,23 @@ declare const __webpack_require__: {
 // todo: in order to become federation impl agnostic, we should parse and provide
 // already processed federation config instead of mfConfig
 
-async function resolve_remote_dependency({ name, version }: { name: string; version: string }): Promise<ResolvedDependency | void> {
+async function resolve_remote_dependency({
+  application_uid,
+  version,
+}: {
+  application_uid: string;
+  version: string;
+}): Promise<ResolvedDependency> {
   const resolveDependency = new URL(
-    `${ze_api_gateway.resolve}/${encodeURIComponent(name)}/${encodeURIComponent(version)}`,
+    `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
     ZE_API_ENDPOINT()
   );
 
+  const [appName, projectName, orgName] = application_uid.split('.');
+
   try {
     const token = await getToken();
+
     const res = await fetch(resolveDependency, {
       method: 'GET',
       headers: {
@@ -26,62 +35,87 @@ async function resolve_remote_dependency({ name, version }: { name: string; vers
     });
 
     if (!res.ok) {
-      throw new Error(res.statusText);
+      throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
+        appUid: application_uid,
+        appName,
+        projectName,
+        orgName,
+        data: {
+          url: resolveDependency.toString(),
+          version,
+          error: await res.json().catch(() => res.text()),
+        },
+      });
     }
-    const response = (await res.json()) as { value: ResolvedDependency } | undefined;
-    return response?.value;
-  } catch (err) {
-    ze_error('ERR_NOT_RESOLVE_APP_NAME_WITH_VERSION', `Could not resolve '${name}' with version '${version}'`);
-  }
-}
 
-export interface DependencyResolutionError {
-  error: boolean;
-  application_uid: string;
+    const response = await res.json();
+
+    if (response.value) {
+      return response.value;
+    }
+
+    throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
+      appUid: application_uid,
+      appName,
+      projectName,
+      orgName,
+      data: { version, response },
+    });
+  } catch (cause) {
+    throw new ZephyrError(ZeErrors.ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION, {
+      data: { version },
+      cause,
+    });
+  }
 }
 
 export async function replace_remote_in_mf_config(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mfPlugin: any,
   config: DelegateConfig
-): Promise<(DependencyResolutionError | void)[] | void> {
-  if (!mfPlugin._options?.remotes) return;
+): Promise<void> {
+  if (!mfPlugin._options?.remotes) {
+    return;
+  }
 
-  // replace remotes with delegate function
-  const depsResolutionTask = Object.keys(mfPlugin._options?.remotes).map(async (key): Promise<void | DependencyResolutionError> => {
-    const [app_name, project_name, org_name] = key.split('.');
-    const application_uid = createApplicationUID({
-      org: org_name ?? config.org,
-      project: project_name ?? config.project,
-      name: app_name,
-    });
+  // Replace remotes with delegate function
+  await Promise.all(
+    Object.keys(mfPlugin._options.remotes).map(async (key) => {
+      const [app_name, project_name, org_name] = key.split('.', 3);
 
-    // if default url is url - set as default, if not use app remote_host as default
-    // if default url is not url - send it as a semver to deps resolution
-    const resolvedDependency = await resolve_remote_dependency({
-      name: application_uid,
-      version: mfPlugin._options?.remotes[key],
-    });
+      // Key might be only the app name
+      const application_uid = createApplicationUID({
+        org: org_name ?? config.org,
+        project: project_name ?? config.project,
+        name: app_name,
+      });
 
-    if (resolvedDependency) {
+      // if default url is url - set as default, if not use app remote_host as default
+      // if default url is not url - send it as a semver to deps resolution
+      const [ok, error, resolvedDependency] = await ZeUtils.PromiseTuple(
+        resolve_remote_dependency({
+          application_uid: application_uid,
+          version: mfPlugin._options?.remotes[key],
+        })
+      );
+
+      // If couldn't resolve remote dependency, skip replacing it
+      if (!ok || error) {
+        return;
+      }
+
       resolvedDependency.library_type = mfPlugin._options?.library?.type ?? 'var';
-      const _version = mfPlugin._options.remotes[key];
-      if (_version?.indexOf('@') !== -1) {
-        const [v_app] = _version.split('@');
+
+      const [v_app] = mfPlugin._options.remotes[key]?.split('@') ?? [];
+
+      if (v_app) {
         resolvedDependency.remote_entry_url = [v_app, resolvedDependency.remote_entry_url].join('@');
       }
 
       resolvedDependency.remote_name = key;
       mfPlugin._options.remotes[key] = replace_remote_with_delegate(resolvedDependency);
-    } else {
-      return {
-        error: true,
-        application_uid,
-      };
-    }
-  });
-
-  return Promise.all(depsResolutionTask);
+    })
+  );
 }
 
 interface ResolvedDependency {

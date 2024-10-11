@@ -1,8 +1,14 @@
-import { type Snapshot, type ZeApplicationConfig, type ZephyrPluginOptions, green, yellow, ze_error } from 'zephyr-edge-contract';
-import { SnapshotUploadFailureError, SnapshotUploadNoResultError } from '../custom-errors/snapshot-uploads';
+import {
+  type Snapshot,
+  type ZeApplicationConfig,
+  ZeErrors,
+  ZephyrError,
+  type ZephyrPluginOptions,
+  green,
+  yellow,
+} from 'zephyr-edge-contract';
 import { logger } from '../remote-logs/ze-log-event';
 import { uploadSnapshot } from '../upload/upload-snapshot';
-import { PromiseTuple } from '../util/promise';
 
 export async function zeUploadSnapshot(props: {
   pluginOptions: ZephyrPluginOptions;
@@ -14,29 +20,21 @@ export async function zeUploadSnapshot(props: {
   const logEvent = logger(pluginOptions);
   const snapUploadMs = Date.now();
 
-  const [error, edgeTodo] = await PromiseTuple(
-    uploadSnapshot({
-      body: snapshot,
-      application_uid: pluginOptions.application_uid,
-    })
-  );
+  const edgeTodo = await uploadSnapshot({
+    body: snapshot,
+    application_uid: pluginOptions.application_uid,
+  });
 
   const versionUrl = edgeTodo?.urls?.version;
 
-  if (!versionUrl || error) {
+  if (!versionUrl) {
     logEvent({
       level: 'error',
       action: 'snapshot:upload:failed',
       message: `failed uploading of ${buildEnv} snapshot to zephyr`,
     });
 
-    if (error) {
-      ze_error('ERR_SNAPSHOT_UPLOADS_NO_RESULTS');
-      throw new SnapshotUploadNoResultError();
-    }
-
-    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', error);
-    throw new SnapshotUploadFailureError();
+    throw new ZephyrError(ZeErrors.ERR_SNAPSHOT_UPLOADS_NO_RESULTS);
   }
 
   logEvent({
@@ -44,10 +42,6 @@ export async function zeUploadSnapshot(props: {
     action: 'snapshot:upload:done',
     message: `Uploaded ${green(buildEnv)} snapshot in ${yellow(`${Date.now() - snapUploadMs}`)}ms`,
   });
-
-  if (!edgeTodo) {
-    ze_error('ERR_SNAPSHOT_UPLOADS_NO_RESULTS', 'Snapshot upload gave no result, exiting...\n');
-  }
 
   return versionUrl;
 }

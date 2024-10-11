@@ -1,57 +1,54 @@
 import {
   ZE_API_ENDPOINT,
   type ZeApplicationConfig,
+  ZeErrors,
+  ZeHttpRequest,
+  ZephyrError,
   getAppConfig,
   getToken,
-  request,
   saveAppConfig,
   ze_api_gateway,
-  ze_error,
   ze_log,
 } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
-import { ConfigurationError } from '../custom-errors/configuration-error';
 
 interface GetApplicationConfigurationProps {
   application_uid: string;
 }
 
-async function loadApplicationConfiguration({
-  application_uid,
-}: GetApplicationConfigurationProps): Promise<ZeApplicationConfig | undefined> {
+async function loadApplicationConfiguration({ application_uid }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
   if (!application_uid) {
-    throw new ConfigurationError('ZE10017', 'application_uid is missing...\n', 'critical');
+    throw new ZephyrError(ZeErrors.ERR_MISSING_APPLICATION_UID);
   }
 
   const token = await getToken();
   const application_config_url = new URL(`${ze_api_gateway.application_config}/${application_uid}`, ZE_API_ENDPOINT());
 
-  try {
-    const response = await request<{ value: ZeApplicationConfig }>(application_config_url, {
-      headers: { Authorization: `Bearer ${token}` },
+  const [ok, cause, data] = await ZeHttpRequest.from<{ value: ZeApplicationConfig }>(application_config_url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!ok || !data?.value) {
+    throw new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {
+      application_uid,
+      cause,
+      data: {
+        url: application_config_url.toString(),
+      },
     });
-
-    if (typeof response !== 'string' && response.value) {
-      ze_log('Application Configuration loaded...', response);
-
-      return {
-        ...response.value,
-        fetched_at: Date.now(),
-      };
-    }
-
-    ze_error('ERR_LOAD_APP_CONFIG', 'Invalid application configuration.', response);
-    return;
-  } catch (v) {
-    ze_error('ERR_LOAD_APP_CONFIG', 'Failed to load application configuration', v);
-    return;
   }
+
+  return {
+    ...data.value,
+    fetched_at: Date.now(),
+  };
 }
 
 /**
  * Gather all calls until the first returns result:
- * - no parallel requests to api
- * - almost all actual data
+ *
+ * - No parallel requests to api
+ * - Almost all actual data
  *
  * Note: not the best solution, but works until we use the same application_uid during execution
  */
@@ -68,10 +65,6 @@ export async function getApplicationConfiguration({ application_uid }: GetApplic
       ze_log('Loading Application Configuration from API...');
       await loadApplicationConfiguration({ application_uid })
         .then(async (loadedAppConfig) => {
-          if (!loadedAppConfig) {
-            throw new ConfigurationError(`ZE20014`, `Failed to load application configuration...`, `critical`);
-          }
-
           ze_log('Saving Application Configuration to node-persist...');
           await saveAppConfig(application_uid, loadedAppConfig);
 

@@ -22,19 +22,11 @@ export async function zeEnableSnapshotOnEdge(props: ZeEnableSnapshotOnEdgeProps)
   ze_log('Enabling snapshot on edge...');
   const logEvent = logger(pluginOptions);
 
-  const latest = await uploadEnvs({
+  await uploadEnvs({
     body: envs_jwt,
     application_uid: pluginOptions.application_uid,
+    logEvent,
   });
-
-  if (!latest) {
-    logEvent({
-      level: 'error',
-      action: 'deploy:edge:failed',
-      message: 'failed deploying local build to edge',
-    });
-    return;
-  }
 
   const urls = envs_jwt.urls
     .reverse()

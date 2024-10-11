@@ -2,10 +2,12 @@ import * as jose from 'jose';
 import {
   ZEPHYR_API_ENDPOINT,
   ZE_API_ENDPOINT,
+  ZeErrors,
+  ZeHttpRequest,
+  ZephyrError,
   getSecretToken,
   getToken,
   removeToken,
-  request,
   saveToken,
   white,
   ze_api_gateway,
@@ -16,9 +18,9 @@ import { PromiseWithResolvers } from '../util/promise';
 import { createSocket } from './websocket';
 
 /**
- * Check if the user is already authenticated. If not, open a browser window to authenticate.
- * Display a message to the console.
- * @return The token as a string.
+ * Check if the user is already authenticated. If not, open a browser window to authenticate. Display a message to the console.
+ *
+ * @returns The token as a string.
  */
 export async function checkAuth(): Promise<string> {
   const secret_token = getSecretToken();
@@ -49,9 +51,10 @@ export async function checkAuth(): Promise<string> {
 
 /**
  * Decides whether the token is still valid based on its expiration time.
+ *
  * @param token The token to check.
- * @param gap in seconds
- * @return boolean indicating if the token is still valid.
+ * @param gap In seconds
+ * @returns Boolean indicating if the token is still valid.
  */
 export function isTokenStillValid(token: string, gap = 0): boolean {
   // Attempts to decode the token
@@ -70,25 +73,19 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
   }
 }
 
-/**
- * Opens the given URL in the default browser.
- */
+/** Opens the given URL in the default browser. */
 async function openUrl(url: string): Promise<void> {
   // Lazy loads `open` module
   const openModule = (await eval(`import('open')`)) as typeof import('open');
   await openModule.default(url);
 }
 
-/**
- * Generates a URL-safe random string to use as a session key.
- */
+/** Generates a URL-safe random string to use as a session key. */
 function generateSessionKey(): string {
   return encodeURIComponent(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
 }
 
-/**
- * Tries to log in the user and get back the websocket reply containing the access token.
- */
+/** Tries to log in the user and get back the websocket reply containing the access token. */
 async function getPersonalAccessTokenFromWebsocket(): Promise<string> {
   const sessionKey = generateSessionKey();
 
@@ -99,6 +96,7 @@ async function getPersonalAccessTokenFromWebsocket(): Promise<string> {
     await openUrl(authUrl);
     logFn('debug', 'Opening browser for authentication...');
   } catch (error) {
+    ze_log(error);
     logFn(
       'debug',
       `Could not open browser to authenticate with ZephyrCloud. Please open the link below to authenticate:\n\n${white(authUrl)}\n`
@@ -108,18 +106,25 @@ async function getPersonalAccessTokenFromWebsocket(): Promise<string> {
   return await waitForAccessToken(sessionKey);
 }
 
-/**
- * Generates the URL to authenticate the user.
- */
+/** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
-  const loginUrl = new URL(ze_api_gateway.auth_link, ZE_API_ENDPOINT());
-  loginUrl.searchParams.append('state', state);
-  return request(loginUrl);
+  const [ok, cause, data] = await ZeHttpRequest.from<string>({
+    path: ze_api_gateway.auth_link,
+    base: ZE_API_ENDPOINT(),
+    query: { state },
+  });
+
+  if (!ok) {
+    throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { cause, message: 'Could not get authentication URL' });
+  }
+
+  return data;
 }
 
 /**
  * Initiates user authentication and handles token storage.
- * @return The new token as a string.
+ *
+ * @returns The new token as a string.
  */
 async function authenticateUser(): Promise<string> {
   const token = await getPersonalAccessTokenFromWebsocket();
@@ -127,9 +132,7 @@ async function authenticateUser(): Promise<string> {
   return token;
 }
 
-/**
- * Waits for the access token to be received from the websocket.
- */
+/** Waits for the access token to be received from the websocket. */
 async function waitForAccessToken(sessionKey: string): Promise<string> {
   const { promise, resolve, reject } = PromiseWithResolvers<string>();
   const socket = createSocket(ZEPHYR_API_ENDPOINT());
@@ -138,13 +141,17 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     socket.once('access-token', resolve);
     // Creating errors outside of the listener closure makes the stack trace point
     // to waitForAccessToken fn instead of socket.io internals event emitter code.
-    socket.once('access-token-error', reject.bind(new Error('Error getting access token')));
-    socket.once('connect_error', reject);
+    socket.once('access-token-error', (cause) =>
+      reject(new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { cause, message: 'Error getting access token' }))
+    );
+    socket.once('connect_error', (cause) =>
+      reject(new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Could not connect to socket.', cause }))
+    );
 
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
 
     // The user has 60 seconds to log in through the browser.
-    setTimeout(reject, 60_000, new Error('Login timeout.'));
+    setTimeout(reject, 60_000, new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: "Couldn't receive access token in 1 minute." }));
 
     return await promise;
   } finally {

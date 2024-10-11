@@ -14,11 +14,14 @@ export async function saveToken(token: string): Promise<void> {
 }
 
 export async function getToken(): Promise<string | undefined> {
-  const tokenFromEnv = await getSecretToken();
+  const tokenFromEnv = getSecretToken();
+
   if (tokenFromEnv) {
     return tokenFromEnv;
   }
+
   await storage;
+
   return getItem(StorageKeys.ze_auth_token);
 }
 

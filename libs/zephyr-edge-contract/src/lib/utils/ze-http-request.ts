@@ -1,87 +1,190 @@
 import type { ClientRequestArgs } from 'node:http';
 import * as http from 'node:http';
 import * as https from 'node:https';
-import { ze_error, ze_log } from './debug';
+import { text } from 'node:stream/consumers';
+import { ZEPHYR_API_ENDPOINT, ZE_API_ENDPOINT_HOST, ZE_IS_PREVIEW } from '../api-contract-negotiation/get-api-contract';
+import { ZeErrors, ZephyrError } from '../errors';
 import { cleanTokens } from '../node-persist/token';
+import { ze_log } from './debug';
+import { PromiseTuple, PromiseWithResolvers } from './promise';
 import { safe_json_parse } from './safe-json-parse';
-import { brightRedBgName } from './debug';
-import { red } from './picocolor';
-import { ZE_API_ENDPOINT, ZE_IS_PREVIEW, ZEPHYR_API_ENDPOINT } from '../api-contract-negotiation/get-api-contract';
 
-function _redact(str: string | undefined): string {
-  if (!str) return '';
-  return str.replace(/Bearer ([^"|']+)/gi, 'Bearer [REDACTED]').replace(/"?jwt"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jwt: [REDACTED]');
-}
+/** Http request wrapper that returns a tuple with the response data or an error. */
+export type HttpResponse<T> = [ok: true, error: null, data: T] | [ok: false, error: Error];
 
-export async function request<T = unknown>(
-  url: URL,
-  options?: ClientRequestArgs,
-  data?: unknown & { length: number | undefined }
-): Promise<T | string> {
-  applyApiHostQueryParam(url);
-  const _https = url.protocol !== 'https:' ? http : https;
-  return new Promise((resolve, reject) => {
-    const req_start = Date.now();
-    const _options_str = _redact(JSON.stringify(options));
+export type UrlString = string | URL | { path: string; base?: string; query: Record<string, string | number | boolean> };
 
-    const req = _https.request(url, options ?? {}, async (res: http.IncomingMessage) => {
-      if (res.statusCode === 401 || res.statusCode === 403) {
-        await cleanTokens();
-        const err = new Error(
-          `${brightRedBgName} ${red(`Error [ZE10018]: auth error, please sign in to https://app.zephyr-cloud.io then try to build again. See documentation https://docs.zephyr-cloud.io/errors/ze10018`)}`
-        );
-        err.stack = void 0;
-        throw err;
+/** Starts a new http request */
+export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
+  /** The time the request was started. */
+  #start = Date.now();
+
+  /** The URL to request. */
+  #url!: URL;
+
+  /** The options for the request. */
+  #options!: ClientRequestArgs;
+
+  /** The data to send with the request. */
+  #data?: string | Buffer;
+
+  // private methods for resolving and rejecting the promise
+  #promise = PromiseWithResolvers<HttpResponse<T>>();
+
+  /** Creates a new http request. */
+  static from<T = void>(urlStr: UrlString, options: ClientRequestArgs = {}, data?: string | Buffer): ZeHttpRequest<T> {
+    const req = new ZeHttpRequest<T>();
+    req.#data = data;
+    req.#options = options;
+
+    // Parse the url into a URL object
+    if (typeof urlStr === 'string') {
+      req.#url = new URL(urlStr);
+    } else if (urlStr instanceof URL) {
+      req.#url = urlStr;
+    } else {
+      req.#url = new URL(urlStr.path, urlStr.base);
+
+      for (const [key, value] of Object.entries(urlStr.query)) {
+        req.#url.searchParams.append(key, String(value));
       }
-
-      const response: Buffer[] = [];
-      res.on('data', (d: Buffer) => response.push(d));
-
-      res.on('end', () => {
-        const _response = Buffer.concat(response)?.toString();
-
-        const message = _redact(
-          `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms` +
-            (data?.length ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb` : '') +
-            (_response ? `\n response: ${_response}` : '') +
-            (_options_str ? `\n options: ${_options_str}` : '')
-        );
-
-        if (_response === 'Not Implemented') return reject(message);
-
-        type error_message = { status: number; message?: string };
-        const parsed_response = safe_json_parse<error_message>(_response);
-        if (
-          (typeof res.statusCode === 'number' && res.statusCode > 299) ||
-          (typeof parsed_response?.status === 'number' && parsed_response?.status > 299)
-        ) {
-          return reject(`${brightRedBgName} Error from ${url}: \n ${parsed_response?.message ?? _response}`);
-        }
-
-        if (url.pathname.indexOf('application/logs') === -1) ze_log(message);
-
-        resolve((parsed_response as T) ?? (_response as string));
-      });
-    });
-
-    req.on('error', (e: unknown) => {
-      ze_error('ERR_UNKNOWN', `[${options?.method || 'GET'}][${url}]: ${Date.now() - req_start}ms \n ${_options_str} \n ${e}`);
-      reject(e);
-    });
-
-    if (data) {
-      req.write(data);
     }
 
-    req.end();
-  });
-}
+    const is_preview = ZE_IS_PREVIEW();
+    const ze_api_endpoint_host = ZE_API_ENDPOINT_HOST();
+    const zephyr_api_endpoint = ZEPHYR_API_ENDPOINT();
 
-function applyApiHostQueryParam(url: URL) {
-  const is_preview = ZE_IS_PREVIEW();
-  const ze_api_endpoint = ZE_API_ENDPOINT();
-  const zephyr_api_endpoint = ZEPHYR_API_ENDPOINT();
-  if (is_preview && url.host === new URL(ze_api_endpoint).host) {
-    url.searchParams.set('api_host', zephyr_api_endpoint);
+    // Add a query param hint in preview environments
+    if (is_preview && req.#url.host === ze_api_endpoint_host) {
+      req.#url.searchParams.set('api_host', zephyr_api_endpoint);
+    }
+
+    req.#request();
+
+    return req;
+  }
+
+  /** "Rejects" the promise with an error. */
+  #reject(error: Error) {
+    this.#promise.resolve([false, error]);
+  }
+
+  /** Resolves the promise with the data. */
+  #resolve(data: T) {
+    this.#promise.resolve([true, null, data]);
+  }
+
+  // promise extension
+  then = this.#promise.promise.then.bind(this.#promise.promise);
+
+  /** Transforms `Promise<HttpResponse<T>>` into `Promise<T>` */
+  async unwrap() {
+    const [ok, error, data] = await this;
+
+    if (!ok) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  #request() {
+    const requester = this.#url.protocol === 'https:' ? https : http;
+    const req = requester.request(this.#url, this.#options ?? {}, this.#onResponse);
+
+    req.on('error', this.#onRequestError);
+    req.end(this.#data);
+  }
+
+  /** Handles the error when the request fails. */
+  #onRequestError = (cause: any) => {
+    if ('ERR_TLS_CERT_ALTNAME_INVALID' in cause) {
+      this.#reject(
+        new ZephyrError(ZeErrors.ERR_TLS_CERT_ALTNAME_INVALID, {
+          cause,
+        })
+      );
+
+      return;
+    }
+
+    this.#reject(
+      new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+        url: this.#url.toString(),
+        method: this.#options.method?.toUpperCase() ?? 'GET',
+        content: 'Could not send request',
+        status: '-1',
+        cause,
+      })
+    );
+  };
+
+  /** Handles the response from the server. */
+  #onResponse = (res: http.IncomingMessage) => {
+    this.#onResponseAsync(res).catch(this.#handleUnknownError);
+  };
+
+  #handleUnknownError = (cause: any) => {
+    this.#reject(new ZephyrError(ZeErrors.ERR_UNKNOWN, { message: 'Could not process provided http.IncomingMessage', cause }));
+  };
+
+  #onResponseAsync = async (res: http.IncomingMessage) => {
+    if (res.statusCode === 401 || res.statusCode === 403) {
+      // Clean the tokens and throw an error
+      await cleanTokens();
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Unauthorized request' });
+    }
+
+    const [resOk, resErr, resText] = await PromiseTuple(text(res));
+
+    if (!resOk) {
+      return this.#onRequestError(resErr);
+    }
+
+    const message = this.#redact(resText);
+
+    if (message === 'Not Implemented') {
+      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+        message: 'Not implemented yet. Please get in contact with our support.',
+      });
+    }
+
+    if (res.statusCode === undefined) {
+      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+        content: 'No status code found',
+        method: this.#options.method?.toUpperCase() ?? 'GET',
+        url: this.#url.toString(),
+        status: -1,
+      });
+    }
+
+    if (!this.#url.pathname.includes('application/logs')) {
+      ze_log(message);
+    }
+
+    // Only parses data if reply content is json
+    const resData = safe_json_parse<any>(resText) ?? resText;
+
+    if (res.statusCode >= 300) {
+      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+        status: res.statusCode,
+        url: this.#url.toString(),
+        content: resData,
+        method: this.#options.method?.toUpperCase() ?? 'GET',
+      });
+    }
+
+    this.#resolve(resData as T);
+  };
+
+  #redact(response: unknown): string {
+    const str = [
+      `[${this.#options.method || 'GET'}][${this.#url}]: ${Date.now() - this.#start}ms`,
+      this.#data?.length ? ` - ${((this.#data.length ?? 0) / 1024).toFixed(2)}kb` : '',
+      response ? `Response: ${response}` : '',
+      this.#options ? `Options: ${JSON.stringify(this.#options)}` : '',
+    ].join('\n');
+
+    return str.replace(/Bearer ([^"|']+)/gi, 'Bearer [REDACTED]').replace(/"?jwt"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jwt: [REDACTED]');
   }
 }

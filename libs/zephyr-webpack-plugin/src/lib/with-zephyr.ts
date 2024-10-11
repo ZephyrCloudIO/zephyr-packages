@@ -1,30 +1,18 @@
 import { Configuration } from 'webpack';
-
-import {
-  createApplicationUID,
-  ze_log,
-  ZephyrPluginOptions,
-} from 'zephyr-edge-contract';
 import { getGitInfo, getPackageJson } from 'zephyr-agent';
-
-import { ZeWebpackPlugin } from './ze-webpack-plugin';
-import { resolve_remote_dependencies } from './dependency-resolution/resolve-remote-dependencies';
+import { createApplicationUID, ze_log, ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { replaceRemotesWithDelegates } from './dependency-resolution/replace-remotes-with-delegates';
 import { getCopyOfMFOptions } from './utils/get-copy-of-mf-options';
+import { ZeWebpackPlugin } from './ze-webpack-plugin';
 
 export function withZephyr(_zephyrOptions?: ZephyrPluginOptions) {
-  return async function configure(
-    config: Configuration
-  ): Promise<Configuration> {
-    /* webpack */
+  return async function configure(config: Configuration): Promise<Configuration> {
     const path_to_execution_dir = config.context;
     ze_log('Configuring with Zephyr');
 
-    const [packageJson, gitInfo] = await Promise.all([
-      getPackageJson(path_to_execution_dir),
-      getGitInfo(),
-    ]);
+    const [packageJson, gitInfo] = await Promise.all([getPackageJson(path_to_execution_dir), getGitInfo()]);
 
-    await resolve_remote_dependencies(config, {
+    await replaceRemotesWithDelegates(config, {
       org: gitInfo.app.org,
       project: gitInfo.app.project,
     });

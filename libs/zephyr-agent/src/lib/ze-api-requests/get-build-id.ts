@@ -1,8 +1,8 @@
+import { getToken, ZeErrors, ZeHttpRequest, ZephyrError } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
-import { getToken, request, ze_error } from 'zephyr-edge-contract';
 
-export async function getBuildId(application_uid: string): Promise<string | void> {
-  const { BUILD_ID_ENDPOINT, user_uuid, jwt } = await getApplicationConfiguration({
+export async function getBuildId(application_uid: string): Promise<string> {
+  const { BUILD_ID_ENDPOINT, user_uuid, jwt, username } = await getApplicationConfiguration({
     application_uid,
   });
 
@@ -15,21 +15,16 @@ export async function getBuildId(application_uid: string): Promise<string | void
     },
   };
 
-  type BuildIdResp = string | Record<string, string> | { status: number; message: string };
+  const [ok, cause, data] = await ZeHttpRequest.from<Record<string, string>>(BUILD_ID_ENDPOINT, options);
 
-  try {
-    const resp = await request<BuildIdResp>(new URL(BUILD_ID_ENDPOINT), options);
-
-    if (typeof resp === 'string') {
-      throw new Error('[get_build_id]: ' + resp);
-    }
-    if (!resp || (typeof resp.status === 'number' && resp.status !== 200)) {
-      throw new Error('[get_build_id]: resp.message: ' + resp.message);
-    }
-
-    return (resp as Record<string, string>)[user_uuid];
-  } catch (err: unknown) {
-    // TODO: this error log doesn't print useful information
-    ze_error('ERR_GET_BUILD_ID', err);
+  if (!ok || !data[user_uuid]) {
+    throw new ZephyrError(ZeErrors.ERR_GET_BUILD_ID, {
+      application_uid,
+      username,
+      cause,
+      data,
+    });
   }
+
+  return data[user_uuid];
 }

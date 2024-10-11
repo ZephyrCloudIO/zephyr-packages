@@ -15,19 +15,11 @@ export function PromiseWithResolvers<T>() {
   return { promise, resolve, reject };
 }
 
-/**
- * Lazy loads a promise.
- *
- * @link https://github.com/sindresorhus/p-lazy
- */
-export function PromiseLazyLoad<const T, const P = void>(promise: (params: P) => Promise<T>) {
-  let _data: Promise<T> | undefined;
-
-  return (params: P) => {
-    if (!_data) {
-      _data = promise(params);
-    }
-
-    return _data;
-  };
+/** Creates a `[boolean, error, value]` tuple value from a promise. */
+export async function PromiseTuple<P>(maybePromise: PromiseLike<P> | P): Promise<[false, unknown] | [true, null, P]> {
+  try {
+    return [true, null, await maybePromise];
+  } catch (err) {
+    return [false, err];
+  }
 }

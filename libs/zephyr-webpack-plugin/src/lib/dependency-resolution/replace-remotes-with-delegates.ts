@@ -1,8 +1,5 @@
-import {
-  DependencyResolutionError,
-  replace_remote_in_mf_config,
-} from '../../delegate-module/zephyr-delegate';
 import { Configuration } from 'webpack';
+import { replace_remote_in_mf_config } from '../../delegate-module/zephyr-delegate';
 import { isModuleFederationPlugin } from '../utils/is-mf-plugin';
 
 export interface DelegateConfig {
@@ -11,18 +8,15 @@ export interface DelegateConfig {
   application?: undefined;
 }
 
-export async function replaceRemotesWithDelegates(
-  _config: unknown,
-  { org, project }: DelegateConfig
-): Promise<((DependencyResolutionError | void)[] | void)[]> {
+export async function replaceRemotesWithDelegates(_config: unknown, { org, project }: DelegateConfig): Promise<void> {
   // this is WebpackOptionsNormalized type but this type is not exported
   const config = _config as Configuration;
+
   const depsResolutionTasks = config.plugins
     ?.filter(isModuleFederationPlugin)
-    ?.map(async (mfConfig) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await replace_remote_in_mf_config(mfConfig, { org, project });
-    });
+    ?.map((mfConfig) => replace_remote_in_mf_config(mfConfig, { org, project }));
 
-  return Promise.all(depsResolutionTasks ?? []);
+  if (depsResolutionTasks) {
+    await Promise.all(depsResolutionTasks);
+  }
 }

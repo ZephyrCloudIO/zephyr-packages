@@ -20,10 +20,10 @@ export interface RemoteMapExtraction {
  * Parses the provided code to extract the remotes object.
  *
  * @param code - The code containing the remotes object declaration.
- * @returns An object containing the remotes object and the start and end indices of the remotes object declaration in the code, or undefined if parsing fails.
+ * @returns An object containing the remotes object and the start and end indices of the remotes object declaration in the code, or
+ *   undefined if parsing fails.
  */
 export function parseRemoteMap(code: string, id: string): RemoteMapExtraction | undefined {
-
   if (!id.includes('localSharedImportMap')) {
     return undefined;
   }

@@ -6,10 +6,7 @@ import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { webpack_zephyr_agent, ZephyrAgentProps } from './ze-agent';
 import { onDeploymentDone } from './ze-agent/lifecycle-events';
 
-export function setupZeDeploy(
-  pluginOptions: ZephyrPluginOptions,
-  compiler: Compiler
-): void {
+export function setupZeDeploy(pluginOptions: ZephyrPluginOptions, compiler: Compiler): void {
   const { pluginName } = pluginOptions;
   compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
     compilation.hooks.processAssets.tapPromise(
@@ -22,19 +19,20 @@ export function setupZeDeploy(
         const stats_json = compilation.getStats().toJson();
 
         pluginOptions.outputPath = compiler.outputPath;
-        process.nextTick(
-          (props: ZephyrAgentProps) => webpack_zephyr_agent(props),
-          {
-            stats,
-            stats_json,
-            assets,
-            pluginOptions,
-          }
-        );
+
+        process.nextTick(webpack_zephyr_agent, {
+          stats,
+          stats_json,
+          assets,
+          pluginOptions,
+        });
 
         if (!pluginOptions.wait_for_index_html) {
           await onDeploymentDone();
         }
+
+        // empty line to separate logs from other plugins
+        console.log();
       }
     );
   });

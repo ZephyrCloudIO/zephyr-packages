@@ -6,9 +6,7 @@ const { withZephyr } = require('../../../libs/zephyr-webpack-plugin/dist');
 
 const printCompilationMessage = require('./compilation.config.js');
 
-/**
- * @type {import('@rspack/cli').Configuration}
- */
+/** @type {import('@rspack/cli').Configuration} */
 module.exports = withZephyr()({
   context: __dirname,
   entry: {

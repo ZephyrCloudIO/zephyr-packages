@@ -1,23 +1,14 @@
 import { ClientRequestArgs } from 'node:http';
-import { request, Snapshot, SnapshotUploadRes, ze_error, ze_log } from 'zephyr-edge-contract';
+import { Snapshot, SnapshotUploadRes, ze_log, ZeErrors, ZeHttpRequest, ZephyrError } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../application-configuration/get-application-configuration';
 
-export async function uploadSnapshot({
-  body,
-  application_uid,
-}: {
-  body: Snapshot;
-  application_uid: string;
-}): Promise<SnapshotUploadRes | undefined> {
+export async function uploadSnapshot({ body, application_uid }: { body: Snapshot; application_uid: string }): Promise<SnapshotUploadRes> {
   const { EDGE_URL, jwt } = await getApplicationConfiguration({
     application_uid,
   });
 
-  const type = 'snapshot';
   const data = JSON.stringify(body);
-  const url = new URL('/upload', EDGE_URL);
-  url.searchParams.append('type', type);
-  url.searchParams.append('skip_assets', 'true');
+
   const options: ClientRequestArgs = {
     method: 'POST',
     headers: {
@@ -27,15 +18,27 @@ export async function uploadSnapshot({
     },
   };
 
-  const res = await request<SnapshotUploadRes>(url, options, data).catch((err) =>
-    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', err)
+  const [ok, cause, resp] = await ZeHttpRequest.from<SnapshotUploadRes>(
+    {
+      path: '/upload',
+      base: EDGE_URL,
+      query: {
+        type: 'snapshot',
+        skip_assets: true,
+      },
+    },
+    options,
+    data
   );
-  ze_log('Snapshot uploaded...');
 
-  if (!res || typeof res === 'string') {
-    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', res);
-    return;
+  if (!ok) {
+    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+      type: 'snapshot',
+      cause,
+    });
   }
 
-  return res;
+  ze_log('Snapshot uploaded...');
+
+  return resp;
 }

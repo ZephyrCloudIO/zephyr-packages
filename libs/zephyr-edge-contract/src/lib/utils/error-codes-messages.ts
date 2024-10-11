@@ -1,6 +1,4 @@
-/**
- * Categories for all error codes.
- */
+/** Categories for all error codes. */
 export const ErrorCategories = {
   unknown: '00',
   build: '10',
@@ -12,32 +10,36 @@ export const ErrorCategories = {
 
 /**
  * A collection of error types and the error code during local/build stage
- * @description if you are searching for an error globally, if it is a build related error, it starts with `ZE10`, if it's a deployment related error, search for `ZE20` and then followed with their ID.
- * - `ZE` at the front is a constant
- * - two digits at the middle PP (`10` for build error or `20` for deployment error) is their categories,
- * - last three digits is their ID.
  *
- * For example, if you have a `SNAPSHOT_NOT_FOUND` error, search for `ZE20023`, if you see an error showing up on terminal or application, the last three numbers are their IDs.
- * We might extend to have more errors in the future. */
+ * If you are searching for an error globally, if it is a build related error, it starts with `ZE10`, if it's a deployment related error,
+ * search for `ZE20` and then followed with their ID.
+ *
+ * - `ZE` at the front is a constant
+ * - Two digits at the middle PP (`10` for build error or `20` for deployment error) is their categories,
+ * - Last three digits is their ID.
+ *
+ * For example, if you have a `SNAPSHOT_NOT_FOUND` error, search for `ZE20023`, if you see an error showing up on terminal or application,
+ * the last three numbers are their IDs. We might extend to have more errors in the future.
+ */
 export const Errors = {
   ERR_UNKNOWN: {
     id: '000',
     message: 'Unknown error. Tell us about it in Discord https://zephyr-cloud.io/discord if you see this error',
     kind: 'unknown',
   },
-  /** package.json not found error */
+  /** Package.json not found error */
   ERR_PACKAGE_JSON_NOT_FOUND: {
     id: '010',
     message: 'Package.json not found',
     kind: 'build',
   },
-  /** Package.json is not in a valid json format*/
+  /** Package.json is not in a valid json format */
   ERR_PACKAGE_JSON_NOT_VALID: {
     id: '011',
     message: 'Package.json is not in a valid json format.',
     kind: 'build',
   },
-  /** Webpack config error*/
+  /** Webpack config error */
   ERR_WEBPACK_CONFIG: {
     id: '012',
     message: 'Webpack config error.',
@@ -49,7 +51,7 @@ export const Errors = {
     message: 'Package.json must have a name and version field.',
     kind: 'build',
   },
-  /** Git remote origin is not configured properly.*/
+  /** Git remote origin is not configured properly. */
   ERR_GIT_REMOTE_ORIGIN: {
     id: '014',
     message: 'Git remote origin is not configured properly.',
@@ -85,7 +87,7 @@ export const Errors = {
     message: 'Could not get build id.',
     kind: 'build',
   },
-  /**Could not initialize Zephyr Agent. */
+  /** Could not initialize Zephyr Agent. */
   ERR_INITIALIZE_ZEPHYR_AGENT: {
     id: '020',
     message: 'Could not initialize Zephyr Agent.',
@@ -103,13 +105,13 @@ export const Errors = {
     message: 'Assets not found.',
     kind: 'deploy',
   },
-  /** assets not found in snapshot */
+  /** Assets not found in snapshot */
   ERR_ASSETS_NOT_FOUND_IN_SNAPSHOT: {
     id: '011',
     message: 'Assets not found in snapshot.',
     kind: 'deploy',
   },
-  /** application_uid missing */
+  /** Application_uid missing */
   ERR_DEPLOY_MISSING_APPLICATION_UID: {
     id: '012',
     message: '`application_uid` is required.',
@@ -126,7 +128,7 @@ export const Errors = {
     message: 'Failed to load application configuration.',
     kind: 'deploy',
   },
-  /**Failed to upload build stats. */
+  /** Failed to upload build stats. */
   ERR_FAILED_UPLOAD_BUILD_STATS: {
     id: '015',
     message: 'Failed to upload build stats.',
@@ -156,7 +158,7 @@ export const Errors = {
     message: 'Snapshot uploads gave no results.',
     kind: 'deploy',
   },
-  /**Failed to get application hash list */
+  /** Failed to get application hash list */
   ERR_GET_APPLICATION_HASH_LIST: {
     id: '020',
     message: 'Failed to get application hash list.',

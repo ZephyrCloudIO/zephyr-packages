@@ -1,13 +1,13 @@
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
   ZE_API_ENDPOINT,
+  ZeHttpRequest,
   brightBlueBgName,
   brightGreenBgName,
   brightRedBgName,
   brightYellowBgName,
   getToken,
   is_debug_enabled,
-  request,
   ze_api_gateway,
   ze_log,
 } from 'zephyr-edge-contract';
@@ -24,7 +24,7 @@ export const logFn = (level: string, msg: unknown): void => {
   const str = String(msg);
   const padded = str
     .split('\n')
-    .map((m) => `${toLevelPrefix(level)}  ${m.trim()}`)
+    .map((m) => `${toLevelPrefix(level)}  ${m.trimEnd()}`)
     .join('\n');
 
   switch (level) {
@@ -88,7 +88,7 @@ export function logger(options: ZephyrPluginOptions): ZeLogger {
     // Then attempt to upload logs,
     loadLogData()
       .then(([config, token]) =>
-        request(
+        ZeHttpRequest.from(
           url,
           {
             method: 'POST',
@@ -114,7 +114,7 @@ export function logger(options: ZephyrPluginOptions): ZeLogger {
                 createdAt: Date.now(),
               }))
           )
-        )
+        ).unwrap()
       )
       // This is ok to fail silently
       .catch(() => void 0);

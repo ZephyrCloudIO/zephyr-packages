@@ -1,5 +1,3 @@
-import { CouldNotGetBuildIdError } from './lib/custom-errors/could-not-get-build-id';
-
 export { zeEnableSnapshotOnEdge } from './lib/actions/ze-enable-snapshot-on-edge';
 export { zeUploadAssets } from './lib/actions/ze-upload-assets';
 export { zeUploadBuildStats } from './lib/actions/ze-upload-build-stats';
@@ -18,13 +16,10 @@ export { zeBuildAssetsMap, buildAssetsMap } from './lib/payload-builders/ze-buil
 export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
 export { zeGetDashData, GetDashDataOptions } from './lib/payload-builders/ze-get-dash-data';
 
-export { logger } from './lib/remote-logs/ze-log-event';
+export { logger, logFn } from './lib/remote-logs/ze-log-event';
 export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
 export { getBuildId } from './lib/ze-api-requests/get-build-id';
 export { upload } from './lib/upload/upload';
 
 export { get_hash_list, update_hash_list } from './lib/dvcs/distributed-hash-control';
 export { get_missing_assets } from './lib/dvcs/get-missing-assets';
-
-// Errors related
-export * from './lib/custom-errors';

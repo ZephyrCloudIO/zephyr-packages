@@ -31,21 +31,22 @@ import type { ZephyrInternalOptions } from './types/zephyr-internal-options';
 import { parseRemoteMap, RemoteMapExtraction, replaceProtocolAndHost } from './remote_map_parser';
 import { resolve_remote_dependency } from './resolve_remote_dependency';
 import { federation } from '@module-federation/vite';
-import type { ModuleFederationOptions, ZephyrPartialInternalOptions } from './types/zephyr-internal-options';
+import type { ZephyrPartialInternalOptions } from './types/zephyr-internal-options';
+
+type FederationFunction = typeof federation;
 
 // TODO: ideally use the same interface in zephyr-edge-contract as other plugins
 // Ensure ModuleFederationOptions extends the module's options
 interface VitePluginZephyrOptions {
-  mfConfig?: ModuleFederationOptions;
+  mfConfig?: Parameters<FederationFunction>[0];
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
-  // @ts-expect-error Our library wants vite@5.0.3 but federation wants ^5.4.3
-  return mfConfig ? federation(mfConfig).concat(zephyrPlugin(_options)) : zephyrPlugin(_options);
+  return mfConfig ? (federation(mfConfig) as Plugin[]).concat([zephyrPlugin(_options)]) : [zephyrPlugin(_options)];
 }
 
-function zephyrPlugin(_options: VitePluginZephyrOptions): Plugin {
+function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   let gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
   let packageJson: Awaited<ReturnType<typeof getPackageJson>>;
   let application_uid: string;

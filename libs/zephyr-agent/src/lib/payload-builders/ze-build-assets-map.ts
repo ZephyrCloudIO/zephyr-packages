@@ -1,9 +1,4 @@
-import {
-  Source,
-  ze_log,
-  ZeBuildAssetsMap,
-  ZephyrPluginOptions,
-} from 'zephyr-edge-contract';
+import { Source, ze_log, ZeBuildAssetsMap, ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 import { getZeBuildAsset } from '../sync-utils/get-ze-build-asset';
 import { onIndexHtmlResolved } from '../hacks/resolve-index-html';
@@ -27,6 +22,7 @@ function extractBuffer(asset: Source): Buffer | string | undefined {
     case 'CompatSource':
     case 'RawSource':
     case 'ConcatSource':
+    case 'SourceMapSource':
       return asset?.buffer && asset.buffer();
     case 'ReplaceSource':
       return asset.source();
@@ -35,10 +31,7 @@ function extractBuffer(asset: Source): Buffer | string | undefined {
   }
 }
 
-export async function zeBuildAssetsMap(
-  pluginOptions: ZephyrPluginOptions,
-  assets: Record<string, Source>
-): Promise<ZeBuildAssetsMap> {
+export async function zeBuildAssetsMap(pluginOptions: ZephyrPluginOptions, assets: Record<string, Source>): Promise<ZeBuildAssetsMap> {
   ze_log('Building assets map from webpack assets.');
 
   const buildAssetMap = buildAssetsMap(assets, extractBuffer, getAssetType);
@@ -57,11 +50,7 @@ export async function zeBuildAssetsMap(
   return buildAssetMap;
 }
 
-export function buildAssetsMap<T>(
-  assets: Record<string, T>,
-  extractBuffer: ExtractBuffer<T>,
-  getAssetType: GetAssetType<T>
-) {
+export function buildAssetsMap<T>(assets: Record<string, T>, extractBuffer: ExtractBuffer<T>, getAssetType: GetAssetType<T>) {
   return Object.keys(assets).reduce((memo, filepath) => {
     const asset = assets[filepath];
     const buffer = extractBuffer(asset);

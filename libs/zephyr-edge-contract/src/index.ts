@@ -1,9 +1,9 @@
-export { ZEPHYR_API_ENDPOINT, ZE_API_ENDPOINT, ze_api_gateway } from './lib/api-contract-negotiation/get-api-contract';
+export { ZEPHYR_API_ENDPOINT, ZE_API_ENDPOINT, ZE_IS_PREVIEW, ze_api_gateway } from './lib/api-contract-negotiation/get-api-contract';
 export { PublishRequest, StageZeroPublishRequest } from './lib/edge-api/publish-request';
 export { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 export { ZeErrorCategories, ZeErrorCodes, ZeErrorKeys, ZeErrorType, ZeErrors, ZephyrError } from './lib/errors';
 export * as appDeployResultCache from './lib/node-persist/app-deploy-result-cache';
-export { getAppConfig, remoteAppConfig, saveAppConfig } from './lib/node-persist/application-configuration';
+export { getAppConfig, removeAppConfig, saveAppConfig } from './lib/node-persist/application-configuration';
 export * as _fs_cache from './lib/node-persist/fs-cache';
 export * as _hash_cache from './lib/node-persist/hash-cache';
 export { getPartialAssetMap, removePartialAssetMap, savePartialAssetMap } from './lib/node-persist/partial-assets-map';

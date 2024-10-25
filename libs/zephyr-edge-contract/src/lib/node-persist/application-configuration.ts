@@ -22,7 +22,7 @@ export async function getAppConfig(application_uid: string): Promise<ZeApplicati
   return getItem(get_key(application_uid));
 }
 
-export async function remoteAppConfig(application_uid: string): Promise<void> {
+export async function removeAppConfig(application_uid: string): Promise<void> {
   await storage;
   await removeItem(get_key(application_uid));
 }

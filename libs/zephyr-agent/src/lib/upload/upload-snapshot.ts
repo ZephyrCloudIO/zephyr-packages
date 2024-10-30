@@ -7,13 +7,13 @@ export async function uploadSnapshot({ body, application_uid }: { body: Snapshot
     application_uid,
   });
 
-  const data = JSON.stringify(body);
+  const json = JSON.stringify(body);
 
   const options: ClientRequestArgs = {
     method: 'POST',
     headers: {
-      'Content-Length': data.length.toString(),
-      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(json),
+      'Content-Type': 'application/json; charset=utf-8',
       can_write_jwt: jwt,
     },
   };
@@ -28,7 +28,7 @@ export async function uploadSnapshot({ body, application_uid }: { body: Snapshot
       },
     },
     options,
-    data
+    json
   );
 
   if (!ok) {

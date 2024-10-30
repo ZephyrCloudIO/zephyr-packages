@@ -23,9 +23,9 @@ export async function uploadEnvs({
   const options: ClientRequestArgs = {
     method: 'POST',
     headers: {
-      can_write_jwt: jwt,
-      'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(json),
+      'Content-Type': 'application/json; charset=utf-8',
+      can_write_jwt: jwt,
     },
   };
 

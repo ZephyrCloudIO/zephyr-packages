@@ -16,7 +16,7 @@ export async function zeEnableSnapshotOnPages({
   ze_log(`Uploading envs to Zephyr, for ${application_uid}`);
 
   const type = 'pages';
-  const data = JSON.stringify({
+  const json = JSON.stringify({
     ...envs_jwt,
     pages_url,
   });
@@ -34,12 +34,12 @@ export async function zeEnableSnapshotOnPages({
     {
       method: 'POST',
       headers: {
+        'Content-Length': Buffer.byteLength(json),
+        'Content-Type': 'application/json; charset=utf-8',
         can_write_jwt: jwt,
-        'Content-Type': 'application/json',
-        'Content-Length': data.length.toString(),
       },
     },
-    data
+    json
   );
 
   if (!ok) {

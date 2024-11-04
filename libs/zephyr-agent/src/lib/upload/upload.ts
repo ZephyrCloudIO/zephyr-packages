@@ -1,3 +1,4 @@
+import * as isCI from 'is-ci';
 import {
   UploadProviderType,
   type ZeApplicationConfig,
@@ -7,6 +8,7 @@ import {
   type ZephyrPluginOptions,
   cyanBright,
   yellow,
+  appDeployResultCache,
 } from 'zephyr-edge-contract';
 import type { GetDashDataOptions } from '../payload-builders';
 import { logger } from '../remote-logs/ze-log-event';
@@ -34,11 +36,9 @@ export async function upload(options: UploadOptions): Promise<void> {
     message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(`${Date.now() - options.zeStart}`)}ms.\n\n${cyanBright(versionUrl)}`,
   });
 
-  // FIXME: Now only possible if:
-  // https://zephyr-cloud.slack.com/archives/C05NRK2SUSE/p1725400546897959
-  // if (deployResult) {
-  //   await appDeployResultCache.setAppDeployResult(result.app_version.application_uid, { urls: result.urls });
-  // }
+  if (isCI) {
+    appDeployResultCache.setAppDeployResult(options.appConfig.application_uid, { urls: [versionUrl] });
+  }
 }
 
 export interface UploadOptions {

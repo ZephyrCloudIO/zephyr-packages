@@ -146,6 +146,19 @@ When trying out public examples, make sure to fork the repository to your accoun
     kind: 'build',
   },
 
+  /** Auth forbidden error */
+  ERR_AUTH_FORBIDDEN_ERROR: {
+    id: '022',
+    message: `
+User not allowed to access the requested resource.
+
+Please make sure you are logged in with the correct Zephyr account.
+
+{{ message }}
+`,
+    kind: 'build',
+  },
+
   /** Deployment error, assets not found */
   ERR_ASSETS_NOT_FOUND: {
     id: '010',

@@ -129,10 +129,14 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
   };
 
   #onResponseAsync = async (res: http.IncomingMessage) => {
-    if (res.statusCode === 401 || res.statusCode === 403) {
+    if (res.statusCode === 401) {
       // Clean the tokens and throw an error
       await cleanTokens();
-      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Unauthorized request' });
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Unauthenticated request' });
+    }
+
+    if (res.statusCode === 403) {
+      throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, { message: 'Unauthorized request' });
     }
 
     const [resOk, resErr, resText] = await PromiseTuple(text(res));

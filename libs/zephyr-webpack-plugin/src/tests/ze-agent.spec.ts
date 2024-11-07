@@ -23,16 +23,14 @@ jest.mock('zephyr-edge-contract', () => {
   };
 });
 
-const exec = promisify(execCB);
-describe('ZeAgent', () => {
-  // Skip tests if not in preview mode
-  if (!ZE_IS_PREVIEW()) {
-    it('should skip tests', () => {
-      expect(true).toBeTruthy();
-    });
-    return;
-  }
+jest.mock('is-ci', () => false);
 
+// Skip tests if not in preview mode
+const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
+
+const exec = promisify(execCB);
+
+runner('ZeAgent', () => {
   const gitUserName = 'Test User';
   const gitEmail = 'test.user@valor-software.com';
   const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
@@ -77,6 +75,7 @@ describe('ZeAgent', () => {
 
   it('should test git configuration', async () => {
     const gitInfo = await getGitInfo();
+
     expect(gitInfo.git.name).toBe(gitUserName);
     expect(gitInfo.git.email).toBe(gitEmail);
     expect(gitInfo.git.commit).toBeTruthy();
@@ -126,7 +125,6 @@ describe('ZeAgent', () => {
       const deployResultUrls = await _getAppTagUrls(application_uid);
       expect(deployResultUrls).toBeTruthy();
       for (const url of deployResultUrls) {
-        console.log('fetching url:', url);
         expect(url).toBeTruthy();
         const content = await _fetchContent(url);
         const match = content.match(/<title>([^<]+)<\/title>/);
@@ -159,7 +157,6 @@ async function _loadAppConfig(application_uid: string): Promise<ZeApplicationCon
 async function _getAppTagUrls(application_uid: string): Promise<string[]> {
   const url = new URL(`/v2/builder-packages-api/deployed-tags/${application_uid}`, ZEPHYR_API_ENDPOINT());
   const secret_token = getSecretToken();
-  console.log('token:', secret_token);
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -168,7 +165,6 @@ async function _getAppTagUrls(application_uid: string): Promise<string[]> {
     },
   });
   return response.json().then((data) => {
-    console.log('data:', data);
     return data.entities.map((tag: { remote_host: string }) => tag.remote_host);
   });
 }

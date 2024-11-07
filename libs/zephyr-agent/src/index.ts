@@ -2,24 +2,19 @@ export { zeEnableSnapshotOnEdge } from './lib/actions/ze-enable-snapshot-on-edge
 export { zeUploadAssets } from './lib/actions/ze-upload-assets';
 export { zeUploadBuildStats } from './lib/actions/ze-upload-build-stats';
 export { zeUploadSnapshot } from './lib/actions/ze-upload-snapshot';
-
 export { getApplicationConfiguration } from './lib/application-configuration/get-application-configuration';
-
 export { checkAuth, isTokenStillValid } from './lib/auth/login';
-
 export { getGitInfo } from './lib/context-utils/ze-util-get-git-info';
+export type { GitInfo } from './lib/context-utils/ze-util-get-git-info';
 export { getPackageJson } from './lib/context-utils/ze-util-read-package-json';
-
-export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index-html';
-
-export { zeBuildAssetsMap, buildAssetsMap } from './lib/payload-builders/ze-build-assets-map';
-export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
-export { zeGetDashData, GetDashDataOptions } from './lib/payload-builders/ze-get-dash-data';
-
-export { logger, logFn } from './lib/remote-logs/ze-log-event';
-export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
-export { getBuildId } from './lib/ze-api-requests/get-build-id';
-export { upload } from './lib/upload/upload';
-
 export { get_hash_list, update_hash_list } from './lib/dvcs/distributed-hash-control';
 export { get_missing_assets } from './lib/dvcs/get-missing-assets';
+export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index-html';
+export { buildAssetsMap, zeBuildAssetsMap } from './lib/payload-builders/ze-build-assets-map';
+export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
+export { zeGetDashData } from './lib/payload-builders/ze-get-dash-data';
+export type { GetDashDataOptions } from './lib/payload-builders/ze-get-dash-data';
+export { logFn, logger } from './lib/remote-logs/ze-log-event';
+export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
+export { upload } from './lib/upload/upload';
+export { getBuildId } from './lib/ze-api-requests/get-build-id';

@@ -1,98 +1,116 @@
-import { promisify } from 'node:util';
-import { exec as execCB } from 'node:child_process';
+import gitUrlParse from 'git-url-parse';
 import isCI from 'is-ci';
-import { ze_log, _fs_cache, hasSecretToken, type ZephyrPluginOptions } from 'zephyr-edge-contract';
+import cp from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import { promisify } from 'node:util';
+import { hasSecretToken, ze_log, ZeErrors, ZephyrError, type ZephyrPluginOptions } from 'zephyr-edge-contract';
 
-import { GitRemoteConfigurationError } from '../custom-errors/git-remote-configuration-error';
-import { GitUserIdentityError } from '../custom-errors/git-user-identity-error';
-
-const exec = promisify(execCB);
-const cache_prefix = 'git_info';
+const exec = promisify(cp.exec);
 
 export interface GitInfo {
   app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
   git: ZephyrPluginOptions['git'];
 }
 
+/** Loads the git information from the current repository. */
 export async function getGitInfo(): Promise<GitInfo> {
-  const cache_key = `${cache_prefix}:${process.cwd()}`;
-  const cached = await _fs_cache.getCache(cache_key);
-  if (cached) return JSON.parse(cached);
+  const hasToken = hasSecretToken();
 
-  const [username, email, remoteOrigin, branch, commitHash] = await Promise.all([
-    getGitUsername(),
-    getGitEmail(),
-    getGitRemoteOrigin(),
-    getGitBranch(),
-    getGitCommitHash(),
-  ]);
+  const { name, email, remoteOrigin, branch, commit, stdout } = await loadGitInfo(hasToken);
 
-  // parse remote origin url to get the organization and repository name
-  const urlParts = remoteOrigin
-    // Remove the protocol (like https://) and user info
-    .replace(/.+@/, '')
-    // Remove the .git at the end
-    .replace(/.git$/, '')
-    // Split at the colon to separate domain from path
-    .split(':')
-    // Take the last part, which is the path
-    .pop()
-    // Split the path into parts
-    ?.split('/');
-
-  const organization = urlParts && urlParts?.length > 1 ? urlParts[urlParts.length - 2]?.toLocaleLowerCase() : undefined;
-  const repositoryName = urlParts && urlParts.length > 0 ? urlParts[urlParts.length - 1]?.toLocaleLowerCase() : undefined;
-
-  if (!organization || !repositoryName) {
-    throw new GitRemoteConfigurationError();
+  if (!hasToken && (!name || !email)) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_USERNAME_EMAIL, {
+      data: { stdout },
+    });
   }
 
-  const has_secret_token = await hasSecretToken();
-  if (!has_secret_token && (!username || !email)) {
-    throw new GitUserIdentityError();
-  }
+  const app = parseGitUrl(remoteOrigin, stdout);
 
   const gitInfo = {
-    git: {
-      name: username,
-      email,
-      branch,
-      commit: commitHash,
-    },
-    app: {
-      org: organization,
-      project: repositoryName,
-    },
+    git: { name, email, branch, commit },
+    app,
   };
+
   ze_log('Git Info Loaded', gitInfo);
-  await _fs_cache.saveCache(cache_key, JSON.stringify(gitInfo));
+
   return gitInfo;
 }
 
-async function getGitUsername() {
-  const has_secret_token = hasSecretToken();
-  if (isCI || has_secret_token) {
-    return exec("git log -1 --pretty=format:'%an'").then((res) => res.stdout.trim());
+/** Loads all data in a single command to avoid multiple executions. */
+async function loadGitInfo(hasSecretToken: boolean) {
+  const automated = isCI || hasSecretToken;
+
+  // ensures multi line output on errors doesn't break the parsing
+  const delimiter = randomUUID().repeat(2);
+
+  const command = [
+    // Inside CI environments, the last committer should be the actor
+    // and not the actual logged git user which sometimes might just be a bot
+    automated ? "git log -1 --pretty=format:'%an'" : 'git config user.name',
+    automated ? "git log -1 --pretty=format:'%ae'" : 'git config user.email',
+    // TODO: support remote names that are not 'origin'
+    'git config --get remote.origin.url',
+    'git rev-parse --abbrev-ref HEAD',
+    'git rev-parse HEAD',
+  ].join(` && echo ${delimiter} && `);
+
+  try {
+    const { stdout } = await exec(command);
+
+    const [name, email, remoteOrigin, branch, commit] = stdout
+      .trim()
+      .split(delimiter)
+      .map((x) => x.trim());
+
+    return {
+      name,
+      email,
+      remoteOrigin,
+      branch,
+      commit,
+      stdout,
+    };
+  } catch (cause: any) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      cause,
+      data: { command, delimiter },
+      message: cause.stderr || cause.message,
+    });
   }
-  return exec('git config user.name').then((res) => res.stdout.trim());
 }
 
-async function getGitEmail() {
-  const has_secret_token = hasSecretToken();
-  if (isCI || has_secret_token) {
-    return exec("git log -1 --pretty=format:'%ae'").then((res) => res.stdout.trim());
+/**
+ * Parses the git url using the `git-url-parse` package.
+ *
+ * This package differentiate CI providers and handle a lot of small utilities for getting git info from `azure`, `aws` etc
+ */
+function parseGitUrl(remoteOrigin: string, stdout: string) {
+  if (!remoteOrigin) {
+    throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN, {
+      data: { stdout },
+    });
   }
-  return exec('git config user.email').then((res) => res.stdout.trim());
-}
 
-async function getGitRemoteOrigin() {
-  return exec('git config --get remote.origin.url').then((res) => res.stdout.trim());
-}
+  let parsed: gitUrlParse.GitUrl;
 
-async function getGitBranch() {
-  return exec('git rev-parse --abbrev-ref HEAD').then((res) => res.stdout.trim());
-}
+  try {
+    parsed = gitUrlParse(remoteOrigin);
+  } catch (cause) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message: stdout,
+      cause,
+      data: { stdout },
+    });
+  }
 
-async function getGitCommitHash() {
-  return exec('git rev-parse HEAD').then((res) => res.stdout.trim());
+  if (!parsed.owner || !parsed.name) {
+    throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN, {
+      data: { stdout },
+    });
+  }
+
+  return {
+    org: parsed.owner.toLocaleLowerCase(),
+    project: parsed.name.toLocaleLowerCase(),
+  };
 }

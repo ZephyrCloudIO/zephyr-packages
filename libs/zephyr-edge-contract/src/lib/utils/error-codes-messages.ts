@@ -8,19 +8,7 @@ export const ErrorCategories = {
   [name: string]: `${Digit}${Digit}`;
 };
 
-/**
- * A collection of error types and the error code during local/build stage
- *
- * If you are searching for an error globally, if it is a build related error, it starts with `ZE10`, if it's a deployment related error,
- * search for `ZE20` and then followed with their ID.
- *
- * - `ZE` at the front is a constant
- * - Two digits at the middle PP (`10` for build error or `20` for deployment error) is their categories,
- * - Last three digits is their ID.
- *
- * For example, if you have a `SNAPSHOT_NOT_FOUND` error, search for `ZE20023`, if you see an error showing up on terminal or application,
- * the last three numbers are their IDs. We might extend to have more errors in the future.
- */
+/** @deprecated */
 export const Errors = {
   ERR_UNKNOWN: {
     id: '000',

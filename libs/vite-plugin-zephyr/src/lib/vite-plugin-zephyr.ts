@@ -2,6 +2,7 @@ import * as isCI from 'is-ci';
 import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
 import type { Plugin, ResolvedConfig } from 'vite';
 import {
+  GitInfo,
   buildAssetsMap,
   checkAuth,
   getApplicationConfiguration,
@@ -47,7 +48,7 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
 }
 
 function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
-  let gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
+  let gitInfo: GitInfo;
   let packageJson: Awaited<ReturnType<typeof getPackageJson>>;
   let application_uid: string;
 
@@ -155,7 +156,7 @@ type ZephyrOptions = {
   assets: OutputBundle;
   vite_internal_options: ZephyrInternalOptions;
   application_uid: string;
-  gitInfo: Awaited<ReturnType<typeof getGitInfo>>;
+  gitInfo: GitInfo;
   packageJson: Awaited<ReturnType<typeof getPackageJson>>;
 };
 

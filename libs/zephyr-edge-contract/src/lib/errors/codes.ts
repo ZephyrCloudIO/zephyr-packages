@@ -71,9 +71,14 @@ Unknown error: {{ message }}
   ERR_GIT_REMOTE_ORIGIN: {
     id: '014',
     message: `
-Git remote origin is not configured properly. git remote origin is not configured properly
-- please set valid 'git remote origin' by using commands below
-- git init && git remote add origin <url>
+Could not detect a git remote called 'origin'. This is required for Zephyr to work properly.
+
+Please set the git remote origin by running the following command:
+
+\`\`\`sh
+git init
+git remote add origin <url>
+\`\`\`
 `,
     kind: 'build',
   },
@@ -92,8 +97,13 @@ Git username or email is not configured:
   /** Could not get git info */
   ERR_NO_GIT_INFO: {
     id: '016',
-    message: `Could not get git info.
-Can you confirm this directory has initialized as a git repository?`,
+    message: `
+
+Failed to load git information:
+
+{{ message }}
+
+`,
     kind: 'build',
   },
 

@@ -148,7 +148,8 @@ function delegate_module_template(): unknown {
   return new Promise((resolve, reject) => {
     const remote_entry_url = '__REMOTE_ENTRY_URL__';
     const library_type = '__LIBRARY_TYPE__';
-    const sessionEdgeURL = window.sessionStorage.getItem('__APPLICATION_UID__');
+    const _window = typeof window !== 'undefined' ? window : globalThis;
+    const sessionEdgeURL = _window.sessionStorage?.getItem('__APPLICATION_UID__');
     let edgeUrl = sessionEdgeURL ?? remote_entry_url;
     let remote_name = '__REMOTE_NAME__';
 
@@ -165,7 +166,7 @@ function delegate_module_template(): unknown {
     Promise.race(resolve_entry)
       .then((remoteUrl) => {
         if (typeof remoteUrl !== 'string') return;
-        const _win = window as unknown as Record<string, unknown>;
+        const _win = _window as unknown as Record<string, unknown>;
 
         if (typeof _win[remote_name] !== 'undefined') {
           return resolve(_win[remote_name]);

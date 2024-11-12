@@ -12,7 +12,7 @@ import {
 } from 'zephyr-edge-contract';
 import type { GetDashDataOptions } from '../payload-builders';
 import { logger } from '../remote-logs/ze-log-event';
-import { cloudflareStrategy, netlifyStrategy } from './strategies';
+import { cloudflareStrategy, fastlyStrategy, netlifyStrategy } from './strategies';
 
 export async function upload(options: UploadOptions): Promise<void> {
   const logEvent = logger(options.pluginOptions);
@@ -25,6 +25,9 @@ export async function upload(options: UploadOptions): Promise<void> {
       break;
     case UploadProviderType.NETLIFY:
       versionUrl = await netlifyStrategy(options);
+      break;
+    case UploadProviderType.FASTLY:
+      versionUrl = await fastlyStrategy(options);
       break;
     default:
       throw new Error('Unsupported upload provider.');

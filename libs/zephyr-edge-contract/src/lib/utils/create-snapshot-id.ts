@@ -4,6 +4,6 @@ export function createSnapshotId(options: {
   app: { org: string; project: string; name: string };
   zeConfig: { user: string; buildId: string };
 }): string {
-  const build_id = [options.zeConfig.user, options.zeConfig.buildId].join('_');
+  const build_id = [options.zeConfig.user, options.zeConfig.buildId].join('-').replace(/_/gm, '-');
   return [build_id, createApplicationUID(options.app)].join('.');
 }

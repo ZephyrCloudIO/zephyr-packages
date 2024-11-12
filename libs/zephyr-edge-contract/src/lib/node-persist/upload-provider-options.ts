@@ -19,4 +19,5 @@ export enum UploadProviderType {
   NETLIFY = 'netlify',
   AZURE = 'azure',
   GCP = 'gcp',
+  FASTLY = 'fastly',
 }

@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "source": {
+      "url": ""
+    },
+    "remote": ""
+  },
+  "topLevelPackage": {
+    "dependencies": {},
+    "devDependencies": {},
+    "optionalDependencies": {}
+  },
+  "publicPath": "",
+  "federationRemoteEntry": {
+    "rendered": false,
+    "initial": true,
+    "entry": true,
+    "recorded": false,
+    "size": 42,
+    "sizes": {
+      "javascript": 42,
+      "runtime": 0
+    },
+    "names": ["utils"],
+    "idHints": [],
+    "files": ["remoteEntry.js"],
+    "auxiliaryFiles": [],
+    "hash": "b1e9cf0d572d8deee906",
+    "childrenByOrder": {},
+    "id": "utils",
+    "siblings": [],
+    "parents": [],
+    "children": [],
+    "modules": [],
+    "filteredModules": 0,
+    "rootModules": [],
+    "filteredRootModules": 0,
+    "nonRootModules": 0,
+    "origins": [
+      {
+        "module": "",
+        "moduleIdentifier": "",
+        "moduleName": "",
+        "loc": ""
+      }
+    ]
+  },
+  "buildHash": "",
+  "modules": [],
+  "chunkDependencies": {
+    "src_analytics_js": []
+  }
+}

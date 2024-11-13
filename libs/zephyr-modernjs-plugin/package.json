@@ -1,0 +1,24 @@
+{
+  "name": "zephyr-modernjs-plugin",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "build": "nx run zephyr-modernjs-plugin:build"
+  },
+  "dependencies": {
+    "@module-federation/automatic-vendor-federation": "1.2.1",
+    "is-ci": "^3.0.1",
+    "tslib": "^2.3.0",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*",
+    "@modern-js/app-tools": "^2.61.0",
+    "@module-federation/modern-js": "^0.7.3"
+  },
+  "devDependencies": {
+    "@types/is-ci": "^3.0.4",
+    "@types/node-persist": "^3.1.8"
+  }
+}

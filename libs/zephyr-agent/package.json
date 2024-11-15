@@ -6,7 +6,20 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run zephyr-agent:build"
+    "build": "nx build zephyr-agent",
+    "test": "nx test zephyr-agent"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./node-persist": {
+      "import": "./dist/node-persist/index.js",
+      "require": "./dist/node-persist/index.js",
+      "types": "./dist/node-persist/index.d.ts"
+    }
   },
   "dependencies": {
     "cloudflare": "^3.4.0",
@@ -17,12 +30,16 @@
     "socket.io-client": "^4.7.5",
     "tslib": "^2.6.3",
     "uuid": "^8.3.2",
+    "node-persist": "^4.0.1",
+    "debug": "^4.3.4",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "^3.0.4",
-    "@types/uuid": "^9.0.8"
+    "@types/uuid": "^9.0.8",
+    "@types/node-persist": "^3.1.8",
+    "@types/debug": "^4.1.12"
   },
   "optionalDependencies": {
     "wrangler": "^3.69.1"

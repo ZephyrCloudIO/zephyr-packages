@@ -7,6 +7,5 @@ export default {
     '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory:
-    '../../coverage/examples/react-micro-frontends/apps/team-blue',
+  coverageDirectory: '../../../../coverage/examples/react-micro-frontends/apps/team-blue',
 };

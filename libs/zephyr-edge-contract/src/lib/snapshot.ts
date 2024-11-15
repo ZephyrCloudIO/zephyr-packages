@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 export interface Snapshot {
   // app.repo.org
   application_uid: string;

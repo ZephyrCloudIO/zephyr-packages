@@ -1,217 +1,56 @@
-import * as isCI from 'is-ci';
-import type { NormalizedOutputOptions, OutputAsset, OutputBundle, OutputChunk } from 'rollup';
+import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import type { ResolvedConfig } from 'vite';
-import {
-  checkAuth,
-  createSnapshot,
-  getApplicationConfiguration,
-  getBuildId,
-  getGitInfo,
-  getPackageJson,
-  getZeBuildAsset,
-  get_hash_list,
-  get_missing_assets,
-  logger,
-  update_hash_list,
-  zeUploadAssets,
-  zeUploadSnapshot,
-} from 'zephyr-agent';
-import {
-  type ZeBuildAssetsMap,
-  type ZephyrPluginOptions,
-  createApplicationUID,
-  cyanBright,
-  savePartialAssetMap,
-  white,
-  yellow,
-  ze_error,
-  ze_log,
-} from 'zephyr-edge-contract';
-import { load_extra_files_from_dist } from './load_extra_files_from_dist';
-import { load_public_dir } from './load_public_dir';
-import type { ZephyrInternalOptions } from './zephyr-internal-options';
+import { savePartialAssetMap, ZephyrEngine } from 'zephyr-agent';
+import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
+import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export function withZephyrPartial() {
-  let bundle: OutputBundle = {};
-  const vite_internal_options = {} as ZephyrInternalOptions;
+  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+
+  let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
+  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
+    resolve_vite_internal_options = resolve;
+  });
 
   return {
     name: 'with-zephyr-partial',
     apply: 'build',
     enforce: 'post',
     configResolved: async (config: ResolvedConfig) => {
-      Object.assign(vite_internal_options, {
+      zephyr_defer_create(config.root);
+      resolve_vite_internal_options({
         root: config.root,
         configFile: config.configFile,
         outDir: config.build.outDir,
         publicDir: config.publicDir,
       });
     },
-
-    writeBundle: async (options: NormalizedOutputOptions, _bundle: OutputBundle) => {
+    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
+      const vite_internal_options = await vite_internal_options_defer;
       vite_internal_options.dir = options.dir;
-      bundle = _bundle;
+      vite_internal_options.assets = bundle;
     },
 
     closeBundle: async () => {
-      const publicAssets: OutputAsset[] = [];
-
-      if (vite_internal_options.publicDir) {
-        const _public_assets = await load_public_dir({
-          outDir: vite_internal_options.outDir,
-          publicDir: vite_internal_options.publicDir,
-        });
-        publicAssets.push(..._public_assets);
-      }
-
-      const _extra_assets = await load_extra_files_from_dist({
-        root: vite_internal_options.root,
-        outDir: vite_internal_options.outDir,
-        bundle,
-      });
-      publicAssets.push(..._extra_assets);
-
-      const assets = Object.assign({}, bundle, ...publicAssets.map((asset) => ({ [asset.fileName]: asset })));
-
-      await _zephyr_partial({ assets, vite_internal_options });
+      const vite_internal_options = await vite_internal_options_defer;
+      const zephyr_engine = await zephyr_engine_defer;
+      const application_uid = zephyr_engine.application_uid;
+      // context import ^
+      const assetsMap = await extract_vite_assets_map(
+        zephyr_engine,
+        vite_internal_options
+      );
+      await savePartialAssetMap(
+        application_uid,
+        vite_internal_options.configFile ?? 'partial',
+        assetsMap
+      );
+      // todo: initially partial build doesn't have deploy, but code below could enable it if needed
+      // await zephyr_engine.upload_assets({
+      //   assetsMap,
+      //   // todo: this should be updated if we have remotes
+      //   buildStats: await zeBuildDashData(zephyr_engine),
+      // });
     },
   };
-}
-
-async function _zephyr_partial(options: { assets: OutputBundle; vite_internal_options: ZephyrInternalOptions }) {
-  const { assets, vite_internal_options } = options;
-  const path_to_execution_dir = vite_internal_options.root;
-
-  ze_log('Configuring with Zephyr...');
-  const packageJson = await getPackageJson(path_to_execution_dir);
-  ze_log('Loaded Package JSON', packageJson);
-  if (!packageJson) return ze_error('ERR_PACKAGE_JSON_NOT_FOUND');
-
-  const gitInfo = await getGitInfo();
-  ze_log('Loaded Git Info', gitInfo);
-
-  if (!gitInfo || !gitInfo?.app.org || !gitInfo?.app.project)
-    return ze_error('ERR_NO_GIT_INFO', 'Can you confirm the current directory has initialized as a git repository?');
-
-  if (!packageJson?.name) return ze_error('ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION', 'package.json must have a name and version.');
-
-  const application_uid = createApplicationUID({
-    org: gitInfo.app.org,
-    project: gitInfo.app.project,
-    name: packageJson?.name,
-  });
-
-  ze_log('Going to check auth token or get it...');
-  await checkAuth();
-
-  ze_log('Got auth token, going to get application configuration and build id...');
-
-  const [appConfig, buildId, hash_set] = await Promise.all([
-    getApplicationConfiguration({ application_uid }),
-    getBuildId(application_uid),
-    get_hash_list(application_uid),
-  ]);
-
-  const { username, email, EDGE_URL } = appConfig;
-  ze_log('Got application configuration', { username, email, EDGE_URL });
-
-  if (!buildId) return ze_error('ERR_GET_BUILD_ID');
-
-  const pluginOptions: ZephyrPluginOptions = {
-    pluginName: 'rollup-plugin-zephyr',
-    application_uid,
-    buildEnv: 'local',
-    username,
-    app: {
-      name: packageJson.name,
-      version: packageJson.version,
-      org: gitInfo.app.org,
-      project: gitInfo.app.project,
-    },
-    git: gitInfo.git,
-    isCI,
-    zeConfig: {
-      user: username,
-      edge_url: EDGE_URL,
-      buildId,
-    },
-    mfConfig: void 0,
-  };
-
-  ze_log('\n--------\n zephyr agent started. \n ------ \n');
-  const logEvent = logger(pluginOptions);
-
-  logEvent({
-    level: 'info',
-    action: 'build:info:user',
-    ignore: true,
-    message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
-  });
-
-  const zeStart = Date.now();
-
-  const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {
-    switch (asset.type) {
-      case 'chunk':
-        return asset.code;
-      case 'asset':
-        return typeof asset.source === 'string' ? asset.source : new TextDecoder().decode(asset.source);
-      default:
-        return void 0;
-    }
-  };
-
-  const getAssetType = (asset: OutputChunk | OutputAsset): string => asset.type;
-
-  const assetsMap = Object.keys(assets).reduce((memo, filepath) => {
-    const asset = assets[filepath];
-    const buffer = extractBuffer(asset);
-
-    if (!buffer && buffer !== '') {
-      logEvent({
-        action: 'ze:build:assets:unknown-asset-type',
-        level: 'error',
-        message: `unknown asset type: ${getAssetType(asset)}`,
-      });
-      return memo;
-    }
-
-    const assetMap = getZeBuildAsset({ filepath, content: buffer });
-    memo[assetMap.hash] = assetMap;
-
-    return memo;
-  }, {} as ZeBuildAssetsMap);
-
-  const snapshot = createSnapshot({
-    options: pluginOptions,
-    assets: assetsMap,
-    username,
-    email,
-  });
-
-  await zeUploadSnapshot({ pluginOptions, snapshot, appConfig }).catch((err) =>
-    ze_error('ERR_FAILED_UPLOAD_SNAPSHOTS', 'Failed to upload snapshot.', err)
-  );
-
-  const missingAssets = get_missing_assets({ assetsMap, hash_set });
-
-  const assetsUploadSuccess = await zeUploadAssets(pluginOptions, {
-    missingAssets,
-    assetsMap,
-    count: Object.keys(assets).length,
-  });
-
-  if (!assetsUploadSuccess) return ze_error('ERR_FAILED_UPLOAD_ASSETS', assetsUploadSuccess);
-
-  if (missingAssets.length) {
-    await update_hash_list(application_uid, assetsMap);
-  }
-
-  await savePartialAssetMap(application_uid, vite_internal_options.configFile ?? 'partial', assetsMap);
-
-  logEvent({
-    level: 'info',
-    action: 'build:deploy:done',
-    message: `Deployment took ${yellow(`${Date.now() - zeStart}`)}ms`,
-  });
 }

@@ -1,9 +1,9 @@
-import * as isCI from 'is-ci';
-import { type ConvertedGraph, createSnapshotId, ze_log, ZeErrors, ZephyrError } from 'zephyr-edge-contract';
-import type { ZephyrAgentProps } from '../lib/ze-agent';
+import { type ConvertedGraph } from 'zephyr-edge-contract';
+import type { ZephyrAgentProps } from '../webpack-plugin/ze-webpack-upload-agent';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
+import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 
-export function getBuildStats({
+export async function getBuildStats({
   stats,
   stats_json,
   pluginOptions,
@@ -16,45 +16,50 @@ export function getBuildStats({
   DOMAIN?: string;
   PLATFORM?: string;
   TYPE?: string;
-}): ConvertedGraph {
+}): Promise<ConvertedGraph> {
   ze_log('get build stats started. create federation dashboard plugin');
+  const app = pluginOptions.zephyr_engine.applicationProperties;
+  const { git } = pluginOptions.zephyr_engine.gitProperties;
+  const { isCI } = pluginOptions.zephyr_engine.env;
   const dashboardPlugin = new FederationDashboardPlugin({
-    app: pluginOptions.app,
-    git: pluginOptions.git,
+    app,
+    git,
     context: {
       isCI,
     },
   });
 
   ze_log('process webpack graph');
-  const convertedGraph = dashboardPlugin.processWebpackGraph({
-    stats,
-    stats_json,
-    pluginOptions,
-  });
+  const convertedGraph = dashboardPlugin.processWebpackGraph({ stats, stats_json });
 
   if (!convertedGraph) {
     throw new ZephyrError(ZeErrors.ERR_CONVERT_GRAPH_TO_DASHBOARD);
   }
 
-  const version = createSnapshotId(pluginOptions);
+  const version = await pluginOptions.zephyr_engine.snapshotId;
+  const application_uid = pluginOptions.zephyr_engine.application_uid;
+  const buildId = await pluginOptions.zephyr_engine.build_id;
 
-  const { app, git } = pluginOptions;
+  // todo: add support for multiple fedeation configs
+  const mfConfig = Array.isArray(pluginOptions.mfConfig)
+    ? pluginOptions.mfConfig[0]
+    : pluginOptions.mfConfig;
+
+  const { name, filename, remotes } = (mfConfig || {}) as Record<string, string>;
+
   const data_overrides = {
-    id: pluginOptions.application_uid,
-    name: pluginOptions.mfConfig?.name,
+    id: application_uid,
+    name: name,
     edge: { url: EDGE_URL },
     domain: DOMAIN,
     platform: PLATFORM,
     type: TYPE,
-    app: Object.assign({}, app, { buildId: pluginOptions.zeConfig.buildId }),
+    app: Object.assign({}, app, { buildId }),
     version,
     git,
-    remote: pluginOptions.mfConfig?.filename,
-    remotes: Object.keys(pluginOptions.mfConfig?.remotes || {}),
-    context: {
-      isCI: pluginOptions.isCI,
-    },
+    remote: filename,
+    remotes: Object.keys(remotes || {}),
+    context: { isCI },
   };
 
   // todo: extend data

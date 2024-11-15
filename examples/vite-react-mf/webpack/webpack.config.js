@@ -1,5 +1,4 @@
 const HtmlWebPackPlugin = require('html-webpack-plugin');
-//const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 const path = require('path');
 const Dotenv = require('dotenv-webpack');
 const { withZephyr } = require('../../../libs/zephyr-webpack-plugin/dist');

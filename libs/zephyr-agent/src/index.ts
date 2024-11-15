@@ -1,20 +1,31 @@
-export { zeEnableSnapshotOnEdge } from './lib/actions/ze-enable-snapshot-on-edge';
-export { zeUploadAssets } from './lib/actions/ze-upload-assets';
-export { zeUploadBuildStats } from './lib/actions/ze-upload-build-stats';
-export { zeUploadSnapshot } from './lib/actions/ze-upload-snapshot';
-export { getApplicationConfiguration } from './lib/application-configuration/get-application-configuration';
-export { checkAuth, isTokenStillValid } from './lib/auth/login';
-export { getGitInfo } from './lib/context-utils/ze-util-get-git-info';
-export type { GitInfo } from './lib/context-utils/ze-util-get-git-info';
-export { getPackageJson } from './lib/context-utils/ze-util-read-package-json';
-export { get_hash_list, update_hash_list } from './lib/dvcs/distributed-hash-control';
-export { get_missing_assets } from './lib/dvcs/get-missing-assets';
+// hack for angular
 export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index-html';
-export { buildAssetsMap, zeBuildAssetsMap } from './lib/payload-builders/ze-build-assets-map';
-export { createSnapshot } from './lib/payload-builders/ze-build-snapshot';
-export { zeGetDashData } from './lib/payload-builders/ze-get-dash-data';
-export type { GetDashDataOptions } from './lib/payload-builders/ze-get-dash-data';
-export { logFn, logger } from './lib/remote-logs/ze-log-event';
-export { getZeBuildAsset } from './lib/sync-utils/get-ze-build-asset';
-export { upload } from './lib/upload/upload';
-export { getBuildId } from './lib/ze-api-requests/get-build-id';
+// qwik hack - persist
+export {
+  getPartialAssetMap,
+  removePartialAssetMap,
+  savePartialAssetMap,
+} from './lib/node-persist/partial-assets-map';
+
+// errors
+export { ZephyrError, ZeErrors } from './lib/errors';
+
+// logger
+export { ze_log } from './lib/logging';
+export { logFn } from './lib/logging/ze-log-event';
+
+// default transformers
+export {
+  buildAssetsMap,
+  type ZeBuildAssetsMap,
+} from './lib/transformers/ze-build-assets-map';
+export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
+export { zeBuildAssets } from './lib/transformers/ze-build-assets';
+
+// Zephyr Edge is the main class which should be used
+export {
+  ZephyrEngine,
+  is_zephyr_dependency_pair,
+  type ZeDependencyPair,
+} from './zephyr-engine';
+export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';

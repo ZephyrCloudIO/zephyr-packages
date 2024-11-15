@@ -1,17 +1,6 @@
 import { sep } from 'node:path';
-import {
-  Chunk,
-  Compiler,
-  container,
-  Stats,
-  StatsChunk,
-  StatsCompilation,
-} from 'webpack';
-import {
-  ConvertedGraph,
-  ZeUploadBuildStats,
-  ZephyrPluginOptions,
-} from 'zephyr-edge-contract';
+import { Chunk, Compiler, container, Stats, StatsChunk, StatsCompilation } from 'webpack';
+import { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
 
 import {
   convertToGraph,
@@ -23,20 +12,18 @@ import { computeVersionStrategy, gitSha } from './compute-version-strategy';
 import { FederationDashboardPluginOptions } from './federation-dashboard-plugin-options';
 import { AddRuntimeRequirementToPromiseExternal } from './add-runtime-requirement-to-promise-external';
 import { Exposes } from './federation-dashboard-types';
-import { isModuleFederationPlugin } from '../../../lib/utils/is-mf-plugin';
-// convert this require to imports
+import { isModuleFederationPlugin } from '../../../webpack-extract/is-module-federation-plugin';
 
+// TODO: convert this require to imports
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AutomaticVendorFederation = require('@module-federation/automatic-vendor-federation');
 
 type ModuleFederationPlugin = typeof container.ModuleFederationPlugin;
-type ModuleFederationPluginOptions =
-  ConstructorParameters<ModuleFederationPlugin>[0];
+type ModuleFederationPluginOptions = ConstructorParameters<ModuleFederationPlugin>[0];
 
 interface ProcessWebpackGraphParams {
   stats: Stats;
   stats_json: StatsCompilation;
-  pluginOptions: ZephyrPluginOptions;
 }
 
 export class FederationDashboardPlugin {
@@ -62,9 +49,7 @@ export class FederationDashboardPlugin {
     ) as FederationDashboardPluginOptions;
   }
 
-  /**
-   * @param {Compiler} compiler
-   */
+  /** @param {Compiler} compiler */
   apply(compiler: Compiler): void {
     // todo: use buildid version (user_build_count)
     compiler.options.output.uniqueName = `v${Date.now()}`;
@@ -73,7 +58,9 @@ export class FederationDashboardPlugin {
 
     const FederationPlugin = compiler.options.plugins.find(
       isModuleFederationPlugin
-    ) as ModuleFederationPlugin & { _options: ModuleFederationPluginOptions };
+    ) as ModuleFederationPlugin & {
+      _options: ModuleFederationPluginOptions;
+    };
 
     // todo: valorkin fixes
     this._options.standalone = typeof FederationPlugin === 'undefined';
@@ -225,7 +212,6 @@ export class FederationDashboardPlugin {
   processWebpackGraph({
     stats,
     stats_json,
-    pluginOptions,
   }: ProcessWebpackGraphParams): ConvertedGraph | undefined {
     // async processWebpackGraph(/*curCompiler: Compilation*/): Promise<unknown> {
     //   const stats = curCompiler.getStats();
@@ -257,10 +243,7 @@ export class FederationDashboardPlugin {
       federationRemoteEntry: RemoteEntryChunk,
       buildHash: stats_json.hash,
       environment: this._options.environment, // 'development' if not specified
-      version: computeVersionStrategy(
-        stats_json,
-        this._options.versionStrategy
-      ),
+      version: computeVersionStrategy(stats_json, this._options.versionStrategy),
       posted: this._options.posted, // Date.now() if not specified
       group: this._options.group, // 'default' if not specified
       sha: gitSha,
@@ -517,9 +500,12 @@ export class FederationDashboardPlugin {
     return Array.from(directReasons);
   }*/
 
-  async postDashboardData(
-    dashData: any
-  ): Promise<{ value: ZeUploadBuildStats } | undefined> {
+  async postDashboardData(dashData: any): Promise<
+    | {
+        value: ZeUploadBuildStats;
+      }
+    | undefined
+  > {
     console.log(dashData);
     throw new Error('not implemented, override it');
   }

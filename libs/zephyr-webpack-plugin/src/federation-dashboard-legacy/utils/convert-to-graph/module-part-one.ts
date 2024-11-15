@@ -23,9 +23,7 @@ function isString(value: any): value is string {
   return typeof value === 'string';
 }
 
-export function modulePartOne(
-  modules: StatsModule[] | undefined
-): ModulePartOneReturn {
+export function modulePartOne(modules: StatsModule[] | undefined): ModulePartOneReturn {
   const consumes: Consume[] = [];
   const consumesByName: Record<string, Consume> = {};
   const modulesObj: Record<
@@ -74,20 +72,19 @@ export function modulePartOne(
 
       if (reasons) {
         reasons.forEach(({ userRequest, resolvedModule }) => {
-          if (!userRequest || !consumesByName[userRequest] || !resolvedModule)
-            return;
+          if (!userRequest || !consumesByName[userRequest] || !resolvedModule) return;
           const module = resolvedModule.replace('./', '');
           consumesByName[userRequest].usedIn.add(module);
         });
       }
-    } else if (
-      data &&
-      data[0] === 'container' &&
-      data[1] === 'entry' &&
-      data[3]
-    ) {
+    } else if (data && data[0] === 'container' && data[1] === 'entry' && data[3]) {
       JSON.parse(data[3]).forEach(
-        ([prefixedName, file]: [string, { import: string[] }]) => {
+        ([prefixedName, file]: [
+          string,
+          {
+            import: string[];
+          },
+        ]) => {
           const name = prefixedName.replace('./', '');
           modulesObj[file.import[0]] = {
             id: `${name}:${name}`,
@@ -146,13 +143,9 @@ export function modulePartOne(
   return { consumes, modulesObj, npmModules };
 }
 
-function safe_read_package_json_sync(
-  file_path: string
-): LocalPackageJson | undefined {
+function safe_read_package_json_sync(file_path: string): LocalPackageJson | undefined {
   try {
-    return JSON.parse(
-      readFileSync(file_path, { encoding: 'utf-8' })
-    ) as LocalPackageJson;
+    return JSON.parse(readFileSync(file_path, { encoding: 'utf-8' })) as LocalPackageJson;
   } catch {
     return;
   }

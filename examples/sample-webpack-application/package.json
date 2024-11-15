@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "nx run sample-webpack-application:serve",
-    "build": "nx run sample-webpack-application:build --skip-nx-cache"
+    "build": "nx run sample-webpack-application:build --skip-nx-cache",
+    "build-watch": "nx run sample-webpack-application:build --skip-nx-cache --watch"
   },
   "repository": {
     "type": "git",

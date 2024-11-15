@@ -1,5 +1,7 @@
-/** Checks that obj has a deeply nested property with value
- * usage: `objHasKeys(federationRemoteEntry, ["origins", "0", "loc"])`
+/**
+ * Checks that obj has a deeply nested property with value usage:
+ * `objHasKeys(federationRemoteEntry, ["origins", "0", "loc"])`
+ *
  * @param obj
  * @param pathArr
  */

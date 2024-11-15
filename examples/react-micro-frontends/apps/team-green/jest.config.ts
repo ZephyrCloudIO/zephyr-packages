@@ -8,5 +8,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory:
-    '../../coverage/examples/react-micro-frontends/apps/team-green',
+    '../../../../coverage/examples/react-micro-frontends/apps/team-green',
 };

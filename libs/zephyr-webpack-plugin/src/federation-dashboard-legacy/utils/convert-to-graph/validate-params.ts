@@ -48,14 +48,11 @@ export function validateParams(
 
   const hasDependencies = objHasKeys(topLevelPackage, ['dependencies']);
   const hasDevDependencies = objHasKeys(topLevelPackage, ['devDependencies']);
-  const hasOptionalDependencies = objHasKeys(topLevelPackage, [
-    'optionalDependencies',
-  ]);
+  const hasOptionalDependencies = objHasKeys(topLevelPackage, ['optionalDependencies']);
   if (federationRemoteEntry) {
     if (
       typeof hasLoc === 'undefined' ||
-      (federationRemoteEntry.origins &&
-        federationRemoteEntry.origins[0].loc === '')
+      (federationRemoteEntry.origins && federationRemoteEntry.origins[0].loc === '')
     ) {
       throw new Error(
         'federationRemoteEntry.origins[0].loc must be defined and have a value'

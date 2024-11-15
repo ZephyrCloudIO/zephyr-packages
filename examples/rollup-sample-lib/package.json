@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "nx build rollup-sample-lib --skip-nx-cache"
+    "build": "nx build rollup-sample-lib --skip-nx-cache",
+    "build-watch-not-working": "nx run rollup-sample-lib:build --skip-nx-cache --watch --verbose"
   },
   "devDependencies": {
     "rollup-plugin-zephyr": "workspace:*"

@@ -1,4 +1,4 @@
-/** eslint-disable */
+/** Eslint-disable */
 import { TopLevelPackage } from './validate-params';
 import { modulePartOne } from './module-part-one';
 import { convertDependencies } from './convert-dependencies';

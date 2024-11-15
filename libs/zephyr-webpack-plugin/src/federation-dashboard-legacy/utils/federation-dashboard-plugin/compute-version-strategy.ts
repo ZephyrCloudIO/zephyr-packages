@@ -8,7 +8,9 @@ try {
 }
 
 export const computeVersionStrategy = (
-  stats: { hash?: string },
+  stats: {
+    hash?: string;
+  },
   arg: string | undefined
 ): string | undefined => {
   switch (arg) {

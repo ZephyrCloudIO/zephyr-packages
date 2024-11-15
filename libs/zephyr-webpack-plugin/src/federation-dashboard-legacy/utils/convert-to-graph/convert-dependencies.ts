@@ -15,10 +15,7 @@ export function convertDependencies(params: {
 }): ConvertedDependencies {
   return {
     dependencies: convertDeps(params.npmModules, params.package.dependencies),
-    devDependencies: convertDeps(
-      params.npmModules,
-      params.package.devDependencies
-    ),
+    devDependencies: convertDeps(params.npmModules, params.package.devDependencies),
     optionalDependencies: convertDeps(
       params.npmModules,
       params.package.optionalDependencies

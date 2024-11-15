@@ -29,9 +29,7 @@ interface ModulePartTwoReturn {
   overrides: Record<string, unknown>;
 }
 
-export function modulePartTwo(
-  params: ModulePartTwoParams
-): ModulePartTwoReturn {
+export function modulePartTwo(params: ModulePartTwoParams): ModulePartTwoReturn {
   const { name, modules, modulesObj, convertedDeps } = params;
   const overrides = {} as Record<string, Overrides>;
 

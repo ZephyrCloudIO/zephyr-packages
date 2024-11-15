@@ -1,85 +1,68 @@
+/* istanbul ignore file */
+
 export interface Asset {
-  /**
-   * the filename of the asset
-   */
+  /** The filename of the asset */
   name: string;
 
-  /**
-   * source of the asset
-   */
+  /** Source of the asset */
   source: Source;
 
-  /**
-   * info about the asset
-   */
+  /** Info about the asset */
   info: KnownAssetInfo;
 }
 
 interface KnownAssetInfo {
-  /**
-   * true, if the asset can be long term cached forever (contains a hash)
-   */
+  /** True, if the asset can be long term cached forever (contains a hash) */
   immutable?: boolean;
 
-  /**
-   * whether the asset is minimized
-   */
+  /** Whether the asset is minimized */
   minimized?: boolean;
 
-  /**
-   * the value(s) of the full hash used for this asset
-   */
+  /** The value(s) of the full hash used for this asset */
   fullhash?: string | string[];
 
-  /**
-   * the value(s) of the chunk hash used for this asset
-   */
+  /** The value(s) of the chunk hash used for this asset */
   chunkhash?: string | string[];
 
-  /**
-   * the value(s) of the module hash used for this asset
-   */
+  /** The value(s) of the module hash used for this asset */
   modulehash?: string | string[];
 
-  /**
-   * the value(s) of the content hash used for this asset
-   */
+  /** The value(s) of the content hash used for this asset */
   contenthash?: string | string[];
 
   /**
-   * when asset was created from a source file (potentially transformed), the original filename relative to compilation context
+   * When asset was created from a source file (potentially transformed), the original
+   * filename relative to compilation context
    */
   sourceFilename?: string;
 
-  /**
-   * size in bytes, only set after asset has been emitted
-   */
+  /** Size in bytes, only set after asset has been emitted */
   size?: number;
 
   /**
-   * true, when asset is only used for development and doesn't count towards user-facing assets
+   * True, when asset is only used for development and doesn't count towards user-facing
+   * assets
    */
   development?: boolean;
 
-  /**
-   * true, when asset ships data for updating an existing application (HMR)
-   */
+  /** True, when asset ships data for updating an existing application (HMR) */
   hotModuleReplacement?: boolean;
 
-  /**
-   * true, when asset is javascript and an ESM
-   */
+  /** True, when asset is javascript and an ESM */
   javascriptModule?: boolean;
 
   /**
-   * object of pointers to other assets, keyed by type of relation (only points from parent to child)
+   * Object of pointers to other assets, keyed by type of relation (only points from
+   * parent to child)
    */
   related?: Record<string, string | string[]>;
 }
 
 export interface Source {
   size(): number;
+
   source(): string | Buffer;
+
   buffer(): Buffer;
 }
 
@@ -93,7 +76,6 @@ export interface UploadableAsset {
 
 export interface ZeUploadAssetsOptions {
   missingAssets: ZeBuildAsset[];
-  count: number;
   assetsMap: {
     [key: string]: ZeBuildAsset;
   };

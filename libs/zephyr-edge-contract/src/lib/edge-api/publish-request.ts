@@ -22,7 +22,7 @@ export interface GatewayPublishRequest {
   application_uid: string;
   snapshot_id: string;
   targets: PublishTargets;
-  /** previously `can_write_jwt` */
+  /** Previously `can_write_jwt` */
   jwt: string;
 }
 

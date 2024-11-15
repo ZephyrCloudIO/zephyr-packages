@@ -1,4 +1,4 @@
-import { type Socket, io as socketio } from 'socket.io-client';
+import { io as socketio, type Socket } from 'socket.io-client';
 
 interface ClientToServerEvents {
   joinAccessTokenRoom: (props: { state: string }) => void;
@@ -9,6 +9,8 @@ interface ServerToClientEvents {
   'access-token-error': (msg: string) => void;
 }
 
-export function createSocket(endpoint: string): Socket<ServerToClientEvents, ClientToServerEvents> {
+export function createSocket(
+  endpoint: string
+): Socket<ServerToClientEvents, ClientToServerEvents> {
   return socketio(endpoint);
 }

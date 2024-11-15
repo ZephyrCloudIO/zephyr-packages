@@ -85,8 +85,7 @@ export function mergeGraphs(graph1: Graph, graph2: Graph): Graph {
       return (
         sidecarConsumedModule.consumingApplicationID ===
           hostConsumedModule.consumingApplicationID &&
-        sidecarConsumedModule.applicationID ===
-          hostConsumedModule.applicationID &&
+        sidecarConsumedModule.applicationID === hostConsumedModule.applicationID &&
         sidecarConsumedModule.name === hostConsumedModule.name
       );
     });

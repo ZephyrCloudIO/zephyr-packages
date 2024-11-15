@@ -1,8 +1,8 @@
 /**
- * Extracts and returns the license/licenses abbrevations
- * from the respective fields.
- * @param  {Object} packageJson The package.json file content as object.
- * @return {String}
+ * Extracts and returns the license/licenses abbrevations from the respective fields.
+ *
+ * @param {Object} packageJson The package.json file content as object.
+ * @returns {String}
  */
 
 export interface LocalPackageJson {

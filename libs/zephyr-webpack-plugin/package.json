@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "commonjs",
   "scripts": {
-    "build": "nx run zephyr-webpack-plugin:build"
+    "build": "nx run zephyr-webpack-plugin:build",
+    "patch-version": "pnpm version"
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "1.2.1",

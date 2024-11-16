@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "nx build zephyr-agent",
-    "test": "nx test zephyr-agent"
+    "test": "nx test zephyr-agent",
+    "patch-version": "pnpm version"
   },
   "exports": {
     ".": {

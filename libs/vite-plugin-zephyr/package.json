@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run vite-plugin-zephyr:build"
+    "build": "nx run vite-plugin-zephyr:build",
+    "patch-version": "pnpm version"
   },
   "dependencies": {
     "@module-federation/runtime": "^0.6.10",

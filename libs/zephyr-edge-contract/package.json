@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "nx build zephyr-edge-contract",
-    "test": "nx test zephyr-edge-contract"
+    "test": "nx test zephyr-edge-contract",
+    "patch-version": "pnpm version"
   },
   "dependencies": {
     "tslib": "^2.3.0"

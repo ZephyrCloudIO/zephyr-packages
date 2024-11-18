@@ -17,7 +17,7 @@ export function flatCreateSnapshotId(props: {
   username: string;
   buildId: string;
 }): string {
-  const build_id = [props.username, props.buildId].join('_');
+  const build_id = [props.username, props.buildId].join('-').replace(/_/gm, '-');
   return [
     build_id,
     createApplicationUid({

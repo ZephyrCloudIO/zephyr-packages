@@ -64,7 +64,7 @@ describe('flatCreateSnapshotId', () => {
     };
     const result = flatCreateSnapshotId(props);
 
-    expect(result).toBe('test_user_build_123.app-name-2024.my-project-123.my-org-');
+    expect(result).toBe('test-user-build-123.app-name-2024.my-project-123.my-org-');
   });
 
   test('should handle empty strings correctly', () => {
@@ -77,7 +77,7 @@ describe('flatCreateSnapshotId', () => {
     };
     const result = flatCreateSnapshotId(props);
 
-    expect(result).toBe('_...');
+    expect(result).toBe('-...');
   });
 
   test('should return a lowercased snapshot ID', () => {
@@ -90,6 +90,6 @@ describe('flatCreateSnapshotId', () => {
     };
     const result = flatCreateSnapshotId(props);
 
-    expect(result).toBe('USER_BUILDID.name.project.org');
+    expect(result).toBe('USER-BUILDID.name.project.org');
   });
 });

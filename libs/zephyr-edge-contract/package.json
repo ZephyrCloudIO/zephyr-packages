@@ -1,6 +1,6 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "license": "Apache-2.0",
   "type": "commonjs",
   "main": "dist/index.js",

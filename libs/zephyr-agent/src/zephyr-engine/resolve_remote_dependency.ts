@@ -55,7 +55,7 @@ export async function resolve_remote_dependency({
     const response = await res.json();
 
     if (response.value) {
-      return Object.assign({}, response.value, { version, name: appName });
+      return Object.assign({}, response.value, { version });
     }
 
     throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
@@ -66,6 +66,8 @@ export async function resolve_remote_dependency({
       data: { version, response },
     });
   } catch (cause) {
+    if (cause instanceof ZephyrError) throw cause;
+
     throw new ZephyrError(ZeErrors.ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION, {
       data: { version },
       cause,

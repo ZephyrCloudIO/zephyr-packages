@@ -1,0 +1,37 @@
+{
+  "name": "zephyr-xpack-internal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-xpack-internal/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-xpack-internal/src",
+        "outputPath": "libs/zephyr-xpack-internal/dist",
+        "tsConfig": "libs/zephyr-xpack-internal/tsconfig.lib.json",
+        "main": "libs/zephyr-xpack-internal/src/index.ts"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-xpack-internal {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-xpack-internal@$(npm view zephyr-xpack-internal@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-xpack-internal/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

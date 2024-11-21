@@ -6,6 +6,6 @@
   },
   "devDependencies": {
     "@module-federation/enhanced": "0.6.7",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-rspack-plugin": "workspace:*"
   }
 }

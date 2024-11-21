@@ -1,22 +1,24 @@
-import { Configuration } from 'webpack';
+import { Configuration as RspackConfiguration } from '@rspack/core';
 import { ZephyrEngine } from 'zephyr-agent';
-
-import { ZeWebpackPlugin } from './ze-webpack-plugin';
-import { ZephyrWebpackPluginOptions } from '../types';
-import { WebpackConfiguration } from '../types/missing-webpack-types';
+import { ZeRspackPlugin } from './ze-rspack-plugin';
+import { ZephyrRspackPluginOptions } from '../types';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 
-export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+export type Configuration = RspackConfiguration;
+
+export function withZephyr(
+  zephyrPluginOptions?: ZephyrRspackPluginOptions
+): (config: Configuration) => Promise<Configuration> {
+  return (config) => _zephyr_configuration(config, zephyrPluginOptions);
 }
 
 async function _zephyr_configuration(
-  config: WebpackConfiguration,
-  _zephyrOptions?: ZephyrWebpackPluginOptions
+  config: Configuration,
+  _zephyrOptions?: ZephyrRspackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create(config.context);
@@ -27,9 +29,9 @@ async function _zephyr_configuration(
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
   mutWebpackFederatedRemotesConfig(config, resolved_dependency_pairs);
 
-  // inject the ZephyrWebpackPlugin
+  // inject the ZephyrRspackPlugin
   config.plugins?.push(
-    new ZeWebpackPlugin({
+    new ZeRspackPlugin({
       zephyr_engine,
       mfConfig: makeCopyOfModuleFederationOptions(config),
       wait_for_index_html: _zephyrOptions?.wait_for_index_html,

@@ -12,11 +12,11 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@rsbuild/core": "^1.0.17",
+    "@rsbuild/core": "1.1.1",
     "@rsbuild/plugin-react": "^1.0.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "typescript": "^5.4.2",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-rspack-plugin": "workspace:*"
   }
 }

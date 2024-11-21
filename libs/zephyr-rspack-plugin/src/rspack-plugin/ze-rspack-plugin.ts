@@ -1,15 +1,15 @@
-import type { Compiler } from 'webpack';
 import { ZephyrEngine } from 'zephyr-agent';
 
-import { logBuildSteps } from './ze-setup-build-steps-logging';
 import { setupZeDeploy } from './ze-setup-ze-deploy';
+import { logBuildSteps } from './ze-setup-build-steps-logging';
 import { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import { Compiler } from '@rspack/core';
 
-const pluginName = 'ZeWebpackPlugin';
+const pluginName = 'ZeRspackPlugin';
 
-export interface ZephyrWebpackInternalPluginOptions {
+export interface ZephyrRspackInternalPluginOptions {
   zephyr_engine: ZephyrEngine;
-  // webpack plugin name
+  // rspack plugin name
   pluginName: string;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
@@ -18,10 +18,10 @@ export interface ZephyrWebpackInternalPluginOptions {
   // outputPath?: string;
 }
 
-export class ZeWebpackPlugin {
-  _options: ZephyrWebpackInternalPluginOptions;
+export class ZeRspackPlugin {
+  _options: ZephyrRspackInternalPluginOptions;
 
-  constructor(options: Omit<ZephyrWebpackInternalPluginOptions, 'pluginName'>) {
+  constructor(options: Omit<ZephyrRspackInternalPluginOptions, 'pluginName'>) {
     this._options = Object.assign({ pluginName }, options);
   }
 

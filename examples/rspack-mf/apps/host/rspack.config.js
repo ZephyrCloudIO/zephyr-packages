@@ -1,6 +1,6 @@
 const { composePlugins, withNx, withReact } = require('@nx/rspack');
 const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
-const { withZephyr } = require('zephyr-webpack-plugin');
+const { withZephyr } = require('zephyr-rspack-plugin');
 const path = require('path');
 
 const withModuleFederation = () => (config) => {
@@ -45,4 +45,9 @@ const withModuleFederation = () => (config) => {
   return config;
 };
 
-module.exports = composePlugins(withNx(), withReact(), withModuleFederation(), withZephyr());
+module.exports = composePlugins(
+  withNx(),
+  withReact(),
+  withModuleFederation(),
+  withZephyr()
+);

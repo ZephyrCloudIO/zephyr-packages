@@ -1,19 +1,19 @@
 {
-  "name": "zephyr-webpack-plugin",
+  "name": "zephyr-rspack-plugin",
   "version": "0.0.29",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
   "scripts": {
-    "build": "nx run zephyr-webpack-plugin:build",
+    "build": "nx run zephyr-rspack-plugin:build",
     "patch-version": "pnpm version"
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "1.2.1",
+    "@rspack/core": "^1.1.3",
     "is-ci": "^3.0.1",
     "tslib": "^2.3.0",
-    "webpack": "^5.93.0",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"

@@ -1,0 +1,37 @@
+{
+  "name": "zephyr-rspack-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-rspack-plugin/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-rspack-plugin/src",
+        "outputPath": "libs/zephyr-rspack-plugin/dist",
+        "tsConfig": "libs/zephyr-rspack-plugin/tsconfig.lib.json",
+        "main": "libs/zephyr-rspack-plugin/src/index.ts"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-rspack-plugin {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-rspack-plugin@$(npm view zephyr-rspack-plugin@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-rspack-plugin/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

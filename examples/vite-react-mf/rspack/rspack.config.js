@@ -2,7 +2,7 @@ const rspack = require('@rspack/core');
 const refreshPlugin = require('@rspack/plugin-react-refresh');
 const isDev = process.env.NODE_ENV === 'development';
 const path = require('path');
-const { withZephyr } = require('../../../libs/zephyr-webpack-plugin/dist');
+const { withZephyr } = require('zephyr-rspack-plugin');
 
 const printCompilationMessage = require('./compilation.config.js');
 
@@ -18,7 +18,8 @@ module.exports = withZephyr()({
     historyApiFallback: true,
     watchFiles: [path.resolve(__dirname, 'src')],
     onListening: function (devServer) {
-      const port = devServer.server.address().port;
+      const address = devServer.server?.address();
+      const port = typeof address === 'string' ? address.split(':').pop() : address?.port;
 
       printCompilationMessage('compiling', port);
 

@@ -47,13 +47,15 @@ export interface ZephyrBuildStats {
     /** Version field form package.json */
     version: string;
     /**
-     * If the repository's git remote url is https://github.com/ZephyrCloudIO/zephyr-mono,
-     * ZephyrCloudIO would be the org field here
+     * If the repository's git remote url is
+     * https://github.com/ZephyrCloudIO/zephyr-packages, ZephyrCloudIO would be the org
+     * field here
      */
     org: string;
     /**
-     * If the repository's git remote url is https://github.com/ZephyrCloudIO/zephyr-mono,
-     * zephyr-mono would be the project field here
+     * If the repository's git remote url is
+     * https://github.com/ZephyrCloudIO/zephyr-packages, zephyr-packages would be the
+     * project field here
      */
     project: string;
 

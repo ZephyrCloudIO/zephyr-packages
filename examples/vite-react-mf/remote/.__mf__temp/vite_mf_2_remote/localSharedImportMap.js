@@ -2,11 +2,15 @@
 
 const importMap = {
   react: async () => {
-    let pkg = await import('__mf__virtual/vite_mf_2_remote__prebuild__react__prebuild__.js');
+    let pkg = await import(
+      '__mf__virtual/vite_mf_2_remote__prebuild__react__prebuild__.js'
+    );
     return pkg;
   },
   'react-dom': async () => {
-    let pkg = await import('__mf__virtual/vite_mf_2_remote__prebuild__react_mf_2_dom__prebuild__.js');
+    let pkg = await import(
+      '__mf__virtual/vite_mf_2_remote__prebuild__react_mf_2_dom__prebuild__.js'
+    );
     return pkg;
   },
 };

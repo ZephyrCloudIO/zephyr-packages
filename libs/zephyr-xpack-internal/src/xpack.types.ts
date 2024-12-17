@@ -44,9 +44,9 @@ export interface XStatsModule {
   identifier?: string;
   reasons?: XStatsReason[];
   moduleType?: string;
-  nameForCondition?: string;
+  nameForCondition?: string | null;
   size?: number;
-  issuerName?: string;
+  issuerName?: string | null;
   name?: string;
 }
 export interface XStatsChunk {
@@ -94,9 +94,9 @@ export interface XChunk {
   getAllReferencedChunks: () => Iterable<XChunk>;
 }
 interface XStatsReason {
-  module?: string;
-  userRequest?: string;
-  resolvedModule?: string;
+  module?: string | null;
+  userRequest?: string | null;
+  resolvedModule?: string | null;
 }
 export interface XStats {
   compilation: {

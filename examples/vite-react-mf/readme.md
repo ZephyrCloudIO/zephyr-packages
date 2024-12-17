@@ -1,6 +1,6 @@
 To run this example:
 
-In `zephyr-mono`'s root directory, run each command in succession:
+In `zephyr-packages`'s root directory, run each command in succession:
 
 ```
 pnpm i

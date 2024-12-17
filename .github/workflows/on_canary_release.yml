@@ -1,0 +1,53 @@
+name: On Canary Release
+on:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 20
+
+jobs:
+  deps:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm i --frozen-lockfile
+
+  libs:
+    name: Publish Libs to NPM - Tag canary
+    runs-on: ubuntu-latest
+    needs: deps
+    env:
+      NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'pnpm'
+      - run: pnpm i --frozen-lockfile
+      - name: Build packages
+        run: pnpm dlx nx run-many -t build --projects="libs/*"
+      - name: Patch versions
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S) &&
+          pnpm ze-version-patch 0.0.0-canary-$TIMESTAMP
+      - name: Publish package on NPM 📦
+        run: pnpm ze-publish --tag=canary

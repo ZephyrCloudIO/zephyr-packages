@@ -147,6 +147,7 @@ runner('ZeAgent', () => {
 });
 
 async function _loadAppConfig(application_uid: string): Promise<ZeApplicationConfig> {
+  console.log(ZEPHYR_API_ENDPOINT());
   const url = new URL(
     `/v2/builder-packages-api/application-config`,
     ZEPHYR_API_ENDPOINT()

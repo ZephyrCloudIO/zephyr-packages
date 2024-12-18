@@ -1,4 +1,8 @@
-import { is_zephyr_dependency_pair, ZeDependencyPair } from 'zephyr-agent';
+import {
+  is_zephyr_dependency_pair,
+  ZeDependencyPair,
+  readPackageJson,
+} from 'zephyr-agent';
 
 import { iterateFederationConfig } from './iterate-federation-config';
 import { XPackConfiguration } from '../xpack.types';
@@ -6,6 +10,15 @@ import { XPackConfiguration } from '../xpack.types';
 export function extractFederatedDependencyPairs(
   config: XPackConfiguration<any>
 ): ZeDependencyPair[] {
+  const { zephyrDependencies } = readPackageJson(config.context ?? process.cwd());
+  if (zephyrDependencies) {
+    return Object.entries(zephyrDependencies).map(([name, version]) => {
+      return {
+        name,
+        version,
+      } as ZeDependencyPair;
+    });
+  }
   return iterateFederationConfig(config, (plugin) => {
     if (!plugin._options.remotes) return null;
     return Object.entries(plugin._options.remotes).map((remote) => {

@@ -27,5 +27,7 @@ export {
   ZephyrEngine,
   is_zephyr_dependency_pair,
   type ZeDependencyPair,
+  type ZephyrDependencies,
+  readPackageJson,
 } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';

@@ -1,3 +1,5 @@
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
 import {
   createApplicationUid,
   flatCreateSnapshotId,
@@ -330,4 +332,18 @@ export interface UploadOptions {
     missingAssets: ZeBuildAsset[];
   };
   getDashData: (zephyr_engine?: ZephyrEngine) => ZephyrBuildStats;
+}
+
+export interface ZephyrDependencies {
+  [key: string]: string;
+}
+
+export function readPackageJson(root: string): {
+  zephyrDependencies: ZephyrDependencies;
+} {
+  const packageJsonPath = join(root, 'package.json');
+  const packageJsonContent = existsSync(packageJsonPath)
+    ? readFileSync(packageJsonPath, 'utf-8')
+    : '{}';
+  return JSON.parse(packageJsonContent);
 }

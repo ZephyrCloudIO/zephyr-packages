@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://zephyr.schemas.zephyr-dependencies-schema.json",
+  "$id": "https://docs.zephyr-cloud.io/general/create-mf-app#zephyr-configuration-integration",
   "title": "Zephyr Dependencies Schema",
   "type": "object",
   "patternProperties": {

@@ -1,5 +1,5 @@
-import type { Stats, StatsCompilation } from 'webpack';
 import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
+import { XStats, XStatsCompilation } from 'zephyr-xpack-internal';
 import {
   type Source,
   type ZephyrBuildStats,
@@ -13,8 +13,8 @@ import {
 import { ZephyrWebpackInternalPluginOptions } from './ze-webpack-plugin';
 
 export interface ZephyrAgentProps {
-  stats: Stats;
-  stats_json: StatsCompilation;
+  stats: XStats;
+  stats_json: XStatsCompilation;
   pluginOptions: ZephyrWebpackInternalPluginOptions;
   assets: Record<string, Source>;
 }

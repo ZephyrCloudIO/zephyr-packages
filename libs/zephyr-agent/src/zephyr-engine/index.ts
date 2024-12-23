@@ -81,8 +81,10 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     buildEnv: string;
-  } = { isCI, buildEnv: isCI ? 'ci' : 'local' };
+    target: 'ios' | 'android' | 'web';
+  } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
+  build_type: 'webpack' | 'rspack' | 'repack' | 'vite' | 'rollup' | undefined = 'rspack';
 
   // resolved dependencies
   federated_dependencies: ZeResolvedDependency[] | null = null;
@@ -109,11 +111,14 @@ export class ZephyrEngine {
   static async create(context: string | undefined): Promise<ZephyrEngine> {
     context = context || process.cwd();
 
-    ze_log(`Initializing: Zephyr Engine for ${context}`);
+    ze_log(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine(context);
-    ze_log('Initializing: npm package info');
+
+    ze_log('Initializing: npm package info...');
+
     ze.npmProperties = await getPackageJson(context);
-    ze_log('Initializing: git info');
+
+    ze_log('Initializing: git info...');
     ze.gitProperties = await getGitInfo();
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
@@ -121,11 +126,13 @@ export class ZephyrEngine {
 
     // starting async load of application configuration, build_id and hash_list
 
-    ze_log('Initializing: checking authentication');
+    ze_log('Initializing: checking authentication...');
     await checkAuth();
 
-    ze_log('Initialized: loading of application configuration');
+    ze_log('Initialized: loading application configuration...');
+
     ze.application_configuration = getApplicationConfiguration({ application_uid });
+
     ze.application_configuration
       .then((appConfig) => {
         const { username, email, EDGE_URL } = appConfig;
@@ -149,8 +156,16 @@ export class ZephyrEngine {
     return ze;
   }
 
+  /**
+   * Accept two argument to resolve remote dependencies:
+   *
+   * @param dependencyPair, Includes name and versions (the url includes localhost),
+   * @param platform, Atm this is React Native specific to resolve correct platform `ios`
+   *   or `android`
+   */
   async resolve_remote_dependencies(
-    deps: ZeDependencyPair[]
+    deps: ZeDependencyPair[],
+    platform?: ZephyrPluginOptions['target']
   ): Promise<ZeResolvedDependency[] | null> {
     if (!deps) {
       return null;
@@ -171,13 +186,20 @@ export class ZephyrEngine {
         resolve_remote_dependency({
           application_uid: dep_application_uid,
           version: dep.version,
+          platform,
         })
       );
 
       // If you couldn't resolve remote dependency, skip replacing it
       if (!ZeUtils.isSuccessTuple(tuple)) {
+        ze_log(
+          `Failed to resolve remote dependency: ${dep.name}@${dep.version}`,
+          'skipping...'
+        );
         return null;
       }
+
+      ze_log(`Resolved dependency: ${tuple[1].default_url}`);
 
       return tuple[1];
     });
@@ -185,6 +207,10 @@ export class ZephyrEngine {
     const resolution_results = await Promise.all(tasks);
     this.federated_dependencies = resolution_results.filter(
       is_zephyr_resolved_dependency
+    );
+
+    ze_log(
+      `this.federated_dependencies: ${JSON.stringify(this.federated_dependencies, null, 2)}`
     );
     return this.federated_dependencies;
   }

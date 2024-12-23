@@ -33,4 +33,6 @@ export interface FederationDashboardPluginOptions {
   group?: string;
   nextjs?: string;
   packageJsonPath?: string;
+  /** Target of the build, be it ios, android, web or others. */
+  target?: 'ios' | 'android' | 'web' | undefined;
 }

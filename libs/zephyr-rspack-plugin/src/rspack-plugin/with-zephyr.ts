@@ -6,6 +6,7 @@ import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
+  xpack_delegate_module_template,
 } from 'zephyr-xpack-internal';
 
 export type Configuration = RspackConfiguration;
@@ -23,17 +24,26 @@ async function _zephyr_configuration(
   // create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create(config.context);
 
+  zephyr_engine.build_type = 'rspack';
+
   // Resolve dependencies and update the config
-  const dependencyPairs = extractFederatedDependencyPairs(config);
+  const dependencyPairs = extractFederatedDependencyPairs(zephyr_engine, config);
+
   const resolved_dependency_pairs =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-  mutWebpackFederatedRemotesConfig(config, resolved_dependency_pairs);
+
+  mutWebpackFederatedRemotesConfig(
+    zephyr_engine,
+    config,
+    resolved_dependency_pairs,
+    xpack_delegate_module_template
+  );
 
   // inject the ZephyrRspackPlugin
   config.plugins?.push(
     new ZeRspackPlugin({
       zephyr_engine,
-      mfConfig: makeCopyOfModuleFederationOptions(config),
+      mfConfig: makeCopyOfModuleFederationOptions(zephyr_engine, config),
       wait_for_index_html: _zephyrOptions?.wait_for_index_html,
     })
   );

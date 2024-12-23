@@ -4,17 +4,18 @@ import {
   type ZephyrBuildStats,
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import { Stats, StatsCompilation } from '@rspack/core';
 import { ZephyrRspackInternalPluginOptions } from './ze-rspack-plugin';
 import {
   buildWebpackAssetMap,
   emitDeploymentDone,
   getBuildStats,
+  XStats,
+  XStatsCompilation,
 } from 'zephyr-xpack-internal';
 
 export interface ZephyrAgentProps {
-  stats: Stats;
-  stats_json: StatsCompilation;
+  stats: XStats;
+  stats_json: XStatsCompilation;
   pluginOptions: ZephyrRspackInternalPluginOptions;
   assets: Record<string, Source>;
 }

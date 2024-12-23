@@ -11,6 +11,7 @@ export interface ZeApplicationConfig {
   PLATFORM: UploadProviderType;
   user_uuid: string;
   username: string;
+  build_target: string;
 }
 
 export enum UploadProviderType {

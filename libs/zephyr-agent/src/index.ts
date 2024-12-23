@@ -29,3 +29,13 @@ export {
   type ZeDependencyPair,
 } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+
+// @lois tech dept to remove after repack fix
+export { get_missing_assets } from './lib/edge-hash-list/get-missing-assets';
+export * from './lib/logging/picocolor';
+export { verify_mf_fastly_config } from './lib/build-context/ze-util-verification';
+export { resolve_remote_dependency } from './zephyr-engine/resolve_remote_dependency';
+export {
+  getAppDeployResult,
+  setAppDeployResult,
+} from './lib/node-persist/app-deploy-result-cache';

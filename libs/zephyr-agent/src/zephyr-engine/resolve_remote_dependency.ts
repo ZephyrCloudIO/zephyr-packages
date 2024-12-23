@@ -1,6 +1,7 @@
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { getToken } from '../lib/node-persist/token';
 import { ZeErrors, ZephyrError } from '../lib/errors';
+import { ze_log } from '../lib/logging';
 
 export interface ZeResolvedDependency {
   name: string;
@@ -15,14 +16,22 @@ export interface ZeResolvedDependency {
 export async function resolve_remote_dependency({
   application_uid,
   version,
+  platform,
 }: {
   application_uid: string;
   version: string;
+  platform?: string;
 }): Promise<ZeResolvedDependency> {
   const resolveDependency = new URL(
     `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
     ZE_API_ENDPOINT()
   );
+
+  if (platform) {
+    ze_log('adding build target to resolve dependency:', platform);
+    resolveDependency.searchParams.append('build_target', platform);
+    ze_log('URL for resolving dependency:', resolveDependency.toString());
+  }
 
   try {
     const token = await getToken();
@@ -55,6 +64,14 @@ export async function resolve_remote_dependency({
     const response = await res.json();
 
     if (response.value) {
+      ze_log(
+        'resolved dependency:',
+        response.value,
+        'application_uid: ',
+        application_uid,
+        'version: ',
+        version
+      );
       return Object.assign({}, response.value, { version });
     }
 

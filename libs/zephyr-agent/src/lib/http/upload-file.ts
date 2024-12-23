@@ -36,9 +36,27 @@ export async function uploadFile(
   );
 
   if (!ok) {
-    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
-      type: 'file',
-      cause,
-    });
+    try {
+      const [ok2, cause2] = await ZeHttpRequest.from(
+        {
+          path: '/upload',
+          base: EDGE_URL,
+          query: { type, hash, filename: asset.path },
+        },
+        options,
+        asset.buffer
+      );
+      if (!ok2) {
+        throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+          type: 'file',
+          cause: cause2,
+        });
+      }
+    } catch (error) {
+      throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+        type: 'file',
+        cause,
+      });
+    }
   }
 }

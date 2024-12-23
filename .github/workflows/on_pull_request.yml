@@ -81,8 +81,8 @@ jobs:
 
   test:
     name: Tests
+    environment: development
     runs-on: ubuntu-latest
-    needs: deps
     steps:
       - uses: actions/checkout@v4
         with:
@@ -102,7 +102,7 @@ jobs:
       - name: run test
         env:
           ZE_IS_PREVIEW: true
-          ZE_API: ${{ secrets.ZEPHYR_API_URL }}
-          ZE_API_GATEWAY: ${{ secrets.ZE_API_GATEWAY }}
+          ZE_API: ${{ vars.ZE_API }}
+          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t test

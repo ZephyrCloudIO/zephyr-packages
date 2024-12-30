@@ -12,7 +12,14 @@
         "rootDir": "libs/zephyr-agent/src",
         "outputPath": "libs/zephyr-agent/dist",
         "tsConfig": "libs/zephyr-agent/tsconfig.lib.json",
-        "main": "libs/zephyr-agent/src/index.ts"
+        "main": "libs/zephyr-agent/src/index.ts",
+        "assets": [
+          {
+            "input": "libs/zephyr-agent/schemas",
+            "glob": "**/*.json",
+            "output": "/schemas"
+          }
+        ]
       }
     },
     "nx-release-publish": {

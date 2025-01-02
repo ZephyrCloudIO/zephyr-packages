@@ -5,12 +5,14 @@ labels: ['bug', 'triage']
 projects:
   [
     'examples',
+    'rollup-plugin-zephyr',
+    'vite-plugin-zephyr',
     'zephyr-repack-plugin',
     'zephyr-webpack-plugin',
-    'vite-plugin-zephyr',
+    'zephyr-rspack-plugin',
     'zephyr-edge-contract',
     'zephyr-agent',
-    'rollup-plugin-zephyr',
+    'zephyr-xpack-internal',
   ]
 body:
   - type: markdown

@@ -5,12 +5,13 @@ labels: ['feature', 'proposal']
 projects:
   [
     'examples',
-    'zephyr-repack-plugin',
-    'zephyr-webpack-plugin',
+    'rollup-plugin-zephyr',
     'vite-plugin-zephyr',
+    'zephyr-webpack-plugin',
+    'zephyr-rspack-plugin',
     'zephyr-edge-contract',
     'zephyr-agent',
-    'rollup-plugin-zephyr',
+    'zephyr-xpack-internal',
   ]
 body:
   - type: markdown

@@ -254,7 +254,7 @@ export class ZephyrEngine {
     const dependencies = zephyr_engine.federated_dependencies;
 
     if (zeStart && versionUrl) {
-      if (dependencies) {
+      if (dependencies && dependencies.length > 0) {
         logger({
           level: 'info',
           action: 'build:info:user',

@@ -7,7 +7,6 @@ projects:
     'examples',
     'rollup-plugin-zephyr',
     'vite-plugin-zephyr',
-    'zephyr-repack-plugin',
     'zephyr-webpack-plugin',
     'zephyr-rspack-plugin',
     'zephyr-edge-contract',

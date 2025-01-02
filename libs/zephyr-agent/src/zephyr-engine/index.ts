@@ -184,9 +184,7 @@ export class ZephyrEngine {
     });
 
     const resolution_results = await Promise.all(tasks);
-    ze_log('Resolved: remote dependencies resolution_results', {
-      results: resolution_results,
-    });
+
     this.federated_dependencies = resolution_results.filter(
       is_zephyr_resolved_dependency
     );
@@ -251,17 +249,8 @@ export class ZephyrEngine {
     const logger = await zephyr_engine.logger;
     const zeStart = zephyr_engine.build_start_time;
     const versionUrl = zephyr_engine.version_url;
-    const dependencies = zephyr_engine.federated_dependencies;
 
     if (zeStart && versionUrl) {
-      if (dependencies && dependencies.length > 0) {
-        logger({
-          level: 'info',
-          action: 'build:info:user',
-          ignore: true,
-          message: `Resolved zephyr dependencies ${cyanBright(dependencies.map((dep) => dep.name).join(', '))}\n`,
-        });
-      }
       logger({
         level: 'trace',
         action: 'deploy:url',

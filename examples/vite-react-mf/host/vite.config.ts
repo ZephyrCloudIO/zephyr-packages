@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
-
+import { federation } from '@module-federation/vite';
 const mfConfig: ModuleFederationOptions = {
   name: 'vite-host',
   filename: 'remoteEntry.js',
@@ -33,7 +33,12 @@ const mfConfig: ModuleFederationOptions = {
 };
 
 export default defineConfig({
-  plugins: [react(), withZephyr({ mfConfig })],
+  plugins: [
+    react(),
+    // @ts-expect-error it's the same type
+    federation(mfConfig),
+    withZephyr(),
+  ],
   build: {
     target: 'chrome89',
   },

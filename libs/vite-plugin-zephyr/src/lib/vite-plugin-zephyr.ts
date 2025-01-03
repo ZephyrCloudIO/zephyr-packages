@@ -1,10 +1,11 @@
 import type { Plugin, ResolvedConfig } from 'vite';
-import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
+import { ze_log, zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
-import { federation } from '@module-federation/vite';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
+import { federation } from '@module-federation/vite';
+import { get_mf_config } from './internal/extract/get-mf-config';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
@@ -31,6 +32,8 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   });
   let root: string;
 
+  let mf_config: ModuleFederationOptions | undefined;
+
   return {
     name: 'with-zephyr',
     enforce: 'post',
@@ -43,15 +46,22 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
       });
+
+      mf_config = get_mf_config([...config.plugins]);
+
+      ze_log('mf_config', mf_config);
     },
     transform: async (code, id) => {
       const zephyr_engine = await zephyr_engine_defer;
 
-      const dependencyPairs = extract_remotes_dependencies(root, code, id);
+      const dependencyPairs = extract_remotes_dependencies(mf_config, root, code, id);
+
+      console.log('dependencyPairs', dependencyPairs);
       if (!dependencyPairs) return code;
 
       const resolved_remotes =
         await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+      console.log('resolved_remotes', resolved_remotes);
       if (!resolved_remotes) return code;
 
       return load_resolved_remotes(resolved_remotes, code, id);

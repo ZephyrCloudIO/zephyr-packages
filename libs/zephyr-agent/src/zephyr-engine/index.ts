@@ -249,8 +249,17 @@ export class ZephyrEngine {
     const logger = await zephyr_engine.logger;
     const zeStart = zephyr_engine.build_start_time;
     const versionUrl = zephyr_engine.version_url;
+    const dependencies = zephyr_engine.federated_dependencies;
 
     if (zeStart && versionUrl) {
+      if (dependencies && dependencies.length > 0) {
+        logger({
+          level: 'info',
+          action: 'build:info:user',
+          ignore: true,
+          message: `Resolved zephyr dependencies ${cyanBright(dependencies.map((dep) => dep.name).join(', '))}\n`,
+        });
+      }
       logger({
         level: 'trace',
         action: 'deploy:url',

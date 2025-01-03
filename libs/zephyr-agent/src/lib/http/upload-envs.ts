@@ -43,12 +43,30 @@ export async function uploadEnvs({
   );
 
   if (!ok || !data) {
-    logEvent({
-      level: 'error',
-      action: 'deploy:edge:failed',
-      message: 'failed deploying local build to edge',
-    });
 
-    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, { type: 'envs', cause: cause });
+    ze_log('First try uploading envs failed, retry again');
+
+    const [ok2, cause2, data2] = await ZeHttpRequest.from<unknown>(
+      {
+        path: '/upload',
+        base: EDGE_URL,
+        query: { type: 'envs' },
+      },
+      options,
+      JSON.stringify(body)
+    );
+
+    if (!ok2 || !data2) {
+      logEvent({
+        level: 'error',
+        action: 'deploy:edge:failed',
+        message: 'failed deploying local build to edge',
+      });
+
+      throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+        type: 'envs',
+        cause: { cause, cause2 },
+      });
+    }
   }
 }

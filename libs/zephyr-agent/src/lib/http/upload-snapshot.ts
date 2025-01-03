@@ -41,10 +41,30 @@ export async function uploadSnapshot({
   );
 
   if (!ok) {
-    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
-      type: 'snapshot',
-      cause,
-    });
+
+    ze_log('First tried uploading snapshot failed, retrying again...');
+    const [ok2, cause2, resp2] = await ZeHttpRequest.from<SnapshotUploadRes>(
+      {
+        path: '/upload',
+        base: EDGE_URL,
+        query: {
+          type: 'snapshot',
+          skip_assets: true,
+        },
+      },
+      options,
+      json
+    );
+    if (!ok2) {
+      throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+        type: 'snapshot',
+        cause: {
+          cause, cause2
+        },
+      });
+    }
+
+    return resp2;
   }
 
   ze_log('Done: snapshot uploaded...', body);

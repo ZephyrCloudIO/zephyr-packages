@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withZephyr } from 'vite-plugin-zephyr';
-import { federation } from '@module-federation/vite';
+// import { federation } from '@module-federation/vite';
 
 const mfConfig = {
   name: 'vite-remote',
@@ -14,7 +14,11 @@ const mfConfig = {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), federation({ ...mfConfig }), withZephyr()],
+  plugins: [
+    react(),
+    // federation({ ...mfConfig }),
+    withZephyr({ mfConfig }),
+  ],
   experimental: {
     renderBuiltUrl() {
       return { relative: true };

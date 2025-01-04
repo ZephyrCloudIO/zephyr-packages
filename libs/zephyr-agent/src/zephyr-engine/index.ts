@@ -161,13 +161,12 @@ export class ZephyrEngine {
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
       // Key might be only the app name
+      // TODO: how do we handle the case they are coming from different repo? ask user to pass in app_id?
       const dep_application_uid = createApplicationUid({
         org: org_name ?? this.gitProperties.app.org,
         project: project_name ?? this.gitProperties.app.project,
         name: app_name,
       });
-
-      console.log(`dep_application_uid: ${dep_application_uid}`);
 
       // if default url is url - set as default, if not use app remote_host as default
       // if default url is not url - send it as a semver to deps resolution
@@ -182,7 +181,7 @@ export class ZephyrEngine {
       if (!ZeUtils.isSuccessTuple(tuple)) {
         return null;
       }
-      console.log('promise tuple results', tuple[1]);
+
       return tuple[1];
     });
 

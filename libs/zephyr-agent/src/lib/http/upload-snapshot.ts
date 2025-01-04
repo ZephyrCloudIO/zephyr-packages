@@ -41,7 +41,6 @@ export async function uploadSnapshot({
   );
 
   if (!ok) {
-
     ze_log('First tried uploading snapshot failed, retrying again...');
     const [ok2, cause2, resp2] = await ZeHttpRequest.from<SnapshotUploadRes>(
       {
@@ -59,7 +58,8 @@ export async function uploadSnapshot({
       throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
         type: 'snapshot',
         cause: {
-          cause, cause2
+          cause,
+          cause2,
         },
       });
     }

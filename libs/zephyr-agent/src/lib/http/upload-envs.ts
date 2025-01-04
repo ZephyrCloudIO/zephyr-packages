@@ -43,7 +43,6 @@ export async function uploadEnvs({
   );
 
   if (!ok || !data) {
-
     ze_log('First try uploading envs failed, retry again');
 
     const [ok2, cause2, data2] = await ZeHttpRequest.from<unknown>(

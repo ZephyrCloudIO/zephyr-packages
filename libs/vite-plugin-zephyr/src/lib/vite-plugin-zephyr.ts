@@ -56,12 +56,12 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
 
       const dependencyPairs = extract_remotes_dependencies(mf_config, root, code, id);
 
-      console.log('dependencyPairs', dependencyPairs);
+      console.log('transform.dependencyPairs', dependencyPairs);
       if (!dependencyPairs) return code;
 
       const resolved_remotes =
         await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-      console.log('resolved_remotes', resolved_remotes);
+      console.log('transform.resolved_remotes', resolved_remotes);
       if (!resolved_remotes) return code;
 
       return load_resolved_remotes(resolved_remotes, code, id);

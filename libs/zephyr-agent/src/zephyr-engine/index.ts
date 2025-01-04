@@ -30,6 +30,7 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
+
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -166,6 +167,8 @@ export class ZephyrEngine {
         name: app_name,
       });
 
+      console.log(`dep_application_uid: ${dep_application_uid}`);
+
       // if default url is url - set as default, if not use app remote_host as default
       // if default url is not url - send it as a semver to deps resolution
       const tuple = await ZeUtils.PromiseTuple(
@@ -179,7 +182,7 @@ export class ZephyrEngine {
       if (!ZeUtils.isSuccessTuple(tuple)) {
         return null;
       }
-
+      console.log('promise tuple results', tuple[1]);
       return tuple[1];
     });
 

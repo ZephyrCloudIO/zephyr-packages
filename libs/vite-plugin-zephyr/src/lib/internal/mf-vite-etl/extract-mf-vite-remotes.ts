@@ -24,11 +24,17 @@ export function extract_remotes_dependencies(
   // if mf_config exists, extract dependency pairs from mf_config
 
   if (mf_config && mf_config.remotes) {
-    return Object.entries(mf_config.remotes).map(([name, entry]) => {
-      console.log('mf_config.remotes.name', name, 'mf_config.remotes.entry', entry);
+    return Object.entries(mf_config.remotes).map(([name, version]) => {
+      if (typeof version === 'string') {
+        return {
+          name,
+          version,
+        };
+      }
+      console.log('mf_config.remotes.name', name, 'mf_config.remotes.entry', version.entry);
       return {
         name,
-        version: entry,
+        version: version.entry,
       } as ZeDependencyPair;
     });
   }

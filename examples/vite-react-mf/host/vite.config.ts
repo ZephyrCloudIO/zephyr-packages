@@ -40,6 +40,7 @@ export default defineConfig({
     withZephyr(),
   ],
   build: {
+    minify: false,
     target: 'chrome89',
   },
 });

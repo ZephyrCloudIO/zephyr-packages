@@ -3,6 +3,7 @@ import { type UploadableAsset } from 'zephyr-edge-contract';
 import { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { ZeHttpRequest } from './ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
+import { ze_log } from '../logging';
 
 export interface UploadFileProps {
   hash: string;
@@ -36,9 +37,26 @@ export async function uploadFile(
   );
 
   if (!ok) {
-    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
-      type: 'file',
-      cause,
-    });
+
+    ze_log('First try uploading file failed, retry again for ', asset.path);
+
+    const [ok2, cause2] = await ZeHttpRequest.from(
+      {
+        path: '/upload',
+        base: EDGE_URL,
+        query: { type, hash, filename: asset.path },
+      },
+      options,
+      asset.buffer
+    );
+    if (!ok2) {
+      throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+        type: 'file',
+        cause: {
+          cause,
+          cause2,
+        },
+      });
+    }
   }
 }

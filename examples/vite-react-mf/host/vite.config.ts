@@ -36,7 +36,7 @@ export default defineConfig({
   plugins: [
     react(),
     // @ts-expect-error it's the same type
-    federation(mfConfig),
+    federation({ ...mfConfig }),
     withZephyr(),
   ],
   build: {

@@ -4,16 +4,12 @@ import { ModuleFederationOptions } from '../../vite-plugin-zephyr';
 
 export function extract_remotes_dependencies(
   mf_config: ModuleFederationOptions | undefined,
-  root: string,
-  code: string,
-  id: string
+  root: string
 ): ZeDependencyPair[] | undefined {
-  const dependencyPairs: ZeDependencyPair[] = [];
   // first check if there are any zephyr dependencies in package.json
   const { zephyrDependencies } = readPackageJson(root);
   if (zephyrDependencies) {
     return Object.entries(zephyrDependencies).map(([name, version]) => {
-      console.log('reading from package.json', name, version);
       return {
         name,
         version,
@@ -31,7 +27,7 @@ export function extract_remotes_dependencies(
           version,
         };
       }
-      console.log('mf_config.remotes.name', name, 'mf_config.remotes.entry', version.entry);
+
       return {
         name,
         version: version.entry,
@@ -39,19 +35,5 @@ export function extract_remotes_dependencies(
     });
   }
 
-  // if there are no remotes in the mf_config, check if there are any remotes in the code
-
-  const extractedRemotes = parseRemoteMap(code, id);
-  if (extractedRemotes === undefined) return;
-
-  const { remotesMap } = extractedRemotes;
-
-  console.log('extractedRemotes', Object.entries(remotesMap));
-
-  for (const remote of remotesMap) {
-    const { name, entry: version } = remote;
-    dependencyPairs.push({ name, version });
-  }
-
-  return dependencyPairs;
+  return;
 }

@@ -1,5 +1,10 @@
 import type { Plugin, ResolvedConfig } from 'vite';
-import { ze_log, zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
+import {
+  ze_log,
+  zeBuildDashData,
+  ZephyrEngine,
+  ZeResolvedDependency,
+} from 'zephyr-agent';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -16,6 +21,7 @@ interface VitePluginZephyrOptions {
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const plugins: Plugin[] = [];
+  // keeping federation plugin here in case people don't know which plugin they should use and want to use zephyr to generate federation output (not recommended)
   if (mfConfig) {
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
@@ -34,6 +40,8 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
 
   let mf_config: ModuleFederationOptions | undefined;
 
+  let resolved_remotes: ZeResolvedDependency[] | null;
+
   return {
     name: 'with-zephyr',
     enforce: 'post',
@@ -46,24 +54,19 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
       });
-
-      mf_config = get_mf_config([...config.plugins]);
-
-      ze_log('mf_config', mf_config);
-    },
-    transform: async (code, id) => {
       const zephyr_engine = await zephyr_engine_defer;
 
-      const dependencyPairs = extract_remotes_dependencies(mf_config, root, code, id);
+      // if no federation plugin found fallback to zephyr options
+      mf_config = get_mf_config([...config.plugins]) ?? _options?.mfConfig;
 
-      console.log('transform.dependencyPairs', dependencyPairs);
-      if (!dependencyPairs) return code;
+      const dependencyPairs = extract_remotes_dependencies(mf_config, root);
 
-      const resolved_remotes =
-        await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-      console.log('transform.resolved_remotes', resolved_remotes);
-      if (!resolved_remotes) return code;
-
+      if (!dependencyPairs) return;
+      resolved_remotes = await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+      ze_log('dependency_pairs', dependencyPairs, 'resolved_remotes', resolved_remotes);
+    },
+    // be cautious of heavy actions under `transform` hook because every action will result in code scan again and again for each asset file
+    transform: async (code, id) => {
       return load_resolved_remotes(resolved_remotes, code, id);
     },
     closeBundle: async () => {

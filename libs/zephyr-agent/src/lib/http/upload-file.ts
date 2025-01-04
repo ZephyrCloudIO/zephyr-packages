@@ -37,7 +37,6 @@ export async function uploadFile(
   );
 
   if (!ok) {
-
     ze_log('First try uploading file failed, retry again for ', asset.path);
 
     const [ok2, cause2] = await ZeHttpRequest.from(

@@ -40,13 +40,17 @@ export async function zeBuildDashData(
     peerDependencies: to_raw(zephyr_engine.npmProperties.peerDependencies),
 
     overrides: [],
+    // TODO: @zmzlois extract mf config to here
     consumes: [],
     modules: [],
+    // TODO: @zmzlois extract mf config to here
     remotes: [],
+    // TODO: tags should have a local copy from app config so we don't duplicate generated tags?
     tags: [],
     project: '',
     metadata: {},
     default: false,
+    // TODO: this is not always the case for react native (specifically in Repack)
     remote: 'remoteEntry.js',
     type: 'app',
   };

@@ -1,4 +1,4 @@
-import { ZeResolvedDependency } from 'zephyr-agent';
+import { ze_log, ZeResolvedDependency } from 'zephyr-agent';
 import {
   parseRemoteMap,
   RemoteMapExtraction,
@@ -6,10 +6,14 @@ import {
 } from './remote_map_parser';
 
 export function load_resolved_remotes(
-  resolved_remotes: ZeResolvedDependency[],
+  resolved_remotes: ZeResolvedDependency[] | null,
   code: string,
   id: string
 ) {
+  if (!resolved_remotes) {
+    ze_log('No remotes to load, skipping');
+    return;
+  }
   const extractedRemotes = parseRemoteMap(code, id);
   if (extractedRemotes === undefined) return;
 

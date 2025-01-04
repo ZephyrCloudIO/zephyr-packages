@@ -187,9 +187,7 @@ export class ZephyrEngine {
     });
 
     const resolution_results = await Promise.all(tasks);
-    ze_log('Resolved: remote dependencies resolution_results', {
-      results: resolution_results,
-    });
+
     this.federated_dependencies = resolution_results.filter(
       is_zephyr_resolved_dependency
     );

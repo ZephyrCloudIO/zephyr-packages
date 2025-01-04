@@ -1,14 +1,18 @@
 import { ZephyrEngine } from '../../zephyr-engine';
 import { ZephyrBuildStats } from 'zephyr-edge-contract';
+import { ZeErrors, ZephyrError } from '../errors';
 
 export async function zeBuildDashData(
   zephyr_engine: ZephyrEngine
 ): Promise<ZephyrBuildStats> {
   const snapshotId = await zephyr_engine.snapshotId;
   const buildId = await zephyr_engine.build_id;
-  if (!snapshotId || !buildId) {
-    // todo: cc @zmzlois new error type :)
-    throw new Error('Missing snapshotId or buildId');
+  if (!snapshotId) {
+    throw new ZephyrError(ZeErrors.ERR_SNAPSHOT_ID_NOT_FOUND);
+  }
+
+  if (!buildId) {
+    throw new ZephyrError(ZeErrors.ERR_GET_BUILD_ID);
   }
 
   const application_uid = zephyr_engine.application_uid;

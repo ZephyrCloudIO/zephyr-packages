@@ -17,6 +17,7 @@ export interface ZeGitInfo {
 
 /** Loads the git information from the current repository. */
 export async function getGitInfo(): Promise<ZeGitInfo> {
+  ze_log('Verifying token...');
   const hasToken = hasSecretToken();
 
   const { name, email, remoteOrigin, branch, commit, stdout } =
@@ -42,11 +43,12 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
 
 /** Loads all data in a single command to avoid multiple executions. */
 async function loadGitInfo(hasSecretToken: boolean) {
+  ze_log('Loading git info... ci: ', isCI, 'hasSecretToken: ', hasSecretToken);
   const automated = isCI || hasSecretToken;
 
   // ensures multi line output on errors doesn't break the parsing
   const delimiter = randomUUID().repeat(2);
-
+  ze_log('delimiter: ', delimiter);
   const command = [
     // Inside CI environments, the last committer should be the actor
     // and not the actual logged git user which sometimes might just be a bot
@@ -59,6 +61,7 @@ async function loadGitInfo(hasSecretToken: boolean) {
   ].join(` && echo ${delimiter} && `);
 
   try {
+    ze_log('Executing command: ', command);
     const { stdout } = await exec(command);
 
     const [name, email, remoteOrigin, branch, commit] = stdout
@@ -91,6 +94,8 @@ async function loadGitInfo(hasSecretToken: boolean) {
  * git info from `azure`, `aws` etc
  */
 function parseGitUrl(remoteOrigin: string, stdout: string) {
+  ze_log('parseGitUrl.remoteOrigin: ', remoteOrigin);
+
   if (!remoteOrigin) {
     throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN, {
       data: { stdout },

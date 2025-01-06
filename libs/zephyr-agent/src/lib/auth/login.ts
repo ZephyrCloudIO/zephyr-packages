@@ -21,6 +21,7 @@ import { ZeErrors, ZephyrError } from '../errors';
  * @returns The token as a string.
  */
 export async function checkAuth(): Promise<string> {
+  ze_log('Checking authentication...');
   const secret_token = getSecretToken();
 
   if (secret_token) {

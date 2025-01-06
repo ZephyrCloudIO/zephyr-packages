@@ -111,22 +111,23 @@ export class ZephyrEngine {
   static async create(context: string | undefined): Promise<ZephyrEngine> {
     context = context || process.cwd();
 
-    ze_log(`Initializing: Zephyr Engine for ${context}`);
+    ze_log(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine(context);
-    ze_log('Initializing: npm package info');
+    ze_log('Initializing: npm package info...');
     ze.npmProperties = await getPackageJson(context);
-    ze_log('Initializing: git info');
+    ze_log('Initializing: git info...');
     ze.gitProperties = await getGitInfo();
+    ze_log('Git properties: ', ze.gitProperties);
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
     const application_uid = ze.application_uid;
-
+    ze_log('Application uid: ', application_uid);
     // starting async load of application configuration, build_id and hash_list
 
-    ze_log('Initializing: checking authentication');
+    ze_log('Initializing: checking authentication...');
     await checkAuth();
-
-    ze_log('Initialized: loading of application configuration');
+    ze_log('Authentication checked...');
+    ze_log('Initializing: loading application configuration...');
     ze.application_configuration = getApplicationConfiguration({ application_uid });
     ze.application_configuration
       .then((appConfig) => {
@@ -134,8 +135,11 @@ export class ZephyrEngine {
         ze_log('Loaded: application configuration', { username, email, EDGE_URL });
       })
       .catch((err) => ze_log(`Failed to get application configuration: ${err}`));
+    ze_log('Application configuration loaded...starting new build...');
 
     await ze.start_new_build();
+
+    ze_log('Build started...');
 
     ze.logger.then(async (logger) => {
       const { username } = await ze.application_configuration;
@@ -335,6 +339,7 @@ function mut_zephyr_app_uid(ze: ZephyrEngine): void {
     version: ze.npmProperties.version,
   };
   ze.application_uid = createApplicationUid(ze.applicationProperties);
+  ze_log('Finished mutating application uid...');
 }
 
 export interface UploadOptions {

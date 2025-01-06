@@ -58,7 +58,7 @@ async function loadApplicationConfiguration({
 export async function getApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
-  ze_log('Getting application configuration from node-persist');
+  ze_log('Getting application configuration from node-persist...');
   const promise = addToQueue();
   if (callsQueue.length === 1) {
     const storedAppConfig = await getAppConfig(application_uid);

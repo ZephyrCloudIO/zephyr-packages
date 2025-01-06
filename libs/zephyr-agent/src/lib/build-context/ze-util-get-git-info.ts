@@ -64,11 +64,13 @@ async function loadGitInfo(hasSecretToken: boolean) {
     ze_log('Executing command: ', command);
     const { stdout } = await exec(command);
 
+    ze_log('exec(command) stdout: ');
     const [name, email, remoteOrigin, branch, commit] = stdout
       .trim()
       .split(delimiter)
       .map((x) => x.trim());
 
+    ze_log(`After stdout trimming: `, [name, email, remoteOrigin, branch, commit]);
     return {
       name,
       email,
@@ -79,6 +81,7 @@ async function loadGitInfo(hasSecretToken: boolean) {
     };
   } catch (cause: unknown) {
     const error = cause as Error & { stderr?: string };
+    ze_log('loadGitInfo.error: ', error);
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
       cause,
       data: { command, delimiter },

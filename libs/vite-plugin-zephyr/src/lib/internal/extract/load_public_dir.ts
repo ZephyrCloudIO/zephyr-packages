@@ -3,6 +3,7 @@ import { readdirSync, readFile, statSync } from 'node:fs';
 import { basename, relative, resolve } from 'node:path';
 import { normalizePath } from 'vite';
 import { promisify } from 'node:util';
+import { ze_log } from 'zephyr-agent';
 
 interface LoadPublicDirOptions {
   outDir: string;
@@ -15,7 +16,8 @@ export async function load_public_dir(
   const { publicDir, outDir } = props;
   const publicAssets: OutputAsset[] = [];
 
-  const loadDir = async (srcDir: string, destDir: string) => {
+  const loadDir = async (destDir: string, srcDir: string) => {
+    ze_log('load_public_dir', { destDir, srcDir });
     for (const file of readdirSync(srcDir)) {
       const srcFile = resolve(srcDir, file);
       if (srcFile === destDir) {
@@ -37,6 +39,9 @@ export async function load_public_dir(
       }
     }
   };
-  await loadDir(publicDir, outDir);
+  // if publicDir is not set, we don't need to load it
+  if (publicDir) {
+    await loadDir(outDir, publicDir);
+  }
   return publicAssets;
 }

@@ -41,6 +41,28 @@ export default defineConfig({
   ],
   build: {
     minify: false,
-    target: 'chrome89',
+    outDir: '../Agoda.Supply.Finance.WebApi/wwwroot',
+    emptyOutDir: false, // to make it stored with webpack
+    target: 'esnext',
+    manifest: 'asset-manifest-vite.json',
+    // minify: true, // To help debug don't remove this
+    terserOptions: {
+      compress: true,
+      mangle: false,
+    },
+    rollupOptions: {
+      output: {
+        format: 'esm',
+        entryFileNames: `static/js/main.[hash].js`,
+        chunkFileNames: `static/js/[name].[hash].js`,
+        assetFileNames: ({ name }) => {
+          if (name?.indexOf('css') !== -1) return `static/css/[name].[hash].css`;
+          else return `static/media/[name].[hash].[ext]`;
+        },
+        minifyInternalExports: false,
+      },
+    },
+    // federation required
+    // target: 'chrome89',
   },
 });

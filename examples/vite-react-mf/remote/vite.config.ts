@@ -14,7 +14,12 @@ const mfConfig = {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), federation({ ...mfConfig }), withZephyr()],
+  plugins: [
+    react(),
+    // @ts-expect-error vite type issue
+    federation({ ...mfConfig }),
+    withZephyr(),
+  ],
   experimental: {
     renderBuiltUrl() {
       return { relative: true };

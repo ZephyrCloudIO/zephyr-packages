@@ -52,7 +52,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
       resolve_vite_internal_options({
         root: config.root,
         outDir: config.build?.outDir,
-        publicDir: config.publicDir,
+        publicDir: config.publicDir ?? undefined,
       });
       const zephyr_engine = await zephyr_engine_defer;
 

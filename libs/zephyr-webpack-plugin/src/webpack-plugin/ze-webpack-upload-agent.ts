@@ -25,7 +25,7 @@ export async function webpack_zephyr_agent({
   assets,
   pluginOptions,
 }: ZephyrAgentProps): Promise<void> {
-  ze_log('Initiating: Zephyr Webpack Upload Agent');
+  ze_log('Initiating Zephyr Agent...');
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;

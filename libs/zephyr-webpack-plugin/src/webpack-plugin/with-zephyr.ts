@@ -1,5 +1,5 @@
 import { Configuration } from 'webpack';
-import { ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZephyrEngine } from 'zephyr-agent';
 
 import { ZeWebpackPlugin } from './ze-webpack-plugin';
 import { ZephyrWebpackPluginOptions } from '../types';
@@ -19,8 +19,9 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrWebpackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
+  ze_log('Creating ZephyrEngine instance...');
   const zephyr_engine = await ZephyrEngine.create(config.context);
-
+  ze_log('ZephyrEngine instance created...');
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);
   const resolved_dependency_pairs =

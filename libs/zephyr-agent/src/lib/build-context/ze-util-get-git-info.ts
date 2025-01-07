@@ -29,6 +29,7 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
   }
 
   const app = parseGitUrl(remoteOrigin, stdout);
+  ze_log('getGitInfo.Parsed: git url', app);
 
   const gitInfo = {
     git: { name, email, branch, commit },
@@ -115,8 +116,19 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
     });
   }
 
+  // Replace invalid DNS characters with '-' and ensure it doesn't start/end with '-'
+  const sanitizeDnsName = (str: string) =>
+    str
+      .toLocaleLowerCase()
+      // Replace any character that isn't a-z, 0-9, or hyphen with '-'
+      .replace(/[^a-z0-9-]/g, '-')
+      // Replace multiple consecutive hyphens with a single hyphen
+      .replace(/-+/g, '-')
+      // Remove hyphens from start and end
+      .replace(/^-+|-+$/g, '');
+
   return {
-    org: parsed.owner.toLocaleLowerCase(),
-    project: parsed.name.toLocaleLowerCase(),
+    org: sanitizeDnsName(parsed.owner.toLocaleLowerCase()),
+    project: sanitizeDnsName(parsed.name.toLocaleLowerCase()),
   };
 }

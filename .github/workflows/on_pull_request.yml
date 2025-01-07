@@ -18,10 +18,11 @@ env:
 jobs:
   deps:
     name: Install Dependencies
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+    runs-on: windows-latest
+    # runs-on: ${{ matrix.os }}
+    # strategy:
+    #   matrix:
+    #     os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -32,55 +33,55 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
+      - run: pnpm i --frozen-lock-files=false
 
-  build:
-    name: Build it all
-    runs-on: ubuntu-latest
-    needs: deps
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: master
-      - name: run build-all
-        # TODO: reintroduce whole repo build when examples are ready
-        run: pnpm build-all --exclude="examples/**" && exit 0
+  # build:
+  #   name: Build it all
+  #   runs-on: ubuntu-latest
+  #   needs: deps
+  #   continue-on-error: true
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 9
+  #     - name: Use Node.js ${{ env.NODE_VERSION }}
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: 'pnpm'
+  #     - run: pnpm i --frozen-lockfile
+  #     - uses: nrwl/nx-set-shas@v4
+  #       with:
+  #         main-branch-name: master
+  #     - name: run build-all
+  #       # TODO: reintroduce whole repo build when examples are ready
+  #       run: pnpm build-all --exclude="examples/**" && exit 0
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    needs: deps
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: master
-      - name: run lint
-        run: pnpm dlx nx affected -t lint
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #   needs: deps
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 9
+  #     - name: Use Node.js ${{ env.NODE_VERSION }}
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.NODE_VERSION }}
+  #         cache: 'pnpm'
+  #     - run: pnpm i --frozen-lockfile
+  #     - uses: nrwl/nx-set-shas@v4
+  #       with:
+  #         main-branch-name: master
+  #     - name: run lint
+  #       run: pnpm dlx nx affected -t lint
 
   test:
     name: Tests

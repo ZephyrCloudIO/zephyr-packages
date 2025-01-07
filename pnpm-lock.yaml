@@ -169,8 +169,8 @@ importers:
         specifier: ^3.36.1
         version: 3.38.0
       dotenv:
-        specifier: 16.3.2
-        version: 16.3.2
+        specifier: 16.4.7
+        version: 16.4.7
       esbuild:
         specifier: ^0.19.11
         version: 0.19.12
@@ -6061,8 +6061,8 @@ packages:
     resolution: {integrity: sha512-HTlk5nmhkm8F6JcdXvHIzaorzCoziNQT9mGxLPVXW8wJF1TiGSL60ZGB4gHWabHOaMmWmhvk2/lPHfnBiT78AQ==}
     engines: {node: '>=12'}
 
-  dotenv@16.4.5:
-    resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
+  dotenv@16.4.7:
+    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
   dotenv@8.6.0:
@@ -13401,12 +13401,6 @@ snapshots:
     dependencies:
       semver: 7.6.3
 
-  '@nrwl/devkit@18.3.5(nx@18.3.5(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))':
-    dependencies:
-      '@nx/devkit': 18.3.5(nx@18.3.5(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))
-    transitivePeerDependencies:
-      - nx
-
   '@nrwl/devkit@18.3.5(nx@19.1.0(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))':
     dependencies:
       '@nx/devkit': 18.3.5(nx@19.1.0(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))
@@ -13853,7 +13847,7 @@ snapshots:
 
   '@nx/devkit@18.3.5(nx@18.3.5(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))':
     dependencies:
-      '@nrwl/devkit': 18.3.5(nx@18.3.5(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))
+      '@nrwl/devkit': 18.3.5(nx@19.1.0(@swc-node/register@1.10.9(@swc/core@1.7.6(@swc/helpers@0.5.12))(@swc/types@0.1.12)(typescript@5.4.3))(@swc/core@1.7.6(@swc/helpers@0.5.12)))
       ejs: 3.1.10
       enquirer: 2.3.6
       ignore: 5.3.1
@@ -18382,7 +18376,7 @@ snapshots:
 
   dotenv-expand@11.0.6:
     dependencies:
-      dotenv: 16.4.5
+      dotenv: 16.4.7
 
   dotenv-webpack@8.1.0(webpack@5.93.0(@swc/core@1.7.6(@swc/helpers@0.5.12))(esbuild@0.19.12)(webpack-cli@4.10.0)):
     dependencies:
@@ -18391,7 +18385,7 @@ snapshots:
 
   dotenv@16.3.2: {}
 
-  dotenv@16.4.5: {}
+  dotenv@16.4.7: {}
 
   dotenv@8.6.0: {}
 
@@ -21900,7 +21894,7 @@ snapshots:
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       cliui: 8.0.1
-      dotenv: 16.4.5
+      dotenv: 16.4.7
       dotenv-expand: 11.0.6
       enquirer: 2.3.6
       figures: 3.2.0
@@ -21953,7 +21947,7 @@ snapshots:
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       cliui: 8.0.1
-      dotenv: 16.4.5
+      dotenv: 16.4.7
       dotenv-expand: 11.0.6
       enquirer: 2.3.6
       figures: 3.2.0

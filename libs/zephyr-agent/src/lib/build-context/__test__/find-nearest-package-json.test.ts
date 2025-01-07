@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { describe, expect, jest } from '@jest/globals';
 import { find_nearest_package_json } from '../find-nearest-package-json';
 
@@ -25,6 +26,8 @@ jest.mock('node:fs/promises', () => {
   };
 });
 
+const setPath = (...paths: string[]) => resolve(join(...paths));
+
 describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nearest-package-json.ts', () => {
   const access_mock = fs.accessSync as jest.Mock<typeof fs.accessSync>;
   const read_file_mock = fsp.readFile as jest.Mock<typeof fsp.readFile>;
@@ -47,12 +50,14 @@ describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nea
       throw new Error('Not found');
     });
 
-    await expect(find_nearest_package_json('/fake/path')).rejects.toThrow('ZE10010');
+    await expect(find_nearest_package_json(setPath('fake', 'path'))).rejects.toThrow(
+      'ZE10010'
+    );
   });
 
   it('should return the path and content of the nearest package.json', async () => {
-    const fakePath = '/fake/path/to';
-    const packageJsonPath = '/fake/path/to/package.json';
+    const fakePath = setPath('fake', 'path', 'to');
+    const packageJsonPath = setPath('fake', 'path', 'to', 'package.json');
     const packageJsonContent = '{ "name": "fake", "version": "1.1.1" }';
 
     access_mock.mockImplementationOnce((path) => {
@@ -70,8 +75,8 @@ describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nea
   });
 
   it('should return the path and content of package.json two folders above', async () => {
-    const fakePath = '/fake/path/to/deeper';
-    const packageJsonPath = '/fake/path/package.json';
+    const fakePath = setPath('fake', 'path', 'to', 'deeper');
+    const packageJsonPath = setPath('fake', 'path', 'package.json');
     const packageJsonContent = '{ "name": "fake", "version": "1.1.1" }';
 
     access_mock.mockImplementation((path) => {
@@ -91,7 +96,7 @@ describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nea
   });
 
   it('should throw when no package.json is found after multiple levels', async () => {
-    const fakePath = '/fake/path/to/deeper';
+    const fakePath = setPath('fake', 'path', 'to', 'deeper');
 
     access_mock.mockImplementation(() => {
       throw new Error('Not found');

@@ -119,7 +119,7 @@ jobs:
       - name: run test
         env:
           ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZEPHYR_API }}
+          ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t test

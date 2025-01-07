@@ -129,12 +129,14 @@ export class ZephyrEngine {
     ze_log('Authentication checked...');
     ze_log('Initializing: loading application configuration...');
     ze.application_configuration = getApplicationConfiguration({ application_uid });
+
     ze.application_configuration
       .then((appConfig) => {
         const { username, email, EDGE_URL } = appConfig;
         ze_log('Loaded: application configuration', { username, email, EDGE_URL });
       })
       .catch((err) => ze_log(`Failed to get application configuration: ${err}`));
+
     ze_log('Application configuration loaded...starting new build...');
 
     await ze.start_new_build();

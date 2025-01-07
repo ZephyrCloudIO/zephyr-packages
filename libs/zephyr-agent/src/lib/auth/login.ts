@@ -9,6 +9,7 @@ import { logFn } from '../logging/ze-log-event';
 import { createSocket } from './websocket';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
+import { ResolveFnOutput } from 'module';
 import { ze_log } from '../logging';
 import { white } from '../logging/picocolor';
 import { ZeHttpRequest } from '../http/ze-http-request';
@@ -25,18 +26,21 @@ export async function checkAuth(): Promise<string> {
   const secret_token = getSecretToken();
 
   if (secret_token) {
+    ze_log('Using token for authentication');
     return secret_token;
   }
-
+  ze_log('Did not find secret token, doing local storage check...');
   const token = await getToken();
 
   if (token) {
+    ze_log('Found token in local storage...');
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(token, 60)) {
       ze_log('You are already logged in');
       return token;
     }
 
+    ze_log('Token is expired, removing...');
     await removeToken();
   }
 
@@ -58,16 +62,20 @@ export async function checkAuth(): Promise<string> {
 export function isTokenStillValid(token: string, gap = 0): boolean {
   // Attempts to decode the token
   try {
+    ze_log('Decoding token with jose...');
     const decodedToken = jose.decodeJwt(token);
 
     if (decodedToken.exp) {
+      ze_log('Token decoded successfully');
       return new Date(decodedToken.exp * 1000) > new Date(Date.now() + gap * 1000);
     }
 
     // No expiration date found, invalid token.
+    ze_log('No expiration date found, invalid token.');
     return false;
   } catch {
     // If the token is invalid, return false.
+    ze_log('Token is invalid, returning false.');
     return false;
   }
 }
@@ -89,8 +97,9 @@ function generateSessionKey(): string {
 
 /** Tries to log in the user and get back the websocket reply containing the access token. */
 async function getPersonalAccessTokenFromWebsocket(): Promise<string> {
+  ze_log('Generating session key...');
   const sessionKey = generateSessionKey();
-
+  ze_log('Session key generated: ', sessionKey);
   // Attempts to open the browser to authenticate the user.
   const authUrl = await getAuthenticationURL(sessionKey);
 
@@ -132,8 +141,10 @@ async function getAuthenticationURL(state: string): Promise<string> {
  * @returns The new token as a string.
  */
 async function authenticateUser(): Promise<string> {
+  ze_log('Attempting to get access token from websocket...');
   const token = await getPersonalAccessTokenFromWebsocket();
   await saveToken(token);
+  ze_log('Saved token to local storage...');
   return token;
 }
 
@@ -146,22 +157,24 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     socket.once('access-token', resolve);
     // Creating errors outside of the listener closure makes the stack trace point
     // to waitForAccessToken fn instead of socket.io internals event emitter code.
-    socket.once('access-token-error', (cause) =>
+    socket.once('access-token-error', (cause) => {
+      ze_log('access-token-error: Error getting access token');
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           cause,
           message: 'Error getting access token',
         })
-      )
-    );
-    socket.once('connect_error', (cause) =>
+      );
+    });
+    socket.once('connect_error', (cause) => {
+      ze_log('connect_error: Could not connect to socket.');
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           message: 'Could not connect to socket.',
           cause,
         })
-      )
-    );
+      );
+    });
 
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
 
@@ -176,6 +189,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
 
     return await promise;
   } finally {
+    ze_log('finally: Closing socket...');
     socket.close();
   }
 }

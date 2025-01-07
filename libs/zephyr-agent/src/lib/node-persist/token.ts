@@ -3,6 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { StorageKeys, ZE_PATH } from './storage-keys';
 import { getSecretToken } from './secret-token';
+import { ze_log } from '../logging';
 
 const storage = init({
   dir: join(homedir(), ZE_PATH),
@@ -20,6 +21,7 @@ export async function getToken(): Promise<string | undefined> {
     return tokenFromEnv;
   }
 
+  ze_log('Did not find token in env, checking local storage...');
   await storage;
 
   return getItem(StorageKeys.ze_auth_token);

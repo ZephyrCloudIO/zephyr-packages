@@ -1,3 +1,5 @@
+import { join } from 'path';
+import { existsSync, readFileSync } from 'fs';
 import {
   createApplicationUid,
   flatCreateSnapshotId,
@@ -28,7 +30,6 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
-
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -183,9 +184,11 @@ export class ZephyrEngine {
     });
 
     const resolution_results = await Promise.all(tasks);
+
     this.federated_dependencies = resolution_results.filter(
       is_zephyr_resolved_dependency
     );
+
     return this.federated_dependencies;
   }
 
@@ -246,8 +249,17 @@ export class ZephyrEngine {
     const logger = await zephyr_engine.logger;
     const zeStart = zephyr_engine.build_start_time;
     const versionUrl = zephyr_engine.version_url;
+    const dependencies = zephyr_engine.federated_dependencies;
 
     if (zeStart && versionUrl) {
+      if (dependencies && dependencies.length > 0) {
+        logger({
+          level: 'info',
+          action: 'build:info:user',
+          ignore: true,
+          message: `Resolved zephyr dependencies ${cyanBright(dependencies.map((dep) => dep.name).join(', '))}\n`,
+        });
+      }
       logger({
         level: 'trace',
         action: 'deploy:url',
@@ -330,4 +342,18 @@ export interface UploadOptions {
     missingAssets: ZeBuildAsset[];
   };
   getDashData: (zephyr_engine?: ZephyrEngine) => ZephyrBuildStats;
+}
+
+export interface ZephyrDependencies {
+  [key: string]: string;
+}
+
+export function readPackageJson(root: string): {
+  zephyrDependencies: ZephyrDependencies;
+} {
+  const packageJsonPath = join(root, 'package.json');
+  const packageJsonContent = existsSync(packageJsonPath)
+    ? readFileSync(packageJsonPath, 'utf-8')
+    : '{}';
+  return JSON.parse(packageJsonContent);
 }

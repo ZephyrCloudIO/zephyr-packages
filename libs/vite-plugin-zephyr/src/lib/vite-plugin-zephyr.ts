@@ -29,12 +29,14 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
     resolve_vite_internal_options = resolve;
   });
+  let root: string;
 
   return {
     name: 'with-zephyr',
     enforce: 'post',
 
     configResolved: async (config: ResolvedConfig) => {
+      root = config.root;
       zephyr_defer_create(config.root);
       resolve_vite_internal_options({
         root: config.root,
@@ -45,7 +47,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
     transform: async (code, id) => {
       const zephyr_engine = await zephyr_engine_defer;
 
-      const dependencyPairs = extract_remotes_dependencies(code, id);
+      const dependencyPairs = extract_remotes_dependencies(root, code, id);
       if (!dependencyPairs) return code;
 
       const resolved_remotes =

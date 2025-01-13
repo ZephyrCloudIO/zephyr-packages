@@ -8,5 +8,9 @@
   "scripts": {
     "build": "nx run team-red:build --skip-nx-cache"
   },
-  "private": true
+  "private": true,
+  "zephyrDependencies": {
+    "team-blue": "0.1.0",
+    "team-green": "0.1.0"
+  }
 }

@@ -42,7 +42,7 @@ testem.log
 Thumbs.db
 
 # nx
-.nx/cache
+.nx
 migrations.json
 
 # Local Netlify folder

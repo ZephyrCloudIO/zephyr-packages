@@ -229,6 +229,7 @@ export class FederationDashboardPlugin {
   processWebpackGraph({
     stats,
     stats_json,
+    pluginOptions,
   }: ProcessWebpackGraphParams): ConvertedGraph | undefined {
     // async processWebpackGraph(/*curCompiler: Compilation*/): Promise<unknown> {
     //   const stats = curCompiler.getStats();

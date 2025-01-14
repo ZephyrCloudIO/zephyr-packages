@@ -23,12 +23,12 @@ async function _zephyr_configuration(
   const zephyr_engine = await ZephyrEngine.create(config.context);
   ze_log('Configuring with Zephyr...');
 
-  zephyr_engine.build_type = 'repack';
+  zephyr_engine.builder = 'repack';
 
   const target = get_platform_from_repack(config);
   ze_log('Deploy build target: ', target);
 
-  const dependency_pairs = extractFederatedDependencyPairs(zephyr_engine, config);
+  const dependency_pairs = extractFederatedDependencyPairs(config);
 
   const resolved_depdency_pairs = await zephyr_engine.resolve_remote_dependencies(
     dependency_pairs,
@@ -44,7 +44,7 @@ async function _zephyr_configuration(
 
   ze_log('dependency resolution completed successfully...or at least trying to...');
 
-  const mf_configs = makeCopyOfModuleFederationOptions(zephyr_engine, config);
+  const mf_configs = makeCopyOfModuleFederationOptions(config);
   // const app_config = await zephyr_engine.application_configuration;
   // Verify Module Federation configuration's naming
   await verify_mf_fastly_config(mf_configs, zephyr_engine);
@@ -55,7 +55,7 @@ async function _zephyr_configuration(
       zephyr_engine,
       target,
       upload_file: _zephyrOptions?.upload_file ? _zephyrOptions.upload_file : true,
-      mfConfig: makeCopyOfModuleFederationOptions(zephyr_engine, config),
+      mfConfig: makeCopyOfModuleFederationOptions(config),
     })
   );
 

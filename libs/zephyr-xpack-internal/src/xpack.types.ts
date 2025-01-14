@@ -18,30 +18,27 @@ interface WebpackPluginInstance<Compiler> {
   apply: (compiler: Compiler) => void;
 }
 
+export interface XFederatedRemotesConfig {
+  name: string;
+  library?: {
+    type?: string;
+  };
+  remotes?: (string | RemotesObject)[] | RemotesObject;
+  /** Repack: bundle file name */
+  filename?: string;
+  /**
+   * Repack: Temporary field for repack to store bundle name (in their case it's the
+   * actual output js.bundle and they want to put it in filename field)
+   */
+  bundle_name?: string;
+}
+
 export interface ModuleFederationPlugin {
   apply: (compiler: unknown) => void;
   /** For Webpack/Rspack */
-  _options?: {
-    name: string;
-    library?: {
-      type?: string;
-    };
-    remotes?: (string | RemotesObject)[] | RemotesObject;
-  };
+  _options?: XFederatedRemotesConfig;
   /** Repack specific for now until Repack change how the config should be exposed */
-  config?: {
-    name: string;
-    library?: {
-      type?: string;
-    };
-    remotes?: (string | RemotesObject)[] | RemotesObject;
-    filename?: string;
-    /**
-     * Temporary field for repack to store bundle name (in their case it's the actual
-     * output js.bundle and they want to put it in filename field)
-     */
-    bundle_name?: string;
-  };
+  config?: XFederatedRemotesConfig;
 }
 
 interface RemotesObject {

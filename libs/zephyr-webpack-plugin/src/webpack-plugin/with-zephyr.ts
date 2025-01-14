@@ -1,4 +1,4 @@
-import { Compiler, Configuration } from 'webpack';
+import { Configuration } from 'webpack';
 import { ze_log, ZephyrEngine } from 'zephyr-agent';
 
 import { ZeWebpackPlugin } from './ze-webpack-plugin';
@@ -9,7 +9,6 @@ import {
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
   xpack_delegate_module_template,
-  XPackConfiguration,
 } from 'zephyr-xpack-internal';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
@@ -23,9 +22,9 @@ async function _zephyr_configuration(
   // create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create(config.context);
 
-  zephyr_engine.build_type = 'webpack';
+  zephyr_engine.builder = 'webpack';
   // Resolve dependencies and update the config
-  const dependencyPairs = extractFederatedDependencyPairs(zephyr_engine, config);
+  const dependencyPairs = extractFederatedDependencyPairs(config);
   const resolved_dependency_pairs =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
@@ -36,7 +35,7 @@ async function _zephyr_configuration(
     xpack_delegate_module_template
   );
 
-  const mfConfig = makeCopyOfModuleFederationOptions(zephyr_engine, config);
+  const mfConfig = makeCopyOfModuleFederationOptions(config);
 
   ze_log(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);
 

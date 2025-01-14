@@ -5,34 +5,32 @@ import {
 } from 'zephyr-agent';
 
 import { iterateFederationConfig } from './iterate-federation-config';
-import { XPackConfiguration } from '../xpack.types';
-import { ZephyrEngine } from 'zephyr-agent';
+import { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
+import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
+
 export function extractFederatedDependencyPairs(
-  zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<any>
 ): ZeDependencyPair[] {
+  const depsPairs: ZeDependencyPair[] = [];
+
   const { zephyrDependencies } = readPackageJson(config.context ?? process.cwd());
   if (zephyrDependencies) {
-    return Object.entries(zephyrDependencies).map(([name, version]) => {
-      return {
-        name,
-        version,
-      } as ZeDependencyPair;
+    Object.entries(zephyrDependencies).map(([name, version]) => {
+      depsPairs.push({ name, version } as ZeDependencyPair);
     });
   }
-  return iterateFederationConfig(zephyr_engine, config, (plugin) => {
-    if (!plugin?.remotes) return;
-    return Object.entries(plugin.remotes).map((remote) => {
-      const [remote_name, remote_version] = remote;
-      return {
+
+  iterateFederatedRemoteConfig(config, (remotesConfig: XFederatedRemotesConfig) => {
+    if (!remotesConfig?.remotes) return;
+    Object.entries(remotesConfig.remotes).map(([remote_name, remote_version]) => {
+      depsPairs.push({
         name: remote_name,
         version: remote_version,
-      } as ZeDependencyPair;
+      } as ZeDependencyPair);
     });
-  })
+  });
+
+  return depsPairs
     .flat()
-    .filter(
-      (dep): dep is ZeDependencyPair =>
-        dep !== undefined && dep !== null && is_zephyr_dependency_pair(dep)
-    );
+    .filter((dep): dep is ZeDependencyPair => is_zephyr_dependency_pair(dep));
 }

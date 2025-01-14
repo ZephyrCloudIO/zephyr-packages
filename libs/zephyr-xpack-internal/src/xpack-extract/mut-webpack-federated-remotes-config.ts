@@ -1,12 +1,9 @@
 import { type ZeResolvedDependency } from 'zephyr-agent';
-import {
-  createMfRuntimeCode,
-  iterateFederationConfig,
-  xpack_delegate_module_template,
-} from './index';
+import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
 import { ze_log } from 'zephyr-agent';
 import { XPackConfiguration } from '../xpack.types';
 import { ZephyrEngine } from 'zephyr-agent';
+import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 
 export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
@@ -23,7 +20,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
     ze_log(`No resolved dependency pairs found, skipping...`);
     return;
   }
-  iterateFederationConfig(zephyr_engine, config, (plugin) => {
+  iterateFederatedRemoteConfig(config, (plugin) => {
     const remotes = plugin?.remotes;
     if (!remotes) {
       ze_log(
@@ -33,11 +30,11 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       return;
     }
 
-    ze_log(`zephyr_engine.build_type: ${zephyr_engine.build_type}`);
+    ze_log(`zephyr_engine.build_type: ${zephyr_engine.builder}`);
     ze_log(`Library type: ${plugin.library?.type}`);
 
     library_type =
-      (plugin.library?.type ?? zephyr_engine.build_type === 'repack') ? 'var' : 'self';
+      (plugin.library?.type ?? zephyr_engine.builder === 'repack') ? 'var' : 'self';
 
     Object.entries(remotes).map((remote) => {
       ze_log(`remote: ${JSON.stringify(remote, null, 2)}`);

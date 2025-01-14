@@ -24,10 +24,10 @@ async function _zephyr_configuration(
   // create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create(config.context);
 
-  zephyr_engine.build_type = 'rspack';
+  zephyr_engine.builder = 'rspack';
 
   // Resolve dependencies and update the config
-  const dependencyPairs = extractFederatedDependencyPairs(zephyr_engine, config);
+  const dependencyPairs = extractFederatedDependencyPairs(config);
 
   const resolved_dependency_pairs =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
@@ -43,7 +43,7 @@ async function _zephyr_configuration(
   config.plugins?.push(
     new ZeRspackPlugin({
       zephyr_engine,
-      mfConfig: makeCopyOfModuleFederationOptions(zephyr_engine, config),
+      mfConfig: makeCopyOfModuleFederationOptions(config),
       wait_for_index_html: _zephyrOptions?.wait_for_index_html,
     })
   );

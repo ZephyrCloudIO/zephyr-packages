@@ -48,9 +48,9 @@ export interface BuildProperties {
 }
 
 export function is_zephyr_dependency_pair(
-  dep: ZeDependencyPair | null
+  dep: ZeDependencyPair | undefined | null
 ): dep is ZeDependencyPair {
-  return dep !== null;
+  return dep != undefined;
 }
 
 export function is_zephyr_resolved_dependency(
@@ -85,7 +85,7 @@ export class ZephyrEngine {
     target: 'ios' | 'android' | 'web';
   } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
-  build_type: 'webpack' | 'rspack' | 'repack' | 'vite' | 'rollup' | undefined = 'rspack';
+  builder: 'webpack' | 'rspack' | 'repack' | 'vite' | 'rollup' | undefined = 'rspack';
 
   // resolved dependencies
   federated_dependencies: ZeResolvedDependency[] | null = null;

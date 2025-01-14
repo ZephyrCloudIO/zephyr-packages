@@ -9,35 +9,30 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown
+  delegate_module_template: () => unknown = xpack_delegate_module_template
 ): void {
-  ze_log(
-    `Resolved dependency pairs: ${JSON.stringify(resolvedDependencyPairs, null, 2)}`,
-    'mutWebpackFederatedRemotesConfig'
-  );
-  let library_type = '';
   if (!resolvedDependencyPairs?.length) {
     ze_log(`No resolved dependency pairs found, skipping...`);
     return;
   }
-  iterateFederatedRemoteConfig(config, (plugin) => {
-    const remotes = plugin?.remotes;
+
+  iterateFederatedRemoteConfig(config, (remotesConfig) => {
+    const remotes = remotesConfig?.remotes;
     if (!remotes) {
       ze_log(
-        `No remotes found for plugin: ${JSON.stringify(plugin, null, 2)}`,
+        `No remotes found for plugin: ${JSON.stringify(remotesConfig, null, 2)}`,
         'skipping...'
       );
       return;
     }
 
-    ze_log(`zephyr_engine.build_type: ${zephyr_engine.builder}`);
-    ze_log(`Library type: ${plugin.library?.type}`);
-
-    library_type =
-      (plugin.library?.type ?? zephyr_engine.builder === 'repack') ? 'var' : 'self';
+    const library_type =
+      (remotesConfig.library?.type ?? zephyr_engine.builder === 'repack')
+        ? 'var'
+        : 'self';
+    ze_log(`Library type: ${library_type}`);
 
     Object.entries(remotes).map((remote) => {
-      ze_log(`remote: ${JSON.stringify(remote, null, 2)}`);
       const [remote_name, remote_version] = remote;
       const resolved_dep = resolvedDependencyPairs.find(
         (dep) => dep.name === remote_name && dep.version === remote_version
@@ -62,7 +57,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         ze_log(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
       }
 
-      ze_log(`Setting library type: ${library_type}`);
       resolved_dep.library_type = library_type;
       resolved_dep.name = remote_name;
       // @ts-expect-error - TS7053: Element implicitly has an any type because expression of type string can't be used to index type RemotesObject | (string | RemotesObject)[]
@@ -71,7 +65,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         // @ts-expect-error - read above
         remotes[remote_name] = createMfRuntimeCode(
           resolved_dep,
-          xpack_delegate_module_template
+          delegate_module_template
         );
         ze_log(`Setting runtime code for remote: ${remotes}`);
       }

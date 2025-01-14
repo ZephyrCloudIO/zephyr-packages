@@ -12,7 +12,7 @@ import { ClientRequestArgs } from 'node:http';
 
 async function fetchWithRetries(
   url: URL,
-  options = {},
+  options: RequestInit = {},
   retries = 3
 ): Promise<Response | undefined> {
   for (let attempt = 1; attempt <= retries; attempt++) {

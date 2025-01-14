@@ -1,6 +1,4 @@
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { Compiler } from '@rspack/core';
-import { setupZephyrConfig as setup } from './set-up-build-id';
 import { log_build_steps } from './set-up-build-stats-logging';
 import { setup_deploy } from './set-up-deploy';
 import { ZephyrEngine } from 'zephyr-agent';

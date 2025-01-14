@@ -1,5 +1,4 @@
 import { type ZeBuildAsset, type ZeUploadAssetsOptions } from 'zephyr-edge-contract';
-import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { uploadFile } from '../http/upload-file';
 import { ZephyrEngine } from '../../zephyr-engine';
 import { white, whiteBright } from '../logging/picocolor';

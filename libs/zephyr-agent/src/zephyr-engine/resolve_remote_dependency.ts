@@ -28,14 +28,13 @@ export async function resolve_remote_dependency({
   );
 
   if (platform) {
-    ze_log('adding build target to resolve dependency:', platform);
     resolveDependency.searchParams.append('build_target', platform);
-    ze_log('URL for resolving dependency:', resolveDependency.toString());
   }
 
   try {
-    const token = await getToken();
+    ze_log('URL for resolving dependency:', resolveDependency.toString());
 
+    const token = await getToken();
     const res = await fetch(resolveDependency, {
       method: 'GET',
       headers: {

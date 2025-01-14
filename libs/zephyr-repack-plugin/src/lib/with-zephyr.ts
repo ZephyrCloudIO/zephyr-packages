@@ -20,10 +20,11 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
-  const zephyr_engine = await ZephyrEngine.create(config.context);
+  const zephyr_engine = await ZephyrEngine.create({
+    builder: 'repack',
+    context: config.context,
+  });
   ze_log('Configuring with Zephyr...');
-
-  zephyr_engine.builder = 'repack';
 
   const target = get_platform_from_repack(config);
   ze_log('Deploy build target: ', target);

@@ -20,9 +20,11 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrWebpackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
-  const zephyr_engine = await ZephyrEngine.create(config.context);
+  const zephyr_engine = await ZephyrEngine.create({
+    builder: 'webpack',
+    context: config.context,
+  });
 
-  zephyr_engine.builder = 'webpack';
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);
   const resolved_dependency_pairs =

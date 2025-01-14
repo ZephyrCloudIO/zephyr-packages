@@ -22,9 +22,10 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrRspackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
-  const zephyr_engine = await ZephyrEngine.create(config.context);
-
-  zephyr_engine.builder = 'rspack';
+  const zephyr_engine = await ZephyrEngine.create({
+    builder: 'rspack',
+    context: config.context,
+  });
 
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);

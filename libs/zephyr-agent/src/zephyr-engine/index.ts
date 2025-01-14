@@ -59,13 +59,24 @@ export function is_zephyr_resolved_dependency(
   return dep !== null;
 }
 
+type ZephyrEngineBuilderTypes =
+  | 'webpack'
+  | 'rspack'
+  | 'repack'
+  | 'vite'
+  | 'rollup'
+  | 'unknown';
+export interface ZephyrEngineOptions {
+  context: string | undefined;
+  builder: ZephyrEngineBuilderTypes;
+}
+
 /**
  * IMPORTANT: do NOT add methods to this class, keep it lean! IMPORTANT: use `await
  * ZephyrEngine.create(context)` to create an instance ZephyrEngine instance represents
  * current state of a build if there are methods - they should call pure functions from
  * ./internal
  */
-
 export class ZephyrEngine {
   // npm and git properties initialized in `create` method
   npmProperties!: ZePackageJson;
@@ -85,7 +96,7 @@ export class ZephyrEngine {
     target: 'ios' | 'android' | 'web';
   } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
-  builder: 'webpack' | 'rspack' | 'repack' | 'vite' | 'rollup' | undefined = 'rspack';
+  builder: ZephyrEngineBuilderTypes;
 
   // resolved dependencies
   federated_dependencies: ZeResolvedDependency[] | null = null;
@@ -97,23 +108,25 @@ export class ZephyrEngine {
   version_url: string | null = null;
 
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
-  private constructor(public context: string) {}
+  private constructor(options: ZephyrEngineOptions) {
+    this.builder = options.builder;
+  }
 
   static defer_create() {
-    let zephyr_defer_create!: (context: string | undefined) => void;
+    let zephyr_defer_create!: (options: ZephyrEngineOptions) => void;
     const zephyr_engine_defer = new Promise<ZephyrEngine>((r) => {
-      zephyr_defer_create = (context: string | undefined) =>
-        r(ZephyrEngine.create(context));
+      zephyr_defer_create = (options: ZephyrEngineOptions) =>
+        r(ZephyrEngine.create(options));
     });
     return { zephyr_engine_defer, zephyr_defer_create };
   }
 
   // todo: extract to a separate fn
-  static async create(context: string | undefined): Promise<ZephyrEngine> {
-    context = context || process.cwd();
+  static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
+    const context = options.context || process.cwd();
 
     ze_log(`Initializing: Zephyr Engine for ${context}...`);
-    const ze = new ZephyrEngine(context);
+    const ze = new ZephyrEngine({ context, builder: options.builder });
 
     ze_log('Initializing: npm package info...');
 

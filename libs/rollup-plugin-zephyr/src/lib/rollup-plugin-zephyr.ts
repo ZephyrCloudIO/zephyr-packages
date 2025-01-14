@@ -17,7 +17,10 @@ export function withZephyr() {
     name: 'with-zephyr',
     buildStart: async (options: InputOptions) => {
       const path_to_execution_dir = getInputFolder(options);
-      zephyr_defer_create(path_to_execution_dir);
+      zephyr_defer_create({
+        builder: 'rollup',
+        context: path_to_execution_dir,
+      });
     },
     writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       const zephyr_engine = await zephyr_engine_defer;

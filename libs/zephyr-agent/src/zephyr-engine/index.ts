@@ -165,6 +165,7 @@ export class ZephyrEngine {
     }
 
     const tasks = deps.map(async (dep) => {
+      if (!dep.name.includes('localhost')) return null;
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
       // Key might be only the app name
       // TODO: how do we handle the case they are coming from different repo? ask user to pass in app_id?

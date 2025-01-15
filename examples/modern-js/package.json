@@ -41,7 +41,6 @@
     "rimraf": "^6.0.1",
     "simple-git-hooks": "^2.11.1",
     "typescript": "~5.0.4",
-    "zephyr-modernjs-plugin": "workspace:*",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-modernjs-plugin": "workspace:*"
   }
 }

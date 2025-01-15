@@ -1,4 +1,4 @@
-export { withZephyr } from './with-zephyr';
+export { withZephyr } from './modernjs-plugin/with-zephyr';
 
 // hacks
 export { onDeploymentDone } from 'zephyr-xpack-internal';

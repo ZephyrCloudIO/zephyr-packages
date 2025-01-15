@@ -10,6 +10,7 @@ export function setupZeDeploy(
   compiler: Compiler
 ): void {
   const { pluginName } = pluginOptions;
+
   compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
     compilation.hooks.processAssets.tapPromise(
       {
@@ -19,6 +20,7 @@ export function setupZeDeploy(
       async (assets) => {
         const stats = compilation.getStats();
         const stats_json = compilation.getStats().toJson();
+        console.log('HELLO ASSETS', JSON.stringify(Object.keys(assets), null, 2));
 
         await pluginOptions.zephyr_engine.start_new_build();
 

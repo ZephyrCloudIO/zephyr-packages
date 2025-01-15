@@ -11,30 +11,26 @@ import {
 const pluginName = 'zephyr-modernjs-plugin';
 
 export function withZephyr(zephyrOptions?: ZephyrPluginOptions): CliPlugin<AppTools> {
+  const isDev = process.env['NODE_ENV'] === 'development';
+
   return {
     name: pluginName,
     post: ['@modern-js/plugin-module-federation-config'],
     setup: async ({ useAppContext }) => {
       const appConfig = useAppContext();
-      const executionDir = appConfig.appDirectory;
-
-      // Initialize ZephyrEngine
-      const zephyrEngine = await ZephyrEngine.create(executionDir);
+      const zephyrEngine = await ZephyrEngine.create(appConfig.appDirectory);
 
       return {
         config: async () => {
-          // Extract and resolve federated dependency pairs
           const dependencyPairs = extractFederatedDependencyPairs(appConfig);
           const resolvedDependencies =
             await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
 
-          // Mutate remotes configuration
           mutWebpackFederatedRemotesConfig(appConfig, resolvedDependencies);
 
           return {
             tools: {
               rspack(config) {
-                // Inject the ZeWebpackPlugin
                 config.plugins?.push(
                   new ZeRspackPlugin({
                     zephyr_engine: zephyrEngine,
@@ -48,31 +44,37 @@ export function withZephyr(zephyrOptions?: ZephyrPluginOptions): CliPlugin<AppTo
         },
       };
     },
-    usePlugins: [zephyrFixPublicPath()],
+    usePlugins: isDev ? [zephyrFixPublicPath()] : [],
   };
 }
 
+/**
+ * Creates a Modern.js CLI plugin that fixes the public path configuration for client-side
+ * builds. This plugin modifies the Rspack configuration to set the publicPath to 'auto'
+ * for non-server builds.
+ *
+ * ! Only required in development mode.
+ *
+ * @remarks
+ *   The plugin is designed to work with Modern.js AppTools and specifically targets Rspack
+ *   configuration. It only modifies the configuration when `isServer` is false.
+ * @returns {CliPlugin<AppTools>} A Modern.js CLI plugin that adjusts the Rspack public
+ *   path configuration
+ */
 function zephyrFixPublicPath(): CliPlugin<AppTools> {
   return {
     name: 'zephyr-publicpath-fix',
     pre: [pluginName],
-    setup: async () => {
-      return {
-        config: async () => {
-          return {
-            tools: {
-              rspack(config, { isServer }) {
-                if (!isServer) {
-                  config.output = {
-                    ...config.output,
-                    publicPath: 'auto',
-                  };
-                }
-              },
-            },
-          };
+    setup: async () => ({
+      config: async () => ({
+        tools: {
+          rspack(config, { isServer }) {
+            if (!isServer) {
+              config.output = { ...config.output, publicPath: 'auto' };
+            }
+          },
         },
-      };
-    },
+      }),
+    }),
   };
 }

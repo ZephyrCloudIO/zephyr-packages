@@ -1,8 +1,7 @@
 import * as process from 'node:process';
 import { Compiler } from 'webpack';
 
-import { webpack_zephyr_agent } from './ze-webpack-upload-agent';
-import { onDeploymentDone } from 'zephyr-xpack-internal';
+import { onDeploymentDone, xpack_zephyr_agent } from 'zephyr-xpack-internal';
 import { ZephyrWebpackInternalPluginOptions } from './ze-webpack-plugin';
 
 export function setupZeDeploy(
@@ -22,7 +21,7 @@ export function setupZeDeploy(
 
         await pluginOptions.zephyr_engine.start_new_build();
 
-        process.nextTick(webpack_zephyr_agent, {
+        process.nextTick(xpack_zephyr_agent, {
           stats,
           stats_json,
           assets,

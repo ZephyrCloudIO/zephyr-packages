@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "zephyr-agent": "0.0.31",
-    "zephyr-edge-contract": "0.0.31",
     "zephyr-xpack-internal": "0.0.31"
   },
   "devDependencies": {

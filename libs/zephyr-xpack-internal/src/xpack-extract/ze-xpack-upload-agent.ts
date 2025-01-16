@@ -1,32 +1,35 @@
-import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
+import { logFn, ze_log, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import {
   type Source,
   type ZephyrBuildStats,
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import { ZephyrRspackInternalPluginOptions } from './ze-rspack-plugin';
-import {
-  buildWebpackAssetMap,
-  emitDeploymentDone,
-  getBuildStats,
-  XStats,
-  XStatsCompilation,
-} from 'zephyr-xpack-internal';
+import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
+import { emitDeploymentDone } from '../lifecycle-events/index';
+import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
 
-export interface ZephyrAgentProps {
+interface UploadAgentPluginOptions {
+  zephyr_engine: ZephyrEngine;
+  wait_for_index_html?: boolean;
+  // federated module config
+  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+}
+
+export interface ZephyrAgentProps<T> {
   stats: XStats;
   stats_json: XStatsCompilation;
-  pluginOptions: ZephyrRspackInternalPluginOptions;
+  pluginOptions: T;
   assets: Record<string, Source>;
 }
 
-export async function rspack_zephyr_agent({
+export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   stats,
   stats_json,
   assets,
   pluginOptions,
-}: ZephyrAgentProps): Promise<void> {
-  ze_log('Initiating: Zephyr Rspack Upload Agent');
+}: ZephyrAgentProps<T>): Promise<void> {
+  ze_log('Initiating: Zephyr Webpack Upload Agent');
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
@@ -35,7 +38,7 @@ export async function rspack_zephyr_agent({
       wait_for_index_html,
     });
 
-    // rspack dash data
+    // webpack dash data
     const { EDGE_URL, PLATFORM } = await zephyr_engine.application_configuration;
 
     const dashData = await getBuildStats({
@@ -60,6 +63,6 @@ export async function rspack_zephyr_agent({
   } finally {
     emitDeploymentDone();
     // todo: log end
-    ze_log('Zephyr Rspack Upload Agent: Done in', Date.now() - zeStart, 'ms');
+    ze_log('Zephyr Webpack Upload Agent: Done in', Date.now() - zeStart, 'ms');
   }
 }

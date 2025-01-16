@@ -2,8 +2,7 @@ import * as process from 'node:process';
 import { Compiler } from '@rspack/core';
 import { ze_log } from 'zephyr-agent';
 import { ZephyrRepackPluginOptions } from './ze-repack-plugin';
-import { repack_zephyr_agent } from './repack_zephyr_agent';
-import { onDeploymentDone } from 'zephyr-xpack-internal';
+import { onDeploymentDone, xpack_zephyr_agent } from 'zephyr-xpack-internal';
 
 export function setup_deploy(
   pluginOptions: ZephyrRepackPluginOptions,
@@ -21,9 +20,9 @@ export function setup_deploy(
         const stats = compilation.getStats();
         const stats_json = compilation.getStats().toJson();
 
-        pluginOptions.zephyr_engine.start_new_build();
+        await pluginOptions.zephyr_engine.start_new_build();
 
-        process.nextTick(repack_zephyr_agent, {
+        process.nextTick(xpack_zephyr_agent, {
           stats,
           stats_json,
           assets,

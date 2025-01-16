@@ -1,8 +1,7 @@
 import { ZephyrEngine } from 'zephyr-agent';
 
 import { setupZeDeploy } from './ze-setup-ze-deploy';
-import { logBuildSteps } from './ze-setup-build-steps-logging';
-import { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import { ModuleFederationPlugin, logBuildSteps } from 'zephyr-xpack-internal';
 import { Compiler } from '@rspack/core';
 
 const pluginName = 'ZeRspackPlugin';
@@ -28,7 +27,7 @@ export class ZeRspackPlugin {
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
 
-    logBuildSteps(this._options, compiler);
+    logBuildSteps<ZephyrRspackInternalPluginOptions, Compiler>(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }
 }

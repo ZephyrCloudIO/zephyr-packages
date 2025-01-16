@@ -1,9 +1,8 @@
 import type { Compiler } from 'webpack';
 import { ZephyrEngine } from 'zephyr-agent';
 
-import { logBuildSteps } from './ze-setup-build-steps-logging';
 import { setupZeDeploy } from './ze-setup-ze-deploy';
-import { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import { ModuleFederationPlugin, logBuildSteps } from 'zephyr-xpack-internal';
 
 const pluginName = 'ZeWebpackPlugin';
 
@@ -28,7 +27,7 @@ export class ZeWebpackPlugin {
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
 
-    logBuildSteps(this._options, compiler);
+    logBuildSteps<ZephyrWebpackInternalPluginOptions, Compiler>(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }
 }

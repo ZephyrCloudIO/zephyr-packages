@@ -1,8 +1,7 @@
 import { Compiler } from '@rspack/core';
-import { log_build_steps } from './set-up-build-stats-logging';
 import { setup_deploy } from './set-up-deploy';
 import { ZephyrEngine } from 'zephyr-agent';
-import { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import { ModuleFederationPlugin, logBuildSteps } from 'zephyr-xpack-internal';
 
 const pluginName = 'ZephyrRepackPlugin';
 
@@ -23,7 +22,7 @@ export class ZeRepackPlugin {
 
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
-    log_build_steps(this._options, compiler);
+    logBuildSteps<ZephyrRepackPluginOptions, Compiler>(this._options, compiler);
     setup_deploy(this._options, compiler);
   }
 }

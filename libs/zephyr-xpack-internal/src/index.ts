@@ -17,3 +17,5 @@ export type {
 } from './xpack.types';
 
 export { getBuildStats } from './federation-dashboard-legacy/get-build-stats';
+
+export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';

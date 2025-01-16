@@ -1,4 +1,8 @@
-import { type ZeBuildAsset, type ZeUploadAssetsOptions } from 'zephyr-edge-contract';
+import {
+  forEachLimit,
+  type ZeBuildAsset,
+  type ZeUploadAssetsOptions,
+} from 'zephyr-edge-contract';
 import { uploadFile } from '../http/upload-file';
 import { ZephyrEngine } from '../../zephyr-engine';
 import { white, whiteBright } from '../logging/picocolor';
@@ -35,7 +39,10 @@ export async function zeUploadAssets(
     ze_log(
       "The target platform is 'ios' and 'android' so we are switching to batch upload."
     );
-    await batchPromises(missingAssets, CLOUDFLARE_BATCH_SIZE, upload_missing_asset);
+    await forEachLimit<void>(
+      missingAssets.map((asset) => () => upload_missing_asset(asset)),
+      CLOUDFLARE_BATCH_SIZE
+    );
   }
 
   logger({
@@ -50,7 +57,7 @@ export async function zeUploadAssets(
 
   return true;
 
-  async function upload_missing_asset(asset: ZeBuildAsset) {
+  async function upload_missing_asset(asset: ZeBuildAsset): Promise<void> {
     const start = Date.now();
     const assetWithBuffer = assetsMap[asset.hash];
     const assetSize = assetWithBuffer?.buffer?.length / 1024;
@@ -70,19 +77,5 @@ export async function zeUploadAssets(
     ze_log(
       `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
     );
-  }
-
-  async function batchPromises<T, R>(
-    items: T[],
-    batchSize: number,
-    fn: (item: T) => Promise<R>
-  ): Promise<R[]> {
-    const results: R[] = [];
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize);
-      const batchResults = await Promise.all(batch.map(fn));
-      results.push(...batchResults);
-    }
-    return results;
   }
 }

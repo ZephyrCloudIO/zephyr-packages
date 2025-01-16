@@ -1,3 +1,5 @@
+export { forEachLimit } from './forEachLimit';
+
 /**
  * ES 2023 Promise.withResolvers() polyfill
  *

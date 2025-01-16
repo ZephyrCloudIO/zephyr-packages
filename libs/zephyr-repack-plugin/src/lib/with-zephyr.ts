@@ -1,5 +1,5 @@
 import { Configuration } from '@rspack/core';
-import { ze_log, ZephyrEngine, verify_mf_fastly_config } from 'zephyr-agent';
+import { ze_log, ZephyrEngine } from 'zephyr-agent';
 
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
 import { get_platform_from_repack } from './utils/get-platform';
@@ -9,6 +9,7 @@ import {
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
+import { verify_mf_fastly_config } from './utils/ze-util-verification';
 
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRepackPluginOptions
@@ -31,7 +32,7 @@ async function _zephyr_configuration(
 
   const dependency_pairs = extractFederatedDependencyPairs(config);
 
-  const resolved_depdency_pairs = await zephyr_engine.resolve_remote_dependencies(
+  const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
     dependency_pairs,
     target
   );
@@ -39,7 +40,7 @@ async function _zephyr_configuration(
   mutWebpackFederatedRemotesConfig(
     zephyr_engine,
     config,
-    resolved_depdency_pairs,
+    resolved_dependency_pairs,
     repack_delegate_module_template
   );
 

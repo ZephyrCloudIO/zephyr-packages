@@ -123,12 +123,13 @@ interface XStatsReason {
 }
 export interface XStats {
   compilation: {
+    name?: string;
+    namedChunks: ReadonlyMap<string, Readonly<XChunk>>;
     options: {
       context?: string;
     };
-    name: string;
-    namedChunks: ReadonlyMap<string, Readonly<XChunk>>;
   };
+  toJson: () => XStatsCompilation;
 }
 
 export interface XStatsCompilation {

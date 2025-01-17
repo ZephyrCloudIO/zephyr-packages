@@ -10,22 +10,6 @@ import {
 } from 'zephyr-edge-contract';
 import { fetchWithRetries } from './fetch-with-retries';
 
-/** Converts ClientRequestArgs to RequestInit */
-// function convertClientRequestArgsToRequestInit(args: ClientRequestArgs): RequestInit {
-//   const { method, headers, timeout, ...rest } = args;
-//   const requestInit: RequestInit = {
-//     method,
-//     headers: headers as Record<string, string>,
-//     ...rest,
-//   };
-//
-//   if (timeout) {
-//     requestInit.signal = AbortSignal.timeout(timeout);
-//   }
-//
-//   return requestInit;
-// }
-
 /** Http request wrapper that returns a tuple with the response data or an error. */
 export type HttpResponse<T> =
   | [ok: true, error: null, data: T]

@@ -11,22 +11,28 @@ import {
 const pluginName = 'zephyr-modernjs-plugin';
 
 export function withZephyr(zephyrOptions?: ZephyrPluginOptions): CliPlugin<AppTools> {
-  const isDev = process.env['NODE_ENV'] === 'development';
-
   return {
     name: pluginName,
     post: ['@modern-js/plugin-module-federation-config'],
-    setup: async ({ useAppContext }) => {
-      const appConfig = useAppContext();
-      const zephyrEngine = await ZephyrEngine.create(appConfig.appDirectory);
+    setup: async ({ useAppContext, useConfigContext, useResolvedConfigContext }) => {
+      const appContext = useAppContext();
+      const appConfig = useResolvedConfigContext();
+
+      const zephyrEngine = await ZephyrEngine.create(appContext.appDirectory);
 
       return {
         config: async () => {
-          const dependencyPairs = extractFederatedDependencyPairs(appConfig);
+          const dependencyPairs = extractFederatedDependencyPairs(appContext);
+          console.log(JSON.stringify(dependencyPairs, null, 2));
           const resolvedDependencies =
             await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
 
-          mutWebpackFederatedRemotesConfig(appConfig, resolvedDependencies);
+          console.log(JSON.stringify(resolvedDependencies, null, 2));
+          mutWebpackFederatedRemotesConfig(appContext, resolvedDependencies);
+
+          const mfConfig = makeCopyOfModuleFederationOptions(appContext);
+
+          console.log(JSON.stringify(mfConfig, null, 2));
 
           return {
             tools: {
@@ -34,7 +40,7 @@ export function withZephyr(zephyrOptions?: ZephyrPluginOptions): CliPlugin<AppTo
                 config.plugins?.push(
                   new ZeRspackPlugin({
                     zephyr_engine: zephyrEngine,
-                    mfConfig: makeCopyOfModuleFederationOptions(appConfig),
+                    mfConfig: mfConfig,
                     wait_for_index_html: zephyrOptions?.wait_for_index_html,
                   })
                 );
@@ -44,23 +50,10 @@ export function withZephyr(zephyrOptions?: ZephyrPluginOptions): CliPlugin<AppTo
         },
       };
     },
-    usePlugins: isDev ? [zephyrFixPublicPath()] : [],
+    usePlugins: [zephyrFixPublicPath()],
   };
 }
 
-/**
- * Creates a Modern.js CLI plugin that fixes the public path configuration for client-side
- * builds. This plugin modifies the Rspack configuration to set the publicPath to 'auto'
- * for non-server builds.
- *
- * ! Only required in development mode.
- *
- * @remarks
- *   The plugin is designed to work with Modern.js AppTools and specifically targets Rspack
- *   configuration. It only modifies the configuration when `isServer` is false.
- * @returns {CliPlugin<AppTools>} A Modern.js CLI plugin that adjusts the Rspack public
- *   path configuration
- */
 function zephyrFixPublicPath(): CliPlugin<AppTools> {
   return {
     name: 'zephyr-publicpath-fix',

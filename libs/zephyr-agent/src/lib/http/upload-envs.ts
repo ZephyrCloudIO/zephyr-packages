@@ -1,4 +1,3 @@
-import type { ClientRequestArgs } from 'node:http';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { LogEvent } from '../logging/ze-log-event';
 import { ZeUploadBuildStats } from 'zephyr-edge-contract';
@@ -23,10 +22,10 @@ export async function uploadEnvs({
 
   const json = JSON.stringify(body);
 
-  const options: ClientRequestArgs = {
+  const options: RequestInit = {
     method: 'POST',
     headers: {
-      'Content-Length': Buffer.byteLength(json),
+      'Content-Length': Buffer.byteLength(json).toString(),
       'Content-Type': 'application/json; charset=utf-8',
       can_write_jwt: jwt,
     },

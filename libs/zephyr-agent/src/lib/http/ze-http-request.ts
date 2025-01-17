@@ -8,53 +8,23 @@ import {
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
-import { ClientRequestArgs } from 'node:http';
-
-async function fetchWithRetries(
-  url: URL,
-  options: RequestInit = {},
-  retries = 3
-): Promise<Response | undefined> {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response;
-    } catch (err) {
-      const error = err as any;
-      if (attempt === retries) {
-        ze_log('Max retries reached. Request failed:', error.message);
-        throw err;
-      }
-      if (error.code === 'EPIPE' || error.message.includes('network')) {
-        ze_log(`Attempt ${attempt} failed due to network issue, retrying...`);
-      } else {
-        ze_log(`Attempt ${attempt} failed with error:`, error.message);
-        throw error;
-      }
-    }
-  }
-
-  throw new Error('Network error: Max retries reached');
-}
+import { fetchWithRetries } from './fetch-with-retries';
 
 /** Converts ClientRequestArgs to RequestInit */
-function convertClientRequestArgsToRequestInit(args: ClientRequestArgs): RequestInit {
-  const { method, headers, timeout, ...rest } = args;
-  const requestInit: RequestInit = {
-    method,
-    headers: headers as Record<string, string>,
-    ...rest,
-  };
-
-  if (timeout) {
-    requestInit.signal = AbortSignal.timeout(timeout);
-  }
-
-  return requestInit;
-}
+// function convertClientRequestArgsToRequestInit(args: ClientRequestArgs): RequestInit {
+//   const { method, headers, timeout, ...rest } = args;
+//   const requestInit: RequestInit = {
+//     method,
+//     headers: headers as Record<string, string>,
+//     ...rest,
+//   };
+//
+//   if (timeout) {
+//     requestInit.signal = AbortSignal.timeout(timeout);
+//   }
+//
+//   return requestInit;
+// }
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
 export type HttpResponse<T> =
@@ -92,13 +62,12 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
   /** Creates a new http request. */
   static from<T = void>(
     urlStr: UrlString,
-    options: ClientRequestArgs = {},
+    options: RequestInit = {},
     data?: string | Buffer
   ): ZeHttpRequest<T> {
     const req = new ZeHttpRequest<T>();
     req.#data = data;
-    // todo: convert incoming typings to RequestInit
-    req.#options = convertClientRequestArgsToRequestInit(options);
+    req.#options = options;
 
     // Parse the url into a URL object
     if (typeof urlStr === 'string') {

@@ -10,49 +10,45 @@ import {
 
 const pluginName = 'zephyr-modernjs-plugin';
 
-export function withZephyr(zephyrOptions?: ZephyrPluginOptions): CliPlugin<AppTools> {
-  return {
-    name: pluginName,
-    post: ['@modern-js/plugin-module-federation-config'],
-    setup: async ({ useAppContext, useConfigContext, useResolvedConfigContext }) => {
-      const appContext = useAppContext();
-      const appConfig = useResolvedConfigContext();
+export const withZephyr = (
+  zephyrOptions?: ZephyrPluginOptions
+): CliPlugin<AppTools<'rspack'>> => ({
+  name: pluginName,
+  post: ['@modern-js/plugin-module-federation-config'],
 
-      const zephyrEngine = await ZephyrEngine.create(appContext.appDirectory);
+  setup: async ({ useAppContext }) => {
+    const appContext = useAppContext();
 
-      return {
-        config: async () => {
-          const dependencyPairs = extractFederatedDependencyPairs(appContext);
-          console.log(JSON.stringify(dependencyPairs, null, 2));
+    const zephyrEngine = await ZephyrEngine.create(appContext.appDirectory);
+
+    return {
+      beforeBuild: async ({ bundlerConfigs }) => {
+        if (bundlerConfigs) {
+          const dependencyPairs = extractFederatedDependencyPairs(bundlerConfigs[0]);
+          console.log('dependency pairs', JSON.stringify(dependencyPairs, null, 3));
+
           const resolvedDependencies =
             await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
+          console.log('resolvedDeps', JSON.stringify(resolvedDependencies, null, 2));
 
-          console.log(JSON.stringify(resolvedDependencies, null, 2));
           mutWebpackFederatedRemotesConfig(appContext, resolvedDependencies);
 
-          const mfConfig = makeCopyOfModuleFederationOptions(appContext);
+          const mfConfig = makeCopyOfModuleFederationOptions(bundlerConfigs[0]);
 
-          console.log(JSON.stringify(mfConfig, null, 2));
+          bundlerConfigs[0].plugins?.push(
+            new ZeRspackPlugin({
+              zephyr_engine: zephyrEngine,
+              mfConfig: mfConfig,
+              wait_for_index_html: zephyrOptions?.wait_for_index_html,
+            })
+          );
+        }
+      },
+    };
+  },
 
-          return {
-            tools: {
-              rspack(config) {
-                config.plugins?.push(
-                  new ZeRspackPlugin({
-                    zephyr_engine: zephyrEngine,
-                    mfConfig: mfConfig,
-                    wait_for_index_html: zephyrOptions?.wait_for_index_html,
-                  })
-                );
-              },
-            },
-          };
-        },
-      };
-    },
-    usePlugins: [zephyrFixPublicPath()],
-  };
-}
+  usePlugins: [zephyrFixPublicPath()],
+});
 
 function zephyrFixPublicPath(): CliPlugin<AppTools> {
   return {

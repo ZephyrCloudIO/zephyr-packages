@@ -1,6 +1,7 @@
 {
-  "name": "remote-app",
+  "name": "modern-remote-app",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "reset": "npx rimraf node_modules ./**/node_modules",
     "dev": "modern dev",

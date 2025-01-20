@@ -1,9 +1,9 @@
 import { createModuleFederationConfig } from '@module-federation/modern-js';
 
 export default createModuleFederationConfig({
-  name: 'host',
+  name: 'modern-host-app',
   remotes: {
-    'remote-app': 'remote-app@http://localhost:3051/mf-manifest.json',
+    'modern-remote-app': 'modern-remote-app@http://localhost:3051/mf-manifest.json',
   },
   shared: {
     react: { singleton: true },

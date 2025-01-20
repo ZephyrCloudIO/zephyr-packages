@@ -9,6 +9,7 @@
     "serve": "modern serve",
     "new": "modern new",
     "lint": "biome check",
+    "format": "biome format",
     "prepare": "simple-git-hooks",
     "upgrade": "modern upgrade"
   },

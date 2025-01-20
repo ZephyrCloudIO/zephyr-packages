@@ -115,7 +115,7 @@
 import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { AppTools, CliPlugin } from '@modern-js/app-tools';
 import { ZeRspackPlugin } from './ze-rspack-plugin';
-import { ZephyrEngine } from 'zephyr-agent';
+import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -143,36 +143,38 @@ export const withZephyr = (
       outDir: appContext.distDirectory,
       publicDir: path.resolve(appContext.appDirectory, 'static'),
     };
-    let mfConfig: any = null;
+
+    let mfConfig: any;
 
     const { zephyr_defer_create, zephyr_engine_defer } = ZephyrEngine.defer_create();
     // const zephyrEngine = await ZephyrEngine.create(appContext.appDirectory);
     zephyr_defer_create(appContext.appDirectory);
+    const zephyr_engine = await zephyr_engine_defer;
+
     return {
       beforeBuild: async ({ bundlerConfigs }) => {
         if (!bundlerConfigs || bundlerConfigs.length === 0) {
           console.warn('No bundler configurations found');
           return;
         }
-
-
-
-
-        const zephyr_engine = await zephyr_engine_defer;
         const currentBundle = bundlerConfigs[0];
 
         const dependencyPairs = extractFederatedDependencyPairs(currentBundle);
+
         const resolvedDependencies =
           await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
         mutWebpackFederatedRemotesConfig(currentBundle, resolvedDependencies);
         mfConfig = makeCopyOfModuleFederationOptions(currentBundle);
 
-        console.log('Finished');
-      },
-      afterBuild: async ({ stats }) => {
-        console.log('stats', JSON.stringify(stats, null, 2));
-        console.log('TEST TEST');
+        // TODO: This doesn't work, for some reason I cannot understand.
+        currentBundle.plugins?.push(
+          new ZeRspackPlugin({
+            zephyr_engine: zephyr_engine,
+            mfConfig: mfConfig,
+            wait_for_index_html: zephyrOptions?.wait_for_index_html,
+          })
+        );
       },
     };
   },

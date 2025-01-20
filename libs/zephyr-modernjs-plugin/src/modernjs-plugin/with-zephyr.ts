@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { AppTools, CliPlugin } from '@modern-js/app-tools';
 import { ZeRspackPlugin } from './ze-rspack-plugin';
@@ -9,6 +10,7 @@ import {
 } from 'zephyr-xpack-internal';
 import { ZephyrInternalOptions } from '../type/zephyr-internal-types';
 import * as path from 'path';
+import { buffer } from 'node:stream/consumers';
 
 const pluginName = 'zephyr-modernjs-plugin';
 
@@ -53,14 +55,40 @@ export const withZephyr = (
         mutWebpackFederatedRemotesConfig(currentBundle, resolvedDependencies);
         mfConfig = makeCopyOfModuleFederationOptions(currentBundle);
 
-        // TODO: This doesn't work, for some reason I cannot understand.
-        currentBundle.plugins?.push(
-          new ZeRspackPlugin({
-            zephyr_engine: zephyr_engine,
-            mfConfig: mfConfig,
-            wait_for_index_html: zephyrOptions?.wait_for_index_html,
-          })
-        );
+        // currentBundle.plugins?.push(
+        //   new ZeRspackPlugin({
+        //     zephyr_engine: zephyr_engine,
+        //     mfConfig: mfConfig,
+        //     wait_for_index_html: zephyrOptions?.wait_for_index_html,
+        //   })
+        // );
+      },
+      afterBuild: async ({ stats }) => {
+        // path: string;
+        // extname: string;
+        // hash: string;
+        // size: number;
+        // buffer: Buffer | string;
+
+        // TODO: upload assets
+        console.log('afterBuild', stats?.toJson(0).assets);
+
+        // const assetsMap = t.stats?.toJson(0)['map']((asset: any) => ({
+        //   path: asset.path,
+        //   extname: asset.extname,
+        //   hash: asset.hash,
+        //   size: asset.size,
+        //   buffer: asset.buffer,
+        // }));
+
+        // console.log(assetsMap);
+
+        await zephyr_engine.start_new_build();
+        // await zephyr_engine.upload_assets({
+        //   assetsMap: t.stats?.toJson(0),
+        //   buildStats: await zeBuildDashData(zephyr_engine),
+        // });
+        await zephyr_engine.build_finished();
       },
     };
   },

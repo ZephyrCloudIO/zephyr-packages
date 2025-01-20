@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-import acorn from 'acorn';
-import * as walk from 'acorn-walk';
+// import acorn from 'acorn';
+//import * as walk from 'acorn-walk';
 
 const targetFile = 'module-federation.config.ts'
 const potentialFiles = 'module-federation'

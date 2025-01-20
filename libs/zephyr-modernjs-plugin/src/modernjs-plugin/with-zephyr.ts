@@ -147,7 +147,7 @@ export const withZephyr = (
 
     const { zephyr_defer_create, zephyr_engine_defer } = ZephyrEngine.defer_create();
     // const zephyrEngine = await ZephyrEngine.create(appContext.appDirectory);
-
+    zephyr_defer_create(appContext.appDirectory);
     return {
       beforeBuild: async ({ bundlerConfigs }) => {
         if (!bundlerConfigs || bundlerConfigs.length === 0) {
@@ -155,9 +155,10 @@ export const withZephyr = (
           return;
         }
 
-        const zephyr_engine = await zephyr_engine_defer;
-        zephyr_defer_create(appContext.appDirectory);
 
+
+
+        const zephyr_engine = await zephyr_engine_defer;
         const currentBundle = bundlerConfigs[0];
 
         const dependencyPairs = extractFederatedDependencyPairs(currentBundle);

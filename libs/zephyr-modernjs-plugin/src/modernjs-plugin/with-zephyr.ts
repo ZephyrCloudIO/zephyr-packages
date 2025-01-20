@@ -155,13 +155,14 @@ export const withZephyr = (
           return;
         }
 
-        const zephyrEngine = await zephyr_engine_defer;
+        const zephyr_engine = await zephyr_engine_defer;
+        zephyr_defer_create(appContext.appDirectory);
 
         const currentBundle = bundlerConfigs[0];
 
         const dependencyPairs = extractFederatedDependencyPairs(currentBundle);
         const resolvedDependencies =
-          await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
+          await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
         mutWebpackFederatedRemotesConfig(currentBundle, resolvedDependencies);
         mfConfig = makeCopyOfModuleFederationOptions(currentBundle);

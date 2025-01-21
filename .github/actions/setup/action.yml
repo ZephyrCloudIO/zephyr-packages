@@ -28,19 +28,10 @@ runs:
       run: |
         echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
     - uses: actions/cache@v3
-      name: Cache pnpm store
       with:
-        path: |
-          ${{ env.STORE_PATH }}
-          node_modules/.cache
-          ~/.cache/Cypress
-          .nx/cache
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/package.json') }}
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}-
           ${{ runner.os }}-pnpm-store-
-    - name: Install dependencies
+    - run: pnpm install --prefer-offline
       shell: bash
-      run: |
-        pnpm config set store-dir ${{ env.STORE_PATH }}
-        pnpm install --prefer-offline --frozen-lockfile

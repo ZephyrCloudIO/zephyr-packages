@@ -21,7 +21,3 @@ jobs:
           node-version: ${{ inputs.node-version }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true

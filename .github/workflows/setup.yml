@@ -14,6 +14,8 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v2
         with:
           version: 8

@@ -5,10 +5,11 @@ inputs:
   os:
     required: true
     description: 'Operating system'
+    default: ubuntu-latest
   node-version:
     required: true
     description: 'Node.js version'
-    default: '21.x'
+    default: 21
 
 runs:
   using: 'composite'

@@ -10,9 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-        with:
-          os: ubuntu-latest
-          node-version: 20
       - name: Build packages
         run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Patch versions

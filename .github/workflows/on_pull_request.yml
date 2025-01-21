@@ -18,9 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-        with:
-          os: ubuntu-latest
-          node-version: 20
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
@@ -32,9 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-        with:
-          os: ubuntu-latest
-          node-version: 20
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
@@ -52,7 +46,6 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-          node-version: 20
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master

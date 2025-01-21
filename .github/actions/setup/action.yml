@@ -8,6 +8,7 @@ inputs:
   node-version:
     required: true
     description: 'Node.js version'
+    default: '21.x'
 
 runs:
   using: 'composite'

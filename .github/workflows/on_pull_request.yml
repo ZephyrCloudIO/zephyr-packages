@@ -27,6 +27,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node.js and PNPM
+        uses: ./.github/workflows/setup.yml
+        with:
+          os: ubuntu-latest
+          node-version: 20
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
@@ -38,6 +43,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node.js and PNPM
+        uses: ./.github/workflows/setup.yml
+        with:
+          os: ubuntu-latest
+          node-version: 20
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master

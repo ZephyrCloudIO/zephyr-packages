@@ -17,6 +17,11 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node.js and PNPM
+        uses: ./.github/workflows/setup.yml
+        with:
+          os: ubuntu-latest
+          node-version: 20
       - name: Build packages
         run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Release libraries

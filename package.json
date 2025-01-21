@@ -104,5 +104,10 @@
     "react-dom": "18.3.1",
     "react-router-dom": "6.11.2",
     "tslib": "^2.6.2"
-  }
+  },
+  "engines": {
+    "node": ">=21.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.9.0"
 }

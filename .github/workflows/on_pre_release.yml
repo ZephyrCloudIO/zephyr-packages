@@ -4,21 +4,13 @@ on:
     types: [prereleased]
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yml
-    with:
-      os: ubuntu-latest
-      node-version: 20
-
   publish:
-    needs: setup
     runs-on: ubuntu-latest
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js and PNPM
-        uses: ./.github/workflows/setup.yml
+      - uses: ./.github/actions/setup
         with:
           os: ubuntu-latest
           node-version: 20

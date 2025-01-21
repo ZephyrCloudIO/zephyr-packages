@@ -13,22 +13,11 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  setup:
-    uses: ./.github/workflows/setup.yml
-    with:
-      os: ${{ matrix.os }}
-      node-version: 20
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
   build:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js and PNPM
-        uses: ./.github/workflows/setup.yml
+      - uses: ./.github/actions/setup
         with:
           os: ubuntu-latest
           node-version: 20
@@ -39,12 +28,10 @@ jobs:
         run: pnpm build-all --exclude="examples/**" && exit 0
 
   lint:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js and PNPM
-        uses: ./.github/workflows/setup.yml
+      - uses: ./.github/actions/setup
         with:
           os: ubuntu-latest
           node-version: 20
@@ -55,7 +42,6 @@ jobs:
         run: pnpm dlx nx affected -t lint
 
   test:
-    needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -63,6 +49,10 @@ jobs:
     environment: development
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os }}
+          node-version: 20
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master

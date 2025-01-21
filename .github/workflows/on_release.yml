@@ -1,45 +1,23 @@
 name: On Release
 on:
   release:
-    types:
-      - released
-
-env:
-  NODE_VERSION: 20
+    types: [released]
 
 jobs:
-  deps:
-    name: Install Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
+  setup:
+    uses: ./.github/workflows/setup.yml
+    with:
+      os: ubuntu-latest
+      node-version: 20
 
-  libs:
-    name: Release Libraries
+  publish:
+    needs: setup
     runs-on: ubuntu-latest
-    needs: deps
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
-      - name: Release libraries - next as latest
+      - name: Build packages
+        run: pnpm dlx nx run-many -t build --projects="libs/*"
+      - name: Release libraries
         run: pnpm dlx nx run-many -t release --projects="libs/*"

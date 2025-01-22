@@ -1,4 +1,4 @@
-import { ZephyrBuildStats, type ConvertedGraph } from 'zephyr-edge-contract';
+import { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
@@ -59,7 +59,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
 
-  const { name, filename, remotes } = (mfConfig || {}) as Record<string, string>;
+  const { name, filename, remotes } = mfConfig?._options || mfConfig?.config || {};
 
   const data_overrides = {
     id: application_uid,

@@ -9,7 +9,7 @@ inputs:
   node-version:
     required: true
     description: 'Node.js version'
-    default: 21
+    default: '21'
 
 runs:
   using: 'composite'
@@ -23,6 +23,7 @@ runs:
         node-version: ${{ inputs.node-version }}
         cache: 'pnpm'
         cache-dependency-path: '**/pnpm-lock.yaml'
+        registry-url: 'https://registry.npmjs.org'
     - name: Get pnpm store directory
       shell: bash
       run: |

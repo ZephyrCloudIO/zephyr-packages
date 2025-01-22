@@ -127,6 +127,7 @@ runner('ZeAgent', () => {
         `DEBUG=zephyr:*`,
       ];
       const cmd = [
+        'npx cross-env',
         ...envs,
         `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
       ].join(' ');

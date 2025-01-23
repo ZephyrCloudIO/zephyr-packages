@@ -1,26 +1,34 @@
-# Zephyr: We made application federation easy
+# Zephyr ModernJS: We made application federation easy
 
-readme too be released
+### How to use?
 
-how to use?
+The plugin requires the following configuration to work:
 
-with Nx, Webpack or Rspack
+- Output
+- HTML
+- Source
 
-```
-export default composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(mfConfig),
-  withZephyr(),
-  (config) => {
-    return config;
-  }
-);
-```
-
-or
-
-```
-module.exports = withZephyr()(your_webpack_config);
-
+```ts
+export default defineConfig({
+  output: {
+    distPath: {
+      html: './',
+    },
+  },
+  html: {
+    outputStructure: 'flat',
+  },
+  source: {
+    mainEntryName: 'index',
+  },
+  runtime: {
+    router: true,
+  },
+  plugins: [
+    appTools({
+      bundler: 'rspack', // Set to 'webpack' to enable webpack
+    }),
+    withZephyr(), // Last
+  ],
+});
 ```

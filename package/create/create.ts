@@ -4,19 +4,29 @@ import create_web from "./create-web"
 import create_react_native from "./create-react-native"
 import { TEMPLATES } from "../utils/constants";
 import { cancel, log } from "@clack/prompts";
+import { bgRed, black } from "picocolors";
+import install from "../utils/install";
 
 
 export default async function create(options: CLIOptions) {
     let web_options = {} as WebCreationOptions
     let react_native_options = {} as ReactNativeCreationOptions
 
-    if (!options.templates) {
-        log.error('Templates are required')
-        cancel('Operation cancelled. Run the command again and select a template.')
+    if (!options.path) {
+        log.error(bgRed(black('Error:')))
+        console.error('Path is required')
+        cancel('Operation cancelled.')
         process.exit(0)
     }
 
     if (options.type === 'web') {
+
+        if (!options.templates) {
+            log.error('Templates are required')
+            cancel('Operation cancelled. Run the command again and select a template.')
+            process.exit(0)
+        }
+
         Object.assign(web_options, {
             path: options.path,
             template: options.templates,
@@ -27,24 +37,16 @@ export default async function create(options: CLIOptions) {
 
     } else if (options.type === 'react-native') {
 
-        if (!options.host_name) {
-            log.error('Host name is required')
-            cancel('Operation cancelled.')
-            process.exit(0)
-        }
-
-        if (!options.remote_names) {
-            log.error('Remote names are required')
-            cancel('Operation cancelled.')
-            process.exit(0)
-        }
 
         Object.assign(react_native_options, {
             path: options.path,
-            host_name: options.host_name,
-            remote_names: options.remote_names
+            //host_name: options.host_name,
+            //remote_names: options.remote_names
         })
 
         create_react_native(react_native_options)
     }
+
+
+    install({ project: options })
 }

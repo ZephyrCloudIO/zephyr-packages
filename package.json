@@ -2,19 +2,12 @@
   "name": "create-zephyr-apps",
   "module": "./src/index.ts",
   "type": "module",
-  "devDependencies": {
-    "@types/degit": "^2.8.6",
-    "@types/node": "^22.10.7",
-    "jiti": "^2.4.2",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch"
   },
   "bin": {
-    "create-zephyr-apps": "./src/index.ts"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+    "create-zephyr-apps": "./dist/index.mjs"
   },
   "dependencies": {
     "@clack/core": "^0.4.1",
@@ -24,6 +17,18 @@
     "degit": "^2.8.4",
     "picocolors": "^1.1.1",
     "vite": "^6.0.11"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.3.2",
+    "@types/degit": "^2.8.6",
+    "@types/node": "^22.10.7",
+    "jiti": "^2.4.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   },
   "packageManager": "pnpm@9.15.0"
 }

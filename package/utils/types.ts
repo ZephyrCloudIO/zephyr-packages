@@ -17,8 +17,8 @@ export interface WebCreationOptions {
 
 export interface ReactNativeCreationOptions {
   path: string;
-  host_name: string;
-  remote_names: string[];
+  // host_name: string;
+  //  remote_names: string[];
 }
 
 export interface CLIOptions {
@@ -26,7 +26,7 @@ export interface CLIOptions {
   type: 'web' | 'react-native';
   /** At the moment, if users opt for  web they will only be asked for a template without host name and remote_name */
   templates: string | undefined;
-  host_name: string | undefined;
-  remote_names: string[] | undefined;
+  //host_name: string | undefined;
+  //remote_names: string[] | undefined;
   install: boolean;
 }

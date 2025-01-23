@@ -1,12 +1,12 @@
 import * as process from 'node:process';
 
-import { rspack_zephyr_agent } from './ze-rspack-upload-agent';
-import { ZephyrRspackInternalPluginOptions } from './ze-rspack-plugin';
+import { modernjs_zephyr_agent } from './ze-modernjs-upload-agent';
+import { ZephyrModernjsInternalPluginOptions } from './ze-modernjs-plugin';
 import { Compiler } from '@rspack/core';
 import { onDeploymentDone } from 'zephyr-xpack-internal';
 
 export function setupZeDeploy(
-  pluginOptions: ZephyrRspackInternalPluginOptions,
+  pluginOptions: ZephyrModernjsInternalPluginOptions,
   compiler: Compiler
 ): void {
   const { pluginName } = pluginOptions;
@@ -23,7 +23,7 @@ export function setupZeDeploy(
 
         await pluginOptions.zephyr_engine.start_new_build();
 
-        process.nextTick(rspack_zephyr_agent, {
+        process.nextTick(modernjs_zephyr_agent, {
           stats,
           stats_json,
           assets,

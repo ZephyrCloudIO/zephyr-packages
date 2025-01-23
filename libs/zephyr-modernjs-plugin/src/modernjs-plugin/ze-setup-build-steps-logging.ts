@@ -1,9 +1,9 @@
 import { Compiler } from '@rspack/core';
-import { ZephyrRspackInternalPluginOptions } from './ze-rspack-plugin';
+import { ZephyrModernjsInternalPluginOptions } from './ze-modernjs-plugin';
 import { ze_log, ZephyrError } from 'zephyr-agent';
 
 export function logBuildSteps(
-  pluginOptions: ZephyrRspackInternalPluginOptions,
+  pluginOptions: ZephyrModernjsInternalPluginOptions,
   compiler: Compiler
 ): { buildStartedAt: number } {
   const { pluginName } = pluginOptions;

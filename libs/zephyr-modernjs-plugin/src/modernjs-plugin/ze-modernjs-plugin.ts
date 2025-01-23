@@ -7,7 +7,7 @@ import { Compiler } from '@rspack/core';
 
 const pluginName = 'ZeRspackPlugin';
 
-export interface ZephyrRspackInternalPluginOptions {
+export interface ZephyrModernjsInternalPluginOptions {
   zephyr_engine: ZephyrEngine;
   // rspack plugin name
   pluginName: string;
@@ -18,10 +18,10 @@ export interface ZephyrRspackInternalPluginOptions {
   // outputPath?: string;
 }
 
-export class ZeRspackPlugin {
-  _options: ZephyrRspackInternalPluginOptions;
+export class ZeModernjsPlugin {
+  _options: ZephyrModernjsInternalPluginOptions;
 
-  constructor(options: Omit<ZephyrRspackInternalPluginOptions, 'pluginName'>) {
+  constructor(options: Omit<ZephyrModernjsInternalPluginOptions, 'pluginName'>) {
     this._options = Object.assign({ pluginName }, options);
   }
 

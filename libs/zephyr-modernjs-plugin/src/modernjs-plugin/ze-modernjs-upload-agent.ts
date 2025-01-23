@@ -5,7 +5,7 @@ import {
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { Stats, StatsCompilation } from '@rspack/core';
-import { ZephyrRspackInternalPluginOptions } from './ze-rspack-plugin';
+import { ZephyrModernjsInternalPluginOptions } from './ze-modernjs-plugin';
 import {
   buildWebpackAssetMap,
   emitDeploymentDone,
@@ -15,17 +15,17 @@ import {
 export interface ZephyrAgentProps {
   stats: Stats;
   stats_json: StatsCompilation;
-  pluginOptions: ZephyrRspackInternalPluginOptions;
+  pluginOptions: ZephyrModernjsInternalPluginOptions;
   assets: Record<string, Source>;
 }
 
-export async function rspack_zephyr_agent({
+export async function modernjs_zephyr_agent({
   stats,
   stats_json,
   assets,
   pluginOptions,
 }: ZephyrAgentProps): Promise<void> {
-  ze_log('Initiating: Zephyr Rspack Upload Agent');
+  ze_log('Initiating: Zephyr Modernjs Upload Agent');
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;

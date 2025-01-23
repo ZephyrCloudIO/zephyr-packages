@@ -1,6 +1,6 @@
 import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { AppTools, CliPlugin } from '@modern-js/app-tools';
-import { ZeRspackPlugin } from './ze-rspack-plugin';
+import { ZeModernjsPlugin } from './ze-modernjs-plugin';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -34,9 +34,19 @@ export const withZephyr = (
 
         return {
           tools: {
+            webpack(config) {
+              config.plugins?.push(
+                // @ts-expect-error Probably should change for Webpack ?
+                new ZeModernjsPlugin({
+                  zephyr_engine: zephyrEngine,
+                  mfConfig,
+                  wait_for_index_html: zephyrOptions?.wait_for_index_html,
+                })
+              );
+            },
             rspack(config) {
               config.plugins?.push(
-                new ZeRspackPlugin({
+                new ZeModernjsPlugin({
                   zephyr_engine: zephyrEngine,
                   mfConfig,
                   wait_for_index_html: zephyrOptions?.wait_for_index_html,

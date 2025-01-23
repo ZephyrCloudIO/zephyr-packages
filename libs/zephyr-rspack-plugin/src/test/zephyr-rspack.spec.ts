@@ -21,18 +21,8 @@ import {
   getSecretToken,
 } from 'zephyr-agent';
 
-// Mock secret token and CI status for deployment simulation
-jest.mock('zephyr-agent', () => {
-  const defaultExport = jest.requireActual('zephyr-agent');
-  return {
-    ...defaultExport,
-    hasSecretToken: jest.fn().mockReturnValue(false),
-  };
-});
-
 jest.mock('is-ci', () => false);
 
-// Skip tests if not in preview mode
 const runner = describe;
 
 const exec = promisify(execCB);
@@ -116,92 +106,87 @@ runner('Rspack Plugin', () => {
     });
   });
 
-  // describe('Plugin Tests', () => {
-  //   it('should properly transform rspack configuration', async () => {
-  //     const baseConfig: RspackConfiguration = {
-  //       context: packageJsonPath,
-  //       output: {
-  //         path: path.join(packageJsonPath, 'dist'),
-  //       },
-  //       plugins: [],
-  //     };
+  describe('Plugin Tests', () => {
+    it('should properly transform rspack configuration', async () => {
+      const baseConfig: RspackConfiguration = {
+        context: packageJsonPath,
+        output: {
+          path: path.join(packageJsonPath, 'dist'),
+        },
+        plugins: [],
+      };
 
-  //     const transformedConfig = await withZephyr()(baseConfig);
+      const transformedConfig = await withZephyr()(baseConfig);
 
-  //     // Verify plugin was added
-  //     const zePlugin = transformedConfig.plugins?.find(
-  //       (plugin) => plugin instanceof ZeRspackPlugin
-  //     );
-  //     expect(zePlugin).toBeTruthy();
-  //   });
+      // Verify plugin was added
+      const zePlugin = transformedConfig.plugins?.find(
+        (plugin) => plugin instanceof ZeRspackPlugin
+      );
+      expect(zePlugin).toBeTruthy();
+    });
 
-  //   it('should respect wait_for_index_html option', async () => {
-  //     const baseConfig: RspackConfiguration = {
-  //       context: packageJsonPath,
-  //       output: {
-  //         path: path.join(packageJsonPath, 'dist'),
-  //       },
-  //       plugins: [],
-  //     };
+    it('should respect wait_for_index_html option', async () => {
+      const baseConfig: RspackConfiguration = {
+        context: packageJsonPath,
+        output: {
+          path: path.join(packageJsonPath, 'dist'),
+        },
+        plugins: [],
+      };
 
-  //     const transformedConfig = await withZephyr({ wait_for_index_html: true })(
-  //       baseConfig
-  //     );
+      const transformedConfig = await withZephyr({ wait_for_index_html: true })(
+        baseConfig
+      );
 
-  //     const zePlugin = transformedConfig.plugins?.find(
-  //       (plugin) => plugin instanceof ZeRspackPlugin
-  //     ) as ZeRspackPlugin;
+      const zePlugin = transformedConfig.plugins?.find(
+        (plugin) => plugin instanceof ZeRspackPlugin
+      ) as ZeRspackPlugin;
 
-  //     expect(zePlugin['_options'].wait_for_index_html).toBe(true);
-  //   });
-  // });
+      expect(zePlugin['_options'].wait_for_index_html).toBe(true);
+    });
+  });
 
-  // describe('Deployment Tests', () => {
-  //   it('should verify appConfig', async () => {
-  //     const savedConfig = await getAppConfig(application_uid);
+  describe('Deployment Tests', () => {
+    it('should verify appConfig', async () => {
+      const savedConfig = await getAppConfig(application_uid);
+      expect(savedConfig?.email).toEqual(gitEmail);
+      expect(savedConfig?.username).toEqual(gitUserName);
+      expect(savedConfig?.user_uuid).toEqual(user_uuid);
+    });
 
-  //     expect(savedConfig?.email).toEqual(gitEmail);
-  //     expect(savedConfig?.username).toEqual(gitUserName);
-  //     expect(savedConfig?.user_uuid).toEqual(user_uuid);
-  //   });
-
-  //   it(
-  //     'should successfully deploy rspack application to Zephyr',
-  //     async () => {
-  //       const envs = [
-  //         `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
-  //         `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
-  //         `ZE_API_GATE=${dev_api_gate_url}`,
-  //         `ZE_SECRET_TOKEN=${getSecretToken()}`,
-  //         `DEBUG=zephyr:*`,
-  //       ];
-
-  //       // Execute rspack build command
-  //       const cmd = [
-  //         ...envs,
-  //         `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
-  //       ].join(' ');
-  //       await exec(cmd);
-
-  //       // Verify deployment
-  //       const deployResultUrls = await _getAppTagUrls(application_uid);
-  //       expect(deployResultUrls).toBeTruthy();
-
-  //       // Check each deployed URL
-  //       for (const url of deployResultUrls) {
-  //         expect(url).toBeTruthy();
-  //         const content = await _fetchContent(url);
-  //         const match = content.match(/<title>([^<]+)<\/title>/);
-  //         expect(match).toBeTruthy();
-  //         expect(match?.[1]).toEqual('SampleRspackApp');
-  //       }
-
-  //       // Cleanup after deployment
-  //       await _cleanUp(application_uid);
-  //     },
-  //     integrationTestTimeout
-  //   );
-  // });
+    it(
+      'should successfully deploy rspack application to Zephyr',
+      async () => {
+        const envs = [
+          `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+          `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+          `ZE_API_GATE=${dev_api_gate_url}`,
+          `ZE_SECRET_TOKEN=${getSecretToken()}`,
+          `DEBUG=zephyr:*`,
+        ];
+        // Execute rspack build command
+        const cmd = [
+          ...envs,
+          `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
+        ].join(' ');
+        await exec(cmd);
+        // Verify deployment
+        const deployResultUrls = await _getAppTagUrls(application_uid);
+        expect(deployResultUrls).toBeTruthy();
+        // Check each deployed URL
+        for (const url of deployResultUrls) {
+          expect(url).toBeTruthy();
+          const content = await _fetchContent(url);
+          const match = content.match(/<title>([^<]+)<\/title>/);
+          expect(match).toBeTruthy();
+          expect(match?.[1]).toEqual('SampleRspackApp');
+        }
+        // Cleanup after deployment
+        await _cleanUp(application_uid);
+      },
+      integrationTestTimeout
+    );
+  });
 });
 
 // Helper functions for API interactions

@@ -5,4 +5,3 @@
 npx nx format
 npx nx affected -t test --no-watch
 npx nx affected -t lint --fix
-git add -A

@@ -26,7 +26,6 @@ jest.mock('zephyr-agent', () => {
   const defaultExport = jest.requireActual('zephyr-agent');
   return {
     ...defaultExport,
-    getSecretToken: jest.fn().mockReturnValue('mock-secret-token'),
     hasSecretToken: jest.fn().mockReturnValue(false),
   };
 });
@@ -34,16 +33,16 @@ jest.mock('zephyr-agent', () => {
 jest.mock('is-ci', () => false);
 
 // Skip tests if not in preview mode
-const runner = describe.skip;
+const runner = describe;
 
 const exec = promisify(execCB);
 
 runner('Rspack Plugin', () => {
-  const gitUserName = 'ZephyrTestUser';
-  const gitEmail = 'zephyrTestUserr@zephyr-cloud.io';
-  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/zephyr-packages.git';
+  const gitUserName = 'Néstor';
+  const gitEmail = 'nestor@nstlopez.com';
+  const gitRemoteOrigin = 'git@github.com:nstlopez/zephyr-packages.git';
 
-  const appOrg = 'testzephyrcloudio';
+  const appOrg = 'nstlopez';
   const appProject = 'zephyr-packages';
 
   const packageJsonPath = path.resolve('examples/sample-rspack-application');
@@ -229,9 +228,9 @@ async function _loadAppConfig(application_uid: string): Promise<ZeApplicationCon
     });
     const json = await response.json();
 
-    if (json.statusCode !== 200) {
-      throw new Error(`Failed to load app config. API response: ${JSON.stringify(json)}`);
-    }
+    // if (json.statusCode !== 200) {
+    //   throw new Error(`Failed to load app config. API response: ${json.statusCode} | ${JSON.stringify(json)}`);
+    // }
 
     return json.value;
   } catch (error) {

@@ -7,6 +7,16 @@ export {
   savePartialAssetMap,
 } from './lib/node-persist/partial-assets-map';
 
+// required for testing
+export { type ZeApplicationConfig } from './lib/node-persist/upload-provider-options';
+export {
+  getAppConfig,
+  saveAppConfig,
+} from './lib/node-persist/application-configuration';
+export { getGitInfo } from './lib/build-context/ze-util-get-git-info';
+export { getPackageJson } from './lib/build-context/ze-util-read-package-json';
+export { getSecretToken } from './lib/node-persist/secret-token';
+
 // errors
 export { ZephyrError, ZeErrors } from './lib/errors';
 

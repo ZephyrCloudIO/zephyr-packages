@@ -57,9 +57,9 @@ jobs:
           echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
           echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-      - run: git config --global user.name "Test User"
-      - run: git config --global user.email "test.user@valor-software.com"
-      - run: git config --global remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
+      - run: git config user.name "Test User"
+      - run: git config user.email "test.user@valor-software.com"
+      - run: git config remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
 
       - name: run test
         env:
@@ -67,4 +67,4 @@ jobs:
           ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: git config --global --list && pnpm dlx nx affected -t test
+        run: pnpm dlx nx affected -t test

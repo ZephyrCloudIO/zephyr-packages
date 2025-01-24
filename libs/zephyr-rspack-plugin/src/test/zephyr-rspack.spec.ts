@@ -21,6 +21,14 @@ import {
   getSecretToken,
 } from 'zephyr-agent';
 
+jest.mock('zephyr-agent', () => {
+  const defaultExport = jest.requireActual('zephyr-agent');
+  return {
+    ...defaultExport,
+    hasSecretToken: jest.fn().mockReturnValue(false),
+  };
+});
+
 jest.mock('is-ci', () => false);
 
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;

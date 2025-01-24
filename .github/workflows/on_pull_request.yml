@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   build:
@@ -46,9 +46,14 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: 'origin/master'
+      # - uses: nrwl/nx-set-shas@v4
+      #   with:
+      #     main-branch-name: 'origin/master'
+      - name: Set Base SHA
+        run: |
+          git fetch origin master --depth=1
+          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
+          echo "NX_HEAD=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       - run: |
           echo "BASE: ${{ env.NX_BASE }}"
           echo "HEAD: ${{ env.NX_HEAD }}"

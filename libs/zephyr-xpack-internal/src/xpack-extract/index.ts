@@ -1,4 +1,7 @@
-export { createMfRuntimeCode } from './create-mf-runtime-code';
+export {
+  createMfRuntimeCode,
+  xpack_delegate_module_template,
+} from './create-mf-runtime-code';
 export { extractFederatedDependencyPairs } from './extract-federated-dependency-pairs';
 export { isModuleFederationPlugin } from './is-module-federation-plugin';
 export { iterateFederationConfig } from './iterate-federation-config';

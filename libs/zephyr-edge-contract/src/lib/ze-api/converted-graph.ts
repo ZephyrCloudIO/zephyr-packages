@@ -4,6 +4,7 @@ export interface ConvertedGraph {
   id?: string;
   version?: string;
   name?: string;
+  /** //TODO: what is this? */
   remote: unknown;
   metadata: unknown;
   versionData: unknown;
@@ -18,4 +19,5 @@ export interface ConvertedGraph {
   dependencies?: LocalPackageJson[];
   devDependencies?: LocalPackageJson[];
   optionalDependencies?: LocalPackageJson[];
+  build_target?: 'ios' | 'android' | 'web' | undefined;
 }

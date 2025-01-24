@@ -28,7 +28,12 @@ export interface ZephyrPluginOptions {
     exposes?: Record<string, string>;
     remotes?: Record<string, string>;
     shared?: Record<string, unknown>;
+    runtimePlugins?: string[] | undefined;
   };
+  // for react native and dynamic platforms
+  target?: 'ios' | 'android' | 'web' | undefined;
+  // For react native host app which doesn't want to be "always uploaded and deployed"
+  upload_file?: boolean;
   // hacks
   wait_for_index_html?: boolean;
   outputPath?: string;

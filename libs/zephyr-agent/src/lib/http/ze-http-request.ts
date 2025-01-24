@@ -1,19 +1,14 @@
-import type { ClientRequestArgs } from 'node:http';
-import * as http from 'node:http';
-import * as https from 'node:https';
-import { text } from 'node:stream/consumers';
 import { ZeErrors, ZephyrError } from '../errors';
 import { cleanTokens } from '../node-persist/token';
 import { ze_log } from '../logging/debug';
 import {
-  isSuccessTuple,
-  PromiseTuple,
   PromiseWithResolvers,
   safe_json_parse,
   ZE_API_ENDPOINT_HOST,
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
+import { fetchWithRetries } from './fetch-with-retries';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
 export type HttpResponse<T> =
@@ -38,18 +33,20 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
   #url!: URL;
 
   /** The options for the request. */
-  #options!: ClientRequestArgs;
+  #options!: RequestInit;
 
   /** The data to send with the request. */
   #data?: string | Buffer;
 
   // private methods for resolving and rejecting the promise
   #promise = PromiseWithResolvers<HttpResponse<T>>();
+  // promise extension
+  then = this.#promise.promise.then.bind(this.#promise.promise);
 
   /** Creates a new http request. */
   static from<T = void>(
     urlStr: UrlString,
-    options: ClientRequestArgs = {},
+    options: RequestInit = {},
     data?: string | Buffer
   ): ZeHttpRequest<T> {
     const req = new ZeHttpRequest<T>();
@@ -83,19 +80,6 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
     return req;
   }
 
-  /** "Rejects" the promise with an error. */
-  #reject(error: Error) {
-    this.#promise.resolve([false, error]);
-  }
-
-  /** Resolves the promise with the data. */
-  #resolve(data: T) {
-    this.#promise.resolve([true, null, data]);
-  }
-
-  // promise extension
-  then = this.#promise.promise.then.bind(this.#promise.promise);
-
   /** Transforms `Promise<HttpResponse<T>>` into `Promise<T>` */
   async unwrap() {
     const [ok, error, data] = await this;
@@ -107,109 +91,86 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
     return data;
   }
 
-  #request() {
-    const requester = this.#url.protocol === 'https:' ? https : http;
-    const req = requester.request(this.#url, this.#options ?? {}, this.#onResponse);
-
-    req.on('error', this.#onRequestError);
-    req.end(this.#data);
+  /** "Rejects" the promise with an error. */
+  #reject(error: Error) {
+    this.#promise.resolve([false, error]);
   }
 
-  /** Handles the error when the request fails. */
-  #onRequestError = (cause: any) => {
-    if ('ERR_TLS_CERT_ALTNAME_INVALID' in cause) {
-      this.#reject(
-        new ZephyrError(ZeErrors.ERR_TLS_CERT_ALTNAME_INVALID, {
-          cause,
-        })
-      );
+  /** Resolves the promise with the data. */
+  #resolve(data: T) {
+    this.#promise.resolve([true, null, data]);
+  }
 
-      return;
-    }
-
-    this.#reject(
-      new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        url: this.#url.toString(),
-        method: this.#options.method?.toUpperCase() ?? 'GET',
-        content: 'Could not send request',
-        status: '-1',
-        cause,
-      })
-    );
-  };
-
-  /** Handles the response from the server. */
-  #onResponse = (res: http.IncomingMessage) => {
-    this.#onResponseAsync(res).catch(this.#handleUnknownError);
-  };
-
-  #handleUnknownError = (cause: any) => {
-    this.#reject(
-      new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: 'Could not process provided http.IncomingMessage',
-        cause,
-      })
-    );
-  };
-
-  #onResponseAsync = async (res: http.IncomingMessage) => {
-    if (res.statusCode === 401) {
-      // Clean the tokens and throw an error
-      await cleanTokens();
-      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-        message: 'Unauthenticated request',
+  async #request() {
+    try {
+      const response = await fetchWithRetries(this.#url, {
+        ...this.#options,
+        body: this.#data,
       });
+
+      if (!response) {
+        throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+          content: 'No response found',
+          method: this.#options.method?.toUpperCase() ?? 'GET',
+          url: this.#url.toString(),
+          status: -1,
+        });
+      }
+
+      const resText = await response.text();
+
+      if (response.status === 401) {
+        // Clean the tokens and throw an error
+        await cleanTokens();
+        throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+          message: 'Unauthenticated request',
+        });
+      }
+
+      if (response.status === 403) {
+        throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+          message: 'Unauthorized request',
+        });
+      }
+
+      const message = this.#redact(resText);
+
+      if (message === 'Not Implemented') {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Not implemented yet. Please get in contact with our support.',
+        });
+      }
+
+      if (response.status === undefined) {
+        throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+          content: 'No status code found',
+          method: this.#options.method?.toUpperCase() ?? 'GET',
+          url: this.#url.toString(),
+          status: -1,
+        });
+      }
+
+      if (!this.#url.pathname.includes('application/logs')) {
+        ze_log(message);
+      }
+
+      // Only parses data if reply content is json
+      const resData = safe_json_parse<any>(resText) ?? resText;
+
+      if (response.status >= 300) {
+        throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+          status: response.status,
+          url: this.#url.toString(),
+          content: resData,
+          method: this.#options.method?.toUpperCase() ?? 'GET',
+        });
+      }
+
+      this.#resolve(resData as T);
+    } catch (error) {
+      this.#reject(error as Error);
     }
-
-    if (res.statusCode === 403) {
-      throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
-        message: 'Unauthorized request',
-      });
-    }
-
-    const tuple = await PromiseTuple(text(res));
-
-    if (!isSuccessTuple(tuple)) {
-      return this.#onRequestError(tuple[0]);
-    }
-
-    const resText = tuple[1];
-
-    const message = this.#redact(resText);
-
-    if (message === 'Not Implemented') {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: 'Not implemented yet. Please get in contact with our support.',
-      });
-    }
-
-    if (res.statusCode === undefined) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        content: 'No status code found',
-        method: this.#options.method?.toUpperCase() ?? 'GET',
-        url: this.#url.toString(),
-        status: -1,
-      });
-    }
-
-    if (!this.#url.pathname.includes('application/logs')) {
-      ze_log(message);
-    }
-
-    // Only parses data if reply content is json
-    const resData = safe_json_parse<any>(resText) ?? resText;
-
-    if (res.statusCode >= 300) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        status: res.statusCode,
-        url: this.#url.toString(),
-        content: resData,
-        method: this.#options.method?.toUpperCase() ?? 'GET',
-      });
-    }
-
-    this.#resolve(resData as T);
-  };
+  }
 
   #redact(response: unknown): string {
     const str = [

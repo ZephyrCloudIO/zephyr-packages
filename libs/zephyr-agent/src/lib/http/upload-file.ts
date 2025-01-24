@@ -1,4 +1,3 @@
-import type { ClientRequestArgs } from 'node:http';
 import { type UploadableAsset } from 'zephyr-edge-contract';
 import { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { ZeHttpRequest } from './ze-http-request';
@@ -15,7 +14,7 @@ export async function uploadFile(
 ) {
   const type = 'file';
 
-  const options: ClientRequestArgs = {
+  const options: RequestInit = {
     method: 'POST',
     headers: {
       'x-file-size': asset.size.toString(),

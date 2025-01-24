@@ -19,5 +19,5 @@ export interface ConvertedGraph {
   dependencies?: LocalPackageJson[];
   devDependencies?: LocalPackageJson[];
   optionalDependencies?: LocalPackageJson[];
-  target?: 'ios' | 'android' | 'web' | undefined;
+  build_target?: 'ios' | 'android' | 'web' | undefined;
 }

@@ -17,7 +17,11 @@ import {
 import { getToken } from '../node-persist/token';
 import { ZeHttpRequest } from '../http/ze-http-request';
 
-export const logFn = (level: string, msg: unknown): void => {
+export const logFn = (
+  level: string,
+  msg: unknown,
+  table: Record<string, unknown>
+): void => {
   if (is_debug_enabled) {
     ze_log(msg);
     return;
@@ -32,15 +36,19 @@ export const logFn = (level: string, msg: unknown): void => {
   switch (level) {
     case 'warn':
       console.warn(padded);
+      table && console.table(table);
       break;
     case 'debug':
       console.debug(padded);
+      table && console.table(table);
       break;
     case 'error':
       console.error(padded);
+      table && console.table(table);
       break;
     default:
       console.log(padded);
+      table && console.table(table);
   }
 };
 
@@ -61,6 +69,7 @@ export interface LogEventOptions {
   level: string;
   action: string;
   message: string;
+  table?: { key: string; value: (string | undefined)[] }[];
   ignore?: boolean;
 }
 

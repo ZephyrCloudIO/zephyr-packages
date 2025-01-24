@@ -185,6 +185,8 @@ export class ZephyrEngine {
       return null;
     }
 
+    ze_log('resolve_remote_dependencies.deps', deps, 'platform', platform);
+
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
       // Key might be only the app name
@@ -291,9 +293,14 @@ export class ZephyrEngine {
           level: 'info',
           action: 'build:info:user',
           ignore: true,
-          message: `Resolved zephyr dependencies ${cyanBright(dependencies.map((dep) => dep.name).join(', '))}\n`,
+          message: `Resolved zephyr dependencies;\n`,
+          table: Object.entries(dependencies).map(([key, value]) => ({
+            key,
+            value: [value.version, value.platform],
+          })),
         });
       }
+
       logger({
         level: 'trace',
         action: 'deploy:url',

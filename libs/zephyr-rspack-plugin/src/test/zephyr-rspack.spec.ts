@@ -70,9 +70,9 @@ runner('Rspack Plugin', () => {
 
   afterAll(async () => {
     // Cleanup git configuration
-    await exec(`git config --unset user.name "${gitUserName}"`);
-    await exec(`git config --unset user.email "${gitEmail}"`);
-    await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
+    // await exec(`git config --unset user.name "${gitUserName}"`);
+    // await exec(`git config --unset user.email "${gitEmail}"`);
+    // await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
   });
 
   describe('Configuration Tests', () => {

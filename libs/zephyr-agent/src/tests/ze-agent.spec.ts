@@ -74,9 +74,9 @@ runner('ZeAgent', () => {
   });
 
   afterAll(async () => {
-    await exec(`git config --unset user.name "${gitUserName}"`);
-    await exec(`git config --unset user.email "${gitEmail}"`);
-    await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
+    // await exec(`git config --unset user.name "${gitUserName}"`);
+    // await exec(`git config --unset user.email "${gitEmail}"`);
+    // await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
   });
 
   it('should test git configuration', async () => {

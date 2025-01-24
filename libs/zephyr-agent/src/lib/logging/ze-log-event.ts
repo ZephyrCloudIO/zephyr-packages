@@ -20,7 +20,6 @@ import { ZeHttpRequest } from '../http/ze-http-request';
 export const logFn = (
   level: string,
   msg: unknown,
-  table?: Record<string, unknown>
 ): void => {
   if (is_debug_enabled) {
     ze_log(msg);
@@ -36,19 +35,15 @@ export const logFn = (
   switch (level) {
     case 'warn':
       console.warn(padded);
-      table && console.table(table);
       break;
     case 'debug':
       console.debug(padded);
-      table && console.table(table);
       break;
     case 'error':
       console.error(padded);
-      table && console.table(table);
       break;
     default:
       console.log(padded);
-      table && console.table(table);
   }
 };
 

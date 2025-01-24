@@ -14,6 +14,7 @@ interface UploadAgentPluginOptions {
   wait_for_index_html?: boolean;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+
 }
 
 export interface ZephyrAgentProps<T> {
@@ -33,6 +34,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
+
   try {
     const assetsMap = await buildWebpackAssetMap(assets, {
       wait_for_index_html,
@@ -49,6 +51,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
       EDGE_URL,
       PLATFORM,
     });
+
 
     await zephyr_engine.upload_assets({
       assetsMap,

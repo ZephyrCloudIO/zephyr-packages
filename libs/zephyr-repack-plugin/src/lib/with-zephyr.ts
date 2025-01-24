@@ -37,6 +37,8 @@ async function _zephyr_configuration(
     target
   );
 
+  zephyr_engine.upload_file = _zephyrOptions?.upload_file ? _zephyrOptions.upload_file : true;
+
   mutWebpackFederatedRemotesConfig(
     zephyr_engine,
     config,

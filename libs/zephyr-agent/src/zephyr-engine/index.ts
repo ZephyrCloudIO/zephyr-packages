@@ -106,7 +106,7 @@ export class ZephyrEngine {
   snapshotId: Promise<string> | null = null;
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   version_url: string | null = null;
-
+  upload_file: boolean | null = null;
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
@@ -286,6 +286,7 @@ export class ZephyrEngine {
     const zeStart = zephyr_engine.build_start_time;
     const versionUrl = zephyr_engine.version_url;
     const dependencies = zephyr_engine.federated_dependencies;
+    const upload_file = zephyr_engine.upload_file;
 
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {
@@ -293,11 +294,8 @@ export class ZephyrEngine {
           level: 'info',
           action: 'build:info:user',
           ignore: true,
-          message: `Resolved zephyr dependencies;\n`,
-          table: Object.entries(dependencies).map(([key, value]) => ({
-            key,
-            value: [value.version, value.platform],
-          })),
+          message: `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
+
         });
       }
 
@@ -305,6 +303,15 @@ export class ZephyrEngine {
         level: 'trace',
         action: 'deploy:url',
         message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(`${Date.now() - zeStart}`)}ms.\n\n${cyanBright(versionUrl)}`,
+      });
+    }
+
+    if (!upload_file) {
+      logger({
+        level: 'info',
+        action: 'build:info:user',
+        ignore: true,
+        message: `Manually skipping deployment`,
       });
     }
 
@@ -326,6 +333,11 @@ export class ZephyrEngine {
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
       ze_log('Failed to upload assets: missing application_uid or build_id');
+      return;
+    }
+
+    if (!zephyr_engine.upload_file) {
+      ze_log('User manually skipping file upload');
       return;
     }
 

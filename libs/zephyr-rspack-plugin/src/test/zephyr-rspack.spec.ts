@@ -28,12 +28,6 @@ const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 const exec = promisify(execCB);
 
 runner('Rspack Plugin', () => {
-  // const gitUserName = 'Néstor';
-  // const gitEmail = 'nestor@nstlopez.com';
-  // const gitRemoteOrigin = 'git@github.com:nstlopez/zephyr-packages.git';
-
-  // const appOrg = 'nstlopez';
-  // const appProject = 'zephyr-packages';
   const gitUserName = 'Test User';
   const gitEmail = 'test.user@valor-software.com';
   const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-packages.git';

@@ -46,6 +46,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
+      # TODO: Broken for some reason.
       # - uses: nrwl/nx-set-shas@v4
       #   with:
       #     main-branch-name: 'origin/master'
@@ -58,10 +59,18 @@ jobs:
           echo "BASE: ${{ env.NX_BASE }}"
           echo "HEAD: ${{ env.NX_HEAD }}"
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "Test User"
+          git config --global user.email "test.user@valor-software.com"
+          git config --global remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
+          git config --global --list  # Verify configuration
+
       - name: run test
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+
         run: pnpm dlx nx affected -t test

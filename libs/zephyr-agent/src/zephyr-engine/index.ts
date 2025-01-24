@@ -198,6 +198,16 @@ export class ZephyrEngine {
 
       // if default url is url - set as default, if not use app remote_host as default
       // if default url is not url - send it as a semver to deps resolution
+      // if dep.version is a valid url from production (something start with https://) skip resolving but return the url to allow custom environment
+
+      if (dep.version.startsWith('https://') || !dep.version.includes('localhost')) {
+        return {
+          name: dep.name,
+          version: dep.version,
+          platform,
+        } as ZeResolvedDependency;
+      }
+
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,

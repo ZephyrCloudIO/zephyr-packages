@@ -12,8 +12,9 @@ export interface ZephyrRepackPluginOptions {
   zephyr_engine: ZephyrEngine;
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  upload_file: boolean;
   target: 'ios' | 'android' | 'web' | undefined;
+  // User can manually skip file upload for host apps
+  upload_file?: boolean;
 }
 
 export class ZeRepackPlugin {

@@ -58,7 +58,6 @@ async function _zephyr_configuration(
     new ZeRepackPlugin({
       zephyr_engine,
       target,
-      upload_file: _zephyrOptions?.upload_file ? _zephyrOptions.upload_file : true,
       mfConfig: makeCopyOfModuleFederationOptions(config),
     })
   );

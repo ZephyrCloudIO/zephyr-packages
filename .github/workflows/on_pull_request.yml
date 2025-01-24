@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
   build:
@@ -18,9 +18,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: master
+      # TODO(Nestor): This is a temporary fix, since the action is not working as expected.
+      # - uses: nrwl/nx-set-shas@v4
+      #   with:
+      #     main-branch-name: master
+      - name: Set Base SHA
+        run: |
+          git fetch origin master
+          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
+          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
       - name: run build-all
         run: pnpm build-all --exclude="examples/**" && exit 0
 
@@ -29,9 +35,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: master
+      # TODO(Nestor): This is a temporary fix, since the action is not working as expected.
+      # - uses: nrwl/nx-set-shas@v4
+      #   with:
+      #     main-branch-name: master
+      - name: Set Base SHA
+        run: |
+          git fetch origin master
+          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
+          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
       - name: run lint
         run: pnpm dlx nx affected -t lint
 
@@ -46,9 +58,15 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: master
+      # TODO(Nestor): This is a temporary fix, since the action is not working as expected.
+      # - uses: nrwl/nx-set-shas@v4
+      #   with:
+      #     main-branch-name: master
+      - name: Set Base SHA
+        run: |
+          git fetch origin master
+          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
+          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
       - name: run test
         env:
           ZE_IS_PREVIEW: true

@@ -11,6 +11,7 @@ export interface ZeResolvedDependency {
   default_url: string;
   remote_entry_url: string;
   library_type: string;
+  platform?: string;
 }
 
 export async function resolve_remote_dependency({

@@ -20,7 +20,7 @@ import { ZeHttpRequest } from '../http/ze-http-request';
 export const logFn = (
   level: string,
   msg: unknown,
-  table: Record<string, unknown>
+  table?: Record<string, unknown>
 ): void => {
   if (is_debug_enabled) {
     ze_log(msg);

@@ -17,16 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
-      # TODO(Nestor): This is a temporary fix, since the action is not working as expected.
-      # - uses: nrwl/nx-set-shas@v4
-      #   with:
-      #     main-branch-name: master
-      - name: Set Base SHA
-        run: |
-          git fetch origin master
-          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
-          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
       - name: run build-all
         run: pnpm build-all --exclude="examples/**" && exit 0
 
@@ -34,16 +31,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
-      # TODO(Nestor): This is a temporary fix, since the action is not working as expected.
-      # - uses: nrwl/nx-set-shas@v4
-      #   with:
-      #     main-branch-name: master
-      - name: Set Base SHA
-        run: |
-          git fetch origin master
-          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
-          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
       - name: run lint
         run: pnpm dlx nx affected -t lint
 
@@ -55,18 +49,15 @@ jobs:
     environment: development
     steps:
       - uses: actions/checkout@v4
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      # TODO(Nestor): This is a temporary fix, since the action is not working as expected.
-      # - uses: nrwl/nx-set-shas@v4
-      #   with:
-      #     main-branch-name: master
-      - name: Set Base SHA
-        run: |
-          git fetch origin master
-          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
-          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
       - name: run test
         env:
           ZE_IS_PREVIEW: true

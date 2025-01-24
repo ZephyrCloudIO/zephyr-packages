@@ -62,9 +62,9 @@ runner('ZeAgent', () => {
         fs.rmSync(path.join(zephyrAppFolder, file));
       });
     }
-    await exec(`git config --replace-all user.name "${gitUserName}"`);
-    await exec(`git config --replace-all user.email "${gitEmail}"`);
-    await exec(`git config --replace-all remote.origin.url ${gitRemoteOrigin}`);
+    await exec(`git config --add user.name "${gitUserName}"`);
+    await exec(`git config --add user.email "${gitEmail}"`);
+    await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
 
     const appConfig = await _loadAppConfig(application_uid);
     appConfig.email = gitEmail;
@@ -74,9 +74,9 @@ runner('ZeAgent', () => {
   });
 
   afterAll(async () => {
-    // await exec(`git config --unset user.name "${gitUserName}"`);
-    // await exec(`git config --unset user.email "${gitEmail}"`);
-    // await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
+    await exec(`git config --unset user.name "${gitUserName}"`);
+    await exec(`git config --unset user.email "${gitEmail}"`);
+    await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
   });
 
   it('should test git configuration', async () => {

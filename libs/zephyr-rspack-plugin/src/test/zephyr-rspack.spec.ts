@@ -188,7 +188,7 @@ runner('Rspack Plugin', () => {
           const content = await _fetchContent(url);
           const match = content.match(/<title>([^<]+)<\/title>/);
           expect(match).toBeTruthy();
-          expect(match?.[1]).toEqual('SampleRspackApp');
+          expect(match?.[1]).toEqual('SampleRspackApplication');
         }
 
         // Cleanup after deployment

@@ -57,9 +57,9 @@ jobs:
           echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
           echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-      - run: git config user.name "Test User"
-      - run: git config user.email "test.user@valor-software.com"
-      - run: git config remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
+      - run: git config --add user.name "Test User"
+      - run: git config --add user.email "test.user@valor-software.com"
+      - run: git config --add remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
 
       - name: run test
         env:

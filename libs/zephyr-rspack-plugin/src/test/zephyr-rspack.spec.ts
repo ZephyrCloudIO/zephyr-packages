@@ -56,9 +56,9 @@ runner('Rspack Plugin', () => {
     }
 
     // Setup git configuration
-    await exec(`git config --add user.name "${gitUserName}"`);
-    await exec(`git config --add user.email "${gitEmail}"`);
-    await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
+    await exec(`git config --replace-all user.name "${gitUserName}"`);
+    await exec(`git config --replace-all user.email "${gitEmail}"`);
+    await exec(`git config --replace-all remote.origin.url ${gitRemoteOrigin}`);
 
     // Setup application configuration
     const appConfig = await _loadAppConfig(application_uid);

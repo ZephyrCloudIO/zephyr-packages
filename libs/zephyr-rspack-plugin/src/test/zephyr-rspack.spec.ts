@@ -23,17 +23,23 @@ import {
 
 jest.mock('is-ci', () => false);
 
-const runner = describe;
+const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 
 const exec = promisify(execCB);
 
 runner('Rspack Plugin', () => {
-  const gitUserName = 'Néstor';
-  const gitEmail = 'nestor@nstlopez.com';
-  const gitRemoteOrigin = 'git@github.com:nstlopez/zephyr-packages.git';
+  // const gitUserName = 'Néstor';
+  // const gitEmail = 'nestor@nstlopez.com';
+  // const gitRemoteOrigin = 'git@github.com:nstlopez/zephyr-packages.git';
 
-  const appOrg = 'nstlopez';
-  const appProject = 'zephyr-packages';
+  // const appOrg = 'nstlopez';
+  // const appProject = 'zephyr-packages';
+  const gitUserName = 'Test User';
+  const gitEmail = 'test.user@valor-software.com';
+  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-packages.git';
+
+  const appOrg = 'testzephyrcloudio';
+  const appProject = 'test-zephyr-packages';
 
   const packageJsonPath = path.resolve('examples/sample-rspack-application');
   const appName = 'sample-rspack-application';
@@ -164,15 +170,18 @@ runner('Rspack Plugin', () => {
           `ZE_SECRET_TOKEN=${getSecretToken()}`,
           `DEBUG=zephyr:*`,
         ];
+
         // Execute rspack build command
         const cmd = [
           ...envs,
           `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
         ].join(' ');
         await exec(cmd);
+
         // Verify deployment
         const deployResultUrls = await _getAppTagUrls(application_uid);
         expect(deployResultUrls).toBeTruthy();
+
         // Check each deployed URL
         for (const url of deployResultUrls) {
           expect(url).toBeTruthy();
@@ -181,6 +190,7 @@ runner('Rspack Plugin', () => {
           expect(match).toBeTruthy();
           expect(match?.[1]).toEqual('SampleRspackApp');
         }
+
         // Cleanup after deployment
         await _cleanUp(application_uid);
       },

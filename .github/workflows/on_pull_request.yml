@@ -51,9 +51,10 @@ jobs:
       #     main-branch-name: 'origin/master'
       - name: Set Base SHA
         run: |
-          git fetch origin master --depth=1
+          git fetch origin master --unshallow
+          git fetch origin ${{ github.event.pull_request.head.ref }} --unshallow
           echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
-          echo "NX_HEAD=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
       - run: |
           echo "BASE: ${{ env.NX_BASE }}"
           echo "HEAD: ${{ env.NX_HEAD }}"

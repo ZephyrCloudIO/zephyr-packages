@@ -43,6 +43,7 @@ jobs:
     environment: development
     steps:
       - uses: actions/checkout@v4
+
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
@@ -55,16 +56,10 @@ jobs:
           git fetch origin master
           echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
           echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
-      - run: |
-          echo "BASE: ${{ env.NX_BASE }}"
-          echo "HEAD: ${{ env.NX_HEAD }}"
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "Test User"
-          git config --global user.email "test.user@valor-software.com"
-          git config --global remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
-          git config --global --list  # Verify configuration
+      - run: git config --global user.name "Test User"
+      - run: git config --global user.email "test.user@valor-software.com"
+      - run: git config --global remote.origin.url "git@github.com:TestZephyrCloudIO/test-zephyr-packages.git"
 
       - name: run test
         env:
@@ -72,5 +67,4 @@ jobs:
           ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-
-        run: pnpm dlx nx affected -t test
+        run: git config --global --list && pnpm dlx nx affected -t test

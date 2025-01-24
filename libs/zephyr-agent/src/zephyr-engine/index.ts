@@ -305,7 +305,6 @@ export class ZephyrEngine {
           action: 'build:info:user',
           ignore: true,
           message: `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
-
         });
       }
 

@@ -14,7 +14,6 @@ interface UploadAgentPluginOptions {
   wait_for_index_html?: boolean;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-
 }
 
 export interface ZephyrAgentProps<T> {
@@ -51,7 +50,6 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
       EDGE_URL,
       PLATFORM,
     });
-
 
     await zephyr_engine.upload_assets({
       assetsMap,

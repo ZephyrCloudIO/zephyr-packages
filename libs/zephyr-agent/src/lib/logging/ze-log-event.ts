@@ -17,10 +17,7 @@ import {
 import { getToken } from '../node-persist/token';
 import { ZeHttpRequest } from '../http/ze-http-request';
 
-export const logFn = (
-  level: string,
-  msg: unknown,
-): void => {
+export const logFn = (level: string, msg: unknown): void => {
   if (is_debug_enabled) {
     ze_log(msg);
     return;

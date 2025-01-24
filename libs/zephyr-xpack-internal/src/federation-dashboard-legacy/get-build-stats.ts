@@ -39,7 +39,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     },
   });
 
-  ze_log('process webpack graph');
+  ze_log('process webpack graph.pluginOptions', pluginOptions);
   const convertedGraph = dashboardPlugin.processWebpackGraph({
     stats,
     stats_json,
@@ -77,6 +77,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   };
 
   // todo: extend data
+
   const res = Object.assign({}, convertedGraph, data_overrides, {
     project: name, // Add missing project property
     tags: [], // Add missing tags property with empty array as default

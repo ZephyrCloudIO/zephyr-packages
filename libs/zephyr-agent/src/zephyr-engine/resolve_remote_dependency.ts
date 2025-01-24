@@ -11,6 +11,7 @@ export interface ZeResolvedDependency {
   default_url: string;
   remote_entry_url: string;
   library_type: string;
+  platform?: string;
 }
 
 export async function resolve_remote_dependency({
@@ -71,7 +72,7 @@ export async function resolve_remote_dependency({
         'version: ',
         version
       );
-      return Object.assign({}, response.value, { version });
+      return Object.assign({}, response.value, { version, platform });
     }
 
     throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {

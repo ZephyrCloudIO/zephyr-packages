@@ -86,6 +86,7 @@ export function convertToGraph(
     functionRemotes,
     sha,
     buildHash,
+    target,
   } = params;
 
   // validateParams(
@@ -118,6 +119,7 @@ export function convertToGraph(
     name,
     remote,
     metadata,
+    build_target: target,
     versionData,
     overrides: Object.values(overrides),
     consumes: consumes.map((con) => ({

@@ -298,6 +298,15 @@ export class ZephyrEngine {
     const dependencies = zephyr_engine.federated_dependencies;
     const upload_file = zephyr_engine.upload_file;
 
+    if (upload_file === false) {
+      logger({
+        level: 'info',
+        action: 'build:info:user',
+        ignore: true,
+        message: `Manually skipping deployment`,
+      });
+    }
+
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {
         logger({
@@ -312,15 +321,6 @@ export class ZephyrEngine {
         level: 'trace',
         action: 'deploy:url',
         message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(`${Date.now() - zeStart}`)}ms.\n\n${cyanBright(versionUrl)}`,
-      });
-    }
-
-    if (!upload_file) {
-      logger({
-        level: 'info',
-        action: 'build:info:user',
-        ignore: true,
-        message: `Manually skipping deployment`,
       });
     }
 
@@ -345,7 +345,7 @@ export class ZephyrEngine {
       return;
     }
 
-    if (!zephyr_engine.upload_file) {
+    if (zephyr_engine.upload_file === false) {
       ze_log('User manually skipping file upload');
       return;
     }

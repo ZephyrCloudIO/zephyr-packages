@@ -4,7 +4,7 @@ import create_web from "./create-web"
 import create_react_native from "./create-react-native"
 import { TEMPLATES } from "../utils/constants";
 import { cancel, log } from "@clack/prompts";
-import { bgRed, black } from "picocolors";
+import { bgMagentaBright   , black } from "picocolors";
 import install from "../utils/install";
 
 
@@ -13,7 +13,7 @@ export default async function create(options: CLIOptions) {
     let react_native_options = {} as ReactNativeCreationOptions
 
     if (!options.path) {
-        log.error(bgRed(black('Error:')))
+        log.error(bgMagentaBright(black('Error:')))
         console.error('Path is required')
         cancel('Operation cancelled.')
         process.exit(0)

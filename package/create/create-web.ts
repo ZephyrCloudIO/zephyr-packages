@@ -2,7 +2,7 @@ import { cancel, log, spinner } from "@clack/prompts";
 import { WebCreationOptions } from "../utils/types";
 import degit from "degit";
 import { BASE_REPO } from "../utils/constants";
-import { cyan, bgRed, black } from "picocolors";
+import { cyan, bgMagentaBright, black } from "picocolors";
 
 export default async function create_web(options: WebCreationOptions) {
     const s = spinner()
@@ -10,17 +10,17 @@ export default async function create_web(options: WebCreationOptions) {
     try {
         const url = `${BASE_REPO}/tree/main/examples/${options.template}`
 
-        //const test = fetch()
-        // console.log('create_web.url', url)
 
-        const emitter = degit(`${BASE_REPO}/examples/${options.template}`, {
+        console.log('create_web.url', url)
+
+        const emitter = degit(url, {
             mode: 'git',
             verbose: true,
         })
 
         emitter.on('warn', (error) => {
 
-            log.error(bgRed(black('Error:')))
+            log.error(bgMagentaBright(black('Error:')))
             console.error(error)
             cancel('Operation cancelled.')
             process.exit(0)
@@ -29,7 +29,7 @@ export default async function create_web(options: WebCreationOptions) {
         emitter.clone(options.path)
 
     } catch (error) {
-        log.error(bgRed(black('Error:')))
+        log.error(bgMagentaBright(black('Error:')))
         console.error(error)
         cancel('Operation cancelled.')
         process.exit(0)

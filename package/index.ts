@@ -19,11 +19,13 @@ import {
   log,
   updateSettings,
 } from '@clack/prompts';
-import * as p from 'picocolors';
+import c from "chalk";
 import { TEMPLATES } from './utils/constants';
-import create from './create/create';
 import { CLIOptions } from './utils/types';
-import end_node from './utils/end';
+import * as tempy from 'tempy';
+import path from 'path';
+import * as fs from 'node:fs'
+
 
 async function main() {
   console.clear();
@@ -40,7 +42,7 @@ async function main() {
   });
 
   note('npx create-zephyr-apps@latest');
-  intro(`${p.bgCyan(p.black(' Create federated applications with Zephyr '))}`);
+  intro(`${c.bgCyan(c.black(' Create federated applications with Zephyr '))}`);
 
   const project = await group(
     {
@@ -82,19 +84,14 @@ async function main() {
             options: Object.keys(TEMPLATES).map((template) => {
               return {
                 value: template as keyof typeof TEMPLATES,
-                label: p.cyan(TEMPLATES[template as keyof typeof TEMPLATES].label),
+                label: c.cyan(TEMPLATES[template as keyof typeof TEMPLATES].label),
                 hint: TEMPLATES[template as keyof typeof TEMPLATES].hint
               }
             })
           })
         }
       },
-      install: ({ results }) => {
-        return confirm({
-          message: 'Install dependencies?',
-          initialValue: false,
-        })
-      },
+
     },
     {
       onCancel: () => {
@@ -106,9 +103,86 @@ async function main() {
 
 
 
-  await create(project as CLIOptions).then(i => end_node({ project }))
+  const temp_dir = tempy.temporaryDirectory()
+
+  const command_web = `git clone --depth 1 https://github.com/ZephyrCloudIO/zephyr-examples.git -b main ${temp_dir}`
+  const command_react_native = `git clone --depth 1 https://github.com/ZephyrCloudIO/zephyr-repack-example.git -b main ${temp_dir}`
+
+  const project_path = project.path.replace('./', '').trim()
+
+  const s = spinner()
+  if (project.type === 'web') {
+
+    s.start(c.cyan('Cloning subfolder ' + c.green(project.templates) + ' from repository https://github.com/ZephyrCloudIO/zephyr-examples.git'))
+
+    exec(command_web, async (err, stdout, stderr) => {
+
+      if (err) {
+        s.stop(c.bgRed(c.black(`Error cloning ${command_web} to ${project_path}...`)))
+        console.error(err);
+        process.exit(0);
+
+      }
+
+      if (!err) {
+        const outputPath = path.join(process.cwd(), project.path);
+
+        const clonedPath = path.join(temp_dir, 'examples', project.templates as string)
+
+        try {
+          const result2 = await fs.promises.cp(clonedPath, outputPath, {
+            recursive: true,
+            force: true
+          });
+
+          s.stop(c.green(`Project successfully created at ${c.underline(project_path)}`))
+
+        } catch (error) {
+          console.error(c.bgRed(c.black(`Error cloning to ${project_path}...`)))
+          console.error(error)
+          process.exit(2)
+        } finally {
+          await fs.promises.rm(temp_dir, { recursive: true, force: true })
+          end_note({ project })
+        }
+      }
+    })
+
+  }
 
 
+  if (project.type === 'react-native') {
+
+    s.start(c.cyan(`Cloning repository https://github.com/ZephyrCloudIO/zephyr-repack-example.git`))
+
+    exec(command_react_native, async (err, stdout, stderr) => {
+      if (err) {
+        s.stop(c.bgRed(c.black(`Error cloning to ${project_path}...`)))
+        console.error(err)
+        process.exit(2)
+      }
+
+      if (!err) {
+
+        const outputPath = path.join(process.cwd(), project.path);
+        try {
+          const result2 = await fs.promises.cp(temp_dir, outputPath, {
+            recursive: true,
+            force: true
+          });
+          s.stop(c.green(`Project successfully created at ${c.underline(project_path)}`))
+        } catch (error) {
+          s.stop(c.bgRed(c.black(`Error clonin to ${project_path}`)))
+          console.error(error)
+          process.exit(2)
+        } finally {
+          await fs.promises.rm(temp_dir, { recursive: true, force: true })
+          end_note({ project })
+        }
+
+      }
+    })
+  }
 
 
 }

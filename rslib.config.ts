@@ -10,7 +10,10 @@ export default defineConfig({
         {
             format: 'cjs',
             autoExtension: false,
-            syntax: 'es2019',
+            syntax: 'es2020',
+            dts: {
+                build: true,
+            },
             output: {
                 target: 'node',
                 filename: {
@@ -18,6 +21,22 @@ export default defineConfig({
                 },
                 cleanDistPath: true,
             },
+        },
+        {
+            format: 'esm',
+            autoExtension: false,
+            syntax: 'es2020',
+            dts: {
+                build: true,
+            },
+            output: {
+                target: 'node',
+                filename: {
+                    js: '[name].mjs',
+                },
+                cleanDistPath: true,
+            },
         }
     ],
+
 });

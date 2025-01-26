@@ -13,7 +13,7 @@ const TEMPLATES = {
         hint: 'A simple application build by Rspack.',
         framework: 'react'
     },
-    'react-vite': {
+    'react-vite-ts': {
         label: 'A simple React application build by Vite',
         hint: 'You will be building React app powered by Vite.',
         framework: 'react'

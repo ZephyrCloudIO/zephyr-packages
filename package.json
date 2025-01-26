@@ -1,10 +1,10 @@
 {
   "name": "create-zephyr-apps",
   "module": "./src/index.ts",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "build": "rslib build",
-    "start": "rslib dev",
     "dev": "tsx package/index.ts"
   },
   "bin": {
@@ -13,18 +13,14 @@
   "dependencies": {
     "@clack/core": "^0.4.1",
     "@clack/prompts": "^0.9.1",
-    "axios": "^1.7.9",
-    "commander": "^13.1.0",
-    "degit": "^2.8.4",
-    "npm-run-all": "^4.1.5",
+    "chalk": "^5.4.1",
     "picocolors": "^1.1.1",
-    "vite": "^6.0.11"
+    "tempy": "^3.1.0"
   },
   "devDependencies": {
     "@rslib/core": "^0.3.2",
     "@types/degit": "^2.8.6",
     "@types/node": "^22.10.7",
-    "jiti": "^2.4.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
@@ -32,5 +28,18 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "zephyr",
+    "create-zephyr-apps",
+    "zephyr-apps",
+    "zephyr-cli",
+    "zephyr-example",
+    "zephyr-template",
+    "example",
+    "template"
+  ]
 }

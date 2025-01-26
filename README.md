@@ -1,15 +1,7 @@
 # create-zephyr-apps
 
-To install dependencies:
+Recommend using node version 22.0.0 or above.
 
-```bash
-bun install
 ```
-
-To run:
-
-```bash
-bun run ./src/index.ts
+npx create-zephyr-apps@latest
 ```
-
-This project was created using `bun init` in bun v1.0.35. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rslib build",
     "start": "rslib dev",
-    "dev": "tsc package/index.ts"
+    "dev": "tsx package/index.ts"
   },
   "bin": {
     "create-zephyr-apps": "./dist/index.mjs"

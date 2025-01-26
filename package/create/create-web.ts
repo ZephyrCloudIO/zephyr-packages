@@ -1,8 +1,8 @@
 import { cancel, log, spinner } from "@clack/prompts";
 import { WebCreationOptions } from "../utils/types";
-import degit from "degit";
+import * as degit from "degit";
 import { BASE_REPO } from "../utils/constants";
-import { cyan, bgMagentaBright, black } from "picocolors";
+import * as p from "picocolors";
 
 export default async function create_web(options: WebCreationOptions) {
     const s = spinner()
@@ -20,7 +20,7 @@ export default async function create_web(options: WebCreationOptions) {
 
         emitter.on('warn', (error) => {
 
-            log.error(bgMagentaBright(black('Error:')))
+            log.error(p.bgMagentaBright(p.black('Error:')))
             console.error(error)
             cancel('Operation cancelled.')
             process.exit(0)
@@ -29,10 +29,10 @@ export default async function create_web(options: WebCreationOptions) {
         emitter.clone(options.path)
 
     } catch (error) {
-        log.error(bgMagentaBright(black('Error:')))
+        log.error(p.bgMagentaBright(p.black('Error:')))
         console.error(error)
         cancel('Operation cancelled.')
         process.exit(0)
     }
-    s.stop(`${cyan(options.framework.slice(0, 1).toUpperCase() + options.framework.slice(1))} template created at ${options.path}`)
+    s.stop(`${p.cyan(options.framework.slice(0, 1).toUpperCase() + options.framework.slice(1))} template created at ${options.path}`)
 }

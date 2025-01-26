@@ -19,9 +19,8 @@ import {
   log,
   updateSettings,
 } from '@clack/prompts';
-import { cyan, underline, bgCyan, black, bgRed } from 'picocolors';
+import * as p from 'picocolors';
 import { TEMPLATES } from './utils/constants';
-import fs from 'node:fs/promises';
 import create from './create/create';
 import { CLIOptions } from './utils/types';
 import end_node from './utils/end';
@@ -41,7 +40,7 @@ async function main() {
   });
 
   note('npx create-zephyr-apps@latest');
-  intro(`${bgCyan(black(' Create federated applications with Zephyr '))}`);
+  intro(`${p.bgCyan(p.black(' Create federated applications with Zephyr '))}`);
 
   const project = await group(
     {
@@ -83,7 +82,7 @@ async function main() {
             options: Object.keys(TEMPLATES).map((template) => {
               return {
                 value: template as keyof typeof TEMPLATES,
-                label: cyan(TEMPLATES[template as keyof typeof TEMPLATES].label),
+                label: p.cyan(TEMPLATES[template as keyof typeof TEMPLATES].label),
                 hint: TEMPLATES[template as keyof typeof TEMPLATES].hint
               }
             })

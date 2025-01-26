@@ -18,17 +18,6 @@ export default defineConfig({
                 },
                 cleanDistPath: true,
             },
-        },
-        {
-            format: 'esm',
-            syntax: 'es2019',
-            output: {
-                target: 'node',
-                filename: {
-                    js: '[name].mjs',
-                },
-                cleanDistPath: true,
-            },
-        },
+        }
     ],
 });

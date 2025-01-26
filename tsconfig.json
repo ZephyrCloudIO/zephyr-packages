@@ -2,14 +2,16 @@
   "compilerOptions": {
     // Enable latest features
     "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "ES2020",
+    "module": "ES2020",
     "moduleDetection": "force",
+
   //"jsx": "react-jsx",
     "allowJs": true,
 
     // Bundler mode
     "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     //"verbatimModuleSyntax": true,
     "noEmit": true,
@@ -22,6 +24,7 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false, 
+    "outDir": "./dist"
   }
 }

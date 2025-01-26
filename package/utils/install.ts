@@ -1,7 +1,7 @@
 import { CLIOptions } from "./types";
 import { spinner, log, cancel } from "@clack/prompts";
 import { exec } from "node:child_process";
-import { bgRed, black } from "picocolors"
+import * as p from "picocolors"
 export default function install({ project }: { project: CLIOptions }) {
     if (project.install) {
 
@@ -14,7 +14,7 @@ export default function install({ project }: { project: CLIOptions }) {
             s.stop('Installed via pnpm');
 
         } catch (error) {
-            log.error(bgRed(black('Error:')))
+            log.error(p.bgRed(p.black('Error:')))
             console.error(error)
             cancel('Operation cancelled.')
             process.exit(0)

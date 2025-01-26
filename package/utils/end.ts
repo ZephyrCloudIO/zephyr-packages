@@ -1,5 +1,5 @@
 import { CLIOptions } from "./types";
-import { underline, cyan } from 'picocolors'
+import * as p from 'picocolors'
 import { note } from "@clack/prompts";
 
 
@@ -11,9 +11,9 @@ export default function end_note({ project }: { project: CLIOptions }) {
 
     note(next_steps, 'Next steps.');
 
-    const end_notes = [`Discord: ${underline(cyan('https://zephyr-cloud.io/discord'))}`,
-    `Documentation: ${underline(cyan('https://zephyr-cloud.io/docs'))}`,
-    `Open an issue: ${underline(cyan('https://github.com/ZephyrCloudIO/create-zephyr-apps/issues'))}`
+    const end_notes = [`Discord: ${p.underline(p.cyan('https://zephyr-cloud.io/discord'))}`,
+    `Documentation: ${p.underline(p.cyan('https://zephyr-cloud.io/docs'))}`,
+    `Open an issue: ${p.underline(p.cyan('https://github.com/ZephyrCloudIO/create-zephyr-apps/issues'))}`
     ]
 
     note(Object.values(end_notes).join('\n'), 'Problems?')

@@ -1,7 +1,7 @@
 import { ReactNativeCreationOptions } from "../utils/types";
 import { spinner, cancel, log } from "@clack/prompts";
 import degit from "degit";
-import { red, bgMagentaBright, black } from "picocolors";
+import * as p from "picocolors";
 import { BASE_REPO, REPACK_REPO_PATH } from "../utils/constants";
 
 export default function create_react_native(options: ReactNativeCreationOptions) {
@@ -9,7 +9,7 @@ export default function create_react_native(options: ReactNativeCreationOptions)
     s.start('Creating React Native app...')
 
     if (!options.path) {
-        log.error(bgMagentaBright(black('Error:')))
+        log.error(p.bgMagentaBright(p.black('Error:')))
         console.error('Path is required')
         cancel('Operation cancelled.')
         process.exit(0)
@@ -22,7 +22,7 @@ export default function create_react_native(options: ReactNativeCreationOptions)
 
         emitter.on('warn', (error) => {
 
-            log.error(bgMagentaBright(black('Error:')))
+            log.error(p.bgMagentaBright(p.black('Error:')))
             console.error(error as unknown as string)
             cancel('Operation cancelled.')
             process.exit(0)
@@ -32,7 +32,7 @@ export default function create_react_native(options: ReactNativeCreationOptions)
 
     } catch (error) {
 
-        log.error(bgMagentaBright(black('Error:')))
+        log.error(p.bgMagentaBright(p.black('Error:')))
         console.error(error as string)
         cancel('Operation cancelled.')
         process.exit(0)

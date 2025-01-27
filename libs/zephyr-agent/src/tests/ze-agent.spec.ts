@@ -118,7 +118,7 @@ runner('ZeAgent', () => {
   });
 
   it(
-    'should be deployed to Zephyr',
+    'should deploy Webpack',
     async () => {
       const envs = [
         `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
@@ -133,8 +133,10 @@ runner('ZeAgent', () => {
         `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
       ].join(' ');
       await exec(cmd);
+
       const deployResultUrls = await _getAppTagUrls(application_uid);
       expect(deployResultUrls).toBeTruthy();
+
       for (const url of deployResultUrls) {
         expect(url).toBeTruthy();
         const content = await _fetchContent(url);
@@ -142,6 +144,43 @@ runner('ZeAgent', () => {
         expect(match).toBeTruthy();
         expect(match?.[1]).toEqual('SampleReactApp');
       }
+      await _cleanUp(application_uid);
+    },
+    integrationTestTimeout
+  );
+
+  it(
+    'should deploy Rspack',
+    async () => {
+      const envs = [
+        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+        `ZE_API_GATE=${dev_api_gate_url}`,
+        `ZE_SECRET_TOKEN=${getSecretToken()}`,
+        `DEBUG=zephyr:*`,
+      ];
+
+      // Execute rspack build command
+      const cmd = [
+        ...envs,
+        `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
+      ].join(' ');
+      await exec(cmd);
+
+      // Verify deployment
+      const deployResultUrls = await _getAppTagUrls(application_uid);
+      expect(deployResultUrls).toBeTruthy();
+
+      // Check each deployed URL
+      for (const url of deployResultUrls) {
+        expect(url).toBeTruthy();
+        const content = await _fetchContent(url);
+        const match = content.match(/<title>([^<]+)<\/title>/);
+        expect(match).toBeTruthy();
+        expect(match?.[1]).toEqual('SampleRspackApplication');
+      }
+
+      // Cleanup after deployment
       await _cleanUp(application_uid);
     },
     integrationTestTimeout

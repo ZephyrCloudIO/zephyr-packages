@@ -7,7 +7,6 @@
   "type": "commonjs",
   "scripts": {
     "build": "nx run zephyr-rspack-plugin:build",
-    "test": "nx run zephyr-rspack-plugin:test",
     "patch-version": "pnpm version"
   },
   "dependencies": {

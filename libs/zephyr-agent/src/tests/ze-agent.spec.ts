@@ -120,6 +120,9 @@ runner('ZeAgent', () => {
   it(
     'should deploy Webpack',
     async () => {
+      const webpackAppName = 'sample-webpack-application';
+      const webpackAppUuid = `${webpackAppName}.${appProject}.${appOrg}`;
+
       const envs = [
         `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
         `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
@@ -134,7 +137,7 @@ runner('ZeAgent', () => {
       ].join(' ');
       await exec(cmd);
 
-      const deployResultUrls = await _getAppTagUrls(application_uid);
+      const deployResultUrls = await _getAppTagUrls(webpackAppUuid);
       expect(deployResultUrls).toBeTruthy();
 
       for (const url of deployResultUrls) {
@@ -144,7 +147,7 @@ runner('ZeAgent', () => {
         expect(match).toBeTruthy();
         expect(match?.[1]).toEqual('SampleReactApp');
       }
-      await _cleanUp(application_uid);
+      await _cleanUp(webpackAppUuid);
     },
     integrationTestTimeout
   );
@@ -152,6 +155,9 @@ runner('ZeAgent', () => {
   it(
     'should deploy Rspack',
     async () => {
+      const rspackAppName = 'sample-rspack-application';
+      const rspackAppUuid = `${rspackAppName}.${appProject}.${appOrg}`;
+
       const envs = [
         `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
         `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
@@ -169,7 +175,7 @@ runner('ZeAgent', () => {
       await exec(cmd);
 
       // Verify deployment
-      const deployResultUrls = await _getAppTagUrls(application_uid);
+      const deployResultUrls = await _getAppTagUrls(rspackAppUuid);
       expect(deployResultUrls).toBeTruthy();
 
       // Check each deployed URL
@@ -182,7 +188,7 @@ runner('ZeAgent', () => {
       }
 
       // Cleanup after deployment
-      await _cleanUp(application_uid);
+      await _cleanUp(rspackAppUuid);
     },
     integrationTestTimeout
   );

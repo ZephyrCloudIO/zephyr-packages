@@ -55,6 +55,7 @@ runner('ZeAgent', () => {
 
   beforeAll(async () => {
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
+
     // Remove Zephyr cache
     if (fs.existsSync(zephyrAppFolder)) {
       const files = fs.readdirSync(zephyrAppFolder);
@@ -117,8 +118,11 @@ runner('ZeAgent', () => {
   });
 
   it(
-    'should be deployed to Zephyr',
+    'should deploy Webpack',
     async () => {
+      const app = 'sample-webpack-application';
+      const uuid = `${app}.${appProject}.${appOrg}`;
+
       const envs = [
         `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
         `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
@@ -132,8 +136,10 @@ runner('ZeAgent', () => {
         `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
       ].join(' ');
       await exec(cmd);
-      const deployResultUrls = await _getAppTagUrls(application_uid);
+
+      const deployResultUrls = await _getAppTagUrls(uuid);
       expect(deployResultUrls).toBeTruthy();
+
       for (const url of deployResultUrls) {
         expect(url).toBeTruthy();
         const content = await _fetchContent(url);
@@ -141,7 +147,87 @@ runner('ZeAgent', () => {
         expect(match).toBeTruthy();
         expect(match?.[1]).toEqual('SampleReactApp');
       }
-      await _cleanUp(application_uid);
+      await _cleanUp(uuid);
+    },
+    integrationTestTimeout
+  );
+
+  it(
+    'should deploy Rspack',
+    async () => {
+      const app = 'sample-rspack-application';
+      const uuid = `${app}.${appProject}.${appOrg}`;
+
+      const envs = [
+        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+        `ZE_API_GATE=${dev_api_gate_url}`,
+        `ZE_SECRET_TOKEN=${getSecretToken()}`,
+        `DEBUG=zephyr:*`,
+      ];
+
+      const cmd = [
+        'npx cross-env',
+        ...envs,
+        `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
+      ].join(' ');
+      await exec(cmd);
+
+      // Verify deployment
+      const deployResultUrls = await _getAppTagUrls(uuid);
+      expect(deployResultUrls).toBeTruthy();
+
+      // Check each deployed URL
+      for (const url of deployResultUrls) {
+        expect(url).toBeTruthy();
+        const content = await _fetchContent(url);
+        const match = content.match(/<title>([^<]+)<\/title>/);
+        expect(match).toBeTruthy();
+        expect(match?.[1]).toEqual('SampleRspackApplication');
+      }
+
+      // Cleanup after deployment
+      await _cleanUp(uuid);
+    },
+    integrationTestTimeout
+  );
+
+  it(
+    'should deploy Vite',
+    async () => {
+      const app = 'vite-react-ts';
+      const uuid = `${app}.${appProject}.${appOrg}`;
+
+      const envs = [
+        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+        `ZE_API_GATE=${dev_api_gate_url}`,
+        `ZE_SECRET_TOKEN=${getSecretToken()}`,
+        `DEBUG=zephyr:*`,
+      ];
+
+      const cmd = [
+        'npx cross-env',
+        ...envs,
+        `npx nx run vite-react-ts:build --skip-nx-cache --verbose`,
+      ].join(' ');
+      await exec(cmd);
+
+      // Verify deployment
+      const deployResultUrls = await _getAppTagUrls(uuid);
+      expect(deployResultUrls).toBeTruthy();
+
+      // Check each deployed URL
+      for (const url of deployResultUrls) {
+        expect(url).toBeTruthy();
+        const content = await _fetchContent(url);
+        const match = content.match(/<title>([^<]+)<\/title>/);
+        expect(match).toBeTruthy();
+        expect(match?.[1]).toEqual('Vite + React + TS');
+      }
+
+      // Cleanup after deployment
+      await _cleanUp(uuid);
     },
     integrationTestTimeout
   );

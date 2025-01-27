@@ -34,7 +34,7 @@ const mfConfig = {
 module.exports = composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(mfConfig),
+  withModuleFederation(mfConfig, { dts: false }),
   withZephyr(),
   (config, ctx) => {
     return config;

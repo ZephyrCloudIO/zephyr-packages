@@ -18,14 +18,27 @@ interface WebpackPluginInstance<Compiler> {
   apply: (compiler: Compiler) => void;
 }
 
+export interface XFederatedRemotesConfig {
+  name: string;
+  library?: {
+    type?: string;
+  };
+  remotes?: (string | RemotesObject)[] | RemotesObject;
+  /** Repack: bundle file name */
+  filename?: string;
+  /**
+   * Repack: Temporary field for repack to store bundle name (in their case it's the
+   * actual output js.bundle and they want to put it in filename field)
+   */
+  bundle_name?: string;
+}
+
 export interface ModuleFederationPlugin {
   apply: (compiler: unknown) => void;
-  _options: {
-    library?: {
-      type?: string;
-    };
-    remotes?: (string | RemotesObject)[] | RemotesObject;
-  };
+  /** For Webpack/Rspack */
+  _options?: XFederatedRemotesConfig;
+  /** Repack specific for now until Repack change how the config should be exposed */
+  config?: XFederatedRemotesConfig;
 }
 
 interface RemotesObject {
@@ -74,14 +87,24 @@ export interface XCompiler {
       loadScript: string;
     };
   };
+  rspack: {
+    RuntimeGlobals: {
+      loadScript: string;
+    };
+  };
 }
 export interface XCompilation {
   outputOptions: {
     trustedTypes: boolean;
   };
   hooks: {
+    /** This is for Webpack */
     additionalModuleRuntimeRequirements: {
       tap: (name: string, callback: (module: XModule, set: Set<string>) => void) => void;
+    };
+    /** This is for Rspack */
+    additionalTreeRuntimeRequirements: {
+      tap: (name: string, callback: (chunk: XChunk, set: Set<string>) => void) => void;
     };
   };
 }
@@ -100,11 +123,13 @@ interface XStatsReason {
 }
 export interface XStats {
   compilation: {
+    name?: string;
+    namedChunks: ReadonlyMap<string, Readonly<XChunk>>;
     options: {
       context?: string;
     };
-    namedChunks: ReadonlyMap<string, Readonly<XChunk>>;
   };
+  toJson: () => XStatsCompilation;
 }
 
 export interface XStatsCompilation {

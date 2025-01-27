@@ -1,9 +1,11 @@
 import type { Compiler } from 'webpack';
 import { ZephyrEngine } from 'zephyr-agent';
 
-import { logBuildSteps } from './ze-setup-build-steps-logging';
-import { setupZeDeploy } from './ze-setup-ze-deploy';
-import { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import {
+  ModuleFederationPlugin,
+  logBuildSteps,
+  setupZeDeploy,
+} from 'zephyr-xpack-internal';
 
 const pluginName = 'ZeWebpackPlugin';
 

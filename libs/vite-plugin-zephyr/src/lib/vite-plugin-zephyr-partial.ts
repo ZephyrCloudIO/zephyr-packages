@@ -17,7 +17,10 @@ export function withZephyrPartial() {
     apply: 'build',
     enforce: 'post',
     configResolved: async (config: ResolvedConfig) => {
-      zephyr_defer_create(config.root);
+      zephyr_defer_create({
+        builder: 'vite',
+        context: config.root,
+      });
       resolve_vite_internal_options({
         root: config.root,
         configFile: config.configFile,

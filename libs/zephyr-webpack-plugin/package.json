@@ -1,6 +1,6 @@
 {
   "name": "zephyr-webpack-plugin",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,6 @@
     "tslib": "^2.3.0",
     "webpack": "^5.93.0",
     "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {

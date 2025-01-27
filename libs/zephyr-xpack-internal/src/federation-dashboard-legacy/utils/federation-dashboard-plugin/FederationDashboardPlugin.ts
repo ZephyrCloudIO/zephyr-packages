@@ -1,7 +1,7 @@
 import { sep } from 'node:path';
 // import { Chunk, Compiler, Stats, StatsChunk, StatsCompilation } from 'webpack';
 import { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
-
+import { ZeErrors, ZephyrEngine } from 'zephyr-agent';
 import {
   convertToGraph,
   ConvertToGraphParams,
@@ -19,6 +19,7 @@ import {
   XStats,
   XStatsChunk,
   XStatsCompilation,
+  ModuleFederationPlugin,
 } from '../../../xpack.types';
 
 // TODO: convert this require to imports
@@ -28,6 +29,14 @@ const AutomaticVendorFederation = require('@module-federation/automatic-vendor-f
 interface ProcessWebpackGraphParams {
   stats: XStats;
   stats_json: XStatsCompilation;
+  pluginOptions: {
+    zephyr_engine: ZephyrEngine;
+    mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+    // Repack specific options because repack might not want to upload the file
+    upload_file?: boolean;
+    // Repack specific options because there are different targets it build towards
+    target?: 'ios' | 'android' | 'web' | undefined;
+  };
 }
 
 export class FederationDashboardPlugin {
@@ -38,7 +47,15 @@ export class FederationDashboardPlugin {
   FederationPluginOptions: {
     name?: string;
     remotes?: unknown;
-    // filename?: string;
+    /**
+     * **bundle_name**: This is a placeholder option since Repack is fast iterating on
+     * Module Federation, right now they are consuming JS bundle and ignore
+     * mf-manifest.json, but if it comes back this field will be needed to understand what
+     * bundle name to look for in mf-manifest.json, Available in
+     * ApplicationVersion.metadata.
+     */
+    bundle_name?: string;
+    filename?: string;
     exposes?: Exposes;
   } = {};
 
@@ -212,6 +229,7 @@ export class FederationDashboardPlugin {
   processWebpackGraph({
     stats,
     stats_json,
+    pluginOptions,
   }: ProcessWebpackGraphParams): ConvertedGraph | undefined {
     // async processWebpackGraph(/*curCompiler: Compilation*/): Promise<unknown> {
     //   const stats = curCompiler.getStats();
@@ -221,6 +239,11 @@ export class FederationDashboardPlugin {
     //   }
 
     // fs.writeFileSync('stats.json', JSON.stringify(stats, null, 2))
+    this.FederationPluginOptions = Object.assign(
+      {},
+      this.FederationPluginOptions,
+      pluginOptions.mfConfig
+    );
 
     // get RemoteEntryChunk
     const RemoteEntryChunk = this.getRemoteEntryChunk(
@@ -234,22 +257,37 @@ export class FederationDashboardPlugin {
     const chunkDependencies = this.getChunkDependencies(validChunkArray);
     const vendorFederation = this.buildVendorFederationMap(stats);
 
+    // TODO: this type casting might not be every compilation result from rspack, but it's fine for now
+    const getPlatformFromStats = stats.compilation
+      .name as FederationDashboardPluginOptions['target'];
+
+    const remotes = this.FederationPluginOptions?.remotes
+      ? Object.keys(this.FederationPluginOptions.remotes)
+      : {};
+
     const rawData: ConvertToGraphParams = {
       name: this.FederationPluginOptions?.name,
-      remotes: Object.keys(this.FederationPluginOptions?.remotes || {}),
-      metadata: this._options.metadata || {},
+      filename: this.FederationPluginOptions?.filename || '',
+      remotes: remotes,
+      metadata:
+        Object.assign(
+          {},
+          this._options.metadata,
+          this.attach_remote_bundle_name_to_metadata()
+        ) || {},
       topLevelPackage: vendorFederation || {},
       publicPath: stats_json.publicPath,
       federationRemoteEntry: RemoteEntryChunk,
       buildHash: stats_json.hash,
-      environment: this._options.environment, // 'development' if not specified
+      environment: this._options.environment || 'development', // 'development' if not specified
       version: computeVersionStrategy(stats_json, this._options.versionStrategy),
-      posted: this._options.posted, // Date.now() if not specified
-      group: this._options.group, // 'default' if not specified
+      posted: this._options.posted || new Date(), // Date.now() if not specified
+      group: this._options.group || 'default', // 'default' if not specified
       sha: gitSha,
       modules: stats_json.modules,
       chunkDependencies,
       functionRemotes: this.allArgumentsUsed,
+      target: pluginOptions.target || getPlatformFromStats,
     };
 
     let graphData: ConvertedGraph | undefined;
@@ -356,17 +394,36 @@ export class FederationDashboardPlugin {
     });*/
   }
 
+  // TODO: add notes on why we need these and what does these do
   getRemoteEntryChunk(
     stats: XStatsCompilation,
     FederationPluginOptions: typeof this.FederationPluginOptions
   ): XStatsChunk | undefined {
     if (!stats.chunks) return;
 
+    // TODO: print all chunk name and see if it has the bundle name or actual remote name. in Rspack this field would return in remote application but won't return in host application due to Rspack's data structure - need external PR to fix
     return stats.chunks.find((chunk) =>
       chunk.names?.find((name) => name === FederationPluginOptions.name)
     );
   }
 
+  /**
+   * TODO: needs a full rewrite because `_group` no longer exists in both Rspack and
+   * Webpack
+   *
+   * Return { "main": [{...dep1Details}, {...dep2Details}], "vendor": [{...dep3Details}],
+   *
+   * 1. Useful for dynamic imports - object generated could inform the bundler or runtime
+   *    loader about which chunks are needed for specific part of the app, enabling better
+   *    performance optimization 1.1 if a chunk representing a React component dynamically
+   *    loads, this dependency graph can help the runtime understand what other chunks
+   *    need to be loaded alongside it.
+   * 2. Optimized loading and caching: By mapping chunk dependencies, this function supports
+   *    advanced optimizations like caching. Chunks that haven’t changed between builds
+   *    can be cached separately, reducing the need for users to download unchanged code.
+   *
+   * }
+   */
   getChunkDependencies(validChunkArray: XChunk[]): Record<string, never> {
     return validChunkArray.reduce(
       (acc, chunk) => {
@@ -395,6 +452,7 @@ export class FederationDashboardPlugin {
   }
 
   buildVendorFederationMap(liveStats: XStats): TopLevelPackage {
+    // calling it "vendor", it's actually npm dependencies
     const vendorFederation: TopLevelPackage = {};
     let packageJson;
     if (this._options.packageJsonPath) {
@@ -435,6 +493,7 @@ export class FederationDashboardPlugin {
     return vendorFederation;
   }
 
+  // Clean up the Chunks to a clear object with keys
   mapToObjectRec(
     m:
       | Record<string, XChunk[keyof XChunk]>
@@ -454,6 +513,10 @@ export class FederationDashboardPlugin {
     return lo;
   }
 
+  /**
+   * In a remote application, this function is used to find all the chunks that are
+   * referenced by the remote entry chunk It won't return anything from HostApp
+   */
   buildValidChunkArray(
     liveStats: XStats,
     FederationPluginOptions: typeof this.FederationPluginOptions
@@ -465,6 +528,7 @@ export class FederationDashboardPlugin {
     );
 
     if (!namedChunkRefs) return [];
+
     const AllReferencedChunksByRemote = namedChunkRefs.getAllReferencedChunks();
 
     const validChunkArray: XChunk[] = [];
@@ -500,13 +564,32 @@ export class FederationDashboardPlugin {
     return Array.from(directReasons);
   }*/
 
+  /**
+   * We are doing this because the filename in React Native is the actual JS bundle, "How
+   * we understand the filename is different in react native" - filename would be at the
+   * end of the URL modified in get_mf_config.ts If we don't attach the remote bundle name
+   * to metadata, we will have no track record of the actual bundle when we need it later
+   * -- this is RePack specific.
+   */
+  attach_remote_bundle_name_to_metadata(): Record<string, string> | undefined {
+    if (!this.FederationPluginOptions.exposes) {
+      return;
+    }
+    // TODO: not sure if this error would break the build. Silently log it for now
+    if (!this.FederationPluginOptions.bundle_name) {
+      console.warn(ZeErrors.ERR_MF_CONFIG_MISSING_FILENAME);
+      return;
+    }
+
+    return { remote_bundle_name: this.FederationPluginOptions.bundle_name };
+  }
+
   async postDashboardData(dashData: any): Promise<
     | {
         value: ZeUploadBuildStats;
       }
     | undefined
   > {
-    console.log(dashData);
     throw new Error('not implemented, override it');
   }
 }

@@ -24,6 +24,25 @@ function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
+/**
+ * TODO: needs full rewrite Module analyzes the build statistics from Rspack to identify
+ * three key aspects of Module Federation. It calculate remote-module, container entry and
+ * node_modules
+ *
+ * 1. Remote Modules (remote-module) // TODO: this is broken needs to fix Tracks which
+ *    modules are being consumed from other federated applications Maps the relationships
+ *    between consuming applications and their remote dependencies Records where these
+ *    remote modules are being used within the application
+ * 2. Container Entry (container entry) Processes the entry points exposed by the Module
+ *    Federation container Creates a mapping of exposed modules and their file locations
+ * 3. Node Modules (node_modules) Collects information about third-party dependencies Gathers
+ *    metadata like package versions, licenses, and sizes Helps track shared dependencies
+ *    between federated applications
+ *
+ * @param modules - The stats object from @rspack/core to parse.
+ * @returns An object containing the consumes, modulesObj, and npmModules.
+ */
+
 export function modulePartOne(modules: XStatsModule[] | undefined): ModulePartOneReturn {
   const consumes: Consume[] = [];
   const consumesByName: Record<string, Consume> = {};

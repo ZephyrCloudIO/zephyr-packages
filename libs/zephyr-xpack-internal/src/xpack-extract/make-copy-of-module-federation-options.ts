@@ -5,6 +5,7 @@ export function makeCopyOfModuleFederationOptions<Compiler>(
   config: XPackConfiguration<Compiler>
 ): ModuleFederationPlugin[] | undefined {
   return iterateFederationConfig(config, (plugin) => {
-    return JSON.parse(JSON.stringify(plugin._options));
-  });
+    if (!plugin) return;
+    return JSON.parse(JSON.stringify(plugin));
+  }).filter(Boolean);
 }

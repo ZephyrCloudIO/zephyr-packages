@@ -61,6 +61,7 @@ export interface LogEventOptions {
   level: string;
   action: string;
   message: string;
+  table?: { key: string; value: (string | undefined)[] }[];
   ignore?: boolean;
 }
 

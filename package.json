@@ -1,6 +1,6 @@
 {
   "name": "zephyr-packages",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "license": "Apache-2.0",
   "scripts": {
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
@@ -34,7 +34,7 @@
     "@nx/rollup": "19.1.0",
     "@nx/rspack": "19.1.0",
     "@nx/vite": "19.8.2",
-    "@nx/web": "19.1.0",
+    "@nx/web": "19.1.1",
     "@nx/webpack": "19.1.0",
     "@nx/workspace": "19.1.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",

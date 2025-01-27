@@ -88,6 +88,7 @@ export const Errors = {
     message: 'Error creating dist folder.',
     kind: 'build',
   },
+
   /** Deployment error, assets not found */
   ERR_ASSETS_NOT_FOUND: {
     id: '010',

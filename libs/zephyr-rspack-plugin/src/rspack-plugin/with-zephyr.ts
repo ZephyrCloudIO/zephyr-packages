@@ -21,13 +21,18 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrRspackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
-  const zephyr_engine = await ZephyrEngine.create(config.context);
+  const zephyr_engine = await ZephyrEngine.create({
+    builder: 'rspack',
+    context: config.context,
+  });
 
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);
+
   const resolved_dependency_pairs =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-  mutWebpackFederatedRemotesConfig(config, resolved_dependency_pairs);
+
+  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
   // inject the ZephyrRspackPlugin
   config.plugins?.push(

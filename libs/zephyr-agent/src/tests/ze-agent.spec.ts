@@ -162,6 +162,7 @@ runner('ZeAgent', () => {
 
       // Execute rspack build command
       const cmd = [
+        'npx cross-env',
         ...envs,
         `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
       ].join(' ');

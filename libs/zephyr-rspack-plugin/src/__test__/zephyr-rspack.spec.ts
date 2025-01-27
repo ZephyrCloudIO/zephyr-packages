@@ -38,10 +38,10 @@ const exec = promisify(execCB);
 runner('Rspack Plugin', () => {
   const gitUserName = 'Test User';
   const gitEmail = 'test.user@valor-software.com';
-  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-packages.git';
+  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
 
   const appOrg = 'testzephyrcloudio';
-  const appProject = 'test-zephyr-packages';
+  const appProject = 'test-zephyr-mono';
 
   const packageJsonPath = path.resolve('examples/sample-rspack-application');
   const appName = 'sample-rspack-application';
@@ -64,9 +64,9 @@ runner('Rspack Plugin', () => {
     }
 
     // Setup git configuration
-    await exec(`git config --replace-all user.name "${gitUserName}"`);
-    await exec(`git config --replace-all user.email "${gitEmail}"`);
-    await exec(`git config --replace-all remote.origin.url ${gitRemoteOrigin}`);
+    await exec(`git config --add user.name "${gitUserName}"`);
+    await exec(`git config --add user.email "${gitEmail}"`);
+    await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
 
     // Setup application configuration
     const appConfig = await _loadAppConfig(application_uid);
@@ -78,9 +78,9 @@ runner('Rspack Plugin', () => {
 
   afterAll(async () => {
     // Cleanup git configuration
-    // await exec(`git config --unset user.name "${gitUserName}"`);
-    // await exec(`git config --unset user.email "${gitEmail}"`);
-    // await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
+    await exec(`git config --unset user.name "${gitUserName}"`);
+    await exec(`git config --unset user.email "${gitEmail}"`);
+    await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
   });
 
   describe('Configuration Tests', () => {

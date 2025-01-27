@@ -55,15 +55,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      # TODO: Broken for some reason.
-      # - uses: nrwl/nx-set-shas@v4
-      #   with:
-      #     main-branch-name: 'origin/master'
-      - name: Set Base SHA
-        run: |
-          git fetch origin master
-          echo "NX_BASE=$(git rev-parse origin/master)" >> $GITHUB_ENV
-          echo "NX_HEAD=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
 
       - name: run test
         env:

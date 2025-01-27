@@ -55,6 +55,7 @@ runner('ZeAgent', () => {
 
   beforeAll(async () => {
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
+
     // Remove Zephyr cache
     if (fs.existsSync(zephyrAppFolder)) {
       const files = fs.readdirSync(zephyrAppFolder);

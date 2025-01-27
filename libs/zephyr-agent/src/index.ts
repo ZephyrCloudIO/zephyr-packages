@@ -22,6 +22,15 @@ export {
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export { zeBuildAssets } from './lib/transformers/ze-build-assets';
 
+export { type ZeApplicationConfig } from './lib/node-persist/upload-provider-options';
+export {
+  getAppConfig,
+  saveAppConfig,
+} from './lib/node-persist/application-configuration';
+export { getGitInfo } from './lib/build-context/ze-util-get-git-info';
+export { getPackageJson } from './lib/build-context/ze-util-read-package-json';
+export { getSecretToken } from './lib/node-persist/secret-token';
+
 // Zephyr Edge is the main class which should be used
 export {
   ZephyrEngine,

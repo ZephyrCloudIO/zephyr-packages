@@ -111,9 +111,9 @@ async function main() {
   const project_path = project.path.replace('./', '').trim()
 
   const s = spinner()
+  s.start(c.cyan(`Creating project in ${project_path}`))
   if (project.type === 'web') {
 
-    s.start(c.cyan('Cloning subfolder ' + c.green(project.templates) + ' from repository https://github.com/ZephyrCloudIO/zephyr-examples.git'))
 
     exec(command_web, async (err, stdout, stderr) => {
 
@@ -153,7 +153,6 @@ async function main() {
 
   if (project.type === 'react-native') {
 
-    s.start(c.cyan(`Cloning repository https://github.com/ZephyrCloudIO/zephyr-repack-example.git`))
 
     exec(command_react_native, async (err, stdout, stderr) => {
       if (err) {

@@ -1,7 +1,7 @@
 {
   "name": "create-zephyr-apps",
   "module": "./src/index.ts",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "build": "rslib build",
@@ -12,7 +12,7 @@
     "url": "https://github.com/ZephyrCloudIO"
   },
   "bin": {
-    "create-zephyr-apps": "./dist/index.mjs"
+    "create-zephyr-apps": "dist/index.mjs"
   },
   "dependencies": {
     "@clack/core": "^0.4.1",

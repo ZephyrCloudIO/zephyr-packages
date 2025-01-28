@@ -4,7 +4,7 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/repack-mf) | [Rspack Docs](https://rspack.dev) | [Re.Pack Docs](https://re-pack.dev)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/repack-mf) | [Rspack Docs](https://rspack.dev) | [Re.Pack Docs](https://re-pack.dev) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 </div>

@@ -15,7 +15,10 @@
         "main": "examples/rspack-mf/apps/remote/src/main.tsx",
         "tsConfig": "examples/rspack-mf/apps/remote/tsconfig.app.json",
         "rspackConfig": "examples/rspack-mf/apps/remote/rspack.config.js",
-        "assets": ["examples/rspack-mf/apps/remote/src/favicon.ico", "examples/rspack-mf/apps/remote/src/assets"]
+        "assets": [
+          "examples/rspack-mf/apps/remote/src/favicon.ico",
+          "examples/rspack-mf/apps/remote/src/assets"
+        ]
       },
       "configurations": {
         "development": {
@@ -31,13 +34,13 @@
     "serve": {
       "executor": "@nx/rspack:dev-server",
       "options": {
-        "buildTarget": "remote:build:development",
+        "buildTarget": "rspack_mf_remote:build:development",
         "port": 4201
       },
       "configurations": {
         "development": {},
         "production": {
-          "buildTarget": "remote:build:production"
+          "buildTarget": "rspack_mf_remote:build:production"
         }
       }
     }

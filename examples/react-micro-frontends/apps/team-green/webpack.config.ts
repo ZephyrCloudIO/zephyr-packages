@@ -35,8 +35,5 @@ module.exports = composePlugins(
   withNx(),
   withReact(),
   withModuleFederation(mfConfig, { dts: false }),
-  withZephyr(),
-  (config, ctx) => {
-    return config;
-  }
+  withZephyr()
 );

@@ -1,26 +1,3 @@
-# Zephyr: We made application federation easy
+# zephyr-xpack-internal (Internal)
 
-readme too be released
-
-how to use?
-
-with Nx, Webpack or Rspack
-
-```
-export default composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(mfConfig),
-  withZephyr(),
-  (config) => {
-    return config;
-  }
-);
-```
-
-or
-
-```
-module.exports = withZephyr()(your_webpack_config);
-
-```
+Read more from our documentation [here](https://docs.zephyr-cloud.io).

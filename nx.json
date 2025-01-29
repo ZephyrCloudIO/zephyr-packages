@@ -119,6 +119,5 @@
       "preVersionCommand": "npx nx run-many -t build -p libs/*"
     }
   },
-  "nxCloudAccessToken": "Zjg0MzllZTQtYTE2Mi00MWMwLWE2ZDUtOTE5ZWI5OGJkYTM5fHJlYWQtd3JpdGU=",
-  "useLegacyCache": true
+  "nxCloudAccessToken": "Zjg0MzllZTQtYTE2Mi00MWMwLWE2ZDUtOTE5ZWI5OGJkYTM5fHJlYWQtd3JpdGU="
 }

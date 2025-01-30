@@ -1,0 +1,23 @@
+{
+  "name": "zephyr-repack-plugin",
+  "version": "0.0.33",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "build": "nx build zephyr-repack-plugin",
+    "test": "nx test zephyr-repack-plugin",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "zephyr-agent": "workspace:*",
+    "zephyr-xpack-internal": "workspace:*"
+  },
+  "devDependencies": {
+    "@callstack/repack": "5.0.0-rc.0",
+    "@rspack/core": "1.0.8",
+    "@types/find-package-json": "^1.2.6",
+    "@types/is-ci": "^3.0.4"
+  }
+}

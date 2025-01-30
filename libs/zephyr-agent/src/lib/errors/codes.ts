@@ -172,6 +172,33 @@ Please make sure you are logged in with the correct Zephyr account.
     kind: 'build',
   },
 
+  /**
+   * Module federation configuraiton error, throw full stop if configuration is invalid -
+   * specifically for React Native.
+   *
+   * Reference:
+   * https://github.com/web-infra-dev/rspack/blob/5848d8bbb0434409aab33a4c677eb2afb52c5564/crates/rspack_plugin_library/src/assign_library_plugin.rs#L222
+   */
+  ERR_INVALID_MF_CONFIG: {
+    id: '023',
+    message: `Library name {{library_name}} must be a valid identifier when using "var" as library type in Module Federation configuration. Either use a valid identifier (e. g. {base_identifier}) or use a different library type (e. g. type: 'global', which assign a property on the global scope instead of declaring a variable). To see a list of valid identifiers, please refer to: 
+- Mozilla's documentation on identifiers: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers 
+- the list of Module Federation's available library type: https://github.com/module-federation/core/blob/ae5ee1eedad4565774ea82e30b3d0df7c9921c58/webpack/declarations/WebpackOptions.d.ts#L112 
+
+You can change the library name to CamelCase to avoid this error.`,
+    kind: 'build',
+  },
+
+  ERR_INVALID_APP_ID: {
+    id: '024',
+    message: `Invalid application_uid: {{application_uid}}. Your application_uid is a combination of: 
+- git organization name
+- git user name
+- name in package.json (They should be the same in your Module Federation configuration if there is any). 
+Please make sure you have set them correctly in your package.json and git repository. The application_uid will be used to assign subdomain for your application. Read more about the standard of what characters are allowed in domain names in IETF: https://datatracker.ietf.org/doc/html/rfc1035#:~:text=The%20labels%20must%20follow%20the%20rules%20for%20ARPANET%20host%20names.%20%20They%20must%0Astart%20with%20a%20letter%2C%20end%20with%20a%20letter%20or%20digit%2C%20and%20have%20as%20interior%0Acharacters%20only%20letters%2C%20digits%2C%20and%20hyphen.%20%20There%20are%20also%20some%0Arestrictions%20on%20the%20length.%20%20Labels%20must%20be%2063%20characters%20or%20less.`,
+    kind: 'build',
+  },
+
   /** Deployment error, assets not found */
   ERR_ASSETS_NOT_FOUND: {
     id: '010',
@@ -412,6 +439,19 @@ Note that we typically map your remote based on below values
 
 We have a complete checklist for Micro-Frontend application configuration here: https://docs.zephyr-cloud.io/how-to/mf-guide
       `,
+    kind: 'config',
+  },
+  ERR_SHARED_PACKAGE: {
+    id: '004',
+    message: `
+Were the required packages in Module federation plugin installed and included in package.json? We had error while trying to compute your shared dependencies.`,
+    kind: 'config',
+  },
+
+  ERR_MF_CONFIG_MISSING_FILENAME: {
+    id: '005',
+    message:
+      'Missing filename in Module Federation configuration. Since the filename in React Native is the actual JS bundle, input of filename in Module Federation configuration is required.',
     kind: 'config',
   },
 } as const satisfies {

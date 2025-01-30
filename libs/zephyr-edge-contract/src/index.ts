@@ -40,6 +40,7 @@ export {
 
 // promise proto methods
 export {
+  forEachLimit,
   PromiseTuple,
   isSuccessTuple,
   PromiseLazyLoad,

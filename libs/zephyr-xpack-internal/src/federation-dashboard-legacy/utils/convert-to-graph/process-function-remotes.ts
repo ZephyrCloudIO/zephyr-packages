@@ -1,5 +1,21 @@
 import { Consume } from './module-part-one';
 
+/**
+ * This function processes dynamic remote module imports in a Module Federation setup. It
+ * tracks which files in the application consume (import) remote modules from other
+ * federated applications.
+ *
+ * For example, if app1 dynamically imports Button from app2 like: const Button = await
+ * import('app2/Button')
+ *
+ * This would be tracked as:
+ *
+ * - ApplicationID: 'app2'
+ * - Name: 'Button'
+ * - ConsumingApplicationID: 'Button'
+ * - UsedIn: Set of files in app1 that import Button
+ */
+
 interface ProcessFunctionRemoteParams {
   functionRemotes: [file: string, applicationID: string, name: string][];
   consumes: Consume[];

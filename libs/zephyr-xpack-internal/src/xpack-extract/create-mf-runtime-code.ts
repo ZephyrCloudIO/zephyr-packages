@@ -4,7 +4,10 @@ declare const __webpack_require__: {
   l: (url: string, fn: () => void, name: string, name2: string) => void;
 };
 
-export function createMfRuntimeCode(deps: ZeResolvedDependency): string {
+export function createMfRuntimeCode(
+  deps: ZeResolvedDependency,
+  delegate_module_template: () => unknown
+): string {
   // prepare delegate function string template
   const fnReplace = delegate_module_template.toString();
   const strStart = new RegExp(/^function[\W\S]+return new Promise/);
@@ -22,7 +25,7 @@ export function createMfRuntimeCode(deps: ZeResolvedDependency): string {
     .replace('__LIBRARY_TYPE__', library_type);
 }
 
-function delegate_module_template(): unknown {
+export function xpack_delegate_module_template(): unknown {
   return new Promise((resolve, reject) => {
     const _windows = typeof window !== 'undefined' ? window : globalThis;
     const sessionEdgeURL = _windows.sessionStorage.getItem('__APPLICATION_UID__');

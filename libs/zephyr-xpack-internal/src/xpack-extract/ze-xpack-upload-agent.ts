@@ -1,34 +1,39 @@
-import type { Stats, StatsCompilation } from 'webpack';
-import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
+import { logFn, ze_log, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import {
   type Source,
   type ZephyrBuildStats,
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import {
-  buildWebpackAssetMap,
-  emitDeploymentDone,
-  getBuildStats,
-} from 'zephyr-xpack-internal';
-import { ZephyrWebpackInternalPluginOptions } from './ze-webpack-plugin';
+import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
+import { emitDeploymentDone } from '../lifecycle-events/index';
+import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
 
-export interface ZephyrAgentProps {
-  stats: Stats;
-  stats_json: StatsCompilation;
-  pluginOptions: ZephyrWebpackInternalPluginOptions;
+interface UploadAgentPluginOptions {
+  zephyr_engine: ZephyrEngine;
+  wait_for_index_html?: boolean;
+  // federated module config
+  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+}
+
+export interface ZephyrAgentProps<T> {
+  stats: XStats;
+  stats_json: XStatsCompilation;
+  pluginOptions: T;
   assets: Record<string, Source>;
 }
 
-export async function webpack_zephyr_agent({
+export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   stats,
   stats_json,
   assets,
   pluginOptions,
-}: ZephyrAgentProps): Promise<void> {
+}: ZephyrAgentProps<T>): Promise<void> {
   ze_log('Initiating: Zephyr Webpack Upload Agent');
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
+
   try {
     const assetsMap = await buildWebpackAssetMap(assets, {
       wait_for_index_html,

@@ -37,7 +37,10 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
-      zephyr_defer_create(config.root);
+      zephyr_defer_create({
+        builder: 'vite',
+        context: config.root,
+      });
       resolve_vite_internal_options({
         root: config.root,
         outDir: config.build?.outDir,

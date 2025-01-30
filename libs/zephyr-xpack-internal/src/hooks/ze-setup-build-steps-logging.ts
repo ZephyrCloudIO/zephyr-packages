@@ -1,9 +1,26 @@
-import { ZephyrRspackInternalPluginOptions } from './ze-rspack-plugin';
-import { ze_log, ZephyrError } from 'zephyr-agent';
-import { Compiler } from '@rspack/core';
+import { ze_log, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 
-export function logBuildSteps(
-  pluginOptions: ZephyrRspackInternalPluginOptions,
+interface BuildSteps {
+  pluginName: string;
+  zephyr_engine: ZephyrEngine;
+}
+
+interface BuildStepsCompiler {
+  hooks: {
+    beforeCompile: {
+      tapAsync: (
+        pluginName: string,
+        cb: (params: unknown, cb: () => void) => Promise<void>
+      ) => void;
+    };
+    failed: {
+      tap: (pluginName: string, cb: (err: Error) => void) => void;
+    };
+  };
+}
+
+export function logBuildSteps<T extends BuildSteps, Compiler extends BuildStepsCompiler>(
+  pluginOptions: T,
   compiler: Compiler
 ): {
   buildStartedAt: number;

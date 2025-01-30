@@ -68,6 +68,12 @@ function zephyrFixPublicPath(): CliPlugin<AppTools> {
     setup: async () => ({
       config: async () => ({
         tools: {
+          webpack(config, { isServer }) {
+            if (!isServer) {
+              config.output = { ...config.output, publicPath: 'auto' };
+            }
+            return config;
+          },
           rspack(config, { isServer }) {
             if (!isServer) {
               config.output = { ...config.output, publicPath: 'auto' };

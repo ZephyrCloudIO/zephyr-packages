@@ -20,7 +20,12 @@ export const withZephyr = (
 
   setup: async ({ useAppContext }) => {
     const appContext = useAppContext();
-    const zephyrEngine = await ZephyrEngine.create(appContext.appDirectory);
+    const zephyrEngineOptions = {
+      context: appContext.appDirectory,
+      builder: appContext.bundlerType === 'rspack' ? 'rspack' : 'webpack',
+    } as const;
+
+    const zephyrEngine = await ZephyrEngine.create(zephyrEngineOptions);
 
     return {
       config: async () => {
@@ -28,7 +33,7 @@ export const withZephyr = (
         const resolvedDependencies =
           await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
 
-        mutWebpackFederatedRemotesConfig(appContext, resolvedDependencies);
+        mutWebpackFederatedRemotesConfig(zephyrEngine, appContext, resolvedDependencies);
 
         const mfConfig = makeCopyOfModuleFederationOptions(appContext);
 

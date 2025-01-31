@@ -21,7 +21,8 @@
     "zephyr-rspack-plugin": "workspace:*",
     "zephyr-webpack-plugin": "workspace:*",
     "webpack": "5.97.1",
-    "@rspack/core": "^1.1.8"
+    "@rspack/core": "^1.1.8",
+    "@modern-js/module-tools": "^2.64.0"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4",

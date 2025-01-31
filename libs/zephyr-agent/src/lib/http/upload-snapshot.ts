@@ -1,4 +1,3 @@
-import { ClientRequestArgs } from 'node:http';
 import { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeHttpRequest } from './ze-http-request';
@@ -18,10 +17,10 @@ export async function uploadSnapshot({
 
   const json = JSON.stringify(body);
 
-  const options: ClientRequestArgs = {
+  const options: RequestInit = {
     method: 'POST',
     headers: {
-      'Content-Length': Buffer.byteLength(json),
+      'Content-Length': Buffer.byteLength(json).toString(),
       'Content-Type': 'application/json; charset=utf-8',
       can_write_jwt: jwt,
     },

@@ -37,7 +37,7 @@ export async function zeEnableSnapshotOnPages({
     {
       method: 'POST',
       headers: {
-        'Content-Length': Buffer.byteLength(json),
+        'Content-Length': Buffer.byteLength(json).toString(),
         'Content-Type': 'application/json; charset=utf-8',
         can_write_jwt: jwt,
       },

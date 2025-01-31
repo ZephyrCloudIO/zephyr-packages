@@ -1,4 +1,4 @@
-import { type ConvertedGraph } from 'zephyr-edge-contract';
+import { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
@@ -26,7 +26,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   DOMAIN?: string;
   PLATFORM?: string;
   TYPE?: string;
-}): Promise<ConvertedGraph> {
+}): Promise<ZephyrBuildStats> {
   ze_log('get build stats started. create federation dashboard plugin');
   const app = pluginOptions.zephyr_engine.applicationProperties;
   const { git } = pluginOptions.zephyr_engine.gitProperties;
@@ -39,8 +39,12 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     },
   });
 
-  ze_log('process webpack graph');
-  const convertedGraph = dashboardPlugin.processWebpackGraph({ stats, stats_json });
+  ze_log('process webpack graph.pluginOptions', pluginOptions);
+  const convertedGraph = dashboardPlugin.processWebpackGraph({
+    stats,
+    stats_json,
+    pluginOptions,
+  });
 
   if (!convertedGraph) {
     throw new ZephyrError(ZeErrors.ERR_CONVERT_GRAPH_TO_DASHBOARD);
@@ -55,7 +59,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
 
-  const { name, filename, remotes } = (mfConfig || {}) as Record<string, string>;
+  const { name, filename, remotes } = mfConfig?._options || mfConfig?.config || {};
 
   const data_overrides = {
     id: application_uid,
@@ -73,7 +77,11 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   };
 
   // todo: extend data
-  const res = Object.assign({}, convertedGraph, data_overrides);
+
+  const res = Object.assign({}, convertedGraph, data_overrides, {
+    project: name, // Add missing project property
+    tags: [], // Add missing tags property with empty array as default
+  }) as ZephyrBuildStats;
   ze_log('get build stats done.', res);
   return res;
 }

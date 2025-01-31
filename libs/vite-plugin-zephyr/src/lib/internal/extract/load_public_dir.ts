@@ -27,11 +27,11 @@ export async function load_public_dir(
         await loadDir(srcFile, destFile);
       } else {
         publicAssets.push({
-          fileName: normalizePath(relative(outDir, destFile)),
           name: basename(file),
           needsCodeReference: false,
           source: await promisify(readFile)(srcFile),
           type: 'asset',
+          fileName: normalizePath(relative(outDir, destFile)),
           originalFileName: basename(file),
         });
       }

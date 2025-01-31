@@ -29,6 +29,32 @@ interface ModulePartTwoReturn {
   overrides: Record<string, unknown>;
 }
 
+/**
+ * TODO: needs full rewrite Analyzing shared dependencies and module overrides
+ *
+ * 1. Shared Module Analysis
+ *
+ * - Processes provide-module types (modules that are shared with other applications) //
+ *   TODO: this is wrong and doesn't apply to Rspack - need to fix
+ * - Handles consume-shared-module types (modules that are consumed from the shared scope)
+ *   // TODO: this is wrong and doesn't apply to Rspack
+ *
+ *   - Need to fix
+ * - Builds dependency graphs between modules
+ *
+ * 2. Version Management
+ *
+ * - Tracks specific versions of shared dependencies
+ * - Handles version resolution for shared modules Creates override configurations for
+ *   specific package versions
+ *
+ * @param name: Name of the federated app
+ * @param modules: Modules from the build stats
+ * @param modulesObj: Processed module objects
+ * @param convertedDeps: Converted dependencies
+ * @returns Overrides: Record<string, unknown>
+ */
+
 export function modulePartTwo(params: ModulePartTwoParams): ModulePartTwoReturn {
   const { name, modules, modulesObj, convertedDeps } = params;
   const overrides = {} as Record<string, Overrides>;

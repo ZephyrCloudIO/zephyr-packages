@@ -7,11 +7,8 @@ import App from './app/app';
 Sentry.init({
   dsn: 'https://dc0d5d0da7a3e71e65bdf4a984a8faf0@o4505862739525632.ingest.sentry.io/4506043285176320',
   integrations: [
-    new Sentry.BrowserTracing({
-      // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-      // tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
-    }),
-    new Sentry.Replay(),
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
   ],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions

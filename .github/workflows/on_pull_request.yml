@@ -10,69 +10,31 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
-env:
-  NODE_VERSION: 20
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 jobs:
-  deps:
-    name: Install Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
-
   build:
-    name: Build it all
     runs-on: ubuntu-latest
-    needs: deps
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
         with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
+      - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
       - name: run build-all
-        # TODO: reintroduce whole repo build when examples are ready
         run: pnpm build-all --exclude="examples/**" && exit 0
 
   lint:
-    name: Lint
     runs-on: ubuntu-latest
-    needs: deps
     steps:
       - uses: actions/checkout@v4
         with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
+      - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
@@ -80,22 +42,19 @@ jobs:
         run: pnpm dlx nx affected -t lint
 
   test:
-    name: Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     environment: development
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup
         with:
-          version: 9
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm i --frozen-lockfile
+          os: ${{ matrix.os }}
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master

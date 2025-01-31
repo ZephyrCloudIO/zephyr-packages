@@ -1,8 +1,10 @@
 import { ZephyrEngine } from 'zephyr-agent';
 
-import { setupZeDeploy } from './ze-setup-ze-deploy';
-import { logBuildSteps } from './ze-setup-build-steps-logging';
-import { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import {
+  ModuleFederationPlugin,
+  logBuildSteps,
+  setupZeDeploy,
+} from 'zephyr-xpack-internal';
 import { Compiler } from '@rspack/core';
 
 const pluginName = 'ZeRspackPlugin';

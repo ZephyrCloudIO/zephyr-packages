@@ -166,7 +166,7 @@ export class ZephyrError<
     const zeError = ZephyrError.is(error)
       ? error
       : new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-          message: (error as any)?.message || String(error),
+          message: (error as Error)?.message || String(error),
           cause: error,
         });
 
@@ -214,13 +214,15 @@ function write_error_file(zeError: ZephyrError<ZeErrorKeys>) {
   }
 }
 
-function format_error(error: any): unknown {
-  if (!error) {
+function format_error(err: unknown): unknown {
+  if (!err) {
     return undefined;
   }
 
+  const error = err as ZephyrError<ZeErrorKeys>;
+
   return {
-    ...(error as any),
+    ...error,
     template: undefined,
     ...error?.template,
     data: error?.data,

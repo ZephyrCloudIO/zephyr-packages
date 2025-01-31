@@ -4,7 +4,6 @@ import {
   readPackageJson,
 } from 'zephyr-agent';
 
-import { iterateFederationConfig } from './iterate-federation-config';
 import { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 

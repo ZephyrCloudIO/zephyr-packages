@@ -3,7 +3,9 @@ packages:
   - 'examples/*'
   - 'examples/vite-react-mf/*'
   - 'examples/rspack-mf/*'
+  - 'examples/modern-js/*'
   - 'examples/modern-js-mf/*'
+  # - 'examples/modern-js-ssr/*'
 
 installOptions:
   preferOnline: false

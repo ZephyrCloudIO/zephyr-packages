@@ -1,5 +1,5 @@
 {
-  "name": "remote-app",
+  "name": "remote",
   "version": "0.1.0",
   "scripts": {
     "reset": "npx rimraf node_modules ./**/node_modules",
@@ -24,9 +24,8 @@
     "pre-commit": "npx lint-staged"
   },
   "dependencies": {
-    "@modern-js/runtime": "2.64.0",
-    "@module-federation/bridge-react": "^0.8.9",
-    "@module-federation/modern-js": "^0.8.9",
+    "@modern-js/runtime": "^2.64.0",
+    "@module-federation/modern-js": "^0.6.6",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
     "zephyr-modernjs-plugin": "workspace:*"

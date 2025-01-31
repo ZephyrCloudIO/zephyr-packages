@@ -1,6 +1,5 @@
 import { Helmet } from '@modern-js/runtime/head';
 import './index.css';
-import { Link } from '@modern-js/runtime/router';
 
 const Index = () => (
   <div className="container-box">
@@ -19,10 +18,10 @@ const Index = () => (
           src="https://lf3-static.bytednsdoc.com/obj/eden-cn/zq-uylkvT/ljhwZthlaukjlkulzlp/modern-js-logo.svg"
           alt="Modern.js Logo"
         />
-        <p className="name">Remote App</p>
+        <p className="name">Modern.js</p>
       </div>
       <p className="description">
-        Get started by goto <Link to="next">Next</Link> page
+        Get started by editing <code className="code">src/routes/page.tsx</code>
       </p>
       <div className="grid">
         <a

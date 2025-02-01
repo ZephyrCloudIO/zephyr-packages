@@ -3,10 +3,6 @@
   "module": "./src/index.ts",
   "version": "0.0.4",
   "type": "module",
-  "scripts": {
-    "build": "rslib build",
-    "dev": "tsx package/index.ts"
-  },
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
@@ -14,25 +10,6 @@
   "bin": {
     "create-zephyr-apps": "dist/index.mjs"
   },
-  "dependencies": {
-    "@clack/core": "^0.4.1",
-    "@clack/prompts": "^0.9.1",
-    "chalk": "^5.4.1",
-    "picocolors": "^1.1.1",
-    "tempy": "^3.1.0"
-  },
-  "devDependencies": {
-    "@rslib/core": "^0.3.2",
-    "@types/degit": "^2.8.6",
-    "@types/node": "^22.10.7",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=18"
   },
@@ -45,5 +22,31 @@
     "zephyr-template",
     "example",
     "template"
-  ]
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "tsx package/index.ts",
+    "lint": "biome check",
+    "fix": "biome format && biome check --fix --unsafe"
+  },
+  "dependencies": {
+    "@clack/core": "^0.4.1",
+    "@clack/prompts": "^0.9.1",
+    "chalk": "^5.4.1",
+    "picocolors": "^1.1.1",
+    "tempy": "^3.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@rslib/core": "^0.3.2",
+    "@types/degit": "^2.8.6",
+    "@types/node": "^22.10.7",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
 }

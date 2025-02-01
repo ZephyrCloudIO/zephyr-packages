@@ -23,6 +23,14 @@
     "example",
     "template"
   ],
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --files-ignore-unknown=true"
+    ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged"
+  },
   "scripts": {
     "build": "rslib build",
     "dev": "tsx package/index.ts",
@@ -37,6 +45,8 @@
     "tempy": "^3.1.0"
   },
   "devDependencies": {
+    "lint-staged": "^15.4.3",
+    "simple-git-hooks": "^2.11.1",
     "@biomejs/biome": "1.9.4",
     "@rslib/core": "^0.3.2",
     "@types/degit": "^2.8.6",

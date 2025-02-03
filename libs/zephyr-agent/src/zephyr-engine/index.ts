@@ -196,13 +196,8 @@ export class ZephyrEngine {
         name: app_name,
       });
 
-      if (should_not_replace_remote(dep.version)) {
-        return {
-          name: dep.name,
-          version: dep.version,
-          platform,
-        } as ZeResolvedDependency;
-      }
+      // if default url is url - set as default, if not use app remote_host as default
+      // if default url is not url - send it as a semver to deps resolution
 
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
@@ -381,16 +376,6 @@ export class ZephyrEngine {
 
     await this.build_finished();
   }
-}
-
-// Identify situations when remote URL should not be replaced
-// - Version URL is fixed to a deployed remote
-// - Version URL contains old promise syntax
-function should_not_replace_remote(version_url: string) {
-  if (version_url.includes('https://')) return true;
-  if (version_url.startsWith('promise new Promise')) return true;
-
-  return false;
 }
 
 function mut_zephyr_app_uid(ze: ZephyrEngine): void {

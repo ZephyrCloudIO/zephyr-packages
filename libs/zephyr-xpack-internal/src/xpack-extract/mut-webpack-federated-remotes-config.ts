@@ -26,10 +26,8 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       return;
     }
 
-    const library_type =
-      (remotesConfig.library?.type ?? zephyr_engine.builder === 'repack')
-        ? 'var'
-        : 'self';
+    const library_type = remotesConfig.library?.type ?? 'var';
+
     ze_log(`Library type: ${library_type}`);
 
     Object.entries(remotes).map((remote) => {

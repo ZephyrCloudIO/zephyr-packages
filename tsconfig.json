@@ -6,7 +6,6 @@
     "module": "ES2020",
     "moduleDetection": "force",
 
-  //"jsx": "react-jsx",
     "allowJs": true,
 
     // Bundler mode
@@ -24,7 +23,7 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false, 
+    "noPropertyAccessFromIndexSignature": false,
     "outDir": "./dist",
     "types": ["node"]
   }

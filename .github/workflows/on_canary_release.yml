@@ -19,6 +19,7 @@ jobs:
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
       - name: Post Summary
+        continue-on-error: true
         run: |
           echo "## Canary version successfully published!" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

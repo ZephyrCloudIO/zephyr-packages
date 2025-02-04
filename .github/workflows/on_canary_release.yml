@@ -10,19 +10,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      # - name: Build packages
-      #   run: pnpm dlx nx run-many -t build --projects="libs/*"
+      - name: Build packages
+        run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Patch versions
         run: |
           CANARY_VERSION=0.0.0-canary-$(date +%Y%m%d%H%M%S)
           pnpm ze-version-patch $CANARY_VERSION
-      # - name: Publish package on NPM 📦
-      #   run: pnpm ze-publish --tag=canary
+      - name: Publish package on NPM 📦
+        run: pnpm ze-publish --tag=canary
       - name: Post Summary
         run: |
-          echo "# Canary version successfully published!" > $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Version name: $CANARY_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "## Canary version successfully published!" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY

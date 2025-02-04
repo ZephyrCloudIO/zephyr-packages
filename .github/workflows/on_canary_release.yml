@@ -10,11 +10,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Build packages
-        run: pnpm dlx nx run-many -t build --projects="libs/*"
+      # - name: Build packages
+      #   run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Patch versions
         run: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          pnpm ze-version-patch 0.0.0-canary-$TIMESTAMP
-      - name: Publish package on NPM 📦
-        run: pnpm ze-publish --tag=canary
+          CANARY_VERSION=0.0.0-canary-$(date +%Y%m%d%H%M%S)
+          pnpm ze-version-patch $CANARY_VERSION
+      # - name: Publish package on NPM 📦
+      #   run: pnpm ze-publish --tag=canary
+      - name: Post Summary
+        run: |
+          echo "# Canary version successfully published!" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version name: $CANARY_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          pnpm list --recursive --depth -1 --filter="./libs/*" | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name
+            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
+            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
+            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
+          done

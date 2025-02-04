@@ -14,7 +14,7 @@ jobs:
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
-            await github.rest.repos.createDispatchEvent({
+            await github.rest.actions.createWorkflowDispatch({
               owner: 'ZephyrCloudIO',
               repo: 'zephyr-repack-example',
               workflow_id: 'e2e-zephyr-repack-plugin.yml',

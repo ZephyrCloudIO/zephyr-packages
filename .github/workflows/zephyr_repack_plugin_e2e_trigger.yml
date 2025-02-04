@@ -6,14 +6,14 @@ on:
       - master
 
 jobs:
-  trigger-origin:
+  trigger-zephyr-repack-example:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
         uses: actions/github-script@v6
         with:
           script: |
-            const response = await github.repos.createDispatchEvent({
+            await github.rest.repos.createDispatchEvent({
               owner: 'ZephyrCloudIO',
               repo: 'zephyr-repack-example',
               event_type: 'trigger-from-zephyr-packages',

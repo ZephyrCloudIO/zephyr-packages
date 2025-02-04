@@ -9,7 +9,7 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
+      # - uses: ./.github/actions/setup
       # - name: Build packages
       #   run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Patch versions
@@ -26,8 +26,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
-          pnpm list --recursive --depth -1 --filter="./libs/*" | while read -r line; do
-            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name
+          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
             VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
             NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
             echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY

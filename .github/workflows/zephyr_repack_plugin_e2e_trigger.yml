@@ -12,6 +12,7 @@ jobs:
       - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GH_TOKEN }}
           script: |
             await github.rest.repos.createDispatchEvent({
               owner: 'ZephyrCloudIO',

@@ -16,41 +16,30 @@ export const withZephyr = (
   zephyrOptions?: ZephyrPluginOptions
 ): CliPlugin<AppTools<'rspack' | 'webpack'>> => ({
   name: pluginName,
-  // pre: ['@modern-js/plugin-module-federation-config'],
   pre: ['@modern-js/plugin-module-federation-config'],
 
   setup: async ({ useAppContext }) => {
     return {
       config: async () => {
+        const appContext = useAppContext();
         const zephyrEngineOptions = {
-          context: useAppContext().appDirectory,
-          builder: useAppContext().bundlerType === 'rspack' ? 'rspack' : 'webpack',
+          context: appContext.appDirectory,
+          builder: appContext.bundlerType === 'rspack' ? 'rspack' : 'webpack',
         } as const;
 
         const zephyrEngine = await ZephyrEngine.create(zephyrEngineOptions);
+        const dependencyPairs = extractFederatedDependencyPairs(appContext);
+
+        const resolvedDependencies =
+          await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
+
+        mutWebpackFederatedRemotesConfig(zephyrEngine, appContext, resolvedDependencies);
+
+        const mfConfig = makeCopyOfModuleFederationOptions(appContext);
 
         return {
           tools: {
             rspack(config) {
-              // ? Get the dependency Pairs
-              const dependencyPairs = extractFederatedDependencyPairs({
-                context: useAppContext().appDirectory,
-                plugins: config.plugins,
-              });
-
-              // TODO: Can't async rspack :(
-              // const resolvedDependencies =
-              //   await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
-
-              // mutWebpackFederatedRemotesConfig(
-              //   zephyrEngine,
-              //   useAppContext(),
-              //   resolvedDependencies
-              // );
-
-              const mfConfig = makeCopyOfModuleFederationOptions(useAppContext());
-
-              // console.log('mfConfig', mfConfig);
               config.plugins?.push(
                 new ZeRspackPlugin({
                   zephyr_engine: zephyrEngine,

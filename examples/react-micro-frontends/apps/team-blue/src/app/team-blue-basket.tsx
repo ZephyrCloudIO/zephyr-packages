@@ -11,9 +11,7 @@ const state: { count: number } = {
 };
 
 export default function BlueBasket({ id }: { id: string }) {
-  const [classname, setClassname] = useState(
-    state.count === 0 ? 'empty' : 'filled'
-  );
+  const [classname] = useState(state.count === 0 ? 'empty' : 'filled');
   const [count, setCount] = useState(state.count);
 
   useEffect(() => {

@@ -14,8 +14,8 @@ jobs:
         run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Patch versions
         run: |
-          CANARY_VERSION=0.0.0-canary-$(date +%Y%m%d%H%M%S)
-          pnpm ze-version-patch $CANARY_VERSION
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          pnpm ze-version-patch 0.0.0-canary-$TIMESTAMP
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
       - name: Post Summary

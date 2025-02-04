@@ -17,5 +17,6 @@ jobs:
             await github.rest.repos.createDispatchEvent({
               owner: 'ZephyrCloudIO',
               repo: 'zephyr-repack-example',
-              event_type: 'trigger-from-zephyr-packages',
-            });
+              workflow_id: 'e2e-zephyr-repack-plugin.yml',
+              ref: 'bootstrap-example'
+            })

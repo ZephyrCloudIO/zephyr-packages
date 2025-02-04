@@ -9,7 +9,7 @@ jobs:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      # - uses: ./.github/actions/setup
+      - uses: ./.github/actions/setup
       # - name: Build packages
       #   run: pnpm dlx nx run-many -t build --projects="libs/*"
       - name: Patch versions

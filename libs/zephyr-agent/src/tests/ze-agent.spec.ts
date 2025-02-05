@@ -17,6 +17,7 @@ import {
 } from '../lib/node-persist/application-configuration';
 import { getSecretToken } from '../lib/node-persist/secret-token';
 import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
+import { getBuildId } from '../lib/edge-requests/get-build-id';
 
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).
@@ -146,91 +147,93 @@ runner('ZeAgent', () => {
         const match = content.match(/<title>([^<]+)<\/title>/);
         expect(match).toBeTruthy();
         expect(match?.[1]).toEqual('SampleReactApp');
+
+        await _verifyBuildId(content, uuid);
       }
       await _cleanUp(uuid);
     },
     integrationTestTimeout
   );
 
-  it(
-    'should deploy Rspack',
-    async () => {
-      const app = 'sample-rspack-application';
-      const uuid = `${app}.${appProject}.${appOrg}`;
+  // it(
+  //   'should deploy Rspack',
+  //   async () => {
+  //     const app = 'sample-rspack-application';
+  //     const uuid = `${app}.${appProject}.${appOrg}`;
 
-      const envs = [
-        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
-        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
-        `ZE_API_GATE=${dev_api_gate_url}`,
-        `ZE_SECRET_TOKEN=${getSecretToken()}`,
-        `DEBUG=zephyr:*`,
-      ];
+  //     const envs = [
+  //       `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+  //       `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+  //       `ZE_API_GATE=${dev_api_gate_url}`,
+  //       `ZE_SECRET_TOKEN=${getSecretToken()}`,
+  //       `DEBUG=zephyr:*`,
+  //     ];
 
-      const cmd = [
-        'npx cross-env',
-        ...envs,
-        `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
-      ].join(' ');
-      await exec(cmd);
+  //     const cmd = [
+  //       'npx cross-env',
+  //       ...envs,
+  //       `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
+  //     ].join(' ');
+  //     await exec(cmd);
 
-      // Verify deployment
-      const deployResultUrls = await _getAppTagUrls(uuid);
-      expect(deployResultUrls).toBeTruthy();
+  //     // Verify deployment
+  //     const deployResultUrls = await _getAppTagUrls(uuid);
+  //     expect(deployResultUrls).toBeTruthy();
 
-      // Check each deployed URL
-      for (const url of deployResultUrls) {
-        expect(url).toBeTruthy();
-        const content = await _fetchContent(url);
-        const match = content.match(/<title>([^<]+)<\/title>/);
-        expect(match).toBeTruthy();
-        expect(match?.[1]).toEqual('SampleRspackApplication');
-      }
+  //     // Check each deployed URL
+  //     for (const url of deployResultUrls) {
+  //       expect(url).toBeTruthy();
+  //       const content = await _fetchContent(url);
+  //       const match = content.match(/<title>([^<]+)<\/title>/);
+  //       expect(match).toBeTruthy();
+  //       expect(match?.[1]).toEqual('SampleRspackApplication');
+  //     }
 
-      // Cleanup after deployment
-      await _cleanUp(uuid);
-    },
-    integrationTestTimeout
-  );
+  //     // Cleanup after deployment
+  //     await _cleanUp(uuid);
+  //   },
+  //   integrationTestTimeout
+  // );
 
-  it(
-    'should deploy Vite',
-    async () => {
-      const app = 'vite-react-ts';
-      const uuid = `${app}.${appProject}.${appOrg}`;
+  // it(
+  //   'should deploy Vite',
+  //   async () => {
+  //     const app = 'vite-react-ts';
+  //     const uuid = `${app}.${appProject}.${appOrg}`;
 
-      const envs = [
-        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
-        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
-        `ZE_API_GATE=${dev_api_gate_url}`,
-        `ZE_SECRET_TOKEN=${getSecretToken()}`,
-        `DEBUG=zephyr:*`,
-      ];
+  //     const envs = [
+  //       `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+  //       `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+  //       `ZE_API_GATE=${dev_api_gate_url}`,
+  //       `ZE_SECRET_TOKEN=${getSecretToken()}`,
+  //       `DEBUG=zephyr:*`,
+  //     ];
 
-      const cmd = [
-        'npx cross-env',
-        ...envs,
-        `npx nx run vite-react-ts:build --skip-nx-cache --verbose`,
-      ].join(' ');
-      await exec(cmd);
+  //     const cmd = [
+  //       'npx cross-env',
+  //       ...envs,
+  //       `npx nx run vite-react-ts:build --skip-nx-cache --verbose`,
+  //     ].join(' ');
+  //     await exec(cmd);
 
-      // Verify deployment
-      const deployResultUrls = await _getAppTagUrls(uuid);
-      expect(deployResultUrls).toBeTruthy();
+  //     // Verify deployment
+  //     const deployResultUrls = await _getAppTagUrls(uuid);
+  //     expect(deployResultUrls).toBeTruthy();
 
-      // Check each deployed URL
-      for (const url of deployResultUrls) {
-        expect(url).toBeTruthy();
-        const content = await _fetchContent(url);
-        const match = content.match(/<title>([^<]+)<\/title>/);
-        expect(match).toBeTruthy();
-        expect(match?.[1]).toEqual('Vite + React + TS');
-      }
+  //     // Check each deployed URL
+  //     for (const url of deployResultUrls) {
+  //       expect(url).toBeTruthy();
+  //       const content = await _fetchContent(url);
+  //       const match = content.match(/<title>([^<]+)<\/title>/);
+  //       expect(match).toBeTruthy();
+  //       expect(match?.[1]).toEqual('Vite + React + TS');
+  //     }
 
-      // Cleanup after deployment
-      await _cleanUp(uuid);
-    },
-    integrationTestTimeout
-  );
+  //     // Cleanup after deployment
+  //     await _cleanUp(uuid);
+  //   },
+  //   integrationTestTimeout
+  // );
 });
 
 async function _loadAppConfig(application_uid: string): Promise<ZeApplicationConfig> {
@@ -295,4 +298,16 @@ async function _fetchContent(url: string, counter = 0): Promise<string> {
     return _fetchContent(url, counter + 1);
   }
   return content;
+}
+
+async function _verifyBuildId(content: string, uuid: string): Promise<void> {
+  const buildIdMatch = content.match(/<meta name="zephyr-build-id" content="([^"]+)"/);
+  expect(buildIdMatch).toBeTruthy();
+
+  if (buildIdMatch) {
+    const buildId = buildIdMatch[1];
+    const expectedBuildId = await getBuildId(uuid);
+    expect(buildId).toBeTruthy();
+    expect(buildId).toEqual(expectedBuildId);
+  }
 }

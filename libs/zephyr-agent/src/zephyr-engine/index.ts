@@ -66,6 +66,7 @@ type ZephyrEngineBuilderTypes =
   | 'vite'
   | 'rollup'
   | 'unknown';
+
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
@@ -384,6 +385,23 @@ export class ZephyrEngine {
     }
 
     await this.build_finished();
+  }
+
+  async injectBuildIdMeta(htmlContent: string): Promise<string> {
+    if (!process.env['ZE_CI_TEST']) {
+      return htmlContent;
+    }
+
+    const buildId = await this.build_id;
+    if (!buildId) {
+      return htmlContent;
+    }
+
+    // Insert meta tag before closing head tag
+    return htmlContent.replace(
+      '</head>',
+      `  <meta name="zephyr-build-id" data-testid="ze-build-id" content="${buildId}" />\n </head>`
+    );
   }
 }
 

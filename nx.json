@@ -9,8 +9,15 @@
     "@nx/jest:jest": {
       "cache": true,
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
-      "options": { "passWithNoTests": true },
-      "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      "options": {
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
     },
     "@nx/eslint:lint": {
       "cache": true,
@@ -36,7 +43,21 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "e2e": { "cache": true, "inputs": ["default", "^production"] }
+    "e2e": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+    "@nx/webpack:webpack": {
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "env": "NX_MF_DEV_REMOTES"
+        }
+      ],
+      "dependsOn": ["^build"]
+    }
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -66,8 +87,13 @@
         "linter": "eslint",
         "bundler": "webpack"
       },
-      "component": { "style": "css" },
-      "library": { "style": "css", "linter": "eslint" }
+      "component": {
+        "style": "css"
+      },
+      "library": {
+        "style": "css",
+        "linter": "eslint"
+      }
     }
   },
   "useInferencePlugins": false,
@@ -75,14 +101,21 @@
   "release": {
     "projects": ["libs/*"],
     "changelog": {
-      "workspaceChangelog": { "createRelease": "github", "file": false }
+      "workspaceChangelog": {
+        "createRelease": "github",
+        "file": false
+      }
     },
     "version": {
       "generatorOptions": {
         "currentVersionResolver": "registry",
         "skipLockFileUpdate": true
       },
-      "git": { "commit": false, "stageChanges": false, "tag": false },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
+      },
       "preVersionCommand": "npx nx run-many -t build -p libs/*"
     }
   },

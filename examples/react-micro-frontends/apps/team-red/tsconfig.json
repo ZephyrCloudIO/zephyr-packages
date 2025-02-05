@@ -4,7 +4,18 @@
     "allowJs": false,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+      "team-green/GreenRecos": [
+        "examples/react-micro-frontends/apps/team-green/src/app/team-green-recos.tsx"
+      ],
+      "team-blue/BlueBasket": [
+        "examples/react-micro-frontends/apps/team-blue/src/app/team-blue-basket.tsx"
+      ],
+      "team-blue/BlueBuy": [
+        "examples/react-micro-frontends/apps/team-blue/src/app/team-blue-buy.tsx"
+      ]
+    }
   },
   "files": [],
   "include": [],
@@ -16,5 +27,5 @@
       "path": "./tsconfig.spec.json"
     }
   ],
-  "extends": "../../tsconfig.json"
+  "extends": "../../../../tsconfig.base.json"
 }

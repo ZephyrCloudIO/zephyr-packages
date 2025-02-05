@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       workflow_status:
-        description: "Status of the E2E Tests"
+        description: "Status of the overall E2E tests workflow"
         required: true
       commit_sha:
         description: "Commit SHA"
@@ -12,20 +12,46 @@ on:
       run_url:
         description: "URL to the workflow run"
         required: true
+      zephyr_deployment_ios_status:
+        description: "Status of zephyr-deployment-ios"
+        required: true
+      ios_tests_status:
+        description: "Status of ios-tests"
+        required: true
+      zephyr_deployment_android_status:
+        description: "Status of zephyr-deployment-android"
+        required: true
+      android_tests_status:
+        description: "Status of android-tests"
+        required: true
+      ios_logs_url:
+        description: "Logs URL for iOS E2E tests job"
+        required: true
+      android_logs_url:
+        description: "Logs URL for Android E2E tests job"
+        required: true
 
 jobs:
   process-results:
     runs-on: ubuntu-latest
     steps:
-      - name: Get Workflow Status
+      - name: Display Workflow Summary
         run: |
-          echo "🔍 **E2E Test Results Received**"
-          echo "📌 **Status:** ${{ github.event.inputs.workflow_status }}"
+          echo "🔍 **E2E Test Results Summary**"
+          echo "📌 **Overall Status:** ${{ github.event.inputs.workflow_status }}"
           echo "🔗 **Commit SHA:** ${{ github.event.inputs.commit_sha }}"
-          echo "🔗 **Run URL:** ${{ github.event.inputs.run_url }}"
+          echo "🔗 **Full E2E Workflow Logs:** ${{ github.event.inputs.run_url }}"
 
-      - name: E2E Tests Failed
+          echo "📱 **iOS Zephyr Deployment Status:** ${{ github.event.inputs.zephyr_deployment_ios_status }}"
+          echo "🧪 **iOS E2E Tests Status:** ${{ github.event.inputs.ios_tests_status }}"
+          echo "🔗 **iOS E2E Tests Logs:** ${{ github.event.inputs.ios_logs_url }}"
+
+          echo "🤖 **Android Zephyr Deployment Status:** ${{ github.event.inputs.zephyr_deployment_android_status }}"
+          echo "🧪 **Android E2E Tests Status:** ${{ github.event.inputs.android_tests_status }}"
+          echo "🔗 **Android E2E Tests Logs:** ${{ github.event.inputs.android_logs_url }}"
+
+      - name: Fail if Any E2E Job Failed
         if: github.event.inputs.workflow_status != 'success'
         run: |
-          echo "❌ E2E tests failed! See logs in `zephyr-repack-example` repo."
+          echo "❌ One or more E2E workflow related job failed! Check the logs in `zephyr-repack-example` repo."
           exit 1

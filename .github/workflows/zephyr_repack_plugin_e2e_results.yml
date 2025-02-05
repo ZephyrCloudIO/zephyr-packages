@@ -1,67 +1,31 @@
-name: Listen for Zephyr Repack Plugin E2E test completion
+name: Process Zephyr Repack Plugin E2E Test Results
 
 on:
-  workflow_run:
-    workflows: ["Zephyr Repack Plugin E2E testing"]
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      workflow_status:
+        description: "Status of the E2E Tests"
+        required: true
+      commit_sha:
+        description: "Commit SHA"
+        required: true
+      run_url:
+        description: "URL to the workflow run"
+        required: true
 
 jobs:
-  check-result:
+  process-results:
     runs-on: ubuntu-latest
     steps:
       - name: Get Workflow Status
         run: |
-          echo "E2E Workflow Run ID: ${{ github.event.workflow_run.id }}"
-          echo "E2E Workflow Status: ${{ github.event.workflow_run.status }}"
-          echo "E2E Workflow Conclusion: ${{ github.event.workflow_run.conclusion }}"
-          echo "Triggered by Commit SHA: ${{ github.event.workflow_run.head_sha }}"
-          echo "Run URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
-
-      - name: Post Result as a GitHub Comment
-        if: always()
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GH_TOKEN }}
-          script: |
-            const runId = ${{ github.event.workflow_run.id }};
-            const conclusion = "${{ github.event.workflow_run.conclusion }}";
-            const commitSha = "${{ github.event.workflow_run.head_sha }}";
-            const runUrl = "https://github.com/${{ github.repository }}/actions/runs/" + runId;
-
-            let message = `### 🚀 Zephyr Repack Plugin E2E Test Results\n\n`;
-            message += `- **Status:** ${conclusion.toUpperCase()}\n`;
-            message += `- **Commit SHA:** \`${commitSha}\`\n`;
-            message += `- [🔍 View Full Logs](${runUrl})\n`;
-
-            if (conclusion !== "success") {
-              message += `\n❌ **E2E tests failed!** Please check the logs.`;
-            } else {
-              message += `\n✅ **E2E tests passed successfully!**`;
-            }
-
-            // Post comment to the PR (if triggered by a PR)
-            const { owner, repo } = context.repo;
-            const pullRequests = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner,
-              repo,
-              commit_sha: commitSha
-            });
-
-            if (pullRequests.data.length > 0) {
-              const prNumber = pullRequests.data[0].number;
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number: prNumber,
-                body: message
-              });
-            } else {
-              console.log("No associated PR found for this commit.");
-            }
+          echo "🔍 **E2E Test Results Received**"
+          echo "📌 **Status:** ${{ github.event.inputs.workflow_status }}"
+          echo "🔗 **Commit SHA:** ${{ github.event.inputs.commit_sha }}"
+          echo "🔗 **Run URL:** ${{ github.event.inputs.run_url }}"
 
       - name: Fail if Tests Failed
-        if: github.event.workflow_run.conclusion != 'success'
+        if: github.event.inputs.workflow_status != 'success'
         run: |
           echo "❌ E2E tests failed! See logs above."
           exit 1

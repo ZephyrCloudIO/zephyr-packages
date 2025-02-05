@@ -6,9 +6,6 @@ on:
       workflow_status:
         description: "Status of the overall E2E tests workflow"
         required: true
-      commit_sha:
-        description: "Commit SHA"
-        required: true
       run_url:
         description: "URL to the workflow run"
         required: true
@@ -45,7 +42,6 @@ jobs:
         run: |
           echo "🔍 **E2E Test Results Summary**"
           echo "📌 **Overall Status:** ${{ github.event.inputs.workflow_status }}"
-          echo "🔗 **Commit SHA:** ${{ github.event.inputs.commit_sha }}"
           echo "🔗 **Full E2E Workflow Logs:** ${{ github.event.inputs.run_url }}"
 
           echo "📱 **iOS Zephyr Deployment Status:** ${{ github.event.inputs.zephyr_deployment_ios_status }}"

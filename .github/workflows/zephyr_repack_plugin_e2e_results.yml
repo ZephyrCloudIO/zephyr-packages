@@ -24,10 +24,16 @@ on:
       android_tests_status:
         description: "Status of android-tests"
         required: true
-      ios_logs_url:
+      ios_deployment_logs_url:
+        description: "Logs URL for iOS Zephyr Deployment job"
+        required: true
+      android_deployment_logs_url:
+        description: "Logs URL for Android Zephyr Deployment job"
+        required: true
+      ios_tests_logs_url:
         description: "Logs URL for iOS E2E tests job"
         required: true
-      android_logs_url:
+      android_tests_logs_url:
         description: "Logs URL for Android E2E tests job"
         required: true
 
@@ -43,12 +49,14 @@ jobs:
           echo "🔗 **Full E2E Workflow Logs:** ${{ github.event.inputs.run_url }}"
 
           echo "📱 **iOS Zephyr Deployment Status:** ${{ github.event.inputs.zephyr_deployment_ios_status }}"
+          echo "🔗 **iOS Zephyr Deployment Logs:** ${{ github.event.inputs.ios_deployment_logs_url }}"
           echo "🧪 **iOS E2E Tests Status:** ${{ github.event.inputs.ios_tests_status }}"
-          echo "🔗 **iOS E2E Tests Logs:** ${{ github.event.inputs.ios_logs_url }}"
+          echo "🔗 **iOS E2E Tests Logs:** ${{ github.event.inputs.ios_tests_logs_url }}"
 
           echo "🤖 **Android Zephyr Deployment Status:** ${{ github.event.inputs.zephyr_deployment_android_status }}"
+          echo "🔗 **Android Zephyr Deployment Logs:** ${{ github.event.inputs.android_deployment_logs_url }}"
           echo "🧪 **Android E2E Tests Status:** ${{ github.event.inputs.android_tests_status }}"
-          echo "🔗 **Android E2E Tests Logs:** ${{ github.event.inputs.android_logs_url }}"
+          echo "🔗 **Android E2E Tests Logs:** ${{ github.event.inputs.android_tests_logs_url }}"
 
       - name: Fail if Any E2E Job Failed
         if: github.event.inputs.workflow_status != 'success'

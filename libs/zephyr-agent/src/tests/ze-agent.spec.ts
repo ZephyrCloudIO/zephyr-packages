@@ -301,6 +301,7 @@ async function _fetchContent(url: string, counter = 0): Promise<string> {
 }
 
 async function _verifyBuildId(content: string, uuid: string): Promise<void> {
+  expect(content).toMatch('tes');
   const buildIdMatch = content.match(
     /<meta name="zephyr-build-id" data-testid="ze-build-id" content="([^"]+)"/
   );

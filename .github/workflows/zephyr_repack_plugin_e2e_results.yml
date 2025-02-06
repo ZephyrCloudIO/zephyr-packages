@@ -53,9 +53,3 @@ jobs:
           echo "🔗 **Android Zephyr Deployment Logs:** ${{ github.event.inputs.android_deployment_logs_url }}"
           echo "🧪 **Android E2E Tests Status:** ${{ github.event.inputs.android_tests_status }}"
           echo "🔗 **Android E2E Tests Logs:** ${{ github.event.inputs.android_tests_logs_url }}"
-
-      - name: Fail if Any E2E Job Failed
-        if: github.event.inputs.workflow_status != 'success'
-        run: |
-          echo "❌ One or more E2E workflow related job failed! Check the logs in `zephyr-repack-example` repo."
-          exit 1

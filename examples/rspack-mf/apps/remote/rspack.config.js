@@ -1,27 +1,37 @@
 const { composePlugins, withNx, withReact } = require('@nx/rspack');
 const path = require('path');
-const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
+const { withModuleFederation } = require('@nx/module-federation/rspack');
 const { withZephyr } = require('zephyr-rspack-plugin');
 
-const withModuleFederation = () => (config) => {
-  const currDir = path.resolve(__dirname);
-  config.output.publicPath = 'auto';
-  config.plugins.push(
-    new ModuleFederationPlugin({
-      name: 'rspack_mf_remote',
-      filename: 'remoteEntry.js',
-      exposes: {
-        './NxWelcome': currDir + '/src/app/nx-welcome.tsx',
-      },
-    })
-  );
-  config.context = currDir;
-  return config;
+const currDir = path.resolve(__dirname);
+
+/** @type {Parameters<typeof withModuleFederation>[0]} */
+const mfConfig = {
+  name: 'rspack_mf_remote',
+  exposes: {
+    './NxWelcome': currDir + '/src/app/nx-welcome.tsx',
+  },
+  shared: (libName) => {
+    const reactShared = [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+    ];
+    if (reactShared.includes(libName)) {
+      return {
+        singleton: true,
+        version: '18.3.1',
+        requiredVersion: '18.3.1',
+        eager: true,
+      };
+    }
+  },
 };
 
 module.exports = composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(),
+  withModuleFederation(mfConfig),
   withZephyr()
 );

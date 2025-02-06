@@ -1,4 +1,3 @@
-// import { UploadProviderType } from '../../../../zephyr-agent/src/lib/node-persist/upload-provider-options';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import { ZephyrEngine } from 'zephyr-agent';
 
@@ -32,7 +31,7 @@ export async function verify_mf_fastly_config(
 ) {
   if (!mf_configs) return;
 
-  const platform = (await zephyr_engine.application_configuration).PLATFORM;
+  await zephyr_engine.application_configuration;
 
   for (const mf_config of mf_configs) {
     const mfConfig = mf_config.config;

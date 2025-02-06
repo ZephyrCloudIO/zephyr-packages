@@ -18,5 +18,5 @@ jobs:
               owner: 'ZephyrCloudIO',
               repo: 'zephyr-repack-example',
               workflow_id: 'e2e-zephyr-repack-plugin.yml',
-              ref: 'bootstrap-example'
+              ref: 'main'
             })

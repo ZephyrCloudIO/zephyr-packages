@@ -1,7 +1,7 @@
 name: Trigger Zephyr Repack Plugin E2E tests
 
 on:
-  pull_request:
+  push:
     branches:
       - master
 

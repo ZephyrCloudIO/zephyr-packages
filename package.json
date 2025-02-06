@@ -9,12 +9,15 @@
     "build-all": "nx run-many -t build --all",
     "lint": "nx run-many -t lint --projects=\"libs/*\"",
     "test": "nx run-many -t test --projects=\"libs/*\"",
-    "prepare": "husky install",
     "test:coverage": "nx run-many --target=test --projects=\"libs/*\" --code-coverage",
     "coverage:merge": "istanbul-merge --out coverage/combined-coverage.json \"coverage/**/coverage-final.json\"",
     "coverage:report": "nyc report --reporter=html --temp-directory=coverage --report-dir=coverage/combined",
     "coverage:serve": "serve coverage",
-    "reset": "nx reset"
+    "version:patch": "tsx .scripts/sync-versions.ts patch",
+    "version:minor": "tsx .scripts/sync-versions.ts minor",
+    "version:major": "tsx .scripts/sync-versions.ts major",
+    "reset": "nx reset",
+    "prepare": "husky install"
   },
   "private": true,
   "devDependencies": {
@@ -86,6 +89,7 @@
     "swc-loader": "0.2.3",
     "ts-jest": "^29.2.5",
     "ts-node": "10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "5.7.3",
     "typescript-eslint": "^8.23.0",
     "url-loader": "^4.1.1",

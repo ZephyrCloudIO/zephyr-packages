@@ -1,0 +1,37 @@
+name: Version Bump Release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '**/package.json'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    if:
+      contains(github.event.head_commit.message, 'deps: bump packages to')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from commit
+        id: get-version
+        run: |
+          VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'deps: bump packages to \K[0-9]+\.[0-9]+\.[0-9]+')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get-version.outputs.version }}
+          name: v${{ steps.get-version.outputs.version }}
+          prerelease: true
+          generate_release_notes: true

@@ -11,7 +11,10 @@ interface DeployPluginOptions {
 }
 
 interface DeployCompiler {
-  webpack: { Compilation: { PROCESS_ASSETS_STAGE_REPORT: number } };
+  webpack: {
+    sources: { RawSource: new (content: string) => Source };
+    Compilation: { PROCESS_ASSETS_STAGE_REPORT: number };
+  };
   hooks: {
     thisCompilation: {
       tap: (pluginName: string, cb: (compilation: DeployCompilation) => void) => void;
@@ -36,6 +39,7 @@ export function setupZeDeploy<
   XCompiler extends DeployCompiler,
 >(pluginOptions: T, compiler: XCompiler): void {
   const { pluginName } = pluginOptions;
+  compiler.hooks.thisCompilation;
   compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
     compilation.hooks.processAssets.tapPromise(
       {
@@ -43,6 +47,26 @@ export function setupZeDeploy<
         stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
       },
       async (assets) => {
+        // Inject build ID into HTML files if in CI test mode
+        try {
+          if (process.env['ZE_CI_TEST']) {
+            const htmlFiles = Object.keys(assets).filter((file) =>
+              file.endsWith('.html')
+            );
+
+            for (const htmlFile of htmlFiles) {
+              const content = assets[htmlFile].source().toString();
+              const modifiedContent =
+                await pluginOptions.zephyr_engine.injectBuildIdMeta(content);
+
+              assets[htmlFile] = new compiler.webpack.sources.RawSource(modifiedContent);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to inject build ID into HTML files:', error);
+          throw error;
+        }
+
         const stats = compilation.getStats();
         const stats_json = compilation.getStats().toJson();
 

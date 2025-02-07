@@ -30,40 +30,6 @@ export class ZeWebpackPlugin {
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
 
-    if (process.env['ZE_CI_TEST']) {
-      compiler.hooks.emit.tapAsync(
-        this._options.pluginName,
-        async (compilation, callback) => {
-          const htmlFiles = Object.keys(compilation.assets).filter((file) =>
-            file.endsWith('.html')
-          );
-
-          for (const htmlFile of htmlFiles) {
-            const asset = compilation.assets[htmlFile];
-            const content = asset.source().toString();
-            const modifiedContent =
-              await this._options.zephyr_engine.injectBuildIdMeta(content);
-
-            compilation.assets[htmlFile] = {
-              source: () => modifiedContent,
-              size: () => modifiedContent.length,
-              map: () => null,
-              sourceAndMap: () => ({
-                source: modifiedContent,
-                map: {},
-              }),
-              updateHash: (hash) => {
-                hash.update(modifiedContent);
-              },
-              buffer: () => Buffer.from(modifiedContent),
-            };
-          }
-
-          callback();
-        }
-      );
-    }
-
     logBuildSteps(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }

@@ -129,6 +129,7 @@ runner('ZeAgent', () => {
         `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
         `ZE_API_GATE=${dev_api_gate_url}`,
         `ZE_SECRET_TOKEN=${getSecretToken()}`,
+        `ZE_TEST_CI=true`,
         `DEBUG=zephyr:*`,
       ];
       const cmd = [
@@ -301,7 +302,6 @@ async function _fetchContent(url: string, counter = 0): Promise<string> {
 }
 
 async function _verifyBuildId(content: string, uuid: string): Promise<void> {
-  expect(content).toMatch('tes');
   const buildIdMatch = content.match(
     /<meta name="zephyr-build-id" data-testid="ze-build-id" content="([^"]+)"/
   );

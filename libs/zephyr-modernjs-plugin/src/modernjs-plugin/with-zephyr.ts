@@ -19,35 +19,15 @@ export const withZephyr = (
   name: pluginName,
   pre: ['@modern-js/plugin-module-federation-config'],
 
-  setup: async ({ useAppContext }) => {
+  setup: () => {
     return {
-      config: async () => {
-        const appContext = useAppContext();
-        const zephyrEngineOptions = {
-          context: appContext.appDirectory,
-          builder: appContext.bundlerType === 'rspack' ? 'rspack' : 'webpack',
-        } as const;
-
-        const zephyrEngine = await ZephyrEngine.create(zephyrEngineOptions);
-        const dependencyPairs = extractFederatedDependencyPairs(appContext);
-
-        const resolvedDependencies =
-          await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
-
-        mutWebpackFederatedRemotesConfig(zephyrEngine, appContext, resolvedDependencies);
-
-        const mfConfig = makeCopyOfModuleFederationOptions(appContext);
-
+      config: () => {
         return {
           tools: {
-            rspack(config, { mergeConfig, appendPlugins }) {
-              appendPlugins(
-                new ZeRspackPlugin({
-                  zephyr_engine: zephyrEngine,
-                  mfConfig,
-                  wait_for_index_html: zephyrOptions?.wait_for_index_html,
-                })
-              );
+            rspack(config, { mergeConfig }) {
+              withZephyrRspack()(config).then((zephyrConfig) => {
+                mergeConfig(config, zephyrConfig);
+              });
             },
           },
         };

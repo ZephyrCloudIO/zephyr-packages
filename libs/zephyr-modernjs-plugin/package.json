@@ -15,14 +15,14 @@
     "tslib": "^2.3.0",
     "@modern-js/app-tools": "^2.64.0",
     "@module-federation/modern-js": "^0.8.9",
-    "zephyr-rspack-plugin": "0.0.34",
     "webpack": "5.97.1",
-    "@rspack/core": "^1.1.8",
+    "@rspack/core": "1.1.8",
     "@modern-js/module-tools": "^2.64.0",
     "@module-federation/sdk": "^0.8.9",
     "@modern-js/node-bundle-require": "2.64.0",
     "@module-federation/enhanced": "0.8.9",
-    "@module-federation/rsbuild-plugin": "0.8.9"
+    "@module-federation/rsbuild-plugin": "0.8.9",
+    "zephyr-rspack-plugin": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4",

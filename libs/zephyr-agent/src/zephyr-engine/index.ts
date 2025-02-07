@@ -393,7 +393,7 @@ export class ZephyrEngine {
     // Insert meta tag before closing head tag
     return htmlContent.replace(
       '</head>',
-      `  <meta name="zephyr-build-id" data-testid="ze-build-id" content="${buildId}" />\n </head>`
+      `  \n <meta name="zephyr-build-id" data-testid="ze-build-id" content="${buildId}" />\n </head>`
     );
   }
 }

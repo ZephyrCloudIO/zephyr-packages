@@ -325,7 +325,9 @@ export class ZephyrEngine {
       });
     }
 
-    this.build_id = null;
+    if (!process.env['ZE_CI_TEST']) {
+      this.build_id = null;
+    }
     this.snapshotId = null;
     this.version_url = null;
     this.build_start_time = null;

@@ -44,8 +44,6 @@ export class ZeWebpackPlugin {
             const modifiedContent =
               await this._options.zephyr_engine.injectBuildIdMeta(content);
 
-            console.log('modifiedContent', modifiedContent);
-
             compilation.assets[htmlFile] = {
               source: () => modifiedContent,
               size: () => modifiedContent.length,
@@ -54,7 +52,7 @@ export class ZeWebpackPlugin {
                 source: modifiedContent,
                 map: {},
               }),
-              updateHash: (hash: any) => {
+              updateHash: (hash) => {
                 hash.update(modifiedContent);
               },
               buffer: () => Buffer.from(modifiedContent),

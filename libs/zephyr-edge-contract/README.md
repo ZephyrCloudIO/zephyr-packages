@@ -1,5 +1,5 @@
-# zephyr-edge-contract
+# zephyr-edge-contract (Internal)
 
-check [zephyr-webpack-plugin](https://www.npmjs.com/package/zephyr-webpack-plugin) for docs
+Read more from our documentation [here](https://docs.zephyr-cloud.io).
 
-this is a set API types and reusable functions for zephyr build plugins
+This is a set of API types and reusable functions for zephyr build plugins.

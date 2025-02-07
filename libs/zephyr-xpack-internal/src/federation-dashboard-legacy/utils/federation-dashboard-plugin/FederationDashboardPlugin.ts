@@ -584,7 +584,7 @@ export class FederationDashboardPlugin {
     return { remote_bundle_name: this.FederationPluginOptions.bundle_name };
   }
 
-  async postDashboardData(dashData: any): Promise<
+  async postDashboardData(): Promise<
     | {
         value: ZeUploadBuildStats;
       }

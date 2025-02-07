@@ -18,11 +18,11 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   if (mfConfig) {
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
-  plugins.push(zephyrPlugin(_options));
+  plugins.push(zephyrPlugin());
   return plugins;
 }
 
-function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
+function zephyrPlugin(): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;

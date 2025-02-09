@@ -156,85 +156,89 @@ runner('ZeAgent', () => {
     integrationTestTimeout
   );
 
-  // it(
-  //   'should deploy Rspack',
-  //   async () => {
-  //     const app = 'sample-rspack-application';
-  //     const uuid = `${app}.${appProject}.${appOrg}`;
+  it(
+    'should deploy Rspack',
+    async () => {
+      const app = 'sample-rspack-application';
+      const uuid = `${app}.${appProject}.${appOrg}`;
 
-  //     const envs = [
-  //       `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
-  //       `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
-  //       `ZE_API_GATE=${dev_api_gate_url}`,
-  //       `ZE_SECRET_TOKEN=${getSecretToken()}`,
-  //       `DEBUG=zephyr:*`,
-  //     ];
+      const envs = [
+        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+        `ZE_API_GATE=${dev_api_gate_url}`,
+        `ZE_SECRET_TOKEN=${getSecretToken()}`,
+        `ZE_TEST_CI=true`,
+        `DEBUG=zephyr:*`,
+      ];
 
-  //     const cmd = [
-  //       'npx cross-env',
-  //       ...envs,
-  //       `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
-  //     ].join(' ');
-  //     await exec(cmd);
+      const cmd = [
+        'npx cross-env',
+        ...envs,
+        `npx nx run sample-rspack-application:build --skip-nx-cache --verbose`,
+      ].join(' ');
+      await exec(cmd);
 
-  //     // Verify deployment
-  //     const deployResultUrls = await _getAppTagUrls(uuid);
-  //     expect(deployResultUrls).toBeTruthy();
+      // Verify deployment
+      const deployResultUrls = await _getAppTagUrls(uuid);
+      expect(deployResultUrls).toBeTruthy();
 
-  //     // Check each deployed URL
-  //     for (const url of deployResultUrls) {
-  //       expect(url).toBeTruthy();
-  //       const content = await _fetchContent(url);
-  //       const match = content.match(/<title>([^<]+)<\/title>/);
-  //       expect(match).toBeTruthy();
-  //       expect(match?.[1]).toEqual('SampleRspackApplication');
-  //     }
+      // Check each deployed URL
+      for (const url of deployResultUrls) {
+        expect(url).toBeTruthy();
+        const content = await _fetchContent(url);
+        const match = content.match(/<title>([^<]+)<\/title>/);
+        expect(match).toBeTruthy();
+        expect(match?.[1]).toEqual('SampleRspackApplication');
 
-  //     // Cleanup after deployment
-  //     await _cleanUp(uuid);
-  //   },
-  //   integrationTestTimeout
-  // );
+        await _verifyBuildId(content, uuid);
+      }
 
-  // it(
-  //   'should deploy Vite',
-  //   async () => {
-  //     const app = 'vite-react-ts';
-  //     const uuid = `${app}.${appProject}.${appOrg}`;
+      // Cleanup after deployment
+      await _cleanUp(uuid);
+    },
+    integrationTestTimeout
+  );
 
-  //     const envs = [
-  //       `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
-  //       `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
-  //       `ZE_API_GATE=${dev_api_gate_url}`,
-  //       `ZE_SECRET_TOKEN=${getSecretToken()}`,
-  //       `DEBUG=zephyr:*`,
-  //     ];
+  it(
+    'should deploy Vite',
+    async () => {
+      const app = 'vite-react-ts';
+      const uuid = `${app}.${appProject}.${appOrg}`;
 
-  //     const cmd = [
-  //       'npx cross-env',
-  //       ...envs,
-  //       `npx nx run vite-react-ts:build --skip-nx-cache --verbose`,
-  //     ].join(' ');
-  //     await exec(cmd);
+      const envs = [
+        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
+        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
+        `ZE_API_GATE=${dev_api_gate_url}`,
+        `ZE_SECRET_TOKEN=${getSecretToken()}`,
+        `ZE_TEST_CI=true`,
+        `DEBUG=zephyr:*`,
+      ];
 
-  //     // Verify deployment
-  //     const deployResultUrls = await _getAppTagUrls(uuid);
-  //     expect(deployResultUrls).toBeTruthy();
+      const cmd = [
+        'npx cross-env',
+        ...envs,
+        `npx nx run vite-react-ts:build --skip-nx-cache --verbose`,
+      ].join(' ');
+      await exec(cmd);
 
-  //     // Check each deployed URL
-  //     for (const url of deployResultUrls) {
-  //       expect(url).toBeTruthy();
-  //       const content = await _fetchContent(url);
-  //       const match = content.match(/<title>([^<]+)<\/title>/);
-  //       expect(match).toBeTruthy();
-  //       expect(match?.[1]).toEqual('Vite + React + TS');
-  //     }
+      // Verify deployment
+      const deployResultUrls = await _getAppTagUrls(uuid);
+      expect(deployResultUrls).toBeTruthy();
 
-  //     // Cleanup after deployment
-  //     await _cleanUp(uuid);
-  //   },
-  //   integrationTestTimeout
-  // );
+      // Check each deployed URL
+      for (const url of deployResultUrls) {
+        expect(url).toBeTruthy();
+        const content = await _fetchContent(url);
+        const match = content.match(/<title>([^<]+)<\/title>/);
+        expect(match).toBeTruthy();
+        expect(match?.[1]).toEqual('Vite + React + TS');
+      }
+
+      // Cleanup after deployment
+      await _cleanUp(uuid);
+    },
+    integrationTestTimeout
+  );
 });
 
 async function _loadAppConfig(application_uid: string): Promise<ZeApplicationConfig> {

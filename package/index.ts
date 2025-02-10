@@ -64,11 +64,12 @@ async function main() {
             {
               value: 'web',
               label: 'Web',
+              hint: 'You will be choosing from a selection of templates provided by us.',
             },
             {
               value: 'react-native',
               label: 'React Native',
-              hint: 'You will be building React Native powered by Re.Pack.',
+              hint: 'This is a comprehensive example project provided by us. You will be building React Native powered by Re.Pack.',
             },
           ],
         }),

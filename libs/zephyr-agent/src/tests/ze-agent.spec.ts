@@ -232,6 +232,8 @@ runner('ZeAgent', () => {
         const match = content.match(/<title>([^<]+)<\/title>/);
         expect(match).toBeTruthy();
         expect(match?.[1]).toEqual('Vite + React + TS');
+
+        await _verifyBuildId(content, uuid);
       }
 
       // Cleanup after deployment

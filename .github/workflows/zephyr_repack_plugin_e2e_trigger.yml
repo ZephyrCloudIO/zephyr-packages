@@ -5,17 +5,16 @@ on:
     branches:
       - master
 
-permissions:
-  actions: write
-
 jobs:
   trigger-zephyr-repack-example:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
       - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ env.GITHUB_TOKEN }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: 'ZephyrCloudIO',

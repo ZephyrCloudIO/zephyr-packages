@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+permissions:
+  actions: write
+
 jobs:
   trigger-zephyr-repack-example:
     runs-on: ubuntu-latest

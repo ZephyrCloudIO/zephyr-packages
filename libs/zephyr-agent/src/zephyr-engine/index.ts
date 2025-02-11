@@ -185,7 +185,7 @@ export class ZephyrEngine {
       return null;
     }
 
-    ze_log('resolve_remote_dependencies.deps', deps, 'platform', platform);
+    ze_log.remotes('resolve_remote_dependencies.deps', deps, 'platform', platform);
 
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
@@ -209,14 +209,14 @@ export class ZephyrEngine {
 
       // If you couldn't resolve remote dependency, skip replacing it
       if (!ZeUtils.isSuccessTuple(tuple)) {
-        ze_log(
+        ze_log.remotes(
           `Failed to resolve remote dependency: ${dep.name}@${dep.version}`,
           'skipping...'
         );
         return null;
       }
 
-      ze_log(`Resolved dependency: ${tuple[1].default_url}`);
+      ze_log.remotes(`Resolved dependency: ${tuple[1].default_url}`);
 
       return tuple[1];
     });

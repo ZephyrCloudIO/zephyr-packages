@@ -57,4 +57,10 @@ pnpm install
 - `pnpm lint` - Checks code for linting errors
 - `pnpm format` - Formats code using Prettier
 
+### Release & Publishing
+
+- `pnpm version:patch` - Bumps the patch version of all packages
+- `pnpm version:minor` - Bumps the minor version of all packages
+- `pnpm version:major` - Bumps the major version of all packages
+
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

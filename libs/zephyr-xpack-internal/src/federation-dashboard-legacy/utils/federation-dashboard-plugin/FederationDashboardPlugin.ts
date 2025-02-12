@@ -32,8 +32,6 @@ interface ProcessWebpackGraphParams {
   pluginOptions: {
     zephyr_engine: ZephyrEngine;
     mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-    // Repack specific options because repack might not want to upload the file
-    upload_file?: boolean;
     // Repack specific options because there are different targets it build towards
     target?: 'ios' | 'android' | 'web' | undefined;
   };

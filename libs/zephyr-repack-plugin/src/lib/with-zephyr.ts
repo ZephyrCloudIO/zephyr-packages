@@ -41,7 +41,7 @@ async function _zephyr_configuration(
     zephyr_engine,
     config,
     resolved_dependency_pairs,
-    repack_delegate_module_template
+    () => repack_delegate_module_template
   );
 
   ze_log('dependency resolution completed successfully...or at least trying to...');

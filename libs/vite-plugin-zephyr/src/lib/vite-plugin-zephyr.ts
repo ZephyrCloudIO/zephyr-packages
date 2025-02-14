@@ -68,12 +68,12 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         zephyr_engine,
         vite_internal_options
       );
+      type Mfconfig = Parameters<typeof zephyr_engine.upload_assets>[0]['mfConfig'];
+      const mfConfig: Mfconfig = _options?.mfConfig as Mfconfig;
       await zephyr_engine.upload_assets({
-        mfConfig: _options?.mfConfig as Parameters<
-          typeof zephyr_engine.upload_assets
-        >[0]['mfConfig'],
+        mfConfig,
         assetsMap,
-        buildStats: await zeBuildDashData(zephyr_engine),
+        buildStats: await zeBuildDashData(zephyr_engine, mfConfig),
       });
       await zephyr_engine.build_finished();
     },

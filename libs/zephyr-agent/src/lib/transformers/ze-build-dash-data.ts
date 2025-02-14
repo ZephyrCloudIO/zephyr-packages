@@ -47,7 +47,7 @@ export async function zeBuildDashData(
     overrides: [],
     consumes: [],
     modules: [],
-    remotes: Object.keys(mfConfig || {}),
+    remotes: Object.keys(mfConfig?.remotes || {}),
     tags: [],
     project: '',
     metadata: {},

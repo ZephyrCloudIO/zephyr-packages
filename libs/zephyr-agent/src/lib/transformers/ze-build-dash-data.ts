@@ -4,7 +4,7 @@ import { ZeErrors, ZephyrError } from '../errors';
 
 export async function zeBuildDashData(
   zephyr_engine: ZephyrEngine,
-  mfConfig: Parameters<typeof zephyr_engine.upload_assets>[0]['mfConfig']
+  mfConfig?: Parameters<typeof zephyr_engine.upload_assets>[0]['mfConfig']
 ): Promise<ZephyrBuildStats> {
   const snapshotId = await zephyr_engine.snapshotId;
   const buildId = await zephyr_engine.build_id;

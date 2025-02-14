@@ -18,11 +18,11 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   if (mfConfig) {
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
-  plugins.push(zephyrPlugin());
+  plugins.push(zephyrPlugin(_options));
   return plugins;
 }
 
-function zephyrPlugin(): Plugin {
+function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
@@ -69,6 +69,9 @@ function zephyrPlugin(): Plugin {
         vite_internal_options
       );
       await zephyr_engine.upload_assets({
+        mfConfig: _options?.mfConfig as Parameters<
+          typeof zephyr_engine.upload_assets
+        >[0]['mfConfig'],
         assetsMap,
         buildStats: await zeBuildDashData(zephyr_engine),
       });

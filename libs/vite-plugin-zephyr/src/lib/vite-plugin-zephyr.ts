@@ -6,6 +6,7 @@ import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import path from 'node:path';
+import { ZephyrGlobal } from './internal/types/zephyr-runtime';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
@@ -35,12 +36,10 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
 function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
-  let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
-  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
-    resolve_vite_internal_options = resolve;
-  });
+  const vite_internal_options_defer = defer<ZephyrInternalOptions>();
+  const remotes_defer = defer<ZeResolvedDependency[] | undefined>();
+
   let root: string;
-  const remotes: ZeResolvedDependency[] = [];
 
   return {
     name: 'with-zephyr',
@@ -52,7 +51,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         builder: 'vite',
         context: config.root,
       });
-      resolve_vite_internal_options({
+      vite_internal_options_defer.resolve({
         root: config.root,
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
@@ -67,26 +66,22 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
       const resolved_remotes =
         await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
       if (!resolved_remotes) return code;
-      remotes.push(...resolved_remotes);
+      remotes_defer.resolve(resolved_remotes);
       return load_resolved_remotes(resolved_remotes, code, id);
     },
-    resolveId(id) {
-      if (id === 'virtual:mf-runtime-info') return id; // Resolve virtual module
-      return;
-    },
-
-    load(id) {
-      const runtimeInfo: { remotes: Record<string, string> } = { remotes: {} };
-      remotes.forEach(
-        (remote) => (runtimeInfo.remotes[remote.name] = remote.application_uid)
+    transformIndexHtml: async (html) => {
+      const remotes = await remotes_defer.promise;
+      if (!remotes?.length) return;
+      const zephyrGlobal: ZephyrGlobal = {
+        remoteMap: Object.fromEntries(remotes.map((remote) => [remote.name, remote])),
+      };
+      return html.replace(
+        '</body>',
+        `<script>window.__ZEPHYR_GLOBAL__ = ${JSON.stringify(zephyrGlobal)};</script></body>`
       );
-      if (id === 'virtual:zephyr-runtime-info') {
-        return `export default ${JSON.stringify(runtimeInfo)};`;
-      }
-      return;
     },
     closeBundle: async () => {
-      const vite_internal_options = await vite_internal_options_defer;
+      const vite_internal_options = await vite_internal_options_defer.promise;
       const zephyr_engine = await zephyr_engine_defer;
 
       await zephyr_engine.start_new_build();
@@ -104,4 +99,10 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
       await zephyr_engine.build_finished();
     },
   };
+}
+
+function defer<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((r) => (resolve = r));
+  return { promise, resolve };
 }

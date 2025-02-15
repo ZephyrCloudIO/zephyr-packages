@@ -21,7 +21,6 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     const runtimePlugin = require.resolve(
       path.join(__dirname, './internal/runtime/runtime-plugin')
     );
-    console.log('---------- runtimePlugin: ', runtimePlugin);
     if (Array.isArray(mfConfig.runtimePlugins)) {
       mfConfig.runtimePlugins.push(runtimePlugin);
     } else {

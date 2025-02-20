@@ -1,12 +1,7 @@
 import { ZephyrPluginOptions } from 'zephyr-edge-contract';
-import { AppTools, CliPlugin } from '@modern-js/app-tools';
-import { ZeModernjsPlugin } from './ze-modernjs-plugin';
-import {
-  extractFederatedDependencyPairs,
-  makeCopyOfModuleFederationOptions,
-  mutWebpackFederatedRemotesConfig,
-} from 'zephyr-xpack-internal';
-import { ZephyrEngine } from 'zephyr-agent';
+import { AppTools, CliPluginFuture } from '@modern-js/app-tools';
+import { withZephyr as withZephyrRspack } from 'zephyr-rspack-plugin';
+import { withZephyr as withZephyrWebpack } from 'zephyr-webpack-plugin';
 
 const pluginName = 'zephyr-modernjs-plugin';
 
@@ -14,79 +9,44 @@ const isDev = process.env['NODE_ENV'] === 'development';
 
 export const withZephyr = (
   zephyrOptions?: ZephyrPluginOptions
-): CliPlugin<AppTools<'rspack' | 'webpack'>> => ({
+): CliPluginFuture<AppTools<'rspack' | 'webpack'>> => ({
   name: pluginName,
   pre: ['@modern-js/plugin-module-federation-config'],
 
-  setup: async ({ useAppContext }) => {
-    const appContext = useAppContext();
-    const zephyrEngineOptions = {
-      context: appContext.appDirectory,
-      builder: appContext.bundlerType === 'rspack' ? 'rspack' : 'webpack',
-    } as const;
+  setup(api) {
+    api.modifyWebpackConfig(async (config, utils) => {
+      const z_config = await withZephyrWebpack()(config);
 
-    const zephyrEngine = await ZephyrEngine.create(zephyrEngineOptions);
+      utils.mergeConfig(config, z_config);
+    });
+    api.modifyRspackConfig(async (config, utils) => {
+      // @ts-expect-error Incompatible types
+      const z_config = await withZephyrRspack()(config);
 
-    return {
-      config: async () => {
-        const dependencyPairs = extractFederatedDependencyPairs(appContext);
-        const resolvedDependencies =
-          await zephyrEngine.resolve_remote_dependencies(dependencyPairs);
-
-        mutWebpackFederatedRemotesConfig(zephyrEngine, appContext, resolvedDependencies);
-
-        const mfConfig = makeCopyOfModuleFederationOptions(appContext);
-
-        return {
-          tools: {
-            webpack(config) {
-              config.plugins?.push(
-                // @ts-expect-error Probably should change for Webpack ?
-                new ZeModernjsPlugin({
-                  zephyr_engine: zephyrEngine,
-                  mfConfig,
-                  wait_for_index_html: zephyrOptions?.wait_for_index_html,
-                })
-              );
-            },
-            rspack(config) {
-              config.plugins?.push(
-                new ZeModernjsPlugin({
-                  zephyr_engine: zephyrEngine,
-                  mfConfig,
-                  wait_for_index_html: zephyrOptions?.wait_for_index_html,
-                })
-              );
-            },
-          },
-        };
-      },
-    };
+      // @ts-expect-error Incompatible types
+      utils.mergeConfig(config, z_config);
+    });
   },
+
   usePlugins: isDev ? [zephyrFixPublicPath()] : [],
 });
 
-function zephyrFixPublicPath(): CliPlugin<AppTools> {
+function zephyrFixPublicPath(): CliPluginFuture<AppTools> {
   return {
     name: 'zephyr-publicpath-fix',
     pre: [pluginName],
-    setup: async () => ({
-      config: async () => ({
-        tools: {
-          webpack(config, { isServer }) {
-            if (!isServer) {
-              config.output = { ...config.output, publicPath: 'auto' };
-            }
-            return config;
-          },
-          rspack(config, { isServer }) {
-            if (!isServer) {
-              config.output = { ...config.output, publicPath: 'auto' };
-            }
-            return config;
-          },
-        },
-      }),
-    }),
+    setup(api) {
+      api.modifyWebpackConfig(async (config, { isServer }) => {
+        if (!isServer) {
+          config.output = { ...config.output, publicPath: 'auto' };
+        }
+      });
+
+      api.modifyRspackConfig(async (config, { isServer }) => {
+        if (!isServer) {
+          config.output = { ...config.output, publicPath: 'auto' };
+        }
+      });
+    },
   };
 }

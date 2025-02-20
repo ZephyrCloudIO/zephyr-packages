@@ -20,10 +20,8 @@ export const withZephyr = (
       utils.mergeConfig(config, z_config);
     });
     api.modifyRspackConfig(async (config, utils) => {
-      // @ts-expect-error Incompatible types
       const z_config = await withZephyrRspack()(config);
 
-      // @ts-expect-error Incompatible types
       utils.mergeConfig(config, z_config);
     });
   },

@@ -8,6 +8,7 @@ const pluginName = 'zephyr-modernjs-plugin';
 const isDev = process.env['NODE_ENV'] === 'development';
 
 export const withZephyr = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   zephyrOptions?: ZephyrPluginOptions
 ): CliPluginFuture<AppTools<'rspack' | 'webpack'>> => ({
   name: pluginName,

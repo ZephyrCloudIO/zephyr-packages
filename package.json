@@ -111,11 +111,7 @@
   "packageManager": "pnpm@9.9.0",
   "pnpm": {
     "overrides": {
-      "cookie@<0.7.0": ">=0.7.0",
-      "cross-spawn@<6.0.6": ">=6.0.6",
-      "@eslint/plugin-kit@<0.2.3": ">=0.2.3",
-      "path-to-regexp@<0.1.12": ">=0.1.12",
-      "webpack@>=5.0.0-alpha.0 <5.94.0": ">=5.94.0"
+      "@rspack/core": ">=1.2.5"
     }
   }
 }

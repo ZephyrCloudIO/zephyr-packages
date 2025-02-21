@@ -89,8 +89,8 @@ export class ZephyrError<
     if (opts) {
       const { cause, data, ...template } = opts;
       this.template = template;
-      this.data = opts.data;
-      this.cause = opts.cause;
+      this.data = data;
+      this.cause = cause;
     }
 
     // Simpler stack traces in VIte

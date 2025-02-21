@@ -32,8 +32,6 @@ interface ProcessWebpackGraphParams {
   pluginOptions: {
     zephyr_engine: ZephyrEngine;
     mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-    // Repack specific options because repack might not want to upload the file
-    upload_file?: boolean;
     // Repack specific options because there are different targets it build towards
     target?: 'ios' | 'android' | 'web' | undefined;
   };
@@ -584,7 +582,7 @@ export class FederationDashboardPlugin {
     return { remote_bundle_name: this.FederationPluginOptions.bundle_name };
   }
 
-  async postDashboardData(dashData: any): Promise<
+  async postDashboardData(): Promise<
     | {
         value: ZeUploadBuildStats;
       }

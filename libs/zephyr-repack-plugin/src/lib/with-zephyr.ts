@@ -18,6 +18,7 @@ export function withZephyr(
 }
 async function _zephyr_configuration(
   config: Configuration,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
   // create instance of ZephyrEngine to track the application
@@ -36,11 +37,6 @@ async function _zephyr_configuration(
     dependency_pairs,
     target
   );
-
-  zephyr_engine.upload_file = _zephyrOptions?.upload_file
-    ? _zephyrOptions.upload_file
-    : true;
-
   mutWebpackFederatedRemotesConfig(
     zephyr_engine,
     config,

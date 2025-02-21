@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "nx run-many -t serve --parallel=5 -p team-blue team-red team-green",
-    "build": "nx run-many -t build --parallel=1 --skip-nx-cache -p team-blue team-green team-red",
+    "build-all": "nx run-many -t build --parallel=1 --skip-nx-cache -p team-blue team-green team-red",
     "build:team-red": "nx run team-red:build:production --skip-nx-cache --verbose",
     "build:team-blue": "nx run team-blue:build:production --skip-nx-cache",
     "build:team-green": "nx run team-green:build:production --skip-nx-cache  --verbose"

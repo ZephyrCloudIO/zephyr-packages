@@ -2,6 +2,7 @@ import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { AppTools, CliPluginFuture } from '@modern-js/app-tools';
 import { withZephyr as withZephyrRspack } from 'zephyr-rspack-plugin';
 import { withZephyr as withZephyrWebpack } from 'zephyr-webpack-plugin';
+import { ze_log } from 'zephyr-agent';
 
 const pluginName = 'zephyr-modernjs-plugin';
 
@@ -37,12 +38,14 @@ function zephyrFixPublicPath(): CliPluginFuture<AppTools> {
     setup(api) {
       api.modifyWebpackConfig(async (config, { isServer }) => {
         if (!isServer) {
+          ze_log('Modify publicPath for Dev Server');
           config.output = { ...config.output, publicPath: 'auto' };
         }
       });
 
       api.modifyRspackConfig(async (config, { isServer }) => {
         if (!isServer) {
+          ze_log('Modify publicPath for Dev Server');
           config.output = { ...config.output, publicPath: 'auto' };
         }
       });

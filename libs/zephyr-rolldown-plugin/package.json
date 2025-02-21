@@ -1,0 +1,19 @@
+{
+  "name": "zephyr-rolldown-plugin",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run zephyr-rolldown-plugin:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "is-ci": "^3",
+    "zephyr-agent": "workspace:*",
+    "rolldown": "1.0.0-beta.3"
+  },
+  "devDependencies": {
+    "@types/is-ci": "^3.0.4"
+  }
+}

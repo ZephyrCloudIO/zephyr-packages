@@ -3,6 +3,7 @@ packages:
   - 'examples/*'
   - 'examples/vite-react-mf/*'
   - 'examples/rspack-mf/*'
+  - 'examples/rolldown-mf/*'
 
 installOptions:
   preferOnline: false

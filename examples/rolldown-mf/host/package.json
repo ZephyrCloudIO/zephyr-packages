@@ -1,0 +1,19 @@
+{
+  "name": "rolldown-mf-host",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "rolldown --config ./rolldown.config.mjs",
+    "dev": "npm run build && http-server ./dist -p 8084"
+  },
+  "devDependencies": {
+    "rolldown": "1.0.0-beta.3",
+    "http-server": "^14.0.1",
+    "zephyr-rolldown-plugin": "workspace:*"
+  },
+  "dependencies": {
+    "@module-federation/runtime": "^0.8.8",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

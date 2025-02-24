@@ -7,7 +7,7 @@ export default defineConfig({
   input: './button.jsx',
   plugins: [
     moduleFederationPlugin({
-      name: 'mf-remote',
+      name: 'remote',
       filename: 'remote-entry.js',
       exposes: {
         './button': './button.jsx',

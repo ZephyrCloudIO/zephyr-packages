@@ -1,4 +1,4 @@
-import RolldownButton from 'rolldown/button';
+import RolldownButton from 'remote/button';
 import WebpackButton from 'webpack/button';
 
 export default function App() {

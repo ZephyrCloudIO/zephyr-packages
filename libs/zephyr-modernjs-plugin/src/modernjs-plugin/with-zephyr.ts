@@ -38,14 +38,14 @@ function zephyrFixPublicPath(): CliPluginFuture<AppTools> {
     setup(api) {
       api.modifyWebpackConfig(async (config, { isServer }) => {
         if (!isServer) {
-          ze_log('Modify publicPath for Dev Server');
+          ze_log('Modifying publicPath for Dev Server');
           config.output = { ...config.output, publicPath: 'auto' };
         }
       });
 
       api.modifyRspackConfig(async (config, { isServer }) => {
         if (!isServer) {
-          ze_log('Modify publicPath for Dev Server');
+          ze_log('Modifying publicPath for Dev Server');
           config.output = { ...config.output, publicPath: 'auto' };
         }
       });

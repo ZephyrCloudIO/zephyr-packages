@@ -1,6 +1,5 @@
 import { withZephyr } from './zephyr-rolldown-plugin';
 import { ZephyrEngine } from 'zephyr-agent';
-import path from 'path';
 
 // Mock dependencies
 jest.mock('zephyr-agent', () => {
@@ -52,7 +51,7 @@ describe('zephyr-rolldown-plugin', () => {
   describe('getInputFolder', () => {
     it('should handle string input', async () => {
       const plugin = withZephyr();
-      await plugin.buildStart?.({ input: '/path/to/input.js' } as any);
+      await plugin.buildStart?.({ input: '/path/to/input.js' } as { input: string });
 
       const { zephyr_defer_create } = ZephyrEngine.defer_create();
       expect(zephyr_defer_create).toHaveBeenCalledWith({
@@ -64,7 +63,9 @@ describe('zephyr-rolldown-plugin', () => {
 
     it('should handle array input by taking the first item', async () => {
       const plugin = withZephyr();
-      await plugin.buildStart?.({ input: ['/path/one.js', '/path/two.js'] } as any);
+      await plugin.buildStart?.({ input: ['/path/one.js', '/path/two.js'] } as {
+        input: string[];
+      });
 
       const { zephyr_defer_create } = ZephyrEngine.defer_create();
       expect(zephyr_defer_create).toHaveBeenCalledWith({
@@ -77,7 +78,7 @@ describe('zephyr-rolldown-plugin', () => {
       const plugin = withZephyr();
       await plugin.buildStart?.({
         input: { main: '/path/main.js', secondary: '/path/secondary.js' },
-      } as any);
+      } as { input: Record<string, string> });
 
       const { zephyr_defer_create } = ZephyrEngine.defer_create();
       expect(zephyr_defer_create).toHaveBeenCalledWith({

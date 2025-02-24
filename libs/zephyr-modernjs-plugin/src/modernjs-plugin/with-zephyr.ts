@@ -13,16 +13,24 @@ export const withZephyr = (
 
   async setup(api) {
     api.modifyWebpackConfig(async (config, utils) => {
+      const currentBundler = api.getAppContext().bundlerType;
+      if (currentBundler !== 'webpack') {
+        return;
+      }
+
       const { withZephyr } = await import('zephyr-webpack-plugin');
       const z_config = await withZephyr(zephyrOptions)(config);
-
       utils.mergeConfig(config, z_config);
     });
 
     api.modifyRspackConfig(async (config, utils) => {
+      const currentBundler = api.getAppContext().bundlerType;
+      if (currentBundler !== 'rspack') {
+        return;
+      }
+
       const { withZephyr } = await import('zephyr-rspack-plugin');
       const z_config = await withZephyr(zephyrOptions)(config);
-
       utils.mergeConfig(config, z_config);
     });
   },

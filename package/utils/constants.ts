@@ -62,6 +62,11 @@ const TEMPLATES = {
     hint: 'A monorepo using Turborepo, React, and Rspack as the bundler.',
     framework: 'react',
   },
+  'rolldown-react': {
+    label: 'React + Rolldown',
+    hint: 'A React example using Rolldown.',
+    framework: 'react',
+  },
 };
 
 export {

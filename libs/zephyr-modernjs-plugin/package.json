@@ -16,12 +16,22 @@
     "@module-federation/modern-js": "^0.8.9",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*",
-    "zephyr-rspack-plugin": "workspace:*",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "^3.0.4",
     "@types/node-persist": "^3.1.8"
+  },
+  "peerDependencies": {
+    "zephyr-rspack-plugin": "workspace:*",
+    "zephyr-webpack-plugin": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "zephyr-rspack-plugin": {
+      "optional": true
+    },
+    "zephyr-webpack-plugin": {
+      "optional": true
+    }
   }
 }

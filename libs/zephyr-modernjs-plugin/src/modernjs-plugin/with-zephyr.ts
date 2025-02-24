@@ -1,28 +1,27 @@
 import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { AppTools, CliPluginFuture } from '@modern-js/app-tools';
-import { withZephyr as withZephyrRspack } from 'zephyr-rspack-plugin';
-import { withZephyr as withZephyrWebpack } from 'zephyr-webpack-plugin';
 import { ze_log } from 'zephyr-agent';
 
 const pluginName = 'zephyr-modernjs-plugin';
-
 const isDev = process.env['NODE_ENV'] === 'development';
 
 export const withZephyr = (
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   zephyrOptions?: ZephyrPluginOptions
 ): CliPluginFuture<AppTools<'rspack' | 'webpack'>> => ({
   name: pluginName,
   pre: ['@modern-js/plugin-module-federation-config'],
 
-  setup(api) {
+  async setup(api) {
     api.modifyWebpackConfig(async (config, utils) => {
-      const z_config = await withZephyrWebpack()(config);
+      const { withZephyr } = await import('zephyr-webpack-plugin');
+      const z_config = await withZephyr(zephyrOptions)(config);
 
       utils.mergeConfig(config, z_config);
     });
+
     api.modifyRspackConfig(async (config, utils) => {
-      const z_config = await withZephyrRspack()(config);
+      const { withZephyr } = await import('zephyr-rspack-plugin');
+      const z_config = await withZephyr(zephyrOptions)(config);
 
       utils.mergeConfig(config, z_config);
     });

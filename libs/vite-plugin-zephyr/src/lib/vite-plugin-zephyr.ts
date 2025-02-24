@@ -47,6 +47,19 @@ function zephyrPlugin(): Plugin {
         publicDir: config.publicDir,
       });
     },
+
+    transformIndexHtml: {
+      enforce: 'post',
+      async transform(html) {
+        if (!process.env['ZE_CI_TEST']) {
+          return html;
+        }
+
+        const zephyr_engine = await zephyr_engine_defer;
+        return zephyr_engine.injectBuildIdMeta(html);
+      },
+    },
+
     transform: async (code, id) => {
       const zephyr_engine = await zephyr_engine_defer;
 

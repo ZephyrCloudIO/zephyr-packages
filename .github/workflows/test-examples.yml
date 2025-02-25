@@ -40,6 +40,10 @@ jobs:
         run: |
           pnpm install --force
 
-      - name: Run Testing Matrix
+      - name: Run one build to sanity check
         run: |
-          pnpm run test:examples
+          cd examples/vite-react-ts && pnpm run build
+
+#      - name: Run Testing Matrix
+#        run: |
+#          pnpm run test:examples

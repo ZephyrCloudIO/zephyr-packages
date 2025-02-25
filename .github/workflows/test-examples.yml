@@ -1,0 +1,41 @@
+name: Test Zephyr Examples
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  # Allow manual runs
+  workflow_dispatch:
+
+jobs:
+  test-examples:
+    name: Test Examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.9.0
+
+      - name: Install Dependencies
+        run: |
+          pnpm install
+
+      - name: Build Libraries
+        run: |
+          pnpm run build
+
+      - name: Run Testing Matrix
+        env:
+          ZE_SECRET_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}
+        run: |
+          pnpm run test:examples

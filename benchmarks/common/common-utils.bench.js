@@ -17,6 +17,23 @@ const mockZephyrEngine = {
   },
 };
 
+// Create mock assets array
+const createMockAssets = (count = 10) => {
+  return Array.from({ length: count }, (_, i) => ({
+    name: `asset-${i}.js`,
+    content: `console.log("Asset ${i}");`,
+    size: 1000 + i * 100,
+    sourcemap:
+      i % 2 === 0
+        ? {
+            name: `asset-${i}.js.map`,
+            content: '{"version":3,"sources":[],"names":[],"mappings":""}',
+            size: 500 + i * 50,
+          }
+        : null,
+  }));
+};
+
 describe('Common Utilities Performance', () => {
   // Test ZephyrEngine creation performance
   bench('ZephyrEngine initialization (synchronous part)', () => {
@@ -32,5 +49,54 @@ describe('Common Utilities Performance', () => {
       builder: 'test',
       context: '/sample/context',
     });
+  });
+
+  // Test asset processing - important for benchmarking our refactored code
+  bench('Process 10 assets with half having sourcemaps', () => {
+    const assets = createMockAssets(10);
+    const processedAssets = assets.map((asset) => {
+      // Basic asset processing similar to what plugins do
+      const result = {
+        fileName: asset.name,
+        source: asset.content,
+        size: asset.size,
+      };
+
+      if (asset.sourcemap) {
+        result.map = {
+          fileName: asset.sourcemap.name,
+          source: asset.sourcemap.content,
+          size: asset.sourcemap.size,
+        };
+      }
+
+      return result;
+    });
+
+    return processedAssets;
+  });
+
+  bench('Process 100 assets with half having sourcemaps', () => {
+    const assets = createMockAssets(100);
+    const processedAssets = assets.map((asset) => {
+      // Basic asset processing similar to what plugins do
+      const result = {
+        fileName: asset.name,
+        source: asset.content,
+        size: asset.size,
+      };
+
+      if (asset.sourcemap) {
+        result.map = {
+          fileName: asset.sourcemap.name,
+          source: asset.sourcemap.content,
+          size: asset.sourcemap.size,
+        };
+      }
+
+      return result;
+    });
+
+    return processedAssets;
   });
 });

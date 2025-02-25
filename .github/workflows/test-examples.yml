@@ -12,7 +12,8 @@ jobs:
   test-examples:
     name: Test Examples
     runs-on: ubuntu-latest
-
+    env:
+      ZEPHYR_AUTH_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,5 +55,3 @@ jobs:
       - name: Run Testing Matrix
         run: |
           pnpm run test:examples
-        env:
-          ZEPHYR_AUTH_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}

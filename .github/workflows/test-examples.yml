@@ -36,21 +36,10 @@ jobs:
         run: |
           pnpm run build
 
-      - name: Create Package Tarballs
-        run: |
-          mkdir -p dist/packages
-          cd libs/zephyr-webpack-plugin && npm pack && mv zephyr-webpack-plugin-*.tgz ../../dist/packages/ && cd ../..
-          cd libs/zephyr-rspack-plugin && npm pack && mv zephyr-rspack-plugin-*.tgz ../../dist/packages/ && cd ../..
-          cd libs/vite-plugin-zephyr && npm pack && mv vite-plugin-zephyr-*.tgz ../../dist/packages/ && cd ../..
-          cd libs/rollup-plugin-zephyr && npm pack && mv rollup-plugin-zephyr-*.tgz ../../dist/packages/ && cd ../..
-          cd libs/zephyr-repack-plugin && npm pack && mv zephyr-repack-plugin-*.tgz ../../dist/packages/ && cd ../..
-          cd libs/zephyr-rolldown-plugin && npm pack && mv zephyr-rolldown-plugin-*.tgz ../../dist/packages/ && cd ../..
-          cd libs/zephyr-modernjs-plugin && npm pack && mv zephyr-modernjs-plugin-*.tgz ../../dist/packages/ && cd ../..
-
       - name: Install Packages in Examples
         run: |
-          # Install dependencies in each example project
-          find examples -name "package.json" -not -path "**/node_modules/*" -exec sh -c 'cd $(dirname {}) && echo "Installing dependencies in $(pwd)" && pnpm install' \;
+          # Install dependencies in each example project using workspace references
+          find examples -name "package.json" -not -path "**/node_modules/*" -exec sh -c 'cd $(dirname {}) && echo "Installing dependencies in $(pwd)" && pnpm install --prefer-workspace-packages' \;
 
       - name: Run Testing Matrix
         run: |

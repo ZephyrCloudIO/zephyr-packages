@@ -28,7 +28,7 @@ jobs:
         with:
           version: 9.9.0
 
-      - name: Install Dependencies
+      - name: Install Dependencies to Build Packages
         run: |
           pnpm install
 
@@ -36,10 +36,9 @@ jobs:
         run: |
           pnpm run build
 
-      - name: Install Packages in Examples
+      - name: Install Dependencies to Build Examples
         run: |
-          # Install dependencies in each example project using workspace references
-          find examples -name "package.json" -not -path "**/node_modules/*" -exec sh -c 'cd $(dirname {}) && echo "Installing dependencies in $(pwd)" && pnpm install --prefer-workspace-packages' \;
+          pnpm install --force
 
       - name: Run Testing Matrix
         run: |

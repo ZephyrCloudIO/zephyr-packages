@@ -1,0 +1,12 @@
+{
+  "name": "benchmarks",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "benchmarks",
+  "projectType": "library",
+  "targets": {
+    "bench": {
+      "command": "vitest bench --config=vitest.bench.config.ts"
+    }
+  },
+  "tags": []
+}

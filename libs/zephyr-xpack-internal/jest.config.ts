@@ -1,7 +1,7 @@
 /* eslint-disable */
 export default {
   displayName: 'zephyr-xpack-internal',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   testEnvironment: 'node',
   // Allow tests in src directory
   // testPathIgnorePatterns: ['<rootDir>/src'],

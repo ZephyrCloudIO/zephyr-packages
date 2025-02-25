@@ -1,3 +1,73 @@
+/**
+ * Core type definitions for Zephyr plugins These types are shared across multiple bundler
+ * plugins
+ */
+
+// ----------- Common Types for All Plugins -----------
+
+/** Base plugin options interface that all Zephyr plugins can extend */
+export interface ZePluginOptions {
+  /** Optional flag to wait for index.html generation before finalizing the build */
+  wait_for_index_html?: boolean;
+
+  /**
+   * Module Federation configuration The type is kept generic as different bundlers use
+   * different configurations
+   */
+  mfConfig?: unknown;
+}
+
+/** Internal options used by all Zephyr plugins */
+export interface ZeInternalPluginOptions {
+  /** The Zephyr Engine instance (imported from zephyr-agent) */
+  zephyr_engine: unknown;
+
+  /** Plugin name for logging and diagnostics */
+  pluginName: string;
+
+  /** Module Federation configuration */
+  mfConfig?: unknown;
+
+  /** Optional flag to wait for index.html generation before finalizing the build */
+  wait_for_index_html?: boolean;
+}
+
+/** Supported bundler types for Zephyr plugins */
+export type ZeBundlerType =
+  | 'webpack'
+  | 'rspack'
+  | 'repack'
+  | 'vite'
+  | 'rollup'
+  | 'rolldown'
+  | 'unknown';
+
+/** Common asset interface used across plugins */
+export interface ZeBuildAsset {
+  /** Asset name/path */
+  name: string;
+
+  /** Asset source content */
+  source: string | Buffer;
+
+  /** Asset size in bytes */
+  size: number;
+}
+
+/** Map of assets by their path */
+export type ZeBuildAssetsMap = Record<string, ZeBuildAsset>;
+
+/** Dependency information */
+export interface ZeDependency {
+  /** Package name */
+  name: string;
+
+  /** Package version */
+  version: string;
+}
+
+// ----------- Webpack/Rspack Specific Types -----------
+
 export interface XPackConfiguration<Compiler> {
   context?: string;
   plugins?: (
@@ -12,7 +82,8 @@ export interface XPackConfiguration<Compiler> {
 }
 
 interface WebpackPluginInstance<Compiler> {
-  [index: string]: any;
+  // Allow for extra properties with unknown type
+  [index: string]: unknown;
 
   /** The run point of the plugin, required method. */
   apply: (compiler: Compiler) => void;
@@ -39,6 +110,9 @@ export interface ModuleFederationPlugin {
   _options?: XFederatedRemotesConfig;
   /** Repack specific for now until Repack change how the config should be exposed */
   config?: XFederatedRemotesConfig;
+
+  // Adding index signature to satisfy WebpackPluginInstance constraint
+  [index: string]: unknown;
 }
 
 interface RemotesObject {
@@ -62,6 +136,7 @@ export interface XStatsModule {
   issuerName?: string | null;
   name?: string;
 }
+
 export interface XStatsChunk {
   [key: string]: unknown;
   names?: string[];
@@ -69,6 +144,7 @@ export interface XStatsChunk {
     loc?: string;
   }>;
 }
+
 export interface XCompiler {
   options: {
     output: {
@@ -93,6 +169,7 @@ export interface XCompiler {
     };
   };
 }
+
 export interface XCompilation {
   outputOptions: {
     trustedTypes: boolean;
@@ -108,19 +185,23 @@ export interface XCompilation {
     };
   };
 }
+
 export interface XModule {
   // I am not empty I am just useless
   type: string;
 }
+
 export interface XChunk {
   id?: string | number | null;
   getAllReferencedChunks: () => Iterable<XChunk>;
 }
+
 interface XStatsReason {
   module?: string | null;
   userRequest?: string | null;
   resolvedModule?: string | null;
 }
+
 export interface XStats {
   compilation: {
     name?: string;

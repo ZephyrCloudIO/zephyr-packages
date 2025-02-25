@@ -1,11 +1,9 @@
 name: CodSpeed
 
 on:
-  # Run on pushes to the main branch
   push:
     branches:
-      - 'main' # or "master"
-  # Run on pull requests
+      - 'main'
   pull_request:
   # `workflow_dispatch` allows CodSpeed to trigger backtest
   # performance analysis in order to generate initial data.
@@ -17,12 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # ...
-      # Setup your environment here:
-      #  - Configure your Python/Rust/Node version
-      #  - Install your dependencies
-      #  - Build your benchmarks (if using a compiled language)
-      # ...
+      - uses: ./.github/actions/setup
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v3
         with:

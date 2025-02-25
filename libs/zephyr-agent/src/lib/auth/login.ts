@@ -24,6 +24,7 @@ export async function checkAuth(): Promise<string> {
   const secret_token = getSecretToken();
 
   if (secret_token) {
+    logFn('debug', 'Token found in environment. Using secret token for authentication.');
     return secret_token;
   }
 

@@ -1,10 +1,24 @@
 #!/bin/bash
 
 # Script to run all examples and verify Zephyr creates a new version
+#
+# Usage:
+#   ./examples/testing-matrix.sh
+#
+# Environment variables:
+#   SHOW_FULL_OUTPUT=1    Show complete build output instead of just the last 50 lines
+#   SAVE_LOGS=1           Save all build logs to the 'test-logs' directory
 
 SUCCESS_COUNT=0
 FAILURE_COUNT=0
 TOTAL_EXAMPLES=0
+
+# Create logs directory if SAVE_LOGS is enabled
+if [[ "${SAVE_LOGS:-0}" == "1" ]]; then
+  LOG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/test-logs"
+  mkdir -p "$LOG_DIR"
+  echo "Logs will be saved to: $LOG_DIR"
+fi
 
 # Print header
 echo "=============================================="
@@ -34,6 +48,17 @@ function run_example() {
   echo "Running: $BUILD_CMD"
   eval "BUILD_OUTPUT=\$(COREPACK_ENABLE_STRICT=0 $BUILD_CMD 2>&1)"
   BUILD_STATUS=$?
+  
+  # Save logs to file if enabled
+  if [[ "${SAVE_LOGS:-0}" == "1" ]]; then
+    LOG_FILE="$LOG_DIR/${EXAMPLE_NAME// /_}.log"
+    echo "Build Command: $BUILD_CMD" > "$LOG_FILE"
+    echo "Build Status: $BUILD_STATUS" >> "$LOG_FILE"
+    echo "Directory: $EXAMPLE_DIR" >> "$LOG_FILE"
+    echo "=======================================" >> "$LOG_FILE"
+    echo "$BUILD_OUTPUT" >> "$LOG_FILE"
+    echo "Log saved to: $LOG_FILE"
+  fi
 
   # Check for success indicators in the output
   # Support all formats of the output: with various formatting
@@ -53,6 +78,22 @@ function run_example() {
     if [[ ! $BUILD_OUTPUT =~ ZEPHYR.*https:// ]]; then
       echo "   Missing Zephyr URL in output"
     fi
+    
+    # Display a section with the build output for debugging
+    echo ""
+    echo "   --- Build Output ---"
+    
+    # If SHOW_FULL_OUTPUT is set to 1, show all output, otherwise show last 50 lines
+    if [[ "${SHOW_FULL_OUTPUT:-0}" == "1" ]]; then
+      echo "$BUILD_OUTPUT"
+    else
+      echo "   (Showing last 50 lines. Set SHOW_FULL_OUTPUT=1 to see all output)"
+      echo "$BUILD_OUTPUT" | tail -n 50
+    fi
+    
+    echo "   --- End of Build Output ---"
+    echo ""
+    
     ((FAILURE_COUNT++))
   fi
 

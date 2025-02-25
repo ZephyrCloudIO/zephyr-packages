@@ -1,0 +1,61 @@
+name: Test Zephyr Examples
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  # Allow manual runs
+  workflow_dispatch:
+
+jobs:
+  test-examples:
+    name: Test Examples
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.9.0
+
+      - name: Install Dependencies
+        run: |
+          pnpm install
+
+      - name: Build Libraries
+        run: |
+          pnpm run build
+
+      - name: Create Package Tarballs
+        run: |
+          mkdir -p dist/packages
+          cd libs/zephyr-webpack-plugin && npm pack && mv zephyr-webpack-plugin-*.tgz ../../dist/packages/ && cd ../..
+          cd libs/zephyr-rspack-plugin && npm pack && mv zephyr-rspack-plugin-*.tgz ../../dist/packages/ && cd ../..
+          cd libs/vite-plugin-zephyr && npm pack && mv vite-plugin-zephyr-*.tgz ../../dist/packages/ && cd ../..
+          cd libs/rollup-plugin-zephyr && npm pack && mv rollup-plugin-zephyr-*.tgz ../../dist/packages/ && cd ../..
+          cd libs/zephyr-repack-plugin && npm pack && mv zephyr-repack-plugin-*.tgz ../../dist/packages/ && cd ../..
+          cd libs/zephyr-rolldown-plugin && npm pack && mv zephyr-rolldown-plugin-*.tgz ../../dist/packages/ && cd ../..
+          cd libs/zephyr-modernjs-plugin && npm pack && mv zephyr-modernjs-plugin-*.tgz ../../dist/packages/ && cd ../..
+
+      - name: Install Packages in Examples
+        run: |
+          # Install dependencies in each example project
+          find examples -name "package.json" -not -path "**/node_modules/*" -exec sh -c 'cd $(dirname {}) && echo "Installing dependencies in $(pwd)" && pnpm install' \;
+
+      - name: Run Testing Matrix
+        run: |
+          pnpm run test:examples
+        env:
+          # Add any environment variables needed for testing
+          NODE_ENV: production
+          ZEPHYR_API_KEY: ${{ secrets.ZEPHYR_API_KEY }}
+          ZEPHYR_OWNER_ID: ${{ secrets.ZEPHYR_OWNER_ID }}

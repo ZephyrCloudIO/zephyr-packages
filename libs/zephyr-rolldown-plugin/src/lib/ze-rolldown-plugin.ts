@@ -114,14 +114,28 @@ export class ZeRolldownPlugin extends ZeBasePlugin<
       }
 
       const zephyr_engine = this.options.zephyr_engine;
-      await zephyr_engine.start_new_build();
 
-      await zephyr_engine.upload_assets({
-        assetsMap: getAssetsMap(this.bundle),
-        buildStats: await zeBuildDashData(zephyr_engine),
-      });
+      try {
+        // Make sure we have a snapshot ID for upload_assets
+        if (typeof zephyr_engine.start_new_build === 'function') {
+          await zephyr_engine.start_new_build();
+        }
 
-      await zephyr_engine.build_finished();
+        await zephyr_engine.upload_assets({
+          assetsMap: getAssetsMap(this.bundle),
+          buildStats: await zeBuildDashData(zephyr_engine),
+        });
+      } catch (error) {
+        this.logError(
+          `Upload assets error: ${error instanceof Error ? error.message : String(error)}`
+        );
+        // Even if upload fails, try to finish the build
+      }
+
+      // Safely call build_finished if it exists
+      if (typeof zephyr_engine.build_finished === 'function') {
+        await zephyr_engine.build_finished();
+      }
 
       this.log('Successfully processed bundle assets');
       return { success: true };

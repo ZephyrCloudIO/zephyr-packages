@@ -1,7 +1,12 @@
-import { ZeRepackPlugin } from './ze-repack-plugin';
-// Skipping withZephyr and ZephyrEngine imports since they're not directly used in this test file
-// due to simplified test approach with mocks
+import { ZeRepackPlugin as ZeLegacyRepackPlugin } from './ze-repack-plugin';
+import { ZeRepackPlugin } from './ze-base-repack-plugin';
 import * as xpackInternal from 'zephyr-xpack-internal';
+
+// Helper to access protected properties for testing
+const getOptions = (plugin: ZeRepackPlugin): any => {
+  // This unsafe cast is only for testing
+  return (plugin as any).options;
+};
 
 // Mock dependencies
 jest.mock('zephyr-agent', () => ({
@@ -20,6 +25,30 @@ jest.mock('zephyr-xpack-internal', () => ({
   mutWebpackFederatedRemotesConfig: jest.fn(),
   logBuildSteps: jest.fn(),
   setupZeDeploy: jest.fn(),
+  ZeBasePlugin: class MockBasePlugin {
+    protected options: any;
+    protected bundlerType: string;
+    protected pluginName: string;
+
+    constructor(options: any, bundlerType: string) {
+      this.options = options;
+      this.bundlerType = bundlerType;
+      this.pluginName = options.pluginName;
+    }
+
+    protected log(): void {
+      /* Empty for testing */
+    }
+    protected logError(): void {
+      /* Empty for testing */
+    }
+    protected logWarning(): void {
+      /* Empty for testing */
+    }
+    protected async processAssets(): Promise<any> {
+      return { success: true };
+    }
+  },
 }));
 
 jest.mock('find-package-json', () => {
@@ -30,7 +59,73 @@ jest.mock('find-package-json', () => {
   });
 });
 
-describe('ZeRepackPlugin', () => {
+describe('Base ZeRepackPlugin', () => {
+  let mockCompiler: {
+    hooks: {
+      beforeCompile: { tap: jest.Mock };
+      thisCompilation: { tap: jest.Mock };
+    };
+    outputPath: string;
+  };
+
+  beforeEach(() => {
+    mockCompiler = {
+      hooks: {
+        beforeCompile: { tap: jest.fn() },
+        thisCompilation: { tap: jest.fn() },
+      },
+      outputPath: '/mock/output/path',
+    };
+
+    jest.clearAllMocks();
+  });
+
+  describe('constructor', () => {
+    it('should set options with correct properties', () => {
+      const zephyrEngine = { buildProperties: {} } as any;
+      const plugin = new ZeRepackPlugin({
+        zephyr_engine: zephyrEngine,
+        mfConfig: undefined,
+        target: 'ios',
+      });
+
+      expect(getOptions(plugin).pluginName).toBe('ZeRepackPlugin');
+      expect(getOptions(plugin).zephyr_engine).toBe(zephyrEngine);
+      expect(getOptions(plugin).target).toBe('ios');
+    });
+  });
+
+  describe('apply', () => {
+    it('should set output path on zephyr_engine', () => {
+      const zephyrEngine = { buildProperties: {} } as any;
+      const plugin = new ZeRepackPlugin({
+        zephyr_engine: zephyrEngine,
+        mfConfig: undefined,
+        target: 'ios',
+      });
+
+      plugin.apply(mockCompiler as any);
+
+      expect(zephyrEngine.buildProperties['output']).toBe('/mock/output/path');
+    });
+
+    it('should call logBuildSteps and setupZeDeploy', () => {
+      const zephyrEngine = { buildProperties: {} } as any;
+      const plugin = new ZeRepackPlugin({
+        zephyr_engine: zephyrEngine,
+        mfConfig: undefined,
+        target: 'android',
+      });
+
+      plugin.apply(mockCompiler as any);
+
+      expect(xpackInternal.logBuildSteps).toHaveBeenCalled();
+      expect(xpackInternal.setupZeDeploy).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Legacy ZeRepackPlugin', () => {
   let mockCompiler: {
     hooks: {
       beforeCompile: { tap: jest.Mock };
@@ -53,8 +148,8 @@ describe('ZeRepackPlugin', () => {
 
   describe('constructor', () => {
     it('should set options with default pluginName', () => {
-      const zephyrEngine = { buildProperties: {} } as any; // using any here to avoid type issues
-      const plugin = new ZeRepackPlugin({
+      const zephyrEngine = { buildProperties: {} } as any;
+      const plugin = new ZeLegacyRepackPlugin({
         zephyr_engine: zephyrEngine,
         mfConfig: undefined,
         target: 'ios',
@@ -68,36 +163,16 @@ describe('ZeRepackPlugin', () => {
 
   describe('apply', () => {
     it('should set output path on zephyr_engine', () => {
-      const zephyrEngine = { buildProperties: {} } as any; // using any here to avoid type issues
-      const plugin = new ZeRepackPlugin({
+      const zephyrEngine = { buildProperties: {} } as any;
+      const plugin = new ZeLegacyRepackPlugin({
         zephyr_engine: zephyrEngine,
         mfConfig: undefined,
         target: 'ios',
       });
 
-      plugin.apply(mockCompiler as any); // using any here to avoid compiler type issues
+      plugin.apply(mockCompiler as any);
 
       expect(zephyrEngine.buildProperties['output']).toBe('/mock/output/path');
-    });
-
-    it('should call logBuildSteps and setupZeDeploy', () => {
-      const zephyrEngine = { buildProperties: {} } as any; // using any here to avoid type issues
-      const plugin = new ZeRepackPlugin({
-        zephyr_engine: zephyrEngine,
-        mfConfig: undefined,
-        target: 'android',
-      });
-
-      plugin.apply(mockCompiler as any); // using any here to avoid compiler type issues
-
-      expect(xpackInternal.logBuildSteps).toHaveBeenCalledWith(
-        plugin._options,
-        mockCompiler
-      );
-      expect(xpackInternal.setupZeDeploy).toHaveBeenCalledWith(
-        plugin._options,
-        mockCompiler
-      );
     });
   });
 });

@@ -1,78 +1,45 @@
-import type { Plugin, ResolvedConfig } from 'vite';
-import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
-import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import type { Plugin } from 'vite';
+import { ZephyrEngine } from 'zephyr-agent';
 import { federation } from '@module-federation/vite';
-import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
-import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
+import { ZeVitePlugin } from './ze-vite-plugin';
+import { ZephyrVitePluginOptions } from './types';
 
+/** Type definition for Module Federation options */
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
-interface VitePluginZephyrOptions {
-  mfConfig?: ModuleFederationOptions;
-}
-
-export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
-  const mfConfig = _options?.mfConfig;
+/**
+ * Factory function to create Vite plugins with Zephyr integration
+ *
+ * @param userOptions - Optional configuration options
+ * @returns Array of Vite plugins (federation plugins + Zephyr plugin)
+ */
+export function withZephyr(userOptions?: ZephyrVitePluginOptions): Plugin[] {
   const plugins: Plugin[] = [];
-  if (mfConfig) {
-    plugins.push(...(federation(mfConfig) as Plugin[]));
-  }
-  plugins.push(zephyrPlugin());
-  return plugins;
-}
 
-function zephyrPlugin(): Plugin {
+  // Add Module Federation plugins if configuration is provided
+  if (userOptions?.mfConfig) {
+    plugins.push(...(federation(userOptions.mfConfig) as Plugin[]));
+  }
+
+  // Create the Zephyr Engine with deferred initialization
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
-  let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
-  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
-    resolve_vite_internal_options = resolve;
+  // Create the Zephyr Vite plugin
+  const zephyrPlugin = new ZeVitePlugin({
+    zephyr_engine: zephyr_engine_defer as unknown as ZephyrEngine,
+    wait_for_index_html: userOptions?.wait_for_index_html,
+    mfConfig: userOptions?.mfConfig,
   });
-  let root: string;
 
-  return {
-    name: 'with-zephyr',
-    enforce: 'post',
+  // Initialize zephyr engine when needed
+  // The actual context will be set in the configResolved hook
+  zephyr_defer_create({
+    builder: 'vite',
+    context: process.cwd(),
+  });
 
-    configResolved: async (config: ResolvedConfig) => {
-      root = config.root;
-      zephyr_defer_create({
-        builder: 'vite',
-        context: config.root,
-      });
-      resolve_vite_internal_options({
-        root: config.root,
-        outDir: config.build?.outDir,
-        publicDir: config.publicDir,
-      });
-    },
-    transform: async (code, id) => {
-      const zephyr_engine = await zephyr_engine_defer;
+  // Add the Zephyr plugin to the array
+  plugins.push(zephyrPlugin.getVitePlugin());
 
-      const dependencyPairs = extract_remotes_dependencies(root, code, id);
-      if (!dependencyPairs) return code;
-
-      const resolved_remotes =
-        await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-      if (!resolved_remotes) return code;
-
-      return load_resolved_remotes(resolved_remotes, code, id);
-    },
-    closeBundle: async () => {
-      const vite_internal_options = await vite_internal_options_defer;
-      const zephyr_engine = await zephyr_engine_defer;
-
-      await zephyr_engine.start_new_build();
-      const assetsMap = await extract_vite_assets_map(
-        zephyr_engine,
-        vite_internal_options
-      );
-      await zephyr_engine.upload_assets({
-        assetsMap,
-        buildStats: await zeBuildDashData(zephyr_engine),
-      });
-      await zephyr_engine.build_finished();
-    },
-  };
+  return plugins;
 }

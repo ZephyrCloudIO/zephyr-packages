@@ -1,35 +1,32 @@
-import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
-import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
-import { getAssetsMap } from './transform/get-assets-map';
+import type { Plugin } from 'rollup';
+import { ZephyrEngine } from 'zephyr-agent';
+import { ZeRollupPlugin } from './ze-rollup-plugin';
+import { ZephyrRollupPluginOptions } from './types';
 import { cwd } from 'node:process';
 
-const getInputFolder = (options: InputOptions): string => {
-  if (typeof options.input === 'string') return options.input;
-  if (Array.isArray(options.input)) return options.input[0];
-  if (typeof options.input === 'object') return Object.values(options.input)[0];
-  return cwd();
-};
-
-export function withZephyr() {
+/**
+ * Factory function to create a Rollup plugin with Zephyr integration
+ *
+ * @param userOptions - Optional Rollup-specific Zephyr options
+ * @returns A Rollup plugin configuration
+ */
+export function withZephyr(userOptions: ZephyrRollupPluginOptions = {}): Plugin {
+  // Create the Zephyr Engine with deferred initialization
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
-  return {
-    name: 'with-zephyr',
-    buildStart: async (options: InputOptions) => {
-      const path_to_execution_dir = getInputFolder(options);
-      zephyr_defer_create({
-        builder: 'rollup',
-        context: path_to_execution_dir,
-      });
-    },
-    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
-      const zephyr_engine = await zephyr_engine_defer;
-      await zephyr_engine.start_new_build();
-      await zephyr_engine.upload_assets({
-        assetsMap: getAssetsMap(bundle),
-        buildStats: await zeBuildDashData(zephyr_engine),
-      });
-      await zephyr_engine.build_finished();
-    },
-  };
+  // Create the plugin instance
+  const plugin = new ZeRollupPlugin({
+    zephyr_engine: zephyr_engine_defer as unknown as ZephyrEngine,
+    wait_for_index_html: userOptions.wait_for_index_html,
+    mfConfig: userOptions.mfConfig,
+  });
+
+  // Initialize zephyr engine when rollup is started
+  zephyr_defer_create({
+    builder: 'rollup',
+    context: cwd(), // This will be updated in buildStart hook
+  });
+
+  // Return the Rollup plugin configuration
+  return plugin.getRollupPlugin();
 }

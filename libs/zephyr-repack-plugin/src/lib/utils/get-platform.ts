@@ -8,16 +8,49 @@ export function is_repack_plugin(plugin?: Plugin) {
   if (!plugin || typeof plugin !== 'object') {
     return false;
   }
-  return (
-    plugin.constructor.name.includes('RepackPlugin') ||
-    plugin['name']?.includes('RepackPlugin')
-  );
+
+  // Check constructor name first
+  if (
+    typeof plugin.constructor === 'function' &&
+    typeof plugin.constructor.name === 'string' &&
+    plugin.constructor.name.includes('RepackPlugin')
+  ) {
+    return true;
+  }
+
+  // Then check for name property
+  const pluginName = plugin['name'];
+  if (typeof pluginName === 'string' && pluginName.includes('RepackPlugin')) {
+    return true;
+  }
+
+  return false;
 }
 
 // Find out whether this is ios, android, or other platform build
 type Platform = DelegateConfig['target'];
 export function get_platform_from_repack(config: Configuration): Platform {
-  return config.plugins
-    ?.filter(is_repack_plugin)
-    ?.map((plugin: any) => plugin.config.platform)[0];
+  const repackPlugins = config.plugins?.filter(is_repack_plugin);
+  if (!repackPlugins || repackPlugins.length === 0) {
+    return undefined;
+  }
+
+  // Safely access plugin.config.platform
+  for (const plugin of repackPlugins) {
+    if (
+      typeof plugin === 'object' &&
+      plugin !== null &&
+      'config' in plugin &&
+      typeof plugin['config'] === 'object' &&
+      plugin['config'] !== null &&
+      'platform' in plugin['config']
+    ) {
+      const platform = plugin['config']['platform'];
+      if (platform === 'ios' || platform === 'android' || platform === 'web') {
+        return platform;
+      }
+    }
+  }
+
+  return undefined;
 }

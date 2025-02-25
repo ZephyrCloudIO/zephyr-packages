@@ -1,24 +1,58 @@
-import { Configuration } from 'webpack';
-import { ze_log, ZephyrEngine } from 'zephyr-agent';
+/**
+ * Provides a configuration function to integrate Zephyr with webpack
+ *
+ * @file Factory function for setting up Zephyr with webpack
+ */
 
-import { ZeWebpackPlugin } from './ze-webpack-plugin';
-import { ZephyrWebpackPluginOptions } from '../types';
-import { WebpackConfiguration } from '../types/missing-webpack-types';
+import { ze_log, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 
+import { ZeWebpackPlugin } from './ze-webpack-plugin';
+import { WebpackConfiguration, ZephyrWebpackPluginOptions } from '../types';
+
+/**
+ * Enhances webpack configuration with Zephyr integration
+ *
+ * This is the main factory function that users interact with. It returns a function that
+ * takes a webpack configuration and enhances it with Zephyr integration.
+ *
+ * @param {ZephyrWebpackPluginOptions} [zephyrPluginOptions] - Options for the Zephyr
+ *   webpack plugin
+ * @returns {(config: WebpackConfiguration) => Promise<WebpackConfiguration>} A function
+ *   that enhances webpack configuration
+ */
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config: WebpackConfiguration) =>
+    _zephyr_configuration(config, zephyrPluginOptions);
 }
 
+/**
+ * Internal function that enhances webpack configuration with Zephyr
+ *
+ * This function:
+ *
+ * 1. Creates a ZephyrEngine instance
+ * 2. Extracts and resolves module federation dependencies
+ * 3. Updates the webpack configuration with resolved remotes
+ * 4. Creates and injects the ZephyrWebpackPlugin
+ *
+ * @async
+ * @private
+ * @param {WebpackConfiguration} config - Webpack configuration object
+ * @param {ZephyrWebpackPluginOptions} [_zephyrOptions] - Options for the Zephyr webpack
+ *   plugin
+ * @returns {Promise<WebpackConfiguration>} Enhanced webpack configuration with Zephyr
+ *   plugin
+ */
 async function _zephyr_configuration(
   config: WebpackConfiguration,
   _zephyrOptions?: ZephyrWebpackPluginOptions
-): Promise<Configuration> {
-  // create instance of ZephyrEngine to track the application
+): Promise<WebpackConfiguration> {
+  // Create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create({
     builder: 'webpack',
     context: config.context,
@@ -35,14 +69,14 @@ async function _zephyr_configuration(
 
   ze_log(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);
 
-  // inject the ZephyrWebpackPlugin
-  config.plugins?.push(
-    new ZeWebpackPlugin({
-      zephyr_engine,
-      mfConfig: mfConfig,
-      wait_for_index_html: _zephyrOptions?.wait_for_index_html,
-    })
-  );
+  // Create and inject the ZephyrWebpackPlugin
+  const plugin = new ZeWebpackPlugin({
+    zephyr_engine,
+    mfConfig: mfConfig,
+    wait_for_index_html: _zephyrOptions?.wait_for_index_html,
+  });
+
+  config.plugins?.push(plugin);
 
   return config;
 }

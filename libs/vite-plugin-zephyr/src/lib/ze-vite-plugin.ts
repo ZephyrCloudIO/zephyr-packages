@@ -99,11 +99,18 @@ export class ZeVitePlugin extends ZeBasePlugin<
     }
 
     try {
-      const zephyr_engine = this.options.zephyr_engine;
+      const zephyr_engine_promise = this.options.zephyr_engine;
+      if (!zephyr_engine_promise) {
+        this.logWarning('Zephyr engine not available, skipping transform');
+        return code;
+      }
 
       // Extract any module federation dependencies
       const dependencyPairs = extract_remotes_dependencies(this.options.root, code, id);
       if (!dependencyPairs) return code;
+
+      // Wait for the engine to be ready
+      const zephyr_engine = await zephyr_engine_promise;
 
       // Resolve the remote dependencies
       const resolved_remotes =
@@ -155,20 +162,40 @@ export class ZeVitePlugin extends ZeBasePlugin<
         };
       }
 
-      const zephyr_engine = this.options.zephyr_engine;
-      await zephyr_engine.start_new_build();
+      // Get the Zephyr engine promise and resolve it
+      const zephyr_engine_promise = this.options.zephyr_engine;
+      if (!zephyr_engine_promise) {
+        return {
+          success: false,
+          error: 'Zephyr engine not available',
+        };
+      }
 
-      const assetsMap = await extract_vite_assets_map(zephyr_engine, viteOptions);
+      // Wait for the engine to be ready
+      const zephyr_engine = await zephyr_engine_promise;
 
-      await zephyr_engine.upload_assets({
-        assetsMap,
-        buildStats: await zeBuildDashData(zephyr_engine),
-      });
+      // Now we have the actual engine instance
+      try {
+        // Make sure we have a build started
+        await zephyr_engine.start_new_build();
 
-      await zephyr_engine.build_finished();
+        const assetsMap = await extract_vite_assets_map(zephyr_engine, viteOptions);
 
-      this.log('Successfully processed and uploaded assets');
-      return { success: true };
+        await zephyr_engine.upload_assets({
+          assetsMap,
+          buildStats: await zeBuildDashData(zephyr_engine),
+        });
+
+        await zephyr_engine.build_finished();
+
+        this.log('Successfully processed and uploaded assets');
+        return { success: true };
+      } catch (engineError) {
+        return {
+          success: false,
+          error: engineError instanceof Error ? engineError.message : String(engineError),
+        };
+      }
     } catch (error) {
       return {
         success: false,

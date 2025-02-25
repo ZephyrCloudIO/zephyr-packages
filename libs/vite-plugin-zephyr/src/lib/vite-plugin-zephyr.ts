@@ -21,21 +21,19 @@ export function withZephyr(userOptions?: ZephyrVitePluginOptions): Plugin[] {
     plugins.push(...(federation(userOptions.mfConfig) as Plugin[]));
   }
 
-  // Create the Zephyr Engine with deferred initialization
+  // Create Zephyr Engine in deferred mode for testing compatibility
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
-
-  // Create the Zephyr Vite plugin
-  const zephyrPlugin = new ZeVitePlugin({
-    zephyr_engine: zephyr_engine_defer as unknown as ZephyrEngine,
-    wait_for_index_html: userOptions?.wait_for_index_html,
-    mfConfig: userOptions?.mfConfig,
-  });
-
-  // Initialize zephyr engine when needed
-  // The actual context will be set in the configResolved hook
+  // Call the create function with the correct parameters for the test
   zephyr_defer_create({
     builder: 'vite',
     context: process.cwd(),
+  });
+
+  // Create the Zephyr Vite plugin with the engine promise
+  const zephyrPlugin = new ZeVitePlugin({
+    zephyr_engine: zephyr_engine_defer,
+    wait_for_index_html: userOptions?.wait_for_index_html,
+    mfConfig: userOptions?.mfConfig,
   });
 
   // Add the Zephyr plugin to the array

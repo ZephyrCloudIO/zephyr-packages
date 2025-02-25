@@ -27,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
+    "@codspeed/vitest-plugin": "^4.0.0",
     "@jest/globals": "29.7.0",
     "@mswjs/http-middleware": "^0.10.3",
     "@nx/devkit": "20.4.0",

@@ -1,8 +1,8 @@
+import codspeedPlugin from '@codspeed/vitest-plugin';
 import { defineConfig } from 'vitest/config';
 
-// Since we don't have access to @codspeed/vitest-plugin (it's not compatible with our setup),
-// we'll use Vitest's built-in benchmark support
 export default defineConfig({
+  plugins: [codspeedPlugin()],
   test: {
     // Use the same environment as your tests
     environment: 'node',

@@ -16,9 +16,10 @@ export interface ZephyrVitePluginOptions extends ZePluginOptions {
  * Internal options used by the Vite Zephyr Plugin Extends the base
  * ZeInternalPluginOptions with Vite-specific internal options
  */
-export interface ZephyrViteInternalPluginOptions extends ZeInternalPluginOptions {
-  /** Zephyr Engine instance with specific typing */
-  zephyr_engine: ZephyrEngine;
+export interface ZephyrViteInternalPluginOptions
+  extends Omit<ZeInternalPluginOptions, 'zephyr_engine'> {
+  /** Zephyr Engine instance or Promise with specific typing */
+  zephyr_engine: ZephyrEngine | Promise<ZephyrEngine>;
 
   /** Vite-specific internal options */
   viteOptions?: ZephyrInternalOptions;

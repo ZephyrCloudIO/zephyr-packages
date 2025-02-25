@@ -3,6 +3,7 @@ import './index.css';
 
 const Index = () => (
   <div className="container-box">
+    {/*@ts-expect-error TS2786: 'Helmet' cannot be used as a JSX component.*/}
     <Helmet>
       <link
         rel="icon"

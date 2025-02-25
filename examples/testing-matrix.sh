@@ -42,7 +42,7 @@ function run_example() {
     echo "✅ SUCCESS: Zephyr deployed successfully"
     # Extract the URL that follows "ZEPHYR" text
     # Use grep -o to just get the URL, not the ZEPHYR prefix
-    URL=$(echo "$BUILD_OUTPUT" | grep -E "ZEPHYR.*https://" | grep -o "https://[^[:space:]]*" | head -1 | sed 's/\[39m$//')
+    URL=$(echo "$BUILD_OUTPUT" | grep -E "ZEPHYR.*https://" | head -1 | sed 's/\[39m$//')
     echo "   URL: $URL"
     ((SUCCESS_COUNT++))
   else
@@ -82,8 +82,8 @@ run_example "$EXAMPLES_DIR/rollup-sample-lib" "Rollup Sample Lib" "nx build roll
 
 # Rspack examples
 run_example "$EXAMPLES_DIR/rspack-sample-app" "Rspack Sample App" "pnpm build"
-run_example "$EXAMPLES_DIR/rspack-mf/apps/host" "Rspack MF Host" "pnpm build"
-run_example "$EXAMPLES_DIR/rspack-mf/apps/remote" "Rspack MF Remote" "pnpm build"
+run_example "$EXAMPLES_DIR/rspack-mf/apps/host" "Rspack MF Host" "nx build"
+run_example "$EXAMPLES_DIR/rspack-mf/apps/remote" "Rspack MF Remote" "nx build"
 
 # Webpack examples
 run_example "$EXAMPLES_DIR/sample-webpack-application" "Sample Webpack App" "nx build sample-webpack-application"

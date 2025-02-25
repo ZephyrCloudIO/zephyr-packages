@@ -1,36 +1,60 @@
-import type { Compiler } from 'webpack';
 import { ZephyrEngine } from 'zephyr-agent';
-
 import {
-  ModuleFederationPlugin,
+  ZeBasePlugin,
+  ZeInternalPluginOptions,
+  ZeProcessAssetsResult,
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
+import { WebpackCompiler, ZephyrWebpackPluginOptions } from '../types';
 
-const pluginName = 'ZeWebpackPlugin';
-
-export interface ZephyrWebpackInternalPluginOptions {
-  zephyr_engine: ZephyrEngine;
-  // webpack plugin name
-  pluginName: string;
-  // federated module config
-  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  // hacks
-  wait_for_index_html?: boolean;
-  // outputPath?: string;
+/** Internal options for the webpack plugin */
+export interface ZephyrWebpackInternalPluginOptions extends ZeInternalPluginOptions {
+  // Any webpack-specific internal options can be added here
+  zephyr_engine: ZephyrEngine; // Override the type to be more specific
 }
 
-export class ZeWebpackPlugin {
-  _options: ZephyrWebpackInternalPluginOptions;
-
+/** Zephyr Webpack Plugin implementation Extends the base plugin for shared functionality */
+export class ZeWebpackPlugin extends ZeBasePlugin<
+  ZephyrWebpackPluginOptions,
+  ZephyrWebpackInternalPluginOptions
+> {
+  /** Create a new ZeWebpackPlugin instance */
   constructor(options: Omit<ZephyrWebpackInternalPluginOptions, 'pluginName'>) {
-    this._options = Object.assign({ pluginName }, options);
+    super(
+      {
+        ...options,
+        pluginName: 'ZeWebpackPlugin',
+      } as ZephyrWebpackInternalPluginOptions,
+      'webpack'
+    );
   }
 
-  apply(compiler: Compiler): void {
-    this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
+  /** Apply the plugin to webpack compiler This is called by webpack during initialization */
+  apply(compiler: WebpackCompiler): void {
+    // Set output path on zephyr engine
+    this.options.zephyr_engine.buildProperties.output = compiler.outputPath;
 
-    logBuildSteps(this._options, compiler);
-    setupZeDeploy(this._options, compiler);
+    // Set up logging and deployment hooks
+    logBuildSteps(this.options, compiler);
+    setupZeDeploy(this.options, compiler);
+  }
+
+  /**
+   * Process assets and create asset map This is automatically called by setupZeDeploy The
+   * base class defines this method without parameters, but we don't need them since
+   * setupZeDeploy will call the upload agent directly
+   */
+  protected async processAssets(): Promise<ZeProcessAssetsResult> {
+    try {
+      // Note: The actual asset processing is handled by the setupZeDeploy function
+      // which calls the xpack_zephyr_agent function
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }
 }

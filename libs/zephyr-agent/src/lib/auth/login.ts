@@ -14,15 +14,15 @@ import { ze_log } from '../logging';
 import { bgBlue, blue, green, red, white, yellow } from '../logging/picocolor';
 import { ZeHttpRequest } from '../http/ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
-import { 
-  DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, 
+import {
+  DEFAULT_AUTH_COMPLETION_TIMEOUT_MS,
   AuthAction,
-  TOKEN_EXPIRY
+  TOKEN_EXPIRY,
 } from './auth-flags';
 
 /**
- * Check if the user is already authenticated. If not, ask if they want to
- * open a browser to authenticate. Display a message to the console.
+ * Check if the user is already authenticated. If not, ask if they want to open a browser
+ * to authenticate. Display a message to the console.
  *
  * @returns The token as a string.
  */
@@ -47,22 +47,24 @@ export async function checkAuth(): Promise<string> {
   }
 
   // No valid token found; initiate authentication.
-  console.log(`\n${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
-  
+  console.log(
+    `\n${yellow('Authentication required')} - You need to log in to Zephyr Cloud`
+  );
+
   // Get authentication URL first
   const sessionKey = generateSessionKey();
   const authUrl = await getAuthenticationURL(sessionKey);
-  
+
   // Prompt user with three options
   const authAction = await promptForAuthAction();
-  
+
   if (authAction === 'cancel') {
     // User wants to cancel the build
     throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
       message: 'Authentication cancelled by user.',
     });
   }
-  
+
   // Handle browser opening based on user choice
   if (authAction === 'open') {
     try {
@@ -76,13 +78,13 @@ export async function checkAuth(): Promise<string> {
     // User wants to manually open the URL
     displayManualLoginInstructions(authUrl);
   }
-  
+
   // Wait for token regardless of method
   const newToken = await waitForAccessToken(sessionKey);
   await saveToken(newToken);
-  
+
   console.log(`${green('✓')} You are now logged in to Zephyr Cloud`);
-  
+
   return newToken;
 }
 
@@ -112,6 +114,7 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
 
 /**
  * Prompts the user to choose an authentication action
+ *
  * @returns The user's choice: 'open', 'manual', or 'cancel'
  */
 async function promptForAuthAction(): Promise<AuthAction> {
@@ -119,7 +122,7 @@ async function promptForAuthAction(): Promise<AuthAction> {
   console.log(`
 ${yellow('Zephyr Cloud requires authentication to continue')}
 `);
-  
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -131,12 +134,12 @@ ${green('y')} - Open browser automatically to log in
 ${yellow('m')} - Show the login URL (manual login)
 ${red('n')} - Cancel and exit
 `);
-    
+
     rl.question(`How would you like to proceed? ${green('(Y/m/n)')} `, (answer) => {
       rl.close();
-      
+
       const normalizedAnswer = answer.trim().toLowerCase();
-      
+
       if (normalizedAnswer === 'n' || normalizedAnswer === 'no') {
         resolve('cancel');
       } else if (normalizedAnswer === 'm' || normalizedAnswer === 'manual') {
@@ -214,7 +217,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
       clearTimeout(timeoutHandle);
       timeoutHandle = null;
     }
-    
+
     socket.removeAllListeners();
     socket.disconnect();
     socket.close();
@@ -225,7 +228,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
       cleanupSocket();
       resolve(token);
     });
-    
+
     // Creating errors outside of the listener closure makes the stack trace point
     // to waitForAccessToken fn instead of socket.io internals event emitter code.
     socket.once('access-token-error', (cause) => {
@@ -237,7 +240,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
         })
       );
     });
-    
+
     socket.once('connect_error', (cause) => {
       cleanupSocket();
       reject(
@@ -255,7 +258,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
       cleanupSocket();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS/1000} seconds. Please try again.`,
+          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
         })
       );
     }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);

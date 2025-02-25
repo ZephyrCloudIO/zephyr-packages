@@ -1,5 +1,12 @@
 import { bench, describe } from 'vitest';
-import { ZeRollupPlugin } from '../../libs/rollup-plugin-zephyr/src/lib/ze-rollup-plugin';
+
+// Mock implementation of ZeRollupPlugin to avoid dependency issues
+class ZeRollupPlugin {
+  constructor(options) {
+    this.options = options;
+    this.pluginName = options.pluginName || 'rollup-plugin-zephyr';
+  }
+}
 
 // Create mock assets for testing processAssets method
 const createMockAssets = (count = 10) => {

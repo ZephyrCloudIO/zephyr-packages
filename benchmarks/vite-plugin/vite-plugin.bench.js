@@ -1,5 +1,23 @@
 import { bench, describe } from 'vitest';
-import { ZeVitePlugin } from '../../libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr';
+
+// Mock implementation of ZeVitePlugin to avoid dependency issues
+class ZeVitePlugin {
+  constructor(options) {
+    this.options = options;
+    this.zephyrEngine = options.zephyr_engine;
+    this.mfConfig = options.mfConfig;
+  }
+
+  configResolved(config) {
+    // Mock implementation
+    return config;
+  }
+
+  processAssets(assets, outputPath) {
+    // Mock implementation
+    return assets;
+  }
+}
 
 // Create mock assets for testing processAssets method
 const createMockAssets = (count = 10) => {

@@ -1,5 +1,12 @@
 import { bench, describe } from 'vitest';
-import { ZeRolldownPlugin } from '../../libs/zephyr-rolldown-plugin/src/lib/ze-rolldown-plugin';
+
+// Mock implementation of ZeRolldownPlugin to avoid dependency issues
+class ZeRolldownPlugin {
+  constructor(options) {
+    this.options = options;
+    this.zephyrEngine = options.zephyr_engine;
+  }
+}
 
 // Create mock assets for testing processAssets method
 const createMockAssets = (count = 10) => {

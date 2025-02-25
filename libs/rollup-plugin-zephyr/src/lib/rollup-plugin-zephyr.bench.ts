@@ -1,32 +1,34 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, vi, beforeEach } from 'vitest';
 import { withZephyr } from './rollup-plugin-zephyr';
 
 // Mock dependencies
-jest.mock('zephyr-agent', () => {
-  const mockDefer = {
-    zephyr_engine_defer: Promise.resolve({
-      start_new_build: jest.fn().mockResolvedValue(undefined),
-      upload_assets: jest.fn().mockResolvedValue(undefined),
-      build_finished: jest.fn().mockResolvedValue(undefined),
-    }),
-    zephyr_defer_create: jest.fn(),
-  };
+const mockDefer = {
+  zephyr_engine_defer: Promise.resolve({
+    start_new_build: vi.fn().mockResolvedValue(undefined),
+    upload_assets: vi.fn().mockResolvedValue(undefined),
+    build_finished: vi.fn().mockResolvedValue(undefined),
+  }),
+  zephyr_defer_create: vi.fn(),
+};
 
-  return {
-    ZephyrEngine: {
-      defer_create: jest.fn().mockReturnValue(mockDefer),
-    },
-    zeBuildDashData: jest.fn().mockResolvedValue({}),
-  };
-});
+const mockZephyrAgent = {
+  ZephyrEngine: {
+    defer_create: vi.fn().mockReturnValue(mockDefer),
+  },
+  zeBuildDashData: vi.fn().mockResolvedValue({}),
+};
 
-jest.mock('./transform/get-assets-map', () => ({
-  getAssetsMap: jest.fn().mockReturnValue({ 'test.js': 'content' }),
-}));
+const mockGetAssetsMap = {
+  getAssetsMap: vi.fn().mockReturnValue({ 'test.js': 'content' }),
+};
 
-jest.mock('node:process', () => ({
-  cwd: jest.fn().mockReturnValue('/mock/cwd'),
-}));
+const mockProcess = {
+  cwd: vi.fn().mockReturnValue('/mock/cwd'),
+};
+
+vi.mock('zephyr-agent', () => mockZephyrAgent);
+vi.mock('./transform/get-assets-map', () => mockGetAssetsMap);
+vi.mock('node:process', () => mockProcess);
 
 describe('rollup-plugin-zephyr Performance', () => {
   bench('Plugin creation', () => {

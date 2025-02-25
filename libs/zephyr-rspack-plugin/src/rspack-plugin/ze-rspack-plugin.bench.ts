@@ -1,31 +1,34 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, vi } from 'vitest';
 import { ZeRspackPlugin } from './ze-rspack-plugin';
 import { withZephyr } from './with-zephyr';
 
 // Mock dependencies to avoid actual network calls
-jest.mock('zephyr-agent', () => ({
+const mockZephyrAgent = {
   ZephyrEngine: {
-    create: jest.fn().mockResolvedValue({
-      resolve_remote_dependencies: jest.fn().mockResolvedValue([]),
+    create: vi.fn().mockResolvedValue({
+      resolve_remote_dependencies: vi.fn().mockResolvedValue([]),
       buildProperties: {},
     }),
   },
-  ze_log: jest.fn(),
-}));
+  ze_log: vi.fn(),
+};
 
-jest.mock('zephyr-xpack-internal', () => ({
-  extractFederatedDependencyPairs: jest.fn().mockReturnValue([]),
-  makeCopyOfModuleFederationOptions: jest.fn().mockReturnValue({}),
-  mutWebpackFederatedRemotesConfig: jest.fn(),
-  logBuildSteps: jest.fn(),
-  setupZeDeploy: jest.fn(),
-}));
+const mockXpackInternal = {
+  extractFederatedDependencyPairs: vi.fn().mockReturnValue([]),
+  makeCopyOfModuleFederationOptions: vi.fn().mockReturnValue({}),
+  mutWebpackFederatedRemotesConfig: vi.fn(),
+  logBuildSteps: vi.fn(),
+  setupZeDeploy: vi.fn(),
+};
+
+vi.mock('zephyr-agent', () => mockZephyrAgent);
+vi.mock('zephyr-xpack-internal', () => mockXpackInternal);
 
 describe('ZeRspackPlugin Performance', () => {
   const mockCompiler = {
     hooks: {
-      beforeCompile: { tap: jest.fn() },
-      thisCompilation: { tap: jest.fn() },
+      beforeCompile: { tap: vi.fn() },
+      thisCompilation: { tap: vi.fn() },
     },
     outputPath: '/mock/output/path',
   };

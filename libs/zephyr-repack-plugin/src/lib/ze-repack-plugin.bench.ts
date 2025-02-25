@@ -1,43 +1,45 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, vi, expect } from 'vitest';
 import { ZeRepackPlugin } from './ze-repack-plugin';
-import * as xpackInternal from 'zephyr-xpack-internal';
 
 // Mock dependencies to avoid actual network calls
-jest.mock('zephyr-agent', () => ({
+const mockZephyrAgent = {
   ZephyrEngine: {
-    create: jest.fn().mockResolvedValue({
-      resolve_remote_dependencies: jest.fn().mockResolvedValue([]),
+    create: vi.fn().mockResolvedValue({
+      resolve_remote_dependencies: vi.fn().mockResolvedValue([]),
       buildProperties: {},
     }),
   },
-  ze_log: jest.fn(),
-}));
+  ze_log: vi.fn(),
+};
 
-jest.mock('zephyr-xpack-internal', () => ({
-  extractFederatedDependencyPairs: jest.fn().mockReturnValue([]),
-  makeCopyOfModuleFederationOptions: jest.fn().mockReturnValue({}),
-  mutWebpackFederatedRemotesConfig: jest.fn(),
-  logBuildSteps: jest.fn(),
-  setupZeDeploy: jest.fn(),
-}));
+const mockXpackInternal = {
+  extractFederatedDependencyPairs: vi.fn().mockReturnValue([]),
+  makeCopyOfModuleFederationOptions: vi.fn().mockReturnValue({}),
+  mutWebpackFederatedRemotesConfig: vi.fn(),
+  logBuildSteps: vi.fn(),
+  setupZeDeploy: vi.fn(),
+};
 
-jest.mock('find-package-json', () => {
-  return () => ({
-    next: jest.fn().mockReturnValue({
-      value: { name: '@test/app' },
-    }),
-  });
+const mockFindPackageJson = () => ({
+  next: vi.fn().mockReturnValue({
+    value: { name: '@test/app' },
+  }),
 });
 
-jest.mock('./utils/get-platform', () => ({
-  get_platform_from_repack: jest.fn().mockReturnValue('ios'),
-}));
+const mockGetPlatform = {
+  get_platform_from_repack: vi.fn().mockReturnValue('ios'),
+};
+
+vi.mock('zephyr-agent', () => mockZephyrAgent);
+vi.mock('zephyr-xpack-internal', () => mockXpackInternal);
+vi.mock('find-package-json', () => mockFindPackageJson);
+vi.mock('./utils/get-platform', () => mockGetPlatform);
 
 describe('ZeRepackPlugin Performance', () => {
   const mockCompiler = {
     hooks: {
-      beforeCompile: { tap: jest.fn() },
-      thisCompilation: { tap: jest.fn() },
+      beforeCompile: { tap: vi.fn() },
+      thisCompilation: { tap: vi.fn() },
     },
     outputPath: '/mock/output/path',
   };
@@ -63,8 +65,8 @@ describe('ZeRepackPlugin Performance', () => {
 
   bench('Plugin hooks performance', () => {
     // Test the performance of the plugin hooks internally
-    xpackInternal.logBuildSteps.mockReset();
-    xpackInternal.setupZeDeploy.mockReset();
+    mockXpackInternal.logBuildSteps.mockClear();
+    mockXpackInternal.setupZeDeploy.mockClear();
 
     const zephyrEngine = { buildProperties: {} } as any;
     const plugin = new ZeRepackPlugin({
@@ -76,7 +78,7 @@ describe('ZeRepackPlugin Performance', () => {
     plugin.apply(mockCompiler as any);
 
     // Verify that the hooks were called
-    expect(xpackInternal.logBuildSteps).toHaveBeenCalled();
-    expect(xpackInternal.setupZeDeploy).toHaveBeenCalled();
+    expect(mockXpackInternal.logBuildSteps).toHaveBeenCalled();
+    expect(mockXpackInternal.setupZeDeploy).toHaveBeenCalled();
   });
 });

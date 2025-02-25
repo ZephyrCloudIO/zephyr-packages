@@ -34,10 +34,6 @@ jobs:
         run: |
           pnpm run build
 
-      - name: Install Dependencies to Build Examples
-        run: |
-          pnpm install --force
-
       - name: Run one build to sanity check
         env:
           ZE_SECRET_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}

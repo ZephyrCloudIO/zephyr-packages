@@ -6,7 +6,6 @@
 #   ./examples/testing-matrix.sh
 #
 # Environment variables:
-#   SHOW_FULL_OUTPUT=1    Show complete build output instead of just the last 50 lines
 #   SAVE_LOGS=1           Save all build logs to the 'test-logs' directory
 
 SUCCESS_COUNT=0
@@ -79,18 +78,10 @@ function run_example() {
       echo "   Missing Zephyr URL in output"
     fi
     
-    # Display a section with the build output for debugging
+    # Always display the build output for failed builds
     echo ""
     echo "   --- Build Output ---"
-    
-    # If SHOW_FULL_OUTPUT is set to 1, show all output, otherwise show last 50 lines
-    if [[ "${SHOW_FULL_OUTPUT:-0}" == "1" ]]; then
-      echo "$BUILD_OUTPUT"
-    else
-      echo "   (Showing last 50 lines. Set SHOW_FULL_OUTPUT=1 to see all output)"
-      echo "$BUILD_OUTPUT" | tail -n 50
-    fi
-    
+    echo "$BUILD_OUTPUT"
     echo "   --- End of Build Output ---"
     echo ""
     

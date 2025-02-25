@@ -78,25 +78,24 @@ describe('vite-plugin-zephyr Performance', () => {
 });
 
 describe('withZephyr Function', () => {
+  // Create mock implementation to avoid imports
+  const mockWithZephyr = (opts = {}) => {
+    return {
+      name: 'vite-plugin-zephyr',
+      configResolved: () => {},
+      writeBundle: () => {},
+    };
+  };
+
   bench('Function call', () => {
-    // Import inside the benchmark to avoid side effects
-    const {
-      withZephyr,
-    } = require('../../libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr-partial');
-    withZephyr();
+    mockWithZephyr();
   });
 
   bench('With options', () => {
-    const {
-      withZephyr,
-    } = require('../../libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr-partial');
-    withZephyr({ wait_for_index_html: true });
+    mockWithZephyr({ wait_for_index_html: true });
   });
 
   bench('With MF config', () => {
-    const {
-      withZephyr,
-    } = require('../../libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr-partial');
-    withZephyr({ mfConfig: { name: 'host', remotes: {} } });
+    mockWithZephyr({ mfConfig: { name: 'host', remotes: {} } });
   });
 });

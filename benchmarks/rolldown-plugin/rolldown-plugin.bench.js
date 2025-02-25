@@ -1,5 +1,5 @@
 import { bench, describe } from 'vitest';
-import { RolldownPluginZephyr } from '../../libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin';
+import { ZeRolldownPlugin } from '../../libs/zephyr-rolldown-plugin/src/lib/ze-rolldown-plugin';
 
 // Create mock assets for testing processAssets method
 const createMockAssets = (count = 10) => {
@@ -29,12 +29,15 @@ const createMockAssets = (count = 10) => {
 describe('rolldown-plugin-zephyr Performance', () => {
   bench('Plugin creation', () => {
     const zephyrEngine = { buildProperties: {} };
-    new RolldownPluginZephyr(zephyrEngine);
+    new ZeRolldownPlugin({ zephyr_engine: zephyrEngine });
   });
 
   bench('Plugin creation with options', () => {
     const zephyrEngine = { buildProperties: {} };
-    new RolldownPluginZephyr(zephyrEngine, { wait_for_index_html: true });
+    new ZeRolldownPlugin({
+      zephyr_engine: zephyrEngine,
+      wait_for_index_html: true,
+    });
   });
 
   describe('Plugin Methods', () => {
@@ -44,7 +47,7 @@ describe('rolldown-plugin-zephyr Performance', () => {
       start_new_build: () => Promise.resolve(),
       build_finished: () => Promise.resolve(),
     };
-    const plugin = new RolldownPluginZephyr(zephyrEngine);
+    const plugin = new ZeRolldownPlugin({ zephyr_engine: zephyrEngine });
 
     bench('buildStart with string input', () => {
       const input = { input: '/path/to/input.js' };
@@ -87,25 +90,25 @@ describe('rolldown-plugin-zephyr Performance', () => {
 describe('withZephyr Performance', () => {
   bench('Function call', () => {
     // Mock function to avoid imports
-    const withZephyr = (opts = {}) => {
+    const mockWithZephyr = (opts = {}) => {
       return {
         name: 'rolldown-plugin-zephyr',
         buildStart: () => {},
         writeBundle: () => {},
       };
     };
-    withZephyr();
+    mockWithZephyr();
   });
 
   bench('With options', () => {
     // Mock function to avoid imports
-    const withZephyr = (opts = {}) => {
+    const mockWithZephyr = (opts = {}) => {
       return {
         name: 'rolldown-plugin-zephyr',
         buildStart: () => {},
         writeBundle: () => {},
       };
     };
-    withZephyr({ wait_for_index_html: true });
+    mockWithZephyr({ wait_for_index_html: true });
   });
 });

@@ -83,27 +83,20 @@ describe('rollup-plugin-zephyr Performance', () => {
 });
 
 describe('withZephyr Performance', () => {
-  bench('Function call', () => {
-    // Mock function to avoid imports
-    const withZephyr = (opts = {}) => {
-      return {
-        name: 'rollup-plugin-zephyr',
-        buildStart: () => {},
-        writeBundle: () => {},
-      };
+  // Create mock implementation to avoid imports
+  const mockWithZephyr = (opts = {}) => {
+    return {
+      name: 'rollup-plugin-zephyr',
+      buildStart: () => {},
+      writeBundle: () => {},
     };
-    withZephyr();
+  };
+
+  bench('Function call', () => {
+    mockWithZephyr();
   });
 
   bench('With options', () => {
-    // Mock function to avoid imports
-    const withZephyr = (opts = {}) => {
-      return {
-        name: 'rollup-plugin-zephyr',
-        buildStart: () => {},
-        writeBundle: () => {},
-      };
-    };
-    withZephyr({ wait_for_index_html: true });
+    mockWithZephyr({ wait_for_index_html: true });
   });
 });

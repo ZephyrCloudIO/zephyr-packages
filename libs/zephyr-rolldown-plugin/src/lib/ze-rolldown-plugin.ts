@@ -121,10 +121,19 @@ export class ZeRolldownPlugin extends ZeBasePlugin<
           await zephyr_engine.start_new_build();
         }
 
-        await zephyr_engine.upload_assets({
-          assetsMap: getAssetsMap(this.bundle),
-          buildStats: await zeBuildDashData(zephyr_engine),
-        });
+        // Only call upload_assets if it exists as a function
+        if (typeof zephyr_engine.upload_assets === 'function') {
+          await zephyr_engine.upload_assets({
+            assetsMap: getAssetsMap(this.bundle),
+            buildStats: await zeBuildDashData(zephyr_engine),
+          });
+        } else {
+          this.logError('upload_assets method is not available on the zephyr_engine');
+          return {
+            success: false,
+            error: 'upload_assets method is not available',
+          };
+        }
       } catch (error) {
         this.logError(
           `Upload assets error: ${error instanceof Error ? error.message : String(error)}`

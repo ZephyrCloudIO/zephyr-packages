@@ -12,8 +12,6 @@ jobs:
   test-examples:
     name: Test Examples
     runs-on: ubuntu-latest
-    env:
-      ZEPHYR_AUTH_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,6 +39,8 @@ jobs:
           pnpm install --force
 
       - name: Run one build to sanity check
+        env:
+          ZE_SECRET_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}
         run: |
           cd examples/vite-react-ts && pnpm run build
 

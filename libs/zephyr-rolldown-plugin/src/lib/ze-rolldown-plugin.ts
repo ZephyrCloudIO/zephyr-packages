@@ -4,7 +4,7 @@ import type {
   OutputBundle,
   Plugin,
 } from 'rolldown';
-import { zeBuildDashData } from 'zephyr-agent';
+import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import { ZeBasePlugin, ZeProcessAssetsResult } from 'zephyr-xpack-internal';
 import { getAssetsMap } from './internal/get-assets-map';
 import {
@@ -35,6 +35,7 @@ export class ZeRolldownPlugin extends ZeBasePlugin<
 > {
   private bundle: OutputBundle | null = null;
   private outputOptions: NormalizedOutputOptions | null = null;
+  private enginePromise: Promise<ZephyrEngine>;
 
   /**
    * Create a new ZeRolldownPlugin instance
@@ -49,6 +50,9 @@ export class ZeRolldownPlugin extends ZeBasePlugin<
       },
       'rollup' // Using rollup as the bundler type since they share the same API
     );
+
+    // Store the Promise to the real ZephyrEngine
+    this.enginePromise = Promise.resolve(options.zephyr_engine);
   }
 
   /** Get the Rolldown plugin instance This is the main entry point that Rolldown will use */
@@ -113,16 +117,16 @@ export class ZeRolldownPlugin extends ZeBasePlugin<
         };
       }
 
-      const zephyr_engine = this.options.zephyr_engine;
-
       try {
-        // Make sure we have a snapshot ID for upload_assets
-        if (typeof zephyr_engine.start_new_build === 'function') {
-          await zephyr_engine.start_new_build();
-        }
+        // Get the fully initialized ZephyrEngine
+        const zephyr_engine = await this.enginePromise;
 
-        // Only call upload_assets if it exists as a function
+        this.log('Starting new build');
+        await zephyr_engine.start_new_build();
+
+        // Check if upload_assets exists (it should, but being defensive)
         if (typeof zephyr_engine.upload_assets === 'function') {
+          this.log('Uploading assets');
           await zephyr_engine.upload_assets({
             assetsMap: getAssetsMap(this.bundle),
             buildStats: await zeBuildDashData(zephyr_engine),
@@ -134,16 +138,17 @@ export class ZeRolldownPlugin extends ZeBasePlugin<
             error: 'upload_assets method is not available',
           };
         }
+
+        this.log('Finishing build');
+        await zephyr_engine.build_finished();
       } catch (error) {
         this.logError(
           `Upload assets error: ${error instanceof Error ? error.message : String(error)}`
         );
-        // Even if upload fails, try to finish the build
-      }
-
-      // Safely call build_finished if it exists
-      if (typeof zephyr_engine.build_finished === 'function') {
-        await zephyr_engine.build_finished();
+        return {
+          success: false,
+          error: `Failed to upload assets: ${error instanceof Error ? error.message : String(error)}`,
+        };
       }
 
       this.log('Successfully processed bundle assets');

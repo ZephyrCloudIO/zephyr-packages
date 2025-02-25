@@ -14,9 +14,9 @@ export function withZephyr(userOptions: ZephyrRollupPluginOptions = {}): Plugin 
   // Create the Zephyr Engine with deferred initialization
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
-  // Create the plugin instance
+  // Create the plugin instance - pass the promise directly
   const plugin = new ZeRollupPlugin({
-    zephyr_engine: zephyr_engine_defer as unknown as ZephyrEngine,
+    zephyr_engine: zephyr_engine_defer, // Pass the promise directly
     wait_for_index_html: userOptions.wait_for_index_html,
     mfConfig: userOptions.mfConfig,
   });

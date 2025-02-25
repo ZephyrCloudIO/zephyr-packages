@@ -18,6 +18,6 @@ export interface ZephyrRollupPluginOptions extends ZePluginOptions {
  * ZeInternalPluginOptions with Rollup-specific internal options
  */
 export interface ZephyrRollupInternalPluginOptions extends ZeInternalPluginOptions {
-  /** Zephyr Engine instance with specific typing */
-  zephyr_engine: ZephyrEngine;
+  /** Zephyr Engine instance or Promise<ZephyrEngine> */
+  zephyr_engine: ZephyrEngine | Promise<ZephyrEngine>;
 }

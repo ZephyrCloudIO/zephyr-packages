@@ -1,5 +1,5 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle, Plugin } from 'rollup';
-import { zeBuildDashData } from 'zephyr-agent';
+import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import { ZeBasePlugin, ZeProcessAssetsResult } from 'zephyr-xpack-internal';
 import { getAssetsMap } from './transform/get-assets-map';
 import { ZephyrRollupInternalPluginOptions, ZephyrRollupPluginOptions } from './types';
@@ -27,6 +27,7 @@ export class ZeRollupPlugin extends ZeBasePlugin<
 > {
   private bundle: OutputBundle | null = null;
   private outputOptions: NormalizedOutputOptions | null = null;
+  private enginePromise: Promise<ZephyrEngine>;
 
   /**
    * Create a new ZeRollupPlugin instance
@@ -41,6 +42,9 @@ export class ZeRollupPlugin extends ZeBasePlugin<
       },
       'rollup'
     );
+
+    // Store the Promise to the real ZephyrEngine
+    this.enginePromise = Promise.resolve(options.zephyr_engine);
   }
 
   /** Get the Rollup plugin instance This is the main entry point that Rollup will use */
@@ -109,15 +113,39 @@ export class ZeRollupPlugin extends ZeBasePlugin<
         };
       }
 
-      const zephyr_engine = this.options.zephyr_engine;
-      await zephyr_engine.start_new_build();
+      try {
+        // Get the fully initialized ZephyrEngine
+        const zephyr_engine = await this.enginePromise;
 
-      await zephyr_engine.upload_assets({
-        assetsMap: getAssetsMap(this.bundle),
-        buildStats: await zeBuildDashData(zephyr_engine),
-      });
+        this.log('Starting new build');
+        await zephyr_engine.start_new_build();
 
-      await zephyr_engine.build_finished();
+        // Check if upload_assets exists (it should, but being defensive)
+        if (typeof zephyr_engine.upload_assets === 'function') {
+          this.log('Uploading assets');
+          await zephyr_engine.upload_assets({
+            assetsMap: getAssetsMap(this.bundle),
+            buildStats: await zeBuildDashData(zephyr_engine),
+          });
+        } else {
+          this.logError('upload_assets method is not available on the zephyr_engine');
+          return {
+            success: false,
+            error: 'upload_assets method is not available',
+          };
+        }
+
+        this.log('Finishing build');
+        await zephyr_engine.build_finished();
+      } catch (error) {
+        this.logError(
+          `Upload assets error: ${error instanceof Error ? error.message : String(error)}`
+        );
+        return {
+          success: false,
+          error: `Failed to upload assets: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
 
       this.log('Successfully processed bundle assets');
       return { success: true };

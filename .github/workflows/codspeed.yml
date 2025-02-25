@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+      - name: Build packages
+        run: pnpm build
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v3
         with:

@@ -6,10 +6,10 @@ export default defineConfig({
   test: {
     // Use the same environment as your tests
     environment: 'node',
-    // Include benchmarks only
+    // Include ONLY our benchmarks folder, not the ones in the libs directory
     include: ['benchmarks/**/*.bench.js'],
-    // Exclude the old bench files in libs directory
-    exclude: ['libs/**/*.bench.ts'],
+    // Explicitly exclude all bench files in libs directory
+    exclude: ['**/node_modules/**', 'libs/**', 'dist/**'],
     // Never timeout in benchmark mode
     testTimeout: 0,
     // Benchmark-specific configuration

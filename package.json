@@ -9,7 +9,7 @@
     "build-all": "nx run-many -t build --all",
     "lint": "nx run-many -t lint --projects=\"libs/*\"",
     "test": "nx run-many -t test --projects=\"libs/*\"",
-    "bench": "vitest bench --config=vitest.bench.config.ts",
+    "bench": "vitest bench --config=vitest.bench.config.ts benchmarks/**/*.bench.js",
     "bench:webpack": "vitest bench --config=vitest.bench.config.ts benchmarks/webpack-plugin/webpack-plugin.bench.js --silent --run",
     "bench:rspack": "vitest bench --config=vitest.bench.config.ts benchmarks/rspack-plugin/rspack-plugin.bench.js --silent --run",
     "bench:vite": "vitest bench --config=vitest.bench.config.ts benchmarks/vite-plugin/vite-plugin.bench.js --silent --run",

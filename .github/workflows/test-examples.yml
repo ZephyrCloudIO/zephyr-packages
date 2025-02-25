@@ -26,7 +26,7 @@ jobs:
         with:
           version: 9.9.0
 
-      - name: Install Dependencies to Build Packages
+      - name: Install Dependencies
         run: |
           pnpm install
 
@@ -34,12 +34,8 @@ jobs:
         run: |
           pnpm run build
 
-      - name: Run one build to sanity check
+      - name: Run Testing Matrix
         env:
           ZE_SECRET_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}
         run: |
-          cd examples/vite-react-ts && pnpm run build
-
-#      - name: Run Testing Matrix
-#        run: |
-#          pnpm run test:examples
+          pnpm run test:examples

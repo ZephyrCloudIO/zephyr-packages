@@ -55,7 +55,4 @@ jobs:
         run: |
           pnpm run test:examples
         env:
-          # Add any environment variables needed for testing
-          NODE_ENV: production
-          ZEPHYR_API_KEY: ${{ secrets.ZEPHYR_API_KEY }}
-          ZEPHYR_OWNER_ID: ${{ secrets.ZEPHYR_OWNER_ID }}
+          ZEPHYR_AUTH_TOKEN: ${{ secrets.ZEPHYR_AUTH_TOKEN }}

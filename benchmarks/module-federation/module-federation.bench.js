@@ -3,8 +3,6 @@ import {
   mutWebpackFederatedRemotesConfig,
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
-  createRemoteReplacementUrl,
-  getFileNameFromURL,
 } from '../../libs/zephyr-xpack-internal/src';
 
 describe('Module Federation Performance', () => {
@@ -101,14 +99,15 @@ describe('Module Federation Performance', () => {
     );
   });
 
-  bench('Create remote replacement URL', () => {
-    createRemoteReplacementUrl('app2', 'app2@http://localhost:3002/remoteEntry.js', {
-      packageName: 'app2',
-      importSpecifier: 'app2',
-    });
-  });
+  // These functions were removed from the codebase, so we'll comment out these benchmarks
+  // bench('Create remote replacement URL', () => {
+  //   createRemoteReplacementUrl('app2', 'app2@http://localhost:3002/remoteEntry.js', {
+  //     packageName: 'app2',
+  //     importSpecifier: 'app2',
+  //   });
+  // });
 
-  bench('Get filename from URL', () => {
-    getFileNameFromURL('http://localhost:3002/remoteEntry.js');
-  });
+  // bench('Get filename from URL', () => {
+  //   getFileNameFromURL('http://localhost:3002/remoteEntry.js');
+  // });
 });

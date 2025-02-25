@@ -2,6 +2,7 @@
   "name": "zephyr-packages",
   "version": "0.0.35",
   "license": "Apache-2.0",
+  "type": "module",
   "scripts": {
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
     "ze-publish": "pnpm --filter \"./libs/**\" publish --access public --no-git-checks",

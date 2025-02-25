@@ -59,8 +59,9 @@ describe('ZeWebpackPlugin Performance', () => {
 
     const mockCompiler = {
       hooks: {
-        beforeCompile: { tap: () => {} },
+        beforeCompile: { tap: () => {}, tapAsync: () => {} },
         thisCompilation: { tap: () => {} },
+        failed: { tap: () => {} },
       },
       outputPath: '/mock/output/path',
     };

@@ -1,0 +1,37 @@
+{
+  "name": "parcel-reporter-zephyr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/parcel-reporter-zephyr/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/parcel-reporter-zephyr/src",
+        "outputPath": "libs/parcel-reporter-zephyr/dist",
+        "tsConfig": "libs/parcel-reporter-zephyr/tsconfig.lib.json",
+        "main": "libs/parcel-reporter-zephyr/src/index.ts"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "release": {
+      "command": "pnpm dist-tag add parcel-reporter-zephyr@$(npm view parcel-reporter-zephyr@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/parcel-reporter-zephyr/jest.config.ts"
+      }
+    }
+  }
+}

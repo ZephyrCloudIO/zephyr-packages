@@ -1,34 +1,37 @@
-# Zephyr Rolldown Plugin (WIP)
+# Zephyr Parcel Plugin
 
 ## Usage
 
-```javascript
-// rolldown.config.mjs
-import { defineConfig } from 'rolldown';
-import { withZephyr } from 'zephyr-rolldown-plugin';
+### With .parcelrc (Recommended)
 
-export default defineConfig({
-  input: 'src/main.tsx',
-  plugins: [
-    {
-      name: 'emit-html',
-      generateBundle() {
-        const html = `
-          <html>
-            <body>
-              <div id="root"></div>
-              <script type="module" src="./main.js"></script>
-            </body>
-          </html>
-        `;
-        this.emitFile({
-          type: 'asset',
-          fileName: 'index.html',
-          source: html,
-        });
-      },
-    },
-    withZephyr(),
-  ],
-});
+The easiest way to use the Zephyr Parcel plugin is to add it to your `.parcelrc` file:
+
+```json
+//.parcelrc
+{
+  "extends": "@parcel/config-default",
+  "reporters": ["...", "parcel-reporter-zephyr"]
+}
+```
+
+### Programmatic Usage
+
+If you're using Parcel programmatically, you can add the plugin directly:
+
+```javascript
+// build.js
+const { Parcel } = require('@parcel/core');
+const ZephyrReporter = require('parcel-reporter-zephyr');
+
+async function build() {
+  const bundler = new Parcel({
+    entries: ['src/index.html'],
+    defaultConfig: '@parcel/config-default',
+    reporters: ['...', ZephyrReporter],
+  });
+
+  await bundler.run();
+}
+
+build();
 ```

@@ -812,9 +812,6 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
-      zephyr-xpack-internal:
-        specifier: workspace:*
-        version: link:../zephyr-xpack-internal
     devDependencies:
       '@types/is-ci':
         specifier: ^3.0.4

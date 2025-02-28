@@ -32,10 +32,10 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
     ze_log.remotes(`Library type: ${library_type}`);
 
     Object.entries(remotes).map((remote) => {
-      const [remote_name, remote_version] = remote;
+      const [remote_name_raw, remote_version] = remote;
 
       // todo: this is a version with named export logic, we should take this into account later
-      const v_app = derive_remote_name(remote_version, remote_name);
+      const v_app = derive_remote_name(remote_version, remote_name_raw);
 
       const resolved_dep = resolvedDependencyPairs.find((dep) => {
         const matchName = dep.name === v_app || dep.application_uid === v_app;
@@ -43,7 +43,9 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         return matchName && matchVersion;
       });
 
-      ze_log.remotes(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
+      ze_log.remotes(
+        `remote_name: ${remote_name_raw}, remote_version: ${remote_version}`
+      );
 
       if (!resolved_dep) {
         ze_log.remotes(
@@ -52,22 +54,18 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         );
         return;
       }
+
+      const remote_name = resolved_dep.name;
       const remote_url = resolved_dep.remote_entry_url;
       resolved_dep.remote_entry_url = [remote_name, remote_url].join('@');
       ze_log.remotes(`Adding version to remote entry url: ${remote_url}`);
-      
+
       resolved_dep.library_type = library_type;
       resolved_dep.name = remote_name;
-      // @ts-expect-error - TS7053: Element implicitly has an any type because expression of type string can't be used to index type RemotesObject | (string | RemotesObject)[]
       // No index signature with a parameter of type string was found on type RemotesObject | (string | RemotesObject)[]
-      if (remotes[remote_name]) {
-        // @ts-expect-error - read above
-        remotes[remote_name] = createMfRuntimeCode(
-          resolved_dep,
-          delegate_module_template
-        );
-        ze_log.remotes(`Setting runtime code for remote: ${remotes}`);
-      }
+      // @ts-expect-error - read above
+      remotes[remote_name] = createMfRuntimeCode(resolved_dep, delegate_module_template);
+      ze_log.remotes(`Setting runtime code for remote: ${remotes}`);
     });
   });
 }

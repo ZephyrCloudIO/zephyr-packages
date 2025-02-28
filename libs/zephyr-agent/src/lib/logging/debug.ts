@@ -37,7 +37,14 @@ function print_error_with_docs<K extends keyof typeof Errors>(
     : console.log(brightRedBgName, redBright('Unknown error'), args);
 }
 
-export const ze_log = debug('zephyr:log');
+const createLogger = () => {
+  const baseLogger = debug('zephyr:log');
+  return Object.assign(baseLogger, {
+    remotes: debug('zephyr:remotes'),
+  });
+};
+
+export const ze_log = createLogger();
 // If debug mode is not enabled just print whatever console output is
 // If debug mode is enabled print the error from our end
 /**

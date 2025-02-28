@@ -63,3 +63,6 @@ playwright
 
 # mf map from vite example
 examples/vite-react-mf/host/.__mf__temp/**
+
+# Parcel cache
+.parcel-cache

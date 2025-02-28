@@ -47,7 +47,7 @@ function run_example() {
   echo "Running: $BUILD_CMD"
   eval "BUILD_OUTPUT=\$(COREPACK_ENABLE_STRICT=0 $BUILD_CMD 2>&1)"
   BUILD_STATUS=$?
-  
+
   # Save logs to file if enabled
   if [[ "${SAVE_LOGS:-0}" == "1" ]]; then
     LOG_FILE="$LOG_DIR/${EXAMPLE_NAME// /_}.log"
@@ -77,14 +77,14 @@ function run_example() {
     if [[ ! $BUILD_OUTPUT =~ ZEPHYR.*https:// ]]; then
       echo "   Missing Zephyr URL in output"
     fi
-    
+
     # Always display the build output for failed builds
     echo ""
     echo "   --- Build Output ---"
     echo "$BUILD_OUTPUT"
     echo "   --- End of Build Output ---"
     echo ""
-    
+
     ((FAILURE_COUNT++))
   fi
 
@@ -122,6 +122,9 @@ run_example "$EXAMPLES_DIR/sample-webpack-application" "Sample Webpack App" "nx 
 
 # Modern.js examples
 run_example "$EXAMPLES_DIR/modern-js" "Modern JS" "pnpm build"
+
+# Parcel examples
+run_example "$EXAMPLES_DIR/parcel-react" "Parcel React" "pnpm build"
 
 # Print summary
 echo "=============================================="

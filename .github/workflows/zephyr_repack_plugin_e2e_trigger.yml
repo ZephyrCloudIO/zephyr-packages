@@ -1,0 +1,22 @@
+name: Trigger Zephyr Repack Plugin E2E tests
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  trigger-zephyr-repack-example:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'ZephyrCloudIO',
+              repo: 'zephyr-repack-example',
+              workflow_id: 'e2e-zephyr-repack-plugin.yml',
+              ref: 'bootstrap-example'
+            })

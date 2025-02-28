@@ -62,6 +62,8 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       resolved_dep.library_type = library_type;
       resolved_dep.name = remote_name;
+      // @ts-expect-error read below
+      delete remotes[remote_name_raw];
       // No index signature with a parameter of type string was found on type RemotesObject | (string | RemotesObject)[]
       // @ts-expect-error - read above
       remotes[remote_name] = createMfRuntimeCode(resolved_dep, delegate_module_template);

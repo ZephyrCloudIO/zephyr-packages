@@ -56,7 +56,39 @@ We have completed the feature implementation for Phase 5, but we've discovered a
 
 ### Migration Plan
 
-#### 1. Core Implementation Migration to zephyr-xpack-internal
+#### 0. Identify Cross-Cutting Concerns Between xpack and rollx
+
+Before starting implementation, conduct a thorough analysis to identify all cross-cutting concerns that should be abstracted to the zephyr-agent/zephyr-engine.
+
+| Task | Description | Status |
+|------|------------|--------|
+| Audit of Bundler-Specific Logic | Identify logic currently duplicated across different bundler implementations | Not Started |
+| Core API Definition | Define common interfaces that will be implemented by both xpack and rollx | Not Started |
+| Common Feature Identification | Identify features (basehref, remote types, etc.) that span all bundlers | Not Started |
+| Dependency Analysis | Document third-party dependencies shared across bundler implementations | Not Started |
+| Plugin Lifecycle Analysis | Identify common plugin lifecycle hooks across bundlers | Not Started |
+
+#### 1. Migrate Common Core to zephyr-agent/zephyr-engine
+
+Extract truly common functionality that applies across all bundler types (xpack and rollx) to the zephyr-agent/zephyr-engine.
+
+| Component | Current Location | Target Location | Status |
+|-----------|------------------|----------------|--------|
+| Universal Plugin Interface | Various files | /libs/zephyr-agent/src/lib/interfaces/plugin-interface.ts | Not Started |
+| Common Feature Contracts | Various files | /libs/zephyr-agent/src/lib/contracts/feature-contracts.ts | Not Started |
+| Path Utilities | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/path-utils.ts | Not Started |
+| URL Construction | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/url-constructor.ts | Not Started |
+| Metadata Schemas | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/schemas/metadata-schema.ts | Not Started |
+| Schema Validation | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/validation/schema-validator.ts | Not Started |
+| Configuration Normalization | Various files | /libs/zephyr-agent/src/lib/utils/config-normalizer.ts | Not Started |
+| Remote Resolution Logic | Various files | /libs/zephyr-agent/src/lib/resolution/remote-resolver.ts | Not Started |
+| Feature Detection | Various files | /libs/zephyr-agent/src/lib/detection/feature-detector.ts | Not Started |
+| Error Handling | Various files | /libs/zephyr-agent/src/lib/errors/error-handling.ts | Not Started |
+| Manifest Generation | Various files | /libs/zephyr-agent/src/lib/manifest/manifest-generator.ts | Not Started |
+
+#### 2. Core Implementation Migration to zephyr-xpack-internal
+
+Migrate webpack/rspack specific implementations to the zephyr-xpack-internal package, ensuring they consume the common abstractions from zephyr-agent/zephyr-engine.
 
 | File | Current Location | Target Location | Status |
 |------|------------------|----------------|--------|
@@ -65,21 +97,9 @@ We have completed the feature implementation for Phase 5, but we've discovered a
 | remote-entry-structure-sharing-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-structure/remote-entry-structure-sharing.ts | Not Started |
 | remote-types-sharing-integration.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-sharing-integration.ts | Not Started |
 
-#### 2. Core Abstractions for Zephyr Agent
-
-Identify and migrate core utilities and abstractions that should be part of the Zephyr Agent package.
-
-| Component | Current Location | Target Location | Status |
-|-----------|------------------|----------------|--------|
-| Path Utilities | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/path-utils.ts | Not Started |
-| URL Construction | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/url-constructor.ts | Not Started |
-| Metadata Schemas | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/schemas/metadata-schema.ts | Not Started |
-| Schema Validation | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/validation/schema-validator.ts | Not Started |
-| Configuration Normalization | Various files | /libs/zephyr-agent/src/lib/utils/config-normalizer.ts | Not Started |
-
 #### 3. RollX Abstraction for Rollup-Based Bundlers
 
-Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vite) to eliminate code duplication and ensure consistent behavior.
+Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vite) to eliminate code duplication and ensure consistent behavior. This should consume the common abstractions from zephyr-agent/zephyr-engine.
 
 | Component | Target Location | Status |
 |-----------|----------------|--------|
@@ -137,60 +157,97 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
 
 #### 6. Integration Steps
 
-1. Create the new zephyr-rollx-internal package:
+1. Start with zephyr-agent/zephyr-engine enhancements:
+   - Thoroughly analyze existing code to identify cross-cutting concerns
+   - Create common interface contracts and abstractions that will be used by all bundlers
+   - Implement universal plugin interfaces and shared utility functions
+   - Develop comprehensive test suites for all shared abstractions
+   - Document the public API and integration patterns for plugin developers
+
+2. Create the new zephyr-rollx-internal package after common abstractions are in place:
    - Initialize the package structure with appropriate dependencies
+   - Implement interfaces defined in zephyr-agent/zephyr-engine
    - Set up exports for the RollX abstraction
    - Ensure proper versioning and integration with other plugins
-   
-2. Update zephyr-agent with core abstractions:
-   - Enhance path utilities and URL construction for base path handling
-   - Add schema validation and metadata schema interfaces
-   - Implement configuration normalization utilities
+   - Add extensive test coverage for the rollx-specific implementations
 
-3. Update main plugin files to include new implementations:
+3. Update zephyr-xpack-internal to leverage common abstractions:
+   - Refactor implementations to use the shared interfaces in zephyr-agent/zephyr-engine
+   - Remove duplicated code that is now in the common layer
+   - Ensure webpack/rspack specific code maintains functionality
+   - Add tests that verify proper integration with shared abstractions
+
+4. Update bundler-specific plugins to use the appropriate internal packages:
    - Update `/libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts` to use RollX abstractions
    - Update `/libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.ts` to use RollX abstractions
    - Update `/libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts` to use RollX abstractions
-   - Update `/libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.ts` to include new plugins
-   - Update `/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts` to include new plugins
+   - Update `/libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.ts` to use xpack abstractions
+   - Update `/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts` to use xpack abstractions
 
-4. Update examples to use the proper plugin imports instead of context-storage imports
+5. Create e2e integration tests that verify proper interaction between layers:
+   - Test that zephyr-agent/zephyr-engine abstractions are properly used by both xpack and rollx
+   - Verify that bundler-specific plugins correctly leverage their respective internal packages
+   - Test common features across all bundler types for consistency
 
-5. Run tests to verify functionality after migration
+6. Update examples to use the proper plugin imports instead of context-storage imports:
+   - Ensure examples showcase proper layering of abstractions
+   - Verify examples work correctly with the restructured code
 
-6. Update documentation to reflect the new structure, agent abstractions and RollX implementation
+7. Comprehensive documentation update:
+   - Document the three-layer architecture (agent/engine → internal → plugin)
+   - Provide integration guides for each layer
+   - Create plugin developer documentation showing how to leverage common abstractions
+   - Update API documentation to reflect new structure
 
 #### 7. Timeline
 
-1. Day 1: Core Abstractions for Zephyr Agent
-   - Identify core utilities that belong in zephyr-agent
-   - Extract and refactor path utilities and schema validation
-   - Update tests for agent-level abstractions
+1. Day 1: Identify Cross-Cutting Concerns and Design Common Interfaces
+   - Conduct audit of all bundler implementations to identify shared functionality
+   - Create comprehensive inventory of cross-cutting concerns
+   - Design common interfaces and contracts to be implemented across all bundlers
+   - Draft initial architecture for the three-layer approach (agent/engine → internal → plugin)
 
-2. Day 2: Core Implementation Migration and RollX Design
-   - Move core implementations to zephyr-xpack-internal
-   - Design RollX abstraction for Rollup-based bundlers
+2. Day 2-3: Core zephyr-agent/zephyr-engine Implementation
+   - Extract and implement universal interfaces in zephyr-agent/zephyr-engine
+   - Implement shared utilities (path handling, URL construction, etc.)
+   - Create common validation and schema functionality
+   - Develop configuration normalization and remote resolution abstractions
+   - Implement comprehensive tests for all shared functionality
+   - Create documentation for the common API
+
+3. Day 4: zephyr-xpack-internal Migration and Refactoring
+   - Move webpack/rspack-specific implementations to zephyr-xpack-internal
+   - Refactor implementations to use the common abstractions from zephyr-agent/zephyr-engine
+   - Remove duplicated code now present in the shared layer
+   - Add tests to verify proper integration with the engine layer
+
+4. Day 5: zephyr-rollx-internal Implementation
    - Create package structure for zephyr-rollx-internal
-
-3. Day 3: RollX Implementation
-   - Implement core RollX abstractions
+   - Implement common interfaces from zephyr-agent/zephyr-engine
+   - Design and implement rollup-based bundler abstractions
    - Create bundler-specific adaptations
-   - Set up proper inheritance and interfaces
+   - Implement comprehensive tests for the rollx layer
 
-4. Day 4: Bundler Plugin Migration
-   - Migrate Vite, Rollup, and Rolldown plugins using RollX
-   - Migrate Webpack and Rspack plugins
-   - Update plugin integration points
-
-5. Day 5: Test Migration and Integration
-   - Split tests according to new structure
+5. Day 6-7: Bundler Plugin Migration
+   - Update all bundler plugins to use their respective internal packages
+   - Ensure all plugins correctly leverage the common abstractions
    - Verify functionality across all bundlers
+   - Create integration tests that verify proper communication between layers
    - Fix any integration issues
 
-6. Day 6: Example Updates and Documentation
+6. Day 8: Examples and Validation
    - Update examples to use proper imports
-   - Document new architecture and abstractions
-   - Create final migration report
+   - Create new examples that showcase the layered architecture
+   - Verify all examples work correctly with the restructured code
+   - Run full test suite across all bundlers and examples
+
+7. Day 9-10: Documentation and Final Review
+   - Document the three-layer architecture
+   - Create integration guides for each layer
+   - Update API documentation to reflect new structure
+   - Create plugin developer documentation
+   - Perform final code review and cleanup
+   - Create migration completion report
 
 ## Previously Completed: Phase 5 - Enhanced Configuration Support
 

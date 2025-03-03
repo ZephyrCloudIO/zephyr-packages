@@ -1,0 +1,20 @@
+{
+  "name": "hybrid-ssr-csr-example",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm install && pnpm --filter \"hybrid-ssr-csr-*\" install",
+    "build:shared": "pnpm --filter hybrid-ssr-csr-shared build",
+    "build:ssr-remote": "pnpm --filter hybrid-ssr-csr-ssr-remote build",
+    "build:csr-remote": "pnpm --filter hybrid-ssr-csr-csr-remote build",
+    "build:host": "pnpm --filter hybrid-ssr-csr-host build",
+    "build:all": "pnpm build:shared && pnpm build:ssr-remote && pnpm build:csr-remote && pnpm build:host",
+    "dev:shared": "pnpm --filter hybrid-ssr-csr-shared dev",
+    "dev:ssr-remote": "pnpm --filter hybrid-ssr-csr-ssr-remote dev",
+    "dev:csr-remote": "pnpm --filter hybrid-ssr-csr-csr-remote dev",
+    "dev:host": "pnpm --filter hybrid-ssr-csr-host dev",
+    "dev": "pnpm -r --parallel dev",
+    "start:all": "pnpm --filter hybrid-ssr-csr-ssr-remote start & pnpm --filter hybrid-ssr-csr-csr-remote preview & pnpm --filter hybrid-ssr-csr-host start",
+    "clean:all": "rm -rf **/node_modules **/.next **/dist"
+  }
+}

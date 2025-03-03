@@ -1,0 +1,28 @@
+{
+  "name": "multi-remote-ssr-remote-b",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@module-federation/nextjs-mf": "^7.0.0",
+    "zephyr-edge-contract": "workspace:*",
+    "zephyr-webpack-plugin": "workspace:*",
+    "multi-remote-ssr-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "typescript": "^5.3.3",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.0.0"
+  }
+}

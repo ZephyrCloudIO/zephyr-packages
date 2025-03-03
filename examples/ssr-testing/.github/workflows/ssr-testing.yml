@@ -1,0 +1,124 @@
+name: SSR Testing Infrastructure
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'examples/ssr-testing/**'
+      - 'examples/nextjs-ssr-basic/**'
+      - 'examples/multi-remote-ssr/**'
+      - 'examples/hybrid-ssr-csr/**'
+      - 'examples/streaming-ssr/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'examples/ssr-testing/**'
+      - 'examples/nextjs-ssr-basic/**'
+      - 'examples/multi-remote-ssr/**'
+      - 'examples/hybrid-ssr-csr/**'
+      - 'examples/streaming-ssr/**'
+
+jobs:
+  test:
+    name: SSR Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd examples/ssr-testing
+          npm install
+
+      - name: Run tests
+        run: |
+          cd examples/ssr-testing
+          npm test
+
+      - name: Run performance tests
+        run: |
+          cd examples/ssr-testing
+          npm run test:performance
+
+  integration:
+    name: SSR Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd examples/ssr-testing
+          npm install
+
+      - name: Run integration tests
+        run: |
+          cd examples/ssr-testing
+          npm run test:examples
+
+      - name: Generate performance reports
+        run: |
+          cd examples/ssr-testing
+          npm run generate-reports
+
+      - name: Archive test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            examples/ssr-testing/reports
+            examples/ssr-testing/coverage
+
+  browser-test:
+    name: Browser Compatibility
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd examples/ssr-testing
+          npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run browser tests
+        run: |
+          cd examples/ssr-testing
+          npm run test:browser
+
+      - name: Generate browser compatibility report
+        run: |
+          cd examples/ssr-testing
+          npm run generate-browser-report
+
+      - name: Archive browser test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: browser-test-results
+          path: examples/ssr-testing/browser-reports

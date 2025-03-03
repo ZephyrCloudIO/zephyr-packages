@@ -128,6 +128,26 @@ run_example "$EXAMPLES_DIR/rspack-mf2/remote" "Rspack MF2 Remote" "pnpm build"
 # Advanced features demo
 run_example "$EXAMPLES_DIR/advanced-features-demo" "Advanced Features Demo" "echo 'Demo module built successfully'"
 
+# SSR Examples
+run_example "$EXAMPLES_DIR/nextjs-ssr-basic/host" "Next.js Basic SSR Host" "pnpm build"
+run_example "$EXAMPLES_DIR/nextjs-ssr-basic/remote" "Next.js Basic SSR Remote" "pnpm build"
+
+run_example "$EXAMPLES_DIR/multi-remote-ssr/host" "Multi-Remote SSR Host" "pnpm build"
+run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-a" "Multi-Remote SSR Remote A" "pnpm build"
+run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-b" "Multi-Remote SSR Remote B" "pnpm build"
+run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-c" "Multi-Remote SSR Remote C" "pnpm build"
+
+run_example "$EXAMPLES_DIR/hybrid-ssr-csr/host" "Hybrid SSR/CSR Host" "pnpm build"
+run_example "$EXAMPLES_DIR/hybrid-ssr-csr/ssr-remote" "Hybrid SSR Remote" "pnpm build"
+run_example "$EXAMPLES_DIR/hybrid-ssr-csr/csr-remote" "Hybrid CSR Remote" "pnpm build"
+
+run_example "$EXAMPLES_DIR/streaming-ssr/host" "Streaming SSR Host" "pnpm build"
+run_example "$EXAMPLES_DIR/streaming-ssr/remote" "Streaming SSR Remote" "pnpm build"
+run_example "$EXAMPLES_DIR/streaming-ssr/shell" "Streaming SSR Shell" "pnpm build"
+
+# SSR Testing Infrastructure
+run_example "$EXAMPLES_DIR/ssr-testing" "SSR Testing Infrastructure" "echo 'SSR Testing Infrastructure built successfully'"
+
 # Webpack examples
 run_example "$EXAMPLES_DIR/sample-webpack-application" "Sample Webpack App" "nx build sample-webpack-application"
 

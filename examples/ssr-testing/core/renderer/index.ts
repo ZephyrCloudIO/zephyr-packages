@@ -126,8 +126,31 @@ export async function render(
     }
     
     if (captureState) {
-      // TODO: Implement state capture
-      state = {};
+      // Capture state from data attributes or script tags
+      const stateRegex = /<script[^>]*id="__ZEPHYR_STATE__"[^>]*>([^<]+)<\/script>/;
+      const match = html.match(stateRegex);
+      
+      if (match && match[1]) {
+        try {
+          state = JSON.parse(match[1]);
+        } catch (error) {
+          errors.push(new Error(`Failed to parse captured state: ${error}`));
+          state = {};
+        }
+      } else {
+        // Try to extract state from data attributes
+        const dataStateRegex = /data-zephyr-state="([^"]*)"/g;
+        let dataMatch;
+        
+        while ((dataMatch = dataStateRegex.exec(html)) !== null) {
+          try {
+            const parsedState = JSON.parse(decodeURIComponent(dataMatch[1]));
+            state = { ...state, ...parsedState };
+          } catch (error) {
+            errors.push(new Error(`Failed to parse data attribute state: ${error}`));
+          }
+        }
+      }
     }
   } catch (error) {
     errors.push(error instanceof Error ? error : new Error(String(error)));

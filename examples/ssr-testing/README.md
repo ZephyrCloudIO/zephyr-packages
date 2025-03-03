@@ -43,6 +43,13 @@ This directory contains the testing infrastructure for Server-Side Rendering (SS
    npm test
    ```
 
+## Recent Enhancements
+
+- **State Capture**: Added ability to capture and validate state during server rendering
+- **Environment Testing**: Added compatibility tests for multiple Node.js versions and browsers
+- **Comprehensive Documentation**: Added detailed usage guides and best practices
+- **Example Workflows**: Provided step-by-step workflows for common testing scenarios
+
 3. Run specific test suites:
    ```
    npm run test:renderer   # Run renderer tests

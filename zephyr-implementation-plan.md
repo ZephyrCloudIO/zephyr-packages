@@ -545,6 +545,7 @@ This approach will ensure we can process large amounts of code across repositori
 | 5.1   | Completed | Completed | BaseHref implementation 100% complete with Vite and Webpack plugins and examples |
 | 5.2   | Completed | Completed | Remote Types Detection 100% complete with bundler plugins and integration |
 | 5.3   | Completed | Completed | Remote Entry Structure Sharing 100% complete with examples and integration |
+| 5.4   | Not Started | Not Started | Plugin Migration from context-storage to proper plugin directories |
 | 6.1   | Not Started | Not Started | Unmanaged Remotes Support pending |
 | 6.3   | Not Started | Not Started | Telemetry Enhancement pending |
 | 7.1   | In Progress | In Progress | Unit testing ongoing, integrating with new examples |
@@ -565,9 +566,54 @@ This approach will ensure we can process large amounts of code across repositori
 | SSR Support | 95% | 80% | Completed |
 | Integration Tests | 85% | 75% | Completed |
 
-## Next Steps: Phase 6 - External Integration & Edge Cases
+## Next Steps: Phase 5.4 - Plugin Migration & Structure Alignment
 
-Based on our progress tracking, we have successfully completed Phases 1-5 and a significant part of Phase 6 (SSR Support). The next focus area is completing the remaining parts of Phase 6: External Integration & Edge Cases.
+Before proceeding to Phase 6, we need to address a critical issue: our Phase 5 implementations have been developed in the context-storage directory instead of their proper plugin directories in /libs/. This misalignment needs to be fixed for proper integration and maintainability.
+
+### Phase 5.4 - Plugin Migration and Abstraction Refactoring (NEW ADDITION)
+
+This new sub-phase focuses on migrating the plugin implementations from context-storage to their proper locations and creating better abstractions:
+
+1. **Core Abstractions for Zephyr Agent** (Highest Priority)
+   - Extract core utilities that should be in zephyr-agent
+   - Move path utilities and URL construction to agent package
+   - Implement schema validation and metadata schemas at agent level
+   - Create configuration normalization utilities
+   - Update tests to reflect the new organization
+
+2. **Core Implementation Migration** (High Priority)
+   - Move core implementations to zephyr-xpack-internal
+   - Update and relocate corresponding tests
+   - Verify functionality with unit tests
+
+3. **Rollup-Based Bundlers Abstraction ("RollX")** (High Priority)
+   - Create new shared abstraction in zephyr-rollx-internal
+   - Extract common logic for Rollup, Rolldown, and Vite into shared modules
+   - Implement plugin interfaces that extend the shared abstraction
+   - Create proper integration with each specific bundler
+   - Update tests to verify abstraction works correctly across bundlers
+
+4. **Bundler Plugin Migration** (High Priority)
+   - Migrate Vite, Rollup, and Rolldown plugins using RollX abstraction
+   - Migrate Webpack and Rspack plugins to their respective directories
+   - Update plugin integration points
+   - Verify plugin functionality with tests
+
+5. **Integration Testing** (High Priority)
+   - Test with example applications
+   - Update any imports in examples
+   - Fix any integration issues
+
+6. **Documentation Updates** (Medium Priority)
+   - Document the agent-level abstractions
+   - Document the new RollX abstraction and its usage
+   - Update documentation to reflect new structure
+   - Remove deprecated files from context-storage
+   - Update implementation status with completed migration details
+
+This migration is critical to ensure that our Phase 5 implementations are properly integrated into the main codebase structure and follow the project's architectural patterns.
+
+## Previously Completed Work
 
 ### Phase 5 - Enhanced Configuration Support ✅ COMPLETED
 

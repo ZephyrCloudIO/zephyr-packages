@@ -4,6 +4,20 @@ This file tracks the current progress of the Zephyr packages implementation. It 
 
 ## Important Development Guidelines
 
+### Plugin Implementation
+- **CRITICAL**: All plugin implementations MUST be developed in their respective plugin directories under `/libs/`, NOT in the context-storage directory
+- The context-storage directory is for temporary development, analysis, and research only
+- Always check existing plugin structure in `/libs/` directory before implementing features
+- Implementation structure:
+  - Vite plugins → `/libs/vite-plugin-zephyr/`
+  - Webpack plugins → `/libs/zephyr-webpack-plugin/`
+  - Rspack plugins → `/libs/zephyr-rspack-plugin/`
+  - Rolldown plugins → `/libs/zephyr-rolldown-plugin/`
+  - Modern.js plugins → `/libs/zephyr-modernjs-plugin/`
+  - Parcel plugins → `/libs/parcel-reporter-zephyr/`
+- Tests should be placed in the appropriate plugin's test directory, following the existing structure
+- **IMPORTANT**: Cross-cutting concerns between xpack and rollx must be abstracted and included in the zephyr-agent/zephyr-engine. This ensures shared functionality is maintained in a single location and prevents code duplication across bundler implementations.
+
 ### Example Applications
 - All example applications MUST be created in the root project directory at `/examples/`, NOT within the context-storage directory
 - When moving examples from context-storage/examples to the main examples directory, make sure to update the testing-matrix.sh file to reference the new paths
@@ -14,6 +28,13 @@ This file tracks the current progress of the Zephyr packages implementation. It 
 - All changes should be presented to the user for review before committing
 - When asked to make changes, focus on implementing the changes without committing them
 - Let the user decide when and how to commit changes to the repository
+
+### Code Migration Process
+- When a feature is fully developed and tested in context-storage, it must be migrated to the appropriate plugin in `/libs/`
+- Tests should be migrated along with the implementation
+- Update all imports and dependencies to ensure proper integration
+- Verify functionality after migration with the appropriate example applications
+- Document the migration in implementation status
 
 ## TDD Approach
 
@@ -29,9 +50,151 @@ We've created additional tracking documents for our TDD approach:
 - `/context-storage/tdd-progress-tracker.md`: Detailed tracking of test cases and coverage
 - `/context-storage/test-report-template.md`: Template for documenting test results
 
-## Current Phase: Phase 5 - Enhanced Configuration Support (IN PROGRESS)
+## Current Phase: Phase 5.4 - Plugin Migration (HIGH PRIORITY)
 
-We are currently implementing Phase 5 of our plan, focusing on enhanced configuration support for different bundlers and deployment scenarios.
+We have completed the feature implementation for Phase 5, but we've discovered a critical issue: our implementations have been developed in the context-storage directory instead of their proper plugin directories in /libs/. We need to migrate these implementations to ensure proper integration and maintainability.
+
+### Migration Plan
+
+#### 1. Core Implementation Migration to zephyr-xpack-internal
+
+| File | Current Location | Target Location | Status |
+|------|------------------|----------------|--------|
+| basehref-implementation-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/basehref/basehref-implementation.ts | Not Started |
+| remote-types-detection-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-detection.ts | Not Started |
+| remote-entry-structure-sharing-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-structure/remote-entry-structure-sharing.ts | Not Started |
+| remote-types-sharing-integration.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-sharing-integration.ts | Not Started |
+
+#### 2. Core Abstractions for Zephyr Agent
+
+Identify and migrate core utilities and abstractions that should be part of the Zephyr Agent package.
+
+| Component | Current Location | Target Location | Status |
+|-----------|------------------|----------------|--------|
+| Path Utilities | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/path-utils.ts | Not Started |
+| URL Construction | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/url-constructor.ts | Not Started |
+| Metadata Schemas | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/schemas/metadata-schema.ts | Not Started |
+| Schema Validation | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/validation/schema-validator.ts | Not Started |
+| Configuration Normalization | Various files | /libs/zephyr-agent/src/lib/utils/config-normalizer.ts | Not Started |
+
+#### 3. RollX Abstraction for Rollup-Based Bundlers
+
+Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vite) to eliminate code duplication and ensure consistent behavior.
+
+| Component | Target Location | Status |
+|-----------|----------------|--------|
+| Core RollX Interface | /libs/zephyr-rollx-internal/src/lib/interfaces/rollx-plugin-interface.ts | Not Started |
+| BaseHref Implementation | /libs/zephyr-rollx-internal/src/lib/plugins/basehref-rollx-plugin.ts | Not Started |
+| Remote Types Implementation | /libs/zephyr-rollx-internal/src/lib/plugins/remote-types-rollx-plugin.ts | Not Started |
+| Plugin Factory | /libs/zephyr-rollx-internal/src/lib/factory/plugin-factory.ts | Not Started |
+| Bundle Analysis Utilities | /libs/zephyr-rollx-internal/src/lib/utils/bundle-analysis.ts | Not Started |
+| Configuration Normalization | /libs/zephyr-rollx-internal/src/lib/utils/config-normalization.ts | Not Started |
+
+#### 4. Bundler Plugin Migration
+
+##### 4.1 Vite Plugin Migration using RollX Abstraction
+
+| File | Current Location | Target Location | Status |
+|------|------------------|----------------|--------|
+| basehref-vite-plugin.ts | /context-storage/ | /libs/vite-plugin-zephyr/src/lib/basehref-vite-plugin.ts | Not Started |
+| remote-types-vite-plugin.ts | /context-storage/ | /libs/vite-plugin-zephyr/src/lib/remote-types-vite-plugin.ts | Not Started |
+
+##### 4.2 Rollup Plugin Migration using RollX Abstraction
+
+| File | Current Location | Target Location | Status |
+|------|------------------|----------------|--------|
+| Based on RollX | n/a | /libs/rollup-plugin-zephyr/src/lib/basehref-rollup-plugin.ts | Not Started |
+| Based on RollX | n/a | /libs/rollup-plugin-zephyr/src/lib/remote-types-rollup-plugin.ts | Not Started |
+
+##### 4.3 Rolldown Plugin Migration using RollX Abstraction
+
+| File | Current Location | Target Location | Status |
+|------|------------------|----------------|--------|
+| Based on RollX | n/a | /libs/zephyr-rolldown-plugin/src/lib/basehref-rolldown-plugin.ts | Not Started |
+| Based on RollX | n/a | /libs/zephyr-rolldown-plugin/src/lib/remote-types-rolldown-plugin.ts | Not Started |
+
+##### 4.4 Webpack Plugin Migration
+
+| File | Current Location | Target Location | Status |
+|------|------------------|----------------|--------|
+| basehref-webpack-plugin.ts | /context-storage/ | /libs/zephyr-webpack-plugin/src/webpack-plugin/basehref-webpack-plugin.ts | Not Started |
+| remote-types-webpack-plugin.ts | /context-storage/ | /libs/zephyr-webpack-plugin/src/webpack-plugin/remote-types-webpack-plugin.ts | Not Started |
+
+##### 4.5 Rspack Plugin Migration
+
+| File | Current Location | Target Location | Status |
+|------|------------------|----------------|--------|
+| Based on webpack plugin | /context-storage/ | /libs/zephyr-rspack-plugin/src/rspack-plugin/basehref-rspack-plugin.ts | Not Started |
+| Based on webpack plugin | /context-storage/ | /libs/zephyr-rspack-plugin/src/rspack-plugin/remote-types-rspack-plugin.ts | Not Started |
+
+#### 5. Test Migration
+
+| Test File | Current Location | Target Location(s) | Status |
+|-----------|------------------|------------------|--------|
+| basehref.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/utils/path-utils.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/basehref/basehref-implementation.spec.ts<br>RollX: /libs/zephyr-rollx-internal/src/lib/plugins/basehref-rollx-plugin.spec.ts<br>Vite: /libs/vite-plugin-zephyr/src/lib/basehref-vite-plugin.spec.ts<br>Webpack: /libs/zephyr-webpack-plugin/src/webpack-plugin/basehref-webpack-plugin.spec.ts | Not Started |
+| remote-types.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/schemas/metadata-schema.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/remote-types/remote-types-detection.spec.ts<br>RollX: /libs/zephyr-rollx-internal/src/lib/plugins/remote-types-rollx-plugin.spec.ts<br>Vite: /libs/vite-plugin-zephyr/src/lib/remote-types-vite-plugin.spec.ts<br>Webpack: /libs/zephyr-webpack-plugin/src/webpack-plugin/remote-types-webpack-plugin.spec.ts | Not Started |
+| remote-entry-structure-sharing.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/validation/schema-validator.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/remote-structure/remote-entry-structure-sharing.spec.ts | Not Started |
+
+#### 6. Integration Steps
+
+1. Create the new zephyr-rollx-internal package:
+   - Initialize the package structure with appropriate dependencies
+   - Set up exports for the RollX abstraction
+   - Ensure proper versioning and integration with other plugins
+   
+2. Update zephyr-agent with core abstractions:
+   - Enhance path utilities and URL construction for base path handling
+   - Add schema validation and metadata schema interfaces
+   - Implement configuration normalization utilities
+
+3. Update main plugin files to include new implementations:
+   - Update `/libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts` to use RollX abstractions
+   - Update `/libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.ts` to use RollX abstractions
+   - Update `/libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts` to use RollX abstractions
+   - Update `/libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.ts` to include new plugins
+   - Update `/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts` to include new plugins
+
+4. Update examples to use the proper plugin imports instead of context-storage imports
+
+5. Run tests to verify functionality after migration
+
+6. Update documentation to reflect the new structure, agent abstractions and RollX implementation
+
+#### 7. Timeline
+
+1. Day 1: Core Abstractions for Zephyr Agent
+   - Identify core utilities that belong in zephyr-agent
+   - Extract and refactor path utilities and schema validation
+   - Update tests for agent-level abstractions
+
+2. Day 2: Core Implementation Migration and RollX Design
+   - Move core implementations to zephyr-xpack-internal
+   - Design RollX abstraction for Rollup-based bundlers
+   - Create package structure for zephyr-rollx-internal
+
+3. Day 3: RollX Implementation
+   - Implement core RollX abstractions
+   - Create bundler-specific adaptations
+   - Set up proper inheritance and interfaces
+
+4. Day 4: Bundler Plugin Migration
+   - Migrate Vite, Rollup, and Rolldown plugins using RollX
+   - Migrate Webpack and Rspack plugins
+   - Update plugin integration points
+
+5. Day 5: Test Migration and Integration
+   - Split tests according to new structure
+   - Verify functionality across all bundlers
+   - Fix any integration issues
+
+6. Day 6: Example Updates and Documentation
+   - Update examples to use proper imports
+   - Document new architecture and abstractions
+   - Create final migration report
+
+## Previously Completed: Phase 5 - Enhanced Configuration Support
+
+We have completed the feature implementation for Phase 5, focusing on enhanced configuration support for different bundlers and deployment scenarios.
 
 ### Completed Items:
 - Basic Next.js SSR Example (host, remote, and shared library)

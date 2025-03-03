@@ -542,9 +542,9 @@ This approach will ensure we can process large amounts of code across repositori
 | 4.2   | Completed | Completed | Vite 6.0 with Rolldown examples created in `/examples/vite-rolldown-mf2` |
 | 4.3   | Completed | Completed | Testing matrix updated to include all new examples |
 | 6.2   | Completed | Completed | SSR examples and testing infrastructure implemented |
-| 5.1   | In Progress | In Progress | BaseHref implementation 80% complete |
-| 5.2   | In Progress | In Progress | Remote Types Detection 80% complete |
-| 5.3   | In Progress | In Progress | Remote Entry Structure Sharing 95% complete, example partially implemented |
+| 5.1   | Completed | Completed | BaseHref implementation 100% complete with Vite and Webpack plugins and examples |
+| 5.2   | Completed | Completed | Remote Types Detection 100% complete with bundler plugins and integration |
+| 5.3   | Completed | Completed | Remote Entry Structure Sharing 100% complete with examples and integration |
 | 6.1   | Not Started | Not Started | Unmanaged Remotes Support pending |
 | 6.3   | Not Started | Not Started | Telemetry Enhancement pending |
 | 7.1   | In Progress | In Progress | Unit testing ongoing, integrating with new examples |
@@ -565,61 +565,60 @@ This approach will ensure we can process large amounts of code across repositori
 | SSR Support | 95% | 80% | Completed |
 | Integration Tests | 85% | 75% | Completed |
 
-## Next Steps: Phase 5 - Enhanced Configuration Support
+## Next Steps: Phase 6 - External Integration & Edge Cases
 
-Based on our progress tracking, we have successfully completed Phases 1-4 and a significant part of Phase 6 (SSR Support). The next focus area is Phase 5: Enhanced Configuration Support.
+Based on our progress tracking, we have successfully completed Phases 1-5 and a significant part of Phase 6 (SSR Support). The next focus area is completing the remaining parts of Phase 6: External Integration & Edge Cases.
 
-### 5.1 BaseHref Implementation (Priority: High)
+### Phase 5 - Enhanced Configuration Support ✅ COMPLETED
 
-The BaseHref implementation is critical for proper path resolution in various deployment scenarios, especially for applications deployed to subdirectories or non-root paths. This will require:
+We have successfully completed all components of Phase 5:
 
-1. **Analysis of Current Path Resolution**
-   - Review how paths are currently resolved in different bundlers
-   - Document the limitations of the current approach
-   - Identify integration points for path customization
+### 5.1 BaseHref Implementation ✅
 
-2. **Vite Integration**
-   - Implement support for Vite's `base` configuration option
-   - Create runtime adjustment for dynamically determined base paths
-   - Test with various deployment scenarios
+The BaseHref implementation provides proper path resolution in various deployment scenarios, especially for applications deployed to subdirectories or non-root paths:
 
-3. **Rspack/Webpack Integration**
-   - Add support for the `publicPath` configuration
-   - Handle html-webpack-plugin integration
-   - Implement build-time path rewriting
+1. **Core Implementation** ✅
+   - Created core path utilities in `BasePathHandler` class
+   - Implemented path normalization and detection
+   - Added URL construction utilities
 
-4. **Testing Strategy**
-   - Create test fixtures for various path configurations
-   - Test with different deployment scenarios
-   - Validate runtime behavior with changing paths
+2. **Bundler Integration** ✅
+   - Implemented Vite plugin in `basehref-vite-plugin.ts`
+   - Created Webpack/Rspack plugin in `basehref-webpack-plugin.ts`
+   - Added HTML generation with base tag support
 
-### 5.2 Remote Types Detection (Priority: Medium)
+3. **Examples and Documentation** ✅
+   - Created examples for Vite and Webpack in `/examples/basehref-example/`
+   - Added comprehensive documentation in `basehref-implementation-docs.md`
+   - Implemented tests in `basehref.test.ts`
 
-Automatically detecting and handling CSR and SSR remotes will significantly improve developer experience and reduce configuration errors:
+### 5.2 Remote Types Detection ✅
 
-1. **Analysis of Rendering Patterns**
-   - Document differences between CSR and SSR execution patterns
-   - Identify reliable detection signals
-   - Determine edge cases and fallbacks
+The Remote Types Detection component provides automatic identification of CSR and SSR applications:
 
-2. **Detection Implementation**
-   - Create heuristics for automatic detection
-   - Implement build configuration analysis
-   - Add runtime verification when possible
+1. **Core Detection Logic** ✅
+   - Implemented detection from dependencies, configuration, and entry points
+   - Added framework detection for various frameworks
+   - Created confidence-based resolution for ambiguous cases
 
-3. **Configuration Options**
-   - Develop explicit configuration for manual specification
-   - Create validation for configurations
-   - Document proper usage patterns
+2. **Bundler Integration** ✅
+   - Created Vite plugin in `remote-types-vite-plugin.ts`
+   - Implemented Webpack plugin in `remote-types-webpack-plugin.ts`
+   - Added integration with Module Federation
 
-4. **Testing Approach**
-   - Create mixed CSR/SSR test environments
-   - Validate detection accuracy
-   - Test explicit configuration overrides
+3. **Integration with Structure Sharing** ✅
+   - Created integration with Remote Entry Structure Sharing in `remote-types-sharing-integration.ts`
+   - Implemented metadata enhancement with render type information
+   - Added compatibility checking between different render types
 
-### 5.3 Remote Entry Structure Sharing (Priority: High - Mostly Complete 95%)
+4. **Examples and Documentation** ✅
+   - Created examples for Vite and Webpack in `/examples/remote-types-example/`
+   - Added comprehensive documentation in `remote-types-detection-docs.md`
+   - Implemented tests in `remote-types.test.ts`
 
-Sharing remote entry structure information enables better integration and error handling:
+### 5.3 Remote Entry Structure Sharing ✅
+
+The Remote Entry Structure Sharing component enables enhanced metadata sharing between federated modules:
 
 1. **Metadata Enhancement** ✅
    - Extended the manifest format to include structure data
@@ -636,24 +635,50 @@ Sharing remote entry structure information enables better integration and error 
    - Created validation against consumer requirements with `validateCompatibility`
    - Implemented adaptive behavior based on remote capabilities in `RemoteStructureSharingIntegration`
 
-4. **Testing Strategy** ✅
-   - Created unit tests for metadata schema, extraction, publishing, and consumption
-   - Implemented integration tests in `remote-entry-structure-sharing-integration.test.ts`
-   - Added tests for compatibility checking and error handling
-   
-5. **Example Implementation** ⚠️ (In Progress - 50%)
+4. **Example Implementation** ✅
    - Created example structure in `/examples/remote-metadata-example/`
-   - Implemented host application and Remote A (Next.js SSR)
-   - Need to implement Remote B (Vite CSR) and Remote C (Webpack)
+   - Implemented host application and remote applications
+   - Added different types of remotes (Next.js SSR, Vite CSR, Webpack)
+
+### 6.1 Unmanaged Remotes Support (Priority: Medium)
+
+For the next phase, we'll focus on supporting unmanaged remotes:
+
+1. **URL Detection**
+   - Create pattern matching for fully qualified URLs
+   - Add support for various URL formats
+   - Implement validation for URLs
+
+2. **Unmanaged Remote Handling**
+   - Create special processing for unmanaged remotes
+   - Implement bypass for Zephyr management
+   - Add documentation for unmanaged use cases
+
+3. **CDN Pattern Support**
+   - Add support for unpkg.com
+   - Implement jsdelivr.net handling
+   - Add extensibility for other CDNs
+
+### 6.3 Telemetry Enhancement (Priority: Low)
+
+We'll also plan to improve telemetry:
+
+1. **Telemetry Data Structure**
+   - Define schema for test run data
+   - Create structure for Rsdoctor output
+   - Implement versioning for telemetry data
+
+2. **Opt-in Collection**
+   - Create opt-in mechanism
+   - Add user notification
+   - Implement privacy controls
 
 ## Timeline and Resources
 
 Based on our progress and remaining work, we estimate:
 
-- **Phase 5.1 (BaseHref)**: 2 weeks
-- **Phase 5.2 (Remote Types)**: 2 weeks
-- **Phase 5.3 (Structure Sharing)**: 2 weeks
-
-We'll proceed with Phase 5 implementation while continuing to refine and expand the documentation and testing for completed phases.
+- **Phase 6.1 (Unmanaged Remotes)**: 2 weeks
+- **Phase 6.3 (Telemetry)**: 2 weeks
+- **Phase 7 (Testing & Documentation)**: Ongoing
 
 This plan will be updated as implementation progresses. Updates will include status changes, notes on challenges encountered, and any adjustments to the approach or timeline. Test coverage will be calculated using Jest's coverage reporting tool and documented after each phase is completed.

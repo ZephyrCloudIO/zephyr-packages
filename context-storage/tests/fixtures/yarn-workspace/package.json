@@ -1,0 +1,12 @@
+{
+  "name": "yarn-workspace-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Test fixture for yarn workspace",
+  "workspaces": [
+    "packages/*"
+  ],
+  "resolutions": {
+    "react": "18.2.0"
+  }
+}

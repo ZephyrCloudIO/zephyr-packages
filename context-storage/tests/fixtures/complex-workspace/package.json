@@ -1,0 +1,9 @@
+{
+  "name": "complex-workspace-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Test fixture for complex workspace with conflicts",
+  "workspaces": [
+    "packages/*"
+  ]
+}

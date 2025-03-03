@@ -1,0 +1,20 @@
+{
+  "name": "vite-rolldown-mf2",
+  "private": true,
+  "scripts": {
+    "build:host": "cd host && pnpm build",
+    "build:remote": "cd remote && pnpm build",
+    "build": "pnpm build:remote && pnpm build:host",
+    "serve:host": "cd host && pnpm serve",
+    "serve:remote": "cd remote && pnpm serve",
+    "serve": "concurrently \"pnpm serve:remote\" \"pnpm serve:host\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "zephyr-vite-plugin": "workspace:*"
+  }
+}

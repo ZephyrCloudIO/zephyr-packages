@@ -1,0 +1,7 @@
+{
+  "name": "package-f",
+  "version": "1.0.0",
+  "dependencies": {
+    "shared": "^2.0.0"
+  }
+}

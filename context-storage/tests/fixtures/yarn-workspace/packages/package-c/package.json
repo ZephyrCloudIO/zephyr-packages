@@ -1,0 +1,8 @@
+{
+  "name": "package-c",
+  "version": "1.0.0",
+  "dependencies": {
+    "package-d": "workspace:^1.0.0",
+    "@scoped/package": "workspace:*"
+  }
+}

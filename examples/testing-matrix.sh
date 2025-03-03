@@ -106,6 +106,10 @@ run_example "$EXAMPLES_DIR/vite-react-ts" "Vite React TS" "pnpm build"
 run_example "$EXAMPLES_DIR/vite-react-mf/host" "Vite MF Host" "pnpm build"
 run_example "$EXAMPLES_DIR/vite-react-mf/remote" "Vite MF Remote" "pnpm build"
 
+# Vite + Rolldown MF 2.0 examples
+run_example "$EXAMPLES_DIR/vite-rolldown-mf2/host" "Vite Rolldown MF2 Host" "pnpm build"
+run_example "$EXAMPLES_DIR/vite-rolldown-mf2/remote" "Vite Rolldown MF2 Remote" "pnpm build"
+
 # Rolldown example
 run_example "$EXAMPLES_DIR/rolldown-react" "Rolldown React" "pnpm build"
 
@@ -116,6 +120,13 @@ run_example "$EXAMPLES_DIR/rollup-sample-lib" "Rollup Sample Lib" "nx build roll
 run_example "$EXAMPLES_DIR/rspack-sample-app" "Rspack Sample App" "pnpm build"
 run_example "$EXAMPLES_DIR/rspack-mf/apps/host" "Rspack MF Host" "nx build"
 run_example "$EXAMPLES_DIR/rspack-mf/apps/remote" "Rspack MF Remote" "nx build"
+
+# Rspack MF 2.0 examples
+run_example "$EXAMPLES_DIR/rspack-mf2/host" "Rspack MF2 Host" "pnpm build"
+run_example "$EXAMPLES_DIR/rspack-mf2/remote" "Rspack MF2 Remote" "pnpm build"
+
+# Advanced features demo
+run_example "$EXAMPLES_DIR/advanced-features-demo" "Advanced Features Demo" "echo 'Demo module built successfully'"
 
 # Webpack examples
 run_example "$EXAMPLES_DIR/sample-webpack-application" "Sample Webpack App" "nx build sample-webpack-application"

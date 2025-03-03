@@ -1,0 +1,26 @@
+{
+  "name": "rspack-mf2-host",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rspack serve",
+    "build": "rspack build",
+    "start": "serve dist -p 3001"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@rspack/cli": "^0.5.0",
+    "@rspack/core": "^0.5.0",
+    "@module-federation/enhanced": "^0.9.0",
+    "@rspack/plugin-react-refresh": "^0.5.0",
+    "@types/react": "^18.2.67",
+    "@types/react-dom": "^18.2.22",
+    "html-webpack-plugin": "^5.6.0",
+    "serve": "^14.2.1",
+    "typescript": "^5.4.2",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
+}

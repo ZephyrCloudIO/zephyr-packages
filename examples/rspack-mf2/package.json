@@ -1,0 +1,20 @@
+{
+  "name": "rspack-mf2",
+  "private": true,
+  "scripts": {
+    "build:host": "cd host && pnpm build",
+    "build:remote": "cd remote && pnpm build",
+    "build": "pnpm build:remote && pnpm build:host",
+    "start:host": "cd host && pnpm start",
+    "start:remote": "cd remote && pnpm start",
+    "start": "concurrently \"pnpm start:remote\" \"pnpm start:host\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
+}

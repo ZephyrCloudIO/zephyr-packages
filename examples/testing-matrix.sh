@@ -145,6 +145,20 @@ run_example "$EXAMPLES_DIR/streaming-ssr/host" "Streaming SSR Host" "pnpm build"
 run_example "$EXAMPLES_DIR/streaming-ssr/remote" "Streaming SSR Remote" "pnpm build"
 run_example "$EXAMPLES_DIR/streaming-ssr/shell" "Streaming SSR Shell" "pnpm build"
 
+# BaseHref examples
+run_example "$EXAMPLES_DIR/basehref-example/vite-app" "BaseHref Vite Example" "pnpm build"
+run_example "$EXAMPLES_DIR/basehref-example/webpack-app" "BaseHref Webpack Example" "pnpm build"
+
+# Remote Metadata examples
+run_example "$EXAMPLES_DIR/remote-metadata-example/host" "Remote Metadata Host" "pnpm build"
+run_example "$EXAMPLES_DIR/remote-metadata-example/remote-a" "Remote Metadata Next.js Remote" "pnpm build"
+run_example "$EXAMPLES_DIR/remote-metadata-example/remote-b" "Remote Metadata Vite Remote" "pnpm build"
+run_example "$EXAMPLES_DIR/remote-metadata-example/remote-c" "Remote Metadata Webpack Remote" "pnpm build"
+
+# Remote Types examples
+run_example "$EXAMPLES_DIR/remote-types-example/vite-app" "Remote Types Vite Example" "pnpm build"
+run_example "$EXAMPLES_DIR/remote-types-example/webpack-app" "Remote Types Webpack Example" "pnpm build"
+
 # SSR Testing Infrastructure
 run_example "$EXAMPLES_DIR/ssr-testing" "SSR Testing Infrastructure" "echo 'SSR Testing Infrastructure built successfully'"
 

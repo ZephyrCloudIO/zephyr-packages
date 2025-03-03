@@ -2,6 +2,19 @@
 
 This file tracks the current progress of the Zephyr packages implementation. It serves as a recovery point in case of interruptions.
 
+## Important Development Guidelines
+
+### Example Applications
+- All example applications MUST be created in the root project directory at `/examples/`, NOT within the context-storage directory
+- When moving examples from context-storage/examples to the main examples directory, make sure to update the testing-matrix.sh file to reference the new paths
+- All new examples should be added to the testing-matrix.sh file to ensure proper integration with the testing infrastructure
+
+### Git Practices
+- DO NOT commit changes unless explicitly requested by the user
+- All changes should be presented to the user for review before committing
+- When asked to make changes, focus on implementing the changes without committing them
+- Let the user decide when and how to commit changes to the repository
+
 ## TDD Approach
 
 We have updated our implementation approach to follow Test-Driven Development (TDD) more rigorously:

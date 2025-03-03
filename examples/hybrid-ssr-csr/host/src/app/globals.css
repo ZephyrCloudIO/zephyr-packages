@@ -1,0 +1,212 @@
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --max-width: 1200px;
+  --border-radius: 8px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+/* Light Theme Variables */
+.theme-light {
+  --color-background: #ffffff;
+  --color-background-alt: #f5f7fa;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-border: #e0e0e0;
+  --color-primary: #3f51b5;
+  --color-primary-light: #7986cb;
+  --color-primary-dark: #303f9f;
+  --color-secondary: #f50057;
+  --color-accent: #ff9800;
+  --color-success: #4caf50;
+  --color-error: #f44336;
+  --color-warning: #ff9800;
+  --color-info: #2196f3;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme Variables */
+.theme-dark {
+  --color-background: #121212;
+  --color-background-alt: #1e1e1e;
+  --color-text: #f5f5f5;
+  --color-text-light: #b0b0b0;
+  --color-border: #333333;
+  --color-primary: #7986cb;
+  --color-primary-light: #9fa8da;
+  --color-primary-dark: #5c6bc0;
+  --color-secondary: #ff4081;
+  --color-accent: #ffb74d;
+  --color-success: #66bb6a;
+  --color-error: #e57373;
+  --color-warning: #ffa726;
+  --color-info: #64b5f6;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-primary-light);
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+/* Layout Styles */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  background-color: var(--color-background-alt);
+  box-shadow: var(--box-shadow);
+  padding: var(--spacing-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.logo a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  gap: var(--spacing-lg);
+}
+
+.main-nav a {
+  color: var(--color-text);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+}
+
+.main-nav a:hover {
+  color: var(--color-primary);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.theme-toggle button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  padding: var(--spacing-sm);
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.theme-toggle button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.app-main {
+  flex: 1;
+  padding: var(--spacing-lg);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-footer {
+  background-color: var(--color-background-alt);
+  padding: var(--spacing-xl) var(--spacing-md);
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  text-align: center;
+  color: var(--color-text-light);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .main-nav ul {
+    gap: var(--spacing-md);
+  }
+  
+  .app-main {
+    padding: var(--spacing-md);
+  }
+}
+
+/* Page Transition Animation */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}

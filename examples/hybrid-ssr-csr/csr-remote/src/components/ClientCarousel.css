@@ -1,0 +1,129 @@
+.client-carousel {
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.carousel-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.carousel-slides {
+  width: 100%;
+  overflow: hidden;
+}
+
+.slides-track {
+  display: flex;
+  transition: transform 0.5s ease;
+  width: 100%;
+}
+
+.slide {
+  min-width: 100%;
+  position: relative;
+}
+
+.slide-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+
+.slide-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 16px;
+  text-align: center;
+}
+
+.slide-caption h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-arrow:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.carousel-arrow.prev {
+  left: 10px;
+}
+
+.carousel-arrow.next {
+  right: 10px;
+}
+
+.carousel-indicators {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.indicator-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.2);
+  margin: 0 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.indicator-dot.active {
+  background-color: #3f51b5;
+}
+
+@media (max-width: 768px) {
+  .carousel-arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+  
+  .slide-caption {
+    padding: 10px;
+  }
+  
+  .slide-caption h3 {
+    font-size: 16px;
+  }
+  
+  .indicator-dot {
+    width: 10px;
+    height: 10px;
+    margin: 0 3px;
+  }
+}

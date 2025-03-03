@@ -1,0 +1,20 @@
+{
+  "name": "streaming-ssr-example",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "pnpm install && pnpm --filter \"streaming-ssr-*\" install",
+    "build:shared": "pnpm --filter streaming-ssr-shared build",
+    "build:remote": "pnpm --filter streaming-ssr-remote build",
+    "build:shell": "pnpm --filter streaming-ssr-shell build",
+    "build:host": "pnpm --filter streaming-ssr-host build",
+    "build:all": "pnpm build:shared && pnpm build:remote && pnpm build:shell && pnpm build:host",
+    "dev:shared": "pnpm --filter streaming-ssr-shared dev",
+    "dev:remote": "pnpm --filter streaming-ssr-remote dev",
+    "dev:shell": "pnpm --filter streaming-ssr-shell dev",
+    "dev:host": "pnpm --filter streaming-ssr-host dev",
+    "dev": "pnpm -r --parallel dev",
+    "start:all": "pnpm --filter streaming-ssr-remote start & pnpm --filter streaming-ssr-shell start & pnpm --filter streaming-ssr-host start",
+    "clean:all": "rm -rf **/node_modules **/.next **/dist"
+  }
+}

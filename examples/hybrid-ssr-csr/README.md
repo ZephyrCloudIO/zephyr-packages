@@ -19,6 +19,44 @@ The application consists of:
 - Dynamic loading of client components
 - Seamless integration between server and client rendering
 
+## Implementation Details
+
+### Host Application
+
+The host application demonstrates several key patterns:
+
+1. **Mixed Rendering Modes**: Components can be server-rendered, client-rendered, or hybrid
+2. **Progressive Enhancement**: Start with essential server-rendered content and enhance with client interactivity
+3. **Selective Hydration**: Components can be hydrated independently and in priority order
+4. **Suspense and Error Boundaries**: Fallbacks and error handling for resilience
+
+### Pages
+
+- **Home Page**: Showcases server components for static content with a client-side carousel
+- **Products Page**: Demonstrates server-rendered product information with client-side filtering and interactivity
+- **Reviews Page**: Shows client-side rendering focus with form submission capabilities
+
+### Remote Components
+
+#### SSR Remote Components:
+- `ServerProduct`: Server-rendered product display
+- `ServerCard`: Versatile content card with theme support
+- `ServerHeader`: Themeable page header
+
+#### CSR Remote Components:
+- `ClientProduct`: Interactive product with add-to-cart functionality
+- `ClientCarousel`: Dynamic image carousel with touch support
+- `ClientReviews`: Reviews component with form submission
+
+### State Management
+
+We use a shared context system for state management across SSR and CSR components:
+
+1. Initial state is server-generated
+2. State is transferred to the client during hydration
+3. Client components can modify state
+4. State changes trigger re-renders across both SSR and CSR components
+
 ## Technical Implementation
 
 - **Server Components**: Rendered on the server, sent as HTML to the client
@@ -37,7 +75,7 @@ The application consists of:
 
 2. Start all applications:
    ```bash
-   pnpm start
+   pnpm dev
    ```
 
 3. Open the host application in your browser:
@@ -50,23 +88,32 @@ The application consists of:
 ```
 /hybrid-ssr-csr
   /host            # Next.js application combining SSR and CSR
-  /ssr-remote      # Remote exposing server-renderable components
-  /csr-remote      # Remote exposing client-only components
+    /src
+      /app         # Next.js App Router routes
+      /components  # Local components
+  
+  /ssr-remote      # Next.js SSR-compatible remote
+    /src
+      /components  # Server components
+  
+  /csr-remote      # Vite CSR-only remote
+    /src
+      /components  # Client components
+  
   /shared          # Shared utilities and types
+    /src
+      /types.ts
+      /theme.ts
+      /utils.ts
+      /federation-context.ts
 ```
 
-## Implementation Details
+## Performance Considerations
 
-This example demonstrates several advanced patterns for combining SSR and CSR with Module Federation:
+This example demonstrates several performance optimization techniques:
 
-1. **Progressive Enhancement**: Starting with server-rendered content and enhancing with client-side interactivity
-2. **Different Rendering Strategies**: Components can declare their rendering strategy (Server Component or Client Component)
-3. **Cross-Remote Dependencies**: Client components can depend on server components and vice versa
-4. **Dynamic Code Splitting**: Code splitting that respects server/client boundaries
-5. **Performance Optimization**: Strategic loading of components based on visibility and user interaction
-
-## Development Notes
-
-- The SSR remote uses React Server Components and must be compatible with RSC constraints
-- The CSR remote uses traditional client-side components with hooks and state
-- The host application orchestrates both rendering modes and manages hydration
+1. **Minimal Client JavaScript**: Server components require no JavaScript on the client
+2. **Lazy Loading**: Client components are loaded only when needed
+3. **Suspense Boundaries**: Components can load in parallel without blocking the page
+4. **Progressive Hydration**: Critical interactive elements are hydrated first
+5. **Shared State Management**: Efficient state updates across components

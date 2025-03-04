@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { federation } from '@module-federation/vite';
-import { withZephyr } from 'zephyr-vite-plugin';
+import { withZephyr } from 'vite-plugin-zephyr';
 
 export default defineConfig({
   plugins: [
     react(),
-    withZephyr(federation({
+    federation({
       name: 'remote',
       filename: 'remoteEntry.js',
       remotes: {},
@@ -23,7 +23,8 @@ export default defineConfig({
           requiredVersion: '^18.0.0'
         }
       }
-    }))
+    }),
+    withZephyr()
   ],
   build: {
     modulePreload: false,

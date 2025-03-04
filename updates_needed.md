@@ -25,3 +25,35 @@ After completing each phase/step, mention what was just completed and what the n
 17) We will need the ability to import versions of remotes with Semver for example `remote@^1.2.1` or `remote@latest`. We should follow the semver standards 
 18) We need the ability to understand if a remote is csr or ssr
 19) We need the ability to upload additional telemetry and connect it to a version and a remote, for example, test runs, Rsdoctor output
+
+## New issues 3/4/2025
+1) Vite does not require a public directory at the root, however the vite plugin requires it, make this optional
+2) The vite mf2 example is not properly generating mf types and sharing them (manually created a remote-declarations.d.ts to get around this, it should be removed after issue fixed)
+3) The vite mf2 example has the following error that needs to be fixed
+```js
+index3.js:242 Error: [ Federation Runtime ]: Failed to locate remote. #RUNTIME-004
+args: {"hostName":"host","requestId":"remote/Button"}
+https://module-federation.io/guide/troubleshooting/runtime/RUNTIME-004
+  at error (host__mf_v__runtimeInit__mf_v__.js:1192:12)
+  at assert (host__mf_v__runtimeInit__mf_v__.js:1184:10)
+  at RemoteHandler.getRemoteModuleAndOptions (host__mf_v__runtimeInit__mf_v__.js:3822:10)
+  at async RemoteHandler.loadRemote (host__mf_v__runtimeInit__mf_v__.js:3724:65)
+  Li @ index3.js:242
+  Ni.c.callback @ index3.js:242
+  sh @ index3.js:210
+  kk @ index3.js:315
+  ik @ index3.js:313
+  hk @ index3.js:312
+  Wk @ index3.js:336
+  Pk @ index3.js:334
+  Gk @ index3.js:322
+  J @ index3.js:44
+  R @ index3.js:45Understand this errorAI
+index3.js:336 Uncaught Error: [ Federation Runtime ]: Failed to locate remote. #RUNTIME-004
+args: {"hostName":"host","requestId":"remote/Button"}
+https://module-federation.io/guide/troubleshooting/runtime/RUNTIME-004
+  at error (host__mf_v__runtimeInit__mf_v__.js:1192:12)
+  at assert (host__mf_v__runtimeInit__mf_v__.js:1184:10)
+  at RemoteHandler.getRemoteModuleAndOptions (host__mf_v__runtimeInit__mf_v__.js:3822:10)
+  at async RemoteHandler.loadRemote (host__mf_v__runtimeInit__mf_v__.js:3724:65)
+```

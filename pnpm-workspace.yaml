@@ -1,8 +1,18 @@
 packages:
   - 'libs/*'
   - 'examples/*'
-  - 'examples/vite-react-mf/*'
-  - 'examples/rspack-mf/*'
+  - 'examples/vite-react-mf/**'
+  - 'examples/rspack-mf/**'
+  - 'examples/react-micro-frontends/**'
+  - 'examples/basehref-example/**'
+  - 'examples/hybrid-ssr-csr/**'
+  - 'examples/multi-remote-ssr/**'
+  - 'examples/nextjs-ssr-basic/**'
+  - 'examples/remote-metadata-example/**'
+  - 'examples/remote-types-example/**'
+  - 'examples/rspack-mf2/**'
+  - 'examples/streaming-ssr/**'
+  - 'examples/vite-rolldown-mf2/**'
 
 installOptions:
   preferOnline: false

@@ -15,6 +15,6 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "zephyr-vite-plugin": "workspace:*"
+    "vite-plugin-zephyr": "workspace:*"
   }
 }

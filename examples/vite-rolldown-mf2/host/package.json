@@ -21,6 +21,6 @@
     "rolldown": "^0.20.0",
     "typescript": "^5.4.2",
     "vite": "^6.0.0",
-    "zephyr-vite-plugin": "workspace:*"
+    "vite-plugin-zephyr": "workspace:*"
   }
 }

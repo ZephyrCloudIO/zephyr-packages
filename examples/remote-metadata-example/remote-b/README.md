@@ -25,7 +25,7 @@ The application will be available at http://localhost:3002.
 
 ### Module Federation Configuration
 
-The application uses `@originjs/vite-plugin-federation` to expose the Button component:
+The application uses `@module-federation/vite` to expose the Button component:
 
 ```typescript
 federation({

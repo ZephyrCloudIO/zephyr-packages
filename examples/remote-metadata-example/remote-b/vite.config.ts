@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import federation from '@originjs/vite-plugin-federation';
-import { RemoteStructureSharingIntegration } from '../../../../remote-entry-structure-sharing-skeleton';
+import { federation } from '@module-federation/vite';
 import pkg from './package.json';
 
 // https://vitejs.dev/config/
@@ -46,17 +45,17 @@ export default defineConfig({
             }
           }
         };
-        
+
         // Write metadata file alongside remoteEntry.js
         const fs = require('fs');
         const path = require('path');
         const outputPath = 'dist';
         const metadataFilePath = path.join(outputPath, 'remoteEntry.metadata.json');
-        
+
         if (!fs.existsSync(outputPath)) {
           fs.mkdirSync(outputPath, { recursive: true });
         }
-        
+
         fs.writeFileSync(metadataFilePath, JSON.stringify(metadata, null, 2));
         console.log('Metadata file created at:', metadataFilePath);
       }

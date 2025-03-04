@@ -3,14 +3,17 @@ import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 import { ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import { XStats } from '../xpack.types';
+import { BaseHrefOptions } from '../basehref/webpack-basehref-integration';
 
 interface DeployPluginOptions {
   pluginName: string;
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
+  baseHref?: BaseHrefOptions;
 }
 
 interface DeployCompiler {
+  options: any; // Add compiler.options to access webpack configuration
   webpack: { Compilation: { PROCESS_ASSETS_STAGE_REPORT: number } };
   hooks: {
     thisCompilation: {
@@ -53,6 +56,7 @@ export function setupZeDeploy<
           stats_json,
           assets,
           pluginOptions,
+          webpackConfig: compiler.options, // Pass webpack configuration
         });
 
         if (!pluginOptions.wait_for_index_html) {

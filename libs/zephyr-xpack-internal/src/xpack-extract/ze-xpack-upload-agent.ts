@@ -8,12 +8,15 @@ import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.type
 import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
 import { emitDeploymentDone } from '../lifecycle-events/index';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
+import { BaseHrefOptions } from '../basehref/webpack-basehref-integration';
 
 interface UploadAgentPluginOptions {
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+  // base href options
+  baseHref?: BaseHrefOptions;
 }
 
 export interface ZephyrAgentProps<T> {
@@ -21,6 +24,7 @@ export interface ZephyrAgentProps<T> {
   stats_json: XStatsCompilation;
   pluginOptions: T;
   assets: Record<string, Source>;
+  webpackConfig?: any; // Add webpack configuration for baseHref detection
 }
 
 export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
@@ -28,15 +32,18 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   stats_json,
   assets,
   pluginOptions,
+  webpackConfig,
 }: ZephyrAgentProps<T>): Promise<void> {
   ze_log('Initiating: Zephyr Webpack Upload Agent');
 
   const zeStart = Date.now();
-  const { wait_for_index_html, zephyr_engine } = pluginOptions;
+  const { wait_for_index_html, zephyr_engine, baseHref } = pluginOptions;
 
   try {
     const assetsMap = await buildWebpackAssetMap(assets, {
       wait_for_index_html,
+      webpackConfig,
+      baseHref,
     });
 
     // webpack dash data

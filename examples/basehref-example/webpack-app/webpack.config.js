@@ -1,12 +1,12 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { webpackBaseHrefPlugin } = require('../../../basehref-webpack-plugin');
+const { withZephyr } = require('zephyr-webpack-plugin');
 
 module.exports = (env = {}) => {
   // Extract publicPath from environment
   const publicPath = env.publicPath || 'auto';
-  
-  return {
+
+  return withZephyr()({
     mode: 'development',
     entry: './src/index.tsx',
     output: {
@@ -48,13 +48,11 @@ module.exports = (env = {}) => {
       new HtmlWebpackPlugin({
         template: './src/index.html',
         filename: 'index.html',
-        inject: 'body'
+        inject: 'body',
+        base: {
+          href: '/js/'
+        }
       }),
-      webpackBaseHrefPlugin({
-        publicPath: publicPath,
-        injectIntoHtml: true,
-        generateManifestFile: true
-      })
     ],
     devServer: {
       static: {
@@ -65,5 +63,5 @@ module.exports = (env = {}) => {
       historyApiFallback: true,
       hot: true
     }
-  };
+  });
 };

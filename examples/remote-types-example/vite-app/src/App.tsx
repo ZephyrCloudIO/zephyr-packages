@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import remoteTypes from 'virtual:remote-types';
 
 function App() {
   const [isServer, setIsServer] = useState<boolean>(false);
   const [manifestContents, setManifestContents] = useState<string>('Loading...');
-  
+
   useEffect(() => {
     // Check if running on server or client
     setIsServer(typeof window === 'undefined');
-    
+
     // Try to fetch the manifest file
     fetch('./remote-types-manifest.json')
       .then(response => response.json())
@@ -25,7 +25,7 @@ function App() {
     <div className="container">
       <h1>Remote Types Detection</h1>
       <p>Vite Example</p>
-      
+
       <div className="card">
         <h2>Detected Information</h2>
         <div className="info">
@@ -37,12 +37,12 @@ function App() {
           <p><strong>Running on:</strong> {isServer ? 'Server' : 'Client'}</p>
         </div>
       </div>
-      
+
       <div className="card">
         <h2>Manifest Content</h2>
         <pre>{manifestContents}</pre>
       </div>
-      
+
       <div className="card">
         <h2>Build Modes</h2>
         <p>This example demonstrates two build configurations:</p>
@@ -50,7 +50,7 @@ function App() {
           <li><strong>Default (CSR)</strong>: Standard client-side rendering</li>
           <li><strong>SSR</strong>: Server-side rendering configuration</li>
         </ol>
-        
+
         <div className="buttons">
           <button onClick={() => window.location.reload()}>Reload Page</button>
           <a href="https://github.com/your-repo/remote-types-example" target="_blank" rel="noopener noreferrer">
@@ -58,7 +58,7 @@ function App() {
           </a>
         </div>
       </div>
-      
+
       <div className="card">
         <h2>Usage</h2>
         <p>Run one of the following commands:</p>
@@ -66,7 +66,7 @@ function App() {
 {`# CSR Build
 npm run dev
 
-# SSR Build 
+# SSR Build
 npm run dev:ssr
 
 # Build both

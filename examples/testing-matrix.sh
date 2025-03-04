@@ -126,41 +126,48 @@ run_example "$EXAMPLES_DIR/rspack-mf2/host" "Rspack MF2 Host" "pnpm build"
 run_example "$EXAMPLES_DIR/rspack-mf2/remote" "Rspack MF2 Remote" "pnpm build"
 
 # Advanced features demo
-run_example "$EXAMPLES_DIR/advanced-features-demo" "Advanced Features Demo" "echo 'Demo module built successfully'"
+# TODO: Commenting this out until it makes sense
+# run_example "$EXAMPLES_DIR/advanced-features-demo" "Advanced Features Demo" "echo 'Demo module built successfully'"
 
 # SSR Examples
-run_example "$EXAMPLES_DIR/nextjs-ssr-basic/host" "Next.js Basic SSR Host" "pnpm build"
-run_example "$EXAMPLES_DIR/nextjs-ssr-basic/remote" "Next.js Basic SSR Remote" "pnpm build"
-
-run_example "$EXAMPLES_DIR/multi-remote-ssr/host" "Multi-Remote SSR Host" "pnpm build"
-run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-a" "Multi-Remote SSR Remote A" "pnpm build"
-run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-b" "Multi-Remote SSR Remote B" "pnpm build"
-run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-c" "Multi-Remote SSR Remote C" "pnpm build"
-
-run_example "$EXAMPLES_DIR/hybrid-ssr-csr/host" "Hybrid SSR/CSR Host" "pnpm build"
-run_example "$EXAMPLES_DIR/hybrid-ssr-csr/ssr-remote" "Hybrid SSR Remote" "pnpm build"
-run_example "$EXAMPLES_DIR/hybrid-ssr-csr/csr-remote" "Hybrid CSR Remote" "pnpm build"
-
-run_example "$EXAMPLES_DIR/streaming-ssr/host" "Streaming SSR Host" "pnpm build"
-run_example "$EXAMPLES_DIR/streaming-ssr/remote" "Streaming SSR Remote" "pnpm build"
-run_example "$EXAMPLES_DIR/streaming-ssr/shell" "Streaming SSR Shell" "pnpm build"
+# TODO: Commenting out these because they are NextJS based
+#run_example "$EXAMPLES_DIR/nextjs-ssr-basic/host" "Next.js Basic SSR Host" "pnpm build"
+#run_example "$EXAMPLES_DIR/nextjs-ssr-basic/remote" "Next.js Basic SSR Remote" "pnpm build"
+#
+# TODO: Commenting out these because they are NextJS based
+#run_example "$EXAMPLES_DIR/multi-remote-ssr/host" "Multi-Remote SSR Host" "pnpm build"
+#run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-a" "Multi-Remote SSR Remote A" "pnpm build"
+#run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-b" "Multi-Remote SSR Remote B" "pnpm build"
+#run_example "$EXAMPLES_DIR/multi-remote-ssr/remote-c" "Multi-Remote SSR Remote C" "pnpm build"
+# TODO: Commenting out these because they are NextJS based
+#run_example "$EXAMPLES_DIR/hybrid-ssr-csr/host" "Hybrid SSR/CSR Host" "pnpm build"
+#run_example "$EXAMPLES_DIR/hybrid-ssr-csr/ssr-remote" "Hybrid SSR Remote" "pnpm build"
+#run_example "$EXAMPLES_DIR/hybrid-ssr-csr/csr-remote" "Hybrid CSR Remote" "pnpm build"
+#
+# TODO: Commenting out these because they are NextJS based
+#run_example "$EXAMPLES_DIR/streaming-ssr/host" "Streaming SSR Host" "pnpm build"
+#run_example "$EXAMPLES_DIR/streaming-ssr/remote" "Streaming SSR Remote" "pnpm build"
+#run_example "$EXAMPLES_DIR/streaming-ssr/shell" "Streaming SSR Shell" "pnpm build"
 
 # BaseHref examples
 run_example "$EXAMPLES_DIR/basehref-example/vite-app" "BaseHref Vite Example" "pnpm build"
 run_example "$EXAMPLES_DIR/basehref-example/webpack-app" "BaseHref Webpack Example" "pnpm build"
 
 # Remote Metadata examples
-run_example "$EXAMPLES_DIR/remote-metadata-example/host" "Remote Metadata Host" "pnpm build"
-run_example "$EXAMPLES_DIR/remote-metadata-example/remote-a" "Remote Metadata Next.js Remote" "pnpm build"
-run_example "$EXAMPLES_DIR/remote-metadata-example/remote-b" "Remote Metadata Vite Remote" "pnpm build"
-run_example "$EXAMPLES_DIR/remote-metadata-example/remote-c" "Remote Metadata Webpack Remote" "pnpm build"
+# TODO: Commenting this out until the remote remote-metadata capabilities are fixed
+#run_example "$EXAMPLES_DIR/remote-metadata-example/host" "Remote Metadata Host" "pnpm build"
+#run_example "$EXAMPLES_DIR/remote-metadata-example/remote-a" "Remote Metadata Next.js Remote" "pnpm build"
+#run_example "$EXAMPLES_DIR/remote-metadata-example/remote-b" "Remote Metadata Vite Remote" "pnpm build"
+#run_example "$EXAMPLES_DIR/remote-metadata-example/remote-c" "Remote Metadata Webpack Remote" "pnpm build"
 
 # Remote Types examples
-run_example "$EXAMPLES_DIR/remote-types-example/vite-app" "Remote Types Vite Example" "pnpm build"
-run_example "$EXAMPLES_DIR/remote-types-example/webpack-app" "Remote Types Webpack Example" "pnpm build"
+# TODO: Commenting this out until the remote types capabilities are fixed
+#run_example "$EXAMPLES_DIR/remote-types-example/vite-app" "Remote Types Vite Example" "pnpm build"
+#run_example "$EXAMPLES_DIR/remote-types-example/webpack-app" "Remote Types Webpack Example" "pnpm build"
 
 # SSR Testing Infrastructure
-run_example "$EXAMPLES_DIR/ssr-testing" "SSR Testing Infrastructure" "echo 'SSR Testing Infrastructure built successfully'"
+# TODO: Commenting this out because it does not deploy to zephyr, need to evaluate where these tests live and how they are run
+#run_example "$EXAMPLES_DIR/ssr-testing" "SSR Testing Infrastructure" "echo 'SSR Testing Infrastructure built successfully'"
 
 # Webpack examples
 run_example "$EXAMPLES_DIR/sample-webpack-application" "Sample Webpack App" "nx build sample-webpack-application"

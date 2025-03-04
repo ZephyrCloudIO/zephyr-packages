@@ -602,12 +602,330 @@ This sub-phase focuses on migrating the plugin implementations from context-stor
    - Update plugin integration points
    - Verify plugin functionality with tests
 
-5. **Integration Testing** (High Priority)
+5. **BaseHref Integration into vite-plugin-zephyr** (High Priority)
+   - Extract base functionality from basehref-vite-plugin.ts into a dedicated module
+   - Create a BasePathHandler class as a core utility in zephyr-agent
+   - Design a pluggable architecture that allows different bundlers to leverage the same core functionality
+   - **CRITICAL PATH RESOLUTION**: Implement proper path resolution for assets with baseHref prefixing
+     - When baseHref is detected (e.g., "js", "/js/", or "/js"), all asset paths must be prefixed with it
+     - Example: If baseHref is "/js/" and asset path is "assets/main.js", the final path must be "js/assets/main.js"
+     - Implement normalization to handle variations like "js", "/js", and "/js/" consistently
+     - Use the same path joining utility for both Vite and Webpack integration:
+       ```typescript
+       // Path joining utility that handles various basePath formats
+       function joinBasePath(basePath: string, assetPath: string): string {
+         // Normalize base path (remove leading/trailing slashes, etc.)
+         const normalizedBase = normalizeBasePath(basePath);
+         
+         // If normalizedBase is empty, return the original assetPath
+         if (!normalizedBase) return assetPath;
+         
+         // Ensure no double slashes when joining paths
+         return `${normalizedBase}/${assetPath.replace(/^\//, '')}`;
+       }
+       ```
+   - **ARCHITECTURE DECISION**: Implement the core logic in the specific plugin layers
+     - This functionality should reside in the zephyr-rollx-internal package for Vite
+     - The plugin will detect, normalize, and apply the base path transformations
+     - Modified URLs are then passed to the zephyr-agent for upload
+     - This ensures Vite's unique configuration approach is handled appropriately
+
+   - Integrate with vite-plugin-zephyr as core functionality through these steps:
+     - Extend the VitePluginZephyrOptions interface to include baseHref configuration options:
+       ```typescript
+       interface VitePluginZephyrOptions {
+         mfConfig?: ModuleFederationOptions;
+         baseHref?: {
+           // Override base path (overrides Vite's `base` config)
+           path?: string;
+           // Enable or disable HTML transformation
+           transformHtml?: boolean;
+           // Additional options for HTML base tag
+           baseTagOptions?: Record<string, string>;
+           // Enable or disable base functionality
+           enabled?: boolean;
+         };
+       }
+       ```
+     - Create a baseHrefIntegration module that adds the base tag to HTML and handles path transformations:
+       ```typescript
+       // Extract from existing basehref-vite-plugin.ts
+       export class BaseHrefIntegration {
+         static apply(config: ResolvedConfig, options?: BaseHrefOptions): BaseHrefContext {
+           // Implementation details
+         }
+         
+         static transformHtml(html: string, context: BaseHrefContext): string {
+           // Implementation details
+         }
+         
+         static rewriteAssetUrls(assets: Record<string, string>, context: BaseHrefContext): Record<string, string> {
+           // Implementation details for transforming asset URLs before upload to Zephyr
+         }
+       }
+       ```
+     - Add hooks in zephyrPlugin to detect and apply baseHref configuration from Vite's config:
+       ```typescript
+       function zephyrPlugin(options?: VitePluginZephyrOptions): Plugin {
+         // Existing setup code...
+         
+         // Initialize base context
+         let baseHrefContext: BaseHrefContext | null = null;
+         
+         return {
+           name: 'with-zephyr',
+           enforce: 'post',
+           
+           configResolved: async (config: ResolvedConfig) => {
+             // Existing config code...
+             
+             // Initialize base href integration if enabled
+             if (options?.baseHref?.enabled !== false) {
+               baseHrefContext = BaseHrefIntegration.apply(config, options?.baseHref);
+               console.log(`[vite-plugin-zephyr] Base path detected: ${baseHrefContext.path}`);
+             }
+           },
+           
+           // Add HTML transformation for base tag
+           transformIndexHtml(html) {
+             if (baseHrefContext && options?.baseHref?.transformHtml !== false) {
+               return BaseHrefIntegration.transformHtml(html, baseHrefContext);
+             }
+             return html;
+           },
+           
+           // Handle virtual module for runtime access
+           resolveId(id) {
+             if (id === 'virtual:base-href') {
+               return '\0virtual:base-href';
+             }
+             return null;
+           },
+           
+           load(id) {
+             if (id === '\0virtual:base-href') {
+               return `export default ${JSON.stringify({
+                 baseHref: baseHrefContext?.path || './'
+               })}`;
+             }
+             return null;
+           },
+           
+           // Modify asset paths during closeBundle
+           closeBundle: async () => {
+             const vite_internal_options = await vite_internal_options_defer;
+             const zephyr_engine = await zephyr_engine_defer;
+
+             await zephyr_engine.start_new_build();
+             // Extract assets map
+             const assetsMap = await extract_vite_assets_map(
+               zephyr_engine,
+               vite_internal_options
+             );
+             
+             // Transform asset paths to include base path if baseHref is configured
+             const transformedAssetsMap = baseHrefContext 
+               ? BaseHrefIntegration.rewriteAssetUrls(assetsMap, baseHrefContext)
+               : assetsMap;
+             
+             // Upload assets with transformed paths
+             await zephyr_engine.upload_assets({
+               assetsMap: transformedAssetsMap,
+               buildStats: await zeBuildDashData(zephyr_engine),
+             });
+             await zephyr_engine.build_finished();
+           },
+         };
+       }
+       ```
+     - Implement runtime utilities for accessing the baseHref in client code (similar to 'virtual:base-href')
+     - Add automatic asset URL transformation for all types of assets (CSS, images, etc.)
+   - Support three configuration modes:
+     - Automatic: Use Vite's base config directly
+       ```typescript
+       // vite.config.ts
+       export default defineConfig({
+         base: '/my-app/',
+         plugins: [
+           // Other plugins...
+           withZephyr()
+         ]
+       });
+       ```
+     - Manual: Allow explicit baseHref configuration via plugin options
+       ```typescript
+       // vite.config.ts
+       export default defineConfig({
+         plugins: [
+           // Other plugins...
+           withZephyr({
+             baseHref: {
+               path: '/custom-path/',
+               transformHtml: true
+             }
+           })
+         ]
+       });
+       ```
+     - Dynamic: Enable runtime resolution for different environments
+       ```typescript
+       // vite.config.ts
+       export default defineConfig(({ mode }) => ({
+         base: mode === 'production' ? '/my-app/' : '/',
+         plugins: [
+           // Other plugins...
+           withZephyr()
+         ]
+       }));
+       ```
+   - Update basehref-example to use integrated plugin
+   - **COMPREHENSIVE TESTING**: Create extensive test suite to verify path handling works correctly
+     - Unit tests for path joining and normalization functions
+     - Integration tests that verify asset paths are correctly transformed with various base path formats:
+       - Test base path as "js"
+       - Test base path as "/js"
+       - Test base path as "/js/"
+       - Test base path with nested paths like "/apps/my-app/"
+     - Tests for detection from different configuration sources:
+       - From Vite's base configuration
+       - From withZephyr baseHref option
+     - End-to-end tests that verify assets are uploaded with correct paths to Zephyr
+     - Tests that verify the assets are correctly referenced from HTML with proper base tag
+   - Create migration guide for users of basehref-vite-plugin, including:
+     - Step-by-step instructions for updating imports and configuration
+     - Examples of common use cases and their new implementation
+     - Troubleshooting guide for common migration issues
+
+   The implementation approach will follow a clean separation of concerns with three layers:
+   1. **Core Layer**: Pure utility functions in BasePathHandler that work with any environment (browser or Node.js)
+   2. **Integration Layer**: BaseHrefIntegration class that connects the core utilities to specific bundler APIs
+   3. **Plugin Layer**: Bundler-specific plugins that hook into their respective build systems
+   
+   This layered architecture will ensure maximum code reuse across different bundlers while maintaining clean integration with each bundler's unique plugin API. We'll initially focus on Vite integration, then expand to Webpack/Rspack in phase 5.6.
+
+6. **Webpack HTML Base Configuration Integration** (High Priority)
+   - Enhance the zephyr-webpack-plugin to detect and use HTML Webpack Plugin's base configuration
+   - Extract baseHref functionality from webpackBaseHrefPlugin to be included directly in zephyr-webpack-plugin
+   - **CRITICAL PATH RESOLUTION**: Implement proper path resolution for assets with baseHref prefixing
+     - When baseHref is detected (e.g., "js", "/js/", or "/js"), all asset paths must be prefixed with it
+     - Example: If baseHref is "/js/" and asset path is "assets/main.js", the final path must be "js/assets/main.js"
+     - Implement normalization to handle variations like "js", "/js", and "/js/" consistently
+     - Create utility function for consistent path joining that handles all edge cases:
+       ```typescript
+       // Path joining utility that handles various basePath formats
+       function joinBasePath(basePath: string, assetPath: string): string {
+         // Normalize base path (remove leading/trailing slashes, etc.)
+         const normalizedBase = normalizeBasePath(basePath);
+         
+         // If normalizedBase is empty, return the original assetPath
+         if (!normalizedBase) return assetPath;
+         
+         // Ensure no double slashes when joining paths
+         return `${normalizedBase}/${assetPath.replace(/^\//, '')}`;
+       }
+       ```
+   - **ARCHITECTURE DECISION**: Implement the core logic in the specific plugin layers
+     - This functionality should reside in the zephyr-xpack-internal and zephyr-rollx-internal packages
+     - These plugins will detect, normalize, and apply the base path transformations
+     - Modified URLs are then passed to the zephyr-agent for upload
+     - This ensures each bundler's unique configuration approach is handled appropriately
+
+   - Add detection for HTML Webpack Plugin configuration with base: { href: '...' } pattern:
+     ```typescript
+     // Detection logic for webpack.config.js
+     function detectHtmlWebpackPluginBaseHref(webpackConfig: any): string | null {
+       if (!webpackConfig.plugins) return null;
+       
+       // Find HtmlWebpackPlugin instances
+       const htmlPlugins = webpackConfig.plugins.filter(plugin => 
+         plugin.constructor.name === 'HtmlWebpackPlugin');
+       
+       // Check each instance for base configuration
+       for (const plugin of htmlPlugins) {
+         if (plugin.options && plugin.options.base && plugin.options.base.href) {
+           return plugin.options.base.href;
+         }
+       }
+       
+       return null;
+     }
+     ```
+   - Create unified integration approach that works with both:
+     - Explicit configuration via zephyr-webpack-plugin options
+     - HtmlWebpackPlugin's base: { href: '...' } configuration
+     - Webpack's output.publicPath setting
+   - Implement priority order for these configurations:
+     1. Explicit zephyr-webpack-plugin baseHref configuration
+     2. HTML Webpack Plugin base.href configuration 
+     3. Webpack output.publicPath configuration
+     4. Default to '/' if none specified
+   - Update the webpack plugin configuration interface:
+     ```typescript
+     interface ZephyrWebpackPluginOptions {
+       // Existing options...
+       
+       baseHref?: {
+         // Override base path (overrides HtmlWebpackPlugin and output.publicPath)
+         path?: string;
+         // Enable or disable base functionality
+         enabled?: boolean;
+         // Additional options for HTML base tag
+         baseTagOptions?: Record<string, string>;
+       };
+     }
+     ```
+   - **COMPREHENSIVE TESTING**: Create extensive test suite to verify path handling works correctly
+     - Unit tests for path joining and normalization functions
+     - Integration tests that verify asset paths are correctly transformed with various base path formats:
+       - Test base path as "js"
+       - Test base path as "/js"
+       - Test base path as "/js/"
+       - Test base path with nested paths like "/apps/my-app/"
+     - Tests for detection from different configuration sources:
+       - From HtmlWebpackPlugin base option
+       - From zephyr-webpack-plugin baseHref option
+       - From Webpack output.publicPath
+     - End-to-end tests that verify assets are uploaded with correct paths to Zephyr
+     - Tests that verify the assets are correctly referenced from HTML with proper base tag
+
+   - Document the unified approach with examples showing the different configuration methods
+   - Example usage in webpack.config.js:
+     ```javascript
+     // Using HtmlWebpackPlugin's base configuration
+     const HtmlWebpackPlugin = require('html-webpack-plugin');
+     const { ZephyrWebpackPlugin } = require('zephyr-webpack-plugin');
+     
+     module.exports = {
+       // ...webpack config
+       plugins: [
+         new HtmlWebpackPlugin({
+           // HtmlWebpackPlugin config
+           base: { href: '/my-app/' }
+         }),
+         new ZephyrWebpackPlugin() // Will automatically detect and use the base configuration
+       ]
+     }
+     
+     // Explicit configuration via ZephyrWebpackPlugin
+     module.exports = {
+       // ...webpack config
+       plugins: [
+         new HtmlWebpackPlugin(),
+         new ZephyrWebpackPlugin({
+           baseHref: {
+             path: '/my-app/'
+           }
+         })
+       ]
+     }
+     ```
+
+7. **Integration Testing** (High Priority)
    - Test with example applications
    - Update any imports in examples
    - Fix any integration issues
 
-6. **Documentation Updates** (Medium Priority)
+8. **Documentation Updates** (Medium Priority)
    - Document the agent-level abstractions
    - Document the new RollX abstraction and its usage
    - Update documentation to reflect new structure

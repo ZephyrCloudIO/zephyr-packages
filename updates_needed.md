@@ -57,3 +57,6 @@ https://module-federation.io/guide/troubleshooting/runtime/RUNTIME-004
   at RemoteHandler.getRemoteModuleAndOptions (host__mf_v__runtimeInit__mf_v__.js:3822:10)
   at async RemoteHandler.loadRemote (host__mf_v__runtimeInit__mf_v__.js:3724:65)
 ```
+4) The examples/advanced-features/demo is nonsense and doesn't seem to match expectations for example testing
+5) in the remote-types-example/vite-app this is not the proper way to do remote types `import remoteTypes from 'virtual:remote-types';`, this will also fail the testing-matrix because it does not use Zephyr, need to add zephyr
+6) in the remote-types-example/webpack-app this is not the proper way to do remote types `const { webpackRemoteTypesPlugin } = require('../../../remote-types-webpack-plugin');`

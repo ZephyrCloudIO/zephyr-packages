@@ -65,6 +65,7 @@ type ZephyrEngineBuilderTypes =
   | 'repack'
   | 'vite'
   | 'rollup'
+  | 'parcel'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;

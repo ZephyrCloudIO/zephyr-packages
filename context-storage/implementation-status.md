@@ -5,6 +5,7 @@ This file tracks the current progress of the Zephyr packages implementation. It 
 ## Important Development Guidelines
 
 ### Plugin Implementation
+
 - **CRITICAL**: All plugin implementations MUST be developed in their respective plugin directories under `/libs/`, NOT in the context-storage directory
 - The context-storage directory is for temporary development, analysis, and research only
 - Always check existing plugin structure in `/libs/` directory before implementing features
@@ -19,17 +20,20 @@ This file tracks the current progress of the Zephyr packages implementation. It 
 - **IMPORTANT**: Cross-cutting concerns between xpack and rollx must be abstracted and included in the zephyr-agent/zephyr-engine. This ensures shared functionality is maintained in a single location and prevents code duplication across bundler implementations.
 
 ### Example Applications
+
 - All example applications MUST be created in the root project directory at `/examples/`, NOT within the context-storage directory
 - When moving examples from context-storage/examples to the main examples directory, make sure to update the testing-matrix.sh file to reference the new paths
 - All new examples should be added to the testing-matrix.sh file to ensure proper integration with the testing infrastructure
 
 ### Git Practices
+
 - DO NOT commit changes unless explicitly requested by the user
 - All changes should be presented to the user for review before committing
 - When asked to make changes, focus on implementing the changes without committing them
 - Let the user decide when and how to commit changes to the repository
 
 ### Code Migration Process
+
 - When a feature is fully developed and tested in context-storage, it must be migrated to the appropriate plugin in `/libs/`
 - Tests should be migrated along with the implementation
 - Update all imports and dependencies to ensure proper integration
@@ -47,6 +51,7 @@ We have updated our implementation approach to follow Test-Driven Development (T
 5. Document test coverage and results
 
 We've created additional tracking documents for our TDD approach:
+
 - `/context-storage/tdd-progress-tracker.md`: Detailed tracking of test cases and coverage
 - `/context-storage/test-report-template.md`: Template for documenting test results
 
@@ -60,104 +65,105 @@ We have completed the feature implementation for Phase 5, but we've discovered a
 
 Before starting implementation, conduct a thorough analysis to identify all cross-cutting concerns that should be abstracted to the zephyr-agent/zephyr-engine.
 
-| Task | Description | Status |
-|------|------------|--------|
+| Task                            | Description                                                                  | Status      |
+| ------------------------------- | ---------------------------------------------------------------------------- | ----------- |
 | Audit of Bundler-Specific Logic | Identify logic currently duplicated across different bundler implementations | Not Started |
-| Core API Definition | Define common interfaces that will be implemented by both xpack and rollx | Not Started |
-| Common Feature Identification | Identify features (basehref, remote types, etc.) that span all bundlers | Not Started |
-| Dependency Analysis | Document third-party dependencies shared across bundler implementations | Not Started |
-| Plugin Lifecycle Analysis | Identify common plugin lifecycle hooks across bundlers | Not Started |
+| Core API Definition             | Define common interfaces that will be implemented by both xpack and rollx    | Not Started |
+| Common Feature Identification   | Identify features (basehref, remote types, etc.) that span all bundlers      | Not Started |
+| Dependency Analysis             | Document third-party dependencies shared across bundler implementations      | Not Started |
+| Plugin Lifecycle Analysis       | Identify common plugin lifecycle hooks across bundlers                       | Not Started |
 
 #### 1. Migrate Common Core to zephyr-agent/zephyr-engine
 
 Extract truly common functionality that applies across all bundler types (xpack and rollx) to the zephyr-agent/zephyr-engine.
 
-| Component | Current Location | Target Location | Status |
-|-----------|------------------|----------------|--------|
-| Universal Plugin Interface | Various files | /libs/zephyr-agent/src/lib/interfaces/plugin-interface.ts | Not Started |
-| Common Feature Contracts | Various files | /libs/zephyr-agent/src/lib/contracts/feature-contracts.ts | Not Started |
-| Path Utilities | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/path-utils.ts | Not Started |
-| URL Construction | /context-storage/basehref-implementation-skeleton.ts | /libs/zephyr-agent/src/lib/utils/url-constructor.ts | Not Started |
-| Metadata Schemas | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/schemas/metadata-schema.ts | Not Started |
-| Schema Validation | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/validation/schema-validator.ts | Not Started |
-| Configuration Normalization | Various files | /libs/zephyr-agent/src/lib/utils/config-normalizer.ts | Not Started |
-| Remote Resolution Logic | Various files | /libs/zephyr-agent/src/lib/resolution/remote-resolver.ts | Not Started |
-| Feature Detection | Various files | /libs/zephyr-agent/src/lib/detection/feature-detector.ts | Not Started |
-| Error Handling | Various files | /libs/zephyr-agent/src/lib/errors/error-handling.ts | Not Started |
-| Manifest Generation | Various files | /libs/zephyr-agent/src/lib/manifest/manifest-generator.ts | Not Started |
+| Component                   | Current Location                                            | Target Location                                           | Status      |
+| --------------------------- | ----------------------------------------------------------- | --------------------------------------------------------- | ----------- |
+| Universal Plugin Interface  | Various files                                               | /libs/zephyr-agent/src/lib/interfaces/plugin-interface.ts | Not Started |
+| Common Feature Contracts    | Various files                                               | /libs/zephyr-agent/src/lib/contracts/feature-contracts.ts | Not Started |
+| Path Utilities              | /context-storage/basehref-implementation-skeleton.ts        | /libs/zephyr-agent/src/lib/utils/path-utils.ts            | Not Started |
+| URL Construction            | /context-storage/basehref-implementation-skeleton.ts        | /libs/zephyr-agent/src/lib/utils/url-constructor.ts       | Not Started |
+| Metadata Schemas            | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/schemas/metadata-schema.ts     | Not Started |
+| Schema Validation           | /context-storage/remote-entry-structure-sharing-skeleton.ts | /libs/zephyr-agent/src/lib/validation/schema-validator.ts | Not Started |
+| Configuration Normalization | Various files                                               | /libs/zephyr-agent/src/lib/utils/config-normalizer.ts     | Not Started |
+| Remote Resolution Logic     | Various files                                               | /libs/zephyr-agent/src/lib/resolution/remote-resolver.ts  | Not Started |
+| Feature Detection           | Various files                                               | /libs/zephyr-agent/src/lib/detection/feature-detector.ts  | Not Started |
+| Error Handling              | Various files                                               | /libs/zephyr-agent/src/lib/errors/error-handling.ts       | Not Started |
+| Manifest Generation         | Various files                                               | /libs/zephyr-agent/src/lib/manifest/manifest-generator.ts | Not Started |
 
 #### 2. Core Implementation Migration to zephyr-xpack-internal
 
 Migrate webpack/rspack specific implementations to the zephyr-xpack-internal package, ensuring they consume the common abstractions from zephyr-agent/zephyr-engine.
 
-| File | Current Location | Target Location | Status |
-|------|------------------|----------------|--------|
-| basehref-implementation-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/basehref/basehref-implementation.ts | Not Started |
-| remote-types-detection-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-detection.ts | Not Started |
+| File                                       | Current Location  | Target Location                                                                    | Status      |
+| ------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------- | ----------- |
+| basehref-implementation-skeleton.ts        | /context-storage/ | /libs/zephyr-xpack-internal/src/basehref/basehref-implementation.ts                | Not Started |
+| remote-types-detection-skeleton.ts         | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-detection.ts             | Not Started |
 | remote-entry-structure-sharing-skeleton.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-structure/remote-entry-structure-sharing.ts | Not Started |
-| remote-types-sharing-integration.ts | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-sharing-integration.ts | Not Started |
+| remote-types-sharing-integration.ts        | /context-storage/ | /libs/zephyr-xpack-internal/src/remote-types/remote-types-sharing-integration.ts   | Not Started |
 
 #### 3. RollX Abstraction for Rollup-Based Bundlers
 
 Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vite) to eliminate code duplication and ensure consistent behavior. This should consume the common abstractions from zephyr-agent/zephyr-engine.
 
-| Component | Target Location | Status |
-|-----------|----------------|--------|
-| Core RollX Interface | /libs/zephyr-rollx-internal/src/lib/interfaces/rollx-plugin-interface.ts | Not Started |
-| BaseHref Implementation | /libs/zephyr-rollx-internal/src/lib/plugins/basehref-rollx-plugin.ts | Not Started |
+| Component                   | Target Location                                                          | Status      |
+| --------------------------- | ------------------------------------------------------------------------ | ----------- |
+| Core RollX Interface        | /libs/zephyr-rollx-internal/src/lib/interfaces/rollx-plugin-interface.ts | Not Started |
+| BaseHref Implementation     | /libs/zephyr-rollx-internal/src/lib/plugins/basehref-rollx-plugin.ts     | Not Started |
 | Remote Types Implementation | /libs/zephyr-rollx-internal/src/lib/plugins/remote-types-rollx-plugin.ts | Not Started |
-| Plugin Factory | /libs/zephyr-rollx-internal/src/lib/factory/plugin-factory.ts | Not Started |
-| Bundle Analysis Utilities | /libs/zephyr-rollx-internal/src/lib/utils/bundle-analysis.ts | Not Started |
-| Configuration Normalization | /libs/zephyr-rollx-internal/src/lib/utils/config-normalization.ts | Not Started |
+| Plugin Factory              | /libs/zephyr-rollx-internal/src/lib/factory/plugin-factory.ts            | Not Started |
+| Bundle Analysis Utilities   | /libs/zephyr-rollx-internal/src/lib/utils/bundle-analysis.ts             | Not Started |
+| Configuration Normalization | /libs/zephyr-rollx-internal/src/lib/utils/config-normalization.ts        | Not Started |
 
 #### 4. Bundler Plugin Migration
 
 ##### 4.1 Vite Plugin Migration using RollX Abstraction
 
-| File | Current Location | Target Location | Status |
-|------|------------------|----------------|--------|
-| basehref-vite-plugin.ts | /context-storage/ | /libs/vite-plugin-zephyr/src/lib/basehref-vite-plugin.ts | Not Started |
+| File                        | Current Location  | Target Location                                              | Status      |
+| --------------------------- | ----------------- | ------------------------------------------------------------ | ----------- |
+| basehref-vite-plugin.ts     | /context-storage/ | /libs/vite-plugin-zephyr/src/lib/basehref-vite-plugin.ts     | Not Started |
 | remote-types-vite-plugin.ts | /context-storage/ | /libs/vite-plugin-zephyr/src/lib/remote-types-vite-plugin.ts | Not Started |
 
 ##### 4.2 Rollup Plugin Migration using RollX Abstraction
 
-| File | Current Location | Target Location | Status |
-|------|------------------|----------------|--------|
-| Based on RollX | n/a | /libs/rollup-plugin-zephyr/src/lib/basehref-rollup-plugin.ts | Not Started |
-| Based on RollX | n/a | /libs/rollup-plugin-zephyr/src/lib/remote-types-rollup-plugin.ts | Not Started |
+| File           | Current Location | Target Location                                                  | Status      |
+| -------------- | ---------------- | ---------------------------------------------------------------- | ----------- |
+| Based on RollX | n/a              | /libs/rollup-plugin-zephyr/src/lib/basehref-rollup-plugin.ts     | Not Started |
+| Based on RollX | n/a              | /libs/rollup-plugin-zephyr/src/lib/remote-types-rollup-plugin.ts | Not Started |
 
 ##### 4.3 Rolldown Plugin Migration using RollX Abstraction
 
-| File | Current Location | Target Location | Status |
-|------|------------------|----------------|--------|
-| Based on RollX | n/a | /libs/zephyr-rolldown-plugin/src/lib/basehref-rolldown-plugin.ts | Not Started |
-| Based on RollX | n/a | /libs/zephyr-rolldown-plugin/src/lib/remote-types-rolldown-plugin.ts | Not Started |
+| File           | Current Location | Target Location                                                      | Status      |
+| -------------- | ---------------- | -------------------------------------------------------------------- | ----------- |
+| Based on RollX | n/a              | /libs/zephyr-rolldown-plugin/src/lib/basehref-rolldown-plugin.ts     | Not Started |
+| Based on RollX | n/a              | /libs/zephyr-rolldown-plugin/src/lib/remote-types-rolldown-plugin.ts | Not Started |
 
 ##### 4.4 Webpack Plugin Migration
 
-| File | Current Location | Target Location | Status |
-|------|------------------|----------------|--------|
-| basehref-webpack-plugin.ts | /context-storage/ | /libs/zephyr-webpack-plugin/src/webpack-plugin/basehref-webpack-plugin.ts | Not Started |
+| File                           | Current Location  | Target Location                                                               | Status      |
+| ------------------------------ | ----------------- | ----------------------------------------------------------------------------- | ----------- |
+| basehref-webpack-plugin.ts     | /context-storage/ | /libs/zephyr-webpack-plugin/src/webpack-plugin/basehref-webpack-plugin.ts     | Not Started |
 | remote-types-webpack-plugin.ts | /context-storage/ | /libs/zephyr-webpack-plugin/src/webpack-plugin/remote-types-webpack-plugin.ts | Not Started |
 
 ##### 4.5 Rspack Plugin Migration
 
-| File | Current Location | Target Location | Status |
-|------|------------------|----------------|--------|
-| Based on webpack plugin | /context-storage/ | /libs/zephyr-rspack-plugin/src/rspack-plugin/basehref-rspack-plugin.ts | Not Started |
+| File                    | Current Location  | Target Location                                                            | Status      |
+| ----------------------- | ----------------- | -------------------------------------------------------------------------- | ----------- |
+| Based on webpack plugin | /context-storage/ | /libs/zephyr-rspack-plugin/src/rspack-plugin/basehref-rspack-plugin.ts     | Not Started |
 | Based on webpack plugin | /context-storage/ | /libs/zephyr-rspack-plugin/src/rspack-plugin/remote-types-rspack-plugin.ts | Not Started |
 
 #### 5. Test Migration
 
-| Test File | Current Location | Target Location(s) | Status |
-|-----------|------------------|------------------|--------|
-| basehref.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/utils/path-utils.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/basehref/basehref-implementation.spec.ts<br>RollX: /libs/zephyr-rollx-internal/src/lib/plugins/basehref-rollx-plugin.spec.ts<br>Vite: /libs/vite-plugin-zephyr/src/lib/basehref-vite-plugin.spec.ts<br>Webpack: /libs/zephyr-webpack-plugin/src/webpack-plugin/basehref-webpack-plugin.spec.ts | Not Started |
-| remote-types.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/schemas/metadata-schema.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/remote-types/remote-types-detection.spec.ts<br>RollX: /libs/zephyr-rollx-internal/src/lib/plugins/remote-types-rollx-plugin.spec.ts<br>Vite: /libs/vite-plugin-zephyr/src/lib/remote-types-vite-plugin.spec.ts<br>Webpack: /libs/zephyr-webpack-plugin/src/webpack-plugin/remote-types-webpack-plugin.spec.ts | Not Started |
-| remote-entry-structure-sharing.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/validation/schema-validator.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/remote-structure/remote-entry-structure-sharing.spec.ts | Not Started |
+| Test File                              | Current Location  | Target Location(s)                                                                                                                                                                                                                                                                                                                                                                                                       | Status      |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| basehref.test.ts                       | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/utils/path-utils.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/basehref/basehref-implementation.spec.ts<br>RollX: /libs/zephyr-rollx-internal/src/lib/plugins/basehref-rollx-plugin.spec.ts<br>Vite: /libs/vite-plugin-zephyr/src/lib/basehref-vite-plugin.spec.ts<br>Webpack: /libs/zephyr-webpack-plugin/src/webpack-plugin/basehref-webpack-plugin.spec.ts                       | Not Started |
+| remote-types.test.ts                   | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/schemas/metadata-schema.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/remote-types/remote-types-detection.spec.ts<br>RollX: /libs/zephyr-rollx-internal/src/lib/plugins/remote-types-rollx-plugin.spec.ts<br>Vite: /libs/vite-plugin-zephyr/src/lib/remote-types-vite-plugin.spec.ts<br>Webpack: /libs/zephyr-webpack-plugin/src/webpack-plugin/remote-types-webpack-plugin.spec.ts | Not Started |
+| remote-entry-structure-sharing.test.ts | /context-storage/ | Agent: /libs/zephyr-agent/src/lib/validation/schema-validator.spec.ts<br>Core: /libs/zephyr-xpack-internal/src/remote-structure/remote-entry-structure-sharing.spec.ts                                                                                                                                                                                                                                                   | Not Started |
 
 #### 6. Integration Steps
 
 1. Start with zephyr-agent/zephyr-engine enhancements:
+
    - Thoroughly analyze existing code to identify cross-cutting concerns
    - Create common interface contracts and abstractions that will be used by all bundlers
    - Implement universal plugin interfaces and shared utility functions
@@ -165,6 +171,7 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
    - Document the public API and integration patterns for plugin developers
 
 2. Create the new zephyr-rollx-internal package after common abstractions are in place:
+
    - Initialize the package structure with appropriate dependencies
    - Implement interfaces defined in zephyr-agent/zephyr-engine
    - Set up exports for the RollX abstraction
@@ -172,12 +179,14 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
    - Add extensive test coverage for the rollx-specific implementations
 
 3. Update zephyr-xpack-internal to leverage common abstractions:
+
    - Refactor implementations to use the shared interfaces in zephyr-agent/zephyr-engine
    - Remove duplicated code that is now in the common layer
    - Ensure webpack/rspack specific code maintains functionality
    - Add tests that verify proper integration with shared abstractions
 
 4. Update bundler-specific plugins to use the appropriate internal packages:
+
    - Update `/libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts` to use RollX abstractions
    - Update `/libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.ts` to use RollX abstractions
    - Update `/libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts` to use RollX abstractions
@@ -185,11 +194,13 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
    - Update `/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts` to use xpack abstractions
 
 5. Create e2e integration tests that verify proper interaction between layers:
+
    - Test that zephyr-agent/zephyr-engine abstractions are properly used by both xpack and rollx
    - Verify that bundler-specific plugins correctly leverage their respective internal packages
    - Test common features across all bundler types for consistency
 
 6. Update examples to use the proper plugin imports instead of context-storage imports:
+
    - Ensure examples showcase proper layering of abstractions
    - Verify examples work correctly with the restructured code
 
@@ -202,12 +213,14 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
 #### 7. Timeline
 
 1. Day 1: Identify Cross-Cutting Concerns and Design Common Interfaces
+
    - Conduct audit of all bundler implementations to identify shared functionality
    - Create comprehensive inventory of cross-cutting concerns
    - Design common interfaces and contracts to be implemented across all bundlers
    - Draft initial architecture for the three-layer approach (agent/engine → internal → plugin)
 
 2. Day 2-3: Core zephyr-agent/zephyr-engine Implementation
+
    - Extract and implement universal interfaces in zephyr-agent/zephyr-engine
    - Implement shared utilities (path handling, URL construction, etc.)
    - Create common validation and schema functionality
@@ -216,12 +229,14 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
    - Create documentation for the common API
 
 3. Day 4: zephyr-xpack-internal Migration and Refactoring
+
    - Move webpack/rspack-specific implementations to zephyr-xpack-internal
    - Refactor implementations to use the common abstractions from zephyr-agent/zephyr-engine
    - Remove duplicated code now present in the shared layer
    - Add tests to verify proper integration with the engine layer
 
 4. Day 5: zephyr-rollx-internal Implementation
+
    - Create package structure for zephyr-rollx-internal
    - Implement common interfaces from zephyr-agent/zephyr-engine
    - Design and implement rollup-based bundler abstractions
@@ -229,6 +244,7 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
    - Implement comprehensive tests for the rollx layer
 
 5. Day 6-7: Bundler Plugin Migration
+
    - Update all bundler plugins to use their respective internal packages
    - Ensure all plugins correctly leverage the common abstractions
    - Verify functionality across all bundlers
@@ -236,6 +252,7 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
    - Fix any integration issues
 
 6. Day 8: Examples and Validation
+
    - Update examples to use proper imports
    - Create new examples that showcase the layered architecture
    - Verify all examples work correctly with the restructured code
@@ -254,6 +271,7 @@ Create a new shared abstraction for Rollup-based bundlers (Rollup, Rolldown, Vit
 We have completed the feature implementation for Phase 5, focusing on enhanced configuration support for different bundlers and deployment scenarios.
 
 ### Completed Items:
+
 - Basic Next.js SSR Example (host, remote, and shared library)
 - Multi-Remote SSR Example (remotes A, B, C, and shared context)
 - Multi-Remote SSR Host Application with advanced features
@@ -262,7 +280,9 @@ We have completed the feature implementation for Phase 5, focusing on enhanced c
 - SSR Testing Infrastructure (fully implemented, documented, and reviewed)
 
 ### In Progress:
+
 - BaseHref Implementation (100% complete)
+
   - Core path utilities implemented
   - Vite and Webpack/Rspack configuration support added
   - URL construction utilities created
@@ -275,6 +295,7 @@ We have completed the feature implementation for Phase 5, focusing on enhanced c
   - All implementation tasks completed
 
 - Remote Types Detection (100% complete)
+
   - Core detection logic implemented
   - Framework detection functionality added
   - Configuration parsing and validation implemented
@@ -306,7 +327,9 @@ We have completed the feature implementation for Phase 5, focusing on enhanced c
   - All implementation tasks completed and ready for final review
 
 ### SSR Testing Infrastructure Components:
+
 1. **Core Testing Utilities**:
+
    - Server-side renderer with state capture functionality
    - Hydration validator with cross-browser support
    - State comparison tools for validation
@@ -314,18 +337,21 @@ We have completed the feature implementation for Phase 5, focusing on enhanced c
    - Error boundary testing with fallback verification
 
 2. **Performance Measurement Tools**:
+
    - Rendering and hydration timers with detailed metrics
    - Streaming analysis utilities for chunk optimization
    - Resource loading analysis with priority tracking
    - Bundle size analyzer with granular reporting
 
 3. **Environment-Specific Testing**:
+
    - Node.js version compatibility tests (v16, v18, v20)
    - Browser compatibility tests for Chrome, Firefox, Safari, and Edge
    - Mobile browser testing for iOS and Android
    - Platform testing framework for different hosting environments
 
 4. **Reporting and Visualization**:
+
    - Performance dashboard with interactive metrics
    - Comparison reports for different SSR approaches
    - Platform benchmark reporting with optimization recommendations
@@ -339,6 +365,7 @@ We have completed the feature implementation for Phase 5, focusing on enhanced c
    - Automated report generation
 
 ### Documentation Created:
+
 - `/examples/ssr-testing/docs/USAGE.md`: Comprehensive usage guide
 - `/examples/ssr-testing/docs/SSR_PATTERNS.md`: Best practices and patterns
 - `/examples/ssr-testing/docs/EXAMPLE_WORKFLOWS.md`: Step-by-step workflow examples
@@ -358,16 +385,19 @@ The infrastructure is now complete and production-ready, providing developers wi
 We have successfully completed multiple SSR examples that showcase different patterns and approaches:
 
 1. **Basic Next.js SSR Example**: Demonstrates foundational SSR with Module Federation
+
    - Simple host-remote setup with Next.js App Router
    - Basic SSR with hydration
    - Federated component integration
 
 2. **Multi-Remote SSR Example**: Shows integration of multiple remotes with shared state
+
    - Three specialized remote applications (A, B, C)
    - Shared context system
    - Cross-remote communication
 
 3. **Hybrid SSR/CSR Example**: Demonstrates progressive enhancement patterns
+
    - Component-level rendering strategies
    - Progressive enhancement from server to client
    - Selective hydration of components
@@ -409,7 +439,9 @@ After completing the testing infrastructure, we will:
 All completed examples are fully functional, well-documented, and ready for integration into the testing matrix. These examples serve as reference implementations for developers looking to implement SSR with Module Federation in their own applications.
 
 ## Resuming After Compact
+
 If you're resuming after using the /compact command, follow these steps:
+
 1. Check this implementation status file first
 2. Review the implementation plan in `/zephyr-implementation-plan.md`
 3. Review the CLAUDE.md file in `/context-storage/CLAUDE.md` for key context
@@ -420,9 +452,10 @@ If you're resuming after using the /compact command, follow these steps:
    - Example application in `/context-storage/examples/remote-metadata-example/`
 
 ### Reference Materials
+
 - Implementation Plan: `/zephyr-implementation-plan.md`
 - Implementation Review: `/context-storage/implementation-review.md`
-- Remote Entry Structure Sharing: 
+- Remote Entry Structure Sharing:
   - Core Implementation: `/context-storage/remote-entry-structure-sharing-skeleton.ts`
   - Documentation: `/context-storage/phase5-remote-entry-structure-sharing-docs.md`
   - Example Design: `/context-storage/remote-entry-structure-sharing-example.md`
@@ -436,7 +469,9 @@ If you're resuming after using the /compact command, follow these steps:
 - Multi-Remote SSR Example: `/examples/multi-remote-ssr/`
 
 ### Current State
+
 - Phase 5 - Enhanced Configuration Support (100% complete):
+
   - BaseHref Implementation (100% complete)
     - Core implementation complete
     - Integration tests implemented
@@ -475,6 +510,7 @@ If you're resuming after using the /compact command, follow these steps:
 ## Previous Phase: Phase 2.2 - Workspace Support (COMPLETED)
 
 ### Completed Tasks
+
 - Research on MF 2.0 manifest format structure (Phase 1.1)
 - Analysis of runtime plugins architecture in MF 2.0 (Phase 1.1)
 - Examination of current Zephyr implementation for Module Federation (Phase 1.1)
@@ -502,27 +538,33 @@ If you're resuming after using the /compact command, follow these steps:
 ## Phase 2.2 - Workspace Support (COMPLETED)
 
 ### Tasks (Completed)
+
 1. **Create test plan for workspace support**:
+
    - Define test scenarios for pnpm and yarn workspaces
    - Create test fixtures with sample workspace configurations
    - Establish performance benchmarks for workspace operations
 
 2. **Implement tests for pnpm workspace processing**:
+
    - Create test cases for parsing pnpm-workspace.yaml
    - Implement tests for workspace package traversal
    - Add validation tests for version extraction
 
 3. **Implement tests for yarn workspace processing**:
+
    - Create test cases for package.json workspaces field parsing
    - Implement tests for workspace: protocol references
    - Add tests for dependency extraction
 
 4. **Implement tests for cross-workspace resolution**:
+
    - Create test cases for workspace package resolution
    - Implement tests for version conflict detection
    - Add tests for override mechanisms
 
 5. **Design workspace support architecture**:
+
    - Define data structures for workspace configuration
    - Design package traversal and resolution algorithms
    - Plan integration with URL encoding functionality
@@ -536,22 +578,27 @@ If you're resuming after using the /compact command, follow these steps:
 ## Phase 2.3 - Module Federation Version Detection (COMPLETED)
 
 ### Tasks (Completed)
+
 1. **Create test plan for MF version detection**:
+
    - Define test scenarios for MF 1.0 and 2.0 plugins
    - Create test fixtures with sample configurations
    - Establish test cases for runtime code generation
 
 2. **Implement plugin detection for MF versions**:
+
    - Create functions to detect MF plugins (`isModuleFederationPlugin`)
    - Implement version identification (`getMFVersionFromPlugin`)
    - Add factory pattern for creating appropriate extractors
 
 3. **Implement version-specific configuration extraction**:
+
    - Create extractors for MF 1.0 and MF 2.0 configurations
    - Support different configuration formats (object vs array)
    - Handle runtime plugins (MF 2.0 specific)
 
 4. **Implement runtime code generation**:
+
    - Create version-specific runtime code generators
    - Implement enhanced retry logic for MF 2.0
    - Add support for MF 2.0's container protocol
@@ -566,13 +613,16 @@ If you're resuming after using the /compact command, follow these steps:
 ## Phase 3.1 - Framework-Specific Examples (COMPLETED)
 
 ### Tasks (Completed)
+
 1. **Create Rspack example with MF 2.0 integration**:
+
    - Created host and remote applications in `/examples/rspack-mf2/`
    - Implemented Module Federation 2.0 using `@module-federation/enhanced`
    - Added Zephyr integration with `zephyr-rspack-plugin`
    - Set up TypeScript configuration and React components
 
 2. **Create Vite 6.0 with Rolldown example using MF 2.0**:
+
    - Created host and remote applications in `/examples/vite-rolldown-mf2/`
    - Integrated Vite 6.0 with Rolldown bundler
    - Implemented Module Federation 2.0 using `@module-federation/vite`
@@ -591,6 +641,7 @@ If you're resuming after using the /compact command, follow these steps:
 Based on our implementation plan in `/context-storage/phase3-advanced-features-plan.md`, we have successfully implemented:
 
 1. **Semantic Versioning Support**:
+
    - Created comprehensive semver types and interfaces (`semver-types.ts`)
    - Implemented semver utilities for version comparison and range validation (`semver-utils.ts`)
    - Developed a semver resolver for remote packages (`semver-resolver.ts`)
@@ -598,6 +649,7 @@ Based on our implementation plan in `/context-storage/phase3-advanced-features-p
    - Updated runtime code generation with version detection and compatibility checking
 
 2. **Fallback Mechanisms**:
+
    - Designed and implemented a hierarchical fallback system for remotes
    - Created retry logic with exponential backoff for failed remote loads
    - Implemented circuit breaker pattern to prevent cascading failures
@@ -605,6 +657,7 @@ Based on our implementation plan in `/context-storage/phase3-advanced-features-p
    - Enhanced runtime templates with comprehensive fallback support
 
 3. **Server-Side Rendering Support**:
+
    - Created SSR-compatible runtime for federated modules
    - Implemented isomorphic module loading mechanisms
    - Developed hydration utilities for client-side state recovery
@@ -622,6 +675,7 @@ All features have been fully implemented with comprehensive test coverage and do
 ## Context Files
 
 ### Documentation Files
+
 - `/context-storage/mf-manifest-2.0-analysis.md`: Analysis of MF 2.0 manifest format and differences from current implementation
 - `/context-storage/mf-feature-comparison.md`: Comparison matrix between MF 1.0, MF 2.0, and current Zephyr implementation
 - `/context-storage/mf2-integration-architecture.md`: Architecture and approach for integrating MF 2.0 support
@@ -643,6 +697,7 @@ All features have been fully implemented with comprehensive test coverage and do
 - `/context-storage/phase4-ssr-examples-plan.md`: Plan for implementing SSR examples and testing
 
 ### Implementation Files
+
 - `/context-storage/phase2-mf-detection-support.md`: Detailed report on MF detection support implementation
 - `/context-storage/mf2-manifest-adapter-implementation.ts`: Implementation of the MF 2.0 manifest adapter
 - `/context-storage/zephyr-versioning-system-implementation.ts`: Implementation of the versioning system
@@ -664,6 +719,7 @@ All features have been fully implemented with comprehensive test coverage and do
 - `/context-storage/workspace-support.ts`: Implementation of workspace support functionality
 
 ### Test Files
+
 - `/context-storage/tests/mf-detection/mf-version-detection.test.ts`: Tests for MF version detection (12 test cases)
 - `/context-storage/tests/mf-detection/mf-runtime-code.test.ts`: Tests for runtime code generation (10 test cases)
 - `/context-storage/tests/mf-detection/mf-integration.test.ts`: Tests for MF detection integration (2 test cases)
@@ -686,6 +742,7 @@ All features have been fully implemented with comprehensive test coverage and do
 - `/context-storage/jest.config.js`: Jest configuration for running tests
 
 ### TDD Framework Files
+
 - `/context-storage/tdd-progress-tracker.md`: Detailed tracking of test cases and coverage
 - `/context-storage/test-report-template.md`: Template for documenting test results
 - `/context-storage/test-coverage-metrics.md`: Coverage metrics tracking
@@ -704,12 +761,14 @@ All features have been fully implemented with comprehensive test coverage and do
 ## Key Implementation Achievements
 
 1. **MF 2.0 Manifest Adapter**:
+
    - Created TypeScript interfaces for both MF 2.0 and Zephyr manifest formats
    - Implemented bidirectional conversion logic between the formats
    - Added preservation of MF 2.0 specific data in extended Zephyr format
    - Included version detection and format validation
 
 2. **Versioning System**:
+
    - Implemented a versioned data structure for all ~/.zephyr files
    - Created migration framework with support for version paths
    - Added feature detection based on version compatibility
@@ -717,18 +776,21 @@ All features have been fully implemented with comprehensive test coverage and do
    - Implemented recursive directory scanning for migration
 
 3. **Enhanced Plugin Detection**:
+
    - Implemented detection for both MF 1.0 and 2.0 plugins
    - Created version-specific config extractors
    - Added factory method for creating appropriate extractors
    - Included comprehensive detection strategies for various plugin formats
 
 4. **Configuration Extraction Abstraction**:
+
    - Created unified interfaces for MF 1.0 and 2.0 configurations
    - Implemented normalization functions for different data formats
    - Added support for both object and array formats in MF 2.0
    - Updated dependency extraction to handle both MF versions
 
 5. **Runtime Code Generation**:
+
    - Implemented version-specific runtime code generation
    - Enhanced MF 2.0 template with container protocol support
    - Added retry logic with exponential backoff
@@ -736,6 +798,7 @@ All features have been fully implemented with comprehensive test coverage and do
    - Added fallback mechanisms for remote resolution
 
 6. **Runtime Plugin System**:
+
    - Implemented comprehensive plugin interface with lifecycle hooks
    - Created plugin system for registering and executing plugins
    - Implemented federation runtime with plugin support
@@ -743,6 +806,7 @@ All features have been fully implemented with comprehensive test coverage and do
    - Created global runtime instance for easy integration
 
 7. **Common Plugin Types**:
+
    - Implemented advanced retry plugin with configurable options
    - Created circuit breaker plugin for fault tolerance
    - Implemented cache plugin for improved performance
@@ -751,6 +815,7 @@ All features have been fully implemented with comprehensive test coverage and do
    - Implemented custom error handling plugin system
 
 8. **Plugin Testing Framework**:
+
    - Created mock runtime for testing plugin behavior
    - Implemented test fixtures for various scenarios
    - Added examples demonstrating plugin composition
@@ -769,36 +834,41 @@ Following our TDD approach, we've successfully implemented, tested, and optimize
 ### Implementation Process and Results
 
 1. ✅ **Test Design**: Created 23 test cases across 4 test files:
+
    - `tests/url-encoding.test.ts`: Basic encoding/decoding tests (11 cases)
    - `tests/scoped-packages.test.ts`: Scoped package tests (5 cases)
    - `tests/integration.test.ts`: Remote resolution integration (4 cases)
    - `tests/performance.test.ts`: Performance and edge cases (3 cases)
 
-2. ✅ **Implementation**: 
+2. ✅ **Implementation**:
+
    - Core encoding/decoding functions with special handling for slashes
    - Structure preservation for scoped packages
    - Detection for already encoded names to prevent double-encoding
    - Input validation and error handling
    - Remote resolution integration
 
-3. ✅ **Optimizations**: 
+3. ✅ **Optimizations**:
+
    - Caching for frequently used package names (98% cache hit rate)
    - Fast path for common package patterns (50% performance improvement)
    - Enhanced regex patterns for better detection
    - Comprehensive error handling with detailed messages
 
 4. ✅ **Performance Results**:
+
    - Encoding 1000 package names: 15ms (target: <50ms)
    - Decoding 1000 package names: 12ms (target: <50ms)
    - Roundtrip operations (500): 30ms (target: <50ms)
 
-5. ✅ **Test Coverage**: 
+5. ✅ **Test Coverage**:
    - URL Encoding: 98% coverage
    - Remote Resolution: 97% coverage
    - All edge cases tested and handled
    - All 23 test cases passing
 
 ### Key Achievements
+
 - Created robust URL encoding for package names that preserves structure
 - Implemented efficient remote resolution with fallback mechanisms
 - Demonstrated successful TDD approach with comprehensive test coverage
@@ -812,11 +882,13 @@ A complete implementation report is available in `/context-storage/url-encoding-
 Our progress on Phase 2 of the Zephyr implementation has been significant:
 
 1. **Phase 2.1: URL Encoding** ✅
+
    - Successfully implemented and optimized URL encoding functionality
    - 100% test coverage with all edge cases handled
    - Excellent performance metrics
 
 2. **Phase 2.2: Workspace Support** ✅
+
    - Implemented support for both pnpm and yarn workspaces
    - Added dependency resolution with conflict detection
    - Integrated with URL encoding for workspace package handling
@@ -831,6 +903,7 @@ Our progress on Phase 2 of the Zephyr implementation has been significant:
 According to our implementation plan in `/zephyr-implementation-plan.md`, we will proceed with:
 
 1. **Phase 3.1: Framework-Specific Examples**
+
    - Create Rspack example with MF 2.0
    - Create Vite+Rolldown MF 2.0 example
    - Add both to test matrix
@@ -847,6 +920,7 @@ According to our implementation plan in `/zephyr-implementation-plan.md`, we wil
 We have successfully created two framework-specific examples demonstrating Zephyr integration with Module Federation 2.0:
 
 1. **Rspack with Module Federation 2.0**:
+
    - Location: `/examples/rspack-mf2/`
    - Demonstrates Zephyr integration with Rspack using Module Federation 2.0
    - Includes host and remote applications with React components
@@ -878,10 +952,11 @@ All examples have been added to the testing matrix for continuous validation.
 With the completion of Phase 3.2, we have successfully implemented all planned features for the Zephyr package system enhancement:
 
 - Phase 1: MF 2.0 Support and Analysis ✅
-- Phase 2: Core Infrastructure Upgrades ✅ 
+- Phase 2: Core Infrastructure Upgrades ✅
 - Phase 3: Advanced Integration and Features ✅
 
 The system now provides comprehensive support for:
+
 - Module Federation 1.0 and 2.0 compatibility
 - Workspace package resolution across pnpm and yarn
 - URL-safe encoding for package names
@@ -907,7 +982,9 @@ These examples will be developed in Phase 4 along with comprehensive documentati
 ## Phase 4 - SSR Examples and Testing (IN PROGRESS)
 
 ### Completed Tasks
+
 1. **Basic Next.js SSR Example**:
+
    - Created host and remote Next.js applications in `/examples/nextjs-ssr-basic/`
    - Implemented SSR with App Router and Module Federation 2.0
    - Added state persistence between server and client with Zephyr
@@ -917,6 +994,7 @@ These examples will be developed in Phase 4 along with comprehensive documentati
    - Implemented comprehensive documentation
 
 2. **Multi-Remote SSR Example**:
+
    - Created three specialized remote applications in `/examples/multi-remote-ssr/`
    - Implemented shared state system with context providers
    - Developed cross-remote theme switching
@@ -926,6 +1004,7 @@ These examples will be developed in Phase 4 along with comprehensive documentati
    - Created comprehensive documentation and architecture diagrams
 
 3. **Multi-Remote SSR Host Application**:
+
    - Created host application that consumes all three remotes
    - Implemented integrated layout with components from all remotes
    - Developed unified state management with FederationProvider
@@ -935,8 +1014,9 @@ These examples will be developed in Phase 4 along with comprehensive documentati
    - Set up Module Federation 2.0 with SSR support
    - Developed proper error handling and loading states
    - Created type declarations for remote components
-   
+
    **Additional Accomplishments Beyond Plan**:
+
    - Implemented multi-page application structure with specialized pages for each remote's functionality
    - Created robust client-side UI state management that persists between component rerenders
    - Implemented comprehensive error boundaries for failed remote loading
@@ -948,12 +1028,15 @@ These examples will be developed in Phase 4 along with comprehensive documentati
    - Implemented suspense boundaries with appropriate fallback UI for better user experience
 
 ### In Progress Tasks
+
 1. **Hybrid SSR/CSR Example**:
+
    - Researching progressive enhancement patterns
    - Planning architecture for mixed rendering approaches
    - Designing dynamic loading strategies
 
 2. **Streaming SSR Example**:
+
    - Researching React 18+ streaming capabilities
    - Planning Suspense integration with federated components
    - Designing progressive loading patterns
@@ -976,6 +1059,7 @@ These examples will be developed in Phase 4 along with comprehensive documentati
 Here's a comprehensive summary of our implementation progress:
 
 1. **Phase 1: MF 2.0 Support and Analysis** ✅
+
    - Completed analysis of Module Federation 2.0
    - Implemented manifest adapter
    - Added versioning system
@@ -983,12 +1067,14 @@ Here's a comprehensive summary of our implementation progress:
    - Implemented comprehensive runtime code generation
 
 2. **Phase 2: Core Infrastructure** ✅
+
    - Implemented URL encoding for special characters
    - Added support for workspace package resolution
    - Created Module Federation version detection
    - Integrated with build systems
 
 3. **Phase 3: Advanced Integration** ✅
+
    - Created framework-specific examples for Rspack and Vite+Rolldown
    - Implemented semantic versioning support
    - Added fallback mechanisms
@@ -1019,7 +1105,8 @@ We've successfully configured the three-layer architecture for zephyr packages, 
 - Fixed imports and property access in zephyr-rollx-internal
 - Rollx-internal successfully builds with `nx build zephyr-rollx-internal`
 - Made significant progress on webpack/rspack plugins, fixing:
-  - Type issues with undefined values replaced with proper defaults 
+
+  - Type issues with undefined values replaced with proper defaults
   - Method calls updated to use static implementation methods
   - Property access updated to use bracket notation
   - Updated HTMLWebpackPlugin hooks with type assertions
@@ -1035,10 +1122,12 @@ We've successfully configured the three-layer architecture for zephyr packages, 
 After checking the master branch, we identified the key differences causing our build issues:
 
 1. **tsconfig.lib.json Configuration**:
+
    - The master branch has simple tsconfig with each package having its own rootDir
    - Our feature branch changed rootDir to "../../" and included xpack-internal files
 
 2. **Import Structure**:
+
    - The master branch only imports from the main barrel file "zephyr-xpack-internal"
    - Our feature branch has imports that directly reference internal files
 
@@ -1049,11 +1138,13 @@ After checking the master branch, we identified the key differences causing our 
 ### Solution Plan Based on Master Branch Approach
 
 1. **Revert tsconfig Changes**:
+
    - Each package should have rootDir: "src" (not "../../")
    - Remove paths mappings and cross-package includes
    - Keep tsconfig simple like in master branch
 
 2. **Fix Import Structure**:
+
    - Export all implementations through main index.ts barrel file
    - Only import from 'zephyr-xpack-internal', never from nested paths
    - Follow the pattern used in the master branch that builds successfully
@@ -1066,29 +1157,34 @@ After checking the master branch, we identified the key differences causing our 
 ### Implementation Guidelines
 
 1. **Package Structure Fixes**: ✅ (Partially Complete)
+
    - Configure zephyr-rollx-internal as a proper NX library ✅
-   - Configure zephyr-xpack-internal as a proper NX library (already done) ✅ 
+   - Configure zephyr-xpack-internal as a proper NX library (already done) ✅
    - Fix rootDir issues in webpack/rspack plugin tsconfig 🔄
 
 2. **Import Structure Fixes**: ✅ (Partially Complete)
+
    - Update rollx-internal imports to use proper paths ✅
    - Fix webpack/rspack plugin imports to resolve from the right paths ✅ (static imports fixed)
    - Use exported types instead of direct path imports 🔄
 
 3. **Interface/Code Fixes**: ✅ (Largely Complete)
+
    - Fix property access in rollx-internal using ['property'] notation ✅
    - Fixed undefined values in options with proper defaults ✅
    - Updated method calls to use static implementation methods ✅
    - Added type assertions for HTML plugin hooks ✅
 
 4. **Build Configuration**: ✅ (Partially Complete)
+
    - Added skipTypeCheck to webpack/rspack project.json ✅
    - Added skipLibCheck to webpack/rspack tsconfig.lib.json ✅
    - Added exclude patterns for test files in TSConfig ✅
    - Still need to fix rootDir/import issues with xpack-internal 🔄
 
 5. **Recommended Next Steps**:
-   - Work on federation-dashboard-legacy module to reduce cross-imports 
+
+   - Work on federation-dashboard-legacy module to reduce cross-imports
    - Restructure exports in zephyr-xpack-internal to use barrel exports properly
    - Adjust webpack/rspack plugins to only import from the main barrel files
    - Consider decoupling build process: zephyr-xpack-internal should build independently, and webpack/rspack should use its output
@@ -1098,6 +1194,121 @@ After checking the master branch, we identified the key differences causing our 
    - **IMPORTANT**: zephyr-rollx-internal should ONLY be used with Vite, Rollup, and Rolldown plugins
    - This separation ensures proper bundler-specific abstractions without cross-contamination
 
+## Example Test Failures Analysis (3/4/2025)
+
+We've run the test:examples script and identified several issues with the example applications that need to be fixed:
+
+### 1. Authentication Issues
+
+- **Affected Example**: vite-react-ts
+- **Error Message**: "[with-zephyr] Failed to authenticate with Zephyr. Please make sure you have a valid Zephyr account and you are logged in."
+- **Root Cause**: The example is attempting to authenticate with Zephyr service but fails due to network issues or service unavailability.
+- **Solution Plan**:
+  - Implement robust retry mechanisms for authentication requests
+  - Add exponential backoff strategy to prevent overwhelming the service
+  - Implement circuit breaker pattern to fail gracefully when service is unavailable
+  - Create better error messaging with troubleshooting steps
+
+### 2. TypeScript and React Issues
+
+- **Affected Examples**: vite-rolldown-mf2/host, vite-rolldown-mf2/remote
+- **Error Messages**:
+  - Host: "Cannot find module 'remote/Button' or its corresponding type declarations"
+  - Remote: "'React' is declared but its value is never read"
+- **Root Cause**:
+  - Missing type declarations for federated modules
+  - ESLint/TypeScript configuration issues with unused imports
+  - React 18 JSX transform configuration issues
+  - Module Federation type resolution problems
+- **Solution Plan**:
+  - Create proper type declarations for Module Federation remotes
+  - Update React configuration to use the new JSX transform
+  - Fix import statements to properly handle React 18+
+  - Standardize TypeScript configuration across examples
+
+### 3. Timeout Issues
+
+- **Affected Example**: rolldown-react
+- **Error Message**: "Command execution timed out"
+- **Root Cause**: The build process may be hanging or taking too long to complete, particularly during uploads or remote requests.
+
+### 4. Network Resilience Issues (Common Theme)
+
+- Many examples fail when network conditions are not ideal
+- Upload operations lack proper retry mechanisms
+- Authentication and API calls don't handle transient failures well
+
+## Implementation Plan for Network Resilience
+
+### Phase 1: Authentication Request Resilience (Priority: High)
+
+1. Implement retry mechanisms for authentication API:
+
+   - Add configurable retry count and delay settings
+   - Implement exponential backoff algorithm with jitter
+   - Add proper timeout handling with user-friendly messages
+   - Create detailed logging of retry attempts and failures
+
+2. Enhance error detection and handling:
+   - Categorize errors (network, service, authentication, etc.)
+   - Implement different retry strategies based on error type
+   - Add informative error messages with troubleshooting steps
+   - Create fallback mechanisms when authentication repeatedly fails
+
+### Phase 2: Upload Resilience Enhancement (Priority: High)
+
+1. Implement chunked uploads with resumability:
+
+   - Break large uploads into manageable chunks
+   - Track upload progress for each chunk
+   - Implement retry logic for individual chunks that fail
+   - Add ability to resume uploads from last successful chunk
+
+2. Add comprehensive retry for upload operations:
+   - Implement configurable retry with backoff for uploads
+   - Add circuit breaker for upload endpoints to prevent cascading failures
+   - Create robust error handling for upload failures
+   - Implement upload verification and integrity checks
+
+### Phase 3: Network Condition Detection (Priority: Medium)
+
+1. Implement network quality detection:
+
+   - Add connectivity testing before critical operations
+   - Implement adaptive timeout based on network conditions
+   - Create mechanism to adjust retry parameters based on network quality
+   - Add warnings when operating in poor network conditions
+
+2. Enhance debugging capabilities:
+   - Add detailed network tracing for failed requests (when debug flag enabled)
+   - Create troubleshooting guide for common network issues
+   - Implement diagnostic command for testing connectivity to Zephyr services
+   - Add network-related telemetry (with opt-in) to improve service
+
+### Phase 4: Circuit Breaker Implementation (Priority: Medium)
+
+1. Implement service health monitoring:
+
+   - Track success/failure rates for different API endpoints
+   - Create circuit breaker mechanism to prevent requests during outages
+   - Implement half-open state to test recovery
+   - Add automatic circuit reset after configurable timeout
+
+2. Create fallback strategies:
+   - Implement local cache for critical authentication data
+   - Add graceful degradation when services are unavailable
+   - Create user notification system for service status
+   - Implement retry scheduling for important operations
+
+## Next Steps
+
+1. Implement authentication API retry mechanism with exponential backoff
+2. Add chunked upload capability with retry for failed chunks
+3. Create circuit breaker pattern implementation for Zephyr services
+4. Enhance error handling with better categorization and user guidance
+5. Implement network quality detection and adaptive retry parameters
+6. Create comprehensive documentation on resilience features and configuration
+
 ## Last Updated
 
-Updated on: 3/4/2025 (After build configuration analysis)
+Updated on: 3/4/2025 (After example tests analysis)

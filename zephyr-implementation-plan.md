@@ -546,6 +546,7 @@ This approach will ensure we can process large amounts of code across repositori
 | 5.2   | Completed | Completed | Remote Types Detection 100% complete with bundler plugins and integration |
 | 5.3   | Completed | Completed | Remote Entry Structure Sharing 100% complete with examples and integration |
 | 5.4   | Not Started | Not Started | Plugin Migration from context-storage to proper plugin directories |
+| 5.5   | Not Started | Not Started | Network Resilience Implementation to improve reliability |
 | 6.1   | Not Started | Not Started | Unmanaged Remotes Support pending |
 | 6.3   | Not Started | Not Started | Telemetry Enhancement pending |
 | 7.1   | In Progress | In Progress | Unit testing ongoing, integrating with new examples |
@@ -566,13 +567,15 @@ This approach will ensure we can process large amounts of code across repositori
 | SSR Support | 95% | 80% | Completed |
 | Integration Tests | 85% | 75% | Completed |
 
-## Next Steps: Phase 5.4 - Plugin Migration & Structure Alignment
+## Next Steps: Phase 5.4 - Plugin Migration & Structure Alignment + Example Fixes
 
-Before proceeding to Phase 6, we need to address a critical issue: our Phase 5 implementations have been developed in the context-storage directory instead of their proper plugin directories in /libs/. This misalignment needs to be fixed for proper integration and maintainability.
+Before proceeding to Phase 6, we need to address two critical issues:
+1. Our Phase 5 implementations have been developed in the context-storage directory instead of their proper plugin directories in /libs/
+2. Multiple examples in our test suite are failing with authentication, TypeScript, and build configuration issues
 
-### Phase 5.4 - Plugin Migration and Abstraction Refactoring (NEW ADDITION)
+### Phase 5.4 - Plugin Migration and Abstraction Refactoring
 
-This new sub-phase focuses on migrating the plugin implementations from context-storage to their proper locations and creating better abstractions:
+This sub-phase focuses on migrating the plugin implementations from context-storage to their proper locations and creating better abstractions:
 
 1. **Core Abstractions for Zephyr Agent** (Highest Priority)
    - Extract core utilities that should be in zephyr-agent
@@ -611,7 +614,73 @@ This new sub-phase focuses on migrating the plugin implementations from context-
    - Remove deprecated files from context-storage
    - Update implementation status with completed migration details
 
-This migration is critical to ensure that our Phase 5 implementations are properly integrated into the main codebase structure and follow the project's architectural patterns.
+### Phase 5.5 - Network Resilience and Example Fixes (NEW ADDITION)
+
+We've identified several issues with our examples related to network resilience, React configuration, and TypeScript handling that need to be addressed:
+
+#### 5.5.1 React and TypeScript Configuration Fixes (High Priority)
+   - Fix Module Federation type declarations:
+     - Create proper remotes.d.ts files for all examples using Module Federation
+     - Implement standardized approach for TypeScript with Module Federation 2.0
+     - Update examples with proper import syntax
+   - Update React 18+ configuration:
+     - Configure projects to use the new JSX transform
+     - Fix ESLint warnings about React imports
+     - Update JSX runtime imports for React 18+
+   - Standardize TypeScript configuration:
+     - Create template tsconfig.json files optimized for different bundlers
+     - Update configurations to handle module federation properly
+     - Fix declaration file generation and import
+
+#### 5.5.2 Authentication Request Resilience (High Priority)
+   - Implement retry mechanisms for authentication API:
+     - Add configurable retry count and delay settings
+     - Implement exponential backoff algorithm with jitter
+     - Add proper timeout handling with user-friendly messages
+     - Create detailed logging of retry attempts and failures
+   - Enhance error detection and handling:
+     - Categorize errors (network, service, authentication, etc.)
+     - Implement different retry strategies based on error type
+     - Add informative error messages with troubleshooting steps
+     - Create fallback mechanisms when authentication repeatedly fails
+
+#### 5.5.3 Upload Resilience Enhancement (High Priority)
+   - Implement chunked uploads with resumability:
+     - Break large uploads into manageable chunks
+     - Track upload progress for each chunk
+     - Implement retry logic for individual chunks that fail
+     - Add ability to resume uploads from last successful chunk
+   - Add comprehensive retry for upload operations:
+     - Implement configurable retry with backoff for uploads
+     - Add circuit breaker for upload endpoints to prevent cascading failures
+     - Create robust error handling for upload failures
+     - Implement upload verification and integrity checks
+
+#### 5.5.4 Network Condition Detection (Medium Priority)
+   - Implement network quality detection:
+     - Add connectivity testing before critical operations
+     - Implement adaptive timeout based on network conditions
+     - Create mechanism to adjust retry parameters based on network quality
+     - Add warnings when operating in poor network conditions
+   - Enhance debugging capabilities:
+     - Add detailed network tracing for failed requests (when debug flag enabled)
+     - Create troubleshooting guide for common network issues
+     - Implement diagnostic command for testing connectivity to Zephyr services
+     - Add network-related telemetry (with opt-in) to improve service
+
+#### 5.5.5 Circuit Breaker Implementation (Medium Priority)
+   - Implement service health monitoring:
+     - Track success/failure rates for different API endpoints
+     - Create circuit breaker mechanism to prevent requests during outages
+     - Implement half-open state to test recovery
+     - Add automatic circuit reset after configurable timeout
+   - Create fallback strategies:
+     - Implement local cache for critical authentication data
+     - Add graceful degradation when services are unavailable
+     - Create user notification system for service status
+     - Implement retry scheduling for important operations
+
+The primary goal of this phase is to make our plugin more resilient to network issues, service disruptions, and other transient failures. This will improve the reliability of examples, tests, and production deployments.
 
 ## Previously Completed Work
 

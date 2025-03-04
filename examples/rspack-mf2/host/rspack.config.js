@@ -1,50 +1,49 @@
 const path = require('path');
-const { ModuleFederationPlugin } = require('@module-federation/enhanced');
+const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { withZephyr } = require('zephyr-rspack-plugin');
 
-module.exports = {
+module.exports = withZephyr()({
   entry: './src/index',
   mode: 'development',
   devServer: {
     static: path.join(__dirname, 'dist'),
-    port: 3001
+    port: 3001,
   },
   output: {
-    publicPath: 'auto'
+    publicPath: 'auto',
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'builtin:swc-loader',
+        use: 'swc-loader',
         exclude: /node_modules/,
         options: {
           jsc: {
             parser: {
               syntax: 'typescript',
-              jsx: true
+              jsx: true,
             },
             transform: {
               react: {
-                runtime: 'automatic'
-              }
-            }
-          }
-        }
+                runtime: 'automatic',
+              },
+            },
+          },
+        },
       },
       {
         test: /\.css$/i,
-        type: 'css'
-      }
-    ]
+        use: ['style-loader', 'css-loader'],
+      },
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html'
+      template: './public/index.html',
     }),
-    // ModuleFederationPlugin from @module-federation/enhanced (MF 2.0)
-    withZephyr(new ModuleFederationPlugin({
+    new ModuleFederationPlugin({
       name: 'host',
       filename: 'remoteEntry.js',
       remotes: {
@@ -54,16 +53,16 @@ module.exports = {
       shared: {
         react: {
           singleton: true,
-          requiredVersion: '^18.0.0'
+          requiredVersion: '^18.0.0',
         },
         'react-dom': {
           singleton: true,
-          requiredVersion: '^18.0.0'
-        }
-      }
-    }))
+          requiredVersion: '^18.0.0',
+        },
+      },
+    }),
   ],
   resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js']
-  }
-};
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
+  },
+});

@@ -82,6 +82,7 @@
     "nx": "20.4.0",
     "nyc": "^17.1.0",
     "prettier": "^3.4.2",
+    "process": "^0.11.10",
     "react-refresh": "^0.14.2",
     "serve": "^14.2.4",
     "swc-loader": "0.2.3",

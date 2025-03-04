@@ -1,9 +1,11 @@
 import {
+  applyBaseHrefToAssets,
   buildAssetsMap,
   getPartialAssetMap,
   removePartialAssetMap,
   ZeBuildAssetsMap,
   ZephyrEngine,
+  ze_log
 } from 'zephyr-agent';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import { loadStaticAssets } from './load_static_assets';
@@ -25,7 +27,21 @@ export async function extract_vite_assets_map(
     ...Object.values(partialAssetMap ?? {}),
     runtime_assets
   );
-  return buildAssetsMap(complete_assets, extractBuffer, getAssetType);
+  
+  // Build the base assets map
+  const assetsMap = buildAssetsMap(complete_assets, extractBuffer, getAssetType);
+  
+  // Handle base path if configured in Vite
+  const basePath = vite_internal_options.base || '';
+  
+  if (basePath && basePath !== '/' && basePath !== './') {
+    ze_log(`[BaseHref] Detected Vite base path: ${basePath}`);
+    
+    // Apply base path to all assets except index.html
+    return applyBaseHrefToAssets(assetsMap, basePath);
+  }
+  
+  return assetsMap;
 }
 
 function getAssetType(asset: OutputChunk | OutputAsset): string {

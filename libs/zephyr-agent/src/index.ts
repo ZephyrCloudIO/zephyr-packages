@@ -21,6 +21,7 @@ export {
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export { zeBuildAssets } from './lib/transformers/ze-build-assets';
+export { applyBaseHrefToAssets } from './lib/transformers/ze-basehref-handler';
 
 // Zephyr Edge is the main class which should be used
 export {

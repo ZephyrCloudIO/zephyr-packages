@@ -45,6 +45,7 @@ function zephyrPlugin(): Plugin {
         root: config.root,
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
+        base: config.base, // Capture Vite's base configuration
       });
     },
     transform: async (code, id) => {

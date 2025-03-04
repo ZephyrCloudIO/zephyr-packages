@@ -26,7 +26,7 @@ export function withZephyr() {
       const zephyr_engine = await zephyr_engine_defer;
       await zephyr_engine.start_new_build();
       await zephyr_engine.upload_assets({
-        assetsMap: getAssetsMap(bundle),
+        assetsMap: getAssetsMap(bundle, options),
         buildStats: await zeBuildDashData(zephyr_engine),
       });
       await zephyr_engine.build_finished();

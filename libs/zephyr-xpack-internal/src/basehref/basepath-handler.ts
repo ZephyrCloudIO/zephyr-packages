@@ -100,6 +100,7 @@ export function detectBasePathFromWebpack(
 
 /**
  * Transform a webpack asset map to include base path prefix for all assets
+ * except for index.html which should remain at the root
  */
 export function transformAssetPathsWithBase(
   assetsMap: Record<string, any>, 
@@ -115,9 +116,21 @@ export function transformAssetPathsWithBase(
     // Create a copy of the asset
     const newAsset = { ...asset };
     
-    // Update the filepath with the base path
-    if (newAsset.filepath) {
-      newAsset.filepath = joinBasePath(basePath, newAsset.filepath);
+    // Skip modifying paths for index.html
+    const isIndexHtml = 
+      (newAsset.filepath && newAsset.filepath.endsWith('index.html')) || 
+      (newAsset.path && newAsset.path.endsWith('index.html'));
+    
+    if (!isIndexHtml) {
+      // Update the filepath with the base path (for internal use)
+      if (newAsset.filepath) {
+        newAsset.filepath = joinBasePath(basePath, newAsset.filepath);
+      }
+      
+      // Update the path property (used in Zephyr assets map)
+      if (newAsset.path) {
+        newAsset.path = joinBasePath(basePath, newAsset.path);
+      }
     }
     
     result[key] = newAsset;

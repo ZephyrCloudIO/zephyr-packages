@@ -41,13 +41,21 @@ export class ZeRspackPlugin {
 
     // Check for HtmlRspackPlugin and its base configuration
     if (compiler.options.plugins) {
+      interface HtmlPlugin {
+        constructor: { name: string };
+        options?: { base?: { href?: string } };
+      }
+      
       const htmlPlugins = compiler.options.plugins.filter((plugin: any) => 
         plugin && plugin.constructor && 
         (plugin.constructor.name === 'HtmlRspackPlugin' || plugin.constructor.name === 'HtmlWebpackPlugin') && 
-        plugin.options?.base?.href);
+        plugin.options?.base?.href) as HtmlPlugin[];
       
       if (htmlPlugins.length > 0 && !this._options.baseHref?.path) {
-        console.log(`[${pluginName}] Detected HTML plugin with base.href: ${htmlPlugins[0].options.base.href}`);
+        const htmlPlugin = htmlPlugins[0] as HtmlPlugin;
+        if (htmlPlugin.options?.base?.href) {
+          console.log(`[${pluginName}] Detected HTML plugin with base.href: ${htmlPlugin.options.base.href}`);
+        }
       }
     }
 

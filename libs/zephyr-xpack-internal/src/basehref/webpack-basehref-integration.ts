@@ -5,9 +5,9 @@
  * and the Zephyr build process.
  */
 
-import { detectBasePathFromWebpack, transformAssetPathsWithBase } from './basepath-handler';
+import { detectBasePathFromWebpack } from './basepath-handler';
 import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
-import { ze_log } from 'zephyr-agent';
+import { applyBaseHrefToAssets, ze_log } from 'zephyr-agent';
 
 export interface BaseHrefOptions {
   /**
@@ -49,8 +49,8 @@ export function processWebpackBaseHref(
   if (basePath) {
     ze_log(`[BaseHref] Detected base path: ${basePath}`);
     
-    // Transform all asset paths to include the base path
-    return transformAssetPathsWithBase(assetsMap, basePath);
+    // Transform all asset paths to include the base path (except index.html)
+    return applyBaseHrefToAssets(assetsMap, basePath);
   }
   
   return assetsMap;

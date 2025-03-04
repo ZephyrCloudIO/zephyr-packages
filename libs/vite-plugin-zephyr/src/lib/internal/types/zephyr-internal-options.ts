@@ -7,4 +7,5 @@ export interface ZephyrInternalOptions {
   publicDir?: string;
   dir?: string;
   assets?: OutputBundle;
+  base?: string; // For Vite base path configuration
 }

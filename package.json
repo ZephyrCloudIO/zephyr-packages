@@ -9,6 +9,7 @@
     "build-all": "nx run-many -t build --all",
     "lint": "nx run-many -t lint --projects=\"libs/*\"",
     "test": "nx run-many -t test --projects=\"libs/*\"",
+    "test:examples": "./examples/testing-matrix.sh",
     "prepare": "husky install",
     "test:coverage": "nx run-many --target=test --projects=\"libs/*\" --code-coverage",
     "coverage:merge": "istanbul-merge --out coverage/combined-coverage.json \"coverage/**/coverage-final.json\"",

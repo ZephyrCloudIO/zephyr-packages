@@ -839,8 +839,8 @@ importers:
   libs/vite-plugin-zephyr:
     dependencies:
       '@module-federation/runtime':
-        specifier: ^0.6.10
-        version: 0.6.10
+        specifier: ^0.8.10
+        version: 0.8.12
       '@module-federation/vite':
         specifier: ^1.1.3
         version: 1.1.3(@types/node@22.13.0)(@vitest/ui@2.1.9)(jsdom@22.1.0)(less@4.1.3)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.0)(typescript@5.7.3))(rollup@4.22.5)(sass-embedded@1.85.0)(sass@1.83.4)(stylus@0.64.0)(terser@5.37.0)

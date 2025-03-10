@@ -1,4 +1,5 @@
 import * as jose from 'jose';
+import * as readline from 'readline';
 import {
   PromiseWithResolvers,
   ZE_API_ENDPOINT,
@@ -10,13 +11,15 @@ import { createSocket } from './websocket';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { ze_log } from '../logging';
-import { white } from '../logging/picocolor';
+import { blue, bold, green, white, yellow } from '../logging/picocolor';
 import { ZeHttpRequest } from '../http/ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
+import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
+import { brightBlueBgName } from '../logging/debug';
 
 /**
- * Check if the user is already authenticated. If not, open a browser window to
- * authenticate. Display a message to the console.
+ * Check if the user is already authenticated. If not, ask if they want to open a browser
+ * to authenticate. Display a message to the console.
  *
  * @returns The token as a string.
  */
@@ -28,22 +31,42 @@ export async function checkAuth(): Promise<string> {
     return secret_token;
   }
 
-  const token = await getToken();
+  const existingToken = await getToken();
 
-  if (token) {
+  if (existingToken) {
     // Check if the token has a valid expiration date.
-    if (isTokenStillValid(token, 60)) {
+    if (isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
       ze_log('You are already logged in');
-      return token;
+      return existingToken;
     }
 
     await removeToken();
   }
 
   // No valid token found; initiate authentication.
-  const newToken = await authenticateUser();
+  logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
 
-  ze_log('You are logged in');
+  // Get authentication URL first
+  const sessionKey = generateSessionKey();
+  const authUrl = await getAuthenticationURL(sessionKey);
+
+  // Prompt user to continue
+  await promptForAuthAction(authUrl);
+
+  // Handle browser opening
+  try {
+    await openUrl(authUrl);
+    logFn('', `${blue('⏳')} Waiting for authentication...\n`);
+  } catch (error) {
+    // If browser failed to open, fall back to manual
+    fallbackManualLogin(authUrl);
+  }
+
+  // Wait for token regardless of method
+  const newToken = await waitForAccessToken(sessionKey);
+  await saveToken(newToken);
+
+  logFn('', `${green('✓')} You are now logged in to Zephyr Cloud`);
 
   return newToken;
 }
@@ -72,6 +95,39 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
   }
 }
 
+/**
+ * Prompts the user to choose an authentication action
+ */
+async function promptForAuthAction(authUrl: string): Promise<void> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise<void>((resolve) => {
+    rl.question(
+      `${brightBlueBgName}  This is the authentication URL:
+${brightBlueBgName}
+${brightBlueBgName}  ${authUrl}
+${brightBlueBgName}
+${brightBlueBgName}  Please hit ${bold(white('Enter'))} to open it up on your browser: `,
+      () => {
+        rl.close();
+        resolve();
+      }
+    );
+  });
+}
+
+/** Helper to display manual login instructions with highlighted URL */
+function fallbackManualLogin(url: string): void {
+  logFn('', '');
+  logFn('', `An unexpected error happened when opening the browser.`);
+  logFn('', `${yellow('Please open this URL in your browser to log in:')}`);
+  logFn('', url);
+  logFn('', `${blue('⏳')} Waiting for you to complete authentication in browser...`);
+}
+
 /** Opens the given URL in the default browser. */
 async function openUrl(url: string): Promise<void> {
   // Lazy loads `open` module
@@ -85,27 +141,6 @@ function generateSessionKey(): string {
     Math.random().toString(36).substring(2, 15) +
       Math.random().toString(36).substring(2, 15)
   );
-}
-
-/** Tries to log in the user and get back the websocket reply containing the access token. */
-async function getPersonalAccessTokenFromWebsocket(): Promise<string> {
-  const sessionKey = generateSessionKey();
-
-  // Attempts to open the browser to authenticate the user.
-  const authUrl = await getAuthenticationURL(sessionKey);
-
-  try {
-    await openUrl(authUrl);
-    logFn('debug', 'Opening browser for authentication...');
-  } catch (error) {
-    ze_log(error);
-    logFn(
-      'debug',
-      `Could not open browser to authenticate with ZephyrCloud. Please open the link below to authenticate:\n\n${white(authUrl)}\n`
-    );
-  }
-
-  return await waitForAccessToken(sessionKey);
 }
 
 /** Generates the URL to authenticate the user. */
@@ -131,51 +166,73 @@ async function getAuthenticationURL(state: string): Promise<string> {
  *
  * @returns The new token as a string.
  */
-async function authenticateUser(): Promise<string> {
-  const token = await getPersonalAccessTokenFromWebsocket();
-  await saveToken(token);
-  return token;
+export async function authenticateUser(): Promise<string> {
+  return await checkAuth();
 }
 
 /** Waits for the access token to be received from the websocket. */
 async function waitForAccessToken(sessionKey: string): Promise<string> {
   const { promise, resolve, reject } = PromiseWithResolvers<string>();
   const socket = createSocket(ZEPHYR_API_ENDPOINT());
+  let timeoutHandle: NodeJS.Timeout | null = null;
+
+  // Helper to properly cleanup socket
+  const cleanupSocket = () => {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+      timeoutHandle = null;
+    }
+
+    socket.removeAllListeners();
+    socket.disconnect();
+    socket.close();
+  };
 
   try {
-    socket.once('access-token', resolve);
+    socket.once('access-token', (token) => {
+      cleanupSocket();
+      resolve(token);
+    });
+
     // Creating errors outside of the listener closure makes the stack trace point
     // to waitForAccessToken fn instead of socket.io internals event emitter code.
-    socket.once('access-token-error', (cause) =>
+    socket.once('access-token-error', (cause) => {
+      cleanupSocket();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           cause,
           message: 'Error getting access token',
         })
-      )
-    );
-    socket.once('connect_error', (cause) =>
+      );
+    });
+
+    socket.once('connect_error', (cause) => {
+      cleanupSocket();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           message: 'Could not connect to socket.',
           cause,
         })
-      )
-    );
+      );
+    });
 
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
 
-    // The user has 60 seconds to log in through the browser.
-    setTimeout(
-      reject,
-      60_000,
-      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-        message: "Couldn't receive access token in 1 minute.",
-      })
-    );
+    // The user has a specified amount of time to log in through the browser.
+    timeoutHandle = setTimeout(() => {
+      cleanupSocket();
+      reject(
+        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
+        })
+      );
+    }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
 
     return await promise;
+  } catch (error) {
+    cleanupSocket();
+    throw error;
   } finally {
-    socket.close();
+    cleanupSocket();
   }
 }

@@ -6,9 +6,6 @@ export const DEFAULT_AUTH_PROMPT_TIMEOUT_MS = 10000; // 10 seconds
 /** Default timeout for authentication completion in milliseconds */
 export const DEFAULT_AUTH_COMPLETION_TIMEOUT_MS = 60000; // 1 minute
 
-/** Authentication action types returned from the prompt */
-export type AuthAction = 'open' | 'manual' | 'cancel';
-
 /** Token expiration thresholds */
 export const TOKEN_EXPIRY = {
   /**

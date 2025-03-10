@@ -11,14 +11,11 @@ import { createSocket } from './websocket';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { ze_log } from '../logging';
-import { bgBlue, blue, green, red, white, yellow } from '../logging/picocolor';
+import { blue, bold, green, white, yellow } from '../logging/picocolor';
 import { ZeHttpRequest } from '../http/ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
-import {
-  DEFAULT_AUTH_COMPLETION_TIMEOUT_MS,
-  AuthAction,
-  TOKEN_EXPIRY,
-} from './auth-flags';
+import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
+import { brightBlueBgName } from '../logging/debug';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
@@ -47,43 +44,29 @@ export async function checkAuth(): Promise<string> {
   }
 
   // No valid token found; initiate authentication.
-  console.log(
-    `\n${yellow('Authentication required')} - You need to log in to Zephyr Cloud`
-  );
+  logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
 
   // Get authentication URL first
   const sessionKey = generateSessionKey();
   const authUrl = await getAuthenticationURL(sessionKey);
 
-  // Prompt user with three options
-  const authAction = await promptForAuthAction();
+  // Prompt user to continue
+  await promptForAuthAction(authUrl);
 
-  if (authAction === 'cancel') {
-    // User wants to cancel the build
-    throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-      message: 'Authentication cancelled by user.',
-    });
-  }
-
-  // Handle browser opening based on user choice
-  if (authAction === 'open') {
-    try {
-      await openUrl(authUrl);
-      console.log(`\n${blue('⏳')} Waiting for authentication...\n`);
-    } catch (error) {
-      // If browser failed to open, fall back to manual
-      displayManualLoginInstructions(authUrl);
-    }
-  } else if (authAction === 'manual') {
-    // User wants to manually open the URL
-    displayManualLoginInstructions(authUrl);
+  // Handle browser opening
+  try {
+    await openUrl(authUrl);
+    logFn('', `${blue('⏳')} Waiting for authentication...\n`);
+  } catch (error) {
+    // If browser failed to open, fall back to manual
+    fallbackManualLogin(authUrl);
   }
 
   // Wait for token regardless of method
   const newToken = await waitForAccessToken(sessionKey);
   await saveToken(newToken);
 
-  console.log(`${green('✓')} You are now logged in to Zephyr Cloud`);
+  logFn('', `${green('✓')} You are now logged in to Zephyr Cloud`);
 
   return newToken;
 }
@@ -114,53 +97,35 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
 
 /**
  * Prompts the user to choose an authentication action
- *
- * @returns The user's choice: 'open', 'manual', or 'cancel'
  */
-async function promptForAuthAction(): Promise<AuthAction> {
-  // First display the authentication options
-  console.log(`
-${yellow('Zephyr Cloud requires authentication to continue')}
-`);
-
+async function promptForAuthAction(authUrl: string): Promise<void> {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
-  return new Promise<AuthAction>((resolve) => {
-    console.log(`Options:
-${green('y')} - Open browser automatically to log in
-${yellow('m')} - Show the login URL (manual login)
-${red('n')} - Cancel and exit
-`);
-
-    rl.question(`How would you like to proceed? ${green('(Y/m/n)')} `, (answer) => {
-      rl.close();
-
-      const normalizedAnswer = answer.trim().toLowerCase();
-
-      if (normalizedAnswer === 'n' || normalizedAnswer === 'no') {
-        resolve('cancel');
-      } else if (normalizedAnswer === 'm' || normalizedAnswer === 'manual') {
-        resolve('manual');
-      } else {
-        // Default to opening browser for any other input (including empty)
-        resolve('open');
+  return new Promise<void>((resolve) => {
+    rl.question(
+      `${brightBlueBgName}  This is the authentication URL:
+${brightBlueBgName}
+${brightBlueBgName}  ${authUrl}
+${brightBlueBgName}
+${brightBlueBgName}  Please hit ${bold(white('Enter'))} to open it up on your browser: `,
+      () => {
+        rl.close();
+        resolve();
       }
-    });
+    );
   });
 }
 
 /** Helper to display manual login instructions with highlighted URL */
-function displayManualLoginInstructions(url: string): void {
-  console.log(`
-${yellow('Please open this URL in your browser to log in:')}
-
-${bgBlue(` ${white(url)} `)}
-
-${blue('⏳')} Waiting for you to complete authentication in browser...
-`);
+function fallbackManualLogin(url: string): void {
+  logFn('', '');
+  logFn('', `An unexpected error happened when opening the browser.`);
+  logFn('', `${yellow('Please open this URL in your browser to log in:')}`);
+  logFn('', url);
+  logFn('', `${blue('⏳')} Waiting for you to complete authentication in browser...`);
 }
 
 /** Opens the given URL in the default browser. */

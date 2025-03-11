@@ -1,0 +1,21 @@
+{
+  "name": "parcel-reporter-zephyr",
+  "version": "0.0.36",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run parcel-reporter-zephyr:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "is-ci": "^3",
+    "@parcel/plugin": "^2.13.3",
+    "@parcel/types": "^2.13.3",
+    "@parcel/core": "^2.13.3",
+    "zephyr-agent": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/is-ci": "^3.0.4"
+  }
+}

@@ -21,13 +21,13 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   DOMAIN,
   PLATFORM,
   TYPE,
-  DElIMITER: delimiter = '',
+  DELIMITER: delimiter = '',
 }: ZephyrAgentProps & {
   EDGE_URL: string;
   DOMAIN?: string;
   PLATFORM?: string;
   TYPE?: string;
-  DElIMITER?: string;
+  DELIMITER?: string;
 }): Promise<ZephyrBuildStats> {
   ze_log('get build stats started. create federation dashboard plugin');
   const app = pluginOptions.zephyr_engine.applicationProperties;

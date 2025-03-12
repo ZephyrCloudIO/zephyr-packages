@@ -12,8 +12,7 @@
   "dependencies": {
     "is-ci": "^3.0.1",
     "tslib": "^2.3.0",
-    "@modern-js/app-tools": "^2.65.0",
-    "@module-federation/modern-js": "^0.8.9",
+    "@modern-js/app-tools": "^2.65.3",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"

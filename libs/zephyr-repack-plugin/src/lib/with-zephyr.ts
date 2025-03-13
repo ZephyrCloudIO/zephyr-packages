@@ -8,7 +8,6 @@ import {
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
-import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 
 export function withZephyr(
@@ -37,12 +36,8 @@ async function _zephyr_configuration(
     dependency_pairs,
     target
   );
-  mutWebpackFederatedRemotesConfig(
-    zephyr_engine,
-    config,
-    resolved_dependency_pairs,
-    repack_delegate_module_template
-  );
+
+  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
   ze_log('dependency resolution completed successfully...or at least trying to...');
 

@@ -9,7 +9,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown = xpack_delegate_module_template
+  delegate_module_template?: () => unknown
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log(`No resolved dependency pairs found, skipping...`);
@@ -62,12 +62,18 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       // @ts-expect-error - TS7053: Element implicitly has an any type because expression of type string can't be used to index type RemotesObject | (string | RemotesObject)[]
       // No index signature with a parameter of type string was found on type RemotesObject | (string | RemotesObject)[]
       if (remotes[remote_name]) {
-        // @ts-expect-error - read above
-        remotes[remote_name] = createMfRuntimeCode(
-          resolved_dep,
-          delegate_module_template
-        );
-        ze_log(`Setting runtime code for remote: ${remotes}`);
+        if (delegate_module_template) {
+          // @ts-expect-error - read above
+          remotes[remote_name] = createMfRuntimeCode(
+            resolved_dep,
+            delegate_module_template
+          );
+          ze_log(`Setting runtime code for remote: ${remote_name}`);
+        } else {
+          // @ts-expect-error - read above
+          remotes[remote_name] = resolved_dep.remote_entry_url;
+          ze_log(`Replacing remote entry URL for remote: ${remote_name}`);
+        }
       }
     });
   });

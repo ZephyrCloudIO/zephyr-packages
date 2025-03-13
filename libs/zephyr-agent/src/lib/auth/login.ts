@@ -95,9 +95,7 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
   }
 }
 
-/**
- * Prompts the user to choose an authentication action
- */
+/** Prompts the user to choose an authentication action */
 async function promptForAuthAction(authUrl: string): Promise<void> {
   const rl = readline.createInterface({
     input: process.stdin,

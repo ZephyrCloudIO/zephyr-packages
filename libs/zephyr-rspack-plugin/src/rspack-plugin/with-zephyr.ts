@@ -6,6 +6,7 @@ import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
+  xpack_delegate_module_template,
 } from 'zephyr-xpack-internal';
 
 export type Configuration = RspackConfiguration;
@@ -32,7 +33,12 @@ async function _zephyr_configuration(
   const resolved_dependency_pairs =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
-  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+  mutWebpackFederatedRemotesConfig(
+    zephyr_engine,
+    config,
+    resolved_dependency_pairs,
+    xpack_delegate_module_template
+  );
 
   // inject the ZephyrRspackPlugin
   config.plugins?.push(

@@ -9,8 +9,18 @@ interface ServerToClientEvents {
   'access-token-error': (msg: string) => void;
 }
 
+/**
+ * Creates a new socket.io connection to the specified endpoint
+ *
+ * @param endpoint The endpoint to connect to
+ * @returns A socket.io Socket instance
+ */
 export function createSocket(
   endpoint: string
 ): Socket<ServerToClientEvents, ClientToServerEvents> {
-  return socketio(endpoint);
+  // Set forceNew to ensure a clean connection
+  return socketio(endpoint, {
+    forceNew: true,
+    reconnection: false,
+  });
 }

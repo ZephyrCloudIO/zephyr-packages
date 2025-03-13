@@ -1,5 +1,5 @@
 import { type ZeResolvedDependency } from 'zephyr-agent';
-import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
+import { createMfRuntimeCode } from './index';
 import { ze_log } from 'zephyr-agent';
 import { XPackConfiguration } from '../xpack.types';
 import { ZephyrEngine } from 'zephyr-agent';

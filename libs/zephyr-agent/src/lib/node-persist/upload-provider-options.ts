@@ -5,6 +5,7 @@ export interface ZeApplicationConfig {
   AUTH0_DOMAIN: string;
   BUILD_ID_ENDPOINT: string;
   EDGE_URL: string;
+  DELIMITER: string;
   email: string;
   fetched_at?: number;
   jwt: string;

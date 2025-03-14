@@ -40,7 +40,8 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     });
 
     // webpack dash data
-    const { EDGE_URL, PLATFORM } = await zephyr_engine.application_configuration;
+    const { EDGE_URL, PLATFORM, DELIMITER } =
+      await zephyr_engine.application_configuration;
 
     const dashData = await getBuildStats({
       stats,
@@ -49,6 +50,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
       pluginOptions,
       EDGE_URL,
       PLATFORM,
+      DELIMITER,
     });
 
     await zephyr_engine.upload_assets({

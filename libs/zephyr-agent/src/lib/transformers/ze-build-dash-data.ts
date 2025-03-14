@@ -22,8 +22,11 @@ export async function zeBuildDashData(
   const app = zephyr_engine.applicationProperties;
   const name = zephyr_engine.applicationProperties.name;
 
-  const edge_url = (await zephyr_engine.application_configuration).EDGE_URL;
-  const username = (await zephyr_engine.application_configuration).username;
+  const {
+    EDGE_URL: edge_url,
+    username,
+    DELIMITER: delimiter,
+  } = await zephyr_engine.application_configuration;
 
   const to_raw = _recordToRawDependency;
 
@@ -31,7 +34,7 @@ export async function zeBuildDashData(
     id: application_uid,
     name,
     environment: '',
-    edge: { url: edge_url },
+    edge: { url: edge_url, delimiter },
     app: Object.assign({}, app, {
       buildId,
     }),

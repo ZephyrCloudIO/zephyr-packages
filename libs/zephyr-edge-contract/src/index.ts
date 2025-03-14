@@ -12,6 +12,7 @@ export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-pl
 export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';
 export { createSnapshotId, flatCreateSnapshotId } from './lib/utils/create-snapshot-id';
+export { derive_remote_name } from './lib/utils/derive-remote-name';
 export * as ZeUtils from './lib/promise';
 export { safe_json_parse } from './lib/utils/safe-json-parse';
 export type { ZeApplicationList } from './lib/ze-api/app-list';

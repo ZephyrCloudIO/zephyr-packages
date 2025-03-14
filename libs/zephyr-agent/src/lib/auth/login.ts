@@ -1,21 +1,21 @@
 import * as jose from 'jose';
-import * as readline from 'readline';
+import * as readline from 'node:readline';
 import {
   PromiseWithResolvers,
+  ZEPHYR_API_ENDPOINT,
   ZE_API_ENDPOINT,
   ze_api_gateway,
-  ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
-import { logFn } from '../logging/ze-log-event';
-import { createSocket } from './websocket';
-import { getSecretToken } from '../node-persist/secret-token';
-import { getToken, removeToken, saveToken } from '../node-persist/token';
-import { ze_log } from '../logging';
-import { blue, bold, green, white, yellow } from '../logging/picocolor';
-import { ZeHttpRequest } from '../http/ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
+import { ZeHttpRequest } from '../http/ze-http-request';
+import { ze_log } from '../logging';
+import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picocolor';
+import { formatLogMsg, logFn } from '../logging/ze-log-event';
+import { getSecretToken } from '../node-persist/secret-token';
+import { StorageKeys } from '../node-persist/storage-keys';
+import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
-import { brightBlueBgName } from '../logging/debug';
+import { createSocket } from './websocket';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
@@ -43,6 +43,12 @@ export async function checkAuth(): Promise<string> {
     await removeToken();
   }
 
+  // In non-TTY environments it's expected that a ZE_SECRET_TOKEN is present
+  // since user cannot interact with it.
+  if (!isTTY) {
+    logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
+  }
+
   // No valid token found; initiate authentication.
   logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
 
@@ -50,23 +56,20 @@ export async function checkAuth(): Promise<string> {
   const sessionKey = generateSessionKey();
   const authUrl = await getAuthenticationURL(sessionKey);
 
-  // Prompt user to continue
-  await promptForAuthAction(authUrl);
+  const browserController = new AbortController();
 
-  // Handle browser opening
-  try {
-    await openUrl(authUrl);
-    logFn('', `${blue('⏳')} Waiting for authentication...\n`);
-  } catch (error) {
-    // If browser failed to open, fall back to manual
-    fallbackManualLogin(authUrl);
-  }
+  // Tries to open the browser to authenticate the user
+  void promptForAuthAction(authUrl, browserController.signal)
+    .then(() => openUrl(authUrl))
+    .catch(() => fallbackManualLogin(authUrl));
 
-  // Wait for token regardless of method
-  const newToken = await waitForAccessToken(sessionKey);
+  const newToken = await waitForAccessToken(sessionKey).finally(() =>
+    browserController.abort()
+  );
+
   await saveToken(newToken);
 
-  logFn('', `${green('✓')} You are now logged in to Zephyr Cloud`);
+  logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
 
   return newToken;
 }
@@ -95,26 +98,27 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
   }
 }
 
-/**
- * Prompts the user to choose an authentication action
- */
-async function promptForAuthAction(authUrl: string): Promise<void> {
+/** Prompts the user to choose an authentication action */
+async function promptForAuthAction(
+  authUrl: string,
+  signal: AbortSignal
+): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
+    signal,
   });
 
-  return new Promise<void>((resolve) => {
+  return new Promise<string>((resolve) => {
     rl.question(
-      `${brightBlueBgName}  This is the authentication URL:
-${brightBlueBgName}
-${brightBlueBgName}  ${authUrl}
-${brightBlueBgName}
-${brightBlueBgName}  Please hit ${bold(white('Enter'))} to open it up on your browser: `,
-      () => {
-        rl.close();
-        resolve();
-      }
+      formatLogMsg(`
+${authUrl}
+
+${gray(`You can hit ${bold(white('Enter'))} to open it up on your browser.`)}
+`),
+
+      { signal },
+      resolve
     );
   });
 }

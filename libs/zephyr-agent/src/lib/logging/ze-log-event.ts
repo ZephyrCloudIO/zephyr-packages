@@ -23,24 +23,20 @@ export const logFn = (level: string, msg: unknown): void => {
     return;
   }
 
-  const str = String(msg);
-  const padded = str
-    .split('\n')
-    .map((m) => `${toLevelPrefix(level)}  ${m.trimEnd()}`)
-    .join('\n');
+  const formatted = formatLogMsg(msg, level);
 
   switch (level) {
     case 'warn':
-      console.warn(padded);
+      console.warn(formatted);
       break;
     case 'debug':
-      console.debug(padded);
+      console.debug(formatted);
       break;
     case 'error':
-      console.error(padded);
+      console.error(formatted);
       break;
     default:
-      console.log(padded);
+      console.log(formatted);
   }
 };
 
@@ -55,6 +51,13 @@ function toLevelPrefix(level: string) {
     default:
       return brightBlueBgName;
   }
+}
+
+export function formatLogMsg(msg: unknown, level = 'info') {
+  return String(msg)
+    .split('\n')
+    .map((m) => `${toLevelPrefix(level)}  ${m.trimEnd()}`)
+    .join('\n');
 }
 
 export interface LogEventOptions {

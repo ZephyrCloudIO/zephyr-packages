@@ -75,11 +75,15 @@ export interface XCompiler {
       uniqueName: string;
     };
     plugins: ModuleFederationPlugin[];
+    name: string | undefined;
   };
   plugins: ModuleFederationPlugin[];
   hooks: {
     compilation: {
       tap: (name: string, callback: (compilation: XCompilation) => void) => void;
+    };
+    beforeCompile: {
+      tap: (name: string, callback: () => void) => void;
     };
   };
   webpack: {

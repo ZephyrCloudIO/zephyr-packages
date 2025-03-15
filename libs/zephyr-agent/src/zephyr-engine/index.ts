@@ -94,7 +94,7 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     buildEnv: string;
-    target: 'ios' | 'android' | 'web';
+    target: 'ios' | 'android' | 'web' | undefined;
   } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;

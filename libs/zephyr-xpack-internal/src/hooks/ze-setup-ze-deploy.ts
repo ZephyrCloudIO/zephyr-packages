@@ -1,6 +1,6 @@
 import { onDeploymentDone } from '../lifecycle-events/index';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
-import { ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import { XStats } from '../xpack.types';
 
@@ -36,6 +36,7 @@ export function setupZeDeploy<
   XCompiler extends DeployCompiler,
 >(pluginOptions: T, compiler: XCompiler): void {
   const { pluginName } = pluginOptions;
+
   compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
     compilation.hooks.processAssets.tapPromise(
       {
@@ -47,6 +48,8 @@ export function setupZeDeploy<
         const stats_json = compilation.getStats().toJson();
 
         await pluginOptions.zephyr_engine.start_new_build();
+
+        ze_log('setupZeDeploy', compiler);
 
         process.nextTick(xpack_zephyr_agent, {
           stats,

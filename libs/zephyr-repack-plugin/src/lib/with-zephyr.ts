@@ -2,7 +2,7 @@ import { Configuration } from '@rspack/core';
 import { ze_log, ZephyrEngine } from 'zephyr-agent';
 
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
-import { get_platform_from_repack } from './utils/get-platform';
+import { RePackConfiguration, PlatformPlugin } from './utils/get-platform';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -13,14 +13,16 @@ import { verify_mf_fastly_config } from './utils/ze-util-verification';
 
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRepackPluginOptions
-): (config: Configuration) => Promise<Configuration> {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+): (config: RePackConfiguration) => Promise<Configuration> {
+  return (config: RePackConfiguration) =>
+    _zephyr_configuration(config, zephyrPluginOptions);
 }
 async function _zephyr_configuration(
-  config: Configuration,
+  config: RePackConfiguration,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
+  ze_log('withZephyr.config', config);
   // create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create({
     builder: 'repack',
@@ -28,14 +30,15 @@ async function _zephyr_configuration(
   });
   ze_log('Configuring with Zephyr...');
 
-  const target = get_platform_from_repack(config);
-  ze_log('Deploy build target: ', target);
+  await config.plugins?.push(new PlatformPlugin({ zephyr_engine }));
+  // ze_log('Deploy build target: ', target);
 
   const dependency_pairs = extractFederatedDependencyPairs(config);
 
+  ze_log('_zephyr_configuration.zephyr_engine.env.target', zephyr_engine.env.target);
   const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
     dependency_pairs,
-    target
+    zephyr_engine.env.target
   );
   mutWebpackFederatedRemotesConfig(
     zephyr_engine,
@@ -55,7 +58,6 @@ async function _zephyr_configuration(
   config.plugins?.push(
     new ZeRepackPlugin({
       zephyr_engine,
-      target,
       mfConfig: makeCopyOfModuleFederationOptions(config),
     })
   );

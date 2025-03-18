@@ -288,13 +288,18 @@ export class ZephyrEngine {
     const versionUrl = zephyr_engine.version_url;
     const dependencies = zephyr_engine.federated_dependencies;
 
+    const if_target_is_react_native =
+      zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
+
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {
         logger({
           level: 'info',
           action: 'build:info:user',
           ignore: true,
-          message: `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
+          message: if_target_is_react_native
+            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target}`
+            : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
         });
       }
 

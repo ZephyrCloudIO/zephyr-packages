@@ -2,7 +2,8 @@ import { Configuration } from '@rspack/core';
 import { ze_log, ZephyrEngine } from 'zephyr-agent';
 
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
-import { RePackConfiguration, PlatformPlugin } from './utils/get-platform';
+import { RePackConfiguration } from './utils/get-platform';
+import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -22,7 +23,6 @@ async function _zephyr_configuration(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
-  ze_log('withZephyr.config', config);
   // create instance of ZephyrEngine to track the application
   const zephyr_engine = await ZephyrEngine.create({
     builder: 'repack',
@@ -30,12 +30,16 @@ async function _zephyr_configuration(
   });
   ze_log('Configuring with Zephyr...');
 
-  await config.plugins?.push(new PlatformPlugin({ zephyr_engine }));
-  // ze_log('Deploy build target: ', target);
+  if (!_zephyrOptions?.target) {
+    throw new ZephyrError(ZeErrors.ERR_TARGET_NOT_SPECIFIED);
+  }
 
   const dependency_pairs = extractFederatedDependencyPairs(config);
 
-  ze_log('_zephyr_configuration.zephyr_engine.env.target', zephyr_engine.env.target);
+  zephyr_engine.env.target = _zephyrOptions.target;
+
+  ze_log('Resolving and building towards target: ', zephyr_engine.env.target);
+
   const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
     dependency_pairs,
     zephyr_engine.env.target
@@ -59,6 +63,7 @@ async function _zephyr_configuration(
     new ZeRepackPlugin({
       zephyr_engine,
       mfConfig: makeCopyOfModuleFederationOptions(config),
+      target: zephyr_engine.env.target,
     })
   );
 

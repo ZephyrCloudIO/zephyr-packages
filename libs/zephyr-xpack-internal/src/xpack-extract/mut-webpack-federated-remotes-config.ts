@@ -64,6 +64,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       if (remotes[remote_name]) {
         // @ts-expect-error - read above
         remotes[remote_name] = createMfRuntimeCode(
+          zephyr_engine,
           resolved_dep,
           delegate_module_template
         );

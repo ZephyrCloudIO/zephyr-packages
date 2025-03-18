@@ -12,7 +12,7 @@ export interface ZephyrRepackPluginOptions {
   zephyr_engine: ZephyrEngine;
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  // target: 'ios' | 'android' | 'web' | undefined;
+  target: 'ios' | 'android' | 'web' | undefined;
 }
 
 export class ZeRepackPlugin {

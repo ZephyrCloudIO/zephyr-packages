@@ -67,6 +67,7 @@ type ZephyrEngineBuilderTypes =
   | 'rollup'
   | 'parcel'
   | 'unknown';
+
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
@@ -305,7 +306,9 @@ export class ZephyrEngine {
       });
     }
 
-    this.build_id = null;
+    if (!process.env['ZE_CI_TEST']) {
+      this.build_id = null;
+    }
     this.snapshotId = null;
     this.version_url = null;
     this.build_start_time = null;
@@ -360,6 +363,23 @@ export class ZephyrEngine {
     }
 
     await this.build_finished();
+  }
+
+  async injectBuildIdMeta(htmlContent: string): Promise<string> {
+    if (!process.env['ZE_CI_TEST']) {
+      return htmlContent;
+    }
+
+    const buildId = await this.build_id;
+    if (!buildId) {
+      return htmlContent;
+    }
+
+    // Insert meta tag before closing head tag
+    return htmlContent.replace(
+      '</head>',
+      `  \n <meta name="zephyr-build-id" data-testid="ze-build-id" content="${buildId}" />\n </head>`
+    );
   }
 }
 

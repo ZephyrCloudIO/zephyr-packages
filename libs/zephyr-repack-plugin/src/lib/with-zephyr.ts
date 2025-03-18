@@ -2,7 +2,6 @@ import { Configuration } from '@rspack/core';
 import { ze_log, ZephyrEngine } from 'zephyr-agent';
 
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
-import { RePackConfiguration } from './utils/get-platform';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
@@ -11,6 +10,12 @@ import {
 } from 'zephyr-xpack-internal';
 import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
+import { DelegateConfig } from '../type/zephyr-internal-types';
+
+type Platform = DelegateConfig['target'];
+export interface RePackConfiguration extends Configuration {
+  platform: Platform;
+}
 
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRepackPluginOptions

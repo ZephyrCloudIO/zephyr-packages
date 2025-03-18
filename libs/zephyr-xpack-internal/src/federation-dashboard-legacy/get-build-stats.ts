@@ -21,7 +21,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   DOMAIN,
   PLATFORM,
   TYPE,
-  DELIMITER: delimiter = '',
+  DELIMITER: delimiter = undefined,
 }: ZephyrAgentProps & {
   EDGE_URL: string;
   DOMAIN?: string;

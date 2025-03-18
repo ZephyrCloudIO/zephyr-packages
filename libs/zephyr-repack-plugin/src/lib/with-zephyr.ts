@@ -10,12 +10,7 @@ import {
 } from 'zephyr-xpack-internal';
 import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { DelegateConfig } from '../type/zephyr-internal-types';
-
-type Platform = DelegateConfig['target'];
-export interface RePackConfiguration extends Configuration {
-  platform: Platform;
-}
+import { RePackConfiguration } from '../type/zephyr-internal-types';
 
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRepackPluginOptions

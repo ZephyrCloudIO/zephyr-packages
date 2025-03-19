@@ -106,6 +106,7 @@ export class ZephyrEngine {
   build_id: Promise<string> | null = null;
   snapshotId: Promise<string> | null = null;
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
+  resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
@@ -245,9 +246,10 @@ export class ZephyrEngine {
     ze_log('Initializing: loading of hash list');
     ze.hash_list = get_hash_list(application_uid);
     ze.hash_list
-      .then((hash_set) =>
-        ze_log(`Loaded: hash list with ${hash_set.hash_set.size} entries`)
-      )
+      .then((hash_set) => {
+        ze.resolved_hash_list = hash_set;
+        ze_log(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
+      })
       .catch((err) => ze_log(`Failed to get hash list: ${err}`));
 
     ze_log('Initializing: loading of build id');
@@ -327,7 +329,7 @@ export class ZephyrEngine {
     }
 
     await zephyr_engine.build_id;
-    const hash_set = await zephyr_engine.hash_list;
+    const hash_set = zephyr_engine.resolved_hash_list;
 
     const missingAssets = get_missing_assets({
       assetsMap,

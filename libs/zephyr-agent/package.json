@@ -41,8 +41,5 @@
     "@types/uuid": "^9.0.8",
     "@types/node-persist": "^3.1.8",
     "@types/debug": "^4.1.12"
-  },
-  "optionalDependencies": {
-    "wrangler": "^3.69.1"
   }
 }

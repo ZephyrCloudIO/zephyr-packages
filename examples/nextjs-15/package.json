@@ -1,0 +1,25 @@
+{
+  "name": "Next15CanaryWithRspackAndZephyr",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@rspack/core": "v1.3.0-beta.0",
+    "@rspack/plugin-react-refresh": "1.0.1",
+    "@next/swc-darwin-arm64": "15.3.0-canary.15",
+    "next": "15.3.0-canary.15",
+    "react": "19.1.0-canary-db7dfe05-20250319",
+    "react-dom": "19.1.0-canary-db7dfe05-20250319",
+    "zephyr-rspack-plugin": "*"
+  },
+  "devDependencies": {
+    "@next/plugin-rspack": "15.3.0-canary.15",
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.12",
+    "typescript": "^5.7.2"
+  }
+}

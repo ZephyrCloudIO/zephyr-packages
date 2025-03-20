@@ -1,0 +1,10 @@
+const withRspack = require("@next/plugin-rspack");
+const { withZephyrNextJS } = require("./next-zephyr");
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  /* config options here */
+};
+
+// Order matters: withRspack should be the outermost wrapper
+module.exports = withRspack(withZephyrNextJS()(nextConfig));

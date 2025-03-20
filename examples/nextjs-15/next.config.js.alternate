@@ -1,0 +1,37 @@
+const withRspack = require("@next/plugin-rspack");
+const { ZephyrEngine } = require("zephyr-agent");
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  /* config options here */
+  webpack: async (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Create instance of ZephyrEngine to track the application
+    const zephyr_engine = await ZephyrEngine.create({
+      builder: 'rspack',
+      context: config.context,
+    });
+
+    // Extract and resolve federated dependencies
+    // This is simplified and would need to be adapted based on the real zephyr-rspack-plugin implementation
+    const dependencyPairs = []; // Extract from config if needed
+    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+
+    // Apply any Zephyr modifications to the config
+    // This would need to be adapted based on the real zephyr-rspack-plugin implementation
+
+    // Add ZephyrRspackPlugin
+    // This would need to reference the actual ZeRspackPlugin from zephyr-rspack-plugin
+    config.plugins = config.plugins || [];
+    config.plugins.push(
+      // Replace this with the actual ZeRspackPlugin
+      // new ZeRspackPlugin({
+      //   zephyr_engine,
+      //   mfConfig: {...},
+      // })
+    );
+
+    return config;
+  },
+};
+
+module.exports = withRspack(nextConfig);

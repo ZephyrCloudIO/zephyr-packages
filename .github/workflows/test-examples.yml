@@ -12,8 +12,8 @@ jobs:
     name: Test Examples
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
       - name: Install Dependencies
         run: |
           pnpm install

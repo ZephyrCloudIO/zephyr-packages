@@ -6,8 +6,15 @@ installOptions:
   preferOnline: false
   frozenLockfile: true
 onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@parcel/watcher'
   - '@swc/core'
   - core-js
+  - core-js-pure
+  - esbuild
+  - lmdb
+  - msgpackr-extract
   - msw
   - nx
+  - simple-git-hooks
   - workerd

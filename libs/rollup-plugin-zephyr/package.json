@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "is-ci": "*",
-    "rollup": "^4",
+    "rollup": "*",
     "tslib": "^2",
     "zephyr-agent": "workspace:*"
   },

@@ -11,9 +11,9 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@parcel/config-default": "2.13.3",
-    "parcel": "2.13.3",
+    "@parcel/config-default": "^2.14.1",
+    "parcel": "^2.14.1",
     "parcel-reporter-zephyr": "workspace:*",
-    "typescript": "^5.7.3"
+    "typescript": "*"
   }
 }

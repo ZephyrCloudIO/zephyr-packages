@@ -6,4 +6,8 @@ installOptions:
   preferOnline: false
   frozenLockfile: true
 onlyBuiltDependencies:
+  - '@swc/core'
+  - core-js
+  - msw
   - nx
+  - workerd

@@ -17,6 +17,9 @@
     "rollup": "^4"
   },
   "devDependencies": {
+    "@eslint/compat": "^1.2.7",
+    "@eslint/eslintrc": "^3.3.0",
+    "@eslint/js": "*",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "*",
@@ -25,6 +28,7 @@
     "eslint": "*",
     "eslint-plugin-react-hooks": "*",
     "eslint-plugin-react-refresh": "*",
+    "globals": "*",
     "typescript": "*",
     "vite": "*",
     "vite-plugin-inspect": "^11.0.0",

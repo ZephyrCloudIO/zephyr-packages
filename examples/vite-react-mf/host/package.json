@@ -22,7 +22,7 @@
     "eslint": "*",
     "eslint-plugin-react-hooks": "*",
     "eslint-plugin-react-refresh": "*",
-    "globals": "^15.9.0",
+    "globals": "*",
     "typescript": "*",
     "typescript-eslint": "*",
     "vite": "*",

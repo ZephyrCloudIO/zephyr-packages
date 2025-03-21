@@ -9,14 +9,14 @@ inputs:
   node-version:
     required: true
     description: 'Node.js version'
-    default: '21'
+    default: '22'
 
 runs:
   using: 'composite'
   steps:
     - uses: pnpm/action-setup@v2
       with:
-        version: 9
+        version: 10
         run_install: false
     - uses: actions/setup-node@v4
       with:

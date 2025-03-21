@@ -13,7 +13,7 @@
     "@module-federation/automatic-vendor-federation": "1.2.1",
     "is-ci": "^3.0.1",
     "tslib": "^2.3.0",
-    "webpack": "^5.93.0",
+    "webpack": "*",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },

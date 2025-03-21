@@ -1,9 +1,9 @@
 packages:
-  - 'libs/*'
-  - 'examples/*'
-  - 'examples/vite-react-mf/*'
-  - 'examples/rspack-mf/*'
-
+  - libs/**
+  - examples/**
+  - '!**/dist/**'
 installOptions:
   preferOnline: false
   frozenLockfile: true
+onlyBuiltDependencies:
+  - nx

@@ -13,18 +13,9 @@ jobs:
     name: Test Examples
     runs-on: ubuntu-latest
     steps:
+      - uses: ./.github/actions/setup
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '21'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9.9.0
 
       - name: Install Dependencies
         run: |

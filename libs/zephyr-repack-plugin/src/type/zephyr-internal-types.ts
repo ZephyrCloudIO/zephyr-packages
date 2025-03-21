@@ -1,4 +1,4 @@
-import { Configuration } from '@rspack/core';
+import { Configuration, Context } from '@rspack/core';
 
 export interface DelegateConfig {
   org: string;
@@ -9,6 +9,20 @@ export interface DelegateConfig {
 
 export type Platform = DelegateConfig['target'];
 
-export interface RePackConfiguration extends Configuration {
-  platform: Platform;
+export interface RepackEnv {
+  context?: Context;
+  // location of react native package in node_modules
+  reactNativePath?: string;
+  // 'development' | 'production' | undefined
+  mode?: 'development' | 'production' | undefined;
+  devServer?: {
+    port?: number;
+    host?: string;
+    https?: boolean;
+    hmr?: boolean;
+  };
+  // 'ios' | 'android' | 'web' | undefined
+  platform?: Platform | undefined;
 }
+
+export type RePackConfiguration = Configuration & RepackEnv;

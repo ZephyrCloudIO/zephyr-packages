@@ -1,8 +1,6 @@
 import { Configuration } from '@rspack/core';
 import { ze_log, ZephyrEngine } from 'zephyr-agent';
-
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -10,13 +8,36 @@ import {
 } from 'zephyr-xpack-internal';
 import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { RePackConfiguration } from '../type/zephyr-internal-types';
+import { RePackConfiguration, RepackEnv } from '../type/zephyr-internal-types';
 
-export function withZephyr(
-  zephyrPluginOptions?: ZephyrRepackPluginOptions
-): (config: RePackConfiguration) => Promise<Configuration> {
-  return (config: RePackConfiguration) =>
-    _zephyr_configuration(config, zephyrPluginOptions);
+export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
+  // First return: A function taking a config function
+  configFn: (env: RepackEnv) => RePackConfiguration
+) => (
+  // Second return: A function taking a config object
+  config: RePackConfiguration
+) => Promise<Configuration> {
+  // RETURN 1: Function that takes the user's config function
+  return (configFn: (env: RepackEnv) => RePackConfiguration) => {
+    // RETURN 2: Function that takes the base config and returns the final webpack config
+    return (config: RePackConfiguration) => {
+      // Extract environment from config
+
+      // Generate user config by calling their function with env
+      const userConfig = configFn({
+        platform: config.platform,
+        mode: config.mode,
+      });
+
+      const updatedZephyrConfig = {
+        ...zephyrPluginOptions,
+        target: userConfig.platform,
+      } as ZephyrRepackPluginOptions;
+
+      // Return the final processed configuration
+      return _zephyr_configuration(userConfig, updatedZephyrConfig);
+    };
+  };
 }
 async function _zephyr_configuration(
   config: RePackConfiguration,
@@ -28,17 +49,19 @@ async function _zephyr_configuration(
     builder: 'repack',
     context: config.context,
   });
-  ze_log('Configuring with Zephyr...');
+  ze_log('Configuring with Zephyr... \n config:', config);
 
-  if (!_zephyrOptions?.target) {
-    throw new ZephyrError(ZeErrors.ERR_TARGET_NOT_SPECIFIED);
-  }
+  // Try to infer platform from output filename
+  const outputPath = config.output?.path || '';
 
+  zephyr_engine.env.target =
+    _zephyrOptions?.target || outputPath.includes('android') ? 'android' : 'ios';
   const dependency_pairs = extractFederatedDependencyPairs(config);
 
-  zephyr_engine.env.target = _zephyrOptions.target;
-
-  ze_log('Resolving and building towards target: ', zephyr_engine.env.target);
+  ze_log(
+    'Resolving and building towards target by zephyr_engine.env.target: ',
+    zephyr_engine.env.target
+  );
 
   const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
     dependency_pairs,
@@ -63,7 +86,6 @@ async function _zephyr_configuration(
     new ZeRepackPlugin({
       zephyr_engine,
       mfConfig: makeCopyOfModuleFederationOptions(config),
-      target: zephyr_engine.env.target,
     })
   );
 

@@ -5,14 +5,14 @@ import {
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
-
+import { Platform } from '../type/zephyr-internal-types';
 const pluginName = 'ZephyrRepackPlugin';
 
 export interface ZephyrRepackPluginOptions {
   zephyr_engine: ZephyrEngine;
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  target: 'ios' | 'android' | 'web' | undefined;
+  target?: Platform | undefined;
 }
 
 export class ZeRepackPlugin {

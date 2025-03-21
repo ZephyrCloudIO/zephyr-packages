@@ -10,7 +10,7 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "^3.0.1",
+    "is-ci": "*",
     "rollup": "^4",
     "tslib": "^2",
     "zephyr-agent": "workspace:*"
@@ -22,6 +22,6 @@
     "deploy"
   ],
   "devDependencies": {
-    "@types/is-ci": "^3.0.4"
+    "@types/is-ci": "*"
   }
 }

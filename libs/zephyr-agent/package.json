@@ -25,7 +25,7 @@
   "dependencies": {
     "cloudflare": "^3.4.0",
     "git-url-parse": "^15.0.0",
-    "is-ci": "^3.0.1",
+    "is-ci": "*",
     "jose": "^5.2.4",
     "open": "^10.1.0",
     "socket.io-client": "^4.7.5",
@@ -37,9 +37,9 @@
   },
   "devDependencies": {
     "@types/git-url-parse": "^9.0.3",
-    "@types/is-ci": "^3.0.4",
+    "@types/is-ci": "*",
     "@types/uuid": "^9.0.8",
-    "@types/node-persist": "^3.1.8",
+    "@types/node-persist": "*",
     "@types/debug": "^4.1.12"
   },
   "optionalDependencies": {

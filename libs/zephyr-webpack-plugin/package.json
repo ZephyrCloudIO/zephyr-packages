@@ -11,14 +11,14 @@
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "1.2.1",
-    "is-ci": "^3.0.1",
+    "is-ci": "*",
     "tslib": "^2.3.0",
     "webpack": "*",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "^3.0.4",
-    "@types/node-persist": "^3.1.8"
+    "@types/is-ci": "*",
+    "@types/node-persist": "*"
   }
 }

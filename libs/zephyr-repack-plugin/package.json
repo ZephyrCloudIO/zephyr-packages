@@ -17,7 +17,6 @@
   "devDependencies": {
     "@callstack/repack": "5.0.0-rc.0",
     "@rspack/core": "*",
-    "@types/find-package-json": "^1.2.6",
-    "@types/is-ci": "^3.0.4"
+    "@types/find-package-json": "^1.2.6"
   }
 }

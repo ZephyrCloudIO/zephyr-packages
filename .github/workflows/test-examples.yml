@@ -1,5 +1,4 @@
 name: Test Zephyr Examples
-
 on:
   push:
     branches: [main, master]
@@ -14,9 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: ./.github/actions/setup
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install Dependencies
         run: |
           pnpm install

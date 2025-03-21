@@ -454,13 +454,6 @@ Were the required packages in Module federation plugin installed and included in
       'Missing filename in Module Federation configuration. Since the filename in React Native is the actual JS bundle, input of filename in Module Federation configuration is required.',
     kind: 'config',
   },
-
-  ERR_TARGET_NOT_SPECIFIED: {
-    id: '006',
-    message:
-      'Platform target is not specified in Zephyr Plugin options. You need to pass in target as "ios", "android", or "web" in Zephyr Plugin options. You can see a complete example here: https://docs.zephyr-cloud.io/recipes/repack-mf ',
-    kind: 'config',
-  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

@@ -82,9 +82,6 @@ export interface XCompiler {
     compilation: {
       tap: (name: string, callback: (compilation: XCompilation) => void) => void;
     };
-    beforeCompile: {
-      tap: (name: string, callback: () => void) => void;
-    };
   };
   webpack: {
     RuntimeGlobals: {

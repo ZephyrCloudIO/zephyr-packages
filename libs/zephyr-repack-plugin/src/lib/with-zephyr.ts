@@ -31,8 +31,10 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
 
       const updatedZephyrConfig = {
         ...zephyrPluginOptions,
-        target: userConfig.platform,
+        target: config.platform,
       } as ZephyrRepackPluginOptions;
+
+      ze_log('updatedZephyrConfig: ', updatedZephyrConfig);
 
       // Return the final processed configuration
       return _zephyr_configuration(userConfig, updatedZephyrConfig);
@@ -49,13 +51,15 @@ async function _zephyr_configuration(
     builder: 'repack',
     context: config.context,
   });
-  ze_log('Configuring with Zephyr... \n config:', config);
+  ze_log(
+    'Configuring with Zephyr... \n config:',
+    config,
+    '\n _zephyrOptions: ',
+    _zephyrOptions
+  );
 
-  // Try to infer platform from output filename
-  const outputPath = config.output?.path || '';
+  zephyr_engine.env.target = _zephyrOptions?.target;
 
-  zephyr_engine.env.target =
-    _zephyrOptions?.target || outputPath.includes('android') ? 'android' : 'ios';
   const dependency_pairs = extractFederatedDependencyPairs(config);
 
   ze_log(

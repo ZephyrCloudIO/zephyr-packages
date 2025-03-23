@@ -8,18 +8,17 @@ import {
 } from 'zephyr-xpack-internal';
 import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { RePackConfiguration } from '../type/zephyr-internal-types';
-import { EnvOptions as RepackEnvOptions } from '@callstack/repack';
+import { RePackConfiguration, RepackEnv } from '../type/zephyr-internal-types';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
-  configFn: (env: RepackEnvOptions) => RePackConfiguration
+  configFn: (env: RepackEnv) => RePackConfiguration
 ) => (
   // Second return: A function taking a config object
   config: RePackConfiguration
 ) => Promise<Configuration> {
   // RETURN 1: Function that takes the user's config function
-  return (configFn: (env: RepackEnvOptions) => RePackConfiguration) => {
+  return (configFn: (env: RepackEnv) => RePackConfiguration) => {
     // RETURN 2: Function that takes the base config and returns the final webpack config
     return (config: RePackConfiguration) => {
       // Extract environment from config

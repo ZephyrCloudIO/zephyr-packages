@@ -1,5 +1,5 @@
-import { Configuration } from '@rspack/core';
-import { EnvOptions as RepackEnvOptions } from '@callstack/repack';
+import { Configuration, Context } from '@rspack/core';
+import { EnvOptions } from '@callstack/repack';
 export interface DelegateConfig {
   org: string;
   project: string;
@@ -9,4 +9,20 @@ export interface DelegateConfig {
 
 export type Platform = DelegateConfig['target'];
 
-export type RePackConfiguration = Configuration & RepackEnvOptions;
+export interface RepackEnv {
+  context?: Context;
+  // location of react native package in node_modules
+  reactNativePath?: string;
+  // 'development' | 'production' | undefined
+  mode?: 'development' | 'production' | undefined;
+  devServer?: {
+    port?: number;
+    host?: string;
+    https?: boolean;
+    hmr?: boolean;
+  };
+  // 'ios' | 'android' | 'web' | undefined
+  platform?: EnvOptions['platform'];
+}
+
+export type RePackConfiguration = Configuration & RepackEnv;

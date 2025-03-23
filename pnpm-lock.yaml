@@ -365,9 +365,6 @@ importers:
       '@types/react-dom':
         specifier: catalog:react19
         version: 19.0.4(@types/react@19.0.12)
-      '@types/react-helmet':
-        specifier: ^6.1.11
-        version: 6.1.11
       lint-staged:
         specifier: ~15.5.0
         version: 15.5.0

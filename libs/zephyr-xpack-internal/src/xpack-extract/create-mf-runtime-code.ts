@@ -7,7 +7,7 @@ declare const __webpack_require__: {
 export function createMfRuntimeCode(
   zephyr_engine: ZephyrEngine,
   deps: ZeResolvedDependency,
-  delegate_module_template: () => unknown
+  delegate_module_template: () => unknown | undefined
 ): string {
   // prepare delegate function string template
   const fnReplace = delegate_module_template.toString();

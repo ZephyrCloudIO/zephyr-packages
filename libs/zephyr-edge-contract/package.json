@@ -14,6 +14,7 @@
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/node": "catalog:typescript"
   }
 }

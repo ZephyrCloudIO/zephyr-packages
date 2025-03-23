@@ -556,6 +556,21 @@ importers:
       '@types/react-router-dom':
         specifier: ^5.3.3
         version: 5.3.3
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
+      eslint-plugin-import:
+        specifier: catalog:eslint
+        version: 2.31.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-jsx-a11y:
+        specifier: catalog:eslint
+        version: 6.10.2(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-react:
+        specifier: catalog:eslint
+        version: 7.37.4(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-react-hooks:
+        specifier: catalog:eslint
+        version: 5.2.0(eslint@9.23.0(jiti@2.4.2))
       rollup-plugin-zephyr:
         specifier: workspace:*
         version: link:../../libs/rollup-plugin-zephyr
@@ -651,6 +666,21 @@ importers:
       '@types/react-dom':
         specifier: catalog:react18
         version: 18.3.0
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
+      eslint-plugin-import:
+        specifier: catalog:eslint
+        version: 2.31.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-jsx-a11y:
+        specifier: catalog:eslint
+        version: 6.10.2(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-react:
+        specifier: catalog:eslint
+        version: 7.37.4(eslint@9.23.0(jiti@2.4.2))
+      eslint-plugin-react-hooks:
+        specifier: catalog:eslint
+        version: 5.2.0(eslint@9.23.0(jiti@2.4.2))
       swc-loader:
         specifier: catalog:swc
         version: 0.2.6(@swc/core@1.11.11(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
@@ -960,6 +990,9 @@ importers:
       '@types/is-ci':
         specifier: catalog:typescript
         version: 3.0.4
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/rollup-plugin-zephyr:
     dependencies:
@@ -979,6 +1012,9 @@ importers:
       '@types/is-ci':
         specifier: catalog:typescript
         version: 3.0.4
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/vite-plugin-zephyr:
     dependencies:
@@ -1013,6 +1049,9 @@ importers:
       '@types/is-ci':
         specifier: catalog:typescript
         version: 3.0.4
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-agent:
     dependencies:
@@ -1065,6 +1104,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
     optionalDependencies:
       wrangler:
         specifier: ^3.69.1
@@ -1079,6 +1121,9 @@ importers:
       '@types/node':
         specifier: catalog:typescript
         version: 22.13.11
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-modernjs-plugin:
     dependencies:
@@ -1113,6 +1158,9 @@ importers:
       '@types/node-persist':
         specifier: catalog:typescript
         version: 3.1.8
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-repack-plugin:
     dependencies:
@@ -1132,6 +1180,9 @@ importers:
       '@types/find-package-json':
         specifier: ^1.2.6
         version: 1.2.6
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-rolldown-plugin:
     dependencies:
@@ -1148,6 +1199,9 @@ importers:
       '@types/is-ci':
         specifier: catalog:typescript
         version: 3.0.4
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-rspack-plugin:
     dependencies:
@@ -1176,6 +1230,9 @@ importers:
       '@types/node-persist':
         specifier: catalog:typescript
         version: 3.1.8
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-webpack-plugin:
     dependencies:
@@ -1204,6 +1261,9 @@ importers:
       '@types/node-persist':
         specifier: catalog:typescript
         version: 3.1.8
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
   libs/zephyr-xpack-internal:
     dependencies:
@@ -1229,6 +1289,9 @@ importers:
       '@types/node-persist':
         specifier: catalog:typescript
         version: 3.1.8
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
 
 packages:
 

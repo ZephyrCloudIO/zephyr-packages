@@ -15,6 +15,11 @@
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "@types/react-router-dom": "^5.3.3",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "eslint-plugin-react-hooks": "catalog:eslint",
+    "eslint-plugin-jsx-a11y": "catalog:eslint",
+    "eslint-plugin-react": "catalog:eslint",
+    "eslint-plugin-import": "catalog:eslint",
     "rollup-plugin-zephyr": "workspace:*"
   }
 }

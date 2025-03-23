@@ -20,6 +20,11 @@
     "@swc/core": "catalog:swc",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "eslint-plugin-react-hooks": "catalog:eslint",
+    "eslint-plugin-jsx-a11y": "catalog:eslint",
+    "eslint-plugin-react": "catalog:eslint",
+    "eslint-plugin-import": "catalog:eslint",
     "swc-loader": "catalog:swc",
     "zephyr-webpack-plugin": "workspace:*"
   }

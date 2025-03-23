@@ -22,6 +22,7 @@
     "deploy"
   ],
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/is-ci": "catalog:typescript"
   }
 }

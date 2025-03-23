@@ -14,6 +14,7 @@
     "rolldown": "catalog:rolldown"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/is-ci": "catalog:typescript"
   }
 }

@@ -17,6 +17,7 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/is-ci": "catalog:typescript",
     "@types/node-persist": "catalog:typescript"
   }

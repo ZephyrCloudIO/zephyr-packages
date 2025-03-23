@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/node-persist": "catalog:typescript"
   }
 }

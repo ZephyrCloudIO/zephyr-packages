@@ -25,7 +25,7 @@
     "@swc-node/register": "catalog:swc",
     "@swc/cli": "catalog:swc",
     "@swc/core": "catalog:swc",
-    "@testing-library/react": "^16.2.0",
+    "@testing-library/react": "catalog:react",
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",

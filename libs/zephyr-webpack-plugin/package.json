@@ -20,6 +20,8 @@
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint"
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   }
 }

@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "@swc/core": "catalog:swc",
+    "@swc/jest": "catalog:swc",
+    "@testing-library/react": "catalog:react",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
@@ -26,6 +28,8 @@
     "eslint-plugin-react": "catalog:eslint",
     "eslint-plugin-import": "catalog:eslint",
     "swc-loader": "catalog:swc",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-webpack-plugin": "workspace:*",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   }
 }

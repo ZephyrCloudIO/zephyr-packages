@@ -20,7 +20,9 @@
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "@types/node-persist": "catalog:typescript"
+    "@types/node-persist": "catalog:typescript",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   },
   "peerDependencies": {
     "zephyr-rspack-plugin": "workspace:*",

@@ -21,6 +21,8 @@
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "@types/is-ci": "catalog:typescript"
+    "@types/is-ci": "catalog:typescript",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   }
 }

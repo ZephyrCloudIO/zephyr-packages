@@ -41,7 +41,10 @@
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/node-persist": "catalog:typescript",
-    "@types/debug": "^4.1.12"
+    "@types/debug": "^4.1.12",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript",
+    "@jest/globals": "catalog:react"
   },
   "optionalDependencies": {
     "wrangler": "^3.69.1"

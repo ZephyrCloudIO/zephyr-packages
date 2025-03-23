@@ -6,7 +6,15 @@
     "build": "nx build rollup-sample-lib --skip-nx-cache",
     "build-watch-not-working": "nx run rollup-sample-lib:build --skip-nx-cache --watch --verbose"
   },
+  "dependencies": {
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18",
+    "react-router-dom": "^6.30.0"
+  },
   "devDependencies": {
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "@types/react-router-dom": "^5.3.3",
     "rollup-plugin-zephyr": "workspace:*"
   }
 }

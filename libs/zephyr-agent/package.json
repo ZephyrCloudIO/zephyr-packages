@@ -25,11 +25,11 @@
   "dependencies": {
     "cloudflare": "^3.4.0",
     "git-url-parse": "^15.0.0",
-    "is-ci": "*",
-    "jose": "^5.2.4",
+    "is-ci": "catalog:plugin-shared",
+    "jose": "^5.10.0",
     "open": "^10.1.0",
     "socket.io-client": "^4.7.5",
-    "tslib": "^2.6.3",
+    "tslib": "catalog:typescript",
     "uuid": "^8.3.2",
     "node-persist": "^4.0.1",
     "debug": "^4.3.4",
@@ -37,9 +37,9 @@
   },
   "devDependencies": {
     "@types/git-url-parse": "^9.0.3",
-    "@types/is-ci": "*",
+    "@types/is-ci": "catalog:typescript",
     "@types/uuid": "^9.0.8",
-    "@types/node-persist": "*",
+    "@types/node-persist": "catalog:typescript",
     "@types/debug": "^4.1.12"
   },
   "optionalDependencies": {

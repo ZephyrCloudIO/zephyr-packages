@@ -9,13 +9,13 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "*",
-    "@parcel/plugin": "^2.13.3",
-    "@parcel/types": "^2.13.3",
-    "@parcel/core": "^2.13.3",
+    "is-ci": "catalog:plugin-shared",
+    "@parcel/plugin": "catalog:parcel",
+    "@parcel/types": "catalog:parcel",
+    "@parcel/core": "catalog:parcel",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "*"
+    "@types/is-ci": "catalog:typescript"
   }
 }

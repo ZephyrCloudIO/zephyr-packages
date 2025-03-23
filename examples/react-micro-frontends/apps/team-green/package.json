@@ -7,7 +7,7 @@
   },
   "private": true,
   "peerDependencies": {
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   }
 }

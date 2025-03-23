@@ -10,14 +10,14 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@module-federation/automatic-vendor-federation": "1.2.1",
-    "is-ci": "*",
-    "tslib": "^2.3.0",
+    "@module-federation/automatic-vendor-federation": "catalog:module-federation",
+    "is-ci": "catalog:plugin-shared",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "*",
-    "@types/node-persist": "*"
+    "@types/is-ci": "catalog:typescript",
+    "@types/node-persist": "catalog:typescript"
   }
 }

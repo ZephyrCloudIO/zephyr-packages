@@ -10,9 +10,9 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "*",
-    "rollup": "*",
-    "tslib": "^2",
+    "is-ci": "catalog:plugin-shared",
+    "rollup": "catalog:rollup4",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "keywords": [
@@ -22,6 +22,6 @@
     "deploy"
   ],
   "devDependencies": {
-    "@types/is-ci": "*"
+    "@types/is-ci": "catalog:typescript"
   }
 }

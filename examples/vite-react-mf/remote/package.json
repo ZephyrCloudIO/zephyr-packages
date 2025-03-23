@@ -10,22 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@module-federation/runtime": "*"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18",
+    "@module-federation/runtime": "catalog:module-federation"
   },
   "devDependencies": {
-    "@eslint/js": "*",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "*",
-    "eslint": "*",
-    "eslint-plugin-react-hooks": "*",
-    "eslint-plugin-react-refresh": "*",
-    "globals": "*",
-    "typescript": "*",
-    "typescript-eslint": "*",
-    "vite": "*",
+    "@eslint/js": "catalog:eslint",
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "@vitejs/plugin-react": "catalog:vite6",
+    "eslint": "catalog:eslint",
+    "eslint-plugin-react-hooks": "catalog:eslint",
+    "eslint-plugin-react-refresh": "catalog:eslint",
+    "globals": "catalog:vite6",
+    "typescript": "catalog:typescript",
+    "typescript-eslint": "catalog:eslint",
+    "vite": "catalog:vite6",
     "vite-plugin-zephyr": "workspace:*"
   }
 }

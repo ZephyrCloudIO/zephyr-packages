@@ -9,11 +9,11 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "*",
+    "is-ci": "catalog:plugin-shared",
     "zephyr-agent": "workspace:*",
-    "rolldown": "1.0.0-beta.3"
+    "rolldown": "catalog:rolldown"
   },
   "devDependencies": {
-    "@types/is-ci": "*"
+    "@types/is-ci": "catalog:typescript"
   }
 }

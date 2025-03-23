@@ -10,16 +10,16 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "*",
-    "tslib": "^2.3.0",
-    "@modern-js/app-tools": "^2.65.3",
+    "is-ci": "catalog:plugin-shared",
+    "tslib": "catalog:typescript",
+    "@modern-js/app-tools": "catalog:modernjs",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "*",
-    "@types/node-persist": "*"
+    "@types/is-ci": "catalog:typescript",
+    "@types/node-persist": "catalog:typescript"
   },
   "peerDependencies": {
     "zephyr-rspack-plugin": "workspace:*",

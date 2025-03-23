@@ -9,17 +9,17 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@module-federation/runtime": "*",
-    "@module-federation/vite": "*",
+    "@module-federation/runtime": "catalog:module-federation",
+    "@module-federation/vite": "catalog:module-federation",
     "acorn": "^8.12.1",
     "acorn-walk": "^8.3.4",
-    "is-ci": "*",
+    "is-ci": "catalog:plugin-shared",
     "json5": "2.2.3",
-    "rollup": "*",
-    "vite": "*",
+    "rollup": "catalog:rollup4",
+    "vite": "catalog:vite6",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "*"
+    "@types/is-ci": "catalog:typescript"
   }
 }

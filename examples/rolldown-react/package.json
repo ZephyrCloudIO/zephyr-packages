@@ -6,13 +6,13 @@
     "build": "rolldown --config ./rolldown.config.mjs"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@types/react": "^19.0.12",
-    "@types/react-dom": "^19.0.4",
-    "rolldown": "1.0.0-beta.6",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "rolldown": "catalog:rolldown",
     "zephyr-rolldown-plugin": "workspace:*"
   }
 }

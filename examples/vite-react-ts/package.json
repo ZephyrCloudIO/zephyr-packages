@@ -12,25 +12,25 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "rollup": "^4"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18",
+    "rollup": "catalog:rollup4"
   },
   "devDependencies": {
-    "@eslint/compat": "^1.2.7",
-    "@eslint/eslintrc": "^3.3.0",
-    "@eslint/js": "*",
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
-    "@typescript-eslint/eslint-plugin": "*",
-    "@typescript-eslint/parser": "*",
-    "@vitejs/plugin-react": "*",
-    "eslint": "*",
-    "eslint-plugin-react-hooks": "*",
-    "eslint-plugin-react-refresh": "*",
-    "globals": "*",
-    "typescript": "*",
-    "vite": "*",
+    "@eslint/compat": "catalog:eslint",
+    "@eslint/eslintrc": "catalog:eslint",
+    "@eslint/js": "catalog:eslint",
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "@typescript-eslint/parser": "catalog:eslint",
+    "@vitejs/plugin-react": "catalog:vite6",
+    "eslint": "catalog:eslint",
+    "eslint-plugin-react-hooks": "catalog:eslint",
+    "eslint-plugin-react-refresh": "catalog:eslint",
+    "globals": "catalog:vite6",
+    "typescript": "catalog:typescript",
+    "vite": "catalog:vite6",
     "vite-plugin-inspect": "^11.0.0",
     "vite-plugin-zephyr": "workspace:*"
   }

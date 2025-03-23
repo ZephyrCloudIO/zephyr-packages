@@ -8,19 +8,19 @@ import {
 } from 'zephyr-xpack-internal';
 import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { RePackConfiguration, RepackEnv } from '../type/zephyr-internal-types';
+import { RepackEnv } from '../type/zephyr-internal-types';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
-  configFn: (env: RepackEnv) => RePackConfiguration
+  configFn: (env: RepackEnv) => Configuration
 ) => (
   // Second return: A function taking a config object
-  config: RePackConfiguration
+  config: RepackEnv
 ) => Promise<Configuration> {
   // RETURN 1: Function that takes the user's config function
-  return (configFn: (env: RepackEnv) => RePackConfiguration) => {
+  return (configFn: (env: RepackEnv) => Configuration) => {
     // RETURN 2: Function that takes the base config and returns the final webpack config
-    return (config: RePackConfiguration) => {
+    return (config: RepackEnv) => {
       // Extract environment from config
 
       // Generate user config by calling their function with env
@@ -42,7 +42,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   };
 }
 async function _zephyr_configuration(
-  config: RePackConfiguration,
+  config: Configuration,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {

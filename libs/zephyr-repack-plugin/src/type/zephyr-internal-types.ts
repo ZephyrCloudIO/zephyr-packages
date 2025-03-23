@@ -1,5 +1,4 @@
-import { Configuration, Context } from '@rspack/core';
-import { EnvOptions } from '@callstack/repack';
+import { Context } from '@rspack/core';
 export interface DelegateConfig {
   org: string;
   project: string;
@@ -22,7 +21,5 @@ export interface RepackEnv {
     hmr?: boolean;
   };
   // 'ios' | 'android' | 'web' | undefined
-  platform?: EnvOptions['platform'];
+  platform?: Platform | undefined;
 }
-
-export type RePackConfiguration = Configuration & RepackEnv;

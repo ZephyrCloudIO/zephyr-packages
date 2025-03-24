@@ -9,7 +9,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown = xpack_delegate_module_template
+  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log(`No resolved dependency pairs found, skipping...`);
@@ -64,6 +64,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       if (remotes[remote_name]) {
         // @ts-expect-error - read above
         remotes[remote_name] = createMfRuntimeCode(
+          zephyr_engine,
           resolved_dep,
           delegate_module_template
         );

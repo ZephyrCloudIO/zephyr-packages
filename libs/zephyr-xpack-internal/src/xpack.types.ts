@@ -75,6 +75,7 @@ export interface XCompiler {
       uniqueName: string;
     };
     plugins: ModuleFederationPlugin[];
+    name: string | undefined;
   };
   plugins: ModuleFederationPlugin[];
   hooks: {

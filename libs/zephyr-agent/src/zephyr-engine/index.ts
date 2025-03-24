@@ -47,6 +47,8 @@ export interface ZeDependencyPair {
 export interface BuildProperties {
   // output path
   output: string;
+  // base href for assets, used to prefix asset paths
+  baseHref?: string;
 }
 
 export function is_zephyr_dependency_pair(

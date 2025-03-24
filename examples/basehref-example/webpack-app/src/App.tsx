@@ -9,7 +9,8 @@ declare global {
 
 const App: React.FC = () => {
   const [detectedBase, setDetectedBase] = useState<string>('');
-  const [manifestContent, setManifestContent] = useState<string>('Loading 9...');
+  const [manifestContent, setManifestContent] =
+    useState<string>('Loading 9...');
 
   return (
     <div className="container">
@@ -25,7 +26,10 @@ const App: React.FC = () => {
       </div>
 
       <footer>
-        <p>This example demonstrates the BaseHref functionality in a Webpack application.</p>
+        <p>
+          This example demonstrates the BaseHref functionality in a Webpack
+          application.
+        </p>
         <p>Try running with different public paths using:</p>
         <p className="resource-path">npm run start:base</p>
       </footer>

@@ -7,6 +7,7 @@ This directory contains example applications demonstrating the BaseHref function
 ### Vite Example
 
 A React application built with Vite, demonstrating:
+
 - Base path detection and configuration
 - HTML base tag injection
 - URL construction with proper base path handling
@@ -18,6 +19,7 @@ A React application built with Vite, demonstrating:
 ### Webpack Example
 
 A React application built with Webpack, demonstrating:
+
 - Public path detection and configuration
 - HTML base tag injection
 - URL construction with proper base path handling
@@ -42,6 +44,7 @@ The BaseHref implementation provides a consistent way to handle application path
 ## Usage
 
 Each example includes detailed instructions on how to:
+
 1. Install dependencies
 2. Run the application with different base paths
 3. Build the application for production

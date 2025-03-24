@@ -25,8 +25,14 @@ function App() {
       <div className="card">
         <h2>Configuration Info</h2>
         {/*<p><strong>Configured Base:</strong> <span className="resource-path">{baseHref.baseHref}</span></p>*/}
-        <p><strong>Detected Base:</strong> <span className="resource-path">{detectedBase}</span></p>
-        <p><strong>Current URL:</strong> <span className="resource-path">{currentUrl}</span></p>
+        <p>
+          <strong>Detected Base:</strong>{' '}
+          <span className="resource-path">{detectedBase}</span>
+        </p>
+        <p>
+          <strong>Current URL:</strong>{' '}
+          <span className="resource-path">{currentUrl}</span>
+        </p>
       </div>
 
       <div className="card">
@@ -35,18 +41,30 @@ function App() {
         <div>
           <h3>Relative Path</h3>
           <p className="resource-path">{imagePaths.relative}</p>
-          <p>Resolves to: <span className="resource-path">{new URL(imagePaths.relative, window.location.href).href}</span></p>
+          <p>
+            Resolves to:{' '}
+            <span className="resource-path">
+              {new URL(imagePaths.relative, window.location.href).href}
+            </span>
+          </p>
         </div>
 
         <div>
           <h3>Absolute Path</h3>
           <p className="resource-path">{imagePaths.absolute}</p>
-          <p>Resolves to: <span className="resource-path">{new URL(imagePaths.absolute, window.location.origin).href}</span></p>
+          <p>
+            Resolves to:{' '}
+            <span className="resource-path">
+              {new URL(imagePaths.absolute, window.location.origin).href}
+            </span>
+          </p>
         </div>
 
         <div>
           <h3>BaseHref Path</h3>
-          <p className="resource-path">new URL('assets/logo.png', baseHref.baseHref)</p>
+          <p className="resource-path">
+            new URL('assets/logo.png', baseHref.baseHref)
+          </p>
           {/*<p>Resolves to: <span className="resource-path">{imagePaths.baseHref}</span></p>*/}
         </div>
       </div>
@@ -61,7 +79,10 @@ function App() {
       </div>
 
       <footer>
-        <p>This example demonstrates the BaseHref functionality in a Vite application.</p>
+        <p>
+          This example demonstrates the BaseHref functionality in a Vite
+          application.
+        </p>
         <p>Try running with different base paths using:</p>
         <p className="resource-path">npm run dev:base</p>
       </footer>

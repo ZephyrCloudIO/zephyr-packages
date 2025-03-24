@@ -20,6 +20,11 @@
       "import": "./dist/node-persist/index.js",
       "require": "./dist/node-persist/index.js",
       "types": "./dist/node-persist/index.d.ts"
+    },
+    "./src/lib/transformers/ze-basehref-handler": {
+      "import": "./dist/lib/transformers/ze-basehref-handler.js",
+      "require": "./dist/lib/transformers/ze-basehref-handler.js",
+      "types": "./dist/lib/transformers/ze-basehref-handler.d.ts"
     }
   },
   "dependencies": {

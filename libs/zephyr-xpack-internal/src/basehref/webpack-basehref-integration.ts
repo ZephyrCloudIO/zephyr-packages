@@ -1,5 +1,4 @@
-import { ZephyrEngine } from 'zephyr-agent';
-import { normalizeBasePath } from 'zephyr-agent/src/lib/transformers/ze-basehref-handler';
+import { ZephyrEngine, normalizeBasePath } from 'zephyr-agent';
 
 /**
  * Interface for options that might contain baseHref settings

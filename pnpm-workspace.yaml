@@ -37,9 +37,12 @@ catalogs:
   plugin-shared:
     is-ci: ^4.1.0
   babel:
+    'babel-loader': ^9.1.2
     '@babel/core': ^7.26.10
     '@babel/runtime': 7.25.6
+    '@babel/preset-env': ^7.26.3
     '@babel/preset-react': ^7.26.3
+    '@babel/preset-typescript': ^7.26.0
   typescript:
     typescript: ~5.8.2
     '@types/jest': 29.5.14
@@ -58,12 +61,19 @@ catalogs:
     '@swc/jest': 0.2.37
   webpack5:
     webpack: ^5.98.0
+    'webpack-cli': ^6.0.1
+    'webpack-dev-server': ^5.2.0
+    'css-loader': ^6.8.1
+    'html-webpack-plugin': ^5.5.3
     '@svgr/webpack': ^8.1.0
   tailwind:
     tailwindcss: ^3.4.11
   postcss:
     postcss: ^8.2.1
     postcss-loader: ^8.0.0
+  vite5:
+    vite: ^5.4.15
+    '@vitejs/plugin-react': ^4.3.4
   vite6:
     vite: ^6.2.2
     globals: ^15.9.0

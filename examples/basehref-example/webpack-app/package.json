@@ -9,24 +9,24 @@
     "build:base": "webpack --mode=production --env publicPath=/app/"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.5",
-    "@babel/preset-env": "^7.22.5",
-    "@babel/preset-react": "^7.22.5",
-    "@babel/preset-typescript": "^7.22.5",
-    "@types/react": "^18.2.12",
-    "@types/react-dom": "^18.2.5",
-    "babel-loader": "^9.1.2",
-    "css-loader": "^6.8.1",
-    "html-webpack-plugin": "^5.5.3",
+    "@babel/core": "catalog:babel",
+    "@babel/preset-env": "catalog:babel",
+    "@babel/preset-react": "catalog:babel",
+    "@babel/preset-typescript": "catalog:babel",
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "babel-loader": "catalog:babel",
+    "css-loader": "catalog:webpack5",
+    "html-webpack-plugin": "catalog:webpack5",
     "style-loader": "^3.3.3",
-    "typescript": "^5.1.3",
-    "webpack": "^5.87.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1",
+    "typescript": "catalog:typescript",
+    "webpack": "catalog:webpack5",
+    "webpack-cli": "catalog:webpack5",
+    "webpack-dev-server": "catalog:webpack5",
     "zephyr-webpack-plugin": "workspace:*"
   }
 }

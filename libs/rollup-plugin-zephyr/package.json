@@ -10,9 +10,9 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "^3.0.1",
-    "rollup": "^4",
-    "tslib": "^2",
+    "is-ci": "catalog:plugin-shared",
+    "rollup": "catalog:rollup4",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "keywords": [
@@ -22,6 +22,9 @@
     "deploy"
   ],
   "devDependencies": {
-    "@types/is-ci": "^3.0.4"
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "@types/is-ci": "catalog:typescript",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   }
 }

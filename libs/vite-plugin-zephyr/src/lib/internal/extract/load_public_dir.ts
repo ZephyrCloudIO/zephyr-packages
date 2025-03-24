@@ -28,11 +28,13 @@ export async function load_public_dir(
       } else {
         publicAssets.push({
           name: basename(file),
+          names: [basename(file)],
           needsCodeReference: false,
           source: await promisify(readFile)(srcFile),
           type: 'asset',
           fileName: normalizePath(relative(outDir, destFile)),
           originalFileName: basename(file),
+          originalFileNames: [basename(file)],
         });
       }
     }

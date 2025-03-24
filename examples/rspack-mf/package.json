@@ -1,10 +1,12 @@
 {
   "name": "rspack-mf",
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
     "zephyr-rspack-plugin": "workspace:*"
   }
 }

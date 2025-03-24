@@ -24,23 +24,23 @@
     "pre-commit": "npx lint-staged"
   },
   "dependencies": {
-    "@modern-js/plugin-ssg": "^2.65.0",
-    "@modern-js/runtime": "^2.65.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@modern-js/plugin-ssg": "^2.65.5",
+    "@modern-js/runtime": "^2.65.5",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@modern-js/app-tools": "^2.65.0",
-    "@modern-js/tsconfig": "^2.65.0",
-    "@types/jest": "~29.5.14",
-    "@types/node": "~18.11.19",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "~19.0.4",
-    "lint-staged": "~15.3.0",
+    "@modern-js/app-tools": "catalog:modernjs",
+    "@modern-js/tsconfig": "catalog:modernjs",
+    "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "lint-staged": "~15.5.0",
     "rimraf": "^6.0.1",
-    "simple-git-hooks": "^2.11.1",
-    "typescript": "~5.7.3",
+    "simple-git-hooks": "^2.12.1",
+    "typescript": "catalog:typescript",
     "zephyr-modernjs-plugin": "workspace:*"
   }
 }

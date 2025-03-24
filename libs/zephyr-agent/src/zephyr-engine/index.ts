@@ -37,6 +37,8 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
+export type Platform = 'ios' | 'android' | 'web' | undefined;
+
 export interface ZeDependencyPair {
   name: string;
   version: string;
@@ -94,7 +96,7 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     buildEnv: string;
-    target: 'ios' | 'android' | 'web';
+    target: Platform;
   } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
@@ -290,13 +292,18 @@ export class ZephyrEngine {
     const versionUrl = zephyr_engine.version_url;
     const dependencies = zephyr_engine.federated_dependencies;
 
+    const if_target_is_react_native =
+      zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
+
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {
         logger({
           level: 'info',
           action: 'build:info:user',
           ignore: true,
-          message: `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
+          message: if_target_is_react_native
+            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target}`
+            : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
         });
       }
 

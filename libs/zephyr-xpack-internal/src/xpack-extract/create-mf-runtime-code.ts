@@ -1,12 +1,13 @@
-import { type ZeResolvedDependency } from 'zephyr-agent';
+import { ZephyrEngine, type ZeResolvedDependency } from 'zephyr-agent';
 
 declare const __webpack_require__: {
   l: (url: string, fn: () => void, name: string, name2: string) => void;
 };
 
 export function createMfRuntimeCode(
+  zephyr_engine: ZephyrEngine,
   deps: ZeResolvedDependency,
-  delegate_module_template: () => unknown
+  delegate_module_template: () => unknown | undefined
 ): string {
   // prepare delegate function string template
   const fnReplace = delegate_module_template.toString();
@@ -16,6 +17,11 @@ export function createMfRuntimeCode(
   const promiseNewPromise = fnReplace.replace(strStart, strNewStart).replace(strEnd, '');
 
   const { application_uid, remote_entry_url, default_url, name, library_type } = deps;
+
+  // If the builder is `repack` only return the remote url without any changes
+  if (zephyr_engine.builder === 'repack') {
+    return remote_entry_url;
+  }
 
   return promiseNewPromise
     .replace('__APPLICATION_UID__', application_uid)

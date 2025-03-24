@@ -15,6 +15,20 @@ export async function uploadSnapshot({
     application_uid,
   });
 
+  console.log('body assets', body.assets);
+  console.log('Object.entries(body.assets', Object.entries(body.assets));
+  console.log('Object.fromEntries', Object.fromEntries(Object.entries(body.assets)));
+  console.log('env uploadSnapshot', process.env['publicPath']);
+
+  // // GAMBI
+  body.assets = Object.fromEntries(
+    Object.entries(body.assets).map(([key, value]) => {
+      value.path = 'app/' + value.path;
+      return ['app/' + key, value];
+    })
+  );
+  console.log('body.assets after', body.assets);
+
   const json = JSON.stringify(body);
 
   const options: RequestInit = {

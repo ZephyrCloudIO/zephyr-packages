@@ -12,13 +12,16 @@ export async function uploadFile(
   { hash, asset }: UploadFileProps,
   { EDGE_URL, jwt }: ZeApplicationConfig
 ) {
+  console.log('env uploadFile', process.env['publicPath']);
+
   const type = 'file';
 
   const options: RequestInit = {
     method: 'POST',
     headers: {
-      'x-file-size': asset.size.toString(),
-      'x-file-path': asset.path,
+      // 'x-file-size': asset.size.toString(),
+      'x-file-path': 'app/' + asset.path,
+      // 'x-file-path': asset.path,
       can_write_jwt: jwt,
       'Content-Type': 'application/octet-stream',
     },
@@ -28,7 +31,8 @@ export async function uploadFile(
     {
       path: '/upload',
       base: EDGE_URL,
-      query: { type, hash, filename: asset.path },
+      query: { type, hash, filename: 'app/' + asset.path },
+      // query: { type, hash, filename: asset.path },
     },
     options,
     asset.buffer

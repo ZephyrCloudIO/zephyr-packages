@@ -34,7 +34,10 @@ export async function zeUploadAssets(
   // If the target is iOS or Android, we upload the assets in a 6 request batch to avoid cloudflare worker requests limit
   // Reference: https://developers.cloudflare.com/workers/platform/limits/#simultaneous-open-connections:~:text=Once%20an%20invocation%20has%20six%20connections%20open%2C%20it%20can%20still%20attempt%20to%20open%20additional%20connections.
   if (zephyr_engine.env.target !== 'ios' && zephyr_engine.env.target !== 'android') {
-    await Promise.all(missingAssets.map(upload_missing_asset));
+    await forEachLimit<void>(
+      missingAssets.map((asset) => () => upload_missing_asset(asset)),
+      1
+    );
   } else {
     ze_log(
       "The target platform is 'ios' and 'android' so we are switching to batch upload."

@@ -105,6 +105,7 @@ export interface ZephyrBuildStats {
   edge: {
     url: string;
     versionUrl?: string;
+    delimiter: string;
   };
   domain?: string | undefined;
   /** @deprecated */

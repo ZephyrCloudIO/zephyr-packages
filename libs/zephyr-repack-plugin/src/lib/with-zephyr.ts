@@ -83,6 +83,7 @@ async function _zephyr_configuration(
     new ZeRepackPlugin({
       zephyr_engine,
       mfConfig: makeCopyOfModuleFederationOptions(config),
+      target: zephyr_engine.env.target,
     })
   );
 

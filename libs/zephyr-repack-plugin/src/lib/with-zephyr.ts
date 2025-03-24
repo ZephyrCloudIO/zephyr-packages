@@ -1,5 +1,5 @@
 import { Configuration } from '@rspack/core';
-import { ze_log, ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
 import {
   extractFederatedDependencyPairs,
@@ -53,7 +53,10 @@ async function _zephyr_configuration(
   });
   ze_log('Configuring with Zephyr... \n config: ', config);
 
-  zephyr_engine.env.target = _zephyrOptions?.target ?? zephyr_engine.env.target;
+  if (!_zephyrOptions?.target) {
+    throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
+  }
+  zephyr_engine.env.target = _zephyrOptions?.target;
 
   const dependency_pairs = extractFederatedDependencyPairs(config);
 

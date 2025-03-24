@@ -20,5 +20,5 @@ export interface RepackEnv {
     hmr?: boolean;
   };
   // 'ios' | 'android' | 'web' | undefined
-  platform?: Platform | undefined;
+  platform: Platform | undefined;
 }

@@ -52,10 +52,10 @@ export default defineConfig({
       enabled: true,
       transformHtml: true,
       baseTagOptions: {
-        target: '_blank'
-      }
-    })
-  ]
+        target: '_blank',
+      },
+    }),
+  ],
 });
 ```
 

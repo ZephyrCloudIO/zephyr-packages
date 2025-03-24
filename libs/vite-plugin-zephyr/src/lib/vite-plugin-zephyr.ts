@@ -1,6 +1,5 @@
 import type { Plugin, ResolvedConfig } from 'vite';
-import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
-import { normalizeBasePath } from 'zephyr-agent/src/lib/transformers/ze-basehref-handler';
+import { zeBuildDashData, ZephyrEngine, normalizeBasePath } from 'zephyr-agent';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 import { federation } from '@module-federation/vite';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';

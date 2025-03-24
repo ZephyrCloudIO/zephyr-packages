@@ -9,6 +9,18 @@
     "build": "nx run zephyr-xpack-internal:build",
     "patch-version": "pnpm version"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./src/basehref/webpack-basehref-integration": {
+      "import": "./dist/basehref/webpack-basehref-integration.js",
+      "require": "./dist/basehref/webpack-basehref-integration.js",
+      "types": "./dist/basehref/webpack-basehref-integration.d.ts"
+    }
+  },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "catalog:module-federation",
     "is-ci": "catalog:plugin-shared",

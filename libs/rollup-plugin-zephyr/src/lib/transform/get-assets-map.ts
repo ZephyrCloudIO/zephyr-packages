@@ -1,8 +1,33 @@
 import { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
-import { buildAssetsMap, ZeBuildAssetsMap } from 'zephyr-agent';
+import { 
+  buildAssetsMap, 
+  ZeBuildAssetsMap, 
+  ZephyrEngine, 
+  ze_log 
+} from 'zephyr-agent';
+import { applyBaseHrefToAssets } from 'zephyr-agent/src/lib/transformers/ze-basehref-handler';
 
-export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
-  return buildAssetsMap(assets, extractBuffer, getAssetType);
+/**
+ * Creates an assets map from Rollup's output bundle, applying baseHref if available
+ * 
+ * @param assets - Rollup output bundle
+ * @param zephyr_engine - ZephyrEngine instance containing build properties
+ * @returns An assets map with paths processed according to baseHref
+ */
+export function getAssetsMap(
+  assets: OutputBundle,
+  zephyr_engine?: ZephyrEngine
+): ZeBuildAssetsMap {
+  // Build the initial assets map
+  let assetsMap = buildAssetsMap(assets, extractBuffer, getAssetType);
+  
+  // Apply baseHref to asset paths if available
+  if (zephyr_engine?.buildProperties?.baseHref) {
+    ze_log(`Applying baseHref '${zephyr_engine.buildProperties.baseHref}' to Rollup asset paths.`);
+    assetsMap = applyBaseHrefToAssets(assetsMap, zephyr_engine.buildProperties.baseHref);
+  }
+  
+  return assetsMap;
 }
 
 const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {

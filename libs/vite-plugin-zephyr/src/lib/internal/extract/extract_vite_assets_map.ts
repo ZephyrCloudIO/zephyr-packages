@@ -5,8 +5,9 @@ import {
   ZeBuildAssetsMap,
   ZephyrEngine,
   ze_log,
+  normalizeBasePath,
+  applyBaseHrefToAssets
 } from 'zephyr-agent';
-import { normalizeBasePath, applyBaseHrefToAssets } from 'zephyr-agent/src/lib/transformers/ze-basehref-handler';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import { loadStaticAssets } from './load_static_assets';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';

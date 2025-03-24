@@ -11,6 +11,7 @@
       "defaultConfiguration": "production",
       "options": {
         "target": "web",
+        "baseHref": "/u/",
         "outputPath": "dist/examples/rspack-mf/apps/host",
         "main": "examples/rspack-mf/apps/host/src/main.tsx",
         "tsConfig": "examples/rspack-mf/apps/host/tsconfig.app.json",

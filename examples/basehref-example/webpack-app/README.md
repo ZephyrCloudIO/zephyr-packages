@@ -41,7 +41,7 @@ const { webpackBaseHrefPlugin } = require('../../../basehref-webpack-plugin');
 module.exports = (env = {}) => {
   // Extract publicPath from environment
   const publicPath = env.publicPath || 'auto';
-  
+
   return {
     // Webpack configuration...
     plugins: [
@@ -49,9 +49,9 @@ module.exports = (env = {}) => {
       webpackBaseHrefPlugin({
         publicPath: publicPath,
         injectIntoHtml: true,
-        generateManifestFile: true
-      })
-    ]
+        generateManifestFile: true,
+      }),
+    ],
   };
 };
 ```
@@ -72,6 +72,6 @@ const imageUrl = new URL('assets/image.jpg', basePath).href;
 
 - When deploying to a non-root path, make sure to set the publicPath in your Webpack configuration
 - Use the BaseHref plugin to ensure proper path handling
-- Use the window.__BASEHREF__ global variable for dynamic path resolution at runtime
+- Use the window.**BASEHREF** global variable for dynamic path resolution at runtime
 - Always construct URLs using the base path to ensure proper resolution
 - Check the generated basehref-manifest.json file for path configuration details

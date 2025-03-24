@@ -58,7 +58,8 @@ h2 {
   margin: 10px 0;
 }
 
-button, a {
+button,
+a {
   background-color: #3498db;
   color: white;
   padding: 8px 15px;
@@ -69,7 +70,8 @@ button, a {
   display: inline-block;
 }
 
-button:hover, a:hover {
+button:hover,
+a:hover {
   background-color: #2980b9;
 }
 
@@ -84,7 +86,7 @@ footer {
   .container {
     padding: 10px;
   }
-  
+
   .row {
     flex-direction: column;
   }

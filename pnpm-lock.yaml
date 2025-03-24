@@ -1013,7 +1013,7 @@ importers:
         version: link:../zephyr-xpack-internal
     devDependencies:
       '@callstack/repack':
-        specifier: 5.0.0
+        specifier: ^5.0.0
         version: 5.0.0(@babel/core@7.26.10)(@module-federation/enhanced@0.8.12(@rspack/core@1.2.5(@swc/helpers@0.5.15))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3)(webpack@5.98.0(@swc/core@1.5.7(@swc/helpers@0.5.15))(esbuild@0.19.12)))(@react-native-community/cli-server-api@15.1.3)(@react-native-community/cli-tools@15.1.3)(@react-native-community/cli-types@15.1.3)(@react-native-community/cli@15.1.3(typescript@5.7.3))(@rspack/core@1.2.5(@swc/helpers@0.5.15))(react-native@0.76.6(@babel/core@7.26.10)(@babel/preset-env@7.26.7(@babel/core@7.26.10))(@react-native-community/cli-server-api@15.1.3)(@types/react@18.3.18)(encoding@0.1.13)(react@19.0.0))(webpack@5.98.0(@swc/core@1.5.7(@swc/helpers@0.5.15))(esbuild@0.19.12))
       '@rspack/core':
         specifier: '>=1.2.5'
@@ -20210,7 +20210,7 @@ snapshots:
       postcss-page-break: 3.0.4(postcss@8.5.1)
       react-refresh: 0.14.2
       rspack-manifest-plugin: 5.0.3(@rspack/core@1.2.5(@swc/helpers@0.5.13))
-      terser-webpack-plugin: 5.3.11(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)(webpack@5.98.0(@swc/core@1.10.16(@swc/helpers@0.5.13))(esbuild@0.17.19))
+      terser-webpack-plugin: 5.3.11(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19))
       ts-deepmerge: 7.0.2
       ts-loader: 9.4.4(typescript@5.7.3)(webpack@5.98.0(@swc/core@1.10.16(@swc/helpers@0.5.13))(esbuild@0.17.19))
       webpack: 5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)
@@ -25024,7 +25024,7 @@ snapshots:
       sirv: 3.0.0
       tinyglobby: 0.2.10
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@18.19.74)(@vitest/ui@2.1.9)(jsdom@22.1.0)(less@4.1.3)(lightningcss@1.29.1)(msw@2.7.0(@types/node@18.19.74)(typescript@5.7.3))(sass-embedded@1.85.0)(sass@1.83.4)(stylus@0.64.0)(terser@5.37.0)
+      vitest: 2.1.9(@types/node@22.13.0)(@vitest/ui@2.1.9)(jsdom@22.1.0)(less@4.1.3)(lightningcss@1.29.1)(msw@2.7.0(@types/node@22.13.0)(typescript@5.7.3))(sass-embedded@1.85.0)(sass@1.83.4)(stylus@0.64.0)(terser@5.37.0)
 
   '@vitest/utils@2.1.9':
     dependencies:
@@ -34866,7 +34866,7 @@ snapshots:
       '@swc/core': 1.10.16(@swc/helpers@0.5.13)
       esbuild: 0.17.19
 
-  terser-webpack-plugin@5.3.11(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)(webpack@5.98.0(@swc/core@1.10.16(@swc/helpers@0.5.13))(esbuild@0.17.19)):
+  terser-webpack-plugin@5.3.11(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
@@ -36377,7 +36377,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.11(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)(webpack@5.98.0(@swc/core@1.10.16(@swc/helpers@0.5.13))(esbuild@0.17.19))
+      terser-webpack-plugin: 5.3.11(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19)(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.13))(esbuild@0.17.19))
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:

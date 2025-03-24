@@ -37,6 +37,7 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
+export type Platform = 'ios' | 'android' | 'web' | undefined;
 export interface ZeDependencyPair {
   name: string;
   version: string;
@@ -94,7 +95,7 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     buildEnv: string;
-    target: 'ios' | 'android' | 'web' | undefined;
+    target: Platform;
   } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;

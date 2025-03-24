@@ -1,12 +1,11 @@
 import { Context } from '@rspack/core';
+import { Platform } from 'zephyr-agent';
 export interface DelegateConfig {
   org: string;
   project: string;
   application?: undefined;
-  target?: 'ios' | 'android' | 'web' | undefined;
+  target?: Platform;
 }
-
-export type Platform = DelegateConfig['target'];
 
 export interface RepackEnv {
   context?: Context;

@@ -15,7 +15,7 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@callstack/repack": "5.0.0",
+    "@callstack/repack": "^5.0.0",
     "@rspack/core": "1.0.8",
     "@types/find-package-json": "^1.2.6",
     "@types/is-ci": "^3.0.4"

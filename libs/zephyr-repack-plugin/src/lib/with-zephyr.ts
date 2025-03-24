@@ -51,14 +51,9 @@ async function _zephyr_configuration(
     builder: 'repack',
     context: config.context,
   });
-  ze_log(
-    'Configuring with Zephyr... \n config:',
-    config,
-    '\n _zephyrOptions: ',
-    _zephyrOptions
-  );
+  ze_log('Configuring with Zephyr... \n config: ', config);
 
-  zephyr_engine.env.target = _zephyrOptions?.target;
+  zephyr_engine.env.target = _zephyrOptions?.target ?? zephyr_engine.env.target;
 
   const dependency_pairs = extractFederatedDependencyPairs(config);
 

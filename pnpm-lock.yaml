@@ -147,6 +147,9 @@ catalogs:
     react-dom:
       specifier: ^19.0.0
       version: 19.0.0
+    react-refresh:
+      specifier: ^0.16.0
+      version: 0.16.0
   rolldown:
     rolldown:
       specifier: 1.0.0-beta.3
@@ -204,6 +207,9 @@ catalogs:
     ts-jest:
       specifier: ^29.2.6
       version: 29.2.6
+    ts-node:
+      specifier: ^10.9.2
+      version: 10.9.2
     tslib:
       specifier: ^2.8.1
       version: 2.8.1
@@ -365,6 +371,43 @@ importers:
       serve:
         specifier: ^14.2.4
         version: 14.2.4
+
+  examples/basehref-example/rspack-app:
+    dependencies:
+      react:
+        specifier: catalog:react19
+        version: 19.0.0
+      react-dom:
+        specifier: catalog:react19
+        version: 19.0.0(react@19.0.0)
+      zephyr-rspack-plugin:
+        specifier: workspace:*
+        version: link:../../../libs/zephyr-rspack-plugin
+    devDependencies:
+      '@rspack/cli':
+        specifier: catalog:rspack
+        version: 1.2.8(@rspack/core@1.2.8(@swc/helpers@0.5.15))(@types/express@4.17.21)(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
+      '@rspack/core':
+        specifier: 1.2.8
+        version: 1.2.8(@swc/helpers@0.5.15)
+      '@rspack/plugin-react-refresh':
+        specifier: catalog:rspack
+        version: 1.0.1(react-refresh@0.16.0)
+      '@types/react':
+        specifier: catalog:react19
+        version: 19.0.12
+      '@types/react-dom':
+        specifier: catalog:react19
+        version: 19.0.4(@types/react@19.0.12)
+      react-refresh:
+        specifier: catalog:react19
+        version: 0.16.0
+      ts-node:
+        specifier: catalog:typescript
+        version: 10.9.2(@swc/core@1.11.11(@swc/helpers@0.5.15))(@types/node@22.13.11)(typescript@5.8.2)
+      typescript:
+        specifier: catalog:typescript
+        version: 5.8.2
 
   examples/basehref-example/vite-app:
     dependencies:
@@ -636,10 +679,10 @@ importers:
         specifier: catalog:react18
         version: 0.16.0
       ts-jest:
-        specifier: ^29.2.6
+        specifier: catalog:typescript
         version: 29.2.6(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.17.19)(jest@29.7.0(@types/node@22.13.11)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.11.11(@swc/helpers@0.5.15))(@types/node@22.13.11)(typescript@5.8.2)))(typescript@5.8.2)
       ts-node:
-        specifier: 10.9.2
+        specifier: catalog:typescript
         version: 10.9.2(@swc/core@1.11.11(@swc/helpers@0.5.15))(@types/node@22.13.11)(typescript@5.8.2)
       tsutils:
         specifier: ^3.21.0
@@ -725,43 +768,6 @@ importers:
       rollup-plugin-zephyr:
         specifier: workspace:*
         version: link:../../libs/rollup-plugin-zephyr
-
-  examples/rspack-base-href:
-    dependencies:
-      react:
-        specifier: ^19.0.0
-        version: 19.0.0
-      react-dom:
-        specifier: ^19.0.0
-        version: 19.0.0(react@19.0.0)
-      zephyr-rspack-plugin:
-        specifier: '*'
-        version: 0.0.36(@swc/helpers@0.5.15)(encoding@0.1.13)(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
-    devDependencies:
-      '@rspack/cli':
-        specifier: ^1.2.8
-        version: 1.2.8(@rspack/core@1.2.8(@swc/helpers@0.5.15))(@types/express@4.17.21)(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
-      '@rspack/core':
-        specifier: 1.2.8
-        version: 1.2.8(@swc/helpers@0.5.15)
-      '@rspack/plugin-react-refresh':
-        specifier: ^1.0.1
-        version: 1.0.1(react-refresh@0.16.0)
-      '@types/react':
-        specifier: ^19.0.10
-        version: 19.0.12
-      '@types/react-dom':
-        specifier: ^19.0.4
-        version: 19.0.4(@types/react@19.0.12)
-      react-refresh:
-        specifier: ^0.16.0
-        version: 0.16.0
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.11.11(@swc/helpers@0.5.15))(@types/node@22.13.11)(typescript@5.8.2)
-      typescript:
-        specifier: ^5.7.3
-        version: 5.8.2
 
   examples/rspack-mf:
     dependencies:
@@ -8799,10 +8805,6 @@ packages:
     resolution: {integrity: sha512-1BC0BVFhS/p0qtw6enp8e+8OD0UrK0oFLztSjNzhcKA3WDuJxxAPXzPuPtKkjEY9UUoEWlX/8fgKeu2S8i9JTA==}
     engines: {node: '>= 0.4'}
 
-  is-ci@3.0.1:
-    resolution: {integrity: sha512-ZYvCgrefwqoQ6yTyYUbQu64HsITZ3NfKX1lzaEYdkTDcfKzzCI/wthRRYKkdjHKFVgNiXKAKm65Zo1pk2as/QQ==}
-    hasBin: true
-
   is-ci@4.1.0:
     resolution: {integrity: sha512-Ab9bQDQ11lWootZUI5qxgN2ZXwxNI5hTwnsvOc1wyxQ7zQ8OkEDw79mI0+9jI3x432NfwbVRru+3noJfXF6lSQ==}
     hasBin: true
@@ -13462,18 +13464,6 @@ packages:
 
   youch@3.2.3:
     resolution: {integrity: sha512-ZBcWz/uzZaQVdCvfV4uk616Bbpf2ee+F/AvuKDR5EwX/Y4v06xWdtMluqTD7+KlZdM93lLm9gMZYo0sKBS0pgw==}
-
-  zephyr-agent@0.0.36:
-    resolution: {integrity: sha512-fgJZNADLR5eu2JlhQfv1813K/UQGhrzMPBh+7n71zHetMQpA4YX6acU7o1qQ0mIvuW4poQ+taotWwhvmGRSh/A==}
-
-  zephyr-edge-contract@0.0.36:
-    resolution: {integrity: sha512-0BRDgwDbxOsS4N9qycFlwo1shZlEW4WwLTH2nNLRMnRSl4zVQv3VFvryV8eFZIiB6Sb2VMWBxUE2fAfRAkyAyQ==}
-
-  zephyr-rspack-plugin@0.0.36:
-    resolution: {integrity: sha512-FGQW+4QjP2Smu5eFPQz7mv8WvUKhqnfwXICQ4cs8ApjOF4CZgul1DeZ9InP3YrtvEfo9Fd/aQh5naHnRfeOdeQ==}
-
-  zephyr-xpack-internal@0.0.36:
-    resolution: {integrity: sha512-gPf8GbJaRnRDFMD2Xm+f053K39g7AnYniHtCoZCiiSo9s7HILI/lGLaGzVb5T+U46h9P9nOz5Ckk9WkYHxSWwA==}
 
   zod@3.22.3:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
@@ -23239,10 +23229,6 @@ snapshots:
 
   is-callable@1.2.7: {}
 
-  is-ci@3.0.1:
-    dependencies:
-      ci-info: 3.9.0
-
   is-ci@4.1.0:
     dependencies:
       ci-info: 4.2.0
@@ -29113,65 +29099,6 @@ snapshots:
       mustache: 4.2.0
       stacktracey: 2.1.8
     optional: true
-
-  zephyr-agent@0.0.36(encoding@0.1.13):
-    dependencies:
-      cloudflare: 3.5.0(encoding@0.1.13)
-      debug: 4.4.0(supports-color@5.5.0)
-      git-url-parse: 15.0.0
-      is-ci: 3.0.1
-      jose: 5.10.0
-      node-persist: 4.0.4
-      open: 10.1.0
-      socket.io-client: 4.8.1
-      tslib: 2.8.1
-      uuid: 8.3.2
-      zephyr-edge-contract: 0.0.36
-    optionalDependencies:
-      wrangler: 3.114.2
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-
-  zephyr-edge-contract@0.0.36:
-    dependencies:
-      tslib: 2.8.1
-
-  zephyr-rspack-plugin@0.0.36(@swc/helpers@0.5.15)(encoding@0.1.13)(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15))):
-    dependencies:
-      '@module-federation/automatic-vendor-federation': 1.2.1(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
-      '@rspack/core': 1.2.8(@swc/helpers@0.5.15)
-      is-ci: 3.0.1
-      tslib: 2.8.1
-      zephyr-agent: 0.0.36(encoding@0.1.13)
-      zephyr-xpack-internal: 0.0.36(encoding@0.1.13)(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - '@rspack/tracing'
-      - '@swc/helpers'
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-      - webpack
-
-  zephyr-xpack-internal@0.0.36(encoding@0.1.13)(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15))):
-    dependencies:
-      '@module-federation/automatic-vendor-federation': 1.2.1(webpack@5.98.0(@swc/core@1.11.11(@swc/helpers@0.5.15)))
-      is-ci: 3.0.1
-      tslib: 2.8.1
-      zephyr-agent: 0.0.36(encoding@0.1.13)
-      zephyr-edge-contract: 0.0.36
-    transitivePeerDependencies:
-      - '@cloudflare/workers-types'
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-      - webpack
 
   zod@3.22.3:
     optional: true

@@ -29,10 +29,12 @@ export async function load_static_entries(
       publicAssets.push({
         fileName,
         name: file,
+        names: [file],
         needsCodeReference: false,
         source: await promisify(readFile)(destFile),
         type: 'asset',
         originalFileName: file,
+        originalFileNames: [file],
       });
     }
   };

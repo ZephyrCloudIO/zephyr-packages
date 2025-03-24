@@ -4,10 +4,19 @@
   "private": true,
   "scripts": {
     "start": "nx run sample-rspack-application:serve",
-    "build": "nx run sample-rspack-application:build --skip-nx-cache --verbose"
+    "build": "nx run sample-rspack-application:build"
+  },
+  "dependencies": {
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
-    "zephyr-webpack-plugin": "workspace:*"
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "zephyr-webpack-plugin": "workspace:*",
+    "@testing-library/react": "catalog:react",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   },
   "repository": {
     "type": "git",

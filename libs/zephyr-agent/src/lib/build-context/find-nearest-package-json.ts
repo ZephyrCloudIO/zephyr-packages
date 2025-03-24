@@ -3,6 +3,7 @@ import { accessSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { constants } from 'fs/promises';
 import { PackageJsonNotFoundError } from '../errors/package-json-not-found-error';
+import { ze_log } from '../logging/debug';
 
 const max_retry = 30;
 
@@ -30,7 +31,7 @@ export async function find_nearest_package_json(startPath: string): Promise<{
         json: await readFile(packageJsonPath, 'utf8'),
       };
     } catch (e) {
-      // do nothing
+      ze_log(e);
     }
 
     const parentDir = resolve(dir, '..');

@@ -32,6 +32,7 @@ function print_error_with_docs<K extends keyof typeof Errors>(
   errMsg?: K,
   ...args: unknown[]
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   errMsg
     ? console.log(`${brightRedBgName} ${err(errMsg)} ${args} \n`)
     : console.log(brightRedBgName, redBright('Unknown error'), args);

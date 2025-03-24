@@ -15,9 +15,10 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@callstack/repack": "^5.0.0",
-    "@rspack/core": "1.0.8",
+    "@rspack/core": "catalog:rspack",
     "@types/find-package-json": "^1.2.6",
-    "@types/is-ci": "^3.0.4"
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
   }
 }

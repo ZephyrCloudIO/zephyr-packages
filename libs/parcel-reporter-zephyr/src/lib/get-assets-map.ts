@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { buildAssetsMap, ZeBuildAssetsMap } from 'zephyr-agent';
+import { buildAssetsMap, ze_log, ZeBuildAssetsMap } from 'zephyr-agent';
 
 export interface ParcelOutputAsset {
   name: string;
@@ -27,6 +27,7 @@ const extractBuffer = (asset: ParcelOutputAsset): string | undefined => {
     try {
       return fs.readFileSync(asset.filePath, 'utf8');
     } catch (err) {
+      ze_log(err);
       return undefined;
     }
   }

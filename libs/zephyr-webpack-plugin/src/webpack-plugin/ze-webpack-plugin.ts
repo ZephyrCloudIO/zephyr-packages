@@ -6,6 +6,7 @@ import {
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
+import { detectAndStoreBaseHref } from 'zephyr-xpack-internal/src/basehref/webpack-basehref-integration';
 
 const pluginName = 'ZeWebpackPlugin';
 
@@ -18,6 +19,8 @@ export interface ZephyrWebpackInternalPluginOptions {
   // hacks
   wait_for_index_html?: boolean;
   // outputPath?: string;
+  // optional base href for assets
+  baseHref?: string;
 }
 
 export class ZeWebpackPlugin {
@@ -29,6 +32,9 @@ export class ZeWebpackPlugin {
 
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
+    
+    // Detect and store baseHref from configuration
+    detectAndStoreBaseHref(this._options.zephyr_engine, compiler, this._options);
 
     logBuildSteps(this._options, compiler);
     setupZeDeploy(this._options, compiler);

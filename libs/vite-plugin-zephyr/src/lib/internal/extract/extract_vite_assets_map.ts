@@ -4,6 +4,9 @@ import {
   removePartialAssetMap,
   ZeBuildAssetsMap,
   ZephyrEngine,
+  ze_log,
+  normalizeBasePath,
+  applyBaseHrefToAssets
 } from 'zephyr-agent';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import { loadStaticAssets } from './load_static_assets';
@@ -18,6 +21,17 @@ export async function extract_vite_assets_map(
   const partialAssetMap = await getPartialAssetMap(application_uid);
   await removePartialAssetMap(application_uid);
 
+  // Extract and store baseHref from Vite's base configuration
+  if (vite_internal_options.base) {
+    // Normalize and store baseHref in ZephyrEngine
+    const normalizedBaseHref = normalizeBasePath(vite_internal_options.base);
+    zephyr_engine.buildProperties.baseHref = normalizedBaseHref;
+    
+    if (normalizedBaseHref) {
+      ze_log(`Vite baseHref detected and normalized: '${normalizedBaseHref}'`);
+    }
+  }
+
   const runtime_assets = vite_internal_options.assets;
   const complete_assets = Object.assign(
     {},
@@ -25,7 +39,17 @@ export async function extract_vite_assets_map(
     ...Object.values(partialAssetMap ?? {}),
     runtime_assets
   );
-  return buildAssetsMap(complete_assets, extractBuffer, getAssetType);
+  
+  // Build the initial assets map
+  let assetsMap = buildAssetsMap(complete_assets, extractBuffer, getAssetType);
+  
+  // Apply baseHref to asset paths if available
+  if (zephyr_engine.buildProperties.baseHref) {
+    ze_log(`Applying baseHref '${zephyr_engine.buildProperties.baseHref}' to Vite asset paths.`);
+    assetsMap = applyBaseHrefToAssets(assetsMap, zephyr_engine.buildProperties.baseHref);
+  }
+  
+  return assetsMap;
 }
 
 function getAssetType(asset: OutputChunk | OutputAsset): string {

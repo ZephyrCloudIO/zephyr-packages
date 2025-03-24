@@ -38,6 +38,7 @@ export interface ZeApplicationProperties {
 }
 
 export type Platform = 'ios' | 'android' | 'web' | undefined;
+
 export interface ZeDependencyPair {
   name: string;
   version: string;

@@ -5,7 +5,7 @@ import {
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
-import { Platform } from '../type/zephyr-internal-types';
+import { Platform } from 'zephyr-agent';
 const pluginName = 'ZephyrRepackPlugin';
 
 export interface ZephyrRepackPluginOptions {

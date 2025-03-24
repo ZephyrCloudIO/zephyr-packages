@@ -1,5 +1,4 @@
 name: Test Zephyr Examples
-
 on:
   push:
     branches: [main, master]
@@ -13,19 +12,8 @@ jobs:
     name: Test Examples
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '21'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9.9.0
-
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
       - name: Install Dependencies
         run: |
           pnpm install

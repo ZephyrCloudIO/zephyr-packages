@@ -21,11 +21,13 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   DOMAIN,
   PLATFORM,
   TYPE,
+  DELIMITER: delimiter = undefined,
 }: ZephyrAgentProps & {
   EDGE_URL: string;
   DOMAIN?: string;
   PLATFORM?: string;
   TYPE?: string;
+  DELIMITER?: string;
 }): Promise<ZephyrBuildStats> {
   ze_log('get build stats started. create federation dashboard plugin');
   const app = pluginOptions.zephyr_engine.applicationProperties;
@@ -64,7 +66,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const data_overrides = {
     id: application_uid,
     name: name,
-    edge: { url: EDGE_URL },
+    edge: { url: EDGE_URL, delimiter },
     domain: DOMAIN,
     platform: PLATFORM,
     type: TYPE,

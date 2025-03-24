@@ -12,7 +12,7 @@ export interface ZephyrRepackPluginOptions {
   zephyr_engine: ZephyrEngine;
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  target?: Platform | undefined;
+  target: Platform | undefined;
 }
 
 export class ZeRepackPlugin {

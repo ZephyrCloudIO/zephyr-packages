@@ -37,6 +37,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   try {
     const assetsMap = await buildWebpackAssetMap(assets, {
       wait_for_index_html,
+      zephyr_engine,
     });
 
     // webpack dash data

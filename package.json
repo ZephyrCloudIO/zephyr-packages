@@ -21,6 +21,12 @@
   },
   "private": true,
   "devDependencies": {
+    "@code-pushup/cli": "^0.65.1",
+    "@code-pushup/coverage-plugin": "^0.65.1",
+    "@code-pushup/eslint-plugin": "^0.65.1",
+    "@code-pushup/js-packages-plugin": "^0.65.1",
+    "@code-pushup/models": "^0.65.1",
+    "@code-pushup/utils": "^0.65.1",
     "@nx/devkit": "20.6.2",
     "@nx/esbuild": "20.6.2",
     "@nx/eslint": "20.6.2",

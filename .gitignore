@@ -66,3 +66,4 @@ examples/vite-react-mf/host/.__mf__temp/**
 
 # Parcel cache
 .parcel-cache
+.code-pushup

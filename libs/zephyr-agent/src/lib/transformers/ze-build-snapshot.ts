@@ -7,6 +7,7 @@ import {
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { ZephyrEngine } from '../../zephyr-engine';
+import { normalizeBasePath } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -38,6 +39,8 @@ export async function createSnapshot(
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
+  const normalizedBasePath = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
+  
   return {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
@@ -67,7 +70,14 @@ export async function createSnapshot(
       (memo, hash: string) => {
         const asset = assets[hash];
         const { path, extname, size } = asset;
-        memo[asset.path] = { path, extname, hash: asset.hash, size };
+        // path prefixed with basehref from plugin config like https://webpack.js.org/guides/public-path/
+        const pathBaseHref = path === 'index.html' ? path : `${normalizedBasePath}/${path}`;
+        memo[pathBaseHref] = {
+          path: pathBaseHref,
+          extname,
+          hash: asset.hash,
+          size,
+        };
         return memo;
       },
       {} as Record<string, SnapshotAsset>

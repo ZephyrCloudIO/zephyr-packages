@@ -2,14 +2,16 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { withZephyr } = require('zephyr-webpack-plugin');
 
-module.exports = () => {
+module.exports = (env = {}) => {
+  const publicPath = env.publicPath || 'auto';
+
   return withZephyr()({
     mode: 'development',
     entry: './src/index.tsx',
     output: {
       filename: 'bundle.[contenthash].js',
       path: path.resolve(__dirname, 'dist'),
-      publicPath: '/u/',
+      publicPath: publicPath,
       clean: true,
     },
     module: {

@@ -11,8 +11,15 @@ import {
 } from 'zephyr-xpack-internal';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config: Configuration) =>
+    _zephyr_configuration(config as WebpackConfiguration, zephyrPluginOptions);
 }
+
+const getBaseHref = (publicPath?: string): string => {
+  if (!publicPath) return '';
+  if (publicPath === 'auto') return '';
+  return publicPath;
+};
 
 async function _zephyr_configuration(
   config: WebpackConfiguration,
@@ -23,6 +30,8 @@ async function _zephyr_configuration(
     builder: 'webpack',
     context: config.context,
   });
+
+  zephyr_engine.buildProperties.baseHref = getBaseHref(config.output?.publicPath);
 
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);

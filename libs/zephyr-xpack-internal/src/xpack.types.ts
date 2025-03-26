@@ -9,6 +9,9 @@ export interface XPackConfiguration<Compiler> {
     | ((this: Compiler, compiler: Compiler) => void)
     | WebpackPluginInstance<Compiler>
   )[];
+  output?: {
+    publicPath?: string;
+  };
 }
 
 interface WebpackPluginInstance<Compiler> {

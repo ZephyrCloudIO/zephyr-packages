@@ -1,1 +1,1 @@
-export { withZephyr, type ZephyrRollupPluginOptions } from './lib/rollup-plugin-zephyr';
+export { withZephyr } from './lib/rollup-plugin-zephyr';

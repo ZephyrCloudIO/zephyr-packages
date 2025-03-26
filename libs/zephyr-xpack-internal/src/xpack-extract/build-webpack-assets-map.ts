@@ -1,12 +1,5 @@
 import type { Source, ZeBuildAssetsMap } from 'zephyr-edge-contract';
-import { 
-  buildAssetsMap, 
-  zeBuildAssets, 
-  onIndexHtmlResolved, 
-  ze_log,
-  ZephyrEngine 
-} from 'zephyr-agent';
-import { applyBaseHrefToAssets } from 'zephyr-agent/src/lib/transformers/ze-basehref-handler';
+import { buildAssetsMap, zeBuildAssets, onIndexHtmlResolved, ze_log } from 'zephyr-agent';
 
 function getAssetType(asset: Source): string {
   return asset.constructor.name;
@@ -28,19 +21,14 @@ function extractBuffer(asset: Source): Buffer | string | undefined {
   }
 }
 
-export interface BuildWebpackAssetMapOptions {
-  wait_for_index_html?: boolean;
-  zephyr_engine?: ZephyrEngine;
-}
-
 export async function buildWebpackAssetMap(
   assets: Record<string, Source>,
-  options: BuildWebpackAssetMapOptions
+  props: { wait_for_index_html?: boolean }
 ): Promise<ZeBuildAssetsMap> {
-  const { wait_for_index_html, zephyr_engine } = options;
+  const { wait_for_index_html } = props;
 
   ze_log('Building assets map from webpack assets.');
-  let assetsMap: ZeBuildAssetsMap = buildAssetsMap(assets, extractBuffer, getAssetType);
+  const assetsMap: ZeBuildAssetsMap = buildAssetsMap(assets, extractBuffer, getAssetType);
 
   if (wait_for_index_html) {
     ze_log('Assets map built. Checking for index.html waiter.');
@@ -52,12 +40,6 @@ export async function buildWebpackAssetMap(
     });
     assetsMap[index_html_asset.hash] = index_html_asset;
     ze_log('Index.html added to assets map.');
-  }
-
-  // Apply baseHref to asset paths if available
-  if (zephyr_engine?.buildProperties?.baseHref) {
-    ze_log(`Applying baseHref '${zephyr_engine.buildProperties.baseHref}' to asset paths.`);
-    assetsMap = applyBaseHrefToAssets(assetsMap, zephyr_engine.buildProperties.baseHref);
   }
 
   return assetsMap;

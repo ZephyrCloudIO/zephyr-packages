@@ -16,6 +16,12 @@ export function withZephyr(
   return (config) => _zephyr_configuration(config, zephyrPluginOptions);
 }
 
+const getBaseHref = (publicPath: string): string => {
+  if (!publicPath) return '';
+  if (publicPath === 'auto') return '';
+  return publicPath;
+};
+
 async function _zephyr_configuration(
   config: Configuration,
   _zephyrOptions?: ZephyrRspackPluginOptions
@@ -25,6 +31,11 @@ async function _zephyr_configuration(
     builder: 'rspack',
     context: config.context,
   });
+
+  // basehref support
+  zephyr_engine.buildProperties.baseHref = getBaseHref(
+    config.output?.publicPath as string
+  );
 
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);

@@ -5,7 +5,7 @@ import { withZephyr } from 'vite-plugin-zephyr';
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/js/',
-  plugins: [react(), withZephyr()],
+  plugins: [react(), withZephyr() as any],
   resolve: {
     alias: {
       '@': '/src',

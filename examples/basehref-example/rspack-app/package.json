@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "rspack dev",
     "build": "rspack build",
+    "build:base": "rspack --env publicPath=/app/",
     "preview": "rspack preview"
   },
   "dependencies": {

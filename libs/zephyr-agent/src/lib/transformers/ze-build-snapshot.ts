@@ -40,7 +40,7 @@ export async function createSnapshot(
     : `${options.username}.${options.buildId}`;
 
   const normalizedBasePath = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
-  
+
   return {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
@@ -71,7 +71,8 @@ export async function createSnapshot(
         const asset = assets[hash];
         const { path, extname, size } = asset;
         // path prefixed with basehref from plugin config like https://webpack.js.org/guides/public-path/
-        const pathBaseHref = path === 'index.html' ? path : `${normalizedBasePath}/${path}`;
+        const pathBaseHref =
+          path === 'index.html' ? path : `${normalizedBasePath}/${path}`;
         memo[pathBaseHref] = {
           path: pathBaseHref,
           extname,

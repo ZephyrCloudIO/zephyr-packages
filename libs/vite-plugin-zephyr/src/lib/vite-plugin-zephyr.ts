@@ -63,6 +63,8 @@ function zephyrPlugin(): Plugin {
       const vite_internal_options = await vite_internal_options_defer;
       const zephyr_engine = await zephyr_engine_defer;
 
+      zephyr_engine.buildProperties.baseHref = vite_internal_options.publicDir;
+
       await zephyr_engine.start_new_build();
       const assetsMap = await extract_vite_assets_map(
         zephyr_engine,

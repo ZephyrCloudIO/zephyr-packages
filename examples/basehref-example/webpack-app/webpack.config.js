@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { withZephyr } = require('zephyr-webpack-plugin');
 
 module.exports = (env = {}) => {
+  // auto is a default value for webpack
   const publicPath = env.publicPath || 'auto';
 
   return withZephyr()({

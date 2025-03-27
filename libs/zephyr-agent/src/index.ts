@@ -21,9 +21,9 @@ export {
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export { zeBuildAssets } from './lib/transformers/ze-build-assets';
-export { 
+export {
   normalizeBasePath,
-  applyBaseHrefToAssets 
+  applyBaseHrefToAssets,
 } from './lib/transformers/ze-basehref-handler';
 
 // Auth related exports

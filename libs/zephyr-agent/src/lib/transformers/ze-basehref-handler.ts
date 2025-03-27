@@ -1,18 +1,17 @@
-/**
- * Utility functions for handling baseHref paths in Zephyr
- */
+/** Utility functions for handling baseHref paths in Zephyr */
 import { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
 
 /**
  * Normalizes a base path string to ensure consistent format across all plugins
- * 
+ *
  * @param baseHref - The base path string to normalize
  * @returns A normalized base path string, or empty string for root/empty paths
- * 
- * Normalization rules:
- * - Removes leading and trailing slashes
- * - Handles special cases like '/', './', '', '.'
- * - Returns empty string for root or empty paths
+ *
+ *   Normalization rules:
+ *
+ *   - Removes leading and trailing slashes
+ *   - Handles special cases like '/', './', '', '.'
+ *   - Returns empty string for root or empty paths
  */
 export function normalizeBasePath(baseHref: string | null | undefined): string {
   // Return empty string for falsy values
@@ -27,17 +26,17 @@ export function normalizeBasePath(baseHref: string | null | undefined): string {
 
   // Remove leading and trailing slashes and whitespace
   let normalized = baseHref.trim();
-  
+
   // Remove leading ./ if present
   if (normalized.startsWith('./')) {
     normalized = normalized.substring(2);
   }
-  
+
   // Remove leading / if present
   if (normalized.startsWith('/')) {
     normalized = normalized.substring(1);
   }
-  
+
   // Remove trailing / if present
   if (normalized.endsWith('/')) {
     normalized = normalized.substring(0, normalized.length - 1);
@@ -48,9 +47,9 @@ export function normalizeBasePath(baseHref: string | null | undefined): string {
 
 /**
  * Determines if a path is absolute (starts with / or includes ://)
- * 
+ *
  * @param path - The path to check
- * @returns true if the path is absolute, false otherwise
+ * @returns True if the path is absolute, false otherwise
  */
 function isAbsolutePath(path: string): boolean {
   return path.startsWith('/') || path.includes('://');
@@ -58,9 +57,9 @@ function isAbsolutePath(path: string): boolean {
 
 /**
  * Checks if a path is an index.html file
- * 
+ *
  * @param path - The path to check
- * @returns true if the path is an index.html file, false otherwise
+ * @returns True if the path is an index.html file, false otherwise
  */
 function isIndexHtml(path: string): boolean {
   return path.endsWith('index.html');
@@ -68,7 +67,7 @@ function isIndexHtml(path: string): boolean {
 
 /**
  * Applies a baseHref prefix to a path
- * 
+ *
  * @param path - The original asset path
  * @param normalizedBaseHref - The normalized baseHref string
  * @returns The path with baseHref applied
@@ -90,7 +89,7 @@ function applyBaseHrefToPath(path: string, normalizedBaseHref: string): string {
 
 /**
  * Transforms asset paths by applying the baseHref prefix
- * 
+ *
  * @param assetsMap - The original assets map
  * @param baseHref - The baseHref to apply to asset paths
  * @returns A new assets map with updated paths
@@ -112,10 +111,10 @@ export function applyBaseHrefToAssets(
   Object.entries(assetsMap).forEach(([key, asset]) => {
     // Create a copy of the asset
     const newAsset: ZeBuildAsset = { ...asset };
-    
+
     // Apply baseHref to the asset path
     newAsset.path = applyBaseHrefToPath(asset.path, normalizedBaseHref);
-    
+
     // Add to result map, keeping the same key
     result[key] = newAsset;
   });

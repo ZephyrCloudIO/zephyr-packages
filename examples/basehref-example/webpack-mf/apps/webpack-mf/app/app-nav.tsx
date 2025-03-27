@@ -1,5 +1,5 @@
-import * as React from "react";
-import { NavLink } from "react-router";
+import * as React from 'react';
+import { NavLink } from 'react-router';
 
 export function AppNav() {
   return (

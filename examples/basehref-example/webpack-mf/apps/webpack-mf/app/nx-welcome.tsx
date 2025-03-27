@@ -5,7 +5,7 @@
  Delete this file and get started with your project!
  * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
- export function NxWelcome({ title }: { title: string }) {
+export function NxWelcome({ title }: { title: string }) {
   return (
     <>
       <style
@@ -718,16 +718,14 @@
                     <span>Enable faster CI & better DX</span>
                   </h2>
                 </div>
-                <p>
-                  Your Nx Cloud remote cache setup is almost complete.
-                </p>
-                
+                <p>Your Nx Cloud remote cache setup is almost complete.</p>
+
                 <a
                   href="https://cloud.nx.app/connect/8knInmtARB"
                   target="_blank"
                   rel="noreferrer"
                 >
-                Click here to finish
+                  Click here to finish
                 </a>
               </div>
             </div>
@@ -752,19 +750,18 @@
                   />
                 </svg>
                 Build, test and lint your app
-                </summary>
-                <pre>
-                 <span># Build</span>
-                  nx build {title}
-                  <span># Test</span>
-                  nx test {title}
-                  <span># Lint</span>
-                  nx lint {title}
-                  <span># Run them together!</span>
-                  nx run-many -p {title} -t build test lint
-                
-                </pre>
-                </details>
+              </summary>
+              <pre>
+                <span># Build</span>
+                nx build {title}
+                <span># Test</span>
+                nx test {title}
+                <span># Lint</span>
+                nx lint {title}
+                <span># Run them together!</span>
+                nx run-many -p {title} -t build test lint
+              </pre>
+            </details>
 
             <details>
               <summary>

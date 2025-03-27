@@ -30,6 +30,7 @@ function zephyrPlugin(): Plugin {
     resolve_vite_internal_options = resolve;
   });
   let root: string;
+  let baseHref = '/';
 
   return {
     name: 'with-zephyr',
@@ -37,6 +38,7 @@ function zephyrPlugin(): Plugin {
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
+      baseHref = config.base || '/';
       zephyr_defer_create({
         builder: 'vite',
         context: config.root,
@@ -63,7 +65,7 @@ function zephyrPlugin(): Plugin {
       const vite_internal_options = await vite_internal_options_defer;
       const zephyr_engine = await zephyr_engine_defer;
 
-      zephyr_engine.buildProperties.baseHref = vite_internal_options.publicDir;
+      zephyr_engine.buildProperties.baseHref = baseHref;
 
       await zephyr_engine.start_new_build();
       const assetsMap = await extract_vite_assets_map(

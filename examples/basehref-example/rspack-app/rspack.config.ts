@@ -5,16 +5,14 @@ import { withZephyr } from 'zephyr-rspack-plugin';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-// auto is a default value for rspack
-const publicPath = process.env.publicPath || 'auto';
+const publicPath = process.env.PUBLIC_PATH || '/';
 
-// Target browsers, see: https://github.com/browserslist/browserslist
 const targets = ['chrome >= 87', 'edge >= 88', 'firefox >= 78', 'safari >= 14'];
 
 export default withZephyr()(
   defineConfig({
     output: {
-      publicPath: publicPath,
+      publicPath,
     },
     context: __dirname,
     entry: {
@@ -58,6 +56,7 @@ export default withZephyr()(
     plugins: [
       new rspack.HtmlRspackPlugin({
         template: './index.html',
+        publicPath,
       }),
       isDev ? new RefreshPlugin() : null,
     ].filter(Boolean),

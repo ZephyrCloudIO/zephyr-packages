@@ -31,7 +31,7 @@ const mfConfig = {
 };
 
 module.exports = composePlugins(
-  withNx({ baseHref: publicPath}),
+  withNx({ baseHref: publicPath }),
   withReact(),
   withModuleFederation(mfConfig),
   withZephyr()

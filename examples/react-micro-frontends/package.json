@@ -41,8 +41,8 @@
     "eslint-plugin-react-hooks": "catalog:eslint",
     "jest-environment-jsdom": "^29.7.0",
     "react-refresh": "catalog:react18",
-    "ts-jest": "^29.2.6",
-    "ts-node": "10.9.2",
+    "ts-jest": "catalog:typescript",
+    "ts-node": "catalog:typescript",
     "tsutils": "^3.21.0",
     "url-loader": "^4.1.1"
   }

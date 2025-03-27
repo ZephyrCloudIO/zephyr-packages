@@ -5,6 +5,7 @@ import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
+  XPackConfiguration,
 } from 'zephyr-xpack-internal';
 
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
@@ -58,7 +59,9 @@ async function _zephyr_configuration(
   }
   zephyr_engine.env.target = _zephyrOptions?.target;
 
-  const dependency_pairs = extractFederatedDependencyPairs(config);
+  const dependency_pairs = extractFederatedDependencyPairs(
+    config as XPackConfiguration<any>
+  );
 
   ze_log(
     'Resolving and building towards target by zephyr_engine.env.target: ',
@@ -69,11 +72,15 @@ async function _zephyr_configuration(
     dependency_pairs,
     zephyr_engine.env.target
   );
-  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+  mutWebpackFederatedRemotesConfig(
+    zephyr_engine,
+    config as XPackConfiguration<any>,
+    resolved_dependency_pairs
+  );
 
   ze_log('dependency resolution completed successfully...or at least trying to...');
 
-  const mf_configs = makeCopyOfModuleFederationOptions(config);
+  const mf_configs = makeCopyOfModuleFederationOptions(config as XPackConfiguration<any>);
   // const app_config = await zephyr_engine.application_configuration;
   // Verify Module Federation configuration's naming
   await verify_mf_fastly_config(mf_configs, zephyr_engine);
@@ -82,7 +89,7 @@ async function _zephyr_configuration(
   config.plugins?.push(
     new ZeRepackPlugin({
       zephyr_engine,
-      mfConfig: makeCopyOfModuleFederationOptions(config),
+      mfConfig: makeCopyOfModuleFederationOptions(config as XPackConfiguration<any>),
       target: zephyr_engine.env.target,
     })
   );

@@ -1,5 +1,5 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
-import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
+import { normalizeBasePath, zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import { cwd } from 'node:process';
 import { getAssetsMap } from './internal/get-assets-map';
 
@@ -24,6 +24,10 @@ export function withZephyr() {
     },
     writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       const zephyr_engine = await zephyr_engine_defer;
+
+      // basehref support
+      zephyr_engine.buildProperties.baseHref = normalizeBasePath(options.dir);
+
       await zephyr_engine.start_new_build();
       await zephyr_engine.upload_assets({
         assetsMap: getAssetsMap(bundle),

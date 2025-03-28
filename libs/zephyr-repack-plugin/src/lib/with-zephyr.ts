@@ -10,35 +10,54 @@ import {
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 import { RepackEnv } from '../type/zephyr-internal-types';
 
-export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
-  // First return: A function taking a config function
-  configFn: (env: RepackEnv) => Configuration
-) => (
-  // Second return: A function taking a config object
-  config: RepackEnv
-) => Promise<Configuration> {
-  // RETURN 1: Function that takes the user's config function
-  return (configFn: (env: RepackEnv) => Configuration) => {
-    // RETURN 2: Function that takes the base config and returns the final webpack config
-    return (config: RepackEnv) => {
-      // Extract environment from config
+// withZephyr's anonymous function could be a function or a static configuration
 
-      // Generate user config by calling their function with env
+type WithZephyrReturn =
+  | ((config: Configuration) => Promise<Configuration>)
+  | ((
+      configFn: (env: RepackEnv) => Configuration
+    ) => (config: RepackEnv) => Promise<Configuration>);
+
+export function withZephyr(
+  zephyrPluginOptions?: ZephyrRepackPluginOptions
+): WithZephyrReturn {
+  function fromFunction(
+    configFn: (env: RepackEnv) => Configuration
+  ): (config: RepackEnv) => Promise<Configuration> {
+    return (_config: RepackEnv) => {
       const userConfig = configFn({
-        platform: config.platform,
-        mode: config.mode,
+        platform: _config.platform,
+        mode: _config.mode,
       });
 
       const updatedZephyrConfig = {
         ...zephyrPluginOptions,
-        target: config.platform,
+        target: _config.platform,
       } as ZephyrRepackPluginOptions;
 
-      ze_log('updatedZephyrConfig: ', updatedZephyrConfig);
-
-      // Return the final processed configuration
-      return _zephyr_configuration(userConfig, updatedZephyrConfig);
+      ze_log('from_function.updatedZephyrConfig: ', updatedZephyrConfig);
+      return _zephyr_configuration(
+        userConfig,
+        updatedZephyrConfig
+      ) as Promise<Configuration>;
     };
+  }
+
+  function fromObject(config: Configuration): Promise<Configuration> {
+    ze_log('from_object.config: ', config);
+    const updatedZephyrConfig = {
+      ...zephyrPluginOptions,
+      target: config.plugins,
+    } as ZephyrRepackPluginOptions;
+    return _zephyr_configuration(config, updatedZephyrConfig);
+  }
+
+  return function (
+    config: ((env: RepackEnv) => Configuration) | Configuration
+  ): Promise<Configuration> {
+    return typeof config === 'function'
+      ? (fromFunction(config) as unknown as Promise<Configuration>)
+      : fromObject(config);
   };
 }
 async function _zephyr_configuration(

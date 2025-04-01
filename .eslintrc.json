@@ -1,10 +1,15 @@
 {
   "root": true,
   "ignorePatterns": ["**/*"],
-  "plugins": ["@nx"],
+  "plugins": ["@nx", "@typescript-eslint"],
+  "parser": "@typescript-eslint/parser",
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
       "rules": {
         "@typescript-eslint/ban-ts-comment": ["warn", {}],
         "@nx/enforce-module-boundaries": [
@@ -26,7 +31,6 @@
       "files": ["*.ts", "*.tsx"],
       "extends": ["plugin:@nx/typescript"],
       "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
         "no-extra-semi": "off"
       }
     },
@@ -34,7 +38,6 @@
       "files": ["*.js", "*.jsx"],
       "extends": ["plugin:@nx/javascript"],
       "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
         "no-extra-semi": "off"
       }
     },
@@ -43,7 +46,9 @@
       "env": {
         "jest": true
       },
-      "rules": {}
+      "rules": {
+        "@typescript-eslint/no-extra-semi": "off"
+      }
     },
     {
       "files": ["*.json"],

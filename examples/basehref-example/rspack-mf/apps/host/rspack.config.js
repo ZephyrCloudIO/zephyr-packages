@@ -24,6 +24,8 @@ const mfConfig = {
   },
 };
 
+const publicPath = 'app/'
+
 module.exports = composePlugins(
   withNx({ baseHref: publicPath }),
   withReact(),

@@ -15,12 +15,6 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
     _zephyr_configuration(config as WebpackConfiguration, zephyrPluginOptions);
 }
 
-const getBaseHref = (publicPath?: string): string => {
-  if (!publicPath) return '';
-  if (publicPath === 'auto') return '';
-  return publicPath;
-};
-
 async function _zephyr_configuration(
   config: WebpackConfiguration,
   _zephyrOptions?: ZephyrWebpackPluginOptions
@@ -30,8 +24,6 @@ async function _zephyr_configuration(
     builder: 'webpack',
     context: config.context,
   });
-
-  zephyr_engine.buildProperties.baseHref = getBaseHref(config.output?.publicPath);
 
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);

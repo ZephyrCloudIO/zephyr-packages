@@ -26,9 +26,6 @@ async function _zephyr_configuration(
     context: config.context,
   });
 
-  // basehref support
-  zephyr_engine.buildProperties.baseHref = config.output?.publicPath as string;
-
   // Resolve dependencies and update the config
   const dependencyPairs = extractFederatedDependencyPairs(config);
 

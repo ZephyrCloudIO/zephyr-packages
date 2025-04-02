@@ -4,7 +4,7 @@ const { withModuleFederation } = require('@nx/module-federation/rspack');
 const { withZephyr } = require('zephyr-rspack-plugin');
 
 const currDir = path.resolve(__dirname);
-const publicPath = process.env.PUBLIC_PATH || '/';
+const publicPath = '/app/'
 
 /** @type {Parameters<typeof withModuleFederation>[0]} */
 const mfConfig = {

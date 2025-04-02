@@ -32,15 +32,15 @@
       }
     },
     "serve": {
-      "executor": "@nx/rspack:module-federation-dev-server",
+      "executor": "@nx/rspack:dev-server",
       "options": {
-        "buildTarget": "rspack_mf_remote:build:development",
+        "buildTarget": "rspack_basehref_mf_remote:build:development",
         "port": 4201
       },
       "configurations": {
         "development": {},
         "production": {
-          "buildTarget": "rspack_mf_remote:build:production"
+          "buildTarget": "rspack_basehref_mf_remote:build:production"
         }
       }
     }

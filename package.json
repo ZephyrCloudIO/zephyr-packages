@@ -60,9 +60,9 @@
       "@rspack/core": "catalog:rspack",
       "@vercel/nft": "^0.29.2",
       "hono": "^4.2.7",
-      "esbuild": "^0.25.0",
-      "@babel/runtime": "^7.26.10",
-      "vite": "^6.2.4"
+      "esbuild": "catalog:esbuild",
+      "@babel/runtime": "catalog:babel",
+      "vite": "catalog:vite6"
     }
   }
 }

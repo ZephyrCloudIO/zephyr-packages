@@ -72,7 +72,6 @@ function extractBaseHrefFromPublicPath(
   compiler: WebpackLikeCompiler
 ): string | undefined {
   const publicPath = compiler.options.output?.publicPath;
-  console.log('------- extractBaseHrefFromPublicPath: ', publicPath)
 
   // Skip 'auto' value which is a special case in webpack
   if (publicPath === 'auto' || publicPath === undefined) {
@@ -124,7 +123,7 @@ export function detectAndStoreBaseHref(
   if (!baseHref) {
     baseHref = extractBaseHrefFromPublicPath(compiler);
   }
-  console.log('---------------- detected baseHref: ', baseHref)
+
   // Store the baseHref in ZephyrEngine.buildProperties
   if (baseHref !== undefined) {
     zephyr_engine.buildProperties.baseHref = normalizeBasePath(baseHref);

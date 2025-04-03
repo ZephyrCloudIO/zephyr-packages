@@ -1,5 +1,5 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
-import { normalizeBasePath, zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
+import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import { getAssetsMap } from './transform/get-assets-map';
 import { cwd } from 'node:process';
 
@@ -10,7 +10,7 @@ const getInputFolder = (options: InputOptions): string => {
   return cwd();
 };
 
-export function withZephyr(publicPath = '/') {
+export function withZephyr() {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   return {
@@ -24,15 +24,6 @@ export function withZephyr(publicPath = '/') {
     },
     writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       const zephyr_engine = await zephyr_engine_defer;
-
-      // basehref support
-      const normalizedPulibPath = normalizeBasePath(publicPath);
-      zephyr_engine.buildProperties.baseHref = normalizedPulibPath;
-      const assetsMap = getAssetsMap(bundle);
-      Object.keys(assetsMap).forEach((key) => {
-        assetsMap[key].path = `${normalizedPulibPath}${assetsMap[key].path}`;
-      });
-
       await zephyr_engine.start_new_build();
       await zephyr_engine.upload_assets({
         assetsMap: getAssetsMap(bundle),

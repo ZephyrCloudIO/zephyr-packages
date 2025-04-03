@@ -74,7 +74,6 @@ type ZephyrEngineBuilderTypes =
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
-  baseHref?: string;
 }
 
 /**
@@ -116,7 +115,6 @@ export class ZephyrEngine {
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
-    this.buildProperties.baseHref = options.baseHref;
   }
 
   static defer_create() {

@@ -1,7 +1,7 @@
 {
   "name": "rspack_basehref_mf_remote",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "examples/rspack-mf/apps/remote/src",
+  "sourceRoot": "examples/basehref-example/rspack-mf/apps/remote/src",
   "projectType": "application",
   "tags": [],
   "targets": {
@@ -11,13 +11,13 @@
       "defaultConfiguration": "production",
       "options": {
         "target": "web",
-        "outputPath": "dist/examples/rspack-mf/apps/remote",
-        "main": "examples/rspack-mf/apps/remote/src/main.tsx",
-        "tsConfig": "examples/rspack-mf/apps/remote/tsconfig.app.json",
-        "rspackConfig": "examples/rspack-mf/apps/remote/rspack.config.js",
+        "outputPath": "dist/examples/basehref-example/rspack-mf/apps/remote",
+        "main": "examples/basehref-example/rspack-mf/apps/remote/src/main.tsx",
+        "tsConfig": "examples/basehref-example/rspack-mf/apps/remote/tsconfig.app.json",
+        "rspackConfig": "examples/basehref-example/rspack-mf/apps/remote/rspack.config.js",
         "assets": [
-          "examples/rspack-mf/apps/remote/src/favicon.ico",
-          "examples/rspack-mf/apps/remote/src/assets"
+          "examples/basehref-example/rspack-mf/apps/remote/src/favicon.ico",
+          "examples/basehref-example/rspack-mf/apps/remote/src/assets"
         ]
       },
       "configurations": {

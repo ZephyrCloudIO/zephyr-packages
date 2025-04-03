@@ -71,8 +71,8 @@ export async function createSnapshot(
         const asset = assets[hash];
         const { path, extname, size } = asset;
         // path prefixed with basehref from plugin config like https://webpack.js.org/guides/public-path/
-        const pathBaseHref =
-          path === 'index.html' ? path : `${normalizedBasePath}/${path}`;
+        const normalizedPath = normalizedBasePath ? `${normalizedBasePath}/${path}` : path
+        const pathBaseHref = path === 'index.html' ? path : normalizedPath;
         memo[pathBaseHref] = {
           path: pathBaseHref,
           extname,

@@ -1,5 +1,5 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
-import { normalizeBasePath, zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
+import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
 import { cwd } from 'node:process';
 import { getAssetsMap } from './internal/get-assets-map';
 

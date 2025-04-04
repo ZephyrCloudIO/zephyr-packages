@@ -108,15 +108,15 @@ export function applyBaseHrefToAssets(
   const result: ZeBuildAssetsMap = {};
 
   // Process each asset
-  Object.entries(assetsMap).forEach(([key, asset]) => {
+  Object.values(assetsMap).forEach((asset) => {
     // Create a copy of the asset
     const newAsset: ZeBuildAsset = { ...asset };
 
     // Apply baseHref to the asset path
     newAsset.path = applyBaseHrefToPath(asset.path, normalizedBaseHref);
 
-    // Add to result map, keeping the same key
-    result[key] = newAsset;
+    // Add to result map, updating the key
+    result[newAsset.path] = newAsset;
   });
 
   return result;

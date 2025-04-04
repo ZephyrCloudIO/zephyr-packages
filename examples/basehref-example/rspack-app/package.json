@@ -1,11 +1,11 @@
 {
-  "name": "rspack-app",
+  "name": "basehref-rspack-app",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "dev": "rspack dev",
     "build": "rspack build",
-    "build:base": "rspack --env publicPath=/app/",
+    "build:base": "PUBLIC_PATH=/app/ rspack build",
     "preview": "rspack preview"
   },
   "dependencies": {

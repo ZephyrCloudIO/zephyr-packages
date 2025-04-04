@@ -1,4 +1,4 @@
-import { ZephyrEngine, normalizeBasePath } from 'zephyr-agent';
+import { ZephyrEngine } from 'zephyr-agent';
 
 /** Interface for options that might contain baseHref settings */
 export interface BaseHrefOptions {
@@ -126,6 +126,6 @@ export function detectAndStoreBaseHref(
 
   // Store the baseHref in ZephyrEngine.buildProperties
   if (baseHref !== undefined) {
-    zephyr_engine.buildProperties.baseHref = normalizeBasePath(baseHref);
+    zephyr_engine.buildProperties.baseHref = baseHref;
   }
 }

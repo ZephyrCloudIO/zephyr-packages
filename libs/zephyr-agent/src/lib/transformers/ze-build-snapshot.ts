@@ -7,7 +7,7 @@ import {
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { ZephyrEngine } from '../../zephyr-engine';
-import { normalizeBasePath } from './ze-basehref-handler';
+import { applyBaseHrefToAssets, normalizeBasePath } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -39,7 +39,7 @@ export async function createSnapshot(
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
-  const normalizedBasePath = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
+  const basedAssets = applyBaseHrefToAssets(assets, zephyr_engine.buildProperties.baseHref)
 
   return {
     // ZeApplicationProperties
@@ -66,19 +66,11 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
-    assets: Object.keys(assets).reduce(
+    assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
-        const asset = assets[hash];
+        const asset = basedAssets[hash];
         const { path, extname, size } = asset;
-        // path prefixed with basehref from plugin config like https://webpack.js.org/guides/public-path/
-        const normalizedPath = normalizedBasePath ? `${normalizedBasePath}/${path}` : path
-        const pathBaseHref = path === 'index.html' ? path : normalizedPath;
-        memo[pathBaseHref] = {
-          path: pathBaseHref,
-          extname,
-          hash: asset.hash,
-          size,
-        };
+        memo[asset.path] = { path, extname, hash: asset.hash, size };
         return memo;
       },
       {} as Record<string, SnapshotAsset>

@@ -409,29 +409,6 @@ importers:
         specifier: catalog:typescript
         version: 5.8.2
 
-  examples/basehref-example/rspack-mf:
-    dependencies:
-      react:
-        specifier: catalog:react18
-        version: 18.3.1
-      react-dom:
-        specifier: catalog:react18
-        version: 18.3.1(react@18.3.1)
-    devDependencies:
-      '@types/react':
-        specifier: catalog:react18
-        version: 18.3.1
-      '@types/react-dom':
-        specifier: catalog:react18
-        version: 18.3.0
-      zephyr-rspack-plugin:
-        specifier: workspace:*
-        version: link:../../../libs/zephyr-rspack-plugin
-
-  examples/basehref-example/rspack-mf/apps/host: {}
-
-  examples/basehref-example/rspack-mf/apps/remote: {}
-
   examples/basehref-example/vite-app:
     dependencies:
       react:

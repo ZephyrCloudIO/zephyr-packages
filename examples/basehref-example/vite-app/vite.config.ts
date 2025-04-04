@@ -4,7 +4,7 @@ import { withZephyr } from 'vite-plugin-zephyr';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/js/',
+  base: '/',
   plugins: [react(), withZephyr() as any],
   resolve: {
     alias: {

@@ -78,6 +78,5 @@
       "@babel/runtime": "catalog:babel",
       "vite": "catalog:vite6"
     }
-  },
-  "type": "module"
+  }
 }

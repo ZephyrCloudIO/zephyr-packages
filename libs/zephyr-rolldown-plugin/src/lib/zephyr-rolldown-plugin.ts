@@ -24,6 +24,10 @@ export function withZephyr() {
     },
     writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       const zephyr_engine = await zephyr_engine_defer;
+
+      // basehref support
+      zephyr_engine.buildProperties.baseHref = options.dir;
+
       await zephyr_engine.start_new_build();
       await zephyr_engine.upload_assets({
         assetsMap: getAssetsMap(bundle),

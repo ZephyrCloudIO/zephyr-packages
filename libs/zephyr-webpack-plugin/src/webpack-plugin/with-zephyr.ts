@@ -11,8 +11,7 @@ import {
 } from 'zephyr-xpack-internal';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
-  return (config: Configuration) =>
-    _zephyr_configuration(config as WebpackConfiguration, zephyrPluginOptions);
+  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
 }
 
 async function _zephyr_configuration(

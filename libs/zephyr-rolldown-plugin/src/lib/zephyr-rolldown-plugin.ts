@@ -26,7 +26,7 @@ export function withZephyr() {
       const zephyr_engine = await zephyr_engine_defer;
 
       // basehref support
-      zephyr_engine.buildProperties.baseHref = normalizeBasePath(options.dir);
+      zephyr_engine.buildProperties.baseHref = options.dir;
 
       await zephyr_engine.start_new_build();
       await zephyr_engine.upload_assets({

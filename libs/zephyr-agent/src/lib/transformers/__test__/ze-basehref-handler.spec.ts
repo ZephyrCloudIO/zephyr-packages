@@ -70,14 +70,14 @@ describe('ze-basehref-handler', () => {
         size: 200,
         buffer: Buffer.from('content'),
       },
-      'absolute.js': {
+      '/absolute/path/to/file.js': {
         path: '/absolute/path/to/file.js',
         extname: '.js',
         hash: 'hash101',
         size: 300,
         buffer: Buffer.from('content'),
       },
-      'external.js': {
+      'https://cdn.example.com/script.js': {
         path: 'https://cdn.example.com/script.js',
         extname: '.js',
         hash: 'hash202',
@@ -102,39 +102,38 @@ describe('ze-basehref-handler', () => {
       expect(applyBaseHrefToAssets(sampleAssetsMap, '.')).toBe(sampleAssetsMap);
     });
 
-    it('should apply baseHref to relative paths, keeping the same keys', () => {
+    it('should apply baseHref to relative paths and keys', () => {
       const result = applyBaseHrefToAssets(sampleAssetsMap, 'base');
 
-      // Should have the same keys
-      expect(Object.keys(result)).toEqual(Object.keys(sampleAssetsMap));
-
       // Regular assets should have baseHref applied
-      expect(result['main.js'].path).toBe('base/main.js');
-      expect(result['styles.css'].path).toBe('base/styles.css');
-      expect(result['nested/image.png'].path).toBe('base/nested/image.png');
+      expect(result['base/main.js'].path).toBe('base/main.js');
+      expect(result['base/styles.css'].path).toBe('base/styles.css');
+      expect(result['base/nested/image.png'].path).toBe('base/nested/image.png');
 
       // index.html should remain unchanged
       expect(result['index.html'].path).toBe('index.html');
 
       // Absolute paths should remain unchanged
-      expect(result['absolute.js'].path).toBe('/absolute/path/to/file.js');
-      expect(result['external.js'].path).toBe('https://cdn.example.com/script.js');
+      expect(result['/absolute/path/to/file.js'].path).toBe('/absolute/path/to/file.js');
+
+      // External should remain external
+      expect(result['https://cdn.example.com/script.js'].path).toBe('https://cdn.example.com/script.js');
     });
 
     it('should normalize the baseHref before applying it', () => {
       const result = applyBaseHrefToAssets(sampleAssetsMap, '/base/');
 
       // Regular assets should have normalized baseHref applied
-      expect(result['main.js'].path).toBe('base/main.js');
-      expect(result['styles.css'].path).toBe('base/styles.css');
+      expect(result['base/main.js'].path).toBe('base/main.js');
+      expect(result['base/styles.css'].path).toBe('base/styles.css');
     });
 
     it('should handle nested baseHref paths correctly', () => {
       const result = applyBaseHrefToAssets(sampleAssetsMap, 'nested/base');
 
       // Should properly join the paths
-      expect(result['main.js'].path).toBe('nested/base/main.js');
-      expect(result['styles.css'].path).toBe('nested/base/styles.css');
+      expect(result['nested/base/main.js'].path).toBe('nested/base/main.js');
+      expect(result['nested/base/styles.css'].path).toBe('nested/base/styles.css');
     });
 
     it('should create a new map without modifying the original', () => {

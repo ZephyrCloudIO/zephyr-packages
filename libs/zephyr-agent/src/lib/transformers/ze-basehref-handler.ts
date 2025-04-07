@@ -42,7 +42,7 @@ export function normalizeBasePath(baseHref: string | null | undefined): string {
     normalized = normalized.substring(0, normalized.length - 1);
   }
 
-  return normalized;
+  return normalized.trim();
 }
 
 /**

@@ -7,7 +7,7 @@ import {
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
 import { ZephyrEngine } from '../../zephyr-engine';
-import { applyBaseHrefToAssets, normalizeBasePath } from './ze-basehref-handler';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];

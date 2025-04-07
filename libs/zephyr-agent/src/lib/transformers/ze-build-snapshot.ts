@@ -39,7 +39,10 @@ export async function createSnapshot(
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
-  const basedAssets = applyBaseHrefToAssets(assets, zephyr_engine.buildProperties.baseHref)
+  const basedAssets = applyBaseHrefToAssets(
+    assets,
+    zephyr_engine.buildProperties.baseHref
+  );
 
   return {
     // ZeApplicationProperties

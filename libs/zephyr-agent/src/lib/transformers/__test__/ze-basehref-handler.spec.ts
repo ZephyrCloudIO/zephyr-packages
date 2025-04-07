@@ -117,7 +117,9 @@ describe('ze-basehref-handler', () => {
       expect(result['/absolute/path/to/file.js'].path).toBe('/absolute/path/to/file.js');
 
       // External should remain external
-      expect(result['https://cdn.example.com/script.js'].path).toBe('https://cdn.example.com/script.js');
+      expect(result['https://cdn.example.com/script.js'].path).toBe(
+        'https://cdn.example.com/script.js'
+      );
     });
 
     it('should normalize the baseHref before applying it', () => {

@@ -1,6 +1,6 @@
-import { cloudflareStrategy, fastlyStrategy, netlifyStrategy } from './index';
 import { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { UploadProviderType } from '../node-persist/upload-provider-options';
+import { commonUploadStrategy } from './common-upload.strategy';
 
 type UploadStrategy = (
   zephyr_engine: ZephyrEngine,
@@ -10,11 +10,10 @@ type UploadStrategy = (
 export function getUploadStrategy(platform: UploadProviderType): UploadStrategy {
   switch (platform) {
     case UploadProviderType.CLOUDFLARE:
-      return cloudflareStrategy;
     case UploadProviderType.NETLIFY:
-      return netlifyStrategy;
     case UploadProviderType.FASTLY:
-      return fastlyStrategy;
+    case UploadProviderType.AKAMAI:
+      return commonUploadStrategy;
     default:
       throw new Error('Unsupported upload provider.');
   }

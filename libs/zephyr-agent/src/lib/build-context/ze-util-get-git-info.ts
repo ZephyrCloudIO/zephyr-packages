@@ -69,7 +69,7 @@ async function loadGitInfo(hasSecretToken: boolean) {
     // Parse tags - if multiple tags point to HEAD, they'll be on separate lines
     const tags = tagsOutput ? tagsOutput.split('\n').filter(Boolean) : [];
 
-    const gitData = {
+    return {
       name,
       email,
       remoteOrigin,
@@ -78,7 +78,6 @@ async function loadGitInfo(hasSecretToken: boolean) {
       tags,
       stdout,
     };
-    return gitData;
   } catch (cause: unknown) {
     const error = cause as Error & { stderr?: string };
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {

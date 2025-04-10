@@ -14,7 +14,9 @@ export type {
   ModuleFederationPlugin,
   XStats,
   XStatsCompilation,
-} from './xpack.types';
+  XCompilation,
+  XCompiler,
+} from 'zephyr-edge-contract';
 
 export { getBuildStats } from './federation-dashboard-legacy/get-build-stats';
 
@@ -22,3 +24,5 @@ export { setupZeDeploy } from './hooks/ze-setup-ze-deploy';
 export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
 
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
+
+export type { DeployCompiler, DeployCompilation } from './hooks/ze-setup-ze-deploy';

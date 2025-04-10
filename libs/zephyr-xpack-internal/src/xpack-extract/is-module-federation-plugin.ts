@@ -1,4 +1,4 @@
-import { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
+import { ModuleFederationPlugin, XPackConfiguration } from 'zephyr-edge-contract';
 
 /** @private */
 type __webpack_plugin__ = NonNullable<XPackConfiguration<any>['plugins']>[number];

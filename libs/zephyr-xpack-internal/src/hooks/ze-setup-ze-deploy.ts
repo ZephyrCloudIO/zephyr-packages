@@ -2,16 +2,28 @@ import { onDeploymentDone } from '../lifecycle-events/index';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 import { ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
-import { XStats } from '../xpack.types';
+import { XStats } from 'zephyr-edge-contract';
 
-interface DeployPluginOptions {
+export interface DeployPluginOptions {
   pluginName: string;
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
 }
 
-interface DeployCompiler {
-  webpack: { Compilation: { PROCESS_ASSETS_STAGE_REPORT: number } };
+export interface DeployCompiler {
+  webpack: {
+    Compilation: { PROCESS_ASSETS_STAGE_REPORT: number };
+    sources: {
+      RawSource: any;
+    };
+  };
+  rspack?: {
+    Compilation: { PROCESS_ASSETS_STAGE_REPORT: number };
+    sources: {
+      RawSource: any;
+    };
+  };
+
   hooks: {
     thisCompilation: {
       tap: (pluginName: string, cb: (compilation: DeployCompilation) => void) => void;
@@ -19,7 +31,7 @@ interface DeployCompiler {
   };
 }
 
-interface DeployCompilation {
+export interface DeployCompilation {
   getStats: () => XStats;
   hooks: {
     processAssets: {
@@ -29,6 +41,7 @@ interface DeployCompilation {
       ) => void;
     };
   };
+  emitAsset: (name: string, source: any, assetInfo?: any) => void;
 }
 
 export function setupZeDeploy<
@@ -41,7 +54,7 @@ export function setupZeDeploy<
     compilation.hooks.processAssets.tapPromise(
       {
         name: pluginName,
-        stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT,
+        stage: compiler.webpack?.Compilation.PROCESS_ASSETS_STAGE_REPORT,
       },
       async (assets) => {
         const stats = compilation.getStats();

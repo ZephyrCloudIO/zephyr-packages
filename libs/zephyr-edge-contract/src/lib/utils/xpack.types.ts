@@ -69,6 +69,9 @@ export interface XStatsChunk {
     loc?: string;
   }>;
 }
+export interface XSource {
+  source: () => string;
+}
 export interface XCompiler {
   options: {
     output: {
@@ -82,19 +85,35 @@ export interface XCompiler {
     compilation: {
       tap: (name: string, callback: (compilation: XCompilation) => void) => void;
     };
+    thisCompilation: {
+      tap: (name: string, callback: (compilation: XCompilation) => void) => void;
+      tapPromise: (
+        name: string,
+        callback: (compilation: XCompilation) => Promise<void>
+      ) => void;
+    };
   };
   webpack: {
     RuntimeGlobals: {
       loadScript: string;
     };
+    sources: {
+      RawSource: any;
+    };
+    Compilation: XCompilation;
   };
   rspack: {
     RuntimeGlobals: {
       loadScript: string;
     };
+    sources: {
+      RawSource: any;
+    };
+    Compilation: XCompilation;
   };
 }
 export interface XCompilation {
+  getStats: () => XStats;
   outputOptions: {
     trustedTypes: boolean;
   };
@@ -107,7 +126,15 @@ export interface XCompilation {
     additionalTreeRuntimeRequirements: {
       tap: (name: string, callback: (chunk: XChunk, set: Set<string>) => void) => void;
     };
+    processAssets: {
+      tapPromise: (
+        { name, stage }: { name: string; stage: number },
+        callback: (assets: Record<string, XSource>) => Promise<void>
+      ) => void;
+    };
   };
+  emitAsset: (name: string, source: any, assetInfo?: any) => void;
+  PROCESS_ASSETS_STAGE_REPORT: number;
 }
 export interface XModule {
   // I am not empty I am just useless

@@ -5,7 +5,7 @@ import { getLicenses } from './get-licenses';
 import { NpmModules } from './convert-dependencies';
 import { ModuleObject } from './module-part-two';
 import { LocalPackageJson } from 'zephyr-edge-contract';
-import { XStatsModule } from '../../../xpack.types';
+import { XStatsModule } from 'zephyr-edge-contract';
 
 export interface Consume {
   consumingApplicationID: string;

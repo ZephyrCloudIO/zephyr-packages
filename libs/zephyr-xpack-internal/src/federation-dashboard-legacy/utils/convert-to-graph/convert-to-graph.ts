@@ -6,7 +6,7 @@ import { modulePartTwo } from './module-part-two';
 import { processFunctionRemotes } from './process-function-remotes';
 
 // import { StatsChunk, StatsModule } from 'webpack';
-import { XStatsChunk, XStatsModule } from '../../../xpack.types';
+import { XStatsChunk, XStatsModule } from 'zephyr-edge-contract';
 import { ConvertedGraph } from 'zephyr-edge-contract';
 
 export interface ConvertToGraphParams {

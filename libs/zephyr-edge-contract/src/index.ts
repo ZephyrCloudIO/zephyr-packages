@@ -18,6 +18,7 @@ export type { ZeApplicationList } from './lib/ze-api/app-list';
 export type { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';
 export type { ConvertedGraph } from './lib/ze-api/converted-graph';
 export type { LocalPackageJson } from './lib/ze-api/local-package-json';
+export type { ZephyrRuntimeSnapshotOptions } from './lib/ze-api/app-runtime';
 export type { ZephyrBuildStats } from './lib/zephyr-build-stats';
 export type {
   Asset,
@@ -38,6 +39,9 @@ export {
   ZE_API_ENDPOINT_HOST,
 } from './lib/api-contract-negotiation/get-api-contract';
 
+// runtime plugin
+export { zephyr_snapshot_filename } from './lib/ze-api/app-runtime';
+
 // promise proto methods
 export {
   forEachLimit,
@@ -51,3 +55,22 @@ export {
 // string proto methods
 export { type FindTemplates, formatString } from './lib/string/string';
 export { stripAnsi } from './lib/string/strip-ansi';
+
+// utils
+export { isDev } from './lib/utils/is-dev';
+export { getSnapshotFileName } from './lib/utils/get-snapshot-filename';
+
+// Xpack types
+export type {
+  XStats,
+  XStatsCompilation,
+  XPackConfiguration,
+  XCompiler,
+  XCompilation,
+  ModuleFederationPlugin,
+  XFederatedRemotesConfig,
+  XModule,
+  XChunk,
+  XStatsChunk,
+  XStatsModule,
+} from './lib/utils/xpack.types';

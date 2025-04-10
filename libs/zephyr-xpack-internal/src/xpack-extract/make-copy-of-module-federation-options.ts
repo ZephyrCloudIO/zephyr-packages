@@ -1,5 +1,5 @@
 import { iterateFederationConfig } from './iterate-federation-config';
-import { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
+import { ModuleFederationPlugin, XPackConfiguration } from 'zephyr-edge-contract';
 
 export function makeCopyOfModuleFederationOptions<Compiler>(
   config: XPackConfiguration<Compiler>

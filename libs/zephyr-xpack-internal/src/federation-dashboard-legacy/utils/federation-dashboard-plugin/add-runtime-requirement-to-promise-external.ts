@@ -1,4 +1,4 @@
-import { XCompilation, XCompiler, XModule, XChunk } from '../../../xpack.types';
+import { XCompilation, XCompiler, XModule, XChunk } from 'zephyr-edge-contract';
 
 export class AddRuntimeRequirementToPromiseExternal {
   apply(compiler: XCompiler): void {

@@ -1,5 +1,5 @@
 import { objHasKeys } from './object-has-keys';
-import { XStatsChunk, XStatsModule } from '../../../xpack.types';
+import { XStatsChunk, XStatsModule } from 'zephyr-edge-contract';
 
 export interface FederationRemoteEntry {
   origins: {

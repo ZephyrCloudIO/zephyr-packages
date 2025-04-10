@@ -36,3 +36,6 @@ export {
 } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
 export type { Platform } from './zephyr-engine';
+
+// colors
+export * from './lib/logging/picocolor';

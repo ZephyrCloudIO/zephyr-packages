@@ -4,7 +4,7 @@ import {
   readPackageJson,
 } from 'zephyr-agent';
 
-import { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
+import { XFederatedRemotesConfig, XPackConfiguration } from 'zephyr-edge-contract';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 
 export function extractFederatedDependencyPairs(

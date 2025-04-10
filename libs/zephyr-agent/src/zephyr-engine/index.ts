@@ -6,6 +6,7 @@ import {
   Snapshot,
   type ZeBuildAsset,
   ZeBuildAssetsMap,
+  zephyr_snapshot_filename,
   type ZephyrBuildStats,
   ZephyrPluginOptions,
   ZeUtils,
@@ -30,6 +31,8 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
+import { ZephyrRuntimeManager } from '../lib/runtime-manager';
+
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -97,7 +100,8 @@ export class ZephyrEngine {
     isCI: boolean;
     buildEnv: string;
     target: Platform;
-  } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
+    zephyr_environment?: string;
+  } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web', zephyr_environment: '' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 
@@ -110,6 +114,7 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+  runtime_manager: ZephyrRuntimeManager | null = new ZephyrRuntimeManager();
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
@@ -347,6 +352,13 @@ export class ZephyrEngine {
     const snapshot = await createSnapshot(zephyr_engine, {
       assets: assetsMap,
       mfConfig,
+    });
+
+    this.runtime_manager?.init({
+      snapshot,
+      zephyr_environment: this.env.zephyr_environment || '',
+      filePath: zephyr_engine.buildProperties.output,
+      fileName: zephyr_snapshot_filename,
     });
 
     const upload_options: UploadOptions = {

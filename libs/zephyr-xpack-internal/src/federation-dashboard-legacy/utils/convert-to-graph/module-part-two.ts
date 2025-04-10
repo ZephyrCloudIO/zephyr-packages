@@ -1,5 +1,5 @@
 import { ConvertedDependencies } from './convert-dependencies';
-import { XStatsModule } from '../../../xpack.types';
+import { XStatsModule } from 'zephyr-edge-contract';
 
 export interface ModuleObject {
   id: string;

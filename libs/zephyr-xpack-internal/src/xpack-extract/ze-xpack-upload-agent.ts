@@ -4,7 +4,7 @@ import {
   type ZephyrBuildStats,
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import { ModuleFederationPlugin, XStats, XStatsCompilation } from 'zephyr-edge-contract';
 import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
 import { emitDeploymentDone } from '../lifecycle-events/index';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';

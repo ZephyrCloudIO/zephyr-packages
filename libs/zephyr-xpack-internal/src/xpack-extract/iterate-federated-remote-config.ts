@@ -1,5 +1,5 @@
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
-import { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
+import { XFederatedRemotesConfig, XPackConfiguration } from 'zephyr-edge-contract';
 import { ze_log } from 'zephyr-agent';
 
 export function iterateFederatedRemoteConfig<Compiler, K = XFederatedRemotesConfig>(

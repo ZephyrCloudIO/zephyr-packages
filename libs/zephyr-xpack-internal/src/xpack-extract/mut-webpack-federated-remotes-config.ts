@@ -1,7 +1,7 @@
 import { type ZeResolvedDependency } from 'zephyr-agent';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
 import { ze_log } from 'zephyr-agent';
-import { XPackConfiguration } from '../xpack.types';
+import { XPackConfiguration } from 'zephyr-edge-contract';
 import { ZephyrEngine } from 'zephyr-agent';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 

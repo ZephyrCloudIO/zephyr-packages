@@ -20,7 +20,7 @@ import {
   XStatsChunk,
   XStatsCompilation,
   ModuleFederationPlugin,
-} from '../../../xpack.types';
+} from 'zephyr-edge-contract';
 
 // TODO: convert this require to imports
 // eslint-disable-next-line @typescript-eslint/no-var-requires

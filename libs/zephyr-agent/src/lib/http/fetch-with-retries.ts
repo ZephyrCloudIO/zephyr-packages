@@ -1,3 +1,4 @@
+import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 
 export async function fetchWithRetries(
@@ -9,7 +10,12 @@ export async function fetchWithRetries(
     try {
       const response = await fetch(url, options);
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+          status: response.status,
+          url: url.toString(),
+          content: await response.text(),
+          method: options.method?.toUpperCase() ?? 'GET',
+        });
       }
       return response;
     } catch (err) {
@@ -27,5 +33,10 @@ export async function fetchWithRetries(
     }
   }
 
-  throw new Error('Network error: Max retries reached');
+  throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+    status: -1,
+    url: url.toString(),
+    content: 'Max retries reached',
+    method: options.method?.toUpperCase() ?? 'GET',
+  });
 }

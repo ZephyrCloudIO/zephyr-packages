@@ -4,12 +4,21 @@ export class PollingManager {
   private static instance: PollingManager;
   private activePolls: Set<NodeJS.Timeout> = new Set();
   private isPolling = false;
+  private authInProgress = false;
 
   static getInstance(): PollingManager {
     if (!PollingManager.instance) {
       PollingManager.instance = new PollingManager();
     }
     return PollingManager.instance;
+  }
+
+  isAuthInProgress(): boolean {
+    return this.authInProgress;
+  }
+
+  setAuthInProgress(status: boolean): void {
+    this.authInProgress = status;
   }
 
   startPolling(callback: () => Promise<void>, interval: number): NodeJS.Timeout {
@@ -49,5 +58,6 @@ export class PollingManager {
     this.activePolls.forEach(clearInterval);
     this.activePolls.clear();
     this.isPolling = false;
+    this.authInProgress = false;
   }
 }

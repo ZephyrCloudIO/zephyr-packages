@@ -60,6 +60,21 @@ export async function checkAuth(): Promise<string> {
   const browserController = new AbortController();
   const pollingManager = PollingManager.getInstance();
 
+  // Check if auth process is already in progress
+  if (pollingManager.isAuthInProgress()) {
+    logFn('debug', 'Authentication already in progress. Waiting for it to complete...');
+    // Wait for a bit before checking if the token is already available
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    const token = await getToken();
+    if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+      return token;
+    }
+  }
+
+  // Mark that auth process is starting
+  pollingManager.setAuthInProgress(true);
+
   // Start polling for valid token
   const pollInterval = pollingManager.startPolling(async () => {
     const token = await getToken();
@@ -117,6 +132,7 @@ export async function checkAuth(): Promise<string> {
     throw error;
   } finally {
     pollingManager.stopPolling(pollInterval);
+    pollingManager.setAuthInProgress(false);
   }
 }
 /**
@@ -224,6 +240,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
   const { promise, resolve, reject } = PromiseWithResolvers<string>();
 
   const socketManager = WebSocketManager.getInstance();
+  const pollingManager = PollingManager.getInstance();
 
   if (!socketManager.canCreateNewConnection()) {
     // If there's an active connection, wait for it to be closed before creating a new one
@@ -234,6 +251,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     const token = await getToken();
     if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
       ze_log('Token is still valid, aborting browser controller');
+      pollingManager.setAuthInProgress(false);
       return token;
     }
     ze_log('Token is not valid, prompting for auth action');
@@ -254,6 +272,9 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     socket.removeAllListeners();
     socket.disconnect();
     socket.close();
+
+    // Ensure auth in progress flag is reset
+    pollingManager.setAuthInProgress(false);
   };
 
   try {

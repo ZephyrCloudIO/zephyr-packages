@@ -88,16 +88,15 @@ export async function checkAuth(): Promise<string> {
   // Tries to open the browser to authenticate the user
   void promptForAuthAction(authUrl, browserController.signal)
     .then(() => {
-      ze_log('promptForAuthAction: Browser opened, clearing interval...');
-      // Clear the polling interval when browser is opened
-      clearInterval(pollInterval);
+      ze_log('promptForAuthAction: Browser opened, stopping polling...');
+      // Stop the polling interval when browser is opened
+      pollingManager.stopPolling(pollInterval);
       openUrl(authUrl);
     })
     .catch(() => {
-      ze_log('promptForAuthAction: Error, clearing interval...');
-      // Clear the polling interval if there's an error
-      clearInterval(pollInterval);
-      fallbackManualLogin(authUrl);
+      ze_log('promptForAuthAction: Error, stopping polling...');
+      // Stop the polling interval if there's an error
+      pollingManager.stopPolling(pollInterval);
     });
 
   try {

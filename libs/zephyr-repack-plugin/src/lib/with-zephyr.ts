@@ -78,13 +78,27 @@ async function _zephyr_configuration(
   // Verify Module Federation configuration's naming
   await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
+  const defineConfig = {
+    ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),
+    ZE_SNAPSHOT_ID: JSON.stringify(await zephyr_engine.snapshotId),
+    ZE_APP_ID: JSON.stringify(zephyr_engine.application_uid),
+    ZE_MF_CONFIG: JSON.stringify(mf_configs),
+    ZE_UPDATED_AT: JSON.stringify(
+      (await zephyr_engine.application_configuration).fetched_at
+    ),
+    ZE_EDGE_URL: JSON.stringify((await zephyr_engine.application_configuration).EDGE_URL),
+  };
+
+  ze_log('Content in defineConfig: ', defineConfig);
+
   ze_log('Application uid created...');
   config.plugins?.push(
     new ZeRepackPlugin({
       zephyr_engine,
       mfConfig: makeCopyOfModuleFederationOptions(config),
       target: zephyr_engine.env.target,
-    })
+    }),
+    new rspack.DefinePlugin(defineConfig)
   );
 
   return config;

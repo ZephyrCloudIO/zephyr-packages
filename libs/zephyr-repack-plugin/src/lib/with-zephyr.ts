@@ -1,4 +1,4 @@
-import { Configuration } from '@rspack/core';
+import { Configuration, rspack } from '@rspack/core';
 import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
 import {

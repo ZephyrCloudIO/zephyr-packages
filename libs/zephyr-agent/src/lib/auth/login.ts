@@ -93,10 +93,11 @@ export async function checkAuth(): Promise<string> {
       pollingManager.stopPolling(pollInterval);
       openUrl(authUrl);
     })
-    .catch(() => {
-      ze_log('promptForAuthAction: Error, stopping polling...');
+    .catch((err) => {
+      ze_log('promptForAuthAction: Error, stopping polling...', err);
       // Stop the polling interval if there's an error
       pollingManager.stopPolling(pollInterval);
+      fallbackManualLogin(authUrl);
     });
 
   try {

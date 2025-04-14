@@ -66,3 +66,8 @@ examples/vite-react-mf/host/.__mf__temp/**
 
 # Parcel cache
 .parcel-cache
+
+
+
+.nx/cache
+.nx/workspace-data

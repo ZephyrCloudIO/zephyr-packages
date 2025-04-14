@@ -73,4 +73,5 @@ export type {
   XChunk,
   XStatsChunk,
   XStatsModule,
+  XSource,
 } from './lib/utils/xpack.types';

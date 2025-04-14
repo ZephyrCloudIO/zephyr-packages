@@ -7,20 +7,14 @@ import {
 } from 'zephyr-xpack-internal';
 import { Platform } from 'zephyr-agent';
 const pluginName = 'ZephyrRepackPlugin';
-import { generateRuntimeSnapshot } from './generate-runtime-snapshot';
-export interface ZephyrRuntimeConfig {
-  zephyr_environment?: string;
-  tag?: string;
-  publicPath?: string;
-  snapshotFileName?: string;
-  disableEmit?: boolean;
-}
+import { ZephyrRuntimeSnapshotOptions } from 'zephyr-edge-contract';
+
 export interface ZephyrRepackPluginOptions {
   zephyr_engine: ZephyrEngine;
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   target: Platform | undefined;
-  runtimeConfig?: ZephyrRuntimeConfig;
+  runtimeConfig?: ZephyrRuntimeSnapshotOptions;
 }
 
 export class ZeRepackPlugin {
@@ -32,10 +26,8 @@ export class ZeRepackPlugin {
 
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
+
     logBuildSteps(this._options, compiler);
-    Promise.all([
-      generateRuntimeSnapshot(this._options, compiler),
-      setupZeDeploy(this._options, compiler),
-    ]);
+    setupZeDeploy(this._options, compiler);
   }
 }

@@ -1,3 +1,5 @@
+import { ZephyrRuntimeSnapshotOptions } from '../ze-api/app-runtime';
+
 export interface ZephyrPluginOptions {
   pluginName: string;
   isCI: boolean;
@@ -36,4 +38,5 @@ export interface ZephyrPluginOptions {
   // hacks
   wait_for_index_html?: boolean;
   outputPath?: string;
+  runtimeConfig?: ZephyrRuntimeSnapshotOptions;
 }

@@ -44,6 +44,7 @@ export class WebSocketManager {
     this.activeSocket = socketio(endpoint, {
       forceNew: true,
       reconnection: false,
+      withCredentials: true,
     });
 
     this.activeSocket.on('disconnect', () => {

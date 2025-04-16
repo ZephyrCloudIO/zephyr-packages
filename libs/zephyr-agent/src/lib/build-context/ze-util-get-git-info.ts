@@ -19,7 +19,7 @@ export interface ZeGitInfo {
 export async function getGitInfo(): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
 
-  const { name, email, remoteOrigin, branch, commit, stdout } =
+  const { name, email, remoteOrigin, branch, commit, tags, stdout } =
     await loadGitInfo(hasToken);
 
   if (!hasToken && (!name || !email)) {
@@ -31,7 +31,7 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
   const app = parseGitUrl(remoteOrigin, stdout);
 
   const gitInfo = {
-    git: { name, email, branch, commit },
+    git: { name, email, branch, commit, tags },
     app,
   };
 
@@ -56,15 +56,18 @@ async function loadGitInfo(hasSecretToken: boolean) {
     'git config --get remote.origin.url',
     'git rev-parse --abbrev-ref HEAD',
     'git rev-parse HEAD',
+    'git tag --points-at HEAD',
   ].join(` && echo ${delimiter} && `);
 
   try {
     const { stdout } = await exec(command);
 
-    const [name, email, remoteOrigin, branch, commit] = stdout
+    const [name, email, remoteOrigin, branch, commit, tagsOutput] = stdout
       .trim()
       .split(delimiter)
       .map((x) => x.trim());
+    // Parse tags - if multiple tags point to HEAD, they'll be on separate lines
+    const tags = tagsOutput ? tagsOutput.split('\n').filter(Boolean) : [];
 
     return {
       name,
@@ -72,6 +75,7 @@ async function loadGitInfo(hasSecretToken: boolean) {
       remoteOrigin,
       branch,
       commit,
+      tags,
       stdout,
     };
   } catch (cause: unknown) {

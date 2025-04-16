@@ -93,6 +93,14 @@ export interface ZephyrBuildStats {
      * @requires To build a successfully through Zephyr user must have this field
      */
     commit: string;
+
+    /**
+     * Git tags that point to the current commit, retrieved using `git tag --points-at
+     * HEAD`
+     *
+     * @optional This field will be an empty array if no tags point to the current commit
+     */
+    tags?: string[];
   };
   context: {
     username?: string;

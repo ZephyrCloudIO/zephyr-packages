@@ -20,6 +20,7 @@ export interface Snapshot {
     email?: string;
     branch: string;
     commit: string;
+    tags?: string[];
   };
   // zephyr user
   creator: {

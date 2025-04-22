@@ -1019,32 +1019,17 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
     devDependencies:
-      '@biomejs/biome':
-        specifier: 1.9.4
-        version: 1.9.4
-      '@rslib/core':
-        specifier: ^0.3.2
-        version: 0.3.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.13))(typescript@5.8.2)
-      '@types/degit':
-        specifier: ^2.8.6
-        version: 2.8.6
       '@types/node':
-        specifier: ^22.10.7
+        specifier: catalog:typescript
         version: 22.13.13
-      lint-staged:
-        specifier: ^15.4.3
-        version: 15.5.0
-      simple-git-hooks:
-        specifier: ^2.11.1
-        version: 2.12.1
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.11.13(@swc/helpers@0.5.15))(@types/node@22.13.13)(typescript@5.8.2)
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
       typescript:
-        specifier: ^5.7.3
+        specifier: catalog:typescript
         version: 5.8.2
 
   libs/parcel-reporter-zephyr:
@@ -4126,11 +4111,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rsbuild/core@1.2.0-beta.1':
-    resolution: {integrity: sha512-+TzwALD2xEpgc2FQgjn1CtNtE2CTS1FELuWXpjI4AABjytYDGdaOHvHyCLXHiJpuvDdnyJumoN/T8i8zhbTkPg==}
-    engines: {node: '>=16.7.0'}
-    hasBin: true
-
   '@rsbuild/core@1.2.19':
     resolution: {integrity: sha512-k76is4HygmbYYMLG2V1d1yQeurHHC+ZEtGs/nwE11y6HmwSndoFhmjOeQbQ2Ul0b2B8HErksqSMtlCxd37YPPQ==}
     engines: {node: '>=16.7.0'}
@@ -4290,19 +4270,6 @@ packages:
 
   '@rsdoctor/utils@1.0.0':
     resolution: {integrity: sha512-28mk6cV9wHXLW6J1OMWzBlqWumQArmCirAPOT8p5l4no8m8s451M0lEZmqGf/dwWWa/x/3r4rvhGAy6BbAL9QQ==}
-
-  '@rslib/core@0.3.2':
-    resolution: {integrity: sha512-BdR/1kjR+Jk614je0ijjEwGoY44fLtPg6PoWHoKfzMkqNMtFg40AwMaBS04SylvR4BuUt1Q+9k6NQ/IWdE5HWg==}
-    engines: {node: '>=16.0.0'}
-    hasBin: true
-    peerDependencies:
-      '@microsoft/api-extractor': ^7
-      typescript: ^5
-    peerDependenciesMeta:
-      '@microsoft/api-extractor':
-        optional: true
-      typescript:
-        optional: true
 
   '@rspack/binding-darwin-arm64@1.2.8':
     resolution: {integrity: sha512-bDlrlroY3iMlzna/3i1gD6eRmhJW2zRyC3Ov6aR1micshVQ9RteigYZWkjZuQfyC5Z8dCcLUQJVojz+pqp0JXg==}
@@ -4838,9 +4805,6 @@ packages:
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
-
-  '@types/degit@2.8.6':
-    resolution: {integrity: sha512-y0M7sqzsnHB6cvAeTCBPrCQNQiZe8U4qdzf8uBVmOWYap5MMTN/gB2iEqrIqFiYcsyvP74GnGD5tgsHttielFw==}
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -10484,19 +10448,6 @@ packages:
     resolution: {integrity: sha512-iAtQy/L4QFU+rTJ1YUjXqJOJzuwEghqWzCEYD2FEghT7Gsy1VdABntrO4CLopA5IkflTyqNiLNwPcOJ3S7UKLg==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
-
-  rsbuild-plugin-dts@0.3.2:
-    resolution: {integrity: sha512-Gjaf5ANA6R9t92Va6utNG1iyRxCE0QLoswKvR5UkOkX5GUpNyWveze+k/6L/qrkgqGRuJqUuYX3lrwatrOUZ3A==}
-    engines: {node: '>=16.0.0'}
-    peerDependencies:
-      '@microsoft/api-extractor': ^7
-      '@rsbuild/core': 1.x
-      typescript: ^5
-    peerDependenciesMeta:
-      '@microsoft/api-extractor':
-        optional: true
-      typescript:
-        optional: true
 
   rsc-html-stream@0.0.5:
     resolution: {integrity: sha512-UhLsi8XLAu1NIBcFZjykoPiSLEAxfkGxkmr/Tnv4KnqhG18A65dVTCWovRvFdpzng6IyVW2f6nTAKz7lw+QhgQ==}
@@ -16298,15 +16249,6 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.37.0':
     optional: true
 
-  '@rsbuild/core@1.2.0-beta.1':
-    dependencies:
-      '@rspack/core': 1.2.8(@swc/helpers@0.5.15)
-      '@rspack/lite-tapable': 1.0.1
-      '@swc/helpers': 0.5.15
-      core-js: 3.40.0
-    transitivePeerDependencies:
-      - '@rspack/tracing'
-
   '@rsbuild/core@1.2.19':
     dependencies:
       '@rspack/core': 1.2.8(@swc/helpers@0.5.15)
@@ -16656,17 +16598,6 @@ snapshots:
       - '@rspack/core'
       - supports-color
       - webpack
-
-  '@rslib/core@0.3.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.13))(typescript@5.8.2)':
-    dependencies:
-      '@rsbuild/core': 1.2.0-beta.1
-      rsbuild-plugin-dts: 0.3.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.13))(@rsbuild/core@1.2.0-beta.1)(typescript@5.8.2)
-      tinyglobby: 0.2.12
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.51.1(@types/node@22.13.13)
-      typescript: 5.8.2
-    transitivePeerDependencies:
-      - '@rspack/tracing'
 
   '@rspack/binding-darwin-arm64@1.2.8':
     optional: true
@@ -17291,8 +17222,6 @@ snapshots:
   '@types/debug@4.1.12':
     dependencies:
       '@types/ms': 2.1.0
-
-  '@types/degit@2.8.6': {}
 
   '@types/eslint-scope@3.7.7':
     dependencies:
@@ -24093,16 +24022,6 @@ snapshots:
       '@rollup/rollup-win32-ia32-msvc': 4.37.0
       '@rollup/rollup-win32-x64-msvc': 4.37.0
       fsevents: 2.3.3
-
-  rsbuild-plugin-dts@0.3.2(@microsoft/api-extractor@7.51.1(@types/node@22.13.13))(@rsbuild/core@1.2.0-beta.1)(typescript@5.8.2):
-    dependencies:
-      '@rsbuild/core': 1.2.0-beta.1
-      magic-string: 0.30.17
-      picocolors: 1.1.1
-      tinyglobby: 0.2.12
-    optionalDependencies:
-      '@microsoft/api-extractor': 7.51.1(@types/node@22.13.13)
-      typescript: 5.8.2
 
   rsc-html-stream@0.0.5: {}
 

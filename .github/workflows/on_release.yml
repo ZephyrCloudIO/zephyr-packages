@@ -12,6 +12,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build packages
-        run: pnpm dlx nx run-many -t build --projects="libs/*"
-      - name: Release libraries
-        run: pnpm dlx nx run-many -t release --projects="libs/*"
+        run: pnpm build
+      - name: Publish package on NPM 📦
+        run: pnpm ze-publish

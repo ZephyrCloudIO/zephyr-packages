@@ -21,9 +21,7 @@ import { TEMPLATES } from './utils/constants';
 import end_note from './utils/end';
 import type { CLIOptions } from './utils/types';
 
-/**
- * Helper function to execute a command in the given working directory.
- */
+/** Helper function to execute a command in the given working directory. */
 function runCmd(cmd: string, cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
     exec(cmd, { cwd }, (err, stdout, stderr) => {
@@ -38,8 +36,8 @@ function runCmd(cmd: string, cwd: string): Promise<void> {
 }
 
 /**
- * Initialize Git in the project directory, set temporary user configuration,
- * commit the changes, and then remove the local configuration.
+ * Initialize Git in the project directory, set temporary user configuration, commit the
+ * changes, and then remove the local configuration.
  */
 async function initializeGit(projectPath: string): Promise<void> {
   // Ask the user if they want to initialize a Git repository.
@@ -58,10 +56,7 @@ async function initializeGit(projectPath: string): Promise<void> {
     await runCmd('git init', projectPath);
 
     // Set temporary Git user configuration.
-    await runCmd(
-      'git config user.email "zephyrbot@zephyr-cloud.io"',
-      projectPath,
-    );
+    await runCmd('git config user.email "zephyrbot@zephyr-cloud.io"', projectPath);
     await runCmd('git config user.name "Zephyr Bot"', projectPath);
 
     // Stage all files and commit them.
@@ -98,10 +93,10 @@ async function main() {
         return text({
           message: 'Where should we create your project?',
           placeholder: './sparkling-solid',
-          validate: value => {
+          validate: (value) => {
             if (!value) return 'Please enter a path.';
             if (value[0] !== '.') return 'Please enter a relative path.';
-            return
+            return;
           },
         });
       },
@@ -130,17 +125,15 @@ async function main() {
             message: 'Pick a template: ',
             initialValue: 'react-rspack-mf',
             maxItems: 5,
-            options: Object.keys(TEMPLATES).map(template => ({
+            options: Object.keys(TEMPLATES).map((template) => ({
               value: template as keyof typeof TEMPLATES,
-              label: c.cyan(
-                TEMPLATES[template as keyof typeof TEMPLATES].label,
-              ),
+              label: c.cyan(TEMPLATES[template as keyof typeof TEMPLATES].label),
               hint: TEMPLATES[template as keyof typeof TEMPLATES].hint,
             })),
           });
         }
 
-        return
+        return;
       },
     },
     {
@@ -148,7 +141,7 @@ async function main() {
         cancel('Operation cancelled.');
         process.exit(0);
       },
-    },
+    }
   )) as CLIOptions;
 
   const temp_dir = tempy.temporaryDirectory();
@@ -163,21 +156,13 @@ async function main() {
   try {
     if (project.type === 'web') {
       await new Promise<void>((resolve, reject) => {
-        exec(command_web, async err => {
+        exec(command_web, async (err) => {
           if (err) {
-            s.stop(
-              c.bgRed(
-                c.black(`Error cloning repository to ${project_path}...`),
-              ),
-            );
+            s.stop(c.bgRed(c.black(`Error cloning repository to ${project_path}...`)));
             return reject(err);
           }
 
-          const clonedPath = path.join(
-            temp_dir,
-            'examples',
-            project.templates as string,
-          );
+          const clonedPath = path.join(temp_dir, 'examples', project.templates as string);
 
           try {
             // Remove .git folder from the cloned template
@@ -191,28 +176,20 @@ async function main() {
               force: true,
             });
             s.stop(
-              c.green(
-                `Project successfully created at ${c.underline(project_path)}`,
-              ),
+              c.green(`Project successfully created at ${c.underline(project_path)}`)
             );
             resolve();
           } catch (copyErr) {
-            s.stop(
-              c.bgRed(c.black(`Error copying template to ${project_path}...`)),
-            );
+            s.stop(c.bgRed(c.black(`Error copying template to ${project_path}...`)));
             reject(copyErr);
           }
         });
       });
     } else if (project.type === 'react-native') {
       await new Promise<void>((resolve, reject) => {
-        exec(command_react_native, async err => {
+        exec(command_react_native, async (err) => {
           if (err) {
-            s.stop(
-              c.bgRed(
-                c.black(`Error cloning repository to ${project_path}...`),
-              ),
-            );
+            s.stop(c.bgRed(c.black(`Error cloning repository to ${project_path}...`)));
             return reject(err);
           }
 
@@ -228,15 +205,11 @@ async function main() {
               force: true,
             });
             s.stop(
-              c.green(
-                `Project successfully created at ${c.underline(project_path)}`,
-              ),
+              c.green(`Project successfully created at ${c.underline(project_path)}`)
             );
             resolve();
           } catch (copyErr) {
-            s.stop(
-              c.bgRed(c.black(`Error copying files to ${project_path}...`)),
-            );
+            s.stop(c.bgRed(c.black(`Error copying files to ${project_path}...`)));
             reject(copyErr);
           }
         });

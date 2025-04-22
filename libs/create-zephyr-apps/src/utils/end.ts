@@ -18,7 +18,7 @@ export default function end_note({ project }: { project: CLIOptions }) {
           `cd ${repo_name}`,
           'pnpm install',
           c.magenta(
-            `git remote add origin https://github.com/${user_name.length >= 1 ? user_name : 'YourUsername'}/${repo_name}.git`,
+            `git remote add origin https://github.com/${user_name.length >= 1 ? user_name : 'YourUsername'}/${repo_name}.git`
           ),
           'ZC=1 pnpm run start',
           '\n--------------------------------\n',

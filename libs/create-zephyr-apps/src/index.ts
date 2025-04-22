@@ -1,231 +1,300 @@
 #!/usr/bin/env node
+
 import { exec } from 'node:child_process';
 import * as fs from 'node:fs';
+import { homedir } from 'node:os';
 import path from 'node:path';
-import { setTimeout } from 'node:timers/promises';
+import { setImmediate } from 'node:timers/promises';
+import { promisify } from 'node:util';
 import {
   cancel,
   confirm,
-  group,
   intro,
   isCancel,
+  log,
   note,
   select,
   spinner,
   text,
-  updateSettings,
 } from '@clack/prompts';
-import c from 'chalk';
-import * as tempy from 'tempy';
-import { TEMPLATES } from './utils/constants';
-import end_note from './utils/end';
-import type { CLIOptions } from './utils/types';
+import { getCatalogsFromWorkspaceManifest } from '@pnpm/catalogs.config';
+import { resolveFromCatalog } from '@pnpm/catalogs.resolver';
+import { readWorkspaceManifest } from '@pnpm/workspace.read-manifest';
+import c from 'chalk-template';
+import terminalLink from 'terminal-link';
+import { ProjectTypes, Templates } from './templates.js';
 
-/** Helper function to execute a command in the given working directory. */
-function runCmd(cmd: string, cwd: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    exec(cmd, { cwd }, (err) => {
-      if (err) {
-        console.error(`Error executing command: ${cmd}`, err);
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+const execAsync = promisify(exec);
+
+// Immediate is required to avoid terminal image flickering
+console.clear();
+await setImmediate();
+
+if (!process.stdout.isTTY) {
+  cancel('Please run this command in a TTY terminal.');
+  process.exit(1);
 }
 
-/**
- * Initialize Git in the project directory, set temporary user configuration, commit the
- * changes, and then remove the local configuration.
- */
-async function initializeGit(projectPath: string): Promise<void> {
-  // Ask the user if they want to initialize a Git repository.
-  const shouldInit = await confirm({
-    message: 'Would you like to initialize a new Git repository?',
-    initialValue: true,
+intro(c`Bootstrap your project using {cyan Zephyr}!`);
+note(
+  c`The only sane way to do micro-frontends\n{cyan https://docs.zephyr-cloud.io/}`,
+  'Zephyr Cloud'
+);
+
+let output = await text({
+  message: 'Where should we create your project?',
+  placeholder: './my-app',
+  validate(value) {
+    if (!value.trim().length) {
+      return 'Please enter a project name.';
+    }
+    return undefined;
+  },
+});
+
+if (isCancel(output)) {
+  cancel('Operation cancelled.');
+  process.exit(0);
+}
+
+output = path.resolve(output);
+const relativeOutput = path.relative(process.cwd(), output) || './';
+
+// ensures output is not a directory with contents
+if (fs.existsSync(output)) {
+  const stats = fs.statSync(output);
+
+  if (!stats.isDirectory()) {
+    cancel(c`{cyan ${relativeOutput}} is not a directory.`);
+    process.exit(1);
+  }
+
+  const files = fs.readdirSync(output);
+
+  if (files.length > 0) {
+    cancel(c`Output directory {cyan ${relativeOutput}} must be empty.`);
+    process.exit(1);
+  }
+}
+
+const projectKind = await select({
+  message: 'What type of project you are creating?',
+  initialValue: ProjectTypes[0]?.value,
+  options: ProjectTypes,
+  maxItems: 1,
+});
+
+if (isCancel(projectKind)) {
+  cancel('Operation cancelled.');
+  process.exit(0);
+}
+
+let examplesRepoName: string;
+let subfolder: string;
+
+if (projectKind === 'web') {
+  const template = await select({
+    message: 'Pick a template: ',
+    initialValue: 'react-rspack-mf',
+    options: Templates.map((temp) => ({
+      value: temp.name,
+      label: temp.label,
+      hint: temp.hint,
+    })),
   });
 
-  if (isCancel(shouldInit)) {
-    cancel('Operation cancelled');
+  if (isCancel(template)) {
+    cancel('Operation cancelled.');
     process.exit(0);
   }
 
-  if (shouldInit) {
-    // Initialize the repository.
-    await runCmd('git init', projectPath);
-
-    // Set temporary Git user configuration.
-    await runCmd('git config user.email "zephyrbot@zephyr-cloud.io"', projectPath);
-    await runCmd('git config user.name "Zephyr Bot"', projectPath);
-
-    // Stage all files and commit them.
-    await runCmd('git add .', projectPath);
-    await runCmd('git commit -m "Initial commit from Zephyr"', projectPath);
-
-    // Remove the temporary local Git configuration so that the user's global
-    // settings will be used for future commits.
-    await runCmd('git config --unset user.email', projectPath);
-    await runCmd('git config --unset user.name', projectPath);
-  }
+  examplesRepoName = 'zephyr-examples';
+  subfolder = `examples/${template}`;
+} else {
+  examplesRepoName = 'zephyr-repack-example';
+  subfolder = '';
 }
 
-async function main() {
-  console.clear();
+const loading = spinner();
+const tmpDir = path.resolve(homedir(), '.zephyr', examplesRepoName);
 
-  await setTimeout(1000);
+loading.start('Preparing temporary directory...');
 
-  updateSettings({
-    aliases: {
-      w: 'up',
-      s: 'down',
-      a: 'left',
-      d: 'right',
+if (!fs.existsSync(tmpDir)) {
+  // ensures the temporary directory exists
+  await fs.promises.mkdir(tmpDir, { recursive: true });
+} else {
+  // cleans the temporary directory
+  await fs.promises.rm(tmpDir, { recursive: true, force: true });
+}
+
+loading.message('Cloning example to temporary directory...');
+
+try {
+  const { stderr } = await execAsync(
+    `git clone --quiet --depth 1 https://github.com/ZephyrCloudIO/${examplesRepoName}.git -b main ${tmpDir}`,
+    { encoding: 'utf8', timeout: 1000 * 60 * 5 }
+  );
+
+  if (stderr) {
+    loading.stop('Error cloning repository to temporary directory... ');
+    cancel(stderr);
+    process.exit(1);
+  }
+
+  loading.message(`Extracting template to ${relativeOutput}...`);
+
+  const pathToCopy = path.join(tmpDir, subfolder);
+  const dotGitPath = path.join(pathToCopy, '.git');
+
+  await fs.promises.cp(pathToCopy, output, {
+    recursive: true,
+    force: true,
+    dereference: true,
+
+    // skip .git folder
+    filter(source) {
+      return !source.startsWith(dotGitPath);
     },
   });
 
-  note('npx create-zephyr-apps@latest');
-  intro(`${c.bgCyan(c.black(' Create federated applications with Zephyr '))}`);
+  loading.message('Reading package.json...');
 
-  const project = (await group(
-    {
-      path: () => {
-        return text({
-          message: 'Where should we create your project?',
-          placeholder: './sparkling-solid',
-          validate: (value) => {
-            if (!value) return 'Please enter a path.';
-            if (value[0] !== '.') return 'Please enter a relative path.';
-            return;
-          },
-        });
-      },
+  const pkgJson = await fs.promises
+    .readFile(path.join(output, 'package.json'), 'utf-8')
+    .then(JSON.parse);
 
-      type: () =>
-        select({
-          message: 'What type of project you are creating?',
-          initialValue: 'web',
-          options: [
-            {
-              value: 'web',
-              label: 'Web',
-              hint: 'You will be choosing from a selection of templates provided by us.',
-            },
-            {
-              value: 'react-native',
-              label: 'React Native',
-              hint: 'This is a comprehensive example project provided by us. You will be building React Native powered by Re.Pack.',
-            },
-          ],
-        }),
+  // Monorepos uses pnpm catalogs
+  const manifest = await readWorkspaceManifest(tmpDir);
 
-      templates: ({ results }) => {
-        if (results.type === 'web') {
-          return select({
-            message: 'Pick a template: ',
-            initialValue: 'react-rspack-mf',
-            maxItems: 5,
-            options: Object.keys(TEMPLATES).map((template) => ({
-              value: template as keyof typeof TEMPLATES,
-              label: c.cyan(TEMPLATES[template as keyof typeof TEMPLATES].label),
-              hint: TEMPLATES[template as keyof typeof TEMPLATES].hint,
-            })),
-          });
+  if (manifest && (manifest.catalog || manifest.catalogs)) {
+    loading.message('Replacing catalogs...');
+
+    const catalogs = getCatalogsFromWorkspaceManifest(manifest);
+
+    for (const field of [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+      'optionalDependencies',
+      'bundledDependencies',
+    ]) {
+      if (!pkgJson[field]) {
+        continue;
+      }
+
+      for (const [alias, pref] of Object.entries<string>(pkgJson[field])) {
+        const result = resolveFromCatalog(catalogs, { alias, pref });
+
+        switch (result.type) {
+          case 'found':
+            pkgJson[field][alias] = result.resolution.specifier;
+            break;
+          case 'misconfiguration':
+            throw result.error;
         }
-
-        return;
-      },
-    },
-    {
-      onCancel: () => {
-        cancel('Operation cancelled.');
-        process.exit(0);
-      },
-    }
-  )) as CLIOptions;
-
-  const temp_dir = tempy.temporaryDirectory();
-  const command_web = `git clone --depth 1 https://github.com/ZephyrCloudIO/zephyr-examples.git -b main ${temp_dir}`;
-  const command_react_native = `git clone --depth 1 https://github.com/ZephyrCloudIO/zephyr-repack-example.git -b main ${temp_dir}`;
-
-  const project_path = project.path.replace('./', '').trim();
-  const s = spinner();
-  s.start(c.cyan(`Creating project in ${project_path}`));
-  const outputPath = path.join(process.cwd(), project.path);
-
-  try {
-    if (project.type === 'web') {
-      await new Promise<void>((resolve, reject) => {
-        exec(command_web, async (err) => {
-          if (err) {
-            s.stop(c.bgRed(c.black(`Error cloning repository to ${project_path}...`)));
-            return reject(err);
-          }
-
-          const clonedPath = path.join(temp_dir, 'examples', project.templates as string);
-
-          try {
-            // Remove .git folder from the cloned template
-            await fs.promises.rm(path.join(clonedPath, '.git'), {
-              recursive: true,
-              force: true,
-            });
-
-            await fs.promises.cp(clonedPath, outputPath, {
-              recursive: true,
-              force: true,
-            });
-            s.stop(
-              c.green(`Project successfully created at ${c.underline(project_path)}`)
-            );
-            resolve();
-          } catch (copyErr) {
-            s.stop(c.bgRed(c.black(`Error copying template to ${project_path}...`)));
-            reject(copyErr);
-          }
-        });
-      });
-    } else if (project.type === 'react-native') {
-      await new Promise<void>((resolve, reject) => {
-        exec(command_react_native, async (err) => {
-          if (err) {
-            s.stop(c.bgRed(c.black(`Error cloning repository to ${project_path}...`)));
-            return reject(err);
-          }
-
-          try {
-            // Remove .git folder from the cloned template
-            await fs.promises.rm(path.join(temp_dir, '.git'), {
-              recursive: true,
-              force: true,
-            });
-
-            await fs.promises.cp(temp_dir, outputPath, {
-              recursive: true,
-              force: true,
-            });
-            s.stop(
-              c.green(`Project successfully created at ${c.underline(project_path)}`)
-            );
-            resolve();
-          } catch (copyErr) {
-            s.stop(c.bgRed(c.black(`Error copying files to ${project_path}...`)));
-            reject(copyErr);
-          }
-        });
-      });
+      }
     }
 
-    // Initialize Git only if user confirms
-    await initializeGit(outputPath);
-    note('Git repository and initial commit created successfully!');
-  } catch (error) {
-    console.error(error);
-    process.exit(2);
-  } finally {
-    await fs.promises.rm(temp_dir, { recursive: true, force: true });
-    end_note({ project });
+    // Write the modified package.json back to the file
+    await fs.promises.writeFile(
+      path.join(output, 'package.json'),
+      JSON.stringify(pkgJson, null, 2)
+    );
   }
+
+  loading.message('Cleaning up temporary directory...');
+
+  await fs.promises.rm(tmpDir, { recursive: true, force: true });
+
+  loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);
+} catch (error) {
+  cancel(c`Error cloning repository to {cyan ${relativeOutput}}...`);
+  loading.stop('Error!', 1);
+  process.exit(1);
 }
 
-main().catch(console.error);
+const shouldInitGit = await confirm({
+  message: 'Would you like to initialize a new Git repository?',
+  initialValue: true,
+});
+
+if (isCancel(shouldInitGit)) {
+  cancel('Operation cancelled');
+  process.exit(0);
+}
+
+if (shouldInitGit) {
+  // Initialize the repository.
+  await execAsync('git init', { cwd: output });
+
+  // Set temporary Git user configuration.
+  await execAsync('git config user.email "zephyrbot@zephyr-cloud.io"', {
+    cwd: output,
+  });
+  await execAsync('git config user.name "Zephyr Bot"', { cwd: output });
+
+  // Stage all files and commit them.
+  await execAsync('git add .', { cwd: output });
+  await execAsync('git commit --no-gpg-sign -m "Initial commit from Zephyr"', {
+    cwd: output,
+  });
+
+  // Remove the temporary local Git configuration so that the user's global
+  // settings will be used for future commits.
+  await execAsync('git config --unset user.email', { cwd: output });
+  await execAsync('git config --unset user.name', { cwd: output });
+} else {
+  log.warn(
+    'Zephyr requires a Git repository to work properly, please create it manually afterwards.'
+  );
+}
+
+const repoName = path.basename(output);
+
+if (projectKind === 'web') {
+  note(
+    `
+cd ./${repoName}
+pnpm install
+pnpm run build
+`.trim(),
+    'Run the application!'
+  );
+} else {
+  note(
+    c`
+cd ./${repoName}
+pnpm install
+git remote add origin https://github.com/{cyan <name>}/{cyan ${repoName}}.git
+{cyan ZC=1} pnpm start
+`.trim(),
+    'Run the application!'
+  );
+
+  note(
+    c`
+Make sure to commit and add a remote to the remote repository!
+Read more about how Module Federation works with Zephyr:
+- {cyan https://docs.zephyr-cloud.io/how-to/mf-guide}
+    `.trim(),
+    'Read more about Module Federation'
+  );
+}
+
+note(
+  c`
+- {cyan ${terminalLink('Discord', 'https://zephyr-cloud.io/discord')}}
+- {cyan ${terminalLink(
+    'Documentation',
+    projectKind === 'web'
+      ? 'https://docs.zephyr-cloud.io/recipes'
+      : 'https://docs.zephyr-cloud.io/recipes/repack-mf'
+  )}}
+- {cyan ${terminalLink(
+    'Open an issue',
+    'https://github.com/ZephyrCloudIO/zephyr-packages/issues'
+  )}}
+`.trim(),
+  'Next steps.'
+);

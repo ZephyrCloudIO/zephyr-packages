@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "auto",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,

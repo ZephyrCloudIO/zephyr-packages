@@ -1,0 +1,43 @@
+{
+  "name": "create-zephyr-apps",
+  "version": "0.0.39",
+  "type": "commonjs",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "bin": "dist/index.js",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "zephyr",
+    "create-zephyr-apps",
+    "zephyr-apps",
+    "zephyr-cli",
+    "zephyr-example",
+    "zephyr-template",
+    "example",
+    "template"
+  ],
+  "scripts": {
+    "dev": "tsx package/index.ts",
+    "build": "nx run parcel-reporter-zephyr:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "@clack/core": "^0.4.1",
+    "@clack/prompts": "^0.9.1",
+    "chalk": "^5.4.1",
+    "picocolors": "^1.1.1",
+    "tempy": "^3.1.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "@types/node": "catalog:typescript",
+    "tsx": "^4.19.3",
+    "typescript": "catalog:typescript",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
+  }
+}

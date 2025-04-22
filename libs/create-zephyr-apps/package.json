@@ -36,6 +36,8 @@
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/node": "catalog:typescript",
     "tsx": "^4.19.3",
-    "typescript": "catalog:typescript"
+    "typescript": "catalog:typescript",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   }
 }

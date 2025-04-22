@@ -101,6 +101,7 @@ async function main() {
           validate: value => {
             if (!value) return 'Please enter a path.';
             if (value[0] !== '.') return 'Please enter a relative path.';
+            return
           },
         });
       },
@@ -138,6 +139,8 @@ async function main() {
             })),
           });
         }
+
+        return
       },
     },
     {

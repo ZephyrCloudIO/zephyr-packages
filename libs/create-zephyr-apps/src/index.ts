@@ -209,7 +209,7 @@ try {
 
   loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);
 } catch (error) {
-  cancel(c`Error cloning repository to {cyan ${relativeOutput}}...`);
+  cancel(c`Error cloning repository to {cyan ${relativeOutput}}: ${error}`);
   loading.stop('Error!', 1);
   process.exit(1);
 }

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    // Enable latest features
+    "lib": ["ESNext"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleDetection": "force",
+
+    "allowJs": true,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    //"verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Some stricter flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "outDir": "./dist",
+    "types": ["node"]
+  }
+}

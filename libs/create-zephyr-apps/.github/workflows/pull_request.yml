@@ -1,0 +1,56 @@
+name: pull_request
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to run workflow on"
+        required: true
+        default: "main"
+
+env:
+  NX_BRANCH: ${{ github.event.number || github.ref_name }}
+  NODE_VERSION: 18
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - run: pnpm i --frozen-lockfile
+
+  lint:
+    needs: cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: nrwl/nx-set-shas@v4
+      - uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint

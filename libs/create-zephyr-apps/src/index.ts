@@ -24,7 +24,7 @@ import type { CLIOptions } from './utils/types';
 /** Helper function to execute a command in the given working directory. */
 function runCmd(cmd: string, cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    exec(cmd, { cwd }, (err, stdout, stderr) => {
+    exec(cmd, { cwd }, (err) => {
       if (err) {
         console.error(`Error executing command: ${cmd}`, err);
         reject(err);
@@ -89,7 +89,7 @@ async function main() {
 
   const project = (await group(
     {
-      path: ({ results }) => {
+      path: () => {
         return text({
           message: 'Where should we create your project?',
           placeholder: './sparkling-solid',

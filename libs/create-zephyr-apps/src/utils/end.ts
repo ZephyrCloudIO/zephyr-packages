@@ -5,7 +5,7 @@ import type { CLIOptions } from './types';
 
 export default function end_note({ project }: { project: CLIOptions }) {
   try {
-    exec('git config user.name', (err, stdout, stderr) => {
+    exec('git config user.name', (err, stdout) => {
       const user_name = stdout.toString().trim();
       const repo_name = project.path.split('/').pop();
 

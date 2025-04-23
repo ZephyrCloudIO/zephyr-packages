@@ -1,6 +1,6 @@
 {
   "name": "zephyr-agent",
-  "version": "0.0.39",
+  "version": "0.0.40",
   "license": "Apache-2.0",
   "type": "commonjs",
   "main": "dist/index.js",

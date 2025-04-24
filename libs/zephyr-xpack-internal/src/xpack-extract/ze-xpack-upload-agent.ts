@@ -65,7 +65,6 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     logFn('error', ZephyrError.format(err));
   } finally {
     emitDeploymentDone();
-    // todo: log end
     ze_log('Zephyr Webpack Upload Agent: Done in', Date.now() - zeStart, 'ms');
   }
 }

@@ -22,7 +22,7 @@ export function withZephyr() {
         context: path_to_execution_dir,
       });
     },
-    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
 

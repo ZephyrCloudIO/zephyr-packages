@@ -110,18 +110,28 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
   }
 
   static defer_create() {
-    let zephyr_defer_create!: (options: ZephyrEngineOptions) => void;
-    const zephyr_engine_defer = new Promise<ZephyrEngine>((r) => {
-      zephyr_defer_create = (options: ZephyrEngineOptions) =>
-        r(ZephyrEngine.create(options));
-    });
-    return { zephyr_engine_defer, zephyr_defer_create };
+    let resolve: (value: ZephyrEngine) => void;
+    let reject: (reason?: unknown) => void;
+
+    return {
+      zephyr_engine_defer: new Promise<ZephyrEngine>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      }),
+
+      // All zephyr_engine_defer calls are wrapped inside a try/catch,
+      // so its safe to reject the promise here and expect it to be handled
+      zephyr_defer_create(options: ZephyrEngineOptions) {
+        ZephyrEngine.create(options).then(resolve, reject);
+      },
+    };
   }
 
   // todo: extract to a separate fn

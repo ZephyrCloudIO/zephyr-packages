@@ -12,6 +12,11 @@
     "example",
     "template"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/create-zephyr-apps"
+  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
@@ -20,7 +25,9 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "dist/index.js",
+  "bin": {
+    "create-zephyr-apps": "dist/index.js"
+  },
   "scripts": {
     "build": "nx run create-zephyr-apps:build",
     "dev": "tsx src/index.ts",
@@ -41,5 +48,9 @@
     "ts-jest": "catalog:typescript",
     "tsx": "^4.19.3",
     "typescript": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

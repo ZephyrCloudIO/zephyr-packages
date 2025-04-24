@@ -1,28 +1,38 @@
 {
   "name": "zephyr-modernjs-plugin",
   "version": "0.0.42",
+  "description": "Modernjs plugin for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-modernjs-plugin"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "commonjs",
   "scripts": {
     "build": "nx run zephyr-modernjs-plugin:build",
     "patch-version": "pnpm version"
   },
   "dependencies": {
+    "@modern-js/app-tools": "catalog:modernjs",
     "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
-    "@modern-js/app-tools": "catalog:modernjs",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
-    "ts-jest": "catalog:typescript",
-    "@types/jest": "catalog:typescript"
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
     "zephyr-rspack-plugin": "workspace:*",
@@ -35,5 +45,9 @@
     "zephyr-webpack-plugin": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

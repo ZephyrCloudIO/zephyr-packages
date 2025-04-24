@@ -11,7 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Build packages
-        run: pnpm build
-      - name: Publish package on NPM 📦
-        run: pnpm ze-publish
+      - name: Release libraries (promote tags from next to latest)
+        run: pnpm dlx nx run-many -t release --projects="libs/*"

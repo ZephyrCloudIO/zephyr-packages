@@ -36,6 +36,7 @@ export function setupZeDeploy<
   XCompiler extends DeployCompiler,
 >(pluginOptions: T, compiler: XCompiler): void {
   const { pluginName } = pluginOptions;
+
   compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
     compilation.hooks.processAssets.tapPromise(
       {

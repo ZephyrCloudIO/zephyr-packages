@@ -1,7 +1,18 @@
 {
   "name": "zephyr-rolldown-plugin",
-  "version": "0.0.35",
+  "version": "0.0.42",
+  "description": "Rolldown plugin for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-rolldown-plugin"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,11 +20,18 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "^3",
-    "zephyr-agent": "workspace:*",
-    "rolldown": "1.0.0-beta.3"
+    "is-ci": "catalog:plugin-shared",
+    "rolldown": "catalog:rolldown",
+    "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "^3.0.4"
+    "@types/is-ci": "catalog:typescript",
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

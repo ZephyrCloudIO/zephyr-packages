@@ -454,6 +454,12 @@ Were the required packages in Module federation plugin installed and included in
       'Missing filename in Module Federation configuration. Since the filename in React Native is the actual JS bundle, input of filename in Module Federation configuration is required.',
     kind: 'config',
   },
+  ERR_MISSING_PLATFORM: {
+    id: '006',
+    message:
+      'Missing platform target (ios, android or others) from compiler options. Please open an issue on https://github.com/ZephyrCloudIO/zephyr-packages/issues',
+    kind: 'config',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

@@ -22,12 +22,17 @@ export {
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export { zeBuildAssets } from './lib/transformers/ze-build-assets';
 
+// Auth related exports
+export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
+
 // Zephyr Edge is the main class which should be used
 export {
   ZephyrEngine,
   is_zephyr_dependency_pair,
   type ZeDependencyPair,
   type ZephyrDependencies,
+  type ZephyrEngineOptions,
   readPackageJson,
 } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+export type { Platform } from './zephyr-engine';

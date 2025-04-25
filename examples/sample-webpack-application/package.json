@@ -13,10 +13,23 @@
   },
   "dependencies": {
     "@sentry/react": "^7.120.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
-    "zephyr-webpack-plugin": "workspace:*"
+    "@swc/core": "catalog:swc",
+    "@swc/jest": "catalog:swc",
+    "@testing-library/react": "catalog:react",
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "eslint-plugin-react-hooks": "catalog:eslint",
+    "eslint-plugin-jsx-a11y": "catalog:eslint",
+    "eslint-plugin-react": "catalog:eslint",
+    "eslint-plugin-import": "catalog:eslint",
+    "swc-loader": "catalog:swc",
+    "zephyr-webpack-plugin": "workspace:*",
+    "ts-jest": "catalog:typescript",
+    "@types/jest": "catalog:typescript"
   }
 }

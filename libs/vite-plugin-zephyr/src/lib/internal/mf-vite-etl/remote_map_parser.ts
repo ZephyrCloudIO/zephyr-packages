@@ -85,9 +85,11 @@ export function parseRemoteMap(
     ze_log('vite.parseRemoteMap.remotesArray: ', remotesArray);
   } catch (error) {
     // Fallback to json5 only if necessary
+    ze_log(error);
     try {
       remotesArray = json5.parse(arrayText);
     } catch (innerError) {
+      ze_log(innerError);
       return;
     }
   }

@@ -1,9 +1,122 @@
 packages:
-  - 'libs/*'
-  - 'examples/*'
-  - 'examples/vite-react-mf/*'
-  - 'examples/rspack-mf/*'
-
+  - libs/**
+  - examples/**
+  - '!**/dist/**'
 installOptions:
   preferOnline: false
   frozenLockfile: true
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@parcel/watcher'
+  - '@swc/core'
+  - core-js
+  - core-js-pure
+  - esbuild
+  - lmdb
+  - msgpackr-extract
+  - msw
+  - nx
+  - sharp
+  - simple-git-hooks
+  - workerd
+catalogs:
+  modernjs:
+    '@modern-js/app-tools': ^2.66.0
+    '@modern-js/tsconfig': ^2.66.0
+  parcel:
+    'parcel': ^2.14.1
+    '@parcel/config-default': ^2.14.1
+    '@parcel/plugin': ^2.13.3
+    '@parcel/types': ^2.13.3
+    '@parcel/core': ^2.13.3
+  module-federation:
+    '@module-federation/enhanced': ^0.11.1
+    '@module-federation/runtime': ^0.11.1
+    '@module-federation/vite': ^1.2.6
+    '@module-federation/automatic-vendor-federation': ^1.2.1
+  plugin-shared:
+    is-ci: ^4.1.0
+  babel:
+    '@babel/core': ^7.26.10
+    '@babel/runtime': ^7.26.10
+    '@babel/preset-react': ^7.26.3
+  typescript:
+    typescript: ~5.8.2
+    '@types/jest': 29.5.14
+    '@types/node': ^22.13.11
+    '@types/is-ci': 3.0.4
+    '@types/node-persist': ^3.1.8
+    '@types/yargs': ^17.0.33
+    tslib: ^2.8.1
+    'ts-jest': ^29.2.6
+  swc:
+    swc-loader: ^0.2.6
+    '@swc/helpers': ^0.5.15
+    '@swc-node/register': ^1.10.10
+    '@swc/cli': ^0.6.0
+    '@swc/core': ^1.11.11
+    '@swc/jest': 0.2.37
+  webpack5:
+    webpack: ^5.98.0
+    '@svgr/webpack': ^8.1.0
+  tailwind:
+    tailwindcss: ^3.4.11
+  postcss:
+    postcss: ^8.2.1
+    postcss-loader: ^8.0.0
+  vite6:
+    vite: ^6.2.4
+    globals: ^15.9.0
+    autoprefixer: ^10.1.0
+    postcss: ^8.2.1
+    postcss-loader: ^8.0.0
+    '@vitejs/plugin-react': ^4.3.4
+    '@vitejs/plugin-react-swc': ^3.8.1
+  rspack:
+    '@rsdoctor/rspack-plugin': 1.0.0
+    '@rspack/cli': ^1.2.8
+    '@rspack/core': 1.2.8
+    '@rspack/plugin-react-refresh': ^1.0.1
+    '@rsbuild/core': ^1.1.1
+    '@rsbuild/plugin-react': ^1.0.5
+  rolldown:
+    rolldown: 1.0.0-beta.3
+  rollup4:
+    rollup: ^4.36.0
+    '@rollup/plugin-url': 8.0.2
+    '@svgr/rollup': 8.1.0
+  esbuild:
+    esbuild: ^0.25.1
+  eslint:
+    eslint: ^9.22.0
+    '@eslint/compat': ^1.2.7
+    '@eslint/eslintrc': ^3.3.0
+    '@eslint/js': ^9.22.0
+    eslint-config-prettier: ^10.1.1
+    eslint-plugin-import: 2.31.0
+    eslint-plugin-jsx-a11y: 6.10.2
+    eslint-plugin-react: ^7.37.4
+    eslint-plugin-react-hooks: ^5.2.0
+    eslint-plugin-react-refresh: ^0.4.19
+    '@typescript-eslint/eslint-plugin': ^8.27.0
+    '@typescript-eslint/parser': ^8.27.0
+    '@typescript-eslint/utils': ^8.27.0
+    typescript-eslint: ^8.27.0
+  react:
+    '@jest/globals': ^29.7.0
+    '@testing-library/react': ^16.2.0
+  react18:
+    react: 18.3.1
+    react-dom: 18.3.1
+    react-refresh: ^0.16.0
+    '@types/react': 18.3.1
+    '@types/react-dom': 18.3.0
+  react19:
+    react: ^19.0.0
+    react-dom: ^19.0.0
+    '@types/react': ^19.0.12
+    '@types/react-dom': ~19.0.4
+  vitest:
+    '@vitest/coverage-v8': ^3.0.9
+    '@vitest/ui': ^3.0.9
+    vitest: ^3.0.9

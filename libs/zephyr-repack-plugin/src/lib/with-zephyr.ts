@@ -1,20 +1,45 @@
 import { Configuration } from '@rspack/core';
-import { ze_log, ZephyrEngine } from 'zephyr-agent';
-
+import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
-import { get_platform_from_repack } from './utils/get-platform';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
-import { repack_delegate_module_template } from '../delegate-module/delegate-module-template';
-import { verify_mf_fastly_config } from './utils/ze-util-verification';
 
-export function withZephyr(
-  zephyrPluginOptions?: ZephyrRepackPluginOptions
-): (config: Configuration) => Promise<Configuration> {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+import { verify_mf_fastly_config } from './utils/ze-util-verification';
+import { RepackEnv } from '../type/zephyr-internal-types';
+
+export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
+  // First return: A function taking a config function
+  configFn: (env: RepackEnv) => Configuration
+) => (
+  // Second return: A function taking a config object
+  config: RepackEnv
+) => Promise<Configuration> {
+  // RETURN 1: Function that takes the user's config function
+  return (configFn: (env: RepackEnv) => Configuration) => {
+    // RETURN 2: Function that takes the base config and returns the final webpack config
+    return (config: RepackEnv) => {
+      // Extract environment from config
+
+      // Generate user config by calling their function with env
+      const userConfig = configFn({
+        platform: config.platform,
+        mode: config.mode,
+      });
+
+      const updatedZephyrConfig = {
+        ...zephyrPluginOptions,
+        target: config.platform,
+      } as ZephyrRepackPluginOptions;
+
+      ze_log('updatedZephyrConfig: ', updatedZephyrConfig);
+
+      // Return the final processed configuration
+      return _zephyr_configuration(userConfig, updatedZephyrConfig);
+    };
+  };
 }
 async function _zephyr_configuration(
   config: Configuration,
@@ -26,23 +51,25 @@ async function _zephyr_configuration(
     builder: 'repack',
     context: config.context,
   });
-  ze_log('Configuring with Zephyr...');
+  ze_log('Configuring with Zephyr... \n config: ', config);
 
-  const target = get_platform_from_repack(config);
-  ze_log('Deploy build target: ', target);
+  if (!_zephyrOptions?.target) {
+    throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
+  }
+  zephyr_engine.env.target = _zephyrOptions?.target;
 
   const dependency_pairs = extractFederatedDependencyPairs(config);
 
+  ze_log(
+    'Resolving and building towards target by zephyr_engine.env.target: ',
+    zephyr_engine.env.target
+  );
+
   const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
     dependency_pairs,
-    target
+    zephyr_engine.env.target
   );
-  mutWebpackFederatedRemotesConfig(
-    zephyr_engine,
-    config,
-    resolved_dependency_pairs,
-    repack_delegate_module_template
-  );
+  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
   ze_log('dependency resolution completed successfully...or at least trying to...');
 
@@ -55,8 +82,8 @@ async function _zephyr_configuration(
   config.plugins?.push(
     new ZeRepackPlugin({
       zephyr_engine,
-      target,
       mfConfig: makeCopyOfModuleFederationOptions(config),
+      target: zephyr_engine.env.target,
     })
   );
 

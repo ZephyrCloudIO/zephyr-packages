@@ -37,6 +37,8 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
+export type Platform = 'ios' | 'android' | 'web' | undefined;
+
 export interface ZeDependencyPair {
   name: string;
   version: string;
@@ -65,6 +67,7 @@ type ZephyrEngineBuilderTypes =
   | 'repack'
   | 'vite'
   | 'rollup'
+  | 'parcel'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;
@@ -93,7 +96,7 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     buildEnv: string;
-    target: 'ios' | 'android' | 'web';
+    target: Platform;
   } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
@@ -105,6 +108,7 @@ export class ZephyrEngine {
   build_id: Promise<string> | null = null;
   snapshotId: Promise<string> | null = null;
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
+  resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
@@ -244,9 +248,10 @@ export class ZephyrEngine {
     ze_log('Initializing: loading of hash list');
     ze.hash_list = get_hash_list(application_uid);
     ze.hash_list
-      .then((hash_set) =>
-        ze_log(`Loaded: hash list with ${hash_set.hash_set.size} entries`)
-      )
+      .then((hash_set) => {
+        ze.resolved_hash_list = hash_set;
+        ze_log(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
+      })
       .catch((err) => ze_log(`Failed to get hash list: ${err}`));
 
     ze_log('Initializing: loading of build id');
@@ -287,13 +292,18 @@ export class ZephyrEngine {
     const versionUrl = zephyr_engine.version_url;
     const dependencies = zephyr_engine.federated_dependencies;
 
+    const if_target_is_react_native =
+      zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
+
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {
         logger({
           level: 'info',
           action: 'build:info:user',
           ignore: true,
-          message: `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
+          message: if_target_is_react_native
+            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target}`
+            : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
         });
       }
 
@@ -326,7 +336,7 @@ export class ZephyrEngine {
     }
 
     await zephyr_engine.build_id;
-    const hash_set = await zephyr_engine.hash_list;
+    const hash_set = zephyr_engine.resolved_hash_list;
 
     const missingAssets = get_missing_assets({
       assetsMap,

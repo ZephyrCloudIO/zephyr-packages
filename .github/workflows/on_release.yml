@@ -11,7 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: Build packages
-        run: pnpm dlx nx run-many -t build --projects="libs/*"
-      - name: Release libraries
+      - name: Release libraries (promote tags from next to latest)
         run: pnpm dlx nx run-many -t release --projects="libs/*"

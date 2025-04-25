@@ -1,23 +1,40 @@
 {
   "name": "zephyr-xpack-internal",
-  "version": "0.0.35",
+  "version": "0.0.42",
+  "description": "Xpack internals for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-xpack-internal"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "commonjs",
   "scripts": {
     "build": "nx run zephyr-xpack-internal:build",
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@module-federation/automatic-vendor-federation": "1.2.1",
-    "is-ci": "^3.0.1",
-    "tslib": "^2.3.0",
+    "@module-federation/automatic-vendor-federation": "catalog:module-federation",
+    "is-ci": "catalog:plugin-shared",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "^3.0.4",
-    "@types/node-persist": "^3.1.8"
+    "@types/is-ci": "catalog:typescript",
+    "@types/jest": "catalog:typescript",
+    "@types/node-persist": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

@@ -1,19 +1,36 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.0.35",
+  "version": "0.0.42",
+  "description": "Edge contract for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-edge-contract"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "nx build zephyr-edge-contract",
-    "test": "nx test zephyr-edge-contract",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "test": "nx test zephyr-edge-contract"
   },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "@types/node": "^20.11.19"
+    "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

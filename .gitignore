@@ -6,6 +6,7 @@
 dist
 tmp
 /out-tsc
+**/*.tsbuildinfo
 
 # dependencies
 node_modules
@@ -63,3 +64,8 @@ playwright
 
 # mf map from vite example
 examples/vite-react-mf/host/.__mf__temp/**
+
+# Parcel cache
+.parcel-cache
+
+

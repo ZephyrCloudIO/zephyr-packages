@@ -6,6 +6,7 @@
 dist
 tmp
 /out-tsc
+**/*.tsbuildinfo
 
 # dependencies
 node_modules
@@ -90,3 +91,5 @@ node_modules/
 # Task files
 tasks.json
 tasks/
+
+

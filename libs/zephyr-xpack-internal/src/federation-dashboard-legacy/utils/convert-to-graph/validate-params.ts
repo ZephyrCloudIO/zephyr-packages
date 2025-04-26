@@ -1,5 +1,7 @@
+/* eslint-disable no-restricted-syntax */
+
 import { objHasKeys } from './object-has-keys';
-import { XStatsChunk, XStatsModule } from '../../../xpack.types';
+import type { XStatsChunk, XStatsModule } from '../../../xpack.types';
 
 export interface FederationRemoteEntry {
   origins: {

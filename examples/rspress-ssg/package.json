@@ -8,8 +8,7 @@
     "preview": "rspress preview"
   },
   "dependencies": {
-    "rspress": "catalog:rspress",
-    "zephyr-rspack-plugin": "catalog:zephyr"
+    "rspress": "catalog:rspress"
   },
   "devDependencies": {
     "@types/node": "catalog:typescript"

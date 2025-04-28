@@ -1,6 +1,6 @@
 import * as path from 'node:path';
-import { defineConfig } from 'rspress/config';
-import { withZephyr } from 'zephyr-rspack-plugin';
+const { defineConfig } = require('rspress/config');
+const { withZephyr } = require('zephyr-rspack-plugin');
 
 const zephyrRsbuildPlugin = () => ({
   name: 'zephyr-rsbuild-plugin',

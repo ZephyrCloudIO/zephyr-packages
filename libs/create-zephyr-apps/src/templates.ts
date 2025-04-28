@@ -68,4 +68,9 @@ export const Templates: { name: string; label: string; hint: string }[] = [
     label: 'Turbo + Rspack + Module Federation',
     hint: 'A monorepo using Turborepo, React, and Rspack as the bundler.',
   },
+  {
+    name: 'rspress-ssg',
+    label: 'React + Rspress + SSG',
+    hint: 'A simple application build by Rspress with SSG enabled.',
+  },
 ].sort((a, b) => a.name.localeCompare(b.name));

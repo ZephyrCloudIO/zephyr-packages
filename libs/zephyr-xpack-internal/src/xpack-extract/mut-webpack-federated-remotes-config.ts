@@ -4,7 +4,7 @@ import { ze_log } from 'zephyr-agent';
 import { XPackConfiguration } from '../xpack.types';
 import { ZephyrEngine } from 'zephyr-agent';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
-import { derive_remote_name } from 'zephyr-edge-contract';
+import { parse_remote_app_name } from 'zephyr-edge-contract';
 
 export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
@@ -31,11 +31,21 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     ze_log.remotes(`Library type: ${library_type}`);
 
-    Object.entries(remotes).map((remote) => {
-      const [remote_name_raw, remote_version] = remote;
+    if (Array.isArray(remotes)) {
+      ze_log.remotes(`Remote array definition is currently not supported, skipping...`);
+      return;
+    }
 
-      // todo: this is a version with named export logic, we should take this into account later
-      const v_app = derive_remote_name(remote_version, remote_name_raw);
+    Object.entries(remotes).map((remote) => {
+      const remote_alias_name = remote[0];
+      let remote_version = remote[1];
+
+      if (typeof remote_version !== 'string') {
+        ze_log.remotes('Remote location is not a string, replacing remote name.');
+        remote_version = remote_alias_name;
+      }
+
+      const v_app = parse_remote_app_name(remote_version) ?? remote_alias_name;
 
       const resolved_dep = resolvedDependencyPairs.find((dep) => {
         const matchName = dep.name === v_app || dep.application_uid === v_app;
@@ -44,12 +54,17 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       });
 
       ze_log.remotes(
-        `remote_name: ${remote_name_raw}, remote_version: ${remote_version}`
+        `remote_name: ${remote_alias_name}`,
+        `remote_version: ${remote_version}`
       );
 
       if (!resolved_dep) {
         ze_log.remotes(
-          `Resolved dependency pair not found for remote: ${JSON.stringify(remote, null, 2)}`,
+          `Resolved dependency pair not found for remote: ${JSON.stringify(
+            remote,
+            null,
+            2
+          )}`,
           'skipping...'
         );
         return;
@@ -62,19 +77,16 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       resolved_dep.library_type = library_type;
       resolved_dep.name = remote_name;
-      // @ts-expect-error read below
-      delete remotes[remote_name_raw];
-      // No index signature with a parameter of type string was found on type RemotesObject | (string | RemotesObject)[]
-      // @ts-expect-error - read above
-      if (remotes[remote_name]) {
-        // @ts-expect-error - read above
-        remotes[remote_name] = createMfRuntimeCode(
-          zephyr_engine,
-          resolved_dep,
-          delegate_module_template
-        );
-        ze_log.remotes(`Setting runtime code for remote: ${remotes}`);
-      }
+      ze_log.remotes(`Resolved dependency: ${JSON.stringify(resolved_dep, null, 2)}`);
+
+      delete remotes[remote_alias_name];
+
+      remotes[remote_name] = createMfRuntimeCode(
+        zephyr_engine,
+        resolved_dep,
+        delegate_module_template
+      );
+      ze_log.remotes(`Setting runtime code for remote: ${remote_name}`);
     });
   });
 }

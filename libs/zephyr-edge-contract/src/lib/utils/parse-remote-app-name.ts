@@ -4,9 +4,7 @@
  *
  * Remotes: { store_b: store_b@http://localhost:3001/remoteEntry.js }
  */
-export function derive_remote_name(remote_version: string, fallback_name: string) {
-  const [name] = remote_version.includes('@')
-    ? remote_version.split('@')
-    : [fallback_name];
+export function parse_remote_app_name(remote_version: string): string | undefined {
+  const [name] = remote_version.includes('@') ? remote_version.split('@') : [];
   return name;
 }

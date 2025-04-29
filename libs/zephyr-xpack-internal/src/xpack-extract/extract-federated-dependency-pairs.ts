@@ -6,7 +6,7 @@ import {
 
 import { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
-import { derive_remote_name } from 'zephyr-edge-contract';
+import { parse_remote_app_name } from 'zephyr-edge-contract';
 
 export function extractFederatedDependencyPairs(
   config: XPackConfiguration<any>
@@ -24,7 +24,7 @@ export function extractFederatedDependencyPairs(
     if (!remotesConfig?.remotes) return;
     Object.entries(remotesConfig.remotes).map(([remote_name, remote_version]) => {
       depsPairs.push({
-        name: derive_remote_name(remote_version, remote_name),
+        name: parse_remote_app_name(remote_version) ?? remote_name,
         version: remote_version,
       } as ZeDependencyPair);
     });

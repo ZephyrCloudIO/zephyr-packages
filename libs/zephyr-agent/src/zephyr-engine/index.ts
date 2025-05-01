@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs';
 import {
   createApplicationUid,
   flatCreateSnapshotId,
+  parse_remote_app_name,
   Snapshot,
   type ZeBuildAsset,
   ZeBuildAssetsMap,
@@ -191,7 +192,8 @@ export class ZephyrEngine {
     ze_log.remotes('resolve_remote_dependencies.deps', deps, 'platform', platform);
 
     const tasks = deps.map(async (dep) => {
-      const [app_name, project_name, org_name] = dep.name.split('.', 3);
+      const parsed_name = parse_remote_app_name(dep.name) ?? dep.name;
+      const [app_name, project_name, org_name] = parsed_name.split('.', 3);
       // Key might be only the app name
       const dep_application_uid = createApplicationUid({
         org: org_name ?? this.gitProperties.app.org,

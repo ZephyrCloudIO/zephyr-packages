@@ -1,10 +1,20 @@
 {
   "name": "zephyr-webpack-plugin",
-  "version": "0.0.38",
+  "version": "0.0.42",
+  "description": "Webpack plugin for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-webpack-plugin"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "commonjs",
   "scripts": {
     "build": "nx run zephyr-webpack-plugin:build",
     "patch-version": "pnpm version"
@@ -19,9 +29,13 @@
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
+    "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
-    "@types/jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

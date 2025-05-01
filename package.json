@@ -1,10 +1,10 @@
 {
   "name": "zephyr-packages",
-  "version": "0.0.38",
+  "version": "0.0.39",
   "license": "Apache-2.0",
   "scripts": {
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
-    "ze-publish": "pnpm --filter \"./libs/**\" publish --access public --no-git-checks",
+    "ze-publish": "pnpm --filter \"./libs/**\" publish --provenance --access public --no-git-checks",
     "build": "nx run-many -t build --projects=\"libs/*\"",
     "build-all": "nx run-many -t build --all",
     "lint": "nx run-many -t lint --projects=\"libs/*\"",

@@ -199,6 +199,69 @@ Please make sure you have set them correctly in your package.json and git reposi
     kind: 'build',
   },
 
+  ERR_MISSING_IOS_VERSION: {
+    id: '025',
+    message:
+      'Missing iOS version. Please ensure you have a valid iOS version in your Info.plist file in the ios project under line <key>CFBundleShortVersionString</key>.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_IOS_BUILD_NUMBER: {
+    id: '026',
+    message:
+      'Missing iOS build number. Please ensure you have a valid iOS build number in your Info.plist file in the ios project under line <key>CFBundleVersion</key>.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_IOS_PROJECT_PATH: {
+    id: '027',
+    message:
+      'Missing iOS project path. Please ensure you have a valid iOS project path where your package.json file is located.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_ANDROID_VERSION: {
+    id: '028',
+    message:
+      'Missing Android version. Please ensure you have a valid Android version in your build.gradle file in the android project behind `versionName`.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_ANDROID_BUILD_NUMBER: {
+    id: '029',
+    message:
+      'Missing Android build number. Please ensure you have a valid Android build number in your build.gradle file in the android project behind `versionCode`.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_MACOS_VERSION: {
+    id: '030',
+    message:
+      'Missing macOS version. Please ensure you have a valid macOS version in your Info.plist file in the macos project under line <key>CFBundleShortVersionString</key>.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_MACOS_BUILD_NUMBER: {
+    id: '031',
+    message:
+      'Missing macOS build number. Please ensure you have a valid macOS build number in your Info.plist file in the macos project under line <key>CFBundleVersion</key>.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_WINDOWS_VERSION: {
+    id: '032',
+    message:
+      'Missing Windows version. Please ensure you have a valid Windows version in your Package.appxmanifest file in the windows project.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_NATIVE_VERSION: {
+    id: '033',
+    message:
+      'Missing native version for your {{ platform }}. Please ensure you have a valid native version in your native configuration file in the project.',
+    kind: 'config',
+  },
+
   /** Deployment error, assets not found */
   ERR_ASSETS_NOT_FOUND: {
     id: '010',

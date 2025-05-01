@@ -37,11 +37,11 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
-export type Platform = 'ios' | 'android' | 'web' | undefined;
+export type Platform = 'ios' | 'android' | 'windows' | 'macos' | 'web' | undefined;
 
 export interface ZeDependencyPair {
-  name: string;
-  version: string;
+  name: string; // remoteAppName
+  version: string; // http://localhost:3000/remoteAppName/mf-manifest.json or http://localhost:3000/remoteAppName/remoteEntry.js
 }
 
 export interface BuildProperties {
@@ -96,8 +96,17 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     buildEnv: string;
+    // Below values (target, native_version, native_build_number) are cross-platform specific properties for react native
     target: Platform;
-  } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
+    native_version: string;
+    native_build_number: string;
+  } = {
+    isCI,
+    buildEnv: isCI ? 'ci' : 'local',
+    target: 'web',
+    native_version: '0.0.0',
+    native_build_number: '0',
+  };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 

@@ -32,7 +32,7 @@ export interface ZephyrPluginOptions {
     runtimePlugins?: string[] | undefined;
   };
   // for react native and dynamic platforms
-  target?: 'ios' | 'android' | 'web' | undefined;
+  target?: 'ios' | 'android' | 'windows' | 'macos' | 'web' | undefined;
   // For react native host app which doesn't want to be "always uploaded and deployed"
   // hacks
   wait_for_index_html?: boolean;

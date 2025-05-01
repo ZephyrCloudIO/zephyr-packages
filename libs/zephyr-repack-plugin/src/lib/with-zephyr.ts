@@ -8,6 +8,7 @@ import {
 } from 'zephyr-xpack-internal';
 
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
+import { getNativeVersionInfoSync } from './utils/ze-util-native-versions';
 import { RepackEnv } from '../type/zephyr-internal-types';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
@@ -78,6 +79,24 @@ async function _zephyr_configuration(
   // Verify Module Federation configuration's naming
   await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
+  // Get native version information if we're building for a mobile platform
+  let nativeVersionInfo = { version: '0.0.0', buildNumber: '0' };
+
+  try {
+    nativeVersionInfo = getNativeVersionInfoSync(
+      _zephyrOptions.target,
+      config.context || process.cwd()
+    );
+    ze_log(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
+  } catch (error) {
+    ze_log(`Error getting native version info for ${_zephyrOptions.target}:`, error);
+  }
+
+  Object.assign(zephyr_engine.env, {
+    native_version: nativeVersionInfo.version,
+    native_build_number: nativeVersionInfo.buildNumber,
+  });
+
   const defineConfig = {
     ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),
     ZE_SNAPSHOT_ID: JSON.stringify(await zephyr_engine.snapshotId),
@@ -87,6 +106,8 @@ async function _zephyr_configuration(
       (await zephyr_engine.application_configuration).fetched_at
     ),
     ZE_EDGE_URL: JSON.stringify((await zephyr_engine.application_configuration).EDGE_URL),
+    ZE_NATIVE_VERSION: JSON.stringify(nativeVersionInfo.version),
+    ZE_NATIVE_BUILD_NUMBER: JSON.stringify(nativeVersionInfo.buildNumber),
   };
 
   ze_log('Content in defineConfig: ', defineConfig);

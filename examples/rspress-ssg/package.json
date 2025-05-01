@@ -8,9 +8,12 @@
     "preview": "rspress preview"
   },
   "dependencies": {
+    "@rsbuild/core": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
     "rspress": "catalog:rspress"
   },
   "devDependencies": {
-    "@types/node": "catalog:typescript"
+    "@types/node": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
   }
 }

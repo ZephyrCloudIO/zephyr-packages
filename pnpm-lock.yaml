@@ -643,6 +643,12 @@ importers:
 
   examples/rspress-ssg:
     dependencies:
+      '@rsbuild/core':
+        specifier: catalog:rspack
+        version: 1.2.19
+      '@rspack/core':
+        specifier: 1.2.8
+        version: 1.2.8(@swc/helpers@0.5.15)
       rspress:
         specifier: catalog:rspress
         version: 1.43.12(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
@@ -650,6 +656,9 @@ importers:
       '@types/node':
         specifier: catalog:typescript
         version: 22.13.13
+      zephyr-rspack-plugin:
+        specifier: workspace:*
+        version: link:../../libs/zephyr-rspack-plugin
 
   examples/sample-rspack-application:
     dependencies:

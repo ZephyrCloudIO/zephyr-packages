@@ -1,7 +1,7 @@
 import * as child_process from 'child_process';
 import { NativeVersionInfo } from '../../type/native-version';
 import * as fs from 'fs';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import * as util from 'util';
 import * as path from 'path';
 
@@ -42,6 +42,8 @@ export async function getIOSVersionInfoAsync(
     if (!buildStdout.trim()) {
       throw new ZephyrError(ZeErrors.ERR_MISSING_IOS_BUILD_NUMBER);
     }
+    ze_log('ios bundle short version string', versionStdout.trim());
+    ze_log('ios bundle version', buildStdout.trim());
 
     return {
       version: versionStdout.trim(),
@@ -92,6 +94,9 @@ export function getIOSVersionInfoSync(iosProjectPath: string): NativeVersionInfo
       if (!buildMatch?.[1]) {
         throw new ZephyrError(ZeErrors.ERR_MISSING_IOS_BUILD_NUMBER);
       }
+
+      ze_log('ios bundle short version string', versionMatch?.[1]);
+      ze_log('ios bundle version', buildMatch?.[1]);
 
       return {
         version: versionMatch?.[1],

@@ -104,8 +104,8 @@ export class ZephyrEngine {
     isCI,
     buildEnv: isCI ? 'ci' : 'local',
     target: 'web',
-    native_version: '0.0.0',
-    native_build_number: '0',
+    native_version: '',
+    native_build_number: '',
   };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;

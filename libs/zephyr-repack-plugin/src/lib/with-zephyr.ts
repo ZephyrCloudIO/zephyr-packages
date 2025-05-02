@@ -8,7 +8,7 @@ import {
 } from 'zephyr-xpack-internal';
 
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { getNativeVersionInfoSync } from './utils/ze-util-native-versions';
+import { getNativeVersionInfoAsync } from './utils/ze-util-native-versions';
 import { RepackEnv } from '../type/zephyr-internal-types';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
@@ -83,7 +83,7 @@ async function _zephyr_configuration(
   let nativeVersionInfo = { version: '0.0.0', buildNumber: '0' };
 
   try {
-    nativeVersionInfo = getNativeVersionInfoSync(
+    nativeVersionInfo = await getNativeVersionInfoAsync(
       _zephyrOptions.target,
       config.context || process.cwd()
     );
@@ -92,10 +92,8 @@ async function _zephyr_configuration(
     ze_log(`Error getting native version info for ${_zephyrOptions.target}:`, error);
   }
 
-  Object.assign(zephyr_engine.env, {
-    native_version: nativeVersionInfo.version,
-    native_build_number: nativeVersionInfo.buildNumber,
-  });
+  zephyr_engine.env.native_version = nativeVersionInfo.version;
+  zephyr_engine.env.native_build_number = nativeVersionInfo.buildNumber;
 
   const defineConfig = {
     ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),

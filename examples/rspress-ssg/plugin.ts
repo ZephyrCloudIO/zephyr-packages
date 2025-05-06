@@ -19,7 +19,7 @@ export function pluginTrackSSGAssets(): RspressPlugin {
           const full = path.join(dir, entry.name);
 
           if (entry.isDirectory()) {
-            files.push(...await walk(full, rel));
+            files.push(...(await walk(full, rel)));
           } else {
             files.push(rel);
           }

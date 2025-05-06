@@ -17,6 +17,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "nx run zephyr-rsbuild-plugin:build",
+    "dev": "nx run zephyr-rsbuild-plugin:build --watch",
     "patch-version": "pnpm version"
   },
   "dependencies": {

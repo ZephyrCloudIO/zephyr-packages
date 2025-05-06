@@ -1,5 +1,14 @@
 import gitUrlParse from 'git-url-parse';
 
+// Standard Git provider domains mapping
+const STANDARD_DOMAINS: Record<string, string> = {
+  'github.com': 'github',
+  'gitlab.com': 'gitlab',
+  'bitbucket.org': 'bitbucket',
+};
+
+const STANDARD_DOMAIN_NAMES = Object.keys(STANDARD_DOMAINS);
+
 /**
  * Git provider detection and information extraction. In Zephyr, application_uid is
  * created as: [app_name, git_repo, git_org].join('.') where app_name comes from
@@ -17,11 +26,8 @@ export function getGitProviderInfo(gitUrl: string): {
 
   const parsed = gitUrlParse(gitUrl);
 
-  // Standard provider domains
-  const standardDomains = ['github.com', 'gitlab.com', 'bitbucket.org'];
-
   // Detect if this is an enterprise/self-hosted instance
-  const isEnterprise = !standardDomains.includes(parsed.resource);
+  const isEnterprise = !STANDARD_DOMAIN_NAMES.includes(parsed.resource);
 
   // Determine provider type by checking various URL parts
   const provider = determineProvider(parsed);
@@ -41,25 +47,9 @@ export function getGitProviderInfo(gitUrl: string): {
 function determineProvider(parsed: gitUrlParse.GitUrl): string {
   const hostname = parsed.resource.toLowerCase();
 
-  // Only consider these exact standard domains
-  const standardDomains: Record<string, string> = {
-    'github.com': 'github',
-    'gitlab.com': 'gitlab',
-    'bitbucket.org': 'bitbucket',
-  };
-
   // Check if it's a standard domain
-  if (standardDomains[hostname]) {
-    return standardDomains[hostname];
-  }
-
-  // Custom domain overrides for specific test cases
-  const customDomains: Record<string, string> = {
-    'git.custom-domain.com': 'custom',
-  };
-
-  if (customDomains[hostname]) {
-    return customDomains[hostname];
+  if (STANDARD_DOMAINS[hostname]) {
+    return STANDARD_DOMAINS[hostname];
   }
 
   // All other domains are treated as custom
@@ -78,10 +68,7 @@ function extractEnterpriseOwner(parsed: gitUrlParse.GitUrl): string {
   return baseDomain.replace(/\./g, '-').toLowerCase();
 }
 
-/**
- * Extracts owner from standard domain providers with special handling for
- * GitLab/Bitbucket subgroups
- */
+/** Extracts owner from standard domain providers with special handling */
 function extractStandardOwner(parsed: gitUrlParse.GitUrl, provider: string): string {
   const rawOwner = parsed.owner.toLowerCase();
 

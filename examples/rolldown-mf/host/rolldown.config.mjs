@@ -1,5 +1,6 @@
 import { defineConfig } from 'rolldown';
 import { moduleFederationPlugin } from 'rolldown/experimental';
+import { withZephyr } from 'zephyr-rolldown-plugin';
 
 export default defineConfig({
   input: './index.jsx',
@@ -33,5 +34,6 @@ export default defineConfig({
         });
       },
     },
+    withZephyr(),
   ],
 });

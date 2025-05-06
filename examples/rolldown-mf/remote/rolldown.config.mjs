@@ -1,5 +1,6 @@
 import { defineConfig } from 'rolldown';
 import { moduleFederationPlugin } from 'rolldown/experimental';
+import { withZephyr } from 'zephyr-rolldown-plugin';
 
 // TODO: can't resolve `./Button.jsx` at ubuntu.
 export default defineConfig({
@@ -19,5 +20,6 @@ export default defineConfig({
       manifest: true,
       getPublicPath: 'http://localhost:8085/',
     }),
+    withZephyr(),
   ],
 });

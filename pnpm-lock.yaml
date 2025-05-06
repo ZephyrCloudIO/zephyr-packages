@@ -544,6 +544,9 @@ importers:
       rolldown:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8(typescript@5.8.2)
+      zephyr-rolldown-plugin:
+        specifier: workspace:*
+        version: link:../../../libs/zephyr-rolldown-plugin
 
   examples/rolldown-mf/remote:
     dependencies:
@@ -560,6 +563,9 @@ importers:
       rolldown:
         specifier: ^1.0.0-beta.8
         version: 1.0.0-beta.8(typescript@5.8.2)
+      zephyr-rolldown-plugin:
+        specifier: workspace:*
+        version: link:../../../libs/zephyr-rolldown-plugin
 
   examples/rolldown-react:
     dependencies:

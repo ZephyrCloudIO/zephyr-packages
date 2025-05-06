@@ -1,5 +1,5 @@
 {
-  "name": "rolldown-mf",
+  "name": "rolldown_mf",
   "private": true,
   "scripts": {
     "dev:host": "pnpm --filter rolldown-host run dev",

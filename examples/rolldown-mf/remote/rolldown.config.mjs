@@ -2,13 +2,13 @@ import { defineConfig } from 'rolldown';
 import { moduleFederationPlugin } from 'rolldown/experimental';
 import { withZephyr } from 'zephyr-rolldown-plugin';
 
-// TODO: can't resolve `./Button.jsx` at ubuntu.
 export default defineConfig({
   input: './button.jsx',
   plugins: [
+    // Using the native module federation plugin
     moduleFederationPlugin({
-      name: 'rolldown-remote',
-      filename: 'remote-entry.js',
+      name: 'rolldown_remote',
+      filename: 'remoteEntry.js', // This should match the filename expected by host
       exposes: {
         './button': './button.jsx',
       },
@@ -17,9 +17,11 @@ export default defineConfig({
           singleton: true,
         },
       },
-      manifest: true,
-      getPublicPath: 'http://localhost:8085/',
+      manifest: true, // Generate manifest.json for discoverability
+      getPublicPath: 'http://localhost:8085/', // Base URL for module loading
     }),
+
+    // Apply Zephyr plugin separately
     withZephyr(),
   ],
 });

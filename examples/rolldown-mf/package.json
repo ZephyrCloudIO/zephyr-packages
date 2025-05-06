@@ -1,0 +1,9 @@
+{
+  "name": "rolldown-mf",
+  "private": true,
+  "scripts": {
+    "dev:host": "pnpm --filter rolldown-host run dev",
+    "dev:remote": "pnpm --filter rolldown-remote run dev",
+    "dev": "pnpm run --stream --color \"/^dev:(remote|host)/\""
+  }
+}

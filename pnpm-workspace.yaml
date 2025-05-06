@@ -64,6 +64,8 @@ catalogs:
   postcss:
     postcss: ^8.2.1
     postcss-loader: ^8.0.0
+  rspress:
+    'rspress': ^1.40.2
   vite6:
     vite: ^6.2.4
     globals: ^15.9.0

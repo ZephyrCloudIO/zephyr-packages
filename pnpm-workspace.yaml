@@ -79,6 +79,8 @@ catalogs:
     '@rspack/plugin-react-refresh': ^1.0.1
     '@rsbuild/core': ^1.1.1
     '@rsbuild/plugin-react': ^1.0.5
+  rspress:
+    'rspress': ^1.40.2
   rolldown:
     rolldown: 1.0.0-beta.3
   rollup4:

@@ -1,35 +1,35 @@
-import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import * as isCI from 'is-ci';
 import {
+  type Snapshot,
+  type ZeBuildAsset,
+  type ZeBuildAssetsMap,
+  ZeUtils,
+  type ZephyrBuildStats,
+  type ZephyrPluginOptions,
   createApplicationUid,
   flatCreateSnapshotId,
-  Snapshot,
-  type ZeBuildAsset,
-  ZeBuildAssetsMap,
-  type ZephyrBuildStats,
-  ZephyrPluginOptions,
-  ZeUtils,
 } from 'zephyr-edge-contract';
-import {
-  resolve_remote_dependency,
-  ZeResolvedDependency,
-} from './resolve_remote_dependency';
-import * as isCI from 'is-ci';
-import { ZePackageJson } from '../lib/build-context/ze-package-json.type';
-import { getGitInfo, ZeGitInfo } from '../lib/build-context/ze-util-get-git-info';
-import { logger, ZeLogger } from '../lib/logging/ze-log-event';
-import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { checkAuth } from '../lib/auth/login';
+import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
+import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
+import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
+import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
+import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
+import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
-import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
-import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
-import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
-import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
-import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
-import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
+import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
+import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
+import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
+import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
+import {
+  type ZeResolvedDependency,
+  resolve_remote_dependency,
+} from './resolve_remote_dependency';
 export interface ZeApplicationProperties {
   org: string;
   project: string;

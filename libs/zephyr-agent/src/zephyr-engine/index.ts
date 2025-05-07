@@ -39,6 +39,11 @@ export interface ZeApplicationProperties {
 
 export type Platform = 'ios' | 'android' | 'web' | undefined;
 
+export type DeferredZephyrEngine = {
+  zephyr_engine_defer: Promise<ZephyrEngine>;
+  zephyr_defer_create(options: ZephyrEngineOptions): void;
+}
+
 export interface ZeDependencyPair {
   name: string;
   version: string;
@@ -52,7 +57,7 @@ export interface BuildProperties {
 export function is_zephyr_dependency_pair(
   dep: ZeDependencyPair | undefined | null
 ): dep is ZeDependencyPair {
-  return dep != undefined;
+  return dep !== undefined;
 }
 
 export function is_zephyr_resolved_dependency(
@@ -116,7 +121,7 @@ export class ZephyrEngine {
     this.builder = options.builder;
   }
 
-  static defer_create() {
+  static defer_create(): DeferredZephyrEngine {
     let resolve: (value: ZephyrEngine) => void;
     let reject: (reason?: unknown) => void;
 

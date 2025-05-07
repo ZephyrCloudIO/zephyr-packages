@@ -57,7 +57,7 @@ export interface BuildProperties {
 export function is_zephyr_dependency_pair(
   dep: ZeDependencyPair | undefined | null
 ): dep is ZeDependencyPair {
-  return dep !== undefined;
+  return !!dep;
 }
 
 export function is_zephyr_resolved_dependency(

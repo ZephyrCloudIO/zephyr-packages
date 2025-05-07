@@ -11,13 +11,15 @@ export default new Reporter({
   report: async ({ event, options }) => {
     const projectRoot = options.projectRoot;
 
-    // ignore unknown build hooks
     switch (event.type) {
       case 'buildStart':
         await onBuildStart({ zephyr_defer_create, projectRoot });
         break;
       case 'buildSuccess':
         await onBuildSuccess({ zephyr_engine_defer, event });
+        break;
+      default:
+        // ignore unknown build hooks
         break;
     }
   },

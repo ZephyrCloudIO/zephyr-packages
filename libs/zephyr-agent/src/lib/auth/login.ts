@@ -13,7 +13,15 @@ import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picoco
 import { formatLogMsg, logFn } from '../logging/ze-log-event';
 import { getSecretToken } from '../node-persist/secret-token';
 import { StorageKeys } from '../node-persist/storage-keys';
-import { getToken, removeToken, saveToken } from '../node-persist/token';
+import {
+  getToken,
+  removeToken,
+  saveToken,
+  isAuthInProgress,
+  setAuthInProgressLock,
+  removeAuthInProgressLock,
+  waitForAuthToComplete,
+} from '../node-persist/token';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
 import { createSocket } from './websocket';
 
@@ -49,6 +57,30 @@ export async function checkAuth(): Promise<string> {
     logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
   }
 
+  // Check if authentication is already in progress in another process
+  if (await isAuthInProgress()) {
+    logFn(
+      '',
+      `${yellow('Authentication in progress')} - Waiting for authentication to complete in another process...`
+    );
+
+    // Wait for the other process to complete authentication
+    const tokenFromOtherProcess = await waitForAuthToComplete();
+    if (tokenFromOtherProcess) {
+      logFn('', `${green('✓')} Authentication completed by another process\n`);
+      return tokenFromOtherProcess;
+    }
+
+    // If waiting failed, continue with our own authentication process
+    logFn(
+      '',
+      `${yellow('Authentication timeout')} - Proceeding with authentication in this process`
+    );
+  }
+
+  // Try to acquire the auth lock
+  await setAuthInProgressLock(DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
+
   // No valid token found; initiate authentication.
   logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
 
@@ -63,15 +95,24 @@ export async function checkAuth(): Promise<string> {
     .then(() => openUrl(authUrl))
     .catch(() => fallbackManualLogin(authUrl));
 
-  const newToken = await waitForAccessToken(sessionKey).finally(() =>
-    browserController.abort()
-  );
+  try {
+    const newToken = await waitForAccessToken(sessionKey).finally(() =>
+      browserController.abort()
+    );
 
-  await saveToken(newToken);
+    await saveToken(newToken);
 
-  logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
+    logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
 
-  return newToken;
+    return newToken;
+  } catch (error) {
+    // If authentication fails, remove the lock so other processes can try
+    await removeAuthInProgressLock();
+    throw error;
+  } finally {
+    // Reset the browser opened flag regardless of success or failure
+    isAuthBrowserOpened = false;
+  }
 }
 
 /**
@@ -132,11 +173,25 @@ function fallbackManualLogin(url: string): void {
   logFn('', `${blue('⏳')} Waiting for you to complete authentication in browser...`);
 }
 
-/** Opens the given URL in the default browser. */
+// Track if a browser window is already opened for auth
+let isAuthBrowserOpened = false;
+
+/** Opens the given URL in the default browser, but only if one isn't already open */
 async function openUrl(url: string): Promise<void> {
-  // Lazy loads `open` module
-  const openModule = (await eval(`import('open')`)) as typeof import('open');
-  await openModule.default(url);
+  if (isAuthBrowserOpened) {
+    logFn('debug', 'Auth browser already open, not opening another window');
+    return;
+  }
+
+  try {
+    isAuthBrowserOpened = true;
+    // Lazy loads `open` module
+    const openModule = (await eval(`import('open')`)) as typeof import('open');
+    await openModule.default(url);
+  } catch (error) {
+    isAuthBrowserOpened = false;
+    throw error;
+  }
 }
 
 /** Generates a URL-safe random string to use as a session key. */
@@ -180,28 +235,27 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
   const socket = createSocket(ZEPHYR_API_ENDPOINT());
   let timeoutHandle: NodeJS.Timeout | null = null;
 
-  // Helper to properly cleanup socket
-  const cleanupSocket = () => {
+  // Helper to properly cleanup socket listeners but don't close it
+  // (as we're now reusing sockets)
+  const cleanupListeners = () => {
     if (timeoutHandle) {
       clearTimeout(timeoutHandle);
       timeoutHandle = null;
     }
 
     socket.removeAllListeners();
-    socket.disconnect();
-    socket.close();
   };
 
   try {
     socket.once('access-token', (token) => {
-      cleanupSocket();
+      cleanupListeners();
       resolve(token);
     });
 
     // Creating errors outside of the listener closure makes the stack trace point
     // to waitForAccessToken fn instead of socket.io internals event emitter code.
     socket.once('access-token-error', (cause) => {
-      cleanupSocket();
+      cleanupListeners();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           cause,
@@ -211,7 +265,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     });
 
     socket.once('connect_error', (cause) => {
-      cleanupSocket();
+      cleanupListeners();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           message: 'Could not connect to socket.',
@@ -224,7 +278,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
 
     // The user has a specified amount of time to log in through the browser.
     timeoutHandle = setTimeout(() => {
-      cleanupSocket();
+      cleanupListeners();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
@@ -234,9 +288,9 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
 
     return await promise;
   } catch (error) {
-    cleanupSocket();
+    cleanupListeners();
     throw error;
   } finally {
-    cleanupSocket();
+    cleanupListeners();
   }
 }

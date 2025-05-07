@@ -42,7 +42,7 @@ export type Platform = 'ios' | 'android' | 'web' | undefined;
 export type DeferredZephyrEngine = {
   zephyr_engine_defer: Promise<ZephyrEngine>;
   zephyr_defer_create(options: ZephyrEngineOptions): void;
-}
+};
 
 export interface ZeDependencyPair {
   name: string;
@@ -174,7 +174,7 @@ export class ZephyrEngine {
 
     await ze.start_new_build();
 
-    ze.logger.then(async (logger) => {
+    void ze.logger.then(async (logger) => {
       const { username } = await ze.application_configuration;
       const buildId = await ze.build_id;
 
@@ -185,6 +185,7 @@ export class ZephyrEngine {
         message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
       });
     });
+
     return ze;
   }
 
@@ -275,13 +276,14 @@ export class ZephyrEngine {
       .then((buildId) => ze_log(`Loaded build id "${buildId}"`))
       .catch((err) => ze_log(`Failed to get build id: ${err}`));
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     if (!ze.logger) {
       ze_log('Initializing: logger');
       let resolve: (value: ZeLogger) => void;
       ze.logger = new Promise<ZeLogger>((r) => (resolve = r));
 
       // internally logger will try to load app_config
-      Promise.all([ze.application_configuration, ze.build_id]).then((record) => {
+      void Promise.all([ze.application_configuration, ze.build_id]).then((record) => {
         const buildId = record[1];
         ze_log('Initialized: application configuration, build id and hash list');
 

@@ -4,7 +4,7 @@ import {
   type ZeUploadAssetsOptions,
 } from 'zephyr-edge-contract';
 import { uploadFile } from '../http/upload-file';
-import { ZephyrEngine } from '../../zephyr-engine';
+import type { ZephyrEngine } from '../../zephyr-engine';
 import { white, whiteBright } from '../logging/picocolor';
 import { ze_log } from '../logging';
 

@@ -26,10 +26,7 @@
       "files": ["*.ts", "*.tsx"],
       "extends": ["plugin:@nx/typescript"],
       "rules": {
-        "@typescript-eslint/no-unused-vars": "error",
-        "@typescript-eslint/consistent-type-imports": "error",
-        "@typescript-eslint/no-floating-promises": "error",
-        "@typescript-eslint/no-misused-promises": "error"
+        "@typescript-eslint/no-unused-vars": "error"
       }
     },
     {
@@ -62,6 +59,19 @@
             "message": "Use ZephyrError instead of Error"
           }
         ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": "error",
+        "@typescript-eslint/no-floating-promises": "error",
+        "@typescript-eslint/no-misused-promises": "error"
+      },
+      "excludedFiles": ["webpack.config.ts", "jest.config.ts", "*.spec.tsx"],
+      "parserOptions": {
+        "projectService": true,
+        "tsconfigRootDir": "./"
       }
     }
   ]

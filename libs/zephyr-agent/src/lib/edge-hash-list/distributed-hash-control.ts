@@ -1,4 +1,4 @@
-import { ZeUploadAssetsOptions } from 'zephyr-edge-contract';
+import type { ZeUploadAssetsOptions } from 'zephyr-edge-contract';
 import { getApplicationHashList } from '../edge-requests/get-application-hash-list';
 import { getCacheKey } from './get-cache-key';
 import { getAppHashCache, setAppHashCache } from '../node-persist/hash-cache';

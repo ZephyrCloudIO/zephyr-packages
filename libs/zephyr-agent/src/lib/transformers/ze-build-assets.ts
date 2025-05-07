@@ -1,4 +1,4 @@
-import { ZeBuildAsset } from 'zephyr-edge-contract';
+import type { ZeBuildAsset } from 'zephyr-edge-contract';
 import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
 

@@ -7,8 +7,6 @@ const STANDARD_DOMAINS: Record<string, string> = {
   'bitbucket.org': 'bitbucket',
 };
 
-const STANDARD_DOMAIN_NAMES = Object.keys(STANDARD_DOMAINS);
-
 /**
  * Git provider detection and information extraction. In Zephyr, application_uid is
  * created as: [app_name, git_repo, git_org].join('.') where app_name comes from
@@ -25,35 +23,21 @@ export function getGitProviderInfo(gitUrl: string): {
   }
 
   const parsed = gitUrlParse(gitUrl);
+  const resource = parsed.resource.toLowerCase();
 
-  // Detect if this is an enterprise/self-hosted instance
-  const isEnterprise = !STANDARD_DOMAIN_NAMES.includes(parsed.resource);
-
-  // Determine provider type by checking various URL parts
-  const provider = determineProvider(parsed);
+  // Determine provider type and enterprise status from resource domain
+  const provider = STANDARD_DOMAINS[resource] ?? 'custom';
+  const isEnterprise = provider === 'custom';
 
   // Extract owner based on provider and enterprise status
   const owner = isEnterprise
     ? extractEnterpriseOwner(parsed)
     : extractStandardOwner(parsed, provider);
 
-  // Extract project name based on provider and URL structure
+  // Extract project name
   const project = extractProjectName(parsed, provider, isEnterprise);
 
   return { provider, owner, project, isEnterprise };
-}
-
-/** Determines the Git provider based on URL analysis */
-function determineProvider(parsed: gitUrlParse.GitUrl): string {
-  const hostname = parsed.resource.toLowerCase();
-
-  // Check if it's a standard domain
-  if (STANDARD_DOMAINS[hostname]) {
-    return STANDARD_DOMAINS[hostname];
-  }
-
-  // All other domains are treated as custom
-  return 'custom';
 }
 
 /** Extracts organization name from enterprise domain */
@@ -86,8 +70,6 @@ function extractProjectName(
   provider: string,
   isEnterprise: boolean
 ): string {
-  const project = parsed.name.toLowerCase();
-
   // Special handling for self-hosted GitLab with deep subgroups
   if (isEnterprise && provider === 'gitlab' && parsed.pathname) {
     const pathParts = parsed.pathname.split('/').filter(Boolean);
@@ -98,5 +80,6 @@ function extractProjectName(
     }
   }
 
-  return project;
+  // For all other cases, use the name property directly
+  return parsed.name.toLowerCase();
 }

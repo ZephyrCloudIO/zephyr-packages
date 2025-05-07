@@ -64,11 +64,9 @@ export class PollingManager {
   }
 
   cleanup() {
-    Promise.race([
-      this.activePolls.forEach(clearInterval),
-      this.activePolls.clear(),
-      (this.isPolling = false),
-      (this.authInProgress = false),
-    ]);
+    this.activePolls.forEach(clearInterval);
+    this.activePolls.clear();
+    this.isPolling = false;
+    this.authInProgress = false;
   }
 }

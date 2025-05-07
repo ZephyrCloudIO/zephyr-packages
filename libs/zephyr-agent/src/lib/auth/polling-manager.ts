@@ -13,7 +13,6 @@ export class PollingManager {
     return PollingManager.instance;
   }
 
-
   isAuthInProgress(): boolean {
     return this.authInProgress;
   }
@@ -23,16 +22,16 @@ export class PollingManager {
   }
 
   startPolling(callback: () => Promise<void>, interval: number): NodeJS.Timeout {
-    if (this.isPolling) {
-      // Return an existing interval ID instead of null to match return type
-      const existingInterval = this.activePolls.values().next().value;
-      if (!existingInterval) {
-        throw new Error('No active polling interval found');
-      }
-      return existingInterval;
-    }
+    // if (this.isPolling) {
+    //   // Return an existing interval ID instead of null to match return type
+    //   const existingInterval = this.activePolls.values().next().value;
+    //   if (!existingInterval) {
+    //     throw new Error('No active polling interval found');
+    //   }
+    //   return existingInterval;
+    // }
 
-    this.isPolling = true;
+    // this.isPolling = true;
     const poll = async () => {
       try {
         await callback();
@@ -55,7 +54,6 @@ export class PollingManager {
   stopPolling(intervalId: NodeJS.Timeout) {
     ze_log('stopPolling: Stopping polling...');
     if (intervalId) {
-      ze_log('InternalID', intervalId);
       clearInterval(intervalId);
       this.activePolls.delete(intervalId);
       this.cleanup();
@@ -69,7 +67,8 @@ export class PollingManager {
     Promise.race([
       this.activePolls.forEach(clearInterval),
       this.activePolls.clear(),
-      this.isPolling = false,
-      this.authInProgress = false,])
+      (this.isPolling = false),
+      (this.authInProgress = false),
+    ]);
   }
 }

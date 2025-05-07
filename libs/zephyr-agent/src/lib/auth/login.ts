@@ -35,7 +35,6 @@ export async function checkAuth(): Promise<string> {
   const existingToken = await getToken();
 
   if (existingToken) {
-
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
       ze_log('You are already logged in');
@@ -60,15 +59,16 @@ export async function checkAuth(): Promise<string> {
 
   const browserController = new AbortController();
 
-  ;
   // Check if auth process is already in progress
   if (pollingManager.isAuthInProgress()) {
     logFn('debug', 'Authentication already in progress. Waiting for it to complete...');
     // Wait for a bit before checking if the token is already available
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-
-    if (existingToken && isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+    if (
+      existingToken &&
+      isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)
+    ) {
       return existingToken;
     }
   }
@@ -101,7 +101,8 @@ export async function checkAuth(): Promise<string> {
         cause: err,
         message: 'Error opening browser',
       });
-    }).finally(() => {
+    })
+    .finally(() => {
       // Stop the polling interval when browser is opened
       pollingManager.stopPolling(pollInterval);
     });
@@ -219,7 +220,7 @@ async function openUrl(url: string): Promise<void> {
 function generateSessionKey(): string {
   return encodeURIComponent(
     Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15)
+      Math.random().toString(36).substring(2, 15)
   );
 }
 

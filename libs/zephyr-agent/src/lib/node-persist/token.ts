@@ -1,4 +1,4 @@
-import { clear, getItem, init, InitOptions, removeItem, setItem } from 'node-persist';
+import { clear, getItem, init, removeItem, setItem } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { StorageKeys, ZE_PATH } from './storage-keys';

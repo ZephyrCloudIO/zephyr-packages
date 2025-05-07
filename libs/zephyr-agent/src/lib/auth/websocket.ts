@@ -59,26 +59,27 @@ export class WebSocketManager {
 
   /**
    * Requests an access token via WebSocket.
+   *
    * @param endpoint The WebSocket endpoint URL
    * @param sessionKey The session key for authentication
    * @param timeoutMs Timeout in milliseconds
    * @returns A promise that resolves with the access token
    */
   async requestAccessToken(
-    endpoint: string, 
-    sessionKey: string, 
+    endpoint: string,
+    sessionKey: string,
     timeoutMs: number
   ): Promise<string> {
     const { promise, resolve, reject } = PromiseWithResolvers<string>();
-    
+
     // Create or get the socket
     const socket = this.createSocket(endpoint);
-    
+
     // Set up event listeners
     socket.once('access-token', (token) => {
       resolve(token);
     });
-    
+
     socket.once('access-token-error', (cause) => {
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
@@ -87,7 +88,7 @@ export class WebSocketManager {
         })
       );
     });
-    
+
     socket.once('connect_error', (cause) => {
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
@@ -96,10 +97,10 @@ export class WebSocketManager {
         })
       );
     });
-    
+
     // Join the room to receive access token
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
-    
+
     // Set up timeout
     this.timeoutHandle = setTimeout(() => {
       reject(
@@ -108,7 +109,7 @@ export class WebSocketManager {
         })
       );
     }, timeoutMs);
-    
+
     try {
       return await promise;
     } finally {
@@ -125,7 +126,7 @@ export class WebSocketManager {
 
   cleanup() {
     this.cleanupTimeout();
-    
+
     if (this.activeSocket) {
       this.activeSocket.removeAllListeners();
       this.activeSocket.disconnect();

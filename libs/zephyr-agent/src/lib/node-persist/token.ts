@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { StorageKeys, ZE_PATH } from './storage-keys';
 import { getSecretToken } from './secret-token';
-
+import { ze_log } from '../logging';
 // Make storage initialization lazy and synchronized
 let storageInitialized = false;
 let storagePromise: Promise<InitOptions> | null = null;
@@ -27,6 +27,7 @@ export async function saveToken(token: string): Promise<void> {
 }
 
 export async function getToken(): Promise<string | undefined> {
+  ze_log('getToken: Getting token...');
   const tokenFromEnv = getSecretToken();
 
   if (tokenFromEnv) {

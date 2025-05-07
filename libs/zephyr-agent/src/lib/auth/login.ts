@@ -1,7 +1,6 @@
 import * as jose from 'jose';
 import * as readline from 'node:readline';
 import {
-  PromiseWithResolvers,
   ZEPHYR_API_ENDPOINT,
   ZE_API_ENDPOINT,
   ze_api_gateway,
@@ -15,9 +14,9 @@ import { getSecretToken } from '../node-persist/secret-token';
 import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
-import { createSocket, WebSocketManager } from './websocket';
+import { WebSocketManager } from './websocket';
 import { PollingManager } from './polling-manager';
-
+import { once } from 'node:events';
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
  * to authenticate. Display a message to the console.
@@ -25,6 +24,7 @@ import { PollingManager } from './polling-manager';
  * @returns The token as a string.
  */
 export async function checkAuth(): Promise<string> {
+  const pollingManager = PollingManager.getInstance();
   const secret_token = getSecretToken();
 
   if (secret_token) {
@@ -35,6 +35,7 @@ export async function checkAuth(): Promise<string> {
   const existingToken = await getToken();
 
   if (existingToken) {
+
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
       ze_log('You are already logged in');
@@ -58,17 +59,17 @@ export async function checkAuth(): Promise<string> {
   const authUrl = await getAuthenticationURL(sessionKey);
 
   const browserController = new AbortController();
-  const pollingManager = PollingManager.getInstance();
 
+  ;
   // Check if auth process is already in progress
   if (pollingManager.isAuthInProgress()) {
     logFn('debug', 'Authentication already in progress. Waiting for it to complete...');
     // Wait for a bit before checking if the token is already available
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const token = await getToken();
-    if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
-      return token;
+
+    if (existingToken && isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+      return existingToken;
     }
   }
 
@@ -77,11 +78,14 @@ export async function checkAuth(): Promise<string> {
 
   // Start polling for valid token
   const pollInterval = pollingManager.startPolling(async () => {
-    const token = await getToken();
 
-    if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
-      pollingManager.stopPolling(pollInterval);
-      browserController.abort();
+
+    while (pollingManager.isAuthInProgress()) {
+      const token = await getToken();
+      if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+        pollingManager.stopPolling(pollInterval);
+        browserController.abort();
+      }
     }
   }, 5000);
 
@@ -89,30 +93,30 @@ export async function checkAuth(): Promise<string> {
   void promptForAuthAction(authUrl, browserController.signal)
     .then(() => {
       ze_log('promptForAuthAction: Browser opened, stopping polling...');
+      pollingManager.stopPolling(pollInterval);
       openUrl(authUrl);
     })
     .catch((err) => {
-      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-        cause: err,
-        message: 'Error opening browser',
-      });
       ze_log('promptForAuthAction: Error, stopping polling...', err);
       // Stop the polling interval if there's an error
       pollingManager.stopPolling(pollInterval);
       fallbackManualLogin(authUrl);
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        cause: err,
+        message: 'Error opening browser',
+      });
     }).finally(() => {
-
       // Stop the polling interval when browser is opened
       pollingManager.stopPolling(pollInterval);
     });
 
   try {
     // Wait for either the token or the auth process to complete
-    const newToken = await Promise.race([
+    const newTokenOrAbort = await Promise.race([
       waitForAccessToken(sessionKey),
       new Promise<string>((resolve) => {
         ze_log('Promise.race: Waiting for browser controller to abort...');
-        browserController.signal.addEventListener('abort', async () => {
+        once(browserController.signal, 'abort').then(async () => {
           const token = await getToken();
           if (token) {
             ze_log('Promise.race: Token found, resolving...');
@@ -123,19 +127,28 @@ export async function checkAuth(): Promise<string> {
     ]).finally(() => {
       ze_log('Promise.race: Finally, clearing interval...');
       clearInterval(pollInterval);
+      ze_log('Promise.race: Abort event received, aborting browser controller...');
       browserController.abort();
     });
 
-    await saveToken(newToken);
+    if (typeof newTokenOrAbort === 'string' && newTokenOrAbort) {
+      await saveToken(newTokenOrAbort);
 
-    logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
+      logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
 
-    return newToken;
+      return newTokenOrAbort;
+    }
+
+    ze_log('Promise.race: Abort event received, returning null...');
+    throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+      message: 'Abort event received',
+    });
   } catch (error) {
     ze_log('Promise.race: Error, clearing interval...');
-    clearInterval(pollInterval);
-    browserController.abort();
-    throw error;
+    throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+      cause: error,
+      message: 'Error waiting for access token',
+    });
   } finally {
     pollingManager.stopPolling(pollInterval);
     pollingManager.setAuthInProgress(false);
@@ -243,8 +256,6 @@ export async function authenticateUser(): Promise<string> {
 
 /** Waits for the access token to be received from the websocket. */
 async function waitForAccessToken(sessionKey: string): Promise<string> {
-  const { promise, resolve, reject } = PromiseWithResolvers<string>();
-
   const socketManager = WebSocketManager.getInstance();
   const pollingManager = PollingManager.getInstance();
 
@@ -265,69 +276,16 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     return await checkAuth();
   }
 
-  const socket = createSocket(ZEPHYR_API_ENDPOINT());
-  let timeoutHandle: NodeJS.Timeout | null = null;
-
-  // Helper to properly cleanup socket
-  const cleanupSocket = () => {
-    if (timeoutHandle) {
-      clearTimeout(timeoutHandle);
-      timeoutHandle = null;
-    }
-
-    socket.removeAllListeners();
-    socket.disconnect();
-    socket.close();
-
-    // Ensure auth in progress flag is reset
-    pollingManager.setAuthInProgress(false);
-  };
-
   try {
-    socket.once('access-token', (token) => {
-      cleanupSocket();
-      resolve(token);
-    });
-
-    // Creating errors outside of the listener closure makes the stack trace point
-    // to waitForAccessToken fn instead of socket.io internals event emitter code.
-    socket.once('access-token-error', (cause) => {
-      cleanupSocket();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          cause,
-          message: 'Error getting access token',
-        })
-      );
-    });
-
-    socket.once('connect_error', (cause) => {
-      cleanupSocket();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: 'Could not connect to socket.',
-          cause,
-        })
-      );
-    });
-
-    socket.emit('joinAccessTokenRoom', { state: sessionKey });
-
-    // The user has a specified amount of time to log in through the browser.
-    timeoutHandle = setTimeout(() => {
-      cleanupSocket();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
-        })
-      );
-    }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
-
-    return await promise;
-  } catch (error) {
-    cleanupSocket();
-    throw error;
+    // Use the new requestAccessToken method from WebSocketManager
+    return await socketManager.requestAccessToken(
+      ZEPHYR_API_ENDPOINT(),
+      sessionKey,
+      DEFAULT_AUTH_COMPLETION_TIMEOUT_MS
+    );
   } finally {
-    cleanupSocket();
+    // Cleanup and reset auth progress flag
+    socketManager.cleanup();
+    pollingManager.setAuthInProgress(false);
   }
 }

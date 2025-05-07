@@ -1,4 +1,6 @@
 import { io as socketio, type Socket } from 'socket.io-client';
+import { PromiseWithResolvers } from 'zephyr-edge-contract';
+import { ZeErrors, ZephyrError } from '../errors';
 
 interface ClientToServerEvents {
   joinAccessTokenRoom: (props: { state: string }) => void;
@@ -14,6 +16,7 @@ export class WebSocketManager {
   private activeSocket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
   private lastConnectionAttempt = 0;
   private readonly COOLDOWN_PERIOD = 5000; // 5 seconds
+  private timeoutHandle: NodeJS.Timeout | null = null;
 
   static getInstance(): WebSocketManager {
     if (!WebSocketManager.instance) {
@@ -37,8 +40,8 @@ export class WebSocketManager {
   createSocket(endpoint: string): Socket<ServerToClientEvents, ClientToServerEvents> {
     this.lastConnectionAttempt = Date.now();
 
-    if (this.hasActiveConnection()) {
-      return this.activeSocket!;
+    if (this.hasActiveConnection() && this.activeSocket) {
+      return this.activeSocket;
     }
 
     this.activeSocket = socketio(endpoint, {
@@ -54,7 +57,75 @@ export class WebSocketManager {
     return this.activeSocket;
   }
 
+  /**
+   * Requests an access token via WebSocket.
+   * @param endpoint The WebSocket endpoint URL
+   * @param sessionKey The session key for authentication
+   * @param timeoutMs Timeout in milliseconds
+   * @returns A promise that resolves with the access token
+   */
+  async requestAccessToken(
+    endpoint: string, 
+    sessionKey: string, 
+    timeoutMs: number
+  ): Promise<string> {
+    const { promise, resolve, reject } = PromiseWithResolvers<string>();
+    
+    // Create or get the socket
+    const socket = this.createSocket(endpoint);
+    
+    // Set up event listeners
+    socket.once('access-token', (token) => {
+      resolve(token);
+    });
+    
+    socket.once('access-token-error', (cause) => {
+      reject(
+        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+          cause,
+          message: 'Error getting access token',
+        })
+      );
+    });
+    
+    socket.once('connect_error', (cause) => {
+      reject(
+        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+          message: 'Could not connect to socket.',
+          cause,
+        })
+      );
+    });
+    
+    // Join the room to receive access token
+    socket.emit('joinAccessTokenRoom', { state: sessionKey });
+    
+    // Set up timeout
+    this.timeoutHandle = setTimeout(() => {
+      reject(
+        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+          message: `Authentication timed out. Couldn't receive access token in ${timeoutMs / 1000} seconds. Please try again.`,
+        })
+      );
+    }, timeoutMs);
+    
+    try {
+      return await promise;
+    } finally {
+      this.cleanupTimeout();
+    }
+  }
+
+  cleanupTimeout() {
+    if (this.timeoutHandle) {
+      clearTimeout(this.timeoutHandle);
+      this.timeoutHandle = null;
+    }
+  }
+
   cleanup() {
+    this.cleanupTimeout();
+    
     if (this.activeSocket) {
       this.activeSocket.removeAllListeners();
       this.activeSocket.disconnect();

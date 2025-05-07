@@ -1,5 +1,5 @@
 // Add a class to manage polling state
-
+import { ze_log } from '../logging';
 export class PollingManager {
   private static instance: PollingManager;
   private activePolls: Set<NodeJS.Timeout> = new Set();
@@ -12,6 +12,7 @@ export class PollingManager {
     }
     return PollingManager.instance;
   }
+
 
   isAuthInProgress(): boolean {
     return this.authInProgress;
@@ -32,32 +33,43 @@ export class PollingManager {
     }
 
     this.isPolling = true;
-    const intervalId = setInterval(async () => {
+    const poll = async () => {
       try {
         await callback();
       } catch (error) {
         console.error('Polling error:', error);
       }
-    }, interval);
+      // Schedule next poll
+      const timer = setTimeout(poll, interval);
+      timer.unref(); // Allow process to exit even if this timer is still pending
+    };
 
-    this.activePolls.add(intervalId);
-    return intervalId;
+    // Start polling
+    const initialTimer = setTimeout(poll, interval);
+    initialTimer.unref();
+
+    this.activePolls.add(initialTimer);
+    return initialTimer;
   }
 
   stopPolling(intervalId: NodeJS.Timeout) {
+    ze_log('stopPolling: Stopping polling...');
     if (intervalId) {
+      ze_log('InternalID', intervalId);
       clearInterval(intervalId);
       this.activePolls.delete(intervalId);
+      this.cleanup();
     }
     if (this.activePolls.size === 0) {
-      this.isPolling = false;
+      this.cleanup();
     }
   }
 
   cleanup() {
-    this.activePolls.forEach(clearInterval);
-    this.activePolls.clear();
-    this.isPolling = false;
-    this.authInProgress = false;
+    Promise.race([
+      this.activePolls.forEach(clearInterval),
+      this.activePolls.clear(),
+      this.isPolling = false,
+      this.authInProgress = false,])
   }
 }

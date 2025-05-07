@@ -5,24 +5,12 @@ import { StorageKeys, ZE_PATH } from './storage-keys';
 import { getSecretToken } from './secret-token';
 import { ze_log } from '../logging';
 // Make storage initialization lazy and synchronized
-let storageInitialized = false;
-let storagePromise: Promise<InitOptions> | null = null;
-
-async function getStorage() {
-  if (!storageInitialized) {
-    if (!storagePromise) {
-      storagePromise = init({
-        dir: join(homedir(), ZE_PATH),
-      });
-    }
-    await storagePromise;
-    storageInitialized = true;
-  }
-  return storagePromise!;
-}
+const storage = init({
+  dir: join(homedir(), ZE_PATH),
+});
 
 export async function saveToken(token: string): Promise<void> {
-  await getStorage();
+  await storage;
   await setItem(StorageKeys.ze_auth_token, token);
 }
 
@@ -34,17 +22,17 @@ export async function getToken(): Promise<string | undefined> {
     return tokenFromEnv;
   }
 
-  await getStorage();
+  await storage;
 
   return getItem(StorageKeys.ze_auth_token);
 }
 
 export async function removeToken(): Promise<void> {
-  await getStorage();
+  await storage;
   await removeItem(StorageKeys.ze_auth_token);
 }
 
 export async function cleanTokens(): Promise<void> {
-  await getStorage();
+  await storage;
   await clear();
 }

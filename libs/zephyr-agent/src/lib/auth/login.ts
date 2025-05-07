@@ -78,14 +78,10 @@ export async function checkAuth(): Promise<string> {
 
   // Start polling for valid token
   const pollInterval = pollingManager.startPolling(async () => {
-
-
-    while (pollingManager.isAuthInProgress()) {
-      const token = await getToken();
-      if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
-        pollingManager.stopPolling(pollInterval);
-        browserController.abort();
-      }
+    const token = await getToken();
+    if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+      pollingManager.stopPolling(pollInterval);
+      browserController.abort();
     }
   }, 5000);
 

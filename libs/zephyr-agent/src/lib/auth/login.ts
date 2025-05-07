@@ -92,6 +92,10 @@ export async function checkAuth(): Promise<string> {
       openUrl(authUrl);
     })
     .catch((err) => {
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        cause: err,
+        message: 'Error opening browser',
+      });
       ze_log('promptForAuthAction: Error, stopping polling...', err);
       // Stop the polling interval if there's an error
       pollingManager.stopPolling(pollInterval);

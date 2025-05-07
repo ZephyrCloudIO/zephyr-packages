@@ -89,8 +89,6 @@ export async function checkAuth(): Promise<string> {
   void promptForAuthAction(authUrl, browserController.signal)
     .then(() => {
       ze_log('promptForAuthAction: Browser opened, stopping polling...');
-      // Stop the polling interval when browser is opened
-      pollingManager.stopPolling(pollInterval);
       openUrl(authUrl);
     })
     .catch((err) => {
@@ -98,6 +96,10 @@ export async function checkAuth(): Promise<string> {
       // Stop the polling interval if there's an error
       pollingManager.stopPolling(pollInterval);
       fallbackManualLogin(authUrl);
+    }).finally(() => {
+
+      // Stop the polling interval when browser is opened
+      pollingManager.stopPolling(pollInterval);
     });
 
   try {
@@ -204,7 +206,7 @@ async function openUrl(url: string): Promise<void> {
 function generateSessionKey(): string {
   return encodeURIComponent(
     Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
+    Math.random().toString(36).substring(2, 15)
   );
 }
 

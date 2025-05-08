@@ -82,8 +82,58 @@ export async function checkAuth(): Promise<string> {
     );
   }
 
-  // Try to acquire the auth lock
-  await setAuthInProgressLock(DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
+  // Try to acquire the auth lock with exponential backoff
+  const maxRetries = 5;
+  let retryCount = 0;
+  let hasLock = false;
+
+  // Attempt to get the lock with exponential backoff
+  while (!hasLock && retryCount < maxRetries) {
+    hasLock = await setAuthInProgressLock(DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
+
+    if (!hasLock) {
+      // Another process got the lock first, wait a bit with exponential backoff
+      const waitTime = Math.min(100 * Math.pow(2, retryCount), 2000); // Start with 100ms, max 2s
+      logFn(
+        'debug',
+        `Another process acquired the lock. Retry ${retryCount + 1}/${maxRetries} in ${waitTime}ms`
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      retryCount++;
+
+      // Check if auth completed during our wait
+      const token = await getToken();
+      if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+        logFn(
+          '',
+          `${green('✓')} Authentication completed by another process during retry wait\n`
+        );
+        return token;
+      }
+    }
+  }
+
+  // If we couldn't get the lock after retries, wait for the existing authentication process
+  if (!hasLock) {
+    logFn(
+      '',
+      `${yellow('Could not acquire auth lock')} - Waiting for existing authentication to complete...`
+    );
+    const tokenFromOtherProcess = await waitForAuthToComplete(180000); // Wait longer (3 minutes)
+    if (tokenFromOtherProcess) {
+      logFn('', `${green('✓')} Authentication completed by another process\n`);
+      return tokenFromOtherProcess;
+    }
+
+    // If still no luck, try one last time to acquire the lock
+    hasLock = await setAuthInProgressLock(DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
+    if (!hasLock) {
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message:
+          'Could not acquire authentication lock after multiple retries. Try again later or use ZE_SECRET_TOKEN environment variable.',
+      });
+    }
+  }
 
   // No valid token found; initiate authentication.
   logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
@@ -100,15 +150,48 @@ export async function checkAuth(): Promise<string> {
     .catch(() => fallbackManualLogin(authUrl));
 
   try {
-    const newToken = await waitForAccessToken(sessionKey).finally(() =>
-      browserController.abort()
-    );
+    // Check for a token before we even start the login process
+    // This is a last safety check in case another process completed auth
+    // between our last check and now
+    const existingToken = await getToken();
+    if (
+      existingToken &&
+      isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)
+    ) {
+      logFn(
+        'debug',
+        'Found valid token from another process before starting our own auth'
+      );
+      browserController.abort(); // Don't open browser
+      return existingToken;
+    }
 
-    await saveToken(newToken);
+    try {
+      const newToken = await waitForAccessToken(sessionKey).finally(() =>
+        browserController.abort()
+      );
 
-    logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
+      await saveToken(newToken);
+      logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
+      return newToken;
+    } catch (error) {
+      // Check one more time if a token has appeared while we were trying to authenticate
+      // This can happen if multiple processes were authenticating simultaneously
+      const lastChanceToken = await getToken();
+      if (
+        lastChanceToken &&
+        isTokenStillValid(lastChanceToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)
+      ) {
+        logFn(
+          'debug',
+          'Found valid token from another process after our auth attempt failed'
+        );
+        return lastChanceToken;
+      }
 
-    return newToken;
+      // If we still don't have a token, rethrow the original error
+      throw error;
+    }
   } finally {
     // Reset the browser opened flag regardless of success or failure
     await removeAuthInProgressLock();
@@ -235,6 +318,24 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
   const { promise, resolve, reject } = PromiseWithResolvers<string>();
   const socket = createSocket(ZEPHYR_API_ENDPOINT());
   let timeoutHandle: NodeJS.Timeout | null = null;
+  let checkTokenIntervalId: NodeJS.Timeout | null = null;
+
+  // Add a shorter interval to periodically check if another process obtained a token
+  const checkForExistingToken = async () => {
+    try {
+      const existingToken = await getToken();
+      if (
+        existingToken &&
+        isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)
+      ) {
+        logFn('debug', 'Found valid token from another process during socket wait');
+        cleanupListeners();
+        resolve(existingToken);
+      }
+    } catch {
+      // Ignore errors during token check
+    }
+  };
 
   // Helper to properly cleanup socket listeners but don't close it
   // (as we're now reusing sockets)
@@ -242,6 +343,11 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     if (timeoutHandle) {
       clearTimeout(timeoutHandle);
       timeoutHandle = null;
+    }
+
+    if (checkTokenIntervalId) {
+      clearInterval(checkTokenIntervalId);
+      checkTokenIntervalId = null;
     }
 
     socket.removeAllListeners();
@@ -277,14 +383,37 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
 
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
 
+    // Start checking periodically for tokens from other processes
+    checkTokenIntervalId = setInterval(checkForExistingToken, 2000); // Check every 2 seconds
+
+    // Also check immediately
+    void checkForExistingToken();
+
     // The user has a specified amount of time to log in through the browser.
     timeoutHandle = setTimeout(() => {
-      cleanupListeners();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
+      // One final check for token before timing out
+      getToken()
+        .then((token) => {
+          if (token && isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+            cleanupListeners();
+            resolve(token);
+          } else {
+            cleanupListeners();
+            reject(
+              new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+                message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
+              })
+            );
+          }
         })
-      );
+        .catch(() => {
+          cleanupListeners();
+          reject(
+            new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+              message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
+            })
+          );
+        });
     }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
 
     return await promise;

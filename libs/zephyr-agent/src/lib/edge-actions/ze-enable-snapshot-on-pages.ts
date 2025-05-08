@@ -46,7 +46,10 @@ export async function zeEnableSnapshotOnPages({
   );
 
   if (!ok) {
-    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, { cause });
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      cause,
+      message: 'Failed to upload envs to Zephyr',
+    });
   }
 
   ze_log('Build successfully deployed.');

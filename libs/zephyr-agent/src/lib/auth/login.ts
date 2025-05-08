@@ -288,7 +288,6 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
 
     return await promise;
   } catch (error) {
-    cleanupListeners();
     throw error;
   } finally {
     cleanupListeners();

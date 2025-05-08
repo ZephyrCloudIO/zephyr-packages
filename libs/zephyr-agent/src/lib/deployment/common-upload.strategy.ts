@@ -1,9 +1,8 @@
 import { zeUploadSnapshot } from '../edge-actions';
 import { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
-import { uploadAssets } from './upload-base/upload-assets';
-import { uploadBuildStatsAndEnableEnvs } from './upload-base/upload-build-stats-and-enable-envs';
+import { uploadAssets, uploadBuildStatsAndEnableEnvs } from './upload-base';
 
-export async function cloudflareStrategy(
+export async function commonUploadStrategy(
   zephyr_engine: ZephyrEngine,
   { snapshot, getDashData, assets: { assetsMap, missingAssets } }: UploadOptions
 ) {

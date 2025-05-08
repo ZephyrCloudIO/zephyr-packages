@@ -22,4 +22,5 @@ export enum UploadProviderType {
   AZURE = 'azure',
   GCP = 'gcp',
   FASTLY = 'fastly',
+  AKAMAI = 'akamai',
 }

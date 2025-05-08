@@ -15,10 +15,11 @@
     "@rspress/shared": "^1.43.12",
     "globby": "^14.1.0",
     "rspress": "catalog:rspress",
-    "webpack": "catalog:webpack5"
+    "webpack": "catalog:webpack5",
+    "webpack-sources": "^3.2.3"
   },
   "devDependencies": {
     "@types/node": "catalog:typescript",
-    "zephyr-rsbuild-plugin": "workspace:*"
+    "zephyr-rspress-plugin": "workspace:*"
   }
 }

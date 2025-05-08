@@ -1,11 +1,11 @@
 {
-  "name": "zephyr-rsbuild-plugin",
+  "name": "zephyr-rspress-plugin",
   "version": "0.0.1",
-  "description": "Rsbuild plugin for Zephyr",
+  "description": "Rspress plugin for Zephyr",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-rsbuild-plugin"
+    "directory": "libs/zephyr-rspress-plugin"
   },
   "license": "Apache-2.0",
   "author": {
@@ -16,13 +16,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run zephyr-rsbuild-plugin:build",
-    "dev": "nx run zephyr-rsbuild-plugin:build --watch",
+    "build": "nx run zephyr-rspress-plugin:build",
+    "dev": "nx run zephyr-rspress-plugin:build --watch",
     "patch-version": "pnpm version"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*"
+    "@rspress/shared": "^1.43.12",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*",
+    "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",

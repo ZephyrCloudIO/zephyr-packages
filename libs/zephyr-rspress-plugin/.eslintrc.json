@@ -5,7 +5,7 @@
     {
       "files": ["*.ts", "*.tsx"],
       "parserOptions": {
-        "project": ["libs/zephyr-rspack-plugin/tsconfig.*?.json"]
+        "project": ["libs/zephyr-rspress-plugin/tsconfig.*?.json"]
       },
       "rules": {}
     },

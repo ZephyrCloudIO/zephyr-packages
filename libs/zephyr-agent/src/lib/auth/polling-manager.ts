@@ -51,11 +51,11 @@ export class PollingManager {
     return initialTimer;
   }
 
-  stopPolling(intervalId: NodeJS.Timeout) {
+  stopPolling(timerId: NodeJS.Timeout) {
     ze_log('stopPolling: Stopping polling...');
-    if (intervalId) {
-      clearInterval(intervalId);
-      this.activePolls.delete(intervalId);
+    if (timerId) {
+      clearTimeout(timerId);
+      this.activePolls.delete(timerId);
       this.cleanup();
     }
     if (this.activePolls.size === 0) {

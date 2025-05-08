@@ -22,5 +22,6 @@ export function createSocket(
   return socketio(endpoint, {
     forceNew: true,
     reconnection: false,
+    withCredentials: true,
   });
 }

@@ -1,7 +1,18 @@
 {
   "name": "parcel-reporter-zephyr",
-  "version": "0.0.38",
+  "version": "0.0.42",
+  "description": "Parcel reporter for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/parcel-reporter-zephyr"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,16 +20,20 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "catalog:plugin-shared",
+    "@parcel/core": "catalog:parcel",
     "@parcel/plugin": "catalog:parcel",
     "@parcel/types": "catalog:parcel",
-    "@parcel/core": "catalog:parcel",
+    "is-ci": "catalog:plugin-shared",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@types/is-ci": "catalog:typescript",
-    "ts-jest": "catalog:typescript",
-    "@types/jest": "catalog:typescript"
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

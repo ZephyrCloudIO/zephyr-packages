@@ -1,14 +1,24 @@
 {
   "name": "zephyr-repack-plugin",
-  "version": "0.0.38",
+  "version": "0.0.42",
+  "description": "Repack plugin for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-repack-plugin"
+  },
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "type": "commonjs",
   "scripts": {
     "build": "nx build zephyr-repack-plugin",
-    "test": "nx test zephyr-repack-plugin",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "test": "nx test zephyr-repack-plugin"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -20,5 +30,9 @@
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

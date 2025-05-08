@@ -21,6 +21,7 @@ import {
   setAuthInProgressLock,
   removeAuthInProgressLock,
   waitForAuthToComplete,
+  cleanStaleAuthLock,
 } from '../node-persist/token';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
 import { createSocket } from './websocket';
@@ -56,6 +57,9 @@ export async function checkAuth(): Promise<string> {
   if (!isTTY) {
     logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
   }
+
+  // Check for and clean up any stale authentication locks before proceeding
+  await cleanStaleAuthLock();
 
   // Check if authentication is already in progress in another process
   if (await isAuthInProgress()) {

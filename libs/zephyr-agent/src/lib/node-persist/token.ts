@@ -1,6 +1,7 @@
 import { clear, getItem, init, removeItem, setItem } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { ze_log } from '../logging';
 import { StorageKeys, ZE_PATH } from './storage-keys';
 import { getSecretToken } from './secret-token';
 
@@ -89,6 +90,48 @@ export async function isAuthInProgress(): Promise<boolean> {
 export async function removeAuthInProgressLock(): Promise<void> {
   await storage;
   await removeItem(StorageKeys.ze_auth_in_progress);
+}
+
+/**
+ * Checks for and cleans up stale authentication locks A stale lock is one that has
+ * expired but was never cleaned up (due to process crash, etc.)
+ *
+ * @returns True if a stale lock was found and cleaned, false otherwise
+ */
+export async function cleanStaleAuthLock(): Promise<boolean> {
+  await storage;
+
+  const existingLock = await getItem(StorageKeys.ze_auth_in_progress);
+  if (!existingLock) {
+    return false;
+  }
+
+  try {
+    const lockInfo = JSON.parse(existingLock);
+    const now = Date.now();
+
+    // If the lock exists but is expired, clean it up
+    if (lockInfo.expiresAt <= now) {
+      const pid = lockInfo.pid;
+      const staleTimeMs = now - lockInfo.expiresAt;
+      const staleTimeMin = Math.floor(staleTimeMs / 60000);
+
+      // Log that we're cleaning up a stale lock
+      ze_log(
+        `Cleaning up stale authentication lock from process ${pid} (expired ${staleTimeMin} minutes ago)`
+      );
+
+      await removeAuthInProgressLock();
+      return true;
+    }
+
+    return false;
+  } catch {
+    // If the lock data is corrupted, clean it up
+    ze_log('Cleaning up corrupted authentication lock');
+    await removeAuthInProgressLock();
+    return true;
+  }
 }
 
 /**

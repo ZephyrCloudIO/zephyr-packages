@@ -1,10 +1,10 @@
-import path from 'node:path';
-import { ZephyrEngine } from 'zephyr-agent';
 import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
-import { ZephyrRspressPluginOptions } from '../types';
-import { buildAssetMapFromFiles, buildStats } from './utils';
+import { ZephyrRspressPluginOptions } from './types';
+import { buildAssetMapFromFiles } from './internal/assets/buildAssets';
+import { buildStats } from './internal/stats/buildStats';
 
-export async function ZeRspressPlugin({
+export async function withZephyrRspressSSG({
+  deferEngine,
   root,
   files,
 }: ZephyrRspressPluginOptions): Promise<void> {
@@ -12,11 +12,6 @@ export async function ZeRspressPlugin({
     console.warn('ZeRspressPlugin: No files to process.');
     return;
   }
-
-  const context = path.resolve(root);
-  const engine = await ZephyrEngine.create({ builder: 'rspress', context });
-
-  await engine.start_new_build();
 
   const [assets, stats] = await Promise.all([
     buildAssetMapFromFiles(root, files),
@@ -29,7 +24,7 @@ export async function ZeRspressPlugin({
     assets,
     pluginOptions: {
       pluginName: 'rspress-ssg',
-      zephyr_engine: engine,
+      zephyr_engine: await deferEngine,
       options: {},
     },
   });

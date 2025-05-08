@@ -8,7 +8,10 @@
     "jest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "src/internal/__test__/showFiles.spec.ts",
+    "src/internal/__test__/walkFiles.spec.ts",
+    "src/internal/__test__/buildAsset.spec.ts"
   ],
   "exclude": ["dist"]
 }

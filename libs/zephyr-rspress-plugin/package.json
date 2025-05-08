@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspress-plugin",
-  "version": "0.0.1",
+  "version": "0.0.42",
   "description": "Rspress plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -18,11 +18,13 @@
   "scripts": {
     "build": "nx run zephyr-rspress-plugin:build",
     "dev": "nx run zephyr-rspress-plugin:build --watch",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "test": "jest"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "@rspress/shared": "^1.43.12",
+    "@rspress/shared": "catalog:rspress",
+    "@rsbuild/core": "catalog:rspack",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"

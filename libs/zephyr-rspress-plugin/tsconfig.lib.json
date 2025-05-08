@@ -6,5 +6,10 @@
     "types": ["node"]
   },
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/internal/__test__/showFiles.spec.ts",
+    "src/internal/__test__/walkFiles.spec.ts",
+    "src/internal/__test__/buildAsset.spec.ts"
+  ]
 }

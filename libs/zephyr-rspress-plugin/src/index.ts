@@ -1,1 +1,1 @@
-export { withZephyr } from './rspress-plugin/with-zephyr';
+export { withZephyr } from './with-zephyr';

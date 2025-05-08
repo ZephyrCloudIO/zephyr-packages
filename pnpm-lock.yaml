@@ -145,8 +145,8 @@ catalogs:
       version: 4.37.0
   rspack:
     '@rsbuild/core':
-      specifier: ^1.1.1
-      version: 1.2.19
+      specifier: 1.2.3
+      version: 1.2.3
     '@rsbuild/plugin-react':
       specifier: ^1.0.5
       version: 1.1.1
@@ -157,6 +157,9 @@ catalogs:
       specifier: ^1.0.1
       version: 1.0.1
   rspress:
+    '@rspress/shared':
+      specifier: ^1.43.12
+      version: 1.43.12
     rspress:
       specifier: ^1.40.2
       version: 1.43.12
@@ -624,10 +627,10 @@ importers:
     devDependencies:
       '@rsbuild/core':
         specifier: catalog:rspack
-        version: 1.2.19
+        version: 1.2.3
       '@rsbuild/plugin-react':
         specifier: catalog:rspack
-        version: 1.1.1(@rsbuild/core@1.2.19)
+        version: 1.1.1(@rsbuild/core@1.2.3)
       '@types/react':
         specifier: catalog:react18
         version: 18.3.1
@@ -645,7 +648,7 @@ importers:
     dependencies:
       '@rsbuild/core':
         specifier: catalog:rspack
-        version: 1.2.19
+        version: 1.2.3
       '@rsbuild/shared':
         specifier: ^0.7.10
         version: 0.7.10(@swc/helpers@0.5.15)
@@ -1360,31 +1363,6 @@ importers:
         specifier: catalog:typescript
         version: 29.3.0(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.1)(jest@29.7.0(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.11.13(@swc/helpers@0.5.15))(@types/node@22.13.13)(typescript@5.8.2)))(typescript@5.8.2)
 
-  libs/zephyr-rsbuild-plugin:
-    dependencies:
-      tslib:
-        specifier: catalog:typescript
-        version: 2.8.1
-      zephyr-agent:
-        specifier: workspace:*
-        version: link:../zephyr-agent
-    devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
-      '@types/jest':
-        specifier: catalog:typescript
-        version: 29.5.14
-      '@types/node-persist':
-        specifier: catalog:typescript
-        version: 3.1.8
-      '@typescript-eslint/eslint-plugin':
-        specifier: catalog:eslint
-        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
-      ts-jest:
-        specifier: catalog:typescript
-        version: 29.3.0(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.1)(jest@29.7.0(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.11.13(@swc/helpers@0.5.15))(@types/node@22.13.13)(typescript@5.8.2)))(typescript@5.8.2)
-
   libs/zephyr-rspack-plugin:
     dependencies:
       '@module-federation/automatic-vendor-federation':
@@ -1424,8 +1402,11 @@ importers:
 
   libs/zephyr-rspress-plugin:
     dependencies:
+      '@rsbuild/core':
+        specifier: catalog:rspack
+        version: 1.2.3
       '@rspress/shared':
-        specifier: ^1.43.12
+        specifier: catalog:rspress
         version: 1.43.12
       tslib:
         specifier: catalog:typescript

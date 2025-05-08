@@ -7,5 +7,6 @@ export default defineConfig({
   root: path.join(__dirname, 'docs'),
   outDir: './doc_build',
   ssg: true,
+  builderPlugins: [],
   plugins: [withZephyr()],
 });

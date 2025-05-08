@@ -5,7 +5,7 @@ export async function fetchWithRetries(
   options: RequestInit = {},
   retries = 3
 ): Promise<Response> {
-  for (let r = 0; r < retries; r++) {
+  for (let retry = 0; retry < retries; retry++) {
     const response = await fetch(url, options).catch(
       (error) => ({ ok: false, error }) as const
     );

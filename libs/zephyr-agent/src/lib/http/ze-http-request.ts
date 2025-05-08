@@ -108,15 +108,6 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
         body: this.#data,
       });
 
-      if (!response) {
-        throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-          content: 'No response found',
-          method: this.#options.method?.toUpperCase() ?? 'GET',
-          url: this.#url.toString(),
-          status: -1,
-        });
-      }
-
       const resText = await response.text();
 
       if (response.status === 401) {

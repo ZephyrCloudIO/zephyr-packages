@@ -11,7 +11,29 @@ const storage = init({
 
 export async function saveToken(token: string): Promise<void> {
   await storage;
-  await setItem(StorageKeys.ze_auth_token, token);
+
+  // Try to decode the token to get expiration time and set TTL accordingly
+  try {
+    const jose = await import('jose');
+    const decodedToken = jose.decodeJwt(token);
+
+    if (decodedToken.exp) {
+      // Calculate TTL as time until expiration in milliseconds
+      // Subtract 5 minutes (300,000ms) as a safety buffer
+      const expiresAt = decodedToken.exp * 1000; // Convert from seconds to milliseconds
+      const now = Date.now();
+      const ttl = Math.max(0, expiresAt - now - 300_000); // Ensure non-negative TTL with 5min buffer
+
+      await setItem(StorageKeys.ze_auth_token, token, { ttl });
+    } else {
+      // If no expiration in token, store without TTL
+      await setItem(StorageKeys.ze_auth_token, token);
+    }
+  } catch {
+    // If token can't be decoded, store without TTL
+    await setItem(StorageKeys.ze_auth_token, token);
+  }
+
   await removeAuthInProgressLock();
 }
 
@@ -63,7 +85,10 @@ export async function setAuthInProgressLock(timeoutMs = 60000): Promise<boolean>
     pid: process.pid,
   };
 
-  await setItem(StorageKeys.ze_auth_in_progress, JSON.stringify(lockInfo));
+  // Use built-in TTL to automatically expire the lock after the timeout
+  await setItem(StorageKeys.ze_auth_in_progress, JSON.stringify(lockInfo), {
+    ttl: timeoutMs,
+  });
   return true;
 }
 
@@ -74,16 +99,9 @@ export async function setAuthInProgressLock(timeoutMs = 60000): Promise<boolean>
 export async function isAuthInProgress(): Promise<boolean> {
   await storage;
 
+  // The item will be automatically removed once expired
   const existingLock = await getItem(StorageKeys.ze_auth_in_progress);
-  if (!existingLock) {
-    return false;
-  }
-
-  const lockInfo = JSON.parse(existingLock);
-  const now = Date.now();
-
-  // Return true only if lock exists and is not expired
-  return lockInfo.expiresAt > now;
+  return !!existingLock;
 }
 
 /** Removes the authentication in progress lock */
@@ -93,10 +111,9 @@ export async function removeAuthInProgressLock(): Promise<void> {
 }
 
 /**
- * Checks for and cleans up stale authentication locks A stale lock is one that has
- * expired but was never cleaned up (due to process crash, etc.)
+ * Checks for corrupted authentication locks and cleans them.
  *
- * @returns True if a stale lock was found and cleaned, false otherwise
+ * @returns True if a corrupted lock was found and cleaned, false otherwise
  */
 export async function cleanStaleAuthLock(): Promise<boolean> {
   await storage;
@@ -107,24 +124,7 @@ export async function cleanStaleAuthLock(): Promise<boolean> {
   }
 
   try {
-    const lockInfo = JSON.parse(existingLock);
-    const now = Date.now();
-
-    // If the lock exists but is expired, clean it up
-    if (lockInfo.expiresAt <= now) {
-      const pid = lockInfo.pid;
-      const staleTimeMs = now - lockInfo.expiresAt;
-      const staleTimeMin = Math.floor(staleTimeMs / 60000);
-
-      // Log that we're cleaning up a stale lock
-      ze_log(
-        `Cleaning up stale authentication lock from process ${pid} (expired ${staleTimeMin} minutes ago)`
-      );
-
-      await removeAuthInProgressLock();
-      return true;
-    }
-
+    JSON.parse(existingLock);
     return false;
   } catch {
     // If the lock data is corrupted, clean it up

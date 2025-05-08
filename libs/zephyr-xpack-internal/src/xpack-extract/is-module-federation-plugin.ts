@@ -1,4 +1,4 @@
-import { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
+import type { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
 
 /** @private */
 type __webpack_plugin__ = NonNullable<XPackConfiguration<any>['plugins']>[number];

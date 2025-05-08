@@ -1,6 +1,6 @@
-import { ConvertedDependencies } from '../convert-to-graph/convert-dependencies';
-import { ModuleObject, Overrides } from '../convert-to-graph/module-part-two';
-import { LocalPackageJson } from 'zephyr-edge-contract';
+import type { ConvertedDependencies } from '../convert-to-graph/convert-dependencies';
+import type { ModuleObject, Overrides } from '../convert-to-graph/module-part-two';
+import type { LocalPackageJson } from 'zephyr-edge-contract';
 
 function mergeWithoutDupe(source: LocalPackageJson[]): LocalPackageJson[] {
   return source.reduce((acc, item) => {

@@ -1,6 +1,6 @@
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
-import { ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getToken } from '../node-persist/token';
 import { ZeHttpRequest } from '../http/ze-http-request';

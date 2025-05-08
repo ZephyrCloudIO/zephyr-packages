@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { accessSync } from 'node:fs';
+import { constants, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { constants } from 'fs/promises';
-import { PackageJsonNotFoundError } from '../errors/package-json-not-found-error';
+import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 
 const max_retry = 30;
@@ -12,7 +11,7 @@ export async function find_nearest_package_json(startPath: string): Promise<{
   json: string;
 }> {
   if (!startPath) {
-    throw new PackageJsonNotFoundError(`${startPath}`);
+    throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND);
   }
 
   let retry = 0;
@@ -20,7 +19,7 @@ export async function find_nearest_package_json(startPath: string): Promise<{
   do {
     retry++;
     if (retry > max_retry) {
-      throw new PackageJsonNotFoundError(`${startPath} after ${max_retry} retries`);
+      throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND);
     }
 
     const packageJsonPath = join(dir, 'package.json');
@@ -36,10 +35,10 @@ export async function find_nearest_package_json(startPath: string): Promise<{
 
     const parentDir = resolve(dir, '..');
     if (parentDir === dir) {
-      throw new PackageJsonNotFoundError(`${startPath}`);
+      throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND);
     }
     dir = parentDir;
   } while (startPath !== dir);
 
-  throw new PackageJsonNotFoundError(`${startPath}`);
+  throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND);
 }

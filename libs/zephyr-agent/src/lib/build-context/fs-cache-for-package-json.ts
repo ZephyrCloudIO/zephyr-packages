@@ -1,5 +1,5 @@
 import { safe_json_parse } from 'zephyr-edge-contract';
-import { type ZePackageJson } from './ze-package-json.type';
+import type { ZePackageJson } from './ze-package-json.type';
 import { getCache, saveCache } from '../node-persist/fs-cache';
 
 const cache_prefix = 'package_json';

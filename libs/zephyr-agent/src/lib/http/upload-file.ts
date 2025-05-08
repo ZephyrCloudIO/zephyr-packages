@@ -1,5 +1,5 @@
 import { type UploadableAsset } from 'zephyr-edge-contract';
-import { ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { ZeHttpRequest } from './ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 

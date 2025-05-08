@@ -1,8 +1,8 @@
 import { onDeploymentDone } from '../lifecycle-events/index';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
-import { XStats } from '../xpack.types';
+import type { XStats } from '../xpack.types';
 
 interface DeployPluginOptions {
   pluginName: string;

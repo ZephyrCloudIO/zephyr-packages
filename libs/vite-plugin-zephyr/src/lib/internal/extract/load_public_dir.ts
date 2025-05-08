@@ -1,4 +1,4 @@
-import { OutputAsset } from 'rollup';
+import type { OutputAsset } from 'rollup';
 import { readdirSync, readFile, statSync } from 'node:fs';
 import { basename, relative, resolve } from 'node:path';
 import { normalizePath } from 'vite';

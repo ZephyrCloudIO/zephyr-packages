@@ -97,7 +97,7 @@ export async function removeAuthInProgressLock(): Promise<void> {
  */
 export async function waitForAuthToComplete(
   timeoutMs = 120000,
-  pollIntervalMs = 1000
+  pollIntervalMs = 500
 ): Promise<string | undefined> {
   const startTime = Date.now();
 

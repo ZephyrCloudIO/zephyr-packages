@@ -105,12 +105,9 @@ export async function checkAuth(): Promise<string> {
     logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
 
     return newToken;
-  } catch (error) {
-    // If authentication fails, remove the lock so other processes can try
-    await removeAuthInProgressLock();
-    throw error;
   } finally {
     // Reset the browser opened flag regardless of success or failure
+    await removeAuthInProgressLock();
     isAuthBrowserOpened = false;
   }
 }
@@ -287,8 +284,6 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
 
     return await promise;
-  } catch (error) {
-    throw error;
   } finally {
     cleanupListeners();
   }

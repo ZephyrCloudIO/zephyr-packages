@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Source } from 'zephyr-edge-contract';
+import type { Source } from 'zephyr-edge-contract';
 
 export async function buildAssetMapFromFiles(
   root: string,

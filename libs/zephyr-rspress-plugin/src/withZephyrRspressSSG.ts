@@ -1,5 +1,5 @@
 import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
-import { ZephyrRspressPluginOptions } from './types';
+import type { ZephyrRspressPluginOptions } from './types';
 import { buildAssetMapFromFiles } from './internal/assets/buildAssets';
 import { buildStats } from './internal/stats/buildStats';
 

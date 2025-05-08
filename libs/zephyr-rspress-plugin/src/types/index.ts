@@ -1,4 +1,4 @@
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 
 export interface ZephyrRspressPluginOptions {
   deferEngine: Promise<ZephyrEngine>;

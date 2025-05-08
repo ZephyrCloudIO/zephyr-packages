@@ -1,7 +1,7 @@
 import { walkFiles } from '../files/walkFiles';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { PathLike, Dirent } from 'node:fs';
+import type { PathLike, Dirent } from 'node:fs';
 
 jest.mock('node:fs/promises');
 

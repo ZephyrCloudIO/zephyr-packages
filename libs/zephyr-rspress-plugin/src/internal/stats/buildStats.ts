@@ -1,4 +1,4 @@
-import { Stats } from '../../types';
+import type { Stats } from '../../types';
 
 export function buildStats(root: string, files: string[]): Stats {
   return {

@@ -1,4 +1,4 @@
-import { RsbuildPlugin } from '@rsbuild/core';
+import type { RsbuildPlugin } from '@rsbuild/core';
 import { withZephyr as withZephyrRspack } from 'zephyr-rspack-plugin';
 
 export const zephyrRsbuildPlugin = (): RsbuildPlugin => ({

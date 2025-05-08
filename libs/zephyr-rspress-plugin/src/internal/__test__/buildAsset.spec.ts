@@ -1,8 +1,8 @@
 import { buildAssetMapFromFiles } from '../assets/buildAssets';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { PathLike } from 'node:fs';
-import { Source } from 'zephyr-edge-contract';
+import type { PathLike } from 'node:fs';
+import type { Source } from 'zephyr-edge-contract';
 
 jest.mock('node:fs/promises');
 const mockedFs = fs as jest.Mocked<typeof fs>;

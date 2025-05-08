@@ -41,7 +41,7 @@ export interface ModuleFederationPlugin {
   config?: XFederatedRemotesConfig;
 }
 
-interface RemotesObject {
+export interface RemotesObject {
   [index: string]: string | RemotesConfig | string[];
 }
 

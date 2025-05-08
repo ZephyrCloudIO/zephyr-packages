@@ -1,4 +1,4 @@
-import { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
+import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeHttpRequest } from './ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';

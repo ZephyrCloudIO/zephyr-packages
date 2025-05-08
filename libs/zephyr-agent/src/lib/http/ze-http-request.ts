@@ -75,7 +75,7 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
       req.#url.searchParams.set('api_host', zephyr_api_endpoint);
     }
 
-    req.#request();
+    void req.#request();
 
     return req;
   }

@@ -2,7 +2,7 @@ import { getItem, init, removeItem, setItem } from 'node-persist';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { StorageKeys, ZE_PATH } from './storage-keys';
-import { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
 const storage = init({
   dir: join(homedir(), ZE_PATH),

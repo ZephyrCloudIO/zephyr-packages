@@ -1,4 +1,5 @@
 import gitUrlParse from 'git-url-parse';
+import { ZeErrors, ZephyrError } from '../errors';
 
 // Standard Git provider domains mapping
 const STANDARD_DOMAINS: Record<string, string> = {
@@ -19,7 +20,7 @@ export function getGitProviderInfo(gitUrl: string): {
   isEnterprise: boolean;
 } {
   if (!gitUrl) {
-    throw new Error('Git URL is required');
+    throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN);
   }
 
   const parsed = gitUrlParse(gitUrl);

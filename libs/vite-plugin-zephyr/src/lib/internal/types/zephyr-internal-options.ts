@@ -1,4 +1,4 @@
-import { OutputBundle } from 'rollup';
+import type { OutputBundle } from 'rollup';
 
 export interface ZephyrInternalOptions {
   root: string;

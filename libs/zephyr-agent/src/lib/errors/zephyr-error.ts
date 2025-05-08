@@ -13,13 +13,13 @@ import {
 import {
   isZeErrorEqual,
   ZeErrorCategories,
-  ZeErrorCode,
+  type ZeErrorCode,
   type ZeErrorCodes,
   type ZeErrorKeys,
   ZeErrors,
-  ZeErrorType,
+  type ZeErrorType,
 } from './codes';
-import { FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
+import { type FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
 
 /** Options to construct {@linkcode ZephyrError}. */
 export type ZephyrErrorOpts<T extends ZeErrorType> = {
@@ -62,8 +62,8 @@ export class ZephyrError<
    * `ZephyrError` for the provided type.
    */
   constructor(type: T, opts?: ZephyrErrorOpts<T>) {
+    // Unwraps ERR_UNKNOWN if cause is known
     if (ZephyrError.is(opts?.cause)) {
-      // Unwraps ERR_UNKNOWN if cause is known
       if (isZeErrorEqual(type, ZeErrors.ERR_UNKNOWN)) {
         return opts.cause as ZephyrError<K>;
       }

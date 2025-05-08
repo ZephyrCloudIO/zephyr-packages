@@ -1,5 +1,5 @@
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
-import { AppTools, CliPluginFuture } from '@modern-js/app-tools';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { AppTools, CliPluginFuture } from '@modern-js/app-tools';
 import { ze_log } from 'zephyr-agent';
 
 const pluginName = 'zephyr-modernjs-plugin';

@@ -1,4 +1,5 @@
-import { ZeDependencyPair, readPackageJson } from 'zephyr-agent';
+import type { ZeDependencyPair } from 'zephyr-agent';
+import { readPackageJson } from 'zephyr-agent';
 import { parseRemoteMap } from './remote_map_parser';
 
 export function extract_remotes_dependencies(

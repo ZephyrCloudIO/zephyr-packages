@@ -2,10 +2,10 @@ import { join, sep } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { getLicenses } from './get-licenses';
 // import { StatsModule } from 'webpack';
-import { NpmModules } from './convert-dependencies';
-import { ModuleObject } from './module-part-two';
-import { LocalPackageJson } from 'zephyr-edge-contract';
-import { XStatsModule } from '../../../xpack.types';
+import type { NpmModules } from './convert-dependencies';
+import type { ModuleObject } from './module-part-two';
+import type { LocalPackageJson } from 'zephyr-edge-contract';
+import type { XStatsModule } from '../../../xpack.types';
 
 export interface Consume {
   consumingApplicationID: string;

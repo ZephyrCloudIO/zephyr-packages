@@ -1,6 +1,6 @@
-import { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { zeUploadBuildStats } from '../../edge-actions/ze-upload-build-stats';
-import { ZephyrEngine } from '../../../zephyr-engine';
+import type { ZephyrEngine } from '../../../zephyr-engine';
 
 interface UploadBuildStatsAndEnableEnvsOptions {
   getDashData: (zephyr_engine: ZephyrEngine) => ZephyrBuildStats;

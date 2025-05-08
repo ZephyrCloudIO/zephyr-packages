@@ -1,4 +1,4 @@
-import { XPackConfiguration } from 'zephyr-xpack-internal';
-import { Compiler } from '@rspack/core';
+import type { XPackConfiguration } from 'zephyr-xpack-internal';
+import type { Compiler } from '@rspack/core';
 
 export type RspackConfiguration = XPackConfiguration<Compiler>;

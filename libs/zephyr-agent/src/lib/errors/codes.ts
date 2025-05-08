@@ -287,7 +287,11 @@ Please check your network connection and try again.
 
   ERR_DEPLOY_LOCAL_BUILD: {
     id: '024',
-    message: 'Failed to deploy local build.',
+    message: `
+Failed to deploy local build.
+
+{{ message }}
+  `,
     kind: 'deploy',
   },
 

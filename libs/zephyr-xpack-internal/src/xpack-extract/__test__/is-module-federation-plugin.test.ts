@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals';
 import { isModuleFederationPlugin } from '../is-module-federation-plugin';
-import { XPackConfiguration } from '../../xpack.types';
+import type { XPackConfiguration } from '../../xpack.types';
 
 // Jest unit tests for isModuleFederationPlugin
 type __webpack_plugin__ = NonNullable<XPackConfiguration<unknown>['plugins']>[number];

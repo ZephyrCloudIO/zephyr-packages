@@ -233,9 +233,7 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
       cleanupSocket();
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: `Authentication timed out. Couldn't receive access token in ${Math.round(
-            DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000
-          )} seconds. Please try again.`,
+          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
         })
       );
     }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);

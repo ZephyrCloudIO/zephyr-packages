@@ -14,7 +14,6 @@ import {
 import { updateRemoteUrls } from './internal/update-remote-urls';
 import { buildDashboardData } from './internal/build-dashboard-data';
 import { extractModuleFederationConfig } from './internal/extract-module-federation-config';
-import { createRuntimePatchPlugin } from './internal/runtime-patch-mf';
 import path from 'node:path';
 
 // Interface for the current Rolldown's ModuleFederation remote entry
@@ -29,10 +28,6 @@ export interface ModuleFederationOptions {
   name: string;
   filename?: string;
   exposes?: Record<string, string>;
-  // Support multiple formats:
-  // 1. Array of objects with entry, name, entryGlobalName (current Rolldown format)
-  // 2. Array of objects with name-url pairs (original Rolldown format)
-  // 3. Direct object with name-url pairs (older but common format)
   remotes?:
     | Array<RolldownRemoteEntry>
     | Array<Record<string, string>>
@@ -121,6 +116,8 @@ export function withZephyr(_options?: WithZephyrOptions): Plugin | Plugin[] {
   // Track whether we've processed dependencies yet
   let hasProcessedDependencies = false;
   let mfPluginCreated = false;
+  // Store the MF config for later use
+  let storedMfConfig: ModuleFederationOptions | undefined;
 
   // Add main Zephyr plugin
   plugins.push({
@@ -135,6 +132,16 @@ export function withZephyr(_options?: WithZephyrOptions): Plugin | Plugin[] {
         builder: 'rollup', // Use 'rollup' as the builder type since 'rolldown' is similar
         context: pathToExecutionDir,
       });
+
+      // Extract Module Federation configuration first to help with debugging
+      console.log("Original input options in options hook:", JSON.stringify({
+        plugins: Array.isArray(options.plugins)
+          ? options.plugins.map(p => ({ name: (p as any).name }))
+          : { name: (options.plugins as any)?.name }
+      }, null, 2));
+
+      storedMfConfig = extractModuleFederationConfig(options);
+      console.log("[Zephyr][options hook] MF Config:", storedMfConfig);
 
       // Extract and resolve dependencies early to modify the configuration
       const zephyrEngine = await zephyr_engine_defer;
@@ -218,9 +225,57 @@ export function withZephyr(_options?: WithZephyrOptions): Plugin | Plugin[] {
         inputOptions = undefined;
       }
 
+      // Use previously stored MF config or extract it again if needed
+      const mfConfig = storedMfConfig || (inputOptions ? extractModuleFederationConfig(inputOptions) : undefined);
+      console.log('[Zephyr] MF Config in writeBundle:', mfConfig);
+
+      // Format the MF config for the snapshot to match ZephyrPluginOptions.mfConfig format
+      let formattedRemotes: Record<string, string> = {};
+
+      if (mfConfig && mfConfig.remotes) {
+        // Handle array format (current Rolldown format)
+        if (Array.isArray(mfConfig.remotes)) {
+          // Convert array format to object format for the snapshot
+          mfConfig.remotes.forEach(remote => {
+            if (remote && typeof remote === 'object') {
+              // For the current Rolldown format with entry/name/entryGlobalName
+              if ('entry' in remote && ('name' in remote || 'entryGlobalName' in remote)) {
+                const remoteName = (remote as any).entryGlobalName || (remote as any).name;
+                const remoteUrl = (remote as any).entry;
+                if (remoteName && remoteUrl) {
+                  formattedRemotes[remoteName] = remoteUrl;
+                }
+              }
+              // For the object format with key-value pairs
+              else {
+                Object.entries(remote).forEach(([key, value]) => {
+                  formattedRemotes[key] = value as string;
+                });
+              }
+            }
+          });
+        }
+        // Handle object format
+        else if (typeof mfConfig.remotes === 'object') {
+          formattedRemotes = mfConfig.remotes as Record<string, string>;
+        }
+      }
+
+      console.log('[Zephyr] Formatted remotes for snapshot:', formattedRemotes);
+
+      const formattedMfConfig = mfConfig ? {
+        name: mfConfig.name,
+        filename: mfConfig.filename || 'remoteEntry.js',
+        exposes: mfConfig.exposes,
+        remotes: formattedRemotes,
+        shared: mfConfig.shared as Record<string, unknown>,
+        runtimePlugins: mfConfig.runtimePlugins
+      } : undefined;
+
       await zephyrEngine.upload_assets({
         assetsMap: getAssetsMap(bundle),
         buildStats: await buildDashboardData(zephyrEngine, inputOptions),
+        mfConfig: formattedMfConfig,
       });
 
       await zephyrEngine.build_finished();

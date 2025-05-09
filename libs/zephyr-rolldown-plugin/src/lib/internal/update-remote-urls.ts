@@ -82,9 +82,22 @@ export function updateRemoteUrls(
       const index = 0;
 
       if (resolvedDeps.length > 0) {
-        // Use the first resolved dependency directly - it WILL be the correct one
-        // because the Zephyr agent API always returns the right dependency based on application_uid
-        const resolvedDep = resolvedDeps[0];
+        // Find the matching resolved dependency by normalizing the names
+        let resolvedDep = resolvedDeps.find(dep =>
+          normalizedCompare(dep.name, remoteName)
+        );
+
+        // If not found by name, just use the first one as a fallback
+        if (!resolvedDep) {
+          resolvedDep = resolvedDeps[0];
+        }
+
+        // Instead of hard-coding URL replacements, use the provided remote_entry_url directly
+        if (resolvedDep) {
+          console.log(`Using resolved dependency URL: ${resolvedDep.remote_entry_url}`);
+          // No manipulation needed, the Zephyr API provides the correct URL
+        }
+
         console.log(
           `\n[USING DIRECT MATCH] Found dependency: ${resolvedDep.name}@${resolvedDep.version}`
         );

@@ -23,7 +23,9 @@ export function extractModuleFederationConfig(
   for (const plugin of pluginsArray) {
     if (!plugin) continue;
 
-    if ((plugin as any).name === 'builtin:module-federation') {
+    const pluginName = (plugin as any).name;
+
+    if (pluginName === 'builtin:module-federation') {
       console.log('Inspecting plugin:', plugin);
 
       // Get the plugin options
@@ -33,6 +35,9 @@ export function extractModuleFederationConfig(
       return mfOptions as ModuleFederationOptions;
     }
   }
+
+  // Log all plugin names to help debug
+  console.log('Available plugins:', pluginsArray.map(p => (p as any).name).filter(Boolean));
 
   return undefined;
 }

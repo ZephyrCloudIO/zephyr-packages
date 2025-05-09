@@ -6,7 +6,8 @@ import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS } from '../auth/auth-flags';
 import { ze_log } from '../logging';
 import { ZE_SESSION_LOCK } from './storage-keys';
 
-const SESSION_LENGTH = 24;
+// 72 bits of entropy is more than enough (80b to have 50% collisions)
+const SESSION_LENGTH = 9;
 
 /**
  * Returns a base64url session key to be used in a login process.

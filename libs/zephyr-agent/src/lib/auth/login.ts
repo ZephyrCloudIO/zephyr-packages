@@ -57,6 +57,10 @@ export async function checkAuth(): Promise<void> {
   using sessionKey = getSessionKey();
   const authUrl = await getAuthenticationURL(sessionKey.session);
 
+  if (!sessionKey.owner) {
+    logFn('', gray('Waiting for session unlock...'));
+  }
+
   const browserController = new AbortController();
 
   // Tries to open the browser to authenticate the user
@@ -76,7 +80,17 @@ export async function checkAuth(): Promise<void> {
     // node-persist is not concurrent safe, so we need to wait for the unlock
     // before next readToken() calls can happen
     // https://github.com/simonlast/node-persist/issues/108#issuecomment-1442305246
-    await waitForUnlock();
+    await waitForUnlock(browserController.signal);
+
+    const token = await getToken();
+
+    // Unlock also happens on timeout, so we need to check if the token was
+    // actually saved or not
+    if (!token) {
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'No token found after authentication finished, did it timeout?',
+      });
+    }
   }
 
   logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);

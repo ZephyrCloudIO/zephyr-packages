@@ -58,11 +58,8 @@ export interface SessionLock extends Disposable {
 /** @returns Either a function to unlock the lock or null if the lock could not be acquired */
 function safeLockSync(createIfNotExists = true): (() => void) | null {
   try {
-    return lockSync(ZE_SESSION_LOCK, {
-      // The timeout to the whole login process makes sense
-      // to keep the lock for the same amount of time
-      stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS,
-    });
+    // The timeout to the whole login process makes sense to keep the lock for the same amount of time
+    return lockSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS });
   } catch (error: any) {
     if (error.code === 'ELOCKED') {
       return null;
@@ -79,23 +76,14 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
 }
 
 /**
- * Checks 8 times per second if the lock is still held by the current process and resolves
+ * Checks 4 times per second if the lock is still held by the current process and resolves
  * when the lock is released.
  */
-export async function waitForUnlock() {
-  for await (const startTime of setInterval(1000 / 8, Date.now())) {
-    // Timeout to avoid waiting forever
-    if (startTime + DEFAULT_AUTH_COMPLETION_TIMEOUT_MS < Date.now()) {
-      return;
-    }
-
-    try {
-      if (checkSync(ZE_SESSION_LOCK) === false) {
-        return;
-      }
-
-      // Error means file does not exist, so we can safely return
-    } catch {
+export async function waitForUnlock(signal?: AbortSignal): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  for await (const _ of setInterval(1000 / 4, null, { ref: false, signal })) {
+    // Stale works as a timeout for the loop
+    if (!checkSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS })) {
       return;
     }
   }

@@ -1,8 +1,7 @@
 import { io as socketio, type Socket } from 'socket.io-client';
 import { PromiseWithResolvers } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
-import { homedir, hostname } from 'node:os';
-import { createHash } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { ze_log } from '../logging';
 
 interface ClientToServerEvents {
@@ -64,11 +63,7 @@ export class WebSocketManager {
 
     // Create a hash based on the user's home directory and hostname
     // This will be consistent for all processes on the same machine
-    const machineIdentifier = `${homedir()}-${hostname()}`;
-    this.sharedRoomId = createHash('sha256')
-      .update(machineIdentifier)
-      .digest('hex')
-      .slice(0, 16);
+    this.sharedRoomId = Buffer.from(randomBytes(16)).toString('base64url');
 
     ze_log('debug', `Generated shared room ID: ${this.sharedRoomId}`);
     return this.sharedRoomId;
@@ -212,26 +207,6 @@ export class WebSocketManager {
       clearTimeout(this.timeoutHandle);
       this.timeoutHandle = null;
     }
-  }
-
-  /**
-   * Cleanup socket resources. If force is false, keeps the socket alive to continue
-   * receiving shared tokens from other processes.
-   */
-  cleanup(force = false) {
-    this.cleanupTimeout();
-
-    if (this.activeSocket && force) {
-      this.activeSocket.removeAllListeners();
-      this.activeSocket.disconnect();
-      this.activeSocket.close();
-      this.activeSocket = null;
-    }
-  }
-
-  /** Force cleanup of all socket resources */
-  forceCleanup() {
-    this.cleanup(true);
   }
 }
 

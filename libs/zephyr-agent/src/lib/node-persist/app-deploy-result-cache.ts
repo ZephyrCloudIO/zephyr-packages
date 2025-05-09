@@ -1,12 +1,6 @@
-import { getItem, init, removeItem, setItem } from 'node-persist';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
-
-import { StorageKeys, ZE_PATH } from './storage-keys';
-
-const storage = init({
-  dir: join(homedir(), ZE_PATH),
-});
+import { getItem, removeItem, setItem } from 'node-persist';
+import { storage } from './storage';
+import { StorageKeys } from './storage-keys';
 
 export async function setAppDeployResult(
   application_uid: string,

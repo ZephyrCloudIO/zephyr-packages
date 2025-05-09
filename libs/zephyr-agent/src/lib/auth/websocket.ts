@@ -1,8 +1,8 @@
 import { io as socketio, type Socket } from 'socket.io-client';
 import { PromiseWithResolvers } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
-import { randomBytes } from 'node:crypto';
 import { ze_log } from '../logging';
+import { getSharedRoomId } from '../node-persist/shared-room-id';
 
 interface ClientToServerEvents {
   joinAccessTokenRoom: (props: { state: string }) => void;
@@ -53,19 +53,18 @@ export class WebSocketManager {
   }
 
   /**
-   * Generates a machine-specific room ID for shared authentication This ensures all
+   * Gets a persistent machine-specific room ID for shared authentication This ensures all
    * processes on the same machine join the same room
    */
-  private getSharedRoomId(): string {
+  private async getSharedRoomId(): Promise<string> {
     if (this.sharedRoomId) {
       return this.sharedRoomId;
     }
 
-    // Create a hash based on the user's home directory and hostname
-    // This will be consistent for all processes on the same machine
-    this.sharedRoomId = Buffer.from(randomBytes(16)).toString('base64url');
+    // Get the persistent shared room ID from storage
+    this.sharedRoomId = await getSharedRoomId();
 
-    ze_log('debug', `Generated shared room ID: ${this.sharedRoomId}`);
+    ze_log('debug', `Using shared room ID: ${this.sharedRoomId}`);
     return this.sharedRoomId;
   }
 
@@ -134,7 +133,7 @@ export class WebSocketManager {
     const { promise, resolve, reject } = PromiseWithResolvers<string>();
 
     // Get the shared room ID for this machine
-    const sharedRoomId = this.getSharedRoomId();
+    const sharedRoomId = await this.getSharedRoomId();
     ze_log('debug', `Using shared room ID: ${sharedRoomId}`);
 
     // Create or get the socket

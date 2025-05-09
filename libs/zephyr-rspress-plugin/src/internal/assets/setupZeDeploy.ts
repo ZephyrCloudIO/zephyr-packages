@@ -1,15 +1,16 @@
 import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
-import type { ZephyrRspressPluginOptions } from './types';
-import { buildAssetMapFromFiles } from './internal/assets/buildAssets';
-import { buildStats } from './internal/stats/buildStats';
+import type { ZephyrRspressPluginOptions } from '../../types';
+import { buildAssetMapFromFiles } from './buildAssets';
+import { buildStats } from '../stats/buildStats';
+import { ze_log } from 'zephyr-agent';
 
-export async function withZephyrRspressSSG({
+export async function setupZeDeploy({
   deferEngine,
   root,
   files,
 }: ZephyrRspressPluginOptions): Promise<void> {
   if (!files.length) {
-    console.warn('ZeRspressPlugin: No files to process.');
+    ze_log('ZeRspressPlugin: No files to process.');
     return;
   }
 

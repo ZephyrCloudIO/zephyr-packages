@@ -1,9 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { ze_log } from 'zephyr-agent';
 
 export async function showFiles(dir: string, files: string[]): Promise<void> {
   if (files.length === 0) {
-    console.warn('No files found in output directory.');
+    ze_log('No files found in output directory.');
     return;
   }
 
@@ -12,9 +13,9 @@ export async function showFiles(dir: string, files: string[]): Promise<void> {
     try {
       const stats = await fs.stat(abs);
       const sizeKB = (stats.size / 1024).toFixed(2);
-      console.log(`${rel} — ${sizeKB} KB`);
+      ze_log(`${rel} — ${sizeKB} KB`);
     } catch {
-      console.warn(`Failed to stat file: ${rel}`);
+      ze_log(`Failed to stat file: ${rel}`);
     }
   });
 

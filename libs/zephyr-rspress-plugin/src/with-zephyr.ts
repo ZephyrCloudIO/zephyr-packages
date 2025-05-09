@@ -4,7 +4,7 @@ import { zephyrRsbuildPlugin } from './zephyrRsbuildPlugin';
 
 export function withZephyr(): RspressPlugin {
   return {
-    name: 'plugin-zephyr-rspress',
+    name: 'zephyr-rspress-plugin',
     async config(config, { addPlugin }) {
       const { ssg = false } = config;
 

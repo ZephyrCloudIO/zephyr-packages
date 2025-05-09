@@ -1,9 +1,10 @@
 import { ZephyrEngine } from 'zephyr-agent';
 import path from 'node:path';
 import type { RspressPlugin } from '@rspress/shared';
-import { withZephyrRspressSSG } from './withZephyrRspressSSG';
+import { setupZeDeploy } from './internal/assets/setupZeDeploy';
 import { walkFiles } from './internal/files/walkFiles';
 import { showFiles } from './internal/files/showFiles';
+import { ze_log } from 'zephyr-agent';
 
 export const zephyrRspressSSGPlugin = ({ outDir = 'doc_build' }): RspressPlugin => {
   const root = path.resolve(outDir);
@@ -12,18 +13,18 @@ export const zephyrRspressSSGPlugin = ({ outDir = 'doc_build' }): RspressPlugin 
   zephyr_defer_create({ builder: 'rspack', context: root });
 
   return {
-    name: 'plugin-zephyr-rspress-ssg',
+    name: 'zephyr-rspress-plugin-ssg',
     async afterBuild() {
       const files = await walkFiles(root);
 
       if (files.length === 0) {
-        console.warn('No files found in output directory.');
+        ze_log('No files found in output directory.');
         return;
       }
 
       await showFiles(root, files);
 
-      await withZephyrRspressSSG({ deferEngine: zephyr_engine_defer, root, files });
+      await setupZeDeploy({ deferEngine: zephyr_engine_defer, root, files });
     },
   };
 };

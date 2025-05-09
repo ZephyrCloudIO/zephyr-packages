@@ -1,11 +1,11 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
-import { withZephyr as withZephyrRspack } from 'zephyr-rspack-plugin';
+import { withZephyr } from 'zephyr-rspack-plugin';
 
 export const zephyrRsbuildPlugin = (): RsbuildPlugin => ({
-  name: 'zephyr-rspress-plugin',
+  name: 'zephyr-rsbuild-plugin',
   setup(api) {
     api.modifyRspackConfig(async (config) => {
-      await withZephyrRspack()(config);
+      await withZephyr()(config);
     });
   },
 });

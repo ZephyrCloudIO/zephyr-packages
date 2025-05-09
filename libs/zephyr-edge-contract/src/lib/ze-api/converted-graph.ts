@@ -1,4 +1,4 @@
-import { LocalPackageJson } from './local-package-json';
+import type { LocalPackageJson } from './local-package-json';
 
 export interface ConvertedGraph {
   id?: string;

@@ -1,3 +1,4 @@
+import { ZeErrors, ZephyrError } from '../../errors';
 import { getGitProviderInfo } from '../git-provider-utils';
 
 describe('Git Provider Utils', () => {
@@ -127,7 +128,9 @@ describe('Git Provider Utils', () => {
     });
 
     it('should throw an error for invalid or empty URLs', () => {
-      expect(() => getGitProviderInfo('')).toThrow('Git URL is required');
+      expect(() => getGitProviderInfo('')).toThrow(
+        new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN)
+      );
     });
   });
 });

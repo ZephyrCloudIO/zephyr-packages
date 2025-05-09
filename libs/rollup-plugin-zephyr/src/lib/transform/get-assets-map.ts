@@ -1,5 +1,6 @@
-import { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
-import { buildAssetsMap, ZeBuildAssetsMap } from 'zephyr-agent';
+import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
+import type { ZeBuildAssetsMap } from 'zephyr-agent';
+import { buildAssetsMap } from 'zephyr-agent';
 
 export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
   return buildAssetsMap(assets, extractBuffer, getAssetType);

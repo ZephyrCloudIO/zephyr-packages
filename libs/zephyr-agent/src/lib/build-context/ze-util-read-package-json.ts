@@ -1,14 +1,11 @@
 import fs from 'node:fs';
 import { resolve } from 'node:path';
 import { safe_json_parse } from 'zephyr-edge-contract';
-
-import { find_nearest_package_json } from './find-nearest-package-json';
-import { ZePackageJson } from './ze-package-json.type';
-import { getPackageJsonCache, setPackageJsonCache } from './fs-cache-for-package-json';
+import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
-import { PackageJsonNotFoundError } from '../errors/package-json-not-found-error';
-import { PackageNotAJsonError } from '../errors/package-not-a-json-error';
-import { PackageJsonNotValidError } from '../errors/package-json-not-valid-error';
+import { find_nearest_package_json } from './find-nearest-package-json';
+import { getPackageJsonCache, setPackageJsonCache } from './fs-cache-for-package-json';
+import type { ZePackageJson } from './ze-package-json.type';
 
 export async function getPackageJson(
   context: string | undefined
@@ -25,17 +22,17 @@ export async function getPackageJson(
   const nearest_package_json = await find_nearest_package_json(startingPath);
 
   if (!nearest_package_json) {
-    throw new PackageJsonNotFoundError(context);
+    throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND);
   }
 
-  const { json, path } = nearest_package_json;
+  const { json } = nearest_package_json;
   const parsed_package_json = safe_json_parse<ZePackageJson>(json);
   if (!parsed_package_json) {
-    throw new PackageNotAJsonError(path);
+    throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_VALID);
   }
 
   if (!parsed_package_json.name || !parsed_package_json.version) {
-    throw new PackageJsonNotValidError(path);
+    throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION);
   }
 
   ze_log('package json found', parsed_package_json);

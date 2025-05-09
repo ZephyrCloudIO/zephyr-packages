@@ -1,6 +1,6 @@
 import { type Snapshot } from 'zephyr-edge-contract';
 import { uploadSnapshot } from '../http/upload-snapshot';
-import { ZephyrEngine } from '../../zephyr-engine';
+import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { green, yellow } from '../logging/picocolor';
 

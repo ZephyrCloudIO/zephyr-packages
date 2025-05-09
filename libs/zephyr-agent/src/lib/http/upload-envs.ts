@@ -1,6 +1,6 @@
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { LogEvent } from '../logging/ze-log-event';
-import { ZeUploadBuildStats } from 'zephyr-edge-contract';
+import type { LogEvent } from '../logging/ze-log-event';
+import type { ZeUploadBuildStats } from 'zephyr-edge-contract';
 import { ze_log } from '../logging';
 import { ZeHttpRequest } from './ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';

@@ -1,5 +1,5 @@
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 
 const valid_identifiers = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
 // Fastly doesn't allow underscore in domains, reference: https://datatracker.ietf.org/doc/html/rfc1035#:~:text=The%20labels%20must%20follow%20the%20rules%20for%20ARPANET%20host%20names.%20%20They%20must%0Astart%20with%20a%20letter%2C%20end%20with%20a%20letter%20or%20digit%2C%20and%20have%20as%20interior%0Acharacters%20only%20letters%2C%20digits%2C%20and%20hyphen.%20%20There%20are%20also%20some%0Arestrictions%20on%20the%20length.%20%20Labels%20must%20be%2063%20characters%20or%20less.

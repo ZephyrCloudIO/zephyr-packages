@@ -4,34 +4,42 @@ export async function fetchWithRetries(
   url: URL,
   options: RequestInit = {},
   retries = 3
-): Promise<Response | undefined> {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    let response: Response | undefined;
+): Promise<Response> {
+  for (let retry = 0; retry < retries; retry++) {
+    const response = await fetch(url, options).catch(
+      (error) => ({ ok: false, error }) as const
+    );
 
-    try {
-      response = await fetch(url, options);
-    } catch (error: any) {
-      // Network failure, retry until attempts are exhausted
-      if (error?.code === 'EPIPE' || error?.message?.includes('network')) {
+    if (response.ok) {
+      return response;
+    }
+
+    // Network failure, retry until attempts are exhausted
+    if ('error' in response) {
+      if (
+        response.error?.code === 'EPIPE' ||
+        response.error?.message?.includes('network')
+      ) {
         continue;
       }
 
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
         message: 'Unknown error occurred',
-        cause: error,
+        cause: response.error,
       });
     }
 
-    if (!response.ok) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        status: response.status,
-        url: url.toString(),
-        content: await response.text(),
-        method: options.method?.toUpperCase() ?? 'GET',
-      });
+    // Retry on server failures
+    if (response.status >= 500) {
+      continue;
     }
 
-    return response;
+    throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+      status: response.status,
+      url: url.toString(),
+      content: await response.text(),
+      method: options.method?.toUpperCase() ?? 'GET',
+    });
   }
 
   throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {

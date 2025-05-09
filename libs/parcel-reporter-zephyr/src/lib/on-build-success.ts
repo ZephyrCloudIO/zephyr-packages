@@ -1,7 +1,7 @@
 import type { BuildSuccessEvent } from '@parcel/types';
-import path from 'path';
-import { getAssetsMap, type ParcelOutputAsset } from './get-assets-map';
-import { logFn, zeBuildDashData, ZephyrError, type ZephyrEngine } from 'zephyr-agent';
+import path from 'node:path';
+import { type ZephyrEngine, ZephyrError, logFn, zeBuildDashData } from 'zephyr-agent';
+import { type ParcelOutputAsset, getAssetsMap } from './get-assets-map';
 
 const assets = new Map<string, ParcelOutputAsset>();
 

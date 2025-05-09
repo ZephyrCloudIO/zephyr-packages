@@ -1,21 +1,22 @@
 import {
   PromiseLazyLoad,
-  stripAnsi,
   ZE_API_ENDPOINT,
+  stripAnsi,
   ze_api_gateway,
 } from 'zephyr-edge-contract';
+import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { ZeGitInfo } from '../build-context/ze-util-get-git-info';
-import { is_debug_enabled } from './debug-enabled';
-import { ze_log } from './index';
+import { ZeErrors, ZephyrError } from '../errors';
+import { ZeHttpRequest } from '../http/ze-http-request';
+import { getToken } from '../node-persist/token';
 import {
   brightBlueBgName,
   brightGreenBgName,
   brightRedBgName,
   brightYellowBgName,
 } from './debug';
-import { getToken } from '../node-persist/token';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { is_debug_enabled } from './debug-enabled';
+import { ze_log } from './index';
 
 export const logFn = (level: string, msg: unknown): void => {
   if (is_debug_enabled) {
@@ -91,7 +92,9 @@ export function logger(props: LoggerOptions): ZeLogger {
     // Prints logs to the console as fast as possible
     for (const log of logs) {
       if (!log.level && !log.action) {
-        throw new Error('log level and action type must be provided');
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Log level and action are required',
+        });
       }
 
       logFn(log.level, log.message);

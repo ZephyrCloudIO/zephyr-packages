@@ -1,4 +1,4 @@
-import { Compiler } from 'webpack';
-import { XPackConfiguration } from 'zephyr-xpack-internal';
+import type { Compiler } from 'webpack';
+import type { XPackConfiguration } from 'zephyr-xpack-internal';
 
 export type WebpackConfiguration = XPackConfiguration<Compiler>;

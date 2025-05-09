@@ -270,6 +270,7 @@ async function openUrl(url: string): Promise<void> {
   try {
     isAuthBrowserOpened = true;
     // Lazy loads `open` module
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const openModule = (await eval(`import('open')`)) as typeof import('open');
     await openModule.default(url);
   } catch (error) {
@@ -384,7 +385,9 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
 
     // Start checking periodically for tokens from other processes
-    checkTokenIntervalId = setInterval(checkForExistingToken, 2000); // Check every 2 seconds
+    checkTokenIntervalId = setInterval(() => {
+      void checkForExistingToken();
+    }, 2000); // Check every 2 seconds
 
     // Also check immediately
     void checkForExistingToken();

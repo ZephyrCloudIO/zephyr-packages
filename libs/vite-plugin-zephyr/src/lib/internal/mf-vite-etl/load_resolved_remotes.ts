@@ -1,9 +1,6 @@
-import { ZeResolvedDependency } from 'zephyr-agent';
-import {
-  parseRemoteMap,
-  RemoteMapExtraction,
-  replaceProtocolAndHost,
-} from './remote_map_parser';
+import type { ZeResolvedDependency } from 'zephyr-agent';
+import type { RemoteMapExtraction } from './remote_map_parser';
+import { parseRemoteMap, replaceProtocolAndHost } from './remote_map_parser';
 
 export function load_resolved_remotes(
   resolved_remotes: ZeResolvedDependency[],

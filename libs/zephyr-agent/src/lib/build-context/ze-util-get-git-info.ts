@@ -2,7 +2,7 @@ import isCI from 'is-ci';
 import cp from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
-import { type ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { hasSecretToken } from '../node-persist/secret-token';

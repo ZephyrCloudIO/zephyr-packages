@@ -1,6 +1,6 @@
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import type { ResolvedConfig } from 'vite';
-import { savePartialAssetMap, ZephyrEngine } from 'zephyr-agent';
+import { logFn, savePartialAssetMap, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
@@ -35,25 +35,30 @@ export function withZephyrPartial() {
     },
 
     closeBundle: async () => {
-      const vite_internal_options = await vite_internal_options_defer;
-      const zephyr_engine = await zephyr_engine_defer;
-      const application_uid = zephyr_engine.application_uid;
-      // context import ^
-      const assetsMap = await extract_vite_assets_map(
-        zephyr_engine,
-        vite_internal_options
-      );
-      await savePartialAssetMap(
-        application_uid,
-        vite_internal_options.configFile ?? 'partial',
-        assetsMap
-      );
-      // todo: initially partial build doesn't have deploy, but code below could enable it if needed
-      // await zephyr_engine.upload_assets({
-      //   assetsMap,
-      //   // todo: this should be updated if we have remotes
-      //   buildStats: await zeBuildDashData(zephyr_engine),
-      // });
+      try {
+        const vite_internal_options = await vite_internal_options_defer;
+        const zephyr_engine = await zephyr_engine_defer;
+        const application_uid = zephyr_engine.application_uid;
+        // context import ^
+        const assetsMap = await extract_vite_assets_map(
+          zephyr_engine,
+          vite_internal_options
+        );
+        await savePartialAssetMap(
+          application_uid,
+          vite_internal_options.configFile ?? 'partial',
+          assetsMap
+        );
+
+        // todo: initially partial build doesn't have deploy, but code below could enable it if needed
+        // await zephyr_engine.upload_assets({
+        //   assetsMap,
+        //   // todo: this should be updated if we have remotes
+        //   buildStats: await zeBuildDashData(zephyr_engine),
+        // });
+      } catch (error) {
+        logFn('error', ZephyrError.format(error));
+      }
     },
   };
 }

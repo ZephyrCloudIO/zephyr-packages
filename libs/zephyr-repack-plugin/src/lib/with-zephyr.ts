@@ -1,14 +1,13 @@
-import { Configuration } from '@rspack/core';
-import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import { ZephyrRepackPluginOptions, ZeRepackPlugin } from './ze-repack-plugin';
+import type { Configuration } from '@rspack/core';
+import { ZeErrors, ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
-
+import type { RepackEnv } from '../type/zephyr-internal-types';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { RepackEnv } from '../type/zephyr-internal-types';
+import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
@@ -46,46 +45,50 @@ async function _zephyr_configuration(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
-  // create instance of ZephyrEngine to track the application
-  const zephyr_engine = await ZephyrEngine.create({
-    builder: 'repack',
-    context: config.context,
-  });
-  ze_log('Configuring with Zephyr... \n config: ', config);
+  try {
+    // create instance of ZephyrEngine to track the application
+    const zephyr_engine = await ZephyrEngine.create({
+      builder: 'repack',
+      context: config.context,
+    });
+    ze_log('Configuring with Zephyr... \n config: ', config);
 
-  if (!_zephyrOptions?.target) {
-    throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
+    if (!_zephyrOptions?.target) {
+      throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
+    }
+    zephyr_engine.env.target = _zephyrOptions?.target;
+
+    const dependency_pairs = extractFederatedDependencyPairs(config);
+
+    ze_log(
+      'Resolving and building towards target by zephyr_engine.env.target: ',
+      zephyr_engine.env.target
+    );
+
+    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
+      dependency_pairs,
+      zephyr_engine.env.target
+    );
+    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+
+    ze_log('dependency resolution completed successfully...or at least trying to...');
+
+    const mf_configs = makeCopyOfModuleFederationOptions(config);
+    // const app_config = await zephyr_engine.application_configuration;
+    // Verify Module Federation configuration's naming
+    await verify_mf_fastly_config(mf_configs, zephyr_engine);
+
+    ze_log('Application uid created...');
+    config.plugins?.push(
+      new ZeRepackPlugin({
+        zephyr_engine,
+        mfConfig: makeCopyOfModuleFederationOptions(config),
+        target: zephyr_engine.env.target,
+      })
+    );
+  } catch (error) {
+    logFn('error', ZephyrError.format(error));
   }
-  zephyr_engine.env.target = _zephyrOptions?.target;
-
-  const dependency_pairs = extractFederatedDependencyPairs(config);
-
-  ze_log(
-    'Resolving and building towards target by zephyr_engine.env.target: ',
-    zephyr_engine.env.target
-  );
-
-  const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
-    dependency_pairs,
-    zephyr_engine.env.target
-  );
-  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-
-  ze_log('dependency resolution completed successfully...or at least trying to...');
-
-  const mf_configs = makeCopyOfModuleFederationOptions(config);
-  // const app_config = await zephyr_engine.application_configuration;
-  // Verify Module Federation configuration's naming
-  await verify_mf_fastly_config(mf_configs, zephyr_engine);
-
-  ze_log('Application uid created...');
-  config.plugins?.push(
-    new ZeRepackPlugin({
-      zephyr_engine,
-      mfConfig: makeCopyOfModuleFederationOptions(config),
-      target: zephyr_engine.env.target,
-    })
-  );
 
   return config;
 }

@@ -1,10 +1,7 @@
-import {
-  is_zephyr_dependency_pair,
-  ZeDependencyPair,
-  readPackageJson,
-} from 'zephyr-agent';
+import type { ZeDependencyPair } from 'zephyr-agent';
+import { is_zephyr_dependency_pair, readPackageJson } from 'zephyr-agent';
 
-import { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
+import type { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 
 export function extractFederatedDependencyPairs(

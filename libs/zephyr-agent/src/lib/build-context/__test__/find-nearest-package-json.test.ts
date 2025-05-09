@@ -3,6 +3,7 @@ import fsp from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { describe, expect, jest } from '@jest/globals';
 import { find_nearest_package_json } from '../find-nearest-package-json';
+import { ZeErrors, ZephyrError } from '../../errors';
 
 // Mocking the functions for testing
 jest.mock('node:fs', () => {
@@ -51,7 +52,7 @@ describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nea
     });
 
     await expect(find_nearest_package_json(setPath('fake', 'path'))).rejects.toThrow(
-      'ZE10010'
+      new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND)
     );
   });
 
@@ -102,6 +103,8 @@ describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nea
       throw new Error('Not found');
     });
 
-    await expect(find_nearest_package_json(fakePath)).rejects.toThrow('ZE10010');
+    await expect(find_nearest_package_json(fakePath)).rejects.toThrow(
+      new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND)
+    );
   });
 });

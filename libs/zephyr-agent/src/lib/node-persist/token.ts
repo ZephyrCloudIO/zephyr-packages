@@ -85,26 +85,34 @@ function setupExitHandlers() {
   };
 
   // For these signals we can do async cleanup
-  process.on('SIGINT', async () => {
-    await cleanupOnExit();
-    process.exit(0);
+  process.on('SIGINT', () => {
+    void (async () => {
+      await cleanupOnExit();
+      process.exit(0);
+    })();
   });
 
-  process.on('SIGTERM', async () => {
-    await cleanupOnExit();
-    process.exit(0);
+  process.on('SIGTERM', () => {
+    void (async () => {
+      await cleanupOnExit();
+      process.exit(0);
+    })();
   });
 
-  process.on('uncaughtException', async (err) => {
+  process.on('uncaughtException', (err) => {
     ze_log(`Uncaught exception: ${err}`);
-    await cleanupOnExit();
-    process.exit(1);
+    void (async () => {
+      await cleanupOnExit();
+      process.exit(1);
+    })();
   });
 
-  process.on('unhandledRejection', async (reason) => {
+  process.on('unhandledRejection', (reason) => {
     ze_log(`Unhandled rejection: ${reason}`);
-    await cleanupOnExit();
-    // Not exiting here, as unhandled rejections might be handled later
+    void (async () => {
+      await cleanupOnExit();
+      // Not exiting here, as unhandled rejections might be handled later
+    })();
   });
 
   exitHandlersInitialized = true;

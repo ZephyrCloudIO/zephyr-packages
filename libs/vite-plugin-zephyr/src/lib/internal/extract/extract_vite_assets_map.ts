@@ -2,8 +2,8 @@ import {
   buildAssetsMap,
   getPartialAssetMap,
   removePartialAssetMap,
-  ZeBuildAssetsMap,
-  ZephyrEngine,
+  type ZeBuildAssetsMap,
+  type ZephyrEngine,
 } from 'zephyr-agent';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import { loadStaticAssets } from './load_static_assets';

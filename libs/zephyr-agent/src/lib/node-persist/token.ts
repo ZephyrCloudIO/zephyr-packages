@@ -10,11 +10,6 @@ import * as lockfile from 'proper-lockfile';
 // Storage directory path
 const storageDir = join(homedir(), ZE_PATH);
 
-// Ensure the directory exists
-if (!existsSync(storageDir)) {
-  mkdirSync(storageDir, { recursive: true });
-}
-
 // Path for the lockfile
 const tokenLockPath = join(storageDir, `${StorageKeys.ze_auth_token}.lock`);
 
@@ -39,7 +34,6 @@ export async function saveToken(token: string): Promise<void> {
     // Once we have the lock, save the token
     await storage;
     await setItem(StorageKeys.ze_auth_token, token);
-
   } catch (error) {
     // If we couldn't acquire the lock after retries, log and still try to save
     ze_log('saveToken: Could not acquire lock, attempting to save anyway', error);

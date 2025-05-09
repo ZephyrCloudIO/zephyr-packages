@@ -235,7 +235,7 @@ async function openUrl(url: string): Promise<void> {
 
 /** Generates a URL-safe random string to use as a session key. */
 function generateSessionKey(): string {
-  return encodeURIComponent(Buffer.from(crypto.randomBytes(16)).toString('base64url'));
+  return Buffer.from(crypto.randomBytes(16)).toString('base64url');
 }
 
 /** Generates the URL to authenticate the user. */

@@ -25,7 +25,7 @@ export async function fetchWithRetries(
 
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
         message: 'Unknown error occurred',
-        cause: response.error,
+        cause: response,
       });
     }
 

@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 
 import { sep } from 'node:path';
-import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZeErrors, type ZephyrEngine } from 'zephyr-agent';
 import type { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
 import { isModuleFederationPlugin } from '../../../xpack-extract/is-module-federation-plugin';
 import type {
@@ -289,9 +289,11 @@ export class FederationDashboardPlugin {
       target: pluginOptions.target || getPlatformFromStats,
     };
 
+    ze_log('debug', 'rawData', rawData);
     let graphData: ConvertedGraph | undefined;
     try {
       graphData = convertToGraph(rawData /*, !!this._options.standalone*/);
+      ze_log('debug', 'graphData', graphData);
     } catch (err) {
       console.warn('Error during dashboard data processing');
       console.warn(err);

@@ -2,15 +2,24 @@ import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import type { ResolvedConfig } from 'vite';
 import { logFn, savePartialAssetMap, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
+import { extractViteBuildStats } from './internal/extract/extract_vite_build_stats';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import type { ModuleFederationOptions } from './vite-plugin-zephyr';
 
-export function withZephyrPartial() {
+interface PartialPluginOptions {
+  mfConfig?: ModuleFederationOptions;
+  enableDeploy?: boolean;
+}
+
+export function withZephyrPartial(options?: PartialPluginOptions) {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
     resolve_vite_internal_options = resolve;
   });
+
+  let outputBundle: OutputBundle | undefined;
 
   return {
     name: 'with-zephyr-partial',
@@ -28,9 +37,10 @@ export function withZephyrPartial() {
         publicDir: config.publicDir,
       });
     },
-    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (opts: NormalizedOutputOptions, bundle: OutputBundle) => {
+      outputBundle = bundle;
       const vite_internal_options = await vite_internal_options_defer;
-      vite_internal_options.dir = options.dir;
+      vite_internal_options.dir = opts.dir;
       vite_internal_options.assets = bundle;
     },
 
@@ -50,12 +60,24 @@ export function withZephyrPartial() {
           assetsMap
         );
 
-        // todo: initially partial build doesn't have deploy, but code below could enable it if needed
-        // await zephyr_engine.upload_assets({
-        //   assetsMap,
-        //   // todo: this should be updated if we have remotes
-        //   buildStats: await zeBuildDashData(zephyr_engine),
-        // });
+        // Enable deployment for partial builds if requested
+        if (options?.enableDeploy) {
+          await zephyr_engine.start_new_build();
+
+          // Generate enhanced build stats for Vite
+          const buildStats = await extractViteBuildStats({
+            zephyr_engine,
+            bundle: outputBundle || {},
+            mfConfig: options?.mfConfig,
+          });
+
+          await zephyr_engine.upload_assets({
+            assetsMap,
+            buildStats,
+          });
+
+          await zephyr_engine.build_finished();
+        }
       } catch (error) {
         logFn('error', ZephyrError.format(error));
       }

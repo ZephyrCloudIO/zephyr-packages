@@ -51,11 +51,11 @@ catalogs:
     'ts-jest': ^29.2.6
   swc:
     swc-loader: ^0.2.6
-    '@swc/helpers': ^0.5.15
+    '@swc/helpers': ^0.5.17
     '@swc-node/register': ^1.10.10
-    '@swc/cli': ^0.6.0
-    '@swc/core': ^1.11.11
-    '@swc/jest': 0.2.37
+    '@swc/cli': ^0.7.5
+    '@swc/core': ^1.11.24
+    '@swc/jest': ^0.2.38
   webpack5:
     webpack: ^5.98.0
     '@svgr/webpack': ^8.1.0

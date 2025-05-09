@@ -40,7 +40,6 @@ export async function saveToken(token: string): Promise<void> {
     await storage;
     await setItem(StorageKeys.ze_auth_token, token);
 
-    ze_log('saveToken: Token saved successfully with lock');
   } catch (error) {
     // If we couldn't acquire the lock after retries, log and still try to save
     ze_log('saveToken: Could not acquire lock, attempting to save anyway', error);

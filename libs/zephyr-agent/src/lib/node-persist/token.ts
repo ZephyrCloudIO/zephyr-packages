@@ -84,12 +84,6 @@ function setupExitHandlers() {
     }
   };
 
-  // Clean up on normal exit and exceptions
-  process.on('exit', () => {
-    // On 'exit' we must use synchronous code, but we can't really do much here
-    // as async storage operations won't work, but the OS will clean up the process anyway
-  });
-
   // For these signals we can do async cleanup
   process.on('SIGINT', async () => {
     await cleanupOnExit();

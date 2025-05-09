@@ -1,14 +1,19 @@
 import { io as socketio, type Socket } from 'socket.io-client';
 import { PromiseWithResolvers } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
+import { homedir, hostname } from 'node:os';
+import { createHash } from 'node:crypto';
+import { ze_log } from '../logging';
 
 interface ClientToServerEvents {
   joinAccessTokenRoom: (props: { state: string }) => void;
+  joinSharedRoom: (props: { roomId: string; state: string }) => void;
 }
 
 interface ServerToClientEvents {
   'access-token': (token: string) => void;
   'access-token-error': (msg: string) => void;
+  'shared-token': (token: string) => void;
 }
 
 export class WebSocketManager {
@@ -17,6 +22,9 @@ export class WebSocketManager {
   private lastConnectionAttempt = 0;
   private readonly COOLDOWN_PERIOD = 5000; // 5 seconds
   private timeoutHandle: NodeJS.Timeout | null = null;
+  private sharedRoomId: string | null = null;
+  private tokenListeners: Set<(token: string) => void> = new Set();
+  private authInProgress = false;
 
   static getInstance(): WebSocketManager {
     if (!WebSocketManager.instance) {
@@ -37,6 +45,48 @@ export class WebSocketManager {
     );
   }
 
+  isAuthInProgress(): boolean {
+    return this.authInProgress;
+  }
+
+  setAuthInProgress(status: boolean): void {
+    this.authInProgress = status;
+  }
+
+  /**
+   * Generates a machine-specific room ID for shared authentication This ensures all
+   * processes on the same machine join the same room
+   */
+  private getSharedRoomId(): string {
+    if (this.sharedRoomId) {
+      return this.sharedRoomId;
+    }
+
+    // Create a hash based on the user's home directory and hostname
+    // This will be consistent for all processes on the same machine
+    const machineIdentifier = `${homedir()}-${hostname()}`;
+    this.sharedRoomId = createHash('sha256')
+      .update(machineIdentifier)
+      .digest('hex')
+      .slice(0, 16);
+
+    ze_log('debug', `Generated shared room ID: ${this.sharedRoomId}`);
+    return this.sharedRoomId;
+  }
+
+  /**
+   * Register a callback to be notified when a token is received from another process in
+   * the shared room
+   */
+  onSharedToken(callback: (token: string) => void): void {
+    this.tokenListeners.add(callback);
+  }
+
+  /** Remove a previously registered callback */
+  removeTokenListener(callback: (token: string) => void): void {
+    this.tokenListeners.delete(callback);
+  }
+
   createSocket(endpoint: string): Socket<ServerToClientEvents, ClientToServerEvents> {
     this.lastConnectionAttempt = Date.now();
 
@@ -46,12 +96,28 @@ export class WebSocketManager {
 
     this.activeSocket = socketio(endpoint, {
       forceNew: true,
-      reconnection: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
       withCredentials: true,
     });
 
     this.activeSocket.on('disconnect', () => {
       this.activeSocket = null;
+    });
+
+    // Listen for shared tokens from other processes
+    this.activeSocket.on('shared-token', (token) => {
+      ze_log('debug', 'Received token from shared room');
+
+      // Notify all registered listeners
+      this.tokenListeners.forEach((listener) => {
+        try {
+          listener(token);
+        } catch (err) {
+          ze_log('error', 'Error in token listener', err);
+        }
+      });
     });
 
     return this.activeSocket;
@@ -72,11 +138,23 @@ export class WebSocketManager {
   ): Promise<string> {
     const { promise, resolve, reject } = PromiseWithResolvers<string>();
 
+    // Get the shared room ID for this machine
+    const sharedRoomId = this.getSharedRoomId();
+    ze_log('debug', `Using shared room ID: ${sharedRoomId}`);
+
     // Create or get the socket
     const socket = this.createSocket(endpoint);
 
     // Set up event listeners
     socket.once('access-token', (token) => {
+      ze_log('debug', 'Received access token from server');
+
+      // Share the token with other processes in the same room
+      if (socket.connected) {
+        ze_log('debug', 'Sharing token with other processes');
+        socket.emit('joinSharedRoom', { roomId: sharedRoomId, state: sessionKey });
+      }
+
       resolve(token);
     });
 
@@ -98,11 +176,22 @@ export class WebSocketManager {
       );
     });
 
-    // Join the room to receive access token
+    // Also listen for shared tokens from other processes
+    const sharedTokenListener = (token: string) => {
+      ze_log('debug', 'Using token shared from another process');
+      resolve(token);
+    };
+
+    // Register the listener
+    this.onSharedToken(sharedTokenListener);
+
+    // Join both the access token room and the shared room
     socket.emit('joinAccessTokenRoom', { state: sessionKey });
+    socket.emit('joinSharedRoom', { roomId: sharedRoomId, state: sessionKey });
 
     // Set up timeout
     this.timeoutHandle = setTimeout(() => {
+      this.removeTokenListener(sharedTokenListener);
       reject(
         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
           message: `Authentication timed out. Couldn't receive access token in ${timeoutMs / 1000} seconds. Please try again.`,
@@ -113,6 +202,7 @@ export class WebSocketManager {
     try {
       return await promise;
     } finally {
+      this.removeTokenListener(sharedTokenListener);
       this.cleanupTimeout();
     }
   }
@@ -124,15 +214,24 @@ export class WebSocketManager {
     }
   }
 
-  cleanup() {
+  /**
+   * Cleanup socket resources. If force is false, keeps the socket alive to continue
+   * receiving shared tokens from other processes.
+   */
+  cleanup(force = false) {
     this.cleanupTimeout();
 
-    if (this.activeSocket) {
+    if (this.activeSocket && force) {
       this.activeSocket.removeAllListeners();
       this.activeSocket.disconnect();
       this.activeSocket.close();
       this.activeSocket = null;
     }
+  }
+
+  /** Force cleanup of all socket resources */
+  forceCleanup() {
+    this.cleanup(true);
   }
 }
 

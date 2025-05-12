@@ -4,13 +4,13 @@ import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
 
 const mfConfig = {
-  name: 'team-red',
+  name: 'team_red',
   exposes: {
     './TeamRedLayout': './src/app/team-red-layout',
   },
   // Workaround necessary until Nx upgrade.
   // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109
-  remotes: ['team-green', 'team-blue'],
+  remotes: ['teamgreen', 'team-blue'],
   additionalShared: [
     {
       libraryName: 'react',

@@ -60,10 +60,15 @@ export function modulePartOne(modules: XStatsModule[] | undefined): ModulePartOn
 
   modules?.forEach((mod) => {
     const { identifier, reasons, moduleType, nameForCondition, size } = mod;
+    console.log(
+      `modulePartOne.mod: identifier: ${identifier}, reasons: ${reasons}, moduleType: ${moduleType}, nameForCondition: ${nameForCondition}, size: ${size}`
+    );
     const data = identifier?.split(' ') as (string | undefined)[] | undefined;
 
     if (moduleType === 'remote-module') {
       if (data?.length === 4 && isString(data[3]) && isString(data[2])) {
+        console.log('data', data);
+        console.log('data[3]', data[3]);
         const name = data[3].replace('./', '');
 
         let applicationID: string | null = data[2].replace(
@@ -91,7 +96,11 @@ export function modulePartOne(modules: XStatsModule[] | undefined): ModulePartOn
       }
 
       if (reasons) {
+        console.log(`modulePartOne.reasons: reasons: ${reasons}`);
         reasons.forEach(({ userRequest, resolvedModule }) => {
+          console.log(
+            `modulePartOne.reasons: userRequest: ${userRequest}, resolvedModule: ${resolvedModule}`
+          );
           if (!userRequest || !consumesByName[userRequest] || !resolvedModule) return;
           const module = resolvedModule.replace('./', '');
           consumesByName[userRequest].usedIn.add(module);

@@ -2,6 +2,7 @@ import json5 from 'json5';
 import acorn from 'acorn';
 import walk from 'acorn-walk';
 import { ze_log } from 'zephyr-agent';
+import type { ApplicationConsumes } from 'zephyr-edge-contract';
 
 export interface RemoteEntry {
   name: string;
@@ -23,11 +24,39 @@ export interface RemoteMapExtraction {
  * @returns An object containing the remotes object and the start and end indices of the
  *   remotes object declaration in the code, or undefined if parsing fails.
  */
-export function parseRemoteMap(
+export function parseRemoteMapAndImportedRemotes(
   code: string,
-  id: string
+  id: string,
+  remotes?: string[]
 ): RemoteMapExtraction | undefined {
-  if (!id.includes('localSharedImportMap')) {
+  let remoteNamesAndImports: acorn.Node | undefined;
+  function isImportedRemote(node: acorn.CallExpression) {
+    if (
+      node.type === 'CallExpression' &&
+      node.callee?.type === 'Identifier' &&
+      node.callee.name === '__vitePreload' &&
+      node.arguments.length >= 1
+    ) {
+      ze_log('vite.isImportedRemote.node: ', node);
+      for (const arg of node.arguments) {
+        ze_log('vite.isImportedRemote.arg Pos1: ', arg);
+        if (
+          arg.type === 'ArrowFunctionExpression' &&
+          arg.body.type === 'CallExpression' &&
+          arg.body.callee?.type === 'Identifier' &&
+          arg.body.callee.name === 'import' &&
+          arg.body.arguments.length === 1
+        ) {
+          ze_log('vite.isImportedRemote.arg Pos2: ', arg);
+          remoteNamesAndImports = arg.body.arguments[0];
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  if (!id.includes('localSharedImportMap') || id.includes('node_modules')) {
     return undefined;
   }
   let arrayNode: acorn.Node | undefined;
@@ -61,6 +90,8 @@ export function parseRemoteMap(
 
   walk.simple(ast, {
     VariableDeclaration: findUsedRemotes,
+    CallExpression: isImportedRemote,
+    // ImportDeclaration: isImportedRemote,
   });
 
   const endTime = Date.now();
@@ -98,6 +129,7 @@ export function parseRemoteMap(
     remotesMap: remotesArray,
     startIndex,
     endIndex,
+    // consumes: remoteNamesAndImports,
   };
 }
 

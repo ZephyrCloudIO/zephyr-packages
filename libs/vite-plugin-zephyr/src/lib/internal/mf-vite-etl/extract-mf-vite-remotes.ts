@@ -1,6 +1,6 @@
 import type { ZeDependencyPair } from 'zephyr-agent';
 import { readPackageJson } from 'zephyr-agent';
-import { parseRemoteMap } from './remote_map_parser';
+import { parseRemoteMapAndImportedRemotes } from './remote_map_parser';
 
 export function extract_remotes_dependencies(
   root: string,
@@ -18,7 +18,7 @@ export function extract_remotes_dependencies(
   }
 
   const dependencyPairs: ZeDependencyPair[] = [];
-  const extractedRemotes = parseRemoteMap(code, id);
+  const extractedRemotes = parseRemoteMapAndImportedRemotes(code, id, zephyrDependencies);
   if (extractedRemotes === undefined) return;
 
   const { remotesMap } = extractedRemotes;

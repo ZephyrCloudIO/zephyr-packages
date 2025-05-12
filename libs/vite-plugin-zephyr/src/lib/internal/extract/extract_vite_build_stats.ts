@@ -1,13 +1,14 @@
 import type { OutputBundle } from 'rollup';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { ModuleFederationOptions } from '../../vite-plugin-zephyr';
-import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrBuildStats, ApplicationConsumes, UsedIn } from 'zephyr-edge-contract';
 import { ze_log } from 'zephyr-agent';
 
 interface ViteBuildStatsOptions {
   zephyr_engine: ZephyrEngine;
   bundle: OutputBundle;
   mfConfig?: ModuleFederationOptions;
+  consumes?: ApplicationConsumes[]; // Add option to provide already discovered imports
 }
 
 /**
@@ -18,8 +19,13 @@ export async function extractViteBuildStats({
   zephyr_engine,
   bundle,
   mfConfig,
+  consumes,
 }: ViteBuildStatsOptions): Promise<ZephyrBuildStats> {
   ze_log('Extracting Vite build stats');
+
+  if (!bundle) {
+    ze_log('No bundle found, skipping build stats extraction');
+  }
 
   const app = zephyr_engine.applicationProperties;
   const { git } = zephyr_engine.gitProperties;
@@ -42,12 +48,23 @@ export async function extractViteBuildStats({
   const chunkCount = Object.values(bundle).filter((item) => item.type === 'chunk').length;
   const assetCount = Object.values(bundle).filter((item) => item.type === 'asset').length;
 
-  const consumes = Object.keys(mfConfig?.remotes || {}).map((remote) => ({
-    consumingApplicationID: application_uid,
-    applicationID: remote,
-    name: remote,
-    usedIn: [],
-  }));
+  // Add any remotes from the Module Federation config that weren't found in our module parsing
+  if (mfConfig?.remotes) {
+    const remoteNames = Object.keys(mfConfig.remotes);
+    for (const remoteName of remoteNames) {
+      // If we have a remote in the config but no components were explicitly imported,
+      // add a generic entry for the remote itself
+      if (!consumes?.some((consume) => consume.applicationID === remoteName)) {
+        ze_log(`Adding MF remote from config: ${remoteName}`);
+        consumes?.push({
+          consumingApplicationID: mfConfig.name || application_uid,
+          applicationID: remoteName,
+          name: remoteName,
+          usedIn: [],
+        });
+      }
+    }
+  }
 
   // Extract shared dependencies from Module Federation config
   const overrides = mfConfig?.shared

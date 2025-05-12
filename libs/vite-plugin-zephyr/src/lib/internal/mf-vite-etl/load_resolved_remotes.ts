@@ -1,13 +1,16 @@
 import type { ZeResolvedDependency } from 'zephyr-agent';
 import type { RemoteMapExtraction } from './remote_map_parser';
-import { parseRemoteMap, replaceProtocolAndHost } from './remote_map_parser';
+import {
+  parseRemoteMapAndImportedRemotes,
+  replaceProtocolAndHost,
+} from './remote_map_parser';
 
 export function load_resolved_remotes(
   resolved_remotes: ZeResolvedDependency[],
   code: string,
   id: string
 ) {
-  const extractedRemotes = parseRemoteMap(code, id);
+  const extractedRemotes = parseRemoteMapAndImportedRemotes(code, id);
   if (extractedRemotes === undefined) return;
 
   const remotes: RemoteMapExtraction['remotesMap'] = [];

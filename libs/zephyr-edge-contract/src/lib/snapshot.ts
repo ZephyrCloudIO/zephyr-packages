@@ -15,6 +15,21 @@ export interface Snapshot {
     repo: string;
     org: string;
   };
+  // globalThis[Symbol.for('zephyr:envs')]
+  envs: {
+    /**
+     * SHould match a key on {@linkcode assets}, ideally random to not be easily
+     * identifiable
+     */
+    filename: string;
+    requirements: {
+      /**
+       * @example
+       *   `ZE_BACKEND_URL`;
+       */
+      name: string;
+    }[];
+  };
   git: {
     name?: string;
     email?: string;

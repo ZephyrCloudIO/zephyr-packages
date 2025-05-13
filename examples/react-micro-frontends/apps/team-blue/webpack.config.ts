@@ -4,7 +4,7 @@ import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
 
 const mfConfig = {
-  name: 'team_blue',
+  name: 'team-blue',
   exposes: {
     './BlueBasket': './src/app/team-blue-basket.tsx',
     './BlueBuy': './src/app/team-blue-buy.tsx',

@@ -2,7 +2,6 @@ import json5 from 'json5';
 import acorn from 'acorn';
 import walk from 'acorn-walk';
 import { ze_log } from 'zephyr-agent';
-import type { ApplicationConsumes } from 'zephyr-edge-contract';
 
 export interface RemoteEntry {
   name: string;
@@ -26,13 +25,12 @@ export interface RemoteMapExtraction {
  */
 export function parseRemoteMapAndImportedRemotes(
   code: string,
-  id: string,
-  remotes?: string[]
+  id: string
+  //remotes?: string[]
 ): RemoteMapExtraction | undefined {
-  let remoteNamesAndImports: acorn.Node | undefined;
+  // let remoteNamesAndImports: acorn.Node | undefined;
   function isImportedRemote(node: acorn.CallExpression) {
     if (
-      node.type === 'CallExpression' &&
       node.callee?.type === 'Identifier' &&
       node.callee.name === '__vitePreload' &&
       node.arguments.length >= 1
@@ -48,7 +46,7 @@ export function parseRemoteMapAndImportedRemotes(
           arg.body.arguments.length === 1
         ) {
           ze_log('vite.isImportedRemote.arg Pos2: ', arg);
-          remoteNamesAndImports = arg.body.arguments[0];
+          // remoteNamesAndImports = arg.body.arguments[0];
           return true;
         }
       }

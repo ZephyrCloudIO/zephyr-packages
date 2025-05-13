@@ -1,16 +1,16 @@
 import type { OutputBundle } from 'rollup';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { ModuleFederationOptions } from '../../vite-plugin-zephyr';
-import type { ZephyrBuildStats, ApplicationConsumes, UsedIn } from 'zephyr-edge-contract';
+import type { ZephyrBuildStats, ApplicationConsumes } from 'zephyr-edge-contract';
 import { ze_log } from 'zephyr-agent';
 
 interface ViteBuildStatsOptions {
   zephyr_engine: ZephyrEngine;
   bundle: OutputBundle;
   mfConfig?: ModuleFederationOptions;
-  consumes?: ApplicationConsumes[]; // Add option to provide already discovered imports
+  root: string;
+  // consumes?: ApplicationConsumes[]; // Add option to provide already discovered imports
 }
-
 /**
  * Extract build statistics specific to Vite builds Similar to webpack's getBuildStats but
  * tailored for Vite
@@ -19,10 +19,12 @@ export async function extractViteBuildStats({
   zephyr_engine,
   bundle,
   mfConfig,
-  consumes,
+  root,
+  // consumes,
 }: ViteBuildStatsOptions): Promise<ZephyrBuildStats> {
   ze_log('Extracting Vite build stats');
 
+  const consumeMap = new Map<string, ApplicationConsumes>();
   if (!bundle) {
     ze_log('No bundle found, skipping build stats extraction');
   }
@@ -47,24 +49,101 @@ export async function extractViteBuildStats({
   const fileCount = Object.keys(bundle).length;
   const chunkCount = Object.values(bundle).filter((item) => item.type === 'chunk').length;
   const assetCount = Object.values(bundle).filter((item) => item.type === 'asset').length;
+  // once we have the chunk and remote's name, we can find the imported remote, what's their used components and where they are being referenced
 
-  // Add any remotes from the Module Federation config that weren't found in our module parsing
-  if (mfConfig?.remotes) {
-    const remoteNames = Object.keys(mfConfig.remotes);
-    for (const remoteName of remoteNames) {
-      // If we have a remote in the config but no components were explicitly imported,
-      // add a generic entry for the remote itself
-      if (!consumes?.some((consume) => consume.applicationID === remoteName)) {
-        ze_log(`Adding MF remote from config: ${remoteName}`);
-        consumes?.push({
-          consumingApplicationID: mfConfig.name || application_uid,
-          applicationID: remoteName,
-          name: remoteName,
-          usedIn: [],
+  // Different regex patterns to match various loadRemote call formats
+  const regexPatterns = [
+    // Basic pattern: loadRemote("remote/component")
+    /loadRemote\(["']([^/]+)\/([^'"]+)["']\)/g,
+
+    // Destructured pattern: { loadRemote: c } = a, then c("remote/component")
+    /(?:\{[ \t]*loadRemote:[ \t]*([a-zA-Z0-9_$]+)[ \t]*\}|\blodRemote[ \t]*:[ \t]*([a-zA-Z0-9_$]+)\b).*?([a-zA-Z0-9_$]+)[ \t]*\(["']([^/]+)\/([^'"]+)["']\)/g,
+
+    // Promise chain pattern: n.then(e => c("remote/component"))
+    /\.then\([ \t]*(?:[a-zA-Z0-9_$]+)[ \t]*=>[ \t]*(?:[a-zA-Z0-9_$]+)\(["']([^/]+)\/([^'"]+)["']\)\)/g,
+  ];
+
+  // Process the bundle to find the loadRemote calls using multiple regex patterns
+  Object.values(bundle)
+    .filter((item) => item.type === 'chunk')
+    .forEach((chunk) => {
+      try {
+        const code = chunk.code;
+
+        // Try each regex pattern
+        for (const pattern of regexPatterns) {
+          // Reset lastIndex to search from beginning
+          pattern.lastIndex = 0;
+
+          let match;
+          while ((match = pattern.exec(code)) !== null) {
+            // The match array structure depends on the regex pattern
+            let remoteName, componentName;
+
+            if (match.length === 3) {
+              // First pattern: loadRemote("remote/component")
+              remoteName = match[1];
+              componentName = match[2];
+            } else if (match.length === 6) {
+              // Second pattern: destructured variant
+              remoteName = match[4];
+              componentName = match[5];
+            } else if (match.length >= 3) {
+              // Third pattern: promise chain
+              remoteName = match[1];
+              componentName = match[2];
+            }
+
+            if (remoteName && componentName) {
+              consumeMap.set(`${remoteName}-${componentName}`, {
+                consumingApplicationID: componentName,
+                applicationID: remoteName,
+                name: componentName,
+                // TODO: move this to moduleParsed hook to process where the remote is being used. Doing this here is too late.
+                usedIn: [
+                  ...chunk.moduleIds.map((id) => ({
+                    file: id,
+                    url: id.replace(root, ''),
+                  })),
+                ],
+              });
+              ze_log('Found remote import', { remoteName, componentName });
+            }
+          }
+        }
+
+        // Extra pattern specifically for the promise chain syntax in your example
+        const promiseChainPattern =
+          /\w+\s*=\s*\w+\.then\(\w+\s*=>\s*\w+\(["']([^/]+)\/([^'"]+)["']\)\)/g;
+        let promiseMatch;
+        while ((promiseMatch = promiseChainPattern.exec(chunk.code)) !== null) {
+          if (promiseMatch.length >= 3) {
+            const remoteName = promiseMatch[1];
+            const componentName = promiseMatch[2];
+
+            consumeMap.set(`${remoteName}-${componentName}`, {
+              consumingApplicationID: componentName,
+              applicationID: remoteName,
+              name: componentName,
+              usedIn: [
+                ...chunk.moduleIds.map((id) => ({
+                  file: id,
+                  url: id.replace(root, ''),
+                })),
+              ],
+            });
+            ze_log('Found remote import in promise chain', { remoteName, componentName });
+          }
+        }
+      } catch (error) {
+        ze_log('Error parsing chunk for loadRemote calls', {
+          error,
+          chunkId: chunk.fileName,
         });
       }
-    }
-  }
+    });
+
+  ze_log('consumeMap', ...consumeMap);
 
   // Extract shared dependencies from Module Federation config
   const overrides = mfConfig?.shared
@@ -130,7 +209,7 @@ export async function extractViteBuildStats({
     peerDependencies: getPackageDependencies(
       zephyr_engine.npmProperties.peerDependencies
     ),
-    consumes,
+    consumes: Array.from(consumeMap.values()),
     overrides,
     modules: extractModulesFromExposes(mfConfig, application_uid),
 

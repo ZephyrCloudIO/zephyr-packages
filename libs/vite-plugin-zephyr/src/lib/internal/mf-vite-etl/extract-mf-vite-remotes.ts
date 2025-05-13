@@ -18,7 +18,7 @@ export function extract_remotes_dependencies(
   }
 
   const dependencyPairs: ZeDependencyPair[] = [];
-  const extractedRemotes = parseRemoteMapAndImportedRemotes(code, id, zephyrDependencies);
+  const extractedRemotes = parseRemoteMapAndImportedRemotes(code, id);
   if (extractedRemotes === undefined) return;
 
   const { remotesMap } = extractedRemotes;

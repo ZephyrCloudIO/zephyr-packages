@@ -1,5 +1,4 @@
 import { ZeErrors, ZephyrError } from '../errors';
-import { ze_log } from '../logging';
 export async function fetchWithRetries(
   url: URL,
   options: RequestInit = {},

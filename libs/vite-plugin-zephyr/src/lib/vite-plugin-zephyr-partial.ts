@@ -61,6 +61,7 @@ export function withZephyrPartial() {
         const buildStats = await extractViteBuildStats({
           zephyr_engine,
           bundle: outputBundle || {},
+          root: vite_internal_options.root,
         });
 
         await zephyr_engine.upload_assets({

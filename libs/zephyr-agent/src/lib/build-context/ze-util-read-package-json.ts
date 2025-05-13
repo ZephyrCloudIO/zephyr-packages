@@ -78,6 +78,7 @@ export async function getPackageJson(
   // Parse and validate package.json
   try {
     const { json, path: packageJsonPath } = nearest_package_json;
+    // todo: split parsed package json into parsed and resulting, where resulting is of type ZePackageJson
     const parsed_package_json = safe_json_parse<ZePackageJson>(json);
 
     if (!parsed_package_json) {
@@ -104,7 +105,7 @@ export async function getPackageJson(
 
     if (parsed_package_json.zephyrDependencies) {
       parsed_package_json.zephyrDependencies = parseZeDependencies(
-        parsed_package_json.zephyrDependencies
+        parsed_package_json.zephyrDependencies as unknown as Record<string, string>
       );
     }
 

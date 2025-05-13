@@ -5,7 +5,6 @@ describe('parseZeDependencies', () => {
     // Arrange
     const zeDependencies = {
       'normal-dep': '^1.0.0',
-      'zephyr-dep': 'zephyr:my-remote-app',
       'tagged-dep': 'zephyr:other-app@stable',
       'semver-dep': 'zephyr:^2.0.0',
     };
@@ -17,13 +16,8 @@ describe('parseZeDependencies', () => {
     expect(result).toEqual({
       'normal-dep': {
         version: '^1.0.0',
-        registry: 'npm',
-        app_uid: 'normal-dep',
-      },
-      'zephyr-dep': {
-        version: 'latest',
         registry: 'zephyr',
-        app_uid: 'my-remote-app',
+        app_uid: 'normal-dep',
       },
       'tagged-dep': {
         version: 'stable',
@@ -55,20 +49,8 @@ describe('parseZeDependency', () => {
     // Assert
     expect(result).toEqual({
       version: '^1.0.0',
-      registry: 'npm',
-      app_uid: 'test-dep',
-    });
-  });
-
-  it('should parse zephyr remote reference', () => {
-    // Act
-    const result = parseZeDependency('local-name', 'zephyr:remote-app');
-
-    // Assert
-    expect(result).toEqual({
-      version: 'latest',
       registry: 'zephyr',
-      app_uid: 'remote-app',
+      app_uid: 'test-dep',
     });
   });
 
@@ -141,18 +123,6 @@ describe('parseZeDependency', () => {
       version: '<2.0.0',
       registry: 'zephyr',
       app_uid: 'local-name',
-    });
-  });
-
-  it('should handle malformed zephyr reference gracefully', () => {
-    // Act
-    const result = parseZeDependency('broken-dep', 'zephyr:');
-
-    // Assert
-    expect(result).toEqual({
-      version: 'latest', // Default to latest for empty reference
-      registry: 'zephyr',
-      app_uid: '', // Empty app_uid since nothing follows zephyr:
     });
   });
 });

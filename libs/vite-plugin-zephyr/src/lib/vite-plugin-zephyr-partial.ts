@@ -31,10 +31,10 @@ export function withZephyrPartial() {
         publicDir: config.publicDir,
       });
     },
-    writeBundle: async (opts: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       outputBundle = bundle;
       const vite_internal_options = await vite_internal_options_defer;
-      vite_internal_options.dir = opts.dir;
+      vite_internal_options.dir = options.dir;
       vite_internal_options.assets = bundle;
     },
 

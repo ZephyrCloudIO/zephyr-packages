@@ -2,7 +2,7 @@ import type { OutputBundle } from 'rollup';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { ModuleFederationOptions } from '../../vite-plugin-zephyr';
 import type { ZephyrBuildStats, ApplicationConsumes } from 'zephyr-edge-contract';
-import { ze_log } from 'zephyr-agent';
+import { resolveCatalogDependencies, ze_log } from 'zephyr-agent';
 
 interface ViteBuildStatsOptions {
   zephyr_engine: ZephyrEngine;
@@ -153,13 +153,25 @@ export async function extractViteBuildStats({
         let version = '0.0.0';
 
         if (zephyr_engine.npmProperties.dependencies?.[name]) {
-          version = zephyr_engine.npmProperties.dependencies[name];
+          // Resolve catalog reference in dependencies if present
+          const depVersion = zephyr_engine.npmProperties.dependencies[name];
+          version = depVersion.startsWith('catalog:')
+            ? resolveCatalogDependencies({ [name]: depVersion })[name]
+            : depVersion;
         } else if (zephyr_engine.npmProperties.peerDependencies?.[name]) {
-          version = zephyr_engine.npmProperties.peerDependencies[name];
+          // Resolve catalog reference in peer dependencies if present
+          const peerVersion = zephyr_engine.npmProperties.peerDependencies[name];
+          version = peerVersion.startsWith('catalog:')
+            ? resolveCatalogDependencies({ [name]: peerVersion })[name]
+            : peerVersion;
         } else if (typeof config === 'object' && config !== null) {
           // Object format: { react: { requiredVersion: '18.0.0', singleton: true } }
           if (config.requiredVersion) {
-            version = config.requiredVersion;
+            const reqVersion = config.requiredVersion;
+            version =
+              typeof reqVersion === 'string' && reqVersion.startsWith('catalog:')
+                ? resolveCatalogDependencies({ [name]: reqVersion })[name]
+                : reqVersion;
           }
         } else if (typeof config === 'string') {
           // String format: { react: '18.0.0' }
@@ -168,7 +180,9 @@ export async function extractViteBuildStats({
             !zephyr_engine.npmProperties.dependencies?.[name] &&
             !zephyr_engine.npmProperties.peerDependencies?.[name]
           ) {
-            version = config;
+            version = config.startsWith('catalog:')
+              ? resolveCatalogDependencies({ [name]: config })[name]
+              : config;
           }
         }
         // Array format is also possible but doesn't typically include version info
@@ -201,13 +215,17 @@ export async function extractViteBuildStats({
     tags: [],
 
     // Module Federation related data
-    dependencies: getPackageDependencies(zephyr_engine.npmProperties.dependencies),
-    devDependencies: getPackageDependencies(zephyr_engine.npmProperties.devDependencies),
+    dependencies: getPackageDependencies(
+      resolveCatalogDependencies(zephyr_engine.npmProperties.dependencies)
+    ),
+    devDependencies: getPackageDependencies(
+      resolveCatalogDependencies(zephyr_engine.npmProperties.devDependencies)
+    ),
     optionalDependencies: getPackageDependencies(
-      zephyr_engine.npmProperties.optionalDependencies
+      resolveCatalogDependencies(zephyr_engine.npmProperties.optionalDependencies)
     ),
     peerDependencies: getPackageDependencies(
-      zephyr_engine.npmProperties.peerDependencies
+      resolveCatalogDependencies(zephyr_engine.npmProperties.peerDependencies)
     ),
     consumes: Array.from(consumeMap.values()),
     overrides,

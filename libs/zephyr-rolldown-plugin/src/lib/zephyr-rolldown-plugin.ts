@@ -28,10 +28,12 @@ interface ZephyrRolldownOptions {
 export function withZephyr(options?: ZephyrRolldownOptions) {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
+  let path_to_execution_dir: string;
+
   return {
     name: 'with-zephyr',
     buildStart: async (inputOptions: InputOptions) => {
-      const path_to_execution_dir = getInputFolder(inputOptions);
+      path_to_execution_dir = getInputFolder(inputOptions);
       zephyr_defer_create({
         builder: 'rolldown', // Now explicitly using 'rolldown' as the builder
         context: path_to_execution_dir,
@@ -52,7 +54,7 @@ export function withZephyr(options?: ZephyrRolldownOptions) {
           zephyr_engine,
           bundle,
           mfConfig: options?.mfConfig,
-          root: zephyr_engine.context,
+          root: path_to_execution_dir,
         });
 
         // Upload assets and build stats

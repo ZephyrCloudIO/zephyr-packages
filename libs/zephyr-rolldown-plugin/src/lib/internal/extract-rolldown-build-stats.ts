@@ -1,7 +1,7 @@
 import type { OutputBundle, OutputChunk } from 'rolldown';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { ZephyrBuildStats, ApplicationConsumes } from 'zephyr-edge-contract';
-import { ze_log } from 'zephyr-agent';
+import { resolveCatalogDependencies, ze_log } from 'zephyr-agent';
 import type { RolldownModuleFederationConfig } from '../zephyr-rolldown-plugin';
 
 interface RolldownBuildStatsOptions {
@@ -158,11 +158,22 @@ export async function extractRolldownBuildStats({
         let finalVersion = '0.0.0';
 
         if (zephyr_engine.npmProperties.dependencies?.[name]) {
-          finalVersion = zephyr_engine.npmProperties.dependencies[name];
+          // Resolve catalog reference in dependencies if present
+          const depVersion = zephyr_engine.npmProperties.dependencies[name];
+          finalVersion = depVersion.startsWith('catalog:')
+            ? resolveCatalogDependencies({ [name]: depVersion })[name]
+            : depVersion;
         } else if (zephyr_engine.npmProperties.peerDependencies?.[name]) {
-          finalVersion = zephyr_engine.npmProperties.peerDependencies[name];
+          // Resolve catalog reference in peer dependencies if present
+          const peerVersion = zephyr_engine.npmProperties.peerDependencies[name];
+          finalVersion = peerVersion.startsWith('catalog:')
+            ? resolveCatalogDependencies({ [name]: peerVersion })[name]
+            : peerVersion;
         } else if (typeof version === 'string') {
-          finalVersion = version;
+          // Resolve catalog reference if present
+          finalVersion = version.startsWith('catalog:')
+            ? resolveCatalogDependencies({ [name]: version })[name]
+            : version;
         }
 
         return {
@@ -193,13 +204,17 @@ export async function extractRolldownBuildStats({
     tags: [],
 
     // Module Federation related data
-    dependencies: getPackageDependencies(zephyr_engine.npmProperties.dependencies),
-    devDependencies: getPackageDependencies(zephyr_engine.npmProperties.devDependencies),
+    dependencies: getPackageDependencies(
+      resolveCatalogDependencies(zephyr_engine.npmProperties.dependencies)
+    ),
+    devDependencies: getPackageDependencies(
+      resolveCatalogDependencies(zephyr_engine.npmProperties.devDependencies)
+    ),
     optionalDependencies: getPackageDependencies(
-      zephyr_engine.npmProperties.optionalDependencies
+      resolveCatalogDependencies(zephyr_engine.npmProperties.optionalDependencies)
     ),
     peerDependencies: getPackageDependencies(
-      zephyr_engine.npmProperties.peerDependencies
+      resolveCatalogDependencies(zephyr_engine.npmProperties.peerDependencies)
     ),
     consumes: Array.from(consumeMap.values()),
     overrides,

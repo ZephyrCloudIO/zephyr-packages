@@ -5,9 +5,12 @@ import { getAssetsMap } from './internal/get-assets-map';
 import { extractRolldownBuildStats } from './internal/extract-rolldown-build-stats';
 
 export interface RolldownModuleFederationConfig {
-  exposes: Record<string, string>;
-  remotes: Record<string, string>;
-  shared: Record<string, string>;
+  name?: string;
+  filename?: string;
+  exposes?: Record<string, string | { import: string }>;
+  remotes?: Record<string, string>;
+  shared?: Record<string, string | { requiredVersion?: string; singleton?: boolean }>;
+  additionalShared?: Array<string | { libraryName: string }>;
 }
 
 const getInputFolder = (options: InputOptions): string => {
@@ -49,6 +52,7 @@ export function withZephyr(options?: ZephyrRolldownOptions) {
           zephyr_engine,
           bundle,
           mfConfig: options?.mfConfig,
+          root: zephyr_engine.context,
         });
 
         // Upload assets and build stats

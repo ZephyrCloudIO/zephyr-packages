@@ -1,6 +1,4 @@
 #!/usr/bin/env sh
-## skip a line
-. "$(dirname -- "$0")/_/husky.sh"
 
 npx nx format
 npx nx affected -t test --no-watch

@@ -24,8 +24,8 @@
     "pre-commit": "npx lint-staged"
   },
   "dependencies": {
-    "@modern-js/plugin-ssg": "^2.65.5",
-    "@modern-js/runtime": "^2.65.5",
+    "@modern-js/plugin-ssg": "^2.66.0",
+    "@modern-js/runtime": "^2.66.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },

@@ -125,9 +125,6 @@ export function convertToGraph(
     consumes: consumes.map((con) => ({
       ...con,
       usedIn: Array.from(con.usedIn.values()).map((file) => {
-        console.log(
-          `convert-to-graph.consumes: files: ${file}, url: ${sourceUrl}/${file}`
-        );
         return {
           file,
           url: `${sourceUrl}/${file}`,

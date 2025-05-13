@@ -1,5 +1,5 @@
 {
-  "name": "team_green",
+  "name": "team-green",
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "examples/react-micro-frontends/apps/team-green/src",
   "projectType": "application",

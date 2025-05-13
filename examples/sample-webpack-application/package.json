@@ -28,7 +28,10 @@
     "eslint-plugin-react": "catalog:eslint",
     "eslint-plugin-import": "catalog:eslint",
     "swc-loader": "catalog:swc",
+    "webpack": "catalog:webpack5",
+    "webpack-sources": "catalog:webpack5",
     "zephyr-webpack-plugin": "workspace:*",
+    "html-webpack-plugin": "catalog:webpack5",
     "ts-jest": "catalog:typescript",
     "@types/jest": "catalog:typescript"
   }

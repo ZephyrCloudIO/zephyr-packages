@@ -58,7 +58,9 @@ catalogs:
     '@swc/jest': 0.2.37
   webpack5:
     webpack: ^5.98.0
+    html-webpack-plugin: ^5.6.3
     '@svgr/webpack': ^8.1.0
+    webpack-sources: ^3.2.3
   tailwind:
     tailwindcss: ^3.4.11
   postcss:

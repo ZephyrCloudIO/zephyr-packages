@@ -102,7 +102,7 @@ export async function extractViteBuildStats({
                 // TODO: move this to moduleParsed hook to process where the remote is being used. Doing this here is too late.
                 usedIn: [
                   ...chunk.moduleIds.map((id) => ({
-                    file: id,
+                    file: id.replace(root, ''),
                     url: id.replace(root, ''),
                   })),
                 ],
@@ -127,7 +127,7 @@ export async function extractViteBuildStats({
               name: componentName,
               usedIn: [
                 ...chunk.moduleIds.map((id) => ({
-                  file: id,
+                  file: id.replace(root, ''),
                   url: id.replace(root, ''),
                 })),
               ],

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import * as isCI from 'is-ci';
 import {
   type Snapshot,
+  type SnapshotVariables,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
   ZeUtils,
@@ -341,6 +342,7 @@ export class ZephyrEngine {
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    variables?: SnapshotVariables;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -362,6 +364,7 @@ export class ZephyrEngine {
 
     // upload data
     const snapshot = await createSnapshot(zephyr_engine, {
+      variables: props.variables,
       assets: assetsMap,
       mfConfig,
     });

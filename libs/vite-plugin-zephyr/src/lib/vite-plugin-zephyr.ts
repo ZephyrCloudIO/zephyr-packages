@@ -37,6 +37,9 @@ function zephyrPlugin(): Plugin {
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
+
+      if (config.command === 'serve') return;
+
       zephyr_defer_create({
         builder: 'vite',
         context: config.root,

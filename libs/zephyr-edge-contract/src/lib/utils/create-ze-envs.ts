@@ -8,29 +8,6 @@ const symbolStr = `Symbol.for('ze_envs')`;
  */
 export const ZephyrEnvsGlobal = `window[${symbolStr}]`;
 
-// Source:
-// const symbol = Symbol.for('ze_envs');
-// //@ts-ignore
-// let envs = window[symbol];
-// if (!envs) {
-//   Object.defineProperty(window, symbol, {
-//     value: (envs = {}),
-//     writable: false,
-//     enumerable: false,
-//     configurable: false,
-//   });
-// }
-// for (const entries of JSON.parse(atob('${envs}'))) {
-//   if (!envs[entries[0]]) {
-//     Object.defineProperty(envs, entries[0], {
-//       value: entries[1],
-//       writable: false,
-//       enumerable: false,
-//       configurable: false,
-//     });
-//   }
-// }
-
 /** Creates the string content of a ze-envs.js file for the provided envs record. */
 export function createZeEnvsFile(envs: Record<string, string>) {
   const entries = JSON.stringify(Object.entries(envs));
@@ -38,14 +15,37 @@ export function createZeEnvsFile(envs: Record<string, string>) {
   const base64Json = Buffer.from(entries).toString('base64');
 
   return (
-    `// https://docs.zephyr-cloud.io/environment-variables\n` +
-    // declare some variables
-    `(()=>{var N=Symbol.for("ze_envs"),j=window[N];` +
-    // define non numerable window[ze_envs]
-    `j||Object.defineProperty(window,N,{value:j={},writable:!1,enumerable:!1,configurable:!1});` +
-    // loops on each env entry
-    `for(var m of JSON.parse(atob("${base64Json}")))` +
-    // Define all missing properties as non-writable, non-enumerable and non-configurable
-    `j[m[0]]||Object.defineProperty(j,m[0],{value:m[1],writable:!1,enumerable:!1,configurable:!1})})();\n`
+    /* js */ `
+// https://docs.zephyr-cloud.io/environment-variables
+
+(()=>{
+  let S=Symbol.for("ze_envs"),
+      e=window[S];
+
+  // Only defined window[Symbol.for('ze_envs')] if it doesn't exist
+  // Non enumerable and non-writable to reduce scope of potential conflicts
+  e||Object.defineProperty(window,S,{
+    value:e={},
+    writable:!1,
+    enumerable:!1
+  });
+
+  // loops on each env entry
+  for(let i of JSON.parse(atob("${base64Json}"))){
+    // On a per-env entry basis, only define it if it doesn't exist
+    // Bundler envs gets replaced into literals, non-writable here is an attempt
+    // to keep the same "immutability" as the bundler envs
+    e[i[0]]||Object.defineProperty(e,i[0],{
+      value:i[1],
+      writable:!1,
+      enumerable:!1
+    });
+  }
+})();
+`
+      // Removes comment lines
+      .replace(/^\s*\/\/.*/gm, '')
+      // Removes line breaks added for readability
+      .replace(/\n\s*/g, '')
   );
 }

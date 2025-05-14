@@ -45,19 +45,7 @@ function zephyrEnvsPlugin(
     enforce: 'pre',
 
     transform: (code) => {
-      try {
-        return findAndReplaceVariables(code, variablesSet, ['importMetaEnv']);
-      } catch (error) {
-        logFn(
-          'error',
-          ZephyrError.format(
-            error,
-            'Could not replace ze-envs. If you are not using ze-envs, please ignore this error.'
-          )
-        );
-        // returns the original code in case of error
-        return code;
-      }
+      return findAndReplaceVariables(code, variablesSet, ['importMetaEnv']);
     },
 
     generateBundle: (opts, bundle) => {

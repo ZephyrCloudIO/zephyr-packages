@@ -56,10 +56,16 @@ export function createTemporaryVariablesFile(variablesSet: Set<string>) {
     envs[name] ??= process.env[name] ?? name;
   }
 
+  const hashKey = Object.keys(envs).sort().join('|');
   const source = createZeEnvsFile(envs);
 
   return {
     source,
-    hash: createHash('sha256').update(source).digest('base64url').slice(0, 8),
+
+    // Despite usually being the source hash, this hash is purely based on the
+    // sorted variable names content since the actual source might change
+    // many times by your Zephyr Integration every time you change an environment
+    // variable
+    hash: createHash('sha256').update(hashKey).digest('base64url').slice(0, 8),
   };
 }

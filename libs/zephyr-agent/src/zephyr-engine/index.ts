@@ -1,6 +1,6 @@
+import * as isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import * as isCI from 'is-ci';
 import {
   type Snapshot,
   type SnapshotVariables,
@@ -23,7 +23,7 @@ import { getApplicationConfiguration } from '../lib/edge-requests/get-applicatio
 import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
-import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
+import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
@@ -368,6 +368,13 @@ export class ZephyrEngine {
       assets: assetsMap,
       mfConfig,
     });
+
+    if (props.variables) {
+      logFn(
+        'info',
+        `Detected ${yellow(props.variables.uses.length.toString())} Zephyr Variables`
+      );
+    }
 
     const upload_options: UploadOptions = {
       snapshot,

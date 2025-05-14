@@ -65,10 +65,8 @@ async function _zephyr_configuration(
       zephyr_engine.env.target
     );
 
-    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
-      dependency_pairs,
-      zephyr_engine.env.target
-    );
+    const resolved_dependency_pairs =
+      await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
     ze_log('dependency resolution completed successfully...or at least trying to...');

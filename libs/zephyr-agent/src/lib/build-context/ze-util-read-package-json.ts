@@ -4,7 +4,6 @@ import { safe_json_parse } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { find_nearest_package_json } from './find-nearest-package-json';
-import { getPackageJsonCache, setPackageJsonCache } from './fs-cache-for-package-json';
 import type { ZePackageJson } from './ze-package-json.type';
 import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
 /**
@@ -40,18 +39,6 @@ export async function getPackageJson(
     );
   }
 
-  // Check the cache first
-  try {
-    const cached = await getPackageJsonCache(startingPath);
-    if (cached) {
-      ze_log('Using cached package.json for path', startingPath);
-      return cached;
-    }
-  } catch (error) {
-    // Cache errors are not fatal, just log and continue
-    ze_log('Cache retrieval error', error);
-  }
-
   // Find nearest package.json
   let nearest_package_json;
   try {
@@ -78,7 +65,6 @@ export async function getPackageJson(
   // Parse and validate package.json
   try {
     const { json, path: packageJsonPath } = nearest_package_json;
-    // todo: split parsed package json into parsed and resulting, where resulting is of type ZePackageJson
     const parsed_package_json = safe_json_parse<ZePackageJson>(json);
 
     if (!parsed_package_json) {
@@ -103,18 +89,9 @@ export async function getPackageJson(
       );
     }
 
-    if (parsed_package_json.zephyrDependencies) {
-      parsed_package_json.zephyrDependencies = parseZeDependencies(
-        parsed_package_json.zephyrDependencies as unknown as Record<string, string>
-      );
-    }
-
-    // Cache the result
-    try {
-      await setPackageJsonCache(startingPath, parsed_package_json);
-    } catch (cacheError) {
-      // Cache errors are not fatal, just log and continue
-      ze_log('Cache storage error', cacheError);
+    const zephyr_dependencies = parsed_package_json['zephyr:dependencies'];
+    if (zephyr_dependencies) {
+      parsed_package_json.zephyrDependencies = parseZeDependencies(zephyr_dependencies);
     }
 
     ze_log('Successfully parsed package.json', {

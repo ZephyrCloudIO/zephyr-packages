@@ -9,7 +9,9 @@ export interface ZePackageJson {
   version: string;
   dependencies?: Record<string, string>;
 
-  // to satisfy build stats
+  /** Zephyr:dependencies in package.json */
+  ['zephyr:dependencies']?: Record<string, string>;
+  // parsed zephyr:dependencies
   zephyrDependencies?: Record<string, ZeDependency>;
   /** OptionalDependencies in package.json */
   optionalDependencies?: Record<string, string>;

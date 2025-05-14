@@ -13,6 +13,7 @@ import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import type { PreRenderedAsset } from 'rollup';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
@@ -67,8 +68,8 @@ function zephyrEnvsPlugin(
 
       const { source, hash } = createTemporaryVariablesFile(variablesSet);
 
-      const preRenderedAsset = {
-        type: 'asset' as const,
+      const asset: PreRenderedAsset = {
+        type: 'asset',
         source,
 
         // No names because this is a 100% generated file
@@ -83,14 +84,14 @@ function zephyrEnvsPlugin(
       // Adapted from https://github.com/rollup/rollup/blob/7536ffb3149ad4aa7cda4e7ef343e5376e2392e1/src/utils/FileEmitter.ts#L566
       zeEnvsFilename =
         typeof opts.assetFileNames === 'function'
-          ? opts.assetFileNames(preRenderedAsset)
+          ? opts.assetFileNames(asset)
           : opts.assetFileNames
               .replace('[ext]', 'js')
               .replace('[name]', 'ze-envs')
               .replace('[hash]', hash);
 
       bundle[zeEnvsFilename] = {
-        ...preRenderedAsset,
+        ...asset,
         fileName: zeEnvsFilename,
         needsCodeReference: false,
       };
@@ -161,6 +162,7 @@ function zephyrPlugin(variables_defer: Promise<SnapshotVariables | undefined>): 
         return code;
       }
     },
+
     closeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine, variables] = await Promise.all([

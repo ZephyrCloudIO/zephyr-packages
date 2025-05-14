@@ -34,7 +34,9 @@ export const ZephyrEnvsGlobal = `window[${symbolStr}]`;
 /** Creates the string content of a ze-envs.js file for the provided envs record. */
 export function createZeEnvsFile(envs: Record<string, string>) {
   const entries = JSON.stringify(Object.entries(envs));
+  // Values here are public so base64 obscurity is just to avoid simple inspect+search
   const base64Json = Buffer.from(entries).toString('base64');
+
   return (
     `// https://docs.zephyr-cloud.io/environment-variables\n` +
     // declare some variables

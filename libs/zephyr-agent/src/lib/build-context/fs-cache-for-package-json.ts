@@ -4,6 +4,9 @@ import { getCache, saveCache } from '../node-persist/fs-cache';
 
 const cache_prefix = 'package_json';
 
+// todo: persisting package.json cache should be done in a way it stores path to package.json file
+// and not the content of the package.json file
+// or store last modified time of the file
 export async function getPackageJsonCache(
   startingPath: string
 ): Promise<ZePackageJson | undefined> {

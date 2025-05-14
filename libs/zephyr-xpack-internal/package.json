@@ -1,6 +1,6 @@
 {
   "name": "zephyr-xpack-internal",
-  "version": "0.0.44",
+  "version": "0.0.46",
   "description": "Xpack internals for Zephyr",
   "repository": {
     "type": "git",

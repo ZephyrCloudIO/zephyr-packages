@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { createZeEnvsFile, ZephyrEnvsGlobal } from 'zephyr-edge-contract';
 
 const regexes = {
   importMetaEnv: {
@@ -10,14 +11,6 @@ const regexes = {
     quoted: /\bprocess\.env\[(['"`])(ZE_[a-zA-Z0-9_]+)\1\]/g,
   },
 } as const;
-
-/**
- * A string code reference to `window[Symbol.for('ze_envs')]`
- *
- * This is used to replace the envs in the code with the actual envs when the code is
- * executed in the browser.
- */
-export const ZephyrEnvsGlobal = `window[Symbol.for('ze_envs')]`;
 
 /**
  * A function used to find references to `ZE_*` envs in the code string and replace them
@@ -63,12 +56,10 @@ export function createTemporaryVariablesFile(variablesSet: Set<string>) {
     envs[name] ??= process.env[name] ?? name;
   }
 
-  // TODO: Put here the right path to our documentation, once written
-  const json = `// https://docs.zephyr-cloud.io/environment-variables
-${ZephyrEnvsGlobal}=${ZephyrEnvsGlobal}||JSON.parse(atob("${Buffer.from(JSON.stringify(envs)).toString('base64')}"))\n`;
+  const source = createZeEnvsFile(envs);
 
   return {
-    source: json,
-    hash: createHash('sha256').update(json).digest('base64url').slice(0, 8),
+    source,
+    hash: createHash('sha256').update(source).digest('base64url').slice(0, 8),
   };
 }

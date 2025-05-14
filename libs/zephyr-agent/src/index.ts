@@ -22,7 +22,6 @@ export {
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export { zeBuildAssets } from './lib/transformers/ze-build-assets';
 export {
-  ZephyrEnvsGlobal,
   createTemporaryVariablesFile,
   findAndReplaceVariables,
 } from './lib/transformers/ze-snapshot-vars';

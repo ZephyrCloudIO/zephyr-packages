@@ -23,37 +23,11 @@ export interface RemoteMapExtraction {
  * @returns An object containing the remotes object and the start and end indices of the
  *   remotes object declaration in the code, or undefined if parsing fails.
  */
-export function parseRemoteMapAndImportedRemotes(
+export function parseRemoteMap(
   code: string,
   id: string
   //remotes?: string[]
 ): RemoteMapExtraction | undefined {
-  // let remoteNamesAndImports: acorn.Node | undefined;
-  function isImportedRemote(node: acorn.CallExpression) {
-    if (
-      node.callee?.type === 'Identifier' &&
-      node.callee.name === '__vitePreload' &&
-      node.arguments.length >= 1
-    ) {
-      ze_log('vite.isImportedRemote.node: ', node);
-      for (const arg of node.arguments) {
-        ze_log('vite.isImportedRemote.arg Pos1: ', arg);
-        if (
-          arg.type === 'ArrowFunctionExpression' &&
-          arg.body.type === 'CallExpression' &&
-          arg.body.callee?.type === 'Identifier' &&
-          arg.body.callee.name === 'import' &&
-          arg.body.arguments.length === 1
-        ) {
-          ze_log('vite.isImportedRemote.arg Pos2: ', arg);
-          // remoteNamesAndImports = arg.body.arguments[0];
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   if (!id.includes('localSharedImportMap') || id.includes('node_modules')) {
     return undefined;
   }
@@ -88,8 +62,6 @@ export function parseRemoteMapAndImportedRemotes(
 
   walk.simple(ast, {
     VariableDeclaration: findUsedRemotes,
-    CallExpression: isImportedRemote,
-    // ImportDeclaration: isImportedRemote,
   });
 
   const endTime = Date.now();

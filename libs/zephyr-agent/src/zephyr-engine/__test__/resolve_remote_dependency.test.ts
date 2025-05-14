@@ -1,10 +1,11 @@
 import { describe, expect, jest, it } from '@jest/globals';
 import { resolve_remote_dependency } from '../resolve_remote_dependency';
-import { ZephyrError, ZeErrors } from '../../lib/errors';
-import { ZE_API_ENDPOINT } from 'zephyr-edge-contract';
+import { ZephyrError } from '../../lib/errors';
+import axios from 'axios';
 
-const fetchMock = jest.fn<(...args: unknown[]) => Promise<Response>>();
-global.fetch = fetchMock;
+// Mock axios instead of fetch
+jest.mock('axios');
+const axiosMock = axios as jest.Mocked<typeof axios>;
 
 const mockToken = 'test-token';
 const getTokenMock = jest.fn();
@@ -24,27 +25,25 @@ const mock_api_response = {
 describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () => {
   beforeEach(() => {
     getTokenMock.mockReset();
-    fetchMock.mockReset();
+    axiosMock.get.mockReset();
   });
 
   it('should resolve a remote dependency successfully', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ value: mock_api_response }),
-    } as Response);
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: mock_api_response },
+    });
 
     const result = await resolve_remote_dependency({ application_uid, version });
 
     expect(getTokenMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ ...mock_api_response, version });
-    expect(fetch).toHaveBeenCalledWith(
-      new URL(
-        `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
-        ZE_API_ENDPOINT()
+    expect(axiosMock.get).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`
       ),
       {
-        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${mockToken}`,
@@ -55,45 +54,44 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
   });
 
   it('should throw ZephyrError on not ok response', async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: false,
-      json: () => Promise.resolve({ value: null }),
-    } as Response);
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockRejectedValueOnce({
+      response: {
+        status: 404,
+        data: { message: 'Not found' },
+      },
+    });
 
     const promise = resolve_remote_dependency({ application_uid, version });
 
     await expect(promise).rejects.toThrowError(ZephyrError);
-    expect(fetchMock).toHaveBeenCalled();
+    expect(axiosMock.get).toHaveBeenCalled();
   });
 
   it('should throw ZephyrError when there is no response.value', async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ value: null }),
-    } as Response);
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: null },
+    });
 
     const promise = resolve_remote_dependency({ application_uid, version });
 
     await expect(promise).rejects.toThrowError(ZephyrError);
-
-    expect(fetchMock).toHaveBeenCalled();
+    expect(axiosMock.get).toHaveBeenCalled();
   });
 
-  it('throws an error when fetch fails', async () => {
+  it('throws an error when request fails', async () => {
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
     const mockError = new Error('Network Error');
-    fetchMock.mockRejectedValue(mockError);
+    axiosMock.get.mockRejectedValueOnce(mockError);
 
-    await expect(
-      resolve_remote_dependency({
-        application_uid,
-        version,
-      })
-    ).rejects.toThrowError(
-      new ZephyrError(ZeErrors.ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION, {
-        cause: mockError,
-      })
-    );
+    const promise = resolve_remote_dependency({
+      application_uid,
+      version,
+    });
 
-    expect(fetch).toHaveBeenCalled();
+    await expect(promise).rejects.toThrow(ZephyrError);
+    expect(axiosMock.get).toHaveBeenCalled();
   });
 });

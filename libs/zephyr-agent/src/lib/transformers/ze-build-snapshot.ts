@@ -36,7 +36,7 @@ export async function createSnapshot(
     applicationProperties: zephyr_engine.applicationProperties,
     edge_url: (await zephyr_engine.application_configuration).EDGE_URL,
     gitProperties: zephyr_engine.gitProperties,
-    mfConfig: mfConfig,
+    mfConfig: mfConfig
   };
 
   const version_postfix = zephyr_engine.env.isCI

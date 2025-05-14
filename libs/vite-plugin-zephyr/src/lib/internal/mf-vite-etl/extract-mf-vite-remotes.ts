@@ -1,11 +1,21 @@
 import type { ZeDependencyPair } from 'zephyr-agent';
 import { readPackageJson } from 'zephyr-agent';
-import { parseRemoteMap } from './remote_map_parser';
+
+export interface RemoteObjectConfig {
+  type?: string;
+  name: string;
+  entry: string;
+  entryGlobalName?: string;
+  shareScope?: string;
+}
+
+export interface PartialViteMFConfig {
+  remotes?: Record<string, string | RemoteObjectConfig> | undefined;
+}
 
 export function extract_remotes_dependencies(
   root: string,
-  code: string,
-  id: string
+  mfConfig: PartialViteMFConfig
 ): ZeDependencyPair[] | undefined {
   const { zephyrDependencies } = readPackageJson(root);
   if (zephyrDependencies) {
@@ -17,16 +27,16 @@ export function extract_remotes_dependencies(
     });
   }
 
-  const dependencyPairs: ZeDependencyPair[] = [];
-  const extractedRemotes = parseRemoteMap(code, id);
-  if (extractedRemotes === undefined) return;
+  if (!mfConfig.remotes) return;
 
-  const { remotesMap } = extractedRemotes;
-
-  for (const remote of remotesMap) {
-    const { name, entry: version } = remote;
-    dependencyPairs.push({ name, version });
-  }
+  const dependencyPairs: ZeDependencyPair[] = Object.entries(mfConfig.remotes).map(
+    ([name, remote]) => {
+      if (typeof remote === 'string') {
+        return { name, version: remote };
+      }
+      return { name, version: remote.entry };
+    }
+  );
 
   return dependencyPairs;
 }

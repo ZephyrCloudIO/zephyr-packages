@@ -62,10 +62,6 @@ export async function createSnapshot(
       repo: options.applicationProperties.project,
       org: options.applicationProperties.org,
     },
-    envs: {
-      filename: '',
-      requirements: []
-    },
     git: options.gitProperties.git,
     creator: {
       name: options.username,

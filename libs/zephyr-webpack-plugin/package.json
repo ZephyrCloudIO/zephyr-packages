@@ -32,7 +32,11 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "html-webpack-plugin": "catalog:webpack5",
+    "@types/html-webpack-plugin": "catalog:webpack5",
+    "webpack-sources": "catalog:webpack5",
+    "@types/webpack-sources": "catalog:webpack5"
   },
   "publishConfig": {
     "access": "public",

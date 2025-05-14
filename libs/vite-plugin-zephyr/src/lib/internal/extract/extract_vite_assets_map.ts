@@ -8,12 +8,10 @@ import {
 import type { OutputAsset, OutputChunk } from 'rollup';
 import { loadStaticAssets } from './load_static_assets';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
-import { ze_log } from 'zephyr-agent';
 export async function extract_vite_assets_map(
   zephyr_engine: ZephyrEngine,
   vite_internal_options: ZephyrInternalOptions
 ): Promise<ZeBuildAssetsMap> {
-  ze_log('extracting assets map...');
   const application_uid = zephyr_engine.application_uid;
   const assets = await loadStaticAssets(vite_internal_options);
   const partialAssetMap = await getPartialAssetMap(application_uid);

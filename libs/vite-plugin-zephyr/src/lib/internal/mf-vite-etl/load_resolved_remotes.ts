@@ -8,7 +8,7 @@ export function load_resolved_remotes(
   id: string
 ) {
   const extractedRemotes = parseRemoteMap(code, id);
-  if (extractedRemotes === undefined) return;
+  if (extractedRemotes === undefined) return code;
 
   const remotes: RemoteMapExtraction['remotesMap'] = [];
   const { remotesMap, startIndex, endIndex } = extractedRemotes;

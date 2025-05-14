@@ -9,7 +9,12 @@ export type {
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 
 export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-plugin-options';
-export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
+export type {
+  Snapshot,
+  SnapshotAsset,
+  SnapshotMetadata,
+  SnapshotVariables,
+} from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';
 export { createSnapshotId, flatCreateSnapshotId } from './lib/utils/create-snapshot-id';
 export * as ZeUtils from './lib/promise';

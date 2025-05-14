@@ -2,6 +2,12 @@ import { extractRolldownBuildStats } from './extract-rolldown-build-stats';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { OutputBundle, OutputChunk } from 'rolldown';
 
+// Mock zephyr-agent functions
+jest.mock('zephyr-agent', () => ({
+  ze_log: jest.fn(),
+  resolveCatalogDependencies: jest.fn((deps) => deps || {}),
+}));
+
 // Mock ZephyrEngine
 const mockZephyrEngine = {
   applicationProperties: {

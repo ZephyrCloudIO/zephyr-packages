@@ -2,6 +2,12 @@ import { extractViteBuildStats } from './extract_vite_build_stats';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { OutputBundle } from 'rollup';
 
+// Mock the zephyr-agent module
+jest.mock('zephyr-agent', () => ({
+  ze_log: jest.fn(),
+  resolveCatalogDependencies: jest.fn((deps) => deps || {}),
+}));
+
 // Mock ZephyrEngine
 const mockZephyrEngine = {
   applicationProperties: {

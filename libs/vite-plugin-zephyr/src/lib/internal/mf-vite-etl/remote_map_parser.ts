@@ -114,11 +114,15 @@ export function parseRemoteMapAndImportedRemotes(
     ze_log('vite.parseRemoteMap.remotesArray: ', remotesArray);
   } catch (error) {
     // Fallback to json5 only if necessary
-    ze_log(error);
     try {
       remotesArray = json5.parse(arrayText);
     } catch (innerError) {
-      ze_log(innerError);
+      ze_log('Failed to parse remotes array: ', arrayText, 'with error: ', innerError);
+      return;
+    }
+
+    if (!Array.isArray(remotesArray)) {
+      ze_log('Failed to parse remotes array: ', arrayText, 'with error: ', error);
       return;
     }
   }

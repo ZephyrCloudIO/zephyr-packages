@@ -1,13 +1,13 @@
 /* istanbul ignore file */
 
 export interface Snapshot {
-  // app.repo.org
+  /** App.repo.org */
   application_uid: string;
-  // package.json version + descriptor `.(user-(ci|ui?)-user_build_counter)`
+  /** Package.json version + descriptor `.(user-(ci|ui?)-user_build_counter)` */
   version: string;
-  // version.app.repo.org
+  /** Version.app.repo.org */
   snapshot_id: string;
-  // default domain url
+  /** Default domain url */
   domain: string;
   uid: {
     build: string;
@@ -15,6 +15,7 @@ export interface Snapshot {
     repo: string;
     org: string;
   };
+  variables?: SnapshotVariables;
   git: {
     name?: string;
     email?: string;
@@ -22,7 +23,7 @@ export interface Snapshot {
     commit: string;
     tags?: string[];
   };
-  // zephyr user
+  /** Zephyr user */
   creator: {
     name: string;
     email: string;
@@ -35,7 +36,7 @@ export interface Snapshot {
     remotes?: Record<string, string>;
     shared?: Record<string, unknown>;
   };
-  // list of files, where key is file path
+  /** List of files, where key is file path */
   assets: Record<string, SnapshotAsset>;
 }
 
@@ -49,3 +50,13 @@ export interface SnapshotAsset {
 export interface SnapshotMetadata {
   pages_url?: string;
 }
+
+export interface SnapshotVariables {
+  /** The `assets/ze-envs-<hash>.js` generated full path with extension */
+  filename: string;
+
+  /** A unique list of environment variables used in the code */
+  uses: string[];
+}
+
+export type SnapshotWithVariables = Snapshot & { variables: SnapshotVariables };

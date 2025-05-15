@@ -51,3 +51,6 @@ export {
 // string proto methods
 export { type FindTemplates, formatString } from './lib/string/string';
 export { stripAnsi } from './lib/string/strip-ansi';
+
+// module consume types
+export type { ApplicationConsumes, UsedIn } from './lib/zephyr-build-stats';

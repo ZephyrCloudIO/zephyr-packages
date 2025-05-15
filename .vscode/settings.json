@@ -1,0 +1,22 @@
+{
+  "biome.enabled": false,
+  "files.associations": {
+    "wrangler.json": "jsonc"
+  },
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 300,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit",
+    "source.removeUnusedImports": "explicit",
+    "source.groupImports": "explicit"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "cSpell.words": ["fastly"]
+}

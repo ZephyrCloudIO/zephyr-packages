@@ -16,6 +16,7 @@ import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
 import { createSocket } from './websocket';
+import { getSessionKey, waitForUnlock } from '../node-persist/session-lock';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
@@ -23,12 +24,12 @@ import { createSocket } from './websocket';
  *
  * @returns The token as a string.
  */
-export async function checkAuth(): Promise<string> {
+export async function checkAuth(): Promise<void> {
   const secret_token = getSecretToken();
 
   if (secret_token) {
     logFn('debug', 'Token found in environment. Using secret token for authentication.');
-    return secret_token;
+    return;
   }
 
   const existingToken = await getToken();
@@ -37,7 +38,7 @@ export async function checkAuth(): Promise<string> {
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
       ze_log('You are already logged in');
-      return existingToken;
+      return;
     }
 
     await removeToken();
@@ -53,8 +54,12 @@ export async function checkAuth(): Promise<string> {
   logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
 
   // Get authentication URL first
-  const sessionKey = generateSessionKey();
-  const authUrl = await getAuthenticationURL(sessionKey);
+  using sessionKey = getSessionKey();
+  const authUrl = await getAuthenticationURL(sessionKey.session);
+
+  if (!sessionKey.owner) {
+    logFn('', gray('Waiting for session unlock...'));
+  }
 
   const browserController = new AbortController();
 
@@ -63,15 +68,32 @@ export async function checkAuth(): Promise<string> {
     .then(() => openUrl(authUrl))
     .catch(() => fallbackManualLogin(authUrl));
 
-  const newToken = await waitForAccessToken(sessionKey).finally(() =>
-    browserController.abort()
-  );
+  // We are the owner of the session request, join websocket room
+  // and wait for the access token
+  if (sessionKey.owner) {
+    const newToken = await waitForAccessToken(sessionKey.session).finally(() =>
+      browserController.abort()
+    );
 
-  await saveToken(newToken);
+    await saveToken(newToken);
+  } else {
+    // node-persist is not concurrent safe, so we need to wait for the unlock
+    // before next readToken() calls can happen
+    // https://github.com/simonlast/node-persist/issues/108#issuecomment-1442305246
+    await waitForUnlock(browserController.signal);
+
+    const token = await getToken();
+
+    // Unlock also happens on timeout, so we need to check if the token was
+    // actually saved or not
+    if (!token) {
+      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'No token found after authentication finished, did it timeout?',
+      });
+    }
+  }
 
   logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
-
-  return newToken;
 }
 
 /**
@@ -140,14 +162,6 @@ async function openUrl(url: string): Promise<void> {
   await openModule.default(url);
 }
 
-/** Generates a URL-safe random string to use as a session key. */
-function generateSessionKey(): string {
-  return encodeURIComponent(
-    Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-  );
-}
-
 /** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
   const [ok, cause, data] = await ZeHttpRequest.from<string>({
@@ -164,15 +178,6 @@ async function getAuthenticationURL(state: string): Promise<string> {
   }
 
   return data;
-}
-
-/**
- * Initiates user authentication and handles token storage.
- *
- * @returns The new token as a string.
- */
-export async function authenticateUser(): Promise<string> {
-  return await checkAuth();
 }
 
 /** Waits for the access token to be received from the websocket. */
@@ -234,9 +239,6 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
     }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
 
     return await promise;
-  } catch (error) {
-    cleanupSocket();
-    throw error;
   } finally {
     cleanupSocket();
   }

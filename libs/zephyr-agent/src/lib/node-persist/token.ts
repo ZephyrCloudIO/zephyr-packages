@@ -1,12 +1,7 @@
-import { clear, getItem, init, removeItem, setItem } from 'node-persist';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { StorageKeys, ZE_PATH } from './storage-keys';
+import { clear, getItem, removeItem, setItem } from 'node-persist';
 import { getSecretToken } from './secret-token';
-
-const storage = init({
-  dir: join(homedir(), ZE_PATH),
-});
+import { storage } from './storage';
+import { StorageKeys } from './storage-keys';
 
 export async function saveToken(token: string): Promise<void> {
   await storage;

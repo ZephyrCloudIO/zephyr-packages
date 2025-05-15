@@ -1,7 +1,8 @@
-import { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
-import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import type { ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 
 interface KnownAgentProps {
   stats: XStats;

@@ -1,7 +1,7 @@
 import { update_hash_list } from '../../edge-hash-list/distributed-hash-control';
 import { zeUploadAssets } from '../../edge-actions/ze-upload-assets';
-import { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
-import { ZephyrEngine } from '../../../zephyr-engine';
+import type { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import type { ZephyrEngine } from '../../../zephyr-engine';
 
 export interface UploadAssetsOptions {
   assetsMap: ZeBuildAssetsMap;

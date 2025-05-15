@@ -1,5 +1,9 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "tui": {
+    "autoExit": 1,
+    "enabled": true
+  },
   "targetDefaults": {
     "build": {
       "cache": true,
@@ -107,16 +111,17 @@
       }
     },
     "version": {
-      "generatorOptions": {
-        "currentVersionResolver": "registry",
-        "skipLockFileUpdate": true
-      },
       "git": {
         "commit": false,
         "stageChanges": false,
         "tag": false
       },
-      "preVersionCommand": "npx nx run-many -t build -p libs/*"
+      "preVersionCommand": "npx nx run-many -t build -p libs/*",
+      "currentVersionResolver": "registry",
+      "preserveLocalDependencyProtocols": false,
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
+      }
     }
   },
   "nxCloudAccessToken": "Zjg0MzllZTQtYTE2Mi00MWMwLWE2ZDUtOTE5ZWI5OGJkYTM5fHJlYWQtd3JpdGU="

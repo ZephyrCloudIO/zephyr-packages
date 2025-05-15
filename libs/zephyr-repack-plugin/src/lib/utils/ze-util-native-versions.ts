@@ -1,5 +1,5 @@
 import { ZeErrors, ZephyrError, logFn, ze_log } from 'zephyr-agent';
-import { NativeVersionInfo, NativePlatform } from '../../type/native-version';
+import type { NativeVersionInfo, NativePlatform } from '../../type/native-version';
 import * as child_process from 'child_process';
 import * as util from 'util';
 import isCI from 'is-ci';
@@ -171,10 +171,6 @@ export async function getNativeVersionInfoAsync(
   platform: NativePlatform,
   projectRoot: string
 ): Promise<NativeVersionInfo> {
-  if (!projectRoot) {
-    throw new Error('Project root directory is required');
-  }
-
   let versionInfo: NativeVersionInfo;
 
   // First get the version info from the platform-specific files

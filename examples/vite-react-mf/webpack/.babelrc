@@ -5,9 +5,12 @@
     [
       "@babel/preset-react",
       {
-        "runtime": "automatic" // Enables the new JSX transform in React 17+
+        "runtime": "automatic"
       }
     ]
   ],
-  "plugins": ["@babel/plugin-transform-runtime", "@babel/plugin-syntax-dynamic-import"]
+  "plugins": [
+    "@babel/plugin-transform-runtime",
+    "@babel/plugin-syntax-dynamic-import"
+  ]
 }

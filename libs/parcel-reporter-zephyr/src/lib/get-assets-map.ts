@@ -1,5 +1,6 @@
-import * as fs from 'fs';
-import { buildAssetsMap, ze_log, ZeBuildAssetsMap } from 'zephyr-agent';
+import * as fs from 'node:fs';
+import type { ZeBuildAssetsMap } from 'zephyr-agent';
+import { buildAssetsMap, ze_log } from 'zephyr-agent';
 
 export interface ParcelOutputAsset {
   name: string;

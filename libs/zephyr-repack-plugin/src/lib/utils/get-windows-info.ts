@@ -1,7 +1,7 @@
-import { ze_log } from 'zephyr-agent';
+import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import * as fs from 'fs';
 import * as path from 'path';
-import { NativeVersionInfo } from '../../type/native-version';
+import type { NativeVersionInfo } from '../../type/native-version';
 
 /**
  * Parse a Windows app manifest file to extract version information
@@ -62,9 +62,10 @@ export async function getWindowsVersionInfoAsync(
         return parseWindowsManifest(altManifestPath);
       }
 
-      throw new Error(`Could not find Package.appxmanifest at ${manifestPath}`);
+      throw new ZephyrError(ZeErrors.ERR_MISSING_WINDOWS_VERSION, {
+        cause: new Error(`Could not find Package.appxmanifest at ${manifestPath}`),
+      });
     }
-
     return parseWindowsManifest(manifestPath);
   } catch (error) {
     ze_log('Error getting Windows version info:', error);

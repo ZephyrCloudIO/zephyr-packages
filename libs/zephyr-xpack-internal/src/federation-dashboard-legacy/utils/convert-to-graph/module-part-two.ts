@@ -1,5 +1,5 @@
-import { ConvertedDependencies } from './convert-dependencies';
-import { XStatsModule } from '../../../xpack.types';
+import type { ConvertedDependencies } from './convert-dependencies';
+import type { XStatsModule } from '../../../xpack.types';
 
 export interface ModuleObject {
   id: string;

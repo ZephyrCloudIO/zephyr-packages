@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { NativeVersionInfo } from '../../type/native-version';
+import type { NativeVersionInfo } from '../../type/native-version';
 import { logFn } from 'zephyr-agent';
 import { DEFAULT_VERSION, DEFAULT_BUILD_NUMBER } from './ze-util-native-versions';
 

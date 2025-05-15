@@ -1,5 +1,5 @@
 import * as child_process from 'child_process';
-import { NativeVersionInfo } from '../../type/native-version';
+import type { NativeVersionInfo } from '../../type/native-version';
 import * as fs from 'fs';
 import { ze_log, logFn, ZeErrors, ZephyrError } from 'zephyr-agent';
 import * as util from 'util';

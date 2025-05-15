@@ -75,7 +75,7 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
       req.#url.searchParams.set('api_host', zephyr_api_endpoint);
     }
 
-    req.#request();
+    void req.#request();
 
     return req;
   }
@@ -107,15 +107,6 @@ export class ZeHttpRequest<T = void> implements PromiseLike<HttpResponse<T>> {
         ...this.#options,
         body: this.#data,
       });
-
-      if (!response) {
-        throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-          content: 'No response found',
-          method: this.#options.method?.toUpperCase() ?? 'GET',
-          url: this.#url.toString(),
-          status: -1,
-        });
-      }
 
       const resText = await response.text();
 

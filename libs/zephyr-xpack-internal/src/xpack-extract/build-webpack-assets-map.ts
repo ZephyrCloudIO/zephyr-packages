@@ -13,6 +13,7 @@ function extractBuffer(asset: Source): Buffer | string | undefined {
     case 'RawSource':
     case 'ConcatSource':
     case 'SourceMapSource':
+    case 'Object':
       return asset?.buffer && asset.buffer();
     case 'ReplaceSource':
       return asset.source();

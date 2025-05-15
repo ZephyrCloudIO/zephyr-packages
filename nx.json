@@ -2,7 +2,7 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "tui": {
     "autoExit": 1,
-    "enabled": true
+    "enabled": false
   },
   "targetDefaults": {
     "build": {

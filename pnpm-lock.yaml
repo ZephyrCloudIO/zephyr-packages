@@ -1277,6 +1277,12 @@ importers:
 
   libs/zephyr-repack-plugin:
     dependencies:
+      is-ci:
+        specifier: ^4.1.0
+        version: 4.1.0
+      semver-regex:
+        specifier: ^4.0.5
+        version: 4.0.5
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1290,6 +1296,9 @@ importers:
       '@types/find-package-json':
         specifier: ^1.2.6
         version: 1.2.6
+      '@types/is-ci':
+        specifier: ^3.0.4
+        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -9064,6 +9073,7 @@ packages:
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    deprecated: Use your platform's native DOMException instead
 
   node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}

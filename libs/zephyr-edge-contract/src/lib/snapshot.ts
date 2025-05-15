@@ -9,6 +9,24 @@ export interface Snapshot {
   snapshot_id: string;
   // default domain url
   domain: string;
+  /** Native platform related data */
+  native?: {
+    /**
+     * The target platform of the build , should be `ios`, `android`, `web` or undefined
+     * at the moment
+     */
+    target: string | undefined;
+    /**
+     * The native version of the build, should be `ios`, `android`, `web` or undefined at
+     * the moment - ususally read from `Info.plist` (ios) or `build.gradle` (android)
+     */
+    native_version?: string | undefined;
+    /**
+     * The native build number of the build, should be `ios`, `android`, `web` or
+     * undefined at the moment - ususally read from `build.gradle` (android)
+     */
+    native_build_number?: string | undefined;
+  };
   uid: {
     build: string;
     app_name: string;

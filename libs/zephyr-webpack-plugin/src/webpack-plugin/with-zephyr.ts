@@ -8,6 +8,7 @@ import {
 import type { ZephyrWebpackPluginOptions } from '../types';
 import type { WebpackConfiguration } from '../types/missing-webpack-types';
 import { ZeWebpackPlugin } from './ze-webpack-plugin';
+import { ZeEnvVarsWebpackPlugin } from './ze-env-vars-webpack-plugin';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
   return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
@@ -35,8 +36,14 @@ async function _zephyr_configuration(
 
     ze_log(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);
 
+    // Initialize the plugins array if needed
+    config.plugins = config.plugins || [];
+
+    // Add the environment variables plugin
+    config.plugins.push(new ZeEnvVarsWebpackPlugin(_zephyrOptions?.envVars));
+
     // inject the ZephyrWebpackPlugin
-    config.plugins?.push(
+    config.plugins.push(
       new ZeWebpackPlugin({
         zephyr_engine,
         mfConfig: mfConfig,

@@ -22,3 +22,5 @@ export { setupZeDeploy } from './hooks/ze-setup-ze-deploy';
 export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
 
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
+
+export type { ZeEnvVarsPluginOptions } from './types/ze-env-vars-types';

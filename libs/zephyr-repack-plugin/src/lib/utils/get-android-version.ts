@@ -1,14 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { NativeVersionInfo } from '../../type/native-version';
-import { ZeErrors } from 'zephyr-agent';
-import { ZephyrError } from 'zephyr-agent';
+import { logFn } from 'zephyr-agent';
+import { DEFAULT_VERSION, DEFAULT_BUILD_NUMBER } from './ze-util-native-versions';
 
 /**
- * Get the native version and build information for Android
+ * Get the native version and build information for Android Extracts version from
+ * build.gradle and validates it
  *
- * @param androidProjectPath Path to the Android project directory
- * @returns Object containing version and buildNumber
+ * @param projectRoot Path to the project root directory
+ * @returns Object containing native_version and native_build_number
  */
 export async function getAndroidVersionInfoAsync(
   projectRoot: string
@@ -19,7 +20,14 @@ export async function getAndroidVersionInfoAsync(
     const buildGradlePath = path.join(androidProjectPath, 'app/build.gradle');
 
     if (!fs.existsSync(buildGradlePath)) {
-      throw new Error(`Could not find build.gradle at ${buildGradlePath}`);
+      logFn(
+        'warn',
+        `Could not find build.gradle at ${buildGradlePath}. Using default values for local development.`
+      );
+      return {
+        native_version: DEFAULT_VERSION,
+        native_build_number: DEFAULT_BUILD_NUMBER,
+      };
     }
 
     const buildGradleContent = fs.readFileSync(buildGradlePath, 'utf-8');
@@ -28,40 +36,34 @@ export async function getAndroidVersionInfoAsync(
     const versionNameMatch = buildGradleContent.match(/versionName ["'](.+?)["']/);
     const versionCodeMatch = buildGradleContent.match(/versionCode (\d+)/);
 
-    return {
-      version: versionNameMatch?.[1] || '0.0.0',
-      buildNumber: versionCodeMatch?.[1] || '0',
+    if (!versionNameMatch) {
+      logFn(
+        'warn',
+        `Could not find versionName in build.gradle. Using default "${DEFAULT_VERSION}" for local development.`
+      );
+    }
+
+    if (!versionCodeMatch) {
+      logFn(
+        'warn',
+        `Could not find versionCode in build.gradle. Using default "${DEFAULT_BUILD_NUMBER}" for local development.`
+      );
+    }
+
+    const versionInfo = {
+      native_version: versionNameMatch?.[1] || DEFAULT_VERSION,
+      native_build_number: versionCodeMatch?.[1] || DEFAULT_BUILD_NUMBER,
     };
+
+    return versionInfo;
   } catch (error) {
-    console.error('Error getting Android version info:', error);
+    logFn(
+      'warn',
+      `Error reading Android version info: ${error}. Using default values "${DEFAULT_VERSION}" for Native Version and "${DEFAULT_BUILD_NUMBER}" for Native Build Number during local development.`
+    );
     return {
-      version: '0.0.0',
-      buildNumber: '0',
+      native_version: DEFAULT_VERSION,
+      native_build_number: DEFAULT_BUILD_NUMBER,
     };
   }
-}
-
-export function getAndroidVersionInfoSync(projectRoot: string): NativeVersionInfo {
-  const androidPath = path.join(projectRoot, 'android');
-  const buildGradlePath = path.join(androidPath, 'app', 'build.gradle');
-  if (fs.existsSync(buildGradlePath)) {
-    const content = fs.readFileSync(buildGradlePath, 'utf8');
-    const versionNameMatch = content.match(/versionName ["'](.+?)["']/);
-    const versionCodeMatch = content.match(/versionCode (\d+)/);
-
-    if (!versionNameMatch?.[1]) {
-      throw new ZephyrError(ZeErrors.ERR_MISSING_ANDROID_VERSION);
-    }
-
-    if (!versionCodeMatch?.[1]) {
-      throw new ZephyrError(ZeErrors.ERR_MISSING_ANDROID_BUILD_NUMBER);
-    }
-
-    return {
-      version: versionNameMatch?.[1],
-      buildNumber: versionCodeMatch?.[1],
-    };
-  }
-
-  throw new ZephyrError(ZeErrors.ERR_MISSING_ANDROID_VERSION);
 }

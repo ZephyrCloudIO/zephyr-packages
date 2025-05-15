@@ -50,6 +50,11 @@ export async function createSnapshot(
       })
     ),
     domain: options.edge_url,
+    native: {
+      target: zephyr_engine.env.target,
+      native_version: zephyr_engine.env.native_version,
+      native_build_number: zephyr_engine.env.native_build_number,
+    },
     uid: {
       build: options.buildId,
       app_name: options.applicationProperties.name,

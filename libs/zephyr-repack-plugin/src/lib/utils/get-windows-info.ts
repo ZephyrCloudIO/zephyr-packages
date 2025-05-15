@@ -1,4 +1,4 @@
-import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import { ze_log } from 'zephyr-agent';
 import * as fs from 'fs';
 import * as path from 'path';
 import { NativeVersionInfo } from '../../type/native-version';
@@ -24,20 +24,20 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
     // We'll use Major.Minor.Build as the version and the full string as buildNumber
     if (parts.length >= 3) {
       return {
-        version: parts.slice(0, 3).join('.'),
-        buildNumber: fullVersion,
+        native_version: parts.slice(0, 3).join('.'),
+        native_build_number: fullVersion,
       };
     }
 
     return {
-      version: fullVersion,
-      buildNumber: fullVersion,
+      native_version: fullVersion,
+      native_build_number: fullVersion,
     };
   }
 
   return {
-    version: '0.0.0',
-    buildNumber: '0',
+    native_version: '0.0.0',
+    native_build_number: '0',
   };
 }
 
@@ -69,29 +69,8 @@ export async function getWindowsVersionInfoAsync(
   } catch (error) {
     ze_log('Error getting Windows version info:', error);
     return {
-      version: '0.0.0',
-      buildNumber: '0',
+      native_version: '0.0.0',
+      native_build_number: '0',
     };
   }
-}
-
-export function getWindowsVersionInfoSync(projectRoot: string): NativeVersionInfo {
-  // For Windows, look for Package.appxmanifest
-  const windowsPath = path.join(projectRoot, 'windows');
-
-  if (fs.existsSync(windowsPath)) {
-    // Check common locations for the manifest
-    const manifestPaths = [
-      path.join(windowsPath, 'app', 'Package.appxmanifest'),
-      path.join(windowsPath, 'Package.appxmanifest'),
-    ];
-
-    for (const manifestPath of manifestPaths) {
-      if (fs.existsSync(manifestPath)) {
-        return parseWindowsManifest(manifestPath);
-      }
-    }
-  }
-
-  throw new ZephyrError(ZeErrors.ERR_MISSING_WINDOWS_VERSION);
 }

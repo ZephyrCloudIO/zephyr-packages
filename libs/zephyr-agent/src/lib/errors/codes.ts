@@ -258,7 +258,7 @@ Please make sure you have set them correctly in your package.json and git reposi
   ERR_MISSING_NATIVE_VERSION: {
     id: '033',
     message:
-      'Missing native version for your {{ platform }}. Please ensure you have a valid native version in your native configuration file in the project.',
+      'Missing native version for your {{ platform }}. Please ensure you have a valid native version in your native configuration file in the project. {{ cause }}',
     kind: 'config',
   },
 

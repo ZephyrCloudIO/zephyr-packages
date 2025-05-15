@@ -1,13 +1,13 @@
 /** Interface representing the version information for a native app platform */
 export interface NativeVersionInfo {
   /** The semantic version of the app (e.g. "1.2.3") */
-  version: string;
+  native_version: string;
 
   /**
    * The build number of the app (e.g. "42" for Android, "1.2.3.4" for iOS/macOS,
    * "1.0.0.0" for Windows)
    */
-  buildNumber: string;
+  native_build_number: string;
 }
 
 /** Supported platform types for React Native builds */

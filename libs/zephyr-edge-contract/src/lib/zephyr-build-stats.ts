@@ -118,11 +118,24 @@ export interface ZephyrBuildStats {
   domain?: string | undefined;
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;
-  /**
-   * The target platform of the build , should be `ios`, `android`, `web` or undefined at
-   * the moment
-   */
-  build_target?: string;
+  /** Native platform related data */
+  native?: {
+    /**
+     * The target platform of the build , should be `ios`, `android`, `web` or undefined
+     * at the moment
+     */
+    build_target?: string;
+    /**
+     * The native version of the build, should be `ios`, `android`, `web` or undefined at
+     * the moment - ususally read from `Info.plist` (ios) or `build.gradle` (android)
+     */
+    native_version?: string;
+    /**
+     * The native build number of the build, should be `ios`, `android`, `web` or
+     * undefined at the moment - ususally read from `build.gradle` (android)
+     */
+    native_build_number?: string;
+  };
   /** @deprecated */
   type: unknown;
 }

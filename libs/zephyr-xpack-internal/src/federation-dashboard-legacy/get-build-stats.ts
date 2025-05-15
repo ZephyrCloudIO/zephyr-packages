@@ -76,9 +76,11 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     remote: filename,
     remotes: Object.keys(remotes || {}),
     context: { isCI },
-    target: pluginOptions.zephyr_engine.env.target,
-    native_version: pluginOptions.zephyr_engine.env.native_version,
-    native_build_number: pluginOptions.zephyr_engine.env.native_build_number,
+    native: {
+      build_target: pluginOptions.zephyr_engine.env.target,
+      native_version: pluginOptions.zephyr_engine.env.native_version,
+      native_build_number: pluginOptions.zephyr_engine.env.native_build_number,
+    },
   };
 
   // todo: extend data

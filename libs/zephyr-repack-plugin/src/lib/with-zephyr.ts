@@ -10,7 +10,7 @@ import {
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 import { getNativeVersionInfoAsync } from './utils/ze-util-native-versions';
 import { RepackEnv } from '../type/zephyr-internal-types';
-
+import { NativeVersionInfo } from '../type/native-version';
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
   configFn: (env: RepackEnv) => Configuration
@@ -80,7 +80,10 @@ async function _zephyr_configuration(
   await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
   // Get native version information if we're building for a mobile platform
-  let nativeVersionInfo = { version: '0.0.0', buildNumber: '0' };
+  let nativeVersionInfo: NativeVersionInfo = {
+    native_version: '0.0.0',
+    native_build_number: '0',
+  };
 
   try {
     nativeVersionInfo = await getNativeVersionInfoAsync(
@@ -92,8 +95,8 @@ async function _zephyr_configuration(
     ze_log(`Error getting native version info for ${_zephyrOptions.target}:`, error);
   }
 
-  zephyr_engine.env.native_version = nativeVersionInfo.version;
-  zephyr_engine.env.native_build_number = nativeVersionInfo.buildNumber;
+  zephyr_engine.env.native_version = nativeVersionInfo.native_version;
+  zephyr_engine.env.native_build_number = nativeVersionInfo.native_build_number;
 
   const defineConfig = {
     ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),
@@ -104,8 +107,8 @@ async function _zephyr_configuration(
       (await zephyr_engine.application_configuration).fetched_at
     ),
     ZE_EDGE_URL: JSON.stringify((await zephyr_engine.application_configuration).EDGE_URL),
-    ZE_NATIVE_VERSION: JSON.stringify(nativeVersionInfo.version),
-    ZE_NATIVE_BUILD_NUMBER: JSON.stringify(nativeVersionInfo.buildNumber),
+    ZE_NATIVE_VERSION: JSON.stringify(nativeVersionInfo.native_version),
+    ZE_NATIVE_BUILD_NUMBER: JSON.stringify(nativeVersionInfo.native_build_number),
   };
 
   ze_log('Content in defineConfig: ', defineConfig);

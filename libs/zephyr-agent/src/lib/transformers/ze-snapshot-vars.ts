@@ -1,5 +1,10 @@
 import { createHash } from 'node:crypto';
-import { createZeEnvsFile, ZephyrEnvsGlobal } from 'zephyr-edge-contract';
+import {
+  createVariablesRecord,
+  createZeEnvsFile,
+  ZephyrEnvsGlobal,
+} from 'zephyr-edge-contract';
+import { logFn } from '../logging/ze-log-event';
 
 const regexes = {
   importMetaEnv: {
@@ -49,23 +54,13 @@ export function findAndReplaceVariables(
 
 /** Returns a temporary ze-envs.js file contents with all used envs in the related build. */
 export function createTemporaryVariablesFile(variablesSet: Set<string>) {
-  const envs: Record<string, string> = {};
-
-  // Ensures either a local value or a process.env value is used
-  for (const name of variablesSet) {
-    envs[name] ??= process.env[name] ?? name;
-  }
-
-  const hashKey = Object.keys(envs).sort().join('|');
+  const envs = createVariablesRecord(variablesSet, process.env, (key) =>
+    logFn('warn', `Missing ${key} environment variable`)
+  );
   const source = createZeEnvsFile(envs);
 
   return {
     source,
-
-    // Despite usually being the source hash, this hash is purely based on the
-    // sorted variable names content since the actual source might change
-    // many times by your Zephyr Integration every time you change an environment
-    // variable
-    hash: createHash('sha256').update(hashKey).digest('base64url').slice(0, 8),
+    hash: createHash('sha256').update(source).digest('base64url').slice(0, 8),
   };
 }

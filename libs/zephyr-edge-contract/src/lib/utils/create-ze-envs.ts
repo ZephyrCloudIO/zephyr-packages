@@ -8,8 +8,33 @@ const symbolStr = `Symbol.for('ze_envs')`;
  */
 export const ZephyrEnvsGlobal = `window[${symbolStr}]`;
 
+type Literal = string | number | boolean;
+
+/** Simple helper function to create a record of variables from the used variables */
+export function createVariablesRecord(
+  uses: Iterable<string>,
+  dictionary: Record<string, Literal | undefined>,
+  onNotFound?: (key: string) => void
+) {
+  const variables: Record<string, Literal> = {};
+
+  for (const key of uses) {
+    let value = dictionary[key];
+
+    // Skip 0, '' and false values
+    if (value === undefined || value === null) {
+      value = `(Missing value for ${key})`;
+      onNotFound?.(key);
+    }
+
+    variables[key] ??= value;
+  }
+
+  return variables;
+}
+
 /** Creates the string content of a ze-envs.js file for the provided envs record. */
-export function createZeEnvsFile(envs: Record<string, string>) {
+export function createZeEnvsFile(envs: Record<string, Literal>) {
   const entries = JSON.stringify(Object.entries(envs));
   // Values here are public so base64 obscurity is just to avoid simple inspect+search
   const base64Json = Buffer.from(entries).toString('base64');

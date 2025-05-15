@@ -2,6 +2,7 @@ import { type ZeEnvVarsPluginOptions } from 'zephyr-xpack-internal';
 import type { Compiler } from 'webpack';
 import { ze_log, createTemporaryVariablesFile } from 'zephyr-agent';
 import path from 'path';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 const PLUGIN_NAME = 'ZeEnvVarsWebpackPlugin';
 
@@ -108,6 +109,12 @@ export class ZeEnvVarsWebpackPlugin {
 
             const html = asset.source().toString();
 
+            // Skip if already injected
+            if (html.includes(this.assetFilename)) {
+              ze_log(`${PLUGIN_NAME}: Script already injected into ${filename}, skipping`);
+              return;
+            }
+
             // Inject the script tag into the head
             const modifiedHtml = html.replace(/<head[^>]*>/, `$&\n  ${scriptTag}`);
 
@@ -125,31 +132,30 @@ export class ZeEnvVarsWebpackPlugin {
         }
       );
 
-      // Look for HtmlWebpackPlugin instance
-      const htmlWebpackPlugin = compiler.options.plugins?.find(
-        (plugin) => plugin?.constructor?.name === 'HtmlWebpackPlugin'
-      );
-
-      // Add support for HtmlWebpackPlugin
-      if (htmlWebpackPlugin) {
-        // Create the script tag
-        const publicPath = this.publicPath
-          ? `${this.publicPath.replace(/\/$/, '')}/${this.assetFilename}`
-          : `/${this.assetFilename}`;
-        const scriptTag = `<script src="${publicPath}" fetchpriority="high"></script>`;
-
-        // @ts-expect-error - Tap into the HTML generation hook
-        compilation.hooks.htmlWebpackPluginAfterHtmlProcessing?.tap(
+      // Look for HtmlWebpackPlugin and tap into its hooks
+      if (HtmlWebpackPlugin.getHooks) {
+        HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync(
           PLUGIN_NAME,
-          // @ts-expect-error - Tap into the HTML generation hook
-          (data) => {
+          (data, cb) => {
             if (!this.assetFilename) {
-              return data;
+              return cb(null, data);
             }
 
+            const publicPath = this.publicPath
+              ? `${this.publicPath.replace(/\/$/, '')}/${this.assetFilename}`
+              : `/${this.assetFilename}`;
+            const scriptTag = `<script src="${publicPath}" fetchpriority="high"></script>`;
+
+            // Skip if already injected
+            if (data.html.includes(this.assetFilename)) {
+              ze_log(`${PLUGIN_NAME}: Script already injected by HtmlWebpackPlugin, skipping`);
+              return cb(null, data);
+            }
+
+            // Inject into the HTML
             ze_log(`${PLUGIN_NAME}: HtmlWebpackPlugin detected, injecting script`);
             data.html = data.html.replace(/<head[^>]*>/, `$&\n  ${scriptTag}`);
-            return data;
+            cb(null, data);
           }
         );
       }

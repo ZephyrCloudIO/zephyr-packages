@@ -1,6 +1,8 @@
 export interface PublishTarget {
   url: string;
   hostname: string;
+  /** The resolved record of snapshot variables for this target, if any */
+  variables?: Record<string, string>;
 }
 
 // TODO: all tags, envs, cname publish targets should be logged in deployment history
@@ -44,14 +46,7 @@ export interface PublishRequest {
   can_write: boolean;
 
   // TODO: all tags, envs, cname publish targets should be logged in deployment history
-  targets: {
-    // already published at this point
-    version: PublishTarget;
-    // publish each below
-    tags: PublishTarget[];
-    envs: PublishTarget[];
-    cnames: PublishTarget[];
-  };
+  targets: PublishTargets;
 
   // this is can_write_jwt
   jwt: string;

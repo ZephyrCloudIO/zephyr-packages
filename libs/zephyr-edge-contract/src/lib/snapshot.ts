@@ -58,3 +58,5 @@ export interface SnapshotVariables {
   /** A unique list of environment variables used in the code */
   uses: string[];
 }
+
+export type SnapshotWithVariables = Snapshot & { variables: SnapshotVariables };

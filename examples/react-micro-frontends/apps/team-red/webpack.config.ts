@@ -3,14 +3,14 @@ import { withModuleFederation } from '@nx/react/module-federation';
 import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
 
-const mfConfig = {
-  name: 'team-red',
+const mfConfig: Parameters<typeof withModuleFederation>[0] = {
+  name: 'team_red',
   exposes: {
     './TeamRedLayout': './src/app/team-red-layout',
   },
   // Workaround necessary until Nx upgrade.
   // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109
-  remotes: ['team-green', 'team-blue'],
+  remotes: ['team_green', 'team_blue'],
   additionalShared: [
     {
       libraryName: 'react',
@@ -35,6 +35,13 @@ const mfConfig = {
 export default composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(mfConfig, { dts: false }),
-  withZephyr()
+  withModuleFederation(mfConfig),
+  withZephyr(),
+  // runtimeChunk override issue. https://github.com/nrwl/nx/issues/31114
+  (config) => {
+    if (config.optimization) {
+      config.optimization.runtimeChunk = false;
+    }
+    return config;
+  }
 );

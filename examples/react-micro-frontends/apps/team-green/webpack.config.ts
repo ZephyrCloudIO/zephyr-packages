@@ -3,8 +3,8 @@ import { withModuleFederation } from '@nx/react/module-federation';
 import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
 
-const mfConfig = {
-  name: 'team-green',
+const mfConfig: Parameters<typeof withModuleFederation>[0] = {
+  name: 'team_green',
   exposes: {
     './GreenRecos': './src/app/team-green-recos.tsx',
   },
@@ -34,6 +34,6 @@ const mfConfig = {
 module.exports = composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(mfConfig, { dts: false }),
+  withModuleFederation(mfConfig),
   withZephyr()
 );

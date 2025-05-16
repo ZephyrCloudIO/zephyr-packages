@@ -4,11 +4,11 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "nx run-many -t serve --parallel=5 -p team-blue team-red team-green",
-    "build-all": "nx run-many -t build --parallel=1 --skip-nx-cache -p team-blue team-green team-red",
-    "build:team-red": "nx run team-red:build:production --skip-nx-cache --verbose",
-    "build:team-blue": "nx run team-blue:build:production --skip-nx-cache",
-    "build:team-green": "nx run team-green:build:production --skip-nx-cache  --verbose"
+    "start": "nx run-many -t serve --parallel=5 -p team_blue team_red team_green",
+    "build-all": "nx run-many -t build --parallel=1 --skip-nx-cache -p team_blue team_green team_red",
+    "build:team_red": "nx run team_red:build:production --skip-nx-cache --verbose",
+    "build:team_blue": "nx run team_blue:build:production --skip-nx-cache",
+    "build:team_green": "nx run team_green:build:production --skip-nx-cache  --verbose"
   },
   "dependencies": {
     "react": "19.0.0",
@@ -16,8 +16,6 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "zephyr-webpack-plugin": "workspace:*",
-    "tsutils": "^3.21.0",
     "@babel/core": "catalog:babel",
     "@babel/preset-react": "catalog:babel",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
@@ -44,6 +42,7 @@
     "ts-jest": "^29.2.6",
     "ts-node": "10.9.2",
     "tsutils": "^3.21.0",
-    "url-loader": "^4.1.1"
+    "url-loader": "^4.1.1",
+    "zephyr-webpack-plugin": "workspace:*"
   }
 }

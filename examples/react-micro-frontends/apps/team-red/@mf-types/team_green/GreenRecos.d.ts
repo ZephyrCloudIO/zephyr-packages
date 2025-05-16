@@ -1,0 +1,2 @@
+export * from './compiled-types/examples/react-micro-frontends/apps/team-green/src/app/team-green-recos';
+export { default } from './compiled-types/examples/react-micro-frontends/apps/team-green/src/app/team-green-recos';

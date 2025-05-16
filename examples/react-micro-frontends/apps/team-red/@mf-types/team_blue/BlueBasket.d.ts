@@ -1,0 +1,2 @@
+export * from './compiled-types/examples/react-micro-frontends/apps/team-blue/src/app/team-blue-basket';
+export { default } from './compiled-types/examples/react-micro-frontends/apps/team-blue/src/app/team-blue-basket';

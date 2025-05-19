@@ -6,7 +6,7 @@ import type { XStats } from '../xpack.types';
 
 interface DeployPluginOptions {
   pluginName: string;
-  zephyr_engine: ZephyrEngine;
+  zephyr_engine: ZephyrEngine | Promise<ZephyrEngine>;
   wait_for_index_html?: boolean;
 }
 
@@ -47,6 +47,9 @@ export function setupZeDeploy<
         const stats = compilation.getStats();
         const stats_json = compilation.getStats().toJson();
 
+        if (pluginOptions.zephyr_engine instanceof Promise) {
+          pluginOptions.zephyr_engine = await pluginOptions.zephyr_engine;
+        }
         await pluginOptions.zephyr_engine.start_new_build();
 
         process.nextTick(xpack_zephyr_agent, {

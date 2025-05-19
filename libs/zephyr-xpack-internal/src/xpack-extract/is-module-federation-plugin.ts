@@ -12,6 +12,8 @@ export function isModuleFederationPlugin(
     typeof plugin.constructor.name?.includes === 'function' &&
     plugin.constructor.name?.includes('ModuleFederationPlugin')
   ) {
+    if (plugin.constructor.name === 'NxModuleFederationPlugin') return false;
+
     return true;
   }
 

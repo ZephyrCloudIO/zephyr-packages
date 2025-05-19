@@ -1,10 +1,10 @@
 import { createModuleFederationConfig } from "@module-federation/enhanced"
 
 export const moduleFederationConfig = createModuleFederationConfig({
-  name: "host",
+  name: "pnpm_workspace_host",
   filename: "remoteEntry.js",
   remotes: {
-    remote: "remote@http://localhost:3001/remoteEntry.js",
+    remote: "pnpm_workspace_remote@http://localhost:3001/remoteEntry.js",
   },
   shared: {
     react: {

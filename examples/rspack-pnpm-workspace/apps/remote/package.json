@@ -1,5 +1,5 @@
 {
-  "name": "remote",
+  "name": "pnpm_workspace_remote",
   "private": true,
   "version": "1.0.0",
   "scripts": {

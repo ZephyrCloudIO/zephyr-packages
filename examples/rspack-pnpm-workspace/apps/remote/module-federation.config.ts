@@ -1,7 +1,7 @@
 import { createModuleFederationConfig } from "@module-federation/enhanced"
 
 export const moduleFederationConfig = createModuleFederationConfig({
-  name: "remote",
+  name: "pnpm_workspace_remote",
   filename: "remoteEntry.js",
   exposes: {
     "./App": "./src/App",

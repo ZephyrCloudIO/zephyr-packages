@@ -8,6 +8,10 @@
   <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
+## Contributing
+
+We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING.md) for more information.
+
 ## Plugins
 
 Plugins within this repository are built for applications to deploy with Zephyr. This repository also includes utility packages for building npm plugins with Zephyr.

@@ -42,7 +42,7 @@ export class ZeRspackPlugin {
 export class ZephyrPlugin {
   _options: ZephyrRspackInternalPluginOptions;
 
-  constructor(options: Omit<ZephyrRspackInternalPluginOptions, 'pluginName'>) {
+  constructor(options?: Omit<ZephyrRspackInternalPluginOptions, 'pluginName'>) {
     this._options = Object.assign({ pluginName }, options);
   }
 
@@ -53,6 +53,7 @@ export class ZephyrPlugin {
     zephyr_engine_defer.then((engine) => {
       engine.buildProperties.output = compiler.outputPath;
     });
+    this._options.zephyr_engine = zephyr_engine_defer;
 
     compiler.hooks.beforeRun.tapPromise(this._options.pluginName, async (compiler) => {
       if (this._options.zephyr_engine instanceof Promise) {

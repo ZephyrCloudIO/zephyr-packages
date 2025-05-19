@@ -1,0 +1,26 @@
+{
+  "name": "host",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "rspack dev",
+    "build": "rspack build",
+    "preview": "rspack preview"
+  },
+  "dependencies": {
+    "@module-federation/enhanced": "^0.14.0",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "zephyr-rspack-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "react-refresh": "^0.17.0",
+    "ts-node": "^10.9.2",
+    "typescript": "catalog:typescript"
+  }
+}

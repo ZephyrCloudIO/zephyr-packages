@@ -1,11 +1,11 @@
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
-import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { ZeErrors, ZephyrError } from '../errors';
-import { getToken } from '../node-persist/token';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
+import { getToken } from '../node-persist/token';
+import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 
 interface GetApplicationConfigurationProps {
   application_uid: string;
@@ -46,35 +46,13 @@ async function loadApplicationConfiguration({
   };
 }
 
-/** A queue for handling multiple requests for the same application configuration */
-const callsQueue: ((value?: ZeApplicationConfig, error?: Error) => void)[] = [];
+// --- 1. Module-level cache --------------------------------------------------
 
-function addToQueue(): Promise<ZeApplicationConfig> {
-  let resolve!: (value: ZeApplicationConfig) => void;
-  let reject!: (error?: Error) => void;
-  const callback = (value?: ZeApplicationConfig, error?: Error) => {
-    if (value) {
-      resolve(value);
-    }
+/** The single shared promise (null when no request is in flight). */
+let inFlight: Promise<ZeApplicationConfig> | null = null;
 
-    reject(error);
-  };
-  callsQueue.push(callback);
-
-  return new Promise<ZeApplicationConfig>((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
-  });
-}
-
-function handleQueue(result?: ZeApplicationConfig, error?: Error) {
-  do {
-    const callback = callsQueue.shift();
-    if (callback) {
-      callback(result, error);
-    }
-  } while (callsQueue.length);
-}
+/** The last successful result (null until we have fetched at least once). */
+let cachedConfig: ZeApplicationConfig | null = null;
 
 /**
  * Gather all calls until the first returns result:
@@ -88,10 +66,29 @@ function handleQueue(result?: ZeApplicationConfig, error?: Error) {
 export async function getApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
+  // Fast path: we already have a valid cached config
+  if (cachedConfig && cachedConfig.application_uid === application_uid) {
+    if (
+      isTokenStillValid(cachedConfig.jwt) &&
+      cachedConfig.fetched_at &&
+      Date.now() - cachedConfig.fetched_at <= 60 * 1000
+    ) {
+      ze_log('Using cached application configuration');
+      return cachedConfig;
+    }
+    // If the cached config is invalid, clear it
+    cachedConfig = null;
+  }
+
+  // Another request already in flight → piggy-back on it
+  if (inFlight) return inFlight;
+
+  // We're the first caller → actually start the fetch
   ze_log('Getting application configuration from node-persist');
-  const promise = addToQueue();
-  if (callsQueue.length === 1) {
+
+  inFlight = (async () => {
     const storedAppConfig = await getAppConfig(application_uid);
+
     if (
       !storedAppConfig ||
       (storedAppConfig &&
@@ -100,19 +97,26 @@ export async function getApplicationConfiguration({
           Date.now() - storedAppConfig.fetched_at > 60 * 1000))
     ) {
       ze_log('Loading Application Configuration from API...');
-      await loadApplicationConfiguration({ application_uid })
-        .then(async (loadedAppConfig) => {
-          ze_log('Saving Application Configuration to node-persist...');
-          await saveAppConfig(application_uid, loadedAppConfig);
-
-          return loadedAppConfig;
-        })
-        .then((result) => handleQueue(result))
-        .catch((error) => handleQueue(undefined, error));
+      const loadedAppConfig = await loadApplicationConfiguration({ application_uid });
+      ze_log('Saving Application Configuration to node-persist...');
+      await saveAppConfig(application_uid, loadedAppConfig);
+      return loadedAppConfig;
     } else {
-      handleQueue(storedAppConfig);
+      return storedAppConfig;
     }
-  }
+  })()
+    .then((config) => {
+      cachedConfig = config; // cache the good result
+      return config;
+    })
+    .finally(() => {
+      inFlight = null; // allow future refreshes
+    });
 
-  return promise;
+  return inFlight;
+}
+
+/** Invalidate the cached application configuration */
+export function invalidateApplicationConfigCache() {
+  cachedConfig = null;
 }

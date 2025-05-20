@@ -7,7 +7,7 @@ import {
 import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { getToken } from '../node-persist/token';
 import {
   brightBlueBgName,
@@ -103,7 +103,7 @@ export function logger(props: LoggerOptions): ZeLogger {
     // Then attempt to upload logs,
     loadLogData()
       .then(([config, token]) =>
-        ZeHttpRequest.from(
+        makeRequest<unknown>(
           url,
           {
             method: 'POST',
@@ -128,7 +128,7 @@ export function logger(props: LoggerOptions): ZeLogger {
                 createdAt: Date.now(),
               }))
           )
-        ).unwrap()
+        )
       )
       // This is ok to fail silently
       .catch(() => void 0);

@@ -3,7 +3,7 @@ import { isTokenStillValid } from '../auth/login';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getToken } from '../node-persist/token';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
 
@@ -24,7 +24,7 @@ async function loadApplicationConfiguration({
     ZE_API_ENDPOINT()
   );
 
-  const [ok, cause, data] = await ZeHttpRequest.from<{
+  const [ok, cause, data] = await makeRequest<{
     value: ZeApplicationConfig;
   }>(application_config_url, {
     headers: { Authorization: `Bearer ${token}` },
@@ -44,6 +44,36 @@ async function loadApplicationConfiguration({
     ...data.value,
     fetched_at: Date.now(),
   };
+}
+
+/** A queue for handling multiple requests for the same application configuration */
+const callsQueue: ((value?: ZeApplicationConfig, error?: Error) => void)[] = [];
+
+function addToQueue(): Promise<ZeApplicationConfig> {
+  let resolve!: (value: ZeApplicationConfig) => void;
+  let reject!: (error?: Error) => void;
+  const callback = (value?: ZeApplicationConfig, error?: Error) => {
+    if (value) {
+      resolve(value);
+    }
+
+    reject(error);
+  };
+  callsQueue.push(callback);
+
+  return new Promise<ZeApplicationConfig>((_resolve, _reject) => {
+    resolve = _resolve;
+    reject = _reject;
+  });
+}
+
+function handleQueue(result?: ZeApplicationConfig, error?: Error) {
+  do {
+    const callback = callsQueue.shift();
+    if (callback) {
+      callback(result, error);
+    }
+  } while (callsQueue.length);
 }
 
 /**
@@ -85,33 +115,4 @@ export async function getApplicationConfiguration({
   }
 
   return promise;
-}
-
-const callsQueue: ((value?: ZeApplicationConfig, error?: Error) => void)[] = [];
-
-function addToQueue(): Promise<ZeApplicationConfig> {
-  let resolve!: (value: ZeApplicationConfig) => void;
-  let reject!: (error?: Error) => void;
-  const callback = (value?: ZeApplicationConfig, error?: Error) => {
-    if (value) {
-      resolve(value);
-    }
-
-    reject(error);
-  };
-  callsQueue.push(callback);
-
-  return new Promise<ZeApplicationConfig>((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
-  });
-}
-
-function handleQueue(result?: ZeApplicationConfig, error?: Error) {
-  do {
-    const callback = callsQueue.shift();
-    if (callback) {
-      callback(result, error);
-    }
-  } while (callsQueue.length);
 }

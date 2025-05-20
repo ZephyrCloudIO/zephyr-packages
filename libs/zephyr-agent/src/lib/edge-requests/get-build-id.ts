@@ -1,6 +1,6 @@
 import { getApplicationConfiguration } from './get-application-configuration';
 import { getToken } from '../node-persist/token';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 
@@ -19,7 +19,7 @@ export async function getBuildId(application_uid: string): Promise<string> {
     },
   };
 
-  const [ok, cause, data] = await ZeHttpRequest.from<Record<string, string>>(
+  const [ok, cause, data] = await makeRequest<Record<string, string>>(
     BUILD_ID_ENDPOINT,
     options
   );

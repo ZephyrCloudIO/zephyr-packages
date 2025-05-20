@@ -7,7 +7,7 @@ import {
   ze_api_gateway,
 } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picocolor';
 import { formatLogMsg, logFn } from '../logging/ze-log-event';
@@ -164,7 +164,7 @@ async function openUrl(url: string): Promise<void> {
 
 /** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
-  const [ok, cause, data] = await ZeHttpRequest.from<string>({
+  const [ok, cause, data] = await makeRequest<string>({
     path: ze_api_gateway.auth_link,
     base: ZE_API_ENDPOINT(),
     query: { state },

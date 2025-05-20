@@ -1,6 +1,6 @@
+import * as isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import * as isCI from 'is-ci';
 import {
   type Snapshot,
   type ZeBuildAsset,
@@ -258,7 +258,11 @@ export class ZephyrEngine {
 
       ze_log(`Resolved dependency: ${tuple[1].default_url}`);
 
-      return tuple[1];
+      if (dep.name === tuple[1].name) {
+        return tuple[1];
+      }
+
+      return Object.assign({}, tuple[1], { name: dep.name, version: dep.version });
     });
 
     const resolution_results = await Promise.all(tasks);

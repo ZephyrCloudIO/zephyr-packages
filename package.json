@@ -1,6 +1,6 @@
 {
   "name": "zephyr-packages",
-  "version": "0.0.46",
+  "version": "0.0.47",
   "license": "Apache-2.0",
   "scripts": {
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
@@ -62,6 +62,7 @@
       "hono": "^4.2.7",
       "esbuild": "catalog:esbuild",
       "@babel/runtime": "catalog:babel",
+      "@swc/helpers": "catalog:swc",
       "vite": "catalog:vite6"
     }
   }

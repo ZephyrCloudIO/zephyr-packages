@@ -202,14 +202,14 @@ Please make sure you have set them correctly in your package.json and git reposi
   ERR_MISSING_IOS_VERSION: {
     id: '025',
     message:
-      'Missing iOS version. Please ensure you have a valid iOS version in your Info.plist file in the ios project under line <key>CFBundleShortVersionString</key>.',
+      'Missing iOS version. Please ensure you have a valid iOS version in your project.pbxproj file in the ios project and variable MARKETING_VERSION is set. To use semantic versioning and ensuring Host application and remote application are in sync, please ensure you have a valid native version in project.xcodeproj or a valid matching git tag for the platform.',
     kind: 'config',
   },
 
   ERR_MISSING_IOS_BUILD_NUMBER: {
     id: '026',
     message:
-      'Missing iOS build number. Please ensure you have a valid iOS build number in your Info.plist file in the ios project under line <key>CFBundleVersion</key>.',
+      'Missing iOS build number. Please ensure you have a valid iOS build number in your project.pbxproj file in the ios project and variable CURRENT_PROJECT_VERSION is set.',
     kind: 'config',
   },
 
@@ -259,6 +259,12 @@ Please make sure you have set them correctly in your package.json and git reposi
     id: '033',
     message:
       'Missing native version for your {{ platform }}. Please ensure you have a valid native version in your native configuration file in the project. {{ cause }}',
+    kind: 'config',
+  },
+
+  ERR_INCORRECT_SEMVER_VERSION: {
+    id: '034',
+    message: `The native version set for your {{ platform }} is not a valid semantic version and it will affect your application's remote resolution. Please ensure you have a valid value set for {{ variable_name }} in {{ file_path }}. For more information, please refer to the official semantic versioning documentation: https://semver.org/`,
     kind: 'config',
   },
 

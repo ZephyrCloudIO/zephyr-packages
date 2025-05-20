@@ -3,63 +3,16 @@ import type { NativeVersionInfo, NativePlatform } from '../../type/native-versio
 import * as child_process from 'child_process';
 import * as util from 'util';
 import isCI from 'is-ci';
-import semverRegex from 'semver-regex';
 import { getAndroidVersionInfoAsync } from './get-android-version';
 import { getIOSVersionInfoAsync } from './get-ios-version';
 import { getWindowsVersionInfoAsync } from './get-windows-info';
+import { isValidSemver, extractSemverFromTag } from 'zephyr-agent';
 
 const exec = util.promisify(child_process.exec);
 
 // Default values to use when version formatting is invalid
 export const DEFAULT_VERSION = '0.0.1';
 export const DEFAULT_BUILD_NUMBER = '1';
-
-/**
- * Checks if a version string follows semantic versioning format (major.minor.patch)
- *
- * @param version The version string to check
- * @returns True if valid semver format, false otherwise
- */
-export function isValidSemver(version: string): boolean {
-  return semverRegex().test(version);
-}
-
-/**
- * Checks if a build number is a valid numeric format (pure number)
- *
- * @param buildNumber The build number string to check
- * @returns True if valid numeric format, false otherwise
- */
-export function isValidBuildNumber(buildNumber: string): boolean {
-  return /^\d+$/.test(buildNumber);
-}
-
-/**
- * Extracts a semver-compatible version from a Git tag
- *
- * @param tag The Git tag to parse
- * @returns A valid semver string or null if tag doesn't contain a valid semver
- */
-export function extractSemverFromTag(tag: string): string | null {
-  // Try to extract semver from the tag (common formats)
-  // 1. Plain semver: v1.2.3 or 1.2.3
-  const semverMatch = tag.match(semverRegex());
-  if (semverMatch) {
-    return semverMatch[0];
-  }
-
-  // 2. Tag with prefix like release-1.2.3 or version/1.2.3
-  const prefixedMatch = tag.match(
-    /(?:release-|version\/|v\/|ver-|ver\/|r-|r\/)(\d+\.\d+\.\d+)/i
-  );
-  if (prefixedMatch && prefixedMatch[1]) {
-    return prefixedMatch[1];
-  }
-
-  // TODO: see if we need tag with platform prefix like ios-1.2.3 or android_1.2.3 or 1.2.3-ios or 1.2.3_android
-
-  return null;
-}
 
 /**
  * Gets the latest Git tag that points to the current commit
@@ -73,9 +26,9 @@ export async function getGitTagVersion(
   try {
     // Get all tags that point to HEAD
     const { stdout } = await exec('git tag --points-at HEAD');
-    const tags = stdout.trim().split('\n').filter(Boolean);
+    const tags = stdout.split('\n').filter(Boolean);
 
-    if (!tags.length) {
+    if (!tags || !tags.length) {
       ze_log('No git tags found for platform: ', platform);
       return null;
     }
@@ -89,7 +42,7 @@ export async function getGitTagVersion(
       // Try platform-specific tags first
       for (const tag of platformTags) {
         const version = extractSemverFromTag(tag);
-        if (version) {
+        if (version && isValidSemver(version)) {
           logFn('info', `Found ${platform}-specific Git tag with version ${version}`);
           return version;
         }
@@ -116,24 +69,10 @@ export async function augmentWithGitTagVersion(
   platform: NativePlatform
 ): Promise<NativeVersionInfo> {
   // Only use Git tags in CI environments
-  let nativeVersion = versionInfo;
+  const nativeVersion = versionInfo;
   if (!isCI) {
     if (!isValidSemver(versionInfo.native_version)) {
-      logFn('warn', warningInfoLog(platform, 'native_version', versionInfo));
-
-      nativeVersion = {
-        ...nativeVersion,
-        native_version: DEFAULT_VERSION,
-      };
-    }
-
-    if (!isValidBuildNumber(versionInfo.native_build_number)) {
-      logFn('warn', warningInfoLog(platform, 'native_build_number', versionInfo));
-
-      nativeVersion = {
-        ...nativeVersion,
-        native_build_number: DEFAULT_BUILD_NUMBER,
-      };
+      throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION);
     }
 
     return nativeVersion;
@@ -146,7 +85,7 @@ export async function augmentWithGitTagVersion(
     // In CI environments, prefer Git tag version over manifest file version
     logFn(
       'info',
-      `Using Git tag version ${gitTagVersion} for ${platform} in CI environment`
+      `Found git tag ${gitTagVersion}. Using Git tag version ${gitTagVersion} for ${platform} in CI environment`
     );
     return {
       native_version: gitTagVersion,
@@ -154,10 +93,9 @@ export async function augmentWithGitTagVersion(
     };
   }
 
-  return versionInfo;
+  throw new ZephyrError(ZeErrors.ERR_MISSING_NATIVE_VERSION);
 }
 
-// TODO: move this to zephyr-agent
 /**
  * Get native version information for the specified platform In CI environments, this
  * function will also attempt to extract version information from Git tags that point to
@@ -171,7 +109,7 @@ export async function getNativeVersionInfoAsync(
   platform: NativePlatform,
   projectRoot: string
 ): Promise<NativeVersionInfo> {
-  let versionInfo: NativeVersionInfo;
+  let versionInfo: NativeVersionInfo | null = null;
 
   // First get the version info from the platform-specific files
   switch (platform) {
@@ -189,17 +127,17 @@ export async function getNativeVersionInfoAsync(
       versionInfo = await getIOSVersionInfoAsync(projectRoot);
       break;
     default:
-      throw new ZephyrError(ZeErrors.ERR_MISSING_NATIVE_VERSION);
+      versionInfo = null;
+      break;
+  }
+  if (!versionInfo) {
+    throw new ZephyrError(ZeErrors.ERR_MISSING_NATIVE_VERSION);
+  }
+
+  if (!isValidSemver(versionInfo.native_version)) {
+    throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION);
   }
 
   // In CI environments, try to augment with Git tag version
   return await augmentWithGitTagVersion(versionInfo, platform);
-}
-
-export function warningInfoLog(
-  platform: NativePlatform,
-  info: 'native_version' | 'native_build_number',
-  versionInfo: NativeVersionInfo
-): string {
-  return `Invalid native ${info} "${versionInfo[info]}" for ${platform} as it is not a valid ${info}. Using default values "${DEFAULT_VERSION}" and "${DEFAULT_BUILD_NUMBER}" for local development.`;
 }

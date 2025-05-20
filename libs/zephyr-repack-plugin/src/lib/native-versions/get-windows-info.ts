@@ -1,4 +1,4 @@
-import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { NativeVersionInfo } from '../../type/native-version';
@@ -68,10 +68,8 @@ export async function getWindowsVersionInfoAsync(
     }
     return parseWindowsManifest(manifestPath);
   } catch (error) {
-    ze_log('Error getting Windows version info:', error);
-    return {
-      native_version: '0.0.0',
-      native_build_number: '0',
-    };
+    throw new ZephyrError(ZeErrors.ERR_MISSING_WINDOWS_VERSION, {
+      cause: error,
+    });
   }
 }

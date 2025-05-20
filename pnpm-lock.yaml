@@ -1172,6 +1172,9 @@ importers:
       open:
         specifier: ^10.1.0
         version: 10.1.0
+      semver-regex:
+        specifier: ^4.0.5
+        version: 4.0.5
       socket.io-client:
         specifier: ^4.7.5
         version: 4.8.1
@@ -1280,9 +1283,6 @@ importers:
       is-ci:
         specifier: ^4.1.0
         version: 4.1.0
-      semver-regex:
-        specifier: ^4.0.5
-        version: 4.0.5
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent

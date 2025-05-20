@@ -1,12 +1,7 @@
-import { getItem, init, removeItem, setItem } from 'node-persist';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { StorageKeys, ZE_PATH } from './storage-keys';
+import { getItem, removeItem, setItem } from 'node-persist';
+import { StorageKeys } from './storage-keys';
 import type { ZeApplicationConfig } from './upload-provider-options';
-
-const storage = init({
-  dir: join(homedir(), ZE_PATH),
-});
+import { storage } from './storage';
 
 function get_key(application_uid: string): string {
   return [StorageKeys.ze_app_config_token, application_uid].join('.');

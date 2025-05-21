@@ -22,6 +22,7 @@ export interface ZephyrPluginOptions {
     branch: string;
     commit: string;
     tags?: string[];
+    targetTag?: string;
   };
   mfConfig?: {
     name: string;

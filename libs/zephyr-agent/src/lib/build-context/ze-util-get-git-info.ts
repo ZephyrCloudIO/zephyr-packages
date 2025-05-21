@@ -19,7 +19,7 @@ export interface ZeGitInfo {
 export async function getGitInfo(): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
 
-  const { name, email, remoteOrigin, branch, commit, tags, stdout } =
+  const { name, email, remoteOrigin, branch, commit, tags, stdout, targetTag } =
     await loadGitInfo(hasToken);
 
   if (!hasToken && (!name || !email)) {
@@ -31,7 +31,7 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
   const app = parseGitUrl(remoteOrigin, stdout);
 
   const gitInfo = {
-    git: { name, email, branch, commit, tags },
+    git: { name, email, branch, commit, tags, targetTag },
     app,
   };
 
@@ -57,18 +57,21 @@ async function loadGitInfo(hasSecretToken: boolean) {
     'git rev-parse --abbrev-ref HEAD',
     'git rev-parse HEAD',
     'git tag --points-at HEAD',
+    // Get the current checked out tag
+    "git reflog -1 --pretty=format:'%D' | grep -o 'tag: [^ ,]*' | sed 's/tag: //'",
   ].join(` && echo ${delimiter} && `);
 
   try {
     const { stdout } = await exec(command);
 
-    const [name, email, remoteOrigin, branch, commit, tagsOutput] = stdout
-      .trim()
-      .split(delimiter)
-      .map((x) => x.trim());
+    const [name, email, remoteOrigin, branch, commit, tagsOutput, targetTagOutput] =
+      stdout
+        .trim()
+        .split(delimiter)
+        .map((x) => x.trim());
     // Parse tags - if multiple tags point to HEAD, they'll be on separate lines
     const tags = tagsOutput ? tagsOutput.split('\n').filter(Boolean) : [];
-
+    const targetTag = targetTagOutput.length ? targetTagOutput : undefined;
     return {
       name,
       email,
@@ -76,6 +79,7 @@ async function loadGitInfo(hasSecretToken: boolean) {
       branch,
       commit,
       tags,
+      targetTag,
       stdout,
     };
   } catch (cause: unknown) {

@@ -1,19 +1,21 @@
 import { federation } from '@module-federation/vite';
+import type { PreRenderedAsset } from 'rollup';
 import type { Plugin, ResolvedConfig } from 'vite';
 import {
+  type DeferredZephyrPrelude,
   ZephyrEngine,
+  type ZephyrEnginePrelude,
   ZephyrError,
-  logFn,
-  zeBuildDashData,
   createTemporaryVariablesFile,
   findAndReplaceVariables,
+  logFn,
+  zeBuildDashData,
 } from 'zephyr-agent';
 import { type SnapshotVariables, deferred } from 'zephyr-edge-contract';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
-import type { PreRenderedAsset } from 'rollup';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
@@ -28,14 +30,18 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   const [variables_defer, resolve_variables] = deferred<SnapshotVariables | undefined>();
-  plugins.push(zephyrEnvsPlugin(resolve_variables));
-  plugins.push(zephyrPlugin(variables_defer));
+  const prelude_defer = ZephyrEngine.create_prelude_defer();
+
+  plugins.push(zephyrEnvsPlugin(resolve_variables, prelude_defer));
+  plugins.push(zephyrPlugin(variables_defer, prelude_defer));
+
   return plugins;
 }
 
 // env parsing must run before vite, that's why we use a different plugin
 function zephyrEnvsPlugin(
-  resolve_variables: (vars: SnapshotVariables | undefined) => void
+  resolve_variables: (vars?: SnapshotVariables) => void,
+  { prelude_defer, prelude_defer_create }: DeferredZephyrPrelude
 ): Plugin {
   const variablesSet = new Set<string>();
   let zeEnvsFilename: string;
@@ -44,17 +50,32 @@ function zephyrEnvsPlugin(
     name: 'with-zephyr-envs',
     enforce: 'pre',
 
+    // No need to handle
+    configResolved: (config) => {
+      prelude_defer_create(config.root);
+    },
+
     transform: (code) => {
       return findAndReplaceVariables(code, variablesSet, ['importMetaEnv']);
     },
 
-    generateBundle: (opts, bundle) => {
+    generateBundle: async (opts, bundle) => {
       if (variablesSet.size === 0) {
         resolve_variables(undefined);
         return;
       }
 
-      const { source, hash } = createTemporaryVariablesFile(variablesSet);
+      const prelude = await prelude_defer;
+
+      // Wasn't able to get basic data...
+      if (!prelude) {
+        return;
+      }
+
+      const { source, hash } = await createTemporaryVariablesFile(
+        variablesSet,
+        prelude.application_uid
+      );
 
       const asset: PreRenderedAsset = {
         type: 'asset',
@@ -109,7 +130,10 @@ function zephyrEnvsPlugin(
   };
 }
 
-function zephyrPlugin(variables_defer: Promise<SnapshotVariables | undefined>): Plugin {
+function zephyrPlugin(
+  variables_defer: Promise<SnapshotVariables | undefined>,
+  { prelude_defer }: DeferredZephyrPrelude
+): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   const [vite_internal_options_defer, resolve_vite_internal_options] =
@@ -122,10 +146,13 @@ function zephyrPlugin(variables_defer: Promise<SnapshotVariables | undefined>): 
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
-      zephyr_defer_create({
-        builder: 'vite',
-        context: config.root,
-      });
+      zephyr_defer_create(
+        {
+          builder: 'vite',
+          context: config.root,
+        },
+        await prelude_defer
+      );
       resolve_vite_internal_options({
         root: config.root,
         outDir: config.build?.outDir,

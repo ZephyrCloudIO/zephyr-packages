@@ -55,7 +55,7 @@ export interface SnapshotVariables {
   /** The `assets/ze-envs-<hash>.js` generated full path with extension */
   filename: string;
 
-  /** A unique list of environment variables used in the code */
+  /** A unique list of environment variables **names** used in the code */
   uses: string[];
 }
 

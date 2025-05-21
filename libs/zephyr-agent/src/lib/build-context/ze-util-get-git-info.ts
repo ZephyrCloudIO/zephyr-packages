@@ -17,6 +17,7 @@ export interface ZeGitInfo {
 
 /** Loads the git information from the current repository. */
 export async function getGitInfo(): Promise<ZeGitInfo> {
+  ze_log('Initializing: git info...');
   const hasToken = hasSecretToken();
 
   const { name, email, remoteOrigin, branch, commit, tags, stdout } =

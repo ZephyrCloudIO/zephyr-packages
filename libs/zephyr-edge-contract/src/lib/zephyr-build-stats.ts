@@ -1,5 +1,7 @@
 /* istanbul ignore file */
 
+import type { SnapshotVariables } from './snapshot';
+
 /** Todo: this worst and most outdated model so far, had to be refactored */
 export interface ZephyrBuildStats {
   /** @deprecated */
@@ -115,6 +117,8 @@ export interface ZephyrBuildStats {
     versionUrl?: string;
     delimiter: string;
   };
+  // Used here so API knows which variables it needs to fetch when deploying an environment
+  variables?: SnapshotVariables;
   domain?: string | undefined;
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;

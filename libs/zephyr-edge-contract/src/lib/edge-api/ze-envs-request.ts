@@ -16,3 +16,17 @@ export interface ZeUploadBuildStats {
 }
 
 export type ZeEnvs = ZeUploadBuildStats;
+
+// TODO: Load these from api SDK instead of copy/paste them here
+export interface ResolveApplicationVariablesBody {
+  names: string[];
+}
+
+export interface ApplicationVariableItem {
+  name: string;
+  value: string;
+}
+
+export interface ResolveApplicationVariablesResponse {
+  variables: ApplicationVariableItem[];
+}

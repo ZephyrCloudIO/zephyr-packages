@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto';
 import {
+  ZephyrEnvsGlobal,
   createVariablesRecord,
   createZeEnvsFile,
-  ZephyrEnvsGlobal,
 } from 'zephyr-edge-contract';
+import { resolveApplicationVariables } from '../edge-requests/application-variables';
+import { ZephyrError } from '../errors';
 import { logFn } from '../logging/ze-log-event';
 
 const regexes = {
@@ -53,10 +55,38 @@ export function findAndReplaceVariables(
 }
 
 /** Returns a temporary ze-envs.js file contents with all used envs in the related build. */
-export function createTemporaryVariablesFile(variablesSet: Set<string>) {
-  const envs = createVariablesRecord(variablesSet, process.env, (key) =>
-    logFn('warn', `Missing ${key} environment variable`)
+export async function createTemporaryVariablesFile(
+  variablesSet: Set<string>,
+  application_uid: string
+) {
+  const envs = await createVariablesRecord(
+    variablesSet,
+    process.env,
+
+    // Simply warns when a variable is missing.
+    // TODO: Ask for user if he wants to create that variable in zephyr (v2 maybe?)
+    (key) => {
+      logFn('warn', `Missing ${key} environment variable`);
+    },
+
+    // Request to api gateway to get missing env names
+    async (names, applyTo) => {
+      try {
+        const result = await resolveApplicationVariables(application_uid, { names });
+
+        if (result.variables.length) {
+          logFn('info', `Loaded ${result.variables.length} environments from API`);
+        }
+
+        for (const { name, value } of result.variables) {
+          applyTo[name] = value;
+        }
+      } catch (error) {
+        logFn('error', ZephyrError.format(error));
+      }
+    }
   );
+
   const source = createZeEnvsFile(envs);
 
   return {

@@ -464,6 +464,15 @@ Were the required packages in Module federation plugin installed and included in
       'Missing platform target (ios, android or others) from compiler options. Please open an issue on https://github.com/ZephyrCloudIO/zephyr-packages/issues',
     kind: 'config',
   },
+  ERR_VARIABLES_RESOLUTION: {
+    id: '007',
+    kind: 'build',
+    message: `
+    Could not resolve and replace your Zephyr Variables:
+
+    {{ message }}
+    `,
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

@@ -8,33 +8,51 @@ const symbolStr = `Symbol.for('ze_envs')`;
  */
 export const ZephyrEnvsGlobal = `window[${symbolStr}]`;
 
-type Literal = string | number | boolean;
-
 /** Simple helper function to create a record of variables from the used variables */
-export function createVariablesRecord(
+export async function createVariablesRecord(
   uses: Iterable<string>,
-  dictionary: Record<string, Literal | undefined>,
-  onNotFound?: (key: string) => void
+  dictionary: Record<string, string | undefined>,
+  // Warns in the CLI of missing variables
+  onNotFound?: (key: string) => void,
+
+  // Performs an async request and append result into variables
+  requestMissingVariables?: (
+    this: void,
+    names: string[],
+    variables: Record<string, string>
+  ) => void | Promise<void>
 ) {
-  const variables: Record<string, Literal> = {};
+  const variables: Record<string, string> = {};
+  const missing: string[] = [];
 
   for (const key of uses) {
-    let value = dictionary[key];
+    const value = dictionary[key];
 
     // Skip 0, '' and false values
     if (value === undefined || value === null) {
-      value = `(Missing value for ${key})`;
+      missing.push(key);
+    } else {
+      variables[key] ??= value;
+    }
+  }
+
+  // Attempts to request missing values
+  if (requestMissingVariables) {
+    await requestMissingVariables(missing, variables);
+  }
+
+  for (const key of missing) {
+    if (!variables[key]) {
+      variables[key] = `(Missing value for ${key})`;
       onNotFound?.(key);
     }
-
-    variables[key] ??= value;
   }
 
   return variables;
 }
 
 /** Creates the string content of a ze-envs.js file for the provided envs record. */
-export function createZeEnvsFile(envs: Record<string, Literal>) {
+export function createZeEnvsFile(envs: Record<string, string>) {
   const entries = JSON.stringify(Object.entries(envs));
   // Values here are public so base64 obscurity is just to avoid simple inspect+search
   const base64Json = Buffer.from(entries).toString('base64');

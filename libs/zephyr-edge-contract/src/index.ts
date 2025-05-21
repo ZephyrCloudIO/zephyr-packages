@@ -6,7 +6,13 @@ export type {
   StageZeroPublishRequest,
   PublishTarget,
 } from './lib/edge-api/publish-request';
-export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
+export type {
+  ZeEnvs,
+  ZeUploadBuildStats,
+  ApplicationVariableItem,
+  ResolveApplicationVariablesBody,
+  ResolveApplicationVariablesResponse,
+} from './lib/edge-api/ze-envs-request';
 
 export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-plugin-options';
 export type {

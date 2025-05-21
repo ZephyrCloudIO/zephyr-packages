@@ -21,6 +21,8 @@ import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
 export async function getPackageJson(
   context: string | undefined
 ): Promise<ZePackageJson> {
+  ze_log('Initializing: npm package info...');
+
   // Determine the starting path
   let startingPath: string;
   try {

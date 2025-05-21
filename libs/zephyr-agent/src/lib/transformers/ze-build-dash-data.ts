@@ -1,9 +1,11 @@
 import type { ZephyrEngine } from '../../zephyr-engine';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
+import type { SnapshotVariables } from 'libs/zephyr-edge-contract/dist';
 
 export async function zeBuildDashData(
-  zephyr_engine: ZephyrEngine
+  zephyr_engine: ZephyrEngine,
+  variables?: SnapshotVariables
 ): Promise<ZephyrBuildStats> {
   const snapshotId = await zephyr_engine.snapshotId;
   const buildId = await zephyr_engine.build_id;
@@ -45,6 +47,7 @@ export async function zeBuildDashData(
     devDependencies: to_raw(zephyr_engine.npmProperties.devDependencies),
     optionalDependencies: to_raw(zephyr_engine.npmProperties.optionalDependencies),
     peerDependencies: to_raw(zephyr_engine.npmProperties.peerDependencies),
+    variables,
 
     overrides: [],
     consumes: [],

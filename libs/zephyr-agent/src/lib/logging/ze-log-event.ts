@@ -7,7 +7,7 @@ import {
 import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { getToken } from '../node-persist/token';
 import {
   brightBlueBgName,
@@ -102,33 +102,34 @@ export function logger(props: LoggerOptions): ZeLogger {
 
     // Then attempt to upload logs,
     loadLogData()
-      .then(([config, token]) =>
-        ZeHttpRequest.from(
-          url,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
+      .then(
+        ([config, token]) =>
+          void makeRequest<unknown>(
+            url,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
             },
-          },
-          JSON.stringify(
-            logs
-              // some logs are empty to give newline effect in terminal
-              .filter((l) => l.message.length && !l.ignore)
-              .map((log) => ({
-                application_uid: application_uid,
-                userId: config.user_uuid,
-                username: config.username,
-                zeBuildId: buildId,
-                logLevel: log.level,
-                actionType: log.action,
-                git: git,
-                message: stripAnsi(log.message.trim()),
-                createdAt: Date.now(),
-              }))
+            JSON.stringify(
+              logs
+                // some logs are empty to give newline effect in terminal
+                .filter((l) => l.message.length && !l.ignore)
+                .map((log) => ({
+                  application_uid: application_uid,
+                  userId: config.user_uuid,
+                  username: config.username,
+                  zeBuildId: buildId,
+                  logLevel: log.level,
+                  actionType: log.action,
+                  git: git,
+                  message: stripAnsi(log.message.trim()),
+                  createdAt: Date.now(),
+                }))
+            )
           )
-        ).unwrap()
       )
       // This is ok to fail silently
       .catch(() => void 0);

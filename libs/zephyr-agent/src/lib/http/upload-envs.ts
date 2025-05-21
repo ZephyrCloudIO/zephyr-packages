@@ -2,7 +2,7 @@ import { getApplicationConfiguration } from '../edge-requests/get-application-co
 import type { LogEvent } from '../logging/ze-log-event';
 import type { ZeUploadBuildStats } from 'zephyr-edge-contract';
 import { ze_log } from '../logging';
-import { ZeHttpRequest } from './ze-http-request';
+import { makeRequest } from './http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 
 export async function uploadEnvs({
@@ -31,12 +31,11 @@ export async function uploadEnvs({
     },
   };
 
-  const [ok, cause, data] = await ZeHttpRequest.from<unknown>(
-    {
-      path: '/upload',
-      base: EDGE_URL,
-      query: { type: 'envs' },
-    },
+  const url = new URL('/upload', EDGE_URL);
+  url.searchParams.append('type', 'envs');
+
+  const [ok, cause, data] = await makeRequest<unknown>(
+    url,
     options,
     JSON.stringify(body)
   );

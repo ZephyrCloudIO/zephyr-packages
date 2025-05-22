@@ -1,5 +1,5 @@
 import { getApplicationConfiguration } from './get-application-configuration';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 
 interface GetApplicationHashListProps {
@@ -18,7 +18,7 @@ export async function getApplicationHashList({
   const url = new URL('/__get_application_hash_list__', EDGE_URL);
   url.searchParams.append('application_uid', application_uid);
 
-  const [ok, cause, data] = await ZeHttpRequest.from<{
+  const [ok, cause, data] = await makeRequest<{
     hashes: string[];
   }>(url, { method: 'GET' });
 

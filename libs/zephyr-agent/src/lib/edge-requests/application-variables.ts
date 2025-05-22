@@ -11,9 +11,14 @@ import { getToken } from '../node-persist/token';
 export async function resolveApplicationVariables(
   application_uid: string,
   body: ResolveApplicationVariablesBody
-) {
+): Promise<ResolveApplicationVariablesResponse> {
   if (!application_uid) {
     throw new ZephyrError(ZeErrors.ERR_MISSING_APPLICATION_UID);
+  }
+
+  // Avoids unnecessary requests to the API
+  if (!body.names.length) {
+    return { variables: [] };
   }
 
   const token = await getToken();

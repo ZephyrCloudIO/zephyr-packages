@@ -77,6 +77,7 @@ type ZephyrEngineBuilderTypes =
   | 'rollup'
   | 'rolldown'
   | 'parcel'
+ß  | 'metro'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;

@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import NxWelcome from './nx-welcome';
 
-// @ts-expect-error remote
 const Remote = React.lazy(() => import('rspack_nx_mf_remote/Module'));
 
 export function App() {

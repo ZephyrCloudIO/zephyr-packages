@@ -625,6 +625,12 @@ importers:
       '@rspack/cli':
         specifier: catalog:rspack
         version: 1.2.8(@rspack/core@1.2.8(@swc/helpers@0.5.15))(@types/express@4.17.21)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      '@swc-node/register':
+        specifier: catalog:swc
+        version: 1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.2)
+      '@swc/helpers':
+        specifier: ^0.5.15
+        version: 0.5.15
       '@types/react':
         specifier: catalog:react19
         version: 19.0.12

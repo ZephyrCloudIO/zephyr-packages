@@ -9,8 +9,6 @@
     "@rspack/cli": "catalog:rspack",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@swc-node/register": "catalog:swc",
-    "@swc/helpers": "catalog:swc",
     "ts-node": "10.9.1",
     "zephyr-rspack-plugin": "workspace:*"
   }

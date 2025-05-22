@@ -1,4 +1,4 @@
-import { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
+import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
 
 export function extractFederatedConfig(
   plugin: ModuleFederationPlugin

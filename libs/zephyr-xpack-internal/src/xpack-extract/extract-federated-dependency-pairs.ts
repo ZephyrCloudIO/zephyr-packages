@@ -18,7 +18,10 @@ export function extractFederatedDependencyPairs(
 
   iterateFederatedRemoteConfig(config, (remotesConfig: XFederatedRemotesConfig) => {
     if (!remotesConfig?.remotes) return;
-    Object.entries(remotesConfig.remotes).map(([remote_name, remote_version]) => {
+
+    const remoteEntries = parseRemotesAsEntries(remotesConfig.remotes);
+
+    remoteEntries.forEach(([remote_name, remote_version]) => {
       depsPairs.push({
         name: remote_name,
         version: remote_version,
@@ -29,4 +32,33 @@ export function extractFederatedDependencyPairs(
   return depsPairs
     .flat()
     .filter((dep): dep is ZeDependencyPair => is_zephyr_dependency_pair(dep));
+}
+
+/** Returns an Array of [remote_name, remote_version] */
+export function parseRemotesAsEntries(
+  remotes: XFederatedRemotesConfig['remotes']
+): [string, string][] {
+  if (!remotes) return [];
+
+  const remotePairs: [string, string][] = [];
+  const remoteEntries = Array.isArray(remotes) ? remotes : Object.entries(remotes);
+
+  remoteEntries.map((remote) => {
+    if (Array.isArray(remote)) {
+      // Case where remotes are declared as:
+      // Record<remote_name: string, remote_version: string | RemotesConfig>
+      // e.g. ['remote_name', { url: 'remote_url' }]
+      remotePairs.push([remote[0], JSON.stringify(remote[1])]);
+    } else if (typeof remote === 'string') {
+      // Case where remotes are declared as string (Nx's default remotes)
+      remotePairs.push([remote, remote]);
+    } else {
+      // Fallback case where remotes are nested RemotesConfig objects
+      Object.entries(remote).forEach(([name, version]) => {
+        remotePairs.push([name, JSON.stringify(version)]);
+      });
+    }
+  });
+
+  return remotePairs;
 }

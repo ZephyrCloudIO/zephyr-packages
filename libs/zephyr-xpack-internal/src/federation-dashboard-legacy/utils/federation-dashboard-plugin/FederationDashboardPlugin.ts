@@ -3,11 +3,12 @@
 import { sep } from 'node:path';
 import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
 import type { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
-import { isModuleFederationPlugin } from '../../../xpack-extract/is-module-federation-plugin';
+import { extractFederatedConfig, isModuleFederationPlugin, parseRemotesAsEntries } from '../../../xpack-extract';
 import type {
   ModuleFederationPlugin,
   XChunk,
   XCompiler,
+  XFederatedRemotesConfig,
   XStats,
   XStatsChunk,
   XStatsCompilation,
@@ -45,7 +46,7 @@ export class FederationDashboardPlugin {
 
   FederationPluginOptions: {
     name?: string;
-    remotes?: unknown;
+    remotes?: XFederatedRemotesConfig['remotes'];
     /**
      * **bundle_name**: This is a placeholder option since Repack is fast iterating on
      * Module Federation, right now they are consuming JS bundle and ignore
@@ -84,7 +85,7 @@ export class FederationDashboardPlugin {
     if (FederationPlugin) {
       this.FederationPluginOptions = Object.assign(
         {},
-        FederationPlugin._options,
+        extractFederatedConfig(FederationPlugin),
         this._options.standalone || {}
       );
     } else if (this._options.standalone) {
@@ -261,7 +262,9 @@ export class FederationDashboardPlugin {
       .name as FederationDashboardPluginOptions['target'];
 
     const remotes = this.FederationPluginOptions?.remotes
-      ? Object.keys(this.FederationPluginOptions.remotes)
+      ? parseRemotesAsEntries(this.FederationPluginOptions?.remotes).map(
+          ([remote_name]) => remote_name
+        )
       : {};
 
     const rawData: ConvertToGraphParams = {
@@ -424,30 +427,21 @@ export class FederationDashboardPlugin {
    * }
    */
   getChunkDependencies(validChunkArray: XChunk[]): Record<string, never> {
-    return validChunkArray.reduce(
-      (acc, chunk) => {
-        const subset = chunk.getAllReferencedChunks();
-        const stringifiableChunk = Array.from(subset).map((sub) => {
-          const cleanSet = Object.getOwnPropertyNames(sub).reduce(
-            (acc, key) => {
-              if (key === '_groups') return acc;
-              return Object.assign(acc, { [key]: sub[key as keyof XChunk] });
-            },
-            {} as Record<
-              keyof Omit<XChunk, '_groups'>,
-              XChunk[keyof Omit<XChunk, '_groups'>]
-            >
-          );
+    return validChunkArray.reduce((acc, chunk) => {
+      const subset = chunk.getAllReferencedChunks();
+      const stringifiableChunk = Array.from(subset).map((sub) => {
+        const cleanSet = Object.getOwnPropertyNames(sub).reduce((acc, key) => {
+          if (key === '_groups') return acc;
+          return Object.assign(acc, { [key]: sub[key as keyof XChunk] });
+        }, {} as Record<keyof Omit<XChunk, '_groups'>, XChunk[keyof Omit<XChunk, '_groups'>]>);
 
-          return this.mapToObjectRec(cleanSet);
-        });
+        return this.mapToObjectRec(cleanSet);
+      });
 
-        return Object.assign(acc, {
-          [`${chunk.id}`]: stringifiableChunk,
-        });
-      },
-      {} as Record<string, never>
-    );
+      return Object.assign(acc, {
+        [`${chunk.id}`]: stringifiableChunk,
+      });
+    }, {} as Record<string, never>);
   }
 
   buildVendorFederationMap(liveStats: XStats): TopLevelPackage {

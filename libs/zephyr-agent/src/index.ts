@@ -25,6 +25,13 @@ export { zeBuildAssets } from './lib/transformers/ze-build-assets';
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
 
+// Catalog related exports
+export {
+  resolveCatalogVersion,
+  resolveCatalogDependencies,
+  getCatalogPackages,
+} from './lib/build-context/resolve-catalog-version';
+
 // Zephyr Edge is the main class which should be used
 export {
   ZephyrEngine,

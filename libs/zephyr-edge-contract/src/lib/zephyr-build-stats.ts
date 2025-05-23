@@ -156,6 +156,28 @@ export interface ApplicationOverride {
   applicationID: string;
 }
 
+/**
+ * If a remote's component is consumed by another app, this field should exists in the
+ * consuming app's build stats. This is the only way to know that a remote's component is
+ * being consumed by another app. It has the shape looks like
+ *
+ *     {
+ *       consumingApplicationID: 'NxWelcome',
+ *       applicationID: 'rspack_mf_remote',
+ *       name: 'NxWelcome',
+ *       usedIn: [Array]
+ *     }
+ *
+ * - ConsumingApplicationId and name are the same value
+ * - ApplicationId is the id of the remote application
+ * - UsedIn is an array of object with the following shape: { files:
+ *   src/screens/LazyLoadedCheckoutSuccessScreen.tsx, url:
+ *   /src/screens/LazyLoadedCheckoutSuccessScreen.tsx } This field describes where the
+ *   remote is being used, and how are they imported, the id of the remote application
+ *   (the id/applicationId is referring to the id of the remote application within the
+ *   bundler context) and the name of the remote's component (ex: NxWelcome).
+ */
+
 export interface ApplicationConsumes {
   consumingApplicationID: string;
   applicationID: string;

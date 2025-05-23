@@ -237,14 +237,14 @@ Please make sure you have set them correctly in your package.json and git reposi
   ERR_MISSING_MACOS_VERSION: {
     id: '030',
     message:
-      'Missing macOS version. Please ensure you have a valid macOS version in your Info.plist file in the macos project under line <key>CFBundleShortVersionString</key>.',
+      'Missing macOS version. Please ensure you have a valid macOS version in your project.pbxproj file in the macos project under line MARKETING_VERSION.',
     kind: 'config',
   },
 
   ERR_MISSING_MACOS_BUILD_NUMBER: {
     id: '031',
     message:
-      'Missing macOS build number. Please ensure you have a valid macOS build number in your Info.plist file in the macos project under line <key>CFBundleVersion</key>.',
+      'Missing macOS build number. Please ensure you have a valid macOS build number in your project.pbxproj file in the macos project under line CURRENT_PROJECT_VERSION.',
     kind: 'config',
   },
 

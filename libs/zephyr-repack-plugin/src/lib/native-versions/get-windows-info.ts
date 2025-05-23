@@ -1,6 +1,6 @@
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { NativeVersionInfo } from '../../type/native-version';
 
 /**
@@ -26,19 +26,24 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
       return {
         native_version: parts.slice(0, 3).join('.'),
         native_build_number: fullVersion,
+        file_path: manifestPath,
+        variable_name: 'Version',
       };
     }
 
     return {
       native_version: fullVersion,
       native_build_number: fullVersion,
+      file_path: manifestPath,
+      variable_name: 'Version',
     };
   }
 
-  return {
-    native_version: '0.0.0',
-    native_build_number: '0',
-  };
+  throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+    variable_name: 'Version',
+    file_path: manifestPath,
+    platform: 'windows',
+  });
 }
 
 /**

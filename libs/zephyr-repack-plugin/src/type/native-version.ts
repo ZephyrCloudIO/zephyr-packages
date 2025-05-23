@@ -8,6 +8,12 @@ export interface NativeVersionInfo {
    * "1.0.0.0" for Windows)
    */
   native_build_number: string;
+
+  /** The file path of the native version info */
+  file_path: string;
+
+  /** The variable name of the native version info */
+  variable_name: string;
 }
 
 /** Supported platform types for React Native builds */

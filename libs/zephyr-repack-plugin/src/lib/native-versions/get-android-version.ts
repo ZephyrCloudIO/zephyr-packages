@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { NativeVersionInfo } from '../../type/native-version';
-import { logFn } from 'zephyr-agent';
-import { DEFAULT_VERSION, DEFAULT_BUILD_NUMBER } from './ze-util-native-versions';
 
 /**
  * Get the native version and build information for Android Extracts version from
@@ -14,20 +13,18 @@ import { DEFAULT_VERSION, DEFAULT_BUILD_NUMBER } from './ze-util-native-versions
 export async function getAndroidVersionInfoAsync(
   projectRoot: string
 ): Promise<NativeVersionInfo> {
+  let buildGradlePath = '';
   const androidProjectPath = path.join(projectRoot, 'android');
   try {
     // Find build.gradle files that might contain version info
-    const buildGradlePath = path.join(androidProjectPath, 'app/build.gradle');
+    buildGradlePath = path.join(androidProjectPath, 'app/build.gradle');
 
     if (!fs.existsSync(buildGradlePath)) {
-      logFn(
-        'warn',
-        `Could not find build.gradle at ${buildGradlePath}. Using default values for local development.`
-      );
-      return {
-        native_version: DEFAULT_VERSION,
-        native_build_number: DEFAULT_BUILD_NUMBER,
-      };
+      throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+        variable_name: 'versionName',
+        file_path: buildGradlePath,
+        platform: 'android',
+      });
     }
 
     const buildGradleContent = fs.readFileSync(buildGradlePath, 'utf-8');
@@ -37,33 +34,37 @@ export async function getAndroidVersionInfoAsync(
     const versionCodeMatch = buildGradleContent.match(/versionCode (\d+)/);
 
     if (!versionNameMatch) {
-      logFn(
-        'warn',
-        `Could not find versionName in build.gradle. Using default "${DEFAULT_VERSION}" for local development.`
-      );
+      throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+        variable_name: 'versionName',
+        file_path: buildGradlePath,
+        platform: 'android',
+      });
     }
 
     if (!versionCodeMatch) {
-      logFn(
-        'warn',
-        `Could not find versionCode in build.gradle. Using default "${DEFAULT_BUILD_NUMBER}" for local development.`
-      );
+      throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+        variable_name: 'versionCode',
+        file_path: buildGradlePath,
+        platform: 'android',
+      });
     }
 
     const versionInfo = {
-      native_version: versionNameMatch?.[1] || DEFAULT_VERSION,
-      native_build_number: versionCodeMatch?.[1] || DEFAULT_BUILD_NUMBER,
+      native_version: versionNameMatch?.[1],
+      native_build_number: versionCodeMatch?.[1],
     };
 
-    return versionInfo;
-  } catch (error) {
-    logFn(
-      'warn',
-      `Error reading Android version info: ${error}. Using default values "${DEFAULT_VERSION}" for Native Version and "${DEFAULT_BUILD_NUMBER}" for Native Build Number during local development.`
-    );
     return {
-      native_version: DEFAULT_VERSION,
-      native_build_number: DEFAULT_BUILD_NUMBER,
+      native_version: versionInfo.native_version,
+      native_build_number: versionInfo.native_build_number,
+      file_path: buildGradlePath,
+      variable_name: 'versionName',
     };
+  } catch (error) {
+    throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+      platform: 'android',
+      variable_name: 'versionName',
+      file_path: buildGradlePath,
+    });
   }
 }

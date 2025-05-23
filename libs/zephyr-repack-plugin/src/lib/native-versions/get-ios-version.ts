@@ -1,8 +1,7 @@
-import type { NativeVersionInfo } from '../../type/native-version';
 import * as fs from 'fs';
-import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import * as path from 'path';
-import { isValidSemver } from 'zephyr-agent';
+import { isValidSemver, ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import type { NativeVersionInfo } from '../../type/native-version';
 
 /**
  * Attempts to extract version information from a project.pbxproj file
@@ -107,7 +106,7 @@ export async function getIOSVersionInfoAsync(
   projectRoot: string
 ): Promise<NativeVersionInfo> {
   const iosProjectPath = path.join(projectRoot, 'ios');
-  let versionInfo: NativeVersionInfo | null = null;
+  const versionInfo: NativeVersionInfo | null = null;
 
   // Try to find project.pbxproj file
   const pbxprojPath = findProjectPbxproj(iosProjectPath);
@@ -119,21 +118,26 @@ export async function getIOSVersionInfoAsync(
     const pbxprojContent = fs.readFileSync(pbxprojPath, 'utf8');
 
     // Try to extract version info from project.pbxproj
-    versionInfo = parseProjectPbxprojContent(pbxprojContent);
+    const info = parseProjectPbxprojContent(pbxprojContent);
 
-    if (!versionInfo) {
+    if (!info) {
       throw new ZephyrError(ZeErrors.ERR_MISSING_IOS_VERSION);
     }
 
     // we only worry about native version here
-    if (!isValidSemver(versionInfo?.native_version)) {
+    if (!isValidSemver(info?.native_version)) {
       throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION);
     }
 
     ze_log('Successfully extracted version info from project.pbxproj');
-    ze_log('iOS marketing version', versionInfo.native_version);
-    ze_log('iOS current project version', versionInfo.native_build_number);
-    return versionInfo;
+    ze_log('iOS marketing version', info.native_version);
+    ze_log('iOS current project version', info.native_build_number);
+    return {
+      native_version: info.native_version,
+      native_build_number: info.native_build_number,
+      file_path: pbxprojPath,
+      variable_name: 'MARKETING_VERSION',
+    };
   }
   throw new ZephyrError(ZeErrors.ERR_MISSING_IOS_VERSION);
 }

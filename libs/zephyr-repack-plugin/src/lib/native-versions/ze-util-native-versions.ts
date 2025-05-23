@@ -1,12 +1,18 @@
-import { ZeErrors, ZephyrError, logFn, ze_log } from 'zephyr-agent';
-import type { NativeVersionInfo, NativePlatform } from '../../type/native-version';
 import * as child_process from 'child_process';
-import * as util from 'util';
 import isCI from 'is-ci';
+import * as util from 'util';
+import {
+  ZeErrors,
+  ZephyrError,
+  extractSemverFromTag,
+  isValidSemver,
+  logFn,
+  ze_log,
+} from 'zephyr-agent';
+import type { NativePlatform, NativeVersionInfo } from '../../type/native-version';
 import { getAndroidVersionInfoAsync } from './get-android-version';
 import { getIOSVersionInfoAsync } from './get-ios-version';
 import { getWindowsVersionInfoAsync } from './get-windows-info';
-import { isValidSemver, extractSemverFromTag } from 'zephyr-agent';
 
 const exec = util.promisify(child_process.exec);
 
@@ -90,6 +96,8 @@ export async function augmentWithGitTagVersion(
     return {
       native_version: gitTagVersion,
       native_build_number: versionInfo.native_build_number, // Keep the build number from manifest
+      file_path: versionInfo.file_path,
+      variable_name: versionInfo.variable_name,
     };
   }
 
@@ -135,7 +143,11 @@ export async function getNativeVersionInfoAsync(
   }
 
   if (!isValidSemver(versionInfo.native_version)) {
-    throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION);
+    throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+      variable_name: versionInfo.variable_name,
+      file_path: versionInfo.file_path,
+      platform: platform as string,
+    });
   }
 
   // In CI environments, try to augment with Git tag version

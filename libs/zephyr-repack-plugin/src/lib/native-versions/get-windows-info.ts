@@ -16,7 +16,15 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
   // Example: <Identity Name="MyApp" Version="1.0.0.0" ...>
   const versionMatch = content.match(/Identity[^>]*Version="([^"]+)"/i);
 
-  if (versionMatch && versionMatch[1]) {
+  if (!versionMatch || !versionMatch[1]) {
+    throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
+      variable_name: 'Version',
+      file_path: manifestPath,
+      platform: 'windows',
+      message: 'Could not find Version in Package.appxmanifest',
+    });
+  }
+
     const fullVersion = versionMatch[1];
     const parts = fullVersion.split('.');
 
@@ -37,13 +45,8 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
       file_path: manifestPath,
       variable_name: 'Version',
     };
-  }
 
-  throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION, {
-    variable_name: 'Version',
-    file_path: manifestPath,
-    platform: 'windows',
-  });
+ 
 }
 
 /**

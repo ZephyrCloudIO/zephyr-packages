@@ -147,6 +147,7 @@ export async function getNativeVersionInfoAsync(
       variable_name: versionInfo.variable_name,
       file_path: versionInfo.file_path,
       platform: platform as string,
+      message: ''
     });
   }
 

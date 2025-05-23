@@ -24,6 +24,7 @@ export async function getAndroidVersionInfoAsync(
         variable_name: 'versionName',
         file_path: buildGradlePath,
         platform: 'android',
+        message: 'Could not find build.gradle file.',
       });
     }
 
@@ -38,6 +39,7 @@ export async function getAndroidVersionInfoAsync(
         variable_name: 'versionName',
         file_path: buildGradlePath,
         platform: 'android',
+        message: 'Could not find versionName in build.gradle file.',
       });
     }
 
@@ -46,6 +48,7 @@ export async function getAndroidVersionInfoAsync(
         variable_name: 'versionCode',
         file_path: buildGradlePath,
         platform: 'android',
+        message: 'Could not find versionCode in build.gradle',
       });
     }
 
@@ -65,6 +68,7 @@ export async function getAndroidVersionInfoAsync(
       platform: 'android',
       variable_name: 'versionName',
       file_path: buildGradlePath,
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

@@ -106,7 +106,6 @@ export async function getIOSVersionInfoAsync(
   projectRoot: string
 ): Promise<NativeVersionInfo> {
   const iosProjectPath = path.join(projectRoot, 'ios');
-  const versionInfo: NativeVersionInfo | null = null;
 
   // Try to find project.pbxproj file
   const pbxprojPath = findProjectPbxproj(iosProjectPath);

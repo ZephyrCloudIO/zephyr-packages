@@ -1,16 +1,16 @@
 {
-  "name": "team-red",
+  "name": "team_red",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
   },
   "scripts": {
-    "build": "nx run team-red:build --skip-nx-cache"
+    "build": "nx run team_red:build --skip-nx-cache"
   },
   "private": true,
   "zephyrDependencies": {
-    "team-blue": "0.1.0",
-    "team-green": "0.1.0"
+    "team_blue": "0.1.0",
+    "team_green": "0.1.0"
   }
 }

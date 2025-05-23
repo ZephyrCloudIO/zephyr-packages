@@ -3,8 +3,8 @@ import { withModuleFederation } from '@nx/react/module-federation';
 import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
 
-const mfConfig = {
-  name: 'team-blue',
+const mfConfig: Parameters<typeof withModuleFederation>[0] = {
+  name: 'team_blue',
   exposes: {
     './BlueBasket': './src/app/team-blue-basket.tsx',
     './BlueBuy': './src/app/team-blue-buy.tsx',
@@ -35,6 +35,6 @@ const mfConfig = {
 module.exports = composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(mfConfig, { dts: false }),
+  withModuleFederation(mfConfig),
   withZephyr()
 );

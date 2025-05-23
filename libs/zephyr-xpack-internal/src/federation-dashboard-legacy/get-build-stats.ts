@@ -1,6 +1,7 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import { parseRemotesAsEntries } from '../xpack-extract';
 import { extractFederatedConfig } from '../xpack-extract/extract-federation-config';
 import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
@@ -58,7 +59,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const application_uid = pluginOptions.zephyr_engine.application_uid;
   const buildId = await pluginOptions.zephyr_engine.build_id;
 
-  // todo: add support for multiple fedeation configs
+  // todo: add support for multiple federation configs
   const mfConfig = Array.isArray(pluginOptions.mfConfig)
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
@@ -78,7 +79,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     version,
     git,
     remote: filename,
-    remotes: Object.keys(remotes || {}),
+    remotes: parseRemotesAsEntries(remotes).map(([remote_name]) => remote_name),
     context: { isCI },
   };
 

@@ -1,8 +1,9 @@
-import type { ZephyrBuildStats } from 'zephyr-edge-contract';
-import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import { extractFederatedConfig } from '../xpack-extract/extract-federation-config';
 import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 
 interface KnownAgentProps {
   stats: XStats;
@@ -62,7 +63,9 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
 
-  const { name, filename, remotes } = mfConfig?._options || mfConfig?.config || {};
+  const { name, filename, remotes } = mfConfig
+    ? extractFederatedConfig(mfConfig) ?? {}
+    : {};
 
   const data_overrides = {
     id: application_uid,

@@ -1,7 +1,7 @@
 import { type ZeUploadBuildStats } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ze_log } from '../logging';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 
 interface ZeEnableSnapshotOnEdgeProps {
@@ -28,7 +28,7 @@ export async function zeEnableSnapshotOnPages({
     application_uid,
   });
 
-  const [ok, cause] = await ZeHttpRequest.from(
+  const [ok, cause] = await makeRequest(
     {
       path: '/upload',
       base: EDGE_URL,

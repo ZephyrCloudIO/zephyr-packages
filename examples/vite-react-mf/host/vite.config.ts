@@ -1,13 +1,13 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
 
 const mfConfig: ModuleFederationOptions = {
   name: 'vite-host',
   filename: 'remoteEntry.js',
   remotes: {
-    'vite-remote': {
-      name: 'vite-remote',
+    vite_remote: {
+      name: 'vite_remote',
       entry: 'http://localhost:5174/remoteEntry.js',
       type: 'module',
     },

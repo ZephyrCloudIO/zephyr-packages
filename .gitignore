@@ -69,3 +69,8 @@ examples/vite-react-mf/host/.__mf__temp/**
 .parcel-cache
 
 
+
+**/.claude/settings.local.json
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

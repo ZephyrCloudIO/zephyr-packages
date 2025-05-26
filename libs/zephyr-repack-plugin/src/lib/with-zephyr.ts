@@ -1,4 +1,5 @@
 import type { Configuration } from '@rspack/core';
+import { rspack } from '@rspack/core';
 import { ZeErrors, ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
@@ -7,8 +8,8 @@ import {
 } from 'zephyr-xpack-internal';
 import type { RepackEnv } from '../type/zephyr-internal-types';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
+import { getNativeVersionInfoAsync } from './native-versions/ze-util-native-versions';
 import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin';
-
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
   configFn: (env: RepackEnv) => Configuration
@@ -46,6 +47,14 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
   try {
+    if (!_zephyrOptions?.target) {
+      throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
+    }
+    const nativeVersionInfo = await getNativeVersionInfoAsync(
+      _zephyrOptions.target,
+      config.context || process.cwd()
+    );
+
     // create instance of ZephyrEngine to track the application
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'repack',
@@ -53,9 +62,6 @@ async function _zephyr_configuration(
     });
     ze_log('Configuring with Zephyr... \n config: ', config);
 
-    if (!_zephyrOptions?.target) {
-      throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
-    }
     zephyr_engine.env.target = _zephyrOptions?.target;
 
     const dependency_pairs = extractFederatedDependencyPairs(config);
@@ -76,13 +82,36 @@ async function _zephyr_configuration(
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
+    // Extend
+
+    ze_log(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
+
+    zephyr_engine.env.native_version = nativeVersionInfo.native_version;
+    zephyr_engine.env.native_build_number = nativeVersionInfo.native_build_number;
+
+    const defineConfig = {
+      ZE_BUILD_ID: await zephyr_engine.build_id,
+      ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,
+      ZE_APP_ID: zephyr_engine.application_uid,
+      ZE_MF_CONFIG: JSON.stringify(mf_configs),
+      ZE_UPDATED_AT: JSON.stringify(
+        (await zephyr_engine.application_configuration).fetched_at
+      ),
+      ZE_EDGE_URL: (await zephyr_engine.application_configuration).EDGE_URL,
+      ZE_NATIVE_VERSION: nativeVersionInfo.native_version,
+      ZE_NATIVE_BUILD_NUMBER: nativeVersionInfo.native_build_number,
+    };
+
+    ze_log('Content in defineConfig: ', defineConfig);
+
     ze_log('Application uid created...');
     config.plugins?.push(
       new ZeRepackPlugin({
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         target: zephyr_engine.env.target,
-      })
+      }),
+      new rspack.DefinePlugin(defineConfig)
     );
   } catch (error) {
     logFn('error', ZephyrError.format(error));

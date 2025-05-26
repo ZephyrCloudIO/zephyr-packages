@@ -1,6 +1,6 @@
-import { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
+import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { ZeHttpRequest } from './ze-http-request';
+import { makeRequest } from './http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 
@@ -26,18 +26,11 @@ export async function uploadSnapshot({
     },
   };
 
-  const [ok, cause, resp] = await ZeHttpRequest.from<SnapshotUploadRes>(
-    {
-      path: '/upload',
-      base: EDGE_URL,
-      query: {
-        type: 'snapshot',
-        skip_assets: true,
-      },
-    },
-    options,
-    json
-  );
+  const url = new URL('/upload', EDGE_URL);
+  url.searchParams.append('type', 'snapshot');
+  url.searchParams.append('skip_assets', 'true');
+
+  const [ok, cause, resp] = await makeRequest<SnapshotUploadRes>(url, options, json);
 
   if (!ok) {
     throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {

@@ -1,14 +1,14 @@
-import gitUrlParse from 'git-url-parse';
 import isCI from 'is-ci';
-import cp from 'node:child_process';
+import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
-import { type ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { hasSecretToken } from '../node-persist/secret-token';
+import { getGitProviderInfo } from './git-provider-utils';
 
-const exec = promisify(cp.exec);
+const exec = promisify(node_exec);
 
 export interface ZeGitInfo {
   app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
@@ -91,8 +91,8 @@ async function loadGitInfo(hasSecretToken: boolean) {
 /**
  * Parses the git url using the `git-url-parse` package.
  *
- * This package differentiate CI providers and handle a lot of small utilities for getting
- * git info from `azure`, `aws` etc
+ * This package differentiates CI providers and handles git info from various platforms
+ * like GitHub, GitLab, Bitbucket, and custom git deployments.
  */
 function parseGitUrl(remoteOrigin: string, stdout: string) {
   if (!remoteOrigin) {
@@ -101,10 +101,20 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
     });
   }
 
-  let parsed: gitUrlParse.GitUrl;
-
   try {
-    parsed = gitUrlParse(remoteOrigin);
+    const gitInfo = getGitProviderInfo(remoteOrigin);
+
+    ze_log(`Git provider detected: ${gitInfo.provider}`, {
+      provider: gitInfo.provider,
+      owner: gitInfo.owner,
+      project: gitInfo.project,
+      isEnterprise: gitInfo.isEnterprise,
+    });
+
+    return {
+      org: gitInfo.owner,
+      project: gitInfo.project,
+    };
   } catch (cause) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
       message: stdout,
@@ -112,15 +122,4 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
       data: { stdout },
     });
   }
-
-  if (!parsed.owner || !parsed.name) {
-    throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN, {
-      data: { stdout },
-    });
-  }
-
-  return {
-    org: parsed.owner.toLocaleLowerCase(),
-    project: parsed.name.toLocaleLowerCase(),
-  };
 }

@@ -1,12 +1,7 @@
-import { getItem, init, removeItem, setItem } from 'node-persist';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { StorageKeys, ZE_PATH } from './storage-keys';
-import { ZeBuildAssetsMap } from 'zephyr-edge-contract';
-
-const storage = init({
-  dir: join(homedir(), ZE_PATH),
-});
+import { getItem, removeItem, setItem } from 'node-persist';
+import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import { storage } from './storage';
+import { StorageKeys } from './storage-keys';
 
 function get_key(application_uid: string): string {
   return [StorageKeys.ze_app_partial_asset_map, application_uid].join('.');

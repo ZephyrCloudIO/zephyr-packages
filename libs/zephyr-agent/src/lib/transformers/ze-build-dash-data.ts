@@ -1,5 +1,5 @@
-import { ZephyrEngine } from '../../zephyr-engine';
-import { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrEngine } from '../../zephyr-engine';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 
 export async function zeBuildDashData(
@@ -49,7 +49,7 @@ export async function zeBuildDashData(
     overrides: [],
     consumes: [],
     modules: [],
-    remotes: [],
+    remotes: zephyr_engine.federated_dependencies?.map((r) => r.name) ?? [],
     tags: [],
     project: '',
     metadata: {},

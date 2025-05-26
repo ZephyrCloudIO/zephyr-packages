@@ -1,6 +1,6 @@
 {
   "name": "zephyr-repack-plugin",
-  "version": "0.0.42",
+  "version": "0.0.48",
   "description": "Repack plugin for Zephyr",
   "repository": {
     "type": "git",

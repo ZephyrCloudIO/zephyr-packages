@@ -42,6 +42,37 @@
       "rules": {
         "@nx/dependency-checks": "off"
       }
+    },
+    {
+      "files": ["**/*.js", "**/*.ts"],
+      "excludedFiles": [
+        "**/*.test.js",
+        "**/*.spec.js",
+        "**/*.test.ts",
+        "**/*.spec.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "ThrowStatement > NewExpression[callee.name='Error']",
+            "message": "Use ZephyrError instead of Error"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "@typescript-eslint/consistent-type-imports": "error",
+        "@typescript-eslint/no-floating-promises": "error",
+        "@typescript-eslint/no-misused-promises": "error"
+      },
+      "excludedFiles": ["webpack.config.ts", "jest.config.ts", "*.spec.tsx"],
+      "parserOptions": {
+        "projectService": true,
+        "tsconfigRootDir": "./"
+      }
     }
   ]
 }

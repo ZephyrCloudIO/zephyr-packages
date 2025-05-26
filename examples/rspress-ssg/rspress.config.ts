@@ -1,5 +1,5 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
-import type {  StatsCompilation } from '@rspack/core';
+import type { StatsCompilation } from '@rspack/core';
 import * as path from 'node:path';
 import { defineConfig } from 'rspress/config';
 import { withZephyr } from 'zephyr-rspack-plugin';
@@ -13,7 +13,9 @@ const zephyrRsbuildPlugin = (): RsbuildPlugin => ({
     // });
     api.onAfterBuild(async ({ stats }) => {
       if (!stats) return;
-      const compilation: StatsCompilation | undefined = stats.toJson({ all: false, assets: true }).children?.[0] || stats.toJson({ all: false, assets: true });
+      const compilation: StatsCompilation | undefined =
+        stats.toJson({ all: false, assets: true }).children?.[0] ||
+        stats.toJson({ all: false, assets: true });
 
       if (!compilation?.assets) {
         console.warn('No assets found in compilation stats.');
@@ -26,7 +28,7 @@ const zephyrRsbuildPlugin = (): RsbuildPlugin => ({
       for (const file of outputFiles) {
         console.log(file);
       }
-    })
+    });
   },
 });
 

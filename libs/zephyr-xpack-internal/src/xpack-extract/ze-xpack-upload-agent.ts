@@ -1,10 +1,8 @@
-import { logFn, ze_log, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import {
-  type Source,
-  type ZephyrBuildStats,
-  ZephyrPluginOptions,
-} from 'zephyr-edge-contract';
-import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import type { ZephyrEngine } from 'zephyr-agent';
+import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { type Source, type ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
 import { emitDeploymentDone } from '../lifecycle-events/index';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
@@ -65,7 +63,6 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     logFn('error', ZephyrError.format(err));
   } finally {
     emitDeploymentDone();
-    // todo: log end
     ze_log('Zephyr Webpack Upload Agent: Done in', Date.now() - zeStart, 'ms');
   }
 }

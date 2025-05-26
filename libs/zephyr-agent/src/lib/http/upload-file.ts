@@ -1,6 +1,6 @@
 import { type UploadableAsset } from 'zephyr-edge-contract';
-import { ZeApplicationConfig } from '../node-persist/upload-provider-options';
-import { ZeHttpRequest } from './ze-http-request';
+import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import { makeRequest } from './http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 
 export interface UploadFileProps {
@@ -24,7 +24,7 @@ export async function uploadFile(
     },
   };
 
-  const [ok, cause] = await ZeHttpRequest.from(
+  const [ok, cause] = await makeRequest(
     {
       path: '/upload',
       base: EDGE_URL,

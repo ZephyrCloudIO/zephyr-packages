@@ -1,26 +1,32 @@
+/* eslint-disable no-restricted-syntax */
+
 import { sep } from 'node:path';
-// import { Chunk, Compiler, Stats, StatsChunk, StatsCompilation } from 'webpack';
-import { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
-import { ZeErrors, ZephyrEngine } from 'zephyr-agent';
+import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
+import type { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
 import {
-  convertToGraph,
-  ConvertToGraphParams,
-} from '../convert-to-graph/convert-to-graph';
-import { TopLevelPackage } from '../convert-to-graph/validate-params';
-import { findPackageJson } from './find-package-json';
-import { computeVersionStrategy, gitSha } from './compute-version-strategy';
-import { FederationDashboardPluginOptions } from './federation-dashboard-plugin-options';
-import { AddRuntimeRequirementToPromiseExternal } from './add-runtime-requirement-to-promise-external';
-import { Exposes } from './federation-dashboard-types';
-import { isModuleFederationPlugin } from '../../../xpack-extract/is-module-federation-plugin';
-import {
+  extractFederatedConfig,
+  isModuleFederationPlugin,
+  parseRemotesAsEntries,
+} from '../../../xpack-extract';
+import type {
+  ModuleFederationPlugin,
   XChunk,
   XCompiler,
+  XFederatedRemotesConfig,
   XStats,
   XStatsChunk,
   XStatsCompilation,
-  ModuleFederationPlugin,
 } from '../../../xpack.types';
+import {
+  type ConvertToGraphParams,
+  convertToGraph,
+} from '../convert-to-graph/convert-to-graph';
+import type { TopLevelPackage } from '../convert-to-graph/validate-params';
+import { AddRuntimeRequirementToPromiseExternal } from './add-runtime-requirement-to-promise-external';
+import { computeVersionStrategy, gitSha } from './compute-version-strategy';
+import type { FederationDashboardPluginOptions } from './federation-dashboard-plugin-options';
+import type { Exposes } from './federation-dashboard-types';
+import { findPackageJson } from './find-package-json';
 
 // TODO: convert this require to imports
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -44,7 +50,7 @@ export class FederationDashboardPlugin {
 
   FederationPluginOptions: {
     name?: string;
-    remotes?: unknown;
+    remotes?: XFederatedRemotesConfig['remotes'];
     /**
      * **bundle_name**: This is a placeholder option since Repack is fast iterating on
      * Module Federation, right now they are consuming JS bundle and ignore
@@ -83,7 +89,7 @@ export class FederationDashboardPlugin {
     if (FederationPlugin) {
       this.FederationPluginOptions = Object.assign(
         {},
-        FederationPlugin._options,
+        extractFederatedConfig(FederationPlugin),
         this._options.standalone || {}
       );
     } else if (this._options.standalone) {
@@ -260,7 +266,9 @@ export class FederationDashboardPlugin {
       .name as FederationDashboardPluginOptions['target'];
 
     const remotes = this.FederationPluginOptions?.remotes
-      ? Object.keys(this.FederationPluginOptions.remotes)
+      ? parseRemotesAsEntries(this.FederationPluginOptions?.remotes).map(
+          ([remote_name]) => remote_name
+        )
       : {};
 
     const rawData: ConvertToGraphParams = {

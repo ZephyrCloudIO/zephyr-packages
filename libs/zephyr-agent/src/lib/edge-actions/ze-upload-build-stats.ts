@@ -6,7 +6,7 @@ import {
 import { ze_log } from '../logging';
 import { dimmedName } from '../logging/debug';
 import { getToken } from '../node-persist/token';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 
 /** Returns true if build stats are uploaded successfully, false otherwise. */
@@ -18,7 +18,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<bo
 
   const url = new URL(ze_api_gateway.build_stats, ZE_API_ENDPOINT());
 
-  const [ok, cause, res] = await ZeHttpRequest.from<{ status: string }>(
+  const [ok, cause, res] = await makeRequest<{ status: string }>(
     url,
     {
       method: 'POST',

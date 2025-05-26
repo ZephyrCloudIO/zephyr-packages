@@ -3,7 +3,11 @@
 import { sep } from 'node:path';
 import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
 import type { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
-import { extractFederatedConfig, isModuleFederationPlugin, parseRemotesAsEntries } from '../../../xpack-extract';
+import {
+  extractFederatedConfig,
+  isModuleFederationPlugin,
+  parseRemotesAsEntries,
+} from '../../../xpack-extract';
 import type {
   ModuleFederationPlugin,
   XChunk,
@@ -427,21 +431,30 @@ export class FederationDashboardPlugin {
    * }
    */
   getChunkDependencies(validChunkArray: XChunk[]): Record<string, never> {
-    return validChunkArray.reduce((acc, chunk) => {
-      const subset = chunk.getAllReferencedChunks();
-      const stringifiableChunk = Array.from(subset).map((sub) => {
-        const cleanSet = Object.getOwnPropertyNames(sub).reduce((acc, key) => {
-          if (key === '_groups') return acc;
-          return Object.assign(acc, { [key]: sub[key as keyof XChunk] });
-        }, {} as Record<keyof Omit<XChunk, '_groups'>, XChunk[keyof Omit<XChunk, '_groups'>]>);
+    return validChunkArray.reduce(
+      (acc, chunk) => {
+        const subset = chunk.getAllReferencedChunks();
+        const stringifiableChunk = Array.from(subset).map((sub) => {
+          const cleanSet = Object.getOwnPropertyNames(sub).reduce(
+            (acc, key) => {
+              if (key === '_groups') return acc;
+              return Object.assign(acc, { [key]: sub[key as keyof XChunk] });
+            },
+            {} as Record<
+              keyof Omit<XChunk, '_groups'>,
+              XChunk[keyof Omit<XChunk, '_groups'>]
+            >
+          );
 
-        return this.mapToObjectRec(cleanSet);
-      });
+          return this.mapToObjectRec(cleanSet);
+        });
 
-      return Object.assign(acc, {
-        [`${chunk.id}`]: stringifiableChunk,
-      });
-    }, {} as Record<string, never>);
+        return Object.assign(acc, {
+          [`${chunk.id}`]: stringifiableChunk,
+        });
+      },
+      {} as Record<string, never>
+    );
   }
 
   buildVendorFederationMap(liveStats: XStats): TopLevelPackage {

@@ -23,12 +23,25 @@ export type UrlString =
       query: Record<string, string | number | boolean>;
     };
 
+function applyApiHost(url: URL): URL {
+  // Add a query param hint in preview environments
+  const is_preview = ZE_IS_PREVIEW();
+  const ze_api_endpoint_host = ZE_API_ENDPOINT_HOST();
+  const zephyr_api_endpoint = ZEPHYR_API_ENDPOINT();
+
+  if (is_preview && url.host === ze_api_endpoint_host) {
+    url.searchParams.set('api_host', zephyr_api_endpoint);
+  }
+
+  return url;
+}
+
 /** Parses the URL string into a URL object */
 export function parseUrl(urlStr: UrlString): URL {
   if (typeof urlStr === 'string') {
-    return new URL(urlStr);
+    return applyApiHost(new URL(urlStr));
   } else if (urlStr instanceof URL) {
-    return urlStr;
+    return applyApiHost(urlStr);
   } else {
     const url = new URL(urlStr.path, urlStr.base);
 
@@ -36,16 +49,7 @@ export function parseUrl(urlStr: UrlString): URL {
       url.searchParams.append(key, String(value));
     }
 
-    // Add a query param hint in preview environments
-    const is_preview = ZE_IS_PREVIEW();
-    const ze_api_endpoint_host = ZE_API_ENDPOINT_HOST();
-    const zephyr_api_endpoint = ZEPHYR_API_ENDPOINT();
-
-    if (is_preview && url.host === ze_api_endpoint_host) {
-      url.searchParams.set('api_host', zephyr_api_endpoint);
-    }
-
-    return url;
+    return applyApiHost(url);
   }
 }
 

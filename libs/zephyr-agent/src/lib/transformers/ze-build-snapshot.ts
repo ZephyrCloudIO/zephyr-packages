@@ -1,13 +1,14 @@
 import {
+  type Snapshot,
+  type SnapshotAsset,
+  type ZeBuildAssetsMap,
+  type ZephyrPluginOptions,
   createApplicationUid,
   flatCreateSnapshotId,
-  Snapshot,
-  SnapshotAsset,
-  ZeBuildAssetsMap,
-  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import { ZephyrEngine } from '../../zephyr-engine';
 import { applyBaseHrefToAssets } from './ze-basehref-handler';
+import type { ZephyrEngine } from '../../zephyr-engine';
+import { ZeErrors, ZephyrError } from '../errors';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -22,7 +23,9 @@ export async function createSnapshot(
 
   if (!buildId) {
     await zephyr_engine.build_id;
-    throw new Error(`Can't createSnapshot() without buildId`);
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: 'Cannot create snapshot before getting buildId',
+    });
   }
 
   const options = {

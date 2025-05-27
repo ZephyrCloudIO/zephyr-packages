@@ -1,5 +1,5 @@
 /** Utility functions for handling baseHref paths in Zephyr */
-import { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
+import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
 
 /**
  * Normalizes a base path string to ensure consistent format across all plugins

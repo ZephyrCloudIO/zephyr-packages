@@ -1,4 +1,4 @@
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 
 /** Interface for options that might contain baseHref settings */
 export interface BaseHrefOptions {

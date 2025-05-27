@@ -1,11 +1,8 @@
-import { Compiler } from '@rspack/core';
-import { ZephyrEngine } from 'zephyr-agent';
-import {
-  ModuleFederationPlugin,
-  logBuildSteps,
-  setupZeDeploy,
-} from 'zephyr-xpack-internal';
-import { Platform } from 'zephyr-agent';
+import type { Compiler } from '@rspack/core';
+import type { ZephyrEngine } from 'zephyr-agent';
+import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
+import { logBuildSteps, setupZeDeploy } from 'zephyr-xpack-internal';
+import type { Platform } from 'zephyr-agent';
 const pluginName = 'ZephyrRepackPlugin';
 
 export interface ZephyrRepackPluginOptions {

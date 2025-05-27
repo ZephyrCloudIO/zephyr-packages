@@ -1,4 +1,4 @@
-import { LocalPackageJson } from 'zephyr-edge-contract';
+import type { LocalPackageJson } from 'zephyr-edge-contract';
 
 export function getLicenses(packageJson: LocalPackageJson): string | undefined {
   if (Array.isArray(packageJson.licenses)) {

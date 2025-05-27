@@ -135,6 +135,7 @@ function fallbackManualLogin(url: string): void {
 /** Opens the given URL in the default browser. */
 async function openUrl(url: string): Promise<void> {
   // Lazy loads `open` module
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const openModule = (await eval(`import('open')`)) as typeof import('open');
   await openModule.default(url);
 }

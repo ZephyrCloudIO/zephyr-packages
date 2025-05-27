@@ -1,5 +1,5 @@
 import { normalizeBasePath, applyBaseHrefToAssets } from '../ze-basehref-handler';
-import { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
 describe('ze-basehref-handler', () => {
   describe('normalizeBasePath', () => {

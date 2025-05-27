@@ -40,7 +40,7 @@ export async function resolve_remote_dependency({
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token,
+        Authorization: `Bearer ${token}`,
         Accept: 'application/json',
       },
     });

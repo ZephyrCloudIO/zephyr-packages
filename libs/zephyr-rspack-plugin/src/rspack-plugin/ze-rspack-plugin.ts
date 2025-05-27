@@ -1,12 +1,12 @@
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 
+import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
-  ModuleFederationPlugin,
   detectAndStoreBaseHref,
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
-import { Compiler } from '@rspack/core';
+import type { Compiler } from '@rspack/core';
 
 const pluginName = 'ZeRspackPlugin';
 

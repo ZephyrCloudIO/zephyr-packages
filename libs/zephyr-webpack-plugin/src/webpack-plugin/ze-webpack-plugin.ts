@@ -1,8 +1,8 @@
 import type { Compiler } from 'webpack';
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 
+import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
-  ModuleFederationPlugin,
   detectAndStoreBaseHref,
   logBuildSteps,
   setupZeDeploy,

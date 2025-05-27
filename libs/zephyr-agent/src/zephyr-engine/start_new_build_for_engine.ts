@@ -11,13 +11,11 @@ export async function start_new_build_for_engine(
   ze_log('Starting new build');
   ze.build_start_time = Date.now();
 
-  if (ze.build_id && ze.snapshotId) {
-    const buildId = await ze.build_id;
-    const snapshotId = await ze.snapshotId;
-    if (buildId && snapshotId) {
-      ze_log('Skip: creating new build because no assets was uploaded');
-      return;
-    }
+  const buildId = await ze.build_id;
+  const snapshotId = await ze.snapshotId;
+  if (buildId && snapshotId) {
+    ze_log('Skip: creating new build because no assets were uploaded');
+    return;
   }
 
   const application_uid = ze.application_uid;

@@ -9,6 +9,9 @@ import { ZE_SESSION_LOCK } from './storage-keys';
 // 72 bits of entropy is more than enough (80b to have 50% collisions)
 const SESSION_LENGTH = 9;
 
+// 1/4 of a second
+const UNLOCK_INTERVAL = 1000 / 4; // 250ms
+
 /**
  * Returns a base64url session key to be used in a login process.
  *
@@ -44,9 +47,19 @@ export function getSessionKey(): SessionLock {
   return {
     owner: !!unlock,
     session: session.toString('base64url'),
+
+    // If we are the holder of the lock, unlock it and clean up the lockfile
     [Symbol.dispose]() {
-      // If we are the holder of the lock, unlock it and clean up the lockfile
-      unlock?.();
+      if (unlock) {
+        unlock();
+
+        // Removes the lockfile to prevent older plugin versions (<0.0.48) from crashing
+        // because `node-persist#forgiveParseErrors` wasn't set to true yet.
+        // TODO: Remove this in the future.
+        setTimeout(fs.unlink, UNLOCK_INTERVAL, ZE_SESSION_LOCK, () => {
+          ze_log('Lock released and lockfile removed');
+        });
+      }
     },
   };
 }
@@ -77,12 +90,12 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
 }
 
 /**
- * Checks 4 times per second if the lock is still held by the current process and resolves
- * when the lock is released.
+ * Checks if the lock is still held by the current process and resolves when the lock is
+ * released.
  */
 export async function waitForUnlock(signal?: AbortSignal): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _ of setInterval(1000 / 4, null, { ref: false, signal })) {
+  for await (const _ of setInterval(UNLOCK_INTERVAL, null, { ref: false, signal })) {
     // Stale works as a timeout for the loop
     if (!checkSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS })) {
       return;

@@ -9,7 +9,7 @@ import { ZE_SESSION_LOCK } from './storage-keys';
 // 72 bits of entropy is more than enough (80b to have 50% collisions)
 const SESSION_LENGTH = 9;
 
-// 1/4 of a second
+// 1/4 of a second, good balance between responsiveness and not hammering the filesystem
 const UNLOCK_INTERVAL = 1000 / 4; // 250ms
 
 /**
@@ -53,10 +53,12 @@ export function getSessionKey(): SessionLock {
       if (unlock) {
         unlock();
 
+        // TODO: Remove this in the future, once >=0.0.48 is the minimum version
+        //
         // Removes the lockfile to prevent older plugin versions (<0.0.48) from crashing
         // because `node-persist#forgiveParseErrors` wasn't set to true yet.
-        // TODO: Remove this in the future.
         setTimeout(fs.unlink, UNLOCK_INTERVAL, ZE_SESSION_LOCK, () => {
+          // no need to care about errors here, if the file is not there, it's fine
           ze_log('Lock released and lockfile removed');
         });
       }

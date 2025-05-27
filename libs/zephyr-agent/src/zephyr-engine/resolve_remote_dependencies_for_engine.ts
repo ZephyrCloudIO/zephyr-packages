@@ -1,12 +1,12 @@
 import { ZeUtils, createApplicationUid } from 'zephyr-edge-contract';
 import { ze_log } from '../lib/logging';
+import type { Platform } from './create_zephyr_engine';
 import type { ZeDependencyPair } from './is_zephyr_dependency_pair';
 import { is_zephyr_resolved_dependency } from './is_zephyr_resolved_dependency';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
-import type { Platform } from './create_zephyr_engine';
 
 export interface ResolveRemoteDependenciesContext {
   npmProperties: {
@@ -19,13 +19,15 @@ export interface ResolveRemoteDependenciesContext {
 }
 
 export async function resolve_remote_dependencies_for_engine(
-  deps: ZeDependencyPair[],
+  deps: ZeDependencyPair[] | null,
   context: ResolveRemoteDependenciesContext
 ): Promise<ZeResolvedDependency[] | null> {
   const ze_dependencies = context.npmProperties.zephyrDependencies;
   const platform = context.env.target;
 
-// Removed redundant guard for `deps` as it is guaranteed to be non-nullable by the function signature.
+  if (!deps) {
+    return null;
+  }
 
   ze_log(
     'resolve_remote_dependencies.deps',
@@ -36,7 +38,7 @@ export async function resolve_remote_dependencies_for_engine(
     ze_dependencies
   );
 
-  const tasks = deps.map(async (dep) => {
+  const tasks = deps?.map(async (dep) => {
     const [app_name, project_name, org_name] = dep.name.split('.', 3);
     const ze_dependency = ze_dependencies?.[dep.name];
     const [ze_app_name, ze_project_name, ze_org_name] =

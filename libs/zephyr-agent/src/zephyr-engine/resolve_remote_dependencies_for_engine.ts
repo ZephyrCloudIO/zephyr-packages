@@ -25,9 +25,7 @@ export async function resolve_remote_dependencies_for_engine(
   const ze_dependencies = context.npmProperties.zephyrDependencies;
   const platform = context.env.target;
 
-  if (!deps) {
-    return null;
-  }
+// Removed redundant guard for `deps` as it is guaranteed to be non-nullable by the function signature.
 
   ze_log(
     'resolve_remote_dependencies.deps',

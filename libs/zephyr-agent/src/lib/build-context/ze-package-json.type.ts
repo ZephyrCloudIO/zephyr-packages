@@ -1,9 +1,18 @@
+export interface ZeDependency {
+  version: string;
+  registry?: string;
+  app_uid?: string;
+}
+
 export interface ZePackageJson {
   name: string;
   version: string;
   dependencies?: Record<string, string>;
 
-  // to satisfy build stats
+  /** Zephyr:dependencies in package.json */
+  ['zephyr:dependencies']?: Record<string, string>;
+  // parsed zephyr:dependencies
+  zephyrDependencies?: Record<string, ZeDependency>;
   /** OptionalDependencies in package.json */
   optionalDependencies?: Record<string, string>;
   /** PeerDependencies in package.json */

@@ -1,6 +1,6 @@
+import * as isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import * as isCI from 'is-ci';
 import {
   type Snapshot,
   type ZeBuildAsset,
@@ -199,22 +199,34 @@ export class ZephyrEngine {
    *   or `android`
    */
   async resolve_remote_dependencies(
-    deps: ZeDependencyPair[],
-    platform?: ZephyrPluginOptions['target']
+    deps: ZeDependencyPair[]
   ): Promise<ZeResolvedDependency[] | null> {
+    const ze_dependencies = this.npmProperties.zephyrDependencies;
+    const platform = this.env.target;
+
     if (!deps) {
       return null;
     }
 
-    ze_log('resolve_remote_dependencies.deps', deps, 'platform', platform);
+    ze_log(
+      'resolve_remote_dependencies.deps',
+      deps,
+      'platform',
+      platform,
+      'ze_dependencies',
+      ze_dependencies
+    );
 
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
+      const ze_dependency = ze_dependencies?.[dep.name];
+      const [ze_app_name, ze_project_name, ze_org_name] =
+        ze_dependency?.app_uid?.split('.') ?? [];
       // Key might be only the app name
       const dep_application_uid = createApplicationUid({
-        org: org_name ?? this.gitProperties.app.org,
-        project: project_name ?? this.gitProperties.app.project,
-        name: app_name,
+        org: ze_org_name ?? org_name ?? this.gitProperties.app.org,
+        project: ze_project_name ?? project_name ?? this.gitProperties.app.project,
+        name: ze_app_name ?? app_name,
       });
 
       // if default url is url - set as default, if not use app remote_host as default
@@ -223,7 +235,7 @@ export class ZephyrEngine {
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,
-          version: dep.version,
+          version: ze_dependency?.version ?? dep.version,
           platform,
         })
       );
@@ -239,7 +251,11 @@ export class ZephyrEngine {
 
       ze_log(`Resolved dependency: ${tuple[1].default_url}`);
 
-      return tuple[1];
+      if (dep.name === tuple[1].name) {
+        return tuple[1];
+      }
+
+      return Object.assign({}, tuple[1], { name: dep.name, version: dep.version });
     });
 
     const resolution_results = await Promise.all(tasks);

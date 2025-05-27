@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "DEBUG=zephyr:log,zephyr:error vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview"
+  },
+  "zephyr:dependencies": {
+    "vite_remote": "zephyr:vite-remote@latest"
   },
   "dependencies": {
     "react": "catalog:react18",

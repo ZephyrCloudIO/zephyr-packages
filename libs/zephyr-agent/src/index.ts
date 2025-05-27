@@ -29,10 +29,22 @@ export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/aut
 export {
   ZephyrEngine,
   is_zephyr_dependency_pair,
+  is_zephyr_resolved_dependency,
   type ZeDependencyPair,
   type ZephyrDependencies,
   type ZephyrEngineOptions,
+  type ZephyrEngineBuilderTypes,
+  type ZeApplicationProperties,
+  type DeferredZephyrEngine,
   readPackageJson,
+  read_package_json,
+  mut_zephyr_app_uid,
+  create_zephyr_engine,
+  defer_create_zephyr_engine,
+  resolve_remote_dependencies_for_engine,
+  start_new_build_for_engine,
+  build_finished_for_engine,
+  upload_assets_for_engine,
 } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
 export type { Platform } from './zephyr-engine';

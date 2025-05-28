@@ -1,5 +1,5 @@
 import isCI from 'is-ci';
-import cp from 'node:child_process';
+import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
@@ -8,7 +8,7 @@ import { ze_log } from '../logging';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getGitProviderInfo } from './git-provider-utils';
 
-const exec = promisify(cp.exec);
+const exec = promisify(node_exec);
 
 export interface ZeGitInfo {
   app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
@@ -19,8 +19,9 @@ export interface ZeGitInfo {
 export async function getGitInfo(): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
 
-  const { name, email, remoteOrigin, branch, commit, tags, stdout } =
-    await loadGitInfo(hasToken);
+  const { name, email, remoteOrigin, branch, commit, tags, stdout } = await loadGitInfo(
+    hasToken
+  );
 
   if (!hasToken && (!name || !email)) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_USERNAME_EMAIL, {

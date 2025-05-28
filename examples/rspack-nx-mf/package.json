@@ -1,0 +1,15 @@
+{
+  "name": "rspack-nx-mf",
+  "dependencies": {
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-router-dom": "6.29.0"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "ts-node": "10.9.1",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
+}

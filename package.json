@@ -1,8 +1,9 @@
 {
   "name": "zephyr-packages",
-  "version": "0.0.48",
+  "version": "0.0.49",
   "license": "Apache-2.0",
   "scripts": {
+    "bump-patch": "node scripts/bump-patch-version.js",
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
     "ze-publish": "pnpm --filter \"./libs/**\" publish --provenance --access public --no-git-checks",
     "build": "nx run-many -t build --projects=\"libs/*\"",

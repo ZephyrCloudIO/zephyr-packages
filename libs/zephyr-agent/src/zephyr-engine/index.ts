@@ -199,12 +199,23 @@ export class ZephyrEngine {
   async resolve_remote_dependencies(
     deps: ZeDependencyPair[]
   ): Promise<ZeResolvedDependency[] | null> {
-    const ze_dependencies = this.npmProperties.zephyrDependencies;
-    const platform = this.env.target;
-
     if (!deps) {
       return null;
     }
+
+    const app_config = await this.application_configuration;
+    const ze_dependencies = this.npmProperties.zephyrDependencies;
+    const platform = this.env.target;
+    const build_context_json = {
+      target: this.env.target,
+      isCI,
+      branch: this.gitProperties.git.branch,
+      username: app_config.username,
+    };
+    // convert to base64
+    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
+      'base64'
+    );
 
     ze_log(
       'resolve_remote_dependencies.deps',
@@ -235,6 +246,7 @@ export class ZephyrEngine {
           application_uid: dep_application_uid,
           version: ze_dependency?.version ?? dep.version,
           platform,
+          build_context,
         })
       );
 

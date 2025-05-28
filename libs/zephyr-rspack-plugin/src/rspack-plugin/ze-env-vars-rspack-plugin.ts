@@ -10,6 +10,7 @@ export class ZeEnvVarsRspackPlugin {
   private publicPath = '';
   private assetFilename = '';
   private assetSource = '';
+  private varsMap: Record<string, string> = {};
 
   constructor(private options: ZeEnvVarsPluginOptions = {}) {}
 
@@ -48,6 +49,10 @@ export class ZeEnvVarsRspackPlugin {
         () => {
           // Get the variables from the global set populated by the loader
           const variablesSet = getGlobalEnvVars();
+          const { source: tempSource, hash: tempHash, varsMap } = createTemporaryVariablesFile(variablesSet);
+          this.assetFilename = `ze-envs-${tempHash}.js`;
+          this.assetSource = tempSource;
+          this.varsMap = varsMap;
 
           if (variablesSet.size === 0) {
             ze_log(
@@ -76,6 +81,43 @@ export class ZeEnvVarsRspackPlugin {
           compilation.emitAsset(this.assetFilename, new RawSource(this.assetSource));
         }
       );
+
+      compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: `${PLUGIN_NAME}:ReplaceInAssets`,
+            stage: webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+          },
+          (assets) => {
+            if (!this.varsMap) return;
+
+            Object.entries(assets).forEach(([filename, asset]) => {
+              if (!/\.(html|css)$/.test(filename)) return;
+
+              let content = asset.source().toString();
+              let replaced = false;
+
+              Object.entries(this.varsMap).forEach(([key, value]) => {
+                const patterns = [
+                  new RegExp(`import\\.meta\\.env\\.${key}`, 'g'),
+                  new RegExp(`process\\.env\\.${key}`, 'g'),
+                ];
+                patterns.forEach((regex) => {
+                  if (regex.test(content)) {
+                    replaced = true;
+                    content = content.replace(regex, JSON.stringify(value));
+                  }
+                });
+              });
+
+              if (replaced) {
+                ze_log(`${PLUGIN_NAME}: Replaced env vars in ${filename}`);
+                compilation.updateAsset(filename, new RawSource(content));
+              }
+            });
+          }
+        );
+      });
 
       // Inject the script tag into HTML files
       compilation.hooks.processAssets.tap(

@@ -31,6 +31,8 @@ function zephyrPlugin(): Plugin {
     resolve_vite_internal_options = resolve;
   });
   let root: string;
+  
+  let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
 
   return {
@@ -39,6 +41,7 @@ function zephyrPlugin(): Plugin {
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
+      baseHref = config.base || '/';
 
       if (config.command === 'serve') return;
 
@@ -79,6 +82,8 @@ function zephyrPlugin(): Plugin {
           vite_internal_options_defer,
           zephyr_engine_defer,
         ]);
+
+        zephyr_engine.buildProperties.baseHref = baseHref;
 
         await zephyr_engine.start_new_build();
         const assetsMap = await extract_vite_assets_map(

@@ -1,4 +1,4 @@
-import * as isCI from 'is-ci';
+import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -79,6 +79,13 @@ export interface ZephyrEngineOptions {
   builder: ZephyrEngineBuilderTypes;
 }
 
+export interface ZeUser {
+  username: string;
+  email: string;
+  user_uuid: string;
+  jwt: string;
+}
+
 /**
  * IMPORTANT: do NOT add methods to this class, keep it lean! IMPORTANT: use `await
  * ZephyrEngine.create(context)` to create an instance ZephyrEngine instance represents
@@ -100,9 +107,8 @@ export class ZephyrEngine {
   // build context properties
   env: {
     isCI: boolean;
-    buildEnv: string;
     target: Platform;
-  } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
+  } = { isCI, target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 

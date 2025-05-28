@@ -1,10 +1,7 @@
-import { ModuleFederationConfig } from '@nx/module-federation';
-
-const config: ModuleFederationConfig = {
-  name: 'rspack_nx_mf_remote',
-  exposes: {
-    './Module': './src/remote-entry.ts',
-  },
+/** @type {Parameters<import('@nx/module-federation/rspack').withModuleFederation>[0]} */
+module.exports = {
+  name: 'rspack_mf_host',
+  remotes: ['rspack_mf_remote'],
   shared: (libName) => {
     const reactShared = [
       'react',
@@ -23,9 +20,3 @@ const config: ModuleFederationConfig = {
     return false;
   },
 };
-
-/**
- * Nx requires a default export of the config to allow correct resolution of the module
- * federation graph.
- */
-export default config;

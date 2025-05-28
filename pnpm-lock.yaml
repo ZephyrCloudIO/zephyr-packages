@@ -529,6 +529,9 @@ importers:
       zephyr-webpack-plugin:
         specifier: workspace:*
         version: link:../../libs/zephyr-webpack-plugin
+      zephyr-xpack-internal:
+        specifier: workspace:*
+        version: link:../../libs/zephyr-xpack-internal
 
   examples/react-micro-frontends/apps/team-blue: {}
 

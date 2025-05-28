@@ -1,9 +1,12 @@
-import { ModuleFederationConfig } from '@nx/module-federation';
+const path = require('path');
 
-const config: ModuleFederationConfig = {
-  name: 'rspack_nx_mf_remote',
+const currDir = path.resolve(__dirname);
+
+/** @type {Parameters<import('@nx/module-federation/rspack').withModuleFederation>[0]} */
+module.exports = {
+  name: 'rspack_mf_remote',
   exposes: {
-    './Module': './src/remote-entry.ts',
+    './NxWelcome': currDir + '/src/app/nx-welcome.tsx',
   },
   shared: (libName) => {
     const reactShared = [
@@ -23,9 +26,3 @@ const config: ModuleFederationConfig = {
     return false;
   },
 };
-
-/**
- * Nx requires a default export of the config to allow correct resolution of the module
- * federation graph.
- */
-export default config;

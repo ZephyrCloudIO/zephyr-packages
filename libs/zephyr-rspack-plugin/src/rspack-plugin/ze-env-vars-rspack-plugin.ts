@@ -49,7 +49,11 @@ export class ZeEnvVarsRspackPlugin {
         () => {
           // Get the variables from the global set populated by the loader
           const variablesSet = getGlobalEnvVars();
-          const { source: tempSource, hash: tempHash, varsMap } = createTemporaryVariablesFile(variablesSet);
+          const {
+            source: tempSource,
+            hash: tempHash,
+            varsMap,
+          } = createTemporaryVariablesFile(variablesSet);
           this.assetFilename = `ze-envs-${tempHash}.js`;
           this.assetSource = tempSource;
           this.varsMap = varsMap;

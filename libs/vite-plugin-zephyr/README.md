@@ -105,28 +105,6 @@ export default defineConfig({
 });
 ```
 
-## Configuration Options
-
-The `withZephyr` function accepts the following options:
-
-```javascript
-withZephyr({
-  // Module Federation configuration
-  mfConfig: {
-    name: 'my-app',
-    remotes: {},
-    exposes: {},
-    shared: {},
-  },
-
-  // Zephyr-specific options
-  options: {
-    deploy: true,
-    environment: 'production',
-  },
-});
-```
-
 ## Features
 
 - 🚀 Seamless deployment during Vite build

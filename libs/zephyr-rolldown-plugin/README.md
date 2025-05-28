@@ -83,26 +83,6 @@ export default defineConfig({
 });
 ```
 
-## Configuration Options
-
-The plugin accepts the following options:
-
-```javascript
-withZephyr({
-  // Enable/disable deployment (default: true in production)
-  deploy: true,
-
-  // Custom deployment environment
-  environment: 'production',
-
-  // Additional metadata
-  metadata: {
-    version: '1.0.0',
-    description: 'My Rolldown app',
-  },
-});
-```
-
 ## Features
 
 - 🚀 Automatic deployment during build

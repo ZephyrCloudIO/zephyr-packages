@@ -115,22 +115,6 @@ plugins: [
 ];
 ```
 
-## Configuration Options
-
-```typescript
-withZephyr({
-  // Deployment options
-  deploy: true,
-  environment: 'production',
-
-  // Additional metadata
-  metadata: {
-    version: '1.0.0',
-    description: 'My Modern.js app',
-  },
-});
-```
-
 ## Features
 
 - 🚀 Seamless deployment during Modern.js build

@@ -104,34 +104,6 @@ export default withZephyr({
 })(config);
 ```
 
-## Configuration Options
-
-The `withZephyr` function accepts configuration options:
-
-```javascript
-withZephyr({
-  // Enable/disable deployment
-  deploy: true,
-
-  // Deployment environment
-  environment: 'production',
-
-  // Module Federation configuration (if not using @nx/rspack)
-  moduleFederation: {
-    name: 'my-app',
-    remotes: {},
-    exposes: {},
-    shared: {},
-  },
-
-  // Additional metadata
-  metadata: {
-    version: '1.0.0',
-    description: 'My Rspack app',
-  },
-});
-```
-
 ## Features
 
 - 🚀 Fast builds with Rspack's Rust-based bundler

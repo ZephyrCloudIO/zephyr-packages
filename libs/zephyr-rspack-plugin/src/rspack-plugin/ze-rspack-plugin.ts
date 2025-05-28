@@ -1,7 +1,5 @@
 import type { Compiler } from '@rspack/core';
-import {
-  ZephyrEngine,
-} from 'zephyr-agent';
+import { ZephyrEngine } from 'zephyr-agent';
 
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import { logBuildSteps, setupZeDeploy } from 'zephyr-xpack-internal';

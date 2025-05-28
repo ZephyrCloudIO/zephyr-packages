@@ -8,6 +8,7 @@
     "ze-publish": "pnpm --filter \"./libs/**\" publish --provenance --access public --no-git-checks",
     "build": "nx run-many -t build --projects=\"libs/*\"",
     "build-all": "nx run-many -t build --all",
+    "build-slow": "nx run-many -t build --all --parallel=1 --verbose --skip-nx-cache",
     "lint": "nx run-many -t lint --projects=\"libs/*\"",
     "lint:examples": "nx run-many -t lint --projects=\"examples/*\"",
     "test": "nx run-many -t test --projects=\"libs/*\"",

@@ -26,7 +26,50 @@ export async function extractViteBuildStats({
 
   const consumeMap = new Map<string, ApplicationConsumes>();
   if (!bundle) {
-    ze_log('No bundle found, skipping build stats extraction');
+    ze_log('No bundle found, returning minimal stats');
+    // Return minimal stats object when bundle is null
+    const app = zephyr_engine.applicationProperties;
+    const { git } = zephyr_engine.gitProperties;
+    const { isCI } = zephyr_engine.env;
+    const version = await zephyr_engine.snapshotId;
+    const application_uid = zephyr_engine.application_uid;
+    const buildId = await zephyr_engine.build_id;
+    const { EDGE_URL, PLATFORM, DELIMITER } =
+      await zephyr_engine.application_configuration;
+
+    return {
+      id: application_uid,
+      name: mfConfig?.name || app.name,
+      edge: { url: EDGE_URL, delimiter: DELIMITER },
+      domain: undefined,
+      platform: PLATFORM as unknown as ZephyrBuildStats['platform'],
+      type: 'app',
+      app: Object.assign({}, app, { buildId }),
+      version,
+      git,
+      remote: mfConfig?.filename || 'remoteEntry.js',
+      remotes: [],
+      context: { isCI },
+      project: mfConfig?.name || app.name,
+      tags: [],
+      dependencies: [],
+      devDependencies: [],
+      optionalDependencies: [],
+      peerDependencies: [],
+      consumes: [],
+      overrides: [],
+      modules: [],
+      metadata: {
+        bundler: 'vite',
+        totalSize: 0,
+        fileCount: 0,
+        chunkCount: 0,
+        assetCount: 0,
+        hasFederation: !!mfConfig,
+      },
+      default: false,
+      environment: '',
+    } as ZephyrBuildStats;
   }
 
   const app = zephyr_engine.applicationProperties;
@@ -57,7 +100,7 @@ export async function extractViteBuildStats({
     /loadRemote\(["']([^/]+)\/([^'"]+)["']\)/g,
 
     // Destructured pattern: { loadRemote: c } = a, then c("remote/component")
-    /(?:\{[ \t]*loadRemote:[ \t]*([a-zA-Z0-9_$]+)[ \t]*\}|\blodRemote[ \t]*:[ \t]*([a-zA-Z0-9_$]+)\b).*?([a-zA-Z0-9_$]+)[ \t]*\(["']([^/]+)\/([^'"]+)["']\)/g,
+    /(?:\{[ \t]*loadRemote:[ \t]*([a-zA-Z0-9_$]+)[ \t]*\}|\bloadRemote[ \t]*:[ \t]*([a-zA-Z0-9_$]+)\b).*?([a-zA-Z0-9_$]+)[ \t]*\(["']([^/]+)\/([^'"]+)["']\)/g,
 
     // Promise chain pattern: n.then(e => c("remote/component"))
     /\.then\([ \t]*(?:[a-zA-Z0-9_$]+)[ \t]*=>[ \t]*(?:[a-zA-Z0-9_$]+)\(["']([^/]+)\/([^'"]+)["']\)\)/g,

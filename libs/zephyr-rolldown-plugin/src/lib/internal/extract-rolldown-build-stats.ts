@@ -1,7 +1,7 @@
 import type { OutputBundle, OutputChunk } from 'rolldown';
 import type { ZephyrEngine } from 'zephyr-agent';
-import type { ZephyrBuildStats, ApplicationConsumes } from 'zephyr-edge-contract';
 import { resolveCatalogDependencies, ze_log } from 'zephyr-agent';
+import type { ApplicationConsumes, ZephyrBuildStats } from 'zephyr-edge-contract';
 import type { RolldownModuleFederationConfig } from '../zephyr-rolldown-plugin';
 
 interface RolldownBuildStatsOptions {
@@ -22,7 +22,51 @@ export async function extractRolldownBuildStats({
 
   const consumeMap = new Map<string, ApplicationConsumes>();
   if (!bundle) {
-    ze_log('No bundle found, skipping build stats extraction');
+    ze_log('No bundle found, returning minimal stats');
+    // Return minimal stats object when bundle is null
+    const app = zephyr_engine.applicationProperties;
+    const { git } = zephyr_engine.gitProperties;
+    const { isCI } = zephyr_engine.env;
+    const version = await zephyr_engine.snapshotId;
+    const application_uid = zephyr_engine.application_uid;
+    const buildId = await zephyr_engine.build_id;
+    const { EDGE_URL, PLATFORM, DELIMITER } =
+      await zephyr_engine.application_configuration;
+
+    return {
+      id: application_uid,
+      name: mfConfig?.name || app.name,
+      edge: { url: EDGE_URL, delimiter: DELIMITER },
+      domain: undefined,
+      platform: PLATFORM as unknown as ZephyrBuildStats['platform'],
+      type: 'lib',
+      app: Object.assign({}, app, { buildId }),
+      version,
+      git,
+      remote: mfConfig?.filename || 'remoteEntry.js',
+      remotes: [],
+      context: { isCI },
+      project: mfConfig?.name || app.name,
+      tags: [],
+      dependencies: [],
+      devDependencies: [],
+      optionalDependencies: [],
+      peerDependencies: [],
+      consumes: [],
+      overrides: [],
+      modules: [],
+      metadata: {
+        bundler: 'rolldown',
+        totalSize: 0,
+        fileCount: 0,
+        chunkCount: 0,
+        assetCount: 0,
+        dynamicImportCount: 0,
+        hasFederation: !!mfConfig,
+      },
+      default: false,
+      environment: '',
+    } as ZephyrBuildStats;
   }
 
   const app = zephyr_engine.applicationProperties;
@@ -63,7 +107,7 @@ export async function extractRolldownBuildStats({
     /loadRemote\(["']([^/]+)\/([^'"]+)["']\)/g,
 
     // Destructured pattern: { loadRemote: c } = a, then c("remote/component")
-    /(?:\{[ \t]*loadRemote:[ \t]*([a-zA-Z0-9_$]+)[ \t]*\}|\blodRemote[ \t]*:[ \t]*([a-zA-Z0-9_$]+)\b).*?([a-zA-Z0-9_$]+)[ \t]*\(["']([^/]+)\/([^'"]+)["']\)/g,
+    /(?:\{[ \t]*loadRemote:[ \t]*([a-zA-Z0-9_$]+)[ \t]*\}|\bloadRemote[ \t]*:[ \t]*([a-zA-Z0-9_$]+)\b).*?([a-zA-Z0-9_$]+)[ \t]*\(["']([^/]+)\/([^'"]+)["']\)/g,
 
     // Promise chain pattern: n.then(e => c("remote/component"))
     /\.then\([ \t]*(?:[a-zA-Z0-9_$]+)[ \t]*=>[ \t]*(?:[a-zA-Z0-9_$]+)\(["']([^/]+)\/([^'"]+)["']\)\)/g,
@@ -133,6 +177,7 @@ export async function extractRolldownBuildStats({
             consumingApplicationID: componentName,
             applicationID: remoteName,
             name: componentName,
+            // TODO lois: this value is wrong and it's using the output bundle name instead of the original file name, need to be fixed
             usedIn: moduleIds.map((id) => ({
               file: id.replace(root, ''),
               url: id.replace(root, ''),

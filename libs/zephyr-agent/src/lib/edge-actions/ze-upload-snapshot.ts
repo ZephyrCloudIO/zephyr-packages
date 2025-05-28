@@ -1,7 +1,7 @@
 import { type Snapshot } from 'zephyr-edge-contract';
-import { uploadSnapshot } from '../http/upload-snapshot';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { uploadSnapshot } from '../http/upload-snapshot';
 import { green, yellow } from '../logging/picocolor';
 
 interface ZeUploadSnapshotProps {
@@ -14,8 +14,8 @@ export async function zeUploadSnapshot(
 ): Promise<string> {
   const zeStart = Date.now();
   const application_uid = zephyr_engine.application_uid;
-  const buildEnv = zephyr_engine.env.buildEnv;
   const logger = await zephyr_engine.logger;
+  const buildEnv = zephyr_engine.env.isCI ? 'ci' : 'local';
 
   const edgeTodo = await uploadSnapshot({
     body: snapshot,

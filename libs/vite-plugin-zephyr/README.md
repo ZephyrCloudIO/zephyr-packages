@@ -10,6 +10,14 @@
 
 A Vite plugin for deploying applications with Zephyr Cloud. This plugin integrates with Vite's build process to enable seamless deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/recipes/react-vite).
 
+## Get Started
+
+The fastest way to get started is to use `create-zephyr-apps` to generate a new Vite application with Zephyr integration and there are various vite examples available:
+
+```bash
+npx create-zephyr-apps@latest
+```
+
 ## Installation
 
 ```bash

@@ -10,6 +10,8 @@
 
 A Rolldown plugin for deploying applications with Zephyr Cloud. This plugin enables seamless deployment of your Rolldown-built applications to Zephyr's global edge network.
 
+For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/recipes/rolldown-react) for rolldown.
+
 > **Note**: This plugin is currently in development (WIP - Work In Progress).
 
 ## Installation

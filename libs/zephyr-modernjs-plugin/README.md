@@ -10,6 +10,16 @@
 
 A Modern.js plugin for deploying applications with Zephyr Cloud. This plugin integrates seamlessly with Modern.js framework to enable application federation and deployment capabilities.
 
+## Get Started
+
+The fastest way to get started is to use `create-zephyr-apps` to generate a new Modern.js application with Zephyr integration:
+
+```bash
+npx create-zephyr-apps@latest
+```
+
+For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/recipes/modernjs) for Modern.js and Zephyr integration.
+
 ## Installation
 
 ```bash

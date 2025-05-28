@@ -10,6 +10,16 @@
 
 An Rspack plugin for deploying applications with Zephyr Cloud. This plugin integrates seamlessly with Rspack's fast bundling to enable deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/recipes/react-rspack-nx).
 
+## Get Started
+
+The fastest way to get started is to use to use `create-zephyr-apps` to generate a new Webpack application with Zephyr integration and choose from various rspack example:
+
+```bash
+npx create-zephyr-apps@latest
+```
+
+For more information please refer to our [documentation](https://docs.zephyr-cloud.io/recipes).
+
 ## Installation
 
 ```bash

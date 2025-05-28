@@ -1,6 +1,6 @@
 {
   "name": "zephyr-webpack-plugin",
-  "version": "0.0.49",
+  "version": "0.0.50",
   "description": "Webpack plugin for Zephyr",
   "repository": {
     "type": "git",

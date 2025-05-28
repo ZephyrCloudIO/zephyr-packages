@@ -13,12 +13,7 @@ const config: ModuleFederationConfig = {
       'react/jsx-dev-runtime',
     ];
     if (reactShared.includes(libName)) {
-      return {
-        singleton: true,
-        version: '18.3.1',
-        requiredVersion: '18.3.1',
-        eager: true,
-      };
+      return { singleton: true };
     }
     return false;
   },

@@ -61,4 +61,22 @@ pnpm install
 - `pnpm lint` - Checks code for linting errors
 - `pnpm format` - Formats code using Prettier
 
+### Version Management
+
+- `pnpm bump-patch` - Automated patch version bump across all packages
+
+  This script automates the complete patch version release process:
+
+  - Increments patch version in root and all lib package.json files
+  - Creates a commit with conventional commit message
+  - Creates a git tag (vX.X.X)
+  - If on main/master branch, creates a new feature branch and opens a PR
+  - Pushes changes and tags to origin
+
+  **Requirements:**
+
+  - Clean working directory (no uncommitted changes)
+  - gh CLI installed and authenticated (for automatic PR creation)
+  - Git configured with push access to origin
+
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

@@ -48,14 +48,17 @@ export function parseRemotesAsEntries(
       // Case where remotes are declared as:
       // Record<remote_name: string, remote_version: string | RemotesConfig>
       // e.g. ['remote_name', { url: 'remote_url' }]
-      remotePairs.push([remote[0], JSON.stringify(remote[1])]);
+      const version =
+        typeof remote[1] === 'string' ? remote[1] : JSON.stringify(remote[1]);
+      remotePairs.push([remote[0], version]);
     } else if (typeof remote === 'string') {
       // Case where remotes are declared as string (Nx's default remotes)
       remotePairs.push([remote, remote]);
     } else {
       // Fallback case where remotes are nested RemotesConfig objects
-      Object.entries(remote).forEach(([name, version]) => {
-        remotePairs.push([name, JSON.stringify(version)]);
+      Object.entries(remote).forEach(([name, config]) => {
+        const version = typeof config === 'string' ? config : JSON.stringify(config);
+        remotePairs.push([name, version]);
       });
     }
   });

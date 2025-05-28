@@ -1,47 +1,44 @@
-import { findAndReplaceVariables } from 'zephyr-agent';
 import { ze_log } from 'zephyr-agent';
 
-// Global set to collect environment variables across all modules
-// This is needed because loaders can't easily communicate with plugins
+// Global set para o plugin acessar depois
 const GLOBAL_ENV_VARS = new Set<string>();
 
-/**
- * Loader for processing ZE_ environment variables in source files. This runs during the
- * transform phase, before bundling.
- */
-export default function loader(this: any, source: string): string {
-  // Skip non-JS/TS files
-  const { resourcePath } = this;
-  if (!/\.(js|jsx|ts|tsx)$/.test(resourcePath)) {
-    return source;
-  }
-
-  // Detect and transform environment variables
-  const variablesSet = new Set<string>();
-  const transformedSource = findAndReplaceVariables(source, variablesSet, [
-    'importMetaEnv',
-    'processEnv',
-  ]);
-
-  // Add detected variables to the global set
-  if (variablesSet.size > 0) {
-    ze_log(
-      `Detected ${variablesSet.size} Zephyr env vars in ${resourcePath}: ${Array.from(variablesSet).join(', ')}`
-    );
-
-    // Add to global set
-    variablesSet.forEach((v) => GLOBAL_ENV_VARS.add(v));
-
-    // Store on the module for plugin access
-    this._module = this._module || {};
-    this._module.buildInfo = this._module.buildInfo || {};
-    this._module.buildInfo.zeEnvVars = Array.from(variablesSet);
-  }
-
-  return transformedSource;
+// Essa função substitui ZE_ vars por seus valores reais vindos do process.env
+function replaceEnvVars(source: string, varsSet: Set<string>): string {
+  return source.replace(
+    /\b(import\.meta\.env|process\.env)\.(ZE_[a-zA-Z0-9_]+)/g,
+    (_full, _type, varName) => {
+      varsSet.add(varName);
+      const value = process.env[varName];
+      if (value === undefined) {
+        ze_log(`⚠️  [ze-env-vars-loader] ${varName} não está definido no process.env`);
+      }
+      return JSON.stringify(value ?? '');
+    }
+  );
 }
 
-// Export access to the global environment variables set
+export default function loader(this: any, source: string): string {
+  const { resourcePath } = this;
+  if (!/\.(js|jsx|ts|tsx)$/.test(resourcePath)) return source;
+
+  const varsSet = new Set<string>();
+  const transformed = replaceEnvVars(source, varsSet);
+
+  if (varsSet.size > 0) {
+    ze_log(
+      `✅ Substituídas ${varsSet.size} ZE_ env vars em ${resourcePath}: ${Array.from(varsSet).join(', ')}`
+    );
+
+    varsSet.forEach((v) => GLOBAL_ENV_VARS.add(v));
+    this._module = this._module || {};
+    this._module.buildInfo = this._module.buildInfo || {};
+    this._module.buildInfo.zeEnvVars = Array.from(varsSet);
+  }
+
+  return transformed;
+}
+
 export function getGlobalEnvVars(): Set<string> {
   return GLOBAL_ENV_VARS;
 }

@@ -7,8 +7,11 @@ import {
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 import type { RepackEnv } from '../type/zephyr-internal-types';
+import {
+  getDependencyHashes,
+  getNativeVersionInfoAsync,
+} from './native-versions/ze-util-native-versions';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { getNativeVersionInfoAsync } from './native-versions/ze-util-native-versions';
 import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin';
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
@@ -89,6 +92,11 @@ async function _zephyr_configuration(
     zephyr_engine.env.native_version = nativeVersionInfo.native_version;
     zephyr_engine.env.native_build_number = nativeVersionInfo.native_build_number;
 
+    zephyr_engine.env.native_config_file_hash = (
+      await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)
+    ).nativeConfigHash;
+
+    ze_log('Native config file hash: ', zephyr_engine.env.native_config_file_hash);
     const defineConfig = {
       ZE_BUILD_ID: await zephyr_engine.build_id,
       ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,

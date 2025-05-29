@@ -264,8 +264,7 @@ Please make sure you have set them correctly in your package.json and git reposi
 
   ERR_INCORRECT_SEMVER_VERSION: {
     id: '034',
-    message: 
-`The native version set for your {{ platform }} is not a valid semantic version and it will affect your application's remote resolution. Please ensure you have a valid value set for {{ variable_name }} in {{ file_path }}. For more information, please refer to the official semantic versioning documentation: https://semver.org/. 
+    message: `The native version set for your {{ platform }} is not a valid semantic version and it will affect your application's remote resolution. Please ensure you have a valid value set for {{ variable_name }} in {{ file_path }}. For more information, please refer to the official semantic versioning documentation: https://semver.org/. 
 Error: {{ message }}`,
     kind: 'config',
   },

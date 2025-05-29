@@ -25,28 +25,26 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
     });
   }
 
-    const fullVersion = versionMatch[1];
-    const parts = fullVersion.split('.');
+  const fullVersion = versionMatch[1];
+  const parts = fullVersion.split('.');
 
-    // Windows uses 4-part version numbers: Major.Minor.Build.Revision
-    // We'll use Major.Minor.Build as the version and the full string as buildNumber
-    if (parts.length >= 3) {
-      return {
-        native_version: parts.slice(0, 3).join('.'),
-        native_build_number: fullVersion,
-        file_path: manifestPath,
-        variable_name: 'Version',
-      };
-    }
-
+  // Windows uses 4-part version numbers: Major.Minor.Build.Revision
+  // We'll use Major.Minor.Build as the version and the full string as buildNumber
+  if (parts.length >= 3) {
     return {
-      native_version: fullVersion,
+      native_version: parts.slice(0, 3).join('.'),
       native_build_number: fullVersion,
       file_path: manifestPath,
       variable_name: 'Version',
     };
+  }
 
- 
+  return {
+    native_version: fullVersion,
+    native_build_number: fullVersion,
+    file_path: manifestPath,
+    variable_name: 'Version',
+  };
 }
 
 /**

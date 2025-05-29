@@ -105,12 +105,14 @@ export class ZephyrEngine {
     target: Platform;
     native_version: string;
     native_build_number: string;
+    native_config_file_hash: string;
   } = {
     isCI,
     buildEnv: isCI ? 'ci' : 'local',
     target: 'web',
     native_version: '',
     native_build_number: '',
+    native_config_file_hash: '',
   };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;

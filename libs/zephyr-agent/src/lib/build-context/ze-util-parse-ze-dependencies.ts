@@ -10,17 +10,28 @@
  *   value
  * @returns Parsed zephyr dependencies with structured information
  */
-import type { ZeDependency } from './ze-package-json.type';
+
+import type { BuildTarget, ZeDependency } from './ze-package-json.type';
 
 export function parseZeDependencies(
-  ze_dependencies: Record<string, string>
+  ze_dependencies: Record<string, string | Record<BuildTarget, string>>
 ): Record<string, ZeDependency> {
-  return Object.fromEntries(
-    Object.entries(ze_dependencies).map(([key, value]) => [
-      key,
-      parseZeDependency(key, value),
-    ])
-  );
+  const entries: [string, ZeDependency][] = [];
+
+  for (const [key, value] of Object.entries(ze_dependencies)) {
+    if (typeof value === 'string') {
+      entries.push([key, parseZeDependency(key, value)]);
+    } else {
+      for (const [target, reference] of Object.entries(value)) {
+        entries.push([
+          `${key}:${target}`,
+          parseZeDependency(key, reference, target as BuildTarget),
+        ]);
+      }
+    }
+  }
+
+  return Object.fromEntries(entries);
 }
 
 /**
@@ -30,20 +41,25 @@ export function parseZeDependencies(
  * @param value - The dependency version or reference string
  * @returns Structured dependency information
  */
-export function parseZeDependency(key: string, value: string): ZeDependency {
+export function parseZeDependency(
+  key: string,
+  value: string,
+  target?: BuildTarget
+): ZeDependency {
   // Default dependency structure
   const dependency: ZeDependency = {
     version: value,
     registry: 'zephyr',
     app_uid: key,
+    target: target ?? 'web',
   };
 
   let reference = value;
   // if reference variable has ':' then cut it off and store dependency.registry
   if (reference.includes(':')) {
-    const refference_parts = reference.split(':');
-    dependency.registry = refference_parts[0];
-    reference = refference_parts[1];
+    const reference_parts = reference.split(':');
+    dependency.registry = reference_parts[0];
+    reference = reference_parts[1];
   }
 
   // Check if it contains a remote app_uid with a tag (e.g., "remote_app_uid@latest")
@@ -52,7 +68,7 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
     dependency.app_uid = remoteAppUid;
     dependency.version = tag;
   }
-  // If it's a semver specification (contains ^, ~, >, <, or =)
+  // if none of the case fits then fuck it recognise it as semver
   else {
     dependency.version = reference;
   }

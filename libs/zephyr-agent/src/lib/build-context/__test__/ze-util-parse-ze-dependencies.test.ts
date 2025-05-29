@@ -18,16 +18,19 @@ describe('parseZeDependencies', () => {
         version: '^1.0.0',
         registry: 'zephyr',
         app_uid: 'normal-dep',
+        target: 'web',
       },
       'tagged-dep': {
         version: 'stable',
         registry: 'zephyr',
         app_uid: 'other-app',
+        target: 'web',
       },
       'semver-dep': {
         version: '^2.0.0',
         registry: 'zephyr',
         app_uid: 'semver-dep',
+        target: 'web',
       },
     });
   });
@@ -51,6 +54,7 @@ describe('parseZeDependency', () => {
       version: '^1.0.0',
       registry: 'zephyr',
       app_uid: 'test-dep',
+      target: 'web',
     });
   });
 
@@ -63,6 +67,7 @@ describe('parseZeDependency', () => {
       version: 'beta',
       registry: 'zephyr',
       app_uid: 'remote-app',
+      target: 'web',
     });
   });
 
@@ -75,6 +80,7 @@ describe('parseZeDependency', () => {
       version: '^2.0.0',
       registry: 'zephyr',
       app_uid: 'local-name',
+      target: 'web',
     });
   });
 
@@ -87,6 +93,7 @@ describe('parseZeDependency', () => {
       version: '~1.2.3',
       registry: 'zephyr',
       app_uid: 'local-name',
+      target: 'web',
     });
   });
 
@@ -99,6 +106,7 @@ describe('parseZeDependency', () => {
       version: '=1.2.3',
       registry: 'zephyr',
       app_uid: 'local-name',
+      target: 'web',
     });
   });
 
@@ -111,6 +119,7 @@ describe('parseZeDependency', () => {
       version: '>1.2.3',
       registry: 'zephyr',
       app_uid: 'local-name',
+      target: 'web',
     });
   });
 
@@ -123,6 +132,7 @@ describe('parseZeDependency', () => {
       version: '<2.0.0',
       registry: 'zephyr',
       app_uid: 'local-name',
+      target: 'web',
     });
   });
 });

@@ -9,10 +9,12 @@ import type { ZeApplicationConfig } from '../node-persist/upload-provider-option
 
 interface GetApplicationConfigurationProps {
   application_uid: string;
+  build_target?: string;
 }
 
 async function loadApplicationConfiguration({
   application_uid,
+  build_target,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
   if (!application_uid) {
     throw new ZephyrError(ZeErrors.ERR_MISSING_APPLICATION_UID);
@@ -23,6 +25,10 @@ async function loadApplicationConfiguration({
     `${ze_api_gateway.application_config}/${application_uid}`,
     ZE_API_ENDPOINT()
   );
+
+  if (build_target) {
+    application_config_url.searchParams.append('build_target', build_target);
+  }
 
   const [ok, cause, data] = await makeRequest<{
     value: ZeApplicationConfig;
@@ -39,6 +45,11 @@ async function loadApplicationConfiguration({
       },
     });
   }
+
+  ze_log('Application Configuration loaded', {
+    application_uid,
+    data: data.value,
+  });
 
   return {
     ...data.value,

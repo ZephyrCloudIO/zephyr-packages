@@ -1,5 +1,8 @@
 import * as child_process from 'child_process';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
 import isCI from 'is-ci';
+import * as path from 'path';
 import * as util from 'util';
 import {
   ZeErrors,
@@ -147,10 +150,68 @@ export async function getNativeVersionInfoAsync(
       variable_name: versionInfo.variable_name,
       file_path: versionInfo.file_path,
       platform: platform as string,
-      message: ''
+      message: '',
     });
   }
 
   // In CI environments, try to augment with Git tag version
   return await augmentWithGitTagVersion(versionInfo, platform);
+}
+
+export interface DependencyHashes {
+  // lockfileHash: string; // TODO: keep it one hash for now
+  nativeConfigHash: string;
+}
+
+export async function getDependencyHashes(
+  projectRoot: string,
+  platform: NativePlatform
+): Promise<DependencyHashes> {
+  const hashes: DependencyHashes = {
+    nativeConfigHash: '',
+    // lockfileHash: '',
+  };
+
+  if (platform === 'ios') {
+    // Hash Podfile.lock
+    const podfileLockPath = path.join(projectRoot, 'ios', 'Podfile.lock');
+
+    const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
+
+    ze_log('Podfile lock path.ios: ', podfileLockPath);
+    if (fs.existsSync(podfileLockPath) || fs.existsSync(podfilePath)) {
+      const content = fs.readFileSync(podfileLockPath, 'utf8');
+      ze_log('Podfile lock content.ios: ', content);
+      hashes.nativeConfigHash = crypto
+        .createHash('sha256')
+        .update(content.length ? content : Buffer.from(podfileLockPath, 'utf8'))
+        .digest('hex');
+      ze_log('Podfile lock hash.ios: ', hashes.nativeConfigHash);
+    }
+  }
+
+  if (platform === 'android') {
+    // Hash build.gradle files
+    // look for gradle.lockfile first, if not found then look for build.gradle
+    // gradle.lockfile would require user to run `./gradlew dependencies --write-locks` and add dependencyLocking with `lockAllConfiguration()`
+
+    const gradleLockPath = path.join(projectRoot, 'android', 'gradle.lockfile');
+    const gradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
+
+    ze_log('Gradle path.android: ', gradlePath);
+    if (fs.existsSync(gradleLockPath) || fs.existsSync(gradlePath)) {
+      const content = fs.readFileSync(gradlePath ? gradlePath : gradleLockPath, 'utf8');
+      ze_log('Gradle content.android: ', content);
+      hashes.nativeConfigHash = fs.existsSync(gradleLockPath)
+        ? crypto.createHash('sha256').update(content).digest('hex')
+        : crypto
+            .createHash('sha256')
+            .update(content.length ? content : Buffer.from(gradleLockPath, 'utf8'))
+            .digest('hex');
+      ze_log('Gradle hash.android: ', hashes.nativeConfigHash);
+    }
+  }
+  ze_log('Native config file hash: ', hashes.nativeConfigHash);
+  // If no native related lockfile found, then return nothing
+  return hashes;
 }

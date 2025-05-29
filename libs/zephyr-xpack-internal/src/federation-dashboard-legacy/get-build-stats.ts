@@ -65,7 +65,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     : pluginOptions.mfConfig;
 
   const { name, filename, remotes } = mfConfig
-    ? extractFederatedConfig(mfConfig) ?? {}
+    ? (extractFederatedConfig(mfConfig) ?? {})
     : {};
 
   const data_overrides = {
@@ -85,6 +85,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
       build_target: pluginOptions.zephyr_engine.env.target,
       native_version: pluginOptions.zephyr_engine.env.native_version,
       native_build_number: pluginOptions.zephyr_engine.env.native_build_number,
+      native_config_file_hash: pluginOptions.zephyr_engine.env.native_config_file_hash,
     },
   };
 

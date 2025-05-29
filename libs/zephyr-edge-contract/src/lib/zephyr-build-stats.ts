@@ -135,6 +135,9 @@ export interface ZephyrBuildStats {
      * undefined at the moment - ususally read from `build.gradle` (android)
      */
     native_build_number?: string;
+
+    /** Native lockfile hash (ios: Podfile.lock, android: gradle.lockfile) */
+    native_config_file_hash?: string;
   };
   /** @deprecated */
   type: unknown;

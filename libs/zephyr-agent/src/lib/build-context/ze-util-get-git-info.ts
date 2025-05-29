@@ -35,7 +35,7 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
     app,
   };
 
-  ze_log('Loaded: git info', gitInfo);
+  ze_log.init('Loaded: git info', gitInfo);
 
   return gitInfo;
 }
@@ -104,7 +104,7 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
   try {
     const gitInfo = getGitProviderInfo(remoteOrigin);
 
-    ze_log(`Git provider detected: ${gitInfo.provider}`, {
+    ze_log.init(`Git provider detected: ${gitInfo.provider}`, {
       provider: gitInfo.provider,
       owner: gitInfo.owner,
       project: gitInfo.project,

@@ -23,6 +23,16 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
-export const ze_log = debug('zephyr:log');
+const createLogger = () => {
+  const baseLogger = debug('zephyr:log');
+  return Object.assign(baseLogger, {
+    auth: debug('zephyr:auth'),
+    init: debug('zephyr:init'),
+    remotes: debug('zephyr:remotes'),
+    upload: debug('zephyr:upload'),
+  });
+};
+
+export const ze_log = createLogger();
 // If debug mode is not enabled just print whatever console output is
 // If debug mode is enabled print the error from our end

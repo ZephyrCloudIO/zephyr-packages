@@ -39,7 +39,7 @@ export async function resolve_remote_dependency({
   }
 
   try {
-    ze_log('URL for resolving dependency:', resolveDependency.toString());
+    ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
     const res = await axios.get(resolveDependency.toString(), {
@@ -71,7 +71,7 @@ export async function resolve_remote_dependency({
     const response = res.data;
 
     if (response.value) {
-      ze_log(
+      ze_log.remotes(
         'resolved dependency:',
         response.value,
         'application_uid: ',

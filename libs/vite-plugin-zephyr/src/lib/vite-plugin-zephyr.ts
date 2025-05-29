@@ -1,8 +1,8 @@
 import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import { extractXViteBuildStats } from 'zephyr-xpack-internal';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
-import { extractViteBuildStats } from './internal/extract/extract_vite_build_stats';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
@@ -113,7 +113,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         );
 
         // Generate enhanced build stats for Vite using the discovered remote imports
-        const buildStats = await extractViteBuildStats({
+        const buildStats = await extractXViteBuildStats({
           zephyr_engine,
           bundle: outputBundle || {},
           mfConfig: _options?.mfConfig,

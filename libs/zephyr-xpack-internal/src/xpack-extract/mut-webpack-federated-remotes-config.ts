@@ -34,13 +34,12 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     remoteEntries.forEach((remote) => {
       const [remote_name, remote_version] = remote;
-      const resolved_dep = resolvedDependencyPairs.find(
-        (dep) => {
-          const nameMatch = dep.name === remote_name;
-          const versionMatch = dep.version === 'latest' ? true : dep.version === remote_version;
-          return nameMatch && versionMatch;
-        }
-      );
+      const resolved_dep = resolvedDependencyPairs.find((dep) => {
+        const nameMatch = dep.name === remote_name;
+        const versionMatch =
+          dep.version === 'latest' ? true : dep.version === remote_version;
+        return nameMatch && versionMatch;
+      });
 
       ze_log(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
 
@@ -78,7 +77,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       if (Array.isArray(remotes)) {
         const remoteIndex = remotes.indexOf(remote_name);
         if (remoteIndex === -1) return;
-        // @ts-expect-error - Nx's ModuleFederationPlugin has different remote types
         remotes.splice(remoteIndex, 1, [remote_name, runtimeCode]);
         return;
       }

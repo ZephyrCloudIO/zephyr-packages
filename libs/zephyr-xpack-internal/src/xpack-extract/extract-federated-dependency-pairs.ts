@@ -1,7 +1,7 @@
 import type { ZeDependencyPair } from 'zephyr-agent';
 import { is_zephyr_dependency_pair, readPackageJson } from 'zephyr-agent';
 
-import type { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
+import type { XFederatedConfig, XPackConfiguration } from '../xpack.types';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 
 export function extractFederatedDependencyPairs(
@@ -16,7 +16,7 @@ export function extractFederatedDependencyPairs(
     });
   }
 
-  iterateFederatedRemoteConfig(config, (remotesConfig: XFederatedRemotesConfig) => {
+  iterateFederatedRemoteConfig(config, (remotesConfig: XFederatedConfig) => {
     if (!remotesConfig?.remotes) return;
 
     const remoteEntries = parseRemotesAsEntries(remotesConfig.remotes);
@@ -36,7 +36,7 @@ export function extractFederatedDependencyPairs(
 
 /** Returns an Array of [remote_name, remote_version] */
 export function parseRemotesAsEntries(
-  remotes: XFederatedRemotesConfig['remotes']
+  remotes: XFederatedConfig['remotes']
 ): [string, string][] {
   if (!remotes) return [];
 

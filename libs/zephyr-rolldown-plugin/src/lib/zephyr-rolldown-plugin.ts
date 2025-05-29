@@ -1,17 +1,14 @@
-import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
-import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { cwd } from 'node:process';
+import type { InputOptions, NormalizedOutputOptions } from 'rolldown';
+import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type {
+  XFederatedConfig,
+  XOutputAsset,
+  XOutputBundle,
+  XOutputChunk,
+} from 'zephyr-xpack-internal';
+import { extractXViteBuildStats } from 'zephyr-xpack-internal';
 import { getAssetsMap } from './internal/get-assets-map';
-import { extractRolldownBuildStats } from './internal/extract-rolldown-build-stats';
-
-export interface RolldownModuleFederationConfig {
-  name?: string;
-  filename?: string;
-  exposes?: Record<string, string | { import: string }>;
-  remotes?: Record<string, string>;
-  shared?: Record<string, string | { requiredVersion?: string; singleton?: boolean }>;
-  additionalShared?: Array<string | { libraryName: string }>;
-}
 
 const getInputFolder = (options: InputOptions): string => {
   if (typeof options.input === 'string') return options.input;
@@ -22,7 +19,7 @@ const getInputFolder = (options: InputOptions): string => {
 
 interface ZephyrRolldownOptions {
   // Reserved for future options like module federation config if needed
-  mfConfig?: RolldownModuleFederationConfig | undefined;
+  mfConfig?: XFederatedConfig | undefined;
 }
 
 export function withZephyr(options?: ZephyrRolldownOptions) {
@@ -39,7 +36,10 @@ export function withZephyr(options?: ZephyrRolldownOptions) {
         context: path_to_execution_dir,
       });
     },
-    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (
+      _options: NormalizedOutputOptions,
+      bundle: XOutputBundle<XOutputChunk | XOutputAsset>
+    ) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
 
@@ -53,7 +53,7 @@ export function withZephyr(options?: ZephyrRolldownOptions) {
         const assetsMap = getAssetsMap(bundle);
 
         // Generate enhanced build stats for Rolldown
-        const buildStats = await extractRolldownBuildStats({
+        const buildStats = await extractXViteBuildStats({
           zephyr_engine,
           bundle,
           mfConfig: options?.mfConfig,

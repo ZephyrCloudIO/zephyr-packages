@@ -1,13 +1,24 @@
-import type { OutputBundle } from 'rollup';
 import type { ZephyrEngine } from 'zephyr-agent';
-import type { ModuleFederationOptions } from '../../vite-plugin-zephyr';
-import type { ZephyrBuildStats, ApplicationConsumes } from 'zephyr-edge-contract';
-import { resolveCatalogDependencies, ze_log } from 'zephyr-agent';
+import {
+  create_minimal_build_stats,
+  resolveCatalogDependencies,
+  ze_log,
+} from 'zephyr-agent';
+import type { ApplicationConsumes, ZephyrBuildStats } from 'zephyr-edge-contract';
+import type {
+  ModuleFederationPlugin,
+  XFederatedConfig,
+  XFederatedSharedConfig,
+  XOutputAsset,
+  XOutputBundle,
+  XOutputChunk,
+} from '../xpack.types';
+import { viteLikeRemoteRegex } from './vite-like-remote-regex';
 
-interface ViteBuildStatsOptions {
+interface XViteBuildStatsOptions {
   zephyr_engine: ZephyrEngine;
-  bundle: OutputBundle;
-  mfConfig?: ModuleFederationOptions;
+  bundle: XOutputBundle<XOutputChunk | XOutputAsset>;
+  mfConfig?: XFederatedConfig;
   root: string;
   // consumes?: ApplicationConsumes[]; // Add option to provide already discovered imports
 }
@@ -15,61 +26,30 @@ interface ViteBuildStatsOptions {
  * Extract build statistics specific to Vite builds Similar to webpack's getBuildStats but
  * tailored for Vite
  */
-export async function extractViteBuildStats({
+export async function extractXViteBuildStats({
   zephyr_engine,
   bundle,
   mfConfig,
   root,
   // consumes,
-}: ViteBuildStatsOptions): Promise<ZephyrBuildStats> {
+}: XViteBuildStatsOptions): Promise<ZephyrBuildStats> {
   ze_log('Extracting Vite build stats');
 
   const consumeMap = new Map<string, ApplicationConsumes>();
   if (!bundle) {
     ze_log('No bundle found, returning minimal stats');
     // Return minimal stats object when bundle is null
-    const app = zephyr_engine.applicationProperties;
-    const { git } = zephyr_engine.gitProperties;
-    const { isCI } = zephyr_engine.env;
-    const version = await zephyr_engine.snapshotId;
-    const application_uid = zephyr_engine.application_uid;
-    const buildId = await zephyr_engine.build_id;
-    const { EDGE_URL, PLATFORM, DELIMITER } =
-      await zephyr_engine.application_configuration;
+    const minimal_build_stats = await create_minimal_build_stats(zephyr_engine);
 
-    return {
-      id: application_uid,
-      name: mfConfig?.name || app.name,
-      edge: { url: EDGE_URL, delimiter: DELIMITER },
-      domain: undefined,
-      platform: PLATFORM as unknown as ZephyrBuildStats['platform'],
-      type: 'app',
-      app: Object.assign({}, app, { buildId }),
-      version,
-      git,
+    Object.assign(minimal_build_stats, {
+      name: mfConfig?.name || zephyr_engine.applicationProperties.name,
       remote: mfConfig?.filename || 'remoteEntry.js',
-      remotes: [],
-      context: { isCI },
-      project: mfConfig?.name || app.name,
-      tags: [],
-      dependencies: [],
-      devDependencies: [],
-      optionalDependencies: [],
-      peerDependencies: [],
-      consumes: [],
-      overrides: [],
-      modules: [],
+      remotes: mfConfig?.remotes ? Object.keys(mfConfig.remotes) : [],
       metadata: {
-        bundler: 'vite',
-        totalSize: 0,
-        fileCount: 0,
-        chunkCount: 0,
-        assetCount: 0,
         hasFederation: !!mfConfig,
       },
-      default: false,
-      environment: '',
-    } as ZephyrBuildStats;
+    });
+    return minimal_build_stats;
   }
 
   const app = zephyr_engine.applicationProperties;
@@ -94,18 +74,6 @@ export async function extractViteBuildStats({
   const assetCount = Object.values(bundle).filter((item) => item.type === 'asset').length;
   // once we have the chunk and remote's name, we can find the imported remote, what's their used components and where they are being referenced
 
-  // Different regex patterns to match various loadRemote call formats
-  const regexPatterns = [
-    // Basic pattern: loadRemote("remote/component")
-    /loadRemote\(["']([^/]+)\/([^'"]+)["']\)/g,
-
-    // Destructured pattern: { loadRemote: c } = a, then c("remote/component")
-    /(?:\{[ \t]*loadRemote:[ \t]*([a-zA-Z0-9_$]+)[ \t]*\}|\bloadRemote[ \t]*:[ \t]*([a-zA-Z0-9_$]+)\b).*?([a-zA-Z0-9_$]+)[ \t]*\(["']([^/]+)\/([^'"]+)["']\)/g,
-
-    // Promise chain pattern: n.then(e => c("remote/component"))
-    /\.then\([ \t]*(?:[a-zA-Z0-9_$]+)[ \t]*=>[ \t]*(?:[a-zA-Z0-9_$]+)\(["']([^/]+)\/([^'"]+)["']\)\)/g,
-  ];
-
   // Process the bundle to find the loadRemote calls using multiple regex patterns
   Object.values(bundle)
     .filter((item) => item.type === 'chunk')
@@ -114,7 +82,7 @@ export async function extractViteBuildStats({
         const code = chunk.code;
 
         // Try each regex pattern
-        for (const pattern of regexPatterns) {
+        for (const pattern of viteLikeRemoteRegex) {
           // Reset lastIndex to search from beginning
           pattern.lastIndex = 0;
 
@@ -144,7 +112,7 @@ export async function extractViteBuildStats({
                 name: componentName,
                 // TODO: move this to moduleParsed hook to process where the remote is being used. Doing this here is too late.
                 usedIn: [
-                  ...chunk.moduleIds.map((id) => ({
+                  ...chunk.moduleIds.map((id: string) => ({
                     file: id.replace(root, ''),
                     url: id.replace(root, ''),
                   })),
@@ -169,7 +137,7 @@ export async function extractViteBuildStats({
               applicationID: remoteName,
               name: componentName,
               usedIn: [
-                ...chunk.moduleIds.map((id) => ({
+                ...chunk.moduleIds.map((id: string) => ({
                   file: id.replace(root, ''),
                   url: id.replace(root, ''),
                 })),
@@ -209,12 +177,15 @@ export async function extractViteBuildStats({
             : peerVersion;
         } else if (typeof config === 'object' && config !== null) {
           // Object format: { react: { requiredVersion: '18.0.0', singleton: true } }
-          if (config.requiredVersion) {
-            const reqVersion = config.requiredVersion;
-            version =
-              typeof reqVersion === 'string' && reqVersion.startsWith('catalog:')
-                ? resolveCatalogDependencies({ [name]: reqVersion })[name]
-                : reqVersion;
+          if ((config as XFederatedSharedConfig).requiredVersion) {
+            const reqVersion = (config as XFederatedSharedConfig).requiredVersion;
+
+            if (reqVersion) {
+              version =
+                typeof reqVersion === 'string' && reqVersion.startsWith('catalog:')
+                  ? resolveCatalogDependencies({ [name]: reqVersion })[name]
+                  : reqVersion;
+            }
           }
         } else if (typeof config === 'string') {
           // String format: { react: '18.0.0' }
@@ -299,7 +270,7 @@ function getPackageDependencies(
   return Object.entries(dependencies).map(([name, version]) => ({ name, version }));
 }
 
-function calculateBundleSize(bundle: OutputBundle): number {
+function calculateBundleSize(bundle: XOutputBundle): number {
   return Object.values(bundle).reduce((size, item) => {
     if (item.type === 'chunk') {
       return size + item.code.length;
@@ -319,7 +290,7 @@ function calculateBundleSize(bundle: OutputBundle): number {
  * entries for the build stats
  */
 function extractModulesFromExposes(
-  mfConfig: ModuleFederationOptions | undefined,
+  mfConfig: ModuleFederationPlugin['config'] | undefined,
   applicationID: string
 ): Array<{
   id: string;
@@ -343,7 +314,7 @@ function extractModulesFromExposes(
       typeof filePath === 'string'
         ? filePath
         : typeof filePath === 'object' && filePath !== null && 'import' in filePath
-          ? String(filePath.import)
+          ? String((filePath as { import: string }).import)
           : String(filePath);
 
     // Extract just the module name from the exposed path (removing './')
@@ -362,11 +333,11 @@ function extractModulesFromExposes(
         // Handle array format: ['react', 'react-dom']
         requires.push(
           ...mfConfig.shared
-            .map((item) => {
+            .map((item: string | XFederatedSharedConfig) => {
               return typeof item === 'string'
                 ? item
                 : typeof item === 'object' && item !== null && 'libraryName' in item
-                  ? String((item as { libraryName: string }).libraryName)
+                  ? String(item.libraryName)
                   : '';
             })
             .filter(Boolean)
@@ -381,7 +352,7 @@ function extractModulesFromExposes(
     if (mfConfig.additionalShared && Array.isArray(mfConfig.additionalShared)) {
       requires.push(
         ...mfConfig.additionalShared
-          .map((item) =>
+          .map((item: string | XFederatedSharedConfig) =>
             typeof item === 'object' && item !== null && 'libraryName' in item
               ? String(item.libraryName)
               : ''

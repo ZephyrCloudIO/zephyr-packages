@@ -1,12 +1,14 @@
-import type { OutputAsset, OutputBundle, OutputChunk } from 'rolldown';
 import type { ZeBuildAssetsMap } from 'zephyr-agent';
 import { buildAssetsMap } from 'zephyr-agent';
+import type { XOutputAsset, XOutputBundle, XOutputChunk } from 'zephyr-xpack-internal';
 
-export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
-  return buildAssetsMap(assets, extractBuffer, getAssetType);
+export function getAssetsMap(
+  assets: XOutputBundle<XOutputChunk | XOutputAsset>
+): ZeBuildAssetsMap {
+  return buildAssetsMap<XOutputChunk | XOutputAsset>(assets, extractBuffer, getAssetType);
 }
 
-const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {
+const extractBuffer = (asset: XOutputChunk | XOutputAsset): string | undefined => {
   switch (asset.type) {
     case 'chunk':
       return asset.code;
@@ -19,4 +21,4 @@ const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => 
   }
 };
 
-const getAssetType = (asset: OutputChunk | OutputAsset): string => asset.type;
+const getAssetType = (asset: XOutputChunk | XOutputAsset): string => asset.type;

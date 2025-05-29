@@ -1,6 +1,5 @@
-import { extractViteBuildStats } from './extract_vite_build_stats';
 import type { ZephyrEngine } from 'zephyr-agent';
-import type { OutputBundle } from 'rollup';
+import { extractXViteBuildStats, type XOutputBundle } from 'zephyr-xpack-internal';
 
 // Mock the zephyr-agent module
 jest.mock('zephyr-agent', () => ({
@@ -45,7 +44,7 @@ const mockZephyrEngine = {
 } as unknown as ZephyrEngine;
 
 // Mock bundle
-const mockBundle: OutputBundle = {
+const mockBundle: XOutputBundle = {
   'main.js': {
     type: 'chunk',
     fileName: 'main.js',
@@ -69,7 +68,7 @@ const mockBundle: OutputBundle = {
 
 describe('extractViteBuildStats', () => {
   it('should extract build stats from Vite build output', async () => {
-    const result = await extractViteBuildStats({
+    const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -87,6 +86,7 @@ describe('extractViteBuildStats', () => {
           'react-dom': { singleton: true },
         },
       },
+      root: '/',
     });
 
     // Verify basic properties
@@ -131,7 +131,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should work with no module federation config', async () => {
-    const result = await extractViteBuildStats({
+    const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
     });
@@ -142,7 +142,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should extract shared dependencies for overrides field with object config', async () => {
-    const result = await extractViteBuildStats({
+    const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -191,7 +191,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should handle complex exposes format in module federation', async () => {
-    const result = await extractViteBuildStats({
+    const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -227,7 +227,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should handle additionalShared format from Nx webpack module federation', async () => {
-    const result = await extractViteBuildStats({
+    const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -260,7 +260,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should extract shared dependencies for overrides field with string config', async () => {
-    const result = await extractViteBuildStats({
+    const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {

@@ -13,80 +13,126 @@ export class ZeEnvVarsWebpackPlugin {
   private publicPath = '';
   private assetFilename = '';
   private assetSource = '';
+  private varsMap: Record<string, string> = {};
 
   constructor(private options: ZeEnvVarsPluginOptions = {}) {}
 
   apply(compiler: Compiler): void {
-    // Get webpack.sources
     const { RawSource } = compiler.webpack.sources;
 
-    // Register a loader for JS/TS files
+    // Register loader for JS/TS
     const loaderPath = path.resolve(__dirname, './ze-env-vars-webpack-loader.js');
-
-    // Add the loader to the module rules
     const rules = compiler.options.module?.rules || [];
     rules.push({
       test: /\.(js|jsx|ts|tsx)$/,
       use: [loaderPath],
       enforce: 'pre',
     });
-
     compiler.options.module = compiler.options.module || {};
     compiler.options.module.rules = rules;
 
     ze_log(`${PLUGIN_NAME}: Added environment variables loader to webpack rules`);
 
-    // Register the hooks for asset generation and HTML injection
     compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
       ze_log(`${PLUGIN_NAME}: Plugin initialized`);
 
-      // Add a custom loader to process JS/TS files
+      // Attach env vars set to loader context
       compilation.hooks.normalModuleLoader.tap(PLUGIN_NAME, (loaderContext) => {
-        // Store a reference to the global environment variables set
-        //@ts-expect-error - zeEnvVars is injected into the loader context
+        //@ts-expect-error
         loaderContext.zeEnvVars = GLOBAL_ENV_VARS;
       });
 
-      // Process assets to generate the environment variables asset
+      // Generate the environment variables asset
       compilation.hooks.processAssets.tap(
         {
           name: PLUGIN_NAME,
           stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
         },
-        () => {
+        (assets) => {
           if (GLOBAL_ENV_VARS.size === 0) {
-            ze_log(
-              `${PLUGIN_NAME}: No environment variables detected, skipping asset generation`
-            );
+            ze_log(`${PLUGIN_NAME}: No environment variables detected, skipping asset generation`);
             return;
           }
 
-          ze_log(
-            `${PLUGIN_NAME}: Collected env vars: ${Array.from(GLOBAL_ENV_VARS).join(', ')}`
-          );
-
-          // Generate the environment variables asset using the agent's createTemporaryVariablesFile
-          const { source, hash } = createTemporaryVariablesFile(GLOBAL_ENV_VARS);
+          const { source, hash, varsMap } = createTemporaryVariablesFile(GLOBAL_ENV_VARS);
           this.assetFilename = `ze-envs-${hash}.js`;
           this.assetSource = source;
+          this.varsMap = varsMap;
 
-          // Get the public path from compiler options
           this.publicPath = (compiler.options.output?.publicPath as string) || '';
           if (this.publicPath === 'auto') this.publicPath = '';
 
-          // Add the environment variables asset to the compilation
-          ze_log(
-            `${PLUGIN_NAME}: Adding environment variables asset: ${this.assetFilename}`
-          );
+          // Emit JS file (opcional, útil para debug manual)
           compilation.emitAsset(this.assetFilename, new RawSource(this.assetSource));
+          ze_log(`${PLUGIN_NAME}: Emitted separate asset: ${this.assetFilename}`);
+
+          // Inject in the main bundle
+          const entryAssetName = Object.keys(assets).find(
+            (name) =>
+              name.endsWith('.js') &&
+              (name.includes('main') || name.includes('index') || name.includes('app'))
+          );
+
+          if (entryAssetName) {
+            const asset = assets[entryAssetName];
+            const originalSource = asset.source().toString();
+
+            // Inject straight in to the asset
+            if (!originalSource.includes('window[Symbol.for("ze_envs")]')) {
+              const injectedSource = `${this.assetSource}\n${originalSource}`;
+              compilation.updateAsset(entryAssetName, new RawSource(injectedSource));
+              ze_log(`${PLUGIN_NAME}: Injected env vars directly into ${entryAssetName}`);
+            } else {
+              ze_log(`${PLUGIN_NAME}: Env vars already present in ${entryAssetName}, skipping injection`);
+            }
+          } else {
+            ze_log(`${PLUGIN_NAME}: Could not find entry JS asset to inject env vars`);
+          }
         }
       );
 
-      // Inject the script tag into HTML files
+
+      // Replace env vars in .html and .css
+      compilation.hooks.processAssets.tap(
+        {
+          name: `${PLUGIN_NAME}:ReplaceInAssets`,
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+        },
+        (assets) => {
+          if (!this.varsMap) return;
+
+          Object.entries(assets).forEach(([filename, asset]) => {
+            if (!/\.(html|css)$/.test(filename)) return;
+
+            let content = asset.source().toString();
+            let replaced = false;
+
+            Object.entries(this.varsMap).forEach(([key, value]) => {
+              const patterns = [
+                new RegExp(`import\\.meta\\.env\\.${key}`, 'g'),
+                new RegExp(`process\\.env\\.${key}`, 'g'),
+              ];
+              patterns.forEach((regex) => {
+                if (regex.test(content)) {
+                  replaced = true;
+                  content = content.replace(regex, JSON.stringify(value));
+                }
+              });
+            });
+
+            if (replaced) {
+              ze_log(`${PLUGIN_NAME}: Replaced env vars in ${filename}`);
+              compilation.updateAsset(filename, new RawSource(content));
+            }
+          });
+        }
+      );
+
+      // Inject the script tag into HTML
       compilation.hooks.processAssets.tap(
         {
           name: `${PLUGIN_NAME}:InjectHtml`,
-          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER, // This runs after asset optimization
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
         },
         (assets) => {
           if (!this.assetFilename) {
@@ -94,31 +140,24 @@ export class ZeEnvVarsWebpackPlugin {
             return;
           }
 
-          // Create the script tag
           const publicPath = this.publicPath
             ? `${this.publicPath.replace(/\/$/, '')}/${this.assetFilename}`
             : `/${this.assetFilename}`;
           const scriptTag = `<script src="${publicPath}" fetchpriority="high"></script>`;
 
-          // Process HTML assets to inject the script tag
           let injectedCount = 0;
           Object.entries(assets).forEach(([filename, asset]) => {
-            if (!/\.html$/.test(filename)) {
-              return;
-            }
+            if (!/\.html$/.test(filename)) return;
 
             const html = asset.source().toString();
 
-            // Skip if already injected
             if (html.includes(this.assetFilename)) {
               ze_log(`${PLUGIN_NAME}: Script already injected into ${filename}, skipping`);
               return;
             }
 
-            // Inject the script tag into the head
             const modifiedHtml = html.replace(/<head[^>]*>/, `$&\n  ${scriptTag}`);
 
-            // Only update if there's a change
             if (modifiedHtml !== html) {
               ze_log(`${PLUGIN_NAME}: Injecting script tag into ${filename}`);
               compilation.updateAsset(filename, new RawSource(modifiedHtml));
@@ -126,33 +165,27 @@ export class ZeEnvVarsWebpackPlugin {
             }
           });
 
-          ze_log(
-            `${PLUGIN_NAME}: Injected environment variables script into ${injectedCount} HTML files`
-          );
+          ze_log(`${PLUGIN_NAME}: Injected environment variables script into ${injectedCount} HTML files`);
         }
       );
 
-      // Look for HtmlWebpackPlugin and tap into its hooks
+      // HtmlWebpackPlugin hook
       if (HtmlWebpackPlugin.getHooks) {
         HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tapAsync(
           PLUGIN_NAME,
           (data, cb) => {
-            if (!this.assetFilename) {
-              return cb(null, data);
-            }
+            if (!this.assetFilename) return cb(null, data);
 
             const publicPath = this.publicPath
               ? `${this.publicPath.replace(/\/$/, '')}/${this.assetFilename}`
               : `/${this.assetFilename}`;
             const scriptTag = `<script src="${publicPath}" fetchpriority="high"></script>`;
 
-            // Skip if already injected
             if (data.html.includes(this.assetFilename)) {
               ze_log(`${PLUGIN_NAME}: Script already injected by HtmlWebpackPlugin, skipping`);
               return cb(null, data);
             }
 
-            // Inject into the HTML
             ze_log(`${PLUGIN_NAME}: HtmlWebpackPlugin detected, injecting script`);
             data.html = data.html.replace(/<head[^>]*>/, `$&\n  ${scriptTag}`);
             cb(null, data);

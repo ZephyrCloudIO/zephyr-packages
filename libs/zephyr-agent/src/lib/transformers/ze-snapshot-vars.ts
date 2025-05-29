@@ -55,15 +55,9 @@ export function findAndReplaceVariables(
 }
 
 /** Returns a temporary ze-envs.js file contents with all used envs in the related build. */
-export async function createTemporaryVariablesFile(
-  variablesSet: Set<string>,
-  application_uid: string
-) {
-  const envs = await createVariablesRecord(
-    variablesSet,
-    process.env,
-
-    // Simply warns when a variable is missing.
+export function createTemporaryVariablesFile(variablesSet: Set<string>,
+  application_uid: string) {
+  const rawEnvMap = createVariablesRecord(variablesSet, process.env, // Simply warns when a variable is missing.
     // TODO: Ask for user if he wants to create that variable in zephyr (v2 maybe?)
     (key) => {
       logFn('warn', `Missing ${key} environment variable`);
@@ -87,10 +81,15 @@ export async function createTemporaryVariablesFile(
     }
   );
 
+  const envs: Record<string, string> = Object.fromEntries(
+    Object.entries(rawEnvMap).map(([k, v]) => [k, String(v)])
+  );
+  
   const source = createZeEnvsFile(envs);
 
   return {
     source,
     hash: createHash('sha256').update(source).digest('base64url').slice(0, 8),
+    varsMap: envs
   };
 }

@@ -3,11 +3,11 @@ import {
   ze_api_gateway,
   type ZephyrBuildStats,
 } from 'zephyr-edge-contract';
+import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { dimmedName } from '../logging/debug';
 import { getToken } from '../node-persist/token';
-import { makeRequest } from '../http/http-request';
-import { ZeErrors, ZephyrError } from '../errors';
 
 /** Returns true if build stats are uploaded successfully, false otherwise. */
 export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<boolean> {
@@ -41,7 +41,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<bo
     });
   }
 
-  ze_log('Build stats uploaded to Zephyr...');
+  ze_log.upload('Build stats uploaded to Zephyr...');
 
   return true;
 }

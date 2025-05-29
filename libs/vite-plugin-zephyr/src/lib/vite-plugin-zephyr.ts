@@ -32,7 +32,7 @@ function zephyrPlugin(): Plugin {
     resolve_vite_internal_options = resolve;
   });
   let root: string;
-  
+
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
 

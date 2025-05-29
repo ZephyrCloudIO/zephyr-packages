@@ -16,7 +16,13 @@
         "baseHref": "/",
         "main": "examples/react-micro-frontends/apps/team-blue/src/main.tsx",
         "tsConfig": "examples/react-micro-frontends/apps/team-blue/tsconfig.app.json",
-        "assets": [],
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "examples/react-micro-frontends/apps/team-blue/src/assets",
+            "output": "."
+          }
+        ],
         "styles": [
           "examples/react-micro-frontends/apps/team-blue/src/styles.css"
         ],

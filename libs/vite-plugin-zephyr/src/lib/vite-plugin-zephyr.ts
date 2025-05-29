@@ -1,14 +1,13 @@
 import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type { XOutputBundle } from 'zephyr-xpack-internal';
 import { extractXViteBuildStats } from 'zephyr-xpack-internal';
+import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
-
-import type { OutputBundle } from 'rollup';
-import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0] & {
   // Support for Nx webpack module federation format
@@ -45,7 +44,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
     resolve_vite_internal_options = resolve;
   });
   let root: string;
-  let outputBundle: OutputBundle | undefined;
+  let outputBundle: XOutputBundle | undefined;
 
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;

@@ -84,26 +84,6 @@ export default defineConfig({
 });
 ```
 
-## Configuration
-
-The plugin accepts the following options:
-
-```javascript
-zephyrPlugin({
-  // Enable/disable deployment (default: true in production)
-  deploy: true,
-
-  // Custom deployment environment
-  environment: 'production',
-
-  // Additional metadata
-  metadata: {
-    version: '1.0.0',
-    description: 'My awesome app',
-  },
-});
-```
-
 ## Features
 
 - 🚀 Automatic deployment during build

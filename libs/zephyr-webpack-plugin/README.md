@@ -2,13 +2,15 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
 A Webpack plugin for deploying applications with Zephyr Cloud. This plugin integrates seamlessly with Webpack's ecosystem to enable deployment of your applications with comprehensive Module Federation support.
+
+For more information please refer to our [documentation](https://docs.zephyr-cloud.io/recipes).
 
 ## Installation
 
@@ -129,34 +131,6 @@ const config = {
 };
 
 module.exports = withZephyr()(config);
-```
-
-## Configuration Options
-
-The `withZephyr` function accepts configuration options:
-
-```javascript
-withZephyr({
-  // Enable/disable deployment
-  deploy: true,
-
-  // Deployment environment
-  environment: 'production',
-
-  // Module Federation configuration (if not using external plugin)
-  moduleFederation: {
-    name: 'my-app',
-    remotes: {},
-    exposes: {},
-    shared: {},
-  },
-
-  // Additional metadata
-  metadata: {
-    version: '1.0.0',
-    description: 'My Webpack app',
-  },
-});
 ```
 
 ## Features

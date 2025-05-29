@@ -134,6 +134,7 @@ describe('extractViteBuildStats', () => {
     const result = await extractXViteBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
+      root: '/',
     });
 
     expect(result.name).toBe('test-app'); // Should use app name when no MF config
@@ -161,6 +162,7 @@ describe('extractViteBuildStats', () => {
           },
         },
       },
+      root: '/',
     });
 
     expect(result.overrides).toHaveLength(3);
@@ -208,6 +210,7 @@ describe('extractViteBuildStats', () => {
         // Array format of shared dependencies
         shared: ['react', 'react-dom'],
       },
+      root: '/',
     });
 
     expect(result.modules).toHaveLength(2);
@@ -248,6 +251,7 @@ describe('extractViteBuildStats', () => {
           },
         ],
       },
+      root: '/',
     });
 
     expect(result.modules).toHaveLength(1);
@@ -272,6 +276,7 @@ describe('extractViteBuildStats', () => {
           'unknown-pkg': '2.0.0', // Package doesn't exist in dependencies
         },
       },
+      root: '/',
     });
 
     expect(result.overrides).toHaveLength(3);

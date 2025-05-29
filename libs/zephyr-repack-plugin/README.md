@@ -10,6 +10,16 @@
 
 A React Native plugin for deploying cross-platform applications built with [React Native](https://reactnative.dev), [Rspack](https://rspack.dev) and [Re.Pack](https://re-pack.dev). This plugin enables Over-The-Air updates capabilities for federated applications and seamless deployment to Zephyr Cloud.
 
+## Get Started
+
+The fastest way to get started is to use `create-zephyr-apps` to generate a new React Native application with Zephyr integration and choose from React Native example:
+
+```bash
+npx create-zephyr-apps@latest
+```
+
+For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/recipes/repack-mf) for Repack and also a comprehensive guide to work with Re.Pack [here](https://docs.zephyr-cloud.io/recipes/react-native).
+
 ## Installation
 
 Installing the `zephyr-repack-plugin` for your cross-platform application:

@@ -65,50 +65,55 @@ function zephyrEnvsPlugin(
         return;
       }
 
-      const prelude = await prelude_defer;
+      try {
+        const prelude = await prelude_defer;
 
-      // Wasn't able to get basic data...
-      if (!prelude) {
-        return;
+        // Wasn't able to get basic data...
+        if (!prelude) {
+          return;
+        }
+
+        const { source, hash } = await createTemporaryVariablesFile(
+          variablesSet,
+          prelude.application_uid
+        );
+
+        const asset: PreRenderedAsset = {
+          type: 'asset',
+          source,
+
+          // No names because this is a 100% generated file
+          names: [],
+          originalFileNames: [],
+
+          // deprecated
+          name: undefined,
+          originalFileName: null,
+        };
+
+        // Adapted from https://github.com/rollup/rollup/blob/7536ffb3149ad4aa7cda4e7ef343e5376e2392e1/src/utils/FileEmitter.ts#L566
+        zeEnvsFilename =
+          typeof opts.assetFileNames === 'function'
+            ? opts.assetFileNames(asset)
+            : opts.assetFileNames
+                .replace('[ext]', 'js')
+                .replace('[name]', 'ze-envs')
+                .replace('[hash]', hash);
+
+        bundle[zeEnvsFilename] = {
+          ...asset,
+          fileName: zeEnvsFilename,
+          needsCodeReference: false,
+        };
+
+        resolve_variables({
+          filename: zeEnvsFilename,
+          uses: Array.from(variablesSet),
+        });
+      } catch (error) {
+        logFn('error', ZephyrError.format(error));
+        resolve_variables(undefined);
       }
-
-      const { source, hash } = await createTemporaryVariablesFile(
-        variablesSet,
-        prelude.application_uid
-      );
-
-      const asset: PreRenderedAsset = {
-        type: 'asset',
-        source,
-
-        // No names because this is a 100% generated file
-        names: [],
-        originalFileNames: [],
-
-        // deprecated
-        name: undefined,
-        originalFileName: null,
-      };
-
-      // Adapted from https://github.com/rollup/rollup/blob/7536ffb3149ad4aa7cda4e7ef343e5376e2392e1/src/utils/FileEmitter.ts#L566
-      zeEnvsFilename =
-        typeof opts.assetFileNames === 'function'
-          ? opts.assetFileNames(asset)
-          : opts.assetFileNames
-              .replace('[ext]', 'js')
-              .replace('[name]', 'ze-envs')
-              .replace('[hash]', hash);
-
-      bundle[zeEnvsFilename] = {
-        ...asset,
-        fileName: zeEnvsFilename,
-        needsCodeReference: false,
-      };
-
-      resolve_variables({
-        filename: zeEnvsFilename,
-        uses: Array.from(variablesSet),
-      });
     },
 
     transformIndexHtml: async (html) => {

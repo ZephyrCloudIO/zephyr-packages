@@ -1,9 +1,9 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
 import { withZephyr } from 'vite-plugin-zephyr';
 
 const mfConfig = {
-  name: 'vite-remote',
+  name: 'vite_remote',
   filename: 'remoteEntry.js',
   exposes: {
     './Button': './src/Button',

@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import { withZephyr } from 'vite-plugin-zephyr';
 
 const mfConfig = {
-  name: 'vite_remote',
+  name: 'vite-remote',
   filename: 'remoteEntry.js',
   exposes: {
     './Button': './src/Button',

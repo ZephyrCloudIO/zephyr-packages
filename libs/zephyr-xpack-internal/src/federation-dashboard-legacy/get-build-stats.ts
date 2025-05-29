@@ -65,7 +65,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     : pluginOptions.mfConfig;
 
   const { name, filename, remotes } = mfConfig
-    ? extractFederatedConfig(mfConfig) ?? {}
+    ? (extractFederatedConfig(mfConfig) ?? {})
     : {};
 
   const data_overrides = {

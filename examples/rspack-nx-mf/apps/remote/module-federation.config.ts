@@ -5,6 +5,18 @@ const config: ModuleFederationConfig = {
   exposes: {
     './Module': './src/remote-entry.ts',
   },
+  shared: (libName) => {
+    const reactShared = [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+    ];
+    if (reactShared.includes(libName)) {
+      return { singleton: true };
+    }
+    return false;
+  },
 };
 
 /**

@@ -14,6 +14,18 @@ const config: ModuleFederationConfig = {
    * Declare module 'my-external-remote';
    */
   remotes: ['rspack_nx_mf_remote'],
+  shared: (libName) => {
+    const reactShared = [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+    ];
+    if (reactShared.includes(libName)) {
+      return { singleton: true };
+    }
+    return false;
+  },
 };
 
 /**

@@ -10,17 +10,34 @@
  *   value
  * @returns Parsed zephyr dependencies with structured information
  */
-import type { ZeDependency } from './ze-package-json.type';
+import type { BuildTarget, ZeDependency } from './ze-package-json.type';
 
 export function parseZeDependencies(
-  ze_dependencies: Record<string, string>
+  ze_dependencies: Record<string, string | Record<BuildTarget, string>>
 ): Record<string, ZeDependency> {
-  return Object.fromEntries(
-    Object.entries(ze_dependencies).map(([key, value]) => [
-      key,
-      parseZeDependency(key, value),
-    ])
-  );
+  const entries: [string, ZeDependency][] = [];
+  for (const [key, value] of Object.entries(ze_dependencies)) {
+    if (typeof value === 'string' && !key.includes(':')) {
+      // TODO: this is not great need review/adjust
+      entries.push([`${key}:web`, parseZeDependency(key, value)]);
+    } else if (typeof value === 'string') {
+      entries.push([key, parseZeDependency(key, value)]);
+    } else {
+      for (const [target, version] of Object.entries(value)) {
+        // One object would only allow unique keys - it will fail on scenario like so added a colon to the key to make it unique
+        // {
+        //   "zephyr:dependencies": {
+        //     "mobile-cart": {
+        //       "android": "1.0.0",
+        //       "ios": "1.0.0"
+        //     }
+        //   }
+        // }
+        entries.push([`${key}:${target}`, parseZeDependency(key, version)]);
+      }
+    }
+  }
+  return Object.fromEntries(entries);
 }
 
 /**
@@ -35,12 +52,14 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
   const dependency: ZeDependency = {
     version: value,
     registry: 'zephyr',
-    app_uid: key,
+    app_uid: key, // this is the initial value in a shape like `mobilecart` but if it's a shape like `mobilecart.repo.org` we need to keep it
+    // To keep this function lean we won't pass zephyr-engine here for app uid
   };
 
   let reference = value;
+
   // if reference variable has ':' then cut it off and store dependency.registry
-  if (reference.includes(':')) {
+  if (reference.includes(':') && reference !== 'workspace:*') {
     const refference_parts = reference.split(':');
     dependency.registry = refference_parts[0];
     reference = refference_parts[1];

@@ -14,17 +14,17 @@ describe('parseZeDependencies', () => {
 
     // Assert
     expect(result).toEqual({
-      'normal-dep': {
+      'normal-dep:web': {
         version: '^1.0.0',
         registry: 'zephyr',
         app_uid: 'normal-dep',
       },
-      'tagged-dep': {
+      'tagged-dep:web': {
         version: 'stable',
         registry: 'zephyr',
         app_uid: 'other-app',
       },
-      'semver-dep': {
+      'semver-dep:web': {
         version: '^2.0.0',
         registry: 'zephyr',
         app_uid: 'semver-dep',

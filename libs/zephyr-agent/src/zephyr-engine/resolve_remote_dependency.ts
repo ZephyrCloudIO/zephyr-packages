@@ -17,12 +17,10 @@ export interface ZeResolvedDependency {
 export async function resolve_remote_dependency({
   application_uid,
   version,
-  platform,
   build_context,
 }: {
   application_uid: string;
   version: string;
-  platform?: string;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
   const resolveDependency = new URL(
@@ -30,11 +28,8 @@ export async function resolve_remote_dependency({
     ZE_API_ENDPOINT()
   );
 
-  if (platform) {
-    resolveDependency.searchParams.append('build_target', platform);
-  }
-
   if (build_context) {
+    ze_log('build_context', build_context);
     resolveDependency.searchParams.append('build_context', build_context);
   }
 
@@ -69,6 +64,7 @@ export async function resolve_remote_dependency({
     }
 
     const response = res.data;
+    ze_log('resolved dependency response', response);
 
     if (response.value) {
       ze_log(
@@ -79,7 +75,7 @@ export async function resolve_remote_dependency({
         'version: ',
         version
       );
-      return Object.assign({}, response.value, { version, platform });
+      return Object.assign({}, response.value, { version, build_context });
     }
 
     throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {

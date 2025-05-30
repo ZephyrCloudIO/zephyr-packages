@@ -212,7 +212,7 @@ export class ZephyrEngine {
     }
 
     const app_config = await this.application_configuration;
-    const ze_dependencies = this.npmProperties.zephyrDependencies;
+    let ze_dependencies = this.npmProperties.zephyrDependencies;
     const platform = this.env.target;
     const build_context_json = {
       target: this.env.target,
@@ -220,25 +220,61 @@ export class ZephyrEngine {
       branch: this.gitProperties.git.branch,
       username: app_config.username,
     };
+    ze_log('build_context_json', build_context_json);
+
+    // if platform is passed in we pick the ze_dependency with the same platform, the key should include the platform
+    if (platform) {
+      ze_dependencies = ze_dependencies
+        ? Object.fromEntries(
+            Object.entries(ze_dependencies).filter(([key]) => key.includes(platform))
+          )
+        : undefined;
+      ze_log('ze_dependencies', ze_dependencies);
+    }
+
     // convert to base64
-    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
-      'base64'
-    );
 
     ze_log(
       'resolve_remote_dependencies.deps',
       deps,
-      'platform',
+      '\nplatform',
       platform,
-      'ze_dependencies',
+      '\nze_dependencies',
       ze_dependencies
     );
 
+    // This deps is coming from MF config itself - our first resolution is:
+    // 1. MF Config
+    // 2. package.json
     const tasks = deps.map(async (dep) => {
-      const [app_name, project_name, org_name] = dep.name.split('.', 3);
-      const ze_dependency = ze_dependencies?.[dep.name];
-      const [ze_app_name, ze_project_name, ze_org_name] =
+      ze_log('dep', dep);
+
+      // dep name is singular `mobilecart` sometimes but not always `mobilecart.repo.org`
+      const [app_name, project_name, org_name] = dep.name.includes('.')
+        ? dep.name.split('.', 3)
+        : [dep.name, this.gitProperties.app.project, this.gitProperties.app.org];
+
+      // ze_log('this.gitProperties.app.project', this.gitProperties.app.project);
+      // ze_log('this.gitProperties.app.org', this.gitProperties.app.org);
+      // ze_log('ze_dependencies', ze_dependencies);
+      // Because we might have keys like `mobilecart:android` or `mobilecart:ios` we need to find the correct dependency hence `startWith`
+      const ze_dependency =
+        ze_dependencies !== undefined
+          ? Object.values(ze_dependencies).find((ze_dependency) =>
+              ze_dependency.app_uid?.startsWith(dep.name)
+            )
+          : undefined;
+      const [_app_name, ze_project_name, ze_org_name] =
         ze_dependency?.app_uid?.split('.') ?? [];
+
+      const [ze_app_name, target] = _app_name.includes(':')
+        ? _app_name.split(':')
+        : [_app_name, 'web'];
+
+      if (target !== null) {
+        Object.assign(build_context_json, { target });
+      }
+
       // Key might be only the app name
       const dep_application_uid = createApplicationUid({
         org: ze_org_name ?? org_name ?? this.gitProperties.app.org,
@@ -248,12 +284,13 @@ export class ZephyrEngine {
 
       // if default url is url - set as default, if not use app remote_host as default
       // if default url is not url - send it as a semver to deps resolution
-
+      const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
+        'base64'
+      );
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,
           version: ze_dependency?.version ?? dep.version,
-          platform,
           build_context,
         })
       );
@@ -261,7 +298,8 @@ export class ZephyrEngine {
       // If you couldn't resolve remote dependency, skip replacing it
       if (!ZeUtils.isSuccessTuple(tuple)) {
         ze_log(
-          `Failed to resolve remote dependency: ${dep.name}@${dep.version}`,
+          `Failed to resolve remote dependency: name: ${dep.name}
+          version: ${dep.version}`,
           'skipping...'
         );
         return null;

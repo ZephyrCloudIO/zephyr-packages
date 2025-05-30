@@ -1,16 +1,27 @@
 import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
-import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type { XOutputBundle } from 'zephyr-xpack-internal';
+import { extractXViteBuildStats } from 'zephyr-xpack-internal';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
-export type ModuleFederationOptions = Parameters<typeof federation>[0];
+export type ModuleFederationOptions = Parameters<typeof federation>[0] & {
+  // Support for Nx webpack module federation format
+  additionalShared?: Array<{
+    libraryName: string;
+    sharedConfig?: {
+      singleton?: boolean;
+      requiredVersion?: string;
+    };
+  }>;
+};
 
-interface VitePluginZephyrOptions extends Omit<ZephyrPluginOptions, 'mfConfig'> {
+// Structure to track module federation references
+interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
 }
 
@@ -20,18 +31,20 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   if (mfConfig) {
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
-  plugins.push(zephyrPlugin());
+  plugins.push(zephyrPlugin(_options));
   return plugins;
 }
 
-function zephyrPlugin(): Plugin {
+function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  // const mfConfig = _options?.mfConfig;
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
     resolve_vite_internal_options = resolve;
   });
   let root: string;
+  let outputBundle: XOutputBundle | undefined;
 
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
@@ -57,11 +70,13 @@ function zephyrPlugin(): Plugin {
       });
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
     },
+
     transform: async (code, id) => {
       try {
         if (!id.includes('virtual:mf-REMOTE_ENTRY_ID') || !mfPlugin) return code;
 
         const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+        // Handle dependency resolution
         if (!dependencyPairs) return code;
 
         const zephyr_engine = await zephyr_engine_defer;
@@ -77,6 +92,10 @@ function zephyrPlugin(): Plugin {
         return code;
       }
     },
+    // Capture the output bundle for build stats generation
+    writeBundle: (_, bundle) => {
+      outputBundle = bundle;
+    },
     closeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
@@ -91,10 +110,21 @@ function zephyrPlugin(): Plugin {
           zephyr_engine,
           vite_internal_options
         );
+
+        // Generate enhanced build stats for Vite using the discovered remote imports
+        const buildStats = await extractXViteBuildStats({
+          zephyr_engine,
+          bundle: outputBundle || {},
+          mfConfig: _options?.mfConfig,
+          root,
+        });
+
+        // Upload assets and build stats
         await zephyr_engine.upload_assets({
           assetsMap,
-          buildStats: await zeBuildDashData(zephyr_engine),
+          buildStats,
         });
+
         await zephyr_engine.build_finished();
       } catch (error) {
         logFn('error', ZephyrError.format(error));

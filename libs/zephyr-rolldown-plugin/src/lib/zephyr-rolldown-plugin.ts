@@ -1,6 +1,13 @@
-import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
-import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { cwd } from 'node:process';
+import type { InputOptions, NormalizedOutputOptions } from 'rolldown';
+import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type {
+  XFederatedConfig,
+  XOutputAsset,
+  XOutputBundle,
+  XOutputChunk,
+} from 'zephyr-xpack-internal';
+import { extractXViteBuildStats } from 'zephyr-xpack-internal';
 import { getAssetsMap } from './internal/get-assets-map';
 
 const getInputFolder = (options: InputOptions): string => {
@@ -10,19 +17,29 @@ const getInputFolder = (options: InputOptions): string => {
   return cwd();
 };
 
-export function withZephyr() {
+interface ZephyrRolldownOptions {
+  // Reserved for future options like module federation config if needed
+  mfConfig?: XFederatedConfig | undefined;
+}
+
+export function withZephyr(options?: ZephyrRolldownOptions) {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+
+  let path_to_execution_dir: string;
 
   return {
     name: 'with-zephyr',
-    buildStart: async (options: InputOptions) => {
-      const path_to_execution_dir = getInputFolder(options);
+    buildStart: async (inputOptions: InputOptions) => {
+      path_to_execution_dir = getInputFolder(inputOptions);
       zephyr_defer_create({
-        builder: 'rollup', //TODO(Nestor): API is the same, but we should make it explicit.
+        builder: 'rolldown', // Now explicitly using 'rolldown' as the builder
         context: path_to_execution_dir,
       });
     },
-    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (
+      _options: NormalizedOutputOptions,
+      bundle: XOutputBundle<XOutputChunk | XOutputAsset>
+    ) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
 
@@ -32,10 +49,21 @@ export function withZephyr() {
         // Start a new build
         await zephyr_engine.start_new_build();
 
-        // Upload assets and finish the build
+        // Get assets map
+        const assetsMap = getAssetsMap(bundle);
+
+        // Generate enhanced build stats for Rolldown
+        const buildStats = await extractXViteBuildStats({
+          zephyr_engine,
+          bundle,
+          mfConfig: options?.mfConfig,
+          root: path_to_execution_dir,
+        });
+
+        // Upload assets and build stats
         await zephyr_engine.upload_assets({
-          assetsMap: getAssetsMap(bundle),
-          buildStats: await zeBuildDashData(zephyr_engine),
+          assetsMap,
+          buildStats,
         });
 
         await zephyr_engine.build_finished();

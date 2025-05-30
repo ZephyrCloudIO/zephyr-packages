@@ -77,7 +77,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       if (Array.isArray(remotes)) {
         const remoteIndex = remotes.indexOf(remote_name);
         if (remoteIndex === -1) return;
-        // @ts-expect-error - Nx's ModuleFederationPlugin has different remote types
         remotes.splice(remoteIndex, 1, [remote_name, runtimeCode]);
         return;
       }

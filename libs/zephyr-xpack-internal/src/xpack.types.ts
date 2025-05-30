@@ -23,12 +23,36 @@ interface WebpackPluginInstance<Compiler> {
   apply: (compiler: Compiler) => void;
 }
 
-export interface XFederatedRemotesConfig {
-  name: string;
-  library?: {
-    type?: string;
+export interface XFederatedSharedConfig {
+  singleton?: boolean;
+  requiredVersion?: string;
+  version?: string;
+  eager?: boolean;
+  /**
+   * This usually doesn't exist in the config, but it's used to support Nx
+   * additionalShared
+   */
+  libraryName?: string;
+}
+
+export interface XAdditionalSharedConfig {
+  libraryName: string;
+  sharedConfig?: {
+    singleton?: boolean;
+    requiredVersion?: string;
   };
-  remotes?: (string | RemotesObject)[] | RemotesObject;
+}
+
+export interface XFederatedConfig {
+  name: string;
+  library?:
+    | {
+        type?: string;
+      }
+    | any;
+  shared?: Record<string, string | XFederatedSharedConfig> | string[] | any;
+  remotes?: (string | RemotesObject)[] | RemotesObject | any;
+  exposes?: Record<string, string | { import: string } | any> | any;
   /** Repack: bundle file name */
   filename?: string;
   /**
@@ -36,14 +60,20 @@ export interface XFederatedRemotesConfig {
    * actual output js.bundle and they want to put it in filename field)
    */
   bundle_name?: string;
+  /** This is not normal MF config, but it's used to support Nx additionalShared */
+  additionalShared?:
+    | string[]
+    | Record<string, string | XFederatedSharedConfig>
+    | XAdditionalSharedConfig[]
+    | any;
 }
 
 export interface ModuleFederationPlugin {
   apply: (compiler: unknown) => void;
   /** For Webpack/Rspack */
-  _options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
+  _options?: XFederatedConfig | { config: XFederatedConfig };
   /** Repack specific for now until Repack change how the config should be exposed */
-  config?: XFederatedRemotesConfig;
+  config?: XFederatedConfig;
 }
 
 interface RemotesObject {
@@ -144,3 +174,35 @@ export interface XStatsCompilation {
   modules?: XStatsModule[];
   chunks?: XStatsChunk[];
 }
+
+export interface XPreRenderdAsset {
+  names: string[];
+  originalFileNames: string[];
+  source: string | Uint8Array;
+  type: 'asset';
+}
+
+export interface XOutputAsset extends XPreRenderdAsset {
+  fileName: string;
+  needsCodeReference: boolean;
+}
+
+export interface XPreRenderedChunk {
+  name: string;
+  moduleIds: string[];
+}
+
+export interface XOutputChunk extends XPreRenderedChunk {
+  type: 'chunk';
+  code: string;
+  source?: string;
+  sourcemap?: string;
+  file?: string;
+  fileName: string;
+  isEntry: boolean;
+  exports: string[];
+  imports: string[];
+}
+
+/** Vite like output bundle */
+export type XOutputBundle<T = XOutputAsset | XOutputChunk> = Record<string, T>;

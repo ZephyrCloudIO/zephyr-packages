@@ -10,10 +10,10 @@
  *   value
  * @returns Parsed zephyr dependencies with structured information
  */
-import type { BuildTarget, ZeDependency } from './ze-package-json.type';
+import type { ZeDependency } from './ze-package-json.type';
 
 export function parseZeDependencies(
-  ze_dependencies: Record<string, string | Record<BuildTarget, string>>
+  ze_dependencies: Record<string, string | Record<string, string>>
 ): Record<string, ZeDependency> {
   const entries: [string, ZeDependency][] = [];
   for (const [key, value] of Object.entries(ze_dependencies)) {
@@ -59,7 +59,7 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
   let reference = value;
 
   // if reference variable has ':' then cut it off and store dependency.registry
-  if (reference.includes(':') && reference !== 'workspace:*') {
+  if (reference.includes(':') && reference !== 'workspace:*' && !reference.startsWith('zephyr:')) {
     const refference_parts = reference.split(':');
     dependency.registry = refference_parts[0];
     reference = refference_parts[1];

@@ -8,11 +8,7 @@ export interface ZeXPlatformDependency {
   [target: string]: ZeDependency;
 }
 
-export enum BuildTarget {
-  ANDROID = 'android',
-  IOS = 'ios',
-  WEB = 'web',
-}
+export type BuildTarget = 'android' | 'ios' | 'web' | undefined;
 
 export interface ZePackageJson {
   name: string;
@@ -20,7 +16,7 @@ export interface ZePackageJson {
   dependencies?: Record<string, string>;
 
   /** Zephyr:dependencies in package.json */
-  ['zephyr:dependencies']?: Record<string, string | Record<BuildTarget, string>>;
+  ['zephyr:dependencies']?: Record<string, string | Record<string, string>>;
   // parsed zephyr:dependencies
   zephyrDependencies?: Record<string, ZeDependency>;
   /** OptionalDependencies in package.json */

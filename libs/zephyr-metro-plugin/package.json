@@ -21,8 +21,8 @@
     "test": "nx test zephyr-metro-plugin"
   },
   "dependencies": {
-    "zephyr-agent": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*"
+    "zephyr-agent": "0.0.50",
+    "zephyr-xpack-internal": "0.0.50"
   },
   "devDependencies": {
     "@rspack/core": "catalog:rspack",

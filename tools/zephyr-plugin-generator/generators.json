@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "zephyr-package": {
+      "factory": "./src/generators/zephyr-package/generator",
+      "schema": "./src/generators/zephyr-package/schema.json",
+      "description": "Create a new Zephyr package library"
+    }
+  }
+}

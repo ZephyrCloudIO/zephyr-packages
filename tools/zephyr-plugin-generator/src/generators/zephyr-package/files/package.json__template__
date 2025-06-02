@@ -1,0 +1,53 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.1",
+  "description": "<%= description || (bundler ? bundler.charAt(0).toUpperCase() + bundler.slice(1) + ' plugin for Zephyr' : 'Zephyr package') %>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "<%= projectRoot %>"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",<% if (packageType === 'agent') { %>
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },<% } %>
+  "scripts": {
+    "build": "nx run <%= projectName %>:build",
+    "patch-version": "pnpm version"<% if (addTests) { %>,
+    "test": "nx test <%= projectName %>"<% } %>
+  },
+  "dependencies": {<% if (packageType === 'plugin') { %>
+    "is-ci": "catalog:plugin-shared",
+    "tslib": "catalog:typescript",<% if (bundler === 'webpack') { %>
+    "webpack": "catalog:webpack5",<% } else if (bundler === 'vite') { %>
+    "vite": "catalog:vite6",<% } else if (bundler === 'rollup') { %>
+    "rollup": "catalog:rollup4",<% } else if (bundler === 'rspack') { %>
+    "@rspack/core": "catalog:rspack",<% } %>
+    "zephyr-agent": "workspace:*",
+    "zephyr-xpack-internal": "workspace:*"<% } else if (packageType === 'agent') { %>
+    "tslib": "catalog:typescript",
+    "zephyr-edge-contract": "workspace:*"<% } else { %>
+    "tslib": "catalog:typescript"<% } %>
+  },
+  "devDependencies": {
+    "@types/is-ci": "catalog:typescript",<% if (addTests) { %>
+    "@types/jest": "catalog:typescript",<% } %>
+    "@typescript-eslint/eslint-plugin": "catalog:eslint"<% if (addTests) { %>,
+    "ts-jest": "catalog:typescript"<% } %>
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -1,0 +1,11 @@
+<% if (addTests) { %>/* eslint-disable */
+export default {
+  displayName: '<%= projectName %>',
+  preset: '<%= offsetFromRoot %>jest.preset.js',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<tsconfig.spec.json>' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '<%= offsetFromRoot %>coverage/<%= projectRoot %>',
+};<% } %>

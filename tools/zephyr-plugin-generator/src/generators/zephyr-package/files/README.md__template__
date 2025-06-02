@@ -1,0 +1,56 @@
+# <%= projectName %>
+
+<%= description || (bundler ? bundler.charAt(0).toUpperCase() + bundler.slice(1) + ' plugin for Zephyr' : 'Zephyr package') %>
+
+## Installation
+
+```bash
+npm install <%= projectName %>
+# or
+pnpm add <%= projectName %>
+# or
+yarn add <%= projectName %>
+```
+
+## Usage
+
+<% if (packageType === 'plugin' && bundler === 'webpack') { %>```javascript
+const { ZephyrWebpackPlugin } = require('<%= projectName %>');
+
+module.exports = {
+  plugins: [
+    new ZephyrWebpackPlugin({
+      // options
+    })
+  ]
+};
+```<% } else if (packageType === 'plugin' && bundler === 'vite') { %>```javascript
+import { defineConfig } from 'vite';
+import { zephyrVitePlugin } from '<%= projectName %>';
+
+export default defineConfig({
+  plugins: [
+    zephyrVitePlugin({
+      // options
+    })
+  ]
+});
+```<% } else if (packageType === 'plugin' && bundler === 'rollup') { %>```javascript
+import { zephyrRollupPlugin } from '<%= projectName %>';
+
+export default {
+  plugins: [
+    zephyrRollupPlugin({
+      // options
+    })
+  ]
+};
+```<% } else { %>```javascript
+import { /* your exports */ } from '<%= projectName %>';
+
+// Usage example
+```<% } %>
+
+## License
+
+Apache-2.0

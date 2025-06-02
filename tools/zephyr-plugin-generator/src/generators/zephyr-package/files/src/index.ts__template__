@@ -1,0 +1,7 @@
+<% if (packageType === 'plugin' && bundler === 'webpack') { %>export { default as ZephyrWebpackPlugin } from './webpack-plugin/ze-webpack-plugin';
+export * from './webpack-plugin/with-zephyr';
+export * from './types';<% } else if (packageType === 'plugin' && bundler === 'vite') { %>export { default as zephyrVitePlugin } from './lib/vite-plugin-zephyr';
+export * from './lib/vite-plugin-zephyr-partial';<% } else if (packageType === 'plugin' && bundler === 'rollup') { %>export { default as zephyrRollupPlugin } from './lib/rollup-plugin-zephyr';<% } else if (packageType === 'plugin' && bundler === 'rspack') { %>export { default as ZephyrRspackPlugin } from './rspack-plugin/ze-rspack-plugin';
+export * from './rspack-plugin/with-zephyr';
+export * from './types';<% } else { %>// Export your main functionality here
+export * from './lib';<% } %>

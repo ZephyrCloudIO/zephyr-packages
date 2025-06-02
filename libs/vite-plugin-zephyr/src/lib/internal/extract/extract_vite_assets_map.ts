@@ -5,9 +5,10 @@ import {
   type ZeBuildAssetsMap,
   type ZephyrEngine,
 } from 'zephyr-agent';
-import type { OutputAsset, OutputChunk } from 'rollup';
-import { loadStaticAssets } from './load_static_assets';
+import { extractRollxBuffer, getRollxAssetType } from 'zephyr-rollx-internal';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
+import { loadStaticAssets } from './load_static_assets';
+
 export async function extract_vite_assets_map(
   zephyr_engine: ZephyrEngine,
   vite_internal_options: ZephyrInternalOptions
@@ -24,22 +25,5 @@ export async function extract_vite_assets_map(
     ...Object.values(partialAssetMap ?? {}),
     runtime_assets
   );
-  return buildAssetsMap(complete_assets, extractBuffer, getAssetType);
-}
-
-function getAssetType(asset: OutputChunk | OutputAsset): string {
-  return asset.type;
-}
-
-function extractBuffer(asset: OutputChunk | OutputAsset): string | undefined {
-  switch (asset.type) {
-    case 'chunk':
-      return asset.code;
-    case 'asset':
-      return typeof asset.source === 'string'
-        ? asset.source
-        : new TextDecoder().decode(asset.source);
-    default:
-      return void 0;
-  }
+  return buildAssetsMap(complete_assets, extractRollxBuffer, getRollxAssetType);
 }

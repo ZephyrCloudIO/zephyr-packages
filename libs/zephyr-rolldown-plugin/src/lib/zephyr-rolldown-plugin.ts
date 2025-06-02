@@ -1,13 +1,14 @@
 import { cwd } from 'node:process';
 import type { InputOptions, NormalizedOutputOptions } from 'rolldown';
 import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import type {
-  XFederatedConfig,
-  XOutputAsset,
-  XOutputBundle,
-  XOutputChunk,
-} from 'zephyr-xpack-internal';
-import { extractXViteBuildStats } from 'zephyr-xpack-internal';
+
+import {
+  extractRollxBuildStats,
+  type XFederatedConfig,
+  type XOutputAsset,
+  type XOutputBundle,
+  type XOutputChunk,
+} from 'zephyr-rollx-internal';
 import { getAssetsMap } from './internal/get-assets-map';
 
 const getInputFolder = (options: InputOptions): string => {
@@ -53,7 +54,7 @@ export function withZephyr(options?: ZephyrRolldownOptions) {
         const assetsMap = getAssetsMap(bundle);
 
         // Generate enhanced build stats for Rolldown
-        const buildStats = await extractXViteBuildStats({
+        const buildStats = await extractRollxBuildStats({
           zephyr_engine,
           bundle,
           mfConfig: options?.mfConfig,

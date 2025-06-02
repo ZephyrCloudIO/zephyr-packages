@@ -22,7 +22,8 @@
   "dependencies": {
     "is-ci": "catalog:plugin-shared",
     "rolldown": "catalog:rolldown",
-    "zephyr-agent": "workspace:*"
+    "zephyr-agent": "workspace:*",
+    "zephyr-rollx-internal": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",

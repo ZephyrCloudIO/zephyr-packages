@@ -11,16 +11,11 @@ export { isModuleFederationPlugin } from './xpack-extract/is-module-federation-p
 
 export type {
   ModuleFederationPlugin,
-  XFederatedConfig,
-  XOutputAsset,
-  XOutputBundle,
-  XOutputChunk,
+  XFederatedRemotesConfig,
   XPackConfiguration,
   XStats,
   XStatsCompilation,
 } from './xpack.types';
-
-export { extractXViteBuildStats } from './bundler-extractors/vite-like-bundler-build-stats';
 
 export { getBuildStats } from './federation-dashboard-legacy/get-build-stats';
 

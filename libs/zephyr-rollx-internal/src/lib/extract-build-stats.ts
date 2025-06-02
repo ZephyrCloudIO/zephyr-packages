@@ -1,10 +1,12 @@
 import type { ZephyrEngine } from 'zephyr-agent';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {
   create_minimal_build_stats,
   resolveCatalogDependencies,
   ze_log,
 } from 'zephyr-agent';
 import type { ApplicationConsumes, ZephyrBuildStats } from 'zephyr-edge-contract';
+import { viteLikeRemoteRegex } from '../lib/remote-regex';
 import type {
   ModuleFederationPlugin,
   XFederatedConfig,
@@ -12,8 +14,7 @@ import type {
   XOutputAsset,
   XOutputBundle,
   XOutputChunk,
-} from '../xpack.types';
-import { viteLikeRemoteRegex } from './vite-like-remote-regex';
+} from '../types/index';
 
 interface XViteBuildStatsOptions {
   zephyr_engine: ZephyrEngine;
@@ -26,7 +27,7 @@ interface XViteBuildStatsOptions {
  * Extract build statistics specific to Vite builds Similar to webpack's getBuildStats but
  * tailored for Vite
  */
-export async function extractXViteBuildStats({
+export async function extractRollxBuildStats({
   zephyr_engine,
   bundle,
   mfConfig,

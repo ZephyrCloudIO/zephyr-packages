@@ -1,17 +1,11 @@
 {
-  "name": "rollup-plugin-zephyr",
+  "name": "zephyr-rollx-internal",
   "version": "0.0.50",
-  "description": "Rollup plugin for Zephyr",
-  "keywords": [
-    "rollup",
-    "rollup-plugin",
-    "zephyr",
-    "deploy"
-  ],
+  "description": "Internal plugin for rollup, rolldown and vite for Zephyr",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/rollup-plugin-zephyr"
+    "directory": "libs/zephyr-rollx-internal"
   },
   "license": "Apache-2.0",
   "author": {
@@ -22,21 +16,20 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run rollup-plugin-zephyr:build",
+    "build": "nx run zephyr-rollx-internal:build",
+    "test": "nx run zephyr-rollx-internal:test",
     "patch-version": "pnpm version"
   },
   "dependencies": {
     "is-ci": "catalog:plugin-shared",
-    "rollup": "catalog:rollup4",
-    "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*",
-    "zephyr-rollx-internal": "workspace:*"
+    "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "zephyr-edge-contract": "workspace:*"
   },
   "publishConfig": {
     "access": "public",

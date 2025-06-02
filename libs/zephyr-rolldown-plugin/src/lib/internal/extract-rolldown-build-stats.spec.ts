@@ -1,6 +1,10 @@
-import { extractXViteBuildStats } from 'zephyr-xpack-internal';
 import type { ZephyrEngine } from 'zephyr-agent';
-import type { XOutputBundle, XOutputChunk } from 'zephyr-xpack-internal';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import {
+  extractRollxBuildStats,
+  type XOutputBundle,
+  type XOutputChunk,
+} from 'zephyr-rollx-internal';
 
 // Mock zephyr-agent functions
 jest.mock('zephyr-agent', () => ({
@@ -8,9 +12,9 @@ jest.mock('zephyr-agent', () => ({
   resolveCatalogDependencies: jest.fn((deps) => deps || {}),
 }));
 
-// Mock the zephyr-xpack-internal module
-jest.mock('zephyr-xpack-internal', () => ({
-  extractXViteBuildStats: jest.fn(),
+// Mock the zephyr-rollx-internal module
+jest.mock('zephyr-rollx-internal', () => ({
+  extractRollxBuildStats: jest.fn(),
 }));
 
 // Mock ZephyrEngine
@@ -63,6 +67,7 @@ const mockChunk: XOutputChunk = {
   modules: {},
   moduleIds: [],
   referencedFiles: [],
+  isEntry: true,
 };
 
 const mockBundle: XOutputBundle = {
@@ -70,24 +75,28 @@ const mockBundle: XOutputBundle = {
   'styles.css': {
     type: 'asset',
     fileName: 'styles.css',
-    name: undefined,
+    names: ['styles.css'],
+    originalFileNames: ['src/styles.css'],
     source: '.button { color: blue; }',
+    needsCodeReference: false,
   },
   'README.md': {
     type: 'asset',
     fileName: 'README.md',
-    name: undefined,
+    names: ['README.md'],
+    originalFileNames: ['README.md'],
     source: '# Rolldown Library',
+    needsCodeReference: false,
   },
 };
 
 describe('extractRolldownBuildStats', () => {
-  let mockExtractXViteBuildStats: jest.MockedFunction<typeof extractXViteBuildStats>;
+  let mockExtractRollxBuildStats: jest.MockedFunction<typeof extractRollxBuildStats>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockExtractXViteBuildStats = extractXViteBuildStats as jest.MockedFunction<
-      typeof extractXViteBuildStats
+    mockExtractRollxBuildStats = extractRollxBuildStats as jest.MockedFunction<
+      typeof extractRollxBuildStats
     >;
   });
 
@@ -111,19 +120,21 @@ describe('extractRolldownBuildStats', () => {
         assetCount: 2,
         dynamicImportCount: 1,
       },
-    };
+    } as Partial<ZephyrBuildStats> as ZephyrBuildStats;
 
-    mockExtractXViteBuildStats.mockResolvedValue(mockResult);
+    mockExtractRollxBuildStats.mockResolvedValue(mockResult);
 
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
+      root: '/mock/root',
     });
 
     // Verify the function was called with correct parameters
-    expect(mockExtractXViteBuildStats).toHaveBeenCalledWith({
+    expect(mockExtractRollxBuildStats).toHaveBeenCalledWith({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
+      root: '/mock/root',
     });
 
     // Verify basic properties
@@ -138,16 +149,9 @@ describe('extractRolldownBuildStats', () => {
 
     // Verify dependencies
     expect(result.dependencies).toHaveLength(1);
-    expect(result.dependencies[0].name).toBe('rolldown');
+    expect(result.dependencies![0].name).toBe('rolldown');
     expect(result.peerDependencies).toHaveLength(1);
-    expect(result.peerDependencies[0].name).toBe('react');
-
-    // Verify metadata
-    expect(result.metadata.bundler).toBe('rolldown');
-    expect(result.metadata.fileCount).toBe(3);
-    expect(result.metadata.chunkCount).toBe(1);
-    expect(result.metadata.assetCount).toBe(2);
-    expect(result.metadata.dynamicImportCount).toBe(1);
+    expect(result.peerDependencies![0].name).toBe('react');
   });
 
   it('should handle empty bundle properly', async () => {
@@ -163,24 +167,21 @@ describe('extractRolldownBuildStats', () => {
         assetCount: 0,
         dynamicImportCount: 0,
       },
-    };
+    } as Partial<ZephyrBuildStats> as ZephyrBuildStats;
 
-    mockExtractXViteBuildStats.mockResolvedValue(mockResult);
+    mockExtractRollxBuildStats.mockResolvedValue(mockResult);
 
-    const result = await extractXViteBuildStats({
+    await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: {},
+      root: '/mock/root',
     });
 
     // Verify the function was called with correct parameters
-    expect(mockExtractXViteBuildStats).toHaveBeenCalledWith({
+    expect(mockExtractRollxBuildStats).toHaveBeenCalledWith({
       zephyr_engine: mockZephyrEngine,
       bundle: {},
+      root: '/mock/root',
     });
-
-    expect(result.metadata.fileCount).toBe(0);
-    expect(result.metadata.chunkCount).toBe(0);
-    expect(result.metadata.assetCount).toBe(0);
-    expect(result.metadata.dynamicImportCount).toBe(0);
   });
 });

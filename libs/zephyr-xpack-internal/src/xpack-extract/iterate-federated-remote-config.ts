@@ -1,11 +1,11 @@
 import { logFn, ze_log } from 'zephyr-agent';
-import type { XFederatedConfig, XPackConfiguration } from '../xpack.types';
+import type { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
 import { extractFederatedConfig } from './extract-federation-config';
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
 
-export function iterateFederatedRemoteConfig<Compiler, K = XFederatedConfig>(
+export function iterateFederatedRemoteConfig<Compiler, K = XFederatedRemotesConfig>(
   config: XPackConfiguration<Compiler>,
-  for_remote: (federatedRemoteConfig: XFederatedConfig) => K
+  for_remote: (federatedRemoteConfig: XFederatedRemotesConfig) => K
 ): K[] {
   if (!config.plugins) {
     return [];

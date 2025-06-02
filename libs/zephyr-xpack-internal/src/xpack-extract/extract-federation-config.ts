@@ -1,8 +1,8 @@
-import type { ModuleFederationPlugin, XFederatedConfig } from '../xpack.types';
+import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
 
 export function extractFederatedConfig(
   plugin: ModuleFederationPlugin
-): XFederatedConfig | undefined {
+): XFederatedRemotesConfig | undefined {
   if (!plugin) return undefined;
   if (plugin._options) {
     // NxModuleFederationPlugin support

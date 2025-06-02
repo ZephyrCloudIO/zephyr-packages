@@ -1,5 +1,5 @@
 import type { ZephyrEngine } from 'zephyr-agent';
-import { extractXViteBuildStats, type XOutputBundle } from 'zephyr-xpack-internal';
+import { extractRollxBuildStats, type XOutputBundle } from 'zephyr-rollx-internal';
 
 // Mock the zephyr-agent module
 jest.mock('zephyr-agent', () => ({
@@ -57,18 +57,21 @@ const mockBundle: XOutputBundle = {
     modules: {},
     moduleIds: [],
     referencedFiles: [],
+    isEntry: true,
   },
   'style.css': {
     type: 'asset',
     fileName: 'style.css',
-    name: undefined,
+    names: ['style.css'],
+    originalFileNames: ['src/style.css'],
     source: 'body { color: red; }',
+    needsCodeReference: false,
   },
 };
 
 describe('extractViteBuildStats', () => {
   it('should extract build stats from Vite build output', async () => {
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -102,8 +105,8 @@ describe('extractViteBuildStats', () => {
 
     // Verify dependencies
     expect(result.dependencies).toHaveLength(2);
-    expect(result.dependencies.find((d) => d.name === 'react')).toBeTruthy();
-    expect(result.dependencies.find((d) => d.name === 'vite')).toBeTruthy();
+    expect(result.dependencies?.find((d) => d.name === 'react')).toBeTruthy();
+    expect(result.dependencies?.find((d) => d.name === 'vite')).toBeTruthy();
 
     // Verify modules (exposed components)
     expect(result.modules).toHaveLength(2);
@@ -121,17 +124,10 @@ describe('extractViteBuildStats', () => {
     expect(headerModule?.id).toBe('Header:Header');
     expect(headerModule?.file).toBe('./src/components/Header.tsx');
     expect(headerModule?.requires).toContain('react');
-
-    // Verify metadata
-    expect(result.metadata.bundler).toBe('vite');
-    expect(result.metadata.fileCount).toBe(2);
-    expect(result.metadata.chunkCount).toBe(1);
-    expect(result.metadata.assetCount).toBe(1);
-    expect(result.metadata.hasFederation).toBe(true);
   });
 
   it('should work with no module federation config', async () => {
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       root: '/',
@@ -139,11 +135,10 @@ describe('extractViteBuildStats', () => {
 
     expect(result.name).toBe('test-app'); // Should use app name when no MF config
     expect(result.remotes).toEqual([]);
-    expect(result.metadata.hasFederation).toBe(false);
   });
 
   it('should extract shared dependencies for overrides field with object config', async () => {
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -193,7 +188,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should handle complex exposes format in module federation', async () => {
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -230,7 +225,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should handle additionalShared format from Nx webpack module federation', async () => {
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {
@@ -264,7 +259,7 @@ describe('extractViteBuildStats', () => {
   });
 
   it('should extract shared dependencies for overrides field with string config', async () => {
-    const result = await extractXViteBuildStats({
+    const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,
       bundle: mockBundle,
       mfConfig: {

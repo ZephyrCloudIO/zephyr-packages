@@ -12,7 +12,7 @@ import type {
   ModuleFederationPlugin,
   XChunk,
   XCompiler,
-  XFederatedConfig,
+  XFederatedRemotesConfig,
   XStats,
   XStatsChunk,
   XStatsCompilation,
@@ -50,7 +50,7 @@ export class FederationDashboardPlugin {
 
   FederationPluginOptions: {
     name?: string;
-    remotes?: XFederatedConfig['remotes'];
+    remotes?: XFederatedRemotesConfig['remotes'];
     /**
      * **bundle_name**: This is a placeholder option since Repack is fast iterating on
      * Module Federation, right now they are consuming JS bundle and ignore

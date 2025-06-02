@@ -1,8 +1,8 @@
 import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import type { XOutputBundle } from 'zephyr-xpack-internal';
-import { extractXViteBuildStats } from 'zephyr-xpack-internal';
+import type { XOutputAsset, XOutputBundle, XOutputChunk } from 'zephyr-rollx-internal';
+import { extractRollxBuildStats } from 'zephyr-rollx-internal';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -93,7 +93,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
       }
     },
     // Capture the output bundle for build stats generation
-    writeBundle: (_, bundle) => {
+    writeBundle: (_, bundle: XOutputBundle<XOutputAsset | XOutputChunk>) => {
       outputBundle = bundle;
     },
     closeBundle: async () => {
@@ -112,7 +112,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         );
 
         // Generate enhanced build stats for Vite using the discovered remote imports
-        const buildStats = await extractXViteBuildStats({
+        const buildStats = await extractRollxBuildStats({
           zephyr_engine,
           bundle: outputBundle || {},
           mfConfig: _options?.mfConfig,

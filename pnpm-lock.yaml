@@ -1140,6 +1140,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
+      zephyr-rollx-internal:
+        specifier: workspace:*
+        version: link:../zephyr-rollx-internal
     devDependencies:
       '@types/is-ci':
         specifier: catalog:typescript
@@ -1183,9 +1186,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
-      zephyr-xpack-internal:
+      zephyr-rollx-internal:
         specifier: workspace:*
-        version: link:../zephyr-xpack-internal
+        version: link:../zephyr-rollx-internal
     devDependencies:
       '@types/is-ci':
         specifier: catalog:typescript
@@ -1374,6 +1377,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
+      zephyr-rollx-internal:
+        specifier: workspace:*
+        version: link:../zephyr-rollx-internal
     devDependencies:
       '@types/is-ci':
         specifier: catalog:typescript
@@ -1387,6 +1393,31 @@ importers:
       ts-jest:
         specifier: catalog:typescript
         version: 29.3.0(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.1)(jest@29.7.0(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.11.13(@swc/helpers@0.5.15))(@types/node@22.13.13)(typescript@5.8.2)))(typescript@5.8.2)
+
+  libs/zephyr-rollx-internal:
+    dependencies:
+      is-ci:
+        specifier: catalog:plugin-shared
+        version: 4.1.0
+      zephyr-agent:
+        specifier: workspace:*
+        version: link:../zephyr-agent
+    devDependencies:
+      '@types/is-ci':
+        specifier: catalog:typescript
+        version: 3.0.4
+      '@types/jest':
+        specifier: catalog:typescript
+        version: 29.5.14
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.27.0(@typescript-eslint/parser@8.27.0(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2))(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
+      ts-jest:
+        specifier: catalog:typescript
+        version: 29.3.0(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.1)(jest@29.7.0(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.11.13(@swc/helpers@0.5.15))(@types/node@22.13.13)(typescript@5.8.2)))(typescript@5.8.2)
+      zephyr-edge-contract:
+        specifier: workspace:*
+        version: link:../zephyr-edge-contract
 
   libs/zephyr-rspack-plugin:
     dependencies:

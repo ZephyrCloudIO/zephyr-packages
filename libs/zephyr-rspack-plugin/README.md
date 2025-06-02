@@ -30,7 +30,7 @@ npm install --save-dev zephyr-rspack-plugin
 yarn add --dev zephyr-rspack-plugin
 
 # pnpm
-pnpm add --dev zephyr-rspack-plugin
+pnpm add --save-dev zephyr-rspack-plugin
 
 # bun
 bun add --dev zephyr-rspack-plugin

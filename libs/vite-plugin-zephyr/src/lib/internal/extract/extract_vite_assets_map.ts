@@ -2,13 +2,12 @@ import {
   buildAssetsMap,
   getPartialAssetMap,
   removePartialAssetMap,
-  ZeBuildAssetsMap,
-  ZephyrEngine,
+  type ZeBuildAssetsMap,
+  type ZephyrEngine,
 } from 'zephyr-agent';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import { loadStaticAssets } from './load_static_assets';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
-
 export async function extract_vite_assets_map(
   zephyr_engine: ZephyrEngine,
   vite_internal_options: ZephyrInternalOptions

@@ -16,7 +16,7 @@ import {
   saveAppConfig,
 } from '../lib/node-persist/application-configuration';
 import { getSecretToken } from '../lib/node-persist/secret-token';
-import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
+import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).

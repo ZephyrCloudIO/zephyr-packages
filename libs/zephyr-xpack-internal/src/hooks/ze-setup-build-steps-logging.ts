@@ -1,4 +1,5 @@
-import { ze_log, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZephyrError } from 'zephyr-agent';
 
 interface BuildSteps {
   pluginName: string;
@@ -38,7 +39,7 @@ export function logBuildSteps<T extends BuildSteps, Compiler extends BuildStepsC
   compiler.hooks.failed.tap(pluginName, (err) => {
     ze_log(`build failed in ${Date.now() - buildStartedAt}ms`);
 
-    pluginOptions.zephyr_engine.logger.then((logger) => {
+    void pluginOptions.zephyr_engine.logger.then((logger) => {
       logger({
         level: 'error',
         action: 'build:failed',

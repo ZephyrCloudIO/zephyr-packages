@@ -1,35 +1,35 @@
-import { join } from 'path';
-import { existsSync, readFileSync } from 'fs';
+import isCI from 'is-ci';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
+  type Snapshot,
+  type ZeBuildAsset,
+  type ZeBuildAssetsMap,
+  ZeUtils,
+  type ZephyrBuildStats,
+  type ZephyrPluginOptions,
   createApplicationUid,
   flatCreateSnapshotId,
-  Snapshot,
-  type ZeBuildAsset,
-  ZeBuildAssetsMap,
-  type ZephyrBuildStats,
-  ZephyrPluginOptions,
-  ZeUtils,
 } from 'zephyr-edge-contract';
-import {
-  resolve_remote_dependency,
-  ZeResolvedDependency,
-} from './resolve_remote_dependency';
-import * as isCI from 'is-ci';
-import { ZePackageJson } from '../lib/build-context/ze-package-json.type';
-import { getGitInfo, ZeGitInfo } from '../lib/build-context/ze-util-get-git-info';
-import { logger, ZeLogger } from '../lib/logging/ze-log-event';
-import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { checkAuth } from '../lib/auth/login';
+import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
+import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
+import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
+import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
+import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
+import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
-import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
-import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
-import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
-import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
-import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
-import { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
+import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
+import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
+import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
+import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
+import {
+  type ZeResolvedDependency,
+  resolve_remote_dependency,
+} from './resolve_remote_dependency';
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -39,6 +39,11 @@ export interface ZeApplicationProperties {
 
 export type Platform = 'ios' | 'android' | 'web' | undefined;
 
+export type DeferredZephyrEngine = {
+  zephyr_engine_defer: Promise<ZephyrEngine>;
+  zephyr_defer_create(options: ZephyrEngineOptions): void;
+};
+
 export interface ZeDependencyPair {
   name: string;
   version: string;
@@ -47,12 +52,14 @@ export interface ZeDependencyPair {
 export interface BuildProperties {
   // output path
   output: string;
+  // base href for assets, used to prefix asset paths
+  baseHref?: string;
 }
 
 export function is_zephyr_dependency_pair(
   dep: ZeDependencyPair | undefined | null
 ): dep is ZeDependencyPair {
-  return dep != undefined;
+  return !!dep;
 }
 
 export function is_zephyr_resolved_dependency(
@@ -72,6 +79,13 @@ type ZephyrEngineBuilderTypes =
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
+}
+
+export interface ZeUser {
+  username: string;
+  email: string;
+  user_uuid: string;
+  jwt: string;
 }
 
 /**
@@ -95,9 +109,8 @@ export class ZephyrEngine {
   // build context properties
   env: {
     isCI: boolean;
-    buildEnv: string;
     target: Platform;
-  } = { isCI, buildEnv: isCI ? 'ci' : 'local', target: 'web' };
+  } = { isCI, target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 
@@ -110,18 +123,28 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
   }
 
-  static defer_create() {
-    let zephyr_defer_create!: (options: ZephyrEngineOptions) => void;
-    const zephyr_engine_defer = new Promise<ZephyrEngine>((r) => {
-      zephyr_defer_create = (options: ZephyrEngineOptions) =>
-        r(ZephyrEngine.create(options));
-    });
-    return { zephyr_engine_defer, zephyr_defer_create };
+  static defer_create(): DeferredZephyrEngine {
+    let resolve: (value: ZephyrEngine) => void;
+    let reject: (reason?: unknown) => void;
+
+    return {
+      zephyr_engine_defer: new Promise<ZephyrEngine>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      }),
+
+      // All zephyr_engine_defer calls are wrapped inside a try/catch,
+      // so its safe to reject the promise here and expect it to be handled
+      zephyr_defer_create(options: ZephyrEngineOptions) {
+        ZephyrEngine.create(options).then(resolve, reject);
+      },
+    };
   }
 
   // todo: extract to a separate fn
@@ -159,7 +182,7 @@ export class ZephyrEngine {
 
     await ze.start_new_build();
 
-    ze.logger.then(async (logger) => {
+    void ze.logger.then(async (logger) => {
       const { username } = await ze.application_configuration;
       const buildId = await ze.build_id;
 
@@ -170,6 +193,7 @@ export class ZephyrEngine {
         message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
       });
     });
+
     return ze;
   }
 
@@ -181,22 +205,45 @@ export class ZephyrEngine {
    *   or `android`
    */
   async resolve_remote_dependencies(
-    deps: ZeDependencyPair[],
-    platform?: ZephyrPluginOptions['target']
+    deps: ZeDependencyPair[]
   ): Promise<ZeResolvedDependency[] | null> {
     if (!deps) {
       return null;
     }
 
-    ze_log('resolve_remote_dependencies.deps', deps, 'platform', platform);
+    const app_config = await this.application_configuration;
+    const ze_dependencies = this.npmProperties.zephyrDependencies;
+    const platform = this.env.target;
+    const build_context_json = {
+      target: this.env.target,
+      isCI,
+      branch: this.gitProperties.git.branch,
+      username: app_config.username,
+    };
+    // convert to base64
+    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
+      'base64'
+    );
+
+    ze_log(
+      'resolve_remote_dependencies.deps',
+      deps,
+      'platform',
+      platform,
+      'ze_dependencies',
+      ze_dependencies
+    );
 
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
+      const ze_dependency = ze_dependencies?.[dep.name];
+      const [ze_app_name, ze_project_name, ze_org_name] =
+        ze_dependency?.app_uid?.split('.') ?? [];
       // Key might be only the app name
       const dep_application_uid = createApplicationUid({
-        org: org_name ?? this.gitProperties.app.org,
-        project: project_name ?? this.gitProperties.app.project,
-        name: app_name,
+        org: ze_org_name ?? org_name ?? this.gitProperties.app.org,
+        project: ze_project_name ?? project_name ?? this.gitProperties.app.project,
+        name: ze_app_name ?? app_name,
       });
 
       // if default url is url - set as default, if not use app remote_host as default
@@ -205,8 +252,9 @@ export class ZephyrEngine {
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,
-          version: dep.version,
+          version: ze_dependency?.version ?? dep.version,
           platform,
+          build_context,
         })
       );
 
@@ -221,7 +269,11 @@ export class ZephyrEngine {
 
       ze_log(`Resolved dependency: ${tuple[1].default_url}`);
 
-      return tuple[1];
+      if (dep.name === tuple[1].name) {
+        return tuple[1];
+      }
+
+      return Object.assign({}, tuple[1], { name: dep.name, version: dep.version });
     });
 
     const resolution_results = await Promise.all(tasks);
@@ -260,13 +312,14 @@ export class ZephyrEngine {
       .then((buildId) => ze_log(`Loaded build id "${buildId}"`))
       .catch((err) => ze_log(`Failed to get build id: ${err}`));
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     if (!ze.logger) {
       ze_log('Initializing: logger');
       let resolve: (value: ZeLogger) => void;
       ze.logger = new Promise<ZeLogger>((r) => (resolve = r));
 
       // internally logger will try to load app_config
-      Promise.all([ze.application_configuration, ze.build_id]).then((record) => {
+      void Promise.all([ze.application_configuration, ze.build_id]).then((record) => {
         const buildId = record[1];
         ze_log('Initialized: application configuration, build id and hash list');
 

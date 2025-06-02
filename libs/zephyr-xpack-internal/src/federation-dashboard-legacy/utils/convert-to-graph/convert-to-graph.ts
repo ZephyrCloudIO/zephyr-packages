@@ -1,13 +1,13 @@
 /** Eslint-disable */
-import { TopLevelPackage } from './validate-params';
+import type { TopLevelPackage } from './validate-params';
 import { modulePartOne } from './module-part-one';
 import { convertDependencies } from './convert-dependencies';
 import { modulePartTwo } from './module-part-two';
 import { processFunctionRemotes } from './process-function-remotes';
 
 // import { StatsChunk, StatsModule } from 'webpack';
-import { XStatsChunk, XStatsModule } from '../../../xpack.types';
-import { ConvertedGraph } from 'zephyr-edge-contract';
+import type { XStatsChunk, XStatsModule } from '../../../xpack.types';
+import type { ConvertedGraph } from 'zephyr-edge-contract';
 
 export interface ConvertToGraphParams {
   /** Application name in module federation config */

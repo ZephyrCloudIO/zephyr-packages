@@ -1,4 +1,5 @@
-import { ZephyrEngine, type ZeResolvedDependency } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
+import { type ZeResolvedDependency } from 'zephyr-agent';
 
 declare const __webpack_require__: {
   l: (url: string, fn: () => void, name: string, name2: string) => void;

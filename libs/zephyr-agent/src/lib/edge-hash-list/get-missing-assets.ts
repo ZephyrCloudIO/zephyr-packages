@@ -1,4 +1,4 @@
-import { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
 interface Params {
   assetsMap: ZeBuildAssetsMap;

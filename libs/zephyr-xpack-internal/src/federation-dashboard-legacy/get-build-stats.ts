@@ -1,7 +1,10 @@
-import { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrEngine } from 'zephyr-agent';
+import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import { parseRemotesAsEntries } from '../xpack-extract';
+import { extractFederatedConfig } from '../xpack-extract/extract-federation-config';
+import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
-import { ze_log, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 
 interface KnownAgentProps {
   stats: XStats;
@@ -56,12 +59,14 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const application_uid = pluginOptions.zephyr_engine.application_uid;
   const buildId = await pluginOptions.zephyr_engine.build_id;
 
-  // todo: add support for multiple fedeation configs
+  // todo: add support for multiple federation configs
   const mfConfig = Array.isArray(pluginOptions.mfConfig)
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
 
-  const { name, filename, remotes } = mfConfig?._options || mfConfig?.config || {};
+  const { name, filename, remotes } = mfConfig
+    ? (extractFederatedConfig(mfConfig) ?? {})
+    : {};
 
   const data_overrides = {
     id: application_uid,
@@ -74,7 +79,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     version,
     git,
     remote: filename,
-    remotes: Object.keys(remotes || {}),
+    remotes: parseRemotesAsEntries(remotes).map(([remote_name]) => remote_name),
     context: { isCI },
   };
 

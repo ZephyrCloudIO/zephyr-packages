@@ -1,4 +1,5 @@
-import { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
+import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
+import { ZeErrors, ZephyrError } from '../errors';
 import { UploadProviderType } from '../node-persist/upload-provider-options';
 import { commonUploadStrategy } from './common-upload.strategy';
 
@@ -15,6 +16,11 @@ export function getUploadStrategy(platform: UploadProviderType): UploadStrategy 
     case UploadProviderType.AKAMAI:
       return commonUploadStrategy;
     default:
-      throw new Error('Unsupported upload provider.');
+      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+        message: 'Unsupported upload provider.',
+        data: {
+          platform,
+        },
+      });
   }
 }

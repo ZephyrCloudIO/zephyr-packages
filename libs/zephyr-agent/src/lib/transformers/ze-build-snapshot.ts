@@ -1,12 +1,14 @@
 import {
+  type Snapshot,
+  type SnapshotAsset,
+  type ZeBuildAssetsMap,
+  type ZephyrPluginOptions,
   createApplicationUid,
   flatCreateSnapshotId,
-  Snapshot,
-  SnapshotAsset,
-  ZeBuildAssetsMap,
-  ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
-import { ZephyrEngine } from '../../zephyr-engine';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
+import type { ZephyrEngine } from '../../zephyr-engine';
+import { ZeErrors, ZephyrError } from '../errors';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -21,7 +23,9 @@ export async function createSnapshot(
 
   if (!buildId) {
     await zephyr_engine.build_id;
-    throw new Error(`Can't createSnapshot() without buildId`);
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: 'Cannot create snapshot before getting buildId',
+    });
   }
 
   const options = {
@@ -37,6 +41,11 @@ export async function createSnapshot(
   const version_postfix = zephyr_engine.env.isCI
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
+
+  const basedAssets = applyBaseHrefToAssets(
+    assets,
+    zephyr_engine.buildProperties.baseHref
+  );
 
   return {
     // ZeApplicationProperties
@@ -63,9 +72,9 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
-    assets: Object.keys(assets).reduce(
+    assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
-        const asset = assets[hash];
+        const asset = basedAssets[hash];
         const { path, extname, size } = asset;
         memo[asset.path] = { path, extname, hash: asset.hash, size };
         return memo;

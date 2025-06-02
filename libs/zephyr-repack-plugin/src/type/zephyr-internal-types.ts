@@ -1,5 +1,5 @@
-import { Context } from '@rspack/core';
-import { Platform } from 'zephyr-agent';
+import type { Context } from '@rspack/core';
+import type { Platform } from 'zephyr-agent';
 export interface DelegateConfig {
   org: string;
   project: string;

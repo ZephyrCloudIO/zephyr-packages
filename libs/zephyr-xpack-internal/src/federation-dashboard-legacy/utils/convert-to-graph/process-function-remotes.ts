@@ -1,4 +1,4 @@
-import { Consume } from './module-part-one';
+import type { Consume } from './module-part-one';
 
 /**
  * This function processes dynamic remote module imports in a Module Federation setup. It

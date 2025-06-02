@@ -1,8 +1,8 @@
+import axios from 'axios';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
-import { getToken } from '../lib/node-persist/token';
 import { ZeErrors, ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
-
+import { getToken } from '../lib/node-persist/token';
 export interface ZeResolvedDependency {
   name: string;
   version: string;
@@ -18,10 +18,12 @@ export async function resolve_remote_dependency({
   application_uid,
   version,
   platform,
+  build_context,
 }: {
   application_uid: string;
   version: string;
   platform?: string;
+  build_context: string;
 }): Promise<ZeResolvedDependency> {
   const resolveDependency = new URL(
     `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
@@ -32,22 +34,27 @@ export async function resolve_remote_dependency({
     resolveDependency.searchParams.append('build_target', platform);
   }
 
+  if (build_context) {
+    resolveDependency.searchParams.append('build_context', build_context);
+  }
+
   try {
     ze_log('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
-    const res = await fetch(resolveDependency, {
-      method: 'GET',
+    const res = await axios.get(resolveDependency.toString(), {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token,
+        Authorization: `Bearer ${token}`,
         Accept: 'application/json',
       },
     });
 
+    // used only for error logging
     const [appName, projectName, orgName] = application_uid.split('.');
 
-    if (!res.ok) {
+    // Check response status
+    if (res.status < 200 || res.status >= 300) {
       throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
         appUid: application_uid,
         appName,
@@ -56,12 +63,12 @@ export async function resolve_remote_dependency({
         data: {
           url: resolveDependency.toString(),
           version,
-          error: await res.json().catch(() => res.text()),
+          error: res.data,
         },
       });
     }
 
-    const response = await res.json();
+    const response = res.data;
 
     if (response.value) {
       ze_log(

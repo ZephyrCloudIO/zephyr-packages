@@ -1,6 +1,7 @@
 import { zeUploadSnapshot } from '../edge-actions';
-import { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
-import { uploadAssets, uploadBuildStatsAndEnableEnvs } from './upload-base';
+import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
+import { uploadAssets } from './upload-base/upload-assets';
+import { uploadBuildStatsAndEnableEnvs } from './upload-base/upload-build-stats-and-enable-envs';
 
 export async function commonUploadStrategy(
   zephyr_engine: ZephyrEngine,

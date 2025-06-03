@@ -49,6 +49,6 @@ function extractBuffer(asset: OutputChunk | OutputAsset): string | Buffer | unde
       }
       return Buffer.from(asset.source);
     default:
-      return void 0;
+      return undefined;
   }
 }

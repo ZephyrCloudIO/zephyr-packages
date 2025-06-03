@@ -47,6 +47,9 @@ const mockViteInternalOptions: ZephyrInternalOptions = {
   },
 };
 
+const PNG_HEADER_BYTES = [137, 80, 78, 71];
+const binaryData = new Uint8Array(PNG_HEADER_BYTES);
+
 describe('extract_vite_assets_map', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -64,12 +67,7 @@ describe('extract_vite_assets_map', () => {
       'partial-asset.js': {
         type: 'chunk',
         code: 'console.log("partial");',
-        buffer: Buffer.from(''),
-        extname: '.js',
-        hash: 'test',
-        path: '/',
-        size: 1234,
-      } as ZeBuildAssetsMap[string],
+      } as unknown as ZeBuildAssetsMap[string],
     };
 
     const mockBuildResult = { assets: 'mock-build-result' };
@@ -217,7 +215,6 @@ describe('extractBuffer', () => {
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
     const extractBufferFn = mockBuildAssetsMap.mock.calls[0][1];
-    const binaryData = new Uint8Array([137, 80, 78, 71]); // PNG header
     const assetWithBufferSource: OutputAsset = {
       type: 'asset',
       source: binaryData,
@@ -241,7 +238,7 @@ describe('extractBuffer', () => {
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
     const extractBufferFn = mockBuildAssetsMap.mock.calls[0][1];
-    const unknownAsset = { type: 'unknown' } as any;
+    const unknownAsset = { type: 'unknown' } as unknown as OutputChunk | OutputAsset;
 
     expect(extractBufferFn(unknownAsset)).toBeUndefined();
   });

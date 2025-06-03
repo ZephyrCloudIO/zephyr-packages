@@ -11,6 +11,7 @@ export function withZephyr(): RspressPlugin {
       if (ssg) {
         addPlugin(zephyrRspressSSGPlugin({ outDir: config.outDir }));
       } else {
+        config.builderPlugins ??= [];
         config.builderPlugins?.push(zephyrRsbuildPlugin());
       }
       return config;

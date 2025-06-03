@@ -15,8 +15,11 @@ function App() {
         </a>
       </div>
       <h1>Vite + React</h1>
+      Env Remote 1: {import.meta.env.ZE_REMOTE_ONE}
       <Button />
-      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
+      <p className="read-the-docs">
+        Click on the Vite and React logos to learn more
+      </p>
     </>
   );
 }

@@ -1,16 +1,14 @@
-import * as isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import * as isCI from 'is-ci';
 import {
   type Snapshot,
-  type SnapshotVariables,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
   ZeUtils,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
   createApplicationUid,
-  deferred,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
@@ -24,7 +22,7 @@ import { getApplicationConfiguration } from '../lib/edge-requests/get-applicatio
 import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
-import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
+import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
@@ -43,12 +41,7 @@ export type Platform = 'ios' | 'android' | 'web' | undefined;
 
 export type DeferredZephyrEngine = {
   zephyr_engine_defer: Promise<ZephyrEngine>;
-  zephyr_defer_create(options: ZephyrEngineOptions, prelude?: ZephyrEnginePrelude): void;
-};
-
-export type DeferredZephyrPrelude = {
-  prelude_defer: Promise<ZephyrEnginePrelude | undefined>;
-  prelude_defer_create(context: string): void;
+  zephyr_defer_create(options: ZephyrEngineOptions): void;
 };
 
 export interface ZeDependencyPair {
@@ -81,14 +74,6 @@ type ZephyrEngineBuilderTypes =
   | 'rollup'
   | 'parcel'
   | 'unknown';
-
-export interface ZephyrEnginePrelude {
-  gitProperties: ZeGitInfo;
-  npmProperties: ZePackageJson;
-  applicationProperties: ZeApplicationProperties;
-  application_uid: string;
-}
-
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
@@ -148,69 +133,28 @@ export class ZephyrEngine {
 
       // All zephyr_engine_defer calls are wrapped inside a try/catch,
       // so its safe to reject the promise here and expect it to be handled
-      zephyr_defer_create(options, prelude) {
-        ZephyrEngine.create(options, prelude).then(resolve, reject);
+      zephyr_defer_create(options: ZephyrEngineOptions) {
+        ZephyrEngine.create(options).then(resolve, reject);
       },
-    };
-  }
-
-  static create_prelude_defer(): DeferredZephyrPrelude {
-    const [prelude_defer, resolve] = deferred<ZephyrEnginePrelude | undefined>();
-
-    return {
-      prelude_defer,
-
-      // Can safely ignore errors here since if prelude cannot be created, later
-      // it will be tried again by create() and will fail there
-      prelude_defer_create(context) {
-        ZephyrEngine.create_prelude(context).then(resolve, () => resolve(undefined));
-      },
-    };
-  }
-
-  /** Some plugins might need this data before being able to initialize the Zephyr Engine */
-  static async create_prelude(context = process.cwd()): Promise<ZephyrEnginePrelude> {
-    ze_log('Initializing: creating prelude');
-
-    const [gitProperties, npmProperties] = await Promise.all([
-      getGitInfo(),
-      getPackageJson(context),
-    ]);
-
-    const applicationProperties: ZeApplicationProperties = {
-      org: gitProperties.app.org,
-      project: gitProperties.app.project,
-      name: npmProperties.name,
-      version: npmProperties.version,
-    };
-
-    return {
-      gitProperties,
-      npmProperties,
-      applicationProperties,
-      application_uid: createApplicationUid(applicationProperties),
     };
   }
 
   // todo: extract to a separate fn
-  static async create(
-    options: ZephyrEngineOptions,
-    // Some plugins may need git information before creating engine, like with env vars
-    prelude?: ZephyrEnginePrelude
-  ): Promise<ZephyrEngine> {
+  static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
     const context = options.context || process.cwd();
 
     ze_log(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine({ context, builder: options.builder });
 
-    prelude ??= await ZephyrEngine.create_prelude(context);
+    ze_log('Initializing: npm package info...');
 
+    ze.npmProperties = await getPackageJson(context);
+
+    ze_log('Initializing: git info...');
+    ze.gitProperties = await getGitInfo();
     // mut: set application_uid and applicationProperties
-    ze.npmProperties = prelude.npmProperties;
-    ze.gitProperties = prelude.gitProperties;
-    ze.applicationProperties = prelude.applicationProperties;
-    ze.application_uid = prelude.application_uid;
-    const application_uid = prelude.application_uid;
+    mut_zephyr_app_uid(ze);
+    const application_uid = ze.application_uid;
 
     // starting async load of application configuration, build_id and hash_list
 
@@ -409,7 +353,6 @@ export class ZephyrEngine {
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
-    variables?: SnapshotVariables;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -431,17 +374,9 @@ export class ZephyrEngine {
 
     // upload data
     const snapshot = await createSnapshot(zephyr_engine, {
-      variables: props.variables,
       assets: assetsMap,
       mfConfig,
     });
-
-    if (props.variables) {
-      logFn(
-        'info',
-        `Detected ${yellow(props.variables.uses.length.toString())} Zephyr Variables`
-      );
-    }
 
     const upload_options: UploadOptions = {
       snapshot,
@@ -464,6 +399,16 @@ export class ZephyrEngine {
 
     await this.build_finished();
   }
+}
+
+function mut_zephyr_app_uid(ze: ZephyrEngine): void {
+  ze.applicationProperties = {
+    org: ze.gitProperties.app.org,
+    project: ze.gitProperties.app.project,
+    name: ze.npmProperties.name,
+    version: ze.npmProperties.version,
+  };
+  ze.application_uid = createApplicationUid(ze.applicationProperties);
 }
 
 export interface UploadOptions {

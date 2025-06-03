@@ -50,7 +50,9 @@ export class ZeEnvVarsWebpackPlugin {
         },
         (assets) => {
           if (GLOBAL_ENV_VARS.size === 0) {
-            ze_log(`${PLUGIN_NAME}: No environment variables detected, skipping asset generation`);
+            ze_log(
+              `${PLUGIN_NAME}: No environment variables detected, skipping asset generation`
+            );
             return;
           }
 
@@ -83,14 +85,15 @@ export class ZeEnvVarsWebpackPlugin {
               compilation.updateAsset(entryAssetName, new RawSource(injectedSource));
               ze_log(`${PLUGIN_NAME}: Injected env vars directly into ${entryAssetName}`);
             } else {
-              ze_log(`${PLUGIN_NAME}: Env vars already present in ${entryAssetName}, skipping injection`);
+              ze_log(
+                `${PLUGIN_NAME}: Env vars already present in ${entryAssetName}, skipping injection`
+              );
             }
           } else {
             ze_log(`${PLUGIN_NAME}: Could not find entry JS asset to inject env vars`);
           }
         }
       );
-
 
       // Replace env vars in .html and .css
       compilation.hooks.processAssets.tap(
@@ -152,7 +155,9 @@ export class ZeEnvVarsWebpackPlugin {
             const html = asset.source().toString();
 
             if (html.includes(this.assetFilename)) {
-              ze_log(`${PLUGIN_NAME}: Script already injected into ${filename}, skipping`);
+              ze_log(
+                `${PLUGIN_NAME}: Script already injected into ${filename}, skipping`
+              );
               return;
             }
 
@@ -165,7 +170,9 @@ export class ZeEnvVarsWebpackPlugin {
             }
           });
 
-          ze_log(`${PLUGIN_NAME}: Injected environment variables script into ${injectedCount} HTML files`);
+          ze_log(
+            `${PLUGIN_NAME}: Injected environment variables script into ${injectedCount} HTML files`
+          );
         }
       );
 
@@ -182,7 +189,9 @@ export class ZeEnvVarsWebpackPlugin {
             const scriptTag = `<script src="${publicPath}" fetchpriority="high"></script>`;
 
             if (data.html.includes(this.assetFilename)) {
-              ze_log(`${PLUGIN_NAME}: Script already injected by HtmlWebpackPlugin, skipping`);
+              ze_log(
+                `${PLUGIN_NAME}: Script already injected by HtmlWebpackPlugin, skipping`
+              );
               return cb(null, data);
             }
 

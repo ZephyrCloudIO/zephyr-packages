@@ -14,16 +14,17 @@ describe('buildAssetMapFromFiles', () => {
   });
 
   it('builds an asset map with Source objects for each file', async () => {
-    const root = '/root';
+    const root = path.resolve('/root');
     const files = ['file1.js', 'nested/file2.css'];
 
     const buffers: Record<string, Buffer> = {
-      [path.join(root, 'file1.js')]: Buffer.from('console.log("file1");'),
-      [path.join(root, 'nested/file2.css')]: Buffer.from('body { margin: 0; }'),
+      [path.normalize(path.join(root, 'file1.js'))]: Buffer.from('console.log("file1");'),
+      [path.normalize(path.join(root, 'nested/file2.css'))]:
+        Buffer.from('body { margin: 0; }'),
     };
 
     mockedFs.readFile.mockImplementation(async (filePath: PathLike | fs.FileHandle) => {
-      const key = filePath.toString();
+      const key = path.normalize(filePath.toString());
       const buffer = buffers[key];
       if (!buffer) throw new Error(`File not found: ${key}`);
       return buffer;
@@ -35,7 +36,7 @@ describe('buildAssetMapFromFiles', () => {
 
     for (const relPath of files) {
       const source: Source = result[relPath];
-      const absPath = path.join(root, relPath);
+      const absPath = path.normalize(path.join(root, relPath));
       const expectedBuffer = buffers[absPath];
 
       expect(source).toBeDefined();
@@ -52,7 +53,7 @@ describe('buildAssetMapFromFiles', () => {
   });
 
   it('throws ZephyrError for path traversal attempt', async () => {
-    const root = '/root';
+    const root = path.resolve('/root');
     const files = ['../outside.js'];
 
     await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(ZephyrError);
@@ -62,8 +63,9 @@ describe('buildAssetMapFromFiles', () => {
   });
 
   it('should reject path traversal attempts', async () => {
-    await expect(
-      buildAssetMapFromFiles('/root', ['../../../etc/passwd'])
-    ).rejects.toThrow('Invalid file path');
+    const root = path.resolve('/root');
+    await expect(buildAssetMapFromFiles(root, ['../../../etc/passwd'])).rejects.toThrow(
+      'Invalid file path'
+    );
   });
 });

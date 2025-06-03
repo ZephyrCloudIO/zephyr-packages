@@ -47,7 +47,7 @@ const mockViteInternalOptions: ZephyrInternalOptions = {
   },
 };
 
-const PNG_HEADER_BYTES = [137, 80, 78, 71];
+const PNG_HEADER_BYTES = [137, 80, 78, 71]; // PNG file signature magic bytes
 const binaryData = new Uint8Array(PNG_HEADER_BYTES);
 
 describe('extract_vite_assets_map', () => {
@@ -238,7 +238,7 @@ describe('extractBuffer', () => {
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
     const extractBufferFn = mockBuildAssetsMap.mock.calls[0][1];
-    const unknownAsset = { type: 'unknown' } as unknown as OutputChunk | OutputAsset;
+    const unknownAsset = { type: 'unknown' };
 
     expect(extractBufferFn(unknownAsset)).toBeUndefined();
   });

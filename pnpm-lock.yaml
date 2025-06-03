@@ -718,9 +718,6 @@ importers:
       rspress:
         specifier: catalog:rspress
         version: 1.44.0(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
-      webpack:
-        specifier: catalog:webpack5
-        version: 5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)
       webpack-sources:
         specifier: ^3.2.3
         version: 3.2.3
@@ -1499,6 +1496,9 @@ importers:
       ts-jest:
         specifier: catalog:typescript
         version: 29.3.0(@babel/core@7.26.10)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.26.10))(esbuild@0.25.1)(jest@29.7.0(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.11.13(@swc/helpers@0.5.17))(@types/node@22.13.13)(typescript@5.8.2)))(typescript@5.8.2)
+      zephyr-rspack-plugin:
+        specifier: workspace:*
+        version: link:../zephyr-rspack-plugin
 
   libs/zephyr-webpack-plugin:
     dependencies:

@@ -69,7 +69,8 @@
       "esbuild": "catalog:esbuild",
       "@babel/runtime": "catalog:babel",
       "@swc/helpers": "catalog:swc",
-      "vite": "catalog:vite6"
+      "vite": "catalog:vite6",
+      "koa": ">=2.16.1"
     }
   }
 }

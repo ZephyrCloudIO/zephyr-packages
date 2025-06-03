@@ -1,12 +1,12 @@
-import { ZeErrors, ZephyrError } from '../errors';
-import { cleanTokens } from '../node-persist/token';
-import { ze_log } from '../logging/debug';
 import {
   safe_json_parse,
   ZE_API_ENDPOINT_HOST,
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
+import { ZeErrors, ZephyrError } from '../errors';
+import { ze_log } from '../logging/debug';
+import { cleanTokens } from '../node-persist/token';
 import { fetchWithRetries } from './fetch-with-retries';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
@@ -121,7 +121,7 @@ export async function makeHttpRequest<T = void>(
     }
 
     if (!url.pathname.includes('application/logs')) {
-      ze_log(message);
+      ze_log.http(message);
     }
 
     // Only parses data if reply content is json

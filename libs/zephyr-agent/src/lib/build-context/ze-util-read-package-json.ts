@@ -31,7 +31,7 @@ export async function getPackageJson(
       startingPath = resolve(startingPath, '..');
     }
 
-    ze_log.init('getPackageJson searching from path', startingPath);
+    ze_log.package('getPackageJson searching from path', startingPath);
   } catch (error) {
     throw new ZephyrError(
       ZeErrors.ERR_PACKAGE_JSON_NOT_FOUND,
@@ -51,7 +51,7 @@ export async function getPackageJson(
       );
     }
 
-    ze_log.init('Found package.json at', nearest_package_json.path);
+    ze_log.package('Found package.json at', nearest_package_json.path);
   } catch (error) {
     if (error instanceof ZephyrError) {
       throw error; // Re-throw existing ZephyrError
@@ -94,7 +94,7 @@ export async function getPackageJson(
       parsed_package_json.zephyrDependencies = parseZeDependencies(zephyr_dependencies);
     }
 
-    ze_log.init('Successfully parsed package.json', {
+    ze_log.package('Successfully parsed package.json', {
       name: parsed_package_json.name,
       version: parsed_package_json.version,
       path: packageJsonPath,

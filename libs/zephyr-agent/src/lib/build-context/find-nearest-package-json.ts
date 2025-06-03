@@ -30,7 +30,7 @@ export async function find_nearest_package_json(startPath: string): Promise<{
         json: await readFile(packageJsonPath, 'utf8'),
       };
     } catch (e) {
-      ze_log.init(e);
+      ze_log.package(e);
     }
 
     const parentDir = resolve(dir, '..');

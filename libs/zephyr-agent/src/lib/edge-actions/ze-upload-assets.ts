@@ -36,7 +36,7 @@ export async function zeUploadAssets(
   if (zephyr_engine.env.target !== 'ios' && zephyr_engine.env.target !== 'android') {
     await Promise.all(missingAssets.map(upload_missing_asset));
   } else {
-    ze_log(
+    ze_log.upload(
       "The target platform is 'ios' and 'android' so we are switching to batch upload."
     );
     await forEachLimit<void>(

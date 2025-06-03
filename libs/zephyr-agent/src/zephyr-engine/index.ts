@@ -302,15 +302,15 @@ export class ZephyrEngine {
     ze.hash_list
       .then((hash_set) => {
         ze.resolved_hash_list = hash_set;
-        ze_log(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
+        ze_log.app(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
       })
-      .catch((err) => ze_log(`Failed to get hash list: ${err}`));
+      .catch((err) => ze_log.app(`Failed to get hash list: ${err}`));
 
     ze_log.init('Initializing: loading of build id');
     ze.build_id = getBuildId(application_uid);
     ze.build_id
-      .then((buildId) => ze_log(`Loaded build id "${buildId}"`))
-      .catch((err) => ze_log(`Failed to get build id: ${err}`));
+      .then((buildId) => ze_log.app(`Loaded build id "${buildId}"`))
+      .catch((err) => ze_log.app(`Failed to get build id: ${err}`));
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     if (!ze.logger) {

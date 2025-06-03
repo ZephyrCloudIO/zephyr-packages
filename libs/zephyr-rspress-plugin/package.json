@@ -34,7 +34,8 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
   },
   "publishConfig": {
     "access": "public",

@@ -1,6 +1,6 @@
 import type { RspressPlugin } from '@rspress/shared';
-import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
 import { zephyrRsbuildPlugin } from './zephyrRsbuildPlugin';
+import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
 
 export function withZephyr(): RspressPlugin {
   return {
@@ -11,8 +11,7 @@ export function withZephyr(): RspressPlugin {
       if (ssg) {
         addPlugin(zephyrRspressSSGPlugin({ outDir: config.outDir }));
       } else {
-        config.builderPlugins ??= [];
-        config.builderPlugins?.push(zephyrRsbuildPlugin());
+        config.builderPlugins = [...(config.builderPlugins ?? []), zephyrRsbuildPlugin()];
       }
       return config;
     },

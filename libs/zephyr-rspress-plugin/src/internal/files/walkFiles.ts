@@ -6,6 +6,8 @@ export async function walkFiles(dir: string, prefix = ''): Promise<string[]> {
   const files: string[] = [];
 
   for (const entry of entries) {
+    if (entry.isSymbolicLink()) continue;
+
     const rel = path.join(prefix, entry.name);
     const full = path.join(dir, entry.name);
 

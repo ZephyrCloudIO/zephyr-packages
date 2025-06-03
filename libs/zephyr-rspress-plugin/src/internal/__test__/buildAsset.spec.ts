@@ -1,8 +1,9 @@
-import { buildAssetMapFromFiles } from '../assets/buildAssets';
+import type { PathLike } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { PathLike } from 'node:fs';
+import { ZephyrError } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
+import { buildAssetMapFromFiles } from '../assets/buildAssets';
 
 jest.mock('node:fs/promises');
 const mockedFs = fs as jest.Mocked<typeof fs>;
@@ -48,5 +49,21 @@ describe('buildAssetMapFromFiles', () => {
     mockedFs.readFile.mockRejectedValue(new Error('read error'));
 
     await expect(buildAssetMapFromFiles('/root', ['x.js'])).rejects.toThrow('read error');
+  });
+
+  it('throws ZephyrError for path traversal attempt', async () => {
+    const root = '/root';
+    const files = ['../outside.js'];
+
+    await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(ZephyrError);
+    await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(
+      /Invalid file path/
+    );
+  });
+
+  it('should reject path traversal attempts', async () => {
+    await expect(
+      buildAssetMapFromFiles('/root', ['../../../etc/passwd'])
+    ).rejects.toThrow('Invalid file path');
   });
 });

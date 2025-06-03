@@ -1,7 +1,7 @@
-import { walkFiles } from '../files/walkFiles';
+import type { Dirent, PathLike } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { PathLike, Dirent } from 'node:fs';
+import { walkFiles } from '../files/walkFiles';
 
 jest.mock('node:fs/promises');
 
@@ -53,5 +53,33 @@ describe('walkFiles', () => {
     mockedFs.readdir.mockImplementation(async () => []);
     const result = await walkFiles('empty');
     expect(result).toEqual([]);
+  });
+
+  it('skips symbolic links to avoid infinite loops', async () => {
+    mockedFs.readdir.mockImplementation(async (dir: PathLike) => {
+      const mockDirent = (name: string, isDir: boolean, isSymlink = false): Dirent =>
+        ({
+          name,
+          isDirectory: () => isDir,
+          isFile: () => !isDir,
+          isBlockDevice: () => false,
+          isCharacterDevice: () => false,
+          isFIFO: () => false,
+          isSocket: () => false,
+          isSymbolicLink: () => isSymlink,
+        }) as unknown as Dirent;
+
+      if (dir.toString() === 'loop') {
+        return [
+          mockDirent('link', true, true), // Simulated symlink to directory
+          mockDirent('real.txt', false),
+        ];
+      }
+
+      return [];
+    });
+
+    const result = await walkFiles('loop');
+    expect(result).toEqual(['real.txt']);
   });
 });

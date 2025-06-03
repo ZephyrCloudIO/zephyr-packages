@@ -121,7 +121,13 @@ run_example "$EXAMPLES_DIR/rspack-mf/apps/remote" "Rspack MF Remote" "nx build"
 run_example "$EXAMPLES_DIR/sample-webpack-application" "Sample Webpack App" "nx build sample-webpack-application"
 
 # Modern.js examples
-run_example "$EXAMPLES_DIR/modern-js" "Modern JS" "pnpm build"
+# run_example "$EXAMPLES_DIR/modern-js" "Modern JS" "pnpm build"
+# todo: fix EPIPE issues in modern.js
+
+# error   Error: write EPIPE
+#     at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:87:19)
+#  ELIFECYCLE  Command failed with exit code 1.
+
 
 # Parcel examples
 run_example "$EXAMPLES_DIR/parcel-react" "Parcel React" "pnpm build"

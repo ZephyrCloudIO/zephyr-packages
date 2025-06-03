@@ -6,11 +6,15 @@ export interface ZeApplicationConfig {
   BUILD_ID_ENDPOINT: string;
   EDGE_URL: string;
   DELIMITER: string;
-  email: string;
   fetched_at?: number;
-  jwt: string;
   PLATFORM: UploadProviderType;
+  // @deprecated
+  email: string;
+  // @deprecated
+  jwt: string;
+  // @deprecated
   user_uuid: string;
+  // @deprecated
   username: string;
   build_target?: string;
   native_config_file_hash?: string;

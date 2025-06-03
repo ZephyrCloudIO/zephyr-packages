@@ -89,8 +89,7 @@ async function _zephyr_configuration(
 
     ze_log(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
 
-    zephyr_engine.env.native_version = nativeVersionInfo.native_version;
-    zephyr_engine.env.native_build_number = nativeVersionInfo.native_build_number;
+    zephyr_engine.npmProperties.version = nativeVersionInfo.native_version;
 
     zephyr_engine.env.native_config_file_hash = (
       await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)

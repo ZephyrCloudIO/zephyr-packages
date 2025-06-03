@@ -1,4 +1,4 @@
-import * as isCI from 'is-ci';
+import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -52,6 +52,8 @@ export interface ZeDependencyPair {
 export interface BuildProperties {
   // output path
   output: string;
+  // base href for assets, used to prefix asset paths
+  baseHref?: string;
 }
 
 export function is_zephyr_dependency_pair(
@@ -70,13 +72,22 @@ type ZephyrEngineBuilderTypes =
   | 'webpack'
   | 'rspack'
   | 'repack'
+  | 'metro'
   | 'vite'
   | 'rollup'
   | 'parcel'
   | 'unknown';
+
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
+}
+
+export interface ZeUser {
+  username: string;
+  email: string;
+  user_uuid: string;
+  jwt: string;
 }
 
 /**
@@ -104,14 +115,12 @@ export class ZephyrEngine {
     // Below values (target, native_version, native_build_number) are cross-platform specific properties for react native
     target: Platform;
     native_version: string;
-    native_build_number: string;
     native_config_file_hash: string;
   } = {
     isCI,
     buildEnv: isCI ? 'ci' : 'local',
     target: 'web',
     native_version: '',
-    native_build_number: '',
     native_config_file_hash: '',
   };
   buildProperties: BuildProperties = { output: './dist' };
@@ -210,12 +219,23 @@ export class ZephyrEngine {
   async resolve_remote_dependencies(
     deps: ZeDependencyPair[]
   ): Promise<ZeResolvedDependency[] | null> {
-    const ze_dependencies = this.npmProperties.zephyrDependencies;
-    const platform = this.env.target;
-
     if (!deps) {
       return null;
     }
+
+    const app_config = await this.application_configuration;
+    const ze_dependencies = this.npmProperties.zephyrDependencies;
+    const platform = this.env.target;
+    const build_context_json = {
+      target: this.env.target,
+      isCI,
+      branch: this.gitProperties.git.branch,
+      username: app_config.username,
+    };
+    // convert to base64
+    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
+      'base64'
+    );
 
     ze_log(
       'resolve_remote_dependencies.deps',
@@ -246,6 +266,7 @@ export class ZephyrEngine {
           application_uid: dep_application_uid,
           version: ze_dependency?.version ?? dep.version,
           platform,
+          build_context,
         })
       );
 

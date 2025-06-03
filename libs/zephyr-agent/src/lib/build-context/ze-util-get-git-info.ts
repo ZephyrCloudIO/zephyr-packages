@@ -19,9 +19,8 @@ export interface ZeGitInfo {
 export async function getGitInfo(): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
 
-  const { name, email, remoteOrigin, branch, commit, tags, stdout } = await loadGitInfo(
-    hasToken
-  );
+  const { name, email, remoteOrigin, branch, commit, tags, stdout } =
+    await loadGitInfo(hasToken);
 
   if (!hasToken && (!name || !email)) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_USERNAME_EMAIL, {

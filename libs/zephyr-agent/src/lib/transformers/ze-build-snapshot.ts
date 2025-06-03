@@ -8,6 +8,7 @@ import {
 } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -41,6 +42,11 @@ export async function createSnapshot(
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
+  const basedAssets = applyBaseHrefToAssets(
+    assets,
+    zephyr_engine.buildProperties.baseHref
+  );
+
   return {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
@@ -53,11 +59,6 @@ export async function createSnapshot(
       })
     ),
     domain: options.edge_url,
-    native: {
-      target: zephyr_engine.env.target,
-      native_version: zephyr_engine.env.native_version,
-      native_build_number: zephyr_engine.env.native_build_number,
-    },
     uid: {
       build: options.buildId,
       app_name: options.applicationProperties.name,
@@ -71,9 +72,9 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
-    assets: Object.keys(assets).reduce(
+    assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
-        const asset = assets[hash];
+        const asset = basedAssets[hash];
         const { path, extname, size } = asset;
         memo[asset.path] = { path, extname, hash: asset.hash, size };
         return memo;

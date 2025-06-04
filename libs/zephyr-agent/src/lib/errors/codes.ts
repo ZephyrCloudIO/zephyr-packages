@@ -421,13 +421,13 @@ Please check your network connection and try again.
     message: `
 Failed to resolve remote dependency: {{ appUid }} version {{ version }}
 
-WHY THIS FAILED:
+This could be due to one of the following reasons:
 - The remote application '{{ appName }}' has not been built with Zephyr yet
 - The specified version '{{ version }}' does not exist
 - You don't have access to this application
 - The application exists but no environment has been created
 
-HOW TO FIX:
+Steps to resolve:
 1. Ensure the remote application is built with Zephyr first
 2. For newly created applications, create an environment:
    - Go to https://app.zephyr-cloud.io
@@ -437,7 +437,7 @@ HOW TO FIX:
 4. Verify you have access to {{ orgName }}/{{ projectName }}/{{ appName }}
 5. If you need any version, use "*" as the version in zephyr:dependencies
 
-EXPECTED BEHAVIOR:
+Expected behavior:
 - Remote applications must be built and deployed before they can be consumed
 - Applications must have at least one environment created
 - Version must match an existing build (use "*" for latest)
@@ -455,17 +455,17 @@ Example: "my-remote.my-project.my-org"
     message: `
 Failed to resolve remote application with version {{ version }}
 
-WHY THIS FAILED:
+This could be due to one of the following reasons:
 - Network error while trying to resolve the dependency
 - Zephyr API is temporarily unavailable
 - Application naming mismatch in configuration
 
-HOW TO FIX:
+Steps to resolve:
 1. Check your network connection
 2. If using "*" version, ensure at least one version exists
 3. Ensure the application has an environment created in the dashboard
 
-EXPECTED BEHAVIOR:
+Expected behavior:
 - Remote application must have at least one deployed version
 - Application must have at least one environment
 

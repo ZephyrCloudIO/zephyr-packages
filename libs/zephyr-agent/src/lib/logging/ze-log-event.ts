@@ -15,15 +15,8 @@ import {
   brightRedBgName,
   brightYellowBgName,
 } from './debug';
-import { is_debug_enabled } from './debug-enabled';
-import { ze_log } from './index';
 
 export const logFn = (level: string, msg: unknown): void => {
-  if (is_debug_enabled) {
-    ze_log.misc(msg);
-    return;
-  }
-
   const formatted = formatLogMsg(msg, level);
 
   switch (level) {

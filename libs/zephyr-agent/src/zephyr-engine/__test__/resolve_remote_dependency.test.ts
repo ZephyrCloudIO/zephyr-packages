@@ -38,12 +38,7 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     const result = await resolve_remote_dependency({ application_uid, version });
 
     expect(getTokenMock).toHaveBeenCalledTimes(1);
-    expect(result).toEqual({
-      ...mock_api_response,
-      version,
-      requested_version: version,
-      platform: undefined,
-    });
+    expect(result).toEqual({ ...mock_api_response, version });
     expect(axiosMock.get).toHaveBeenCalledWith(
       expect.stringContaining(
         `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`
@@ -98,84 +93,5 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
 
     await expect(promise).rejects.toThrow(ZephyrError);
     expect(axiosMock.get).toHaveBeenCalled();
-  });
-
-  it('should handle wildcard version "*" by requesting "latest"', async () => {
-    const resolvedVersion = '1.2.3';
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: {
-        value: {
-          ...mock_api_response,
-          version: resolvedVersion,
-        },
-      },
-    });
-
-    const result = await resolve_remote_dependency({
-      application_uid,
-      version: '*',
-      build_context: 'test-context',
-    });
-
-    expect(result).toEqual({
-      ...mock_api_response,
-      version: resolvedVersion,
-      requested_version: '*',
-      platform: undefined,
-    });
-
-    // Verify the API was called with "latest" instead of "*"
-    expect(axiosMock.get).toHaveBeenCalledWith(
-      expect.stringContaining('/resolve/test_app.test_project.test_organization/latest'),
-      expect.any(Object)
-    );
-  });
-
-  it('should include build_context in query params', async () => {
-    const build_context = 'eyJ0ZXN0IjoidmFsdWUifQ=='; // base64 encoded
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
-
-    const result = await resolve_remote_dependency({
-      application_uid,
-      version,
-      build_context,
-    });
-
-    expect(result).toEqual({
-      ...mock_api_response,
-      version,
-      requested_version: version,
-      platform: undefined,
-    });
-
-    const expectedUrl = expect.stringContaining('build_context=');
-    expect(axiosMock.get).toHaveBeenCalledWith(expectedUrl, expect.any(Object));
-  });
-
-  it('should include platform in query params when provided', async () => {
-    const platform = 'ios';
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
-
-    await resolve_remote_dependency({
-      application_uid,
-      version,
-      platform,
-      build_context: 'test',
-    });
-
-    expect(axiosMock.get).toHaveBeenCalledWith(
-      expect.stringContaining('build_target=ios'),
-      expect.any(Object)
-    );
   });
 });

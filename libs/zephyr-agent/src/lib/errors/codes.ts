@@ -441,6 +441,7 @@ Expected behavior:
 - Remote applications must be built and deployed before they can be consumed
 - Applications must have at least one environment created
 - Version must match an existing build (use "*" for latest)
+- When using "*", at least one version must exist in the application
 - You must have read access to the remote application
 
 Application UID format: [app_name].[project_name].[org_name]

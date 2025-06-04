@@ -6,7 +6,7 @@ import { getToken } from '../lib/node-persist/token';
 export interface ZeResolvedDependency {
   name: string;
   version: string;
-  requested_version?: string; // Original version requested (e.g., "*")
+
   application_uid: string;
   default_url: string;
   remote_entry_url: string;
@@ -25,11 +25,8 @@ export async function resolve_remote_dependency({
   platform?: string;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
-  // Handle wildcard version - replace * with "latest" for API call
-  const resolvedVersion = version === '*' ? 'latest' : version;
-
   const resolveDependency = new URL(
-    `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(resolvedVersion)}`,
+    `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
     ZE_API_ENDPOINT()
   );
 
@@ -42,9 +39,6 @@ export async function resolve_remote_dependency({
   }
 
   try {
-    if (version === '*') {
-      ze_log.remotes(`Resolving wildcard version '*' to latest for ${application_uid}`);
-    }
     ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
@@ -69,7 +63,6 @@ export async function resolve_remote_dependency({
         version,
         data: {
           url: resolveDependency.toString(),
-          version,
           error: res.data,
         },
       });
@@ -78,11 +71,6 @@ export async function resolve_remote_dependency({
     const response = res.data;
 
     if (response.value) {
-      if (version === '*') {
-        ze_log.remotes(
-          `Wildcard version '*' resolved to version '${response.value.version}' for ${application_uid}`
-        );
-      }
       ze_log.remotes(
         'resolved dependency:',
         response.value,
@@ -91,12 +79,7 @@ export async function resolve_remote_dependency({
         'version: ',
         version
       );
-      // Keep the original requested version in the returned object for tracking
-      return Object.assign({}, response.value, {
-        version: response.value.version || version,
-        requested_version: version,
-        platform,
-      });
+      return Object.assign({}, response.value, { version, platform });
     }
 
     throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {

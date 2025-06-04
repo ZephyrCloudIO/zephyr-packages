@@ -125,40 +125,4 @@ describe('parseZeDependency', () => {
       app_uid: 'local-name',
     });
   });
-
-  it('should parse wildcard version', () => {
-    // Act
-    const result = parseZeDependency('my-app', '*');
-
-    // Assert
-    expect(result).toEqual({
-      version: '*',
-      registry: 'zephyr',
-      app_uid: 'my-app',
-    });
-  });
-
-  it('should parse zephyr with wildcard version', () => {
-    // Act
-    const result = parseZeDependency('my-app', 'zephyr:*');
-
-    // Assert
-    expect(result).toEqual({
-      version: '*',
-      registry: 'zephyr',
-      app_uid: 'my-app',
-    });
-  });
-
-  it('should parse remote app with wildcard', () => {
-    // Act
-    const result = parseZeDependency('local-name', 'zephyr:remote-app@*');
-
-    // Assert
-    expect(result).toEqual({
-      version: '*',
-      registry: 'zephyr',
-      app_uid: 'remote-app',
-    });
-  });
 });

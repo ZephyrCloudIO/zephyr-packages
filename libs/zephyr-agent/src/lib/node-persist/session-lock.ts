@@ -30,7 +30,7 @@ export function getSessionKey(): SessionLock {
   // Another process has the lock = concurrent login is in progress,
   // use that session key instead
   if (!unlock) {
-    ze_log('Lock is already held by another process, using the same session key');
+    ze_log.misc('Lock is already held by another process, using the same session key');
     session = fs.readFileSync(ZE_SESSION_LOCK);
 
     // A second write here helps solve any concurrency between reading and writing
@@ -39,7 +39,7 @@ export function getSessionKey(): SessionLock {
       session = fs.readFileSync(ZE_SESSION_LOCK);
     }
   } else {
-    ze_log('Lock acquired, writing session key to lockfile');
+    ze_log.misc('Lock acquired, writing session key to lockfile');
     // read and write as array buffer
     fs.writeFileSync(ZE_SESSION_LOCK, session, { flush: true });
   }
@@ -59,7 +59,7 @@ export function getSessionKey(): SessionLock {
         // because `node-persist#forgiveParseErrors` wasn't set to true yet.
         setTimeout(fs.unlink, UNLOCK_INTERVAL, ZE_SESSION_LOCK, () => {
           // no need to care about errors here, if the file is not there, it's fine
-          ze_log('Lock released and lockfile removed');
+          ze_log.misc('Lock released and lockfile removed');
         });
       }
     },

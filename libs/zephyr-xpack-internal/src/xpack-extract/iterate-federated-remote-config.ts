@@ -28,7 +28,7 @@ export function iterateFederatedRemoteConfig<Compiler, K = XFederatedRemotesConf
     }
     results.push(for_remote(federatedConfig));
   }
-  ze_log('iterateFederatedRemoteConfig.results', results);
+  ze_log.remotes('iterateFederatedRemoteConfig.results', results);
 
   return results;
 }

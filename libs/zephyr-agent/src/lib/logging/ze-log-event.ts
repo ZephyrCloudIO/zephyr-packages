@@ -20,7 +20,7 @@ import { ze_log } from './index';
 
 export const logFn = (level: string, msg: unknown): void => {
   if (is_debug_enabled) {
-    ze_log(msg);
+    ze_log.misc(msg);
     return;
   }
 

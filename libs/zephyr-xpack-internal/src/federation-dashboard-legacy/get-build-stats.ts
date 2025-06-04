@@ -31,7 +31,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   TYPE?: string;
   DELIMITER?: string;
 }): Promise<ZephyrBuildStats> {
-  ze_log('get build stats started. create federation dashboard plugin');
+  ze_log.app('get build stats started. create federation dashboard plugin');
   const ze_engine = pluginOptions.zephyr_engine;
   const app = ze_engine.applicationProperties;
   const { git } = ze_engine.gitProperties;
@@ -44,7 +44,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     },
   });
 
-  ze_log('process webpack graph.pluginOptions', pluginOptions);
+  ze_log.app('process webpack graph.pluginOptions', pluginOptions);
   const convertedGraph = dashboardPlugin.processWebpackGraph({
     stats,
     stats_json,
@@ -88,6 +88,6 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     project: name, // Add missing project property
     tags: [], // Add missing tags property with empty array as default
   }) as ZephyrBuildStats;
-  ze_log('get build stats done.', res);
+  ze_log.app('get build stats done.', res);
   return res;
 }

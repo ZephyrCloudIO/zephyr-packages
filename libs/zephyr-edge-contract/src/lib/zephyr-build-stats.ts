@@ -119,25 +119,10 @@ export interface ZephyrBuildStats {
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;
   /** Native platform related data */
+  build_target?: string;
   native?: {
-    /**
-     * The target platform of the build , should be `ios`, `android`, `web` or undefined
-     * at the moment
-     */
-    build_target?: string;
-    /**
-     * The native version of the build, should be `ios`, `android`, `web` or undefined at
-     * the moment - ususally read from `Info.plist` (ios) or `build.gradle` (android)
-     */
-    native_version?: string;
-    /**
-     * The native build number of the build, should be `ios`, `android`, `web` or
-     * undefined at the moment - ususally read from `build.gradle` (android)
-     */
-    native_build_number?: string;
-
     /** Native lockfile hash (ios: Podfile.lock, android: gradle.lockfile) */
-    native_config_file_hash?: string;
+    lock_file_hash?: string;
   };
   /** @deprecated */
   type: unknown;

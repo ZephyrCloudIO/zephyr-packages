@@ -89,13 +89,13 @@ async function _zephyr_configuration(
 
     ze_log(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
 
-    zephyr_engine.npmProperties.version = nativeVersionInfo.native_version;
+    zephyr_engine.applicationProperties.version = nativeVersionInfo.native_version;
 
-    zephyr_engine.env.native_config_file_hash = (
+    zephyr_engine.env.lock_file_hash = (
       await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)
     ).nativeConfigHash;
 
-    ze_log('Native config file hash: ', zephyr_engine.env.native_config_file_hash);
+    ze_log('Native config file hash: ', zephyr_engine.env.lock_file_hash);
     const defineConfig = {
       ZE_BUILD_ID: await zephyr_engine.build_id,
       ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,

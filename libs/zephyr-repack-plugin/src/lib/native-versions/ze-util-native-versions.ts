@@ -181,7 +181,6 @@ export async function getDependencyHashes(
     ze_log('Podfile lock path.ios: ', podfileLockPath);
     if (fs.existsSync(podfileLockPath) || fs.existsSync(podfilePath)) {
       const content = fs.readFileSync(podfileLockPath, 'utf8');
-      ze_log('Podfile lock content.ios: ', content);
       hashes.nativeConfigHash = crypto
         .createHash('sha256')
         .update(content.length ? content : Buffer.from(podfileLockPath, 'utf8'))
@@ -201,7 +200,6 @@ export async function getDependencyHashes(
     ze_log('Gradle path.android: ', gradlePath);
     if (fs.existsSync(gradleLockPath) || fs.existsSync(gradlePath)) {
       const content = fs.readFileSync(gradlePath ? gradlePath : gradleLockPath, 'utf8');
-      ze_log('Gradle content.android: ', content);
       hashes.nativeConfigHash = fs.existsSync(gradleLockPath)
         ? crypto.createHash('sha256').update(content).digest('hex')
         : crypto

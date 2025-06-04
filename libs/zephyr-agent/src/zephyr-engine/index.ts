@@ -114,14 +114,12 @@ export class ZephyrEngine {
     buildEnv: string;
     // Below values (target, native_version, native_build_number) are cross-platform specific properties for react native
     target: Platform;
-    native_version: string;
-    native_config_file_hash: string;
+    lock_file_hash: string;
   } = {
     isCI,
     buildEnv: isCI ? 'ci' : 'local',
     target: 'web',
-    native_version: '',
-    native_config_file_hash: '',
+    lock_file_hash: '',
   };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
@@ -367,7 +365,7 @@ export class ZephyrEngine {
           action: 'build:info:user',
           ignore: true,
           message: if_target_is_react_native
-            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target} for native version: ${zephyr_engine.env.native_version}`
+            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target} for native version: ${zephyr_engine.npmProperties.version}`
             : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
         });
       }

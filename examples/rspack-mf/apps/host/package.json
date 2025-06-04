@@ -1,4 +1,7 @@
 {
   "name": "rspack_mf_host",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "zephyr:dependencies": {
+    "rspack_mf_remote": "zephyr:rspack_mf_remote@*"
+  }
 }

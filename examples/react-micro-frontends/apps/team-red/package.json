@@ -9,8 +9,8 @@
     "build": "nx run team-red:build --skip-nx-cache"
   },
   "private": true,
-  "zephyrDependencies": {
-    "team-blue": "0.1.0",
-    "team-green": "0.1.0"
+  "zephyr:dependencies": {
+    "team-blue": "zephyr:team-blue@*",
+    "team-green": "zephyr:team-green@*"
   }
 }

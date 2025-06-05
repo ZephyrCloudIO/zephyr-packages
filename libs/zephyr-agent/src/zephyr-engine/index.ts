@@ -365,7 +365,7 @@ export class ZephyrEngine {
           action: 'build:info:user',
           ignore: true,
           message: if_target_is_react_native
-            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target} for native version: ${zephyr_engine.npmProperties.version}`
+            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target} for native version: ${zephyr_engine.applicationProperties.version}`
             : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
         });
       }

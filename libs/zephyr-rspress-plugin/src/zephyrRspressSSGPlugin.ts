@@ -1,10 +1,9 @@
-import { ZephyrEngine } from 'zephyr-agent';
-import path from 'node:path';
 import type { RspressPlugin } from '@rspress/shared';
+import path from 'node:path';
+import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
 import { setupZeDeploy } from './internal/assets/setupZeDeploy';
-import { walkFiles } from './internal/files/walkFiles';
 import { showFiles } from './internal/files/showFiles';
-import { ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import { walkFiles } from './internal/files/walkFiles';
 
 export const zephyrRspressSSGPlugin = ({ outDir = 'doc_build' }): RspressPlugin => {
   const root = path.resolve(outDir);
@@ -19,7 +18,7 @@ export const zephyrRspressSSGPlugin = ({ outDir = 'doc_build' }): RspressPlugin 
         const files = await walkFiles(root);
 
         if (files.length === 0) {
-          ze_log('No files found in output directory.');
+          ze_log.package('No files found in output directory.');
           return;
         }
 

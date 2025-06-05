@@ -5,12 +5,15 @@ import { ze_log } from 'zephyr-agent';
 import { showFiles } from '../files/showFiles';
 
 jest.mock('node:fs/promises');
+
 jest.mock('zephyr-agent', () => ({
-  ze_log: jest.fn(),
+  ze_log: {
+    package: jest.fn(),
+  },
 }));
 
 const mockedFs = fs as jest.Mocked<typeof fs>;
-const mockedZeLog = ze_log as unknown as jest.Mock;
+const mockedZeLog = ze_log.package as unknown as jest.Mock;
 
 describe('showFiles', () => {
   beforeEach(() => {

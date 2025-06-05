@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { setupZeDeploy } from '../assets/setupZeDeploy';
+import { ze_log } from 'zephyr-agent';
 import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
 import { buildAssetMapFromFiles } from '../assets/buildAssets';
+import { setupZeDeploy } from '../assets/setupZeDeploy';
 import { buildStats } from '../stats/buildStats';
-import { ze_log } from 'zephyr-agent';
 
 jest.mock('zephyr-xpack-internal', () => ({
   xpack_zephyr_agent: jest.fn(),
@@ -18,8 +18,13 @@ jest.mock('../stats/buildStats', () => ({
 }));
 
 jest.mock('zephyr-agent', () => ({
-  ze_log: jest.fn(),
+  ze_log: {
+    package: jest.fn(),
+  },
 }));
+
+// Get reference to ze_log.package mock
+const mockedZeLog = ze_log.package as jest.Mock;
 
 describe('setupZeDeploy', () => {
   const mockAssets = { 'file.js': { type: 'asset', size: 123 } };
@@ -40,7 +45,7 @@ describe('setupZeDeploy', () => {
       files: [],
     });
 
-    expect(ze_log).toHaveBeenCalledWith('ZeRspressPlugin: No files to process.');
+    expect(mockedZeLog).toHaveBeenCalledWith('ZeRspressPlugin: No files to process.');
     expect(buildAssetMapFromFiles).not.toHaveBeenCalled();
     expect(buildStats).not.toHaveBeenCalled();
     expect(xpack_zephyr_agent).not.toHaveBeenCalled();
@@ -53,7 +58,7 @@ describe('setupZeDeploy', () => {
       files: ['index.html', 'main.js'],
     });
 
-    await new Promise(process.nextTick);
+    await new Promise(process.nextTick); // Allow promises to resolve
 
     expect(buildAssetMapFromFiles).toHaveBeenCalledWith('/root', [
       'index.html',

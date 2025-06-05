@@ -1,9 +1,9 @@
 import path from 'node:path';
-import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
-import { ZephyrEngine, ze_log, logFn } from 'zephyr-agent';
+import { ZephyrEngine, logFn, ze_log } from 'zephyr-agent';
 import { setupZeDeploy } from '../internal/assets/setupZeDeploy';
-import { walkFiles } from '../internal/files/walkFiles';
 import { showFiles } from '../internal/files/showFiles';
+import { walkFiles } from '../internal/files/walkFiles';
+import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
 
 jest.mock('zephyr-agent', () => {
   const actual = jest.requireActual('zephyr-agent');
@@ -12,7 +12,9 @@ jest.mock('zephyr-agent', () => {
     ZephyrEngine: {
       defer_create: jest.fn(),
     },
-    ze_log: jest.fn(),
+    ze_log: {
+      package: jest.fn(),
+    },
     logFn: jest.fn(),
     ZephyrError: {
       format: jest.fn((err) => `Formatted: ${err.message}`),
@@ -31,6 +33,9 @@ jest.mock('../internal/files/showFiles', () => ({
 jest.mock('../internal/assets/setupZeDeploy', () => ({
   setupZeDeploy: jest.fn(),
 }));
+
+// Get reference to ze_log.package mock
+const mockedZeLog = ze_log.package as jest.Mock;
 
 describe('zephyrRspressSSGPlugin', () => {
   const mockZephyrDefer = jest.fn();
@@ -62,7 +67,7 @@ describe('zephyrRspressSSGPlugin', () => {
     await plugin.afterBuild?.({}, false);
 
     expect(walkFiles).toHaveBeenCalled();
-    expect(ze_log).toHaveBeenCalledWith('No files found in output directory.');
+    expect(mockedZeLog).toHaveBeenCalledWith('No files found in output directory.');
     expect(showFiles).not.toHaveBeenCalled();
     expect(setupZeDeploy).not.toHaveBeenCalled();
   });

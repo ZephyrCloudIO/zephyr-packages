@@ -151,14 +151,14 @@ export class ZephyrEngine {
   static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
     const context = options.context || process.cwd();
 
-    ze_log(`Initializing: Zephyr Engine for ${context}...`);
+    ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine({ context, builder: options.builder });
 
-    ze_log('Initializing: npm package info...');
+    ze_log.init('Initializing: npm package info...');
 
     ze.npmProperties = await getPackageJson(context);
 
-    ze_log('Initializing: git info...');
+    ze_log.init('Initializing: git info...');
     ze.gitProperties = await getGitInfo();
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
@@ -166,19 +166,19 @@ export class ZephyrEngine {
 
     // starting async load of application configuration, build_id and hash_list
 
-    ze_log('Initializing: checking authentication...');
+    ze_log.init('Initializing: checking authentication...');
     await checkAuth();
 
-    ze_log('Initialized: loading application configuration...');
+    ze_log.init('Initialized: loading application configuration...');
 
     ze.application_configuration = getApplicationConfiguration({ application_uid });
 
     ze.application_configuration
       .then((appConfig) => {
         const { username, email, EDGE_URL } = appConfig;
-        ze_log('Loaded: application configuration', { username, email, EDGE_URL });
+        ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
       })
-      .catch((err) => ze_log(`Failed to get application configuration: ${err}`));
+      .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
 
     await ze.start_new_build();
 
@@ -225,7 +225,7 @@ export class ZephyrEngine {
       'base64'
     );
 
-    ze_log(
+    ze_log.remotes(
       'resolve_remote_dependencies.deps',
       deps,
       'platform',
@@ -260,14 +260,14 @@ export class ZephyrEngine {
 
       // If you couldn't resolve remote dependency, skip replacing it
       if (!ZeUtils.isSuccessTuple(tuple)) {
-        ze_log(
+        ze_log.remotes(
           `Failed to resolve remote dependency: ${dep.name}@${dep.version}`,
           'skipping...'
         );
         return null;
       }
 
-      ze_log(`Resolved dependency: ${tuple[1].default_url}`);
+      ze_log.remotes(`Resolved dependency: ${tuple[1].default_url}`);
 
       if (dep.name === tuple[1].name) {
         return tuple[1];
@@ -285,43 +285,43 @@ export class ZephyrEngine {
   }
 
   async start_new_build(): Promise<void> {
-    ze_log('Starting new build');
+    ze_log.init('Starting new build');
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const ze = this;
     ze.build_start_time = Date.now();
 
     if ((await ze.build_id) && (await ze.snapshotId)) {
-      ze_log('Skip: creating new build because no assets was uploaded');
+      ze_log.init('Skip: creating new build because no assets was uploaded');
       return;
     }
 
     const application_uid = ze.application_uid;
 
-    ze_log('Initializing: loading of hash list');
+    ze_log.init('Initializing: loading of hash list');
     ze.hash_list = get_hash_list(application_uid);
     ze.hash_list
       .then((hash_set) => {
         ze.resolved_hash_list = hash_set;
-        ze_log(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
+        ze_log.app(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
       })
-      .catch((err) => ze_log(`Failed to get hash list: ${err}`));
+      .catch((err) => ze_log.app(`Failed to get hash list: ${err}`));
 
-    ze_log('Initializing: loading of build id');
+    ze_log.init('Initializing: loading of build id');
     ze.build_id = getBuildId(application_uid);
     ze.build_id
-      .then((buildId) => ze_log(`Loaded build id "${buildId}"`))
-      .catch((err) => ze_log(`Failed to get build id: ${err}`));
+      .then((buildId) => ze_log.app(`Loaded build id "${buildId}"`))
+      .catch((err) => ze_log.app(`Failed to get build id: ${err}`));
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     if (!ze.logger) {
-      ze_log('Initializing: logger');
+      ze_log.init('Initializing: logger');
       let resolve: (value: ZeLogger) => void;
       ze.logger = new Promise<ZeLogger>((r) => (resolve = r));
 
       // internally logger will try to load app_config
       void Promise.all([ze.application_configuration, ze.build_id]).then((record) => {
         const buildId = record[1];
-        ze_log('Initialized: application configuration, build id and hash list');
+        ze_log.init('Initialized: application configuration, build id and hash list');
 
         resolve(logger({ application_uid, buildId, git: ze.gitProperties.git }));
       });
@@ -380,11 +380,11 @@ export class ZephyrEngine {
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
-    ze_log('Initializing: upload assets');
+    ze_log.upload('Initializing: upload assets');
     const { assetsMap, buildStats, mfConfig } = props;
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
-      ze_log('Failed to upload assets: missing application_uid or build_id');
+      ze_log.upload('Failed to upload assets: missing application_uid or build_id');
       return;
     }
 

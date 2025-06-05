@@ -20,6 +20,7 @@ import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
+import { ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
@@ -234,6 +235,8 @@ export class ZephyrEngine {
       ze_dependencies
     );
 
+    const resolution_errors: Array<{ dep: ZeDependencyPair; error: unknown }> = [];
+
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
       const ze_dependency = ze_dependencies?.[dep.name];
@@ -264,6 +267,7 @@ export class ZephyrEngine {
           `Failed to resolve remote dependency: ${dep.name}@${dep.version}`,
           'skipping...'
         );
+        resolution_errors.push({ dep, error: tuple[0] });
         return null;
       }
 
@@ -277,6 +281,32 @@ export class ZephyrEngine {
     });
 
     const resolution_results = await Promise.all(tasks);
+
+    // If there are resolution errors, throw with summary
+    if (resolution_errors.length > 0) {
+      // Log a summary if multiple errors
+      if (resolution_errors.length > 1) {
+        const logger = await this.logger;
+        const errorSummary = resolution_errors
+          .map(({ dep, error }) => {
+            const version =
+              ZephyrError.is(error) && error.template && 'version' in error.template
+                ? (error.template.version as string)
+                : dep.version;
+            return `  - ${dep.name} @ ${version}`;
+          })
+          .join('\n');
+
+        logger({
+          level: 'error',
+          action: 'build:error:dependency_resolution',
+          message: `Failed to resolve ${resolution_errors.length} remote dependencies:\n${errorSummary}\n`,
+        });
+      }
+
+      // Throw the first error - it will be caught and formatted by the bundler plugin
+      throw resolution_errors[0].error;
+    }
 
     this.federated_dependencies = resolution_results.filter(
       is_zephyr_resolved_dependency

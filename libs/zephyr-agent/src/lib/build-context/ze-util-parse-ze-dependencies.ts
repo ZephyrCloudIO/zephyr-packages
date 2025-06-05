@@ -5,6 +5,7 @@
  * - Standard semver: "^1.0.0"
  * - Zephyr remote with tag: "zephyr:remote_app_uid@latest"
  * - Zephyr with semver: "zephyr:^1.0.0"
+ * - Wildcard version: "*" (resolves to latest available version)
  *
  * @param ze_dependencies - Object with dependency name as key and version/reference as
  *   value

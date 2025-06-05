@@ -5,7 +5,6 @@
  * - Standard semver: "^1.0.0"
  * - Zephyr remote with tag: "zephyr:remote_app_uid@latest"
  * - Zephyr with semver: "zephyr:^1.0.0"
- * - Wildcard version: "*" (resolves to latest available version)
  *
  * @param ze_dependencies - Object with dependency name as key and version/reference as
  *   value
@@ -40,13 +39,16 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
   };
 
   let reference = value;
+
+  if (reference === 'workspace:*') {
+    return dependency;
+  }
+
   // if reference variable has ':' then cut it off and store dependency.registry
   if (reference.includes(':')) {
     const reference_parts = reference.split(':');
     dependency.registry = reference_parts[0];
-    // consider reference all of what's left of the version
-    // e.g.: zephyr:my-app@workspace:*
-    reference = reference_parts.slice(1).join(':');
+    reference = reference_parts[1];
   }
 
   // Check if it contains a remote app_uid with a tag (e.g., "remote_app_uid@latest")

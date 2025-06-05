@@ -18,7 +18,7 @@ export const zephyrRspressSSGPlugin = ({ outDir = 'doc_build' }): RspressPlugin 
         const files = await walkFiles(root);
 
         if (files.length === 0) {
-          ze_log.package('No files found in output directory.');
+          ze_log.upload('No files found in output directory.');
           return;
         }
 

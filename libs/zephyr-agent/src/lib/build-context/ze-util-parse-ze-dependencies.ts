@@ -41,16 +41,20 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
   let reference = value;
   // if reference variable has ':' then cut it off and store dependency.registry
   if (reference.includes(':')) {
-    const refference_parts = reference.split(':');
-    dependency.registry = refference_parts[0];
-    reference = refference_parts[1];
+    const reference_parts = reference.split(':');
+    dependency.registry = reference_parts[0];
+    // consider reference all of what's left of the version
+    // e.g.: zephyr:my-app@workspace:*
+    reference = reference_parts.slice(1).join(':');
   }
 
   // Check if it contains a remote app_uid with a tag (e.g., "remote_app_uid@latest")
   if (reference.includes('@')) {
-    const [remoteAppUid, tag] = reference.split('@');
-    dependency.app_uid = remoteAppUid;
-    dependency.version = tag;
+    const reference_parts = reference.split('@');
+    // consider scoped application names
+    // e.g.: @app-zephyr/host@latest
+    dependency.app_uid = reference_parts.slice(0, reference_parts.length - 1).join('@');
+    dependency.version = reference_parts[reference_parts.length - 1];
   }
   // If it's a semver specification (contains ^, ~, >, <, or =)
   else {

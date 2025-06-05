@@ -88,14 +88,13 @@ export async function resolve_remote_dependency({
       projectName,
       orgName,
       version,
-      data: { version, response },
+      data: { response },
     });
   } catch (cause) {
     if (cause instanceof ZephyrError) throw cause;
 
     throw new ZephyrError(ZeErrors.ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION, {
       version,
-      data: { version },
       cause,
     });
   }

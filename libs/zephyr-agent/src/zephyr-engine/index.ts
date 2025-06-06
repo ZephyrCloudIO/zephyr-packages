@@ -282,27 +282,24 @@ export class ZephyrEngine {
 
     const resolution_results = await Promise.all(tasks);
 
-    // If there are resolution errors, throw with summary
+    // If there are resolution errors, log it with summary
     if (resolution_errors.length > 0) {
-      // Log a summary if multiple errors
-      if (resolution_errors.length > 1) {
-        const logger = await this.logger;
-        const errorSummary = resolution_errors
-          .map(({ dep, error }) => {
-            const version =
-              ZephyrError.is(error) && error.template && 'version' in error.template
-                ? (error.template.version as string)
-                : dep.version;
-            return `  - ${dep.name} @ ${version}`;
-          })
-          .join('\n');
+      const logger = await this.logger;
+      const errorSummary = resolution_errors
+        .map(({ dep, error }) => {
+          const version =
+            ZephyrError.is(error) && error.template && 'version' in error.template
+              ? (error.template.version as string)
+              : dep.version;
+          return `  - ${dep.name} @ ${version}`;
+        })
+        .join('\n');
 
-        logger({
-          level: 'error',
-          action: 'build:error:dependency_resolution',
-          message: `Failed to resolve ${resolution_errors.length} remote dependencies:\n${errorSummary}\n`,
-        });
-      }
+      logger({
+        level: 'error',
+        action: 'build:error:dependency_resolution',
+        message: `Failed to resolve ${resolution_errors.length} remote dependencies:\n${errorSummary}\n`,
+      });
     }
 
     this.federated_dependencies = resolution_results.filter(

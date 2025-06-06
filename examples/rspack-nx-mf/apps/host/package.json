@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "zephyr:dependencies": {
-    "rspack_nx_mf_remote": "zephyr:rspack_nx_mf_remote@workspace:*"
+    "rspack_nx_mf_remote": "workspace:*"
   }
 }

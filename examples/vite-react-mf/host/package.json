@@ -29,8 +29,8 @@
     "vite-plugin-zephyr": "workspace:*"
   },
   "zephyr:dependencies": {
-    "vite_remote": "zephyr:vite-remote@workspace:*",
-    "vite_webpack": "zephyr:vite_webpack@workspace:*",
-    "vite_rspack": "zephyr:vite_rspack@workspace:*"
+    "vite_remote": "workspace:*",
+    "vite_webpack": "workspace:*",
+    "vite_rspack": "workspace:*"
   }
 }

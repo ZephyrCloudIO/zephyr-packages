@@ -10,7 +10,7 @@
   },
   "private": true,
   "zephyr:dependencies": {
-    "team-blue": "zephyr:team-blue@workspace:*",
-    "team-green": "zephyr:team-green@workspace:*"
+    "team-blue": "workspace:*",
+    "team-green": "workspace:*"
   }
 }

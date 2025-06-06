@@ -1,7 +1,6 @@
 import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -10,7 +9,7 @@ import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-opt
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
-interface VitePluginZephyrOptions extends Omit<ZephyrPluginOptions, 'mfConfig'> {
+interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
 }
 

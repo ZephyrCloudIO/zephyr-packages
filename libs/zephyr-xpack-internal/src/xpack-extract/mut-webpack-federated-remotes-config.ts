@@ -1,7 +1,7 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, type ZeResolvedDependency } from 'zephyr-agent';
 import type { XPackConfiguration } from '../xpack.types';
-import { parseRemotesAsEntries } from './extract-federated-dependency-pairs';
+import { parseRemotesAßtract-federated-dependency-pairs';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 
@@ -11,6 +11,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
   delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ): void {
+  ze_log(`==========resolvedDependencyPairs: ${JSON.stringify(resolvedDependencyPairs)}`);
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;

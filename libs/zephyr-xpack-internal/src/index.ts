@@ -1,10 +1,11 @@
 export { emitDeploymentDone, onDeploymentDone } from './lifecycle-events';
 
 export {
+  createMfRuntimeCode,
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
-  xpack_delegate_module_template,
+  xpack_delegate_module_template,ß
 } from './xpack-extract';
 export { buildWebpackAssetMap } from './xpack-extract/build-webpack-assets-map';
 export { isModuleFederationPlugin } from './xpack-extract/is-module-federation-plugin';

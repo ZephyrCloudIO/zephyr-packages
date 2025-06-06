@@ -303,9 +303,6 @@ export class ZephyrEngine {
           message: `Failed to resolve ${resolution_errors.length} remote dependencies:\n${errorSummary}\n`,
         });
       }
-
-      // Throw the first error - it will be caught and formatted by the bundler plugin
-      throw resolution_errors[0].error;
     }
 
     this.federated_dependencies = resolution_results.filter(

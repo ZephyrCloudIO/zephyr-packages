@@ -1,3 +1,4 @@
+import type { ConfigT } from 'metro-config';
 import {
   buildAssetsMap,
   Platform,
@@ -21,6 +22,23 @@ export interface ZephyrCommandWrapperConfig {
   context: string;
   outDir: string;
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+}
+
+export function withZephyr(
+  config: ZephyrPluginOptions
+): (config: ConfigT, federationOptions: any) => ConfigT {
+  ze_log('withZephyr.config', config);
+
+  return function (config: ConfigT, federationOptions: any) {
+    ze_log('\n\nwithZephyr\n\n --metro-------');
+    ze_log('config: ', config);
+    ze_log('federationOptions: ', federationOptions);
+    federationOptions && (federationOptions.name = 'custom-name');
+    return {
+      ...config,
+      federationOptions,
+    };
+  };
 }
 
 export class ZephyrMetroPlugin {
@@ -51,6 +69,7 @@ export class ZephyrMetroPlugin {
       await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
 
     if (this.config.mfConfig) {
+      ze_log('Mutating MF config...');
       mutateMfConfig(this.zephyr_engine, this.config.mfConfig, resolved_dependency_pairs);
     }
 

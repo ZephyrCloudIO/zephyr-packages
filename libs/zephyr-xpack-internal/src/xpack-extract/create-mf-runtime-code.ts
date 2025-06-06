@@ -20,7 +20,7 @@ export function createMfRuntimeCode(
   const { application_uid, remote_entry_url, default_url, name, library_type } = deps;
 
   // If the builder is `repack` only return the remote url without any changes
-  if (zephyr_engine.builder === 'repack') {
+  if (zephyr_engine.builder === 'repack' || zephyr_engine.builder === 'metro') {
     return remote_entry_url;
   }
 

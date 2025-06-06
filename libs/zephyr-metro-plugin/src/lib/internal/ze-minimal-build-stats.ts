@@ -36,7 +36,7 @@ export async function create_minimal_build_stats(
     overrides: [],
     modules: [],
     metadata: {
-      bundler: 'rolldown',
+      bundler: 'metro',
       totalSize: 0,
       fileCount: 0,
       chunkCount: 0,

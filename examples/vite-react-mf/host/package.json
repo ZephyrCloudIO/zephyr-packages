@@ -9,9 +9,6 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-  "zephyr:dependencies": {
-    "vite_remote": "zephyr:vite-remote@latest"
-  },
   "dependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18",
@@ -30,5 +27,10 @@
     "typescript-eslint": "catalog:eslint",
     "vite": "catalog:vite6",
     "vite-plugin-zephyr": "workspace:*"
+  },
+  "zephyr:dependencies": {
+    "vite_remote": "workspace:*",
+    "vite_webpack": "workspace:*",
+    "vite_rspack": "workspace:*"
   }
 }

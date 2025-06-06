@@ -191,7 +191,9 @@ export class ZephyrEngine {
         level: 'info',
         action: 'build:info:user',
         ignore: true,
-        message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
+        message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(
+          `#${buildId}`
+        )}\n`,
       });
     });
 
@@ -282,30 +284,30 @@ export class ZephyrEngine {
 
     const resolution_results = await Promise.all(tasks);
 
-    // If there are resolution errors, throw with summary
+    // If there are resolution errors, log it with summary
     if (resolution_errors.length > 0) {
-      // Log a summary if multiple errors
-      if (resolution_errors.length > 1) {
-        const logger = await this.logger;
-        const errorSummary = resolution_errors
-          .map(({ dep, error }) => {
-            const version =
-              ZephyrError.is(error) && error.template && 'version' in error.template
-                ? (error.template.version as string)
-                : dep.version;
-            return `  - ${dep.name} @ ${version}`;
-          })
-          .join('\n');
+      const logger = await this.logger;
+      const errorSummary = resolution_errors
+        .map(({ dep, error }) => {
+          const errorMessage = ZephyrError.is(error)
+            ? `Error code: ${error.code}`
+            : `Unknown error`;
+          const version =
+            ZephyrError.is(error) && error.template && 'version' in error.template
+              ? (error.template.version as string)
+              : dep.version;
+          return `  - ${dep.name}@${version} -> ${errorMessage}`;
+        })
+        .join('\n');
 
-        logger({
-          level: 'error',
-          action: 'build:error:dependency_resolution',
-          message: `Failed to resolve ${resolution_errors.length} remote dependencies:\n${errorSummary}\n`,
-        });
-      }
-
-      // Throw the first error - it will be caught and formatted by the bundler plugin
-      throw resolution_errors[0].error;
+      logger({
+        level: 'warn',
+        action: 'build:error:dependency_resolution',
+        message: `Failed to resolve remote dependencies:
+${errorSummary}\n
+More information on remote dependency resolution please check:
+https://docs.zephyr-cloud.io/how-to/dependency-management`,
+      });
     }
 
     this.federated_dependencies = resolution_results.filter(
@@ -385,15 +387,21 @@ export class ZephyrEngine {
           action: 'build:info:user',
           ignore: true,
           message: if_target_is_react_native
-            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target}`
-            : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
+            ? `Resolved zephyr dependencies: ${dependencies
+                .map((dep) => dep.name)
+                .join(', ')} for platform: ${zephyr_engine.env.target}`
+            : `Resolved zephyr dependencies: ${dependencies
+                .map((dep) => dep.name)
+                .join(', ')}`,
         });
       }
 
       logger({
         level: 'trace',
         action: 'deploy:url',
-        message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(`${Date.now() - zeStart}`)}ms.\n\n${cyanBright(versionUrl)}`,
+        message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(
+          `${Date.now() - zeStart}`
+        )}ms.\n\n${cyanBright(versionUrl)}`,
       });
     }
 

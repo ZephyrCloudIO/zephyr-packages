@@ -72,7 +72,7 @@ type ZephyrEngineBuilderTypes =
   | 'repack'
   | 'vite'
   | 'rollup'
-  | 'parcel' 
+  | 'parcel'
   | 'metro'
   | 'unknown';
 export interface ZephyrEngineOptions {

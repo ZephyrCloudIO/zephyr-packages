@@ -296,18 +296,17 @@ export class ZephyrEngine {
             ZephyrError.is(error) && error.template && 'version' in error.template
               ? (error.template.version as string)
               : dep.version;
-          return `  - Remote name: ${dep.name} Version: ${version} ${errorMessage}`;
+          return `  - ${dep.name}@${version} -> ${errorMessage}`;
         })
         .join('\n');
 
       logger({
-        level: 'error',
+        level: 'warn',
         action: 'build:error:dependency_resolution',
-        message: `
-          Failed to resolve ${resolution_errors.length} remote dependencies:\n
-          ${errorSummary}\n
-          More information on dependency resolution please check:\n
-          https://docs.zephyr-cloud.io/how-to/dependency-management\n`,
+        message: `Failed to resolve remote dependencies:
+${errorSummary}\n
+More information on remote dependency resolution please check:
+https://docs.zephyr-cloud.io/how-to/dependency-management`,
       });
     }
 

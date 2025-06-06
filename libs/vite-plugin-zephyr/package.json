@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-zephyr",
-  "version": "0.0.52",
+  "version": "0.0.53",
   "description": "Vite plugin for Zephyr",
   "repository": {
     "type": "git",

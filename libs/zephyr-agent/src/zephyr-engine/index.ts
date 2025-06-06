@@ -191,7 +191,9 @@ export class ZephyrEngine {
         level: 'info',
         action: 'build:info:user',
         ignore: true,
-        message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(`#${buildId}`)}\n`,
+        message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(
+          `#${buildId}`
+        )}\n`,
       });
     });
 
@@ -287,18 +289,25 @@ export class ZephyrEngine {
       const logger = await this.logger;
       const errorSummary = resolution_errors
         .map(({ dep, error }) => {
+          const errorMessage = ZephyrError.is(error)
+            ? `Error code: ${error.code}`
+            : `Unknown error`;
           const version =
             ZephyrError.is(error) && error.template && 'version' in error.template
               ? (error.template.version as string)
               : dep.version;
-          return `  - ${dep.name} @ ${version}`;
+          return `  - Remote name: ${dep.name} Version: ${version} ${errorMessage}`;
         })
         .join('\n');
 
       logger({
         level: 'error',
         action: 'build:error:dependency_resolution',
-        message: `Failed to resolve ${resolution_errors.length} remote dependencies:\n${errorSummary}\n`,
+        message: `
+          Failed to resolve ${resolution_errors.length} remote dependencies:\n
+          ${errorSummary}\n
+          More information on dependency resolution please check:\n
+          https://docs.zephyr-cloud.io/how-to/dependency-management\n`,
       });
     }
 
@@ -379,15 +388,21 @@ export class ZephyrEngine {
           action: 'build:info:user',
           ignore: true,
           message: if_target_is_react_native
-            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target}`
-            : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
+            ? `Resolved zephyr dependencies: ${dependencies
+                .map((dep) => dep.name)
+                .join(', ')} for platform: ${zephyr_engine.env.target}`
+            : `Resolved zephyr dependencies: ${dependencies
+                .map((dep) => dep.name)
+                .join(', ')}`,
         });
       }
 
       logger({
         level: 'trace',
         action: 'deploy:url',
-        message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(`${Date.now() - zeStart}`)}ms.\n\n${cyanBright(versionUrl)}`,
+        message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(
+          `${Date.now() - zeStart}`
+        )}ms.\n\n${cyanBright(versionUrl)}`,
       });
     }
 

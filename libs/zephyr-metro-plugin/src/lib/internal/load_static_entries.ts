@@ -1,12 +1,18 @@
 import { readdirSync, readFile, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import type { OutputAsset } from 'rollup';
-import { normalizePath } from 'vite';
 
 interface LoadStaticEntriesOptions {
   root: string;
   outDir: string;
+}
+
+export interface OutputAsset {
+  name: string;
+  fileName: string;
+  originalFileName: string;
+  source: string | Uint8Array;
+  type: 'asset';
 }
 
 export async function load_static_entries(
@@ -25,19 +31,18 @@ export async function load_static_entries(
         await loadDir(destFile);
         continue;
       }
-      const fileName = normalizePath(relative(root_dist_dir, destFile));
+      const fileName = relative(root_dist_dir, destFile);
+
       publicAssets.push({
         fileName,
         name: file,
-        names: [file],
-        needsCodeReference: false,
         source: await promisify(readFile)(destFile),
         type: 'asset',
         originalFileName: file,
-        originalFileNames: [file],
       });
     }
   };
   await loadDir(root_dist_dir);
+
   return publicAssets;
 }

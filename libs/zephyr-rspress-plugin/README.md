@@ -63,20 +63,6 @@ export default defineConfig({
 });
 ```
 
-You can also pass options:
-
-```ts
-export default defineConfig({
-  ssg: true,
-  plugins: [
-    withZephyr({
-      environment: 'production',
-      deploy: true,
-    }),
-  ],
-});
-```
-
 ---
 
 ## Features

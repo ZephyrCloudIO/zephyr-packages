@@ -1,6 +1,6 @@
 import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
 import { buildAssetsMap, ze_log, ZephyrEngine } from 'zephyr-agent';
-import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrBuildStats, ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { extract_remotes_dependencies } from './internal/extract-mf-remotes';
 import type { OutputAsset } from './internal/load_static_entries';
 import { load_static_entries } from './internal/load_static_entries';
@@ -74,7 +74,8 @@ export class ZephyrMetroPlugin {
       metadata: {
         hasFederation: !!this.config.mfConfig,
       },
-    });
+      build_target: this.zephyr_engine.env.target,
+    }) as ZephyrBuildStats;
 
     // Extract shared dependencies from Module Federation config
     const overrides = this.config.mfConfig?.shared

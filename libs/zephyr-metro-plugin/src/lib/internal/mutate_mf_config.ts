@@ -12,13 +12,13 @@ export function mutateMfConfig(
   delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ) {
   if (!resolvedDependencyPairs?.length) {
-    ze_log(`No resolved dependency pairs found, skipping...`);
+    ze_log.mf(`No resolved dependency pairs found, skipping...`);
     return;
   }
 
   const remotes = config?.remotes;
   if (!remotes) {
-    ze_log(
+    ze_log.mf(
       `No remotes found for plugin: ${JSON.stringify(config, null, 2)}`,
       'skipping...'
     );
@@ -31,10 +31,10 @@ export function mutateMfConfig(
       (dep) => dep.name === remote_name && dep.version === remote_version
     );
 
-    ze_log(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
+    ze_log.mf(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
 
     if (!resolved_dep) {
-      ze_log(
+      ze_log.mf(
         `Resolved dependency pair not found for remote: ${JSON.stringify(remote, null, 2)}`,
         'skipping...'
       );
@@ -46,10 +46,10 @@ export function mutateMfConfig(
       ? remote_version.split('@')
       : [remote_name];
 
-    ze_log(`v_app: ${v_app}`);
+    ze_log.mf(`v_app: ${v_app}`);
     if (v_app) {
       resolved_dep.remote_entry_url = [v_app, resolved_dep.remote_entry_url].join('@');
-      ze_log(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
+      ze_log.mf(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
     }
 
     resolved_dep.name = remote_name;
@@ -60,7 +60,7 @@ export function mutateMfConfig(
         resolved_dep,
         delegate_module_template
       );
-      ze_log(`Setting runtime code for remote: ${remotes}`);
+      ze_log.mf(`Setting runtime code for remote: ${remotes}`);
     }
   });
 

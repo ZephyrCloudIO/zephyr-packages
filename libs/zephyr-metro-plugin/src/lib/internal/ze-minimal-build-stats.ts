@@ -46,5 +46,6 @@ export async function create_minimal_build_stats(
     },
     default: false,
     environment: '',
+    build_target: zephyr_engine.env.target,
   } as ZephyrBuildStats;
 }

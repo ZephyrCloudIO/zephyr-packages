@@ -225,6 +225,7 @@ export class ZephyrEngine {
       branch: this.gitProperties.git.branch,
       username: app_config.username,
     };
+    ze_log.config('build_context_json', build_context_json);
     // convert to base64
     const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
       'base64'

@@ -1,5 +1,8 @@
 {
   "name": "rspack_nx_mf_host",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "zephyr:dependencies": {
+    "rspack_nx_mf_remote": "workspace:*"
+  }
 }

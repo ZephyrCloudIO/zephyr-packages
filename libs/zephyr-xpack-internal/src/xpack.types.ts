@@ -9,6 +9,11 @@ export interface XPackConfiguration<Compiler> {
     | ((this: Compiler, compiler: Compiler) => void)
     | WebpackPluginInstance<Compiler>
   )[];
+  output?:
+    | {
+        publicPath?: string;
+      }
+    | any;
 }
 
 interface WebpackPluginInstance<Compiler> {
@@ -36,7 +41,7 @@ export interface XFederatedRemotesConfig {
 export interface ModuleFederationPlugin {
   apply: (compiler: unknown) => void;
   /** For Webpack/Rspack */
-  _options?: XFederatedRemotesConfig;
+  _options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
   /** Repack specific for now until Repack change how the config should be exposed */
   config?: XFederatedRemotesConfig;
 }

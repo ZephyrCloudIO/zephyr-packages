@@ -33,7 +33,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
         target: config.platform,
       } as ZephyrRepackPluginOptions;
 
-      ze_log('updatedZephyrConfig: ', updatedZephyrConfig);
+      ze_log.init('updatedZephyrConfig: ', updatedZephyrConfig);
 
       // Return the final processed configuration
       return _zephyr_configuration(userConfig, updatedZephyrConfig);
@@ -51,7 +51,7 @@ async function _zephyr_configuration(
       builder: 'repack',
       context: config.context,
     });
-    ze_log('Configuring with Zephyr... \n config: ', config);
+    ze_log.init('Configuring with Zephyr... \n config: ', config);
 
     if (!_zephyrOptions?.target) {
       throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
@@ -60,7 +60,7 @@ async function _zephyr_configuration(
 
     const dependency_pairs = extractFederatedDependencyPairs(config);
 
-    ze_log(
+    ze_log.init(
       'Resolving and building towards target by zephyr_engine.env.target: ',
       zephyr_engine.env.target
     );
@@ -69,14 +69,16 @@ async function _zephyr_configuration(
       await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
-    ze_log('dependency resolution completed successfully...or at least trying to...');
+    ze_log.remotes(
+      'dependency resolution completed successfully...or at least trying to...'
+    );
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
     // const app_config = await zephyr_engine.application_configuration;
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
-    ze_log('Application uid created...');
+    ze_log.app('Application uid created...');
     config.plugins?.push(
       new ZeRepackPlugin({
         zephyr_engine,

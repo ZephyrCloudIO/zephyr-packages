@@ -13,7 +13,7 @@ export async function zephyrCommandWrapper(
   updateManifest: () => void
 ) {
   return async (...args: any[]) => {
-    ze_log('zephyrCommandWrapper', args);
+    ze_log.init('zephyrCommandWrapper', args);
     // before build
     const isDev = args[0][0]['mode'];
     const platform = args[0][0]['platform'];
@@ -40,7 +40,7 @@ export async function zephyrCommandWrapper(
 
     const res = await bundleFederatedRemote(...args);
 
-    zephyrMetroPlugin.afterBuild();
+    await zephyrMetroPlugin.afterBuild();
 
     return res;
   };

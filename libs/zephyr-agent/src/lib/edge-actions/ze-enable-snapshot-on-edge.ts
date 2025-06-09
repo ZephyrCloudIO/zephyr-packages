@@ -1,9 +1,9 @@
 import type { ZephyrPluginOptions, ZeUploadBuildStats } from 'zephyr-edge-contract';
-import { logger } from '../logging/ze-log-event';
 import { uploadEnvs } from '../http/upload-envs';
 import { ze_log } from '../logging';
 import { brightBlueBgName } from '../logging/debug';
 import { blackBright, cyanBright, yellow } from '../logging/picocolor';
+import { logger } from '../logging/ze-log-event';
 
 interface ZeEnableSnapshotOnEdgeProps {
   pluginOptions: ZephyrPluginOptions;
@@ -16,7 +16,7 @@ export async function zeEnableSnapshotOnEdge(
 ): Promise<void> {
   const { pluginOptions, envs_jwt, zeStart } = props;
 
-  ze_log('Enabling snapshot on edge...');
+  ze_log.snapshot('Enabling snapshot on edge...');
   const logEvent = logger(pluginOptions);
 
   await uploadEnvs({
@@ -46,5 +46,5 @@ export async function zeEnableSnapshotOnEdge(
     }
   );
 
-  ze_log('Build successfully deployed to edge...');
+  ze_log.snapshot('Build successfully deployed to edge...');
 }

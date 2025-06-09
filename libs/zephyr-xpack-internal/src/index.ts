@@ -23,3 +23,5 @@ export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
 export { setupZeDeploy } from './hooks/ze-setup-ze-deploy';
 
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
+
+export { detectAndStoreBaseHref } from './basehref/basehref-integration';

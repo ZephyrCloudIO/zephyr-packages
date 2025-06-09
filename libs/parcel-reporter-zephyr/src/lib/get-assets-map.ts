@@ -28,7 +28,7 @@ const extractBuffer = (asset: ParcelOutputAsset): string | undefined => {
     try {
       return fs.readFileSync(asset.filePath, 'utf8');
     } catch (err) {
-      ze_log(err);
+      ze_log.upload(err);
       return undefined;
     }
   }

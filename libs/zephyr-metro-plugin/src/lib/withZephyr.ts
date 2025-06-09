@@ -1,5 +1,5 @@
 import { ze_log } from 'zephyr-agent';
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export interface ModuleFederationConfig {
@@ -24,8 +24,8 @@ export function withZephyr(
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']
 ) => Promise<Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']> {
   return async function (config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']) {
-    ze_log('\n\nwithZephyr\n\n --federation config-------');
-    ze_log('config: ', config);
+    ze_log.mf('\n\nwithZephyr\n\n --federation config-------');
+    ze_log.config('config: ', config);
 
     if (!config) return config;
 
@@ -39,7 +39,7 @@ export function withZephyr(
 
     const newConfig = await zephyrMetroPlugin.beforeBuild();
 
-    ze_log('newConfig: ', newConfig);
+    ze_log.config('newConfig: ', newConfig);
 
     return newConfig;
   };

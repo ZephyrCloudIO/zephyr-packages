@@ -39,7 +39,7 @@ export const Templates: { name: string; label: string; hint: string }[] = [
     hint: 'You will be building federated React apps powered by Vite, Webpack and Rspack.',
   },
   {
-    name: 'react-vite-ts',
+    name: 'vite-react-ts',
     label: 'A simple React application build by Vite',
     hint: 'You will be building React app powered by Vite.',
   },

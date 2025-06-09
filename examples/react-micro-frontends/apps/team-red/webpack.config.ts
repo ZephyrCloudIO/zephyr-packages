@@ -1,7 +1,8 @@
+import { withModuleFederation } from '@nx/module-federation/webpack';
 import { withReact } from '@nx/react';
-import { withModuleFederation } from '@nx/react/module-federation';
 import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
+import { isModuleFederationPlugin } from 'zephyr-xpack-internal';
 
 const mfConfig = {
   name: 'team-red',
@@ -36,5 +37,26 @@ export default composePlugins(
   withNx(),
   withReact(),
   withModuleFederation(mfConfig, { dts: false }),
+  (config) => {
+    // Workaround for aliases while this issue
+    // -> https://github.com/nrwl/nx/issues/31346
+    // is not resolved.
+    const plugin = config.plugins?.find(isModuleFederationPlugin);
+    if (!plugin?._options) return config;
+    if ('config' in plugin._options) return config;
+    plugin._options.remotes = Object.fromEntries(
+      Object.entries(plugin._options.remotes || {}).map(([name, remote]) => [
+        mfConfig.remotes.find((nameAlias) => nameAlias === name.replace(/_/g, '-')),
+        remote,
+      ])
+    );
+
+    // Workaround for incomplete resolution of https://github.com/nrwl/nx/issues/31114
+    if (config.optimization) {
+      config.optimization.runtimeChunk = false;
+    }
+
+    return config;
+  },
   withZephyr()
 );

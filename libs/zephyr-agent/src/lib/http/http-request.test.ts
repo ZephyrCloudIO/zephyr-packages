@@ -1,14 +1,16 @@
 // Error types are used by mocks
 import '../errors';
-import { parseUrl, makeRequest, makeHttpRequest } from './http-request';
-import { fetchWithRetries } from './fetch-with-retries';
 import { cleanTokens } from '../node-persist/token';
+import { fetchWithRetries } from './fetch-with-retries';
+import { makeHttpRequest, makeRequest, parseUrl } from './http-request';
 
 // Mock dependencies
 jest.mock('./fetch-with-retries');
 jest.mock('../node-persist/token');
 jest.mock('../logging/debug', () => ({
-  ze_log: jest.fn(),
+  ze_log: {
+    http: jest.fn(),
+  },
 }));
 jest.mock('zephyr-edge-contract', () => ({
   PromiseWithResolvers: () => {
@@ -117,7 +119,7 @@ describe('Pure HTTP Request Functions', () => {
 
       expect(ok).toBe(false);
       expect(error).toBeInstanceOf(Error);
-      expect(error.message).toBe('Network error');
+      expect(error?.message).toBe('Network error');
     });
   });
 

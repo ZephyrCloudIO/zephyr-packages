@@ -1,13 +1,24 @@
 # Zephyr Repack Plugin
 
-`zephyr-repack-plugin` is a plugin to deploy cross-platform application built with [React Native](https://reactnative.dev), [Rspack](https://rspack.dev) and [Re.Pack](https://re-pack.dev) and enable Over-The-Air updates capablities for federated applications.
-
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/repack-mf) | [Rspack Docs](https://rspack.dev) | [Re.Pack Docs](https://re-pack.dev) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/repack-mf) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
+<img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
+
+A React Native plugin for deploying cross-platform applications built with [React Native](https://reactnative.dev), [Rspack](https://rspack.dev) and [Re.Pack](https://re-pack.dev). This plugin enables Over-The-Air updates capabilities for federated applications and seamless deployment to Zephyr Cloud.
+
+## Get Started
+
+The fastest way to get started is to use `create-zephyr-apps` to generate a new React Native application with Zephyr integration and choose from React Native example:
+
+```bash
+npx create-zephyr-apps@latest
+```
+
+For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/recipes/repack-mf) for Repack and also a comprehensive guide to work with Re.Pack [here](https://docs.zephyr-cloud.io/recipes/react-native).
 
 ## Installation
 
@@ -125,3 +136,29 @@ npx create-zephyr-apps@latest
 ```
 
 This will create a new React Native application with Zephyr enabled, configured, and ready to use. [Read more about what this command would create here](https://docs.zephyr-cloud.io/recipes/repack-mf).
+
+## Features
+
+- 📱 Cross-platform React Native support (iOS, Android)
+- 🚀 Over-The-Air (OTA) updates for federated applications
+- 🏗️ Module Federation support with Re.Pack
+- ⚡ Rspack for fast bundling and building
+- 🔧 Zero-config setup with minimal configuration
+- 📊 Build analytics and monitoring
+- 🌐 Global CDN distribution for mobile assets
+
+## Requirements
+
+- React Native 0.70 or higher
+- Re.Pack 3.x or higher
+- Rspack 0.3 or higher
+- Node.js 18 or higher
+- Zephyr Cloud account (sign up at [zephyr-cloud.io](https://zephyr-cloud.io))
+
+## Contributing
+
+We welcome contributions! Please read our [contributing guidelines](../../CONTRIBUTING.md) for more information.
+
+## License
+
+Licensed under the Apache-2.0 License. See [LICENSE](LICENSE) for more information.

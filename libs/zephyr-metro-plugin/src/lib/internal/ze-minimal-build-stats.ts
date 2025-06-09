@@ -1,4 +1,4 @@
-import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine } from 'zephyr-agent';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 
 // TODO: This is a temporary function to create minimal build stats for Metro. Need to be replaced with the one from zephyr-agent

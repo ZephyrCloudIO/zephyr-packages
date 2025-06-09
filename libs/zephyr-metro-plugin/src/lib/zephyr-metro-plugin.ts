@@ -1,13 +1,9 @@
-import {
-  buildAssetsMap,
-  Platform,
-  ze_log,
-  ZeBuildAssetsMap,
-  ZephyrEngine,
-} from 'zephyr-agent';
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
+import { buildAssetsMap, ze_log, ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { extract_remotes_dependencies } from './internal/extract-mf-remotes';
-import { load_static_entries, OutputAsset } from './internal/load_static_entries';
+import type { OutputAsset } from './internal/load_static_entries';
+import { load_static_entries } from './internal/load_static_entries';
 import { mutateMfConfig } from './internal/mutate_mf_config';
 import {
   extractModulesFromExposes,
@@ -36,13 +32,13 @@ export class ZephyrMetroPlugin {
       builder: 'metro',
       context: this.config.context,
     });
-    ze_log('Configuring with Zephyr... \n config: ', this.config);
+    ze_log.config('Configuring with Zephyr... \n config: ', this.config);
 
     this.zephyr_engine.env.target = this.config.platform;
 
     const dependency_pairs = extract_remotes_dependencies(this.config.mfConfig?.remotes);
 
-    ze_log(
+    ze_log.config(
       'Resolving and building towards target by zephyr_engine.env.target: ',
       this.zephyr_engine.env.target
     );
@@ -51,19 +47,21 @@ export class ZephyrMetroPlugin {
       await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
 
     if (this.config.mfConfig) {
-      ze_log('Mutating MF config...');
+      ze_log.mf('Mutating MF config...');
       mutateMfConfig(this.zephyr_engine, this.config.mfConfig, resolved_dependency_pairs);
     }
 
-    ze_log('dependency resolution completed successfully...or at least trying to...');
+    ze_log.misc(
+      'dependency resolution completed successfully...or at least trying to...'
+    );
 
-    ze_log('Application uid created...');
+    ze_log.misc('Application uid created...');
 
     return this.config.mfConfig;
   }
 
   private async getBuildStats() {
-    ze_log('Extracting Metro build stats');
+    ze_log.misc('Extracting Metro build stats');
 
     const minimal_build_stats = await create_minimal_build_stats(this.zephyr_engine);
 
@@ -166,7 +164,7 @@ export class ZephyrMetroPlugin {
 
     const buildStats = await this.getBuildStats();
 
-    ze_log('Build stats: ', buildStats);
+    ze_log.config('Build stats: ', buildStats);
 
     await this.zephyr_engine.upload_assets({
       assetsMap,

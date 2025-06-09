@@ -2,7 +2,11 @@ import type { Compiler } from 'webpack';
 import type { ZephyrEngine } from 'zephyr-agent';
 
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
-import { logBuildSteps, setupZeDeploy } from 'zephyr-xpack-internal';
+import {
+  detectAndStoreBaseHref,
+  logBuildSteps,
+  setupZeDeploy,
+} from 'zephyr-xpack-internal';
 
 const pluginName = 'ZeWebpackPlugin';
 
@@ -26,7 +30,7 @@ export class ZeWebpackPlugin {
 
   apply(compiler: Compiler): void {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
-
+    detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
     logBuildSteps(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }

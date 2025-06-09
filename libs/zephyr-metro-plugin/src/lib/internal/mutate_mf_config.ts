@@ -1,5 +1,6 @@
-import { ze_log, ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
+import { ze_log } from 'zephyr-agent';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
   createMfRuntimeCode,
   xpack_delegate_module_template,

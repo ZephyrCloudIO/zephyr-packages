@@ -18,11 +18,15 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 ### Public Plugins
 
+- [`create-zephyr-apps`](libs/create-zephyr-apps/README.md) - Create new applications with Zephyr integration
+- [`parcel-reporter-zephyr`](libs/parcel-reporter-zephyr/README.md) - A Parcel reporter plugin for deploying with Zephyr
+- [`rollup-plugin-zephyr`](libs/rollup-plugin-zephyr/README.md) - A Rollup plugin for deploying with Zephyr
+- [`vite-plugin-zephyr`](libs/vite-plugin-zephyr/README.md) - A Vite plugin for deploying with Zephyr
+- [`zephyr-modernjs-plugin`](libs/zephyr-modernjs-plugin/README.md) - A Modern.js plugin for deploying with Zephyr
 - [`zephyr-repack-plugin`](libs/zephyr-repack-plugin/README.md) - A Rspack plugin for deploying with Zephyr building with React Native and Re.Pack
+- [`zephyr-rolldown-plugin`](libs/zephyr-rolldown-plugin/README.md) - A Rolldown plugin for deploying with Zephyr
 - [`zephyr-rspack-plugin`](libs/zephyr-rspack-plugin/README.md) - A Rspack plugin for deploying with Zephyr
-- [`vite-plugin-zephyr`](libs/vite-plugin-zephyr/README.md) - A Vite plugin for deploying with Zephyr.
-- [`zephyr-webpack-plugin`](libs/zephyr-webpack-plugin/README.md) - A webpack plugin for Zephyr
-- [`rollup-plugin-zephyr`](libs/rollup-plugin-zephyr/README.md) - A rollup plugin for Zephyr
+- [`zephyr-webpack-plugin`](libs/zephyr-webpack-plugin/README.md) - A Webpack plugin for deploying with Zephyr
 
 ### Utility Packages
 
@@ -60,5 +64,23 @@ pnpm install
 
 - `pnpm lint` - Checks code for linting errors
 - `pnpm format` - Formats code using Prettier
+
+### Version Management
+
+- `pnpm bump-patch` - Automated patch version bump across all packages
+
+  This script automates the complete patch version release process:
+
+  - Increments patch version in root and all lib package.json files
+  - Creates a commit with conventional commit message
+  - Creates a git tag (vX.X.X)
+  - If on main/master branch, creates a new feature branch and opens a PR
+  - Pushes changes and tags to origin
+
+  **Requirements:**
+
+  - Clean working directory (no uncommitted changes)
+  - gh CLI installed and authenticated (for automatic PR creation)
+  - Git configured with push access to origin
 
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

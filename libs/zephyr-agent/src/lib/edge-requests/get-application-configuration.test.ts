@@ -12,9 +12,7 @@ jest.mock('../http/http-request');
 jest.mock('../node-persist/token');
 jest.mock('../auth/login');
 jest.mock('../node-persist/application-configuration');
-jest.mock('../logging', () => ({
-  ze_log: jest.fn(),
-}));
+jest.mock('../logging', () => ({ ze_log: { app: jest.fn() } }));
 jest.mock('zephyr-edge-contract', () => ({
   ZE_API_ENDPOINT: jest.fn(() => 'https://api.zephyr.com'),
   ze_api_gateway: {

@@ -3,10 +3,10 @@ import {
   type ZeBuildAsset,
   type ZeUploadAssetsOptions,
 } from 'zephyr-edge-contract';
-import { uploadFile } from '../http/upload-file';
 import type { ZephyrEngine } from '../../zephyr-engine';
-import { white, whiteBright } from '../logging/picocolor';
+import { uploadFile } from '../http/upload-file';
 import { ze_log } from '../logging';
+import { white, whiteBright } from '../logging/picocolor';
 
 const CLOUDFLARE_BATCH_SIZE = 6;
 
@@ -36,7 +36,7 @@ export async function zeUploadAssets(
   if (zephyr_engine.env.target !== 'ios' && zephyr_engine.env.target !== 'android') {
     await Promise.all(missingAssets.map(upload_missing_asset));
   } else {
-    ze_log(
+    ze_log.upload(
       "The target platform is 'ios' and 'android' so we are switching to batch upload."
     );
     await forEachLimit<void>(
@@ -74,7 +74,7 @@ export async function zeUploadAssets(
 
     totalSize += assetSize;
 
-    ze_log(
+    ze_log.upload(
       `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
     );
   }

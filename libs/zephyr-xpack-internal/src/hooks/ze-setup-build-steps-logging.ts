@@ -32,12 +32,12 @@ export function logBuildSteps<T extends BuildSteps, Compiler extends BuildStepsC
 
   compiler.hooks.beforeCompile.tapAsync(pluginName, async (params, cb) => {
     buildStartedAt = Date.now();
-    ze_log('build started at', buildStartedAt);
+    ze_log.init('build started at', buildStartedAt);
     cb();
   });
 
   compiler.hooks.failed.tap(pluginName, (err) => {
-    ze_log(`build failed in ${Date.now() - buildStartedAt}ms`);
+    ze_log.misc(`build failed in ${Date.now() - buildStartedAt}ms`);
 
     void pluginOptions.zephyr_engine.logger.then((logger) => {
       logger({

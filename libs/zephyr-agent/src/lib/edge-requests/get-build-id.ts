@@ -1,8 +1,8 @@
-import { getApplicationConfiguration } from './get-application-configuration';
-import { getToken } from '../node-persist/token';
-import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
+import { getToken } from '../node-persist/token';
+import { getApplicationConfiguration } from './get-application-configuration';
 
 export async function getBuildId(application_uid: string): Promise<string> {
   const { BUILD_ID_ENDPOINT, user_uuid, jwt, username } =
@@ -33,6 +33,6 @@ export async function getBuildId(application_uid: string): Promise<string> {
     });
   }
 
-  ze_log('Build ID retrieved...', data);
+  ze_log.app('Build ID retrieved...', data);
   return data[user_uuid];
 }

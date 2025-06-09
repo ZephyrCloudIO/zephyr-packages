@@ -16,8 +16,6 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "zephyr-webpack-plugin": "workspace:*",
-    "tsutils": "^3.21.0",
     "@babel/core": "catalog:babel",
     "@babel/preset-react": "catalog:babel",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
@@ -44,6 +42,8 @@
     "ts-jest": "^29.2.6",
     "ts-node": "10.9.2",
     "tsutils": "^3.21.0",
-    "url-loader": "^4.1.1"
+    "url-loader": "^4.1.1",
+    "zephyr-webpack-plugin": "workspace:*",
+    "zephyr-xpack-internal": "workspace:*"
   }
 }

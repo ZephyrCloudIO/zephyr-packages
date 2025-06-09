@@ -30,7 +30,7 @@ export function withZephyr(
     if (!config) return config;
 
     const zephyrMetroPlugin = new ZephyrMetroPlugin({
-      platform: 'android',
+      platform: 'ios',
       mode: 'development',
       context: context || process.cwd(),
       outDir: 'dist',

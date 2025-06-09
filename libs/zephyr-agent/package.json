@@ -1,6 +1,6 @@
 {
   "name": "zephyr-agent",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "description": "Zephyr plugin agent",
   "repository": {
     "type": "git",

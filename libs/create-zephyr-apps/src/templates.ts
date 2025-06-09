@@ -1,3 +1,10 @@
+export const DependencyFields = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+] as const;
+
 export const ProjectTypes = [
   {
     value: 'web',

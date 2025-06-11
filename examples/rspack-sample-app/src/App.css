@@ -12,6 +12,7 @@ body {
   text-align: center;
   flex-direction: column;
   justify-content: center;
+  padding: 1rem;
 }
 
 .content h1 {
@@ -23,4 +24,38 @@ body {
   font-size: 1.2rem;
   font-weight: 400;
   opacity: 0.5;
+}
+
+.env-vars {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.env-vars h2 {
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #7dd3fc;
+}
+
+.env-vars ul {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.env-vars li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+}
+
+.env-vars li:last-child {
+  border-bottom: none;
 }

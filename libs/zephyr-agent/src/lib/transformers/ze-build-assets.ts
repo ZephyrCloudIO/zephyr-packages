@@ -11,6 +11,7 @@ export function zeBuildAssets({
 }): ZeBuildAsset {
   const buffer = typeof content === 'string' ? Buffer.from(content, 'utf8') : content;
 
+  // This MUST match the computeSHA256 function in workers!
   const hash = createHash('sha256')
     .update(buffer.length ? buffer : Buffer.from(filepath, 'utf8'))
     .update(Buffer.from(filepath, 'utf8'))

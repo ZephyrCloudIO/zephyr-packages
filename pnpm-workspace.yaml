@@ -59,6 +59,7 @@ catalogs:
   webpack5:
     webpack: ^5.98.0
     '@svgr/webpack': ^8.1.0
+    html-webpack-plugin: ^5.6.3
   tailwind:
     tailwindcss: ^3.4.11
   postcss:

@@ -23,7 +23,7 @@ jest.mock('zephyr-agent', () => ({
   },
 }));
 
-// Get reference to ze_log.package mock
+// @ts-expect-error Get reference to ze_log.package mock
 const mockedZeLog = ze_log.package as jest.Mock;
 
 describe('setupZeDeploy', () => {
@@ -41,7 +41,7 @@ describe('setupZeDeploy', () => {
   it('should log and return early if no files are provided', async () => {
     await setupZeDeploy({
       deferEngine: Promise.resolve({ engine: 'mock' } as any),
-      root: '/root',
+      outDir: '/doc_build',
       files: [],
     });
 
@@ -54,17 +54,17 @@ describe('setupZeDeploy', () => {
   it('should build assets and stats and call xpack_zephyr_agent', async () => {
     await setupZeDeploy({
       deferEngine: Promise.resolve({ engine: 'mock' } as any),
-      root: '/root',
+      outDir: '/doc_build',
       files: ['index.html', 'main.js'],
     });
 
     await new Promise(process.nextTick); // Allow promises to resolve
 
-    expect(buildAssetMapFromFiles).toHaveBeenCalledWith('/root', [
+    expect(buildAssetMapFromFiles).toHaveBeenCalledWith('/doc_build', [
       'index.html',
       'main.js',
     ]);
-    expect(buildStats).toHaveBeenCalledWith('/root', ['index.html', 'main.js']);
+    expect(buildStats).toHaveBeenCalledWith('/doc_build', ['index.html', 'main.js']);
     expect(xpack_zephyr_agent).toHaveBeenCalledWith({
       stats: mockStats,
       stats_json: { some: 'json' },

@@ -6,7 +6,7 @@ import { buildAssetMapFromFiles } from './buildAssets';
 
 export async function setupZeDeploy({
   deferEngine,
-  root,
+  outDir,
   files,
 }: ZephyrRspressPluginOptions): Promise<void> {
   if (!files.length) {
@@ -15,8 +15,8 @@ export async function setupZeDeploy({
   }
 
   const [assets, stats] = await Promise.all([
-    buildAssetMapFromFiles(root, files),
-    Promise.resolve(buildStats(root, files)),
+    buildAssetMapFromFiles(outDir, files),
+    Promise.resolve(buildStats(outDir, files)),
   ]);
 
   process.nextTick(xpack_zephyr_agent, {

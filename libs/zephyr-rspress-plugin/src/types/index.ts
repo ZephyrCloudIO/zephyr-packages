@@ -2,7 +2,7 @@ import type { ZephyrEngine } from 'zephyr-agent';
 
 export interface ZephyrRspressPluginOptions {
   deferEngine: Promise<ZephyrEngine>;
-  root: string;
+  outDir: string;
   files: string[];
 }
 

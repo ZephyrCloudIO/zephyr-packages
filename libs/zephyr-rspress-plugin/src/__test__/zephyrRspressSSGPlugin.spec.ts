@@ -53,7 +53,7 @@ describe('zephyrRspressSSGPlugin', () => {
     expect(ZephyrEngine.defer_create).toHaveBeenCalled();
     expect(mockZephyrDefer).toHaveBeenCalledWith({
       builder: 'rspack',
-      context: path.resolve('custom-out'),
+      context: path.resolve(),
     });
   });
 
@@ -67,7 +67,7 @@ describe('zephyrRspressSSGPlugin', () => {
     expect(showFiles).toHaveBeenCalledWith(path.resolve('dist'), mockFiles);
     expect(setupZeDeploy).toHaveBeenCalledWith({
       deferEngine: mockEngine,
-      root: path.resolve('dist'),
+      outDir: path.resolve('dist'),
       files: mockFiles,
     });
   });

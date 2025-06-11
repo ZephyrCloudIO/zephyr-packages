@@ -9,7 +9,7 @@ export function withZephyr(): RspressPlugin {
       const { ssg = false } = config;
 
       if (ssg) {
-        addPlugin(zephyrRspressSSGPlugin({ outDir: config.outDir }));
+        addPlugin(zephyrRspressSSGPlugin(config));
       } else {
         config.builderPlugins = [...(config.builderPlugins ?? []), zephyrRsbuildPlugin()];
       }

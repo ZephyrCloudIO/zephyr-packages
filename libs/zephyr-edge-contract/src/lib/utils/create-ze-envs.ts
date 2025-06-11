@@ -13,7 +13,7 @@ export async function createVariablesRecord(
   uses: Iterable<string>,
   dictionary: Record<string, string | undefined>,
   // Warns in the CLI of missing variables
-  onNotFound?: (key: string) => void,
+  onNotFound?: string[] | ((key: string) => void),
 
   // Performs an async request and append result into variables
   requestMissingVariables?: (
@@ -44,7 +44,15 @@ export async function createVariablesRecord(
   for (const key of missing) {
     if (!variables[key]) {
       variables[key] = `(Missing value for ${key})`;
-      onNotFound?.(key);
+
+      switch (typeof onNotFound) {
+        case 'function':
+          onNotFound(key);
+          break;
+        case 'object':
+          onNotFound.push(key);
+          break;
+      }
     }
   }
 

@@ -57,33 +57,54 @@ export function findAndReplaceVariables(
 /** Returns a temporary ze-envs.js file contents with all used envs in the related build. */
 export function createTemporaryVariablesFile(
   variablesSet: Set<string>,
-  application_uid: string
+  application_uid: string,
+  remotes: string[]
 ) {
+  const missing: string[] = [];
+
   const rawEnvMap = createVariablesRecord(
     variablesSet,
     process.env, // Simply warns when a variable is missing.
-    // TODO: Ask for user if he wants to create that variable in zephyr (v2 maybe?)
-    (key) => {
-      logFn('warn', `Missing ${key} environment variable`);
-    },
+    missing,
 
     // Request to api gateway to get missing env names
     async (names, applyTo) => {
       try {
-        const result = await resolveApplicationVariables(application_uid, { names });
+        const result = await resolveApplicationVariables(application_uid, {
+          names,
+          remotes,
+        });
 
         if (result.variables.length) {
-          logFn('info', `Loaded ${result.variables.length} environments from API`);
+          if (remotes.length) {
+            logFn(
+              'info',
+              `Loaded ${result.variables.length} from ${remotes.length} federated env vars`
+            );
+          } else {
+            logFn('info', `Loaded ${result.variables.length} env vars`);
+          }
         }
 
         for (const { name, value } of result.variables) {
           applyTo[name] = value;
+
+          // Remotes might have new variables that are not in the current build
+          variablesSet.add(name);
         }
       } catch (error) {
         logFn('error', ZephyrError.format(error));
       }
     }
   );
+
+  if (missing.length) {
+    logFn('warn', `Could not fetch ${missing.length} env variables:`);
+
+    for (const key of missing) {
+      logFn('warn', `  - ${key}`);
+    }
+  }
 
   const envs: Record<string, string> = Object.fromEntries(
     Object.entries(rawEnvMap).map(([k, v]) => [k, String(v)])

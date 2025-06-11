@@ -19,6 +19,7 @@ export type ZeEnvs = ZeUploadBuildStats;
 
 // TODO: Load these from api SDK instead of copy/paste them here
 export interface ResolveApplicationVariablesBody {
+  remotes: string[];
   names: string[];
 }
 

@@ -1,4 +1,5 @@
 import isCI from 'is-ci';
+import { SnapshotVariables } from 'libs/zephyr-edge-contract/dist';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -23,7 +24,7 @@ import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
-import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
+import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
@@ -415,6 +416,7 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    variables?: SnapshotVariables;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -436,9 +438,17 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 
     // upload data
     const snapshot = await createSnapshot(zephyr_engine, {
+      variables: props.variables,
       assets: assetsMap,
       mfConfig,
     });
+
+    if (props.variables) {
+      logFn(
+        'info',
+        `Detected ${yellow(props.variables.uses.length.toString())} Zephyr Variables`
+      );
+    }
 
     const upload_options: UploadOptions = {
       snapshot,

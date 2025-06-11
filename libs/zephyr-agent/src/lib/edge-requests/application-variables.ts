@@ -5,7 +5,7 @@ import {
   ze_api_gateway,
 } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
-import { ZeHttpRequest } from '../http/ze-http-request';
+import { makeRequest } from '../http/http-request';
 import { getToken } from '../node-persist/token';
 
 export async function resolveApplicationVariables(
@@ -17,7 +17,7 @@ export async function resolveApplicationVariables(
   }
 
   // Avoids unnecessary requests to the API
-  if (!body.names.length) {
+  if (!body.names.length && !body.remotes.length) {
     return { variables: [] };
   }
 
@@ -27,7 +27,7 @@ export async function resolveApplicationVariables(
     ZE_API_ENDPOINT()
   );
 
-  const [ok, cause, data] = await ZeHttpRequest.from<ResolveApplicationVariablesResponse>(
+  const [ok, cause, data] = await makeRequest<ResolveApplicationVariablesResponse>(
     resolve_application_variables_url,
     {
       method: 'POST',

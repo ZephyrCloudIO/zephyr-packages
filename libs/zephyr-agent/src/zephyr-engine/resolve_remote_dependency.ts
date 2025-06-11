@@ -1,8 +1,8 @@
+import axios from 'axios';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
-import { getToken } from '../lib/node-persist/token';
 import { ZeErrors, ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
-import axios from 'axios';
+import { getToken } from '../lib/node-persist/token';
 export interface ZeResolvedDependency {
   name: string;
   version: string;
@@ -18,10 +18,12 @@ export async function resolve_remote_dependency({
   application_uid,
   version,
   platform,
+  build_context,
 }: {
   application_uid: string;
   version: string;
   platform?: string;
+  build_context: string;
 }): Promise<ZeResolvedDependency> {
   const resolveDependency = new URL(
     `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
@@ -32,8 +34,12 @@ export async function resolve_remote_dependency({
     resolveDependency.searchParams.append('build_target', platform);
   }
 
+  if (build_context) {
+    resolveDependency.searchParams.append('build_context', build_context);
+  }
+
   try {
-    ze_log('URL for resolving dependency:', resolveDependency.toString());
+    ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
     const res = await axios.get(resolveDependency.toString(), {
@@ -44,6 +50,7 @@ export async function resolve_remote_dependency({
       },
     });
 
+    // used only for error logging
     const [appName, projectName, orgName] = application_uid.split('.');
 
     // Check response status
@@ -53,9 +60,9 @@ export async function resolve_remote_dependency({
         appName,
         projectName,
         orgName,
+        version,
         data: {
           url: resolveDependency.toString(),
-          version,
           error: res.data,
         },
       });
@@ -64,7 +71,7 @@ export async function resolve_remote_dependency({
     const response = res.data;
 
     if (response.value) {
-      ze_log(
+      ze_log.remotes(
         'resolved dependency:',
         response.value,
         'application_uid: ',
@@ -80,13 +87,14 @@ export async function resolve_remote_dependency({
       appName,
       projectName,
       orgName,
-      data: { version, response },
+      version,
+      data: { response },
     });
   } catch (cause) {
     if (cause instanceof ZephyrError) throw cause;
 
     throw new ZephyrError(ZeErrors.ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION, {
-      data: { version },
+      version,
       cause,
     });
   }

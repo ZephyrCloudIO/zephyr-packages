@@ -1,9 +1,9 @@
-import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import type { LogEvent } from '../logging/ze-log-event';
 import type { ZeUploadBuildStats } from 'zephyr-edge-contract';
-import { ze_log } from '../logging';
-import { ZeHttpRequest } from './ze-http-request';
+import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
+import { ze_log } from '../logging';
+import type { LogEvent } from '../logging/ze-log-event';
+import { makeRequest } from './http-request';
 
 export async function uploadEnvs({
   body,
@@ -14,7 +14,7 @@ export async function uploadEnvs({
   application_uid: string;
   logEvent: LogEvent;
 }): Promise<void> {
-  ze_log(`Uploading envs to Zephyr, for ${application_uid}`);
+  ze_log.upload(`Uploading envs to Zephyr, for ${application_uid}`);
 
   const { EDGE_URL, jwt } = await getApplicationConfiguration({
     application_uid,
@@ -31,12 +31,11 @@ export async function uploadEnvs({
     },
   };
 
-  const [ok, cause, data] = await ZeHttpRequest.from<unknown>(
-    {
-      path: '/upload',
-      base: EDGE_URL,
-      query: { type: 'envs' },
-    },
+  const url = new URL('/upload', EDGE_URL);
+  url.searchParams.append('type', 'envs');
+
+  const [ok, cause, data] = await makeRequest<unknown>(
+    url,
     options,
     JSON.stringify(body)
   );

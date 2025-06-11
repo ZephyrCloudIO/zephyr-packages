@@ -52,7 +52,7 @@ export async function zeBuildDashData(
     overrides: [],
     consumes: [],
     modules: [],
-    remotes: [],
+    remotes: zephyr_engine.federated_dependencies?.map((r) => r.name) ?? [],
     tags: [],
     project: '',
     metadata: {},

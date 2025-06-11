@@ -1,0 +1,14 @@
+{
+  "name": "rspack_nx_mf_host",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/rspack-nx-mf/apps/host/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "serve": {
+      "options": {
+        "port": 4200
+      }
+    }
+  }
+}

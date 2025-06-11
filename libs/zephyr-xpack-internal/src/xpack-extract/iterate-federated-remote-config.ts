@@ -1,6 +1,7 @@
-import { isModuleFederationPlugin } from './is-module-federation-plugin';
+import { logFn, ze_log } from 'zephyr-agent';
 import type { XFederatedRemotesConfig, XPackConfiguration } from '../xpack.types';
-import { ze_log } from 'zephyr-agent';
+import { extractFederatedConfig } from './extract-federation-config';
+import { isModuleFederationPlugin } from './is-module-federation-plugin';
 
 export function iterateFederatedRemoteConfig<Compiler, K = XFederatedRemotesConfig>(
   config: XPackConfiguration<Compiler>,
@@ -15,13 +16,19 @@ export function iterateFederatedRemoteConfig<Compiler, K = XFederatedRemotesConf
     if (!isModuleFederationPlugin(plugin)) {
       continue;
     }
-    if (plugin._options) {
-      results.push(for_remote(plugin._options));
-    } else if (plugin.config) {
-      results.push(for_remote(plugin.config));
+
+    const federatedConfig = extractFederatedConfig(plugin);
+
+    if (!federatedConfig) {
+      logFn(
+        'warn',
+        `No federated config found for plugin: ${plugin.constructor.name}, skipping...`
+      );
+      continue;
     }
+    results.push(for_remote(federatedConfig));
   }
-  ze_log('iterateFederatedRemoteConfig.results', results);
+  ze_log.remotes('iterateFederatedRemoteConfig.results', results);
 
   return results;
 }

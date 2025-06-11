@@ -34,7 +34,7 @@ async function _zephyr_configuration(
 
     const mfConfig = makeCopyOfModuleFederationOptions(config);
 
-    ze_log(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);
+    ze_log.mf(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);
 
     // Initialize the plugins array if needed
     config.plugins = config.plugins || [];

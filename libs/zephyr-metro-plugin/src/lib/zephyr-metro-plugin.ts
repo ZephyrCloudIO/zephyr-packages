@@ -26,7 +26,7 @@ export interface ZephyrCommandWrapperConfig {
 
 export class ZephyrMetroPlugin {
   private config: ZephyrCommandWrapperConfig;
-  private zephyr_engine!: ZephyrEngine;
+  public zephyr_engine!: ZephyrEngine;
 
   constructor(props: ZephyrCommandWrapperConfig) {
     this.config = props;
@@ -181,7 +181,10 @@ export class ZephyrMetroPlugin {
   private async loadStaticAssets(): Promise<Record<string, OutputAsset>> {
     const assets = await load_static_entries({
       root: this.config.context,
-      outDir: this.config.outDir,
+      outDir:
+        this.config.platform === 'ios' || this.config.platform === 'android'
+          ? this.config.outDir + `/${this.config.platform}`
+          : this.config.outDir,
     });
 
     return assets.reduce((acc, asset) => {

@@ -31,7 +31,7 @@ describe('withZephyr', () => {
       false
     );
 
-    expect(zephyrRspressSSGPlugin).toHaveBeenCalledWith({ outDir: 'dist' });
+    expect(zephyrRspressSSGPlugin).toHaveBeenCalledWith(config);
     expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
     expect(result).toEqual(config);
   });

@@ -456,7 +456,10 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 
     if (isCI) {
       const application_uid = zephyr_engine.application_uid;
-      await setAppDeployResult(application_uid, { urls: [zephyr_engine.version_url] });
+      await setAppDeployResult(application_uid, {
+        urls: [zephyr_engine.version_url],
+        snapshot,
+      });
     }
 
     await this.build_finished();

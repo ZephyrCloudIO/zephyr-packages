@@ -65,3 +65,30 @@ jobs:
           ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t test
+
+  e2e-test:
+    runs-on: ${{ matrix.os }}
+    name: End-to-end test of examples
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os }}
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
+      - name: Build Libraries
+        run: pnpm run build
+      - name: Run e2e examples test
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API }}
+          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+        run: pnpm dlx nx run e2e-deployment:e2e-test

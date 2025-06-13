@@ -24,10 +24,8 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
-      - name: run build affected libs
-        run: pnpm dlx nx affected -t build --exclude examples
-      - name: run build affected examples
-        run: pnpm dlx nx affected -t build --skip-nx-cache --exclude libs
+      - name: run build affected
+        run: pnpm dlx nx affected -t build --skipRemoteCache
       - name: Upload zephyr cache
         uses: actions/upload-artifact@v4
         with:

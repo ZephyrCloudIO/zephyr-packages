@@ -9,7 +9,7 @@ const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create()
 
 export default new Reporter({
   report: async ({ event, options }) => {
-    const projectRoot = options.projectRoot;
+    const projectRoot = options.inputFS.cwd();
 
     switch (event.type) {
       case 'buildStart':

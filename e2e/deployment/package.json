@@ -1,0 +1,13 @@
+{
+  "name": "e2e-deployment",
+  "devDependencies": {
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "jest-environment-node": "^29.7.0",
+    "ts-jest": "catalog:typescript",
+    "ts-node": "10.9.1",
+    "typescript": "catalog:typescript",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
+  }
+}

@@ -1,6 +1,7 @@
 packages:
   - libs/**
   - examples/**
+  - e2e/**
   - '!**/dist/**'
 installOptions:
   preferOnline: false

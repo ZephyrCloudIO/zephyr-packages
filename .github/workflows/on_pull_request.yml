@@ -25,7 +25,12 @@ jobs:
         with:
           main-branch-name: master
       - name: run build-all
-        run: pnpm build-all --exclude="examples/**" && exit 0
+        run: pnpm dlx nx affected -t build
+      - name: Upload zephyr cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephyr-cache
+          path: ~/.zephyr
 
   lint:
     runs-on: ubuntu-latest
@@ -69,6 +74,7 @@ jobs:
   e2e-test:
     runs-on: ${{ matrix.os }}
     name: End-to-end test of examples
+    needs: build
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -83,8 +89,11 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: master
-      - name: Build Libraries
-        run: pnpm run build
+      - name: Download zephyr cache
+        uses: actions/download-artifact@v4
+        with:
+          name: zephyr-cache
+          path: ~/
       - name: Run e2e examples test
         env:
           ZE_IS_PREVIEW: true

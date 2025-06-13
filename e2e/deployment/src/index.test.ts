@@ -1,34 +1,36 @@
 import { readFileSync } from 'node:fs';
-import { type DeployResult } from 'zephyr-agent';
-import { buildResultsPath } from './constants';
+import { getAppDeployResult } from 'zephyr-agent';
+import { testTargetsPath } from './constants';
 
-type DeployResults = Record<string, DeployResult>;
+(() => {
+  const rawFile = readFileSync(testTargetsPath).toString();
+  const testTargets: string[] = JSON.parse(rawFile);
+  for (const appUid of testTargets) {
+    describe(`Assert deployed assets from ${appUid}`, () => {
+      it(
+        'should have correctly deployed assets',
+        async () => {
+          const deployResult = await getAppDeployResult(appUid);
 
-describe('e2e examples deployments', () => {
-  const rawFile = readFileSync(buildResultsPath).toString();
-  const buildResults: DeployResults = JSON.parse(rawFile);
+          if (!deployResult)
+            fail(`Deployment result for ${appUid} was not cached properly.`);
 
-  const resultEntries = Object.entries(buildResults);
+          const assetEntries = Object.values(deployResult.snapshot.assets);
+          const promises = assetEntries.map(async (asset) => {
+            return fetchWithRetries(`${deployResult.urls[0]}/${asset.path}`, 1);
+          });
 
-  for (const [app, result] of resultEntries) {
-    it(
-      `should correctly deploy assets from app: ${app}`,
-      async () => {
-        const assetEntries = Object.values(result.snapshot.assets);
-        const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${result.urls[0]}/${asset.path}`, 1);
-        });
-
-        const results = await Promise.all(promises);
-        results.forEach((res) => {
-          expect(res.ok).toBe(true);
-          expect(res.status).toBe(200);
-        });
-      },
-      5 * 60 * 1000
-    );
+          const results = await Promise.all(promises);
+          results.forEach((res) => {
+            expect(res.ok).toBe(true);
+            expect(res.status).toBe(200);
+          });
+        },
+        5 * 60 * 1000
+      );
+    });
   }
-});
+})();
 
 const fetchWithRetries = async (url: string, retries = 1) => {
   const res = await fetch(url, { method: 'HEAD' });

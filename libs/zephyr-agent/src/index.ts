@@ -12,12 +12,11 @@ export { ZeErrors, ZephyrError } from './lib/errors';
 
 // deploy result
 export {
+  getAllAppDeployResults,
+  getAllDeployedApps,
   getAppDeployResult,
   type DeployResult,
 } from './lib/node-persist/app-deploy-result-cache';
-
-// context
-export { getGitInfo } from './lib/build-context/ze-util-get-git-info';
 
 // logger
 export { ze_log } from './lib/logging';

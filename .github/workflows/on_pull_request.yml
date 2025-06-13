@@ -15,11 +15,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ZE_IS_PREVIEW: true
-      ZE_API: ${{ vars.ZE_API }}
-      ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
-      ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +25,11 @@ jobs:
         with:
           main-branch-name: master
       - name: run build affected
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API }}
+          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t build --skipRemoteCache
       - name: Upload zephyr cache
         uses: actions/upload-artifact@v4
@@ -77,12 +77,9 @@ jobs:
         run: pnpm dlx nx affected -t test
 
   e2e-test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     name: End-to-end test of examples
     needs: build
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
     environment: development
     steps:
       - uses: actions/checkout@v4

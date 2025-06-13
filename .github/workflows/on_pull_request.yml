@@ -15,6 +15,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ZE_IS_PREVIEW: true
+      ZE_API: ${{ vars.ZE_API }}
+      ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
+      ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,9 +100,4 @@ jobs:
           name: zephyr-cache
           path: ~/
       - name: Run e2e examples test
-        env:
-          ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API }}
-          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
-          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx run e2e-deployment:e2e-test

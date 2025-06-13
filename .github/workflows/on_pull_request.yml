@@ -29,10 +29,9 @@ jobs:
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API }}
-          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t build --skipRemoteCache && exit 0
-      - run: echo ${{ vars.ZE_API }} ${{ vars.ZE_API_GATEWAY }}
       - name: Upload zephyr cache
         uses: actions/upload-artifact@v4
         with:
@@ -74,7 +73,7 @@ jobs:
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API }}
-          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t test
 

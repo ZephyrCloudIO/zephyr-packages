@@ -8,5 +8,4 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/zephyr-agent',
-  passWithNoTests: true,
 };

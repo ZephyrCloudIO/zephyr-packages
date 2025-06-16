@@ -36,11 +36,11 @@ jobs:
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t build --skipRemoteCache && exit 0
       - run: echo $HOME
-      - name: Upload zephyr cache
+      - name: Upload built libs and cache
         uses: actions/upload-artifact@v4
         with:
           name: zephyr-cache
-          path: ${{ env.ZEPHYR_CACHE }}
+          path: $HOME/.zephyr
           include-hidden-files: true
 
   lint:
@@ -101,6 +101,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: zephyr-cache
-          path: ${{ env.ZEPHYR_CACHE }}
+          path: $HOME/.zephyr
       - name: Run e2e examples test
         run: pnpm dlx nx run e2e-deployment:e2e-test

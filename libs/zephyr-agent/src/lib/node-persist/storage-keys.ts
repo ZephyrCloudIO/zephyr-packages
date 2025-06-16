@@ -1,12 +1,13 @@
-import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
+import * as path from 'node:path';
 
 export const ZE_PATH = path.resolve(os.homedir(), '.zephyr');
 export const ZE_SESSION_LOCK = path.resolve(ZE_PATH, 'session');
 
 try {
   // Ensures that the directory exists and lockfile is writable
+  console.log('---------------- ZE_PATH: ', ZE_PATH);
   fs.mkdirSync(ZE_PATH, { recursive: true });
 } catch (error) {
   console.error(

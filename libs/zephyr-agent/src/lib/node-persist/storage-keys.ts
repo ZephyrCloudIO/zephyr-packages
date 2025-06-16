@@ -7,7 +7,6 @@ export const ZE_SESSION_LOCK = path.resolve(ZE_PATH, 'session');
 
 try {
   // Ensures that the directory exists and lockfile is writable
-  console.log('---------------- ZE_PATH: ', ZE_PATH);
   fs.mkdirSync(ZE_PATH, { recursive: true });
 } catch (error) {
   console.error(

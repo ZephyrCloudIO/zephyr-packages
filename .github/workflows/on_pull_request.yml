@@ -41,6 +41,7 @@ jobs:
         with:
           name: zephyr-cache
           path: ${{ env.ZEPHYR_CACHE }}
+          include-hidden-files: true
 
   lint:
     runs-on: ubuntu-latest

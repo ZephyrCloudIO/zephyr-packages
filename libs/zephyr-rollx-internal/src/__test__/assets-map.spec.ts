@@ -50,13 +50,14 @@ describe('assets-map', () => {
       };
 
       const result = extractRollxBuffer(asset);
-      expect(result).toBe('binary content');
+      expect(result).toBeInstanceOf(Buffer);
+      expect(Buffer.isBuffer(result)).toBe(true);
+      expect(result).toEqual(Buffer.from(source));
     });
 
     it('should return undefined for unknown asset type', () => {
       const unknownAsset = {
-        type: 'asset',
-        source: undefined,
+        type: 'unknown',
       };
 
       // @ts-expect-error - unknown asset type

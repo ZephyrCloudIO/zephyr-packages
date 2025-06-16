@@ -39,7 +39,7 @@ export async function resolve_remote_dependency({
   }
 
   try {
-    ze_log('URL for resolving dependency:', resolveDependency.toString());
+    ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
     const res = await axios.get(resolveDependency.toString(), {
@@ -60,9 +60,9 @@ export async function resolve_remote_dependency({
         appName,
         projectName,
         orgName,
+        version,
         data: {
           url: resolveDependency.toString(),
-          version,
           error: res.data,
         },
       });
@@ -71,7 +71,7 @@ export async function resolve_remote_dependency({
     const response = res.data;
 
     if (response.value) {
-      ze_log(
+      ze_log.remotes(
         'resolved dependency:',
         response.value,
         'application_uid: ',
@@ -87,13 +87,14 @@ export async function resolve_remote_dependency({
       appName,
       projectName,
       orgName,
-      data: { version, response },
+      version,
+      data: { response },
     });
   } catch (cause) {
     if (cause instanceof ZephyrError) throw cause;
 
     throw new ZephyrError(ZeErrors.ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION, {
-      data: { version },
+      version,
       cause,
     });
   }

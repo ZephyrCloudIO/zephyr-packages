@@ -17,7 +17,7 @@ export function iterateFederationConfig<Compiler, K = ModuleFederationPlugin>(
     }
     results.push(for_remote(plugin));
   }
-  ze_log('iterateFederationConfig.results', results);
+  ze_log.mf('iterateFederationConfig.results', results);
 
   return results;
 }

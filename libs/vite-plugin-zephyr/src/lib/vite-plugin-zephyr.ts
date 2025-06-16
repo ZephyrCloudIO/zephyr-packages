@@ -9,18 +9,8 @@ import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
-export type ModuleFederationOptions = Parameters<typeof federation>[0] & {
-  // Support for Nx webpack module federation format
-  additionalShared?: Array<{
-    libraryName: string;
-    sharedConfig?: {
-      singleton?: boolean;
-      requiredVersion?: string;
-    };
-  }>;
-};
+export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
-// Structure to track module federation references
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
 }

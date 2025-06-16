@@ -1,6 +1,6 @@
 import type { ZeBuildAssetsMap } from 'zephyr-agent';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { buildAssetsMap, ze_log } from 'zephyr-agent';
+import { buildAssetsMap } from 'zephyr-agent';
 import type { XOutputAsset, XOutputBundle, XOutputChunk } from '../types';
 
 export function getRollxAssetsMap(
@@ -15,26 +15,17 @@ export function getRollxAssetsMap(
 
 export const extractRollxBuffer = (
   asset: XOutputChunk | XOutputAsset
-): string | undefined => {
+): string | Buffer | undefined => {
   switch (asset.type) {
     case 'chunk':
       return asset.code;
     case 'asset':
       if (typeof asset.source === 'string') {
         return asset.source;
-      } else if (asset.source instanceof Uint8Array) {
-        try {
-          return new TextDecoder().decode(asset.source);
-        } catch (error) {
-          // If decoding fails (e.g., binary data), return base64 or handle gracefully
-          ze_log('Error decoding asset source', error);
-
-          return new TextDecoder('utf-8', { fatal: false }).decode(asset.source);
-        }
       }
-      return void 0;
+      return Buffer.from(asset.source);
     default:
-      return void 0;
+      return undefined;
   }
 };
 

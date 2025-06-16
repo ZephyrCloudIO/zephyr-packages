@@ -2,10 +2,10 @@ import type { ZephyrEngine } from 'zephyr-agent';
 import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { type Source, type ZephyrBuildStats } from 'zephyr-edge-contract';
-import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
-import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
-import { emitDeploymentDone } from '../lifecycle-events/index';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
+import { emitDeploymentDone } from '../lifecycle-events/index';
+import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
+import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 
 interface UploadAgentPluginOptions {
   zephyr_engine: ZephyrEngine;
@@ -27,7 +27,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   assets,
   pluginOptions,
 }: ZephyrAgentProps<T>): Promise<void> {
-  ze_log('Initiating: Zephyr Webpack Upload Agent');
+  ze_log.init('Initiating: Zephyr Webpack Upload Agent');
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
@@ -63,6 +63,6 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     logFn('error', ZephyrError.format(err));
   } finally {
     emitDeploymentDone();
-    ze_log('Zephyr Webpack Upload Agent: Done in', Date.now() - zeStart, 'ms');
+    ze_log.upload('Zephyr Webpack Upload Agent: Done in', Date.now() - zeStart, 'ms');
   }
 }

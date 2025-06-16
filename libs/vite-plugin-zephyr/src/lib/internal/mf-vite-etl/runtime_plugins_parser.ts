@@ -46,7 +46,7 @@ export function parseRuntimePlugin(code: string): RuntimePluginsExtraction | und
     !('start' in pluginsArrayNode) ||
     !('end' in pluginsArrayNode)
   ) {
-    ze_log('Could not find plugins array in remote entry');
+    ze_log.mf('Could not find plugins array in remote entry');
     return undefined;
   }
 

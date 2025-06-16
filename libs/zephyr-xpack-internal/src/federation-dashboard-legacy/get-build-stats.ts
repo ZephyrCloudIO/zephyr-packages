@@ -1,7 +1,6 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
-import { parseRemotesAsEntries } from '../xpack-extract';
 import { extractFederatedConfig } from '../xpack-extract/extract-federation-config';
 import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
@@ -32,10 +31,11 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   TYPE?: string;
   DELIMITER?: string;
 }): Promise<ZephyrBuildStats> {
-  ze_log('get build stats started. create federation dashboard plugin');
-  const app = pluginOptions.zephyr_engine.applicationProperties;
-  const { git } = pluginOptions.zephyr_engine.gitProperties;
-  const { isCI } = pluginOptions.zephyr_engine.env;
+  ze_log.app('get build stats started. create federation dashboard plugin');
+  const ze_engine = pluginOptions.zephyr_engine;
+  const app = ze_engine.applicationProperties;
+  const { git } = ze_engine.gitProperties;
+  const { isCI } = ze_engine.env;
   const dashboardPlugin = new FederationDashboardPlugin({
     app,
     git,
@@ -44,7 +44,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     },
   });
 
-  ze_log('process webpack graph.pluginOptions', pluginOptions);
+  ze_log.app('process webpack graph.pluginOptions', pluginOptions);
   const convertedGraph = dashboardPlugin.processWebpackGraph({
     stats,
     stats_json,
@@ -55,18 +55,18 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     throw new ZephyrError(ZeErrors.ERR_CONVERT_GRAPH_TO_DASHBOARD);
   }
 
-  const version = await pluginOptions.zephyr_engine.snapshotId;
-  const application_uid = pluginOptions.zephyr_engine.application_uid;
-  const buildId = await pluginOptions.zephyr_engine.build_id;
+  const version = await ze_engine.snapshotId;
+  const application_uid = ze_engine.application_uid;
+  const buildId = await ze_engine.build_id;
+  const build_target = ze_engine.env.target ?? 'web';
 
   // todo: add support for multiple federation configs
   const mfConfig = Array.isArray(pluginOptions.mfConfig)
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
 
-  const { name, filename, remotes } = mfConfig
-    ? (extractFederatedConfig(mfConfig) ?? {})
-    : {};
+  const { name, filename } = mfConfig ? (extractFederatedConfig(mfConfig) ?? {}) : {};
+  const remotes = ze_engine.federated_dependencies;
 
   const data_overrides = {
     id: application_uid,
@@ -79,8 +79,9 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     version,
     git,
     remote: filename,
-    remotes: parseRemotesAsEntries(remotes).map(([remote_name]) => remote_name),
+    remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context: { isCI },
+    build_target,
   };
 
   // todo: extend data
@@ -89,6 +90,6 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     project: name, // Add missing project property
     tags: [], // Add missing tags property with empty array as default
   }) as ZephyrBuildStats;
-  ze_log('get build stats done.', res);
+  ze_log.app('get build stats done.', res);
   return res;
 }

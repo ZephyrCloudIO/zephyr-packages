@@ -51,7 +51,6 @@ export function withZephyr() {
         const buildStats = await extractRollxBuildStats({
           zephyr_engine,
           bundle,
-          mfConfig: options?.mfConfig,
           root: path_to_execution_dir,
         });
 

@@ -1,0 +1,22 @@
+{
+  "name": "rolldown_mf_host",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "rolldown --config ./rolldown.config.mjs",
+    "dev": "rolldown --config ./rolldown.config.mjs --watch"
+  },
+  "dependencies": {
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "rolldown": "catalog:rolldown",
+    "zephyr-rolldown-plugin": "workspace:*"
+  },
+  "zephyr:dependencies": {
+    "rolldown_mf_remote": "workspace:*"
+  }
+}

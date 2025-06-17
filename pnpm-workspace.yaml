@@ -36,6 +36,8 @@ catalogs:
     '@module-federation/automatic-vendor-federation': ^1.2.1
   plugin-shared:
     is-ci: ^4.1.0
+    acorn: ^8.12.1
+    acorn-walk: ^8.3.4
   babel:
     '@babel/core': ^7.26.10
     '@babel/runtime': ^7.26.10

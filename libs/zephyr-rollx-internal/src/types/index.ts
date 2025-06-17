@@ -28,27 +28,13 @@ export interface XFederatedConfig {
   shared?: Record<string, string | XFederatedSharedConfig> | string[] | any;
   remotes?: (string | RemotesObject)[] | RemotesObject | any;
   exposes?: Record<string, string | { import: string } | any> | any;
-  /** Repack: bundle file name */
   filename?: string;
-  /**
-   * Repack: Temporary field for repack to store bundle name (in their case it's the
-   * actual output js.bundle and they want to put it in filename field)
-   */
-  bundle_name?: string;
   /** This is not normal MF config, but it's used to support Nx additionalShared */
   additionalShared?:
     | string[]
     | Record<string, string | XFederatedSharedConfig>
     | XAdditionalSharedConfig[]
     | any;
-}
-
-export interface ModuleFederationPlugin {
-  apply: (compiler: unknown) => void;
-  /** For Webpack/Rspack */
-  _options?: XFederatedConfig | { config: XFederatedConfig };
-  /** Repack specific for now until Repack change how the config should be exposed */
-  config?: XFederatedConfig;
 }
 
 interface RemotesObject {
@@ -72,7 +58,7 @@ export interface XPreRenderdAsset {
 
 export interface XOutputAsset extends XPreRenderdAsset {
   fileName: string;
-  needsCodeReference: boolean;
+  needsCodeReference?: boolean;
 }
 
 export interface XPreRenderedChunk {
@@ -98,3 +84,9 @@ export interface XOutputChunk extends XPreRenderedChunk {
 
 /** Vite like output bundle */
 export type XOutputBundle<T = XOutputAsset | XOutputChunk> = Record<string, T>;
+
+/**
+ * Generic Module Federation Options type Compatible with Vite, Webpack, and Rolldown MF
+ * plugins
+ */
+export type ModuleFederationOptions = XFederatedConfig;

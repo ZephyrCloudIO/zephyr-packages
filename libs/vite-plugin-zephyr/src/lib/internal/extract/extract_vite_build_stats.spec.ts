@@ -1,11 +1,7 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 import { extractRollxBuildStats, type XOutputBundle } from 'zephyr-rollx-internal';
 
-// Mock the zephyr-agent module
-jest.mock('zephyr-agent', () => ({
-  ze_log: jest.fn(),
-  resolveCatalogDependencies: jest.fn((deps) => deps || {}),
-}));
+const create_minimal_build_stats = jest.fn();
 
 // Mock ZephyrEngine
 const mockZephyrEngine = {
@@ -70,6 +66,21 @@ const mockBundle: XOutputBundle = {
 };
 
 describe('extractViteBuildStats', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    create_minimal_build_stats.mockResolvedValue({
+      id: 'minimal-stats',
+      name: 'test-app',
+      dependencies: [],
+      devDependencies: [],
+      optionalDependencies: [],
+      peerDependencies: [],
+      consumes: [],
+      overrides: [],
+      modules: [],
+    });
+  });
+
   it('should extract build stats from Vite build output', async () => {
     const result = await extractRollxBuildStats({
       zephyr_engine: mockZephyrEngine,

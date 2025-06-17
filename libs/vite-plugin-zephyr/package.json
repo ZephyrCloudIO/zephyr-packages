@@ -22,8 +22,8 @@
   "dependencies": {
     "@module-federation/runtime": "catalog:module-federation",
     "@module-federation/vite": "catalog:module-federation",
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.4",
+    "acorn": "catalog:plugin-shared",
+    "acorn-walk": "catalog:plugin-shared",
     "is-ci": "catalog:plugin-shared",
     "json5": "2.2.3",
     "rollup": "catalog:rollup4",

@@ -1,18 +1,24 @@
 import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import type { XOutputAsset, XOutputBundle, XOutputChunk } from 'zephyr-rollx-internal';
-import { extractRollxBuildStats } from 'zephyr-rollx-internal';
-import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
-import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
-import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
+import type {
+  XFederatedConfig,
+  XOutputAsset,
+  XOutputBundle,
+  XOutputChunk,
+} from 'zephyr-rollx-internal';
+import {
+  extract_mf_plugin,
+  extract_remotes_dependencies,
+  extractMFConfig,
+  extractRollxBuildStats,
+  getRollxAssetsMap,
+  load_resolved_remotes,
+} from 'zephyr-rollx-internal';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
-export type ModuleFederationOptions = Parameters<typeof federation>[0];
-
 interface VitePluginZephyrOptions {
-  mfConfig?: ModuleFederationOptions;
+  mfConfig?: XFederatedConfig;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
@@ -37,7 +43,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
   let outputBundle: XOutputBundle | undefined;
 
   let baseHref = '/';
-  let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
+  let mf_config: XFederatedConfig | undefined;
 
   return {
     name: 'with-zephyr',
@@ -58,16 +64,19 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
       });
-      mfPlugin = extract_mf_plugin(config.plugins ?? []);
+      mf_config = extract_mf_plugin(config.plugins as any) || undefined;
     },
 
     transform: async (code, id) => {
       try {
-        if (!id.includes('virtual:mf-REMOTE_ENTRY_ID') || !mfPlugin) return code;
+        if (!id.includes('virtual:mf-REMOTE_ENTRY_ID') || !mf_config) return code;
 
-        const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+        const mfConfig = extractMFConfig(mf_config);
+        if (!mfConfig) return code;
+
+        const dependencyPairs = extract_remotes_dependencies(mfConfig);
         // Handle dependency resolution
-        if (!dependencyPairs) return code;
+        if (!dependencyPairs || dependencyPairs.length === 0) return code;
 
         const zephyr_engine = await zephyr_engine_defer;
         const resolved_remotes =
@@ -75,7 +84,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
 
         if (!resolved_remotes) return code;
 
-        return load_resolved_remotes(resolved_remotes, code);
+        return load_resolved_remotes(code, resolved_remotes);
       } catch (error) {
         logFn('error', ZephyrError.format(error));
         // returns the original code in case of error
@@ -96,10 +105,7 @@ function zephyrPlugin(_options?: VitePluginZephyrOptions): Plugin {
         zephyr_engine.buildProperties.baseHref = baseHref;
 
         await zephyr_engine.start_new_build();
-        const assetsMap = await extract_vite_assets_map(
-          zephyr_engine,
-          vite_internal_options
-        );
+        const assetsMap = await getRollxAssetsMap(outputBundle || {});
 
         // Generate enhanced build stats for Vite using the discovered remote imports
         const buildStats = await extractRollxBuildStats({

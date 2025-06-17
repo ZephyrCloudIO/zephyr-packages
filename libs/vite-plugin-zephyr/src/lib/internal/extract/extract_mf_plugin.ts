@@ -1,8 +1,8 @@
 import type { Plugin } from 'vite';
-import type { ModuleFederationOptions } from '../../vite-plugin-zephyr';
+import type { XFederatedConfig } from 'zephyr-rollx-internal';
 
 export interface ViteMFPlugin {
-  _options: ModuleFederationOptions;
+  _options: XFederatedConfig;
 }
 
 export function extract_mf_plugin(plugins: readonly Plugin[]) {

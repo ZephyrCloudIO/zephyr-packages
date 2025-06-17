@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import type { ZePackageJson } from './ze-package-json.type';
-import { ze_log } from '../logging';
 import { safe_json_parse } from 'zephyr-edge-contract';
+import { ze_log } from '../logging';
+import type { ZePackageJson } from './ze-package-json.type';
 
 /** Type definition for pnpm-workspace.yaml catalogs section */
 interface PnpmCatalogs {
@@ -37,7 +37,7 @@ function readWorkspaceConfig(workspacePath?: string): PnpmWorkspace {
   // Try to find pnpm-workspace.yaml in current directory or parent directories
   const searchPath = workspacePath || findWorkspaceFile();
   if (!searchPath) {
-    ze_log('Warning: Could not find pnpm-workspace.yaml file');
+    ze_log.app('Warning: Could not find pnpm-workspace.yaml file');
     return {};
   }
 
@@ -49,7 +49,7 @@ function readWorkspaceConfig(workspacePath?: string): PnpmWorkspace {
     workspaceConfigCache = config;
     return config;
   } catch (error) {
-    ze_log('Error reading pnpm-workspace.yaml:', error);
+    ze_log.app('Error reading pnpm-workspace.yaml:', error);
     return {};
   }
 }
@@ -224,7 +224,7 @@ function findPackageJsonFiles(
         }
       }
     } catch (error) {
-      ze_log(`Error reading directory ${dir}:`, error);
+      ze_log.app(`Error reading directory ${dir}:`, error);
     }
   };
 
@@ -245,13 +245,13 @@ function findWorkspacePackages(): Map<string, ZePackageJson> {
 
   const workspaceRoot = getWorkspaceRoot();
   if (!workspaceRoot) {
-    ze_log('Warning: Could not find workspace root directory');
+    ze_log.app('Warning: Could not find workspace root directory');
     return new Map();
   }
 
   const config = readWorkspaceConfig();
   if (!config.packages || config.packages.length === 0) {
-    ze_log('Warning: No workspace packages defined in pnpm-workspace.yaml');
+    ze_log.app('Warning: No workspace packages defined in pnpm-workspace.yaml');
     return new Map();
   }
 
@@ -288,11 +288,11 @@ function findWorkspacePackages(): Map<string, ZePackageJson> {
             packageJsonMap.set(packageJson.name, packageJson);
           }
         } catch (error) {
-          ze_log(`Error reading package.json at ${packageJsonPath}:`, error);
+          ze_log.app(`Error reading package.json at ${packageJsonPath}:`, error);
         }
       }
     } catch (error) {
-      ze_log(`Error processing pattern ${includePattern}:`, error);
+      ze_log.app(`Error processing pattern ${includePattern}:`, error);
     }
   }
 
@@ -346,7 +346,7 @@ export function resolveCatalogVersion(
 
   // If no catalogs section or the specified catalog doesn't exist
   if (!config.catalogs || !Object.keys(config.catalogs).includes(catalogName)) {
-    ze_log(`Warning: Catalog "${catalogName}" not found in pnpm-workspace.yaml`);
+    ze_log.app(`Warning: Catalog "${catalogName}" not found in pnpm-workspace.yaml`);
     return versionString; // Return the original version string as fallback
   }
 
@@ -372,7 +372,7 @@ export function getCatalogPackages(catalogName: string): Record<string, string> 
 
   // If no catalogs section or the specified catalog doesn't exist
   if (!config.catalogs || !Object.keys(config.catalogs).includes(catalogName)) {
-    ze_log(`Warning: Catalog "${catalogName}" not found in pnpm-workspace.yaml`);
+    ze_log.app(`Warning: Catalog "${catalogName}" not found in pnpm-workspace.yaml`);
     return null;
   }
 
@@ -404,7 +404,7 @@ export function resolveCatalogDependencies(
       } else {
         // If the exact package isn't in the catalog, keep the original for backward compatibility
         result[name] = version;
-        ze_log(
+        ze_log.app(
           `Warning: Package ${name} not found in catalog ${catalogName}, using original reference`
         );
       }
@@ -416,7 +416,7 @@ export function resolveCatalogDependencies(
       } else {
         // If the package isn't found in the workspace, keep the original
         result[name] = version;
-        ze_log(
+        ze_log.app(
           `Warning: Package ${name} not found in workspace, using original reference`
         );
       }
@@ -429,7 +429,7 @@ export function resolveCatalogDependencies(
     } else {
       // Fallback for edge cases
       result[name] = '*';
-      ze_log(`Warning: No valid version found for ${name}, it's using wildcard '*'`);
+      ze_log.app(`Warning: No valid version found for ${name}, it's using wildcard '*'`);
     }
   }
 

@@ -1,5 +1,4 @@
 import type { ZeBuildAssetsMap } from 'zephyr-agent';
-// eslint-disable-next-line @nx/enforce-module-boundaries
 import { buildAssetsMap } from 'zephyr-agent';
 import type { XOutputAsset, XOutputBundle, XOutputChunk } from '../types';
 

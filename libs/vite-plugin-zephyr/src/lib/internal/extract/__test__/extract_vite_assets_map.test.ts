@@ -26,16 +26,6 @@ const extractRollxBuffer = (asset: any): string | Buffer | undefined => {
   }
 };
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  getPartialAssetMap: jest.fn(),
-  removePartialAssetMap: jest.fn(),
-}));
-
-jest.mock('../load_static_assets', () => ({
-  loadStaticAssets: jest.fn(),
-}));
-
 const mockBuildAssetsMap = buildAssetsMap as jest.MockedFunction<typeof buildAssetsMap>;
 const mockGetPartialAssetMap = getPartialAssetMap as jest.MockedFunction<
   typeof getPartialAssetMap

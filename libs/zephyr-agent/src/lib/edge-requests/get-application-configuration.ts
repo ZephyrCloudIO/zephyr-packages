@@ -46,7 +46,7 @@ async function loadApplicationConfiguration({
     });
   }
 
-  ze_log('Application Configuration loaded', {
+  ze_log.app('Application Configuration loaded', {
     application_uid,
     data: data.value,
   });
@@ -84,7 +84,7 @@ export async function getApplicationConfiguration({
       cachedConfig.fetched_at &&
       Date.now() - cachedConfig.fetched_at <= 60 * 1000
     ) {
-      ze_log('Using cached application configuration');
+      ze_log.app('Using cached application configuration');
       return cachedConfig;
     }
     // If the cached config is invalid, clear it
@@ -95,7 +95,7 @@ export async function getApplicationConfiguration({
   if (inFlight) return inFlight;
 
   // We're the first caller → actually start the fetch
-  ze_log('Getting application configuration from node-persist');
+  ze_log.app('Getting application configuration from node-persist');
 
   inFlight = (async () => {
     const storedAppConfig = await getAppConfig(application_uid);
@@ -107,9 +107,9 @@ export async function getApplicationConfiguration({
           !storedAppConfig?.fetched_at ||
           Date.now() - storedAppConfig.fetched_at > 60 * 1000))
     ) {
-      ze_log('Loading Application Configuration from API...');
+      ze_log.app('Loading Application Configuration from API...');
       const loadedAppConfig = await loadApplicationConfiguration({ application_uid });
-      ze_log('Saving Application Configuration to node-persist...');
+      ze_log.app('Saving Application Configuration to node-persist...');
       await saveAppConfig(application_uid, loadedAppConfig);
       return loadedAppConfig;
     } else {

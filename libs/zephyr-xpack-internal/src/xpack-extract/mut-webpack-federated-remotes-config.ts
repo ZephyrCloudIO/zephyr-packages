@@ -12,14 +12,14 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ): void {
   if (!resolvedDependencyPairs?.length) {
-    ze_log(`No resolved dependency pairs found, skipping...`);
+    ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;
   }
 
   iterateFederatedRemoteConfig(config, (remotesConfig) => {
     const remotes = remotesConfig?.remotes;
     if (!remotes) {
-      ze_log(
+      ze_log.remotes(
         `No remotes found for plugin: ${JSON.stringify(remotesConfig, null, 2)}`,
         'skipping...'
       );
@@ -28,7 +28,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     const library_type = remotesConfig.library?.type ?? 'var';
 
-    ze_log(`Library type: ${library_type}`);
+    ze_log.remotes(`Library type: ${library_type}`);
 
     const remoteEntries = parseRemotesAsEntries(remotes);
 
@@ -41,10 +41,10 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         return nameMatch && versionMatch;
       });
 
-      ze_log(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
+      ze_log.remotes(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
 
       if (!resolved_dep) {
-        ze_log(
+        ze_log.remotes(
           `Resolved dependency pair not found for remote: ${JSON.stringify(
             remote,
             null,
@@ -60,10 +60,12 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         ? remote_version.split('@')
         : [remote_name];
 
-      ze_log(`v_app: ${v_app}`);
+      ze_log.remotes(`v_app: ${v_app}`);
       if (v_app) {
         resolved_dep.remote_entry_url = [v_app, resolved_dep.remote_entry_url].join('@');
-        ze_log(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
+        ze_log.remotes(
+          `Adding version to remote entry url: ${resolved_dep.remote_entry_url}`
+        );
       }
 
       resolved_dep.library_type = library_type;
@@ -84,6 +86,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       remotes[remote_name] = runtimeCode;
     });
-    ze_log(`Set runtime code for remotes: ${remotes}`);
+    ze_log.remotes(`Set runtime code for remotes: ${remotes}`);
   });
 }

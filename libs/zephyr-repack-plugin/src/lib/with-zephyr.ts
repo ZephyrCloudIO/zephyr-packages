@@ -37,7 +37,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
         target: config.platform,
       } as ZephyrRepackPluginOptions;
 
-      ze_log('updatedZephyrConfig: ', updatedZephyrConfig);
+      ze_log.init('updatedZephyrConfig: ', updatedZephyrConfig);
 
       // Return the final processed configuration
       return _zephyr_configuration(userConfig, updatedZephyrConfig);
@@ -63,13 +63,13 @@ async function _zephyr_configuration(
       builder: 'repack',
       context: config.context,
     });
-    ze_log('Configuring with Zephyr... \n config: ', config);
+    ze_log.init('Configuring with Zephyr... \n config: ', config);
 
     zephyr_engine.env.target = _zephyrOptions?.target;
 
     const dependency_pairs = extractFederatedDependencyPairs(config);
 
-    ze_log(
+    ze_log.init(
       'Resolving and building towards target by zephyr_engine.env.target: ',
       zephyr_engine.env.target
     );
@@ -78,7 +78,9 @@ async function _zephyr_configuration(
       await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
-    ze_log('dependency resolution completed successfully...or at least trying to...');
+    ze_log.remotes(
+      'dependency resolution completed successfully...or at least trying to...'
+    );
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
     // const app_config = await zephyr_engine.application_configuration;
@@ -111,7 +113,33 @@ async function _zephyr_configuration(
 
     ze_log('Content in defineConfig: ', defineConfig);
 
-    ze_log('Application uid created...');
+    // Extend
+
+    ze_log.app(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
+
+    zephyr_engine.applicationProperties.version = nativeVersionInfo.native_version;
+
+    zephyr_engine.env.lock_file_hash = (
+      await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)
+    ).nativeConfigHash;
+
+    ze_log('Native config file hash: ', zephyr_engine.env.lock_file_hash);
+    const defineConfig = {
+      ZE_BUILD_ID: await zephyr_engine.build_id,
+      ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,
+      ZE_APP_ID: zephyr_engine.application_uid,
+      ZE_MF_CONFIG: JSON.stringify(mf_configs),
+      ZE_UPDATED_AT: JSON.stringify(
+        (await zephyr_engine.application_configuration).fetched_at
+      ),
+      ZE_EDGE_URL: (await zephyr_engine.application_configuration).EDGE_URL,
+      ZE_NATIVE_VERSION: nativeVersionInfo.native_version,
+      ZE_NATIVE_BUILD_NUMBER: nativeVersionInfo.native_build_number,
+    };
+
+    ze_log('Content in defineConfig: ', defineConfig);
+
+    ze_log.app('Application uid created...');
     config.plugins?.push(
       new ZeRepackPlugin({
         zephyr_engine,

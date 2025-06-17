@@ -181,9 +181,9 @@ Please make sure you are logged in with the correct Zephyr account.
    */
   ERR_INVALID_MF_CONFIG: {
     id: '023',
-    message: `Library name {{library_name}} must be a valid identifier when using "var" as library type in Module Federation configuration. Either use a valid identifier (e. g. {base_identifier}) or use a different library type (e. g. type: 'global', which assign a property on the global scope instead of declaring a variable). To see a list of valid identifiers, please refer to: 
-- Mozilla's documentation on identifiers: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers 
-- the list of Module Federation's available library type: https://github.com/module-federation/core/blob/ae5ee1eedad4565774ea82e30b3d0df7c9921c58/webpack/declarations/WebpackOptions.d.ts#L112 
+    message: `Library name {{library_name}} must be a valid identifier when using "var" as library type in Module Federation configuration. Either use a valid identifier (e. g. {base_identifier}) or use a different library type (e. g. type: 'global', which assign a property on the global scope instead of declaring a variable). To see a list of valid identifiers, please refer to:
+- Mozilla's documentation on identifiers: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers
+- The list of Module Federation's available library type: https://github.com/module-federation/core/blob/ae5ee1eedad4565774ea82e30b3d0df7c9921c58/webpack/declarations/WebpackOptions.d.ts#L112
 
 You can change the library name to CamelCase to avoid this error.`,
     kind: 'build',
@@ -191,10 +191,10 @@ You can change the library name to CamelCase to avoid this error.`,
 
   ERR_INVALID_APP_ID: {
     id: '024',
-    message: `Invalid application_uid: {{application_uid}}. Your application_uid is a combination of: 
+    message: `Invalid application_uid: {{application_uid}}. Your application_uid is a combination of:
 - git organization name
 - git user name
-- name in package.json (They should be the same in your Module Federation configuration if there is any). 
+- name in package.json (They should be the same in your Module Federation configuration if there is any).
 Please make sure you have set them correctly in your package.json and git repository. The application_uid will be used to assign subdomain for your application. Read more about the standard of what characters are allowed in domain names in IETF: https://datatracker.ietf.org/doc/html/rfc1035#:~:text=The%20labels%20must%20follow%20the%20rules%20for%20ARPANET%20host%20names.%20%20They%20must%0Astart%20with%20a%20letter%2C%20end%20with%20a%20letter%20or%20digit%2C%20and%20have%20as%20interior%0Acharacters%20only%20letters%2C%20digits%2C%20and%20hyphen.%20%20There%20are%20also%20some%0Arestrictions%20on%20the%20length.%20%20Labels%20must%20be%2063%20characters%20or%20less.`,
     kind: 'build',
   },
@@ -489,12 +489,33 @@ Please check your network connection and try again.
   ERR_RESOLVE_REMOTES: {
     id: '001',
     message: `
-Please build {{ appUid }} with Zephyr first or add as Unmanaged applications.
+Failed to resolve remote dependency: {{ appUid }} version {{ version }}
 
-Note: you can read application uid as follows:
-- {{ appName }} - project.json 'name' field of remote application
-- {{ projectName }} - git repository name
-- {{ orgName }} - git organization name
+This could be due to one of the following reasons:
+- The remote application '{{ appName }}' has not been built with Zephyr yet
+- The specified version '{{ version }}' does not exist
+- You don't have access to this application
+- The application exists but no environment has been created
+
+Steps to resolve:
+1. Ensure the remote application is built with Zephyr first
+2. For newly created applications, create an environment:
+   - Go to https://app.zephyr-cloud.io
+   - Navigate to your application
+   - Create a new environment (e.g., "development" or "production")
+3. Check that the version exists by visiting the dashboard
+4. Verify you have access to {{ orgName }}/{{ projectName }}/{{ appName }}
+5. If you need any version, use "*" as the version in zephyr:dependencies
+
+Expected behavior:
+- Remote applications must be built and deployed before they can be consumed
+- Applications must have at least one environment created
+- Version must match an existing build (use "*" for latest)
+- When using "*", at least one version must exist in the application
+- You must have read access to the remote application
+
+Application UID format: [app_name].[project_name].[org_name]
+Example: "my-remote.my-project.my-org"
 
 `,
     kind: 'config',
@@ -503,15 +524,33 @@ Note: you can read application uid as follows:
   ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION: {
     id: '003',
     message: `
-Is the remote application being built? We are not able to find your remote application based on application_uid and remote name in configuration.
-Note that we typically map your remote based on below values
+Failed to resolve remote application with version {{ version }}
 
-- git username
+This could be due to one of the following reasons:
+- Network error while trying to resolve the dependency
+- Zephyr API is temporarily unavailable
+- Application naming mismatch in configuration
+
+Steps to resolve:
+1. Check your network connection
+2. If using "*" version, ensure at least one version exists
+3. Ensure the application has an environment created in the dashboard
+
+Expected behavior:
+- Remote application must have at least one deployed version
+- Application must have at least one environment
+
+Application naming is based on:
+- git organization/username
 - git repository name
 - name in package.json
-- name in micro-frontend configuration.
 
-We have a complete checklist for Micro-Frontend application configuration here: https://docs.zephyr-cloud.io/how-to/mf-guide
+For debugging, check:
+- Your ~/.zephyr folder for cached tokens
+- Network proxy settings if behind corporate firewall
+- API status at https://status.zephyr-cloud.io
+
+Documentation: https://docs.zephyr-cloud.io/how-to/mf-guide
       `,
     kind: 'config',
   },

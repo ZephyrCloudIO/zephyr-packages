@@ -13,7 +13,20 @@ jest.mock('../node-persist/token');
 jest.mock('../auth/login');
 jest.mock('../node-persist/application-configuration');
 jest.mock('../logging', () => ({
-  ze_log: jest.fn(),
+  ze_log: Object.assign(jest.fn(), {
+    app: jest.fn(),
+    auth: jest.fn(),
+    config: jest.fn(),
+    git: jest.fn(),
+    http: jest.fn(),
+    init: jest.fn(),
+    mf: jest.fn(),
+    misc: jest.fn(),
+    package: jest.fn(),
+    remotes: jest.fn(),
+    snapshot: jest.fn(),
+    upload: jest.fn(),
+  }),
 }));
 jest.mock('zephyr-edge-contract', () => ({
   ZE_API_ENDPOINT: jest.fn(() => 'https://api.zephyr.com'),

@@ -34,11 +34,11 @@ export async function extractRollxBuildStats({
   root,
   // consumes,
 }: XViteBuildStatsOptions): Promise<ZephyrBuildStats> {
-  ze_log('Extracting Vite build stats');
+  ze_log.app('Extracting Vite build stats');
 
   const consumeMap = new Map<string, ApplicationConsumes>();
   if (!bundle) {
-    ze_log('No bundle found, returning minimal stats');
+    ze_log.app('No bundle found, returning minimal stats');
     // Return minimal stats object when bundle is null
     const minimal_build_stats = await create_minimal_build_stats(zephyr_engine);
 
@@ -119,7 +119,7 @@ export async function extractRollxBuildStats({
                   })),
                 ],
               });
-              ze_log('Found remote import', { remoteName, componentName });
+              ze_log.app('Found remote import', { remoteName, componentName });
             }
           }
         }
@@ -144,18 +144,21 @@ export async function extractRollxBuildStats({
                 })),
               ],
             });
-            ze_log('Found remote import in promise chain', { remoteName, componentName });
+            ze_log.app('Found remote import in promise chain', {
+              remoteName,
+              componentName,
+            });
           }
         }
       } catch (error) {
-        ze_log('Error parsing chunk for loadRemote calls', {
+        ze_log.app('Error parsing chunk for loadRemote calls', {
           error,
           chunkId: chunk.fileName,
         });
       }
     });
 
-  ze_log('consumeMap', ...consumeMap);
+  ze_log.app('consumeMap', ...consumeMap);
 
   // Extract shared dependencies from Module Federation config
   const overrides = mfConfig?.shared
@@ -260,7 +263,7 @@ export async function extractRollxBuildStats({
     environment: '',
   } as ZephyrBuildStats;
 
-  ze_log('Vite build stats extracted successfully', buildStats);
+  ze_log.app('Vite build stats extracted successfully', buildStats);
   return buildStats;
 }
 

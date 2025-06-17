@@ -3,7 +3,9 @@ import { extractRollxBuildStats, type XOutputBundle } from 'zephyr-rollx-interna
 
 // Mock the zephyr-agent module
 jest.mock('zephyr-agent', () => ({
-  ze_log: jest.fn(),
+  ze_log: {
+    app: jest.fn(),
+  },
   resolveCatalogDependencies: jest.fn((deps) => deps || {}),
 }));
 

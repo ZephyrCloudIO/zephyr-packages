@@ -4,7 +4,6 @@ import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 
 import {
   extractRollxBuildStats,
-  type XFederatedConfig,
   type XOutputAsset,
   type XOutputBundle,
   type XOutputChunk,
@@ -18,12 +17,7 @@ const getInputFolder = (options: InputOptions): string => {
   return cwd();
 };
 
-interface ZephyrRolldownOptions {
-  // Reserved for future options like module federation config if needed
-  mfConfig?: XFederatedConfig | undefined;
-}
-
-export function withZephyr(options?: ZephyrRolldownOptions) {
+export function withZephyr() {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let path_to_execution_dir: string;

@@ -3,6 +3,7 @@ import { PreRenderedAsset } from 'rollup';
 import type { Plugin, ResolvedConfig } from 'vite';
 import {
   ZephyrEngine,
+  ZephyrEngineOptions,
   ZephyrError,
   createTemporaryVariablesFile,
   findAndReplaceVariables,
@@ -17,37 +18,61 @@ import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-opt
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
-interface VitePluginZephyrOptions {
+export interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const plugins: Plugin[] = [];
+
   if (mfConfig) {
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
 
   const variablesSet = new Set<string>();
 
-  plugins.push(zephyrPluginPre(variablesSet));
-  plugins.push(zephyrPlugin(variablesSet));
+  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+
+  plugins.push(zephyrPluginPre(variablesSet, zephyr_engine_defer, zephyr_defer_create));
+  plugins.push(zephyrPlugin(variablesSet, zephyr_engine_defer));
+
   return plugins;
 }
 
-function zephyrPluginPre(variablesSet: Set<string>): Plugin {
+function zephyrPluginPre(
+  variablesSet: Set<string>,
+  zephyr_engine_defer: Promise<ZephyrEngine>,
+  zephyr_defer_create: (options: ZephyrEngineOptions) => void
+): Plugin {
   return {
     name: 'with-zephyr-envs',
     enforce: 'pre',
-    transform: (code) => {
-      return findAndReplaceVariables(code, variablesSet, ['importMetaEnv']);
+
+    configResolved: (config: ResolvedConfig) => {
+      if (config.command === 'serve') return;
+
+      zephyr_defer_create({
+        builder: 'vite',
+        context: config.root,
+      });
+    },
+
+   async  transform  (code){
+      return findAndReplaceVariables(
+        code,
+        (await zephyr_engine_defer).application_uid,
+        variablesSet,
+        ['importMetaEnv']
+      );
     },
   };
 }
 
-function zephyrPlugin(variablesSet: Set<string>): Plugin {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
-
+function zephyrPlugin(
+  variablesSet: Set<string>,
+  zephyr_engine_defer: Promise<ZephyrEngine>
+): Plugin {
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
     resolve_vite_internal_options = resolve;
@@ -69,10 +94,6 @@ function zephyrPlugin(variablesSet: Set<string>): Plugin {
 
       if (config.command === 'serve') return;
 
-      zephyr_defer_create({
-        builder: 'vite',
-        context: config.root,
-      });
       resolve_vite_internal_options({
         root: config.root,
         outDir: config.build?.outDir,

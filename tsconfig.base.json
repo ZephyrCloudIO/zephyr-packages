@@ -12,18 +12,37 @@
     "incremental": true,
     "isolatedModules": true,
     "allowJs": true,
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "module": "CommonJS",
     "moduleResolution": "Node",
     "paths": {
-      "rollup-plugin-zephyr": ["libs/rollup-plugin-zephyr/src/index.ts"],
-      "vite-plugin-zephyr": ["libs/vite-plugin-zephyr/src/index.ts"],
-      "zephyr-agent": ["libs/zephyr-agent/src/index.ts"],
-      "zephyr-edge-contract": ["libs/zephyr-edge-contract/src/index.ts"],
-      "zephyr-repack-plugin": ["libs/zephyr-repack-plugin/src/index.ts"],
-      "zephyr-rspack-plugin": ["libs/zephyr-rspack-plugin/src/index.ts"],
-      "zephyr-webpack-plugin": ["libs/zephyr-webpack-plugin/src/index.ts"],
-      "zephyr-xpack-internal": ["libs/zephyr-xpack-internal/src/index.ts"]
+      "rollup-plugin-zephyr": [
+        "libs/rollup-plugin-zephyr/src/index.ts"
+      ],
+      "vite-plugin-zephyr": [
+        "libs/vite-plugin-zephyr/src/index.ts"
+      ],
+      "zephyr-agent": [
+        "libs/zephyr-agent/src/index.ts"
+      ],
+      "zephyr-edge-contract": [
+        "libs/zephyr-edge-contract/src/index.ts"
+      ],
+      "zephyr-repack-plugin": [
+        "libs/zephyr-repack-plugin/src/index.ts"
+      ],
+      "zephyr-rspack-plugin": [
+        "libs/zephyr-rspack-plugin/src/index.ts"
+      ],
+      "zephyr-webpack-plugin": [
+        "libs/zephyr-webpack-plugin/src/index.ts"
+      ],
+      "zephyr-xpack-internal": [
+        "libs/zephyr-xpack-internal/src/index.ts"
+      ]
     },
     "rootDir": ".",
     "skipDefaultLibCheck": true,
@@ -32,5 +51,8 @@
     "stripInternal": true,
     "target": "ES2017"
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }

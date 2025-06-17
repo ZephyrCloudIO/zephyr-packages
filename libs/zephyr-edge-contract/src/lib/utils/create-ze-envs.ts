@@ -8,8 +8,19 @@ const symbolStr = `Symbol.for('ze_envs')`;
  */
 export const ZephyrEnvsGlobal = `window[${symbolStr}]`;
 
+/**
+ * A double-record structure to store environment variables for an application and its
+ * remotes
+ */
+export type VariablesRecord = {
+  [application_uid: string]: {
+    [variableName: string]: string;
+  };
+};
+
 /** Simple helper function to create a record of variables from the used variables */
 export async function createVariablesRecord(
+  application_uid:string,
   uses: Iterable<string>,
   dictionary: Record<string, string | undefined>,
   // Warns in the CLI of missing variables
@@ -19,10 +30,10 @@ export async function createVariablesRecord(
   requestMissingVariables?: (
     this: void,
     names: string[],
-    variables: Record<string, string>
+    variables: VariablesRecord
   ) => void | Promise<void>
 ) {
-  const variables: Record<string, string> = {};
+  const variables:  VariablesRecord= { [application_uid]: {} }
   const missing: string[] = [];
 
   for (const key of uses) {
@@ -32,7 +43,7 @@ export async function createVariablesRecord(
     if (value === undefined || value === null) {
       missing.push(key);
     } else {
-      variables[key] ??= value;
+      variables[application_uid][key] ??= value;
     }
   }
 
@@ -60,8 +71,10 @@ export async function createVariablesRecord(
 }
 
 /** Creates the string content of a ze-envs.js file for the provided envs record. */
-export function createZeEnvsFile(envs: Record<string, string>) {
-  const entries = JSON.stringify(Object.entries(envs));
+export function createZeEnvsFile(envs: VariablesRecord) {
+  const entries = JSON.stringify(
+    Object.entries(envs).map(([k, v]) => [k, Object.entries(v)])
+  );
   // Values here are public so base64 obscurity is just to avoid simple inspect+search
   const base64Json = Buffer.from(entries).toString('base64');
 
@@ -71,12 +84,13 @@ export function createZeEnvsFile(envs: Record<string, string>) {
 
 (()=>{
   let S=Symbol.for("ze_envs"),
-      e=window[S];
+      v=window[S],
+      e,
 
   // Only defined window[Symbol.for('ze_envs')] if it doesn't exist
   // Non enumerable and non-writable to reduce scope of potential conflicts
-  e||Object.defineProperty(window,S,{
-    value:e={},
+  v||Object.defineProperty(window,S,{
+    value:v={},
     writable:!1,
     enumerable:!1
   });
@@ -86,8 +100,8 @@ export function createZeEnvsFile(envs: Record<string, string>) {
     // On a per-env entry basis, only define it if it doesn't exist
     // Bundler envs gets replaced into literals, non-writable here is an attempt
     // to keep the same "immutability" as the bundler envs
-    e[i[0]]||Object.defineProperty(e,i[0],{
-      value:i[1],
+    v[i[0]]||Object.defineProperty(v,i[0],{
+      value:{},
       writable:!1,
       enumerable:!1
     });

@@ -30,24 +30,26 @@ const regexes = {
  */
 export function findAndReplaceVariables(
   code: string,
+  application_uid: string,
   variablesSet: Set<string>,
   kinds: (keyof typeof regexes)[]
 ): string {
   for (const kind of kinds) {
     const { simple, quoted } = regexes[kind];
 
+    // /g regexes are stateful, so we need to reset them
     quoted.lastIndex = 0;
     simple.lastIndex = 0;
 
-    // Can use newer syntax (?) because it runs before bundler's transformations
+    // Code can use chain operator because transformation happens after this
     code = code
       .replace(simple, (_, name) => {
         variablesSet.add(name);
-        return `${ZephyrEnvsGlobal}?.${name}`;
+        return `${ZephyrEnvsGlobal}?.["${application_uid}"]?.${name}`;
       })
       .replace(quoted, (_, quote, name) => {
         variablesSet.add(name);
-        return `${ZephyrEnvsGlobal}?.[${quote}${name}${quote}]`;
+        return `${ZephyrEnvsGlobal}?.["${application_uid}"]?.[${quote}${name}${quote}]`;
       });
   }
 

@@ -1552,6 +1552,9 @@ importers:
       '@module-federation/automatic-vendor-federation':
         specifier: catalog:module-federation
         version: 1.2.1(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 0.11.1
       is-ci:
         specifier: catalog:plugin-shared
         version: 4.1.0
@@ -1565,6 +1568,9 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
     devDependencies:
+      '@module-federation/sdk':
+        specifier: 0.15.0
+        version: 0.15.0
       '@types/is-ci':
         specifier: catalog:typescript
         version: 3.0.4
@@ -3304,6 +3310,9 @@ packages:
 
   '@module-federation/sdk@0.14.3':
     resolution: {integrity: sha512-THJZMfbXpqjQOLblCQ8jjcBFFXsGRJwUWE9l/Q4SmuCSKMgAwie7yLT0qSGrHmyBYrsUjAuy+xNB4nfKP0pnGw==}
+
+  '@module-federation/sdk@0.15.0':
+    resolution: {integrity: sha512-PWiYbGcJrKUD6JZiEPihrXhV3bgXdll4bV7rU+opV7tHaun+Z0CdcawjZ82Xnpb8MCPGmqHwa1MPFeUs66zksw==}
 
   '@module-federation/sdk@0.8.12':
     resolution: {integrity: sha512-zFgXYBHbzwIqlrLfn6ewIRXDZCctDDQT2nFhbsZr29yWQgpmW1fm2kJCxQsG0DENGGN1KpzfDoxjjvSKJS/ZHA==}
@@ -16887,6 +16896,8 @@ snapshots:
   '@module-federation/sdk@0.11.1': {}
 
   '@module-federation/sdk@0.14.3': {}
+
+  '@module-federation/sdk@0.15.0': {}
 
   '@module-federation/sdk@0.8.12':
     dependencies:

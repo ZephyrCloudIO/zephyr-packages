@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "catalog:module-federation",
+    "@module-federation/runtime": "catalog:module-federation",
     "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
@@ -31,7 +32,8 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "@module-federation/sdk": "0.15.0"
   },
   "publishConfig": {
     "access": "public",

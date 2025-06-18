@@ -36,6 +36,8 @@ export interface XFederatedRemotesConfig {
    * actual output js.bundle and they want to put it in filename field)
    */
   bundle_name?: string;
+  /** Runtime plugins for Module Federation */
+  runtimePlugins?: string[];
 }
 
 export interface ModuleFederationPlugin {

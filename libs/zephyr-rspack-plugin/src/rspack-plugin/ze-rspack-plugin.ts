@@ -1,12 +1,12 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 
+import type { Compiler } from '@rspack/core';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
   detectAndStoreBaseHref,
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
-import type { Compiler } from '@rspack/core';
 
 const pluginName = 'ZeRspackPlugin';
 
@@ -18,6 +18,8 @@ export interface ZephyrRspackInternalPluginOptions {
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   // hacks
   wait_for_index_html?: boolean;
+  // Runtime plugin option
+  runtimePlugin?: boolean;
   // outputPath?: string;
 }
 

@@ -12,7 +12,7 @@
     "lint": "nx run-many -t lint --projects=\"libs/*\"",
     "lint:examples": "nx run-many -t lint --projects=\"examples/*\"",
     "test": "nx run-many -t test --projects=\"libs/*\"",
-    "test:examples": "./examples/testing-matrix.sh",
+    "test:examples": "nx run e2e-deployment:e2e-test --skip-nx-cache",
     "prepare": "husky install",
     "test:coverage": "nx run-many --target=test --projects=\"libs/*\" --code-coverage",
     "coverage:merge": "istanbul-merge --out coverage/combined-coverage.json \"coverage/**/coverage-final.json\"",

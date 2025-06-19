@@ -18,7 +18,7 @@ for (const appUid of testTargets) {
 
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${deployResult.urls[0]}/${asset.path}`, 5);
+          return fetchWithRetries(`${deployResult.urls[0]}/${asset.path}`, 3);
         });
 
         const results = await Promise.all(promises);
@@ -27,17 +27,17 @@ for (const appUid of testTargets) {
           expect(res.status).toBe(200);
         });
       },
-      5 * 60 * 1000
+      90 * 1000
     );
   });
 }
 
-const fetchWithRetries = async (url: string, retries = 1) => {
+const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
   const res = await fetch(url, { method: 'HEAD' });
 
-  if (res.status === 200 || retries <= 1) return res;
+  if (res.status === 200 || attemptsLeft <= 1) return res;
 
   await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
 
-  return fetchWithRetries(url, retries - 1);
+  return fetchWithRetries(url, attemptsLeft - 1);
 };

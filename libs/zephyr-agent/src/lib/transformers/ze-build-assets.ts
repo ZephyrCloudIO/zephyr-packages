@@ -1,6 +1,6 @@
-import type { ZeBuildAsset } from 'zephyr-edge-contract';
 import { createHash } from 'node:crypto';
 import { extname } from 'node:path';
+import type { ZeBuildAsset } from 'zephyr-edge-contract';
 
 export function zeBuildAssets({
   filepath,
@@ -12,7 +12,7 @@ export function zeBuildAssets({
   const buffer = typeof content === 'string' ? Buffer.from(content, 'utf8') : content;
 
   const hash = createHash('sha256')
-    .update(buffer.length ? buffer : Buffer.from(filepath, 'utf8'))
+    .update(buffer)
     .update(Buffer.from(filepath, 'utf8'))
     .digest('hex');
 

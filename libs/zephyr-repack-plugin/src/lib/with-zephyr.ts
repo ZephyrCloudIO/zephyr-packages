@@ -1,5 +1,6 @@
 import type { Configuration } from '@rspack/core';
 import { rspack } from '@rspack/core';
+import isCI from 'is-ci';
 import { ZeErrors, ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
@@ -89,32 +90,6 @@ async function _zephyr_configuration(
 
     // Extend
 
-    ze_log(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
-
-    zephyr_engine.applicationProperties.version = nativeVersionInfo.native_version;
-
-    zephyr_engine.env.lock_file_hash = (
-      await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)
-    ).nativeConfigHash;
-
-    ze_log('Native config file hash: ', zephyr_engine.env.lock_file_hash);
-    const defineConfig = {
-      ZE_BUILD_ID: await zephyr_engine.build_id,
-      ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,
-      ZE_APP_ID: zephyr_engine.application_uid,
-      ZE_MF_CONFIG: JSON.stringify(mf_configs),
-      ZE_UPDATED_AT: JSON.stringify(
-        (await zephyr_engine.application_configuration).fetched_at
-      ),
-      ZE_EDGE_URL: (await zephyr_engine.application_configuration).EDGE_URL,
-      ZE_NATIVE_VERSION: nativeVersionInfo.native_version,
-      ZE_NATIVE_BUILD_NUMBER: nativeVersionInfo.native_build_number,
-    };
-
-    ze_log('Content in defineConfig: ', defineConfig);
-
-    // Extend
-
     ze_log.app(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
 
     zephyr_engine.applicationProperties.version = nativeVersionInfo.native_version;
@@ -123,8 +98,8 @@ async function _zephyr_configuration(
       await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)
     ).nativeConfigHash;
 
-    ze_log('Native config file hash: ', zephyr_engine.env.lock_file_hash);
-    const defineConfig = {
+    ze_log.app('Native config file hash: ', zephyr_engine.env.lock_file_hash);
+    const define_config = {
       ZE_BUILD_ID: await zephyr_engine.build_id,
       ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,
       ZE_APP_ID: zephyr_engine.application_uid,
@@ -134,10 +109,16 @@ async function _zephyr_configuration(
       ),
       ZE_EDGE_URL: (await zephyr_engine.application_configuration).EDGE_URL,
       ZE_NATIVE_VERSION: nativeVersionInfo.native_version,
-      ZE_NATIVE_BUILD_NUMBER: nativeVersionInfo.native_build_number,
+      ZE_BUILD_CONTEXT: JSON.stringify(config.context),
+      ZE_FINGERPRINT: JSON.stringify(zephyr_engine.env.lock_file_hash),
+      ZE_IS_CI: isCI,
+      ZE_USER: JSON.stringify((await zephyr_engine.application_configuration).username),
+      ZE_BRANCH: JSON.stringify(zephyr_engine.gitProperties.git.branch),
     };
 
-    ze_log('Content in defineConfig: ', defineConfig);
+    ze_log.app('Content in defineConfig: ', define_config);
+
+    // Extend
 
     ze_log.app('Application uid created...');
     config.plugins?.push(
@@ -146,7 +127,7 @@ async function _zephyr_configuration(
         mfConfig: makeCopyOfModuleFederationOptions(config),
         target: zephyr_engine.env.target,
       }),
-      new rspack.DefinePlugin(defineConfig)
+      new rspack.DefinePlugin(define_config)
     );
   } catch (error) {
     logFn('error', ZephyrError.format(error));

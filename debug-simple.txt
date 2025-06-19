@@ -1,0 +1,1588 @@
+2025-06-19T04:16:42.084Z corepack Checking /Users/lois/Documents/Github/work/repos/zephyr-packages/package.json
+2025-06-19T04:16:42.085Z corepack Checking /Users/lois/Documents/Github/work/repos/zephyr-packages/.corepack.env
+2025-06-19T04:16:42.086Z corepack No env file found at /Users/lois/Documents/Github/work/repos/zephyr-packages/.corepack.env
+2025-06-19T04:16:42.086Z corepack Checking /Users/lois/Documents/Github/work/repos/package.json
+2025-06-19T04:16:42.086Z corepack Checking /Users/lois/Documents/Github/work/package.json
+2025-06-19T04:16:42.086Z corepack Checking /Users/lois/Documents/Github/package.json
+2025-06-19T04:16:42.086Z corepack Checking /Users/lois/Documents/package.json
+2025-06-19T04:16:42.086Z corepack Checking /Users/lois/package.json
+2025-06-19T04:16:42.086Z corepack Checking /Users/package.json
+2025-06-19T04:16:42.086Z corepack Checking /package.json
+2025-06-19T04:16:42.087Z corepack LastKnownGood file would be located at /Users/lois/.cache/node/corepack/lastKnownGood.json
+2025-06-19T04:16:42.087Z corepack Search for default version: Found pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977 in LastKnownGood file
+2025-06-19T04:16:42.087Z corepack Falling back to pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977 in the absence of "packageManage" field in /Users/lois/Documents/Github/work/repos/zephyr-packages/package.json
+2025-06-19T04:16:42.090Z corepack Reusing pnpm@10.11.0 found in /Users/lois/.cache/node/corepack/v1/pnpm/10.11.0
+
+> nextjs-15@1.0.0 build /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15
+> next build
+
+config { webpack: [Function: webpack] }
+config { webpack: [Function: webpack] }
+   ▲ Next.js 15.3.3 (Rspack)
+
+   Creating an optimized production build ...
+2025-06-19T04:16:42.714Z next:build:webpack-build building all compilers in same process
+ ⚠ `next-rspack` is currently experimental. It's not an official Next.js plugin, and is supported by the Rspack team in partnership with Next.js. Help improve Next.js and Rspack by providing feedback at https://github.com/vercel/next.js/discussions/77800
+2025-06-19T04:16:42.880Z next:jsconfig-paths-plugin tsconfig.json or jsconfig.json paths: {}
+2025-06-19T04:16:42.880Z next:jsconfig-paths-plugin resolved baseUrl: {
+  baseUrl: '/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15',
+  isImplicit: true
+}
+2025-06-19T04:16:42.884Z next:jsconfig-paths-plugin tsconfig.json or jsconfig.json paths: {}
+2025-06-19T04:16:42.884Z next:jsconfig-paths-plugin resolved baseUrl: {
+  baseUrl: '/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15',
+  isImplicit: true
+}
+2025-06-19T04:16:42.892Z next:jsconfig-paths-plugin tsconfig.json or jsconfig.json paths: {}
+2025-06-19T04:16:42.892Z next:jsconfig-paths-plugin resolved baseUrl: {
+  baseUrl: '/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15',
+  isImplicit: true
+}
+2025-06-19T04:16:42.895Z zephyr:init Initializing: Zephyr Engine for /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15...
+2025-06-19T04:16:42.895Z zephyr:init Initializing: npm package info...
+2025-06-19T04:16:42.895Z zephyr:package getPackageJson searching from path /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15
+> Promise returned in next config. https://nextjs.org/docs/messages/promise-in-next-config
+2025-06-19T04:16:42.895Z zephyr:init Initializing: Zephyr Engine for /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15...
+2025-06-19T04:16:42.895Z zephyr:init Initializing: npm package info...
+2025-06-19T04:16:42.895Z zephyr:package getPackageJson searching from path /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15
+> Promise returned in next config. https://nextjs.org/docs/messages/promise-in-next-config
+2025-06-19T04:16:42.896Z zephyr:init Initializing: Zephyr Engine for /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15...
+2025-06-19T04:16:42.896Z zephyr:init Initializing: npm package info...
+2025-06-19T04:16:42.896Z zephyr:package getPackageJson searching from path /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15
+> Promise returned in next config. https://nextjs.org/docs/messages/promise-in-next-config
+2025-06-19T04:16:42.903Z zephyr:package Found package.json at /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15/package.json
+2025-06-19T04:16:42.903Z zephyr:package Successfully parsed package.json {
+  name: 'nextjs-15',
+  version: '1.0.0',
+  path: '/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15/package.json'
+}
+2025-06-19T04:16:42.903Z zephyr:init Initializing: git info...
+2025-06-19T04:16:42.904Z zephyr:package Found package.json at /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15/package.json
+2025-06-19T04:16:42.904Z zephyr:package Successfully parsed package.json {
+  name: 'nextjs-15',
+  version: '1.0.0',
+  path: '/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15/package.json'
+}
+2025-06-19T04:16:42.905Z zephyr:init Initializing: git info...
+2025-06-19T04:16:42.905Z zephyr:package Found package.json at /Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15/package.json
+2025-06-19T04:16:42.905Z zephyr:package Successfully parsed package.json {
+  name: 'nextjs-15',
+  version: '1.0.0',
+  path: '/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15/package.json'
+}
+2025-06-19T04:16:42.905Z zephyr:init Initializing: git info...
+2025-06-19T04:16:42.946Z zephyr:git Git provider detected: github {
+  provider: 'github',
+  owner: 'zephyrcloudio',
+  project: 'zephyr-packages',
+  isEnterprise: false
+}
+2025-06-19T04:16:42.946Z zephyr:git Loaded: git info {
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  app: { org: 'zephyrcloudio', project: 'zephyr-packages' }
+}
+2025-06-19T04:16:42.946Z zephyr:init Initializing: checking authentication...
+2025-06-19T04:16:42.947Z zephyr:git Git provider detected: github {
+  provider: 'github',
+  owner: 'zephyrcloudio',
+  project: 'zephyr-packages',
+  isEnterprise: false
+}
+2025-06-19T04:16:42.947Z zephyr:git Loaded: git info {
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  app: { org: 'zephyrcloudio', project: 'zephyr-packages' }
+}
+2025-06-19T04:16:42.947Z zephyr:init Initializing: checking authentication...
+2025-06-19T04:16:42.947Z zephyr:git Git provider detected: github {
+  provider: 'github',
+  owner: 'zephyrcloudio',
+  project: 'zephyr-packages',
+  isEnterprise: false
+}
+2025-06-19T04:16:42.947Z zephyr:git Loaded: git info {
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  app: { org: 'zephyrcloudio', project: 'zephyr-packages' }
+}
+2025-06-19T04:16:42.947Z zephyr:init Initializing: checking authentication...
+2025-06-19T04:16:42.948Z zephyr:auth You are already logged in
+2025-06-19T04:16:42.948Z zephyr:init Initialized: loading application configuration...
+2025-06-19T04:16:42.948Z zephyr:app Getting application configuration from node-persist
+2025-06-19T04:16:42.948Z zephyr:init Starting new build
+2025-06-19T04:16:42.948Z zephyr:init Initializing: loading of hash list
+2025-06-19T04:16:42.948Z zephyr:init Initializing: loading of build id
+2025-06-19T04:16:42.948Z zephyr:init Initializing: logger
+2025-06-19T04:16:42.948Z zephyr:remotes iterateFederatedRemoteConfig.results []
+2025-06-19T04:16:42.948Z zephyr:auth You are already logged in
+2025-06-19T04:16:42.948Z zephyr:init Initialized: loading application configuration...
+2025-06-19T04:16:42.948Z zephyr:init Starting new build
+2025-06-19T04:16:42.948Z zephyr:init Initializing: loading of hash list
+2025-06-19T04:16:42.948Z zephyr:init Initializing: loading of build id
+2025-06-19T04:16:42.948Z zephyr:init Initializing: logger
+2025-06-19T04:16:42.949Z zephyr:remotes iterateFederatedRemoteConfig.results []
+2025-06-19T04:16:42.949Z zephyr:auth You are already logged in
+2025-06-19T04:16:42.949Z zephyr:init Initialized: loading application configuration...
+2025-06-19T04:16:42.949Z zephyr:init Starting new build
+2025-06-19T04:16:42.949Z zephyr:init Initializing: loading of hash list
+2025-06-19T04:16:42.949Z zephyr:init Initializing: loading of build id
+2025-06-19T04:16:42.949Z zephyr:init Initializing: logger
+2025-06-19T04:16:42.949Z zephyr:remotes iterateFederatedRemoteConfig.results []
+2025-06-19T04:16:42.949Z zephyr:init Loaded: application configuration {
+  username: 'lois_zephyr-cloud_io',
+  email: 'lois@zephyr-cloud.io',
+  EDGE_URL: 'https://ze.zephyrcloud.app'
+}
+2025-06-19T04:16:42.949Z zephyr:remotes resolve_remote_dependencies.deps [] platform web ze_dependencies undefined
+2025-06-19T04:16:42.949Z zephyr:init Loaded: application configuration {
+  username: 'lois_zephyr-cloud_io',
+  email: 'lois@zephyr-cloud.io',
+  EDGE_URL: 'https://ze.zephyrcloud.app'
+}
+2025-06-19T04:16:42.949Z zephyr:remotes resolve_remote_dependencies.deps [] platform web ze_dependencies undefined
+2025-06-19T04:16:42.949Z zephyr:init Loaded: application configuration {
+  username: 'lois_zephyr-cloud_io',
+  email: 'lois@zephyr-cloud.io',
+  EDGE_URL: 'https://ze.zephyrcloud.app'
+}
+2025-06-19T04:16:42.949Z zephyr:remotes resolve_remote_dependencies.deps [] platform web ze_dependencies undefined
+2025-06-19T04:16:42.949Z zephyr:remotes No resolved dependency pairs found, skipping...
+2025-06-19T04:16:42.949Z zephyr:mf iterateFederationConfig.results []
+2025-06-19T04:16:42.949Z zephyr:remotes No resolved dependency pairs found, skipping...
+2025-06-19T04:16:42.949Z zephyr:mf iterateFederationConfig.results []
+2025-06-19T04:16:42.949Z zephyr:remotes No resolved dependency pairs found, skipping...
+2025-06-19T04:16:42.949Z zephyr:mf iterateFederationConfig.results []
+2025-06-19T04:16:42.949Z next:build:webpack-build starting compiler null
+2025-06-19T04:16:42.950Z next:build:webpack-build starting server compiler
+2025-06-19T04:16:42.964Z zephyr:init build started at 1750306602964
+2025-06-19T04:16:42.977Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/build-id',
+  method: 'GET',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    can_write_jwt: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYW5fd3JpdGUiOnRydWUsImVtYWlsIjoibG9pc0B6ZXBoeXItY2xvdWQuaW8iLCJ1c2VyX3V1aWQiOiI3N2E5YTkwNi00ZWNkLTRhNzktODVkMS1hMGRkYTQyM2IxNmQiLCJhcHBsaWNhdGlvbl91aWQiOiJuZXh0anMtMTUuemVwaHlyLXBhY2thZ2VzLnplcGh5cmNsb3VkaW8iLCJ1c2VybmFtZSI6ImxvaXNfemVwaHlyLWNsb3VkX2lvIiwiaWF0IjoxNzUwMzA2NTgxLCJleHAiOjE3NTAzMTAxODF9.csPdFuhkTNAXn0I6W6NNh52lpcwkKnLvbgUEV1KCAyxpc1TjKdfRJuNfGKHNsOfzWSWhqye-PifOMlSKk480MZByEGOQS8tqoUUf2VoCeevfmGdkUvfF9gZh5SIzW9A1tlPeHCb8CC89a3afx-L2nLjUgNkfpcqdRYLU9a8-3H6AMAPsqW7bGK-j5goswL8vjU8HK57PuYCQPY6XhixD0H4pYmvQNKpvY2E_e0PJQtZDFU1CBFwgGKkLmYipn0WXJ4fGi6YEdCu9ig9K9ltYQML0yNJ754uqbZ1Nn42GDd_Jshorn7_g2Ck_dnN3rDPVxZ7BP1Inb-K9bvs8qU_30A',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:42.979Z zephyr:app Loaded: hash list with 128 entries
+2025-06-19T04:16:42.979Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/build-id',
+  method: 'GET',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    can_write_jwt: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYW5fd3JpdGUiOnRydWUsImVtYWlsIjoibG9pc0B6ZXBoeXItY2xvdWQuaW8iLCJ1c2VyX3V1aWQiOiI3N2E5YTkwNi00ZWNkLTRhNzktODVkMS1hMGRkYTQyM2IxNmQiLCJhcHBsaWNhdGlvbl91aWQiOiJuZXh0anMtMTUuemVwaHlyLXBhY2thZ2VzLnplcGh5cmNsb3VkaW8iLCJ1c2VybmFtZSI6ImxvaXNfemVwaHlyLWNsb3VkX2lvIiwiaWF0IjoxNzUwMzA2NTgxLCJleHAiOjE3NTAzMTAxODF9.csPdFuhkTNAXn0I6W6NNh52lpcwkKnLvbgUEV1KCAyxpc1TjKdfRJuNfGKHNsOfzWSWhqye-PifOMlSKk480MZByEGOQS8tqoUUf2VoCeevfmGdkUvfF9gZh5SIzW9A1tlPeHCb8CC89a3afx-L2nLjUgNkfpcqdRYLU9a8-3H6AMAPsqW7bGK-j5goswL8vjU8HK57PuYCQPY6XhixD0H4pYmvQNKpvY2E_e0PJQtZDFU1CBFwgGKkLmYipn0WXJ4fGi6YEdCu9ig9K9ltYQML0yNJ754uqbZ1Nn42GDd_Jshorn7_g2Ck_dnN3rDPVxZ7BP1Inb-K9bvs8qU_30A',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:42.980Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/build-id',
+  method: 'GET',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    can_write_jwt: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYW5fd3JpdGUiOnRydWUsImVtYWlsIjoibG9pc0B6ZXBoeXItY2xvdWQuaW8iLCJ1c2VyX3V1aWQiOiI3N2E5YTkwNi00ZWNkLTRhNzktODVkMS1hMGRkYTQyM2IxNmQiLCJhcHBsaWNhdGlvbl91aWQiOiJuZXh0anMtMTUuemVwaHlyLXBhY2thZ2VzLnplcGh5cmNsb3VkaW8iLCJ1c2VybmFtZSI6ImxvaXNfemVwaHlyLWNsb3VkX2lvIiwiaWF0IjoxNzUwMzA2NTgxLCJleHAiOjE3NTAzMTAxODF9.csPdFuhkTNAXn0I6W6NNh52lpcwkKnLvbgUEV1KCAyxpc1TjKdfRJuNfGKHNsOfzWSWhqye-PifOMlSKk480MZByEGOQS8tqoUUf2VoCeevfmGdkUvfF9gZh5SIzW9A1tlPeHCb8CC89a3afx-L2nLjUgNkfpcqdRYLU9a8-3H6AMAPsqW7bGK-j5goswL8vjU8HK57PuYCQPY6XhixD0H4pYmvQNKpvY2E_e0PJQtZDFU1CBFwgGKkLmYipn0WXJ4fGi6YEdCu9ig9K9ltYQML0yNJ754uqbZ1Nn42GDd_Jshorn7_g2Ck_dnN3rDPVxZ7BP1Inb-K9bvs8qU_30A',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:42.981Z zephyr:app Loaded: hash list with 128 entries
+2025-06-19T04:16:42.981Z zephyr:app Loaded: hash list with 128 entries
+2025-06-19T04:16:43.165Z zephyr:http [GET][https://zeapi.zephyrcloud.app/build-id]: 191ms
+
+Response: {"77a9a906-4ecd-4a79-85d1-a0dda423b16d":"1375"}
+Options: {"headers":{"can_write_jwt: [REDACTED],"Authorization":"Bearer [REDACTED]"}}
+2025-06-19T04:16:43.165Z zephyr:app Build ID retrieved... { '77a9a906-4ecd-4a79-85d1-a0dda423b16d': '1375' }
+2025-06-19T04:16:43.165Z zephyr:app Loaded build id "1375"
+2025-06-19T04:16:43.165Z zephyr:init Initialized: application configuration, build id and hash list
+ ZEPHYR   Hi lois_zephyr-cloud_io!
+ ZEPHYR   nextjs-15.zephyr-packages.zephyrcloudio#1375
+ ZEPHYR   
+2025-06-19T04:16:43.165Z zephyr:app Using cached application configuration
+2025-06-19T04:16:43.167Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '2',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.176Z zephyr:http [GET][https://zeapi.zephyrcloud.app/build-id]: 197ms
+
+Response: {"77a9a906-4ecd-4a79-85d1-a0dda423b16d":"1376"}
+Options: {"headers":{"can_write_jwt: [REDACTED],"Authorization":"Bearer [REDACTED]"}}
+2025-06-19T04:16:43.176Z zephyr:app Build ID retrieved... { '77a9a906-4ecd-4a79-85d1-a0dda423b16d': '1376' }
+2025-06-19T04:16:43.176Z zephyr:app Loaded build id "1376"
+2025-06-19T04:16:43.176Z zephyr:init Initialized: application configuration, build id and hash list
+ ZEPHYR   Hi lois_zephyr-cloud_io!
+ ZEPHYR   nextjs-15.zephyr-packages.zephyrcloudio#1376
+ ZEPHYR   
+2025-06-19T04:16:43.176Z zephyr:app Using cached application configuration
+2025-06-19T04:16:43.177Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '2',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.185Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 19ms
+ - 0.00kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.203Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 27ms
+ - 0.00kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.213Z zephyr:http [GET][https://zeapi.zephyrcloud.app/build-id]: 233ms
+
+Response: {"77a9a906-4ecd-4a79-85d1-a0dda423b16d":"1377"}
+Options: {"headers":{"can_write_jwt: [REDACTED],"Authorization":"Bearer [REDACTED]"}}
+2025-06-19T04:16:43.213Z zephyr:app Build ID retrieved... { '77a9a906-4ecd-4a79-85d1-a0dda423b16d': '1377' }
+2025-06-19T04:16:43.213Z zephyr:app Loaded build id "1377"
+2025-06-19T04:16:43.213Z zephyr:init Initialized: application configuration, build id and hash list
+ ZEPHYR   Hi lois_zephyr-cloud_io!
+ ZEPHYR   nextjs-15.zephyr-packages.zephyrcloudio#1377
+ ZEPHYR   
+2025-06-19T04:16:43.213Z zephyr:app Using cached application configuration
+2025-06-19T04:16:43.242Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '2',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.267Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 25ms
+ - 0.00kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.374Z zephyr:init Starting new build
+2025-06-19T04:16:43.374Z zephyr:init Skip: creating new build because no assets was uploaded
+2025-06-19T04:16:43.374Z zephyr:misc Waiting for deployment done
+2025-06-19T04:16:43.375Z zephyr:init Initiating: Zephyr Webpack Upload Agent
+2025-06-19T04:16:43.375Z zephyr:upload Building assets map from webpack assets.
+2025-06-19T04:16:43.376Z zephyr:app get build stats started. create federation dashboard plugin
+2025-06-19T04:16:43.376Z zephyr:app process webpack graph.pluginOptions {
+  pluginName: 'ZeRspackPlugin',
+  zephyr_engine: ZephyrEngine {
+    env: { isCI: false, target: 'web' },
+    buildProperties: { output: '', baseHref: '/_next/' },
+    federated_dependencies: [],
+    build_start_time: 1750306603374,
+    build_id: Promise { '1376' },
+    snapshotId: Promise {
+      'lois-zephyr-cloud-io-1376.nextjs-15.zephyr-packages.zephyrcloudio'
+    },
+    hash_list: Promise { [Object] },
+    resolved_hash_list: { hash_set: [Set] },
+    version_url: null,
+    builder: 'rspack',
+    npmProperties: {
+      name: 'nextjs-15',
+      version: '1.0.0',
+      private: true,
+      scripts: [Object],
+      dependencies: [Object],
+      devDependencies: [Object]
+    },
+    gitProperties: { git: [Object], app: [Object] },
+    applicationProperties: {
+      org: 'zephyrcloudio',
+      project: 'zephyr-packages',
+      name: 'nextjs-15',
+      version: '1.0.0'
+    },
+    application_uid: 'nextjs-15.zephyr-packages.zephyrcloudio',
+    application_configuration: Promise { [Object] },
+    logger: Promise { [Function: logEvent] }
+  },
+  mfConfig: [],
+  wait_for_index_html: undefined
+}
+2025-06-19T04:16:43.381Z zephyr:app get build stats done. {
+  dependencies: [
+    { name: 'next', version: '15.3' },
+    { name: 'react', version: '18.3' },
+    { name: 'react-dom', version: '18.3' }
+  ],
+  devDependencies: [
+    { name: 'next-rspack', version: '15.4.0-canary' },
+    { name: 'zephyr-rspack-plugin', version: '0.0' },
+    { name: 'typescript', version: '5.8' }
+  ],
+  optionalDependencies: [],
+  id: 'nextjs-15.zephyr-packages.zephyrcloudio',
+  name: undefined,
+  remote: undefined,
+  metadata: {},
+  build_target: 'web',
+  versionData: undefined,
+  overrides: [],
+  consumes: [],
+  modules: [],
+  environment: 'development',
+  version: 'lois-zephyr-cloud-io-1376.nextjs-15.zephyr-packages.zephyrcloudio',
+  posted: 2025-06-19T04:16:43.378Z,
+  group: 'default',
+  sha: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+  buildHash: 'a11fc95a20fae7af',
+  edge: { url: 'https://ze.zephyrcloud.app', delimiter: '-' },
+  domain: undefined,
+  platform: 'cloudflare',
+  type: undefined,
+  app: {
+    org: 'zephyrcloudio',
+    project: 'zephyr-packages',
+    name: 'nextjs-15',
+    version: '1.0.0',
+    buildId: '1376'
+  },
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  remotes: [],
+  context: { isCI: false },
+  project: undefined,
+  tags: []
+}
+2025-06-19T04:16:43.381Z zephyr:upload Initializing: upload assets
+2025-06-19T04:16:43.382Z zephyr:app Using cached application configuration
+ ZEPHYR   No assets to upload, skipping...
+2025-06-19T04:16:43.382Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/upload?type=snapshot&skip_assets=true',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': '4969',
+    can_write_jwt: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYW5fd3JpdGUiOnRydWUsImVtYWlsIjoibG9pc0B6ZXBoeXItY2xvdWQuaW8iLCJ1c2VyX3V1aWQiOiI3N2E5YTkwNi00ZWNkLTRhNzktODVkMS1hMGRkYTQyM2IxNmQiLCJhcHBsaWNhdGlvbl91aWQiOiJuZXh0anMtMTUuemVwaHlyLXBhY2thZ2VzLnplcGh5cmNsb3VkaW8iLCJ1c2VybmFtZSI6ImxvaXNfemVwaHlyLWNsb3VkX2lvIiwiaWF0IjoxNzUwMzA2NTgxLCJleHAiOjE3NTAzMTAxODF9.csPdFuhkTNAXn0I6W6NNh52lpcwkKnLvbgUEV1KCAyxpc1TjKdfRJuNfGKHNsOfzWSWhqye-PifOMlSKk480MZByEGOQS8tqoUUf2VoCeevfmGdkUvfF9gZh5SIzW9A1tlPeHCb8CC89a3afx-L2nLjUgNkfpcqdRYLU9a8-3H6AMAPsqW7bGK-j5goswL8vjU8HK57PuYCQPY6XhixD0H4pYmvQNKpvY2E_e0PJQtZDFU1CBFwgGKkLmYipn0WXJ4fGi6YEdCu9ig9K9ltYQML0yNJ754uqbZ1Nn42GDd_Jshorn7_g2Ck_dnN3rDPVxZ7BP1Inb-K9bvs8qU_30A',
+    'User-Agent': 'axios/1.9.0',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'ze.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.383Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '439',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.414Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 32ms
+ - 0.43kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.541Z zephyr:http [POST][https://ze.zephyrcloud.app/upload?type=snapshot&skip_assets=true]: 159ms
+ - 4.85kb
+Response: {"urls":{"version":"https://lois-zephyr-cloud-io-1376-nextjs-15-zephyr-packag-a84c70ed6-ze.zephyrcloud.app"}}
+Options: {"method":"POST","headers":{"Content-Length":"4969","Content-Type":"application/json; charset=utf-8","can_write_jwt: [REDACTED]}}
+2025-06-19T04:16:43.541Z zephyr:snapshot Done: snapshot uploaded... {
+  application_uid: 'nextjs-15.zephyr-packages.zephyrcloudio',
+  version: '1.0.0-lois_zephyr-cloud_io.1376',
+  snapshot_id: 'lois-zephyr-cloud-io-1376.nextjs-15.zephyr-packages.zephyrcloudio',
+  domain: 'https://ze.zephyrcloud.app',
+  uid: {
+    build: '1376',
+    app_name: 'nextjs-15',
+    repo: 'zephyr-packages',
+    org: 'zephyrcloudio'
+  },
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  creator: { name: 'lois_zephyr-cloud_io', email: 'lois@zephyr-cloud.io' },
+  createdAt: 1750306603381,
+  mfConfig: [],
+  assets: {
+    '_next/../server-reference-manifest.json': {
+      path: '_next/../server-reference-manifest.json',
+      extname: '.json',
+      hash: '975788516a8ec4c0f1aa11e2ce2aabd1d01400e74819b97d7e910724d4fefadc',
+      size: 373
+    },
+    '_next/889.js': {
+      path: '_next/889.js',
+      extname: '.js',
+      hash: '599ed4bb25ff8d9ceb01a51330b708fa27c843801d22d8f4206bee96ffcc5820',
+      size: 53180
+    },
+    '_next/../pages/_document.js.nft.json': {
+      path: '_next/../pages/_document.js.nft.json',
+      extname: '.json',
+      hash: 'cf3168a3c114b6a73974480da9bf6380071c6a9517a7403927e1bfc50b90c302',
+      size: 264
+    },
+    '_next/../app/page.js': {
+      path: '_next/../app/page.js',
+      extname: '.js',
+      hash: '4ef96297d15aff5c2bcea4e3f27584832b643de0cf950cdf8d092fa90c0c6c80',
+      size: 4973
+    },
+    '_next/332.js': {
+      path: '_next/332.js',
+      extname: '.js',
+      hash: 'ac0df722dfa9d77a4d1f7588d10bfa57c4c60ee8eae3ca1e5652dcd7518f911d',
+      size: 283230
+    },
+    '_next/62.js': {
+      path: '_next/62.js',
+      extname: '.js',
+      hash: '38f250176dceb5a91dd3796c78a30d9959cd7db30a070d403d0a210b8879ae5f',
+      size: 7952
+    },
+    '_next/../../types/app/page.ts': {
+      path: '_next/../../types/app/page.ts',
+      extname: '.ts',
+      hash: '72f32b82883c16ac3bb8b55939c5bde119afc5c565ab53d8e920aad7dbaa8e52',
+      size: 3730
+    },
+    '_next/../pages/_error.js': {
+      path: '_next/../pages/_error.js',
+      extname: '.js',
+      hash: 'a9446205511fa7e8dac0e05ec2b37c734df45a2e8dd975e4c6d7186dc3c3a08f',
+      size: 26185
+    },
+    '_next/../../types/app/layout.ts': {
+      path: '_next/../../types/app/layout.ts',
+      extname: '.ts',
+      hash: '5a51ed4753416295318189f745336ed7797d3494f0f44c6353dbf976294e60cf',
+      size: 3742
+    },
+    '_next/../app/contact/page.js.nft.json': {
+      path: '_next/../app/contact/page.js.nft.json',
+      extname: '.json',
+      hash: 'd94d236a2660a85a315b28136b89acc8f89086d4783a43f52f33a8b46778b62f',
+      size: 135
+    },
+    '_next/../app/contact/page.js': {
+      path: '_next/../app/contact/page.js',
+      extname: '.js',
+      hash: '544b2786f607104676b08215b53d05248c60777d228efb192e5cf6e79e6de3b5',
+      size: 6374
+    },
+    '_next/../app/_not-found/page.js.nft.json': {
+      path: '_next/../app/_not-found/page.js.nft.json',
+      extname: '.json',
+      hash: '7794f54632b277ab321ca9f149ca3af3781c595c70e9d475aa1810d6741ee673',
+      size: 81
+    },
+    '_next/../app/page.js.nft.json': {
+      path: '_next/../app/page.js.nft.json',
+      extname: '.json',
+      hash: '554f4968450994c3fbc7291eda913e447be1665e53a6df79c9a66b8e09bb40f7',
+      size: 108
+    },
+    '_next/../../types/cache-life.d.ts': {
+      path: '_next/../../types/cache-life.d.ts',
+      extname: '.ts',
+      hash: '6287a2c08afea8655f8eda3c3480ec4bc9d5e69144b47a8132ef8dc165406a52',
+      size: 5861
+    },
+    '_next/../server-reference-manifest.js': {
+      path: '_next/../server-reference-manifest.js',
+      extname: '.js',
+      hash: '52b291154bee8da527357d4ae0c0b12f81457549375d246c7eaa3fa87ce7c46a',
+      size: 448
+    },
+    '_next/../pages/_app.js.nft.json': {
+      path: '_next/../pages/_app.js.nft.json',
+      extname: '.json',
+      hash: 'd4e3f5c4a0d4ae28098ac4b5012eb52cba41b046dadd62042508c05fb61b4cbb',
+      size: 240
+    },
+    '_next/../pages/_app.js': {
+      path: '_next/../pages/_app.js',
+      extname: '.js',
+      hash: '87a5da86a346fd48d55eb56f5b212333e55dddf92afe418ee863a1ce706d51f4',
+      size: 3475
+    },
+    '_next/../../types/package.json': {
+      path: '_next/../../types/package.json',
+      extname: '.json',
+      hash: 'eec86ae1178459a6f452566b47acdc3b4afbd7ee13248f2b6aaba929649855db',
+      size: 18
+    },
+    '_next/../pages/_error.js.nft.json': {
+      path: '_next/../pages/_error.js.nft.json',
+      extname: '.json',
+      hash: 'fabd6631e355ae55bc01f618ba346ab493c2c25168e5679fb39b735420ba2c2b',
+      size: 42
+    },
+    '_next/../pages/_document.js': {
+      path: '_next/../pages/_document.js',
+      extname: '.js',
+      hash: 'bd1c1b35c411779b67f73890acd940566878018c9aff7d8a01dc227d8166e60f',
+      size: 16666
+    },
+    '_next/../app/about/page.js.nft.json': {
+      path: '_next/../app/about/page.js.nft.json',
+      extname: '.json',
+      hash: '98cb0c01be8332b5f824a1190b232817ed9ef950015238a3e63f2997e608dea3',
+      size: 135
+    },
+    '_next/../app/about/page.js': {
+      path: '_next/../app/about/page.js',
+      extname: '.js',
+      hash: 'ee1b7acf4b5da67367d6059f2e55f939c84827aef0faeeead5b440ee6afe6626',
+      size: 5693
+    },
+    '_next/../../types/app/contact/page.ts': {
+      path: '_next/../../types/app/contact/page.ts',
+      extname: '.ts',
+      hash: '0bedb4fbe9c15008789f0215b516c6ecfd28bfb4057d1ea32b7bade2af923831',
+      size: 3760
+    },
+    '_next/../app/_not-found/page.js': {
+      path: '_next/../app/_not-found/page.js',
+      extname: '.js',
+      hash: 'e4530eec82b0575f304b2aa28bacc78fc608e125a0f35b3ce7ef775f702de13c',
+      size: 4776
+    },
+    '_next/../../types/app/about/page.ts': {
+      path: '_next/../../types/app/about/page.ts',
+      extname: '.ts',
+      hash: 'bdb1489f96335b726b61c7330e3dace18da81d536a2ce909fcf327206f59332b',
+      size: 3754
+    }
+  }
+}
+ ZEPHYR   Uploaded local snapshot in 160ms
+2025-06-19T04:16:43.542Z zephyr:upload  ZEPHYR  Uploading build stats to Zephyr...
+2025-06-19T04:16:43.542Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '431',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.544Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/build-stats',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '1156',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.562Z zephyr:http [POST][https://zeapi.zephyrcloud.app/build-stats]: 18ms
+ - 1.13kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Content-Type":"application/json","Authorization":"Bearer [REDACTED]","Accept":"application/json"}}
+2025-06-19T04:16:43.562Z zephyr:upload Build stats uploaded to Zephyr...
+ ZEPHYR   Deployed to Zephyr's edge in 189ms.
+ ZEPHYR   
+ ZEPHYR   https://lois-zephyr-cloud-io-1376-nextjs-15-zephyr-packag-a84c70ed6-ze.zephyrcloud.app
+2025-06-19T04:16:43.563Z zephyr:misc Deployment done
+2025-06-19T04:16:43.563Z zephyr:upload Zephyr Webpack Upload Agent: Done in 188 ms
+2025-06-19T04:16:43.563Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '515',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+
+2025-06-19T04:16:43.565Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 23ms
+ - 0.42kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.574Z next:build:webpack-build server compiler finished 624ms
+2025-06-19T04:16:43.574Z next:build:webpack-build starting edge-server compiler
+2025-06-19T04:16:43.582Z zephyr:init build started at 1750306603582
+2025-06-19T04:16:43.587Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 24ms
+ - 0.50kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.590Z zephyr:init Starting new build
+2025-06-19T04:16:43.590Z zephyr:init Skip: creating new build because no assets was uploaded
+2025-06-19T04:16:43.590Z zephyr:misc Waiting for deployment done
+2025-06-19T04:16:43.590Z zephyr:init Initiating: Zephyr Webpack Upload Agent
+2025-06-19T04:16:43.590Z zephyr:upload Building assets map from webpack assets.
+2025-06-19T04:16:43.591Z zephyr:app get build stats started. create federation dashboard plugin
+2025-06-19T04:16:43.591Z zephyr:app process webpack graph.pluginOptions {
+  pluginName: 'ZeRspackPlugin',
+  zephyr_engine: ZephyrEngine {
+    env: { isCI: false, target: 'web' },
+    buildProperties: { output: '', baseHref: '/_next/' },
+    federated_dependencies: [],
+    build_start_time: 1750306603590,
+    build_id: Promise { '1377' },
+    snapshotId: Promise {
+      'lois-zephyr-cloud-io-1377.nextjs-15.zephyr-packages.zephyrcloudio'
+    },
+    hash_list: Promise { [Object] },
+    resolved_hash_list: { hash_set: [Set] },
+    version_url: null,
+    builder: 'rspack',
+    npmProperties: {
+      name: 'nextjs-15',
+      version: '1.0.0',
+      private: true,
+      scripts: [Object],
+      dependencies: [Object],
+      devDependencies: [Object]
+    },
+    gitProperties: { git: [Object], app: [Object] },
+    applicationProperties: {
+      org: 'zephyrcloudio',
+      project: 'zephyr-packages',
+      name: 'nextjs-15',
+      version: '1.0.0'
+    },
+    application_uid: 'nextjs-15.zephyr-packages.zephyrcloudio',
+    application_configuration: Promise { [Object] },
+    logger: Promise { [Function: logEvent] }
+  },
+  mfConfig: [],
+  wait_for_index_html: undefined
+}
+2025-06-19T04:16:43.592Z zephyr:app get build stats done. {
+  dependencies: [
+    { name: 'next', version: '15.3' },
+    { name: 'react', version: '18.3' },
+    { name: 'react-dom', version: '18.3' }
+  ],
+  devDependencies: [
+    { name: 'next-rspack', version: '15.4.0-canary' },
+    { name: 'zephyr-rspack-plugin', version: '0.0' },
+    { name: 'typescript', version: '5.8' }
+  ],
+  optionalDependencies: [],
+  id: 'nextjs-15.zephyr-packages.zephyrcloudio',
+  name: undefined,
+  remote: undefined,
+  metadata: {},
+  build_target: 'web',
+  versionData: undefined,
+  overrides: [],
+  consumes: [],
+  modules: [],
+  environment: 'development',
+  version: 'lois-zephyr-cloud-io-1377.nextjs-15.zephyr-packages.zephyrcloudio',
+  posted: 2025-06-19T04:16:43.592Z,
+  group: 'default',
+  sha: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+  buildHash: '3aefa6fd5cf2deb4',
+  edge: { url: 'https://ze.zephyrcloud.app', delimiter: '-' },
+  domain: undefined,
+  platform: 'cloudflare',
+  type: undefined,
+  app: {
+    org: 'zephyrcloudio',
+    project: 'zephyr-packages',
+    name: 'nextjs-15',
+    version: '1.0.0',
+    buildId: '1377'
+  },
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  remotes: [],
+  context: { isCI: false },
+  project: undefined,
+  tags: []
+}
+2025-06-19T04:16:43.592Z zephyr:upload Initializing: upload assets
+2025-06-19T04:16:43.592Z zephyr:app Using cached application configuration
+ ZEPHYR   No assets to upload, skipping...
+2025-06-19T04:16:43.593Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/upload?type=snapshot&skip_assets=true',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': '1686',
+    can_write_jwt: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjYW5fd3JpdGUiOnRydWUsImVtYWlsIjoibG9pc0B6ZXBoeXItY2xvdWQuaW8iLCJ1c2VyX3V1aWQiOiI3N2E5YTkwNi00ZWNkLTRhNzktODVkMS1hMGRkYTQyM2IxNmQiLCJhcHBsaWNhdGlvbl91aWQiOiJuZXh0anMtMTUuemVwaHlyLXBhY2thZ2VzLnplcGh5cmNsb3VkaW8iLCJ1c2VybmFtZSI6ImxvaXNfemVwaHlyLWNsb3VkX2lvIiwiaWF0IjoxNzUwMzA2NTgxLCJleHAiOjE3NTAzMTAxODF9.csPdFuhkTNAXn0I6W6NNh52lpcwkKnLvbgUEV1KCAyxpc1TjKdfRJuNfGKHNsOfzWSWhqye-PifOMlSKk480MZByEGOQS8tqoUUf2VoCeevfmGdkUvfF9gZh5SIzW9A1tlPeHCb8CC89a3afx-L2nLjUgNkfpcqdRYLU9a8-3H6AMAPsqW7bGK-j5goswL8vjU8HK57PuYCQPY6XhixD0H4pYmvQNKpvY2E_e0PJQtZDFU1CBFwgGKkLmYipn0WXJ4fGi6YEdCu9ig9K9ltYQML0yNJ754uqbZ1Nn42GDd_Jshorn7_g2Ck_dnN3rDPVxZ7BP1Inb-K9bvs8qU_30A',
+    'User-Agent': 'axios/1.9.0',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'ze.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.593Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '439',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.632Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 39ms
+ - 0.43kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.733Z zephyr:http [POST][https://ze.zephyrcloud.app/upload?type=snapshot&skip_assets=true]: 140ms
+ - 1.65kb
+Response: {"urls":{"version":"https://lois-zephyr-cloud-io-1377-nextjs-15-zephyr-packag-5aef30953-ze.zephyrcloud.app"}}
+Options: {"method":"POST","headers":{"Content-Length":"1686","Content-Type":"application/json; charset=utf-8","can_write_jwt: [REDACTED]}}
+2025-06-19T04:16:43.733Z zephyr:snapshot Done: snapshot uploaded... {
+  application_uid: 'nextjs-15.zephyr-packages.zephyrcloudio',
+  version: '1.0.0-lois_zephyr-cloud_io.1377',
+  snapshot_id: 'lois-zephyr-cloud-io-1377.nextjs-15.zephyr-packages.zephyrcloudio',
+  domain: 'https://ze.zephyrcloud.app',
+  uid: {
+    build: '1377',
+    app_name: 'nextjs-15',
+    repo: 'zephyr-packages',
+    org: 'zephyrcloudio'
+  },
+  git: {
+    name: 'zmzlois',
+    email: 'lois.z@comcord.vision',
+    branch: 'feat/nextjs',
+    commit: 'd2b2142ca6c6331bb30060f3cd7d437a4c5b42b1',
+    tags: []
+  },
+  creator: { name: 'lois_zephyr-cloud_io', email: 'lois@zephyr-cloud.io' },
+  createdAt: 1750306603592,
+  mfConfig: [],
+  assets: {
+    '_next/middleware-manifest.json': {
+      path: '_next/middleware-manifest.json',
+      extname: '.json',
+      hash: 'feb91512746ba59d293889f1a215130623327a0b1a764edf2a1e1d5969c1d17c',
+      size: 83
+    },
+    '_next/server-reference-manifest.js': {
+      path: '_next/server-reference-manifest.js',
+      extname: '.js',
+      hash: '75447f4b1bf79baa523f3a24a80b2b76363d8544d3708fce44135645335fa570',
+      size: 448
+    },
+    '_next/../types/package.json': {
+      path: '_next/../types/package.json',
+      extname: '.json',
+      hash: 'b79896dae58bf268ecbb4d0c39fc513f8e75ea9d18d4e16183496c263c91bc3d',
+      size: 18
+    },
+    '_next/interception-route-rewrite-manifest.js': {
+      path: '_next/interception-route-rewrite-manifest.js',
+      extname: '.js',
+      hash: '52b7c036cf80cbc2fad51aa293a7591d2a532d77456c7acc63c98591ed87be66',
+      size: 48
+    },
+    '_next/server-reference-manifest.json': {
+      path: '_next/server-reference-manifest.json',
+      extname: '.json',
+      hash: 'ea6be22164ef399736fc3e7776c12aa655010c67fad23c040a7817b83d3f9697',
+      size: 373
+    },
+    '_next/../types/cache-life.d.ts': {
+      path: '_next/../types/cache-life.d.ts',
+      extname: '.ts',
+      hash: '1a4cfc1046eb114944b0d1fdda5e0418b340daac8b65530f239de8d2dcdf1396',
+      size: 5861
+    }
+  }
+}
+ ZEPHYR   Uploaded local snapshot in 141ms
+2025-06-19T04:16:43.733Z zephyr:upload  ZEPHYR  Uploading build stats to Zephyr...
+2025-06-19T04:16:43.733Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '431',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.734Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/build-stats',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '1156',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+2025-06-19T04:16:43.752Z zephyr:http [POST][https://zeapi.zephyrcloud.app/logs]: 19ms
+ - 0.42kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Authorization":"Bearer [REDACTED]","Content-Type":"application/json"}}
+2025-06-19T04:16:43.760Z zephyr:http [POST][https://zeapi.zephyrcloud.app/build-stats]: 27ms
+ - 1.13kb
+Response: {"status":"ok"}
+Options: {"method":"POST","headers":{"Content-Type":"application/json","Authorization":"Bearer [REDACTED]","Accept":"application/json"}}
+2025-06-19T04:16:43.760Z zephyr:upload Build stats uploaded to Zephyr...
+ ZEPHYR   Deployed to Zephyr's edge in 170ms.
+ ZEPHYR   
+ ZEPHYR   https://lois-zephyr-cloud-io-1377-nextjs-15-zephyr-packag-5aef30953-ze.zephyrcloud.app
+2025-06-19T04:16:43.760Z zephyr:misc Deployment done
+2025-06-19T04:16:43.760Z zephyr:upload Zephyr Webpack Upload Agent: Done in 170 ms
+2025-06-19T04:16:43.760Z follow-redirects options {
+  maxRedirects: 21,
+  maxBodyLength: Infinity,
+  protocol: 'https:',
+  path: '/logs',
+  method: 'POST',
+  headers: [Object: null prototype] {
+    Accept: 'application/json, text/plain, */*',
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkFvNEVCd2ZZXzZnSE5NRzhnQWM5biJ9.eyJodHRwczovL2FwaS56ZXBoeXItY2xvdWQuaW8vZW1haWwiOiJsb2lzQHplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pby9uYW1lIjoiTG9pcyBaaGFvIiwiaHR0cHM6Ly9hcGkuemVwaHlyLWNsb3VkLmlvL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguemVwaHlyLWNsb3VkLmlvLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEzOTAxMTg0MDU3NjE3MjIyNTI1IiwiYXVkIjpbImh0dHBzOi8vYXBpLnplcGh5ci1jbG91ZC5pbyIsImh0dHBzOi8vemVwaHlyLWNsb3VkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3NTAyODAxNjksImV4cCI6MTc1MDM2NjU2OSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImF6cCI6IklkdWVEdzBibkJvQ1BmWFNtWWtNZ2F3dERLWGtrQ2hOIn0.11FA8YNn_jnLueu3u5aB5Io6kjdNmELj1w3n93HQ0TU4nlKvDzeaxZyniVN5ma_IzRxfrPiwXVqqIPLqVrJsGIa4psM7kWsi7jgOYPaCLWAXgq4woqt9r3phKj7hOh1GOnxl64UE5VAul8QdfyLCZ9xB1V9Bimz9Rlz7ppIRqg6C5LdbM7vS5DaK2jGR7O_xBJrcsOqO_KXFKm-Q1ob-3rrGEeVUN4zu4rfmVmUQQLTb_JdFf-_NPCReFCvIdJKTTLv75Ukq8w9uoLnMhYeBO6cKMWenG0a1jXiQACob5BITENdC5rrccJ37ieEZ7-8uUlZ5l2TwhPibKdvJCrRONA',
+    'User-Agent': 'axios/1.9.0',
+    'Content-Length': '515',
+    'Accept-Encoding': 'gzip, compress, deflate, br'
+  },
+  agents: { http: undefined, https: undefined },
+  auth: undefined,
+  family: undefined,
+  beforeRedirect: [Function: dispatchBeforeRedirect],
+  beforeRedirects: { proxy: [Function: beforeRedirect] },
+  hostname: 'zeapi.zephyrcloud.app',
+  port: '',
+  agent: undefined,
+  nativeProtocols: {
+    'http:': {
+      _connectionListener: [Function: connectionListener],
+      METHODS: [Array],
+      STATUS_CODES: [Object],
+      Agent: [Function],
+      ClientRequest: [Function: ClientRequest],
+      IncomingMessage: [Function: IncomingMessage],
+      OutgoingMessage: [Function: OutgoingMessage],
+      Server: [Function: Server],
+      ServerResponse: [Function: ServerResponse],
+      createServer: [Function: createServer],
+      validateHeaderName: [Function],
+      validateHeaderValue: [Function],
+      get: [Function: get],
+      request: [Function: request],
+      setMaxIdleHTTPParsers: [Function: setMaxIdleHTTPParsers],
+      maxHeaderSize: [Getter],
+      globalAgent: [Getter/Setter],
+      WebSocket: [Getter],
+      CloseEvent: [Getter],
+      MessageEvent: [Getter]
+    },
+    'https:': {
+      Agent: [Function: Agent],
+      globalAgent: [Agent],
+      Server: [Function: Server],
+      createServer: [Function: createServer],
+      get: [Function: get],
+      request: [Function: request]
+    }
+  }
+}
+
+2025-06-19T04:16:43.763Z next:build:webpack-build edge-server compiler finished 189ms
+
+> Build error occurred
+[TypeError: Cannot read properties of undefined (reading 'import')]
+/Users/lois/Documents/Github/work/repos/zephyr-packages/examples/nextjs-15:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  nextjs-15@1.0.0 build: `next build`
+Exit status 1

@@ -1,0 +1,129 @@
+{
+  "application_uid": "nextjs-15.zephyr-packages.zephyrcloudio",
+  "version": "1.0.0-lois_zephyr-cloud_io.1367",
+  "snapshot_id": "lois-zephyr-cloud-io-1367.nextjs-15.zephyr-packages.zephyrcloudio",
+  "domain": "https://ze.zephyrcloud.app",
+  "uid": {
+    "build": "1367",
+    "app_name": "nextjs-15",
+    "repo": "zephyr-packages",
+    "org": "zephyrcloudio"
+  },
+  "git": {
+    "name": "zmzlois",
+    "email": "lois.z@comcord.vision",
+    "branch": "feat/nextjs",
+    "commit": "d2b2142ca6c6331bb30060f3cd7d437a4c5b42b1",
+    "tags": []
+  },
+  "creator": {
+    "name": "lois_zephyr-cloud_io",
+    "email": "lois@zephyr-cloud.io"
+  },
+  "createdAt": 1750304935873,
+  "mfConfig": [],
+  "assets": {
+    "_next/pages/_document.js": {
+      "path": "_next/pages/_document.js",
+      "extname": ".js",
+      "hash": "1d218c3b9c779c48c859eb4c3d97afdefd378157e4df336410267dc987b263e4",
+      "size": 6983
+    },
+    "_next/../types/package.json": {
+      "path": "_next/../types/package.json",
+      "extname": ".json",
+      "hash": "b79896dae58bf268ecbb4d0c39fc513f8e75ea9d18d4e16183496c263c91bc3d",
+      "size": 18
+    },
+    "/_error.js": {
+      "path": "/_error.js",
+      "extname": ".js",
+      "hash": "95aae5c23168ae88d755f5496dff580a794b438e842fa281e3ed3b7af7e28c4b",
+      "size": 18785
+    },
+    "_next/pages/_app.js": {
+      "path": "_next/pages/_app.js",
+      "extname": ".js",
+      "hash": "e5d0b05acf11fa64d7d2f75ad43496412f0887e574ffb2b7a6744abfe5f6f475",
+      "size": 6428
+    },
+    "_next/app/page.js": {
+      "path": "_next/app/page.js",
+      "extname": ".js",
+      "hash": "d2680ce6dc623c155d6466d253d985f2eb20aae0dc6eb2d290bb1f35542bc5b1",
+      "size": 142606
+    },
+    "_next/vendor-chunks/@swc+helpers@0.5.15.js": {
+      "path": "_next/vendor-chunks/@swc+helpers@0.5.15.js",
+      "extname": ".js",
+      "hash": "7fea140cbb1fdf4f5f3d258cabd6ecfd230606c940b27f5ba87d2f281cc00a2c",
+      "size": 25374
+    },
+    "_next/app/_not-found/page.js": {
+      "path": "_next/app/_not-found/page.js",
+      "extname": ".js",
+      "hash": "3a39607184d687109bea6a857a033278754bf545533b6b77630433b5bdfdd793",
+      "size": 82437
+    },
+    "_next/webpack-runtime.js": {
+      "path": "_next/webpack-runtime.js",
+      "extname": ".js",
+      "hash": "9031d89bffadaf0b70f8a6b71601b097d5624944eff920e6549ba5a16970e0b7",
+      "size": 5828
+    },
+    "_next/vendor-chunks/next@15.3.3_@babel+core@7.26.10_babel-plugin-macros@3.1.0_react-dom@18.3.1_react@18.3.1__react@18.3.1_sass@1.86.0.js": {
+      "path": "_next/vendor-chunks/next@15.3.3_@babel+core@7.26.10_babel-plugin-macros@3.1.0_react-dom@18.3.1_react@18.3.1__react@18.3.1_sass@1.86.0.js",
+      "extname": ".js",
+      "hash": "6d1d37fabbbb543c977762503ce7948af063b2a91478942d60f8d9d4242704ca",
+      "size": 5157600
+    },
+    "_next/server-reference-manifest.json": {
+      "path": "_next/server-reference-manifest.json",
+      "extname": ".json",
+      "hash": "b16621c735bbc3cb9e9115db2a3ae1c41bb4c083597bf717f29b5f437f4426d7",
+      "size": 2145
+    },
+    "_next/pages/_error.js": {
+      "path": "_next/pages/_error.js",
+      "extname": ".js",
+      "hash": "a8d55360db9c2da524309cdbb49df1c62c44c8d7369432a4e8bc5798bb010d22",
+      "size": 20442
+    },
+    "_next/server-reference-manifest.js": {
+      "path": "_next/server-reference-manifest.js",
+      "extname": ".js",
+      "hash": "7b9c2dcba6057164ec89a5b86c0d9046eb0bb1cf84d85c7586e014468918ef2f",
+      "size": 2247
+    },
+    "_next/../types/app/page.ts": {
+      "path": "_next/../types/app/page.ts",
+      "extname": ".ts",
+      "hash": "d9cd34c96b0f8b7af107fa2865181ffbb6d851e66721ad2b23060fdf50d16da1",
+      "size": 3730
+    },
+    "_next/app-paths-manifest.json": {
+      "path": "_next/app-paths-manifest.json",
+      "extname": ".json",
+      "hash": "dae395dde57ecf434f354bb722e622b18bd0a57b005bdf5419d617452875d33c",
+      "size": 76
+    },
+    "_next/../types/cache-life.d.ts": {
+      "path": "_next/../types/cache-life.d.ts",
+      "extname": ".ts",
+      "hash": "1a4cfc1046eb114944b0d1fdda5e0418b340daac8b65530f239de8d2dcdf1396",
+      "size": 5861
+    },
+    "_next/pages-manifest.json": {
+      "path": "_next/pages-manifest.json",
+      "extname": ".json",
+      "hash": "8703b64b16adbb093dc929103fe873a95a284ab79df1dc2ceebc4116f5c60527",
+      "size": 100
+    },
+    "_next/../types/app/layout.ts": {
+      "path": "_next/../types/app/layout.ts",
+      "extname": ".ts",
+      "hash": "7c47cffceac2cd235d99dbac37435ed8cbb91772b80b4a9762ceeec79e5f1a99",
+      "size": 3742
+    }
+  }
+}

@@ -19,6 +19,8 @@ jest.mock('../../logging/ze-log-event', () => ({
   logFn: jest.fn(),
 }));
 
+jest.mock('is-ci', () => false);
+
 describe('getGitInfo - non-git environments', () => {
   const mockExec = node_exec as unknown as jest.Mock;
   let mockGitLog: jest.Mock;
@@ -67,14 +69,14 @@ describe('getGitInfo - non-git environments', () => {
     expect(result.git.email).toBe('global@example.com');
     expect(result.git.branch).toBe('main');
     expect(result.git.commit).toBe('no-git-commit');
-    expect(result.app.org).toMatch(/^global-[a-f0-9]{8}$/); // auto-generated org
+    expect(result.app.org).toBe(''); // org should be empty when git remote is not available
     expect(mockLogFn).toHaveBeenCalledWith(
       'warn',
       expect.stringContaining('Git repository not found')
     );
     expect(mockLogFn).toHaveBeenCalledWith(
       'warn',
-      expect.stringContaining('Using auto-generated org')
+      expect.stringContaining('Organization will be determined from your account')
     );
     expect(mockLogFn).toHaveBeenCalledWith(
       'warn',
@@ -97,7 +99,7 @@ describe('getGitInfo - non-git environments', () => {
     expect(result.git.email).toBe('anonymous@zephyr-cloud.io');
     expect(result.git.branch).toBe('main');
     expect(result.git.commit).toBe('no-git-commit');
-    expect(result.app.org).toMatch(/^anonymous-[a-f0-9]{8}$/); // auto-generated unique ID per machine
+    expect(result.app.org).toBe(''); // org should be empty when git remote is not available
     expect(mockLogFn).toHaveBeenCalledWith(
       'warn',
       expect.stringContaining('Git repository not found')
@@ -139,7 +141,7 @@ describe('getGitInfo - non-git environments', () => {
     expect(mockLogFn).not.toHaveBeenCalledWith('warn', expect.any(String));
   });
 
-  it('should generate unique org names for anonymous users on the same machine', async () => {
+  it('should always use empty org when git is not available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
         callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
@@ -152,9 +154,11 @@ describe('getGitInfo - non-git environments', () => {
     const result1 = await getGitInfo();
     const result2 = await getGitInfo();
 
-    // Should be consistent on the same machine
-    expect(result1.app.org).toBe(result2.app.org);
-    // Should be anonymous with a machine-specific hash
-    expect(result1.app.org).toMatch(/^anonymous-[a-f0-9]{8}$/);
+    // Should always use empty string when git is not available
+    expect(result1.app.org).toBe('');
+    expect(result2.app.org).toBe('');
+    // Project names should still be generated from current directory
+    expect(result1.app.project).toBeTruthy();
+    expect(result2.app.project).toBeTruthy();
   });
 });

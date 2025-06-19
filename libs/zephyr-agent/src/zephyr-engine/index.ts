@@ -464,8 +464,11 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 }
 
 function mut_zephyr_app_uid(ze: ZephyrEngine): void {
+  // Use special marker when organization is empty (no git remote)
+  const org = ze.gitProperties.app.org || '__user_default__';
+
   ze.applicationProperties = {
-    org: ze.gitProperties.app.org,
+    org: org,
     project: ze.gitProperties.app.project,
     name: ze.npmProperties.name,
     version: ze.npmProperties.version,

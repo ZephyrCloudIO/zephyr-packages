@@ -1,7 +1,6 @@
 import isCI from 'is-ci';
 import { exec as node_exec } from 'node:child_process';
-import { createHash, randomUUID } from 'node:crypto';
-import { arch, homedir, hostname, platform } from 'node:os';
+import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
@@ -41,7 +40,15 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
     ze_log.git('Loaded: git info', gitInfo);
 
     return gitInfo;
-  } catch {
+  } catch (error) {
+    // In CI environments, fail immediately if git info is not available
+    if (isCI) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message: 'Git repository information is required in CI environments',
+        cause: error,
+      });
+    }
+
     // If git repo info is not available, try global git config
     logFn('warn', 'Git repository not found, falling back to global git config');
     ze_log.git('Git repository not found, falling back to global git config');
@@ -156,8 +163,6 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
       });
     }
 
-    // Generate org based on user email to ensure consistency
-    const orgName = generateOrgFromEmail(email.trim());
     const projectName = getCurrentDirectoryName();
 
     const gitInfo: ZeGitInfo = {
@@ -169,19 +174,22 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
         tags: [],
       },
       app: {
-        org: orgName,
+        org: '', // Empty organization when git remote is not available
         project: projectName,
       },
     };
 
     ze_log.git('Using global git config (no local repository)', gitInfo);
-    logFn('warn', `Using auto-generated org "${orgName}" based on global git email`);
-    ze_log.git(`Using auto-generated org "${orgName}" based on global git email`);
     logFn(
       'warn',
-      'To use your own organization, initialize a git repository: "git init && git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git"'
+      'Git repository not found. Organization will be determined from your account.'
     );
-    ze_log.git('To use your own organization, initialize a git repository');
+    ze_log.git('Organization will be determined from your account');
+    logFn(
+      'warn',
+      'To use a specific organization, initialize a git repository: "git init && git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git"'
+    );
+    ze_log.git('To use a specific organization, initialize a git repository');
 
     return gitInfo;
   } catch (error) {
@@ -198,9 +206,6 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   const defaultUser = 'anonymous';
   const defaultEmail = 'anonymous@zephyr-cloud.io';
 
-  // Generate a unique org name for anonymous users using machine-specific data
-  const uniqueId = generateUniqueOrgId();
-  const orgName = `anonymous-${uniqueId}`;
   const projectName = getCurrentDirectoryName();
 
   const gitInfo: ZeGitInfo = {
@@ -212,7 +217,7 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
       tags: [],
     },
     app: {
-      org: orgName,
+      org: '', // Empty organization when git is not available
       project: projectName,
     },
   };
@@ -220,30 +225,18 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   ze_log.git('Using fallback git info (git not available)', gitInfo);
   logFn(
     'warn',
-    `Git not available - using fallback org "${orgName}" and project "${projectName}"`
+    `Git not available - organization will be determined from your account. Project: "${projectName}".`
   );
   ze_log.git(
-    `Git not available - using fallback org "${orgName}" and project "${projectName}"`
+    `Git not available - organization will be determined from your account. Project: "${projectName}".`
   );
   logFn(
     'warn',
-    'To use your own organization, initialize a git repository: "git init && git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git"'
+    'To use a specific organization, initialize a git repository: "git init && git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git"'
   );
-  ze_log.git('To use your own organization, initialize a git repository');
+  ze_log.git('To use a specific organization, initialize a git repository');
 
   return gitInfo;
-}
-
-/** Generate a consistent org name from email */
-function generateOrgFromEmail(email: string): string {
-  // Create a hash of the email to ensure consistency
-  const hash = createHash('sha256').update(email.toLowerCase()).digest('hex');
-  // Take first 8 chars of hash for readability
-  const shortHash = hash.substring(0, 8);
-  // Extract username part of email
-  const username = email.split('@')[0].replace(/[^a-zA-Z0-9-]/g, '-');
-  // Combine for a unique but readable org name
-  return `${username}-${shortHash}`;
 }
 
 /** Get current directory name as project name */
@@ -252,20 +245,4 @@ function getCurrentDirectoryName(): string {
   const dirName = cwd.split('/').pop() || cwd.split('\\').pop() || 'untitled-project';
   // Sanitize directory name for use as project name
   return dirName.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
-}
-
-/** Generate a unique org ID for anonymous users */
-function generateUniqueOrgId(): string {
-  // Use a combination of machine-specific data to create a consistent but unique ID per machine
-  const machineData = [
-    hostname(), // Machine hostname
-    homedir(), // Home directory path
-    platform(), // OS platform
-    arch(), // CPU architecture
-  ].join(':');
-
-  // Create a hash of the machine data
-  const hash = createHash('sha256').update(machineData).digest('hex');
-  // Return first 8 chars for readability
-  return hash.substring(0, 8);
 }

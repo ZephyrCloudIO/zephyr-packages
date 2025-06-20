@@ -13,7 +13,8 @@
     "zephyr-edge-contract": "workspace:*",
     "zephyr-rspack-plugin": "workspace:*",
     "@module-federation/enhanced": "^0.15.0",
-    "@module-federation/sdk": "^0.15.0"
+    "@module-federation/sdk": "^0.15.0",
+    "@module-federation/node": "^0.15.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.3",

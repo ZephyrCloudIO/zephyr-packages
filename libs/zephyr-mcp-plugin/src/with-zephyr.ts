@@ -30,7 +30,13 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
               requiredVersion: '^1.0.0',
             },
             ...options.mfConfig.shared,
+
           },
+          // runtimePlugins: [
+          //   await import('@module-federation/node/runtimePlugin')
+          // ],
+          library: {
+            type: 'commonjs-module',  name: options.mfConfig.name,}
         })
       );
     }

@@ -110,7 +110,32 @@ export class ZephyrHostMCPServer {
         }
         
         const manifest = await response.json();
-        servers = manifest.servers || [];
+        
+        // Check if this is a Module Federation manifest
+        if (manifest.id && manifest.metaData) {
+          console.log('Detected Module Federation manifest');
+          console.log(`ID: ${manifest.id}, Name: ${manifest.name}`);
+          // Convert MF manifest to our server entry format
+          const baseUrl = this.config.cloudUrl!.replace('/mf-manifest.json', '');
+          const server: MCPServerEntry = {
+            id: manifest.id,
+            name: manifest.name,
+            version: manifest.metaData.buildInfo?.buildVersion || '1.0.0',
+            description: `Module Federation remote: ${manifest.name}`,
+            bundleUrl: `${baseUrl}/remoteEntry.js`,
+            metadata: {
+              ['mfManifest']: manifest,
+              capabilities: {}
+            },
+            status: 'active',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          servers = [server];
+          console.log(`Created server entry for ${server.name} at ${server.bundleUrl}`);
+        } else {
+          servers = manifest.servers || [];
+        }
       } else {
         console.log('No MCP URLs or manifest URL provided.');
         return;
@@ -125,19 +150,8 @@ export class ZephyrHostMCPServer {
           continue;
         }
 
-        const entry: MCPServerEntry = {
-          id: server.id,
-          name: server.name,
-          version: server.version,
-          description: server.description,
-          bundleUrl: server.bundleUrl,
-          metadata: server.metadata || {},
-          status: server.status,
-          createdAt: new Date(server.createdAt),
-          updatedAt: new Date(server.updatedAt),
-        };
-
-        this.registry.register(entry);
+        // Server is already an MCPServerEntry, just register it
+        this.registry.register(server);
       }
 
       console.log(`✓ Found ${this.registry.size()} MCP servers`);
@@ -166,7 +180,7 @@ export class ZephyrHostMCPServer {
           console.log(`Module Federation failed for ${entry.name}, trying direct load...`);
           
           // Fallback to direct bundle loading
-          const bundle = await this.downloadBundle(entry.bundleUrl);
+          const bundle = await this.downloadBundle(entry.bundleUrl, entry);
           factory = await this.createServerFactory(bundle, entry);
           console.log(`✓ Loaded ${entry.name} via direct bundle`);
         }
@@ -181,16 +195,68 @@ export class ZephyrHostMCPServer {
     }
   }
 
-  private async downloadBundle(bundleUrl: string): Promise<Buffer> {
-    // Use Zephyr Engine to download authenticated bundle
-    // TODO: Implement actual API call
-    // const response = await this.engine.api.get(bundleUrl, {
-    //   responseType: 'arraybuffer',
-    // });
-    // return Buffer.from(response.data);
+  private async downloadBundle(bundleUrl: string, entry?: MCPServerEntry): Promise<Buffer> {
+    // For remoteEntry.js files, we need to handle them differently
+    if (bundleUrl.endsWith('remoteEntry.js')) {
+      // Module Federation remotes need special handling
+      console.log('Note: remoteEntry.js is a Module Federation manifest, not a direct bundle');
+      console.log('For proper loading, the MCP server should be bundled as a standalone module');
+      
+      // Check if we have manifest metadata with exposed modules
+      if (entry?.metadata?.['mfManifest']) {
+        const manifest = entry.metadata['mfManifest'];
+        if (manifest.exposes && manifest.exposes.length > 0) {
+          const expose = manifest.exposes[0];
+          const modulePath = expose.assets?.js?.sync?.[1] || expose.assets?.js?.sync?.[0];
+          
+          if (modulePath) {
+            const baseUrl = bundleUrl.replace('/remoteEntry.js', '');
+            const moduleUrl = `${baseUrl}/${modulePath}`;
+            console.log(`Trying exposed module: ${moduleUrl}`);
+            
+            try {
+              const response = await fetch(moduleUrl);
+              if (response.ok) {
+                console.log(`Found exposed module at: ${moduleUrl}`);
+                const arrayBuffer = await response.arrayBuffer();
+                return Buffer.from(arrayBuffer);
+              }
+            } catch (error) {
+              console.error(`Failed to load exposed module: ${error}`);
+            }
+          }
+        }
+      }
+      
+      // Try common alternative paths
+      const alternatives = [
+        bundleUrl.replace('/remoteEntry.js', '/main.js'),
+        bundleUrl.replace('/remoteEntry.js', '/index.js'),
+        bundleUrl.replace('/remoteEntry.js', '/bundle.js'),
+        bundleUrl.replace('/remoteEntry.js', '/server.js'),
+      ];
+      
+      for (const altUrl of alternatives) {
+        try {
+          console.log(`Trying: ${altUrl}`);
+          const response = await fetch(altUrl);
+          if (response.ok) {
+            console.log(`Found bundle at: ${altUrl}`);
+            const arrayBuffer = await response.arrayBuffer();
+            return Buffer.from(arrayBuffer);
+          }
+        } catch (error) {
+          // Continue to next alternative
+        }
+      }
+    }
     
-    // For now, use fetch
+    // Download bundle from URL
     const response = await fetch(bundleUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download bundle from ${bundleUrl}: ${response.statusText}`);
+    }
+    
     const arrayBuffer = await response.arrayBuffer();
     return Buffer.from(arrayBuffer);
   }
@@ -215,31 +281,112 @@ export class ZephyrHostMCPServer {
 
     // Execute module (in production, use proper sandboxing)
     try {
-      const moduleFunction = new Function(
-        'exports',
-        'require',
-        'module',
-        '__filename',
-        '__dirname',
-        moduleCode
-      );
+      // Check if this is a webpack module
+      if (moduleCode.includes('exports.ids=') && moduleCode.includes('exports.modules=')) {
+        // This is a webpack chunk - extract the module
+        const webpackExports: any = { ids: [], modules: {} };
+        const moduleFunction = new Function(
+          'exports',
+          moduleCode
+        );
+        moduleFunction(webpackExports);
+        
+        // Execute the first module in the chunk
+        const moduleId = Object.keys(webpackExports.modules)[0];
+        if (moduleId) {
+          const webpackRequire: any = (id: number): any => {
+            // Handle MCP SDK requires
+            if (id === 7919) {
+              return { x: Server }; // @modelcontextprotocol/sdk/server/index.js
+            }
+            if (id === 5434) {
+              return { // @modelcontextprotocol/sdk/types.js
+                Cg: ListToolsRequestSchema,
+                zN: CallToolRequestSchema,
+              };
+            }
+            
+            // Simplified webpack require for other modules
+            const mod = { exports: {} };
+            const moduleFunc = webpackExports.modules[id];
+            if (moduleFunc) {
+              moduleFunc(mod, mod.exports, webpackRequire);
+            }
+            return mod.exports;
+          };
+          
+          // Add webpack helpers
+          webpackRequire.r = (exports: any) => {
+            if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+              Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+            }
+            Object.defineProperty(exports, '__esModule', { value: true });
+          };
+          
+          webpackRequire.d = (exports: any, definition: any) => {
+            for(const key in definition) {
+              if(webpackRequire.o(definition, key) && !webpackRequire.o(exports, key)) {
+                Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+              }
+            }
+          };
+          
+          webpackRequire.o = (obj: any, prop: any) => Object.prototype.hasOwnProperty.call(obj, prop);
+          
+          const webpackModule = { exports: {} };
+          webpackExports.modules[moduleId](webpackModule, webpackModule.exports, webpackRequire);
+          
+          // Copy webpack exports to our module exports
+          Object.assign(moduleExports, webpackModule.exports);
+        }
+      } else {
+        // Standard CommonJS module
+        const moduleFunction = new Function(
+          'exports',
+          'require',
+          'module',
+          '__filename',
+          '__dirname',
+          moduleCode
+        );
 
-      moduleFunction(
-        moduleExports,
-        moduleRequire,
-        { exports: moduleExports },
-        `mcp://${entry.name}`,
-        'mcp://'
-      );
+        moduleFunction(
+          moduleExports,
+          moduleRequire,
+          { exports: moduleExports },
+          `mcp://${entry.name}`,
+          'mcp://'
+        );
+      }
 
-      // Find the default export or main server factory
-      const factory =
-        moduleExports.default ||
-        moduleExports[entry.name] ||
-        Object.values(moduleExports).find((v: any) => typeof v === 'function');
+      // Find the server factory - could be default export, named export, or a create function
+      let factory = moduleExports.default || 
+                   moduleExports.createServer ||
+                   moduleExports.createMCPServer ||
+                   moduleExports[entry.name];
+      
+      // If not found, look for any function export
+      if (!factory) {
+        const functionExports = Object.entries(moduleExports)
+          .filter(([key, value]) => typeof value === 'function');
+        
+        if (functionExports.length === 1) {
+          factory = functionExports[0][1];
+        } else if (functionExports.length > 1) {
+          // Look for likely candidates
+          const candidate = functionExports.find(([key]) => 
+            key.toLowerCase().includes('server') || 
+            key.toLowerCase().includes('create')
+          );
+          if (candidate) {
+            factory = candidate[1];
+          }
+        }
+      }
 
       if (typeof factory !== 'function') {
-        throw new Error('No server factory function found in bundle');
+        console.error('Module exports:', Object.keys(moduleExports));
+        throw new Error('No server factory function found in bundle. Expected a function export.');
       }
 
       return factory;

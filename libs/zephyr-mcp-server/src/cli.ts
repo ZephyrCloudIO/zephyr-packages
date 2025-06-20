@@ -33,7 +33,8 @@ program
       });
 
       console.log('Enter Zephyr MCP server URLs (one per line).');
-      console.log('Example: https://nestor-lopez-1853-github-tools-mcp-example-zephyr-f1e0463b8-ze.zephyrcloud.app/remoteEntry.js');
+      console.log('Example: https://[your-server].zephyrcloud.app/bundle.js');
+      console.log('Note: For mf-manifest.json files, use --cloud-url option instead');
       console.log('Press Enter when done.\n');
 
       const getUrls = (): Promise<void> => {
@@ -49,9 +50,17 @@ program
                   askForUrl();
                 }
               } else {
-                mcpUrls.push(url.trim());
-                console.log(`✓ Added: ${url.trim()}\n`);
-                askForUrl();
+                const trimmedUrl = url.trim();
+                if (trimmedUrl.endsWith('/mf-manifest.json')) {
+                  console.log('\n⚠️  Detected mf-manifest.json URL.');
+                  console.log('Please restart with: node ./dist/cli.js start --cloud-url ' + trimmedUrl);
+                  console.log('Or provide direct bundle URLs instead.\n');
+                  askForUrl();
+                } else {
+                  mcpUrls.push(trimmedUrl);
+                  console.log(`✓ Added: ${trimmedUrl}\n`);
+                  askForUrl();
+                }
               }
             });
           };

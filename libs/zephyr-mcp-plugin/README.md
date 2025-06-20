@@ -195,4 +195,4 @@ ZEPHYR_API_KEY=your-key zephyr-mcp-server start
 
 ## License
 
-MIT
+Apache-2.0

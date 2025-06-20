@@ -1,202 +1,164 @@
-# zephyr-mcp-server
+# Zephyr MCP Server
 
-The Zephyr MCP Host Server that dynamically loads and aggregates MCP servers from Zephyr Cloud URLs.
-
-## Features
-
-- 🌐 **URL-Based Loading**: Load MCP servers from Zephyr CDN URLs or manifest files
-- 🔗 **Unified Interface**: Aggregates all tools, resources, and prompts from multiple servers
-- 📦 **Module Federation**: Uses Module Federation for runtime loading
-- 🔒 **Sandboxed Execution**: Runs loaded servers in isolated environments
-- 🏷️ **Namespace Isolation**: Tools are namespaced by server (e.g., `github.create_issue`)
-- 📊 **Manifest Support**: Define available servers via JSON manifests
+A host server that dynamically loads and runs MCP (Model Context Protocol) servers deployed to Zephyr Cloud via Module Federation.
 
 ## Installation
 
 ```bash
-npm install -g zephyr-mcp-server
+npm install zephyr-mcp-server
+# or
+pnpm add zephyr-mcp-server
 ```
 
 ## Usage
 
-### Interactive Mode (Recommended)
+### Starting the Server
 
-When you start the server without arguments, it will prompt you for Zephyr MCP URLs:
-
-```bash
-$ zephyr-mcp-server start
-
-Starting Zephyr MCP Host Server...
-================================
-
-Enter Zephyr MCP server URLs (one per line).
-Example: https://nestor-lopez-1853-github-tools-mcp-example-zephyr-f1e0463b8-ze.zephyrcloud.app/remoteEntry.js
-Press Enter when done.
-
-MCP URL (or press Enter to finish): [paste your URL here]
-```
-
-### Command Line Options
+The Zephyr MCP Server can load **any** MCP server deployed to Zephyr Cloud. Simply provide the Module Federation manifest URL:
 
 ```bash
-# Start with a manifest URL
-zephyr-mcp-server start --cloud-url https://cdn.zephyr-cloud.io/mcp/my-org/manifest.json
-
-# With authentication
-zephyr-mcp-server start \
-  --api-key YOUR_API_KEY \
-  --servers github-tools,database-tools
-
-# List available servers from a manifest
-zephyr-mcp-server list --cloud-url https://cdn.zephyr-cloud.io/mcp/my-org/manifest.json
+# Load any MCP server from Zephyr Cloud
+npx zephyr-mcp-server start --cloud-url https://[your-server].zephyrcloud.app/mf-manifest.json
 ```
 
-### Environment Variables
+### Examples
 
 ```bash
-export ZEPHYR_API_KEY=your-api-key
-export ZEPHYR_CLOUD_URL=https://cdn.zephyr-cloud.io/mcp/my-org/manifest.json
-zephyr-mcp-server start
+# GitHub Tools MCP
+npx zephyr-mcp-server start --cloud-url https://nestor-lopez-1858-github-tools-mcp-example-zephyr-7d0eb9770-ze.zephyrcloud.app/mf-manifest.json
+
+# Your Custom Database MCP
+npx zephyr-mcp-server start --cloud-url https://[user]-[id]-database-mcp-[hash].zephyrcloud.app/mf-manifest.json
+
+# AI Assistant MCP
+npx zephyr-mcp-server start --cloud-url https://[user]-[id]-ai-assistant-[hash].zephyrcloud.app/mf-manifest.json
 ```
 
-### Programmatic Usage
+### How It Works
 
-```typescript
-import { createZephyrHostServer } from 'zephyr-mcp-server';
+1. **Universal Loader**: The host server uses Module Federation to dynamically load any MCP server
+2. **Automatic Discovery**: Reads the `mf-manifest.json` to find exposed modules
+3. **Dynamic Loading**: Downloads and executes the MCP server code at runtime
+4. **Tool Namespacing**: All tools are namespaced by server name to avoid conflicts
 
-const host = await createZephyrHostServer({
-  apiKey: 'your-api-key',
-  cloudUrl: 'https://cdn.zephyr-cloud.io/mcp/my-org/manifest.json',
-  environment: 'production',
-  allowedServers: ['github-tools', 'database-tools'],
-  cache: {
-    enabled: true,
-    ttl: 3600000, // 1 hour
-  },
-});
+### Multiple Servers (Coming Soon)
 
-await host.connect(process.stdin, process.stdout);
+```bash
+# Load multiple MCP servers at once
+npx zephyr-mcp-server start \
+  --cloud-url https://[github-mcp].zephyrcloud.app/mf-manifest.json \
+  --cloud-url https://[database-mcp].zephyrcloud.app/mf-manifest.json \
+  --cloud-url https://[ai-mcp].zephyrcloud.app/mf-manifest.json
 ```
 
-## Configuration
+## Integration with MCP Clients
 
-```typescript
-interface ZephyrHostConfig {
-  // Zephyr API key
-  apiKey?: string;
+Configure your MCP client (e.g., Claude Desktop) to use any Zephyr-hosted MCP server:
 
-  // Zephyr Cloud URL or manifest URL
-  cloudUrl?: string;
-
-  // Environment (production, staging, dev)
-  environment?: 'production' | 'staging' | 'dev';
-
-  // Filter specific servers (omit to load all)
-  allowedServers?: string[];
-
-  // Cache settings
-  cache?: {
-    enabled: boolean;
-    ttl: number; // milliseconds
-  };
-
-  // Sandbox settings
-  sandbox?: {
-    enabled: boolean;
-    memoryLimit?: number;
-    timeout?: number;
-  };
+```json
+{
+  "mcpServers": {
+    "my-tools": {
+      "command": "npx",
+      "args": [
+        "zephyr-mcp-server",
+        "start",
+        "--cloud-url",
+        "https://[your-custom-mcp].zephyrcloud.app/mf-manifest.json"
+      ]
+    }
+  }
 }
 ```
 
-## How It Works
+## Building Your Own MCP Server for Zephyr
 
-1. **URL Input**: Prompts for or accepts Zephyr MCP server URLs
-2. **Discovery**: Fetches server bundles from provided URLs
-3. **Loading**: Dynamically imports servers using Module Federation
-4. **Registration**: Registers all tools, resources, and prompts
-5. **Namespacing**: Prefixes all capabilities with server name
-6. **Routing**: Routes requests to appropriate servers
+1. Create your MCP server using the `zephyr-mcp-plugin`:
 
-## Zephyr URLs
+```javascript
+// rspack.config.js
+import { withZephyr } from 'zephyr-mcp-plugin';
 
-When you deploy an MCP server with `zephyr-mcp-plugin`, Zephyr generates a unique URL:
-
-```
-https://[user]-[id]-[server-name]-zephyr-[hash]-ze.zephyrcloud.app/remoteEntry.js
-```
-
-Example:
-```
-https://nestor-lopez-1853-github-tools-mcp-example-zephyr-f1e0463b8-ze.zephyrcloud.app/remoteEntry.js
+export default withZephyr({
+  entry: './src/my-mcp-server.ts',
+  mfConfig: {
+    name: 'my_custom_mcp',
+    exposes: {
+      './server': './src/my-mcp-server.ts'
+    }
+  }
+});
 ```
 
-These URLs are provided after building your MCP server and can be used directly with the host server.
-
-## Tool Namespacing
-
-Tools from different servers are namespaced to avoid conflicts:
-
-- `github.create_issue` → GitHub server's `create_issue` tool
-- `database.query` → Database server's `query` tool
-- `ai.generate` → AI server's `generate` tool
-
-## Security
-
-- **Authentication**: Requires valid Zephyr API key
-- **Sandboxing**: Loaded servers run in isolated contexts
-- **Access Control**: Can restrict which servers to load
-- **HTTPS Only**: All communication encrypted
-
-## Examples
-
-### Basic Usage
+2. Build and deploy:
 
 ```bash
-# Start with a manifest URL
-zephyr-mcp-server start --cloud-url https://cdn.zephyr-cloud.io/mcp/acme/manifest.json
+pnpm build
+# Automatically uploads to Zephyr Cloud
 ```
 
-### Filtered Servers
+3. Get your manifest URL and use it:
 
 ```bash
-# Only load specific servers
-zephyr-mcp-server start --servers github-tools,jira-tools
+npx zephyr-mcp-server start --cloud-url https://[your-deployment].zephyrcloud.app/mf-manifest.json
 ```
 
-### Development Mode
+## Advanced Options
 
 ```bash
-# Use staging environment
-zephyr-mcp-server start --env staging --no-cache
+# With API key for private servers
+npx zephyr-mcp-server start --cloud-url [url] --api-key your-key
+
+# Specify environment
+npx zephyr-mcp-server start --cloud-url [url] --env staging
+
+# Filter allowed servers (when using manifests with multiple servers)
+npx zephyr-mcp-server start --cloud-url [url] --servers "github,database"
+
+# Disable caching
+npx zephyr-mcp-server start --cloud-url [url] --no-cache
 ```
 
-## Troubleshooting
+## Benefits
 
-### Server Not Loading
+- **🚀 Zero Configuration**: Just provide a URL and it works
+- **🔌 Universal Compatibility**: Works with any MCP server built with zephyr-mcp-plugin
+- **🌐 Dynamic Loading**: No need to install MCP servers locally
+- **📦 Module Federation**: Leverages webpack's Module Federation for efficient loading
+- **🏷️ Automatic Namespacing**: Prevents tool conflicts between servers
+- **🔄 Hot Swapping**: Change servers without restarting your client
 
-1. Check your API key is valid
-2. Verify the server is active in Zephyr Cloud
-3. Check network connectivity
-4. Try with `--no-cache` flag
-
-### Authentication Errors
+## Development
 
 ```bash
-# Set API key
-export ZEPHYR_API_KEY=your-api-key
+# Clone the repository
+git clone https://github.com/ZephyrCloudIO/zephyr-packages.git
+cd zephyr-packages/libs/zephyr-mcp-server
 
-# Or pass directly
-zephyr-mcp-server start --api-key your-api-key
+# Install dependencies
+pnpm install
+
+# Build
+pnpm nx build zephyr-mcp-server
+
+# Run locally
+node ./dist/cli.js start --cloud-url [manifest-url]
 ```
 
-### Debug Mode
+## How Module Federation Makes This Possible
 
-```bash
-# Enable debug logging
-DEBUG=zephyr:* zephyr-mcp-server start
-```
+Module Federation allows the host server to:
+1. Load code dynamically from any Zephyr URL
+2. Share dependencies efficiently (e.g., MCP SDK)
+3. Isolate different MCP servers while running them in the same process
+4. Update servers without changing the host
+
+This means you can:
+- Deploy new MCP servers without updating the host
+- Mix and match different MCP servers
+- Version your MCP servers independently
+- Share MCP servers across teams easily
 
 ## License
 
-MIT
+Apache-2.0

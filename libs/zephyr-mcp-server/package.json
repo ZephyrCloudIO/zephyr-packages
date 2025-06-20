@@ -1,0 +1,35 @@
+{
+  "name": "zephyr-mcp-server",
+  "version": "0.0.1",
+  "description": "Zephyr MCP Host Server that loads and aggregates MCP servers from Zephyr Cloud",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "bin": {
+    "zephyr-mcp-server": "./dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist",
+    "start": "node ./src/cli.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "typescript": "^5.8.3",
+    "rimraf": "^6.0.1"
+  },
+  "keywords": [
+    "zephyr",
+    "mcp",
+    "model-context-protocol",
+    "server",
+    "host"
+  ],
+  "author": "Zephyr Team",
+  "license": "MIT"
+}

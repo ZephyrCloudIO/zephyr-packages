@@ -1,0 +1,454 @@
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrHostConfig, MCPServerEntry, LoadedMCPServer } from './types';
+import { MCPRegistry } from './registry';
+
+export class ZephyrHostMCPServer {
+  private server: Server;
+  private engine: ZephyrEngine;
+  private config: ZephyrHostConfig;
+  private registry: MCPRegistry;
+  private loadedServers: Map<string, LoadedMCPServer> = new Map();
+
+  constructor(config: ZephyrHostConfig = {}) {
+    this.config = {
+      environment: 'production',
+      cache: { enabled: true, ttl: 3600000 }, // 1 hour
+      sandbox: { enabled: true },
+      ...config,
+    };
+    
+    this.server = new Server({
+      name: 'zephyr-mcp-host',
+      version: '1.0.0',
+      capabilities: {
+        tools: {},
+        resources: {},
+        prompts: {},
+      },
+    });
+    
+    this.registry = new MCPRegistry();
+  }
+
+  async initialize(): Promise<void> {
+    // Initialize Zephyr Engine
+    this.engine = await ZephyrEngine.create({
+      builder: 'mcp-host',
+      context: process.cwd(),
+      apiKey: this.config.apiKey,
+      environment: this.config.environment,
+    });
+
+    // Discover available MCP servers
+    await this.discoverServers();
+
+    // Load approved servers
+    await this.loadServers();
+
+    // Set up request handlers
+    this.setupRequestHandlers();
+  }
+
+  private async discoverServers(): Promise<void> {
+    console.log('Discovering MCP servers from Zephyr Cloud...');
+    
+    try {
+      // Query Zephyr for available MCP servers
+      const response = await this.engine.api.get('/mcp/servers', {
+        params: {
+          status: 'active',
+          type: 'mcp-server',
+        },
+      });
+
+      const servers = response.data.servers || [];
+      
+      for (const server of servers) {
+        // Filter by allowed servers if specified
+        if (this.config.allowedServers && 
+            !this.config.allowedServers.includes(server.name)) {
+          continue;
+        }
+
+        const entry: MCPServerEntry = {
+          id: server.id,
+          name: server.name,
+          version: server.version,
+          description: server.description,
+          bundleUrl: server.bundleUrl,
+          metadata: server.metadata || {},
+          status: server.status,
+          createdAt: new Date(server.createdAt),
+          updatedAt: new Date(server.updatedAt),
+        };
+
+        this.registry.register(entry);
+      }
+
+      console.log(`✓ Found ${this.registry.size()} MCP servers`);
+    } catch (error) {
+      console.error('Failed to discover servers:', error);
+      throw error;
+    }
+  }
+
+  private async loadServers(): Promise<void> {
+    console.log('Loading MCP servers...');
+    
+    const entries = this.registry.getAll();
+    
+    for (const entry of entries) {
+      try {
+        console.log(`Loading ${entry.name} v${entry.version}...`);
+        
+        // Download bundle from Zephyr
+        const bundle = await this.downloadBundle(entry.bundleUrl);
+        
+        // Create server factory
+        const factory = await this.createServerFactory(bundle, entry);
+        
+        this.loadedServers.set(entry.name, {
+          entry,
+          factory,
+        });
+        
+        console.log(`✓ Loaded ${entry.name}`);
+      } catch (error) {
+        console.error(`Failed to load ${entry.name}:`, error);
+      }
+    }
+  }
+
+  private async downloadBundle(bundleUrl: string): Promise<Buffer> {
+    // Use Zephyr Engine to download authenticated bundle
+    const response = await this.engine.api.get(bundleUrl, {
+      responseType: 'arraybuffer',
+    });
+    
+    return Buffer.from(response.data);
+  }
+
+  private async createServerFactory(
+    bundle: Buffer,
+    entry: MCPServerEntry
+  ): Promise<() => Promise<Server>> {
+    // In production, this would use a proper sandbox (VM2, isolated-vm, etc.)
+    // For now, we'll create a simple module loader
+    
+    const moduleCode = bundle.toString();
+    
+    // Create a module context
+    const moduleExports: any = {};
+    const moduleRequire = (id: string) => {
+      if (id === '@modelcontextprotocol/sdk/server/index.js') {
+        return { Server };
+      }
+      throw new Error(`Module ${id} not allowed in sandbox`);
+    };
+    
+    // Execute module (in production, use proper sandboxing)
+    try {
+      const moduleFunction = new Function(
+        'exports',
+        'require',
+        'module',
+        '__filename',
+        '__dirname',
+        moduleCode
+      );
+      
+      moduleFunction(
+        moduleExports,
+        moduleRequire,
+        { exports: moduleExports },
+        `mcp://${entry.name}`,
+        'mcp://'
+      );
+      
+      // Find the default export or main server factory
+      const factory = moduleExports.default || 
+                     moduleExports[entry.name] ||
+                     Object.values(moduleExports).find((v: any) => typeof v === 'function');
+      
+      if (typeof factory !== 'function') {
+        throw new Error('No server factory function found in bundle');
+      }
+      
+      return factory;
+    } catch (error) {
+      console.error(`Failed to create factory for ${entry.name}:`, error);
+      throw error;
+    }
+  }
+
+  private setupRequestHandlers(): void {
+    // List all available tools
+    this.server.setRequestHandler('tools/list', async () => {
+      const allTools = [];
+      
+      for (const [serverName, loaded] of this.loadedServers) {
+        try {
+          // Get or create server instance
+          if (!loaded.instance) {
+            loaded.instance = await loaded.factory();
+          }
+          
+          // Get tools from server
+          const response = await loaded.instance.requestHandler(
+            { method: 'tools/list', params: {} },
+            {}
+          );
+          
+          if (response.tools) {
+            // Namespace tools
+            for (const tool of response.tools) {
+              allTools.push({
+                ...tool,
+                name: `${serverName}.${tool.name}`,
+                description: `[${serverName}] ${tool.description || ''}`,
+                metadata: {
+                  ...tool.metadata,
+                  server: serverName,
+                  version: loaded.entry.version,
+                },
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to get tools from ${serverName}:`, error);
+        }
+      }
+      
+      return { tools: allTools };
+    });
+
+    // Handle tool calls
+    this.server.setRequestHandler('tools/call', async (request) => {
+      const { name, arguments: args } = request.params;
+      
+      // Parse namespaced name
+      const dotIndex = name.indexOf('.');
+      if (dotIndex === -1) {
+        throw new Error(`Invalid tool name format. Use: server.tool`);
+      }
+      
+      const serverName = name.substring(0, dotIndex);
+      const toolName = name.substring(dotIndex + 1);
+      
+      const loaded = this.loadedServers.get(serverName);
+      if (!loaded) {
+        throw new Error(`Server ${serverName} not found`);
+      }
+      
+      try {
+        // Get or create server instance
+        if (!loaded.instance) {
+          loaded.instance = await loaded.factory();
+        }
+        
+        // Call the tool
+        const response = await loaded.instance.requestHandler(
+          {
+            method: 'tools/call',
+            params: {
+              name: toolName,
+              arguments: args,
+            },
+          },
+          {}
+        );
+        
+        return response;
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error calling ${name}: ${error.message}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    });
+
+    // Server info
+    this.server.setRequestHandler('server/info', async () => {
+      const servers = Array.from(this.loadedServers.values()).map(loaded => ({
+        name: loaded.entry.name,
+        version: loaded.entry.version,
+        description: loaded.entry.description,
+        capabilities: loaded.entry.metadata.capabilities,
+      }));
+      
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              name: 'zephyr-mcp-host',
+              version: '1.0.0',
+              type: 'host',
+              environment: this.config.environment,
+              servers,
+            }, null, 2),
+          },
+        ],
+      };
+    });
+
+    // Also handle resources and prompts
+    this.setupResourceHandlers();
+    this.setupPromptHandlers();
+  }
+
+  private setupResourceHandlers(): void {
+    this.server.setRequestHandler('resources/list', async () => {
+      const allResources = [];
+      
+      for (const [serverName, loaded] of this.loadedServers) {
+        try {
+          if (!loaded.instance) {
+            loaded.instance = await loaded.factory();
+          }
+          
+          const response = await loaded.instance.requestHandler(
+            { method: 'resources/list', params: {} },
+            {}
+          );
+          
+          if (response.resources) {
+            for (const resource of response.resources) {
+              allResources.push({
+                ...resource,
+                uri: `${serverName}:${resource.uri}`,
+                metadata: {
+                  ...resource.metadata,
+                  server: serverName,
+                },
+              });
+            }
+          }
+        } catch (error) {
+          // Server might not support resources
+        }
+      }
+      
+      return { resources: allResources };
+    });
+
+    this.server.setRequestHandler('resources/read', async (request) => {
+      const { uri } = request.params;
+      
+      const colonIndex = uri.indexOf(':');
+      if (colonIndex === -1) {
+        throw new Error(`Invalid resource URI format`);
+      }
+      
+      const serverName = uri.substring(0, colonIndex);
+      const resourceUri = uri.substring(colonIndex + 1);
+      
+      const loaded = this.loadedServers.get(serverName);
+      if (!loaded) {
+        throw new Error(`Server ${serverName} not found`);
+      }
+      
+      if (!loaded.instance) {
+        loaded.instance = await loaded.factory();
+      }
+      
+      return loaded.instance.requestHandler(
+        {
+          method: 'resources/read',
+          params: { uri: resourceUri },
+        },
+        {}
+      );
+    });
+  }
+
+  private setupPromptHandlers(): void {
+    this.server.setRequestHandler('prompts/list', async () => {
+      const allPrompts = [];
+      
+      for (const [serverName, loaded] of this.loadedServers) {
+        try {
+          if (!loaded.instance) {
+            loaded.instance = await loaded.factory();
+          }
+          
+          const response = await loaded.instance.requestHandler(
+            { method: 'prompts/list', params: {} },
+            {}
+          );
+          
+          if (response.prompts) {
+            for (const prompt of response.prompts) {
+              allPrompts.push({
+                ...prompt,
+                name: `${serverName}.${prompt.name}`,
+                metadata: {
+                  ...prompt.metadata,
+                  server: serverName,
+                },
+              });
+            }
+          }
+        } catch (error) {
+          // Server might not support prompts
+        }
+      }
+      
+      return { prompts: allPrompts };
+    });
+
+    this.server.setRequestHandler('prompts/get', async (request) => {
+      const { name, arguments: args } = request.params;
+      
+      const dotIndex = name.indexOf('.');
+      if (dotIndex === -1) {
+        throw new Error(`Invalid prompt name format`);
+      }
+      
+      const serverName = name.substring(0, dotIndex);
+      const promptName = name.substring(dotIndex + 1);
+      
+      const loaded = this.loadedServers.get(serverName);
+      if (!loaded) {
+        throw new Error(`Server ${serverName} not found`);
+      }
+      
+      if (!loaded.instance) {
+        loaded.instance = await loaded.factory();
+      }
+      
+      return loaded.instance.requestHandler(
+        {
+          method: 'prompts/get',
+          params: {
+            name: promptName,
+            arguments: args,
+          },
+        },
+        {}
+      );
+    });
+  }
+
+  getServer(): Server {
+    return this.server;
+  }
+
+  async connect(stdin: NodeJS.ReadStream, stdout: NodeJS.WriteStream): Promise<void> {
+    await this.server.connect(stdin, stdout);
+  }
+}
+
+export async function createZephyrHostServer(
+  config?: ZephyrHostConfig
+): Promise<ZephyrHostMCPServer> {
+  const host = new ZephyrHostMCPServer(config);
+  await host.initialize();
+  return host;
+}

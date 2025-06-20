@@ -1,0 +1,37 @@
+{
+  "name": "zephyr-mcp-server",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-mcp-server/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-mcp-server/src",
+        "outputPath": "libs/zephyr-mcp-server/dist",
+        "tsConfig": "libs/zephyr-mcp-server/tsconfig.lib.json",
+        "main": "libs/zephyr-mcp-server/src/index.ts"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-mcp-server {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-mcp-server@$(npm view zephyr-mcp-server@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-mcp-server/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

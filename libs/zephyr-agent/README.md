@@ -95,54 +95,65 @@ interface ZephyrAgentConfig {
 }
 ```
 
-### Git Repository Detection
+### Git Repository Requirements
 
-When deploying from a directory that is not a Git repository, Zephyr will attempt the following fallbacks in order:
+**IMPORTANT**: Zephyr requires a properly initialized Git repository with a remote origin for production deployments.
 
-1. **Local Git Repository** - Uses git info from the current repository
-2. **Global Git Config** - Falls back to global git user config and auto-generates an organization name
-3. **Anonymous Mode** - Creates a machine-specific organization for anonymous users
+#### Git Information Handling
 
-**Note**: When git is not available, Zephyr will display warnings indicating this is fallback behavior.
+When Zephyr cannot find a Git repository with remote origin, it will:
 
-#### Auto-Generated Organization Names
+1. **Interactive Terminal (TTY available)**:
 
-Zephyr generates unique organization names in different scenarios:
+   - Prompt you to manually enter organization and project names
+   - Display strong warnings that this is NOT recommended
+   - Show clear instructions on how to properly set up Git
+   - Use custom Zephyr-branded prompts with green styling
 
-1. **With Global Git Config**: Organization name is derived from the user's email address
+2. **Non-Interactive Environment (CI/CD, no TTY)**:
+   - Use global Git config for user information (if available)
+   - Leave organization empty (will be determined from your Zephyr account)
+   - Display critical warnings about potential deployment issues
+   - Continue with the build but functionality may be limited
 
-   - Example: `john-doe-a1b2c3d4` (username + hash of email)
-   - Consistent across projects for the same user email
-
-2. **Anonymous Users (No Git)**: Organization name is derived from machine-specific data
-
-   - Example: `anonymous-f3e4b2a1` (anonymous + machine hash)
-   - Unique per machine, consistent on the same machine
-   - Prevents conflicts between different anonymous users
-
-#### Example Usage
+#### Example Scenarios
 
 ```bash
-# With a git repository (recommended)
+# Recommended: Proper Git setup
 git init
-git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git
-npm run build  # Will use your GitHub org/username
+git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git
+git add . && git commit -m "Initial commit"
+npm run build  # Works perfectly
 
-# With global git config (fallback)
-git config --global user.name "John Doe"
-git config --global user.email "john@example.com"
-npm run build  # Will use auto-generated org: john-a1b2c3d4
+# Interactive fallback (NOT recommended)
+# No git repository, but terminal is available
+npm run build
+# > ⚠️  Git repository not found. Zephyr REQUIRES git...
+# > PROMPT  What organization should this project belong to?
+# > PROMPT  What is the project name?
 
-# Without any git config (anonymous)
-npm run build  # Will use machine-specific org: anonymous-f3e4b2a1
+# Non-interactive fallback (may cause issues)
+# No git repository, no terminal (e.g., CI environment)
+npm run build
+# > ⚠️  CRITICAL: Git not available. Zephyr CANNOT function properly...
+# > Organization will be determined from your account
 ```
 
-This allows Zephyr to work in environments without Git, such as:
+#### Why Git is Required
 
-- CI/CD pipelines without Git history
-- Standalone build directories
-- Ephemeral development environments
-- Quick prototypes and demos
+Zephyr uses Git information to:
+
+- Determine organization and project structure
+- Track deployment versions and commits
+- Enable collaboration features
+- Provide proper deployment metadata
+
+Without Git, Zephyr cannot guarantee proper functionality, especially for:
+
+- Production deployments
+- Team collaboration
+- Version tracking
+- Rollback capabilities
 
 ## Internal APIs
 

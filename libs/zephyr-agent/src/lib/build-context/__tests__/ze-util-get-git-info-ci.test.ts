@@ -22,11 +22,24 @@ jest.mock('../../logging/ze-log-event', () => ({
 // Mock is-ci to return true for CI environment testing
 jest.mock('is-ci', () => true);
 
+jest.mock('../ze-git-info-cache', () => ({
+  getCachedGitInfo: jest.fn().mockReturnValue(null),
+  setCachedGitInfo: jest.fn(),
+  getGitInfoPromise: jest.fn().mockReturnValue(null),
+  setGitInfoPromise: jest.fn(),
+  clearGitInfoCache: jest.fn(),
+}));
+
 describe('getGitInfo - CI environments', () => {
   const mockExec = node_exec as unknown as jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Reset cache mocks
+    const { getCachedGitInfo, getGitInfoPromise } = require('../ze-git-info-cache');
+    getCachedGitInfo.mockReturnValue(null);
+    getGitInfoPromise.mockReturnValue(null);
   });
 
   it('should fail immediately in CI when git info is not available', async () => {
@@ -41,8 +54,8 @@ describe('getGitInfo - CI environments', () => {
     await expect(getGitInfo()).rejects.toThrow();
     try {
       await getGitInfo();
-    } catch (error: any) {
-      expect(error.message).toContain(
+    } catch (error) {
+      expect((error as Error).message).toContain(
         'Git repository information is required in CI environments'
       );
     }

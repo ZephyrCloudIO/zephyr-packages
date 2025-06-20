@@ -8,6 +8,13 @@ import { ze_log } from '../logging';
 import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getGitProviderInfo } from './git-provider-utils';
+import { isInteractiveTerminal, promptForGitInfo } from './ze-util-interactive-prompts';
+import {
+  getCachedGitInfo,
+  setCachedGitInfo,
+  getGitInfoPromise,
+  setGitInfoPromise,
+} from './ze-git-info-cache';
 
 const exec = promisify(node_exec);
 
@@ -18,6 +25,36 @@ export interface ZeGitInfo {
 
 /** Loads the git information from the current repository. */
 export async function getGitInfo(): Promise<ZeGitInfo> {
+  // Check if we already have cached git info
+  const cached = getCachedGitInfo();
+  if (cached) {
+    ze_log.git('Using cached git info');
+    return cached;
+  }
+
+  // Check if another call is already gathering git info
+  const existingPromise = getGitInfoPromise();
+  if (existingPromise) {
+    ze_log.git('Waiting for existing git info gathering to complete');
+    return existingPromise;
+  }
+
+  // Create a new promise for gathering git info
+  const gitInfoPromise = gatherGitInfo();
+  setGitInfoPromise(gitInfoPromise);
+
+  try {
+    const gitInfo = await gitInfoPromise;
+    setCachedGitInfo(gitInfo);
+    return gitInfo;
+  } finally {
+    // Clear the promise after completion
+    setGitInfoPromise(null);
+  }
+}
+
+/** Internal function that actually gathers git information. */
+async function gatherGitInfo(): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
 
   try {
@@ -50,7 +87,6 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
     }
 
     // If git repo info is not available, try global git config
-    logFn('warn', 'Git repository not found, falling back to global git config');
     ze_log.git('Git repository not found, falling back to global git config');
 
     try {
@@ -164,6 +200,35 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
     }
 
     const projectName = getCurrentDirectoryName();
+    let org = '';
+    let project = projectName;
+
+    // If we're in an interactive terminal, prompt for org and project info
+    if (isInteractiveTerminal()) {
+      logFn(
+        'error',
+        '⚠️  Git repository not found. Zephyr REQUIRES a git repository with remote origin.'
+      );
+      const promptResult = await promptForGitInfo(projectName);
+      org = promptResult.org;
+      project = promptResult.project;
+    } else {
+      // Non-interactive mode: use defaults and show warnings
+      logFn(
+        'error',
+        '⚠️  WARNING: Git repository not found. Zephyr REQUIRES git for proper deployment.'
+      );
+      logFn(
+        'error',
+        'Organization will be determined from your account - this is NOT recommended.'
+      );
+      ze_log.git('Organization will be determined from your account');
+      logFn(
+        'warn',
+        'To properly use Zephyr: git init && git remote add origin git@github.com:ORG/REPO.git'
+      );
+      logFn('info', 'Full setup guide: https://docs.zephyr-cloud.io');
+    }
 
     const gitInfo: ZeGitInfo = {
       git: {
@@ -174,22 +239,12 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
         tags: [],
       },
       app: {
-        org: '', // Empty organization when git remote is not available
-        project: projectName,
+        org,
+        project,
       },
     };
 
     ze_log.git('Using global git config (no local repository)', gitInfo);
-    logFn(
-      'warn',
-      'Git repository not found. Organization will be determined from your account.'
-    );
-    ze_log.git('Organization will be determined from your account');
-    logFn(
-      'warn',
-      'To use a specific organization, initialize a git repository: "git init && git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git"'
-    );
-    ze_log.git('To use a specific organization, initialize a git repository');
 
     return gitInfo;
   } catch (error) {
@@ -207,6 +262,32 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   const defaultEmail = 'anonymous@zephyr-cloud.io';
 
   const projectName = getCurrentDirectoryName();
+  let org = '';
+  let project = projectName;
+
+  // If we're in an interactive terminal, prompt for org and project info
+  if (isInteractiveTerminal()) {
+    logFn('error', '⚠️  Git not available. Zephyr REQUIRES git for deployment.');
+    const promptResult = await promptForGitInfo(projectName);
+    org = promptResult.org;
+    project = promptResult.project;
+  } else {
+    // Non-interactive mode: use defaults and show warnings
+    logFn(
+      'error',
+      `⚠️  CRITICAL: Git not available. Zephyr CANNOT function properly without git.`
+    );
+    logFn(
+      'error',
+      `Using fallback project name: "${projectName}" - this WILL cause deployment issues.`
+    );
+    ze_log.git(`Git not available - using fallback configuration`);
+    logFn(
+      'warn',
+      'Zephyr REQUIRES: git init && git remote add origin git@github.com:ORG/REPO.git && git commit'
+    );
+    logFn('info', 'Setup guide: https://docs.zephyr-cloud.io');
+  }
 
   const gitInfo: ZeGitInfo = {
     git: {
@@ -217,24 +298,12 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
       tags: [],
     },
     app: {
-      org: '', // Empty organization when git is not available
-      project: projectName,
+      org,
+      project,
     },
   };
 
   ze_log.git('Using fallback git info (git not available)', gitInfo);
-  logFn(
-    'warn',
-    `Git not available - organization will be determined from your account. Project: "${projectName}".`
-  );
-  ze_log.git(
-    `Git not available - organization will be determined from your account. Project: "${projectName}".`
-  );
-  logFn(
-    'warn',
-    'To use a specific organization, initialize a git repository: "git init && git remote add origin git@github.com:USERNAME_OR_ORG/YOUR_REPO.git"'
-  );
-  ze_log.git('To use a specific organization, initialize a git repository');
 
   return gitInfo;
 }

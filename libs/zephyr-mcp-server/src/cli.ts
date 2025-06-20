@@ -2,6 +2,7 @@
 import { Command } from 'commander';
 import { createZephyrHostServer } from './host-server';
 import * as readline from 'readline';
+import { logger } from './logger';
 
 const program = new Command();
 
@@ -20,8 +21,8 @@ program
   .option('-s, --servers <servers>', 'Comma-separated list of allowed servers')
   .option('--no-cache', 'Disable caching')
   .action(async (options) => {
-    console.log('Starting Zephyr MCP Host Server...');
-    console.log('================================\n');
+    logger.log('Starting Zephyr MCP Host Server...');
+    logger.log('================================\n');
 
     // If no cloud URL provided, prompt for MCP server URLs
     const mcpUrls: string[] = [];
@@ -29,36 +30,36 @@ program
     if (!options.cloudUrl) {
       const rl = readline.createInterface({
         input: process.stdin,
-        output: process.stdout
+        output: process.stderr  // Use stderr to avoid interfering with JSON-RPC
       });
 
-      console.log('Enter Zephyr MCP server URLs (one per line).');
-      console.log('Example: https://[your-server].zephyrcloud.app/bundle.js');
-      console.log('Note: For mf-manifest.json files, use --cloud-url option instead');
-      console.log('Press Enter when done.\n');
+      logger.log('Enter Zephyr MCP server URLs (one per line).');
+      logger.log('Example: https://[your-server].zephyrcloud.app/bundle.js');
+      logger.log('Note: For mf-manifest.json files, use --cloud-url option instead');
+      logger.log('Press Enter when done.\n');
 
       const getUrls = (): Promise<void> => {
         return new Promise((resolve) => {
-          const askForUrl = () => {
+          const askForUrl = (): void => {
             rl.question('MCP URL (or press Enter to finish): ', (url) => {
               if (url.trim() === '') {
                 if (mcpUrls.length > 0) {
                   rl.close();
                   resolve();
                 } else {
-                  console.log('Please enter at least one URL.');
+                  logger.log('Please enter at least one URL.');
                   askForUrl();
                 }
               } else {
                 const trimmedUrl = url.trim();
                 if (trimmedUrl.endsWith('/mf-manifest.json')) {
-                  console.log('\n⚠️  Detected mf-manifest.json URL.');
-                  console.log('Please restart with: node ./dist/cli.js start --cloud-url ' + trimmedUrl);
-                  console.log('Or provide direct bundle URLs instead.\n');
+                  logger.log('\n⚠️  Detected mf-manifest.json URL.');
+                  logger.log('Please restart with: node ./dist/cli.js start --cloud-url ' + trimmedUrl);
+                  logger.log('Or provide direct bundle URLs instead.\n');
                   askForUrl();
                 } else {
                   mcpUrls.push(trimmedUrl);
-                  console.log(`✓ Added: ${trimmedUrl}\n`);
+                  logger.log(`✓ Added: ${trimmedUrl}\n`);
                   askForUrl();
                 }
               }
@@ -70,7 +71,7 @@ program
 
       await getUrls();
       
-      console.log(`\nLoading ${mcpUrls.length} MCP server(s)...\n`);
+      logger.log(`\nLoading ${mcpUrls.length} MCP server(s)...\n`);
     }
 
     const config = {
@@ -88,14 +89,14 @@ program
     try {
       const host = await createZephyrHostServer(config);
 
-      console.log('✓ Host server initialized');
-      console.log('✓ Connecting to stdio...');
+      logger.log('✓ Host server initialized');
+      logger.log('✓ Connecting to stdio...');
 
       await host.connect(process.stdin, process.stdout);
 
-      console.error('Zephyr MCP Host Server is running');
+      logger.log('Zephyr MCP Host Server is running');
     } catch (error) {
-      console.error('Failed to start server:', error);
+      logger.error('Failed to start server:', error);
       process.exit(1);
     }
   });
@@ -109,7 +110,7 @@ program
     try {
       const cloudUrl = options.cloudUrl || 'https://cdn.zephyr-cloud.io/mcp/manifest.json';
 
-      console.log(`Fetching MCP servers from: ${cloudUrl}`);
+      logger.log(`Fetching MCP servers from: ${cloudUrl}`);
 
       const response = await fetch(cloudUrl);
       if (!response.ok) {
@@ -119,22 +120,22 @@ program
       const manifest = await response.json();
       const servers = manifest.servers || [];
 
-      console.log('\nAvailable MCP Servers:');
-      console.log('=====================');
+      logger.log('\nAvailable MCP Servers:');
+      logger.log('=====================');
 
       for (const server of servers) {
-        console.log(`\n${server.name} v${server.version}`);
-        console.log(`  Description: ${server.description}`);
-        console.log(`  Status: ${server.status}`);
+        logger.log(`\n${server.name} v${server.version}`);
+        logger.log(`  Description: ${server.description}`);
+        logger.log(`  Status: ${server.status}`);
         if (server.metadata?.capabilities) {
           const caps = server.metadata.capabilities;
           if (caps.tools?.length) {
-            console.log(`  Tools: ${caps.tools.join(', ')}`);
+            logger.log(`  Tools: ${caps.tools.join(', ')}`);
           }
         }
       }
     } catch (error) {
-      console.error('Failed to list servers:', error);
+      logger.error('Failed to list servers:', error);
       process.exit(1);
     }
   });
@@ -146,12 +147,12 @@ program.action(() => {
 
 // Handle errors
 process.on('SIGINT', () => {
-  console.error('\nShutting down...');
+  logger.log('\nShutting down...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.error('\nShutting down...');
+  logger.log('\nShutting down...');
   process.exit(0);
 });
 

@@ -9,17 +9,22 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@module-federation/enhanced": "^0.16.0",
+    "@module-federation/node": "^2.7.8",
+    "@module-federation/sdk": "^0.16.0",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
-    "zephyr-rspack-plugin": "workspace:*",
-    "@module-federation/enhanced": "^0.15.0",
-    "@module-federation/sdk": "^0.15.0",
-    "@module-federation/node": "^0.15.0"
+    "zephyr-rspack-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.0.3",
-    "typescript": "^5.8.3",
-    "rimraf": "^6.0.1"
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "jest": "29.7.0",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@modelcontextprotocol/sdk": ">=1.13.0",

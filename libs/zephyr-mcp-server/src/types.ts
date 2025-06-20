@@ -1,4 +1,5 @@
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 
 export interface ZephyrHostConfig {
   /** Zephyr API key for accessing hosted MCP servers */
@@ -45,7 +46,7 @@ export interface MCPServerEntry {
       resources?: string[];
       prompts?: string[];
     };
-    [key: string]: any; // Allow additional metadata fields
+    [key: string]: unknown; // Allow additional metadata fields
   };
   status: 'active' | 'inactive' | 'deprecated';
   createdAt: Date;
@@ -56,4 +57,5 @@ export interface LoadedMCPServer {
   entry: MCPServerEntry;
   factory: () => Promise<Server>;
   instance?: Server;
+  client?: Client;
 }

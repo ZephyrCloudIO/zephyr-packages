@@ -1,0 +1,28 @@
+{
+  "name": "webpack-mcp-example",
+  "version": "1.0.0",
+  "description": "Example MCP server using webpack and Module Federation",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["mcp", "module-federation", "webpack"],
+  "author": "Example Developer",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "axios": "^1.10.0"
+  },
+  "devDependencies": {
+    "@module-federation/enhanced": "^0.16.0",
+    "@module-federation/node": "^2.7.8",
+    "@types/node": "^24.0.11",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1",
+    "zephyr-mcp-plugin": "workspace:*"
+  }
+}

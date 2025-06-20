@@ -1,15 +1,24 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import {
-  ListToolsRequestSchema,
   CallToolRequestSchema,
-  ListResourcesRequestSchema,
-  ReadResourceRequestSchema,
-  ListPromptsRequestSchema,
+  CallToolResultSchema,
   GetPromptRequestSchema,
+  GetPromptResultSchema,
+  ListPromptsRequestSchema,
+  ListPromptsResultSchema,
+  ListResourcesRequestSchema,
+  ListResourcesResultSchema,
+  ListToolsRequestSchema,
+  ListToolsResultSchema,
+  ReadResourceRequestSchema,
+  ReadResourceResultSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import type { ZephyrHostConfig, MCPServerEntry, LoadedMCPServer } from './types';
-import { MCPRegistry } from './registry';
 import { ModuleFederationLoader } from './module-federation-loader';
+import { MCPRegistry } from './registry';
+import type { LoadedMCPServer, MCPServerEntry, ZephyrHostConfig } from './types';
+import { logger } from './logger';
 
 export class ZephyrHostMCPServer {
   private server: Server;
@@ -57,28 +66,28 @@ export class ZephyrHostMCPServer {
   }
 
   private async discoverServers(): Promise<void> {
-    console.log('Discovering MCP servers...');
+    logger.log('Discovering MCP servers...');
 
     try {
       let servers: MCPServerEntry[] = [];
-      
+
       // If direct MCP URLs are provided, create entries for them
       if (this.config.mcpUrls && this.config.mcpUrls.length > 0) {
-        console.log(`Loading ${this.config.mcpUrls.length} MCP servers from provided URLs...`);
-        
+        logger.log(`Loading ${this.config.mcpUrls.length} MCP servers from provided URLs...`);
+
         for (const url of this.config.mcpUrls) {
           // Extract server name from URL
           // Example: https://nestor-lopez-1853-github-tools-mcp-example-zephyr-f1e0463b8-ze.zephyrcloud.app/remoteEntry.js
           const urlParts = new URL(url);
           const hostParts = urlParts.hostname.split('-');
-          
+
           // Try to extract a meaningful name from the URL
           let serverName = 'mcp-server';
           if (hostParts.length > 4) {
             // Take parts that look like the actual name (github-tools-mcp)
             serverName = hostParts.slice(3, -3).join('-');
           }
-          
+
           const entry: MCPServerEntry = {
             id: `${serverName}-${Date.now()}`,
             name: serverName,
@@ -92,29 +101,29 @@ export class ZephyrHostMCPServer {
             createdAt: new Date(),
             updatedAt: new Date()
           };
-          
+
           servers.push(entry);
         }
       } else if (this.config.cloudUrl) {
         // Fetch from manifest URL
-        console.log(`Fetching manifest from: ${this.config.cloudUrl}`);
-        
+        logger.log(`Fetching manifest from: ${this.config.cloudUrl}`);
+
         const response = await fetch(this.config.cloudUrl, {
           headers: this.config.apiKey ? {
             'Authorization': `Bearer ${this.config.apiKey}`,
           } : {},
         });
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch manifest: ${response.statusText}`);
         }
-        
+
         const manifest = await response.json();
-        
+
         // Check if this is a Module Federation manifest
         if (manifest.id && manifest.metaData) {
-          console.log('Detected Module Federation manifest');
-          console.log(`ID: ${manifest.id}, Name: ${manifest.name}`);
+          logger.log('Detected Module Federation manifest');
+          logger.log(`ID: ${manifest.id}, Name: ${manifest.name}`);
           // Convert MF manifest to our server entry format
           const baseUrl = this.config.cloudUrl!.replace('/mf-manifest.json', '');
           const server: MCPServerEntry = {
@@ -132,12 +141,12 @@ export class ZephyrHostMCPServer {
             updatedAt: new Date()
           };
           servers = [server];
-          console.log(`Created server entry for ${server.name} at ${server.bundleUrl}`);
+          logger.log(`Created server entry for ${server.name} at ${server.bundleUrl}`);
         } else {
           servers = manifest.servers || [];
         }
       } else {
-        console.log('No MCP URLs or manifest URL provided.');
+        logger.log('No MCP URLs or manifest URL provided.');
         return;
       }
 
@@ -154,246 +163,66 @@ export class ZephyrHostMCPServer {
         this.registry.register(server);
       }
 
-      console.log(`✓ Found ${this.registry.size()} MCP servers`);
+      logger.log(`✓ Found ${this.registry.size()} MCP servers`);
     } catch (error) {
-      console.error('Failed to discover servers:', error);
+      logger.error('Failed to discover servers:', error);
       throw error;
     }
   }
 
   private async loadServers(): Promise<void> {
-    console.log('Loading MCP servers...');
+    logger.log('Loading MCP servers...');
 
     const entries = this.registry.getAll();
 
     for (const entry of entries) {
       try {
-        console.log(`Loading ${entry.name} v${entry.version}...`);
+        logger.log(`Loading ${entry.name} v${entry.version}...`);
 
-        // Try Module Federation first
-        let factory: () => Promise<any>;
-        
-        try {
-          factory = await this.moduleLoader.loadMCPServer(entry);
-          console.log(`✓ Loaded ${entry.name} via Module Federation`);
-        } catch {
-          console.log(`Module Federation failed for ${entry.name}, trying direct load...`);
-          
-          // Fallback to direct bundle loading
-          const bundle = await this.downloadBundle(entry.bundleUrl, entry);
-          factory = await this.createServerFactory(bundle, entry);
-          console.log(`✓ Loaded ${entry.name} via direct bundle`);
-        }
+        const factory = await this.moduleLoader.loadMCPServer(entry);
+        logger.log(`✓ Loaded ${entry.name} via Module Federation`);
 
         this.loadedServers.set(entry.name, {
           entry,
           factory,
         });
       } catch (error) {
-        console.error(`Failed to load ${entry.name}:`, error);
+        logger.error(`Failed to load ${entry.name}:`, error);
       }
     }
   }
 
-  private async downloadBundle(bundleUrl: string, entry?: MCPServerEntry): Promise<Buffer> {
-    // For remoteEntry.js files, we need to handle them differently
-    if (bundleUrl.endsWith('remoteEntry.js')) {
-      // Module Federation remotes need special handling
-      console.log('Note: remoteEntry.js is a Module Federation manifest, not a direct bundle');
-      console.log('For proper loading, the MCP server should be bundled as a standalone module');
-      
-      // Check if we have manifest metadata with exposed modules
-      if (entry?.metadata?.['mfManifest']) {
-        const manifest = entry.metadata['mfManifest'];
-        if (manifest.exposes && manifest.exposes.length > 0) {
-          const expose = manifest.exposes[0];
-          const modulePath = expose.assets?.js?.sync?.[1] || expose.assets?.js?.sync?.[0];
-          
-          if (modulePath) {
-            const baseUrl = bundleUrl.replace('/remoteEntry.js', '');
-            const moduleUrl = `${baseUrl}/${modulePath}`;
-            console.log(`Trying exposed module: ${moduleUrl}`);
-            
-            try {
-              const response = await fetch(moduleUrl);
-              if (response.ok) {
-                console.log(`Found exposed module at: ${moduleUrl}`);
-                const arrayBuffer = await response.arrayBuffer();
-                return Buffer.from(arrayBuffer);
-              }
-            } catch (error) {
-              console.error(`Failed to load exposed module: ${error}`);
-            }
-          }
+  private async getServerClient(loaded: LoadedMCPServer): Promise<Client> {
+    if (!loaded.client) {
+      // First, get the server instance
+      if (!loaded.instance) {
+        const instance = await loaded.factory();
+        // Check if the instance has a 'server' property (common pattern)
+        if (instance && typeof instance === 'object' && 'server' in instance) {
+          loaded.instance = (instance as Record<string, unknown>).server as Server;
+        } else {
+          loaded.instance = instance;
         }
       }
+
+      // Create a linked pair of transports for client-server communication
+      const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
       
-      // Try common alternative paths
-      const alternatives = [
-        bundleUrl.replace('/remoteEntry.js', '/main.js'),
-        bundleUrl.replace('/remoteEntry.js', '/index.js'),
-        bundleUrl.replace('/remoteEntry.js', '/bundle.js'),
-        bundleUrl.replace('/remoteEntry.js', '/server.js'),
-      ];
+      // Create and connect the client
+      loaded.client = new Client({
+        name: `${loaded.entry.name}-client`,
+        version: '1.0.0',
+      }, {
+        capabilities: {}
+      });
+
+      // Connect the server to one transport and client to the other
+      await loaded.instance!.connect(serverTransport);
+      await loaded.client.connect(clientTransport);
       
-      for (const altUrl of alternatives) {
-        try {
-          console.log(`Trying: ${altUrl}`);
-          const response = await fetch(altUrl);
-          if (response.ok) {
-            console.log(`Found bundle at: ${altUrl}`);
-            const arrayBuffer = await response.arrayBuffer();
-            return Buffer.from(arrayBuffer);
-          }
-        } catch (error) {
-          // Continue to next alternative
-        }
-      }
+      logger.log(`✓ Connected client to ${loaded.entry.name}`);
     }
-    
-    // Download bundle from URL
-    const response = await fetch(bundleUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download bundle from ${bundleUrl}: ${response.statusText}`);
-    }
-    
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  }
-
-  private async createServerFactory(
-    bundle: Buffer,
-    entry: MCPServerEntry
-  ): Promise<() => Promise<Server>> {
-    // In production, this would use a proper sandbox (VM2, isolated-vm, etc.)
-    // For now, we'll create a simple module loader
-
-    const moduleCode = bundle.toString();
-
-    // Create a module context
-    const moduleExports: any = {};
-    const moduleRequire = (id: string): any => {
-      if (id === '@modelcontextprotocol/sdk/server/index.js') {
-        return { Server };
-      }
-      throw new Error(`Module ${id} not allowed in sandbox`);
-    };
-
-    // Execute module (in production, use proper sandboxing)
-    try {
-      // Check if this is a webpack module
-      if (moduleCode.includes('exports.ids=') && moduleCode.includes('exports.modules=')) {
-        // This is a webpack chunk - extract the module
-        const webpackExports: any = { ids: [], modules: {} };
-        const moduleFunction = new Function(
-          'exports',
-          moduleCode
-        );
-        moduleFunction(webpackExports);
-        
-        // Execute the first module in the chunk
-        const moduleId = Object.keys(webpackExports.modules)[0];
-        if (moduleId) {
-          const webpackRequire: any = (id: number): any => {
-            // Handle MCP SDK requires
-            if (id === 7919) {
-              return { x: Server }; // @modelcontextprotocol/sdk/server/index.js
-            }
-            if (id === 5434) {
-              return { // @modelcontextprotocol/sdk/types.js
-                Cg: ListToolsRequestSchema,
-                zN: CallToolRequestSchema,
-              };
-            }
-            
-            // Simplified webpack require for other modules
-            const mod = { exports: {} };
-            const moduleFunc = webpackExports.modules[id];
-            if (moduleFunc) {
-              moduleFunc(mod, mod.exports, webpackRequire);
-            }
-            return mod.exports;
-          };
-          
-          // Add webpack helpers
-          webpackRequire.r = (exports: any) => {
-            if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-              Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-            }
-            Object.defineProperty(exports, '__esModule', { value: true });
-          };
-          
-          webpackRequire.d = (exports: any, definition: any) => {
-            for(const key in definition) {
-              if(webpackRequire.o(definition, key) && !webpackRequire.o(exports, key)) {
-                Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-              }
-            }
-          };
-          
-          webpackRequire.o = (obj: any, prop: any) => Object.prototype.hasOwnProperty.call(obj, prop);
-          
-          const webpackModule = { exports: {} };
-          webpackExports.modules[moduleId](webpackModule, webpackModule.exports, webpackRequire);
-          
-          // Copy webpack exports to our module exports
-          Object.assign(moduleExports, webpackModule.exports);
-        }
-      } else {
-        // Standard CommonJS module
-        const moduleFunction = new Function(
-          'exports',
-          'require',
-          'module',
-          '__filename',
-          '__dirname',
-          moduleCode
-        );
-
-        moduleFunction(
-          moduleExports,
-          moduleRequire,
-          { exports: moduleExports },
-          `mcp://${entry.name}`,
-          'mcp://'
-        );
-      }
-
-      // Find the server factory - could be default export, named export, or a create function
-      let factory = moduleExports.default || 
-                   moduleExports.createServer ||
-                   moduleExports.createMCPServer ||
-                   moduleExports[entry.name];
-      
-      // If not found, look for any function export
-      if (!factory) {
-        const functionExports = Object.entries(moduleExports)
-          .filter(([key, value]) => typeof value === 'function');
-        
-        if (functionExports.length === 1) {
-          factory = functionExports[0][1];
-        } else if (functionExports.length > 1) {
-          // Look for likely candidates
-          const candidate = functionExports.find(([key]) => 
-            key.toLowerCase().includes('server') || 
-            key.toLowerCase().includes('create')
-          );
-          if (candidate) {
-            factory = candidate[1];
-          }
-        }
-      }
-
-      if (typeof factory !== 'function') {
-        console.error('Module exports:', Object.keys(moduleExports));
-        throw new Error('No server factory function found in bundle. Expected a function export.');
-      }
-
-      return factory;
-    } catch (error) {
-      console.error(`Failed to create factory for ${entry.name}:`, error);
-      throw error;
-    }
+    return loaded.client;
   }
 
   private setupRequestHandlers(): void {
@@ -403,15 +232,11 @@ export class ZephyrHostMCPServer {
 
       for (const [serverName, loaded] of this.loadedServers) {
         try {
-          // Get or create server instance
-          if (!loaded.instance) {
-            loaded.instance = await loaded.factory();
-          }
-
-          // Get tools from server
-          const response = await (loaded.instance as any).request(
+          // Get tools from server via client
+          const client = await this.getServerClient(loaded);
+          const response = await client.request(
             { method: 'tools/list', params: {} },
-            {}
+            ListToolsResultSchema
           );
 
           if (response.tools) {
@@ -422,7 +247,7 @@ export class ZephyrHostMCPServer {
                 name: `${serverName}.${tool.name}`,
                 description: `[${serverName}] ${tool.description || ''}`,
                 metadata: {
-                  ...tool.metadata,
+                  ...(tool['metadata'] || {}),
                   server: serverName,
                   version: loaded.entry.version,
                 },
@@ -430,7 +255,7 @@ export class ZephyrHostMCPServer {
             }
           }
         } catch (error) {
-          console.error(`Failed to get tools from ${serverName}:`, error);
+          logger.error(`Failed to get tools from ${serverName}:`, error);
         }
       }
 
@@ -456,13 +281,9 @@ export class ZephyrHostMCPServer {
       }
 
       try {
-        // Get or create server instance
-        if (!loaded.instance) {
-          loaded.instance = await loaded.factory();
-        }
-
-        // Call the tool
-        const response = await (loaded.instance as any).request(
+        // Call the tool via client
+        const client = await this.getServerClient(loaded);
+        const response = await client.request(
           {
             method: 'tools/call',
             params: {
@@ -470,7 +291,7 @@ export class ZephyrHostMCPServer {
               arguments: args,
             },
           },
-          {}
+          CallToolResultSchema
         );
 
         return response;
@@ -527,13 +348,10 @@ export class ZephyrHostMCPServer {
 
       for (const [serverName, loaded] of this.loadedServers) {
         try {
-          if (!loaded.instance) {
-            loaded.instance = await loaded.factory();
-          }
-
-          const response = await (loaded.instance as any).request(
+          const client = await this.getServerClient(loaded);
+          const response = await client.request(
             { method: 'resources/list', params: {} },
-            {}
+            ListResourcesResultSchema
           );
 
           if (response.resources) {
@@ -542,7 +360,7 @@ export class ZephyrHostMCPServer {
                 ...resource,
                 uri: `${serverName}:${resource.uri}`,
                 metadata: {
-                  ...resource.metadata,
+                  ...(resource['metadata'] || {}),
                   server: serverName,
                 },
               });
@@ -572,16 +390,13 @@ export class ZephyrHostMCPServer {
         throw new Error(`Server ${serverName} not found`);
       }
 
-      if (!loaded.instance) {
-        loaded.instance = await loaded.factory();
-      }
-
-      return (loaded.instance as any).request(
+      const client = await this.getServerClient(loaded);
+      return client.request(
         {
           method: 'resources/read',
           params: { uri: resourceUri },
         },
-        {}
+        ReadResourceResultSchema
       );
     });
   }
@@ -592,13 +407,10 @@ export class ZephyrHostMCPServer {
 
       for (const [serverName, loaded] of this.loadedServers) {
         try {
-          if (!loaded.instance) {
-            loaded.instance = await loaded.factory();
-          }
-
-          const response = await (loaded.instance as any).request(
+          const client = await this.getServerClient(loaded);
+          const response = await client.request(
             { method: 'prompts/list', params: {} },
-            {}
+            ListPromptsResultSchema
           );
 
           if (response.prompts) {
@@ -607,7 +419,7 @@ export class ZephyrHostMCPServer {
                 ...prompt,
                 name: `${serverName}.${prompt.name}`,
                 metadata: {
-                  ...prompt.metadata,
+                  ...(prompt['metadata'] || {}),
                   server: serverName,
                 },
               });
@@ -637,11 +449,8 @@ export class ZephyrHostMCPServer {
         throw new Error(`Server ${serverName} not found`);
       }
 
-      if (!loaded.instance) {
-        loaded.instance = await loaded.factory();
-      }
-
-      return (loaded.instance as any).request(
+      const client = await this.getServerClient(loaded);
+      return client.request(
         {
           method: 'prompts/get',
           params: {
@@ -649,7 +458,7 @@ export class ZephyrHostMCPServer {
             arguments: args,
           },
         },
-        {}
+        GetPromptResultSchema
       );
     });
   }
@@ -658,11 +467,36 @@ export class ZephyrHostMCPServer {
     return this.server;
   }
 
-  async connect(stdin: NodeJS.ReadStream, stdout: NodeJS.WriteStream): Promise<void> {
+  async connect(_stdin: NodeJS.ReadStream, _stdout: NodeJS.WriteStream): Promise<void> {
     // Connect using stdio transport
     const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
+  }
+
+  async close(): Promise<void> {
+    // Close all client connections
+    for (const [serverName, loaded] of this.loadedServers) {
+      if (loaded.client) {
+        try {
+          await loaded.client.close();
+          logger.log(`✓ Closed client connection to ${serverName}`);
+        } catch (error) {
+          logger.error(`Failed to close client for ${serverName}:`, error);
+        }
+      }
+    }
+    
+    // Clear loaded servers
+    this.loadedServers.clear();
+    
+    // Close the host server if connected
+    try {
+      await this.server.close();
+      logger.log('✓ Host server closed');
+    } catch (error) {
+      logger.error('Failed to close host server:', error);
+    }
   }
 }
 

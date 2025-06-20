@@ -24,19 +24,23 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
         new ModuleFederationPlugin({
           ...options.mfConfig,
           // Ensure shared dependencies include MCP SDK
+          dts: false,
           shared: {
             '@modelcontextprotocol/sdk': {
               singleton: true,
               requiredVersion: '^1.0.0',
             },
             ...options.mfConfig.shared,
-
           },
-          // runtimePlugins: [
-          //   await import('@module-federation/node/runtimePlugin')
-          // ],
+          // Runtime plugins would go here for full Module Federation support
+          // For now, the host uses direct bundle loading which works well
           library: {
-            type: 'commonjs-module',  name: options.mfConfig.name,}
+            type: 'commonjs-module',
+            name: options.mfConfig.name,
+          },
+          runtimePlugins: [
+            require.resolve('@module-federation/node/runtimePlugin'),
+          ]
         })
       );
     }

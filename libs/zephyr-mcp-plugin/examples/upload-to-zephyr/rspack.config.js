@@ -5,12 +5,17 @@ const config = defineConfig({
   mode: 'production',
   target: 'async-node',
   entry: './src/index.ts',
+  optimization: {
+    minimize: false, // Disable minimization for easier debugging
+    moduleIds: 'named', // Use named module IDs for easier debugging
+  },
   output: {
     path: './dist',
     filename: '[name].js',
     libraryTarget: 'commonjs2',
     clean: true,
     publicPath: 'auto',
+    chunkFilename: '[id].js', // Ensure consistent chunk naming
   },
   resolve: {
     extensions: ['.ts', '.js', '.json'],

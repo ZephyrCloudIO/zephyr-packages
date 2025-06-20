@@ -90,7 +90,7 @@ function findProjectPbxproj(dir: string): string | null {
 
     return null;
   } catch (err) {
-    ze_log('Error finding project.pbxproj', err);
+    ze_log.app('Error finding project.pbxproj', err);
     return null;
   }
 }
@@ -111,7 +111,7 @@ export async function getIOSVersionInfoAsync(
   const pbxprojPath = findProjectPbxproj(iosProjectPath);
 
   if (pbxprojPath && fs.existsSync(pbxprojPath)) {
-    ze_log('Found project.pbxproj at', pbxprojPath);
+    ze_log.app('Found project.pbxproj at', pbxprojPath);
 
     // Read the project.pbxproj file content
     const pbxprojContent = fs.readFileSync(pbxprojPath, 'utf8');
@@ -128,9 +128,9 @@ export async function getIOSVersionInfoAsync(
       throw new ZephyrError(ZeErrors.ERR_INCORRECT_SEMVER_VERSION);
     }
 
-    ze_log('Successfully extracted version info from project.pbxproj');
-    ze_log('iOS marketing version', info.native_version);
-    ze_log('iOS current project version', info.native_build_number);
+    ze_log.app('Successfully extracted version info from project.pbxproj');
+    ze_log.app('iOS marketing version', info.native_version);
+    ze_log.app('iOS current project version', info.native_build_number);
     return {
       native_version: info.native_version,
       native_build_number: info.native_build_number,

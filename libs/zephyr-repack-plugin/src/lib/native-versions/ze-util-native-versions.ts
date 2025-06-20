@@ -38,7 +38,7 @@ export async function getGitTagVersion(
     const tags = stdout.split('\n').filter(Boolean);
 
     if (!tags || !tags.length) {
-      ze_log('No git tags found for platform: ', platform);
+      ze_log.app('No git tags found for platform: ', platform);
       return null;
     }
 
@@ -178,14 +178,14 @@ export async function getDependencyHashes(
 
     const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
 
-    ze_log('Podfile lock path.ios: ', podfileLockPath);
+    ze_log.app('Podfile lock path.ios: ', podfileLockPath);
     if (fs.existsSync(podfileLockPath) || fs.existsSync(podfilePath)) {
       const content = fs.readFileSync(podfileLockPath, 'utf8');
       hashes.nativeConfigHash = crypto
         .createHash('sha256')
         .update(content.length ? content : Buffer.from(podfileLockPath, 'utf8'))
         .digest('hex');
-      ze_log('Podfile lock hash.ios: ', hashes.nativeConfigHash);
+      ze_log.app('Podfile lock hash.ios: ', hashes.nativeConfigHash);
     }
   }
 
@@ -197,7 +197,7 @@ export async function getDependencyHashes(
     const gradleLockPath = path.join(projectRoot, 'android', 'gradle.lockfile');
     const gradlePath = path.join(projectRoot, 'android', 'app', 'build.gradle');
 
-    ze_log('Gradle path.android: ', gradlePath);
+    ze_log.app('Gradle path.android: ', gradlePath);
     if (fs.existsSync(gradleLockPath) || fs.existsSync(gradlePath)) {
       const content = fs.readFileSync(gradlePath ? gradlePath : gradleLockPath, 'utf8');
       hashes.nativeConfigHash = fs.existsSync(gradleLockPath)
@@ -206,10 +206,10 @@ export async function getDependencyHashes(
             .createHash('sha256')
             .update(content.length ? content : Buffer.from(gradleLockPath, 'utf8'))
             .digest('hex');
-      ze_log('Gradle hash.android: ', hashes.nativeConfigHash);
+      ze_log.app('Gradle hash.android: ', hashes.nativeConfigHash);
     }
   }
-  ze_log('Native config file hash: ', hashes.nativeConfigHash);
+  ze_log.app('Native config file hash: ', hashes.nativeConfigHash);
   // If no native related lockfile found, then return nothing
   return hashes;
 }

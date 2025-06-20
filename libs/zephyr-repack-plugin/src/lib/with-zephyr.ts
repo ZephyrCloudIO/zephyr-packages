@@ -93,6 +93,7 @@ async function _zephyr_configuration(
     ze_log.app(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
 
     zephyr_engine.applicationProperties.version = nativeVersionInfo.native_version;
+    Object.freeze(zephyr_engine.applicationProperties.version);
 
     zephyr_engine.env.lock_file_hash = (
       await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)

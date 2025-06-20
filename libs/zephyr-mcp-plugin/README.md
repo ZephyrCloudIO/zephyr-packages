@@ -56,10 +56,12 @@ export async function createMyToolsServer(): Promise<Server> {
   server.setRequestHandler('tools/call', async (request) => {
     if (request.params.name === 'my_awesome_tool') {
       return {
-        content: [{
-          type: 'text',
-          text: `Processed: ${request.params.arguments.input}`,
-        }],
+        content: [
+          {
+            type: 'text',
+            text: `Processed: ${request.params.arguments.input}`,
+          },
+        ],
       };
     }
     throw new Error('Tool not found');
@@ -135,7 +137,7 @@ Your MCP server is now deployed to Zephyr Cloud and will be automatically availa
 interface ZephyrMCPPluginOptions {
   // Module Federation configuration
   mfConfig?: ModuleFederationPluginOptions;
-  
+
   // Server metadata
   metadata?: {
     description?: string;
@@ -150,7 +152,7 @@ interface ZephyrMCPPluginOptions {
     // Any additional metadata
     [key: string]: any;
   };
-  
+
   // Set to false for non-MCP builds (default: false)
   wait_for_index_html?: boolean;
 }

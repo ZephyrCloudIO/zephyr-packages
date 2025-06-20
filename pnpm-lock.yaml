@@ -1407,15 +1407,12 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.13.0
         version: 1.13.0
+      '@module-federation/runtime':
+        specifier: ^0.15.0
+        version: 0.15.0
       commander:
         specifier: ^14.0.0
         version: 14.0.0
-      zephyr-agent:
-        specifier: workspace:*
-        version: link:../zephyr-agent
-      zephyr-edge-contract:
-        specifier: workspace:*
-        version: link:../zephyr-edge-contract
     devDependencies:
       '@types/node':
         specifier: ^24.0.3

@@ -1,52 +1,34 @@
-import { moduleFederationPlugin } from '@module-federation/sdk';
+import type { moduleFederationPlugin } from '@module-federation/sdk';
 
 export interface ZephyrMCPPluginOptions {
-  /**
-   * Module Federation configuration for the MCP server
-   */
+  /** Module Federation configuration for the MCP server */
   mfConfig?: moduleFederationPlugin.ModuleFederationPluginOptions;
 
-  /**
-   * MCP server metadata for Zephyr
-   */
+  /** MCP server metadata for Zephyr */
   metadata?: {
-    /**
-     * Server description
-     */
+    /** Server description */
     description?: string;
 
-    /**
-     * Server author
-     */
+    /** Server author */
     author?: string;
 
-    /**
-     * Homepage URL
-     */
+    /** Homepage URL */
     homepage?: string;
 
-    /**
-     * Documentation URL
-     */
+    /** Documentation URL */
     documentation?: string;
 
-    /**
-     * Server capabilities
-     */
+    /** Server capabilities */
     capabilities?: {
       tools?: string[];
       resources?: string[];
       prompts?: string[];
     };
 
-    /**
-     * Additional custom metadata
-     */
-    [key: string]: any;
+    /** Additional custom metadata */
+    [key: string]: unknown;
   };
 
-  /**
-   * Whether to wait for index.html (false for MCP servers)
-   */
+  /** Whether to wait for index.html (false for MCP servers) */
   wait_for_index_html?: boolean;
 }

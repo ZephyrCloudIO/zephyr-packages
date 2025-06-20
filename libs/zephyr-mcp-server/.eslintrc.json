@@ -7,7 +7,10 @@
       "parserOptions": {
         "project": ["libs/zephyr-mcp-server/tsconfig.*?.json"]
       },
-      "rules": {}
+      "rules": {
+        "no-restricted-syntax": "off",
+        "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+      }
     },
     {
       "files": ["*.ts", "*.tsx"],

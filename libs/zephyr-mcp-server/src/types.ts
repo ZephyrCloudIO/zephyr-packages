@@ -1,37 +1,28 @@
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 
 export interface ZephyrHostConfig {
-  /**
-   * Zephyr API key for accessing hosted MCP servers
-   */
+  /** Zephyr API key for accessing hosted MCP servers */
   apiKey?: string;
-  
-  /**
-   * Zephyr environment
-   */
+
+  /** Zephyr environment */
   environment?: 'production' | 'staging' | 'dev';
-  
-  /**
-   * Zephyr Cloud base URL
-   */
+
+  /** Zephyr Cloud base URL or manifest URL */
   cloudUrl?: string;
-  
-  /**
-   * Filter for specific MCP servers (leave empty to load all)
-   */
+
+  /** Direct MCP server URLs to load */
+  mcpUrls?: string[];
+
+  /** Filter for specific MCP servers (leave empty to load all) */
   allowedServers?: string[];
-  
-  /**
-   * Cache configuration
-   */
+
+  /** Cache configuration */
   cache?: {
     enabled: boolean;
     ttl: number;
   };
-  
-  /**
-   * Sandbox configuration
-   */
+
+  /** Sandbox configuration */
   sandbox?: {
     enabled: boolean;
     memoryLimit?: number;
@@ -54,6 +45,7 @@ export interface MCPServerEntry {
       resources?: string[];
       prompts?: string[];
     };
+    [key: string]: any; // Allow additional metadata fields
   };
   status: 'active' | 'inactive' | 'deprecated';
   createdAt: Date;

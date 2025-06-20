@@ -3,8 +3,8 @@ import type { Configuration as RspackConfiguration } from '@rspack/core';
 import type { ZephyrMCPPluginOptions } from './types';
 
 /**
- * Integrates Zephyr with Rspack for MCP servers
- * Automatically deploys MCP servers to Zephyr Cloud during build
+ * Integrates Zephyr with Rspack for MCP servers Automatically deploys MCP servers to
+ * Zephyr Cloud during build
  */
 export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
   return async (config: RspackConfiguration): Promise<RspackConfiguration> => {
@@ -20,17 +20,19 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
 
     // Add Module Federation plugin if mfConfig is provided
     if (options.mfConfig) {
-      config.plugins.push(new ModuleFederationPlugin({
-        ...options.mfConfig,
-        // Ensure shared dependencies include MCP SDK
-        shared: {
-          '@modelcontextprotocol/sdk': {
-            singleton: true,
-            requiredVersion: '^1.0.0',
+      config.plugins.push(
+        new ModuleFederationPlugin({
+          ...options.mfConfig,
+          // Ensure shared dependencies include MCP SDK
+          shared: {
+            '@modelcontextprotocol/sdk': {
+              singleton: true,
+              requiredVersion: '^1.0.0',
+            },
+            ...options.mfConfig.shared,
           },
-          ...options.mfConfig.shared,
-        },
-      }));
+        })
+      );
     }
 
     // Apply Zephyr Rspack plugin for automatic deployment

@@ -7,6 +7,9 @@ import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
+import { getToken } from '../node-persist/token';
+import { isTokenStillValid } from '../auth/login';
+import * as jose from 'jose';
 import { getGitProviderInfo } from './git-provider-utils';
 import { isInteractiveTerminal, promptForGitInfo } from './ze-util-interactive-prompts';
 import {
@@ -255,11 +258,139 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
   }
 }
 
+/** Try to get git info using environment variables for AI tools/platforms */
+async function getEnvBasedGitInfo(): Promise<ZeGitInfo | null> {
+  try {
+    // Check if we have the required environment variables
+    const org = process.env['ZEPHYR_ORG'];
+    const project = process.env['ZEPHYR_PROJECT'];
+
+    if (!org || !project) {
+      return null;
+    }
+
+    // Check if we have a valid token (required for authentication)
+    const token = await getToken();
+    if (!token || !isTokenStillValid(token, 60)) {
+      ze_log.git('Environment variables found but no valid token for authentication');
+      return null;
+    }
+
+    ze_log.git('Using environment variable fallback for deployment');
+    logFn('info', '🔧 Using ZEPHYR_ORG and ZEPHYR_PROJECT environment variables');
+
+    // Try to extract user information from the JWT token
+    let tokenUserName: string | undefined;
+    let tokenUserEmail: string | undefined;
+    let tokenUserId: string | undefined;
+
+    try {
+      const decodedToken = jose.decodeJwt(token);
+      ze_log.git('Decoded JWT token claims:', Object.keys(decodedToken));
+
+      // Zephyr uses both standard and namespaced claims
+      // Priority: namespaced claims > standard claims > other common claims
+      tokenUserName = (decodedToken['https://api.zephyr-cloud.io/name'] ||
+        decodedToken['name'] ||
+        decodedToken['nickname'] ||
+        decodedToken['preferred_username'] ||
+        decodedToken['given_name']) as string | undefined;
+
+      tokenUserEmail = (decodedToken['https://api.zephyr-cloud.io/email'] ||
+        decodedToken['email'] ||
+        decodedToken['upn'] || // User Principal Name in some systems
+        decodedToken['unique_name']) as string | undefined;
+
+      // Extract user ID from 'sub' claim (e.g., "google-oauth2|109373569979745840525")
+      tokenUserId = decodedToken['sub'] as string | undefined;
+
+      if (tokenUserName || tokenUserEmail) {
+        ze_log.git('Extracted user info from token:', {
+          name: tokenUserName,
+          email: tokenUserEmail,
+          userId: tokenUserId,
+        });
+      }
+    } catch (error) {
+      ze_log.git('Failed to decode JWT token for user info:', error);
+    }
+
+    // Use provided values or token-extracted values or defaults
+    const gitName =
+      process.env['ZEPHYR_GIT_NAME'] || tokenUserName || 'zephyr-env-deploy';
+    const gitEmail =
+      process.env['ZEPHYR_GIT_EMAIL'] || tokenUserEmail || 'deploy@zephyr-cloud.io';
+    const branch = process.env['ZEPHYR_GIT_BRANCH'] || 'main';
+
+    const gitInfo: ZeGitInfo = {
+      git: {
+        name: gitName,
+        email: gitEmail,
+        branch,
+        commit: `env-deployment-${Date.now()}`,
+        tags: tokenUserId ? [`deployed-by:${tokenUserId}`] : [],
+      },
+      app: {
+        org,
+        project,
+      },
+    };
+
+    ze_log.git('Using environment-based git info', gitInfo);
+    logFn('info', `Organization: ${org}, Project: ${project}`);
+    logFn('info', `Deployment by: ${gitName} <${gitEmail}>`);
+
+    if (tokenUserName || tokenUserEmail) {
+      logFn('info', '✓ User information extracted from authentication token');
+    }
+
+    return gitInfo;
+  } catch (error) {
+    ze_log.git('Failed to use environment-based fallback:', error);
+    return null;
+  }
+}
+
 /** Generate fallback git info when git is completely unavailable */
 async function getFallbackGitInfo(): Promise<ZeGitInfo> {
-  // Generate defaults for anonymous users
-  const defaultUser = 'anonymous';
-  const defaultEmail = 'anonymous@zephyr-cloud.io';
+  // First try environment-based fallback for AI tools/platforms
+  const envBasedInfo = await getEnvBasedGitInfo();
+  if (envBasedInfo) {
+    return envBasedInfo;
+  }
+
+  // Try to extract user info from token even without env vars
+  let tokenUserName: string | undefined;
+  let tokenUserEmail: string | undefined;
+  let tokenUserId: string | undefined;
+
+  try {
+    const token = await getToken();
+    if (token && isTokenStillValid(token, 60)) {
+      const decodedToken = jose.decodeJwt(token);
+
+      tokenUserName = (decodedToken['https://api.zephyr-cloud.io/name'] ||
+        decodedToken['name']) as string | undefined;
+
+      tokenUserEmail = (decodedToken['https://api.zephyr-cloud.io/email'] ||
+        decodedToken['email']) as string | undefined;
+
+      tokenUserId = decodedToken['sub'] as string | undefined;
+
+      if (tokenUserName || tokenUserEmail) {
+        ze_log.git('Extracted user info from token for fallback:', {
+          name: tokenUserName,
+          email: tokenUserEmail,
+        });
+      }
+    }
+  } catch (error) {
+    ze_log.git('Failed to extract token info for fallback:', error);
+  }
+
+  // Use token info if available, otherwise use generic defaults
+  const gitName = tokenUserName || 'zephyr-deploy';
+  const gitEmail = tokenUserEmail || 'deploy@zephyr-cloud.io';
 
   const projectName = getCurrentDirectoryName();
   let org = '';
@@ -272,15 +403,28 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
     org = promptResult.org;
     project = promptResult.project;
   } else {
-    // Non-interactive mode: use defaults and show warnings
+    // In CI environments, we should fail if git is not available
+    if (isCI) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Git repository information is required in CI environments. Please ensure your CI workflow includes git repository with proper remote origin.',
+      });
+    }
+
+    // Non-interactive, non-CI mode: use defaults and show warnings
     logFn(
       'error',
       `⚠️  CRITICAL: Git not available. Zephyr CANNOT function properly without git.`
     );
     logFn(
       'error',
-      `Using fallback project name: "${projectName}" - this WILL cause deployment issues.`
+      `Using fallback project name: "${projectName}" - deployment may have issues.`
     );
+
+    if (tokenUserName || tokenUserEmail) {
+      logFn('info', `Deploying as: ${gitName} <${gitEmail}>`);
+    }
+
     ze_log.git(`Git not available - using fallback configuration`);
     logFn(
       'warn',
@@ -291,11 +435,11 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
 
   const gitInfo: ZeGitInfo = {
     git: {
-      name: defaultUser,
-      email: defaultEmail,
+      name: gitName,
+      email: gitEmail,
       branch: 'main',
-      commit: 'no-git-commit',
-      tags: [],
+      commit: `fallback-deployment-${Date.now()}`,
+      tags: tokenUserId ? [`deployed-by:${tokenUserId}`] : [],
     },
     app: {
       org,

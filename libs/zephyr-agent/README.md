@@ -155,6 +155,45 @@ Without Git, Zephyr cannot guarantee proper functionality, especially for:
 - Version tracking
 - Rollback capabilities
 
+#### Environment Variable Fallback (AI Tools/Platforms)
+
+For environments where Git is not available (e.g., AI coding tools like Bolt), you can provide deployment information via environment variables:
+
+**Required Environment Variables:**
+
+- `ZE_SECRET_TOKEN` or authenticated via CLI
+- `ZEPHYR_ORG` - Your Zephyr organization name
+- `ZEPHYR_PROJECT` - Your project name
+
+**Optional Environment Variables:**
+
+- `ZEPHYR_GIT_NAME` - Git user name (defaults to extracted token info or 'zephyr-env-deploy')
+- `ZEPHYR_GIT_EMAIL` - Git user email (defaults to extracted token info or 'deploy@zephyr-cloud.io')
+- `ZEPHYR_GIT_BRANCH` - Git branch name (default: 'main')
+
+**User Information Extraction:**
+When using environment variable fallback, Zephyr automatically extracts user information from your authentication token:
+
+- **User Name**: From claims `https://api.zephyr-cloud.io/name`, `name`, `nickname`, etc.
+- **User Email**: From claims `https://api.zephyr-cloud.io/email`, `email`, etc.
+- **User ID**: From the `sub` claim (used in deployment tags)
+
+This provides full accountability by:
+
+- Using the authenticated user's name and email for Git metadata
+- Adding deployment tags with the user's identity for traceability
+
+**Example:**
+
+```bash
+export ZE_SECRET_TOKEN="your-zephyr-token"
+export ZEPHYR_ORG="my-organization"
+export ZEPHYR_PROJECT="my-project"
+npm run build
+```
+
+This fallback is designed for AI coding platforms and similar environments where Git repositories cannot be properly initialized.
+
 ## Internal APIs
 
 ### Build Context API

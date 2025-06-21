@@ -123,10 +123,10 @@ describe('getGitInfo - non-git environments', () => {
 
     const result = await getGitInfo();
 
-    expect(result.git.name).toBe('anonymous');
-    expect(result.git.email).toBe('anonymous@zephyr-cloud.io');
+    expect(result.git.name).toBe('zephyr-deploy');
+    expect(result.git.email).toBe('deploy@zephyr-cloud.io');
     expect(result.git.branch).toBe('main');
-    expect(result.git.commit).toBe('no-git-commit');
+    expect(result.git.commit).toMatch(/^fallback-deployment-\d+$/);
     expect(result.app.org).toBe(''); // org should be empty when git remote is not available
     // For non-interactive fallback, should show critical error messages
     expect(mockLogFn).toHaveBeenCalledWith(
@@ -260,8 +260,8 @@ describe('getGitInfo - non-git environments', () => {
 
       const result = await getGitInfo();
 
-      expect(result.git.name).toBe('anonymous');
-      expect(result.git.email).toBe('anonymous@zephyr-cloud.io');
+      expect(result.git.name).toBe('zephyr-deploy');
+      expect(result.git.email).toBe('deploy@zephyr-cloud.io');
       expect(result.app.org).toBe('prompted-org');
       expect(result.app.project).toBe('prompted-project');
       expect(promptForGitInfo).toHaveBeenCalled();

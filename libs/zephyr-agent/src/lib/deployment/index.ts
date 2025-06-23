@@ -1,3 +1,2 @@
-export * from './cloudflare.strategy';
-export * from './netlify.strategy';
-export * from './fastly.strategy';
+export { commonUploadStrategy } from './common-upload.strategy';
+export { getUploadStrategy } from './get-upload-strategy';

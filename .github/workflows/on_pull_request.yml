@@ -34,7 +34,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATE: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm dlx nx affected -t build --skipRemoteCache && exit 0
+        run: DEBUG=zephyr:* pnpm dlx nx affected -t build --skipRemoteCache && exit 0
       - name: Set ZEPHYR_CACHE
         run: echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
       - name: Upload built libs and cache

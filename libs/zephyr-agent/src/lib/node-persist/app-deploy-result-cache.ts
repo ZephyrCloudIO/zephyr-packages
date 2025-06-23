@@ -3,8 +3,6 @@ import type { Snapshot } from 'zephyr-edge-contract';
 import { storage } from './storage';
 import { StorageKeys } from './storage-keys';
 
-const prefix = `${StorageKeys.ze_app_deploy_result}:`;
-
 export interface DeployResult {
   urls: string[];
   snapshot: Snapshot;
@@ -15,7 +13,7 @@ export async function setAppDeployResult(
   value: DeployResult
 ): Promise<void> {
   await storage;
-  void (await setItem(`${prefix}${application_uid}`, value, {
+  void (await setItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`, value, {
     ttl: 1000 * 60 * 60 * 24,
   }));
 }
@@ -24,18 +22,22 @@ export async function getAppDeployResult(
   application_uid: string
 ): Promise<DeployResult | undefined> {
   await storage;
-  return getItem(`${prefix}${application_uid}`);
+  return getItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`);
 }
 
 export async function removeAppDeployResult(application_uid: string): Promise<void> {
   await storage;
-  await removeItem(`${prefix}${application_uid}`);
+  await removeItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`);
 }
 
 export async function getAllDeployedApps(): Promise<string[]> {
   const allKeys = await keys();
-  const resultKeys = allKeys.filter((key) => key.startsWith(prefix));
-  return resultKeys.map((key) => key.substring(prefix.length));
+  const resultKeys = allKeys.filter((key) =>
+    key.startsWith(StorageKeys.ze_app_deploy_result)
+  );
+  return resultKeys.map((key) =>
+    key.substring(StorageKeys.ze_app_deploy_result.length + 1)
+  );
 }
 
 export async function getAllAppDeployResults(): Promise<Record<string, DeployResult>> {
@@ -43,8 +45,10 @@ export async function getAllAppDeployResults(): Promise<Record<string, DeployRes
   const results: Record<string, DeployResult> = {};
 
   await forEach((entry) => {
-    if (entry.key && entry.key.startsWith(prefix)) {
-      const application_uid = entry.key.substring(prefix.length);
+    if (entry.key && entry.key.startsWith(StorageKeys.ze_app_deploy_result)) {
+      const application_uid = entry.key.substring(
+        StorageKeys.ze_app_deploy_result.length + 1
+      );
       results[application_uid] = entry.value;
     }
   });

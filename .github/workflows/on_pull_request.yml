@@ -12,9 +12,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
-env:
-  ZEPHYR_CACHE: /home/runner/.zephyr
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,7 +36,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: zephyr-cache
-          path: ${{ env.ZEPHYR_CACHE }}
+          path: ~/.zephyr
+          retention-days: 7
           include-hidden-files: true
 
   lint:
@@ -100,6 +98,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: zephyr-cache
-          path: ${{ env.ZEPHYR_CACHE }}
+          path: ~/.zephyr
       - name: Run e2e examples test
         run: pnpm dlx nx run e2e-deployment:e2e-test

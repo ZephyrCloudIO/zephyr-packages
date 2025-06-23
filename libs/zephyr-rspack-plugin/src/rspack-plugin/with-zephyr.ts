@@ -33,7 +33,13 @@ async function _zephyr_configuration(
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    mutWebpackFederatedRemotesConfig(
+      zephyr_engine,
+      config,
+      resolved_dependency_pairs,
+      undefined,
+      _zephyrOptions?.runtimePlugin
+    );
 
     // inject the ZephyrRspackPlugin
     config.plugins?.push(
@@ -41,6 +47,7 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
+        runtimePlugin: _zephyrOptions?.runtimePlugin,
       })
     );
   } catch (error) {

@@ -36,7 +36,6 @@ export function xpack_delegate_module_template(): unknown {
   return new Promise((resolve, reject) => {
     const _windows = typeof window !== 'undefined' ? window : globalThis;
     const sessionEdgeURL = _windows.sessionStorage.getItem('__APPLICATION_UID__');
-
     const remote_entry_url = '__REMOTE_ENTRY_URL__';
     const library_type = '__LIBRARY_TYPE__';
     let edgeUrl = sessionEdgeURL ?? remote_entry_url;

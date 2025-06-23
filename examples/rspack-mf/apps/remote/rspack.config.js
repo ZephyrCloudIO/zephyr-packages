@@ -7,5 +7,5 @@ module.exports = composePlugins(
   withNx(),
   withReact(),
   withModuleFederation(mfConfig),
-  withZephyr()
+  withZephyr({ runtimePlugin: true })
 );

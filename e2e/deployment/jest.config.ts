@@ -1,5 +1,4 @@
 export default {
-  globalSetup: './src/globalSetup.ts',
   displayName: 'e2e-deployment',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',

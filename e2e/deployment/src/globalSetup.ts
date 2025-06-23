@@ -2,7 +2,6 @@ import { exec as execCB } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { promisify } from 'node:util';
 import { getAllDeployedApps } from 'zephyr-agent';
-import { testTargetsPath } from './constants';
 
 const exec = promisify(execCB);
 
@@ -15,5 +14,5 @@ export default async function globalSetup() {
     examples.includes(appUid.split('.')[0])
   );
 
-  writeFileSync(testTargetsPath, JSON.stringify(testTargets));
+  writeFileSync('./test-targets.json', JSON.stringify(testTargets));
 }

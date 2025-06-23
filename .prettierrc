@@ -1,6 +1,5 @@
 {
   "singleQuote": true,
   "trailingComma": "es5",
-  "tabWidth": 2,
-  "plugins": ["./node_modules/prettier-plugin-jsdoc/dist/index.js"]
+  "tabWidth": 2
 }

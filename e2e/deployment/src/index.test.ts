@@ -1,24 +1,36 @@
-import { readFileSync } from 'node:fs';
-import { getAppDeployResult } from 'zephyr-agent';
-import { testTargetsPath } from './constants';
+import { execSync } from 'node:child_process';
+import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
-const rawFile = readFileSync(testTargetsPath).toString();
-const testTargets: string[] = JSON.parse(rawFile);
+const output = execSync(
+  'npx nx show projects --affected -t=build --exclude="libs/*,e2e/*"'
+);
+const testTargets = output.toString().split('\n').filter(Boolean);
+const appUidsPromise: Promise<string[]> = getAllDeployedApps();
 
-for (const appUid of testTargets) {
-  describe(`[${appUid}]: asset deployment assertion`, () => {
+for (const appName of testTargets) {
+  describe(`[${appName}]: asset deployment assertion`, () => {
+    let deployResult: DeployResult;
+
+    beforeAll(async () => {
+      const appUids = await appUidsPromise;
+      const appUid = appUids.find((uid) => uid.startsWith(replacer(appName)));
+      if (!appUid) {
+        throw new Error(`Application ${appName} was not found on deployed apps.`);
+      }
+      const result = await getAppDeployResult(appUid);
+      if (!result) {
+        throw new Error(`No deployment log found for application ${appName}.`);
+      }
+      deployResult = result;
+    });
+
     it(
       'should have correctly deployed assets',
       async () => {
-        const deployResult = await getAppDeployResult(appUid);
-
-        if (!deployResult) {
-          return fail(`Deployment result for ${appUid} was not cached properly.`);
-        }
-
+        const url = deployResult.urls[0];
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${deployResult.urls[0]}/${asset.path}`, 3);
+          return fetchWithRetries(`${url}/${asset.path}`, 3);
         });
 
         const results = await Promise.all(promises);
@@ -41,3 +53,7 @@ const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
 
   return fetchWithRetries(url, attemptsLeft - 1);
 };
+
+function replacer(str: string): string {
+  return str.replace(/[^a-zA-Z0-9-]/gi, '-');
+}

@@ -31,6 +31,7 @@ export async function removeAppDeployResult(application_uid: string): Promise<vo
 }
 
 export async function getAllDeployedApps(): Promise<string[]> {
+  await storage;
   const allKeys = await keys();
   const resultKeys = allKeys.filter((key) =>
     key.startsWith(StorageKeys.ze_app_deploy_result)

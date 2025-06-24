@@ -33,7 +33,6 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
   if (parts.length >= 3) {
     return {
       native_version: parts.slice(0, 3).join('.'),
-      native_build_number: fullVersion,
       file_path: manifestPath,
       variable_name: 'Version',
     };
@@ -41,7 +40,6 @@ export function parseWindowsManifest(manifestPath: string): NativeVersionInfo {
 
   return {
     native_version: fullVersion,
-    native_build_number: fullVersion,
     file_path: manifestPath,
     variable_name: 'Version',
   };

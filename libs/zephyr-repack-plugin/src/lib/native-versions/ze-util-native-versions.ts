@@ -98,7 +98,6 @@ export async function augmentWithGitTagVersion(
     );
     return {
       native_version: gitTagVersion,
-      native_build_number: versionInfo.native_build_number, // Keep the build number from manifest
       file_path: versionInfo.file_path,
       variable_name: versionInfo.variable_name,
     };

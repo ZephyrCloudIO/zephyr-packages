@@ -101,18 +101,26 @@ async function _zephyr_configuration(
 
     ze_log.app('Native config file hash: ', zephyr_engine.env.lock_file_hash);
     const define_config = {
-      ZE_BUILD_ID: await zephyr_engine.build_id,
-      ZE_SNAPSHOT_ID: await zephyr_engine.snapshotId,
-      ZE_APP_ID: zephyr_engine.application_uid,
+      ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),
+      ZE_SNAPSHOT_ID: JSON.stringify(await zephyr_engine.snapshotId),
+      ZE_APP_UID: JSON.stringify(zephyr_engine.application_uid),
+      /** Provided as final resolved module for Module Federation */
       ZE_MF_CONFIG: JSON.stringify(mf_configs),
+      /** Provided as comparison for app_uid and selectors */
+      ZE_DEPENDENCIES: JSON.stringify(
+        await zephyr_engine.npmProperties.zephyrDependencies
+      ),
       ZE_UPDATED_AT: JSON.stringify(
         (await zephyr_engine.application_configuration).fetched_at
       ),
-      ZE_EDGE_URL: (await zephyr_engine.application_configuration).EDGE_URL,
-      ZE_NATIVE_VERSION: nativeVersionInfo.native_version,
+      ZE_EDGE_URL: JSON.stringify(
+        (await zephyr_engine.application_configuration).EDGE_URL
+      ),
+      /** Native version of the application */
+      ZE_NATIVE_VERSION: JSON.stringify(nativeVersionInfo.native_version),
       ZE_BUILD_CONTEXT: JSON.stringify(config.context),
       ZE_FINGERPRINT: JSON.stringify(zephyr_engine.env.lock_file_hash),
-      ZE_IS_CI: isCI,
+      ZE_IS_CI: JSON.stringify(isCI),
       ZE_USER: JSON.stringify((await zephyr_engine.application_configuration).username),
       ZE_BRANCH: JSON.stringify(zephyr_engine.gitProperties.git.branch),
     };

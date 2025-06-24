@@ -5,12 +5,6 @@ export interface ZeDependency {
   target?: 'web' | 'ios' | 'android';
 }
 
-export enum BuildTarget {
-  WEB = 'web',
-  IOS = 'ios',
-  ANDROID = 'android',
-}
-
 export interface ZePackageJson {
   name: string;
   version: string;
@@ -20,7 +14,7 @@ export interface ZePackageJson {
    * Zephyr:dependencies in package.json - if it's a string it's web, if it's an object is
    * a cross-platform app
    */
-  ['zephyr:dependencies']?: Record<string, string | Record<BuildTarget, string>>;
+  ['zephyr:dependencies']?: Record<string, string>;
   // parsed zephyr:dependencies
   zephyrDependencies?: Record<string, ZeDependency>;
   /** OptionalDependencies in package.json */

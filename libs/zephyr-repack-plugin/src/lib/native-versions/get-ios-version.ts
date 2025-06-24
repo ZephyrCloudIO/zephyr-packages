@@ -133,7 +133,6 @@ export async function getIOSVersionInfoAsync(
     ze_log.app('iOS current project version', info.native_build_number);
     return {
       native_version: info.native_version,
-      native_build_number: info.native_build_number,
       file_path: pbxprojPath,
       variable_name: 'MARKETING_VERSION',
     };

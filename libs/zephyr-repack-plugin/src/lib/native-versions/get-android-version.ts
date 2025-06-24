@@ -59,7 +59,6 @@ export async function getAndroidVersionInfoAsync(
 
     return {
       native_version: versionInfo.native_version,
-      native_build_number: versionInfo.native_build_number,
       file_path: buildGradlePath,
       variable_name: 'versionName',
     };

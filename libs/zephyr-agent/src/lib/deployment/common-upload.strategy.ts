@@ -3,7 +3,7 @@ import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { uploadAssets } from './upload-base/upload-assets';
 import { uploadBuildStatsAndEnableEnvs } from './upload-base/upload-build-stats-and-enable-envs';
 
-export async function netlifyStrategy(
+export async function commonUploadStrategy(
   zephyr_engine: ZephyrEngine,
   { snapshot, getDashData, assets: { assetsMap, missingAssets } }: UploadOptions
 ) {

@@ -34,7 +34,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATE: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm dlx nx affected -t build --skipRemoteCache
+        run: pnpm nx affected -t build --skipRemoteCache
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -63,7 +63,7 @@ jobs:
         with:
           main-branch-name: master
       - name: run lint
-        run: pnpm dlx nx affected -t lint
+        run: pnpm nx affected -t lint
 
   test:
     runs-on: ${{ matrix.os }}
@@ -88,7 +88,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API }}
           ZE_API_GATE: ${{ vars.ZE_API_GATEWAY }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm dlx nx affected -t test
+        run: pnpm nx affected -t test
 
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -122,4 +122,4 @@ jobs:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
       - name: Run e2e examples test
-        run: pnpm dlx nx run e2e-deployment:e2e-test
+        run: pnpm nx run e2e-deployment:e2e-test

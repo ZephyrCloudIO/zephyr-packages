@@ -30,13 +30,13 @@ for (const appName of testTargets) {
         const url = deployResult.urls[0];
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${url}/${asset.path}`, 3);
+          return fetchWithRetries(`${url}/${asset.path}`, 5);
         });
 
         const results = await Promise.all(promises);
         results.forEach((res) => {
-          expect(res.ok).toBe(true);
           expect(res.status).toBe(200);
+          expect(res.ok).toBe(true);
         });
       },
       90 * 1000

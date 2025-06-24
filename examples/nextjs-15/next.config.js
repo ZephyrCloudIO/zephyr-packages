@@ -1,12 +1,11 @@
-const withRspack = require('next-rspack');
-const zephyr = require('zephyr-rspack-plugin');
+const { withZephyr } = require('zephyr-nextjs-plugin');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    const newConfig = zephyr.withZephyr()(config);
-    return newConfig;
+  webpack: (config, context) => {
+    return withZephyr()(config, context);
   },
+  output: 'standalone',
 };
 
-module.exports = async () => withRspack(nextConfig);
+module.exports = nextConfig;

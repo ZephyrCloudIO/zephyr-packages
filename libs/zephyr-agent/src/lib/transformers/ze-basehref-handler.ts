@@ -2,6 +2,17 @@
 import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
 
 /**
+ * Normalizes path separators to forward slashes for web compatibility Converts Windows
+ * backslashes to forward slashes
+ *
+ * @param path - The path to normalize
+ * @returns The path with forward slashes
+ */
+function normalizePathSeparators(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
+/**
  * Normalizes a base path string to ensure consistent format across all plugins
  *
  * @param baseHref - The base path string to normalize
@@ -73,18 +84,21 @@ function isIndexHtml(path: string): boolean {
  * @returns The path with baseHref applied
  */
 function applyBaseHrefToPath(path: string, normalizedBaseHref: string): string {
+  // Normalize path separators first to handle Windows backslashes
+  const normalizedPath = normalizePathSeparators(path);
+
   // Don't modify absolute paths or index.html
-  if (isAbsolutePath(path) || isIndexHtml(path)) {
-    return path;
+  if (isAbsolutePath(normalizedPath) || isIndexHtml(normalizedPath)) {
+    return normalizedPath;
   }
 
-  // Return original path if baseHref is empty
+  // Return normalized path if baseHref is empty
   if (!normalizedBaseHref) {
-    return path;
+    return normalizedPath;
   }
 
   // Join the baseHref and path with a slash
-  return `${normalizedBaseHref}/${path}`;
+  return `${normalizedBaseHref}/${normalizedPath}`;
 }
 
 /**

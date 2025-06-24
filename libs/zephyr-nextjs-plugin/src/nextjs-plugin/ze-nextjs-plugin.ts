@@ -13,6 +13,9 @@ import {
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 
+import { NextJSServerFunctionExtractor } from './server-function-extractor';
+import type { ZephyrServerAsset, ZephyrNextJSSnapshot } from '../types';
+
 const pluginName = 'ZeNextJSPlugin';
 
 export interface ZephyrNextJSInternalPluginOptions {
@@ -32,6 +35,12 @@ export interface ZephyrNextJSInternalPluginOptions {
   // NextJS specific options
   deployOnClientOnly?: boolean;
   preserveServerAssets?: boolean;
+  // Server function support (Phase 1)
+  enableServerFunctions?: boolean;
+  serverRuntime?: 'nodejs' | 'edge';
+  enableMiddleware?: boolean;
+  enableISR?: boolean;
+  cacheStrategy?: 'kv' | 'r2' | 'hybrid';
   // Additional fields for async initialization
   webpackConfig?: any;
   webpackContext?: string;
@@ -147,10 +156,88 @@ export class ZeNextJSPlugin {
     // Log build steps with NextJS context
     logBuildSteps(validOptions, compiler);
     
-    // Setup deployment with NextJS-aware handling
-    setupZeDeploy(validOptions, compiler);
+    // Setup deployment with NextJS-aware handling including server functions
+    this.setupNextJSDeployment(validOptions, compiler);
     
     this._deploymentSetup = true;
     console.log('🔧 Zephyr deployment hooks configured for Next.js');
+  }
+
+  private setupNextJSDeployment(
+    options: ZephyrNextJSInternalPluginOptions & { zephyr_engine: ZephyrEngine },
+    compiler: Compiler
+  ): void {
+    // Setup standard deployment for static assets
+    setupZeDeploy(options, compiler);
+
+    // Add server function processing if enabled
+    if (options.enableServerFunctions) {
+      compiler.hooks.afterEmit.tapAsync(pluginName, async (compilation, callback) => {
+        try {
+          await this.processServerFunctions(options, compiler);
+          callback();
+        } catch (error) {
+          logFn('error', `Failed to process server functions: ${ZephyrError.format(error)}`);
+          callback();
+        }
+      });
+    }
+  }
+
+  private async processServerFunctions(
+    options: ZephyrNextJSInternalPluginOptions & { zephyr_engine: ZephyrEngine },
+    compiler: Compiler
+  ): Promise<void> {
+    try {
+      const { buildContext } = options;
+      const outputPath = compiler.outputPath;
+      
+      console.log('🔍 Processing NextJS server functions...');
+      
+      // Create server function extractor
+      const extractor = new NextJSServerFunctionExtractor(
+        outputPath,
+        buildContext.buildId,
+        options
+      );
+      
+      // Extract server functions
+      const { serverFunctions, routeManifest, buildManifest } = 
+        await extractor.extractServerFunctions();
+      
+      if (serverFunctions.length === 0) {
+        console.log('ℹ️  No server functions found to deploy');
+        return;
+      }
+      
+      console.log(`📦 Found ${serverFunctions.length} server functions to deploy`);
+      
+      // Process server functions similar to static assets
+      for (const serverFunction of serverFunctions) {
+        console.log(`  📄 ${serverFunction.type}: ${serverFunction.path} -> ${serverFunction.routes.join(', ')}`);
+      }
+      
+      // Store server functions in the engine for upload
+      // Note: This would require extending ZephyrEngine to support server functions
+      // For now, we'll store them as metadata
+      if (!options.zephyr_engine.buildProperties.serverFunctions) {
+        (options.zephyr_engine.buildProperties as any).serverFunctions = [];
+      }
+      (options.zephyr_engine.buildProperties as any).serverFunctions.push(...serverFunctions);
+      
+      // Store manifests
+      if (routeManifest) {
+        (options.zephyr_engine.buildProperties as any).routeManifest = routeManifest;
+      }
+      if (buildManifest) {
+        (options.zephyr_engine.buildProperties as any).buildManifest = buildManifest;
+      }
+      
+      console.log('✅ Server functions processed successfully');
+      
+    } catch (error) {
+      console.error('❌ Error processing server functions:', error);
+      throw error;
+    }
   }
 }

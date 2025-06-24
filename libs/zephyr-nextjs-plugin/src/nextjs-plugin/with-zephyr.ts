@@ -52,6 +52,12 @@ function _zephyr_configuration_sync(
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
         deployOnClientOnly: _zephyrOptions?.deployOnClientOnly,
         preserveServerAssets: _zephyrOptions?.preserveServerAssets,
+        // Server function support (Phase 1)
+        enableServerFunctions: _zephyrOptions?.enableServerFunctions,
+        serverRuntime: _zephyrOptions?.serverRuntime,
+        enableMiddleware: _zephyrOptions?.enableMiddleware,
+        enableISR: _zephyrOptions?.enableISR,
+        cacheStrategy: _zephyrOptions?.cacheStrategy,
         // Add webpack config and context for async initialization
         webpackConfig: config,
         webpackContext: config.context,

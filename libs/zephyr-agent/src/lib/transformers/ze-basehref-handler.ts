@@ -1,17 +1,5 @@
 /** Utility functions for handling baseHref paths in Zephyr */
-import { posix, win32 } from 'node:path';
-import type { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
-
-/**
- * Normalizes path separators to forward slashes for web compatibility Converts Windows
- * backslashes to forward slashes
- *
- * @param path - The path to normalize
- * @returns The path with forward slashes
- */
-function normalizePathSeparators(path: string): string {
-  return path.split(win32.sep).join(posix.sep);
-}
+import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
 
 /**
  * Normalizes a base path string to ensure consistent format across all plugins
@@ -85,21 +73,18 @@ function isIndexHtml(path: string): boolean {
  * @returns The path with baseHref applied
  */
 function applyBaseHrefToPath(path: string, normalizedBaseHref: string): string {
-  // Normalize path separators first to handle Windows backslashes
-  const normalizedPath = normalizePathSeparators(path);
-
   // Don't modify absolute paths or index.html
-  if (isAbsolutePath(normalizedPath) || isIndexHtml(normalizedPath)) {
-    return normalizedPath;
+  if (isAbsolutePath(path) || isIndexHtml(path)) {
+    return path;
   }
 
-  // Return normalized path if baseHref is empty
+  // Return original path if baseHref is empty
   if (!normalizedBaseHref) {
-    return normalizedPath;
+    return path;
   }
 
   // Join the baseHref and path with a slash
-  return `${normalizedBaseHref}/${normalizedPath}`;
+  return `${normalizedBaseHref}/${path}`;
 }
 
 /**

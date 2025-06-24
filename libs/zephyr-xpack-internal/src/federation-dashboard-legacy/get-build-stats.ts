@@ -82,6 +82,9 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context: { isCI },
     build_target,
+    native: {
+      lock_file_hash: pluginOptions.zephyr_engine.env.lock_file_hash,
+    },
   };
 
   // todo: extend data

@@ -43,6 +43,7 @@
     "node-persist": "^4.0.1",
     "open": "^10.1.0",
     "proper-lockfile": "^4.1.2",
+    "semver-regex": "^4.0.5",
     "socket.io-client": "^4.7.5",
     "tslib": "catalog:typescript",
     "uuid": "^8.3.2",

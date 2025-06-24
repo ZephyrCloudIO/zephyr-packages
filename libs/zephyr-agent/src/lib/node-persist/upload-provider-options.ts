@@ -16,8 +16,8 @@ export interface ZeApplicationConfig {
   user_uuid: string;
   // @deprecated
   username: string;
-  // @deprecated
-  build_target: string;
+  build_target?: string;
+  native_config_file_hash?: string;
 }
 
 export enum UploadProviderType {

@@ -1,5 +1,6 @@
 /** Utility functions for handling baseHref paths in Zephyr */
 import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
+import { sep, posix } from 'node:path';
 
 /**
  * Normalizes path separators to forward slashes for web compatibility Converts Windows
@@ -9,7 +10,7 @@ import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
  * @returns The path with forward slashes
  */
 function normalizePathSeparators(path: string): string {
-  return path.replace(/\\/g, '/');
+  return path.split(sep).join(posix.sep);
 }
 
 /**

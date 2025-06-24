@@ -36,7 +36,13 @@ jobs:
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm dlx nx affected -t build --skipRemoteCache
       - name: Set ZEPHYR_CACHE
-        run: echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "ZEPHYR_CACHE=$USERPROFILE\\.zephyr" >> $GITHUB_ENV
+          else
+            echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
+          fi
       - name: Upload built libs and cache
         uses: actions/upload-artifact@v4
         with:
@@ -103,7 +109,13 @@ jobs:
         with:
           main-branch-name: master
       - name: Set ZEPHYR_CACHE
-        run: echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "ZEPHYR_CACHE=$USERPROFILE\\.zephyr" >> $GITHUB_ENV
+          else
+            echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
+          fi
       - name: Download zephyr cache
         uses: actions/download-artifact@v4
         with:

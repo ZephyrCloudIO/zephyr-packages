@@ -1,11 +1,11 @@
 {
-  "name": "vite-plugin-zephyr",
-  "version": "0.0.54",
-  "description": "Vite plugin for Zephyr",
+  "name": "zephyr-rollx-internal",
+  "version": "0.0.50",
+  "description": "Internal plugin for rollup, rolldown and vite for Zephyr",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/vite-plugin-zephyr"
+    "directory": "libs/zephyr-rollx-internal"
   },
   "license": "Apache-2.0",
   "author": {
@@ -16,26 +16,20 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run vite-plugin-zephyr:build",
+    "build": "nx run zephyr-rollx-internal:build",
+    "test": "nx run zephyr-rollx-internal:test",
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@module-federation/runtime": "catalog:module-federation",
-    "@module-federation/vite": "catalog:module-federation",
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.4",
     "is-ci": "catalog:plugin-shared",
-    "json5": "2.2.3",
-    "rollup": "catalog:rollup4",
-    "vite": "catalog:vite6",
-    "zephyr-agent": "workspace:*",
-    "zephyr-rollx-internal": "workspace:*"
+    "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "zephyr-edge-contract": "workspace:*"
   },
   "publishConfig": {
     "access": "public",

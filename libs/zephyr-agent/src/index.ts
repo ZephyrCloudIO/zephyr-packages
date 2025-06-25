@@ -10,6 +10,14 @@ export {
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';
 
+// deploy result
+export {
+  getAllAppDeployResults,
+  getAllDeployedApps,
+  getAppDeployResult,
+  type DeployResult,
+} from './lib/node-persist/app-deploy-result-cache';
+
 // logger
 export { ze_log } from './lib/logging';
 export { logFn } from './lib/logging/ze-log-event';

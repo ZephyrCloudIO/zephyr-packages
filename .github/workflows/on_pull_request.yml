@@ -110,7 +110,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     name: End-to-end test of examples
     needs: build
-    if: (matrix.os == 'ubuntu-latest' && needs.build.outputs.has-cache-ubuntu == 'true') || (matrix.os == 'windows-latest' && needs.build.outputs.has-cache-windows == 'true')
+    if: needs.build.outputs.has-cache-ubuntu == 'true' || needs.build.outputs.has-cache-windows == 'true'
     environment: development
     steps:
       - uses: actions/checkout@v4

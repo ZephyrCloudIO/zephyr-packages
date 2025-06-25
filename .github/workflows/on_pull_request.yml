@@ -99,15 +99,6 @@ jobs:
     needs: build
     environment: development
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-        with:
-          os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: master
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -117,9 +108,26 @@ jobs:
             echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
           fi
       - name: Download zephyr cache
+        id: download-cache
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
+      - name: Exit early if no cache is found
+        if: steps.download-cache.outcome == 'success'
+        shell: bash
+        run: |
+          echo "No build cache was found. Exiting early."
+          exit 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os }}
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: master
       - name: Run e2e examples test
         run: pnpm nx run e2e-deployment:e2e-test

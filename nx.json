@@ -127,7 +127,7 @@
   "plugins": [
     {
       "plugin": "@nx/rspack/plugin",
-      "include": ["examples/rspack-nx-mf/**"],
+      "include": ["examples/rspack-nx-mf/apps/**"],
       "options": {
         "buildTargetName": "build",
         "serveTargetName": "serve",

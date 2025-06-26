@@ -363,6 +363,7 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       async (record) =>
         flatCreateSnapshotId({
           ...ze.applicationProperties,
+          target: ze.env.target ?? 'web',
           buildId: record[1],
           username: record[0].username,
         })

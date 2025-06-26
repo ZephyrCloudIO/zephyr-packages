@@ -41,8 +41,8 @@ export async function createSnapshot(
     mfConfig: mfConfig,
   };
   const version_postfix = zephyr_engine.env.isCI
-    ? `${options.git_branch}.${options.buildId}`
-    : `${options.username}.${options.buildId}`;
+    ? `${options.target}.${options.git_branch}.${options.buildId}`
+    : `${options.target}.${options.username}.${options.buildId}`;
 
   const basedAssets = applyBaseHrefToAssets(
     assets,

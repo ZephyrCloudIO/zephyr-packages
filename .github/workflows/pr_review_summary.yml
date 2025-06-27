@@ -15,20 +15,16 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
   pull_request_review_comment:
     types: [created]
-  issues:
-    types: [opened, assigned]
-  pull_request_review:
-    types: [submitted]
 
 jobs:
-  pr_review_summary:
-    if: github.event_name == 'pull_request'
+  code_review:
+    if: |
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@claude please review')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude please review'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,6 +41,7 @@ jobs:
         run: gh auth setup-git
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run Claude Code
         id: claude
         uses: valorkin/claude-code-action@feat-silence
@@ -53,14 +50,17 @@ jobs:
           model: claude-sonnet-4-20250514
           sticky_comment: true
           allowed_tools: |
+            mcp__github__create_pending_pull_request_review,
+            mcp__github__add_pull_request_review_comment_to_pending_review,
+            mcp__github__submit_pending_pull_request_review,
             mcp__github__get_pull_request_diff,
-            mcp__github__create_issue_comment,
-            mcp__github__update_issue_comment
+            mcp__github__delete_pending_pull_request_review,
+            mcp__github__get_pull_request_review_comments
           direct_prompt: |
             You are a senior product engineer.
-            Please provide a thorough review of this pull request.
             Pay extra attention to coding standards, security practices,
             test coverage, readability, maintainability, and performance.
+
             Focus on:
             - Correctness & hidden bugs (edge cases, race conditions, off-by-one, etc.)
             - Performance hot-spots (Big-O, memory, DB queries, async misuse)
@@ -72,18 +72,17 @@ jobs:
             - Performance considerations
             - Documentation updates if needed
             - Architecture and design decisions
-            Reply with:
-            - *One-sentence purpose summary* of the changes.
-            - A **table** with columns **Severity (Critical/High/Medium/Low)**, **File/Line(s)**, **Issue**, **Recommendation**.
-            - Concrete code samples for any non-trivial fix.
-            - An overall quality score **/10** and the top 3 next steps.
-            Provide constructive feedback with specific suggestions for improvement.
-            Use <details> and <summary> md tags to show summary in comment and view details on click.
-            Please review this PR and provide feedback as a single PR comment. Follow these steps:
-            1. **Get diff information**: Use `mcp__github__get_pull_request_diff` to understand the code changes and line numbers
-            2. **Create or update comment**: 
-              - If a comment_id is provided, use `mcp__github__update_issue_comment` to update the existing comment
-              - If no comment_id is provided, use `mcp__github__create_issue_comment` to create a new comment
 
-            Provide a comprehensive review in a single comment that covers all the important aspects of the PR. Include file paths and line numbers in your feedback table for easy reference.
-            Explicitely mention in header that writing `@claude please review` in the comment will trigger a full reviews.
+            Make sure that:
+              - in typescript code all functions and methods have to have type annotations of arguments and return value
+              - all typescript code is compatible with `strict` mode
+
+            Please comment on this PR and provide inline feedback using the GitHub review system. Follow these steps:
+            0. **Delete pending review**: Use `mcp__github__delete_pending_pull_request_review` to delete any existing pending review
+            1. **Start a review**: Use `mcp__github__create_pending_pull_request_review` to begin a pending review
+            2. **Get diff information**: Use `mcp__github__get_pull_request_diff` to understand the code changes and line numbers
+            3. **Get existing comments**: Use `mcp__github__get_pull_request_review_comments` to get all existing comments
+            4. **Add inline comments**: Use `mcp__github__add_pull_request_review_comment_to_pending_review` for each specific piece of feedback on particular lines. If there is already a similar comment, do not add a new comment.
+            5. **Submit the review**: Use `mcp__github__submit_pending_pull_request_review` with event type "COMMENT" (not "REQUEST_CHANGES") to publish all comments as a non-blocking review
+            6. **Important**: Submit as "COMMENT" type so the review doesn't block the PR.
+            7. **Important**: wrap all of the claude review comment in <details> tag; <summary> tag has to contain only "Claude comment inside" text

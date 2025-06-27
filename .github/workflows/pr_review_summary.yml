@@ -1,0 +1,89 @@
+# Claude Code Review Workflow
+#
+# This workflow provides automated code review using Claude AI with a dual-job architecture:
+#
+# 1. **pr_review_summary**: Automatic summary review on every PR (opened/reopened/synchronized)
+#    - Provides a high-level review with severity table and quality score
+#    - Uses simplified GitHub API tools for commenting
+#    - Runs silently without verbose output
+
+name: Claude Code
+
+# Prevent concurrent runs on the same PR to avoid conflicts
+concurrency:
+  group: claude-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  pr_review_summary:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate GitHub CLI
+        run: gh auth setup-git
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Claude Code
+        id: claude
+        uses: valorkin/claude-code-action@feat-silence
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-sonnet-4-20250514
+          sticky_comment: true
+          allowed_tools: |
+            mcp__github__get_pull_request_diff,
+            mcp__github__create_issue_comment,
+            mcp__github__update_issue_comment
+          direct_prompt: |
+            You are a senior product engineer.
+            Please provide a thorough review of this pull request.
+            Pay extra attention to coding standards, security practices,
+            test coverage, readability, maintainability, and performance.
+            Focus on:
+            - Correctness & hidden bugs (edge cases, race conditions, off-by-one, etc.)
+            - Performance hot-spots (Big-O, memory, DB queries, async misuse)
+            - Security implications and vulnerabilities (injection, XSS, secrets exposure)
+            - Readability & maintainability (naming, duplication, comments)
+            - Test coverage gaps (suggest unit/integration tests)
+            - Code quality and best practices
+            - Potential bugs or issues
+            - Performance considerations
+            - Documentation updates if needed
+            - Architecture and design decisions
+            Reply with:
+            - *One-sentence purpose summary* of the changes.
+            - A **table** with columns **Severity (Critical/High/Medium/Low)**, **File/Line(s)**, **Issue**, **Recommendation**.
+            - Concrete code samples for any non-trivial fix.
+            - An overall quality score **/10** and the top 3 next steps.
+            Provide constructive feedback with specific suggestions for improvement.
+            Use <details> and <summary> md tags to show summary in comment and view details on click.
+            Please review this PR and provide feedback as a single PR comment. Follow these steps:
+            1. **Get diff information**: Use `mcp__github__get_pull_request_diff` to understand the code changes and line numbers
+            2. **Create or update comment**: 
+              - If a comment_id is provided, use `mcp__github__update_issue_comment` to update the existing comment
+              - If no comment_id is provided, use `mcp__github__create_issue_comment` to create a new comment
+
+            Provide a comprehensive review in a single comment that covers all the important aspects of the PR. Include file paths and line numbers in your feedback table for easy reference.
+            Explicitely mention in header that writing `@claude please review` in the comment will trigger a full reviews.

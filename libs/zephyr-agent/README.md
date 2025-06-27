@@ -103,18 +103,18 @@ interface ZephyrAgentConfig {
 
 When Zephyr cannot find a Git repository with remote origin, it will:
 
-1. **Interactive Terminal (TTY available)**:
+1. **Automatic Package.json-Based Naming**:
 
-   - Prompt you to manually enter organization and project names
-   - Display strong warnings that this is NOT recommended
-   - Show clear instructions on how to properly set up Git
-   - Use custom Zephyr-branded prompts with green styling
+   - Extract organization, project, and app names from your `package.json`
+   - Use authenticated user's username as the organization for personal Zephyr org
+   - Follow intelligent naming conventions based on package structure
+   - No user prompts or environment variables required
 
-2. **Non-Interactive Environment (CI/CD, no TTY)**:
-   - Use global Git config for user information (if available)
-   - Leave organization empty (will be determined from your Zephyr account)
-   - Display critical warnings about potential deployment issues
-   - Continue with the build but functionality may be limited
+2. **Naming Logic**:
+   - **Scoped packages** (`@scope/name`): project = scope, app = name
+   - **With root package.json**: project = root package name, app = current package name
+   - **Otherwise**: project = app = package name
+   - **Organization**: Uses JWT token username (sanitized for URL safety) or defaults to 'personal'
 
 #### Example Scenarios
 
@@ -123,20 +123,27 @@ When Zephyr cannot find a Git repository with remote origin, it will:
 git init
 git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git
 git add . && git commit -m "Initial commit"
-npm run build  # Works perfectly
+npm run build  # Works perfectly with full Git context
 
-# Interactive fallback (NOT recommended)
-# No git repository, but terminal is available
-npm run build
-# > ⚠️  Git repository not found. Zephyr REQUIRES git...
-# > PROMPT  What organization should this project belong to?
-# > PROMPT  What is the project name?
+# Automatic fallback (works seamlessly)
+# No git repository - uses package.json naming
+npm run build  # Automatically determines naming from package.json
 
-# Non-interactive fallback (may cause issues)
-# No git repository, no terminal (e.g., CI environment)
-npm run build
-# > ⚠️  CRITICAL: Git not available. Zephyr CANNOT function properly...
-# > Organization will be determined from your account
+# Examples of automatic naming:
+# package.json: { "name": "@my-company/my-app" }
+# → org: "jwt-username", project: "my-company", app: "my-app"
+
+# package.json: { "name": "my-project" } (no root package.json)
+# → org: "jwt-username", project: "my-project", app: "my-project"
+
+# package.json: { "name": "my-app" } (root package.json: { "name": "my-workspace" })
+# → org: "jwt-username", project: "my-workspace", app: "my-app"
+
+# Special characters in username get sanitized:
+# JWT username: "Néstor López" → org: "n-stor-l-pez"
+
+# No token available:
+# → org: "personal", project: from package.json, app: from package.json
 ```
 
 #### Why Git is Required
@@ -155,44 +162,39 @@ Without Git, Zephyr cannot guarantee proper functionality, especially for:
 - Version tracking
 - Rollback capabilities
 
-#### Environment Variable Fallback (AI Tools/Platforms)
+#### Package.json-Based Naming (Non-Git Environments)
 
-For environments where Git is not available (e.g., AI coding tools like Bolt), you can provide deployment information via environment variables:
+When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr automatically extracts naming information from your `package.json` structure:
 
-**Required Environment Variables:**
+**Automatic Organization Detection:**
 
-- `ZE_SECRET_TOKEN` or authenticated via CLI
-- `ZEPHYR_ORG` - Your Zephyr organization name
-- `ZEPHYR_PROJECT` - Your project name
+- Uses the authenticated user's name from JWT token claims
+- Fallback to 'personal' if no token available
 
-**Optional Environment Variables:**
+**Project and App Naming Logic:**
 
-- `ZEPHYR_GIT_NAME` - Git user name (defaults to extracted token info or 'zephyr-env-deploy')
-- `ZEPHYR_GIT_EMAIL` - Git user email (defaults to extracted token info or 'deploy@zephyr-cloud.io')
-- `ZEPHYR_GIT_BRANCH` - Git branch name (default: 'main')
+1. **Scoped Package** (`@company/app-name`):
+
+   - Project: `company` (scope without @)
+   - App: `app-name`
+
+2. **Monorepo Structure** (root `package.json` exists):
+
+   - Project: Root package name
+   - App: Current package name
+
+3. **Single Package**:
+   - Project: Package name
+   - App: Package name
 
 **User Information Extraction:**
-When using environment variable fallback, Zephyr automatically extracts user information from your authentication token:
+Zephyr extracts user information from your authentication token:
 
-- **User Name**: From claims `https://api.zephyr-cloud.io/name`, `name`, `nickname`, etc.
+- **User Name**: From claims `https://api.zephyr-cloud.io/name`, `name`, etc.
 - **User Email**: From claims `https://api.zephyr-cloud.io/email`, `email`, etc.
 - **User ID**: From the `sub` claim (used in deployment tags)
 
-This provides full accountability by:
-
-- Using the authenticated user's name and email for Git metadata
-- Adding deployment tags with the user's identity for traceability
-
-**Example:**
-
-```bash
-export ZE_SECRET_TOKEN="your-zephyr-token"
-export ZEPHYR_ORG="my-organization"
-export ZEPHYR_PROJECT="my-project"
-npm run build
-```
-
-This fallback is designed for AI coding platforms and similar environments where Git repositories cannot be properly initialized.
+This provides full accountability without requiring manual configuration.
 
 ## Internal APIs
 

@@ -1,23 +1,23 @@
 import isCI from 'is-ci';
+import * as jose from 'jose';
 import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getToken } from '../node-persist/token';
-import { isTokenStillValid } from '../auth/login';
-import * as jose from 'jose';
 import { getGitProviderInfo } from './git-provider-utils';
-import { isInteractiveTerminal, promptForGitInfo } from './ze-util-interactive-prompts';
 import {
   getCachedGitInfo,
-  setCachedGitInfo,
   getGitInfoPromise,
+  setCachedGitInfo,
   setGitInfoPromise,
 } from './ze-git-info-cache';
+import { getPackageJson } from './ze-util-read-package-json';
 
 const exec = promisify(node_exec);
 
@@ -202,36 +202,7 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
       });
     }
 
-    const projectName = getCurrentDirectoryName();
-    let org = '';
-    let project = projectName;
-
-    // If we're in an interactive terminal, prompt for org and project info
-    if (isInteractiveTerminal()) {
-      logFn(
-        'error',
-        '⚠️  Git repository not found. Zephyr REQUIRES a git repository with remote origin.'
-      );
-      const promptResult = await promptForGitInfo(projectName);
-      org = promptResult.org;
-      project = promptResult.project;
-    } else {
-      // Non-interactive mode: use defaults and show warnings
-      logFn(
-        'error',
-        '⚠️  WARNING: Git repository not found. Zephyr REQUIRES git for proper deployment.'
-      );
-      logFn(
-        'error',
-        'Organization will be determined from your account - this is NOT recommended.'
-      );
-      ze_log.git('Organization will be determined from your account');
-      logFn(
-        'warn',
-        'To properly use Zephyr: git init && git remote add origin git@github.com:ORG/REPO.git'
-      );
-      logFn('info', 'Full setup guide: https://docs.zephyr-cloud.io');
-    }
+    const { org, project } = await getAppNamingFromPackageJson(name.trim());
 
     const gitInfo: ZeGitInfo = {
       git: {
@@ -258,108 +229,8 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
   }
 }
 
-/** Try to get git info using environment variables for AI tools/platforms */
-async function getEnvBasedGitInfo(): Promise<ZeGitInfo | null> {
-  try {
-    // Check if we have the required environment variables
-    const org = process.env['ZEPHYR_ORG'];
-    const project = process.env['ZEPHYR_PROJECT'];
-
-    if (!org || !project) {
-      return null;
-    }
-
-    // Check if we have a valid token (required for authentication)
-    const token = await getToken();
-    if (!token || !isTokenStillValid(token, 60)) {
-      ze_log.git('Environment variables found but no valid token for authentication');
-      return null;
-    }
-
-    ze_log.git('Using environment variable fallback for deployment');
-    logFn('info', '🔧 Using ZEPHYR_ORG and ZEPHYR_PROJECT environment variables');
-
-    // Try to extract user information from the JWT token
-    let tokenUserName: string | undefined;
-    let tokenUserEmail: string | undefined;
-    let tokenUserId: string | undefined;
-
-    try {
-      const decodedToken = jose.decodeJwt(token);
-      ze_log.git('Decoded JWT token claims:', Object.keys(decodedToken));
-
-      // Zephyr uses both standard and namespaced claims
-      // Priority: namespaced claims > standard claims > other common claims
-      tokenUserName = (decodedToken['https://api.zephyr-cloud.io/name'] ||
-        decodedToken['name'] ||
-        decodedToken['nickname'] ||
-        decodedToken['preferred_username'] ||
-        decodedToken['given_name']) as string | undefined;
-
-      tokenUserEmail = (decodedToken['https://api.zephyr-cloud.io/email'] ||
-        decodedToken['email'] ||
-        decodedToken['upn'] || // User Principal Name in some systems
-        decodedToken['unique_name']) as string | undefined;
-
-      // Extract user ID from 'sub' claim (e.g., "google-oauth2|109373569979745840525")
-      tokenUserId = decodedToken['sub'] as string | undefined;
-
-      if (tokenUserName || tokenUserEmail) {
-        ze_log.git('Extracted user info from token:', {
-          name: tokenUserName,
-          email: tokenUserEmail,
-          userId: tokenUserId,
-        });
-      }
-    } catch (error) {
-      ze_log.git('Failed to decode JWT token for user info:', error);
-    }
-
-    // Use provided values or token-extracted values or defaults
-    const gitName =
-      process.env['ZEPHYR_GIT_NAME'] || tokenUserName || 'zephyr-env-deploy';
-    const gitEmail =
-      process.env['ZEPHYR_GIT_EMAIL'] || tokenUserEmail || 'deploy@zephyr-cloud.io';
-    const branch = process.env['ZEPHYR_GIT_BRANCH'] || 'main';
-
-    const gitInfo: ZeGitInfo = {
-      git: {
-        name: gitName,
-        email: gitEmail,
-        branch,
-        commit: `env-deployment-${Date.now()}`,
-        tags: tokenUserId ? [`deployed-by:${tokenUserId}`] : [],
-      },
-      app: {
-        org,
-        project,
-      },
-    };
-
-    ze_log.git('Using environment-based git info', gitInfo);
-    logFn('info', `Organization: ${org}, Project: ${project}`);
-    logFn('info', `Deployment by: ${gitName} <${gitEmail}>`);
-
-    if (tokenUserName || tokenUserEmail) {
-      logFn('info', '✓ User information extracted from authentication token');
-    }
-
-    return gitInfo;
-  } catch (error) {
-    ze_log.git('Failed to use environment-based fallback:', error);
-    return null;
-  }
-}
-
 /** Generate fallback git info when git is completely unavailable */
 async function getFallbackGitInfo(): Promise<ZeGitInfo> {
-  // First try environment-based fallback for AI tools/platforms
-  const envBasedInfo = await getEnvBasedGitInfo();
-  if (envBasedInfo) {
-    return envBasedInfo;
-  }
-
-  // Try to extract user info from token even without env vars
   let tokenUserName: string | undefined;
   let tokenUserEmail: string | undefined;
   let tokenUserId: string | undefined;
@@ -388,50 +259,17 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
     ze_log.git('Failed to extract token info for fallback:', error);
   }
 
-  // Use token info if available, otherwise use generic defaults
   const gitName = tokenUserName || 'zephyr-deploy';
   const gitEmail = tokenUserEmail || 'deploy@zephyr-cloud.io';
 
-  const projectName = getCurrentDirectoryName();
-  let org = '';
-  let project = projectName;
-
-  // If we're in an interactive terminal, prompt for org and project info
-  if (isInteractiveTerminal()) {
-    logFn('error', '⚠️  Git not available. Zephyr REQUIRES git for deployment.');
-    const promptResult = await promptForGitInfo(projectName);
-    org = promptResult.org;
-    project = promptResult.project;
-  } else {
-    // In CI environments, we should fail if git is not available
-    if (isCI) {
-      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message:
-          'Git repository information is required in CI environments. Please ensure your CI workflow includes git repository with proper remote origin.',
-      });
-    }
-
-    // Non-interactive, non-CI mode: use defaults and show warnings
-    logFn(
-      'error',
-      `⚠️  CRITICAL: Git not available. Zephyr CANNOT function properly without git.`
-    );
-    logFn(
-      'error',
-      `Using fallback project name: "${projectName}" - deployment may have issues.`
-    );
-
-    if (tokenUserName || tokenUserEmail) {
-      logFn('info', `Deploying as: ${gitName} <${gitEmail}>`);
-    }
-
-    ze_log.git(`Git not available - using fallback configuration`);
-    logFn(
-      'warn',
-      'Zephyr REQUIRES: git init && git remote add origin git@github.com:ORG/REPO.git && git commit'
-    );
-    logFn('info', 'Setup guide: https://docs.zephyr-cloud.io');
+  if (isCI) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message:
+        'Git repository information is required in CI environments. Please ensure your CI workflow includes git repository with proper remote origin.',
+    });
   }
+
+  const { org, project } = await getAppNamingFromPackageJson(tokenUserName);
 
   const gitInfo: ZeGitInfo = {
     git: {
@@ -452,10 +290,69 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   return gitInfo;
 }
 
+/** Sanitize string for use as org/project name */
+function sanitizeName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+}
+
 /** Get current directory name as project name */
 function getCurrentDirectoryName(): string {
   const cwd = process.cwd();
   const dirName = cwd.split('/').pop() || cwd.split('\\').pop() || 'untitled-project';
-  // Sanitize directory name for use as project name
-  return dirName.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+  return sanitizeName(dirName);
+}
+
+/**
+ * Extract org, project, and app names from package.json structure for non-git
+ * environments
+ */
+async function getAppNamingFromPackageJson(
+  tokenUserName?: string
+): Promise<{ org: string; project: string; app: string }> {
+  try {
+    const packageJson = await getPackageJson(process.cwd());
+    const packageName = packageJson.name;
+
+    // Use JWT username as org, fallback to 'personal'
+    const org = tokenUserName ? sanitizeName(tokenUserName) : 'personal';
+
+    if (packageName.includes('@')) {
+      // Scoped package: @scope/name -> project: scope, app: name
+      const [scope, name] = packageName.split('/');
+      return {
+        org,
+        project: scope.replace('@', ''),
+        app: name,
+      };
+    } else {
+      // Monorepo: use root package name as project
+      try {
+        const rootPackageJson = await getPackageJson(process.cwd() + '/..');
+        if (rootPackageJson) {
+          return {
+            org,
+            project: rootPackageJson.name,
+            app: packageName,
+          };
+        }
+      } catch {
+        // No root package.json found
+      }
+
+      // Single package: use same name for project and app
+      return {
+        org,
+        project: packageName,
+        app: packageName,
+      };
+    }
+  } catch {
+    // No package.json: use directory name
+    const dirName = getCurrentDirectoryName();
+    return {
+      org: tokenUserName ? sanitizeName(tokenUserName) : 'personal',
+      project: dirName,
+      app: dirName,
+    };
+  }
 }

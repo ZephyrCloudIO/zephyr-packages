@@ -8,7 +8,7 @@
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
-A specialized Next.js plugin for deploying applications with Zephyr Cloud. This plugin seamlessly integrates with Next.js's unique three-phase build system (client, server, and edge) to enable complete deployment of your applications with Module Federation support.
+A specialized Next.js plugin for deploying applications with Zephyr Cloud's Next.js worker (`ze-worker-nextjs-deploy`). This plugin seamlessly integrates with Next.js's build system to enable complete deployment with Module Federation support, server functions, middleware, and Incremental Static Regeneration (ISR).
 
 ## 🎯 Why This Plugin?
 
@@ -22,9 +22,11 @@ The standard `zephyr-webpack-plugin` wasn't compatible with Next.js due to async
 ## ✨ Features
 
 - 🚀 **Full Next.js Integration**: Works with App Router and Pages Router
-- 🏗️ **Three-Phase Deployment**: Deploys client, server, and edge builds
-- 📦 **Smart Asset Optimization**: Handles Next.js-specific asset patterns
-- 🔧 **Zero-Config Setup**: Works out of the box with sane defaults
+- 🏗️ **Next.js Worker Deployment**: Deploys to dedicated `ze-worker-nextjs-deploy` worker
+- ⚡ **Server Functions**: Full support for API routes, SSR, and server actions
+- 🛡️ **Middleware Support**: Edge middleware execution with NextRequest/NextResponse
+- 📦 **Incremental Static Regeneration**: KV-based ISR with tag and path revalidation
+- 🖼️ **Image Optimization**: Next.js Image component with Cloudflare Images integration
 - 📊 **Build Analytics**: Complete visibility into deployment process
 - 🌐 **Global CDN**: Assets distributed via Zephyr's edge network
 - ⚡ **Module Federation**: Full support for micro-frontends
@@ -96,13 +98,23 @@ ZEPHYR   https://your-app-client.zephyrcloud.app
 
 ```typescript
 interface ZephyrNextJSPluginOptions {
-  deployOnClientOnly?: boolean;     // Deploy only client build
-  wait_for_index_html?: boolean;    // Wait for index.html processing
-  preserveServerAssets?: boolean;   // Preserve server assets
+  // Optional flag to wait for index.html processing (for SPA mode)
+  wait_for_index_html?: boolean;
 }
 ```
 
-### Advanced Configuration
+**Zero Configuration**: The plugin automatically enables all Next.js features:
+- ✅ **Next.js Worker**: Always uses `ze-worker-nextjs-deploy`
+- ✅ **Server Functions**: API routes, SSR, and server actions 
+- ✅ **Edge Runtime**: Optimized for edge execution
+- ✅ **Middleware**: Full Next.js middleware support
+- ✅ **ISR**: Incremental Static Regeneration with KV caching
+- ✅ **Image Optimization**: Next.js Image component integration
+- ✅ **Complete Build Processing**: Deploys both server and client build outputs
+
+### SPA Mode Configuration
+
+For Single Page Applications that need special index.html processing:
 
 ```javascript
 // next.config.js
@@ -111,12 +123,10 @@ const { withZephyr } = require('zephyr-nextjs-plugin');
 const nextConfig = {
   webpack: (config, context) => {
     return withZephyr({
-      deployOnClientOnly: false,    // Deploy all build types
-      wait_for_index_html: true,    // Handle SPA mode
-      preserveServerAssets: true,   // Keep server assets
+      wait_for_index_html: true,  // Enable for SPA mode
     })(config, context);
   },
-  output: 'standalone', // For containerized deployments
+  output: 'export', // For static export
 };
 
 module.exports = nextConfig;
@@ -131,9 +141,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   webpack: (config, context) => {
-    return withZephyr({
-      deployOnClientOnly: false,
-    })(config, context);
+    return withZephyr()(config, context);
   },
 };
 

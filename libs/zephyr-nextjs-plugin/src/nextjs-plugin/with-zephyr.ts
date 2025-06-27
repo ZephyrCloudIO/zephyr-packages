@@ -29,11 +29,12 @@ function _zephyr_configuration_sync(
     
     console.log('🔍 NextJS Build context:', { isServer, nextRuntime, buildId });
     
-    // Skip deployment for server builds if deployOnClientOnly is enabled
-    if (_zephyrOptions?.deployOnClientOnly && isServer) {
-      console.log(`⏭️  Skipping Zephyr for ${nextRuntime || 'server'} build (deployOnClientOnly: true)`);
-      return config;
-    }
+    // Deploy on all builds - we need server outputs for Next.js worker
+    console.log(`🔍 Processing ${isServer ? 'server' : 'client'} build for Next.js deployment`);
+    
+    // Note: We need both client and server build outputs:
+    // - Client: Static assets, client-side bundles
+    // - Server: API routes, SSR functions, middleware, manifests
     
     // For Next.js, we need to handle async operations inside the webpack plugin
     // instead of here, since Next.js expects synchronous webpack functions
@@ -50,14 +51,9 @@ function _zephyr_configuration_sync(
           buildId
         },
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
-        deployOnClientOnly: _zephyrOptions?.deployOnClientOnly,
-        preserveServerAssets: _zephyrOptions?.preserveServerAssets,
-        // Server function support (Phase 1)
-        enableServerFunctions: _zephyrOptions?.enableServerFunctions,
-        serverRuntime: _zephyrOptions?.serverRuntime,
-        enableMiddleware: _zephyrOptions?.enableMiddleware,
-        enableISR: _zephyrOptions?.enableISR,
-        cacheStrategy: _zephyrOptions?.cacheStrategy,
+        // Deploy on all builds - Next.js worker needs server and client outputs
+        deployOnClientOnly: false,
+        preserveServerAssets: true,
         // Add webpack config and context for async initialization
         webpackConfig: config,
         webpackContext: config.context,

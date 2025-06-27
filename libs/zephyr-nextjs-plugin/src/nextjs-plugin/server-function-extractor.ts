@@ -36,10 +36,7 @@ export class NextJSServerFunctionExtractor {
   }> {
     const serverFunctions: ZephyrServerAsset[] = [];
     
-    // Only extract if server functions are enabled
-    if (!this.options.enableServerFunctions) {
-      return { serverFunctions };
-    }
+    // Always extract server functions for Next.js projects
 
     try {
       console.log('🔍 Extracting NextJS server functions from build...');
@@ -52,11 +49,9 @@ export class NextJSServerFunctionExtractor {
       const serverActions = await this.extractServerActions();
       serverFunctions.push(...serverActions);
       
-      // Extract middleware
-      if (this.options.enableMiddleware) {
-        const middleware = await this.extractMiddleware();
-        serverFunctions.push(...middleware);
-      }
+      // Extract middleware (always enabled for Next.js)
+      const middleware = await this.extractMiddleware();
+      serverFunctions.push(...middleware);
       
       // Extract SSR pages (if enabled)
       const ssrPages = await this.extractSSRPages();
@@ -288,7 +283,7 @@ export class NextJSServerFunctionExtractor {
         size: Buffer.byteLength(content, 'utf-8'),
         content,
         type,
-        runtime: this.options.serverRuntime || 'edge',
+        runtime: 'edge', // Always use edge runtime for Next.js
         routes,
         nextjsMetadata: {
           buildId: this.buildId,

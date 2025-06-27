@@ -1,17 +1,6 @@
 export interface ZephyrNextJSPluginOptions {
-  // Optional flag to wait for index.html processing
+  // Optional flag to wait for index.html processing (for SPA mode)
   wait_for_index_html?: boolean;
-  
-  // NextJS specific options
-  deployOnClientOnly?: boolean; // If true, only deploy on client build
-  preserveServerAssets?: boolean; // If true, preserve server build assets
-  
-  // Server function support (Phase 1)
-  enableServerFunctions?: boolean; // Enable server function extraction and deployment
-  serverRuntime?: 'nodejs' | 'edge'; // Target runtime for server functions
-  enableMiddleware?: boolean; // Enable NextJS middleware support
-  enableISR?: boolean; // Enable Incremental Static Regeneration
-  cacheStrategy?: 'kv' | 'r2' | 'hybrid'; // Caching strategy for server functions
 }
 
 // Server function asset type

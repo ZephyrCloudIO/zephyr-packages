@@ -30,7 +30,7 @@ for (const appName of testTargets) {
         const url = deployResult.urls[0];
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${url}/${asset.path}`, 5);
+          return fetchWithRetries(`${url}/${asset.path}`, 3);
         });
 
         const results = await Promise.all(promises);
@@ -39,7 +39,7 @@ for (const appName of testTargets) {
           expect(res.ok).toBe(true);
         });
       },
-      90 * 1000
+      60 * 1000
     );
   });
 }
@@ -47,7 +47,7 @@ for (const appName of testTargets) {
 const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
   const res = await fetch(url, { method: 'HEAD' });
 
-  if (res.status === 200 || attemptsLeft <= 1) return res;
+  if (res.status === 200 || attemptsLeft < 1) return res;
 
   await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
 

@@ -193,21 +193,36 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
 /** Try to load git info from global git config */
 async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
   try {
-    const { stdout: name } = await exec('git config --global user.name');
-    const { stdout: email } = await exec('git config --global user.email');
+    const [nameResult, emailResult] = await Promise.all([
+      exec('git config --global user.name').catch(() => ({ stdout: '' })),
+      exec('git config --global user.email').catch(() => ({ stdout: '' })),
+    ]);
 
-    if (!name?.trim() || !email?.trim()) {
+    const name = nameResult.stdout?.trim();
+    const email = emailResult.stdout?.trim();
+
+    if (!name && !email) {
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message: 'Global git config incomplete',
+        message: 'Global git config incomplete: both name and email are missing',
+      });
+    } else if (!name) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Global git config incomplete: user name is missing. Run: git config --global user.name "Your Name"',
+      });
+    } else if (!email) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Global git config incomplete: user email is missing. Run: git config --global user.email "your@email.com"',
       });
     }
 
-    const { org, project } = await getAppNamingFromPackageJson(name.trim());
+    const { org, project } = await getAppNamingFromPackageJson(name);
 
     const gitInfo: ZeGitInfo = {
       git: {
-        name: name.trim(),
-        email: email.trim(),
+        name,
+        email,
         branch: 'main',
         commit: 'no-git-commit',
         tags: [],

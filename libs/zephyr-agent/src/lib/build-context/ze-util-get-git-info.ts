@@ -1,12 +1,23 @@
 import isCI from 'is-ci';
+import * as jose from 'jose';
 import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
+import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
+import { getToken } from '../node-persist/token';
 import { getGitProviderInfo } from './git-provider-utils';
+import {
+  getCachedGitInfo,
+  getGitInfoPromise,
+  setCachedGitInfo,
+  setGitInfoPromise,
+} from './ze-git-info-cache';
+import { getPackageJson } from './ze-util-read-package-json';
 
 const exec = promisify(node_exec);
 
@@ -17,27 +28,82 @@ export interface ZeGitInfo {
 
 /** Loads the git information from the current repository. */
 export async function getGitInfo(): Promise<ZeGitInfo> {
-  const hasToken = hasSecretToken();
-
-  const { name, email, remoteOrigin, branch, commit, tags, stdout } =
-    await loadGitInfo(hasToken);
-
-  if (!hasToken && (!name || !email)) {
-    throw new ZephyrError(ZeErrors.ERR_NO_GIT_USERNAME_EMAIL, {
-      data: { stdout },
-    });
+  // Check if we already have cached git info
+  const cached = getCachedGitInfo();
+  if (cached) {
+    ze_log.git('Using cached git info');
+    return cached;
   }
 
-  const app = parseGitUrl(remoteOrigin, stdout);
+  // Check if another call is already gathering git info
+  const existingPromise = getGitInfoPromise();
+  if (existingPromise) {
+    ze_log.git('Waiting for existing git info gathering to complete');
+    return existingPromise;
+  }
 
-  const gitInfo = {
-    git: { name, email, branch, commit, tags },
-    app,
-  };
+  // Create a new promise for gathering git info
+  const gitInfoPromise = gatherGitInfo();
+  setGitInfoPromise(gitInfoPromise);
 
-  ze_log.git('Loaded: git info', gitInfo);
+  try {
+    const gitInfo = await gitInfoPromise;
+    setCachedGitInfo(gitInfo);
+    return gitInfo;
+  } finally {
+    // Clear the promise after completion
+    setGitInfoPromise(null);
+  }
+}
 
-  return gitInfo;
+/** Internal function that actually gathers git information. */
+async function gatherGitInfo(): Promise<ZeGitInfo> {
+  const hasToken = hasSecretToken();
+
+  try {
+    const { name, email, remoteOrigin, branch, commit, tags, stdout } =
+      await loadGitInfo(hasToken);
+
+    if (!hasToken && (!name || !email)) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_USERNAME_EMAIL, {
+        data: { stdout },
+      });
+    }
+
+    const app = parseGitUrl(remoteOrigin, stdout);
+
+    const gitInfo = {
+      git: { name, email, branch, commit, tags },
+      app,
+    };
+
+    ze_log.git('Loaded: git info', gitInfo);
+
+    return gitInfo;
+  } catch (error) {
+    // In CI environments, fail immediately if git info is not available
+    if (isCI) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message: 'Git repository information is required in CI environments',
+        cause: error,
+      });
+    }
+
+    // If git repo info is not available, try global git config
+    ze_log.git('Git repository not found, falling back to global git config');
+
+    try {
+      const globalGitInfo = await loadGlobalGitInfo();
+      return globalGitInfo;
+    } catch {
+      // If global git config also fails, use defaults
+      logFn('warn', 'Global git config not found, using auto-generated defaults');
+      ze_log.git('Global git config not found, using auto-generated defaults');
+
+      const fallbackInfo = await getFallbackGitInfo();
+      return fallbackInfo;
+    }
+  }
 }
 
 /** Loads all data in a single command to avoid multiple executions. */
@@ -121,5 +187,187 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
       cause,
       data: { stdout },
     });
+  }
+}
+
+/** Try to load git info from global git config */
+async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
+  try {
+    const [nameResult, emailResult] = await Promise.all([
+      exec('git config --global user.name').catch(() => ({ stdout: '' })),
+      exec('git config --global user.email').catch(() => ({ stdout: '' })),
+    ]);
+
+    const name = nameResult.stdout?.trim();
+    const email = emailResult.stdout?.trim();
+
+    if (!name && !email) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message: 'Global git config incomplete: both name and email are missing',
+      });
+    } else if (!name) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Global git config incomplete: user name is missing. Run: git config --global user.name "Your Name"',
+      });
+    } else if (!email) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Global git config incomplete: user email is missing. Run: git config --global user.email "your@email.com"',
+      });
+    }
+
+    const { org, project } = await getAppNamingFromPackageJson(name);
+
+    const gitInfo: ZeGitInfo = {
+      git: {
+        name,
+        email,
+        branch: 'main',
+        commit: 'no-git-commit',
+        tags: [],
+      },
+      app: {
+        org,
+        project,
+      },
+    };
+
+    ze_log.git('Using global git config (no local repository)', gitInfo);
+
+    return gitInfo;
+  } catch (error) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message: 'Failed to load global git config',
+      cause: error,
+    });
+  }
+}
+
+/** Generate fallback git info when git is completely unavailable */
+async function getFallbackGitInfo(): Promise<ZeGitInfo> {
+  let tokenUserName: string | undefined;
+  let tokenUserEmail: string | undefined;
+  let tokenUserId: string | undefined;
+
+  try {
+    const token = await getToken();
+    if (token && isTokenStillValid(token, 60)) {
+      const decodedToken = jose.decodeJwt(token);
+
+      tokenUserName = (decodedToken['https://api.zephyr-cloud.io/name'] ||
+        decodedToken['name']) as string | undefined;
+
+      tokenUserEmail = (decodedToken['https://api.zephyr-cloud.io/email'] ||
+        decodedToken['email']) as string | undefined;
+
+      tokenUserId = decodedToken['sub'] as string | undefined;
+
+      if (tokenUserName || tokenUserEmail) {
+        ze_log.git('Extracted user info from token for fallback:', {
+          name: tokenUserName,
+          email: tokenUserEmail,
+        });
+      }
+    }
+  } catch (error) {
+    ze_log.git('Failed to extract token info for fallback:', error);
+  }
+
+  const gitName = tokenUserName || 'zephyr-deploy';
+  const gitEmail = tokenUserEmail || 'deploy@zephyr-cloud.io';
+
+  if (isCI) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message:
+        'Git repository information is required in CI environments. Please ensure your CI workflow includes git repository with proper remote origin.',
+    });
+  }
+
+  const { org, project } = await getAppNamingFromPackageJson(tokenUserName);
+
+  const gitInfo: ZeGitInfo = {
+    git: {
+      name: gitName,
+      email: gitEmail,
+      branch: 'main',
+      commit: `fallback-deployment-${Date.now()}`,
+      tags: tokenUserId ? [`deployed-by:${tokenUserId}`] : [],
+    },
+    app: {
+      org,
+      project,
+    },
+  };
+
+  ze_log.git('Using fallback git info (git not available)', gitInfo);
+
+  return gitInfo;
+}
+
+/** Sanitize string for use as org/project name */
+function sanitizeName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
+}
+
+/** Get current directory name as project name */
+function getCurrentDirectoryName(): string {
+  const cwd = process.cwd();
+  const dirName = cwd.split('/').pop() || cwd.split('\\').pop() || 'untitled-project';
+  return sanitizeName(dirName);
+}
+
+/**
+ * Extract org, project, and app names from package.json structure for non-git
+ * environments
+ */
+async function getAppNamingFromPackageJson(
+  tokenUserName?: string
+): Promise<{ org: string; project: string; app: string }> {
+  try {
+    const packageJson = await getPackageJson(process.cwd());
+    const packageName = packageJson.name;
+
+    // Use JWT username as org, fallback to 'personal'
+    const org = tokenUserName ? sanitizeName(tokenUserName) : 'personal';
+
+    if (packageName.includes('@')) {
+      // Scoped package: @scope/name -> project: scope, app: name
+      const [scope, name] = packageName.split('/');
+      return {
+        org,
+        project: scope.replace('@', ''),
+        app: name,
+      };
+    } else {
+      // Monorepo: use root package name as project
+      try {
+        const rootPackageJson = await getPackageJson(process.cwd() + '/..');
+        if (rootPackageJson) {
+          return {
+            org,
+            project: rootPackageJson.name,
+            app: packageName,
+          };
+        }
+      } catch {
+        // No root package.json found
+      }
+
+      // Single package: use same name for project and app
+      return {
+        org,
+        project: packageName,
+        app: packageName,
+      };
+    }
+  } catch {
+    // No package.json: use directory name
+    const dirName = getCurrentDirectoryName();
+    return {
+      org: tokenUserName ? sanitizeName(tokenUserName) : 'personal',
+      project: dirName,
+      app: dirName,
+    };
   }
 }

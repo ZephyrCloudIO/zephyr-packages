@@ -22,6 +22,9 @@ export {
 export { ze_log } from './lib/logging';
 export { logFn } from './lib/logging/ze-log-event';
 
+// git info utilities
+export { clearGitInfoCache } from './lib/build-context/ze-git-info-cache';
+
 // default transformers
 export {
   applyBaseHrefToAssets,

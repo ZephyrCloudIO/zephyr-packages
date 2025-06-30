@@ -24,5 +24,7 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
 export const ze_log = debug('zephyr:log');
+export const ze_error = debug('zephyr:error');
+export const ze_debug = debug('zephyr:debug');
 // If debug mode is not enabled just print whatever console output is
 // If debug mode is enabled print the error from our end

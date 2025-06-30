@@ -17,4 +17,5 @@ export const ze_api_gateway = {
   auth_link: '/auth-link',
   resolve: '/resolve',
   application_config: '/application-config',
+  websocket: '/websocket',
 };

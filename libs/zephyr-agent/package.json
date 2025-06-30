@@ -45,7 +45,9 @@
     "proper-lockfile": "^4.1.2",
     "socket.io-client": "^4.7.5",
     "tslib": "catalog:typescript",
+    "undici": "^7.11.0",
     "uuid": "^8.3.2",
+    "ws": "^8.18.3",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
@@ -57,6 +59,7 @@
     "@types/node-persist": "catalog:typescript",
     "@types/proper-lockfile": "^4.1.4",
     "@types/uuid": "^9.0.8",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
   },

@@ -4,6 +4,7 @@ import { logFn, savePartialAssetMap, ZephyrEngine, ZephyrError } from 'zephyr-ag
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
+/** @deprecated */
 export function withZephyrPartial() {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 

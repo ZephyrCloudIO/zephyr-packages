@@ -33,9 +33,17 @@ export {
   type ZeBuildAssetsMap,
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
+export { create_minimal_build_stats } from './lib/transformers/ze-minimal-build-stats';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
+
+// Catalog related exports
+export {
+  getCatalogPackages,
+  resolveCatalogDependencies,
+  resolveCatalogVersion,
+} from './lib/build-context/resolve-catalog-version';
 
 // Zephyr Edge is the main class which should be used
 export {

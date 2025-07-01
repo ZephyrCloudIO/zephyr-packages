@@ -29,7 +29,8 @@
     "is-ci": "catalog:plugin-shared",
     "rollup": "catalog:rollup4",
     "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*"
+    "zephyr-agent": "workspace:*",
+    "zephyr-rollx-internal": "workspace:*"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",

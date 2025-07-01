@@ -22,6 +22,15 @@ function _zephyr_configuration_sync(
   _zephyrOptions?: ZephyrNextJSPluginOptions
 ): Configuration {
   try {
+    // Skip Zephyr initialization in development mode or when explicitly disabled
+    const isDev = nextJSContext?.dev ?? false;
+    const skipZephyr = process.env['SKIP_ZEPHYR_UPLOAD'] === 'true' || process.env['NODE_ENV'] === 'development';
+    
+    if (isDev || skipZephyr) {
+      console.log('🔧 Development mode detected or Zephyr uploads disabled - skipping Zephyr deployment');
+      return config;
+    }
+
     // Extract NextJS context safely
     const isServer = nextJSContext?.isServer ?? false;
     const nextRuntime = nextJSContext?.nextRuntime;

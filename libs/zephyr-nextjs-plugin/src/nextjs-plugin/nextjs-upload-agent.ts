@@ -1,5 +1,5 @@
 import type { ZephyrEngine } from 'zephyr-agent';
-import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
+import { logFn, ze_log, ZephyrError, buildAssetsMap, zeBuildDashData } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import type { XStats, XStatsCompilation } from 'zephyr-xpack-internal';
 import type { 
@@ -75,12 +75,21 @@ export async function nextjsZephyrAgent({
       pluginOptions
     );
 
-    // Upload assets using Next.js worker protocol
-    await uploadToNextJSWorker({
-      assetsMap: enhancedAssetsMap.staticAssets,
-      snapshot: nextjsSnapshot,
-      endpoint: targetEndpoint,
-      engine: zephyr_engine,
+    // Use standard Zephyr upload mechanism instead of custom Next.js worker
+    console.log('🔄 Using standard Zephyr upload mechanism for Next.js assets');
+    
+    // Use the standard buildAssetsMap function like other plugins
+    console.log(`🔍 Converting ${Object.keys(assets).length} Next.js assets for standard upload`);
+    
+    // Create the assets map using the standard Zephyr utility
+    const standardAssetsMap = buildAssetsMap(assets, extractNextJSBuffer, getNextJSAssetType);
+    
+    console.log(`✅ Standard assets map has ${Object.keys(standardAssetsMap).length} valid assets`);
+    
+    // Upload using the standard Zephyr engine (same as other plugins)
+    await zephyr_engine.upload_assets({
+      assetsMap: standardAssetsMap,
+      buildStats: await zeBuildDashData(zephyr_engine), // Use standard build stats
     });
 
   } catch (err) {
@@ -220,9 +229,9 @@ function extractImageConfig(buildManifest: NextJSBuildManifest): any {
 
 function getNextJSWorkerEndpoint(baseUrl: string, options: NextJSUploadAgentOptions): string {
   // Local development override
-  if (process.env.ZE_LOCAL_NEXTJS_WORKER) {
-    console.log(`🔧 Using local Next.js worker: ${process.env.ZE_LOCAL_NEXTJS_WORKER}`);
-    return process.env.ZE_LOCAL_NEXTJS_WORKER;
+  if (process.env['ZE_LOCAL_NEXTJS_WORKER']) {
+    console.log(`🔧 Using local Next.js worker: ${process.env['ZE_LOCAL_NEXTJS_WORKER']}`);
+    return process.env['ZE_LOCAL_NEXTJS_WORKER'];
   }
 
   // If explicitly configured, use that
@@ -326,6 +335,54 @@ async function uploadNextJSAsset(
     throw new Error(`Failed to upload asset ${path}: ${response.status} ${response.statusText}`);
   }
 }
+
+// Helper functions for the standard buildAssetsMap utility
+function extractNextJSBuffer(asset: Source): Buffer | string | undefined {
+  // Handle webpack Source objects (Next.js uses webpack internally)
+  const className = getNextJSAssetType(asset);
+  
+  switch (className) {
+    case 'CachedSource':
+    case 'CompatSource':
+    case 'RawSource':
+    case 'ConcatSource':
+    case 'SourceMapSource':
+    case 'Object':
+      // Try webpack's buffer() method first
+      if (asset && typeof asset.buffer === 'function') {
+        return asset.buffer();
+      }
+      // Fall back to source() method
+      if (asset && typeof asset.source === 'function') {
+        return asset.source();
+      }
+      return undefined;
+    case 'ReplaceSource':
+      // ReplaceSource typically uses source() method
+      if (asset && typeof asset.source === 'function') {
+        return asset.source();
+      }
+      return undefined;
+    default:
+      // Try generic methods
+      if (asset && typeof asset.buffer === 'function') {
+        return asset.buffer();
+      }
+      if (asset && typeof asset.source === 'function') {
+        return asset.source();
+      }
+      return undefined;
+  }
+}
+
+function getNextJSAssetType(asset: Source): string {
+  // Return the constructor name for logging/debugging
+  if (asset && asset.constructor && asset.constructor.name) {
+    return asset.constructor.name;
+  }
+  return 'Unknown';
+}
+
 
 function getContentTypeHeaders(filePath: string): Record<string, string> {
   const ext = filePath.split('.').pop()?.toLowerCase();

@@ -440,6 +440,9 @@ importers:
       zephyr-nextjs-plugin:
         specifier: workspace:*
         version: link:../../libs/zephyr-nextjs-plugin
+      zephyr-webpack-plugin:
+        specifier: workspace:*
+        version: link:../../libs/zephyr-webpack-plugin
 
   examples/parcel-react:
     dependencies:

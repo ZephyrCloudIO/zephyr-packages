@@ -114,7 +114,7 @@ When Zephyr cannot find a Git repository with remote origin, it will:
    - **Scoped packages** (`@scope/name`): project = scope, app = name
    - **With root package.json**: project = root package name, app = current package name
    - **Otherwise**: project = app = package name
-   - **Organization**: Uses JWT token username (sanitized for URL safety) or defaults to 'personal'
+   - **Organization**: Uses authenticated user's username (sanitized for URL safety)
 
 #### Example Scenarios
 
@@ -140,10 +140,7 @@ npm run build  # Automatically determines naming from package.json
 # → org: "jwt-username", project: "my-workspace", app: "my-app"
 
 # Special characters in username get sanitized:
-# JWT username: "Néstor López" → org: "n-stor-l-pez"
-
-# No token available:
-# → org: "personal", project: from package.json, app: from package.json
+# Username: "Néstor López" → org: "n-stor-l-pez"
 ```
 
 #### Why Git is Required
@@ -168,8 +165,8 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
 
 **Automatic Organization Detection:**
 
-- Uses the authenticated user's name from JWT token claims
-- Fallback to 'personal' if no token available
+- Uses the authenticated user's name from your authentication token
+- Requires valid authentication to determine organization
 
 **Project and App Naming Logic:**
 
@@ -187,14 +184,8 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
    - Project: Package name
    - App: Package name
 
-**User Information Extraction:**
-Zephyr extracts user information from your authentication token:
-
-- **User Name**: From claims `https://api.zephyr-cloud.io/name`, `name`, etc.
-- **User Email**: From claims `https://api.zephyr-cloud.io/email`, `email`, etc.
-- **User ID**: From the `sub` claim (used in deployment tags)
-
-This provides full accountability without requiring manual configuration.
+**User Information:**
+Zephyr automatically extracts user information from your authentication token to provide full accountability without requiring manual configuration.
 
 ## Internal APIs
 

@@ -29,16 +29,12 @@ jest.mock('../../node-persist/token', () => ({
   getToken: jest.fn(),
 }));
 
-jest.mock('../../auth/login', () => ({
-  isTokenStillValid: jest.fn(),
+jest.mock('../../http/http-request', () => ({
+  makeRequest: jest.fn(),
 }));
 
-jest.mock('../ze-git-info-cache', () => ({
-  getCachedGitInfo: jest.fn().mockReturnValue(null),
-  setCachedGitInfo: jest.fn(),
-  getGitInfoPromise: jest.fn().mockReturnValue(null),
-  setGitInfoPromise: jest.fn(),
-  clearGitInfoCache: jest.fn(),
+jest.mock('../../auth/login', () => ({
+  isTokenStillValid: jest.fn(),
 }));
 
 describe('getGitInfo - non-git environments', () => {
@@ -49,6 +45,9 @@ describe('getGitInfo - non-git environments', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Set NODE_ENV to production for tests expecting 'main' branch
+    process.env.NODE_ENV = 'production';
 
     // Get the mocked ze_log.git function
     const { ze_log } = require('../../logging');
@@ -68,10 +67,25 @@ describe('getGitInfo - non-git environments', () => {
       version: '1.0.0',
     });
 
-    // Reset cache mocks
-    const { getCachedGitInfo, getGitInfoPromise } = require('../ze-git-info-cache');
-    getCachedGitInfo.mockReturnValue(null);
-    getGitInfoPromise.mockReturnValue(null);
+    // Mock authentication and API calls for fallback scenarios
+    const { getToken } = require('../../node-persist/token');
+    const { isTokenStillValid } = require('../../auth/login');
+    const { makeRequest } = require('../../http/http-request');
+
+    // Default token setup
+    getToken.mockResolvedValue('valid-token');
+    isTokenStillValid.mockReturnValue(true);
+    makeRequest.mockResolvedValue([
+      true,
+      null,
+      {
+        value: {
+          name: 'API User',
+          email: 'api@example.com',
+          id: 'user-123',
+        },
+      },
+    ]);
   });
 
   it('should fall back to global git config when local repo not available', async () => {
@@ -107,7 +121,7 @@ describe('getGitInfo - non-git environments', () => {
     expect(result.app.project).toBe('test-project'); // from package.json
   });
 
-  it('should fall back to defaults when neither local nor global git available', async () => {
+  it('should fall back to API user info when neither local nor global git available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
         callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
@@ -118,11 +132,11 @@ describe('getGitInfo - non-git environments', () => {
 
     const result = await getGitInfo();
 
-    expect(result.git.name).toBe('zephyr-deploy');
-    expect(result.git.email).toBe('deploy@zephyr-cloud.io');
+    expect(result.git.name).toBe('API User');
+    expect(result.git.email).toBe('api@example.com');
     expect(result.git.branch).toBe('main');
     expect(result.git.commit).toMatch(/^fallback-deployment-\d+$/);
-    expect(result.app.org).toBe('personal'); // org should be 'personal' for personal zephyr org
+    expect(result.app.org).toBe('api-user'); // org should be sanitized API username
     expect(result.app.project).toBe('test-project'); // from package.json
   });
 
@@ -153,7 +167,7 @@ describe('getGitInfo - non-git environments', () => {
     expect(mockLogFn).not.toHaveBeenCalledWith('warn', expect.any(String));
   });
 
-  it('should use personal org and package.json project when git is not available', async () => {
+  it('should use API user org and package.json project when git is not available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
         callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
@@ -165,9 +179,9 @@ describe('getGitInfo - non-git environments', () => {
     const result1 = await getGitInfo();
     const result2 = await getGitInfo();
 
-    // Should use 'personal' org when git is not available and no token username
-    expect(result1.app.org).toBe('personal');
-    expect(result2.app.org).toBe('personal');
+    // Should use API user org when git is not available
+    expect(result1.app.org).toBe('api-user');
+    expect(result2.app.org).toBe('api-user');
     // Project names should come from package.json
     expect(result1.app.project).toBe('test-project');
     expect(result2.app.project).toBe('test-project');
@@ -190,29 +204,24 @@ describe('getGitInfo - non-git environments', () => {
 
       const result = await getGitInfo();
 
-      expect(result.app.org).toBe('personal');
+      expect(result.app.org).toBe('api-user');
       expect(result.app.project).toBe('my-scope'); // extracted from @my-scope/my-app-name
     });
 
-    it('should use username from token when available', async () => {
-      // Mock token functionality
-      const mockToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidGVzdC11c2VyIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIn0.test';
-      const { getToken } = require('../../node-persist/token');
-      const { isTokenStillValid } = require('../../auth/login');
-      const getTokenMock = getToken as jest.Mock;
-      const isTokenStillValidMock = isTokenStillValid as jest.Mock;
-
-      getTokenMock.mockResolvedValue(mockToken);
-      isTokenStillValidMock.mockReturnValue(true);
-
-      // Mock jwt decode
-      const jose = require('jose');
-      const joseDecodeMock = jest.spyOn(jose, 'decodeJwt');
-      joseDecodeMock.mockReturnValue({
-        name: 'test-user-from-token',
-        email: 'test@example.com',
-      });
+    it('should use username from API when available', async () => {
+      // Mock API response with specific user info
+      const { makeRequest } = require('../../http/http-request');
+      makeRequest.mockResolvedValue([
+        true,
+        null,
+        {
+          value: {
+            name: 'Custom User',
+            email: 'custom@example.com',
+            id: 'custom-123',
+          },
+        },
+      ]);
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
@@ -224,28 +233,24 @@ describe('getGitInfo - non-git environments', () => {
 
       const result = await getGitInfo();
 
-      expect(result.app.org).toBe('test-user-from-token'); // should use sanitized username from token
+      expect(result.app.org).toBe('custom-user'); // should use sanitized username from API
       expect(result.app.project).toBe('test-project');
     });
 
     it('should sanitize org name with special characters', async () => {
-      // Mock token functionality with special characters
-      const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
-      const { getToken } = require('../../node-persist/token');
-      const { isTokenStillValid } = require('../../auth/login');
-      const getTokenMock = getToken as jest.Mock;
-      const isTokenStillValidMock = isTokenStillValid as jest.Mock;
-
-      getTokenMock.mockResolvedValue(mockToken);
-      isTokenStillValidMock.mockReturnValue(true);
-
-      // Mock jwt decode with special characters
-      const jose = require('jose');
-      const joseDecodeMock = jest.spyOn(jose, 'decodeJwt');
-      joseDecodeMock.mockReturnValue({
-        name: 'Néstor López', // Contains special characters
-        email: 'nestor@example.com',
-      });
+      // Mock API response with special characters
+      const { makeRequest } = require('../../http/http-request');
+      makeRequest.mockResolvedValue([
+        true,
+        null,
+        {
+          value: {
+            name: 'Néstor López', // Contains special characters
+            email: 'nestor@example.com',
+            id: 'nestor-123',
+          },
+        },
+      ]);
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
@@ -259,65 +264,6 @@ describe('getGitInfo - non-git environments', () => {
 
       expect(result.app.org).toBe('n-stor-l-pez'); // should sanitize special characters
       expect(result.app.project).toBe('test-project');
-    });
-  });
-
-  describe('caching behavior', () => {
-    it('should return cached git info if available', async () => {
-      const cachedInfo = {
-        git: {
-          name: 'Cached User',
-          email: 'cached@example.com',
-          branch: 'cached-branch',
-          commit: 'cached-commit',
-          tags: [],
-        },
-        app: {
-          org: 'cached-org',
-          project: 'cached-project',
-        },
-      };
-
-      const { getCachedGitInfo } = require('../ze-git-info-cache');
-      getCachedGitInfo.mockReturnValue(cachedInfo);
-
-      const result = await getGitInfo();
-
-      expect(result).toEqual(cachedInfo);
-      // Should not execute any git commands when cache is available
-      expect(mockExec).not.toHaveBeenCalled();
-    });
-
-    it('should cache git info after first successful fetch', async () => {
-      const { setCachedGitInfo } = require('../ze-git-info-cache');
-
-      mockExec.mockImplementation((cmd, callback) => {
-        const delimiter = cmd.match(/echo ([a-f0-9-]+) &&/)?.[1] || '';
-        const output = [
-          'John Doe',
-          'john@example.com',
-          'https://github.com/example/repo.git',
-          'main',
-          'abc123def456',
-          'v1.0.0',
-        ].join(`\n${delimiter}\n`);
-        callback(null, { stdout: output, stderr: '' });
-      });
-
-      await getGitInfo();
-
-      expect(setCachedGitInfo).toHaveBeenCalledWith(
-        expect.objectContaining({
-          git: expect.objectContaining({
-            name: 'John Doe',
-            email: 'john@example.com',
-          }),
-          app: expect.objectContaining({
-            org: 'example',
-            project: 'repo',
-          }),
-        })
-      );
     });
   });
 });

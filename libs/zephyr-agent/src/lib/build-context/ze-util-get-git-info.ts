@@ -1,22 +1,17 @@
 import isCI from 'is-ci';
-import * as jose from 'jose';
 import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import { ZEPHYR_API_ENDPOINT } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getToken } from '../node-persist/token';
 import { getGitProviderInfo } from './git-provider-utils';
-import {
-  getCachedGitInfo,
-  getGitInfoPromise,
-  setCachedGitInfo,
-  setGitInfoPromise,
-} from './ze-git-info-cache';
 import { getPackageJson } from './ze-util-read-package-json';
 
 const exec = promisify(node_exec);
@@ -26,34 +21,26 @@ export interface ZeGitInfo {
   git: ZephyrPluginOptions['git'];
 }
 
+interface UserInfo {
+  name: string;
+  email: string;
+  id: string;
+}
+
+/** Determine branch name based on production flag */
+function getBranchName(): string {
+  // Check for --prod flag in command line arguments
+  const hasProductionFlag = process.argv.includes('--prod');
+  // Check for environment variable
+  const isProduction = process.env['NODE_ENV'] === 'production' || hasProductionFlag;
+
+  return isProduction ? 'main' : 'development';
+}
+
 /** Loads the git information from the current repository. */
 export async function getGitInfo(): Promise<ZeGitInfo> {
-  // Check if we already have cached git info
-  const cached = getCachedGitInfo();
-  if (cached) {
-    ze_log.git('Using cached git info');
-    return cached;
-  }
-
-  // Check if another call is already gathering git info
-  const existingPromise = getGitInfoPromise();
-  if (existingPromise) {
-    ze_log.git('Waiting for existing git info gathering to complete');
-    return existingPromise;
-  }
-
-  // Create a new promise for gathering git info
-  const gitInfoPromise = gatherGitInfo();
-  setGitInfoPromise(gitInfoPromise);
-
-  try {
-    const gitInfo = await gitInfoPromise;
-    setCachedGitInfo(gitInfo);
-    return gitInfo;
-  } finally {
-    // Clear the promise after completion
-    setGitInfoPromise(null);
-  }
+  // Always gather fresh git info for build accuracy
+  return await gatherGitInfo();
 }
 
 /** Internal function that actually gathers git information. */
@@ -202,18 +189,32 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
     const email = emailResult.stdout?.trim();
 
     if (!name && !email) {
+      logFn(
+        'warn',
+        'Global git config incomplete: both name and email are missing. Falling back to API user info.'
+      );
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
         message: 'Global git config incomplete: both name and email are missing',
       });
-    } else if (!name) {
+    }
+
+    if (!name) {
+      logFn(
+        'warn',
+        'Global git config incomplete: user name is missing. Run: git config --global user.name "Your Name". Falling back to API user info.'
+      );
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message:
-          'Global git config incomplete: user name is missing. Run: git config --global user.name "Your Name"',
+        message: 'Global git config incomplete: user name is missing',
       });
-    } else if (!email) {
+    }
+
+    if (!email) {
+      logFn(
+        'warn',
+        'Global git config incomplete: user email is missing. Run: git config --global user.email "your@email.com". Falling back to API user info.'
+      );
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message:
-          'Global git config incomplete: user email is missing. Run: git config --global user.email "your@email.com"',
+        message: 'Global git config incomplete: user email is missing',
       });
     }
 
@@ -223,7 +224,7 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
       git: {
         name,
         email,
-        branch: 'main',
+        branch: getBranchName(),
         commit: 'no-git-commit',
         tags: [],
       },
@@ -244,38 +245,52 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
   }
 }
 
-/** Generate fallback git info when git is completely unavailable */
-async function getFallbackGitInfo(): Promise<ZeGitInfo> {
-  let tokenUserName: string | undefined;
-  let tokenUserEmail: string | undefined;
-  let tokenUserId: string | undefined;
-
-  try {
-    const token = await getToken();
-    if (token && isTokenStillValid(token, 60)) {
-      const decodedToken = jose.decodeJwt(token);
-
-      tokenUserName = (decodedToken['https://api.zephyr-cloud.io/name'] ||
-        decodedToken['name']) as string | undefined;
-
-      tokenUserEmail = (decodedToken['https://api.zephyr-cloud.io/email'] ||
-        decodedToken['email']) as string | undefined;
-
-      tokenUserId = decodedToken['sub'] as string | undefined;
-
-      if (tokenUserName || tokenUserEmail) {
-        ze_log.git('Extracted user info from token for fallback:', {
-          name: tokenUserName,
-          email: tokenUserEmail,
-        });
-      }
-    }
-  } catch (error) {
-    ze_log.git('Failed to extract token info for fallback:', error);
+/** Get user info from API endpoint instead of JWT decoding */
+async function getUserInfoFromAPI(): Promise<UserInfo> {
+  const token = await getToken();
+  if (!token || !isTokenStillValid(token, 60)) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message: 'No valid authentication token found. Please login first.',
+    });
   }
 
-  const gitName = tokenUserName || 'zephyr-deploy';
-  const gitEmail = tokenUserEmail || 'deploy@zephyr-cloud.io';
+  const [ok, cause, response] = await makeRequest<{ value: UserInfo }>({
+    path: '/v2/user/me',
+    base: ZEPHYR_API_ENDPOINT(),
+    query: {},
+  });
+
+  if (!ok) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message:
+        'Failed to get user information from API. Please ensure you are logged in with a valid token.',
+      cause,
+    });
+  }
+
+  const userData = response.value;
+
+  ze_log.git('Retrieved user info from API:', {
+    name: userData.name,
+    email: userData.email,
+  });
+
+  return userData;
+}
+
+/** Generate fallback git info when git is completely unavailable */
+async function getFallbackGitInfo(): Promise<ZeGitInfo> {
+  let userInfo: UserInfo;
+
+  try {
+    userInfo = await getUserInfoFromAPI();
+  } catch (error) {
+    ze_log.git('Failed to get user info from API:', error);
+    throw error;
+  }
+
+  const gitName = userInfo.name;
+  const gitEmail = userInfo.email;
 
   if (isCI) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
@@ -284,15 +299,15 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
     });
   }
 
-  const { org, project } = await getAppNamingFromPackageJson(tokenUserName);
+  const { org, project } = await getAppNamingFromPackageJson(userInfo.name);
 
   const gitInfo: ZeGitInfo = {
     git: {
       name: gitName,
       email: gitEmail,
-      branch: 'main',
+      branch: getBranchName(),
       commit: `fallback-deployment-${Date.now()}`,
-      tags: tokenUserId ? [`deployed-by:${tokenUserId}`] : [],
+      tags: [`deployed-by:${userInfo.id}`],
     },
     app: {
       org,
@@ -328,8 +343,14 @@ async function getAppNamingFromPackageJson(
     const packageJson = await getPackageJson(process.cwd());
     const packageName = packageJson.name;
 
-    // Use JWT username as org, fallback to 'personal'
-    const org = tokenUserName ? sanitizeName(tokenUserName) : 'personal';
+    // Require JWT username for org - no fallback to avoid build loss
+    if (!tokenUserName) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Unable to determine organization: no authenticated user found. Please ensure you are logged in with a valid token.',
+      });
+    }
+    const org = sanitizeName(tokenUserName);
 
     if (packageName.includes('@')) {
       // Scoped package: @scope/name -> project: scope, app: name
@@ -364,8 +385,14 @@ async function getAppNamingFromPackageJson(
   } catch {
     // No package.json: use directory name
     const dirName = getCurrentDirectoryName();
+    if (!tokenUserName) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Unable to determine organization: no authenticated user found and no package.json available. Please ensure you are logged in with a valid token.',
+      });
+    }
     return {
-      org: tokenUserName ? sanitizeName(tokenUserName) : 'personal',
+      org: sanitizeName(tokenUserName),
       project: dirName,
       app: dirName,
     };

@@ -23,11 +23,6 @@ export type {
   SnapshotVariables,
 } from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';
-export {
-  ZephyrEnvsGlobal,
-  createZeEnvsFile,
-  createVariablesRecord,
-} from './lib/utils/create-ze-envs';
 export { createSnapshotId, flatCreateSnapshotId } from './lib/utils/create-snapshot-id';
 export * as ZeUtils from './lib/promise';
 export { safe_json_parse } from './lib/utils/safe-json-parse';
@@ -64,6 +59,15 @@ export {
   PromiseWithResolvers,
   deferred,
 } from './lib/promise';
+
+// zephyr runtime
+export { ZephyrRuntimeConstants } from './lib/zephyr-runtime/constants';
+export { type DependenciesRecord } from './lib/zephyr-runtime/dependencies-record';
+export { createZephyrRuntimeFile } from './lib/zephyr-runtime/generator';
+export {
+  createVariablesRecord,
+  type VariablesRecord,
+} from './lib/zephyr-runtime/variables-record';
 
 // string proto methods
 export { type FindTemplates, formatString } from './lib/string/string';

@@ -1,15 +1,16 @@
-import isCI from 'is-ci';
-import { SnapshotVariables } from 'libs/zephyr-edge-contract/dist';
+import * as isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   type Snapshot,
+  type SnapshotVariables,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
   ZeUtils,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
   createApplicationUid,
+  deferred,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
@@ -43,7 +44,7 @@ export type Platform = 'ios' | 'android' | 'web' | undefined;
 
 export type DeferredZephyrEngine = {
   zephyr_engine_defer: Promise<ZephyrEngine>;
-  zephyr_defer_create(options: ZephyrEngineOptions): void;
+  zephyr_defer_create(options: ZephyrEngineOptions, prelude?: ZephyrEnginePrelude): void;
 };
 
 export interface ZeDependencyPair {
@@ -78,6 +79,14 @@ type ZephyrEngineBuilderTypes =
   | 'rollup'
   | 'parcel'
   | 'unknown';
+
+export interface ZephyrEnginePrelude {
+  gitProperties: ZeGitInfo;
+  npmProperties: ZePackageJson;
+  applicationProperties: ZeApplicationProperties;
+  application_uid: string;
+}
+
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
@@ -132,55 +141,73 @@ export class ZephyrEngine {
   }
 
   static defer_create(): DeferredZephyrEngine {
-    let resolve: (value: ZephyrEngine) => void;
-    let reject: (reason?: unknown) => void;
+    const [zephyr_engine_defer, resolve, reject] = deferred<ZephyrEngine>();
 
     return {
-      zephyr_engine_defer: new Promise<ZephyrEngine>((res, rej) => {
-        resolve = res;
-        reject = rej;
-      }),
+      zephyr_engine_defer,
 
       // All zephyr_engine_defer calls are wrapped inside a try/catch,
       // so its safe to reject the promise here and expect it to be handled
-      zephyr_defer_create(options: ZephyrEngineOptions) {
-        ZephyrEngine.create(options).then(resolve, reject);
+      zephyr_defer_create(options, prelude) {
+        ZephyrEngine.create(options, prelude).then(resolve, reject);
       },
     };
   }
 
+  /** Some plugins might need this data before being able to initialize the Zephyr Engine */
+  static async create_prelude(context = process.cwd()): Promise<ZephyrEnginePrelude> {
+    ze_log.init('Loading prelude for Zephyr Engine...');
+
+    const [gitProperties, npmProperties] = await Promise.all([
+      getGitInfo(),
+      getPackageJson(context),
+    ]);
+
+    const applicationProperties: ZeApplicationProperties = {
+      org: gitProperties.app.org,
+      project: gitProperties.app.project,
+      name: npmProperties.name,
+      version: npmProperties.version,
+    };
+
+    return {
+      gitProperties,
+      npmProperties,
+      applicationProperties,
+      application_uid: createApplicationUid(applicationProperties),
+    };
+  }
+
   // todo: extract to a separate fn
-  static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
-    const context = options.context || process.cwd();
+  static async create(
+    options: ZephyrEngineOptions,
+    prelude?: ZephyrEnginePrelude
+  ): Promise<ZephyrEngine> {
+    options.context ??= process.cwd();
+    options.builder ??= 'unknown';
 
-    ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
-    const ze = new ZephyrEngine({ context, builder: options.builder });
+    ze_log.init(`Zephyr Engine for ${options.context}...`);
+    const ze = new ZephyrEngine(options);
 
-    ze_log.init('Initializing: npm package info...');
-
-    ze.npmProperties = await getPackageJson(context);
-
-    ze_log.init('Initializing: git info...');
-    ze.gitProperties = await getGitInfo();
     // mut: set application_uid and applicationProperties
-    mut_zephyr_app_uid(ze);
-    const application_uid = ze.application_uid;
+    prelude ??= await ZephyrEngine.create_prelude(options.context);
+    ze.npmProperties = prelude.npmProperties;
+    ze.gitProperties = prelude.gitProperties;
+    ze.applicationProperties = prelude.applicationProperties;
+    ze.application_uid = prelude.application_uid;
 
     // starting async load of application configuration, build_id and hash_list
+    ze_log.init('Checking authentication...');
 
-    ze_log.init('Initializing: checking authentication...');
     await checkAuth();
 
-    ze_log.init('Initialized: loading application configuration...');
+    ze_log.init('Loading application configuration...');
 
-    ze.application_configuration = getApplicationConfiguration({ application_uid });
+    ze.application_configuration = getApplicationConfiguration(ze);
 
-    ze.application_configuration
-      .then((appConfig) => {
-        const { username, email, EDGE_URL } = appConfig;
-        ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
-      })
-      .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
+    void ze.application_configuration
+      .then((config) => ze_log.init('Loaded application configuration', config))
+      .catch((err) => ze_log.init('Failed to load application configuration', err));
 
     await ze.start_new_build();
 
@@ -192,7 +219,7 @@ export class ZephyrEngine {
         level: 'info',
         action: 'build:info:user',
         ignore: true,
-        message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(
+        message: `Hi ${cyanBright(username)}!\n${white(ze.application_uid)}${yellow(
           `#${buildId}`
         )}\n`,
       });

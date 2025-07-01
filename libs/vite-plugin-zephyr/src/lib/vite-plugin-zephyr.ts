@@ -1,15 +1,18 @@
 import { federation } from '@module-federation/vite';
-import { PreRenderedAsset } from 'rollup';
+import {
+  DeferredZephyrEngine,
+  ZephyrEnginePrelude,
+} from 'libs/zephyr-agent/src/zephyr-engine';
 import type { Plugin, ResolvedConfig } from 'vite';
 import {
-  ZephyrEngine,
-  ZephyrEngineOptions,
-  ZephyrError,
-  createTemporaryVariablesFile,
+  createLocalVariablesRecord,
   findAndReplaceVariables,
   logFn,
   zeBuildDashData,
+  ZephyrEngine,
+  ZephyrError,
 } from 'zephyr-agent';
+import { createZephyrRuntimeFile, ZephyrRuntimeConstants } from 'zephyr-edge-contract';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -22,83 +25,87 @@ export interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
 }
 
-export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
-  const mfConfig = _options?.mfConfig;
-  const plugins: Plugin[] = [];
-
-  if (mfConfig) {
-    plugins.push(...(federation(mfConfig) as Plugin[]));
-  }
-
-  const variablesSet = new Set<string>();
-
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
-
-  plugins.push(zephyrPluginPre(variablesSet, zephyr_engine_defer, zephyr_defer_create));
-  plugins.push(zephyrPlugin(variablesSet, zephyr_engine_defer));
-
-  return plugins;
+interface ZephyrPluginContext extends DeferredZephyrEngine {
+  usedEnvNames: Set<string>;
+  prelude: ZephyrEnginePrelude | undefined;
+  hasZephyrRuntime: boolean;
 }
 
-function zephyrPluginPre(
-  variablesSet: Set<string>,
-  zephyr_engine_defer: Promise<ZephyrEngine>,
-  zephyr_defer_create: (options: ZephyrEngineOptions) => void
-): Plugin {
+export function withZephyr(options?: VitePluginZephyrOptions): Plugin[] {
+  const context: ZephyrPluginContext = {
+    ...ZephyrEngine.defer_create(),
+    usedEnvNames: new Set<string>(),
+    prelude: undefined,
+    hasZephyrRuntime: false,
+  };
+
+  return [
+    options?.mfConfig ? federation(options.mfConfig) : undefined,
+    zephyrPluginPre(context),
+    zephyrPlugin(context),
+  ]
+    .flat()
+    .filter((x): x is NonNullable<typeof x> => !!x);
+}
+
+function zephyrPluginPre(context: ZephyrPluginContext): Plugin {
   return {
     name: 'with-zephyr-envs',
     enforce: 'pre',
 
-    configResolved: (config: ResolvedConfig) => {
-      if (config.command === 'serve') return;
-
-      zephyr_defer_create({
-        builder: 'vite',
-        context: config.root,
-      });
+    async configResolved(config) {
+      context.prelude = await ZephyrEngine.create_prelude(config.root);
     },
 
-   async  transform  (code){
+    transform(code) {
+      if (!context.prelude) return;
+
       return findAndReplaceVariables(
         code,
-        (await zephyr_engine_defer).application_uid,
-        variablesSet,
+        context.prelude.application_uid,
+        context.usedEnvNames,
         ['importMetaEnv']
       );
     },
   };
 }
 
-function zephyrPlugin(
-  variablesSet: Set<string>,
-  zephyr_engine_defer: Promise<ZephyrEngine>
-): Plugin {
+function zephyrPlugin(context: ZephyrPluginContext): Plugin {
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
     resolve_vite_internal_options = resolve;
   });
-  let root: string;
 
+  let root: string;
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
-
-  let zeEnvsFilename: string | undefined;
 
   return {
     name: 'with-zephyr',
     enforce: 'post',
 
-    configResolved: async (config: ResolvedConfig) => {
+    configResolved(config: ResolvedConfig) {
       root = config.root;
       baseHref = config.base || '/';
 
-      if (config.command === 'serve') return;
+      if (config.command !== 'build') {
+        return;
+      }
+
+      context.zephyr_defer_create(
+        {
+          builder: 'vite',
+          context: config.root,
+        },
+        context.prelude
+      );
 
       resolve_vite_internal_options({
         root: config.root,
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
       });
+
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
     },
 
@@ -109,7 +116,7 @@ function zephyrPlugin(
         const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
         if (!dependencyPairs) return code;
 
-        const zephyr_engine = await zephyr_engine_defer;
+        const zephyr_engine = await context.zephyr_engine_defer;
         const resolved_remotes =
           await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
@@ -123,24 +130,39 @@ function zephyrPlugin(
       }
     },
 
-    generateBundle: async (opts, bundle) => {
+    async generateBundle(_, bundle) {
       try {
-        const { application_uid, federated_dependencies } = await zephyr_engine_defer;
+        const { application_uid, federated_dependencies } =
+          await context.zephyr_engine_defer;
 
-        // no variables and no federated dependencies, nothing to do
-        if (variablesSet.size === 0 && !federated_dependencies?.length) {
+        const variablesRecord = await createLocalVariablesRecord(
+          context.usedEnvNames,
+          application_uid,
+          federated_dependencies?.map((f) => f.application_uid) || [],
+          process.env
+        );
+
+        // TODO: Code to handle dependenciesRecord
+        const dependenciesRecord = null;
+
+        const source = createZephyrRuntimeFile(variablesRecord, dependenciesRecord);
+
+        // Only creating a zephyr-runtime.js file implicates that if a build
+        // without any variables is published, but later Zephyr Edge/Cloud tries
+        // to use something that requires the runtime, like adding a new remote
+        // or adding a new variable, it won't work. However this is not a problem
+        // since, for now, both adding a new variable or adding a remote needs to deploy
+        // the application again.
+        if (source === null) {
           return;
         }
 
-        const { source, hash } = await createTemporaryVariablesFile(
-          variablesSet,
-          application_uid,
-          federated_dependencies?.map((f) => f.application_uid) || []
-        );
-
-        const asset: PreRenderedAsset = {
+        context.hasZephyrRuntime = true;
+        bundle[ZephyrRuntimeConstants.filename] = {
           type: 'asset',
           source,
+          fileName: ZephyrRuntimeConstants.filename,
+          needsCodeReference: false,
 
           // No names because this is a 100% generated file
           names: [],
@@ -150,21 +172,6 @@ function zephyrPlugin(
           name: undefined,
           originalFileName: null,
         };
-
-        // Adapted from https://github.com/rollup/rollup/blob/7536ffb3149ad4aa7cda4e7ef343e5376e2392e1/src/utils/FileEmitter.ts#L566
-        zeEnvsFilename =
-          typeof opts.assetFileNames === 'function'
-            ? opts.assetFileNames(asset)
-            : opts.assetFileNames
-                .replace('[ext]', 'js')
-                .replace('[name]', 'ze-envs')
-                .replace('[hash]', hash);
-
-        bundle[zeEnvsFilename] = {
-          ...asset,
-          fileName: zeEnvsFilename,
-          needsCodeReference: false,
-        };
       } catch (error) {
         logFn('error', ZephyrError.format(error));
       }
@@ -172,7 +179,7 @@ function zephyrPlugin(
 
     transformIndexHtml: async (html) => {
       // No variables set, no need to inject the script
-      if (!zeEnvsFilename) {
+      if (!context.hasZephyrRuntime) {
         return;
       }
 
@@ -181,7 +188,7 @@ function zephyrPlugin(
         tags: [
           {
             tag: 'script',
-            attrs: { src: `/${zeEnvsFilename}`, fetchpriority: 'high' },
+            attrs: { src: `/${ZephyrRuntimeConstants.filename}`, fetchpriority: 'high' },
             injectTo: 'head-prepend',
           },
         ],
@@ -192,7 +199,7 @@ function zephyrPlugin(
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,
-          zephyr_engine_defer,
+          context.zephyr_engine_defer,
         ]);
 
         zephyr_engine.buildProperties.baseHref = baseHref;
@@ -205,10 +212,10 @@ function zephyrPlugin(
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
-          variables: zeEnvsFilename
+          variables: context.usedEnvNames.size
             ? {
                 filename: zeEnvsFilename,
-                uses: Array.from(variablesSet),
+                uses: Array.from(context.usedEnvNames),
               }
             : undefined,
         });

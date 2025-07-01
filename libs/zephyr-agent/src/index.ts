@@ -33,10 +33,10 @@ export {
   type ZeBuildAssetsMap
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
-export {
-  createTemporaryVariablesFile,
-  findAndReplaceVariables
-} from './lib/transformers/ze-snapshot-vars';
+
+// zephyr runtime
+export { createZephyrRuntimeAsset } from './lib/zephyr-runtime/generator';
+export { createLocalVariablesRecord, findAndReplaceVariables } from './lib/zephyr-runtime/variables';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
@@ -48,7 +48,8 @@ export {
   ZephyrEngine,
   type ZeDependencyPair,
   type ZephyrDependencies,
-  type ZephyrEngineOptions
+  type ZephyrEngineOptions,
+  type ZephyrEnginePrelude,
 } from './zephyr-engine';
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';

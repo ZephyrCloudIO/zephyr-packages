@@ -1,8 +1,8 @@
-import { type ZeEnvVarsPluginOptions } from 'zephyr-xpack-internal';
 import type { Compiler } from '@rspack/core';
-import { ze_log, createTemporaryVariablesFile } from 'zephyr-agent';
-import { getGlobalEnvVars } from './ze-env-vars-rspack-loader';
 import path from 'path';
+import { createTemporaryVariablesFile, ze_log } from 'zephyr-agent';
+import { type ZeEnvVarsPluginOptions } from 'zephyr-xpack-internal';
+import { getGlobalEnvVars } from './ze-env-vars-rspack-loader';
 
 const PLUGIN_NAME = 'ZeEnvVarsRspackPlugin';
 
@@ -48,17 +48,17 @@ export class ZeEnvVarsRspackPlugin {
         },
         () => {
           // Get the variables from the global set populated by the loader
-          const variablesSet = getGlobalEnvVars();
+          const usedEnvNames = getGlobalEnvVars();
           const {
             source: tempSource,
             hash: tempHash,
             varsMap,
-          } = createTemporaryVariablesFile(variablesSet);
+          } = createTemporaryVariablesFile(usedEnvNames);
           this.assetFilename = `ze-envs-${tempHash}.js`;
           this.assetSource = tempSource;
           this.varsMap = varsMap;
 
-          if (variablesSet.size === 0) {
+          if (usedEnvNames.size === 0) {
             ze_log(
               `${PLUGIN_NAME}: No environment variables detected, skipping asset generation`
             );
@@ -66,11 +66,11 @@ export class ZeEnvVarsRspackPlugin {
           }
 
           ze_log(
-            `${PLUGIN_NAME}: Collected env vars: ${Array.from(variablesSet).join(', ')}`
+            `${PLUGIN_NAME}: Collected env vars: ${Array.from(usedEnvNames).join(', ')}`
           );
 
           // Generate the environment variables asset using the agent's createTemporaryVariablesFile
-          const { source, hash } = createTemporaryVariablesFile(variablesSet);
+          const { source, hash } = createTemporaryVariablesFile(usedEnvNames);
           this.assetFilename = `ze-envs-${hash}.js`;
           this.assetSource = source;
 

@@ -9,27 +9,27 @@ module.exports = function loader(source) {
 
   const regex = /process\.env\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
 
-  const variablesSet = new Set();
+  const usedEnvNames = new Set();
   let transformedSource = source;
 
   transformedSource = transformedSource.replace(regex, (_, key) => {
     const value = process.env[key];
 
     if (value !== undefined) {
-      variablesSet.add(key);
+      usedEnvNames.add(key);
       return JSON.stringify(value);
     }
 
     return `process.env.${key}`;
   });
 
-  if (variablesSet.size > 0) {
+  if (usedEnvNames.size > 0) {
     ze_log(
-      `WebpackLoader: Replaced ${variablesSet.size} Zephyr env vars in ${resourcePath}: ${Array.from(variablesSet).join(', ')}`
+      `WebpackLoader: Replaced ${usedEnvNames.size} Zephyr env vars in ${resourcePath}: ${Array.from(usedEnvNames).join(', ')}`
     );
 
     if (this.zeEnvVars) {
-      variablesSet.forEach((v) => this.zeEnvVars.add(v));
+      usedEnvNames.forEach((v) => this.zeEnvVars.add(v));
     }
   }
 

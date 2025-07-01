@@ -16,6 +16,7 @@ export async function uploadSnapshot({
   });
 
   const json = JSON.stringify(body);
+  console.log('[HTTP_UPLOAD_SNAPSHOT] Sending snapshot to edge:', JSON.stringify(body, null, 2));
 
   const options: RequestInit = {
     method: 'POST',
@@ -29,6 +30,7 @@ export async function uploadSnapshot({
   const url = new URL('/upload', EDGE_URL);
   url.searchParams.append('type', 'snapshot');
   url.searchParams.append('skip_assets', 'true');
+  console.log('[HTTP_UPLOAD_SNAPSHOT] Upload URL:', url.toString());
 
   const [ok, cause, resp] = await makeRequest<SnapshotUploadRes>(url, options, json);
 

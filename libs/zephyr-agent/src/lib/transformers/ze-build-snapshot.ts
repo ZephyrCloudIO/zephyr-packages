@@ -47,7 +47,35 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  return {
+  // Build resolvedRemotes object from federated_dependencies
+  const resolvedRemotes: Record<string, {
+    application_uid: string;
+    remote_entry_url: string;
+    default_url: string;
+    name: string;
+    library_type: string;
+  }> = {};
+
+  if (zephyr_engine.federated_dependencies) {
+    console.log('[Plugin] ze-build-snapshot: Building resolved remotes from federated dependencies');
+    console.log(`[Plugin] ze-build-snapshot: Found ${zephyr_engine.federated_dependencies.length} dependencies`);
+    
+    zephyr_engine.federated_dependencies.forEach(dep => {
+      resolvedRemotes[dep.name] = {
+        application_uid: dep.application_uid,
+        remote_entry_url: dep.remote_entry_url,
+        default_url: dep.default_url,
+        name: dep.name,
+        library_type: dep.library_type,
+      };
+      console.log(`[Plugin] ze-build-snapshot: Added dependency ${dep.name} -> ${dep.remote_entry_url}`);
+    });
+  } else {
+    console.log('[Plugin] ze-build-snapshot: No federated dependencies found');
+  }
+  
+
+  const snapshot = {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
@@ -72,6 +100,7 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
+    'zephyr:dependencies': Object.keys(resolvedRemotes).length > 0 ? resolvedRemotes : undefined,
     assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
         const asset = basedAssets[hash];
@@ -82,4 +111,13 @@ export async function createSnapshot(
       {} as Record<string, SnapshotAsset>
     ),
   };
+  
+  console.log('[Plugin] ze-build-snapshot: Created snapshot with ID:', snapshot.snapshot_id);
+  if (snapshot['zephyr:dependencies']) {
+    console.log('[Plugin] ze-build-snapshot: Snapshot includes zephyr:dependencies:', snapshot['zephyr:dependencies']);
+  } else {
+    console.log('[Plugin] ze-build-snapshot: Snapshot has no zephyr:dependencies');
+  }
+  
+  return snapshot;
 }

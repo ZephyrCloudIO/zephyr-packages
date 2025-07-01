@@ -30,7 +30,27 @@ export async function zeBuildDashData(
 
   const to_raw = _recordToRawDependency;
 
-  return {
+  // Build zephyr:dependencies from federated_dependencies
+  const zephyrDependencies: Record<string, any> = {};
+  if (zephyr_engine.federated_dependencies) {
+    console.log('[Plugin] ze-build-dash-data: Building zephyr:dependencies for dashboard');
+    console.log(`[Plugin] ze-build-dash-data: Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`);
+    
+    for (const dep of zephyr_engine.federated_dependencies) {
+      zephyrDependencies[dep.name] = {
+        application_uid: dep.application_uid,
+        remote_entry_url: dep.remote_entry_url,
+        default_url: dep.default_url,
+        name: dep.name,
+        library_type: dep.library_type || 'module',
+      };
+      console.log(`[Plugin] ze-build-dash-data: Added ${dep.name} to dashboard data`);
+    }
+  } else {
+    console.log('[Plugin] ze-build-dash-data: No federated dependencies to add to dashboard data');
+  }
+
+  const result = {
     id: application_uid,
     name,
     environment: '',
@@ -56,7 +76,12 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
+    'zephyr:dependencies': zephyrDependencies,
   };
+  
+  console.log(`[Plugin] ze-build-dash-data: Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyr:dependencies`);
+  
+  return result;
 }
 
 interface RawDependency {

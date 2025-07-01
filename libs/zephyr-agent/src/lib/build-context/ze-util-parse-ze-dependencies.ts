@@ -16,12 +16,18 @@ import type { ZeDependency } from './ze-package-json.type';
 export function parseZeDependencies(
   ze_dependencies: Record<string, string>
 ): Record<string, ZeDependency> {
-  return Object.fromEntries(
+  console.log('[Plugin] parseZeDependencies: Parsing zephyr:dependencies from package.json');
+  console.log('[Plugin] parseZeDependencies: Input:', ze_dependencies);
+  
+  const parsed = Object.fromEntries(
     Object.entries(ze_dependencies).map(([key, value]) => [
       key,
       parseZeDependency(key, value),
     ])
   );
+  
+  console.log('[Plugin] parseZeDependencies: Parsed dependencies:', parsed);
+  return parsed;
 }
 
 /**

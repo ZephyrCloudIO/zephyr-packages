@@ -1,5 +1,5 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
-import { ZephyrEngine, ZephyrError, logFn } from 'zephyr-agent';
+import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -7,6 +7,7 @@ import {
 } from 'zephyr-xpack-internal';
 import type { ZephyrRspackPluginOptions } from '../types';
 import { ZeRspackPlugin } from './ze-rspack-plugin';
+import { ZeEnvVarsRspackPlugin } from './ze-env-vars-rspack-plugin';
 
 export type Configuration = RspackConfiguration;
 
@@ -35,8 +36,20 @@ async function _zephyr_configuration(
 
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
+    // Initialize the plugins array if needed
+    config.plugins = config.plugins || [];
+
+    // Add the environment variables plugin
+    const envVarsPlugin = new ZeEnvVarsRspackPlugin(_zephyrOptions?.envVars);
+    config.plugins.push(envVarsPlugin);
+
+    // Debug log
+    ze_log(
+      `Added ZeEnvVarsRspackPlugin to config. Total plugins: ${config.plugins.length}`
+    );
+
     // inject the ZephyrRspackPlugin
-    config.plugins?.push(
+    config.plugins.push(
       new ZeRspackPlugin({
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),

@@ -1,6 +1,7 @@
 import {
   type Snapshot,
   type SnapshotAsset,
+  type SnapshotVariables,
   type ZeBuildAssetsMap,
   type ZephyrPluginOptions,
   createApplicationUid,
@@ -14,16 +15,16 @@ import { posix, win32 } from 'node:path';
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
   assets: ZeBuildAssetsMap;
+  variables?: SnapshotVariables;
 }
 
 export async function createSnapshot(
   zephyr_engine: ZephyrEngine,
-  { mfConfig, assets }: CreateSnapshotProps
+  { mfConfig, assets, variables }: CreateSnapshotProps
 ): Promise<Snapshot> {
   const buildId = await zephyr_engine.build_id;
 
   if (!buildId) {
-    await zephyr_engine.build_id;
     throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
       message: 'Cannot create snapshot before getting buildId',
     });
@@ -39,6 +40,7 @@ export async function createSnapshot(
     gitProperties: zephyr_engine.gitProperties,
     mfConfig: mfConfig,
   };
+
   const version_postfix = zephyr_engine.env.isCI
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
@@ -59,6 +61,7 @@ export async function createSnapshot(
         username: options.username,
       })
     ),
+    variables,
     domain: options.edge_url,
     uid: {
       build: options.buildId,

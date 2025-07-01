@@ -4,7 +4,7 @@ export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index
 export {
   getPartialAssetMap,
   removePartialAssetMap,
-  savePartialAssetMap,
+  savePartialAssetMap
 } from './lib/node-persist/partial-assets-map';
 
 // errors
@@ -15,7 +15,7 @@ export {
   getAllAppDeployResults,
   getAllDeployedApps,
   getAppDeployResult,
-  type DeployResult,
+  type DeployResult
 } from './lib/node-persist/app-deploy-result-cache';
 
 // logger
@@ -25,14 +25,18 @@ export { logFn } from './lib/logging/ze-log-event';
 // default transformers
 export {
   applyBaseHrefToAssets,
-  normalizeBasePath,
+  normalizeBasePath
 } from './lib/transformers/ze-basehref-handler';
 export { zeBuildAssets } from './lib/transformers/ze-build-assets';
 export {
   buildAssetsMap,
-  type ZeBuildAssetsMap,
+  type ZeBuildAssetsMap
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
+
+// zephyr runtime
+export { createZephyrRuntimeAsset } from './lib/zephyr-runtime/generator';
+export { createLocalVariablesRecord, findAndReplaceVariables } from './lib/zephyr-runtime/variables';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
@@ -45,6 +49,8 @@ export {
   type ZeDependencyPair,
   type ZephyrDependencies,
   type ZephyrEngineOptions,
+  type ZephyrEnginePrelude,
 } from './zephyr-engine';
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+

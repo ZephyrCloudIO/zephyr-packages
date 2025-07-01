@@ -1,12 +1,8 @@
-import type { ZephyrEngine } from 'zephyr-agent';
+import type { Compiler } from '@rspack/core';
+import { ZephyrEngine } from 'zephyr-agent';
 
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
-import {
-  detectAndStoreBaseHref,
-  logBuildSteps,
-  setupZeDeploy,
-} from 'zephyr-xpack-internal';
-import type { Compiler } from '@rspack/core';
+import { logBuildSteps, setupZeDeploy } from 'zephyr-xpack-internal';
 
 const pluginName = 'ZeRspackPlugin';
 
@@ -29,8 +25,9 @@ export class ZeRspackPlugin {
   }
 
   apply(compiler: Compiler): void {
-    this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
-    detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
+    const zephyrEngine = this._options.zephyr_engine;
+    zephyrEngine.buildProperties.output = compiler.outputPath;
+
     logBuildSteps(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }

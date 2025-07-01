@@ -163,11 +163,11 @@ export class ZephyrError<
     return ZeErrors.ERR_UNKNOWN;
   }
 
-  static format(error: unknown): string {
+  static format(error: unknown, customMessage?: string): string {
     const zeError = ZephyrError.is(error)
       ? error
       : new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-          message: (error as Error)?.message || String(error),
+          message: customMessage || (error as Error)?.message || String(error),
           cause: error,
         });
 

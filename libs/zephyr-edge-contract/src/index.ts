@@ -6,10 +6,22 @@ export type {
   StageZeroPublishRequest,
   PublishTarget,
 } from './lib/edge-api/publish-request';
-export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
+export type {
+  ZeEnvs,
+  ZeUploadBuildStats,
+  ApplicationVariableItem,
+  ResolveApplicationVariablesBody,
+  ResolveApplicationVariablesResponse,
+} from './lib/edge-api/ze-envs-request';
 
 export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-plugin-options';
-export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
+export type {
+  Snapshot,
+  SnapshotAsset,
+  SnapshotMetadata,
+  SnapshotWithVariables,
+  SnapshotVariables,
+} from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';
 export { createSnapshotId, flatCreateSnapshotId } from './lib/utils/create-snapshot-id';
 export * as ZeUtils from './lib/promise';
@@ -47,6 +59,15 @@ export {
   PromiseWithResolvers,
   deferred,
 } from './lib/promise';
+
+// zephyr runtime
+export { ZephyrRuntimeConstants } from './lib/zephyr-runtime/constants';
+export { type DependenciesRecord } from './lib/zephyr-runtime/dependencies-record';
+export { createZephyrRuntimeFile } from './lib/zephyr-runtime/generator';
+export {
+  createVariablesRecord,
+  type VariablesRecord,
+} from './lib/zephyr-runtime/variables-record';
 
 // string proto methods
 export { type FindTemplates, formatString } from './lib/string/string';

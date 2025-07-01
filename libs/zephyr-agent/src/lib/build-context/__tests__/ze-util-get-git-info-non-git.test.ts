@@ -115,7 +115,7 @@ describe('getGitInfo - non-git environments', () => {
 
     expect(result.git.name).toBe('Global User');
     expect(result.git.email).toBe('global@example.com');
-    expect(result.git.branch).toBe('main');
+    expect(result.git.branch).toMatch(/^global-git-\d{8}T\d{6}$/);
     expect(result.git.commit).toBe('no-git-commit');
     expect(result.app.org).toBe('global-user'); // org should be sanitized username for personal zephyr org
     expect(result.app.project).toBe('test-project'); // from package.json
@@ -134,7 +134,7 @@ describe('getGitInfo - non-git environments', () => {
 
     expect(result.git.name).toBe('API User');
     expect(result.git.email).toBe('api@example.com');
-    expect(result.git.branch).toBe('main');
+    expect(result.git.branch).toMatch(/^no-git-user-123-\d{8}T\d{6}$/);
     expect(result.git.commit).toMatch(/^fallback-deployment-\d+$/);
     expect(result.app.org).toBe('api-user'); // org should be sanitized API username
     expect(result.app.project).toBe('test-project'); // from package.json

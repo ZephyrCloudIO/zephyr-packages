@@ -1,6 +1,7 @@
 import isCI from 'is-ci';
 import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { dirname } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZEPHYR_API_ENDPOINT } from 'zephyr-edge-contract';
@@ -27,14 +28,11 @@ interface UserInfo {
   id: string;
 }
 
-/** Determine branch name based on production flag */
-function getBranchName(): string {
-  // Check for --prod flag in command line arguments
-  const hasProductionFlag = process.argv.includes('--prod');
-  // Check for environment variable
-  const isProduction = process.env['NODE_ENV'] === 'production' || hasProductionFlag;
-
-  return isProduction ? 'main' : 'development';
+/** Generate branch name for non-git contexts */
+function generateBranchName(context: 'global-git' | 'no-git', userId?: string): string {
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+  const userSuffix = userId ? `-${userId.slice(0, 8)}` : '';
+  return `${context}${userSuffix}-${timestamp}`;
 }
 
 /** Loads the git information from the current repository. */
@@ -94,7 +92,15 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
 }
 
 /** Loads all data in a single command to avoid multiple executions. */
-async function loadGitInfo(hasSecretToken: boolean) {
+async function loadGitInfo(hasSecretToken: boolean): Promise<{
+  name: string;
+  email: string;
+  remoteOrigin: string;
+  branch: string;
+  commit: string;
+  tags: string[];
+  stdout: string;
+}> {
   const automated = isCI || hasSecretToken;
 
   // ensures multi line output on errors doesn't break the parsing
@@ -147,7 +153,10 @@ async function loadGitInfo(hasSecretToken: boolean) {
  * This package differentiates CI providers and handles git info from various platforms
  * like GitHub, GitLab, Bitbucket, and custom git deployments.
  */
-function parseGitUrl(remoteOrigin: string, stdout: string) {
+function parseGitUrl(
+  remoteOrigin: string,
+  stdout: string
+): Pick<ZephyrPluginOptions['app'], 'org' | 'project'> {
   if (!remoteOrigin) {
     throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN, {
       data: { stdout },
@@ -224,7 +233,7 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
       git: {
         name,
         email,
-        branch: getBranchName(),
+        branch: generateBranchName('global-git'),
         commit: 'no-git-commit',
         tags: [],
       },
@@ -305,7 +314,7 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
     git: {
       name: gitName,
       email: gitEmail,
-      branch: getBranchName(),
+      branch: generateBranchName('no-git', userInfo.id),
       commit: `fallback-deployment-${Date.now()}`,
       tags: [`deployed-by:${userInfo.id}`],
     },
@@ -363,7 +372,7 @@ async function getAppNamingFromPackageJson(
     } else {
       // Monorepo: use root package name as project
       try {
-        const rootPackageJson = await getPackageJson(process.cwd() + '/..');
+        const rootPackageJson = await getPackageJson(dirname(process.cwd()));
         if (rootPackageJson) {
           return {
             org,

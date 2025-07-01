@@ -241,17 +241,20 @@ async function tryZephyrAgentUpload(
   try {
     log.info('🔧 Attempting to use existing Zephyr Agent infrastructure...')
     
-    // Try to import ZephyrEngine and helper functions from zephyr-agent
-    const { ZephyrEngine, buildAssetsMap } = await import('zephyr-agent')
+    // Import proper zephyr-agent functions
+    const { ZephyrEngine, buildAssetsMap, zeBuildDashData } = await import('zephyr-agent')
     const fs = await import('fs')
     const path = await import('path')
     
-    // ZephyrEngine needs to be created using the static create method
+    // Create ZephyrEngine instance using proper pattern
     log.info('🔌 Creating ZephyrEngine instance...')
     const zephyrEngine = await ZephyrEngine.create({
       context: process.cwd(),
       builder: 'unknown' // NextJS adapter doesn't fit standard builder types
     })
+    
+    // Start new build (following the pattern from other plugins)
+    await zephyrEngine.start_new_build()
     
     log.info('🔄 Converting Next.js assets to Zephyr format...')
     
@@ -260,7 +263,8 @@ async function tryZephyrAgentUpload(
     const staticDir = path.join(process.cwd(), '.next/static')
     const buildDir = path.join(process.cwd(), '.next')
     
-    const assets: Record<string, any> = {}
+    // Create assets object in format expected by buildAssetsMap
+    const assets: Record<string, { source: () => Buffer; size: () => number }> = {}
     
     // Add static assets from .next/static
     if (fs.existsSync(staticDir)) {
@@ -275,7 +279,6 @@ async function tryZephyrAgentUpload(
             const assetPath = `/_next/static/${prefix}${file}`
             assets[assetPath] = {
               source: () => fs.readFileSync(fullPath),
-              buffer: () => fs.readFileSync(fullPath),
               size: () => stat.size
             }
           }
@@ -298,7 +301,6 @@ async function tryZephyrAgentUpload(
             const assetPath = `/_next/server/${prefix}${file}`
             assets[assetPath] = {
               source: () => fs.readFileSync(fullPath),
-              buffer: () => fs.readFileSync(fullPath),
               size: () => stat.size
             }
           }
@@ -314,7 +316,6 @@ async function tryZephyrAgentUpload(
         const stat = fs.statSync(serverFile)
         assets['/server.js'] = {
           source: () => fs.readFileSync(serverFile),
-          buffer: () => fs.readFileSync(serverFile),
           size: () => stat.size
         }
       }
@@ -336,27 +337,49 @@ async function tryZephyrAgentUpload(
     // Use the proper buildAssetsMap function from zephyr-agent
     const assetsMap = buildAssetsMap(
       assets,
-      (asset: any) => asset.buffer(),
-      (asset: any) => 'static' // All Next.js assets are treated as static for now
+      (asset) => asset.source(), // Extract buffer from asset
+      (asset) => 'static' // All Next.js assets are treated as static for now
     )
     
-    const buildStats = createBuildStats(snapshot)
+    // Use zeBuildDashData to create proper build stats (instead of our custom function)
+    log.info('📊 Creating build stats using zephyr-agent...')
+    const buildStats = await zeBuildDashData(zephyrEngine)
+    
+    // Enhance build stats with Next.js specific metadata
+    const enhancedBuildStats = {
+      ...buildStats,
+      metadata: {
+        ...(buildStats.metadata || {}),
+        nextjs: {
+          hasMiddleware: snapshot.metadata.hasMiddleware,
+          hasAPIRoutes: snapshot.metadata.hasAPIRoutes,
+          hasSSR: snapshot.metadata.hasSSR,
+          totalOutputs: snapshot.metadata.totalOutputs,
+          staticAssetsCount: snapshot.metadata.staticAssetsCount,
+          serverFunctionsCount: snapshot.metadata.serverFunctionsCount,
+          edgeFunctionsCount: snapshot.metadata.edgeFunctionsCount
+        }
+      },
+      type: 'nextjs'
+    }
     
     log.info('📤 Uploading via ZephyrEngine.upload_assets()...')
     
-    // Use existing upload infrastructure with proper error handling
+    // Use existing upload infrastructure with proper build stats
     const uploadResult = await zephyrEngine.upload_assets({
       assetsMap,
-      buildStats
+      buildStats: enhancedBuildStats
     })
     
+    // Finish build (following the pattern from other plugins)
+    await zephyrEngine.build_finished()
+    
     log.info('✅ Upload completed via Zephyr Agent')
-    log.info(`🔗 Build ID: ${snapshot.id}`)
-    log.info(`📊 Upload result:`, uploadResult)
+    log.info(`🔗 Build ID: ${buildStats.app.buildId}`)
     
     return {
       success: true,
-      buildId: snapshot.id,
+      buildId: buildStats.app.buildId,
       timestamp: snapshot.timestamp,
       uploadedAssets: Object.keys(assets).length
     }
@@ -429,83 +452,7 @@ async function simulateUpload(
   log.info(`   ✅ ${type}: ${count} items uploaded`)
 }
 
-/**
- * Convert snapshot to format expected by existing Zephyr infrastructure
- */
-function convertSnapshotToZephyrFormat(snapshot: ZephyrSnapshot): ZeBuildAssetsMap {
-  const assetsMap: ZeBuildAssetsMap = {}
-  
-  // Helper function to convert Next.js assets to ZeBuildAsset format
-  const convertAsset = (asset: ZephyrAssetInfo, index: number): void => {
-    const hash = `${asset.type}-${asset.id}-${index}`
-    assetsMap[hash] = {
-      path: asset.pathname,
-      extname: path.extname(asset.pathname) || '.js',
-      hash,
-      size: 0, // Will be calculated during upload
-      buffer: '' // Will be read from filesystem during upload
-    }
-  }
-  
-  // Convert all asset types to the unified format
-  snapshot.deploymentTargets.cdn.assets.forEach(convertAsset)
-  snapshot.deploymentTargets.cdn.publicAssets.forEach(convertAsset)
-  snapshot.deploymentTargets.server.functions.forEach(convertAsset)
-  snapshot.deploymentTargets.edge.functions.forEach(convertAsset)
-  snapshot.deploymentTargets.manifests.forEach(convertAsset)
-  
-  return assetsMap
-}
 
-/**
- * Create build stats for existing Zephyr infrastructure
- */
-function createBuildStats(snapshot: ZephyrSnapshot): any {
-  // This is a complex structure required by ZephyrBuildStats
-  // For the Next.js adapter, we'll provide the minimum required fields
-  return {
-    project: 'nextjs-project', // deprecated but still required
-    id: snapshot.id,
-    name: 'nextjs-app',
-    version: '1.0.0',
-    environment: snapshot.environment,
-    remote: undefined, // Next.js doesn't typically have a remoteEntry.js
-    metadata: snapshot.metadata,
-    overrides: [],
-    consumes: [],
-    modules: [],
-    tags: [],
-    dependencies: [],
-    optionalDependencies: [],
-    peerDependencies: [],
-    devDependencies: [],
-    default: false,
-    remotes: [],
-    app: {
-      name: 'nextjs-app',
-      version: '1.0.0',
-      org: 'default-org',
-      project: 'nextjs-project',
-      buildId: snapshot.id
-    },
-    git: {
-      name: 'NextJS User',
-      email: 'nextjs@example.com',
-      branch: 'main',
-      commit: 'unknown',
-      tags: []
-    },
-    context: {
-      username: 'nextjs-user',
-      isCI: false
-    },
-    edge: {
-      url: 'https://edge.zephyr-cloud.io',
-      delimiter: '/'
-    },
-    type: 'nextjs'
-  }
-}
 
 /**
  * Save snapshot manifest locally for debugging and verification

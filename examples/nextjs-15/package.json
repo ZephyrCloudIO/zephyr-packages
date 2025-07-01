@@ -5,18 +5,20 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
+    "build:zephyr": "next build && node zephyr-deploy.js",
     "start": "next start"
   },
   "dependencies": {
-    "next": "latest",
+    "next": "15.4.0-canary.107",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "zephyr-nextjs-plugin": "workspace:*",
-        "zephyr-webpack-plugin": "workspace:*",
     "@types/node": "^22.10.1",
     "@types/react": "^18.3.12",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "zephyr-nextjs-adapter": "workspace:*",
+    "zephyr-nextjs-plugin": "workspace:*",
+    "zephyr-webpack-plugin": "workspace:*"
   }
 }

@@ -1,0 +1,50 @@
+{
+  "name": "zephyr-nextjs-adapter",
+  "version": "1.0.0",
+  "description": "Next.js Deployment Adapter for Zephyr Cloud - using the official Next.js Adapter API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./adapter": {
+      "import": "./dist/adapter.mjs",
+      "require": "./dist/adapter.js",
+      "types": "./dist/adapter.d.ts"
+    }
+  },
+  "keywords": [
+    "nextjs",
+    "adapter",
+    "deployment",
+    "zephyr",
+    "micro-frontends",
+    "module-federation"
+  ],
+  "author": "Zephyr Team",
+  "license": "MIT",
+  "dependencies": {
+    "zephyr-agent": "*",
+    "zephyr-edge-contract": "*"
+  },
+  "peerDependencies": {
+    "next": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.lib.json",
+    "test": "jest",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zephyr-cloud/zephyr-packages",
+    "directory": "libs/zephyr-nextjs-adapter"
+  }
+}

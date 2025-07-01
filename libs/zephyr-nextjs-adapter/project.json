@@ -1,0 +1,33 @@
+{
+  "name": "zephyr-nextjs-adapter",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-nextjs-adapter/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/zephyr-nextjs-adapter",
+        "main": "libs/zephyr-nextjs-adapter/src/index.ts",
+        "tsConfig": "libs/zephyr-nextjs-adapter/tsconfig.lib.json",
+        "assets": ["libs/zephyr-nextjs-adapter/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/zephyr-nextjs-adapter/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-nextjs-adapter/jest.config.ts"
+      }
+    }
+  },
+  "tags": ["type:library", "platform:nextjs", "scope:adapter"]
+}

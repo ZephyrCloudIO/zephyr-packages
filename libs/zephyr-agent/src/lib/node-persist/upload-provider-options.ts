@@ -6,12 +6,17 @@ export interface ZeApplicationConfig {
   BUILD_ID_ENDPOINT: string;
   EDGE_URL: string;
   DELIMITER: string;
-  email: string;
   fetched_at?: number;
-  jwt: string;
   PLATFORM: UploadProviderType;
+  // @deprecated
+  email: string;
+  // @deprecated
+  jwt: string;
+  // @deprecated
   user_uuid: string;
+  // @deprecated
   username: string;
+  // @deprecated
   build_target: string;
 }
 
@@ -22,4 +27,5 @@ export enum UploadProviderType {
   AZURE = 'azure',
   GCP = 'gcp',
   FASTLY = 'fastly',
+  AKAMAI = 'akamai',
 }

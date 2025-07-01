@@ -124,5 +124,18 @@
       }
     }
   },
+  "plugins": [
+    {
+      "plugin": "@nx/rspack/plugin",
+      "include": ["examples/rspack-nx-mf/apps/**"],
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ],
   "nxCloudAccessToken": "Zjg0MzllZTQtYTE2Mi00MWMwLWE2ZDUtOTE5ZWI5OGJkYTM5fHJlYWQtd3JpdGU="
 }

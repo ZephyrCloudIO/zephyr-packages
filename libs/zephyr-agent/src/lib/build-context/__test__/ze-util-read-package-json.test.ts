@@ -1,19 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { getPackageJson } from '../ze-util-read-package-json';
-import { find_nearest_package_json } from '../find-nearest-package-json';
 import { ZephyrError } from '../../errors';
-import { parseZeDependencies } from '../ze-util-parse-ze-dependencies';
+import { find_nearest_package_json } from '../find-nearest-package-json';
 import type { ZeDependency } from '../ze-package-json.type';
+import { parseZeDependencies } from '../ze-util-parse-ze-dependencies';
+import { getPackageJson } from '../ze-util-read-package-json';
 
 // Mock dependencies
 jest.mock('node:fs');
 jest.mock('node:fs/promises');
 jest.mock('../find-nearest-package-json');
 jest.mock('../ze-util-parse-ze-dependencies');
-jest.mock('../../logging', () => ({
-  ze_log: jest.fn(),
-}));
+jest.mock('../../logging', () => ({ ze_log: { package: jest.fn() } }));
 
 describe('getPackageJson', () => {
   // Common mock values

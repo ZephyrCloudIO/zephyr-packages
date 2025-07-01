@@ -1,5 +1,5 @@
+import { withModuleFederation } from '@nx/module-federation/webpack';
 import { withReact } from '@nx/react';
-import { withModuleFederation } from '@nx/react/module-federation';
 import { composePlugins, withNx } from '@nx/webpack';
 import { withZephyr } from 'zephyr-webpack-plugin';
 
@@ -36,5 +36,12 @@ module.exports = composePlugins(
   withNx(),
   withReact(),
   withModuleFederation(mfConfig, { dts: false }),
+  // Workaround for incomplete resolution of https://github.com/nrwl/nx/issues/31114
+  (config) => {
+    if (config.optimization) {
+      config.optimization.runtimeChunk = false;
+    }
+    return config;
+  },
   withZephyr()
 );

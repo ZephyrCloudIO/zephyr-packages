@@ -9,6 +9,9 @@ import { ZE_SESSION_LOCK } from './storage-keys';
 // 72 bits of entropy is more than enough (80b to have 50% collisions)
 const SESSION_LENGTH = 9;
 
+// 1/4 of a second, good balance between responsiveness and not hammering the filesystem
+const UNLOCK_INTERVAL = 1000 / 4; // 250ms
+
 /**
  * Returns a base64url session key to be used in a login process.
  *
@@ -27,7 +30,7 @@ export function getSessionKey(): SessionLock {
   // Another process has the lock = concurrent login is in progress,
   // use that session key instead
   if (!unlock) {
-    ze_log('Lock is already held by another process, using the same session key');
+    ze_log.misc('Lock is already held by another process, using the same session key');
     session = fs.readFileSync(ZE_SESSION_LOCK);
 
     // A second write here helps solve any concurrency between reading and writing
@@ -36,7 +39,7 @@ export function getSessionKey(): SessionLock {
       session = fs.readFileSync(ZE_SESSION_LOCK);
     }
   } else {
-    ze_log('Lock acquired, writing session key to lockfile');
+    ze_log.misc('Lock acquired, writing session key to lockfile');
     // read and write as array buffer
     fs.writeFileSync(ZE_SESSION_LOCK, session, { flush: true });
   }
@@ -44,9 +47,21 @@ export function getSessionKey(): SessionLock {
   return {
     owner: !!unlock,
     session: session.toString('base64url'),
+
+    // If we are the holder of the lock, unlock it and clean up the lockfile
     [Symbol.dispose]() {
-      // If we are the holder of the lock, unlock it and clean up the lockfile
-      unlock?.();
+      if (unlock) {
+        unlock();
+
+        // TODO: Remove this in the future, once >=0.0.48 is the minimum version
+        //
+        // Removes the lockfile to prevent older plugin versions (<0.0.48) from crashing
+        // because `node-persist#forgiveParseErrors` wasn't set to true yet.
+        setTimeout(fs.unlink, UNLOCK_INTERVAL, ZE_SESSION_LOCK, () => {
+          // no need to care about errors here, if the file is not there, it's fine
+          ze_log.misc('Lock released and lockfile removed');
+        });
+      }
     },
   };
 }
@@ -77,12 +92,12 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
 }
 
 /**
- * Checks 4 times per second if the lock is still held by the current process and resolves
- * when the lock is released.
+ * Checks if the lock is still held by the current process and resolves when the lock is
+ * released.
  */
 export async function waitForUnlock(signal?: AbortSignal): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _ of setInterval(1000 / 4, null, { ref: false, signal })) {
+  for await (const _ of setInterval(UNLOCK_INTERVAL, null, { ref: false, signal })) {
     // Stale works as a timeout for the loop
     if (!checkSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS })) {
       return;

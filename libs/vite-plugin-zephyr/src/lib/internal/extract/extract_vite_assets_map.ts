@@ -1,3 +1,4 @@
+import type { OutputAsset, OutputChunk } from 'rollup';
 import {
   buildAssetsMap,
   getPartialAssetMap,
@@ -5,9 +6,8 @@ import {
   type ZeBuildAssetsMap,
   type ZephyrEngine,
 } from 'zephyr-agent';
-import type { OutputAsset, OutputChunk } from 'rollup';
-import { loadStaticAssets } from './load_static_assets';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
+import { loadStaticAssets } from './load_static_assets';
 
 export async function extract_vite_assets_map(
   zephyr_engine: ZephyrEngine,
@@ -32,15 +32,23 @@ function getAssetType(asset: OutputChunk | OutputAsset): string {
   return asset.type;
 }
 
-function extractBuffer(asset: OutputChunk | OutputAsset): string | undefined {
+/**
+ * Extracts buffer content from Rollup assets.
+ *
+ * @param asset - Output chunk or asset from Rollup
+ * @returns String for text-based chunks, Buffer for binary assets, undefined for unknown
+ *   types
+ */
+function extractBuffer(asset: OutputChunk | OutputAsset): string | Buffer | undefined {
   switch (asset.type) {
     case 'chunk':
       return asset.code;
     case 'asset':
-      return typeof asset.source === 'string'
-        ? asset.source
-        : new TextDecoder().decode(asset.source);
+      if (typeof asset.source === 'string') {
+        return asset.source;
+      }
+      return Buffer.from(asset.source);
     default:
-      return void 0;
+      return undefined;
   }
 }

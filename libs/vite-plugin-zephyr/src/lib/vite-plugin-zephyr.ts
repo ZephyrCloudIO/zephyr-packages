@@ -1,11 +1,11 @@
+import { federation } from '@module-federation/vite';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
-import { federation } from '@module-federation/vite';
+import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
-import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
+import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
@@ -31,6 +31,8 @@ function zephyrPlugin(): Plugin {
     resolve_vite_internal_options = resolve;
   });
   let root: string;
+
+  let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
 
   return {
@@ -39,6 +41,10 @@ function zephyrPlugin(): Plugin {
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
+      baseHref = config.base || '/';
+
+      if (config.command === 'serve') return;
+
       zephyr_defer_create({
         builder: 'vite',
         context: config.root,
@@ -76,6 +82,8 @@ function zephyrPlugin(): Plugin {
           vite_internal_options_defer,
           zephyr_engine_defer,
         ]);
+
+        zephyr_engine.buildProperties.baseHref = baseHref;
 
         await zephyr_engine.start_new_build();
         const assetsMap = await extract_vite_assets_map(

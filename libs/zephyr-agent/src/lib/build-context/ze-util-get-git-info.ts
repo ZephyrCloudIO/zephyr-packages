@@ -1,5 +1,5 @@
 import isCI from 'is-ci';
-import cp from 'node:child_process';
+import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
@@ -8,7 +8,7 @@ import { ze_log } from '../logging';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getGitProviderInfo } from './git-provider-utils';
 
-const exec = promisify(cp.exec);
+const exec = promisify(node_exec);
 
 export interface ZeGitInfo {
   app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
@@ -35,7 +35,7 @@ export async function getGitInfo(): Promise<ZeGitInfo> {
     app,
   };
 
-  ze_log('Loaded: git info', gitInfo);
+  ze_log.git('Loaded: git info', gitInfo);
 
   return gitInfo;
 }
@@ -108,7 +108,7 @@ function parseGitUrl(remoteOrigin: string, stdout: string) {
   try {
     const gitInfo = getGitProviderInfo(remoteOrigin);
 
-    ze_log(`Git provider detected: ${gitInfo.provider}`, {
+    ze_log.git(`Git provider detected: ${gitInfo.provider}`, {
       provider: gitInfo.provider,
       owner: gitInfo.owner,
       project: gitInfo.project,

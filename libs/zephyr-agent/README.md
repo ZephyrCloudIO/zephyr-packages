@@ -110,10 +110,13 @@ When Zephyr cannot find a Git repository with remote origin, it will:
    - Follow intelligent naming conventions based on package structure
    - No user prompts or environment variables required
 
-2. **Naming Logic**:
+2. **Enhanced Naming Logic**:
    - **Scoped packages** (`@scope/name`): project = scope, app = name
-   - **With root package.json**: project = root package name, app = current package name
-   - **Otherwise**: project = app = package name
+   - **With root package.json**:
+     - If root is scoped (`@scope/name`): project = scope, app = current package name
+     - Otherwise: project = root package name, app = current package name
+   - **Fallback to directory name**: If no root package.json found, uses directory name as project
+   - **Single package**: project = app = package name
    - **Organization**: Uses authenticated user's username (sanitized for URL safety)
 
 #### Example Scenarios
@@ -138,6 +141,12 @@ npm run build  # Automatically determines naming from package.json
 
 # package.json: { "name": "my-app" } (root package.json: { "name": "my-workspace" })
 # → org: "jwt-username", project: "my-workspace", app: "my-app"
+
+# package.json: { "name": "my-app" } (root package.json: { "name": "@company/monorepo" })
+# → org: "jwt-username", project: "company", app: "my-app"
+
+# package.json: { "name": "my-app" } (no root package.json found)
+# → org: "jwt-username", project: "current-directory-name", app: "my-app"
 
 # Special characters in username get sanitized:
 # Username: "Néstor López" → org: "n-stor-l-pez"
@@ -177,8 +186,9 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
 
 2. **Monorepo Structure** (root `package.json` exists):
 
-   - Project: Root package name
-   - App: Current package name
+   - If root is scoped (`@company/monorepo`): Project = `company`, App = current package name
+   - Otherwise: Project = root package name, App = current package name
+   - If no root package.json found: Project = current directory name, App = current package name
 
 3. **Single Package**:
    - Project: Package name
@@ -186,6 +196,9 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
 
 **User Information:**
 Zephyr automatically extracts user information from your authentication token to provide full accountability without requiring manual configuration.
+
+**Cross-Platform Compatibility:**
+The agent automatically handles path separators across different operating systems (Windows, macOS, Linux) using Node.js built-in path utilities, ensuring consistent behavior regardless of the development environment.
 
 ## Internal APIs
 

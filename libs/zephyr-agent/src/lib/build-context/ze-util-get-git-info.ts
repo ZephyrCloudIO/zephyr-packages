@@ -1,7 +1,7 @@
 import isCI from 'is-ci';
 import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { dirname } from 'node:path';
+import { dirname, sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZEPHYR_API_ENDPOINT } from 'zephyr-edge-contract';
@@ -337,7 +337,7 @@ function sanitizeName(name: string): string {
 /** Get current directory name as project name */
 function getCurrentDirectoryName(): string {
   const cwd = process.cwd();
-  const dirName = cwd.split('/').pop() || cwd.split('\\').pop() || 'untitled-project';
+  const dirName = cwd.split(sep).pop() || 'untitled-project';
   return sanitizeName(dirName);
 }
 
@@ -374,14 +374,30 @@ async function getAppNamingFromPackageJson(
       try {
         const rootPackageJson = await getPackageJson(dirname(process.cwd()));
         if (rootPackageJson) {
-          return {
-            org,
-            project: rootPackageJson.name,
-            app: packageName,
-          };
+          // If root package is scoped, use the scope as project
+          if (rootPackageJson.name.includes('@')) {
+            const [scope] = rootPackageJson.name.split('/');
+            return {
+              org,
+              project: scope.replace('@', ''),
+              app: packageName,
+            };
+          } else {
+            return {
+              org,
+              project: rootPackageJson.name,
+              app: packageName,
+            };
+          }
         }
       } catch {
-        // No root package.json found
+        // No root package.json found - use directory name as project
+        const dirName = getCurrentDirectoryName();
+        return {
+          org,
+          project: dirName,
+          app: packageName,
+        };
       }
 
       // Single package: use same name for project and app

@@ -17,7 +17,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    adapterPath: require.resolve('./zephyr-adapter-wrapper.mjs'),
+    adapterPath: require.resolve('zephyr-nextjs-adapter'),
   },
 };
 

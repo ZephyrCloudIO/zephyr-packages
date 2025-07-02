@@ -9,11 +9,6 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./adapter": {
-      "import": "./dist/adapter.mjs",
-      "require": "./dist/adapter.js",
-      "types": "./dist/adapter.d.ts"
     }
   },
   "keywords": [

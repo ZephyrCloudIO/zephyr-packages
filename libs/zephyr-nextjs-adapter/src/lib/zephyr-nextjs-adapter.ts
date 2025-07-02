@@ -11,6 +11,7 @@ import type {
   ManifestHeaderRoute,
   ManifestRedirectRoute,
   ManifestRewriteRoute,
+  AdapterOutputs,
 } from './types';
 import { getZephyrConfig, createLogger } from './utils';
 import { convertToZephyrAssets, createSnapshot, uploadSnapshot } from './core';
@@ -59,7 +60,7 @@ const zephyrNextJSAdapter: NextAdapter = {
       const originalWebpack = config.webpack;
       config.webpack = (webpackConfig: unknown, options: unknown) => {
         // Call original webpack config first
-        const result = originalWebpack(webpackConfig, options);
+        const result = originalWebpack(webpackConfig, options) as any;
 
         // Remove any existing Zephyr webpack plugins
         if (result.plugins) {

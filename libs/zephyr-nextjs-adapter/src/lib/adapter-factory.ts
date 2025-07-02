@@ -69,7 +69,7 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
       if (nextConfig.webpack) {
         const originalWebpack = nextConfig.webpack;
         nextConfig.webpack = (webpackConfig: unknown, options: unknown) => {
-          const result = originalWebpack(webpackConfig, options);
+          const result = originalWebpack(webpackConfig, options) as any;
 
           if (result.plugins) {
             const originalLength = result.plugins.length;
@@ -194,7 +194,7 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
 
         // Add custom metadata if provided
         if (config.customMetadata) {
-          (snapshot as unknown as Record<string, unknown>).customMetadata =
+          (snapshot as unknown as Record<string, unknown>)['customMetadata'] =
             config.customMetadata;
           log.info('📋 Added custom metadata to snapshot');
         }

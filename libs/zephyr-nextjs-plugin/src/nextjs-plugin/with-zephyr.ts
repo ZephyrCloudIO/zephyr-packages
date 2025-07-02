@@ -1,15 +1,10 @@
 import type { Configuration } from 'webpack';
-import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
-import {
-  extractFederatedDependencyPairs,
-  makeCopyOfModuleFederationOptions,
-  mutWebpackFederatedRemotesConfig,
-} from 'zephyr-xpack-internal';
+import { ZephyrError, logFn } from 'zephyr-agent';
 import type { ZephyrNextJSPluginOptions } from '../types';
 import { ZeNextJSPlugin } from './ze-nextjs-plugin';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrNextJSPluginOptions) {
-  return (config: Configuration, nextJSContext?: any) => {
+  return (config: Configuration, nextJSContext?: unknown) => {
     // Next.js expects synchronous webpack functions, so we can't use async/await here
     // Instead, we'll initialize Zephyr synchronously in the webpack plugin itself
     return _zephyr_configuration_sync(config, nextJSContext, zephyrPluginOptions);
@@ -18,16 +13,20 @@ export function withZephyr(zephyrPluginOptions?: ZephyrNextJSPluginOptions) {
 
 function _zephyr_configuration_sync(
   config: Configuration,
-  nextJSContext: any,
+  nextJSContext: unknown,
   _zephyrOptions?: ZephyrNextJSPluginOptions
 ): Configuration {
   try {
     // Skip Zephyr initialization in development mode or when explicitly disabled
     const isDev = nextJSContext?.dev ?? false;
-    const skipZephyr = process.env['SKIP_ZEPHYR_UPLOAD'] === 'true' || process.env['NODE_ENV'] === 'development';
-    
+    const skipZephyr =
+      process.env['SKIP_ZEPHYR_UPLOAD'] === 'true' ||
+      process.env['NODE_ENV'] === 'development';
+
     if (isDev || skipZephyr) {
-      console.log('🔧 Development mode detected or Zephyr uploads disabled - skipping Zephyr deployment');
+      console.log(
+        '🔧 Development mode detected or Zephyr uploads disabled - skipping Zephyr deployment'
+      );
       return config;
     }
 
@@ -35,19 +34,21 @@ function _zephyr_configuration_sync(
     const isServer = nextJSContext?.isServer ?? false;
     const nextRuntime = nextJSContext?.nextRuntime;
     const buildId = nextJSContext?.buildId ?? 'unknown';
-    
+
     console.log('🔍 NextJS Build context:', { isServer, nextRuntime, buildId });
-    
+
     // Deploy on all builds - we need server outputs for Next.js worker
-    console.log(`🔍 Processing ${isServer ? 'server' : 'client'} build for Next.js deployment`);
-    
+    console.log(
+      `🔍 Processing ${isServer ? 'server' : 'client'} build for Next.js deployment`
+    );
+
     // Note: We need both client and server build outputs:
     // - Client: Static assets, client-side bundles
     // - Server: API routes, SSR functions, middleware, manifests
-    
+
     // For Next.js, we need to handle async operations inside the webpack plugin
     // instead of here, since Next.js expects synchronous webpack functions
-    // 
+    //
     // Add our NextJS-aware plugin that will handle async initialization
     config.plugins?.push(
       new ZeNextJSPlugin({
@@ -57,7 +58,7 @@ function _zephyr_configuration_sync(
         buildContext: {
           isServer,
           nextRuntime,
-          buildId
+          buildId,
         },
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
         // Deploy on all builds - Next.js worker needs server and client outputs

@@ -13,6 +13,7 @@ A specialized Next.js plugin for deploying applications with Zephyr Cloud's Next
 ## 🎯 Why This Plugin?
 
 Next.js has a complex build system that creates three separate webpack configurations:
+
 - **Client Build**: Browser-side JavaScript bundles
 - **Server Build**: SSR functions for Node.js runtime
 - **Edge Server Build**: Code for Edge Runtime environment
@@ -73,6 +74,7 @@ npm run build
 ```
 
 **Expected Output:**
+
 ```bash
 ✅ Zephyr engine initialized for Next.js
 🔧 Zephyr deployment hooks configured for Next.js
@@ -82,7 +84,7 @@ ZEPHYR   Uploaded local snapshot in 183ms
 ZEPHYR   (8/8 assets uploaded, 956.91kb)
 ZEPHYR   https://your-app-server.zephyrcloud.app
 
-# Edge Build  
+# Edge Build
 ZEPHYR   No assets to upload, skipping...
 ZEPHYR   https://your-app-edge.zephyrcloud.app
 
@@ -104,8 +106,9 @@ interface ZephyrNextJSPluginOptions {
 ```
 
 **Zero Configuration**: The plugin automatically enables all Next.js features:
+
 - ✅ **Next.js Worker**: Always uses `ze-worker-nextjs-deploy`
-- ✅ **Server Functions**: API routes, SSR, and server actions 
+- ✅ **Server Functions**: API routes, SSR, and server actions
 - ✅ **Edge Runtime**: Optimized for edge execution
 - ✅ **Middleware**: Full Next.js middleware support
 - ✅ **ISR**: Incremental Static Regeneration with KV caching
@@ -123,7 +126,7 @@ const { withZephyr } = require('zephyr-nextjs-plugin');
 const nextConfig = {
   webpack: (config, context) => {
     return withZephyr({
-      wait_for_index_html: true,  // Enable for SPA mode
+      wait_for_index_html: true, // Enable for SPA mode
     })(config, context);
   },
   output: 'export', // For static export
@@ -216,28 +219,28 @@ module.exports = nextConfig;
 
 ### Three-Phase Deployment
 
-| Build Phase | Purpose | Assets | Deployment |
-|-------------|---------|--------|------------|
-| **Server** | SSR for Node.js | Server functions, API routes | Node.js runtime |
-| **Edge** | SSR for Edge Runtime | Lightweight functions | Edge workers |
-| **Client** | Browser bundles | JS, CSS, static files | CDN distribution |
+| Build Phase | Purpose              | Assets                       | Deployment       |
+| ----------- | -------------------- | ---------------------------- | ---------------- |
+| **Server**  | SSR for Node.js      | Server functions, API routes | Node.js runtime  |
+| **Edge**    | SSR for Edge Runtime | Lightweight functions        | Edge workers     |
+| **Client**  | Browser bundles      | JS, CSS, static files        | CDN distribution |
 
 ### Deployment Flow
 
 ```mermaid
 graph TD
     A[next build] --> B[Server Build]
-    A --> C[Edge Build] 
+    A --> C[Edge Build]
     A --> D[Client Build]
-    
+
     B --> E[Server Assets]
     C --> F[Edge Functions]
     D --> G[Static Assets]
-    
+
     E --> H[Node.js Runtime]
     F --> I[Edge Runtime]
     G --> J[CDN Distribution]
-    
+
     H --> K[Zephyr Edge Network]
     I --> K
     J --> K
@@ -280,10 +283,12 @@ pnpm dev
 ## 📊 Performance
 
 ### Build Times
+
 - **Development**: ~2-5 seconds (cached)
 - **Production**: ~10-30 seconds (full deployment)
 
 ### Asset Optimization
+
 - **Differential uploads**: Only changed files uploaded
 - **Compression**: Automatic gzip/brotli compression
 - **Caching**: Aggressive edge caching strategies
@@ -293,22 +298,28 @@ pnpm dev
 ### Common Issues
 
 #### 1. Build Fails with Entry Error
+
 ```bash
 Cannot read properties of undefined (reading 'import')
 ```
+
 **Solution**: Ensure you're using the correct plugin (`zephyr-nextjs-plugin` not `zephyr-webpack-plugin`)
 
 #### 2. No Deployment URLs Shown
+
 ```bash
 ✅ Zephyr engine initialized for Next.js
 # But no deployment URLs...
 ```
+
 **Solution**: Check authentication with `zephyr login` or set `ZE_SECRET_TOKEN`
 
 #### 3. Module Federation Issues
+
 ```bash
 Module not found: Can't resolve 'webpack/sharing/consume'
 ```
+
 **Solution**: Ensure Module Federation plugin is added before Zephyr plugin
 
 ### Debug Information

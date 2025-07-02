@@ -15,30 +15,35 @@ The Zephyr Next.js Adapter provides:
 ## Migration from Webpack Plugin
 
 ### Before (Webpack Plugin)
+
 ```javascript
 // next.config.js (OLD)
-const { withZephyr } = require('zephyr-nextjs-plugin')
+const { withZephyr } = require('zephyr-nextjs-plugin');
 
-module.exports = withZephyr({
-  // Next.js config
-}, {
-  // Zephyr plugin config
-  orgId: process.env.ZEPHYR_ORG_ID,
-  projectId: process.env.ZEPHYR_PROJECT_ID
-})
+module.exports = withZephyr(
+  {
+    // Next.js config
+  },
+  {
+    // Zephyr plugin config
+    orgId: process.env.ZEPHYR_ORG_ID,
+    projectId: process.env.ZEPHYR_PROJECT_ID,
+  }
+);
 ```
 
 ### After (Adapter)
+
 ```javascript
 // next.config.js (NEW)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    adapterPath: 'zephyr-nextjs-adapter'
-  }
-}
+    adapterPath: 'zephyr-nextjs-adapter',
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
 ```
 
 ## Installation
@@ -61,14 +66,14 @@ Update your `next.config.js`:
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    adapterPath: 'zephyr-nextjs-adapter'
+    adapterPath: 'zephyr-nextjs-adapter',
   },
   // Your existing Next.js configuration
   reactStrictMode: true,
   // ...
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
 ```
 
 ### 2. Authentication (Optional)
@@ -76,17 +81,20 @@ module.exports = nextConfig
 The adapter automatically discovers your organization and project from git, so you only need authentication:
 
 **Option A: Environment Variable**
+
 ```bash
 export ZEPHYR_API_KEY=your-api-key
 ```
 
 **Option B: Zephyr CLI Login (Recommended)**
+
 ```bash
 npx zephyr login
 # This stores your authentication token automatically
 ```
 
 **Optional Configuration:**
+
 ```bash
 # Optional - auto-detected from NODE_ENV
 ZEPHYR_ENVIRONMENT=development|staging|production
@@ -96,6 +104,7 @@ ZEPHYR_MODULE_FEDERATION=true|false
 ```
 
 The adapter will automatically detect:
+
 - **Organization & Project**: From your git remote origin URL
 - **Package Name & Version**: From your package.json
 - **Git Branch & Commit**: From your current git state
@@ -108,6 +117,7 @@ npm run build
 ```
 
 The adapter will:
+
 1. Let Next.js complete the entire build process
 2. Capture all build outputs and metadata
 3. Create a single comprehensive snapshot
@@ -121,7 +131,7 @@ Create a custom adapter file for advanced use cases:
 
 ```javascript
 // zephyr.adapter.mjs
-import { createZephyrAdapter } from 'zephyr-nextjs-adapter'
+import { createZephyrAdapter } from 'zephyr-nextjs-adapter';
 
 export default createZephyrAdapter({
   // Custom configuration options
@@ -129,13 +139,13 @@ export default createZephyrAdapter({
   enableDetailedLogging: true,
   customAssetFilter: (asset) => {
     // Filter assets before upload
-    return !asset.pathname.includes('/_error')
+    return !asset.pathname.includes('/_error');
   },
   customMetadata: {
     deploymentVersion: '1.2.3',
-    buildHash: process.env.BUILD_HASH
-  }
-})
+    buildHash: process.env.BUILD_HASH,
+  },
+});
 ```
 
 Then reference it in your `next.config.js`:
@@ -143,30 +153,30 @@ Then reference it in your `next.config.js`:
 ```javascript
 module.exports = {
   experimental: {
-    adapterPath: './zephyr.adapter.mjs'
-  }
-}
+    adapterPath: './zephyr.adapter.mjs',
+  },
+};
 ```
 
 ### Environment-Specific Behavior
 
 ```javascript
 // zephyr.adapter.mjs
-import { createZephyrAdapter } from 'zephyr-nextjs-adapter'
+import { createZephyrAdapter } from 'zephyr-nextjs-adapter';
 
 export default createZephyrAdapter({
   onBuildComplete: async (ctx) => {
-    const isDevelopment = process.env.NODE_ENV === 'development'
-    
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
     if (isDevelopment) {
-      console.log('Development mode - skipping upload')
-      return
+      console.log('Development mode - skipping upload');
+      return;
     }
-    
+
     // Production upload logic
-    await uploadToZephyr(ctx)
-  }
-})
+    await uploadToZephyr(ctx);
+  },
+});
 ```
 
 ## Integration with Existing Zephyr Infrastructure
@@ -175,27 +185,27 @@ The adapter integrates seamlessly with your existing Zephyr infrastructure:
 
 ```javascript
 // Example integration with ZephyrEngine
-import { ZephyrEngine } from 'zephyr-agent'
-import { createZephyrAdapter } from 'zephyr-nextjs-adapter'
+import { ZephyrEngine } from 'zephyr-agent';
+import { createZephyrAdapter } from 'zephyr-nextjs-adapter';
 
 export default createZephyrAdapter({
   onBuildComplete: async (ctx) => {
     const zephyrEngine = new ZephyrEngine({
       orgId: process.env.ZEPHYR_ORG_ID,
       projectId: process.env.ZEPHYR_PROJECT_ID,
-      apiKey: process.env.ZEPHYR_API_KEY
-    })
-    
+      apiKey: process.env.ZEPHYR_API_KEY,
+    });
+
     // Convert Next.js outputs to Zephyr format
-    const assetsMap = convertToZephyrFormat(ctx.outputs)
-    
+    const assetsMap = convertToZephyrFormat(ctx.outputs);
+
     // Use existing upload infrastructure
     await zephyrEngine.upload_assets({
       assetsMap,
-      buildStats: generateBuildStats(ctx)
-    })
-  }
-})
+      buildStats: generateBuildStats(ctx),
+    });
+  },
+});
 ```
 
 ## Build Output Structure
@@ -203,23 +213,27 @@ export default createZephyrAdapter({
 The adapter captures and processes all Next.js build outputs:
 
 ### Static Assets
+
 - CSS files (`/_next/static/css/`)
 - JavaScript chunks (`/_next/static/chunks/`)
 - Images and other assets
 - Public folder contents
 
 ### Server Functions
+
 - App Router pages (SSR/SSG)
 - Pages Router pages (legacy)
 - API routes
 - Server Components
 
 ### Edge Functions
+
 - Edge API routes
 - Middleware
 - Edge Runtime pages
 
 ### Manifests and Metadata
+
 - Routes configuration
 - Build statistics
 - Dependency traces
@@ -227,24 +241,26 @@ The adapter captures and processes all Next.js build outputs:
 
 ## Comparison with Webpack Plugin
 
-| Feature | Webpack Plugin | Next.js Adapter |
-|---------|---------------|-----------------|
-| **Upload Timing** | During compilation | After complete build |
-| **Integration** | Webpack hooks | Official Next.js API |
-| **Reliability** | Fragile webpack internals | Stable Next.js interface |
-| **Build Capture** | Partial (compilation-time) | Complete (final state) |
-| **Configuration** | Complex webpack setup | Simple Next.js config |
-| **Maintenance** | High (webpack changes) | Low (stable API) |
+| Feature           | Webpack Plugin             | Next.js Adapter          |
+| ----------------- | -------------------------- | ------------------------ |
+| **Upload Timing** | During compilation         | After complete build     |
+| **Integration**   | Webpack hooks              | Official Next.js API     |
+| **Reliability**   | Fragile webpack internals  | Stable Next.js interface |
+| **Build Capture** | Partial (compilation-time) | Complete (final state)   |
+| **Configuration** | Complex webpack setup      | Simple Next.js config    |
+| **Maintenance**   | High (webpack changes)     | Low (stable API)         |
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **"adapterPath not recognized"**
-   - Ensure you're using Next.js 14+ 
+
+   - Ensure you're using Next.js 14+
    - Check that the experimental adapter API is available
 
 2. **Environment variables not set**
+
    - Verify `ZEPHYR_ORG_ID`, `ZEPHYR_PROJECT_ID`, and `ZEPHYR_API_KEY` are set
    - Check the adapter logs for specific missing variables
 
@@ -283,25 +299,25 @@ cat .next/zephyr-snapshot-manifest.json
 ```typescript
 interface ZephyrAdapterConfig {
   // Upload configuration
-  uploadBatchSize?: number
-  uploadTimeout?: number
-  
+  uploadBatchSize?: number;
+  uploadTimeout?: number;
+
   // Filtering options
-  customAssetFilter?: (asset: AdapterOutput) => boolean
-  excludePatterns?: string[]
-  
+  customAssetFilter?: (asset: AdapterOutput) => boolean;
+  excludePatterns?: string[];
+
   // Metadata customization
-  customMetadata?: Record<string, any>
-  
+  customMetadata?: Record<string, any>;
+
   // Logging options
-  enableDetailedLogging?: boolean
-  logLevel?: 'error' | 'warn' | 'info' | 'debug'
-  
+  enableDetailedLogging?: boolean;
+  logLevel?: 'error' | 'warn' | 'info' | 'debug';
+
   // Custom hooks
-  onBuildStart?: () => Promise<void> | void
-  onBuildComplete?: (ctx: BuildContext) => Promise<void> | void
-  onUploadStart?: (snapshot: Snapshot) => Promise<void> | void
-  onUploadComplete?: (result: UploadResult) => Promise<void> | void
+  onBuildStart?: () => Promise<void> | void;
+  onBuildComplete?: (ctx: BuildContext) => Promise<void> | void;
+  onUploadStart?: (snapshot: Snapshot) => Promise<void> | void;
+  onUploadComplete?: (result: UploadResult) => Promise<void> | void;
 }
 ```
 
@@ -310,21 +326,21 @@ interface ZephyrAdapterConfig {
 ```typescript
 interface BuildContext {
   routes: {
-    headers: Array<HeaderRoute>
-    redirects: Array<RedirectRoute>
-    rewrites: RewriteRoutes
-    dynamicRoutes: Array<DynamicRoute>
-  }
+    headers: Array<HeaderRoute>;
+    redirects: Array<RedirectRoute>;
+    rewrites: RewriteRoutes;
+    dynamicRoutes: Array<DynamicRoute>;
+  };
   outputs: Array<{
-    id: string
-    pathname: string
-    filePath: string
-    type: RouteType
-    runtime?: 'nodejs' | 'edge'
-    config?: FunctionConfig
-    assets?: Record<string, string>
-    fallbackID?: string
-  }>
+    id: string;
+    pathname: string;
+    filePath: string;
+    type: RouteType;
+    runtime?: 'nodejs' | 'edge';
+    config?: FunctionConfig;
+    assets?: Record<string, string>;
+    fallbackID?: string;
+  }>;
 }
 ```
 

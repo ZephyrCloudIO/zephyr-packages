@@ -1,24 +1,22 @@
-/**
- * Utility functions for the Zephyr Next.js Adapter
- */
+/** Utility functions for the Zephyr Next.js Adapter */
 
-import type { ZephyrConfig, RouteType, AdapterOutput } from './types'
+import type { ZephyrConfig, AdapterOutput } from './types';
 
 /**
- * Get Zephyr configuration using the same auto-discovery approach as other plugins
- * This mirrors the pattern used in zephyr-agent for automatic git and package.json detection
+ * Get Zephyr configuration using the same auto-discovery approach as other plugins This
+ * mirrors the pattern used in zephyr-agent for automatic git and package.json detection
  */
 export async function getZephyrConfig(): Promise<ZephyrConfig> {
   try {
     // Try to import and use existing Zephyr infrastructure for auto-discovery
-    const { ZephyrEngine } = await import('zephyr-agent')
-    
+    const { ZephyrEngine } = await import('zephyr-agent');
+
     // Create a temporary ZephyrEngine instance to access the auto-discovery
     const tempEngine = await ZephyrEngine.create({
       context: process.cwd(),
-      builder: 'unknown'
-    })
-    
+      builder: 'unknown',
+    });
+
     return {
       orgId: tempEngine.applicationProperties.org,
       projectId: tempEngine.applicationProperties.project,
@@ -32,10 +30,10 @@ export async function getZephyrConfig(): Promise<ZephyrConfig> {
       gitInfo: tempEngine.gitProperties.git,
       packageInfo: {
         name: tempEngine.npmProperties.name,
-        version: tempEngine.npmProperties.version
-      }
-    }
-  } catch (error) {
+        version: tempEngine.npmProperties.version,
+      },
+    };
+  } catch {
     // Fallback to environment variables if auto-discovery fails
     return {
       orgId: process.env['ZEPHYR_ORG_ID'],
@@ -44,202 +42,191 @@ export async function getZephyrConfig(): Promise<ZephyrConfig> {
       environment: process.env['NODE_ENV'] || 'development',
       buildId: `nextjs-build-${Date.now()}`,
       enableModuleFederation: process.env['ZEPHYR_MODULE_FEDERATION'] === 'true',
-      enableEdgeWorkers: process.env['ZEPHYR_EDGE_WORKERS'] !== 'false'
-    }
+      enableEdgeWorkers: process.env['ZEPHYR_EDGE_WORKERS'] !== 'false',
+    };
   }
 }
 
-/**
- * Create a logger with a specific context
- */
+/** Create a logger with a specific context */
 export function createLogger(context: string) {
-  const isDebug = process.env['ZEPHYR_DEBUG'] === 'true' || process.env['DEBUG']?.includes('zephyr')
-  
+  const isDebug =
+    process.env['ZEPHYR_DEBUG'] === 'true' || process.env['DEBUG']?.includes('zephyr');
+
   return {
-    info: (message: string, ...args: any[]) => {
-      console.log(message, ...args)
+    info: (message: string, ...args: unknown[]) => {
+      console.log(message, ...args);
     },
-    warn: (message: string, ...args: any[]) => {
-      console.warn(message, ...args)
+    warn: (message: string, ...args: unknown[]) => {
+      console.warn(message, ...args);
     },
-    error: (message: string, ...args: any[]) => {
-      console.error(message, ...args)
+    error: (message: string, ...args: unknown[]) => {
+      console.error(message, ...args);
     },
-    debug: (message: string, ...args: any[]) => {
+    debug: (message: string, ...args: unknown[]) => {
       if (isDebug) {
-        console.log(`[DEBUG:${context}]`, message, ...args)
+        console.log(`[DEBUG:${context}]`, message, ...args);
       }
-    }
-  }
+    },
+  };
 }
 
-/**
- * Determine the appropriate Zephyr deployment target for an output
- */
-export function determineDeploymentTarget(output: AdapterOutput): 'cdn' | 'edge' | 'server' {
+/** Determine the appropriate Zephyr deployment target for an output */
+export function determineDeploymentTarget(
+  output: AdapterOutput
+): 'cdn' | 'edge' | 'server' {
   switch (output.type) {
     case 'STATIC_FILE':
-      return 'cdn'
-      
+      return 'cdn';
+
     case 'MIDDLEWARE':
-      return 'edge'
-      
+      return 'edge';
+
     case 'APP_ROUTE':
     case 'PAGES_API':
-      return output.runtime === 'edge' ? 'edge' : 'server'
-      
+      return output.runtime === 'edge' ? 'edge' : 'server';
+
     case 'APP_PAGE':
     case 'PAGES':
-      return output.runtime === 'edge' ? 'edge' : 'server'
-      
+      return output.runtime === 'edge' ? 'edge' : 'server';
+
     default:
-      return 'server'
+      return 'server';
   }
 }
 
-/**
- * Check if an output is compatible with module federation
- */
+/** Check if an output is compatible with module federation */
 export function isModuleFederationCompatible(output: AdapterOutput): boolean {
   // Static assets and certain types of pages can be federated
-  return ['STATIC_FILE', 'APP_PAGE', 'PAGES'].includes(output.type)
+  return ['STATIC_FILE', 'APP_PAGE', 'PAGES'].includes(output.type);
 }
 
-/**
- * Check if an output should be cached by CDN
- */
+/** Check if an output should be cached by CDN */
 export function isCacheable(output: AdapterOutput): boolean {
   // Static assets are cacheable, dynamic content is not
-  return output.type === 'STATIC_FILE'
+  return output.type === 'STATIC_FILE';
 }
 
-/**
- * Convert Map to Array for JSON serialization
- */
+/** Convert Map to Array for JSON serialization */
 export function convertMapToArray<T>(map: Map<string, T>): T[] {
-  return Array.from(map.values())
+  return Array.from(map.values());
 }
 
-/**
- * Check if output is a public asset (from public folder)
- */
+/** Check if output is a public asset (from public folder) */
 export function isPublicAsset(output: AdapterOutput): boolean {
-  return output.type === 'STATIC_FILE' && 
-         !output.pathname.startsWith('/_next/') &&
-         !output.pathname.startsWith('/api/')
+  return (
+    output.type === 'STATIC_FILE' &&
+    !output.pathname.startsWith('/_next/') &&
+    !output.pathname.startsWith('/api/')
+  );
 }
 
-/**
- * Check if output is a static Next.js asset
- */
+/** Check if output is a static Next.js asset */
 export function isNextJSStaticAsset(output: AdapterOutput): boolean {
-  return output.type === 'STATIC_FILE' && 
-         output.pathname.startsWith('/_next/static/')
+  return output.type === 'STATIC_FILE' && output.pathname.startsWith('/_next/static/');
 }
 
-/**
- * Generate a unique asset ID from output
- */
+/** Generate a unique asset ID from output */
 export function generateAssetId(output: AdapterOutput): string {
-  return output.id || `${output.type}-${output.pathname.replace(/[^a-zA-Z0-9]/g, '-')}`
+  return output.id || `${output.type}-${output.pathname.replace(/[^a-zA-Z0-9]/g, '-')}`;
 }
 
 /**
- * Validate required Zephyr configuration
- * With auto-discovery, we only require API key as everything else is auto-detected
+ * Validate required Zephyr configuration With auto-discovery, we only require API key as
+ * everything else is auto-detected
  */
-export function validateZephyrConfig(config: ZephyrConfig): { valid: boolean; errors: string[] } {
-  const errors: string[] = []
-  
+export function validateZephyrConfig(config: ZephyrConfig): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
   // API key is still required for authentication
   if (!config.apiKey) {
-    errors.push('ZEPHYR_API_KEY is required (or use `zephyr login` for token-based auth)')
+    errors.push(
+      'ZEPHYR_API_KEY is required (or use `zephyr login` for token-based auth)'
+    );
   }
-  
+
   // With auto-discovery, org and project should be available from git
   if (!config.orgId) {
-    errors.push('Organization not found - ensure you are in a git repository with remote origin')
+    errors.push(
+      'Organization not found - ensure you are in a git repository with remote origin'
+    );
   }
-  
+
   if (!config.projectId) {
-    errors.push('Project not found - ensure you are in a git repository with remote origin')
+    errors.push(
+      'Project not found - ensure you are in a git repository with remote origin'
+    );
   }
-  
+
   return {
     valid: errors.length === 0,
-    errors
-  }
+    errors,
+  };
 }
 
-/**
- * Create a delay for rate limiting or simulation
- */
+/** Create a delay for rate limiting or simulation */
 export function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Get file size in a human readable format
- */
+/** Get file size in a human readable format */
 export async function getFileSize(filePath: string): Promise<string> {
   try {
-    const fs = await import('fs/promises')
-    const stats = await fs.stat(filePath)
-    const bytes = stats.size
-    
-    if (bytes === 0) return '0 B'
-    
-    const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    const fs = await import('fs/promises');
+    const stats = await fs.stat(filePath);
+    const bytes = stats.size;
+
+    if (bytes === 0) return '0 B';
+
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   } catch {
-    return 'unknown'
+    return 'unknown';
   }
 }
 
-/**
- * Calculate a simple hash for build identification
- */
-export function calculateBuildHash(data: any): string {
-  const str = JSON.stringify(data)
-  let hash = 0
-  
+/** Calculate a simple hash for build identification */
+export function calculateBuildHash(data: unknown): string {
+  const str = JSON.stringify(data);
+  let hash = 0;
+
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
   }
-  
-  return Math.abs(hash).toString(16)
+
+  return Math.abs(hash).toString(16);
 }
 
-/**
- * Filter sensitive information from logs
- */
-export function sanitizeForLogging(obj: any): any {
-  const sensitive = ['apiKey', 'token', 'password', 'secret']
-  
+/** Filter sensitive information from logs */
+export function sanitizeForLogging(obj: unknown): unknown {
+  const sensitive = ['apiKey', 'token', 'password', 'secret'];
+
   if (typeof obj !== 'object' || obj === null) {
-    return obj
+    return obj;
   }
-  
+
   if (Array.isArray(obj)) {
-    return obj.map(sanitizeForLogging)
+    return obj.map(sanitizeForLogging);
   }
-  
-  const sanitized: any = {}
-  
+
+  const sanitized: Record<string, unknown> = {};
+
   for (const [key, value] of Object.entries(obj)) {
-    if (sensitive.some(s => key.toLowerCase().includes(s))) {
-      sanitized[key] = '[REDACTED]'
+    if (sensitive.some((s) => key.toLowerCase().includes(s))) {
+      sanitized[key] = '[REDACTED]';
     } else if (typeof value === 'object') {
-      sanitized[key] = sanitizeForLogging(value)
+      sanitized[key] = sanitizeForLogging(value);
     } else {
-      sanitized[key] = value
+      sanitized[key] = value;
     }
   }
-  
-  return sanitized
+
+  return sanitized;
 }

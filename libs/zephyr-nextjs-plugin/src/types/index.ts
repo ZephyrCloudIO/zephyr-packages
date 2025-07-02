@@ -10,14 +10,14 @@ export interface ZephyrServerAsset {
   hash: string;
   size: number;
   content: string | Buffer;
-  
+
   // Server function specific properties
   type: 'api-route' | 'server-action' | 'page-ssr' | 'middleware' | 'edge-function';
   runtime: 'nodejs' | 'edge';
   routes: string[]; // Route patterns this function handles
   dependencies?: string[]; // Required dependencies
   environment?: Record<string, string>; // Environment variables needed
-  
+
   // NextJS specific metadata
   nextjsMetadata?: {
     buildId: string;
@@ -37,16 +37,16 @@ export interface ZephyrNextJSSnapshot {
     compressed?: boolean;
   }>;
   staticAssetsMap: Record<string, any>;
-  
+
   // New server function assets
   serverFunctions?: ZephyrServerAsset[];
   serverFunctionsMap?: Record<string, ZephyrServerAsset>;
-  
+
   // NextJS routing and metadata
   routeManifest?: NextJSRouteManifest;
   buildManifest?: NextJSBuildManifest;
   middleware?: ZephyrServerAsset[];
-  
+
   // Build metadata
   buildId: string;
   nextjsVersion?: string;

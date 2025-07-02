@@ -1,17 +1,18 @@
 import type { ZephyrEngine } from 'zephyr-agent';
-import { logFn, ze_log, ZephyrError, buildAssetsMap, zeBuildDashData } from 'zephyr-agent';
+import {
+  logFn,
+  ze_log,
+  ZephyrError,
+  buildAssetsMap,
+  zeBuildDashData,
+} from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
-import type { XStats, XStatsCompilation } from 'zephyr-xpack-internal';
-import type { 
-  ZephyrNextJSSnapshot, 
-  ZephyrServerAsset, 
-  NextJSBuildManifest, 
+import type {
+  ZephyrServerAsset,
+  NextJSBuildManifest,
   NextJSRouteManifest,
-  ZephyrNextJSPluginOptions
 } from '../types';
 import { NextJSServerFunctionExtractor } from './server-function-extractor';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 
 interface NextJSUploadAgentOptions {
   zephyr_engine: ZephyrEngine;
@@ -31,16 +32,12 @@ interface NextJSUploadAgentOptions {
 }
 
 export interface NextJSZephyrAgentProps {
-  stats: XStats;
-  stats_json: XStatsCompilation;
   assets: Record<string, Source>;
   pluginOptions: NextJSUploadAgentOptions;
   outputPath: string;
 }
 
 export async function nextjsZephyrAgent({
-  stats,
-  stats_json,
   assets,
   pluginOptions,
   outputPath,
@@ -60,7 +57,7 @@ export async function nextjsZephyrAgent({
     );
 
     // Get application configuration
-    const { EDGE_URL, PLATFORM, DELIMITER } = await zephyr_engine.application_configuration;
+    const { EDGE_URL } = await zephyr_engine.application_configuration;
 
     // Determine target endpoint
     const targetEndpoint = getNextJSWorkerEndpoint(EDGE_URL, pluginOptions);
@@ -68,7 +65,7 @@ export async function nextjsZephyrAgent({
     console.log(`🚀 Deploying to Next.js worker: ${targetEndpoint}`);
 
     // Create Next.js-specific snapshot
-    const nextjsSnapshot = await createNextJSSnapshot(
+    await createNextJSSnapshot(
       enhancedAssetsMap,
       outputPath,
       buildContext,
@@ -77,21 +74,28 @@ export async function nextjsZephyrAgent({
 
     // Use standard Zephyr upload mechanism instead of custom Next.js worker
     console.log('🔄 Using standard Zephyr upload mechanism for Next.js assets');
-    
+
     // Use the standard buildAssetsMap function like other plugins
-    console.log(`🔍 Converting ${Object.keys(assets).length} Next.js assets for standard upload`);
-    
+    console.log(
+      `🔍 Converting ${Object.keys(assets).length} Next.js assets for standard upload`
+    );
+
     // Create the assets map using the standard Zephyr utility
-    const standardAssetsMap = buildAssetsMap(assets, extractNextJSBuffer, getNextJSAssetType);
-    
-    console.log(`✅ Standard assets map has ${Object.keys(standardAssetsMap).length} valid assets`);
-    
+    const standardAssetsMap = buildAssetsMap(
+      assets,
+      extractNextJSBuffer,
+      getNextJSAssetType
+    );
+
+    console.log(
+      `✅ Standard assets map has ${Object.keys(standardAssetsMap).length} valid assets`
+    );
+
     // Upload using the standard Zephyr engine (same as other plugins)
     await zephyr_engine.upload_assets({
       assetsMap: standardAssetsMap,
       buildStats: await zeBuildDashData(zephyr_engine), // Use standard build stats
     });
-
   } catch (err) {
     logFn('error', ZephyrError.format(err));
     throw err;
@@ -111,7 +115,7 @@ interface EnhancedAssetsMap {
 async function buildNextJSAssetMap(
   assets: Record<string, Source>,
   outputPath: string,
-  buildContext: any,
+  buildContext: unknown,
   options: NextJSUploadAgentOptions
 ): Promise<EnhancedAssetsMap> {
   const result: EnhancedAssetsMap = {
@@ -123,7 +127,7 @@ async function buildNextJSAssetMap(
   for (const [path, source] of Object.entries(assets)) {
     const content = source.source();
     const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content);
-    
+
     result.staticAssets[path] = {
       content: contentBuffer,
       hash: require('crypto').createHash('md5').update(contentBuffer).digest('hex'),
@@ -140,15 +144,17 @@ async function buildNextJSAssetMap(
         buildContext.buildId,
         options
       );
-      
-      const { serverFunctions, routeManifest, buildManifest } = 
+
+      const { serverFunctions, routeManifest, buildManifest } =
         await extractor.extractServerFunctions();
-      
+
       result.serverFunctions = serverFunctions;
       result.routeManifest = routeManifest;
       result.buildManifest = buildManifest;
-      
-      console.log(`📦 Extracted ${serverFunctions.length} server functions from server build`);
+
+      console.log(
+        `📦 Extracted ${serverFunctions.length} server functions from server build`
+      );
     } catch (error) {
       console.warn('⚠️ Failed to extract server functions:', error);
     }
@@ -162,11 +168,11 @@ async function buildNextJSAssetMap(
 async function createNextJSSnapshot(
   assetsMap: EnhancedAssetsMap,
   outputPath: string,
-  buildContext: any,
+  buildContext: unknown,
   options: NextJSUploadAgentOptions
 ): Promise<any> {
   const config = await options.zephyr_engine.application_configuration;
-  
+
   // Convert static assets to snapshot format
   const staticAssets = Object.entries(assetsMap.staticAssets).map(([path, asset]) => ({
     id: asset.hash,
@@ -176,25 +182,29 @@ async function createNextJSSnapshot(
   }));
 
   const staticAssetsMap = Object.fromEntries(
-    staticAssets.map(asset => [asset.filepath, asset])
+    staticAssets.map((asset) => [asset.filepath, asset])
   );
 
   // Build server functions map
   const serverFunctionsMap = Object.fromEntries(
-    assetsMap.serverFunctions.map(func => [func.path, func])
+    assetsMap.serverFunctions.map((func) => [func.path, func])
   );
 
   // Extract routes from manifests and server functions
-  const pages = assetsMap.routeManifest?.pages ? Object.keys(assetsMap.routeManifest.pages) : [];
+  const pages = assetsMap.routeManifest?.pages
+    ? Object.keys(assetsMap.routeManifest.pages)
+    : [];
   const apiRoutes = [
-    ...(assetsMap.routeManifest?.apiRoutes ? Object.keys(assetsMap.routeManifest.apiRoutes) : []),
+    ...(assetsMap.routeManifest?.apiRoutes
+      ? Object.keys(assetsMap.routeManifest.apiRoutes)
+      : []),
     ...assetsMap.serverFunctions
-      .filter(func => func.type === 'api-route')
-      .flatMap(func => func.routes)
+      .filter((func) => func.type === 'api-route')
+      .flatMap((func) => func.routes),
   ];
 
   // Create snapshot in format expected by ze-worker-nextjs-deploy
-  const snapshot: any = {
+  const snapshot: unknown = {
     application_uid: config.application_uid,
     buildId: buildContext.buildId,
     timestamp: Date.now(),
@@ -203,19 +213,22 @@ async function createNextJSSnapshot(
     functions: serverFunctionsMap,
     routes: {
       pages,
-      api: apiRoutes
+      api: apiRoutes,
     },
     config: {
-      images: assetsMap.buildManifest ? extractImageConfig(assetsMap.buildManifest) : undefined,
-      experimental: {} // TODO: Extract from Next.js config if available
+      images: assetsMap.buildManifest
+        ? extractImageConfig(assetsMap.buildManifest)
+        : undefined,
+      experimental: {}, // TODO: Extract from Next.js config if available
     },
-    middleware: assetsMap.middleware?.[0]?.path // Single middleware file path
+    middleware: assetsMap.middleware?.[0]?.path, // Single middleware file path
   };
 
   return snapshot;
 }
 
-function extractImageConfig(buildManifest: NextJSBuildManifest): any {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function extractImageConfig(_buildManifest: NextJSBuildManifest): unknown {
   // Extract image configuration from Next.js build manifest
   // This is a simplified version - real implementation would parse next.config.js
   return {
@@ -227,10 +240,15 @@ function extractImageConfig(buildManifest: NextJSBuildManifest): any {
   };
 }
 
-function getNextJSWorkerEndpoint(baseUrl: string, options: NextJSUploadAgentOptions): string {
+function getNextJSWorkerEndpoint(
+  baseUrl: string,
+  options: NextJSUploadAgentOptions
+): string {
   // Local development override
   if (process.env['ZE_LOCAL_NEXTJS_WORKER']) {
-    console.log(`🔧 Using local Next.js worker: ${process.env['ZE_LOCAL_NEXTJS_WORKER']}`);
+    console.log(
+      `🔧 Using local Next.js worker: ${process.env['ZE_LOCAL_NEXTJS_WORKER']}`
+    );
     return process.env['ZE_LOCAL_NEXTJS_WORKER'];
   }
 
@@ -249,7 +267,7 @@ function getNextJSWorkerEndpoint(baseUrl: string, options: NextJSUploadAgentOpti
   // ze.zephyrcloudapp.dev -> nextjs-ze.zephyrcloudapp.dev
   const url = new URL(baseUrl);
   const hostname = url.hostname;
-  
+
   if (hostname.startsWith('ze.')) {
     url.hostname = hostname.replace('ze.', 'nextjs-ze.');
   } else if (hostname.includes('-ze.')) {
@@ -264,11 +282,12 @@ function getNextJSWorkerEndpoint(baseUrl: string, options: NextJSUploadAgentOpti
 
 interface UploadToNextJSWorkerOptions {
   assetsMap: Record<string, any>;
-  snapshot: any;
+  snapshot: unknown;
   endpoint: string;
   engine: ZephyrEngine;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function uploadToNextJSWorker({
   assetsMap,
   snapshot,
@@ -276,55 +295,57 @@ async function uploadToNextJSWorker({
   engine,
 }: UploadToNextJSWorkerOptions): Promise<void> {
   const config = await engine.application_configuration;
-  
+
   // Upload snapshot first using Next.js worker protocol
   await uploadNextJSSnapshot(snapshot, endpoint, config.jwt);
-  
+
   // Upload individual assets
   const uploadPromises = Object.entries(assetsMap).map(async ([path, asset]) => {
     return uploadNextJSAsset(path, asset, endpoint, config.jwt);
   });
 
   await Promise.all(uploadPromises);
-  
+
   console.log(`✅ Uploaded ${Object.keys(assetsMap).length} assets to Next.js worker`);
 }
 
 async function uploadNextJSSnapshot(
-  snapshot: any,
+  snapshot: unknown,
   endpoint: string,
   jwt: string
 ): Promise<void> {
   const url = new URL('/__zephyr_deploy', endpoint);
-  
+
   const response = await fetch(url.toString(), {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${jwt}`,
+      Authorization: `Bearer ${jwt}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(snapshot),
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to upload Next.js snapshot: ${response.status} ${response.statusText}`);
+    throw new ZephyrError(
+      `Failed to upload Next.js snapshot: ${response.status} ${response.statusText}`
+    );
   }
 }
 
 async function uploadNextJSAsset(
   path: string,
-  asset: any,
+  asset: unknown,
   endpoint: string,
   jwt: string
 ): Promise<void> {
   const url = new URL('/__zephyr_upload', endpoint);
   url.searchParams.set('type', 'file');
   url.searchParams.set('hash', asset.hash);
-  
+
   const response = await fetch(url.toString(), {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${jwt}`,
+      Authorization: `Bearer ${jwt}`,
       'x-file-path': path,
       'Content-Type': asset.headers?.['Content-Type'] || 'application/octet-stream',
     },
@@ -332,7 +353,9 @@ async function uploadNextJSAsset(
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to upload asset ${path}: ${response.status} ${response.statusText}`);
+    throw new ZephyrError(
+      `Failed to upload asset ${path}: ${response.status} ${response.statusText}`
+    );
   }
 }
 
@@ -340,7 +363,7 @@ async function uploadNextJSAsset(
 function extractNextJSBuffer(asset: Source): Buffer | string | undefined {
   // Handle webpack Source objects (Next.js uses webpack internally)
   const className = getNextJSAssetType(asset);
-  
+
   switch (className) {
     case 'CachedSource':
     case 'CompatSource':
@@ -383,10 +406,9 @@ function getNextJSAssetType(asset: Source): string {
   return 'Unknown';
 }
 
-
 function getContentTypeHeaders(filePath: string): Record<string, string> {
   const ext = filePath.split('.').pop()?.toLowerCase();
-  
+
   switch (ext) {
     case 'html':
       return { 'Content-Type': 'text/html; charset=utf-8' };

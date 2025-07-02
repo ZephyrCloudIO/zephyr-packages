@@ -9,10 +9,11 @@ The `zephyr-nextjs-plugin` is a specialized webpack plugin designed to integrate
 Next.js creates three separate webpack configurations during each build:
 
 1. **Server Build** (`isServer: true, nextRuntime: 'nodejs'`) - Server-side rendering code for Node.js runtime
-2. **Edge Server Build** (`isServer: true, nextRuntime: 'edge'`) - Code for Edge Runtime environment  
+2. **Edge Server Build** (`isServer: true, nextRuntime: 'edge'`) - Code for Edge Runtime environment
 3. **Client Build** (`isServer: false, nextRuntime: undefined`) - Browser-side JavaScript bundles
 
 The existing `zephyr-webpack-plugin` was incompatible with Next.js due to:
+
 - **Async/Sync Mismatch**: Next.js expects synchronous webpack functions, but Zephyr uses async operations
 - **Entry Structure Corruption**: The plugin was corrupting Next.js's critical `main-app` entry required for App Router
 - **Hook Timing Issues**: Using incorrect webpack hooks that don't fire in Next.js's compilation process
@@ -39,21 +40,24 @@ zephyr-nextjs-plugin/
 ### Key Components
 
 #### 1. `withZephyr()` Function
+
 - **Synchronous** configuration function that Next.js calls
 - Safely extracts Next.js build context (`isServer`, `nextRuntime`, `buildId`)
 - Adds the Zephyr webpack plugin without breaking Next.js internals
 
 #### 2. `ZeNextJSPlugin` Class
+
 - Handles **async initialization** of ZephyrEngine in webpack hooks
 - Manages **deployment hooks** using Next.js-compatible patterns
 - Supports **build context filtering** for selective deployment
 
 #### 3. **Async Initialization Pattern**
+
 ```typescript
 // Synchronous webpack config modification
 webpack: (config, context) => {
   return withZephyr()(config, context); // Returns immediately
-}
+};
 
 // Asynchronous initialization in webpack hooks
 compiler.hooks.beforeRun.tapAsync(pluginName, async (compiler, callback) => {
@@ -68,7 +72,8 @@ compiler.hooks.beforeRun.tapAsync(pluginName, async (compiler, callback) => {
 
 **Problem**: Next.js calls webpack functions synchronously, but ZephyrEngine.create() is async.
 
-**Solution**: 
+**Solution**:
+
 - Make `withZephyr()` synchronous, returning config immediately
 - Move async operations to webpack hooks (`beforeRun`, `watchRun`)
 - Initialize ZephyrEngine when webpack compilation starts
@@ -85,7 +90,11 @@ export function withZephyr() {
 // ✅ New approach (Next.js compatible)
 export function withZephyr() {
   return (config, context) => {
-    config.plugins.push(new ZeNextJSPlugin({ /* async init later */ }));
+    config.plugins.push(
+      new ZeNextJSPlugin({
+        /* async init later */
+      })
+    );
     return config; // Synchronous return
   };
 }
@@ -100,16 +109,26 @@ export function withZephyr() {
 ```typescript
 // ❌ Old approach (doesn't fire in Next.js)
 compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
-  compilation.hooks.processAssets.tapPromise({
-    stage: PROCESS_ASSETS_STAGE_REPORT
-  }, async (assets) => { /* deploy */ });
+  compilation.hooks.processAssets.tapPromise(
+    {
+      stage: PROCESS_ASSETS_STAGE_REPORT,
+    },
+    async (assets) => {
+      /* deploy */
+    }
+  );
 });
 
 // ✅ New approach (matches Next.js patterns)
 compiler.hooks.make.tap(pluginName, (compilation) => {
-  compilation.hooks.processAssets.tapPromise({
-    stage: PROCESS_ASSETS_STAGE_ADDITIONS
-  }, async (assets) => { /* deploy */ });
+  compilation.hooks.processAssets.tapPromise(
+    {
+      stage: PROCESS_ASSETS_STAGE_ADDITIONS,
+    },
+    async (assets) => {
+      /* deploy */
+    }
+  );
 });
 ```
 
@@ -117,7 +136,8 @@ compiler.hooks.make.tap(pluginName, (compilation) => {
 
 **Problem**: Next.js App Router requires specific entry structure that was being corrupted.
 
-**Solution**: 
+**Solution**:
+
 - Don't modify webpack entries in the main configuration function
 - Use webpack hooks for all async operations
 - Preserve Next.js's critical `main-app` entry structure
@@ -125,6 +145,7 @@ compiler.hooks.make.tap(pluginName, (compilation) => {
 ## Build Flow
 
 ### 1. **Configuration Phase** (Synchronous)
+
 ```
 Next.js calls webpack function
   ↓
@@ -136,6 +157,7 @@ Returns config immediately (sync)
 ```
 
 ### 2. **Initialization Phase** (Async in hooks)
+
 ```
 webpack starts compilation
   ↓
@@ -149,6 +171,7 @@ Deployment hooks configured
 ```
 
 ### 3. **Asset Processing Phase**
+
 ```
 webpack processes assets
   ↓
@@ -167,7 +190,7 @@ Deployment URLs generated
 interface ZephyrNextJSPluginOptions {
   // Optional flag to wait for index.html processing
   wait_for_index_html?: boolean;
-  
+
   // NextJS specific options
   deployOnClientOnly?: boolean; // If true, only deploy on client build
   preserveServerAssets?: boolean; // If true, preserve server build assets
@@ -177,6 +200,7 @@ interface ZephyrNextJSPluginOptions {
 ## Usage Examples
 
 ### Basic Usage
+
 ```javascript
 // next.config.js
 const { withZephyr } = require('zephyr-nextjs-plugin');
@@ -191,6 +215,7 @@ module.exports = nextConfig;
 ```
 
 ### Advanced Configuration
+
 ```javascript
 // next.config.js
 const { withZephyr } = require('zephyr-nextjs-plugin');
@@ -198,8 +223,8 @@ const { withZephyr } = require('zephyr-nextjs-plugin');
 const nextConfig = {
   webpack: (config, context) => {
     return withZephyr({
-      deployOnClientOnly: false,    // Deploy all build types
-      wait_for_index_html: true,    // Don't wait for index.html
+      deployOnClientOnly: false, // Deploy all build types
+      wait_for_index_html: true, // Don't wait for index.html
     })(config, context);
   },
   output: 'standalone', // For containerized deployments
@@ -209,6 +234,7 @@ module.exports = nextConfig;
 ```
 
 ### TypeScript Configuration
+
 ```typescript
 // next.config.ts
 import { withZephyr } from 'zephyr-nextjs-plugin';
@@ -236,7 +262,7 @@ ZEPHYR   Uploaded local snapshot in 183ms
 ZEPHYR   (8/8 assets uploaded in 258ms, 956.91kb)
 ZEPHYR   https://nestor-lopez-1938-nextjs-15-zephyr-packages-zephy-75851b8a2-ze.zephyrcloud.app
 
-# Edge Build (#1939)  
+# Edge Build (#1939)
 ZEPHYR   No assets to upload, skipping...
 ZEPHYR   https://nestor-lopez-1939-nextjs-15-zephyr-packages-zephy-4e34d42d1-ze.zephyrcloud.app
 

@@ -5,12 +5,14 @@ This guide helps you migrate from the existing `zephyr-nextjs-plugin` (webpack a
 ## Why Migrate?
 
 ### Current Webpack Plugin Issues
+
 - ❌ **Multiple uploads during build**: Uploads happen at different webpack compilation phases
 - ❌ **Fragile integration**: Relies on webpack internals that can change
 - ❌ **Incomplete capture**: May miss final build state and post-processing outputs
 - ❌ **Complex coordination**: Difficult to coordinate between client/server builds
 
 ### New Adapter Benefits
+
 - ✅ **Single snapshot upload**: Waits for complete build before uploading
 - ✅ **Official Next.js API**: Uses stable, documented Next.js interfaces
 - ✅ **Complete build capture**: Captures everything including post-processing
@@ -31,33 +33,38 @@ npm uninstall zephyr-nextjs-plugin
 ### 2. Update Next.js Configuration
 
 **Before (Webpack Plugin):**
+
 ```javascript
 // next.config.js
-const { withZephyr } = require('zephyr-nextjs-plugin')
+const { withZephyr } = require('zephyr-nextjs-plugin');
 
-module.exports = withZephyr({
-  reactStrictMode: true,
-  // other Next.js config
-}, {
-  orgId: process.env.ZEPHYR_ORG_ID,
-  projectId: process.env.ZEPHYR_PROJECT_ID,
-  // other Zephyr config
-})
+module.exports = withZephyr(
+  {
+    reactStrictMode: true,
+    // other Next.js config
+  },
+  {
+    orgId: process.env.ZEPHYR_ORG_ID,
+    projectId: process.env.ZEPHYR_PROJECT_ID,
+    // other Zephyr config
+  }
+);
 ```
 
 **After (Adapter):**
+
 ```javascript
 // next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    adapterPath: 'zephyr-nextjs-adapter'
+    adapterPath: 'zephyr-nextjs-adapter',
   },
   reactStrictMode: true,
   // other Next.js config
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
 ```
 
 ### 3. Simplified Configuration
@@ -65,6 +72,7 @@ module.exports = nextConfig
 **Good news**: You can remove most environment variables! The adapter auto-discovers everything from git and package.json, just like your other Zephyr plugins.
 
 **Before (Manual Configuration):**
+
 ```bash
 # Required
 ZEPHYR_ORG_ID=your-organization-id  # ❌ No longer needed
@@ -78,6 +86,7 @@ ZEPHYR_BUILD_ID=custom-build-id     # ❌ Auto-generated
 ```
 
 **After (Auto-Discovery):**
+
 ```bash
 # Only authentication is needed
 ZEPHYR_API_KEY=your-api-key
@@ -88,8 +97,9 @@ ZEPHYR_MODULE_FEDERATION=true  # If you want module federation
 ```
 
 **Auto-Discovered:**
+
 - ✅ **Organization & Project**: From git remote origin URL
-- ✅ **Package Name & Version**: From package.json  
+- ✅ **Package Name & Version**: From package.json
 - ✅ **Git Branch & Commit**: From current git state
 - ✅ **Build Environment**: From NODE_ENV
 - ✅ **Build ID**: Auto-generated with package info
@@ -97,15 +107,17 @@ ZEPHYR_MODULE_FEDERATION=true  # If you want module federation
 ### 4. Build Process Changes
 
 **Before:**
+
 ```bash
 npm run build
 # Multiple uploads during build:
 # 1. Static assets during webpack client build
-# 2. Server functions during webpack server build  
+# 2. Server functions during webpack server build
 # 3. Final manifest after Next.js post-processing
 ```
 
 **After:**
+
 ```bash
 npm run build
 # Single upload after complete build:
@@ -122,19 +134,19 @@ If you need custom behavior, create a custom adapter:
 
 ```javascript
 // zephyr.adapter.mjs
-import { createZephyrAdapter } from 'zephyr-nextjs-adapter'
+import { createZephyrAdapter } from 'zephyr-nextjs-adapter';
 
 export default createZephyrAdapter({
   enableDetailedLogging: true,
   customAssetFilter: (asset) => {
     // Custom filtering logic
-    return !asset.pathname.includes('/_error')
+    return !asset.pathname.includes('/_error');
   },
   customMetadata: {
     version: '1.0.0',
-    buildHash: process.env.BUILD_HASH
-  }
-})
+    buildHash: process.env.BUILD_HASH,
+  },
+});
 ```
 
 Then update your Next.js config:
@@ -143,20 +155,20 @@ Then update your Next.js config:
 // next.config.js
 module.exports = {
   experimental: {
-    adapterPath: './zephyr.adapter.mjs'
-  }
-}
+    adapterPath: './zephyr.adapter.mjs',
+  },
+};
 ```
 
 ### Environment-Specific Adapters
 
 ```javascript
 // zephyr.adapter.mjs
-import { 
-  createZephyrAdapter, 
-  createDevelopmentAdapter, 
+import {
+  createZephyrAdapter,
+  createDevelopmentAdapter,
   createProductionAdapter,
-  createCIAdapter 
+  createCIAdapter
 } from 'zephyr-nextjs-adapter'
 
 const isDevelopment = process.env.NODE_ENV === 'development'
@@ -185,15 +197,17 @@ cat .next/zephyr-snapshot-manifest.json
 ### 2. Compare Asset Counts
 
 **Webpack Plugin Output:**
+
 - Check previous build logs for asset counts
 - Multiple upload events with partial counts
 
 **Adapter Output:**
+
 ```bash
 # Look for this in build output:
 📦 Converted assets:
    - Static assets: 25
-   - Server functions: 8  
+   - Server functions: 8
    - Edge functions: 2
    - Pre-rendered pages: 0
    - Public assets: 3
@@ -203,10 +217,12 @@ cat .next/zephyr-snapshot-manifest.json
 ### 3. Timing Comparison
 
 **Before (Webpack Plugin):**
+
 - Uploads happen during compilation
 - Build may appear slower due to network I/O during webpack phases
 
 **After (Adapter):**
+
 - Uploads happen after build completes
 - Build completes faster, upload happens at end
 
@@ -215,10 +231,12 @@ cat .next/zephyr-snapshot-manifest.json
 ### Common Issues
 
 1. **"adapterPath not recognized"**
+
    - Ensure Next.js version supports experimental adapter API
    - Check Next.js version: `npm list next`
 
 2. **Build fails with adapter errors**
+
    - Check environment variables are set
    - Verify adapter file exists and exports default
 
@@ -239,6 +257,7 @@ ZEPHYR_DEBUG=true npm run build
 If you need to rollback to the webpack plugin:
 
 1. **Revert Next.js config:**
+
 ```diff
 module.exports = {
 -  experimental: {
@@ -248,11 +267,13 @@ module.exports = {
 ```
 
 2. **Reinstall webpack plugin:**
+
 ```bash
 npm install zephyr-nextjs-plugin
 ```
 
 3. **Restore webpack plugin config:**
+
 ```javascript
 const { withZephyr } = require('zephyr-nextjs-plugin')
 module.exports = withZephyr({...}, {...})

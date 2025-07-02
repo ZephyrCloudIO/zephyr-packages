@@ -1,21 +1,11 @@
 import type { Compiler } from 'webpack';
-import { ZephyrEngine, ZephyrError, logFn, zeBuildAssets } from 'zephyr-agent';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { ZephyrEngine, ZephyrError, logFn } from 'zephyr-agent';
 
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
-import {
-  detectAndStoreBaseHref,
-  logBuildSteps,
-  setupZeDeploy,
-  extractFederatedDependencyPairs,
-  makeCopyOfModuleFederationOptions,
-  mutWebpackFederatedRemotesConfig,
-} from 'zephyr-xpack-internal';
+import { detectAndStoreBaseHref, logBuildSteps } from 'zephyr-xpack-internal';
 
 import { NextJSServerFunctionExtractor } from './server-function-extractor';
 import { nextjsZephyrAgent } from './nextjs-upload-agent';
-import type { ZephyrServerAsset, ZephyrNextJSSnapshot } from '../types';
 
 const pluginName = 'ZeNextJSPlugin';
 
@@ -33,7 +23,7 @@ export interface ZephyrNextJSInternalPluginOptions {
   };
   // hacks
   wait_for_index_html?: boolean;
-  // NextJS specific options  
+  // NextJS specific options
   deployOnClientOnly?: boolean;
   preserveServerAssets?: boolean;
   // Additional fields for async initialization
@@ -43,46 +33,52 @@ export interface ZephyrNextJSInternalPluginOptions {
 
 export class ZeNextJSPlugin {
   _options: ZephyrNextJSInternalPluginOptions;
-  private _initialized: boolean = false;
-  private _deploymentSetup: boolean = false;
+  private _initialized = false;
+  private _deploymentSetup = false;
 
   constructor(options: Omit<ZephyrNextJSInternalPluginOptions, 'pluginName'>) {
     this._options = Object.assign({ pluginName }, options);
   }
 
   apply(compiler: Compiler): void {
-    const { isServer, nextRuntime } = this._options.buildContext;
-    
+    const { isServer } = this._options.buildContext;
+
     // Handle deployment for both server and client builds
-    console.log(`🔍 Setting up Zephyr deployment for ${isServer ? 'server' : 'client'} build`);
-    
+    console.log(
+      `🔍 Setting up Zephyr deployment for ${isServer ? 'server' : 'client'} build`
+    );
+
     // We need both builds:
     // - Server build: API routes, SSR functions, middleware, manifests
     // - Client build: Static assets, client-side bundles
-    
+
     // Initialize Zephyr asynchronously in webpack hooks to avoid blocking Next.js
-    compiler.hooks.beforeRun.tapAsync(pluginName, async (compiler, callback) => {
-      try {
-        if (!this._initialized && !this._options.zephyr_engine) {
-          await this.initializeZephyr();
+    compiler.hooks.beforeRun.tapAsync(pluginName, (compiler, callback) => {
+      (async () => {
+        try {
+          if (!this._initialized && !this._options.zephyr_engine) {
+            await this.initializeZephyr();
+          }
+          callback();
+        } catch (error) {
+          logFn('error', ZephyrError.format(error));
+          callback();
         }
-        callback();
-      } catch (error) {
-        logFn('error', ZephyrError.format(error));
-        callback();
-      }
+      })().catch(() => callback());
     });
 
-    compiler.hooks.watchRun.tapAsync(pluginName, async (compiler, callback) => {
-      try {
-        if (!this._initialized && !this._options.zephyr_engine) {
-          await this.initializeZephyr();
+    compiler.hooks.watchRun.tapAsync(pluginName, (compiler, callback) => {
+      (async () => {
+        try {
+          if (!this._initialized && !this._options.zephyr_engine) {
+            await this.initializeZephyr();
+          }
+          callback();
+        } catch (error) {
+          logFn('error', ZephyrError.format(error));
+          callback();
         }
-        callback();
-      } catch (error) {
-        logFn('error', ZephyrError.format(error));
-        callback();
-      }
+      })().catch(() => callback());
     });
 
     // Setup Zephyr deployment hooks when engine is ready
@@ -109,13 +105,19 @@ export class ZeNextJSPlugin {
       });
 
       // Resolve dependencies and update the config
-      const dependencyPairs = extractFederatedDependencyPairs(this._options.webpackConfig);
+      const dependencyPairs = extractFederatedDependencyPairs(
+        this._options.webpackConfig
+      );
       const resolved_dependency_pairs =
         await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
       // Mutate webpack federated remotes config
       if (this._options.webpackConfig) {
-        mutWebpackFederatedRemotesConfig(zephyr_engine, this._options.webpackConfig, resolved_dependency_pairs);
+        mutWebpackFederatedRemotesConfig(
+          zephyr_engine,
+          this._options.webpackConfig,
+          resolved_dependency_pairs
+        );
       }
 
       const mfConfig = makeCopyOfModuleFederationOptions(this._options.webpackConfig);
@@ -138,22 +140,22 @@ export class ZeNextJSPlugin {
 
     // Set output path for the zephyr engine
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
-    
+
     // Detect and store base href - this is safe for NextJS
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
-    
+
     // Create a valid options object for the internal functions
     const validOptions = {
       ...this._options,
       zephyr_engine: this._options.zephyr_engine as ZephyrEngine, // Type assertion since we checked above
     };
-    
+
     // Log build steps with NextJS context
     logBuildSteps(validOptions, compiler);
-    
+
     // Setup deployment with NextJS-aware handling including server functions
     this.setupNextJSDeployment(validOptions, compiler);
-    
+
     this._deploymentSetup = true;
     console.log('🔧 Zephyr deployment hooks configured for Next.js');
   }
@@ -223,41 +225,43 @@ export class ZeNextJSPlugin {
     try {
       const { buildContext } = options;
       const outputPath = compiler.outputPath;
-      
+
       console.log('🔍 Processing NextJS server functions...');
-      
+
       // Create server function extractor
       const extractor = new NextJSServerFunctionExtractor(
         outputPath,
         buildContext.buildId,
         options
       );
-      
+
       // Extract server functions
-      const { serverFunctions, routeManifest, buildManifest } = 
+      const { serverFunctions, routeManifest, buildManifest } =
         await extractor.extractServerFunctions();
-      
+
       if (serverFunctions.length === 0) {
         console.log('ℹ️  No server functions found to deploy');
         return;
       }
-      
+
       console.log(`📦 Found ${serverFunctions.length} server functions to deploy`);
-      
+
       // Process server functions similar to static assets
       for (const serverFunction of serverFunctions) {
-        console.log(`  📄 ${serverFunction.type}: ${serverFunction.path} -> ${serverFunction.routes.join(', ')}`);
+        console.log(
+          `  📄 ${serverFunction.type}: ${serverFunction.path} -> ${serverFunction.routes.join(', ')}`
+        );
       }
-      
+
       // Store server functions as metadata in the engine
       // Note: This extends the buildProperties with Next.js-specific data
       const buildProps = options.zephyr_engine.buildProperties as any;
-      
+
       if (!buildProps.serverFunctions) {
         buildProps.serverFunctions = [];
       }
       buildProps.serverFunctions.push(...serverFunctions);
-      
+
       // Store manifests
       if (routeManifest) {
         buildProps.routeManifest = routeManifest;
@@ -265,9 +269,8 @@ export class ZeNextJSPlugin {
       if (buildManifest) {
         buildProps.buildManifest = buildManifest;
       }
-      
+
       console.log('✅ Server functions processed successfully');
-      
     } catch (error) {
       console.error('❌ Error processing server functions:', error);
       throw error;

@@ -1,4 +1,4 @@
-import { onDeploymentDone } from '../lifecycle-events/index';
+// import { onDeploymentDone } from '../lifecycle-events/index';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
@@ -12,11 +12,11 @@ interface DeployPluginOptions {
 }
 
 interface DeployCompiler {
-  webpack: { 
-    Compilation: { 
+  webpack: {
+    Compilation: {
       PROCESS_ASSETS_STAGE_REPORT: number;
       PROCESS_ASSETS_STAGE_ADDITIONS: number;
-    } 
+    };
   };
   hooks: {
     thisCompilation: {

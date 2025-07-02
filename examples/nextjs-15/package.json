@@ -17,8 +17,6 @@
     "@types/node": "^22.10.1",
     "@types/react": "^18.3.12",
     "typescript": "^5.7.2",
-    "zephyr-nextjs-adapter": "workspace:*",
-    "zephyr-nextjs-plugin": "workspace:*",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-nextjs-adapter": "workspace:*"
   }
 }

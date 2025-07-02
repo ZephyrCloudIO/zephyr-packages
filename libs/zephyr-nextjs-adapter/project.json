@@ -8,11 +8,18 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/libs/zephyr-nextjs-adapter",
-        "main": "libs/zephyr-nextjs-adapter/src/index.ts",
+        "rootDir": "libs/zephyr-nextjs-adapter/src",
+        "outputPath": "libs/zephyr-nextjs-adapter/dist",
         "tsConfig": "libs/zephyr-nextjs-adapter/tsconfig.lib.json",
-        "assets": ["libs/zephyr-nextjs-adapter/*.md"]
+        "main": "libs/zephyr-nextjs-adapter/src/index.ts"
       }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-nextjs-adapter {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-nextjs-adapter@$(npm view zephyr-nextjs-adapter@next version) latest"
     },
     "lint": {
       "executor": "@nx/eslint:lint",

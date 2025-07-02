@@ -13,7 +13,7 @@ import type {
   ManifestRewriteRoute,
   AdapterOutputs,
 } from './types';
-import { getZephyrConfig, createLogger } from './utils';
+import { getZephyrConfig, createLogger, transformRoutes } from './utils';
 import { convertToZephyrAssets, createSnapshot, uploadSnapshot } from './core';
 
 /** Default Zephyr Next.js Adapter */
@@ -22,20 +22,22 @@ const zephyrNextJSAdapter: NextAdapter = {
 
   /** Modify Next.js configuration before build starts */
   modifyConfig: async (config: NextConfigComplete) => {
-    const log = createLogger('modifyConfig');
-    log.info('🚀 Zephyr Next.js Adapter: Configuring Next.js for Zephyr deployment...');
+    const log = createLogger();
+
+    // Use only Zephyr debug logging - no plain console outputs
+    log.debug.init('Next.js adapter configuration started');
 
     // Auto-discover Zephyr configuration using same approach as other plugins
     const zephyrConfig = await getZephyrConfig();
 
-    log.info('⚙️  Auto-discovered Zephyr Configuration:');
-    log.info(`   - Organization: ${zephyrConfig.orgId || 'Auto-detected from git'}`);
-    log.info(`   - Project: ${zephyrConfig.projectId || 'Auto-detected from git'}`);
-    log.info(
-      `   - Package: ${zephyrConfig.packageInfo?.name}@${zephyrConfig.packageInfo?.version}`
-    );
-    log.info(`   - Git Branch: ${zephyrConfig.gitInfo?.branch}`);
-    log.info(`   - Environment: ${zephyrConfig.environment}`);
+    // Log configuration details using debug categories
+    log.debug.config('Auto-discovered Zephyr Configuration', {
+      organization: zephyrConfig.orgId,
+      project: zephyrConfig.projectId,
+      package: `${zephyrConfig.packageInfo?.name}@${zephyrConfig.packageInfo?.version}`,
+      branch: zephyrConfig.gitInfo?.branch,
+      environment: zephyrConfig.environment,
+    });
 
     // Apply Zephyr-specific Next.js configuration
     config.experimental = config.experimental || {};
@@ -45,7 +47,7 @@ const zephyrNextJSAdapter: NextAdapter = {
 
     // Configure for module federation if enabled
     if (zephyrConfig.enableModuleFederation) {
-      log.info('🔗 Enabling Module Federation support');
+      log.debug.misc('Enabling Module Federation support');
       config.experimental.esmExternals = true;
       config.experimental.serverComponentsExternalPackages = [
         ...(config.experimental.serverComponentsExternalPackages || []),
@@ -60,18 +62,19 @@ const zephyrNextJSAdapter: NextAdapter = {
       const originalWebpack = config.webpack;
       config.webpack = (webpackConfig: unknown, options: unknown) => {
         // Call original webpack config first
-        const result = originalWebpack(webpackConfig, options) as any;
+        const result = originalWebpack(webpackConfig, options) as Record<string, unknown>;
 
         // Remove any existing Zephyr webpack plugins
-        if (result.plugins) {
-          const originalLength = result.plugins.length;
-          result.plugins = result.plugins.filter(
+        const plugins = result['plugins'] as any[];
+        if (plugins && Array.isArray(plugins)) {
+          const originalLength = plugins.length;
+          result['plugins'] = plugins.filter(
             (plugin: { constructor: { name: string } }) =>
               !plugin.constructor.name.includes('Zephyr')
           );
 
-          if (result.plugins.length < originalLength) {
-            log.info('🔧 Removed Zephyr webpack plugins (using adapter instead)');
+          if ((result['plugins'] as any[]).length < originalLength) {
+            log.debug.misc('Removed conflicting Zephyr webpack plugins');
           }
         }
 
@@ -79,7 +82,7 @@ const zephyrNextJSAdapter: NextAdapter = {
       };
     }
 
-    log.info('✅ Zephyr Next.js Adapter: Configuration completed');
+    log.debug.init('Next.js adapter configuration completed');
     return config;
   },
 
@@ -100,61 +103,16 @@ const zephyrNextJSAdapter: NextAdapter = {
     };
     outputs: AdapterOutputs;
   }) => {
-    const log = createLogger('onBuildComplete');
-    log.info('🎯 Zephyr Next.js Adapter: Build completed, creating final snapshot...');
-    log.info(`📊 Total outputs to process: ${ctx.outputs.length}`);
+    const log = createLogger();
+    log.debug.init('Next.js build completed, creating Zephyr snapshot');
+    log.debug.snapshot('Processing outputs', { count: ctx.outputs.length });
 
     try {
-      // Convert the Next.js adapter context to our legacy BuildContext for compatibility
+      // Convert the Next.js adapter context to our legacy BuildContext using functional transformation
       const legacyBuildContext = {
-        routes: {
-          headers: (ctx.routes.headers || []).map((route) => ({
-            source: route.source || '',
-            headers:
-              route.headers && Array.isArray(route.headers)
-                ? route.headers.reduce(
-                    (acc, h) => ({ ...acc, [h.key]: h.value }),
-                    {} as Record<string, string>
-                  )
-                : route.headers || {},
-            has: route.has,
-            missing: route.missing,
-          })),
-          redirects: (ctx.routes.redirects || []).map((route) => ({
-            source: route.source || '',
-            destination: route.destination || '',
-            permanent: route.permanent,
-            statusCode: route.statusCode,
-            has: route.has,
-            missing: route.missing,
-          })),
-          rewrites: {
-            beforeFiles: (ctx.routes.rewrites?.beforeFiles || []).map((route) => ({
-              source: route.source || '',
-              destination: route.destination || '',
-              has: route.has,
-              missing: route.missing,
-            })),
-            afterFiles: (ctx.routes.rewrites?.afterFiles || []).map((route) => ({
-              source: route.source || '',
-              destination: route.destination || '',
-              has: route.has,
-              missing: route.missing,
-            })),
-            fallback: (ctx.routes.rewrites?.fallback || []).map((route) => ({
-              source: route.source || '',
-              destination: route.destination || '',
-              has: route.has,
-              missing: route.missing,
-            })),
-          },
-          dynamicRoutes: (ctx.routes.dynamicRoutes || []).map(() => ({
-            page: '',
-            regex: '',
-          })),
-        },
+        routes: transformRoutes(ctx.routes),
         outputs: ctx.outputs,
-      };
+      } as any;
 
       // Convert Next.js adapter outputs to Zephyr asset format
       const zephyrAssets = await convertToZephyrAssets(legacyBuildContext, log);
@@ -165,11 +123,9 @@ const zephyrNextJSAdapter: NextAdapter = {
       // Upload the snapshot to Zephyr Cloud
       await uploadSnapshot(snapshot, log);
 
-      log.info(
-        '✨ Zephyr Next.js Adapter: Single snapshot created and uploaded successfully!'
-      );
+      log.debug.upload('Snapshot created and uploaded successfully');
     } catch (error) {
-      log.error('❌ Zephyr Next.js Adapter: Failed to create snapshot:', error);
+      log.error('Failed to create Zephyr snapshot', error);
       throw error;
     }
   },

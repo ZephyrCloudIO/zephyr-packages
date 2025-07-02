@@ -15,10 +15,25 @@ jest.mock('./utils', () => ({
     enableEdgeWorkers: true,
   })),
   createLogger: jest.fn(() => ({
-    info: jest.fn(),
-    warn: jest.fn(),
+    debug: {
+      init: jest.fn(),
+      config: jest.fn(),
+      misc: jest.fn(),
+      app: jest.fn(),
+      upload: jest.fn(),
+      snapshot: jest.fn(),
+    },
     error: jest.fn(),
-    debug: jest.fn(),
+  })),
+  transformRoutes: jest.fn(() => ({
+    dynamicRoutes: [],
+    headers: [],
+    redirects: [],
+    rewrites: {
+      beforeFiles: [],
+      afterFiles: [],
+      fallback: [],
+    },
   })),
 }));
 

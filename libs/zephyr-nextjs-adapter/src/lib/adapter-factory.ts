@@ -26,27 +26,26 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
     name: adapterName,
 
     modifyConfig: async (nextConfig: NextConfigComplete) => {
-      const log = createLogger('modifyConfig');
+      const log = createLogger();
 
       // Call custom hook if provided
       if (config.onBuildStart) {
         await config.onBuildStart();
       }
 
-      log.info(`🚀 ${adapterName}: Configuring Next.js for Zephyr deployment...`);
+      log.debug.init(`${adapterName}: Configuring Next.js for Zephyr deployment`);
 
       // Auto-discover Zephyr configuration
       const zephyrConfig = await getZephyrConfig();
 
       if (config.enableDetailedLogging) {
-        log.info('⚙️  Auto-discovered Zephyr Configuration:');
-        log.info(`   - Organization: ${zephyrConfig.orgId || 'Auto-detected from git'}`);
-        log.info(`   - Project: ${zephyrConfig.projectId || 'Auto-detected from git'}`);
-        log.info(
-          `   - Package: ${zephyrConfig.packageInfo?.name}@${zephyrConfig.packageInfo?.version}`
-        );
-        log.info(`   - Git Branch: ${zephyrConfig.gitInfo?.branch}`);
-        log.info(`   - Environment: ${zephyrConfig.environment}`);
+        log.debug.config('Auto-discovered Zephyr Configuration:', {
+          organization: zephyrConfig.orgId || 'Auto-detected from git',
+          project: zephyrConfig.projectId || 'Auto-detected from git',
+          package: `${zephyrConfig.packageInfo?.name}@${zephyrConfig.packageInfo?.version}`,
+          gitBranch: zephyrConfig.gitInfo?.branch,
+          environment: zephyrConfig.environment,
+        });
       }
 
       // Apply standard Zephyr configuration
@@ -55,7 +54,7 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
 
       // Configure for module federation if enabled
       if (zephyrConfig.enableModuleFederation) {
-        log.info('🔗 Enabling Module Federation support');
+        log.debug.config('Enabling Module Federation support');
         nextConfig.experimental.esmExternals = true;
         nextConfig.experimental.serverComponentsExternalPackages = [
           ...(nextConfig.experimental.serverComponentsExternalPackages || []),
@@ -79,7 +78,7 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
             );
 
             if (result.plugins.length < originalLength) {
-              log.info('🔧 Removed conflicting Zephyr webpack plugins');
+              log.debug.config('Removed conflicting Zephyr webpack plugins');
             }
           }
 
@@ -87,7 +86,7 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
         };
       }
 
-      log.info(`✅ ${adapterName}: Configuration completed`);
+      log.debug.init(`${adapterName}: Configuration completed`);
       return nextConfig;
     },
 
@@ -104,10 +103,10 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
       };
       outputs: AdapterOutputs;
     }) => {
-      const log = createLogger('onBuildComplete');
+      const log = createLogger();
 
-      log.info(`🎯 ${adapterName}: Build completed, processing outputs...`);
-      log.info(`📊 Total outputs to process: ${ctx.outputs.length}`);
+      log.debug.init(`${adapterName}: Build completed, processing outputs...`);
+      log.debug.misc(`Total outputs to process: ${ctx.outputs.length}`);
 
       try {
         // Apply custom asset filtering if provided
@@ -118,8 +117,8 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
           filteredOutputs = filteredOutputs.filter(config.customAssetFilter);
 
           if (filteredOutputs.length < originalCount) {
-            log.info(
-              `🔍 Filtered ${originalCount - filteredOutputs.length} assets using custom filter`
+            log.debug.misc(
+              `Filtered ${originalCount - filteredOutputs.length} assets using custom filter`
             );
           }
         }
@@ -136,8 +135,8 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
           );
 
           if (filteredOutputs.length < originalCount) {
-            log.info(
-              `🚫 Excluded ${originalCount - filteredOutputs.length} assets using exclude patterns`
+            log.debug.misc(
+              `Excluded ${originalCount - filteredOutputs.length} assets using exclude patterns`
             );
           }
         }
@@ -196,7 +195,7 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
         if (config.customMetadata) {
           (snapshot as unknown as Record<string, unknown>)['customMetadata'] =
             config.customMetadata;
-          log.info('📋 Added custom metadata to snapshot');
+          log.debug.snapshot('Added custom metadata to snapshot');
         }
 
         // Call custom hook before upload if provided
@@ -229,12 +228,12 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
         }
 
         if (uploadResult.success) {
-          log.info(`✨ ${adapterName}: Snapshot created and uploaded successfully!`);
+          log.debug.upload(`${adapterName}: Snapshot created and uploaded successfully!`);
         } else {
-          log.warn(`⚠️  ${adapterName}: Upload completed with warnings`);
-          if (uploadResult.errors) {
-            uploadResult.errors.forEach((error) => log.warn(`   - ${error}`));
-          }
+          log.error(
+            `${adapterName}: Upload completed with warnings`,
+            uploadResult.errors
+          );
         }
       } catch (error) {
         log.error(`❌ ${adapterName}: Failed to process build:`, error);
@@ -248,9 +247,9 @@ export function createZephyrAdapter(config: ZephyrAdapterConfig = {}): NextAdapt
 export function createDevelopmentAdapter(): NextAdapter {
   return createZephyrAdapter({
     onBuildComplete: async (ctx: BuildContext) => {
-      const log = createLogger('development');
-      log.info('🏗️  Development mode - skipping Zephyr upload');
-      log.info(`📊 Build completed with ${ctx.outputs.length} outputs`);
+      const log = createLogger();
+      log.debug.init('Development mode - skipping Zephyr upload');
+      log.debug.misc(`Build completed with ${ctx.outputs.length} outputs`);
 
       // Just log the outputs for debugging
       const outputsByType = ctx.outputs.reduce(
@@ -261,10 +260,7 @@ export function createDevelopmentAdapter(): NextAdapter {
         {} as Record<string, number>
       );
 
-      log.info('📦 Output summary:');
-      Object.entries(outputsByType).forEach(([type, count]) => {
-        log.info(`   - ${type}: ${count}`);
-      });
+      log.debug.misc('Output summary:', outputsByType);
     },
   });
 }

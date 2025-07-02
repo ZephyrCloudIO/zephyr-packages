@@ -50,7 +50,8 @@
     "jsonc-eslint-parser": "^2.4.0",
     "nx": "21.1.2",
     "nyc": "^17.1.0",
-    "serve": "^14.2.4"
+    "serve": "^14.2.4",
+    "ts-jest": "^29.4.0"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^8.35.1",

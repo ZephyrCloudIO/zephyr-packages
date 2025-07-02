@@ -47,24 +47,60 @@ export async function getZephyrConfig(): Promise<ZephyrConfig> {
   }
 }
 
-/** Create a logger with a specific context */
-export function createLogger(context: string) {
-  const isDebug =
-    process.env['ZEPHYR_DEBUG'] === 'true' || process.env['DEBUG']?.includes('zephyr');
+// Dynamic import for zephyr-agent to avoid static imports of lazy-loaded libraries
+
+/**
+ * Create a logger using only Zephyr's debug logging system No plain console outputs -
+ * only structured Zephyr logs
+ */
+export function createLogger() {
+  // Create no-op fallback functions if zephyr-agent is not available
+  const noop = () => {
+    /* intentionally empty */
+  };
+
+  let ze_log: Record<string, (...args: unknown[]) => void> = {
+    init: noop,
+    config: noop,
+    misc: noop,
+    app: noop,
+    upload: noop,
+    snapshot: noop,
+  };
+  let ZephyrError: { format: (e: unknown) => unknown } = { format: (e: unknown) => e };
+
+  // Try to load zephyr-agent synchronously if available
+  try {
+    const agent = require('zephyr-agent');
+    ze_log = agent.ze_log;
+    ZephyrError = agent.ZephyrError;
+  } catch {
+    // Fallback to console for development
+    ze_log = {
+      init: console.log,
+      config: console.log,
+      misc: console.log,
+      app: console.log,
+      upload: console.log,
+      snapshot: console.log,
+    };
+  }
 
   return {
-    info: (message: string, ...args: unknown[]) => {
-      console.log(message, ...args);
+    debug: {
+      init: (message: string, ...args: unknown[]) => ze_log['init'](message, ...args),
+      config: (message: string, ...args: unknown[]) => ze_log['config'](message, ...args),
+      misc: (message: string, ...args: unknown[]) => ze_log['misc'](message, ...args),
+      app: (message: string, ...args: unknown[]) => ze_log['app'](message, ...args),
+      upload: (message: string, ...args: unknown[]) => ze_log['upload'](message, ...args),
+      snapshot: (message: string, ...args: unknown[]) =>
+        ze_log['snapshot'](message, ...args),
     },
-    warn: (message: string, ...args: unknown[]) => {
-      console.warn(message, ...args);
-    },
-    error: (message: string, ...args: unknown[]) => {
-      console.error(message, ...args);
-    },
-    debug: (message: string, ...args: unknown[]) => {
-      if (isDebug) {
-        console.log(`[DEBUG:${context}]`, message, ...args);
+    error: (message: string, error?: unknown) => {
+      if (error) {
+        ze_log['misc'](`ERROR: ${message}`, ZephyrError.format(error));
+      } else {
+        ze_log['misc'](`ERROR: ${message}`);
       }
     },
   };
@@ -93,6 +129,90 @@ export function determineDeploymentTarget(
       return 'server';
   }
 }
+
+// Simple functional programming helpers
+
+/** Convert array of tuples to Map */
+export const toMap = <T>(items: [string, T][]): Map<string, T> => new Map(items);
+
+// Route transformation utilities
+
+/** Ensure array exists */
+export const ensureArray = <T>(items: T[] | undefined): T[] => items || [];
+
+/** Transform headers from Next.js format to legacy format */
+export const transformHeaders = (headers: unknown): Record<string, string> => {
+  if (!headers) return {};
+  if (Array.isArray(headers)) {
+    return headers.reduce((acc, h) => ({ ...acc, [h.key]: h.value }), {});
+  }
+  return headers as Record<string, string>;
+};
+
+/** Create header route transformer */
+export const createHeaderRouteTransform = (route: unknown) => {
+  const r = route as Record<string, unknown>;
+  return {
+    source: (r['source'] as string) || '',
+    headers: transformHeaders(r['headers']),
+    has: r['has'],
+    missing: r['missing'],
+  };
+};
+
+/** Create redirect route transformer */
+export const createRedirectRouteTransform = (route: unknown) => {
+  const r = route as Record<string, unknown>;
+  return {
+    source: (r['source'] as string) || '',
+    destination: (r['destination'] as string) || '',
+    permanent: r['permanent'],
+    statusCode: r['statusCode'],
+    has: r['has'],
+    missing: r['missing'],
+  };
+};
+
+/** Create rewrite route transformer */
+export const createRewriteRouteTransform = (route: unknown) => {
+  const r = route as Record<string, unknown>;
+  return {
+    source: (r['source'] as string) || '',
+    destination: (r['destination'] as string) || '',
+    has: r['has'],
+    missing: r['missing'],
+  };
+};
+
+/** Create dynamic route transformer */
+export const createDynamicRouteTransform = () => ({
+  page: '',
+  regex: '',
+});
+
+/** Transform routes using functional composition */
+export const transformRoutes = (routes: unknown) => {
+  const r = routes as Record<string, unknown>;
+  const rewrites = r['rewrites'] as Record<string, unknown> | undefined;
+  return {
+    headers: ensureArray(r['headers'] as unknown[]).map(createHeaderRouteTransform),
+    redirects: ensureArray(r['redirects'] as unknown[]).map(createRedirectRouteTransform),
+    rewrites: {
+      beforeFiles: ensureArray(rewrites?.['beforeFiles'] as unknown[]).map(
+        createRewriteRouteTransform
+      ),
+      afterFiles: ensureArray(rewrites?.['afterFiles'] as unknown[]).map(
+        createRewriteRouteTransform
+      ),
+      fallback: ensureArray(rewrites?.['fallback'] as unknown[]).map(
+        createRewriteRouteTransform
+      ),
+    },
+    dynamicRoutes: ensureArray(r['dynamicRoutes'] as unknown[]).map(
+      createDynamicRouteTransform
+    ),
+  };
+};
 
 /** Check if an output is compatible with module federation */
 export function isModuleFederationCompatible(output: AdapterOutput): boolean {

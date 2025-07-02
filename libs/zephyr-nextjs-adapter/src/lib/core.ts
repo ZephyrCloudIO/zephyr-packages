@@ -21,76 +21,107 @@ import {
   getZephyrConfig,
   validateZephyrConfig,
   delay,
+  toMap,
 } from './utils';
 import type { createLogger } from './utils';
 
-/** Convert Next.js adapter outputs to Zephyr asset format */
+// Pure transformation functions for functional asset processing
+
+/** Transform an AdapterOutput to ZephyrAssetInfo */
+const transformToAssetInfo = (output: Record<string, unknown>): ZephyrAssetInfo => ({
+  id: output['id'] as string,
+  pathname: output['pathname'] as string,
+  filePath: output['filePath'] as string,
+  runtime: output['runtime'] as 'nodejs' | 'edge' | undefined,
+  type: output['type'] as any,
+  config: output['config'] as Record<string, unknown>,
+  assets: (output['assets'] as Record<string, string>) || {},
+  fallbackID: output['fallbackID'] as string,
+});
+
+/** Categorize asset by deployment target */
+const categorizeAsset = (output: Record<string, unknown>): [string, ZephyrAssetInfo] => {
+  const assetInfo = transformToAssetInfo(output);
+  const deploymentTarget = determineDeploymentTarget(output as any);
+
+  // Determine the specific category
+  let category: string;
+  switch (deploymentTarget) {
+    case 'cdn':
+      category = isPublicAsset(output as any) ? 'publicAssets' : 'staticAssets';
+      break;
+    case 'edge':
+      category = 'edgeFunctions';
+      break;
+    case 'server':
+      category = 'serverFunctions';
+      break;
+    default:
+      category = 'manifests';
+  }
+
+  return [category, assetInfo];
+};
+
+/** Group categorized assets into ZephyrAssets structure */
+const groupAssetsByCategory = (
+  categorizedAssets: [string, ZephyrAssetInfo][]
+): ZephyrAssets => {
+  const grouped = categorizedAssets.reduce(
+    (acc, [category, asset]) => {
+      if (!acc[category]) acc[category] = [];
+      acc[category].push([asset.id, asset] as [string, ZephyrAssetInfo]);
+      return acc;
+    },
+    {} as Record<string, [string, ZephyrAssetInfo][]>
+  );
+
+  return {
+    staticAssets: toMap(grouped['staticAssets'] || []),
+    serverFunctions: toMap(grouped['serverFunctions'] || []),
+    edgeFunctions: toMap(grouped['edgeFunctions'] || []),
+    prerenderedPages: toMap(grouped['prerenderedPages'] || []),
+    manifests: toMap(grouped['manifests'] || []),
+    publicAssets: toMap(grouped['publicAssets'] || []),
+  };
+};
+
+/** Convert Next.js adapter outputs to Zephyr asset format using functional pipeline */
 export async function convertToZephyrAssets(
   ctx: BuildContext,
   log: ReturnType<typeof createLogger>
 ): Promise<ZephyrAssets> {
-  log.info('🔄 Converting Next.js outputs to Zephyr asset format...');
+  log.debug.init('Converting Next.js outputs to Zephyr asset format');
 
-  const zephyrAssets: ZephyrAssets = {
-    staticAssets: new Map(),
-    serverFunctions: new Map(),
-    edgeFunctions: new Map(),
-    prerenderedPages: new Map(),
-    manifests: new Map(),
-    publicAssets: new Map(),
-  };
+  // Apply functional transformation step by step for type safety
+  const validOutputs = ctx.outputs || [];
+  const categorizedAssets = validOutputs.map((output) =>
+    categorizeAsset(output as Record<string, unknown>)
+  );
+  const zephyrAssets = groupAssetsByCategory(categorizedAssets);
 
-  // Process each output based on its type and deployment target
-  for (const output of ctx.outputs || []) {
-    const assetInfo: ZephyrAssetInfo = {
-      id: output.id,
-      pathname: output.pathname,
-      filePath: output.filePath,
-      runtime: output.runtime,
-      type: output.type,
-      config: output.config,
-      assets: output.assets || {},
-      fallbackID: output.fallbackID,
-    };
+  // Handle prerendered pages separately (functional approach)
+  const prerenderedAssets = (ctx.outputs || [])
+    .filter((output) => output.fallbackID)
+    .map(
+      (output) =>
+        [output.id, transformToAssetInfo(output as Record<string, unknown>)] as [
+          string,
+          ZephyrAssetInfo,
+        ]
+    );
 
-    const deploymentTarget = determineDeploymentTarget(output);
+  zephyrAssets.prerenderedPages = toMap(prerenderedAssets);
 
-    // Categorize based on deployment target and asset type
-    switch (deploymentTarget) {
-      case 'cdn':
-        if (isPublicAsset(output)) {
-          zephyrAssets.publicAssets.set(output.id, assetInfo);
-        } else {
-          zephyrAssets.staticAssets.set(output.id, assetInfo);
-        }
-        break;
-
-      case 'edge':
-        zephyrAssets.edgeFunctions.set(output.id, assetInfo);
-        break;
-
-      case 'server':
-        zephyrAssets.serverFunctions.set(output.id, assetInfo);
-        break;
-
-      default:
-        log.warn(`⚠️  Unknown deployment target for ${output.id}, treating as manifest`);
-        zephyrAssets.manifests.set(output.id, assetInfo);
-    }
-
-    // Handle prerendered pages (those with fallback IDs)
-    if (output.fallbackID) {
-      zephyrAssets.prerenderedPages.set(output.id, assetInfo);
-    }
-  }
-
-  log.info(`📦 Converted assets:`);
-  log.info(`   - Static assets: ${zephyrAssets.staticAssets.size}`);
-  log.info(`   - Server functions: ${zephyrAssets.serverFunctions.size}`);
-  log.info(`   - Edge functions: ${zephyrAssets.edgeFunctions.size}`);
-  log.info(`   - Pre-rendered pages: ${zephyrAssets.prerenderedPages.size}`);
-  log.info(`   - Public assets: ${zephyrAssets.publicAssets.size}`);
-  log.info(`   - Manifests: ${zephyrAssets.manifests.size}`);
+  // Log results with structured information using debug categories
+  log.debug.misc('Converted assets', {
+    staticAssets: zephyrAssets.staticAssets.size,
+    serverFunctions: zephyrAssets.serverFunctions.size,
+    edgeFunctions: zephyrAssets.edgeFunctions.size,
+    prerenderedPages: zephyrAssets.prerenderedPages.size,
+    publicAssets: zephyrAssets.publicAssets.size,
+    manifests: zephyrAssets.manifests.size,
+  });
 
   return zephyrAssets;
 }
@@ -101,7 +132,7 @@ export async function createSnapshot(
   ctx: BuildContext,
   log: ReturnType<typeof createLogger>
 ): Promise<ZephyrSnapshot> {
-  log.info('📸 Creating Zephyr snapshot...');
+  log.debug.snapshot('Creating Zephyr snapshot');
 
   const zephyrConfig = await getZephyrConfig();
 
@@ -162,7 +193,7 @@ export async function createSnapshot(
     },
   };
 
-  log.info(`📸 Snapshot created with ID: ${snapshot.id}`);
+  log.debug.snapshot(`Snapshot created with ID: ${snapshot.id}`);
   return snapshot;
 }
 
@@ -171,7 +202,7 @@ export async function uploadSnapshot(
   snapshot: ZephyrSnapshot,
   log: ReturnType<typeof createLogger>
 ): Promise<UploadResult> {
-  log.info('☁️  Uploading snapshot to Zephyr Cloud...');
+  log.debug.upload('Uploading snapshot to Zephyr Cloud');
 
   // Try to upload using ZephyrEngine first (it handles its own authentication)
   const uploadViaZephyrAgent = await tryZephyrAgentUpload(snapshot, log);
@@ -186,9 +217,11 @@ export async function uploadSnapshot(
   // Only validate for our fallback upload - ZephyrEngine handles its own auth
   const validation = validateZephyrConfig(zephyrConfig);
   if (!validation.valid) {
-    log.warn('⚠️  Missing required Zephyr configuration for fallback upload:');
-    validation.errors.forEach((error) => log.warn(`   - ${error}`));
-    log.warn('⚠️  Skipping upload - set environment variables and try again');
+    log.debug.config(
+      'Missing required Zephyr configuration for fallback upload:',
+      validation.errors
+    );
+    log.debug.misc('Skipping upload - set environment variables and try again');
 
     // Save snapshot locally even if upload is skipped
     await saveSnapshotManifest(snapshot, log);
@@ -227,7 +260,7 @@ async function tryZephyrAgentUpload(
   log: ReturnType<typeof createLogger>
 ): Promise<UploadResult> {
   try {
-    log.info('🔧 Attempting to use existing Zephyr Agent infrastructure...');
+    log.debug.init('Attempting to use existing Zephyr Agent infrastructure');
 
     // Import proper zephyr-agent functions
     const { ZephyrEngine, buildAssetsMap, zeBuildDashData } = await import(
@@ -237,7 +270,7 @@ async function tryZephyrAgentUpload(
     const path = await import('path');
 
     // Create ZephyrEngine instance using proper pattern
-    log.info('🔌 Creating ZephyrEngine instance...');
+    log.debug.init('Creating ZephyrEngine instance');
     const zephyrEngine = await ZephyrEngine.create({
       context: process.cwd(),
       builder: 'unknown', // NextJS adapter doesn't fit standard builder types
@@ -246,7 +279,7 @@ async function tryZephyrAgentUpload(
     // Start new build (following the pattern from other plugins)
     await zephyrEngine.start_new_build();
 
-    log.info('🔄 Converting Next.js assets to Zephyr format...');
+    log.debug.upload('Converting Next.js assets to Zephyr format');
 
     // Build assets map using the actual Next.js build outputs
     const standaloneDir = path.join(process.cwd(), '.next/standalone');
@@ -311,10 +344,10 @@ async function tryZephyrAgentUpload(
       }
     }
 
-    log.info(`📋 Found ${Object.keys(assets).length} assets to upload`);
+    log.debug.upload(`Found ${Object.keys(assets).length} assets to upload`);
 
     if (Object.keys(assets).length === 0) {
-      log.warn('⚠️  No assets found to upload');
+      log.debug.misc('No assets found to upload');
       return {
         success: false,
         buildId: snapshot.id,
@@ -332,7 +365,7 @@ async function tryZephyrAgentUpload(
     );
 
     // Use zeBuildDashData to create proper build stats (instead of our custom function)
-    log.info('📊 Creating build stats using zephyr-agent...');
+    log.debug.upload('Creating build stats using zephyr-agent');
     const buildStats = await zeBuildDashData(zephyrEngine);
 
     // Enhance build stats with Next.js specific metadata
@@ -353,7 +386,7 @@ async function tryZephyrAgentUpload(
       type: 'nextjs',
     };
 
-    log.info('📤 Uploading via ZephyrEngine.upload_assets()...');
+    log.debug.upload('Uploading via ZephyrEngine.upload_assets()');
 
     // Use existing upload infrastructure with proper build stats
     await zephyrEngine.upload_assets({
@@ -364,8 +397,8 @@ async function tryZephyrAgentUpload(
     // Finish build (following the pattern from other plugins)
     await zephyrEngine.build_finished();
 
-    log.info('✅ Upload completed via Zephyr Agent');
-    log.info(`🔗 Build ID: ${buildStats.app.buildId}`);
+    log.debug.upload('Upload completed via Zephyr Agent');
+    log.debug.upload(`Build ID: ${buildStats.app.buildId}`);
 
     return {
       success: true,
@@ -390,45 +423,45 @@ async function simulateDirectUpload(
   snapshot: ZephyrSnapshot,
   log: ReturnType<typeof createLogger>
 ): Promise<UploadResult> {
-  log.info('🔐 Authenticating with Zephyr Cloud...');
+  log.debug.upload('Authenticating with Zephyr Cloud...');
   await delay(200);
 
-  log.info('📤 Uploading CDN assets...');
+  log.debug.upload('Uploading CDN assets...');
   await simulateUpload('CDN assets', snapshot.deploymentTargets.cdn.assets.length, log);
 
-  log.info('📤 Uploading Public assets...');
+  log.debug.upload('Uploading Public assets...');
   await simulateUpload(
     'Public assets',
     snapshot.deploymentTargets.cdn.publicAssets.length,
     log
   );
 
-  log.info('⚡ Uploading Edge functions...');
+  log.debug.upload('Uploading Edge functions...');
   await simulateUpload(
     'Edge functions',
     snapshot.deploymentTargets.edge.functions.length,
     log
   );
 
-  log.info('🖥️  Uploading Server functions...');
+  log.debug.upload('Uploading Server functions...');
   await simulateUpload(
     'Server functions',
     snapshot.deploymentTargets.server.functions.length,
     log
   );
 
-  log.info('📋 Uploading manifests and metadata...');
+  log.debug.upload('Uploading manifests and metadata...');
   await simulateUpload('Manifests', snapshot.deploymentTargets.manifests.length, log);
 
-  log.info('🌐 Configuring routes and deployment...');
+  log.debug.upload('Configuring routes and deployment...');
   await delay(500);
 
   // Save snapshot metadata locally
   await saveSnapshotManifest(snapshot, log);
 
-  log.info('✅ Snapshot uploaded successfully to Zephyr Cloud!');
-  log.info(`🔗 Build ID: ${snapshot.id}`);
-  log.info(`🌍 Environment: ${snapshot.environment}`);
+  log.debug.upload('Snapshot uploaded successfully to Zephyr Cloud!');
+  log.debug.upload(`Build ID: ${snapshot.id}`);
+  log.debug.upload(`Environment: ${snapshot.environment}`);
 
   return {
     success: true,
@@ -446,7 +479,7 @@ async function simulateUpload(
 ): Promise<void> {
   const delay_ms = Math.min(count * 50, 1000); // Max 1 second delay
   await delay(delay_ms);
-  log.info(`   ✅ ${type}: ${count} items uploaded`);
+  log.debug.upload(`${type}: ${count} items uploaded`);
 }
 
 /** Save snapshot manifest locally for debugging and verification */
@@ -460,11 +493,10 @@ async function saveSnapshotManifest(
 
     await fs.mkdir(manifestDir, { recursive: true });
     await fs.writeFile(manifestPath, JSON.stringify(snapshot, null, 2));
-    log.info(`📄 Snapshot manifest saved to: ${manifestPath}`);
+    log.debug.misc(`Snapshot manifest saved to: ${manifestPath}`);
   } catch (error) {
-    log.warn(
-      '⚠️  Could not save snapshot manifest:',
-      error instanceof Error ? error.message : 'Unknown error'
+    log.error(
+      `Could not save snapshot manifest: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
   }
 }

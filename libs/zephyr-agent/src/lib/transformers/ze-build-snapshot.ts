@@ -30,7 +30,7 @@ export async function createSnapshot(
   }
 
   const options = {
-    target: zephyr_engine.env.target,
+    target: zephyr_engine.env.target ?? 'web',
     git_branch: zephyr_engine.gitProperties.git.branch,
     buildId,
     username: (await zephyr_engine.application_configuration).username,

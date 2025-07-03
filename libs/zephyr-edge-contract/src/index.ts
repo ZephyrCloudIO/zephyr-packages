@@ -31,7 +31,6 @@ export type {
 
 // api contract negotiation
 export {
-  ZEPHYR_API_ENDPOINT,
   ZE_API_ENDPOINT,
   ZE_IS_PREVIEW,
   ze_api_gateway,

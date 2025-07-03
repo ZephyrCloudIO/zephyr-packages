@@ -1,6 +1,6 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
-import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZeBuildAssetsMap, ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { type Source, type ZephyrBuildStats } from 'zephyr-edge-contract';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
 import { emitDeploymentDone } from '../lifecycle-events/index';
@@ -12,6 +12,7 @@ interface UploadAgentPluginOptions {
   wait_for_index_html?: boolean;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+  skipDeploy?: boolean;
 }
 
 export interface ZephyrAgentProps<T> {
@@ -30,12 +31,15 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   ze_log.init('Initiating: Zephyr Webpack Upload Agent');
 
   const zeStart = Date.now();
-  const { wait_for_index_html, zephyr_engine } = pluginOptions;
+  const { wait_for_index_html, zephyr_engine, skipDeploy } = pluginOptions;
 
   try {
-    const assetsMap = await buildWebpackAssetMap(assets, {
-      wait_for_index_html,
-    });
+    let assetsMap: ZeBuildAssetsMap | undefined = {};
+    if (!skipDeploy) {
+      assetsMap = await buildWebpackAssetMap(assets, {
+        wait_for_index_html,
+      });
+    }
 
     // webpack dash data
     const { EDGE_URL, PLATFORM, DELIMITER } =

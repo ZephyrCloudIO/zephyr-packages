@@ -414,6 +414,7 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
   async upload_assets(props: {
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
+    stats_only?: boolean;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -429,17 +430,21 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     await zephyr_engine.build_id;
     const hash_set = zephyr_engine.resolved_hash_list;
 
-    const missingAssets = get_missing_assets({
-      assetsMap,
-      hash_set: hash_set ?? { hash_set: new Set() },
-    });
+    let missingAssets: ZeBuildAsset[] = [];
+    let snapshot: Snapshot | undefined;
+    if (!props.stats_only) {
+      missingAssets = get_missing_assets({
+        assetsMap,
+        hash_set: hash_set ?? { hash_set: new Set() },
+      });
+
+      snapshot = await createSnapshot(zephyr_engine, {
+        assets: assetsMap,
+        mfConfig,
+      });
+    }
 
     // upload data
-    const snapshot = await createSnapshot(zephyr_engine, {
-      assets: assetsMap,
-      mfConfig,
-    });
-
     const upload_options: UploadOptions = {
       snapshot,
       getDashData: () => buildStats,
@@ -455,10 +460,12 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);
 
     const application_uid = zephyr_engine.application_uid;
-    await setAppDeployResult(application_uid, {
-      urls: [zephyr_engine.version_url],
-      snapshot,
-    });
+    if (!props.stats_only) {
+      await setAppDeployResult(application_uid, {
+        urls: [zephyr_engine.version_url],
+        snapshot: snapshot!,
+      });
+    }
 
     await this.build_finished();
   }
@@ -475,7 +482,7 @@ function mut_zephyr_app_uid(ze: ZephyrEngine): void {
 }
 
 export interface UploadOptions {
-  snapshot: Snapshot;
+  snapshot: Snapshot | undefined;
   assets: {
     assetsMap: ZeBuildAssetsMap;
     missingAssets: ZeBuildAsset[];

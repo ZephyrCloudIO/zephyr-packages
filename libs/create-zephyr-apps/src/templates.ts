@@ -26,6 +26,11 @@ export const Templates: { name: string; label: string; hint: string }[] = [
     hint: 'You will be building an Angular app powered by Vite.',
   },
   {
+    name: 'react-airbnb-clone',
+    label: 'Airbnb clone',
+    hint: 'A React Airbnb clone with Module Federation.',
+  },
+  {
     name: 'modernjs-app',
     label: 'ModernJS',
     hint: 'A simple ModernJS app.',

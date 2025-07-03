@@ -44,11 +44,11 @@ jobs:
 
       - name: Run Claude Code
         id: claude
-        uses: valorkin/claude-code-action@feat-silence
+        uses: anthropics/claude-code-action@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           model: claude-sonnet-4-20250514
-          sticky_comment: true
+          use_sticky_comment: true
           allowed_tools: |
             mcp__github__create_pending_pull_request_review,
             mcp__github__add_pull_request_review_comment_to_pending_review,

@@ -23,6 +23,8 @@ import path from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import terminalLink from 'terminal-link';
+import { generatePnpmWorkspaceConfig } from './generate-pnpm-workspace.js';
+import { DEFAULT_GITIGNORE } from './gitignore-template.js';
 import { DependencyFields, ProjectTypes, Templates } from './templates.js';
 
 const execAsync = promisify(exec);
@@ -204,6 +206,19 @@ try {
 
   // no need to wait this operation, as it is not critical for the user experience
   void fs.promises.rm(tmpDir, { recursive: true, force: true }).catch(console.error);
+
+  // Create a standard .gitignore file
+  const gitignorePath = path.join(output, '.gitignore');
+  await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
+
+  loading.message('Scanning for multi-app structure...');
+
+  // Check if this is a multi-app repository and create pnpm-workspace.yaml if needed
+  const workspaceConfig = await generatePnpmWorkspaceConfig(output);
+  if (workspaceConfig) {
+    const workspacePath = path.join(output, 'pnpm-workspace.yaml');
+    await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+  }
 
   loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);
 } catch (error) {

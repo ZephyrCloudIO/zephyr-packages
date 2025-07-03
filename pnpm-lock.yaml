@@ -18413,7 +18413,7 @@ snapshots:
       webpack: 5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)
     optionalDependencies:
       type-fest: 4.38.0
-      webpack-dev-server: 5.2.2(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      webpack-dev-server: 5.2.2(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
 
   '@pmmmwh/react-refresh-webpack-plugin@0.5.15(react-refresh@0.14.2)(type-fest@4.38.0)(webpack-dev-server@5.2.2(webpack@5.99.9(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1))':
     dependencies:
@@ -19953,7 +19953,7 @@ snapshots:
       chokidar: 3.6.0
       http-proxy-middleware: 3.0.5
       p-retry: 6.2.1
-      webpack-dev-server: 5.2.2(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      webpack-dev-server: 5.2.2(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
       ws: 8.18.1
     transitivePeerDependencies:
       - bufferutil
@@ -30920,7 +30920,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webpack-dev-server@5.2.2(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)):
+  webpack-dev-server@5.2.2(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)):
     dependencies:
       '@types/bonjour': 3.5.13
       '@types/connect-history-api-fallback': 1.5.4

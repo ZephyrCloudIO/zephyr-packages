@@ -1,10 +1,10 @@
 import isCI from 'is-ci';
 import { exec as node_exec } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { dirname, sep } from 'node:path';
+import { sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
-import { ZEPHYR_API_ENDPOINT } from 'zephyr-edge-contract';
+import { ZE_API_ENDPOINT } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
@@ -13,6 +13,7 @@ import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getToken } from '../node-persist/token';
 import { getGitProviderInfo } from './git-provider-utils';
+import { detectMonorepo, getMonorepoRootPackageJson } from './detect-monorepo';
 import { getPackageJson } from './ze-util-read-package-json';
 
 const exec = promisify(node_exec);
@@ -30,7 +31,7 @@ interface UserInfo {
 
 /** Generate branch name for non-git contexts */
 function generateBranchName(context: 'global-git' | 'no-git', userId?: string): string {
-  const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+  const timestamp = new Date().toISOString().replace(/\D/g, '');
   const userSuffix = userId ? `-${userId.slice(0, 8)}` : '';
   return `${context}${userSuffix}-${timestamp}`;
 }
@@ -265,7 +266,7 @@ async function getUserInfoFromAPI(): Promise<UserInfo> {
 
   const [ok, cause, response] = await makeRequest<{ value: UserInfo }>({
     path: '/v2/user/me',
-    base: ZEPHYR_API_ENDPOINT(),
+    base: ZE_API_ENDPOINT(),
     query: {},
   });
 
@@ -369,44 +370,49 @@ async function getAppNamingFromPackageJson(
         project: scope.replace('@', ''),
         app: name,
       };
-    } else {
-      // Monorepo: use root package name as project
-      try {
-        const rootPackageJson = await getPackageJson(dirname(process.cwd()));
-        if (rootPackageJson) {
-          // If root package is scoped, use the scope as project
-          if (rootPackageJson.name.includes('@')) {
-            const [scope] = rootPackageJson.name.split('/');
-            return {
-              org,
-              project: scope.replace('@', ''),
-              app: packageName,
-            };
-          } else {
-            return {
-              org,
-              project: rootPackageJson.name,
-              app: packageName,
-            };
-          }
+    }
+
+    // Check if we're in a monorepo
+    const monorepoInfo = await detectMonorepo(process.cwd());
+
+    if (monorepoInfo.type !== 'none') {
+      // We're in a monorepo
+      const rootPackageJson = await getMonorepoRootPackageJson(monorepoInfo.root);
+
+      if (rootPackageJson && rootPackageJson['name']) {
+        const rootName = rootPackageJson['name'] as string;
+        // If root package is scoped, use the scope as project
+        if (rootName.includes('@')) {
+          const [scope] = rootName.split('/');
+          return {
+            org,
+            project: scope.replace('@', ''),
+            app: packageName,
+          };
         }
-      } catch {
-        // No root package.json found - use directory name as project
-        const dirName = getCurrentDirectoryName();
+        // Use root package name as project
         return {
           org,
-          project: dirName,
+          project: sanitizeName(rootName),
+          app: packageName,
+        };
+      } else {
+        // No root package.json or no name - use monorepo root directory name
+        const rootDirName = monorepoInfo.root.split(sep).pop() || 'monorepo';
+        return {
+          org,
+          project: sanitizeName(rootDirName),
           app: packageName,
         };
       }
-
-      // Single package: use same name for project and app
-      return {
-        org,
-        project: packageName,
-        app: packageName,
-      };
     }
+
+    // Not in a monorepo - single package
+    return {
+      org,
+      project: packageName,
+      app: packageName,
+    };
   } catch {
     // No package.json: use directory name
     const dirName = getCurrentDirectoryName();

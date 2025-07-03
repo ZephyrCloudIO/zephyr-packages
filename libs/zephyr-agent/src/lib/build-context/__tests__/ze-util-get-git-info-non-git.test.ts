@@ -37,6 +37,11 @@ jest.mock('../../auth/login', () => ({
   isTokenStillValid: jest.fn(),
 }));
 
+jest.mock('../detect-monorepo', () => ({
+  detectMonorepo: jest.fn().mockResolvedValue({ type: 'none', root: process.cwd() }),
+  getMonorepoRootPackageJson: jest.fn().mockResolvedValue(null),
+}));
+
 describe('getGitInfo - non-git environments', () => {
   const mockExec = node_exec as unknown as jest.Mock;
   let mockGitLog: jest.Mock;
@@ -115,7 +120,7 @@ describe('getGitInfo - non-git environments', () => {
 
     expect(result.git.name).toBe('Global User');
     expect(result.git.email).toBe('global@example.com');
-    expect(result.git.branch).toMatch(/^global-git-\d{8}T\d{6}$/);
+    expect(result.git.branch).toMatch(/^global-git-\d{17}$/);
     expect(result.git.commit).toBe('no-git-commit');
     expect(result.app.org).toBe('global-user'); // org should be sanitized username for personal zephyr org
     expect(result.app.project).toBe('test-project'); // from package.json
@@ -134,7 +139,7 @@ describe('getGitInfo - non-git environments', () => {
 
     expect(result.git.name).toBe('API User');
     expect(result.git.email).toBe('api@example.com');
-    expect(result.git.branch).toMatch(/^no-git-user-123-\d{8}T\d{6}$/);
+    expect(result.git.branch).toMatch(/^no-git-user-123-\d{17}$/);
     expect(result.git.commit).toMatch(/^fallback-deployment-\d+$/);
     expect(result.app.org).toBe('api-user'); // org should be sanitized API username
     expect(result.app.project).toBe('test-project'); // from package.json

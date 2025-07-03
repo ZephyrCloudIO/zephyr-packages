@@ -194,12 +194,6 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
    - Project: Package name
    - App: Package name
 
-**User Information:**
-Zephyr automatically extracts user information from your authentication token to provide full accountability without requiring manual configuration.
-
-**Cross-Platform Compatibility:**
-The agent automatically handles path separators across different operating systems (Windows, macOS, Linux) using Node.js built-in path utilities, ensuring consistent behavior regardless of the development environment.
-
 ## Internal APIs
 
 ### Build Context API

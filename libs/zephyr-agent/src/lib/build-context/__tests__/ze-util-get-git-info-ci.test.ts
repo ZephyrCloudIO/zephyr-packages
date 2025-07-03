@@ -50,7 +50,7 @@ describe('getGitInfo - CI environments', () => {
 
   it('should work normally in CI when git is available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
-      const delimiter = cmd.match(/echo ([a-f0-9-]+) &&/)?.[1] || '';
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'CI User',
         'ci@example.com',
@@ -77,7 +77,7 @@ describe('getGitInfo - CI environments', () => {
     let capturedCommand = '';
     mockExec.mockImplementation((cmd, callback) => {
       capturedCommand = cmd;
-      const delimiter = cmd.match(/echo ([a-f0-9-]+) &&/)?.[1] || '';
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'Last Committer',
         'committer@example.com',

@@ -1,6 +1,5 @@
 import isCI from 'is-ci';
 import { exec as node_exec } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
 import { sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
@@ -92,6 +91,9 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
   }
 }
 
+// Static delimiter that's unique enough to avoid conflicts with git output
+const GIT_OUTPUT_DELIMITER = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+
 /** Loads all data in a single command to avoid multiple executions. */
 async function loadGitInfo(hasSecretToken: boolean): Promise<{
   name: string;
@@ -104,9 +106,6 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
 }> {
   const automated = isCI || hasSecretToken;
 
-  // ensures multi line output on errors doesn't break the parsing
-  const delimiter = randomUUID().repeat(2);
-
   const command = [
     // Inside CI environments, the last committer should be the actor
     // and not the actual logged git user which sometimes might just be a bot
@@ -117,14 +116,14 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
     'git rev-parse --abbrev-ref HEAD',
     'git rev-parse HEAD',
     'git tag --points-at HEAD',
-  ].join(` && echo ${delimiter} && `);
+  ].join(` && echo ${GIT_OUTPUT_DELIMITER} && `);
 
   try {
     const { stdout } = await exec(command);
 
     const [name, email, remoteOrigin, branch, commit, tagsOutput] = stdout
       .trim()
-      .split(delimiter)
+      .split(GIT_OUTPUT_DELIMITER)
       .map((x) => x.trim());
     // Parse tags - if multiple tags point to HEAD, they'll be on separate lines
     const tags = tagsOutput ? tagsOutput.split('\n').filter(Boolean) : [];
@@ -142,7 +141,7 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
     const error = cause as Error & { stderr?: string };
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
       cause,
-      data: { command, delimiter },
+      data: { command, delimiter: GIT_OUTPUT_DELIMITER },
       message: error?.stderr || error.message,
     });
   }

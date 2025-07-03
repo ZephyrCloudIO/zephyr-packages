@@ -147,7 +147,8 @@ describe('getGitInfo - non-git environments', () => {
 
   it('should still work normally when git is available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
-      const delimiter = cmd.match(/echo ([a-f0-9-]+) &&/)?.[1] || '';
+      // Extract the delimiter from the command - now it's a static string
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'John Doe',
         'john@example.com',

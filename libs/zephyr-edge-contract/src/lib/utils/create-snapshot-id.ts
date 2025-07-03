@@ -12,7 +12,7 @@ export function createSnapshotId(options: {
       .filter(Boolean) // handle the case when some values are empty (unlikely but it's possible)
       .join('-')
       .replace(/_/gm, '-') || '-';
-  return [build_id, createApplicationUid(options.app)].join('.').toLowerCase();
+  return [build_id, createApplicationUid(options.app)].join('.');
 }
 
 export function flatCreateSnapshotId(props: {

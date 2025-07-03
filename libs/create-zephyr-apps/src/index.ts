@@ -23,6 +23,8 @@ import path from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import terminalLink from 'terminal-link';
+import { generatePnpmWorkspaceConfig } from './generate-pnpm-workspace.js';
+import { DEFAULT_GITIGNORE } from './gitignore-template.js';
 import { DependencyFields, ProjectTypes, Templates } from './templates.js';
 
 const execAsync = promisify(exec);
@@ -204,6 +206,44 @@ try {
 
   // no need to wait this operation, as it is not critical for the user experience
   void fs.promises.rm(tmpDir, { recursive: true, force: true }).catch(console.error);
+
+  // Create a standard .gitignore file
+  const gitignorePath = path.join(output, '.gitignore');
+  const gitignoreExists = await fs.promises.stat(gitignorePath);
+  if (!gitignoreExists) {
+    try {
+      await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
+    } catch (error) {
+      if (process.env['DEBUG']) {
+        console.error('Warning: Failed to create .gitignore file:', error);
+      }
+      loading.message('Checking for .gitignore file...');
+    }
+    loading.stop('.gitignore file created');
+  }
+
+  loading.message('Scanning for multi-app structure...');
+
+  // Check if pnpm-workspace.yaml already exists
+  const workspacePath = path.join(output, 'pnpm-workspace.yaml');
+
+  const workspaceExists = await fs.promises.stat(workspacePath);
+  if (!workspaceExists) {
+    // Check if this is a multi-app repository and create pnpm-workspace.yaml if needed
+    try {
+      const workspaceConfig = await generatePnpmWorkspaceConfig(output);
+      if (workspaceConfig) {
+        loading.message('Creating pnpm-workspace.yaml...');
+        await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+      }
+    } catch (error) {
+      if (process.env['DEBUG']) {
+        console.error('Warning: Failed to create pnpm-workspace.yaml:', error);
+      }
+      loading.message('Checking for pnpm-workspace.yaml...');
+    }
+    loading.stop('pnpm-workspace.yaml created');
+  }
 
   loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);
 } catch (error) {

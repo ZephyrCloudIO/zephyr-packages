@@ -31,6 +31,7 @@
   "scripts": {
     "build": "nx run create-zephyr-apps:build",
     "dev": "tsx src/index.ts",
+    "test": "jest",
     "patch-version": "pnpm version"
   },
   "dependencies": {
@@ -43,6 +44,7 @@
     "terminal-link": "^4.0.0"
   },
   "devDependencies": {
+    "@pnpm/types": "1000.6.0",
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",

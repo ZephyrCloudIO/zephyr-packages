@@ -1,0 +1,68 @@
+import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
+import path from 'node:path';
+
+export async function generatePnpmWorkspaceConfig(
+  rootPath: string
+): Promise<string | null> {
+  try {
+    // Use @pnpm/workspace.find-packages to detect packages
+    const packages = await findWorkspacePackagesNoCheck(rootPath);
+
+    // If only one package found (likely the root), no workspace needed
+    if (packages.length <= 1) {
+      return null;
+    }
+
+    // Group packages by their parent directory structure
+    const workspacePaths = new Set<string>();
+    const commonDirs = ['apps', 'packages', 'libs', 'examples', 'tools'];
+
+    for (const pkg of packages) {
+      const relativePath = path.relative(rootPath, pkg.rootDir);
+
+      // Skip root package and validate path
+      if (!relativePath || relativePath === '.' || relativePath.startsWith('..')) {
+        continue;
+      }
+      const pathParts = relativePath.split(path.sep);
+      const topLevelDir = pathParts[0];
+
+      // Check if it's a common workspace directory pattern
+      if (commonDirs.includes(topLevelDir)) {
+        workspacePaths.add(`"${topLevelDir}/*"`);
+      } else {
+        // Individual package directory
+        workspacePaths.add(`"${relativePath}"`);
+      }
+    }
+
+    // Only create workspace config if we found multiple packages
+    if (workspacePaths.size > 0) {
+      const sortedPaths = Array.from(workspacePaths).sort();
+      return `packages:
+${sortedPaths.map((p) => `  - ${p}`).join('\n')}
+  - "!**/dist/**"
+  - "!**/build/**"
+  - "!**/node_modules/**"
+`;
+    }
+
+    return null;
+  } catch (error) {
+    if (process.env['DEBUG'] === 'true') {
+      console.error('Error generating pnpm workspace config:', error);
+    }
+
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT')) {
+        console.warn(
+          'Warning: Could not find package.json files for workspace detection'
+        );
+      } else if (error.message.includes('EACCES')) {
+        console.warn('Warning: Permission denied while scanning for packages');
+      }
+    }
+
+    return null;
+  }
+}

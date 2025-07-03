@@ -1,4 +1,3 @@
-
 export const DEFAULT_GITIGNORE = `# Dependencies
 node_modules/
 .pnpm-store/

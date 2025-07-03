@@ -209,10 +209,12 @@ try {
 
   // Create a standard .gitignore file
   const gitignorePath = path.join(output, '.gitignore');
-  try {
-    await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
-  } catch (error) {
-    console.error('Warning: Failed to create .gitignore file:', error);
+  if (!fs.existsSync(gitignorePath)) {
+    try {
+      await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
+    } catch (error) {
+      console.error('Warning: Failed to create .gitignore file:', error);
+    }
   }
 
   loading.message('Scanning for multi-app structure...');

@@ -6,9 +6,9 @@ export function createSnapshotId(options: {
   zeConfig: { user: string; buildId: string };
 }): string {
   // we handle it like this so it trim the user email's domain or their family name out
-  const username = options.zeConfig.user.split('_')[0];
+  const target = options.target !== 'web' ? options.target : null;
   const build_id =
-    [username, options.target, options.zeConfig.buildId]
+    [options.zeConfig.user, target, options.zeConfig.buildId]
       .filter(Boolean) // handle the case when some values are empty (unlikely but it's possible)
       .join('-')
       .replace(/_/gm, '-') || '-';
@@ -24,9 +24,9 @@ export function flatCreateSnapshotId(props: {
   buildId: string;
 }): string {
   // we handle it like this so it trim the user email's domain or their family name out
-  const username = props.username.split('_')[0];
+  const target = props.target !== 'web' ? props.target : null;
   const build_id =
-    [username, props.target, props.buildId]
+    [props.username, target, props.buildId]
       .filter(Boolean)
       .join('-')
       .replace(/_/gm, '-') || '-';

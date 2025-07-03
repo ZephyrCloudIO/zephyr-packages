@@ -51,6 +51,10 @@ ${sortedPaths.map((p) => `  - ${p}`).join('\n')}
     return null;
   } catch (error) {
     // do nothing
+    // print this error only when debug mode is enabled
+    if (process.env['DEBUG'] === 'true') {
+      console.error(error);
+    }
     return null;
   }
 }

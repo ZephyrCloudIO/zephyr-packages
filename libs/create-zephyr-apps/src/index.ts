@@ -213,11 +213,15 @@ try {
 
   loading.message('Scanning for multi-app structure...');
 
-  // Check if this is a multi-app repository and create pnpm-workspace.yaml if needed
-  const workspaceConfig = await generatePnpmWorkspaceConfig(output);
-  if (workspaceConfig) {
-    const workspacePath = path.join(output, 'pnpm-workspace.yaml');
-    await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+  // Check if pnpm-workspace.yaml already exists
+  const workspacePath = path.join(output, 'pnpm-workspace.yaml');
+  if (!fs.existsSync(workspacePath)) {
+    // Check if this is a multi-app repository and create pnpm-workspace.yaml if needed
+    const workspaceConfig = await generatePnpmWorkspaceConfig(output);
+    if (workspaceConfig) {
+      loading.message('Creating pnpm-workspace.yaml...');
+      await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+    }
   }
 
   loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);

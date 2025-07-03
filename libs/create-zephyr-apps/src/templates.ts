@@ -28,7 +28,7 @@ export const Templates: { name: string; label: string; hint: string }[] = [
   {
     name: 'react-airbnb-clone',
     label: 'Airbnb clone',
-    hint: 'An Airbnb clone with React and Module Federation.',
+    hint: 'You will be building an Airbnb clone with React, TypeScript, and Module Federation.',
   },
   {
     name: 'modernjs-app',

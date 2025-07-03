@@ -50,13 +50,20 @@ ${sortedPaths.map((p) => `  - ${p}`).join('\n')}
 
     return null;
   } catch (error) {
-    // Log error in debug mode or if it's a specific expected error type
     if (process.env['DEBUG'] === 'true') {
       console.error('Error generating pnpm workspace config:', error);
-    } else if (error instanceof Error && error.message.includes('ENOENT')) {
-      // Log file not found errors even in non-debug mode
-      console.warn('Warning: Could not find package.json files for workspace detection');
     }
+
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT')) {
+        console.warn(
+          'Warning: Could not find package.json files for workspace detection'
+        );
+      } else if (error.message.includes('EACCES')) {
+        console.warn('Warning: Permission denied while scanning for packages');
+      }
+    }
+
     return null;
   }
 }

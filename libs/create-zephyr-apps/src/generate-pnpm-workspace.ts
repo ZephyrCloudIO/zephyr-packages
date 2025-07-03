@@ -20,11 +20,10 @@ export async function generatePnpmWorkspaceConfig(
     for (const pkg of packages) {
       const relativePath = path.relative(rootPath, pkg.rootDir);
 
-      // Skip root package
-      if (!relativePath || relativePath === '.') {
+      // Skip root package and validate path
+      if (!relativePath || relativePath === '.' || relativePath.startsWith('..')) {
         continue;
       }
-
       const pathParts = relativePath.split(path.sep);
       const topLevelDir = pathParts[0];
 

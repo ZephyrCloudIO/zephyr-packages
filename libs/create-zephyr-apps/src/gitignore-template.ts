@@ -16,7 +16,6 @@ out/
 .env.production.local
 
 # IDE files
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -82,10 +81,8 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
-.cache/
 public
 
 # Storybook build outputs
@@ -99,7 +96,6 @@ temp/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
 *.suo
 *.ntvs*
 *.njsproj

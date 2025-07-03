@@ -209,7 +209,11 @@ try {
 
   // Create a standard .gitignore file
   const gitignorePath = path.join(output, '.gitignore');
-  await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
+  try {
+    await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
+  } catch (error) {
+    console.error('Warning: Failed to create .gitignore file:', error);
+  }
 
   loading.message('Scanning for multi-app structure...');
 
@@ -217,10 +221,14 @@ try {
   const workspacePath = path.join(output, 'pnpm-workspace.yaml');
   if (!fs.existsSync(workspacePath)) {
     // Check if this is a multi-app repository and create pnpm-workspace.yaml if needed
-    const workspaceConfig = await generatePnpmWorkspaceConfig(output);
-    if (workspaceConfig) {
-      loading.message('Creating pnpm-workspace.yaml...');
-      await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+    try {
+      const workspaceConfig = await generatePnpmWorkspaceConfig(output);
+      if (workspaceConfig) {
+        loading.message('Creating pnpm-workspace.yaml...');
+        await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+      }
+    } catch (error) {
+      console.error('Warning: Failed to create pnpm-workspace.yaml:', error);
     }
   }
 

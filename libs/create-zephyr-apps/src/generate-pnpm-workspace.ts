@@ -50,10 +50,12 @@ ${sortedPaths.map((p) => `  - ${p}`).join('\n')}
 
     return null;
   } catch (error) {
-    // do nothing
-    // print this error only when debug mode is enabled
+    // Log error in debug mode or if it's a specific expected error type
     if (process.env['DEBUG'] === 'true') {
-      console.error(error);
+      console.error('Error generating pnpm workspace config:', error);
+    } else if (error instanceof Error && error.message.includes('ENOENT')) {
+      // Log file not found errors even in non-debug mode
+      console.warn('Warning: Could not find package.json files for workspace detection');
     }
     return null;
   }

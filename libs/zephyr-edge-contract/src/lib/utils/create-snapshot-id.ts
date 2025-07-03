@@ -37,7 +37,5 @@ export function flatCreateSnapshotId(props: {
       project: props.project,
       name: props.name,
     }),
-  ]
-    .join('.')
-    .toLowerCase();
+  ].join('.');
 }

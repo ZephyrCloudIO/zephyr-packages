@@ -47,35 +47,24 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  // Build resolvedRemotes object from federated_dependencies
-  const resolvedRemotes: Record<string, {
-    application_uid: string;
-    remote_entry_url: string;
-    default_url: string;
-    name: string;
-    library_type: string;
-  }> = {};
-
-  if (zephyr_engine.federated_dependencies) {
-    console.log('[Plugin] ze-build-snapshot: Building resolved remotes from federated dependencies');
-    console.log(`[Plugin] ze-build-snapshot: Found ${zephyr_engine.federated_dependencies.length} dependencies`);
-    
-    zephyr_engine.federated_dependencies.forEach(dep => {
-      resolvedRemotes[dep.name] = {
-        application_uid: dep.application_uid,
-        remote_entry_url: dep.remote_entry_url,
-        default_url: dep.default_url,
-        name: dep.name,
-        library_type: dep.library_type,
-      };
-      console.log(`[Plugin] ze-build-snapshot: Added dependency ${dep.name} -> ${dep.remote_entry_url}`);
-    });
+  // Check if zephyr-manifest.json exists in the assets
+  let manifestReference: { filename: string; remotes?: string[] } | undefined;
+  
+  const manifestAsset = Object.values(basedAssets).find(asset => asset.path === 'zephyr-manifest.json');
+  
+  if (manifestAsset && zephyr_engine.federated_dependencies && zephyr_engine.federated_dependencies.length > 0) {
+    console.log('[Zephyr Build] Found zephyr-manifest.json in assets');
+    manifestReference = {
+      filename: 'zephyr-manifest.json',
+      remotes: zephyr_engine.federated_dependencies.map(dep => dep.name),
+    };
+    console.log('[Zephyr Build] Created manifest reference:', manifestReference);
   } else {
-    console.log('[Plugin] ze-build-snapshot: No federated dependencies found');
+    console.log('[Zephyr Build] No manifest file found in assets or no federated dependencies');
   }
   
 
-  const snapshot = {
+  const snapshot: Snapshot = {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
@@ -100,7 +89,6 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
-    'zephyr:dependencies': Object.keys(resolvedRemotes).length > 0 ? resolvedRemotes : undefined,
     assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
         const asset = basedAssets[hash];
@@ -112,11 +100,15 @@ export async function createSnapshot(
     ),
   };
   
+  // Add the manifest reference as a custom field
+  // We'll use a type assertion to bypass the type check for now
+  (snapshot as any)['zephyr:dependencies'] = manifestReference;
+  
   console.log('[Plugin] ze-build-snapshot: Created snapshot with ID:', snapshot.snapshot_id);
-  if (snapshot['zephyr:dependencies']) {
-    console.log('[Plugin] ze-build-snapshot: Snapshot includes zephyr:dependencies:', snapshot['zephyr:dependencies']);
+  if (manifestReference) {
+    console.log('[Plugin] ze-build-snapshot: Snapshot includes manifest reference:', manifestReference);
   } else {
-    console.log('[Plugin] ze-build-snapshot: Snapshot has no zephyr:dependencies');
+    console.log('[Plugin] ze-build-snapshot: Snapshot has no manifest reference');
   }
   
   return snapshot;

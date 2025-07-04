@@ -6,6 +6,7 @@ import {
   detectAndStoreBaseHref,
   logBuildSteps,
   setupZeDeploy,
+  setupManifestEmission,
 } from 'zephyr-xpack-internal';
 
 const pluginName = 'ZeRspackPlugin';
@@ -34,6 +35,7 @@ export class ZeRspackPlugin {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
     logBuildSteps(this._options, compiler);
+    setupManifestEmission(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }
 }

@@ -163,7 +163,7 @@ Add these scripts to your `package.json`:
 
 Check out our [examples directory](../../examples/) for complete working examples:
 
-- [rspack-sample-app](../../examples/rspack-sample-app/) - Basic Rspack setup
+- [rsbuild-sample-app](../../examples/rsbuild-sample-app/) - Basic Rsbuild setup
 - [rspack-mf](../../examples/rspack-mf/) - Module Federation setup with host and remote
 - [rspack-nx-mf](../../examples/rspack-nx-mf/) - Nx workspace with Rspack and Module Federation
 

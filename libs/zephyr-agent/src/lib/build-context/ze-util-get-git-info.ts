@@ -75,6 +75,22 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
     }
 
     // If git repo info is not available, try global git config
+    logFn(
+      'warn',
+      'Git repository not found. Zephyr REQUIRES a git repository with remote origin.'
+    );
+    logFn(
+      'warn',
+      'Manual configuration is NOT recommended and WILL cause errors in production.'
+    );
+    logFn('warn', '');
+    logFn('warn', 'To properly use Zephyr, you MUST:');
+    logFn('warn', '1. Initialize git: git init');
+    logFn('warn', '2. Add remote: git remote add origin git@github.com:ORG/REPO.git');
+    logFn('warn', '3. Commit your changes: git add . && git commit -m "Initial commit"');
+    logFn('warn', '');
+    logFn('warn', 'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps');
+    logFn('warn', '📝 Documentation: https://docs.zephyr-cloud.io');
     ze_log.git('Git repository not found, falling back to global git config');
 
     try {
@@ -245,6 +261,17 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
 
     ze_log.git('Using global git config (no local repository)', gitInfo);
 
+    logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
+    logFn('warn', 'This manual configuration will NOT work for production deployments.');
+    logFn(
+      'warn',
+      'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
+    );
+    logFn(
+      'warn',
+      'Please set up git before your next deployment: https://docs.zephyr-cloud.io'
+    );
+
     return gitInfo;
   } catch (error) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
@@ -325,6 +352,18 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   };
 
   ze_log.git('Using fallback git info (git not available)', gitInfo);
+
+  logFn('warn', `Using organization "${org}" from authenticated user.`);
+  logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
+  logFn('warn', 'This manual configuration will NOT work for production deployments.');
+  logFn(
+    'warn',
+    'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
+  );
+  logFn(
+    'warn',
+    'Please set up git before your next deployment: https://docs.zephyr-cloud.io'
+  );
 
   return gitInfo;
 }

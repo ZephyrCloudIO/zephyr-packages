@@ -28,9 +28,7 @@ function hasEntry(remote: any): remote is RemoteWithEntry {
   );
 }
 
-/**
- * Fetches the zephyr-manifest.json file and returns the runtime plugin data
- */
+/** Fetches the zephyr-manifest.json file and returns the runtime plugin data */
 async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
   if (typeof window === 'undefined') {
     return null;
@@ -39,16 +37,16 @@ async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
   try {
     // Fetch the manifest from the same origin
     const response = await fetch('/zephyr-manifest.json');
-    
+
     if (!response.ok) {
       return null;
     }
 
     const manifest = await response.json();
-    
+
     // Transform manifest dependencies to runtime plugin format
     const resolvedRemotes: RuntimePluginData['resolvedRemotes'] = {};
-    
+
     if (manifest.dependencies) {
       Object.entries(manifest.dependencies).forEach(([name, dep]: [string, any]) => {
         resolvedRemotes[name] = {
@@ -60,10 +58,10 @@ async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
         };
       });
     }
-    
+
     return {
       builder: 'webpack', // Default to webpack, can be overridden by resourceQuery
-      resolvedRemotes
+      resolvedRemotes,
     };
   } catch (error) {
     return null;
@@ -86,7 +84,7 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
   // Initialize manifest fetching
   const initializeManifest = async (): Promise<RuntimePluginData | null> => {
     let loadSource = '';
-    
+
     try {
       // Primary source: fetch the manifest file
       runtimeData = await fetchZephyrManifest();
@@ -105,14 +103,14 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
           loadSource = 'resourceQuery';
         }
       }
-      
+
       if (runtimeData && loadSource) {
         console.log(`[Zephyr Runtime] Loaded from: ${loadSource}`);
       }
     } catch (error) {
       console.error('[Zephyr Runtime] Failed to load manifest:', error);
     }
-    
+
     return runtimeData;
   };
 
@@ -126,7 +124,7 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
       if (manifestPromise) {
         await manifestPromise;
       }
-      
+
       return args;
     },
     async beforeRequest(args) {
@@ -134,7 +132,7 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
       if (manifestPromise) {
         await manifestPromise;
       }
-      
+
       if (!runtimeData) {
         return args;
       }
@@ -159,11 +157,12 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
       if (!resolvedRemote) {
         return args;
       }
-      
+
       if (resolvedRemote && args.options.remotes) {
         // Find the matching remote in the remotes array
         const targetRemote = args.options.remotes.find(
-          (remote) => hasEntry(remote) &&
+          (remote) =>
+            hasEntry(remote) &&
             (remote.name === remoteName || remote.alias === remoteName)
         );
 
@@ -174,7 +173,9 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
 
           // Only log if we're actually changing the URL
           if (originalUrl !== resolvedUrl) {
-            console.log(`[Zephyr Runtime] Resolved ${remoteName}: ${originalUrl} → ${resolvedUrl}`);
+            console.log(
+              `[Zephyr Runtime] Resolved ${remoteName}: ${originalUrl} → ${resolvedUrl}`
+            );
           }
 
           // Update the remote entry URL
@@ -195,10 +196,10 @@ function getResolvedRemoteUrl(
   resolvedRemote: RuntimePluginData['resolvedRemotes'][string]
 ): string {
   const _window = typeof window !== 'undefined' ? window : globalThis;
-  
+
   // Check for session storage override (for development/testing)
   const sessionEdgeURL = _window.sessionStorage?.getItem(resolvedRemote.application_uid);
-  
+
   // Use session URL if available, otherwise use resolved URL
   let edgeUrl = sessionEdgeURL ?? resolvedRemote.remote_entry_url;
 

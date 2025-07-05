@@ -7,13 +7,16 @@ interface EmitManifestOptions {
 }
 
 interface EmitManifestCompiler {
-  webpack: { 
+  webpack: {
     sources: { RawSource: new (source: string | Buffer) => any };
     Compilation: { PROCESS_ASSETS_STAGE_ADDITIONAL: number };
   };
   hooks: {
     thisCompilation: {
-      tap: (pluginName: string, cb: (compilation: EmitManifestCompilation) => void) => void;
+      tap: (
+        pluginName: string,
+        cb: (compilation: EmitManifestCompilation) => void
+      ) => void;
     };
   };
 }
@@ -31,8 +34,8 @@ interface EmitManifestCompilation {
 }
 
 /**
- * Emits the zephyr-manifest.json file during the build process
- * This ensures the manifest is available for local development
+ * Emits the zephyr-manifest.json file during the build process This ensures the manifest
+ * is available for local development
  */
 export function setupManifestEmission<
   T extends EmitManifestOptions,
@@ -62,7 +65,7 @@ export function setupManifestEmission<
         };
 
         // Add dependencies to manifest
-        zephyr_engine.federated_dependencies.forEach(dep => {
+        zephyr_engine.federated_dependencies.forEach((dep) => {
           manifest.dependencies[dep.name] = {
             name: dep.name,
             application_uid: dep.application_uid,
@@ -73,10 +76,12 @@ export function setupManifestEmission<
 
         // Convert to JSON
         const manifestContent = JSON.stringify(manifest, null, 2);
-        
+
         console.log('[Zephyr Manifest] Emitting zephyr-manifest.json to build output');
         console.log(`[Zephyr Manifest] Manifest size: ${manifestContent.length} bytes`);
-        console.log(`[Zephyr Manifest] Dependencies: ${Object.keys(manifest.dependencies).join(', ')}`);
+        console.log(
+          `[Zephyr Manifest] Dependencies: ${Object.keys(manifest.dependencies).join(', ')}`
+        );
 
         // Emit the asset
         compilation.emitAsset('zephyr-manifest.json', new RawSource(manifestContent));

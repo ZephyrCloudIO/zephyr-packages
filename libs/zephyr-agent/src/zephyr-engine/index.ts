@@ -315,14 +315,20 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     this.federated_dependencies = resolution_results.filter(
       is_zephyr_resolved_dependency
     );
-    
-    console.log('[Zephyr Engine] Resolved dependencies:', this.federated_dependencies?.length || 0);
+
+    console.log(
+      '[Zephyr Engine] Resolved dependencies:',
+      this.federated_dependencies?.length || 0
+    );
     if (this.federated_dependencies && this.federated_dependencies.length > 0) {
-      console.log('[Zephyr Engine] Dependencies resolved:', 
-        this.federated_dependencies.map(d => `${d.name} -> ${d.remote_entry_url}`).join(', ')
+      console.log(
+        '[Zephyr Engine] Dependencies resolved:',
+        this.federated_dependencies
+          .map((d) => `${d.name} -> ${d.remote_entry_url}`)
+          .join(', ')
       );
     }
-    
+
     return this.federated_dependencies;
   }
 
@@ -452,11 +458,20 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       assets: assetsMap,
       mfConfig,
     });
-    
-    console.log('[Zephyr Engine] Snapshot created with assets:', Object.keys(snapshot.assets));
-    console.log('[Zephyr Engine] Manifest in snapshot:', !!(snapshot as any)['zephyr:dependencies']);
+
+    console.log(
+      '[Zephyr Engine] Snapshot created with assets:',
+      Object.keys(snapshot.assets)
+    );
+    console.log(
+      '[Zephyr Engine] Manifest in snapshot:',
+      !!(snapshot as any)['zephyr:dependencies']
+    );
     if ((snapshot as any)['zephyr:dependencies']) {
-      console.log('[Zephyr Engine] Manifest reference:', (snapshot as any)['zephyr:dependencies']);
+      console.log(
+        '[Zephyr Engine] Manifest reference:',
+        (snapshot as any)['zephyr:dependencies']
+      );
     }
 
     const upload_options: UploadOptions = {

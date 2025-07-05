@@ -289,7 +289,7 @@ importers:
         version: 21.1.2(@babel/traverse@7.26.10)(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15))(nx@21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15)))
       '@nx/webpack':
         specifier: 21.1.2
-        version: 21.1.2(@babel/traverse@7.26.10)(@rspack/core@1.3.15(@swc/helpers@0.5.15))(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(nx@21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15)))(typescript@5.8.3)
+        version: 21.1.2(@babel/traverse@7.26.10)(@rspack/core@1.3.15(@swc/helpers@0.5.15))(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)))(nx@21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15)))(typescript@5.8.3)
       '@nx/workspace':
         specifier: 21.1.2
         version: 21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15))
@@ -618,75 +618,6 @@ importers:
       rollup-plugin-zephyr:
         specifier: workspace:*
         version: link:../../libs/rollup-plugin-zephyr
-
-  examples/rsbuild-mf-2:
-    dependencies:
-      zephyr-rspack-plugin:
-        specifier: workspace:*
-        version: link:../../libs/zephyr-rspack-plugin
-    devDependencies:
-      '@module-federation/rsbuild-plugin':
-        specifier: ^0.15.0
-        version: 0.15.0(@rsbuild/core@1.3.22)(@rspack/core@1.3.15(@swc/helpers@0.5.15))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
-      '@rsbuild/core':
-        specifier: ^1.3.22
-        version: 1.3.22
-
-  examples/rsbuild-mf-2/apps/host:
-    dependencies:
-      react:
-        specifier: ^19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.1.0(react@19.1.0)
-    devDependencies:
-      '@biomejs/biome':
-        specifier: ^1.9.4
-        version: 1.9.4
-      '@rsbuild/core':
-        specifier: ^1.3.22
-        version: 1.3.22
-      '@rsbuild/plugin-react':
-        specifier: ^1.3.2
-        version: 1.3.2(@rsbuild/core@1.3.22)
-      '@types/react':
-        specifier: ^19.1.6
-        version: 19.1.8
-      '@types/react-dom':
-        specifier: ^19.1.6
-        version: 19.1.6(@types/react@19.1.8)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-
-  examples/rsbuild-mf-2/apps/remote:
-    dependencies:
-      react:
-        specifier: ^19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.1.0(react@19.1.0)
-    devDependencies:
-      '@biomejs/biome':
-        specifier: ^1.9.4
-        version: 1.9.4
-      '@rsbuild/core':
-        specifier: ^1.3.22
-        version: 1.3.22
-      '@rsbuild/plugin-react':
-        specifier: ^1.3.2
-        version: 1.3.2(@rsbuild/core@1.3.22)
-      '@types/react':
-        specifier: ^19.1.6
-        version: 19.1.8
-      '@types/react-dom':
-        specifier: ^19.1.6
-        version: 19.1.6(@types/react@19.1.8)
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
 
   examples/rspack-mf:
     dependencies:
@@ -3390,15 +3321,6 @@ packages:
       react-dom:
         optional: true
 
-  '@module-federation/rsbuild-plugin@0.15.0':
-    resolution: {integrity: sha512-3F3R4+tN7AjT/4jN+N6jzSDU37DYPumnYBTioD1wLeook5QF1xVtPaTjTB0Jm6JSjnvkQ24K6YAT6tG9wXVvAg==}
-    engines: {node: '>=16.0.0'}
-    peerDependencies:
-      '@rsbuild/core': ^1.3.21
-    peerDependenciesMeta:
-      '@rsbuild/core':
-        optional: true
-
   '@module-federation/rspack@0.11.1':
     resolution: {integrity: sha512-hhikMBb7qSWCKtoCPO1QLoJwu4BsZPAKs9nychLXakMPQEGByrnh/upVb1C2wep2C4Ax9sjuFT7zD/3CdHOmGg==}
     peerDependencies:
@@ -5988,11 +5910,6 @@ packages:
 
   '@types/react-dom@19.0.4':
     resolution: {integrity: sha512-4fSQ8vWFkg+TGhePfUzVmat3eC14TXYSsiiDSLI0dVLsrm9gZFABjPy/Qu6TKgl1tq1Bu1yDsuQgY3A3DOjCcg==}
-    peerDependencies:
-      '@types/react': ^19.0.0
-
-  '@types/react-dom@19.1.6':
-    resolution: {integrity: sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==}
     peerDependencies:
       '@types/react': ^19.0.0
 
@@ -16782,7 +16699,7 @@ snapshots:
       ts-deepmerge: 7.0.2
       ts-loader: 9.4.4(typescript@5.8.2)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
       webpack: 5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
     transitivePeerDependencies:
       - '@parcel/css'
       - '@rspack/core'
@@ -16861,7 +16778,7 @@ snapshots:
       ts-deepmerge: 7.0.2
       ts-loader: 9.4.4(typescript@5.8.3)(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1))
       webpack: 5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
     transitivePeerDependencies:
       - '@parcel/css'
       - '@rspack/core'
@@ -17314,27 +17231,6 @@ snapshots:
       - typescript
       - utf-8-validate
       - vue-tsc
-
-  '@module-federation/rsbuild-plugin@0.15.0(@rsbuild/core@1.3.22)(@rspack/core@1.3.15(@swc/helpers@0.5.15))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))':
-    dependencies:
-      '@module-federation/enhanced': 0.15.0(@rspack/core@1.3.15(@swc/helpers@0.5.15))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
-      '@module-federation/node': 2.7.7(@rspack/core@1.3.15(@swc/helpers@0.5.15))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
-      '@module-federation/sdk': 0.15.0
-      fs-extra: 11.3.0
-    optionalDependencies:
-      '@rsbuild/core': 1.3.22
-    transitivePeerDependencies:
-      - '@rspack/core'
-      - bufferutil
-      - debug
-      - next
-      - react
-      - react-dom
-      - supports-color
-      - typescript
-      - utf-8-validate
-      - vue-tsc
-      - webpack
 
   '@module-federation/rspack@0.11.1(@rspack/core@1.3.15(@swc/helpers@0.5.15))(typescript@5.8.2)':
     dependencies:
@@ -18096,7 +17992,7 @@ snapshots:
       - supports-color
       - verdaccio
 
-  '@nx/webpack@21.1.2(@babel/traverse@7.26.10)(@rspack/core@1.3.15(@swc/helpers@0.5.15))(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(nx@21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15)))(typescript@5.8.3)':
+  '@nx/webpack@21.1.2(@babel/traverse@7.26.10)(@rspack/core@1.3.15(@swc/helpers@0.5.15))(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)))(nx@21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15)))(typescript@5.8.3)':
     dependencies:
       '@babel/core': 7.26.10
       '@nx/devkit': 21.1.2(nx@21.1.2(@swc-node/register@1.10.10(@swc/core@1.11.13(@swc/helpers@0.5.15))(@swc/types@0.1.19)(typescript@5.8.3))(@swc/core@1.11.13(@swc/helpers@0.5.15)))
@@ -18135,7 +18031,7 @@ snapshots:
       webpack: 5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)
       webpack-dev-server: 5.2.2(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1))
       webpack-node-externals: 3.0.0
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@parcel/css'
@@ -21381,10 +21277,6 @@ snapshots:
   '@types/react-dom@19.0.4(@types/react@19.0.12)':
     dependencies:
       '@types/react': 19.0.12
-
-  '@types/react-dom@19.1.6(@types/react@19.1.8)':
-    dependencies:
-      '@types/react': 19.1.8
 
   '@types/react-helmet@6.1.11':
     dependencies:
@@ -31539,7 +31431,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack-subresource-integrity@5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)):
+  webpack-subresource-integrity@5.1.0(html-webpack-plugin@5.6.3(@rspack/core@1.3.15(@swc/helpers@0.5.15))(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)))(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)):
     dependencies:
       typed-assert: 1.0.9
       webpack: 5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)

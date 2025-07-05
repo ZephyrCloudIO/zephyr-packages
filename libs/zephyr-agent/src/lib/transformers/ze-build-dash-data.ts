@@ -33,9 +33,13 @@ export async function zeBuildDashData(
   // Build zephyr:dependencies from federated_dependencies
   const zephyrDependencies: Record<string, any> = {};
   if (zephyr_engine.federated_dependencies) {
-    console.log('[Plugin] ze-build-dash-data: Building zephyr:dependencies for dashboard');
-    console.log(`[Plugin] ze-build-dash-data: Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`);
-    
+    console.log(
+      '[Plugin] ze-build-dash-data: Building zephyr:dependencies for dashboard'
+    );
+    console.log(
+      `[Plugin] ze-build-dash-data: Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`
+    );
+
     for (const dep of zephyr_engine.federated_dependencies) {
       zephyrDependencies[dep.name] = {
         application_uid: dep.application_uid,
@@ -47,7 +51,9 @@ export async function zeBuildDashData(
       console.log(`[Plugin] ze-build-dash-data: Added ${dep.name} to dashboard data`);
     }
   } else {
-    console.log('[Plugin] ze-build-dash-data: No federated dependencies to add to dashboard data');
+    console.log(
+      '[Plugin] ze-build-dash-data: No federated dependencies to add to dashboard data'
+    );
   }
 
   const result = {
@@ -78,9 +84,11 @@ export async function zeBuildDashData(
     type: 'app',
     'zephyr:dependencies': zephyrDependencies,
   };
-  
-  console.log(`[Plugin] ze-build-dash-data: Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyr:dependencies`);
-  
+
+  console.log(
+    `[Plugin] ze-build-dash-data: Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyr:dependencies`
+  );
+
   return result;
 }
 

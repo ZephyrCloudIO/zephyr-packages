@@ -26,7 +26,7 @@ export async function resolve_remote_dependency({
   build_context: string;
 }): Promise<ZeResolvedDependency> {
   ze_log.remotes(`[Plugin] Resolving remote dependency: ${application_uid}@${version}`);
-  
+
   const resolveDependency = new URL(
     `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
     ZE_API_ENDPOINT()
@@ -74,7 +74,9 @@ export async function resolve_remote_dependency({
     const response = res.data;
 
     if (response.value) {
-      ze_log.remotes(`[Plugin] Successfully resolved dependency ${application_uid}@${version}:`);
+      ze_log.remotes(
+        `[Plugin] Successfully resolved dependency ${application_uid}@${version}:`
+      );
       ze_log.remotes(`  - remote_entry_url: ${response.value.remote_entry_url}`);
       ze_log.remotes(`  - default_url: ${response.value.default_url}`);
       ze_log.remotes(`  - library_type: ${response.value.library_type}`);

@@ -16,7 +16,10 @@ export async function uploadSnapshot({
   });
 
   const json = JSON.stringify(body);
-  console.log('[HTTP_UPLOAD_SNAPSHOT] Sending snapshot to edge:', JSON.stringify(body, null, 2));
+  console.log(
+    '[HTTP_UPLOAD_SNAPSHOT] Sending snapshot to edge:',
+    JSON.stringify(body, null, 2)
+  );
 
   const options: RequestInit = {
     method: 'POST',

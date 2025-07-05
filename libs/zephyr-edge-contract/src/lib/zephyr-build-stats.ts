@@ -126,13 +126,16 @@ export interface ZephyrBuildStats {
   /** @deprecated */
   type: unknown;
   /** Resolved zephyr dependencies */
-  'zephyr:dependencies'?: Record<string, {
-    application_uid: string;
-    remote_entry_url: string;
-    default_url: string;
-    name: string;
-    library_type: string;
-  }>;
+  'zephyr:dependencies'?: Record<
+    string,
+    {
+      application_uid: string;
+      remote_entry_url: string;
+      default_url: string;
+      name: string;
+      library_type: string;
+    }
+  >;
 }
 
 enum DeploymentIntegrationPlatform {

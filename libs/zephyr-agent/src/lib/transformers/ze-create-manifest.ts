@@ -17,6 +17,7 @@ interface ZephyrManifest {
 
 /**
  * Creates a zephyr-manifest.json file with resolved dependencies
+ *
  * @param dependencies - The resolved dependencies from the build
  * @returns The manifest content and the asset object
  */
@@ -24,14 +25,19 @@ export function createZephyrManifest(dependencies: ZeResolvedDependency[] | null
   content: string;
   asset: ZeBuildAsset;
 } {
-  console.log('[Zephyr Manifest] Creating manifest with dependencies:', dependencies?.length || 0);
-  
+  console.log(
+    '[Zephyr Manifest] Creating manifest with dependencies:',
+    dependencies?.length || 0
+  );
+
   // Build the dependencies object
   const dependenciesMap: Record<string, ZephyrDependency> = {};
-  
+
   if (dependencies && dependencies.length > 0) {
-    dependencies.forEach(dep => {
-      console.log(`[Zephyr Manifest] Adding dependency: ${dep.name} -> ${dep.remote_entry_url}`);
+    dependencies.forEach((dep) => {
+      console.log(
+        `[Zephyr Manifest] Adding dependency: ${dep.name} -> ${dep.remote_entry_url}`
+      );
       dependenciesMap[dep.name] = {
         name: dep.name,
         application_uid: dep.application_uid,
@@ -53,7 +59,7 @@ export function createZephyrManifest(dependencies: ZeResolvedDependency[] | null
   // Convert to JSON string
   const content = JSON.stringify(manifest, null, 2);
   const contentBuffer = Buffer.from(content);
-  
+
   // Calculate hash for the content
   const hash = createHash('sha256')
     .update(content + 'zephyr-manifest.json')

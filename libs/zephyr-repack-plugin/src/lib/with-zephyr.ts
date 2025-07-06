@@ -8,10 +8,7 @@ import {
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 import type { RepackEnv } from '../type/zephyr-internal-types';
-import {
-  getDependencyHashes,
-  getNativeVersionInfoAsync,
-} from './native-versions/ze-util-native-versions';
+
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin';
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
@@ -54,11 +51,6 @@ async function _zephyr_configuration(
     if (!_zephyrOptions?.target) {
       throw new ZephyrError(ZeErrors.ERR_MISSING_PLATFORM);
     }
-    const nativeVersionInfo = await getNativeVersionInfoAsync(
-      _zephyrOptions.target,
-      config.context || process.cwd()
-    );
-
     // create instance of ZephyrEngine to track the application
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'repack',
@@ -88,17 +80,6 @@ async function _zephyr_configuration(
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
-    // Extend
-
-    ze_log.app(`Native ${_zephyrOptions.target} version info:`, nativeVersionInfo);
-
-    zephyr_engine.applicationProperties.version = nativeVersionInfo.native_version;
-    Object.freeze(zephyr_engine.applicationProperties.version);
-
-    zephyr_engine.env.lock_file_hash = (
-      await getDependencyHashes(config.context || process.cwd(), _zephyrOptions.target)
-    ).nativeConfigHash;
-
     ze_log.app('Native config file hash: ', zephyr_engine.env.lock_file_hash);
     const define_config = {
       ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),
@@ -117,7 +98,7 @@ async function _zephyr_configuration(
         (await zephyr_engine.application_configuration).EDGE_URL
       ),
       /** Native version of the application */
-      ZE_NATIVE_VERSION: JSON.stringify(nativeVersionInfo.native_version),
+      ZE_NATIVE_VERSION: JSON.stringify(zephyr_engine.applicationProperties.version),
       ZE_BUILD_CONTEXT: JSON.stringify(config.context),
       ZE_FINGERPRINT: JSON.stringify(zephyr_engine.env.lock_file_hash),
       ZE_IS_CI: JSON.stringify(isCI),

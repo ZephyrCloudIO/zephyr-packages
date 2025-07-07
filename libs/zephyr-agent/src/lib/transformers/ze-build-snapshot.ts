@@ -53,10 +53,10 @@ export async function createSnapshot(
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
-    // ZeApplicationProperties + target +buildId + ZeApplicationProperties.username
+    // ZeApplicationProperties + target + buildId + ZeApplicationProperties.username
     snapshot_id: flatCreateSnapshotId(
       Object.assign({}, options.applicationProperties, {
-        target: options.target ?? 'web',
+        target: options.target,
         buildId: options.buildId,
         username: options.username,
       })

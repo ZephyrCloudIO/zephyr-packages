@@ -5,8 +5,8 @@ export function createSnapshotId(options: {
   target: string;
   zeConfig: { user: string; buildId: string };
 }): string {
-  // we handle it like this so it trim the user email's domain or their family name out
-  const target = options.target !== 'web' ? options.target : null;
+  // Only include target in ID if it's not the default 'web' platform
+  const target = options.target === 'web' ? null : options.target;
   const build_id =
     [options.zeConfig.user, target, options.zeConfig.buildId]
       .filter(Boolean) // handle the case when some values are empty (unlikely but it's possible)
@@ -23,8 +23,8 @@ export function flatCreateSnapshotId(props: {
   username: string;
   buildId: string;
 }): string {
-  // we handle it like this so it trim the user email's domain or their family name out
-  const target = props.target !== 'web' ? props.target : null;
+  // Only include target in ID if it's not the default 'web' platform
+  const target = props.target === 'web' ? null : props.target;
   const build_id =
     [props.username, target, props.buildId]
       .filter(Boolean)

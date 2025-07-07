@@ -11,7 +11,8 @@ export function createSnapshotId(options: {
     [options.zeConfig.user, target, options.zeConfig.buildId]
       .filter(Boolean) // handle the case when some values are empty (unlikely but it's possible)
       .join('-')
-      .replace(/_/gm, '-').toLowerCase() || '-';
+      .replace(/_/gm, '-')
+      .toLowerCase() || '-';
   return [build_id, createApplicationUid(options.app)].join('.');
 }
 

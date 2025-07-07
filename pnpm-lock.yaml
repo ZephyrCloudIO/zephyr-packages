@@ -1418,9 +1418,6 @@ importers:
 
   libs/zephyr-repack-plugin:
     dependencies:
-      is-ci:
-        specifier: ^4.1.0
-        version: 4.1.0
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1434,9 +1431,6 @@ importers:
       '@types/find-package-json':
         specifier: ^1.2.6
         version: 1.2.6
-      '@types/is-ci':
-        specifier: ^3.0.4
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -29914,7 +29908,7 @@ snapshots:
       '@swc/core': 1.10.18(@swc/helpers@0.5.15)
       esbuild: 0.25.1
 
-  terser-webpack-plugin@5.3.14(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)):
+  terser-webpack-plugin@5.3.14(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
@@ -30942,7 +30936,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.14(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(webpack@5.98.0(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1))
+      terser-webpack-plugin: 5.3.14(@swc/core@1.11.13(@swc/helpers@0.5.15))(esbuild@0.25.1)(webpack@5.98.0(@swc/core@1.10.18(@swc/helpers@0.5.15))(esbuild@0.25.1))
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     transitivePeerDependencies:

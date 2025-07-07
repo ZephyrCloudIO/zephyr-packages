@@ -21,14 +21,12 @@
     "test": "nx test zephyr-repack-plugin"
   },
   "dependencies": {
-    "is-ci": "^4.1.0",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
     "@rspack/core": "catalog:rspack",
     "@types/find-package-json": "^1.2.6",
-    "@types/is-ci": "^3.0.4",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"

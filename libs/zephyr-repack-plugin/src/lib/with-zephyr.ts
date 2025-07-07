@@ -1,6 +1,5 @@
 import type { Configuration } from '@rspack/core';
 import { rspack } from '@rspack/core';
-import isCI from 'is-ci';
 import { ZeErrors, ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
@@ -101,7 +100,7 @@ async function _zephyr_configuration(
       ZE_NATIVE_VERSION: JSON.stringify(zephyr_engine.applicationProperties.version),
       ZE_BUILD_CONTEXT: JSON.stringify(config.context),
       ZE_FINGERPRINT: JSON.stringify(zephyr_engine.env.lock_file_hash),
-      ZE_IS_CI: JSON.stringify(isCI),
+      ZE_IS_CI: JSON.stringify(zephyr_engine.env.isCI),
       ZE_USER: JSON.stringify((await zephyr_engine.application_configuration).username),
       ZE_BRANCH: JSON.stringify(zephyr_engine.gitProperties.git.branch),
     };

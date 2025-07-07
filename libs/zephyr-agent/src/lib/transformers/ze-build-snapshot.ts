@@ -9,6 +9,7 @@ import {
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { applyBaseHrefToAssets } from './ze-basehref-handler';
+import { posix, win32 } from 'node:path';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -76,10 +77,22 @@ export async function createSnapshot(
       (memo, hash: string) => {
         const asset = basedAssets[hash];
         const { path, extname, size } = asset;
-        memo[asset.path] = { path, extname, hash: asset.hash, size };
+        const normalizedPath = normalizePathSeparators(path);
+        memo[normalizedPath] = { path: normalizedPath, extname, hash: asset.hash, size };
         return memo;
       },
       {} as Record<string, SnapshotAsset>
     ),
   };
+}
+
+/**
+ * Normalizes path separators to forward slashes for web compatibility Converts Windows
+ * backslashes to forward slashes
+ *
+ * @param path - The path to normalize
+ * @returns The path with forward slashes
+ */
+function normalizePathSeparators(path: string): string {
+  return path.split(win32.sep).join(posix.sep);
 }

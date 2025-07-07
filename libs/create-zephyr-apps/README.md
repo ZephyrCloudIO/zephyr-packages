@@ -51,20 +51,23 @@ This will prompt you to choose:
 You can also specify options directly:
 
 ```bash
-npx create-zephyr-apps@latest my-app --template vite-react
+npx create-zephyr-apps@latest my-app --template vite-react-ts
 ```
 
 ## Available Templates
 
-- **vite-react** - React application with Vite
-- **vite-react-mf** - React microfrontend with Vite and Module Federation
-- **rspack-react** - React application with Rspack
-- **rspack-mf** - React microfrontend with Rspack and Module Federation
-- **webpack-react** - React application with Webpack
-- **modern-js** - Modern.js application
-- **repack-react-native** - React Native application with Re.Pack
-- **rollup-lib** - Library with Rollup
-- **parcel-react** - React application with Parcel
+- **angular-vite** - Angular app with Vite
+- **modernjs-app** - A simple ModernJS app
+- **qwik-1.5** - A Qwik v1.5 app using Vite as the bundler
+- **react-airbnb-clone** - Airbnb clone with React, TypeScript, and Module Federation
+- **react-rspack-tractor-2.0** - React application using Rspack as the bundler and Tractor 2.0 as the module federation manager
+- **react-vite-mf** - Federated React apps powered by Vite, Webpack and Rspack
+- **rolldown-react** - A React example using Rolldown
+- **rspack-project** - A simple application build by Rspack
+- **solid** - A Solid app using Vite as the bundler
+- **svelte** - A Svelte app using Vite as the bundler
+- **turbo-rspack-mf** - A monorepo using Turborepo, React, and Rspack as the bundler
+- **vite-react-ts** - A simple React application build by Vite
 
 ## Getting Started
 

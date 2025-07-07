@@ -40,11 +40,13 @@ export async function createSnapshot(
     gitProperties: zephyr_engine.gitProperties,
     mfConfig: mfConfig,
   };
-  // Don't include target in version_postfix if it's 'web'
-  const targetPrefix = options.target === 'web' ? '' : `${options.target}.`;
-  const version_postfix = zephyr_engine.env.isCI
-    ? `${targetPrefix}${options.git_branch}.${options.buildId}`
-    : `${targetPrefix}${options.username}.${options.buildId}`;
+  const versionParts = [
+    options.target !== 'web' ? options.target : null,
+    zephyr_engine.env.isCI ? options.git_branch : options.username,
+    options.buildId,
+  ].filter(Boolean);
+
+  const version_postfix = versionParts.join('.');
 
   const basedAssets = applyBaseHrefToAssets(
     assets,

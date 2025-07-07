@@ -2,7 +2,6 @@ export interface ZeDependency {
   version: string;
   registry?: string;
   app_uid?: string;
-  target?: 'web' | 'ios' | 'android';
 }
 
 export interface ZePackageJson {

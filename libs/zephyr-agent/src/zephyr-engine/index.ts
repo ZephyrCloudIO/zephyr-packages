@@ -73,7 +73,6 @@ type ZephyrEngineBuilderTypes =
   | 'webpack'
   | 'rspack'
   | 'repack'
-  | 'metro'
   | 'vite'
   | 'rollup'
   | 'parcel'
@@ -112,15 +111,10 @@ export class ZephyrEngine {
   // build context properties
   env: {
     isCI: boolean;
-    buildEnv: string;
-    // Below values (target, native_version, native_build_number) are cross-platform specific properties for react native
     target: Platform;
-    lock_file_hash: string;
   } = {
     isCI,
-    buildEnv: isCI ? 'ci' : 'local',
     target: 'web',
-    lock_file_hash: '',
   };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;

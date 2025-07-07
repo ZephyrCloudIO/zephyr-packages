@@ -79,7 +79,6 @@ async function _zephyr_configuration(
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
-    ze_log.app('Native config file hash: ', zephyr_engine.env.lock_file_hash);
     const define_config = {
       ZE_BUILD_ID: JSON.stringify(await zephyr_engine.build_id),
       ZE_SNAPSHOT_ID: JSON.stringify(await zephyr_engine.snapshotId),
@@ -99,7 +98,8 @@ async function _zephyr_configuration(
       /** Native version of the application */
       ZE_NATIVE_VERSION: JSON.stringify(zephyr_engine.applicationProperties.version),
       ZE_BUILD_CONTEXT: JSON.stringify(config.context),
-      ZE_FINGERPRINT: JSON.stringify(zephyr_engine.env.lock_file_hash),
+      // TODO: to be implemented and discuss with dima 
+      // ZE_FINGERPRINT: JSON.stringify(zephyr_engine.env.lock_file_hash),
       ZE_IS_CI: JSON.stringify(zephyr_engine.env.isCI),
       ZE_USER: JSON.stringify((await zephyr_engine.application_configuration).username),
       ZE_BRANCH: JSON.stringify(zephyr_engine.gitProperties.git.branch),

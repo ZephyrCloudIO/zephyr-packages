@@ -118,12 +118,8 @@ export interface ZephyrBuildStats {
   domain?: string | undefined;
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;
-  /** Native platform related data */
+  //  deploy target platform related data, should be `ios`, `android`, `web` or undefined at the moment
   build_target?: string;
-  native?: {
-    /** Native lockfile hash (ios: Podfile.lock, android: gradle.lockfile) */
-    lock_file_hash?: string;
-  };
   /** @deprecated */
   type: unknown;
 }

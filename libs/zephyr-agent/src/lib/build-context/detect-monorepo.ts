@@ -3,20 +3,27 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { ze_log } from '../logging/debug';
 
+export type MonorepoType = 'pnpm' | 'yarn' | 'npm' | 'lerna' | 'nx' | 'rush' | 'none';
+
 export interface MonorepoInfo {
-  type: 'pnpm' | 'yarn' | 'npm' | 'lerna' | 'nx' | 'rush' | 'none';
+  type: MonorepoType;
   root: string;
   configFile?: string;
   workspaces?: string[];
 }
 
-const MONOREPO_CONFIG_FILES = [
-  { file: 'pnpm-workspace.yaml', type: 'pnpm' as const },
-  { file: 'pnpm-workspace.yml', type: 'pnpm' as const },
-  { file: 'lerna.json', type: 'lerna' as const },
-  { file: 'nx.json', type: 'nx' as const },
-  { file: 'rush.json', type: 'rush' as const },
-];
+type MonorepoConfigFile = {
+  file: string;
+  type: Exclude<MonorepoType, 'yarn' | 'npm' | 'none'>;
+};
+
+const MONOREPO_CONFIG_FILES: readonly MonorepoConfigFile[] = [
+  { file: 'pnpm-workspace.yaml', type: 'pnpm' },
+  { file: 'pnpm-workspace.yml', type: 'pnpm' },
+  { file: 'lerna.json', type: 'lerna' },
+  { file: 'nx.json', type: 'nx' },
+  { file: 'rush.json', type: 'rush' },
+] as const;
 
 const MAX_TRAVERSAL_DEPTH = 10;
 

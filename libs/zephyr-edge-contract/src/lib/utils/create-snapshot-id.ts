@@ -29,7 +29,8 @@ export function flatCreateSnapshotId(props: {
     [props.username, target, props.buildId]
       .filter(Boolean)
       .join('-')
-      .replace(/_/gm, '-') || '-';
+      .replace(/_/gm, '-') // Replace underscores with hyphens
+      .toLowerCase() || '-'; // Convert to lowercase
   return [
     build_id,
     createApplicationUid({

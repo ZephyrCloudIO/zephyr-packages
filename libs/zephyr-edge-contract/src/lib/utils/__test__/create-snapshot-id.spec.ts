@@ -34,7 +34,7 @@ describe('createSnapshotId', () => {
     };
     const result = createSnapshotId(options);
 
-    expect(result).toBe('-...');
+    expect(result).toBe('...');
   });
 
   test('should return a lowercased snapshot ID', () => {
@@ -44,7 +44,7 @@ describe('createSnapshotId', () => {
         project: 'PROJECT',
         name: 'NAME',
       },
-      target: 'WEB',
+      target: 'android',
       zeConfig: {
         user: 'USER',
         buildId: 'BUILDID',
@@ -52,7 +52,25 @@ describe('createSnapshotId', () => {
     };
     const result = createSnapshotId(options);
 
-    expect(result).toBe('user-web-buildid.name.project.org');
+    expect(result).toBe('USER-android-BUILDID.name.project.org');
+  });
+
+  test('should not return snapshot id if target is web', () => {
+    const options = {
+      app: {
+        org: 'ORG',
+        project: 'PROJECT',
+        name: 'NAME',
+      },
+      target: 'web',
+      zeConfig: {
+        user: 'USER',
+        buildId: 'BUILDID',
+      },
+    };
+    const result = createSnapshotId(options);
+
+    expect(result).toBe('USER-BUILDID.name.project.org');
   });
 });
 
@@ -82,7 +100,7 @@ describe('flatCreateSnapshotId', () => {
     };
     const result = flatCreateSnapshotId(props);
 
-    expect(result).toBe('-...');
+    expect(result).toBe('...');
   });
 
   test('should return a lowercased snapshot ID', () => {
@@ -96,6 +114,6 @@ describe('flatCreateSnapshotId', () => {
     };
     const result = flatCreateSnapshotId(props);
 
-    expect(result).toBe('user-platform-buildid.name.project.org');
+    expect(result).toBe('USER-PLATFORM-BUILDID.name.project.org');
   });
 });

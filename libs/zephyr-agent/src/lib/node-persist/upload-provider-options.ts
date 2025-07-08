@@ -1,13 +1,13 @@
 // libs/api/builder-packages-api/src/lib/builder-packages-api.service.ts
 export interface ZeApplicationConfig {
   application_uid: string;
-  AUTH0_CLIENT_ID: string;
-  AUTH0_DOMAIN: string;
   BUILD_ID_ENDPOINT: string;
   EDGE_URL: string;
   DELIMITER: string;
-  fetched_at?: number;
   PLATFORM: UploadProviderType;
+  fetched_at?: number;
+
+  // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration
   // @deprecated
   email: string;
   // @deprecated
@@ -16,7 +16,6 @@ export interface ZeApplicationConfig {
   user_uuid: string;
   // @deprecated
   username: string;
-  build_target: string;
 }
 
 export enum UploadProviderType {

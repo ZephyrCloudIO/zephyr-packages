@@ -2,7 +2,8 @@ import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
 import path from 'node:path';
 
 export async function generatePnpmWorkspaceConfig(
-  rootPath: string
+  rootPath: string,
+  includeStandardExcludes: boolean = true
 ): Promise<string | null> {
   try {
     // Use @pnpm/workspace.find-packages to detect packages
@@ -40,29 +41,12 @@ export async function generatePnpmWorkspaceConfig(
     if (workspacePaths.size > 0) {
       const sortedPaths = Array.from(workspacePaths).sort();
       return `packages:
-${sortedPaths.map((p) => `  - ${p}`).join('\n')}
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`;
+${sortedPaths.map((p) => `  - ${p}`).join('\n')}`;
     }
 
     return null;
   } catch (error) {
-    if (process.env['DEBUG'] === 'true') {
-      console.error('Error generating pnpm workspace config:', error);
-    }
-
-    if (error instanceof Error) {
-      if (error.message.includes('ENOENT')) {
-        console.warn(
-          'Warning: Could not find package.json files for workspace detection'
-        );
-      } else if (error.message.includes('EACCES')) {
-        console.warn('Warning: Permission denied while scanning for packages');
-      }
-    }
-
+    console.error(error);
     return null;
   }
 }

@@ -6,7 +6,7 @@
     "bump-patch": "node scripts/bump-patch-version.js",
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
     "ze-publish": "pnpm --filter \"./libs/**\" publish --provenance --access public --no-git-checks",
-    "build": "nx run-many -t build --projects=\"libs/*\"",
+    "build": "nx run-many -t build --projects=\"libs/*\" --exclude=\"rollup-sample-lib\"",
     "build-all": "nx run-many -t build --all",
     "build-slow": "nx run-many -t build --all --parallel=1 --verbose --skip-nx-cache",
     "lint": "nx run-many -t lint --projects=\"libs/*\"",

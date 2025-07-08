@@ -1,0 +1,37 @@
+{
+  "name": "zephyr-rollx-internal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-rollx-internal/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-rollx-internal/src",
+        "outputPath": "libs/zephyr-rollx-internal/dist",
+        "tsConfig": "libs/zephyr-rollx-internal/tsconfig.lib.json",
+        "main": "libs/zephyr-rollx-internal/src/index.ts"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-rollx-internal@$(npm view zephyr-rollx-internal@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-rollx-internal/jest.config.ts"
+      }
+    }
+  }
+}

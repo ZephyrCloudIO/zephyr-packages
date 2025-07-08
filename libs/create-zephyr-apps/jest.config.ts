@@ -13,5 +13,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/libs/create-zephyr-apps',
-  testMatch: ['<rootDir>/tests/**/*.spec.ts'],
+  testMatch: ['<rootDir>/__tests__/**/*.spec.ts'],
 };

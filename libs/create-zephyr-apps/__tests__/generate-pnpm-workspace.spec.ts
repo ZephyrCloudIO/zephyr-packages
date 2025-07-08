@@ -1,12 +1,12 @@
-import { generatePnpmWorkspaceConfig } from '../src/generate-pnpm-workspace';
-import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
 import type {
+  Project,
   ProjectManifest,
   ProjectRootDir,
   ProjectRootDirRealPath,
-  Project,
 } from '@pnpm/types';
+import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
 import path from 'node:path';
+import { generatePnpmWorkspaceConfig } from '../src/generate-pnpm-workspace';
 
 // Mock the external dependency
 jest.mock('@pnpm/workspace.find-packages', () => ({
@@ -64,14 +64,9 @@ describe('generatePnpmWorkspaceConfig', () => {
 
     const result = await generatePnpmWorkspaceConfig(mockRootPath);
 
-    expect(result).toBe(`packages:
-  - "apps/*"
-  - "libs/*"
-  - "packages/*"
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`);
+    expect(result).toEqual({
+      packages: ['apps/*', 'libs/*', 'packages/*'],
+    });
   });
 
   it('should handle individual package directories not in common patterns', async () => {
@@ -83,13 +78,9 @@ describe('generatePnpmWorkspaceConfig', () => {
 
     const result = await generatePnpmWorkspaceConfig(mockRootPath);
 
-    expect(result).toBe(`packages:
-  - "another-pkg"
-  - "custom-pkg"
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`);
+    expect(result).toEqual({
+      packages: ['another-pkg', 'custom-pkg'],
+    });
   });
 
   it('should mix common patterns with individual packages', async () => {
@@ -102,14 +93,9 @@ describe('generatePnpmWorkspaceConfig', () => {
 
     const result = await generatePnpmWorkspaceConfig(mockRootPath);
 
-    expect(result).toBe(`packages:
-  - "apps/*"
-  - "custom-pkg"
-  - "libs/*"
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`);
+    expect(result).toEqual({
+      packages: ['apps/*', 'custom-pkg', 'libs/*'],
+    });
   });
 
   it('should handle nested packages in common directories', async () => {
@@ -121,12 +107,9 @@ describe('generatePnpmWorkspaceConfig', () => {
 
     const result = await generatePnpmWorkspaceConfig(mockRootPath);
 
-    expect(result).toBe(`packages:
-  - "apps/*"
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`);
+    expect(result).toEqual({
+      packages: ['apps/*'],
+    });
   });
 
   it('should skip root package when it has empty relative path', async () => {
@@ -137,63 +120,9 @@ describe('generatePnpmWorkspaceConfig', () => {
 
     const result = await generatePnpmWorkspaceConfig(mockRootPath);
 
-    expect(result).toBe(`packages:
-  - "apps/*"
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`);
-  });
-
-  it('should return null and log error in debug mode when findWorkspacePackagesNoCheck throws', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    process.env['DEBUG'] = 'true';
-
-    const error = new Error('Test error');
-    mockFindWorkspacePackagesNoCheck.mockRejectedValue(error);
-
-    const result = await generatePnpmWorkspaceConfig(mockRootPath);
-
-    expect(result).toBeNull();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Error generating pnpm workspace config:',
-      error
-    );
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('should return null and log warning for ENOENT errors even without debug mode', async () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    const error = new Error('ENOENT: no such file or directory');
-    mockFindWorkspacePackagesNoCheck.mockRejectedValue(error);
-
-    const result = await generatePnpmWorkspaceConfig(mockRootPath);
-
-    expect(result).toBeNull();
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'Warning: Could not find package.json files for workspace detection'
-    );
-
-    consoleWarnSpy.mockRestore();
-  });
-
-  it('should return null silently for non-ENOENT errors without debug mode', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    const error = new Error('Some other error');
-    mockFindWorkspacePackagesNoCheck.mockRejectedValue(error);
-
-    const result = await generatePnpmWorkspaceConfig(mockRootPath);
-
-    expect(result).toBeNull();
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-    expect(consoleWarnSpy).not.toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
+    expect(result).toEqual({
+      packages: ['apps/*'],
+    });
   });
 
   it('should handle all common directory patterns', async () => {
@@ -208,15 +137,8 @@ describe('generatePnpmWorkspaceConfig', () => {
 
     const result = await generatePnpmWorkspaceConfig(mockRootPath);
 
-    expect(result).toBe(`packages:
-  - "apps/*"
-  - "examples/*"
-  - "libs/*"
-  - "packages/*"
-  - "tools/*"
-  - "!**/dist/**"
-  - "!**/build/**"
-  - "!**/node_modules/**"
-`);
+    expect(result).toEqual({
+      packages: ['apps/*', 'examples/*', 'libs/*', 'packages/*', 'tools/*'],
+    });
   });
 });

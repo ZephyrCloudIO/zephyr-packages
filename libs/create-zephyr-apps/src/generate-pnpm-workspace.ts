@@ -1,10 +1,13 @@
 import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
 import path from 'node:path';
 
+export interface WorkspaceConfig {
+  packages: string[];
+}
+
 export async function generatePnpmWorkspaceConfig(
-  rootPath: string,
-  includeStandardExcludes: boolean = true
-): Promise<string | null> {
+  rootPath: string
+): Promise<WorkspaceConfig | null> {
   try {
     // Use @pnpm/workspace.find-packages to detect packages
     const packages = await findWorkspacePackagesNoCheck(rootPath);
@@ -30,23 +33,25 @@ export async function generatePnpmWorkspaceConfig(
 
       // Check if it's a common workspace directory pattern
       if (commonDirs.includes(topLevelDir)) {
-        workspacePaths.add(`"${topLevelDir}/*"`);
+        workspacePaths.add(`${topLevelDir}/*`);
       } else {
         // Individual package directory
-        workspacePaths.add(`"${relativePath}"`);
+        workspacePaths.add(relativePath);
       }
     }
 
     // Only create workspace config if we found multiple packages
     if (workspacePaths.size > 0) {
       const sortedPaths = Array.from(workspacePaths).sort();
-      return `packages:
-${sortedPaths.map((p) => `  - ${p}`).join('\n')}`;
+      return {
+        packages: [...sortedPaths],
+      };
     }
 
     return null;
   } catch (error) {
     console.error(error);
+
     return null;
   }
 }

@@ -24,6 +24,7 @@ import { setImmediate } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import terminalLink from 'terminal-link';
 import { generatePnpmWorkspaceConfig } from './generate-pnpm-workspace.js';
+import { workspaceConfigToYaml } from './workspace-yaml.js';
 import { DEFAULT_GITIGNORE } from './gitignore-template.js';
 import { DependencyFields, ProjectTypes, Templates } from './templates.js';
 
@@ -232,7 +233,8 @@ try {
       const workspaceConfig = await generatePnpmWorkspaceConfig(output);
       if (workspaceConfig) {
         loading.message('Creating pnpm-workspace.yaml...');
-        await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
+        const yamlContent = workspaceConfigToYaml(workspaceConfig);
+        await fs.promises.writeFile(workspacePath, yamlContent, 'utf8');
       }
     } catch (error) {
       console.error(error);

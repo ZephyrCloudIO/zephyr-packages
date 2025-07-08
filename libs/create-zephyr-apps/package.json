@@ -41,11 +41,13 @@
     "@pnpm/workspace.find-packages": "^1000.0.26",
     "@pnpm/workspace.read-manifest": "1000.1.3",
     "chalk-template": "1.1.0",
+    "js-yaml": "^4.1.0",
     "terminal-link": "^4.0.0"
   },
   "devDependencies": {
     "@pnpm/types": "1000.6.0",
     "@types/jest": "catalog:typescript",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript",

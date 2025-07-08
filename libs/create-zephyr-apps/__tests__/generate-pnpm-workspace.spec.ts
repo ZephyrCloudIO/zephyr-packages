@@ -6,7 +6,7 @@ import type {
 } from '@pnpm/types';
 import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
 import path from 'node:path';
-import { generatePnpmWorkspaceConfig } from '../src/generate-pnpm-workspace';
+import { generatePnpmWorkspaceConfig } from '../src/utils/generate-pnpm-workspace';
 
 // Mock the external dependency
 jest.mock('@pnpm/workspace.find-packages', () => ({

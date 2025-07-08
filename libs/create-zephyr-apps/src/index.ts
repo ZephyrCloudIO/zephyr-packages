@@ -23,10 +23,10 @@ import path from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import terminalLink from 'terminal-link';
-import { generatePnpmWorkspaceConfig } from './generate-pnpm-workspace.js';
-import { workspaceConfigToYaml } from './workspace-yaml.js';
-import { DEFAULT_GITIGNORE } from './gitignore-template.js';
+import { DEFAULT_GITIGNORE } from './utils/gitignore-template.js';
 import { DependencyFields, ProjectTypes, Templates } from './templates.js';
+import { generatePnpmWorkspaceConfig } from './utils/generate-pnpm-workspace.js';
+import { workspaceConfigToYaml } from './utils/workspace-yaml.js';
 
 const execAsync = promisify(exec);
 

@@ -214,9 +214,7 @@ try {
     try {
       await fs.promises.writeFile(gitignorePath, DEFAULT_GITIGNORE, 'utf8');
     } catch (error) {
-      if (process.env['DEBUG']) {
-        console.error('Warning: Failed to create .gitignore file:', error);
-      }
+      console.error(error);
       loading.message('Checking for .gitignore file...');
     }
     loading.stop('.gitignore file created');
@@ -237,9 +235,7 @@ try {
         await fs.promises.writeFile(workspacePath, workspaceConfig, 'utf8');
       }
     } catch (error) {
-      if (process.env['DEBUG']) {
-        console.error('Warning: Failed to create pnpm-workspace.yaml:', error);
-      }
+      console.error(error);
       loading.message('Checking for pnpm-workspace.yaml...');
     }
     loading.stop('pnpm-workspace.yaml created');

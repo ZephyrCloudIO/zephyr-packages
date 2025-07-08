@@ -40,6 +40,11 @@ async function loadApplicationConfiguration({
     });
   }
 
+  ze_log.app('Application Configuration loaded', {
+    application_uid,
+    data: data.value,
+  });
+
   return {
     ...data.value,
     fetched_at: Date.now(),

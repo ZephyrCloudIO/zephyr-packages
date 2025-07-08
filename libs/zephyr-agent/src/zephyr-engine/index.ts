@@ -38,7 +38,7 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
-export type Platform = 'ios' | 'android' | 'web' | undefined;
+export type Platform = 'ios' | 'android' | 'windows' | 'macos' | 'web' | undefined;
 
 export type DeferredZephyrEngine = {
   zephyr_engine_defer: Promise<ZephyrEngine>;
@@ -46,8 +46,8 @@ export type DeferredZephyrEngine = {
 };
 
 export interface ZeDependencyPair {
-  name: string;
-  version: string;
+  name: string; // remoteAppName
+  version: string; // http://localhost:3000/remoteAppName/mf-manifest.json or http://localhost:3000/remoteAppName/remoteEntry.js
 }
 
 export interface BuildProperties {
@@ -77,6 +77,7 @@ type ZephyrEngineBuilderTypes =
   | 'rollup'
   | 'parcel'
   | 'unknown';
+
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
@@ -111,7 +112,10 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     target: Platform;
-  } = { isCI, target: 'web' };
+  } = {
+    isCI,
+    target: 'web',
+  };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 
@@ -387,12 +391,8 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
           action: 'build:info:user',
           ignore: true,
           message: if_target_is_react_native
-            ? `Resolved zephyr dependencies: ${dependencies
-                .map((dep) => dep.name)
-                .join(', ')} for platform: ${zephyr_engine.env.target}`
-            : `Resolved zephyr dependencies: ${dependencies
-                .map((dep) => dep.name)
-                .join(', ')}`,
+            ? `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')} for platform: ${zephyr_engine.env.target} for native version: ${zephyr_engine.applicationProperties.version}`
+            : `Resolved zephyr dependencies: ${dependencies.map((dep) => dep.name).join(', ')}`,
         });
       }
 

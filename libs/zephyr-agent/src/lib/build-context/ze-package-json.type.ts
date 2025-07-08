@@ -9,7 +9,10 @@ export interface ZePackageJson {
   version: string;
   dependencies?: Record<string, string>;
 
-  /** Zephyr:dependencies in package.json */
+  /**
+   * Zephyr:dependencies in package.json - if it's a string it's web, if it's an object is
+   * a cross-platform app
+   */
   ['zephyr:dependencies']?: Record<string, string>;
   // parsed zephyr:dependencies
   zephyrDependencies?: Record<string, ZeDependency>;

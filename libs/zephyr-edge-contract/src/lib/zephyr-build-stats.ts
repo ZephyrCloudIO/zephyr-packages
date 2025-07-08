@@ -118,10 +118,7 @@ export interface ZephyrBuildStats {
   domain?: string | undefined;
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;
-  /**
-   * The target platform of the build , should be `ios`, `android`, `web` or undefined at
-   * the moment
-   */
+  //  deploy target platform related data, should be `ios`, `android`, `web` or undefined at the moment
   build_target?: string;
   /** @deprecated */
   type: unknown;

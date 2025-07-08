@@ -6,9 +6,9 @@ import {
   createApplicationUid,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
-import { applyBaseHrefToAssets } from './ze-basehref-handler';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
 import { posix, win32 } from 'node:path';
 
 interface CreateSnapshotProps {

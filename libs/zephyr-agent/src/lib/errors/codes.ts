@@ -199,6 +199,76 @@ Please make sure you have set them correctly in your package.json and git reposi
     kind: 'build',
   },
 
+  ERR_MISSING_IOS_VERSION: {
+    id: '025',
+    message:
+      'Missing iOS version. Please ensure you have a valid iOS version in your project.pbxproj file in the ios project and variable MARKETING_VERSION is set. To use semantic versioning and ensuring Host application and remote application are in sync, please ensure you have a valid native version in project.xcodeproj or a valid matching git tag for the platform.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_IOS_BUILD_NUMBER: {
+    id: '026',
+    message:
+      'Missing iOS build number. Please ensure you have a valid iOS build number in your project.pbxproj file in the ios project and variable CURRENT_PROJECT_VERSION is set.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_IOS_PROJECT_PATH: {
+    id: '027',
+    message:
+      'Missing iOS project path. Please ensure you have a valid iOS project path where your package.json file is located.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_ANDROID_VERSION: {
+    id: '028',
+    message:
+      'Missing Android version. Please ensure you have a valid Android version in your build.gradle file in the android project behind `versionName`.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_ANDROID_BUILD_NUMBER: {
+    id: '029',
+    message:
+      'Missing Android build number. Please ensure you have a valid Android build number in your build.gradle file in the android project behind `versionCode`.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_MACOS_VERSION: {
+    id: '030',
+    message:
+      'Missing macOS version. Please ensure you have a valid macOS version in your project.pbxproj file in the macos project under line MARKETING_VERSION.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_MACOS_BUILD_NUMBER: {
+    id: '031',
+    message:
+      'Missing macOS build number. Please ensure you have a valid macOS build number in your project.pbxproj file in the macos project under line CURRENT_PROJECT_VERSION.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_WINDOWS_VERSION: {
+    id: '032',
+    message:
+      'Missing Windows version. Please ensure you have a valid Windows version in your Package.appxmanifest file in the windows project.',
+    kind: 'config',
+  },
+
+  ERR_MISSING_NATIVE_VERSION: {
+    id: '033',
+    message:
+      'Missing native version for your {{ platform }}. Please ensure you have a valid native version in your native configuration file in the project. {{ cause }}',
+    kind: 'config',
+  },
+
+  ERR_INCORRECT_SEMVER_VERSION: {
+    id: '034',
+    message: `The native version set for your {{ platform }} is not a valid semantic version and it will affect your application's remote resolution. Please ensure you have a valid value set for {{ variable_name }} in {{ file_path }}. For more information, please refer to the official semantic versioning documentation: https://semver.org/. 
+Error: {{ message }}`,
+    kind: 'config',
+  },
+
   /** Deployment error, assets not found */
   ERR_ASSETS_NOT_FOUND: {
     id: '010',

@@ -5,9 +5,9 @@ import type { XOutputAsset, XOutputBundle, XOutputChunk } from 'zephyr-rollx-int
 import { extractRollxBuildStats } from 'zephyr-rollx-internal';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
-import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 

@@ -1,13 +1,15 @@
 import { readdirSync, readFile, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import type { OutputAsset } from 'rollup';
+import type { OutputAsset as RollupOutputAsset } from 'rollup';
 import { normalizePath } from 'vite';
 
 interface LoadStaticEntriesOptions {
   root: string;
   outDir: string;
 }
+
+export type OutputAsset = RollupOutputAsset;
 
 export async function load_static_entries(
   props: LoadStaticEntriesOptions

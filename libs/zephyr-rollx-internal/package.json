@@ -22,7 +22,9 @@
   },
   "dependencies": {
     "is-ci": "catalog:plugin-shared",
-    "zephyr-agent": "workspace:*"
+    "zephyr-agent": "workspace:*",
+    "rollup": "catalog:rollup4",
+    "vite": "catalog:vite6"
   },
   "devDependencies": {
     "@types/is-ci": "catalog:typescript",

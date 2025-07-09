@@ -5,7 +5,7 @@ export {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
-  xpack_delegate_module_template,ß
+  xpack_delegate_module_template,
 } from './xpack-extract';
 export { buildWebpackAssetMap } from './xpack-extract/build-webpack-assets-map';
 export { isModuleFederationPlugin } from './xpack-extract/is-module-federation-plugin';

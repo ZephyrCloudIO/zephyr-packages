@@ -1,4 +1,3 @@
-import { ze_log } from 'zephyr-agent';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export type MetroConfig = any; // TODO: Import proper Metro config type
@@ -13,7 +12,6 @@ export async function zephyrCommandWrapper(
   updateManifest: () => void
 ) {
   return async (...args: any[]) => {
-    ze_log('zephyrCommandWrapper', args);
     // before build
     const isDev = args[0][0]['mode'];
     const platform = args[0][0]['platform'];

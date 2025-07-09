@@ -1,4 +1,3 @@
-import { ze_log } from 'zephyr-agent';
 import { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
@@ -24,9 +23,6 @@ export function withZephyr(
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']
 ) => Promise<Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']> {
   return async function (config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']) {
-    ze_log('\n\nwithZephyr\n\n --federation config-------');
-    ze_log('config: ', config);
-
     if (!config) return config;
 
     const zephyrMetroPlugin = new ZephyrMetroPlugin({
@@ -38,8 +34,6 @@ export function withZephyr(
     });
 
     const newConfig = await zephyrMetroPlugin.beforeBuild();
-
-    ze_log('newConfig: ', newConfig);
 
     return newConfig;
   };

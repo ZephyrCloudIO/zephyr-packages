@@ -39,6 +39,8 @@ const createLogger = () => {
     remotes: debug('zephyr:remotes'),
     snapshot: debug('zephyr:snapshot'),
     upload: debug('zephyr:upload'),
+    debug: debug('zephyr:debug'),
+    error: debug('zephyr:error'),
   };
 };
 

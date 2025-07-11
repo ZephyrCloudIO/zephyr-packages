@@ -159,7 +159,7 @@ async function openUrl(url: string): Promise<void> {
 
 /** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
-  ze_log(
+  ze_log.auth(
     'getAuthenticationURL',
     `${ZE_API_ENDPOINT()}${ze_api_gateway.auth_link}?state=${state}`
   );

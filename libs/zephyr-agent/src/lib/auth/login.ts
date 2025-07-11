@@ -179,31 +179,6 @@ async function getAuthenticationURL(state: string): Promise<string> {
   return data;
 }
 
-/** Waits for the access token to be received from the websocket. */
-// function waitForAccessTokenWs(sessionKey: string): Promise<string> {
-//   return new Promise(async (resolve, reject) => {
-//     const url = new URL(ze_api_gateway.websocket, ZE_API_ENDPOINT());
-//     url.searchParams.set('sessionId', sessionKey);
-//     const socket = await createSocket(url);
-
-//     socket.addEventListener('message', (event) => {
-//       const data = JSON.parse(event.data as string);
-//       if (data.type === 'access-token') {
-//         resolve(data.token);
-//       }
-//     });
-
-//     socket.addEventListener('error', (event) => {
-//       reject(
-//         new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-//           message: 'Error getting access token',
-//           cause: event,
-//         })
-//       );
-//     });
-//   });
-// }
-
 async function waitForAccessToken(sessionKey: string): Promise<string> {
   const url = new URL(ze_api_gateway.websocket, ZE_API_ENDPOINT());
   url.searchParams.set('sessionId', sessionKey);

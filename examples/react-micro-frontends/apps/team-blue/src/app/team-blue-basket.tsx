@@ -31,9 +31,7 @@ export default function BlueBasket({ id }: { id: string }) {
 
   return (
     <div id={id}>
-      <div className={classname}>
-        basket: {count} item(s) (1.0.0.opavlovskyi)
-      </div>
+      <div className={classname}>basket: {count} item(s)</div>
     </div>
   );
 }

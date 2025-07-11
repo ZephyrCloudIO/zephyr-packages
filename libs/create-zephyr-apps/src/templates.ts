@@ -1,3 +1,10 @@
+export const DependencyFields = [
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+] as const;
+
 export const ProjectTypes = [
   {
     value: 'web',
@@ -17,6 +24,11 @@ export const Templates: { name: string; label: string; hint: string }[] = [
     name: 'angular-vite',
     label: 'Angular app with Vite',
     hint: 'You will be building an Angular app powered by Vite.',
+  },
+  {
+    name: 'react-airbnb-clone',
+    label: 'Airbnb clone',
+    hint: 'You will be building an Airbnb clone with React, TypeScript, and Module Federation.',
   },
   {
     name: 'modernjs-app',

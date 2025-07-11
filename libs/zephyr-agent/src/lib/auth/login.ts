@@ -10,8 +10,8 @@ import { getSecretToken } from '../node-persist/secret-token';
 import { getSessionKey, waitForUnlock } from '../node-persist/session-lock';
 import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
-import { TOKEN_EXPIRY } from './auth-flags';
 import { AuthListener } from './sse';
+import { TOKEN_EXPIRY } from './auth-flags';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
@@ -32,7 +32,7 @@ export async function checkAuth(): Promise<void> {
   if (existingToken) {
     // Check if the token has a valid expiration date.
     if (isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
-      ze_log('You are already logged in');
+      ze_log.auth('You are already logged in');
       return;
     }
 

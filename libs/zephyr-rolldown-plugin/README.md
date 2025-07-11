@@ -76,11 +76,7 @@ export default defineConfig({
   input: 'src/main.tsx',
   plugins: [
     // ... other plugins
-    withZephyr({
-      // Configuration options
-      deploy: true,
-      environment: 'production',
-    }),
+    withZephyr(),
   ],
 });
 ```

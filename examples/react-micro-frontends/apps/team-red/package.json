@@ -10,7 +10,7 @@
   },
   "private": true,
   "zephyr:dependencies": {
-    "team-blue": "zephyr:team-blue.zephyr-packages.zephyrcloudio@production",
-    "team-green": "zephyr:team-green.zephyr-packages.zephyrcloudio@3.0.0"
+    "team-blue": "workspace:*",
+    "team-green": "workspace:*"
   }
 }

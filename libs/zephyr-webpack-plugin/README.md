@@ -99,11 +99,7 @@ const config: Configuration = {
   // ... other configuration
 };
 
-export default withZephyr({
-  // Zephyr options
-  deploy: true,
-  environment: 'production',
-})(config);
+export default withZephyr()(config);
 ```
 
 ### With Module Federation Plugin

@@ -95,11 +95,10 @@ export async function getPackageJson(
       parsed_package_json.zephyrDependencies = parseZeDependencies(zephyr_dependencies);
     } else {
       logFn(
-        'warn',
-        'No zephyr:dependencies found in package.json, to give you more control over your dependencies, please add a "zephyr:dependencies" field in your package.json'
+        'info',
+        'No zephyr:dependencies found in package.json, to give you more control over your dependencies, check out our documentation:'
       );
-      logFn('warn', 'For more information, please refer to the documentation:');
-      logFn('warn', 'https://docs.zephyr-cloud.io/how-to/dependency-management');
+      logFn('info', 'https://docs.zephyr-cloud.io/how-to/dependency-management');
     }
 
     ze_log.package('Successfully parsed package.json', {

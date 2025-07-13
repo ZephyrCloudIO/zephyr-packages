@@ -46,9 +46,7 @@ const config = {
         type: 'commonjs-module',
         name: 'weather_tools_mcp',
       },
-      runtimePlugins: [
-        require.resolve('@module-federation/node/runtimePlugin'),
-      ],
+      runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')],
       shared: {
         '@modelcontextprotocol/sdk': {
           singleton: true,

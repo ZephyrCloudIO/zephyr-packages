@@ -7,6 +7,7 @@ The Zephyr MCP Server is designed to load MCP servers deployed to Zephyr Cloud. 
 ### Module Federation vs Direct Bundles
 
 When you deploy with `zephyr-mcp-plugin`, it creates Module Federation bundles with URLs like:
+
 ```
 https://[user]-[id]-[name]-zephyr-[hash]-ze.zephyrcloud.app/remoteEntry.js
 ```
@@ -24,7 +25,7 @@ When building your MCP server, create a standalone bundle in addition to the Mod
 export default {
   entry: './src/index.ts',
   output: {
-    filename: 'bundle.js',  // Standalone bundle
+    filename: 'bundle.js', // Standalone bundle
     libraryTarget: 'commonjs2',
   },
   // ... rest of config
@@ -32,6 +33,7 @@ export default {
 ```
 
 Then the URL would be:
+
 ```
 https://[...].zephyrcloud.app/bundle.js
 ```
@@ -41,13 +43,14 @@ https://[...].zephyrcloud.app/bundle.js
 We could enhance the host server to properly initialize Module Federation runtime and load remotes dynamically. This would require:
 
 1. Setting up the Module Federation runtime properly
-2. Loading the remoteEntry.js 
+2. Loading the remoteEntry.js
 3. Accessing the exposed modules
 4. Creating server instances from them
 
 ### Option 3: Direct Module Loading
 
 For testing, you can try the direct module URL:
+
 ```
 https://[...].zephyrcloud.app/__federation_expose_github.js
 ```
@@ -77,9 +80,9 @@ module.exports = async function createServer() {
 
 // Option 2: Named export
 module.exports = {
-  createServer: async function() {
+  createServer: async function () {
     // ... return server
-  }
+  },
 };
 
 // Option 3: Direct server instance

@@ -158,12 +158,14 @@ In a real implementation, this would connect to services like:
 
   private async getWeather(args: any) {
     const { location } = args;
-    
+
     // Mock weather data - in real implementation, call actual API
     const mockData = {
       location,
       temperature: Math.floor(Math.random() * 30) + 10,
-      conditions: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)],
+      conditions: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][
+        Math.floor(Math.random() * 4)
+      ],
       humidity: Math.floor(Math.random() * 50) + 30,
       windSpeed: Math.floor(Math.random() * 20) + 5,
     };
@@ -184,25 +186,26 @@ Wind Speed: ${mockData.windSpeed} km/h`,
 
   private async getForecast(args: any) {
     const { location, days = 3 } = args;
-    
+
     // Mock forecast data
     const forecast = [];
     for (let i = 0; i < days; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
-      
+
       forecast.push({
         date: date.toDateString(),
         high: Math.floor(Math.random() * 30) + 10,
         low: Math.floor(Math.random() * 20),
-        conditions: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)],
+        conditions: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][
+          Math.floor(Math.random() * 4)
+        ],
       });
     }
 
     const forecastText = forecast
       .map(
-        (day) =>
-          `${day.date}: High ${day.high}°C, Low ${day.low}°C, ${day.conditions}`
+        (day) => `${day.date}: High ${day.high}°C, Low ${day.low}°C, ${day.conditions}`
       )
       .join('\n');
 
@@ -218,12 +221,20 @@ Wind Speed: ${mockData.windSpeed} km/h`,
 
   private async searchLocation(args: any) {
     const { query } = args;
-    
+
     // Mock location search
     const mockLocations = [
       { name: query, lat: Math.random() * 180 - 90, lon: Math.random() * 360 - 180 },
-      { name: `${query} City`, lat: Math.random() * 180 - 90, lon: Math.random() * 360 - 180 },
-      { name: `${query} County`, lat: Math.random() * 180 - 90, lon: Math.random() * 360 - 180 },
+      {
+        name: `${query} City`,
+        lat: Math.random() * 180 - 90,
+        lon: Math.random() * 360 - 180,
+      },
+      {
+        name: `${query} County`,
+        lat: Math.random() * 180 - 90,
+        lon: Math.random() * 360 - 180,
+      },
     ];
 
     const resultsText = mockLocations

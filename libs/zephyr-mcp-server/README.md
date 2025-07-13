@@ -60,12 +60,7 @@ Configure your MCP client (e.g., Claude Desktop) to use any Zephyr-hosted MCP se
   "mcpServers": {
     "my-tools": {
       "command": "npx",
-      "args": [
-        "zephyr-mcp-server",
-        "start",
-        "--cloud-url",
-        "https://[your-custom-mcp].zephyrcloud.app/mf-manifest.json"
-      ]
+      "args": ["zephyr-mcp-server", "start", "--cloud-url", "https://[your-custom-mcp].zephyrcloud.app/mf-manifest.json"]
     }
   }
 }
@@ -84,9 +79,9 @@ export default withZephyr({
   mfConfig: {
     name: 'my_custom_mcp',
     exposes: {
-      './server': './src/my-mcp-server.ts'
-    }
-  }
+      './server': './src/my-mcp-server.ts',
+    },
+  },
 });
 ```
 
@@ -148,12 +143,14 @@ node ./dist/cli.js start --cloud-url [manifest-url]
 ## How Module Federation Makes This Possible
 
 Module Federation allows the host server to:
+
 1. Load code dynamically from any Zephyr URL
 2. Share dependencies efficiently (e.g., MCP SDK)
 3. Isolate different MCP servers while running them in the same process
 4. Update servers without changing the host
 
 This means you can:
+
 - Deploy new MCP servers without updating the host
 - Mix and match different MCP servers
 - Version your MCP servers independently

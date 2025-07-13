@@ -12,7 +12,7 @@ This example demonstrates how to build an MCP server using Webpack and Module Fe
 ## Available Tools
 
 1. **get_weather** - Get current weather for a location
-2. **get_forecast** - Get weather forecast for up to 7 days  
+2. **get_forecast** - Get weather forecast for up to 7 days
 3. **search_location** - Search for location coordinates
 
 ## Building

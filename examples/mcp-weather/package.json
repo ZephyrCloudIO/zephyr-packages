@@ -8,9 +8,6 @@
     "dev": "webpack --mode development --watch",
     "clean": "rm -rf dist"
   },
-  "keywords": ["mcp", "module-federation", "webpack"],
-  "author": "Example Developer",
-  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.0",
     "axios": "^1.10.0"

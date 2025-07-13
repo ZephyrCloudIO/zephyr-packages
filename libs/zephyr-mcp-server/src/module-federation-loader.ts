@@ -1,6 +1,11 @@
 // Module Federation runtime will be dynamically imported
 // to avoid bundling issues
-import { init, loadRemote, registerPlugins, registerRemotes } from '@module-federation/enhanced/runtime';
+import {
+  init,
+  loadRemote,
+  registerPlugins,
+  registerRemotes,
+} from '@module-federation/enhanced/runtime';
 import runtimePlugin from '@module-federation/node/runtimePlugin';
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import type { MCPServerEntry } from './types';
@@ -14,7 +19,7 @@ export class ModuleFederationLoader {
       // Initialize runtime once with empty remotes
       init({
         name: 'zephyr-mcp-host',
-        remotes: []
+        remotes: [],
       });
 
       registerPlugins([runtimePlugin()]);
@@ -41,7 +46,10 @@ export class ModuleFederationLoader {
           this.initializeRuntime();
 
           // Extract base URL from the bundle URL to use for chunk loading
-          const baseUrl = entry.bundleUrl.substring(0, entry.bundleUrl.lastIndexOf('/') + 1);
+          const baseUrl = entry.bundleUrl.substring(
+            0,
+            entry.bundleUrl.lastIndexOf('/') + 1
+          );
           logger.log(`Base URL for chunks: ${baseUrl}`);
 
           // Set the webpack public path before loading the remote
@@ -52,18 +60,20 @@ export class ModuleFederationLoader {
           }
 
           // Register the remote based on mf-manifest
-          registerRemotes([{
-            name: manifest.name,
-            entry: entry.bundleUrl
-          }]);
+          registerRemotes([
+            {
+              name: manifest.name,
+              entry: entry.bundleUrl,
+            },
+          ]);
 
           // Load the remote module using loadRemote with format: "remoteName/expose"
           const moduleId = `${manifest.name}${exposePath.startsWith('./') ? exposePath.substring(1) : '/' + exposePath}`;
           logger.log(`Loading module: ${moduleId}`);
 
           // Use loadRemote which should handle chunk loading properly
-          const remoteModule = await loadRemote(moduleId) as unknown;
-          
+          const remoteModule = (await loadRemote(moduleId)) as unknown;
+
           // Handle different export patterns dynamically
           return async () => {
             // If it's already a function, call it to get the server instance
@@ -75,37 +85,51 @@ export class ModuleFederationLoader {
               }
               return result;
             }
-            
+
             // If it has a default export
-            if (remoteModule && typeof remoteModule === 'object' && 'default' in remoteModule) {
+            if (
+              remoteModule &&
+              typeof remoteModule === 'object' &&
+              'default' in remoteModule
+            ) {
               const defaultExport = remoteModule.default;
               if (typeof defaultExport === 'function') {
                 const result = defaultExport();
-                return result && typeof result === 'object' && 'server' in result ? result.server : result;
+                return result && typeof result === 'object' && 'server' in result
+                  ? result.server
+                  : result;
               }
               return defaultExport;
             }
-            
+
             // If it directly exports a server instance
-            if (remoteModule && typeof remoteModule === 'object' && 'server' in remoteModule) {
+            if (
+              remoteModule &&
+              typeof remoteModule === 'object' &&
+              'server' in remoteModule
+            ) {
               return remoteModule.server;
             }
-            
+
             // Look for any factory function in the exports
             if (remoteModule && typeof remoteModule === 'object') {
               const exportKeys = Object.keys(remoteModule);
               for (const key of exportKeys) {
                 const exportValue = remoteModule[key];
-                if (typeof exportValue === 'function' && 
-                    (key.toLowerCase().includes('create') || 
-                     key.toLowerCase().includes('factory') || 
-                     key.toLowerCase().includes('server'))) {
+                if (
+                  typeof exportValue === 'function' &&
+                  (key.toLowerCase().includes('create') ||
+                    key.toLowerCase().includes('factory') ||
+                    key.toLowerCase().includes('server'))
+                ) {
                   const result = exportValue();
-                  return result && typeof result === 'object' && 'server' in result ? result.server : result;
+                  return result && typeof result === 'object' && 'server' in result
+                    ? result.server
+                    : result;
                 }
               }
             }
-            
+
             // Return the module itself as last resort
             return remoteModule;
           };
@@ -114,7 +138,10 @@ export class ModuleFederationLoader {
 
       throw new Error('No Module Federation manifest found');
     } catch (error) {
-      logger.error(`Failed to load MCP server ${entry.name} via Module Federation:`, error);
+      logger.error(
+        `Failed to load MCP server ${entry.name} via Module Federation:`,
+        error
+      );
       throw error;
     }
   }

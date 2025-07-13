@@ -26,11 +26,11 @@ program
 
     // If no cloud URL provided, prompt for MCP server URLs
     const mcpUrls: string[] = [];
-    
+
     if (!options.cloudUrl) {
       const rl = readline.createInterface({
         input: process.stdin,
-        output: process.stderr  // Use stderr to avoid interfering with JSON-RPC
+        output: process.stderr, // Use stderr to avoid interfering with JSON-RPC
       });
 
       logger.log('Enter Zephyr MCP server URLs (one per line).');
@@ -54,7 +54,10 @@ program
                 const trimmedUrl = url.trim();
                 if (trimmedUrl.endsWith('/mf-manifest.json')) {
                   logger.log('\n⚠️  Detected mf-manifest.json URL.');
-                  logger.log('Please restart with: node ./dist/cli.js start --cloud-url ' + trimmedUrl);
+                  logger.log(
+                    'Please restart with: node ./dist/cli.js start --cloud-url ' +
+                      trimmedUrl
+                  );
                   logger.log('Or provide direct bundle URLs instead.\n');
                   askForUrl();
                 } else {
@@ -70,7 +73,7 @@ program
       };
 
       await getUrls();
-      
+
       logger.log(`\nLoading ${mcpUrls.length} MCP server(s)...\n`);
     }
 
@@ -108,7 +111,8 @@ program
   .option('-e, --env <environment>', 'Environment', 'production')
   .action(async (options) => {
     try {
-      const cloudUrl = options.cloudUrl || 'https://cdn.zephyr-cloud.io/mcp/manifest.json';
+      const cloudUrl =
+        options.cloudUrl || 'https://cdn.zephyr-cloud.io/mcp/manifest.json';
 
       logger.log(`Fetching MCP servers from: ${cloudUrl}`);
 

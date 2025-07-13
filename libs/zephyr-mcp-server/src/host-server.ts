@@ -73,7 +73,9 @@ export class ZephyrHostMCPServer {
 
       // If direct MCP URLs are provided, create entries for them
       if (this.config.mcpUrls && this.config.mcpUrls.length > 0) {
-        logger.log(`Loading ${this.config.mcpUrls.length} MCP servers from provided URLs...`);
+        logger.log(
+          `Loading ${this.config.mcpUrls.length} MCP servers from provided URLs...`
+        );
 
         for (const url of this.config.mcpUrls) {
           // Extract server name from URL
@@ -95,11 +97,11 @@ export class ZephyrHostMCPServer {
             description: `MCP server from ${urlParts.hostname}`,
             bundleUrl: url,
             metadata: {
-              capabilities: {}
+              capabilities: {},
             },
             status: 'active',
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
 
           servers.push(entry);
@@ -109,9 +111,11 @@ export class ZephyrHostMCPServer {
         logger.log(`Fetching manifest from: ${this.config.cloudUrl}`);
 
         const response = await fetch(this.config.cloudUrl, {
-          headers: this.config.apiKey ? {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-          } : {},
+          headers: this.config.apiKey
+            ? {
+                Authorization: `Bearer ${this.config.apiKey}`,
+              }
+            : {},
         });
 
         if (!response.ok) {
@@ -134,11 +138,11 @@ export class ZephyrHostMCPServer {
             bundleUrl: `${baseUrl}/remoteEntry.js`,
             metadata: {
               ['mfManifest']: manifest,
-              capabilities: {}
+              capabilities: {},
             },
             status: 'active',
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
           servers = [server];
           logger.log(`Created server entry for ${server.name} at ${server.bundleUrl}`);
@@ -207,19 +211,22 @@ export class ZephyrHostMCPServer {
 
       // Create a linked pair of transports for client-server communication
       const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-      
+
       // Create and connect the client
-      loaded.client = new Client({
-        name: `${loaded.entry.name}-client`,
-        version: '1.0.0',
-      }, {
-        capabilities: {}
-      });
+      loaded.client = new Client(
+        {
+          name: `${loaded.entry.name}-client`,
+          version: '1.0.0',
+        },
+        {
+          capabilities: {},
+        }
+      );
 
       // Connect the server to one transport and client to the other
       await loaded.instance!.connect(serverTransport);
       await loaded.client.connect(clientTransport);
-      
+
       logger.log(`✓ Connected client to ${loaded.entry.name}`);
     }
     return loaded.client;
@@ -469,7 +476,9 @@ export class ZephyrHostMCPServer {
 
   async connect(_stdin: NodeJS.ReadStream, _stdout: NodeJS.WriteStream): Promise<void> {
     // Connect using stdio transport
-    const { StdioServerTransport } = await import('@modelcontextprotocol/sdk/server/stdio.js');
+    const { StdioServerTransport } = await import(
+      '@modelcontextprotocol/sdk/server/stdio.js'
+    );
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
   }
@@ -486,10 +495,10 @@ export class ZephyrHostMCPServer {
         }
       }
     }
-    
+
     // Clear loaded servers
     this.loadedServers.clear();
-    
+
     // Close the host server if connected
     try {
       await this.server.close();

@@ -38,9 +38,7 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
             type: 'commonjs-module',
             name: options.mfConfig.name,
           },
-          runtimePlugins: [
-            require.resolve('@module-federation/node/runtimePlugin'),
-          ]
+          runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')],
         })
       );
     }

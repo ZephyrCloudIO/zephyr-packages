@@ -38,7 +38,7 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
-export type Platform = 'ios' | 'android' | 'web' | undefined;
+export type Platform = 'ios' | 'android' | 'web' | 'mcp' | undefined;
 
 export type DeferredZephyrEngine = {
   zephyr_engine_defer: Promise<ZephyrEngine>;

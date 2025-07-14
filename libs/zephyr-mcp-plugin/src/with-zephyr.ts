@@ -43,12 +43,35 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
       );
     }
 
-    // Apply Zephyr Rspack plugin for automatic deployment
+    // Apply Zephyr Rspack plugin for automatic deployment with MCP platform metadata
     const { withZephyr: withZephyrRspack } = await import('zephyr-rspack-plugin');
 
-    // Pass MCP-specific metadata through to Zephyr
-    const enhancedConfig = await withZephyrRspack()(config);
+    // Create a custom wrapper to set MCP platform after ZephyrEngine creation
+    const mcpAwareZephyrWrapper = async (
+      rspackConfig: RspackConfiguration
+    ): Promise<RspackConfiguration> => {
+      const enhancedConfig = await withZephyrRspack()(rspackConfig);
 
-    return enhancedConfig;
+      // Find the ZeRspackPlugin instance in the enhanced config to access ZephyrEngine
+      const zeRspackPlugin = enhancedConfig.plugins?.find(
+        (plugin: unknown) =>
+          (plugin as { constructor: { name: string } }).constructor.name ===
+          'ZeRspackPlugin'
+      );
+
+      if (
+        zeRspackPlugin &&
+        (zeRspackPlugin as { zephyr_engine?: { env: { target: string } } }).zephyr_engine
+      ) {
+        // Set platform to 'mcp' for MCP servers
+        (
+          zeRspackPlugin as { zephyr_engine: { env: { target: string } } }
+        ).zephyr_engine.env.target = 'mcp';
+      }
+
+      return enhancedConfig;
+    };
+
+    return await mcpAwareZephyrWrapper(config);
   };
 }

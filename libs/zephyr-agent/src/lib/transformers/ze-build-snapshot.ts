@@ -71,6 +71,9 @@ export async function createSnapshot(
       email: options.email,
     },
     createdAt: Date.now(),
+    meta: {
+      platform: zephyr_engine.env.target,
+    },
     mfConfig: options.mfConfig,
     assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {

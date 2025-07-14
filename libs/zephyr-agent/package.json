@@ -50,6 +50,9 @@
   },
   "devDependencies": {
     "@jest/globals": "catalog:react",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.62.0",
+    "@opentelemetry/sdk-node": "^0.203.0",
     "@types/debug": "^4.1.12",
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "catalog:typescript",

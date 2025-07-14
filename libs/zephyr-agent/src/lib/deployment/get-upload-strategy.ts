@@ -14,6 +14,7 @@ export function getUploadStrategy(platform: UploadProviderType): UploadStrategy 
     case UploadProviderType.NETLIFY:
     case UploadProviderType.FASTLY:
     case UploadProviderType.AKAMAI:
+    case UploadProviderType.AWS:
       return commonUploadStrategy;
     default:
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {

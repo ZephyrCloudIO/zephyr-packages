@@ -1,10 +1,9 @@
+import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
 import {
   buildAssetsMap,
   create_minimal_build_stats,
-  Platform,
   resolveCatalogDependencies,
   ze_log,
-  ZeBuildAssetsMap,
   ZephyrEngine,
 } from 'zephyr-agent';
 import type {
@@ -21,7 +20,7 @@ import {
   parseSharedDependencies,
 } from 'zephyr-rollx-internal';
 import { extract_remotes_dependencies } from './internal/extract-mf-remotes';
-import { mutateMfConfig } from './internal/mutate_mf_config';
+import { mutateMfConfig } from './internal/mutate-mf-config';
 
 export interface ZephyrCommandWrapperConfig {
   platform: Platform;
@@ -110,7 +109,7 @@ export class ZephyrMetroPlugin {
 
           // Search for ES6 import statements: import ... from 'remote/component'
           const searchPattern =
-            /import\s+(?:\{[^}]*\}|\w+)\s+from\s+['"]([^\/'"]+)\/([^\/'"]+)['"]/g;
+            /import\s+(?:\{[^}]*\}|\w+)\s+from\s+['"]([^'"]+)\/([^'"]+)['"]/g;
 
           filteredSourcesContent.forEach((content: string, contentIndex: number) => {
             let match;
@@ -225,10 +224,10 @@ export class ZephyrMetroPlugin {
   }
 
   private extractBuffer(asset: OutputAsset): string | undefined {
-    return asset.source.toString();
+    return asset.source?.toString();
   }
 
   private getAssetType(asset: OutputAsset): string {
-    return asset.type;
+    return asset.type ?? 'asset';
   }
 }

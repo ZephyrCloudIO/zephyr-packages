@@ -1,5 +1,6 @@
-import { resolveCatalogDependencies, ZephyrEngine } from 'zephyr-agent';
-import { XFederatedSharedConfig } from '../types';
+import type { ZephyrEngine } from 'zephyr-agent';
+import { resolveCatalogDependencies } from 'zephyr-agent';
+import type { XFederatedSharedConfig } from '../types';
 
 export function parseSharedDependencies(
   name: string,

@@ -58,7 +58,6 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const version = await ze_engine.snapshotId;
   const application_uid = ze_engine.application_uid;
   const buildId = await ze_engine.build_id;
-  const build_target = ze_engine.env.target ?? 'web';
 
   // todo: add support for multiple federation configs
   const mfConfig = Array.isArray(pluginOptions.mfConfig)

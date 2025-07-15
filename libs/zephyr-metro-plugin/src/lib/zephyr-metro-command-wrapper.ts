@@ -1,7 +1,8 @@
+import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
-export type MetroConfig = any; // TODO: Import proper Metro config type
-export type MetroFederationConfig = any; // TODO: Import proper MF config type
+export type MetroConfig = Record<string, unknown>;
+export type MetroFederationConfig = Record<string, unknown>; // TODO: Import proper MF config type
 
 export async function zephyrCommandWrapper(
   bundleFederatedRemote: (...args: any[]) => Promise<any>,
@@ -12,34 +13,44 @@ export async function zephyrCommandWrapper(
   updateManifest: () => void
 ) {
   return async (...args: any[]) => {
-    // before build
-    const isDev = args[0][0]['mode'];
-    const platform = args[0][0]['platform'];
+    try {
+      // before build
+      const isDev = args[0][0]['mode'];
+      const platform = args[0][0]['platform'];
 
-    const context = args[1].root;
+      const context = args[1].root;
 
-    await loadMetroConfig(args[1], {
-      maxWorkers: args[2].maxWorkers,
-      resetCache: args[2].resetCache,
-      config: args[2].config,
-    });
+      await loadMetroConfig(args[1], {
+        maxWorkers: args[2].maxWorkers,
+        resetCache: args[2].resetCache,
+        config: args[2].config,
+      });
 
-    const zephyrMetroPlugin = new ZephyrMetroPlugin({
-      platform,
-      mode: isDev ? 'development' : 'production',
-      context,
-      outDir: 'dist',
-      mfConfig: (global as any).__METRO_FEDERATION_CONFIG,
-    });
+      if (!(global as any).__METRO_FEDERATION_CONFIG) {
+        throw new ZephyrError(ZeErrors.ERR_MISSING_METRO_FEDERATION_CONFIG);
+      }
 
-    await zephyrMetroPlugin.beforeBuild();
+      const zephyrMetroPlugin = new ZephyrMetroPlugin({
+        platform,
+        mode: isDev ? 'development' : 'production',
+        context,
+        outDir: 'dist',
+        mfConfig: (global as any).__METRO_FEDERATION_CONFIG,
+      });
 
-    updateManifest();
+      await zephyrMetroPlugin.beforeBuild();
 
-    const res = await bundleFederatedRemote(...args);
+      updateManifest();
 
-    zephyrMetroPlugin.afterBuild();
+      const res = await bundleFederatedRemote(...args);
 
-    return res;
+      await zephyrMetroPlugin.afterBuild();
+
+      return res;
+    } catch (error) {
+      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+        message: JSON.stringify(error),
+      });
+    }
   };
 }

@@ -21,10 +21,12 @@
     "test": "nx test zephyr-metro-plugin"
   },
   "dependencies": {
-    "metro-config": "^0.82.4",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*",
     "zephyr-rollx-internal": "workspace:*"
+  },
+  "peerDependencies": {
+    "metro-config": "^0.82.4"
   },
   "devDependencies": {
     "@rspack/core": "catalog:rspack",

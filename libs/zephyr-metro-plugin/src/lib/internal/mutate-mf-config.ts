@@ -1,5 +1,6 @@
-import { ze_log, ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
+import { ze_log } from 'zephyr-agent';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import {
   createMfRuntimeCode,
   xpack_delegate_module_template,
@@ -27,6 +28,16 @@ export function mutateMfConfig(
 
   Object.entries(remotes).map((remote) => {
     const [remote_name, remote_version] = remote;
+
+    if (
+      !remote_name ||
+      typeof remote_name !== 'string' ||
+      !remote_version ||
+      typeof remote_version !== 'string'
+    ) {
+      ze_log.mf(`Invalid remote configuration: ${JSON.stringify(remote)}, skipping...`);
+      return;
+    }
     const resolved_dep = resolvedDependencyPairs.find(
       (dep) => dep.name === remote_name && dep.version === remote_version
     );

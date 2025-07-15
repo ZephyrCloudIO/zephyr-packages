@@ -5,7 +5,7 @@
     {
       "files": ["*.ts", "*.tsx"],
       "parserOptions": {
-        "project": ["libs/zephyr-repack-plugin/tsconfig.*?.json"]
+        "project": ["libs/zephyr-metro-plugin/tsconfig.spec.json"]
       },
       "rules": {}
     },

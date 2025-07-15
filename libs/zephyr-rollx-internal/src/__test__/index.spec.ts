@@ -97,12 +97,17 @@ describe('index', () => {
 
   it('should not export any unexpected properties', () => {
     const exportNames = Object.keys(indexExports);
+
     const expectedExports = [
       'getRollxAssetsMap',
       'extractRollxBuffer',
       'getRollxAssetType',
       'extractRollxBuildStats',
       'viteLikeRemoteRegex',
+      'getPackageDependencies',
+      'extractModulesFromExposes',
+      'load_static_entries',
+      'parseSharedDependencies',
     ];
 
     // Check that we only export what we expect (no extra exports)

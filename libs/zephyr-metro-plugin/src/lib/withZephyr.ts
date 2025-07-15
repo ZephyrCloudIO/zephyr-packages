@@ -1,4 +1,4 @@
-import { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export interface ModuleFederationConfig {
@@ -18,7 +18,10 @@ export interface ModuleFederationConfig {
 }
 
 export function withZephyr(
-  context?: string
+  context?: string,
+  platform: 'ios' | 'android' = 'ios',
+  mode: 'development' | 'production' = 'development',
+  outDir = 'dist'
 ): (
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']
 ) => Promise<Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig']> {
@@ -26,10 +29,10 @@ export function withZephyr(
     if (!config) return config;
 
     const zephyrMetroPlugin = new ZephyrMetroPlugin({
-      platform: 'ios',
-      mode: 'development',
+      platform,
+      mode,
       context: context || process.cwd(),
-      outDir: 'dist',
+      outDir,
       mfConfig: config,
     });
 

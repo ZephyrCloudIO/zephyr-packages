@@ -1354,6 +1354,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
+      zephyr-rollx-internal:
+        specifier: workspace:*
+        version: link:../zephyr-rollx-internal
       zephyr-xpack-internal:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal

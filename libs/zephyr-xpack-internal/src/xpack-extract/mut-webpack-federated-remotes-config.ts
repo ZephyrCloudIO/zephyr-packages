@@ -11,7 +11,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
   delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ): void {
-  ze_log(`==========resolvedDependencyPairs: ${JSON.stringify(resolvedDependencyPairs)}`);
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;

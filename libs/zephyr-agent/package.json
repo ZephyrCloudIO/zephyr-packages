@@ -52,7 +52,13 @@
     "@jest/globals": "catalog:react",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.62.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.203.0",
+    "@opentelemetry/instrumentation": "^0.203.0",
+    "@opentelemetry/resources": "^2.0.1",
+    "@opentelemetry/sdk-metrics": "^2.0.1",
     "@opentelemetry/sdk-node": "^0.203.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.1",
+    "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@types/debug": "^4.1.12",
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "catalog:typescript",
@@ -61,7 +67,8 @@
     "@types/proper-lockfile": "^4.1.4",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "ts-node": "^10.9.2"
   },
   "publishConfig": {
     "access": "public",

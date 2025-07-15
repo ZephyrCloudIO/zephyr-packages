@@ -79,6 +79,9 @@
       "@rspack/dev-server>http-proxy-middleware": ">=3.0.5",
       "prismjs@<1.30.0": ">=1.30.0",
       "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "protobufjs"
+    ]
   }
 }

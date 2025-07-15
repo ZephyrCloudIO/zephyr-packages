@@ -14,7 +14,7 @@ export const ZE_IS_PREVIEW = () => process.env['ZE_IS_PREVIEW'] === 'true';
 export const ze_api_gateway = {
   logs: '/logs',
   build_stats: '/build-stats',
-  auth_link: '/auth-link',
+  authorize_link: '/authorize-link',
   resolve: '/resolve',
   application_config: '/application-config',
   websocket: '/websocket',

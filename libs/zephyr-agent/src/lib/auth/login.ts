@@ -161,10 +161,10 @@ async function openUrl(url: string): Promise<void> {
 async function getAuthenticationURL(state: string): Promise<string> {
   ze_log.auth(
     'getAuthenticationURL',
-    `${ZE_API_ENDPOINT()}${ze_api_gateway.auth_link}?state=${state}`
+    `${ZE_API_ENDPOINT()}${ze_api_gateway.authorize_link}?state=${state}`
   );
   const [ok, cause, data] = await makeRequest<string>({
-    path: ze_api_gateway.auth_link,
+    path: ze_api_gateway.authorize_link,
     base: ZE_API_ENDPOINT(),
     query: { state },
   });

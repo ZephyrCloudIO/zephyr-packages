@@ -9,9 +9,11 @@
 // OTEL_RESOURCE_ATTRIBUTES="service.name=zephyr-agent,service.namespace=zephyr,deployment.environment=dev"
 //
 // Only manual spans created with getTracer() will be sent to Grafana Cloud.
-import { trace } from '@opentelemetry/api';
+import { metrics, trace } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { MeterProvider } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -36,21 +38,51 @@ function parseHeaders(headersString: string): Record<string, string> {
   return headers;
 }
 
+// Helper to ensure correct OTLP endpoint suffix
+function ensureOtlpEndpointSuffix(
+  endpoint: string,
+  type: 'traces' | 'logs' | 'metrics'
+): string {
+  let suffix = '';
+  if (type === 'traces') suffix = '/v1/traces';
+  if (type === 'logs') suffix = '/v1/logs';
+  if (type === 'metrics') suffix = '/v1/metrics';
+  if (!endpoint.endsWith(suffix)) {
+    // Remove any trailing slash to avoid double slashes
+    endpoint = endpoint.replace(/\/+$/, '');
+    return endpoint + suffix;
+  }
+  return endpoint;
+}
+
 // Only initialize if we have the required environment variables
 if (otlpEndpoint && otlpHeaders) {
   console.log('[Telemetry] Initializing OpenTelemetry...');
 
+  const resource = new Resource({
+    'service.name': 'zephyr-agent',
+    'service.namespace': 'zephyr',
+    'deployment.environment': 'dev',
+  });
+
   const traceExporter = new OTLPTraceExporter({
-    url: otlpEndpoint,
+    url: ensureOtlpEndpointSuffix(otlpEndpoint, 'traces'),
     headers: parseHeaders(otlpHeaders),
   });
 
+  // Set up basic metrics provider (without OTLP export for now)
+  const meterProvider = new MeterProvider({
+    resource: resource,
+  });
+  metrics.setGlobalMeterProvider(meterProvider);
+
   const sdk = new NodeSDK({
-    traceExporter,
+    resource: resource,
+    spanProcessor: new BatchSpanProcessor(traceExporter),
   });
 
   sdk.start();
-  console.log('[Telemetry] ✅ OpenTelemetry started');
+  console.log('[Telemetry] ✅ OpenTelemetry started with traces and metrics');
 } else {
   console.warn(
     '[Telemetry] Missing OTEL_EXPORTER_OTLP_ENDPOINT or OTEL_EXPORTER_OTLP_HEADERS - telemetry disabled'
@@ -60,3 +92,36 @@ if (otlpEndpoint && otlpHeaders) {
 export function getTracer(name: string) {
   return trace.getTracer(name);
 }
+
+export function getMeter(name: string) {
+  return metrics.getMeter(name);
+}
+
+// Pre-create common meters for easy access
+export const buildMetrics = {
+  meter: getMeter('zephyr.build'),
+  buildIdGeneration: {
+    counter: getMeter('zephyr.build').createCounter('build_id_generation_total', {
+      description: 'Total number of build ID generation attempts',
+    }),
+    duration: getMeter('zephyr.build').createHistogram(
+      'build_id_generation_duration_seconds',
+      {
+        description: 'Duration of build ID generation in seconds',
+        unit: 's',
+      }
+    ),
+  },
+  engineInitialization: {
+    counter: getMeter('zephyr.engine').createCounter('engine_initialization_total', {
+      description: 'Total number of engine initialization attempts',
+    }),
+    duration: getMeter('zephyr.engine').createHistogram(
+      'engine_initialization_duration_seconds',
+      {
+        description: 'Duration of engine initialization in seconds',
+        unit: 's',
+      }
+    ),
+  },
+};

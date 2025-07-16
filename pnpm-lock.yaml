@@ -1148,13 +1148,22 @@ importers:
       chalk-template:
         specifier: 1.1.0
         version: 1.1.0
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
       terminal-link:
         specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
+      '@pnpm/types':
+        specifier: 1000.6.0
+        version: 1000.6.0
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       '@types/node':
         specifier: catalog:typescript
         version: 22.13.13
@@ -5751,6 +5760,9 @@ packages:
 
   '@types/jest@29.5.14':
     resolution: {integrity: sha512-ZN+4sdnLUbo8EVvVc2ao0GFW6oVrQRPn4K2lglySj7APvSrgzxHiNNK99us4WDMi57xxA2yggblIAMNhXOotLQ==}
+
+  '@types/js-yaml@4.0.9':
+    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
 
   '@types/jsdom@20.0.1':
     resolution: {integrity: sha512-d0r18sZPmMQr1eG35u12FZfhIXNrnsPU/g5wvRKCUf/tOGilKKwYMYGqh33BNR6ba+2gkHw1EUiHoN3mn7E5IQ==}
@@ -20679,6 +20691,8 @@ snapshots:
     dependencies:
       expect: 29.7.0
       pretty-format: 29.7.0
+
+  '@types/js-yaml@4.0.9': {}
 
   '@types/jsdom@20.0.1':
     dependencies:

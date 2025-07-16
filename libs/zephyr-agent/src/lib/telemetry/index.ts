@@ -38,46 +38,20 @@ function parseHeaders(headersString: string): Record<string, string> {
   return headers;
 }
 
-// Helper to ensure correct OTLP endpoint suffix
-function ensureOtlpEndpointSuffix(
-  endpoint: string,
-  type: 'traces' | 'logs' | 'metrics'
-): string {
-  let suffix = '';
-  if (type === 'traces') suffix = '/v1/traces';
-  if (type === 'logs') suffix = '/v1/logs';
-  if (type === 'metrics') suffix = '/v1/metrics';
-  if (!endpoint.endsWith(suffix)) {
-    // Remove any trailing slash to avoid double slashes
-    endpoint = endpoint.replace(/\/+$/, '');
-    return endpoint + suffix;
-  }
-  return endpoint;
-}
-
 // Only initialize if we have the required environment variables
 if (otlpEndpoint && otlpHeaders) {
   console.log('[Telemetry] Initializing OpenTelemetry...');
 
-  const resource = new Resource({
-    'service.name': 'zephyr-agent',
-    'service.namespace': 'zephyr',
-    'deployment.environment': 'dev',
-  });
-
   const traceExporter = new OTLPTraceExporter({
-    url: ensureOtlpEndpointSuffix(otlpEndpoint, 'traces'),
+    url: otlpEndpoint,
     headers: parseHeaders(otlpHeaders),
   });
 
-  // Set up basic metrics provider (without OTLP export for now)
-  const meterProvider = new MeterProvider({
-    resource: resource,
-  });
+  // Set up basic metrics provider
+  const meterProvider = new MeterProvider();
   metrics.setGlobalMeterProvider(meterProvider);
 
   const sdk = new NodeSDK({
-    resource: resource,
     spanProcessor: new BatchSpanProcessor(traceExporter),
   });
 

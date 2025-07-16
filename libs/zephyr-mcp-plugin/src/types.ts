@@ -4,8 +4,8 @@ export interface ZephyrMCPPluginOptions {
   /** Module Federation configuration for the MCP server */
   mfConfig?: moduleFederationPlugin.ModuleFederationPluginOptions;
 
-  /** MCP server metadata for Zephyr */
-  metadata?: {
+  /** MCP server metadata for Zephyr (stored in snapshot metadata) */
+  mcpMetadata?: {
     /** Server description */
     description?: string;
 
@@ -28,7 +28,4 @@ export interface ZephyrMCPPluginOptions {
     /** Additional custom metadata */
     [key: string]: unknown;
   };
-
-  /** Whether to wait for index.html (false for MCP servers) */
-  wait_for_index_html?: boolean;
 }

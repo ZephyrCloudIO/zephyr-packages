@@ -1,6 +1,7 @@
 import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 import type { Configuration as RspackConfiguration } from '@rspack/core';
 import type { ZephyrMCPPluginOptions } from './types';
+import { ZeMCPPlugin } from './ze-mcp-plugin';
 
 /**
  * Integrates Zephyr with Rspack for MCP servers Automatically deploys MCP servers to
@@ -32,8 +33,6 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
             },
             ...options.mfConfig.shared,
           },
-          // Runtime plugins would go here for full Module Federation support
-          // For now, the host uses direct bundle loading which works well
           library: {
             type: 'commonjs-module',
             name: options.mfConfig.name,
@@ -43,35 +42,9 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
       );
     }
 
-    // Apply Zephyr Rspack plugin for automatic deployment with MCP platform metadata
-    const { withZephyr: withZephyrRspack } = await import('zephyr-rspack-plugin');
+    // Add our custom MCP plugin
+    config.plugins.push(new ZeMCPPlugin(options));
 
-    // Create a custom wrapper to set MCP platform after ZephyrEngine creation
-    const mcpAwareZephyrWrapper = async (
-      rspackConfig: RspackConfiguration
-    ): Promise<RspackConfiguration> => {
-      const enhancedConfig = await withZephyrRspack()(rspackConfig);
-
-      // Find the ZeRspackPlugin instance in the enhanced config to access ZephyrEngine
-      const zeRspackPlugin = enhancedConfig.plugins?.find(
-        (plugin: unknown) =>
-          (plugin as { constructor: { name: string } }).constructor.name ===
-          'ZeRspackPlugin'
-      );
-
-      if (
-        zeRspackPlugin &&
-        (zeRspackPlugin as { zephyr_engine?: { env: { target: string } } }).zephyr_engine
-      ) {
-        // Set platform to 'mcp' for MCP servers
-        (
-          zeRspackPlugin as { zephyr_engine: { env: { target: string } } }
-        ).zephyr_engine.env.target = 'mcp';
-      }
-
-      return enhancedConfig;
-    };
-
-    return await mcpAwareZephyrWrapper(config);
+    return config;
   };
 }

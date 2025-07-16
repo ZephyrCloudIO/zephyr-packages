@@ -203,7 +203,7 @@ export class ZephyrHostMCPServer {
         const instance = await loaded.factory();
         // Check if the instance has a 'server' property (common pattern)
         if (instance && typeof instance === 'object' && 'server' in instance) {
-          loaded.instance = (instance as Record<string, unknown>).server as Server;
+          loaded.instance = (instance as Record<string, unknown>)['server'] as Server;
         } else {
           loaded.instance = instance;
         }

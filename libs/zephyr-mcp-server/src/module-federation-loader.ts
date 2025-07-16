@@ -34,8 +34,8 @@ export class ModuleFederationLoader {
         const manifest = entry.metadata['mfManifest'];
 
         // Find the exposed module
-        if (manifest.exposes && manifest.exposes.length > 0) {
-          const expose = manifest.exposes[0];
+        if ((manifest as any).exposes && (manifest as any).exposes.length > 0) {
+          const expose = (manifest as any).exposes[0];
           const exposePath = expose.path || './server';
 
           logger.log(`Loading ${entry.name} via Module Federation`);
@@ -55,20 +55,20 @@ export class ModuleFederationLoader {
           // Set the webpack public path before loading the remote
           // This ensures chunks are loaded from the correct URL
           if (typeof global !== 'undefined') {
-            (global as Record<string, unknown>).__webpack_public_path__ = baseUrl;
-            (global as Record<string, unknown>).__remoteModuleBaseUrl__ = baseUrl;
+            (global as Record<string, unknown>)['__webpack_public_path__'] = baseUrl;
+            (global as Record<string, unknown>)['__remoteModuleBaseUrl__'] = baseUrl;
           }
 
           // Register the remote based on mf-manifest
           registerRemotes([
             {
-              name: manifest.name,
+              name: (manifest as any).name,
               entry: entry.bundleUrl,
             },
           ]);
 
           // Load the remote module using loadRemote with format: "remoteName/expose"
-          const moduleId = `${manifest.name}${exposePath.startsWith('./') ? exposePath.substring(1) : '/' + exposePath}`;
+          const moduleId = `${(manifest as any).name}${exposePath.startsWith('./') ? exposePath.substring(1) : '/' + exposePath}`;
           logger.log(`Loading module: ${moduleId}`);
 
           // Use loadRemote which should handle chunk loading properly
@@ -115,7 +115,7 @@ export class ModuleFederationLoader {
             if (remoteModule && typeof remoteModule === 'object') {
               const exportKeys = Object.keys(remoteModule);
               for (const key of exportKeys) {
-                const exportValue = remoteModule[key];
+                const exportValue = (remoteModule as any)[key];
                 if (
                   typeof exportValue === 'function' &&
                   (key.toLowerCase().includes('create') ||

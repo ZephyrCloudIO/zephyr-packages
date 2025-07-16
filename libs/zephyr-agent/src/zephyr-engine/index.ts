@@ -1,3 +1,4 @@
+import { SpanStatusCode } from '@opentelemetry/api';
 import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,6 +27,7 @@ import { cyanBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
+import { getTracer } from '../lib/telemetry';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
 import {
   type ZeResolvedDependency,
@@ -150,54 +152,64 @@ export class ZephyrEngine {
 
   // todo: extract to a separate fn
   static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
-    const context = options.context || process.cwd();
-
-    ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
-    const ze = new ZephyrEngine({ context, builder: options.builder });
-
-    ze_log.init('Initializing: npm package info...');
-
-    ze.npmProperties = await getPackageJson(context);
-
-    ze_log.init('Initializing: git info...');
-    ze.gitProperties = await getGitInfo();
-    // mut: set application_uid and applicationProperties
-    mut_zephyr_app_uid(ze);
-    const application_uid = ze.application_uid;
-
-    // starting async load of application configuration, build_id and hash_list
-
-    ze_log.init('Initializing: checking authentication...');
-    await checkAuth();
-
-    ze_log.init('Initialized: loading application configuration...');
-
-    ze.application_configuration = getApplicationConfiguration({ application_uid });
-
-    ze.application_configuration
-      .then((appConfig) => {
-        const { username, email, EDGE_URL } = appConfig;
-        ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
-      })
-      .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
-
-    await ze.start_new_build();
-
-    void ze.logger.then(async (logger) => {
-      const { username } = await ze.application_configuration;
-      const buildId = await ze.build_id;
-
-      logger({
-        level: 'info',
-        action: 'build:info:user',
-        ignore: true,
-        message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(
-          `#${buildId}`
-        )}\n`,
-      });
+    const tracer = getTracer('zephyr.engine_initialization');
+    const span = tracer.startSpan('zephyr.engine_initialization', {
+      attributes: {
+        context: options.context || process.cwd(),
+        builder: options.builder,
+      },
     });
+    try {
+      const context = options.context || process.cwd();
 
-    return ze;
+      ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
+      const ze = new ZephyrEngine({ context, builder: options.builder });
+
+      ze_log.init('Initializing: npm package info...');
+      ze.npmProperties = await getPackageJson(context);
+
+      ze_log.init('Initializing: git info...');
+      ze.gitProperties = await getGitInfo();
+      // mut: set application_uid and applicationProperties
+      mut_zephyr_app_uid(ze);
+      const application_uid = ze.application_uid;
+
+      // starting async load of application configuration, build_id and hash_list
+      ze_log.init('Initializing: checking authentication...');
+      await checkAuth();
+
+      ze_log.init('Initialized: loading application configuration...');
+      ze.application_configuration = getApplicationConfiguration({ application_uid });
+      ze.application_configuration
+        .then((appConfig) => {
+          const { username, email, EDGE_URL } = appConfig;
+          ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
+        })
+        .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
+
+      await ze.start_new_build();
+
+      void ze.logger.then(async (logger) => {
+        const { username } = await ze.application_configuration;
+        const buildId = await ze.build_id;
+        logger({
+          level: 'info',
+          action: 'build:info:user',
+          ignore: true,
+          message: `Hi ${cyanBright(username)}!\n${white(application_uid)}${yellow(
+            `#${buildId}`
+          )}\n`,
+        });
+      });
+
+      span.setStatus({ code: SpanStatusCode.OK });
+      return ze;
+    } catch (err) {
+      span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+      throw err;
+    } finally {
+      span.end();
+    }
   }
 
   /**

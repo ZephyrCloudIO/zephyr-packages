@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { safe_json_parse } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
+import { logFn } from '../logging/ze-log-event';
 import { find_nearest_package_json } from './find-nearest-package-json';
 import type { ZePackageJson } from './ze-package-json.type';
 import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
@@ -92,6 +93,12 @@ export async function getPackageJson(
     const zephyr_dependencies = parsed_package_json['zephyr:dependencies'];
     if (zephyr_dependencies) {
       parsed_package_json.zephyrDependencies = parseZeDependencies(zephyr_dependencies);
+    } else {
+      logFn(
+        'info',
+        'No zephyr:dependencies found in package.json, to give you more control over your dependencies, check out our documentation:'
+      );
+      logFn('info', 'https://docs.zephyr-cloud.io/how-to/dependency-management');
     }
 
     ze_log.package('Successfully parsed package.json', {

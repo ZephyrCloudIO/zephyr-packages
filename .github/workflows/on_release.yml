@@ -12,4 +12,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Release libraries (promote tags from next to latest)
-        run: pnpm dlx nx run-many -t release --projects="libs/*"
+        run: pnpm nx run-many -t release --projects="libs/*"

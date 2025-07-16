@@ -124,10 +124,12 @@ export function convertToGraph(
     overrides: Object.values(overrides),
     consumes: consumes.map((con) => ({
       ...con,
-      usedIn: Array.from(con.usedIn.values()).map((file) => ({
-        file,
-        url: `${sourceUrl}/${file}`,
-      })),
+      usedIn: Array.from(con.usedIn.values()).map((file) => {
+        return {
+          file,
+          url: `${sourceUrl}/${file}`,
+        };
+      }),
     })),
     modules: Object.values(modulesObj).map((mod) => ({
       ...mod,

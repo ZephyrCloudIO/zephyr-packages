@@ -1,22 +1,8 @@
-import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
+import type { OutputBundle } from 'rollup';
 import type { ZeBuildAssetsMap } from 'zephyr-agent';
 import { buildAssetsMap } from 'zephyr-agent';
+import { extractRollxBuffer, getRollxAssetType } from 'zephyr-rollx-internal';
 
 export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
-  return buildAssetsMap(assets, extractBuffer, getAssetType);
+  return buildAssetsMap(assets, extractRollxBuffer, getRollxAssetType);
 }
-
-const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {
-  switch (asset.type) {
-    case 'chunk':
-      return asset.code;
-    case 'asset':
-      return typeof asset.source === 'string'
-        ? asset.source
-        : new TextDecoder().decode(asset.source);
-    default:
-      return void 0;
-  }
-};
-
-const getAssetType = (asset: OutputChunk | OutputAsset): string => asset.type;

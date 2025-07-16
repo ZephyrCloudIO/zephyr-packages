@@ -497,6 +497,12 @@ Were the required packages in Module federation plugin installed and included in
       'Missing filename in Module Federation configuration. Since the filename in React Native is the actual JS bundle, input of filename in Module Federation configuration is required.',
     kind: 'config',
   },
+  ERR_MISSING_METRO_FEDERATION_CONFIG: {
+    id: '037',
+    message:
+      'Missing Metro Federation configuration. Please ensure the configuration is correctly set in your project.',
+    kind: 'config',
+  },
   ERR_MISSING_PLATFORM: {
     id: '006',
     message:

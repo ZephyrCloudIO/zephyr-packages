@@ -1,3 +1,9 @@
+import { initTelemetry } from './lib/telemetry';
+
+// Initialize OpenTelemetry telemetry at startup
+// Using void to explicitly mark as ignored since this is a top-level initialization
+void initTelemetry();
+
 // hack for angular
 export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index-html';
 // qwik hack - persist

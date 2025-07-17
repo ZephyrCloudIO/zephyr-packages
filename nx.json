@@ -101,7 +101,7 @@
     }
   },
   "useInferencePlugins": false,
-  "defaultBase": "master",
+  "defaultBase": "main",
   "release": {
     "projects": ["libs/*"],
     "changelog": {

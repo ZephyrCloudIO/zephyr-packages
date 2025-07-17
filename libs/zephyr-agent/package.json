@@ -59,6 +59,7 @@
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/sdk-trace-base": "^2.0.1",
     "@opentelemetry/sdk-trace-node": "^2.0.1",
+    "@opentelemetry/semantic-conventions": "^1.36.0",
     "@types/debug": "^4.1.12",
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "catalog:typescript",

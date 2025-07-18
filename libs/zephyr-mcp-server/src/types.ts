@@ -11,6 +11,9 @@ export interface ZephyrHostConfig {
   /** Zephyr Cloud base URL or manifest URL */
   cloudUrl?: string;
 
+  /** Multiple Zephyr Cloud URLs or manifest URLs */
+  cloudUrls?: string[];
+
   /** Direct MCP server URLs to load */
   mcpUrls?: string[];
 

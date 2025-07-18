@@ -17,7 +17,10 @@ program
     'Environment (production, staging, dev)',
     'production'
   )
-  .option('-u, --cloud-url <url>', 'Zephyr Cloud URL or manifest URL')
+  .option(
+    '-u, --cloud-url <urls...>',
+    'Zephyr Cloud URLs or manifest URLs (space-separated)'
+  )
   .option('-s, --servers <servers>', 'Comma-separated list of allowed servers')
   .option('--no-cache', 'Disable caching')
   .action(async (options) => {
@@ -26,6 +29,14 @@ program
 
     // If no cloud URL provided, prompt for MCP server URLs
     const mcpUrls: string[] = [];
+    let cloudUrls: string[] = [];
+
+    // Handle multiple cloud URLs
+    if (options.cloudUrl) {
+      cloudUrls = Array.isArray(options.cloudUrl) ? options.cloudUrl : [options.cloudUrl];
+      logger.log(`Using ${cloudUrls.length} cloud URL(s):`);
+      cloudUrls.forEach((url) => logger.log(`  - ${url}`));
+    }
 
     if (!options.cloudUrl) {
       const rl = readline.createInterface({
@@ -80,7 +91,8 @@ program
     const config = {
       apiKey: options.apiKey || process.env['ZEPHYR_API_KEY'],
       environment: options.env as 'production' | 'staging' | 'dev',
-      cloudUrl: options.cloudUrl,
+      cloudUrls: cloudUrls.length > 0 ? cloudUrls : undefined,
+      cloudUrl: cloudUrls.length === 1 ? cloudUrls[0] : undefined, // Backward compatibility
       mcpUrls: mcpUrls.length > 0 ? mcpUrls : undefined,
       allowedServers: options.servers ? options.servers.split(',') : undefined,
       cache: {
@@ -100,46 +112,6 @@ program
       logger.log('Zephyr MCP Host Server is running');
     } catch (error) {
       logger.error('Failed to start server:', error);
-      process.exit(1);
-    }
-  });
-
-program
-  .command('list')
-  .description('List available MCP servers from Zephyr Cloud')
-  .option('-k, --api-key <key>', 'Zephyr API key')
-  .option('-e, --env <environment>', 'Environment', 'production')
-  .action(async (options) => {
-    try {
-      const cloudUrl =
-        options.cloudUrl || 'https://cdn.zephyr-cloud.io/mcp/manifest.json';
-
-      logger.log(`Fetching MCP servers from: ${cloudUrl}`);
-
-      const response = await fetch(cloudUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch manifest: ${response.statusText}`);
-      }
-
-      const manifest = await response.json();
-      const servers = manifest.servers || [];
-
-      logger.log('\nAvailable MCP Servers:');
-      logger.log('=====================');
-
-      for (const server of servers) {
-        logger.log(`\n${server.name} v${server.version}`);
-        logger.log(`  Description: ${server.description}`);
-        logger.log(`  Status: ${server.status}`);
-        if (server.metadata?.capabilities) {
-          const caps = server.metadata.capabilities;
-          if (caps.tools?.length) {
-            logger.log(`  Tools: ${caps.tools.join(', ')}`);
-          }
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to list servers:', error);
       process.exit(1);
     }
   });

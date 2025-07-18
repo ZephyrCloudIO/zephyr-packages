@@ -6,7 +6,6 @@ import {
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import axios from 'axios';
 
 // Simple weather MCP server
 class WeatherMCPServer {

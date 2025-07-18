@@ -9,8 +9,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.15.0",
-    "axios": "^1.10.0"
+    "@modelcontextprotocol/sdk": "^1.15.0"
   },
   "devDependencies": {
     "@module-federation/enhanced": "^0.16.0",

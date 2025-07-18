@@ -368,7 +368,7 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       });
     }
     // snapshotId is a flat version of application_uid and build_id
-    ze.snapshotId = Promise.all([ze.application_configuration, ze.build_id]).then(
+    ze.snapshotId = Promise.all([ze.application_configuration, ze.build_id, ze.hash_list]).then(
       async (record) =>
         flatCreateSnapshotId({
           ...ze.applicationProperties,

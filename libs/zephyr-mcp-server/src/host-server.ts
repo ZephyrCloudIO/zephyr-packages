@@ -69,92 +69,44 @@ export class ZephyrHostMCPServer {
     logger.log('Discovering MCP servers...');
 
     try {
-      let servers: MCPServerEntry[] = [];
+      const allServers: MCPServerEntry[] = [];
 
-      // If direct MCP URLs are provided, create entries for them
+      // Process direct MCP URLs if provided
       if (this.config.mcpUrls && this.config.mcpUrls.length > 0) {
         logger.log(
           `Loading ${this.config.mcpUrls.length} MCP servers from provided URLs...`
         );
 
-        for (const url of this.config.mcpUrls) {
-          // Extract server name from URL
-          // Example: https://nestor-lopez-1853-github-tools-mcp-example-zephyr-f1e0463b8-ze.zephyrcloud.app/remoteEntry.js
-          const urlParts = new URL(url);
-          const hostParts = urlParts.hostname.split('-');
+        const directServers = await this.processDirectUrls(this.config.mcpUrls);
+        allServers.push(...directServers);
+      }
 
-          // Try to extract a meaningful name from the URL
-          let serverName = 'mcp-server';
-          if (hostParts.length > 4) {
-            // Take parts that look like the actual name (github-tools-mcp)
-            serverName = hostParts.slice(3, -3).join('-');
-          }
+      // Process cloud URLs (manifests) if provided
+      if (this.config.cloudUrls && this.config.cloudUrls.length > 0) {
+        logger.log(
+          `Loading ${this.config.cloudUrls.length} manifest(s) from cloud URLs...`
+        );
 
-          const entry: MCPServerEntry = {
-            id: `${serverName}-${Date.now()}`,
-            name: serverName,
-            version: '1.0.0',
-            description: `MCP server from ${urlParts.hostname}`,
-            bundleUrl: url,
-            metadata: {
-              capabilities: {},
-            },
-            status: 'active',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
+        const manifestServers = await this.processManifestUrls(this.config.cloudUrls);
+        allServers.push(...manifestServers);
+      }
 
-          servers.push(entry);
-        }
-      } else if (this.config.cloudUrl) {
-        // Fetch from manifest URL
-        logger.log(`Fetching manifest from: ${this.config.cloudUrl}`);
+      // Backward compatibility: single cloudUrl
+      if (this.config.cloudUrl && !this.config.cloudUrls) {
+        logger.log(`Loading manifest from: ${this.config.cloudUrl}`);
+        const manifestServers = await this.processManifestUrls([this.config.cloudUrl]);
+        allServers.push(...manifestServers);
+      }
 
-        const response = await fetch(this.config.cloudUrl, {
-          headers: this.config.apiKey
-            ? {
-                Authorization: `Bearer ${this.config.apiKey}`,
-              }
-            : {},
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch manifest: ${response.statusText}`);
-        }
-
-        const manifest = await response.json();
-
-        // Check if this is a Module Federation manifest
-        if (manifest.id && manifest.metaData) {
-          logger.log('Detected Module Federation manifest');
-          logger.log(`ID: ${manifest.id}, Name: ${manifest.name}`);
-          // Convert MF manifest to our server entry format
-          const baseUrl = this.config.cloudUrl!.replace('/mf-manifest.json', '');
-          const server: MCPServerEntry = {
-            id: manifest.id,
-            name: manifest.name,
-            version: manifest.metaData.buildInfo?.buildVersion || '1.0.0',
-            description: `Module Federation remote: ${manifest.name}`,
-            bundleUrl: `${baseUrl}/remoteEntry.js`,
-            metadata: {
-              ['mfManifest']: manifest,
-              capabilities: {},
-            },
-            status: 'active',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          };
-          servers = [server];
-          logger.log(`Created server entry for ${server.name} at ${server.bundleUrl}`);
-        } else {
-          servers = manifest.servers || [];
-        }
-      } else {
-        logger.log('No MCP URLs or manifest URL provided.');
+      if (allServers.length === 0) {
+        logger.log('No MCP URLs or manifest URLs provided.');
         return;
       }
 
-      for (const server of servers) {
+      // Deduplicate servers by name and register them
+      const uniqueServers = this.deduplicateServers(allServers);
+
+      for (const server of uniqueServers) {
         // Filter by allowed servers if specified
         if (
           this.config.allowedServers &&
@@ -163,15 +115,152 @@ export class ZephyrHostMCPServer {
           continue;
         }
 
-        // Server is already an MCPServerEntry, just register it
         this.registry.register(server);
       }
 
-      logger.log(`✓ Found ${this.registry.size()} MCP servers`);
+      logger.log(`✓ Found ${this.registry.size()} MCP servers after deduplication`);
     } catch (error) {
       logger.error('Failed to discover servers:', error);
       throw error;
     }
+  }
+
+  private async processDirectUrls(urls: string[]): Promise<MCPServerEntry[]> {
+    const servers: MCPServerEntry[] = [];
+
+    for (const url of urls) {
+      try {
+        const entry = this.createServerEntryFromUrl(url);
+        servers.push(entry);
+        logger.log(`✓ Created entry for ${entry.name} from ${url}`);
+      } catch (error) {
+        logger.error(`Failed to process URL ${url}:`, error);
+      }
+    }
+
+    return servers;
+  }
+
+  private async processManifestUrls(urls: string[]): Promise<MCPServerEntry[]> {
+    const servers: MCPServerEntry[] = [];
+
+    // Process manifests in parallel for better performance
+    const manifestPromises = urls.map((url) => this.processManifestUrl(url));
+    const results = await Promise.allSettled(manifestPromises);
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      const url = urls[i];
+
+      if (result.status === 'fulfilled') {
+        servers.push(...result.value);
+        logger.log(`✓ Loaded ${result.value.length} server(s) from ${url}`);
+      } else {
+        logger.error(`Failed to load manifest from ${url}:`, result.reason);
+      }
+    }
+
+    return servers;
+  }
+
+  private async processManifestUrl(url: string): Promise<MCPServerEntry[]> {
+    const response = await fetch(url, {
+      headers: this.config.apiKey
+        ? {
+            Authorization: `Bearer ${this.config.apiKey}`,
+          }
+        : {},
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch manifest: ${response.statusText}`);
+    }
+
+    const manifest = await response.json();
+
+    // Check if this is a Module Federation manifest
+    if (manifest.id && manifest.metaData) {
+      logger.log('Detected Module Federation manifest');
+      logger.log(`ID: ${manifest.id}, Name: ${manifest.name}`);
+
+      const baseUrl = url.replace('/mf-manifest.json', '');
+      const server: MCPServerEntry = {
+        id: manifest.id,
+        name: this.ensureUniqueName(manifest.name, url),
+        version: manifest.metaData.buildInfo?.buildVersion || '1.0.0',
+        description: `Module Federation remote: ${manifest.name}`,
+        bundleUrl: `${baseUrl}/remoteEntry.js`,
+        metadata: {
+          mfManifest: manifest,
+          sourceUrl: url,
+          capabilities: {},
+        },
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      return [server];
+    } else {
+      // Legacy server list manifest
+      const servers = manifest.servers || [];
+      return servers.map((server: MCPServerEntry) => ({
+        ...server,
+        metadata: {
+          ...server.metadata,
+          sourceUrl: url,
+        },
+      }));
+    }
+  }
+
+  private createServerEntryFromUrl(url: string): MCPServerEntry {
+    const urlParts = new URL(url);
+    const hostParts = urlParts.hostname.split('-');
+
+    // Try to extract a meaningful name from the URL
+    let serverName = 'mcp-server';
+    if (hostParts.length > 4) {
+      // Take parts that look like the actual name (github-tools-mcp)
+      serverName = hostParts.slice(3, -3).join('-');
+    }
+
+    return {
+      id: `${serverName}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: this.ensureUniqueName(serverName, url),
+      version: '1.0.0',
+      description: `MCP server from ${urlParts.hostname}`,
+      bundleUrl: url,
+      metadata: {
+        sourceUrl: url,
+        capabilities: {},
+      },
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
+
+  private ensureUniqueName(baseName: string, sourceUrl: string): string {
+    // Simple approach: if name conflicts, append URL hash
+    const urlHash = sourceUrl.split('//')[1]?.split('.')[0] || 'unknown';
+    return `${baseName}-${urlHash}`;
+  }
+
+  private deduplicateServers(servers: MCPServerEntry[]): MCPServerEntry[] {
+    const seen = new Set<string>();
+    const unique: MCPServerEntry[] = [];
+
+    for (const server of servers) {
+      if (!seen.has(server.name)) {
+        seen.add(server.name);
+        unique.push(server);
+      } else {
+        logger.log(`⚠️  Skipping duplicate server: ${server.name}`);
+      }
+    }
+
+    return unique;
   }
 
   private async loadServers(): Promise<void> {
@@ -224,7 +313,7 @@ export class ZephyrHostMCPServer {
       );
 
       // Connect the server to one transport and client to the other
-      await loaded.instance!.connect(serverTransport);
+      await loaded.instance?.connect(serverTransport);
       await loaded.client.connect(clientTransport);
 
       logger.log(`✓ Connected client to ${loaded.entry.name}`);
@@ -315,35 +404,6 @@ export class ZephyrHostMCPServer {
       }
     });
 
-    // Server info - TODO: Find proper schema
-    // this.server.setRequestHandler('server/info', async () => {
-    //   const servers = Array.from(this.loadedServers.values()).map((loaded) => ({
-    //     name: loaded.entry.name,
-    //     version: loaded.entry.version,
-    //     description: loaded.entry.description,
-    //     capabilities: loaded.entry.metadata.capabilities,
-    //   }));
-    //
-    //   return {
-    //     content: [
-    //       {
-    //         type: 'text',
-    //         text: JSON.stringify(
-    //           {
-    //             name: 'zephyr-mcp-host',
-    //             version: '1.0.0',
-    //             type: 'host',
-    //             environment: this.config.environment,
-    //             servers,
-    //           },
-    //           null,
-    //           2
-    //         ),
-    //       },
-    //     ],
-    //   };
-    // });
-
     // Also handle resources and prompts
     this.setupResourceHandlers();
     this.setupPromptHandlers();
@@ -373,8 +433,8 @@ export class ZephyrHostMCPServer {
               });
             }
           }
-        } catch {
-          // Server might not support resources
+        } catch (error) {
+          logger.error(`Failed to get resources from ${serverName}:`, error);
         }
       }
 
@@ -432,8 +492,8 @@ export class ZephyrHostMCPServer {
               });
             }
           }
-        } catch {
-          // Server might not support prompts
+        } catch (error) {
+          logger.error(`Failed to get prompts from ${serverName}:`, error);
         }
       }
 

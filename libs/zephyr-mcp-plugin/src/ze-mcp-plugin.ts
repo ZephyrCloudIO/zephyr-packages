@@ -3,6 +3,7 @@ import {
   ZephyrEngine,
   buildAssetsMap,
   zeBuildDashData,
+  ZephyrError,
   type ZeBuildAssetsMap,
 } from 'zephyr-agent';
 import type { ZephyrMCPPluginOptions } from './types';
@@ -10,22 +11,22 @@ import type { ZephyrMCPPluginOptions } from './types';
 // Functional helpers for asset processing
 const createAssetExtractor =
   () =>
-  (asset: any): Buffer | string | undefined => {
+  (asset: { source: () => Buffer | string }): Buffer | string | undefined => {
     const content = asset.source();
     return Buffer.isBuffer(content) ? content : Buffer.from(content);
   };
 
 const createAssetTypeExtractor =
   () =>
-  (asset: any): string => {
+  (asset: { constructor: { name?: string } }): string => {
     return asset.constructor.name || 'unknown';
   };
 
 // Functional helper for build stats customization
 const customizeBuildStatsForMCP = (
-  buildStats: any,
+  buildStats: Record<string, unknown>,
   mcpMetadata?: ZephyrMCPPluginOptions['mcpMetadata']
-) => {
+): Record<string, unknown> => {
   buildStats.build_target = 'mcp';
 
   // Add MCP metadata to snapshot if provided
@@ -55,51 +56,58 @@ export class ZeMCPPlugin {
     const pluginName = 'ZeMCPPlugin';
 
     // Initialize ZephyrEngine during compilation
-    compiler.hooks.beforeCompile.tapAsync(pluginName, async (params, callback) => {
-      try {
-        this.zephyrEngine = await ZephyrEngine.create({
-          context: compiler.context,
-          builder: 'rspack',
-        });
+    compiler.hooks.beforeCompile.tapAsync(pluginName, (params, callback): void => {
+      void (async (): Promise<void> => {
+        try {
+          this.zephyrEngine = await ZephyrEngine.create({
+            context: compiler.context,
+            builder: 'rspack',
+          });
 
-        // Set platform to 'mcp' for MCP servers
-        this.zephyrEngine.env.target = 'mcp';
+          // Set platform to 'mcp' for MCP servers
+          this.zephyrEngine.env.target = 'mcp';
 
-        // Start new build
-        await this.zephyrEngine.start_new_build();
+          // Start new build
+          await this.zephyrEngine.start_new_build();
 
-        callback();
-      } catch (error) {
-        callback(error as Error);
-      }
+          callback();
+        } catch (error) {
+          callback(ZephyrError.from(error));
+        }
+      })();
     });
 
     // Handle build completion
-    compiler.hooks.afterEmit.tapAsync(pluginName, async (compilation, callback) => {
+    compiler.hooks.afterEmit.tapAsync(pluginName, (compilation, callback): void => {
       if (!this.zephyrEngine) {
-        callback(new Error('ZephyrEngine not initialized'));
+        callback(new ZephyrError('ZephyrEngine not initialized'));
         return;
       }
 
-      try {
-        // Process assets using functional approach
-        const assetsMap = await this.processAssets(compilation.assets);
+      void (async (): Promise<void> => {
+        try {
+          // Process assets using functional approach
+          const assetsMap = await this.processAssets(compilation.assets);
 
-        // Generate and customize build stats
-        const buildStats = await this.generateBuildStats();
+          // Generate and customize build stats
+          const buildStats = await this.generateBuildStats();
 
-        // Upload and finalize
-        await this.uploadAndFinalize(assetsMap, buildStats);
+          // Upload and finalize
+          await this.uploadAndFinalize(assetsMap, buildStats);
 
-        callback();
-      } catch (error) {
-        callback(error as Error);
-      }
+          callback();
+        } catch (error) {
+          callback(ZephyrError.from(error));
+        }
+      })();
     });
   }
 
   private async processAssets(
-    compilationAssets: Record<string, any>
+    compilationAssets: Record<
+      string,
+      { source: () => Buffer | string; constructor: { name?: string } }
+    >
   ): Promise<ZeBuildAssetsMap> {
     const extractBuffer = createAssetExtractor();
     const getAssetType = createAssetTypeExtractor();
@@ -107,9 +115,9 @@ export class ZeMCPPlugin {
     return buildAssetsMap(compilationAssets, extractBuffer, getAssetType);
   }
 
-  private async generateBuildStats() {
+  private async generateBuildStats(): Promise<Record<string, unknown>> {
     if (!this.zephyrEngine) {
-      throw new Error('ZephyrEngine not initialized');
+      throw new ZephyrError('ZephyrEngine not initialized');
     }
 
     const buildStats = await zeBuildDashData(this.zephyrEngine);
@@ -118,10 +126,10 @@ export class ZeMCPPlugin {
 
   private async uploadAndFinalize(
     assetsMap: ZeBuildAssetsMap,
-    buildStats: any
+    buildStats: Record<string, unknown>
   ): Promise<void> {
     if (!this.zephyrEngine) {
-      throw new Error('ZephyrEngine not initialized');
+      throw new ZephyrError('ZephyrEngine not initialized');
     }
 
     await this.zephyrEngine.upload_assets({

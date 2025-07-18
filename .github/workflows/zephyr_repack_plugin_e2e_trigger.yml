@@ -3,7 +3,7 @@ name: Trigger Zephyr Repack Plugin E2E tests
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   trigger-zephyr-repack-example:

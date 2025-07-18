@@ -1,3 +1,4 @@
+import { posix, win32 } from 'node:path';
 import {
   type Snapshot,
   type SnapshotAsset,
@@ -6,10 +7,9 @@ import {
   createApplicationUid,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
-import { applyBaseHrefToAssets } from './ze-basehref-handler';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
-import { posix, win32 } from 'node:path';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -30,6 +30,7 @@ export async function createSnapshot(
   }
 
   const options = {
+    target: zephyr_engine.env.target ?? 'web',
     git_branch: zephyr_engine.gitProperties.git.branch,
     buildId,
     username: (await zephyr_engine.application_configuration).username,
@@ -39,9 +40,13 @@ export async function createSnapshot(
     gitProperties: zephyr_engine.gitProperties,
     mfConfig: mfConfig,
   };
-  const version_postfix = zephyr_engine.env.isCI
-    ? `${options.git_branch}.${options.buildId}`
-    : `${options.username}.${options.buildId}`;
+  const versionParts = [
+    options.target !== 'web' ? options.target : null,
+    zephyr_engine.env.isCI ? options.git_branch : options.username,
+    options.buildId,
+  ].filter(Boolean);
+
+  const version_postfix = versionParts.join('.');
 
   const basedAssets = applyBaseHrefToAssets(
     assets,
@@ -52,9 +57,10 @@ export async function createSnapshot(
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
-    // ZeApplicationProperties + buildId + ZeApplicationProperties.username
+    // ZeApplicationProperties + target + buildId + ZeApplicationProperties.username
     snapshot_id: flatCreateSnapshotId(
       Object.assign({}, options.applicationProperties, {
+        target: options.target,
         buildId: options.buildId,
         username: options.username,
       })

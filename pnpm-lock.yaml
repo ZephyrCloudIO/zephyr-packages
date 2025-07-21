@@ -397,9 +397,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.15.0
         version: 1.15.0
-      axios:
-        specifier: ^1.10.0
-        version: 1.10.0
     devDependencies:
       '@module-federation/enhanced':
         specifier: ^0.16.0

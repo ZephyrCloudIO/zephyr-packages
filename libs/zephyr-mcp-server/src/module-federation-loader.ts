@@ -1,5 +1,6 @@
 // Module Federation runtime will be dynamically imported
 // to avoid bundling issues
+import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   init,
   loadRemote,
@@ -7,9 +8,8 @@ import {
   registerRemotes,
 } from '@module-federation/enhanced/runtime';
 import runtimePlugin from '@module-federation/node/runtimePlugin';
-import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import type { MCPServerEntry } from './types';
 import { logger } from './logger';
+import type { MCPServerEntry } from './types';
 
 export class ModuleFederationLoader {
   private initialized = false;
@@ -18,7 +18,7 @@ export class ModuleFederationLoader {
     if (!this.initialized) {
       // Initialize runtime once with empty remotes
       init({
-        name: 'zephyr-mcp-host',
+        name: 'zephyr-mcp',
         remotes: [],
       });
 

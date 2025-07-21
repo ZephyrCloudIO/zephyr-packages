@@ -1,13 +1,7 @@
-import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import type { Server } from '@modelcontextprotocol/sdk/server/index.js';
 
 export interface ZephyrHostConfig {
-  /** Zephyr API key for accessing hosted MCP servers */
-  apiKey?: string;
-
-  /** Zephyr environment */
-  environment?: 'production' | 'staging' | 'dev';
-
   /** Zephyr Cloud base URL or manifest URL */
   cloudUrl?: string;
 

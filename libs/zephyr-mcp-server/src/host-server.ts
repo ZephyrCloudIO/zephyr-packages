@@ -1,6 +1,6 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
   CallToolResultSchema,
@@ -15,10 +15,10 @@ import {
   ReadResourceRequestSchema,
   ReadResourceResultSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { logger } from './logger';
 import { ModuleFederationLoader } from './module-federation-loader';
 import { MCPRegistry } from './registry';
 import type { LoadedMCPServer, MCPServerEntry, ZephyrHostConfig } from './types';
-import { logger } from './logger';
 
 export class ZephyrHostMCPServer {
   private server: Server;
@@ -29,8 +29,7 @@ export class ZephyrHostMCPServer {
 
   constructor(config: ZephyrHostConfig = {}) {
     this.config = {
-      environment: 'production',
-      cloudUrl: config.cloudUrl || 'https://cdn.zephyr-cloud.io',
+      cloudUrl: config.cloudUrl,
       cache: { enabled: true, ttl: 3600000 }, // 1 hour
       sandbox: { enabled: true },
       ...config,
@@ -38,7 +37,7 @@ export class ZephyrHostMCPServer {
 
     this.server = new Server(
       {
-        name: 'zephyr-mcp-host',
+        name: 'zephyr-mcp',
         version: '1.0.0',
       },
       {
@@ -130,7 +129,7 @@ export class ZephyrHostMCPServer {
 
     for (const url of urls) {
       try {
-        const entry = this.createServerEntryFromUrl(url);
+        const entry = await this.createServerEntryFromUrl(url);
         servers.push(entry);
         logger.log(`✓ Created entry for ${entry.name} from ${url}`);
       } catch (error) {
@@ -164,13 +163,7 @@ export class ZephyrHostMCPServer {
   }
 
   private async processManifestUrl(url: string): Promise<MCPServerEntry[]> {
-    const response = await fetch(url, {
-      headers: this.config.apiKey
-        ? {
-            Authorization: `Bearer ${this.config.apiKey}`,
-          }
-        : {},
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch manifest: ${response.statusText}`);
@@ -214,15 +207,33 @@ export class ZephyrHostMCPServer {
     }
   }
 
-  private createServerEntryFromUrl(url: string): MCPServerEntry {
+  private async createServerEntryFromUrl(url: string): Promise<MCPServerEntry> {
     const urlParts = new URL(url);
     const hostParts = urlParts.hostname.split('-');
 
     // Try to extract a meaningful name from the URL
     let serverName = 'mcp-server';
-    if (hostParts.length > 4) {
-      // Take parts that look like the actual name (github-tools-mcp)
-      serverName = hostParts.slice(3, -3).join('-');
+
+    // Try to get the name from mf-manifest.json if available
+    try {
+      // Derive a potential mf-manifest.json URL from the direct URL
+      const baseUrl = url.substring(0, url.lastIndexOf('/'));
+      const manifestUrl = `${baseUrl}/mf-manifest.json`;
+
+      const response = await fetch(manifestUrl);
+      if (response.ok) {
+        const manifest = await response.json();
+        if (manifest.name) {
+          serverName = manifest.name;
+          logger.log(`Using name from mf-manifest.json: ${serverName}`);
+        }
+      }
+    } catch {
+      // Fall back to extracting from hostname if mf-manifest.json is not available
+      if (hostParts.length > 4) {
+        // Take parts that look like the actual name (github-tools-mcp)
+        serverName = hostParts.slice(3, -3).join('-');
+      }
     }
 
     return {

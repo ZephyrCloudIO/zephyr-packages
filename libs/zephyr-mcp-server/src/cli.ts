@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { createZephyrHostServer } from './host-server';
 import * as readline from 'readline';
+import { createZephyrHostServer } from './host-server';
 import { logger } from './logger';
 
 const program = new Command();
@@ -12,11 +12,6 @@ program
   .command('start')
   .description('Start the Zephyr MCP Host Server')
   .option('-k, --api-key <key>', 'Zephyr API key')
-  .option(
-    '-e, --env <environment>',
-    'Environment (production, staging, dev)',
-    'production'
-  )
   .option(
     '-u, --cloud-url <urls...>',
     'Zephyr Cloud URLs or manifest URLs (space-separated)'
@@ -90,7 +85,6 @@ program
 
     const config = {
       apiKey: options.apiKey || process.env['ZEPHYR_API_KEY'],
-      environment: options.env as 'production' | 'staging' | 'dev',
       cloudUrls: cloudUrls.length > 0 ? cloudUrls : undefined,
       cloudUrl: cloudUrls.length === 1 ? cloudUrls[0] : undefined, // Backward compatibility
       mcpUrls: mcpUrls.length > 0 ? mcpUrls : undefined,

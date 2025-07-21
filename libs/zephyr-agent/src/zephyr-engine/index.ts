@@ -76,6 +76,7 @@ type ZephyrEngineBuilderTypes =
   | 'vite'
   | 'rollup'
   | 'parcel'
+  | 'astro'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;

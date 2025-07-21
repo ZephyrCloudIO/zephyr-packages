@@ -1,0 +1,39 @@
+{
+  "name": "zephyr-astro-integration",
+  "version": "0.0.56",
+  "description": "Astro integration for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-astro-integration"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run zephyr-astro-integration:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "is-ci": "catalog:plugin-shared",
+    "zephyr-agent": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "astro": "^4.0.0",
+    "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "astro": "^4.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

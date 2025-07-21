@@ -1,0 +1,1 @@
+export { withZephyr } from './lib/astro-integration-zephyr';

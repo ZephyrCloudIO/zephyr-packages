@@ -64,7 +64,7 @@ async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
       builder: 'webpack', // Default to webpack, can be overridden by resourceQuery
       resolvedRemotes,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -120,19 +120,9 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
 
   return {
     name: 'zephyr-runtime-remote-resolver',
-    async init(args) {
-      // Wait for manifest to be loaded
-      if (manifestPromise) {
-        await manifestPromise;
-      }
-
-      return args;
-    },
     async beforeRequest(args) {
       // Ensure manifest is loaded before processing
-      if (manifestPromise) {
-        await manifestPromise;
-      }
+      await manifestPromise;
 
       if (!runtimeData) {
         return args;

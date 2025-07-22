@@ -50,7 +50,7 @@ export async function createSnapshot(
   );
 
   // Check if zephyr-manifest.json exists in the assets
-  let manifestReference: ZephyrManifestRef | undefined;
+  let manifestReference: { filename: string; remotes?: string[] } | undefined;
 
   const manifestAsset = Object.values(basedAssets).find(
     (asset) => asset.path === 'zephyr-manifest.json'

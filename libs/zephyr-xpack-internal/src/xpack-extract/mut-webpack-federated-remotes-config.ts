@@ -15,19 +15,17 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   runtimePlugin?: boolean
 ): void {
   if (!resolvedDependencyPairs?.length) {
-    ze_log.remotes(`[Plugin] No resolved dependency pairs found, skipping...`);
+    ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;
   }
 
-  ze_log.remotes(
-    `[Plugin] mutWebpackFederatedRemotesConfig: Processing ${resolvedDependencyPairs.length} resolved dependencies`
-  );
+  ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
 
   // Add single runtime plugin with all resolved dependencies if enabled
   if (runtimePlugin) {
     try {
       const runtimePluginPath = require.resolve('./runtimePlugin');
-      ze_log.remotes(`[Plugin] Adding Zephyr runtime plugin: ${runtimePluginPath}`);
+      ze_log.remotes(`Adding Zephyr runtime plugin: ${runtimePluginPath}`);
 
       // Create resolved remotes map for runtime plugin with all dependencies
       const resolvedRemotesMap = Object.fromEntries(
@@ -44,7 +42,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       );
 
       ze_log.remotes(
-        `[Plugin] Resolved remotes map:`,
+        `Resolved remotes map:`,
         JSON.stringify(resolvedRemotesMap, null, 2)
       );
 
@@ -58,7 +56,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         runtimePluginPath + `?ze=${JSON.stringify(queryData)}`;
 
       ze_log.remotes(
-        `[Plugin] Runtime plugin query length: ${runtimePluginWithQuery.length} chars`
+        `Runtime plugin query length: ${runtimePluginWithQuery.length} chars`
       );
 
       // Find first Module Federation plugin and add runtime plugin
@@ -76,7 +74,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
               // Add the single runtime plugin with all data
               remotesConfig.runtimePlugins.push(runtimePluginWithQuery);
               ze_log.remotes(
-                `[Plugin] Runtime plugin added to Module Federation config with ${Object.keys(resolvedRemotesMap).length} remotes`
+                `Runtime plugin added to Module Federation config with ${Object.keys(resolvedRemotesMap).length} remotes`
               );
               runtimePluginAdded = true;
               break; // Add only to first MF plugin found
@@ -87,14 +85,14 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       if (!runtimePluginAdded) {
         ze_log.remotes(
-          `[Plugin] Warning: No Module Federation plugin found to add runtime plugin`
+          `Warning: No Module Federation plugin found to add runtime plugin`
         );
       }
     } catch (error) {
-      ze_log.remotes(`[Plugin] Failed to resolve runtime plugin path: ${error}`);
+      ze_log.remotes(`Failed to resolve runtime plugin path: ${error}`);
     }
   } else {
-    ze_log.remotes(`[Plugin] Runtime plugin is not enabled`);
+    ze_log.remotes(`Runtime plugin is not enabled`);
   }
 
   iterateFederatedRemoteConfig(config, (remotesConfig) => {

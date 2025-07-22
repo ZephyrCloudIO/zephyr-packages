@@ -33,7 +33,7 @@
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript",
-    "@module-federation/sdk": "0.15.0"
+    "@module-federation/sdk": "catalog:module-federation"
   },
   "publishConfig": {
     "access": "public",

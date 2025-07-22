@@ -210,9 +210,9 @@ export class ZephyrEngine {
   async resolve_remote_dependencies(
     deps: ZeDependencyPair[]
   ): Promise<ZeResolvedDependency[] | null> {
-    console.log('[Zephyr Engine] resolve_remote_dependencies called with deps:', deps);
+    ze_log.remotes('[Zephyr Engine] resolve_remote_dependencies called with deps:', deps);
     if (!deps || deps.length === 0) {
-      console.log('[Zephyr Engine] No dependencies to resolve');
+      ze_log.remotes('[Zephyr Engine] No dependencies to resolve');
       return null;
     }
 
@@ -316,12 +316,12 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       is_zephyr_resolved_dependency
     );
 
-    console.log(
+    ze_log.remotes(
       '[Zephyr Engine] Resolved dependencies:',
       this.federated_dependencies?.length || 0
     );
     if (this.federated_dependencies && this.federated_dependencies.length > 0) {
-      console.log(
+      ze_log.remotes(
         '[Zephyr Engine] Dependencies resolved:',
         this.federated_dependencies
           .map((d) => `${d.name} -> ${d.remote_entry_url}`)
@@ -435,9 +435,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
     ze_log.upload('Initializing: upload assets');
-    console.log('[Zephyr Engine] upload_assets called');
-    console.log('[Zephyr Engine] Assets to upload:', Object.keys(props.assetsMap).length);
-    console.log('[Zephyr Engine] Has mfConfig:', !!props.mfConfig);
     const { assetsMap, buildStats, mfConfig } = props;
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
@@ -458,21 +455,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       assets: assetsMap,
       mfConfig,
     });
-
-    console.log(
-      '[Zephyr Engine] Snapshot created with assets:',
-      Object.keys(snapshot.assets)
-    );
-    console.log(
-      '[Zephyr Engine] Manifest in snapshot:',
-      !!(snapshot as any)['zephyr:dependencies']
-    );
-    if ((snapshot as any)['zephyr:dependencies']) {
-      console.log(
-        '[Zephyr Engine] Manifest reference:',
-        (snapshot as any)['zephyr:dependencies']
-      );
-    }
 
     const upload_options: UploadOptions = {
       snapshot,

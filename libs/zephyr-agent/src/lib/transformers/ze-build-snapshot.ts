@@ -2,13 +2,15 @@ import {
   type Snapshot,
   type SnapshotAsset,
   type ZeBuildAssetsMap,
+  ZephyrManifestRef,
   type ZephyrPluginOptions,
   createApplicationUid,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
-import { applyBaseHrefToAssets } from './ze-basehref-handler';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { ze_log } from '../logging';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -48,7 +50,7 @@ export async function createSnapshot(
   );
 
   // Check if zephyr-manifest.json exists in the assets
-  let manifestReference: { filename: string; remotes?: string[] } | undefined;
+  let manifestReference: ZephyrManifestRef | undefined;
 
   const manifestAsset = Object.values(basedAssets).find(
     (asset) => asset.path === 'zephyr-manifest.json'
@@ -59,16 +61,14 @@ export async function createSnapshot(
     zephyr_engine.federated_dependencies &&
     zephyr_engine.federated_dependencies.length > 0
   ) {
-    console.log('[Zephyr Build] Found zephyr-manifest.json in assets');
+    ze_log.snapshot('Found zephyr-manifest.json in assets');
     manifestReference = {
       filename: 'zephyr-manifest.json',
       remotes: zephyr_engine.federated_dependencies.map((dep) => dep.name),
     };
-    console.log('[Zephyr Build] Created manifest reference:', manifestReference);
+    ze_log.snapshot('Created manifest reference:', manifestReference);
   } else {
-    console.log(
-      '[Zephyr Build] No manifest file found in assets or no federated dependencies'
-    );
+    ze_log.snapshot('No manifest file found in assets or no federated dependencies');
   }
 
   const snapshot: Snapshot = {
@@ -111,17 +111,11 @@ export async function createSnapshot(
   // We'll use a type assertion to bypass the type check for now
   (snapshot as any)['zephyr:dependencies'] = manifestReference;
 
-  console.log(
-    '[Plugin] ze-build-snapshot: Created snapshot with ID:',
-    snapshot.snapshot_id
-  );
+  ze_log.snapshot('Created snapshot with ID:', snapshot.snapshot_id);
   if (manifestReference) {
-    console.log(
-      '[Plugin] ze-build-snapshot: Snapshot includes manifest reference:',
-      manifestReference
-    );
+    ze_log.snapshot('Snapshot includes manifest reference:', manifestReference);
   } else {
-    console.log('[Plugin] ze-build-snapshot: Snapshot has no manifest reference');
+    ze_log.snapshot('Snapshot has no manifest reference');
   }
 
   return snapshot;

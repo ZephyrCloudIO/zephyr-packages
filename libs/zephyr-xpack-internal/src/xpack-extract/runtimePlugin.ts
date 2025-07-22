@@ -1,5 +1,6 @@
 import type { FederationRuntimePlugin } from '@module-federation/runtime';
 import type { RemoteWithEntry } from '@module-federation/sdk';
+import { ze_log } from 'zephyr-agent';
 // Webpack/Rspack-specific global for resourceQuery
 declare const __resourceQuery: string | undefined;
 
@@ -105,10 +106,10 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
       }
 
       if (runtimeData && loadSource) {
-        console.log(`[Zephyr Runtime] Loaded from: ${loadSource}`);
+        ze_log.mf(`Loaded from: ${loadSource}`);
       }
     } catch (error) {
-      console.error('[Zephyr Runtime] Failed to load manifest:', error);
+      ze_log.mf('Failed to load manifest:', error);
     }
 
     return runtimeData;

@@ -2,6 +2,6 @@
   "name": "rspack_mf_host",
   "version": "0.0.0",
   "zephyr:dependencies": {
-    "rspack_mf_remote": "rspack-mf-remote.zephyr-packages.zephyrcloudio@PROD"
+    "rspack_mf_remote": "workspace:*"
   }
 }

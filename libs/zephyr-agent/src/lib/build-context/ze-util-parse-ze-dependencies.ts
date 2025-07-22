@@ -11,15 +11,13 @@
  *   value
  * @returns Parsed zephyr dependencies with structured information
  */
+import { ze_log } from '../logging';
 import type { ZeDependency } from './ze-package-json.type';
 
 export function parseZeDependencies(
   ze_dependencies: Record<string, string>
 ): Record<string, ZeDependency> {
-  console.log(
-    '[Plugin] parseZeDependencies: Parsing zephyr:dependencies from package.json'
-  );
-  console.log('[Plugin] parseZeDependencies: Input:', ze_dependencies);
+  ze_log.remotes('Parsing zephyr:dependencies from package.json: ', ze_dependencies);
 
   const parsed = Object.fromEntries(
     Object.entries(ze_dependencies).map(([key, value]) => [
@@ -28,7 +26,7 @@ export function parseZeDependencies(
     ])
   );
 
-  console.log('[Plugin] parseZeDependencies: Parsed dependencies:', parsed);
+  ze_log.remotes('Parsed dependencies:', parsed);
   return parsed;
 }
 

@@ -1,37 +1,29 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "vite-react-mf.host",
-            "program": "${workspaceFolder}/examples/vite-react-mf/host/node_modules/vite/bin/vite.js",
-            "args": [
-                "build",
-                "--mode",
-                "production"
-            ],
-            "cwd": "${workspaceFolder}/examples/vite-react-mf/host",
-            "runtimeArgs": [
-                "--inspect-brk"
-            ],
-            "sourceMaps": true,
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/examples/vite-react-mf/host/**",
-                "!**/node_modules/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/examples/vite-react-mf/host/dist/**/*.js"
-            ],
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "env": {
-                "DEBUG": "zephyr:*",
-                "NODE_ENV": "production"
-            },
-            "restart": true,
-            "autoAttachChildProcesses": true
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "vite-react-mf.host",
+      "program": "${workspaceFolder}/examples/vite-react-mf/host/node_modules/vite/bin/vite.js",
+      "args": ["build", "--mode", "production"],
+      "cwd": "${workspaceFolder}/examples/vite-react-mf/host",
+      "runtimeArgs": ["--inspect-brk"],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/examples/vite-react-mf/host/**",
+        "!**/node_modules/**"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/examples/vite-react-mf/host/dist/**/*.js"
+      ],
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "DEBUG": "zephyr:*",
+        "NODE_ENV": "production"
+      },
+      "restart": true,
+      "autoAttachChildProcesses": true
+    }
+  ]
 }

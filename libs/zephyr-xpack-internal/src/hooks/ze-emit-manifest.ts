@@ -1,5 +1,4 @@
-import type { ZephyrEngine } from 'zephyr-agent';
-import { createHash } from 'crypto';
+import { ze_log, type ZephyrEngine } from 'zephyr-agent';
 
 interface EmitManifestOptions {
   pluginName: string;
@@ -53,7 +52,7 @@ export function setupManifestEmission<
       async () => {
         // Wait for dependencies to be resolved
         if (!zephyr_engine.federated_dependencies) {
-          console.log('[Zephyr Manifest] No federated dependencies to emit');
+          ze_log.snapshot('[Zephyr Manifest] No federated dependencies to emit');
           return;
         }
 
@@ -77,11 +76,7 @@ export function setupManifestEmission<
         // Convert to JSON
         const manifestContent = JSON.stringify(manifest, null, 2);
 
-        console.log('[Zephyr Manifest] Emitting zephyr-manifest.json to build output');
-        console.log(`[Zephyr Manifest] Manifest size: ${manifestContent.length} bytes`);
-        console.log(
-          `[Zephyr Manifest] Dependencies: ${Object.keys(manifest.dependencies).join(', ')}`
-        );
+        ze_log.manifest(`Dependencies: ${Object.keys(manifest.dependencies).join(', ')}`);
 
         // Emit the asset
         compilation.emitAsset('zephyr-manifest.json', new RawSource(manifestContent));

@@ -1,6 +1,7 @@
-import type { ZephyrEngine } from '../../zephyr-engine';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { ze_log } from '../logging';
 
 export async function zeBuildDashData(
   zephyr_engine: ZephyrEngine
@@ -33,11 +34,9 @@ export async function zeBuildDashData(
   // Build zephyr:dependencies from federated_dependencies
   const zephyrDependencies: Record<string, any> = {};
   if (zephyr_engine.federated_dependencies) {
-    console.log(
-      '[Plugin] ze-build-dash-data: Building zephyr:dependencies for dashboard'
-    );
-    console.log(
-      `[Plugin] ze-build-dash-data: Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`
+    ze_log.buildstats('Building zephyr:dependencies for dashboard');
+    ze_log.buildstats(
+      `Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`
     );
 
     for (const dep of zephyr_engine.federated_dependencies) {
@@ -48,12 +47,10 @@ export async function zeBuildDashData(
         name: dep.name,
         library_type: dep.library_type || 'module',
       };
-      console.log(`[Plugin] ze-build-dash-data: Added ${dep.name} to dashboard data`);
+      ze_log.buildstats(`Added ${dep.name} to dashboard data`);
     }
   } else {
-    console.log(
-      '[Plugin] ze-build-dash-data: No federated dependencies to add to dashboard data'
-    );
+    ze_log.buildstats('No federated dependencies to add to dashboard data');
   }
 
   const result = {
@@ -85,8 +82,8 @@ export async function zeBuildDashData(
     'zephyr:dependencies': zephyrDependencies,
   };
 
-  console.log(
-    `[Plugin] ze-build-dash-data: Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyr:dependencies`
+  ze_log.buildstats(
+    `Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyr:dependencies`
   );
 
   return result;

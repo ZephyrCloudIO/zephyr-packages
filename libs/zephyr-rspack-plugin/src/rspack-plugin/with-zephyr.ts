@@ -47,7 +47,6 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
-        runtimePlugin: _zephyrOptions?.runtimePlugin,
       })
     );
   } catch (error) {

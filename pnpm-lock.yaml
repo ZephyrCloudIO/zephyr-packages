@@ -69,6 +69,9 @@ catalogs:
     '@module-federation/runtime':
       specifier: ^0.11.1
       version: 0.11.1
+    '@module-federation/sdk':
+      specifier: 0.15.0
+      version: 0.15.0
     '@module-federation/vite':
       specifier: ^1.2.6
       version: 1.2.6
@@ -1598,7 +1601,7 @@ importers:
         version: link:../zephyr-edge-contract
     devDependencies:
       '@module-federation/sdk':
-        specifier: 0.15.0
+        specifier: catalog:module-federation
         version: 0.15.0
       '@types/is-ci':
         specifier: catalog:typescript

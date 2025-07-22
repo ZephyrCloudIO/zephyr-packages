@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { ZeBuildAsset } from 'zephyr-edge-contract';
 import type { ZeResolvedDependency } from '../../zephyr-engine/resolve_remote_dependency';
+import { ze_log } from '../logging';
 
 interface ZephyrDependency {
   name: string;
@@ -25,19 +26,13 @@ export function createZephyrManifest(dependencies: ZeResolvedDependency[] | null
   content: string;
   asset: ZeBuildAsset;
 } {
-  console.log(
-    '[Zephyr Manifest] Creating manifest with dependencies:',
-    dependencies?.length || 0
-  );
+  ze_log.manifest('Creating manifest with dependencies:', dependencies?.length || 0);
 
   // Build the dependencies object
   const dependenciesMap: Record<string, ZephyrDependency> = {};
 
   if (dependencies && dependencies.length > 0) {
     dependencies.forEach((dep) => {
-      console.log(
-        `[Zephyr Manifest] Adding dependency: ${dep.name} -> ${dep.remote_entry_url}`
-      );
       dependenciesMap[dep.name] = {
         name: dep.name,
         application_uid: dep.application_uid,
@@ -45,8 +40,6 @@ export function createZephyrManifest(dependencies: ZeResolvedDependency[] | null
         default_url: dep.default_url,
       };
     });
-  } else {
-    console.log('[Zephyr Manifest] No dependencies to add to manifest');
   }
 
   // Create the manifest object
@@ -74,11 +67,10 @@ export function createZephyrManifest(dependencies: ZeResolvedDependency[] | null
     buffer: contentBuffer,
   };
 
-  console.log('[Zephyr Manifest] Created manifest asset:');
-  console.log(`  - Path: ${asset.path}`);
-  console.log(`  - Hash: ${asset.hash}`);
-  console.log(`  - Size: ${asset.size} bytes`);
-  console.log(`  - Dependencies: ${Object.keys(dependenciesMap).join(', ') || 'none'}`);
+  ze_log.manifest('Created manifest asset:');
+  ze_log.manifest(
+    `  - Dependencies: ${Object.keys(dependenciesMap).join(', ') || 'none'}`
+  );
 
   return { content, asset };
 }

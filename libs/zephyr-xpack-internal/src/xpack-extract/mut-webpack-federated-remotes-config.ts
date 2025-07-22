@@ -2,17 +2,15 @@ import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, type ZeResolvedDependency } from 'zephyr-agent';
 import type { XPackConfiguration } from '../xpack.types';
 import { parseRemotesAsEntries } from './extract-federated-dependency-pairs';
-import { extractFederatedConfig } from './extract-federation-config';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
-import { isModuleFederationPlugin } from './is-module-federation-plugin';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
+import { runtimePluginInsert } from './runtime-plugin-insert';
 
 export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template,
-  runtimePlugin?: boolean
+  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
@@ -21,78 +19,16 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
   ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
 
-  // Add single runtime plugin with all resolved dependencies if enabled
-  if (runtimePlugin) {
-    try {
-      const runtimePluginPath = require.resolve('./runtimePlugin');
-      ze_log.remotes(`Adding Zephyr runtime plugin: ${runtimePluginPath}`);
+  // TODO NOW: add check to see if is webpack MF!
+  if (true) {
+    const runtimePluginInserted = runtimePluginInsert(
+      zephyr_engine,
+      config,
+      resolvedDependencyPairs
+    );
 
-      // Create resolved remotes map for runtime plugin with all dependencies
-      const resolvedRemotesMap = Object.fromEntries(
-        resolvedDependencyPairs.map((dep) => [
-          dep.name,
-          {
-            application_uid: dep.application_uid,
-            remote_entry_url: dep.remote_entry_url,
-            default_url: dep.default_url,
-            name: dep.name,
-            library_type: dep.library_type,
-          },
-        ])
-      );
-
-      ze_log.remotes(
-        `Resolved remotes map:`,
-        JSON.stringify(resolvedRemotesMap, null, 2)
-      );
-
-      // Pass all resolved dependencies via resourceQuery to single runtime plugin
-      const queryData = {
-        builder: zephyr_engine.builder,
-        resolvedRemotes: resolvedRemotesMap,
-      };
-
-      const runtimePluginWithQuery =
-        runtimePluginPath + `?ze=${JSON.stringify(queryData)}`;
-
-      ze_log.remotes(
-        `Runtime plugin query length: ${runtimePluginWithQuery.length} chars`
-      );
-
-      // Find first Module Federation plugin and add runtime plugin
-      let runtimePluginAdded = false;
-      if (config.plugins) {
-        for (const plugin of config.plugins) {
-          if (isModuleFederationPlugin(plugin)) {
-            const remotesConfig = extractFederatedConfig(plugin);
-            if (remotesConfig) {
-              // Initialize runtimePlugins array if it doesn't exist
-              if (!remotesConfig.runtimePlugins) {
-                remotesConfig.runtimePlugins = [];
-              }
-
-              // Add the single runtime plugin with all data
-              remotesConfig.runtimePlugins.push(runtimePluginWithQuery);
-              ze_log.remotes(
-                `Runtime plugin added to Module Federation config with ${Object.keys(resolvedRemotesMap).length} remotes`
-              );
-              runtimePluginAdded = true;
-              break; // Add only to first MF plugin found
-            }
-          }
-        }
-      }
-
-      if (!runtimePluginAdded) {
-        ze_log.remotes(
-          `Warning: No Module Federation plugin found to add runtime plugin`
-        );
-      }
-    } catch (error) {
-      ze_log.remotes(`Failed to resolve runtime plugin path: ${error}`);
-    }
-  } else {
-    ze_log.remotes(`Runtime plugin is not enabled`);
+    // If runtime plugin successfully inserted, skip delegate module.
+    if (runtimePluginInserted) return;
   }
 
   iterateFederatedRemoteConfig(config, (remotesConfig) => {
@@ -131,11 +67,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
           )}`,
           'skipping...'
         );
-        return;
-      }
-
-      // If runtime plugin is enabled, don't modify remotes here - let runtime plugin handle it
-      if (runtimePlugin) {
         return;
       }
 

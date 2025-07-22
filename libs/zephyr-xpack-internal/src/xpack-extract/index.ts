@@ -11,4 +11,4 @@ export { isModuleFederationPlugin } from './is-module-federation-plugin';
 export { iterateFederationConfig } from './iterate-federation-config';
 export { makeCopyOfModuleFederationOptions } from './make-copy-of-module-federation-options';
 export { mutWebpackFederatedRemotesConfig } from './mut-webpack-federated-remotes-config';
-export { createZephyrRuntimePlugin } from './runtimePlugin';
+export { createZephyrRuntimePlugin } from './runtime-plugin';

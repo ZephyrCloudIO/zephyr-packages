@@ -1,8 +1,8 @@
+import { posix, win32 } from 'node:path';
 import {
   type Snapshot,
   type SnapshotAsset,
   type ZeBuildAssetsMap,
-  ZephyrManifestRef,
   type ZephyrPluginOptions,
   createApplicationUid,
   flatCreateSnapshotId,
@@ -100,7 +100,8 @@ export async function createSnapshot(
       (memo, hash: string) => {
         const asset = basedAssets[hash];
         const { path, extname, size } = asset;
-        memo[asset.path] = { path, extname, hash: asset.hash, size };
+        const normalizedPath = normalizePathSeparators(path);
+        memo[normalizedPath] = { path: normalizedPath, extname, hash: asset.hash, size };
         return memo;
       },
       {} as Record<string, SnapshotAsset>
@@ -119,4 +120,15 @@ export async function createSnapshot(
   }
 
   return snapshot;
+}
+
+/**
+ * Normalizes path separators to forward slashes for web compatibility Converts Windows
+ * backslashes to forward slashes
+ *
+ * @param path - The path to normalize
+ * @returns The path with forward slashes
+ */
+function normalizePathSeparators(path: string): string {
+  return path.split(win32.sep).join(posix.sep);
 }

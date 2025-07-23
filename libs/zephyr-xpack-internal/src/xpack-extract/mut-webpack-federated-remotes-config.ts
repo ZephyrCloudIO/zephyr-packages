@@ -4,16 +4,32 @@ import type { XPackConfiguration } from '../xpack.types';
 import { parseRemotesAsEntries } from './extract-federated-dependency-pairs';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
+import { runtimePluginInsert } from './runtime-plugin-insert';
 
 export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
+  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template,
+  isEnhanced = true
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;
+  }
+
+  ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
+
+  // TODO NOW: add check to see if is webpack MF!
+  if (isEnhanced) {
+    const runtimePluginInserted = runtimePluginInsert(
+      zephyr_engine,
+      config,
+      resolvedDependencyPairs
+    );
+
+    // If runtime plugin successfully inserted, skip delegate module.
+    if (runtimePluginInserted) return;
   }
 
   iterateFederatedRemoteConfig(config, (remotesConfig) => {
@@ -55,6 +71,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         return;
       }
 
+      // Legacy behavior when runtime plugin is not enabled
       // todo: this is a version with named export logic, we should take this into account later
       const [v_app] = remote_version.includes('@')
         ? remote_version.split('@')

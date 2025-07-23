@@ -37,8 +37,7 @@ async function _zephyr_configuration(
       zephyr_engine,
       config,
       resolved_dependency_pairs,
-      undefined,
-      _zephyrOptions?.runtimePlugin
+      undefined
     );
 
     // inject the ZephyrRspackPlugin

@@ -84,14 +84,9 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
 
   // Initialize manifest fetching
   const initializeManifest = async (): Promise<RuntimePluginData | null> => {
-    let loadSource = '';
-
     try {
       // Primary source: fetch the manifest file
       runtimeData = await fetchZephyrManifest();
-      if (runtimeData) {
-        loadSource = 'zephyr-manifest.json';
-      }
 
       // Fallback for development: check resourceQuery
       if (!runtimeData && typeof __resourceQuery !== 'undefined' && __resourceQuery) {
@@ -101,7 +96,6 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
 
         if (zeData) {
           runtimeData = JSON.parse(zeData);
-          loadSource = 'resourceQuery';
         }
       }
     } catch (error) {

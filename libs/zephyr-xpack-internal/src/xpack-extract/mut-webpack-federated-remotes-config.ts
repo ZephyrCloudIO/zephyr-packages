@@ -10,7 +10,8 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
+  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template,
+  isEnhanced = true
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
@@ -20,7 +21,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
 
   // TODO NOW: add check to see if is webpack MF!
-  if (true) {
+  if (isEnhanced) {
     const runtimePluginInserted = runtimePluginInsert(
       zephyr_engine,
       config,

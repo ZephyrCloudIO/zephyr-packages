@@ -1,5 +1,5 @@
-import { ze_log, ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
-import { XPackConfiguration } from '../xpack.types';
+import { ze_log, type ZephyrEngine, type ZeResolvedDependency } from 'zephyr-agent';
+import { type XPackConfiguration } from '../xpack.types';
 import { extractFederatedConfig } from './extract-federation-config';
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
 
@@ -7,7 +7,7 @@ export function runtimePluginInsert<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[]
-) {
+): boolean {
   try {
     const runtimePluginPath = require.resolve('./runtime-plugin');
     ze_log.remotes(`Adding Zephyr runtime plugin: ${runtimePluginPath}`);

@@ -3,13 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/zephyr-metro-plugin/src",
   "projectType": "library",
-  "release": {
-    "version": {
-      "manifestRootsToUpdate": ["dist/{projectRoot}"],
-      "currentVersionResolver": "git-tag",
-      "fallbackCurrentVersionResolver": "disk"
-    }
-  },
   "tags": [],
   "targets": {
     "build": {
@@ -27,6 +20,13 @@
       "options": {
         "packageRoot": "dist/{projectRoot}"
       }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-metro-plugin {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-metro-plugin@$(npm view zephyr-metro-plugin@next version) latest"
     },
     "lint": {
       "executor": "@nx/eslint:lint"

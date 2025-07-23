@@ -140,3 +140,4 @@ otelcol.auth.basic "grafana_cloud" {
 	username = env("GRAFANA_CLOUD_INSTANCE_ID")
 	password = env("GRAFANA_CLOUD_API_KEY")
 }
+

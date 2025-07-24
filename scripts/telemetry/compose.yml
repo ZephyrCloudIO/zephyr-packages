@@ -1,0 +1,19 @@
+services:
+  grafana-alloy:
+    image: grafana/alloy:latest
+    container_name: grafana-alloy
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy
+    ports:
+      - '12345:12345' # Alloy HTTP UI/API (if enabled)
+      - '4317:4317' # OTLP gRPC
+      - '4318:4318' # OTLP HTTP
+    env_file:
+      - .env
+    command:
+      [
+        'run',
+        '--server.http.listen-addr=0.0.0.0:12345',
+        '/    "@nx/eslint": "^20.3.0",etc/alloy/config.alloy',
+      ]
+    restart: always

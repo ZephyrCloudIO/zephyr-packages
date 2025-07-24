@@ -2,18 +2,15 @@
 // Best practices: explicit async init, idempotency, auto-instrumentation, resource attributes, shutdown, config flexibility, metrics-ready
 
 import { trace, type Tracer } from '@opentelemetry/api';
-//import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPTraceExporter as OTLPTraceExporterGrpc } from '@opentelemetry/exporter-trace-otlp-grpc';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import type { SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import dotenv from 'dotenv';
-import path from 'path';
-dotenv.config({ path: path.join(__dirname, '../../../.env') });
 
 let sdk: NodeSDK | undefined;
 let initialized = false;
-const OTLP_ENDPOINT = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
+const OTLP_ENDPOINT =
+  process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] || 'http://localhost:4318';
 const OTEL_EXPORTER_OTLP_HEADERS = process.env['OTEL_EXPORTER_OTLP_HEADERS'];
 
 // this is to parse the headers from the environment variable
@@ -31,7 +28,7 @@ export async function initTelemetry(): Promise<void> {
   if (initialized) return;
 
   // starting the otlp exporter this is ONLY for the traces
-  const otlpExporter = new OTLPTraceExporterGrpc({
+  const otlpExporter = new OTLPTraceExporter({
     url: `${OTLP_ENDPOINT}/v1/traces`,
     headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
   });

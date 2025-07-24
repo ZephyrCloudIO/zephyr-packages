@@ -14,6 +14,6 @@ services:
       [
         'run',
         '--server.http.listen-addr=0.0.0.0:12345',
-        '/    "@nx/eslint": "^20.3.0",etc/alloy/config.alloy',
+        '/etc/alloy/config.alloy',
       ]
     restart: always

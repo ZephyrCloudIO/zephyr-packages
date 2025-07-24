@@ -4,34 +4,34 @@ on:
   workflow_dispatch:
     inputs:
       workflow_status:
-        description: "Status of the overall E2E tests workflow"
+        description: 'Status of the overall E2E tests workflow'
         required: true
       run_url:
-        description: "URL to the workflow run"
+        description: 'URL to the workflow run'
         required: true
       zephyr_deployment_ios_status:
-        description: "Status of zephyr-deployment-ios"
+        description: 'Status of zephyr-deployment-ios'
         required: true
       ios_tests_status:
-        description: "Status of ios-tests"
+        description: 'Status of ios-tests'
         required: true
       zephyr_deployment_android_status:
-        description: "Status of zephyr-deployment-android"
+        description: 'Status of zephyr-deployment-android'
         required: true
       android_tests_status:
-        description: "Status of android-tests"
+        description: 'Status of android-tests'
         required: true
       ios_deployment_logs_url:
-        description: "Logs URL for iOS Zephyr Deployment job"
+        description: 'Logs URL for iOS Zephyr Deployment job'
         required: true
       android_deployment_logs_url:
-        description: "Logs URL for Android Zephyr Deployment job"
+        description: 'Logs URL for Android Zephyr Deployment job'
         required: true
       ios_tests_logs_url:
-        description: "Logs URL for iOS E2E tests job"
+        description: 'Logs URL for iOS E2E tests job'
         required: true
       android_tests_logs_url:
-        description: "Logs URL for Android E2E tests job"
+        description: 'Logs URL for Android E2E tests job'
         required: true
 
 jobs:

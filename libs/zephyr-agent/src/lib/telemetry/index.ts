@@ -1,13 +1,19 @@
 // OpenTelemetry Telemetry Setup for Zephyr Agent
 // Best practices: explicit async init, idempotency, auto-instrumentation, resource attributes, shutdown, config flexibility, metrics-ready
 
-import type { Meter} from '@opentelemetry/api';
+import type { Meter } from '@opentelemetry/api';
 import { metrics, trace, type Tracer } from '@opentelemetry/api';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+
+import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
 
 let sdk: NodeSDK | undefined;
 let initialized = false;
@@ -46,8 +52,8 @@ export async function initTelemetry(): Promise<void> {
   // Always use the console metric exporter for now
   const metricReader = new PeriodicExportingMetricReader({
     exporter: otlpMetricExporter,
-    exportIntervalMillis: 30000, // 30 seconds
-    exportTimeoutMillis: 10000, // 10 seconds
+    exportIntervalMillis: 10000, // 10 seconds
+    exportTimeoutMillis: 5000, // 5 seconds
   });
 
   // Configure span processors for both local and remote telemetry
@@ -56,9 +62,15 @@ export async function initTelemetry(): Promise<void> {
     new SimpleSpanProcessor(consoleExporter), // TODO: Remove this once we have a proper logging system
   ];
 
+  const resource = resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: 'zephyr-agent',
+    [ATTR_SERVICE_VERSION]: process.env['npm_package_version'] || 'unknown',
+  });
+
   sdk = new NodeSDK({
     spanProcessors: spanProcessors,
     metricReader: metricReader,
+    resource: resource,
     // NOTE: To add more metric exporters, use a custom MeterProvider setup
   });
 
@@ -74,7 +86,7 @@ export function getTracer(name: string): Tracer {
   return trace.getTracer(name);
 }
 
-// TODO: Add metrics
+// metrics added
 
 export function getMetrics(name: string): Meter {
   return metrics.getMeter(name);

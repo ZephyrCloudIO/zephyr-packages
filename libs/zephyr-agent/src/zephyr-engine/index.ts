@@ -33,6 +33,22 @@ import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+
+// --- OpenTelemetry Metrics (module scope) ---
+const meter = getMetrics('zephyr-agent');
+const buildStartedCounter = meter.createCounter('zephyr_builds_started_total', {
+  description: 'Total number of builds started by Zephyr Agent',
+});
+const buildCompletedCounter = meter.createCounter('zephyr_builds_completed_total', {
+  description: 'Total number of builds completed by Zephyr Agent',
+});
+const buildDuration = meter.createHistogram('zephyr_build_duration_milliseconds', {
+  description: 'Duration of Zephyr builds in milliseconds',
+  unit: 'ms',
+});
+const errorCounter = meter.createCounter('zephyr_errors_total', {
+  description: 'Total number of errors encountered by Zephyr Agent',
+});
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -152,13 +168,10 @@ export class ZephyrEngine {
 
   // todo: extract to a separate fn
   static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
-    const tracer = getTracer('zephyr.engine_initialization');
-    const span = tracer.startSpan('zephyr.engine_initialization', {
-      attributes: {
-        context: options.context || process.cwd(),
-        builder: options.builder,
-        // Add initial attributes, more will be added after loading
-      },
+    const { builder } = options;
+    const tracer = getTracer('zephyr-agent');
+    const span = tracer.startSpan('zephyr-engine-create', {
+      attributes: { builder },
     });
     try {
       const context = options.context || process.cwd();
@@ -224,9 +237,16 @@ export class ZephyrEngine {
       span.setStatus({ code: SpanStatusCode.OK });
       return ze;
     } catch (err) {
-      // Add error details to the span
+      // --- METRICS: Record error ---
+      errorCounter.add(1, {
+        builder,
+        error_type: (err as Error)?.name || 'UnknownError',
+      });
+      // --- END METRICS ---
+      // --- TRACING: Record error event ---
       span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
       span.recordException(err as Error);
+      // --- END TRACING ---
       throw err;
     } finally {
       span.end();
@@ -364,6 +384,10 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     const ze = this;
     ze.build_start_time = Date.now();
 
+    // --- METRICS: Record build started ---
+    buildStartedCounter.add(1, { builder: ze.builder });
+    // --- END METRICS ---
+
     if ((await ze.build_id) && (await ze.snapshotId)) {
       ze_log.init('Skip: creating new build because no assets was uploaded');
       return;
@@ -422,20 +446,22 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     const if_target_is_react_native =
       zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
 
+    // --- METRICS: Record build completed ---
+    buildCompletedCounter.add(1, {
+      builder: zephyr_engine.builder,
+      status: versionUrl ? 'success' : 'failure',
+    });
+    // --- END METRICS ---
+
     // --- METRICS: Record build duration ---
     if (zeStart) {
-      const durationSeconds = (Date.now() - zeStart) / 1000;
-      const meter = getMetrics('zephyr');
-      const buildDuration = meter.createHistogram('zephyr_build_duration_seconds', {
-        description: 'Duration of Zephyr builds in seconds',
-        unit: 's',
-      });
+      const durationSeconds = Date.now() - zeStart; // we should record this in miliseconds
       buildDuration.record(durationSeconds, {
         project: zephyr_engine.applicationProperties?.project,
         app: zephyr_engine.applicationProperties?.name,
         version: zephyr_engine.applicationProperties?.version,
         branch: zephyr_engine.gitProperties?.git?.branch,
-        status: versionUrl ? 'success' : 'failure',
+        status: versionUrl ? 'success' : 'failure', // checking to see if the url exists
       });
     }
     // --- END METRICS ---

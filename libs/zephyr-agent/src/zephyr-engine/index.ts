@@ -27,7 +27,7 @@ import { cyanBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
-import { getTracer } from '../lib/telemetry';
+import { getMetrics, getTracer } from '../lib/telemetry';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
 import {
   type ZeResolvedDependency,
@@ -157,6 +157,7 @@ export class ZephyrEngine {
       attributes: {
         context: options.context || process.cwd(),
         builder: options.builder,
+        // Add initial attributes, more will be added after loading
       },
     });
     try {
@@ -174,6 +175,18 @@ export class ZephyrEngine {
       mut_zephyr_app_uid(ze);
       const application_uid = ze.application_uid;
 
+      // Add more attributes to the root span for observability
+      span.setAttributes({
+        'zephyr.application_uid': application_uid,
+        'zephyr.project': ze.applicationProperties?.project,
+        'zephyr.app': ze.applicationProperties?.name,
+        'zephyr.version': ze.applicationProperties?.version,
+        'zephyr.git.commit': ze.gitProperties?.git?.commit,
+        'zephyr.git.branch': ze.gitProperties?.git?.branch,
+        'zephyr.package.name': ze.npmProperties?.name,
+        'zephyr.package.version': ze.npmProperties?.version,
+      });
+
       // starting async load of application configuration, build_id and hash_list
       ze_log.init('Initializing: checking authentication...');
       await checkAuth();
@@ -184,6 +197,12 @@ export class ZephyrEngine {
         .then((appConfig) => {
           const { username, email, EDGE_URL } = appConfig;
           ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
+          // Add user and edge info to the span
+          span.setAttributes({
+            'zephyr.user': username,
+            'zephyr.user.email': email,
+            'zephyr.edge_url': EDGE_URL,
+          });
         })
         .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
 
@@ -205,7 +224,9 @@ export class ZephyrEngine {
       span.setStatus({ code: SpanStatusCode.OK });
       return ze;
     } catch (err) {
+      // Add error details to the span
       span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+      span.recordException(err as Error);
       throw err;
     } finally {
       span.end();
@@ -400,6 +421,24 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 
     const if_target_is_react_native =
       zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
+
+    // --- METRICS: Record build duration ---
+    if (zeStart) {
+      const durationSeconds = (Date.now() - zeStart) / 1000;
+      const meter = getMetrics('zephyr');
+      const buildDuration = meter.createHistogram('zephyr_build_duration_seconds', {
+        description: 'Duration of Zephyr builds in seconds',
+        unit: 's',
+      });
+      buildDuration.record(durationSeconds, {
+        project: zephyr_engine.applicationProperties?.project,
+        app: zephyr_engine.applicationProperties?.name,
+        version: zephyr_engine.applicationProperties?.version,
+        branch: zephyr_engine.gitProperties?.git?.branch,
+        status: versionUrl ? 'success' : 'failure',
+      });
+    }
+    // --- END METRICS ---
 
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {

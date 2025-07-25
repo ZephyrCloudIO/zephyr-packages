@@ -1,10 +1,12 @@
 // OpenTelemetry Telemetry Setup for Zephyr Agent
 // Best practices: explicit async init, idempotency, auto-instrumentation, resource attributes, shutdown, config flexibility, metrics-ready
 
-import { trace, type Tracer } from '@opentelemetry/api';
+import type { Meter} from '@opentelemetry/api';
+import { metrics, trace, type Tracer } from '@opentelemetry/api';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import type { SpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 
 let sdk: NodeSDK | undefined;
@@ -27,26 +29,44 @@ function parseHeaders(headers: string): Record<string, string> {
 export async function initTelemetry(): Promise<void> {
   if (initialized) return;
 
-  // starting the otlp exporter this is ONLY for the traces
+  // Trace exporters
   const otlpExporter = new OTLPTraceExporter({
     url: `${OTLP_ENDPOINT}/v1/traces`,
     headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
   });
   const consoleExporter = new ConsoleSpanExporter();
 
-  // TODO: Add metrics exporter
+  // Metrics exporters
+  const otlpMetricExporter = new OTLPMetricExporter({
+    url: `${OTLP_ENDPOINT}/v1/metrics`,
+    headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
+  });
+  //const consoleMetricExporter = new ConsoleMetricExporter();
 
-  // TODO: Add logging exporter
+  // Always use the console metric exporter for now
+  const metricReader = new PeriodicExportingMetricReader({
+    exporter: otlpMetricExporter,
+    exportIntervalMillis: 30000, // 30 seconds
+    exportTimeoutMillis: 10000, // 10 seconds
+  });
+
+  // Configure span processors for both local and remote telemetry
+  const spanProcessors = [
+    new SimpleSpanProcessor(otlpExporter),
+    new SimpleSpanProcessor(consoleExporter), // TODO: Remove this once we have a proper logging system
+  ];
 
   sdk = new NodeSDK({
-    spanProcessors: [
-      new SimpleSpanProcessor(otlpExporter),
-      new SimpleSpanProcessor(consoleExporter), // TODO: Remove this once we have a proper logging system
-    ] as SpanProcessor[],
-    // No auto-instrumentations might add later if we need it
+    spanProcessors: spanProcessors,
+    metricReader: metricReader,
+    // NOTE: To add more metric exporters, use a custom MeterProvider setup
   });
 
   await sdk.start();
+  // NOTE: OpenTelemetry NodeSDK currently only supports one metricReader directly.
+  // To add more, you must set up a custom MeterProvider and register multiple readers.
+  // See: https://github.com/open-telemetry/opentelemetry-js/issues/3892
+
   initialized = true;
 }
 
@@ -55,4 +75,9 @@ export function getTracer(name: string): Tracer {
 }
 
 // TODO: Add metrics
+
+export function getMetrics(name: string): Meter {
+  return metrics.getMeter(name);
+}
+
 // TODO: Add logging

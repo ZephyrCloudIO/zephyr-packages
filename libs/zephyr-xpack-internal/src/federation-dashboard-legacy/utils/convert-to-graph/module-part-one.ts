@@ -60,6 +60,7 @@ export function modulePartOne(modules: XStatsModule[] | undefined): ModulePartOn
 
   modules?.forEach((mod) => {
     const { identifier, reasons, moduleType, nameForCondition, size } = mod;
+
     const data = identifier?.split(' ') as (string | undefined)[] | undefined;
 
     if (moduleType === 'remote-module') {

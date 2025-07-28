@@ -1,4 +1,3 @@
-import type { OutputAsset, OutputChunk } from 'rollup';
 import {
   buildAssetsMap,
   getPartialAssetMap,
@@ -6,6 +5,7 @@ import {
   type ZeBuildAssetsMap,
   type ZephyrEngine,
 } from 'zephyr-agent';
+import { extractRollxBuffer, getRollxAssetType } from 'zephyr-rollx-internal';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
 import { loadStaticAssets } from './load_static_assets';
 
@@ -25,30 +25,5 @@ export async function extract_vite_assets_map(
     ...Object.values(partialAssetMap ?? {}),
     runtime_assets
   );
-  return buildAssetsMap(complete_assets, extractBuffer, getAssetType);
-}
-
-function getAssetType(asset: OutputChunk | OutputAsset): string {
-  return asset.type;
-}
-
-/**
- * Extracts buffer content from Rollup assets.
- *
- * @param asset - Output chunk or asset from Rollup
- * @returns String for text-based chunks, Buffer for binary assets, undefined for unknown
- *   types
- */
-function extractBuffer(asset: OutputChunk | OutputAsset): string | Buffer | undefined {
-  switch (asset.type) {
-    case 'chunk':
-      return asset.code;
-    case 'asset':
-      if (typeof asset.source === 'string') {
-        return asset.source;
-      }
-      return Buffer.from(asset.source);
-    default:
-      return undefined;
-  }
+  return buildAssetsMap(complete_assets, extractRollxBuffer, getRollxAssetType);
 }

@@ -57,6 +57,10 @@
     "prettier-plugin-jsdoc": "^1.3.2",
     "tslib": "catalog:typescript"
   },
+  "engines": {
+    "node": "22.x",
+    "pnpm": "10.x"
+  },
   "pnpm": {
     "overrides": {
       "@rsdoctor/rspack-plugin": "catalog:rspack",
@@ -74,8 +78,8 @@
       "webpack-dev-server@<=5.2.0": ">=5.2.2",
       "@rspack/dev-server>http-proxy-middleware": ">=3.0.5",
       "prismjs@<1.30.0": ">=1.30.0",
-      "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5"
+      "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5",
+      "pbkdf2": ">=3.1.3"
     }
-  },
-  "packageManager": "pnpm@9.9.0+sha256.7a4261e50d9a44d9240baf6c9d6e10089dcf0a79d0007f2a26985a6927324177"
+  }
 }

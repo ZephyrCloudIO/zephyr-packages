@@ -101,7 +101,7 @@
     }
   },
   "useInferencePlugins": false,
-  "defaultBase": "master",
+  "defaultBase": "main",
   "release": {
     "projects": ["libs/*"],
     "changelog": {
@@ -111,12 +111,12 @@
       }
     },
     "version": {
-      "preVersionCommand": "npx nx run-many -t build -p libs/*",
       "git": {
         "commit": false,
         "stageChanges": false,
         "tag": false
       },
+      "preVersionCommand": "npx nx run-many -t build -p libs/*",
       "currentVersionResolver": "registry",
       "preserveLocalDependencyProtocols": false,
       "versionActionsOptions": {

@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: on the master branch
+        description: on the main branch
         required: true
-        default: 'master'
+        default: 'main'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: main
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
@@ -73,7 +73,7 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: main
       - name: run lint
         run: pnpm nx affected -t lint
 
@@ -92,7 +92,7 @@ jobs:
           os: ${{ matrix.os }}
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: main
       - name: run test
         env:
           ZE_IS_PREVIEW: true
@@ -118,7 +118,7 @@ jobs:
           os: ${{ matrix.os }}
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: main
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |

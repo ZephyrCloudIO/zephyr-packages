@@ -1,6 +1,6 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.0.55",
+  "version": "0.0.56",
   "description": "Edge contract for Zephyr",
   "repository": {
     "type": "git",

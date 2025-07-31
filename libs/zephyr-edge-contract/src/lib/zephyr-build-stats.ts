@@ -119,12 +119,32 @@ export interface ZephyrBuildStats {
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;
   /**
-   * The target platform of the build , should be `ios`, `android`, `web`, "mcp" or
-   * undefined at the moment
+   * The target platform of the build , should be `ios`, `android`, `web`, `mcp` or
+   * `undefined` at the moment
    */
   build_target?: string;
   /** @deprecated */
   type: unknown;
+
+  // MCP-specific fields (only present when build_target === 'mcp')
+  /** MCP protocol version (e.g. '2024-11-05') */
+  mcp_version?: string;
+  /** MCP server capabilities */
+  mcp_capabilities?: {
+    tools?: string[];
+    resources?: string[];
+    prompts?: string[];
+    [key: string]: unknown;
+  };
+  /** MCP server metadata */
+  mcp_metadata?: {
+    name?: string;
+    description?: string;
+    author?: string;
+    homepage?: string;
+    documentation?: string;
+    [key: string]: unknown;
+  };
 }
 
 enum DeploymentIntegrationPlatform {

@@ -10,7 +10,7 @@ import { ZeMCPPlugin } from './ze-mcp-plugin';
 export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
   return async (config: RspackConfiguration): Promise<RspackConfiguration> => {
     // Ensure we're building for Node.js
-    if (!config.target) {
+    if (!config.target || config.target !== 'async-node') {
       config.target = 'async-node';
     }
 
@@ -25,7 +25,7 @@ export function withZephyr(options: ZephyrMCPPluginOptions = {}) {
         new ModuleFederationPlugin({
           ...options.mfConfig,
           // Ensure shared dependencies include MCP SDK
-          dts: false,
+          // dts: false,
           shared: {
             '@modelcontextprotocol/sdk': {
               singleton: true,

@@ -1,6 +1,9 @@
 const path = require('path');
 const { ModuleFederationPlugin } = require('@module-federation/enhanced/webpack');
-const { withZephyr } = require('zephyr-webpack-plugin');
+const {
+  DEFAULT_NEGOTIATED_PROTOCOL_VERSION,
+} = require('@modelcontextprotocol/sdk/types.js');
+const { withZephyr } = require('zephyr-mcp-plugin');
 
 const config = {
   mode: 'production',
@@ -60,6 +63,7 @@ const config = {
 // Apply Zephyr plugin for automatic deployment
 module.exports = withZephyr({
   // Metadata for Zephyr
+  mcpVersion: DEFAULT_NEGOTIATED_PROTOCOL_VERSION,
   metadata: {
     description: 'Weather tools for MCP - get weather forecasts and current conditions',
     author: 'Example Developer',

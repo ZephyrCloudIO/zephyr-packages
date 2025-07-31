@@ -1,62 +1,67 @@
 import type { Compiler } from '@rspack/core';
 import {
-  ZephyrEngine,
   buildAssetsMap,
   zeBuildDashData,
+  ZeErrors,
+  ZephyrEngine,
   ZephyrError,
   type ZeBuildAssetsMap,
 } from 'zephyr-agent';
+import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import type { ZephyrMCPPluginOptions } from './types';
 
 // Functional helpers for asset processing
-const createAssetExtractor =
-  () =>
-  (asset: { source: () => Buffer | string }): Buffer | string | undefined => {
+function createAssetExtractor() {
+  return (asset: { source: () => Buffer | string }): Buffer | string | undefined => {
     const content = asset.source();
     return Buffer.isBuffer(content) ? content : Buffer.from(content);
   };
+}
 
-const createAssetTypeExtractor =
-  () =>
-  (asset: { constructor: { name?: string } }): string => {
+function createAssetTypeExtractor() {
+  return (asset: { constructor: { name?: string } }): string => {
     return asset.constructor.name || 'unknown';
   };
+}
 
-// Functional helper for build stats customization
-const customizeBuildStatsForMCP = (
-  buildStats: Record<string, unknown>,
-  mcpMetadata?: ZephyrMCPPluginOptions['mcpMetadata']
-): Record<string, unknown> => {
+// Helper for build stats customization
+function customizeBuildStatsForMCP(
+  buildStats: ZephyrBuildStats,
+  mcpOptions?: ZephyrMCPPluginOptions
+): ZephyrBuildStats {
   buildStats.build_target = 'mcp';
 
-  // Add MCP metadata to snapshot if provided
-  if (mcpMetadata) {
-    buildStats.snapshot = {
-      ...buildStats.snapshot,
-      metadata: {
-        ...buildStats.snapshot?.metadata,
-        platform: 'mcp',
-        ...mcpMetadata,
-      },
+  // Use MCP version from options or fallback to default
+  buildStats.mcp_version = mcpOptions?.mcpVersion || '2024-11-05';
+
+  if (mcpOptions?.mcpMetadata) {
+    buildStats.mcp_capabilities = mcpOptions.mcpMetadata.capabilities;
+    buildStats.mcp_metadata = {
+      name: mcpOptions.mcpMetadata['name'] as string | undefined,
+      description: mcpOptions.mcpMetadata['description'] as string | undefined,
+      author: mcpOptions.mcpMetadata['author'] as string | undefined,
+      homepage: mcpOptions.mcpMetadata['homepage'] as string | undefined,
+      documentation: mcpOptions.mcpMetadata['documentation'] as string | undefined,
+      ...mcpOptions.mcpMetadata,
     };
   }
 
   return buildStats;
-};
+}
 
 export class ZeMCPPlugin {
   private zephyrEngine: ZephyrEngine | null = null;
-  private readonly mcpMetadata: ZephyrMCPPluginOptions['mcpMetadata'];
+  private readonly mcpOptions: ZephyrMCPPluginOptions;
 
   constructor(options: ZephyrMCPPluginOptions = {}) {
-    this.mcpMetadata = options.mcpMetadata;
+    this.mcpOptions = options;
   }
 
   apply(compiler: Compiler): void {
     const pluginName = 'ZeMCPPlugin';
 
     // Initialize ZephyrEngine during compilation
-    compiler.hooks.beforeCompile.tapAsync(pluginName, (params, callback): void => {
+    compiler.hooks.beforeCompile.tapAsync(pluginName, (_, callback): void => {
       void (async (): Promise<void> => {
         try {
           this.zephyrEngine = await ZephyrEngine.create({
@@ -72,7 +77,9 @@ export class ZeMCPPlugin {
 
           callback();
         } catch (error) {
-          callback(ZephyrError.from(error));
+          callback(
+            new ZephyrError(ZeErrors.ERR_INITIALIZE_ZEPHYR_AGENT, { cause: error })
+          );
         }
       })();
     });
@@ -80,7 +87,7 @@ export class ZeMCPPlugin {
     // Handle build completion
     compiler.hooks.afterEmit.tapAsync(pluginName, (compilation, callback): void => {
       if (!this.zephyrEngine) {
-        callback(new ZephyrError('ZephyrEngine not initialized'));
+        callback(new ZephyrError(ZeErrors.ERR_INITIALIZE_ZEPHYR_AGENT));
         return;
       }
 
@@ -97,7 +104,9 @@ export class ZeMCPPlugin {
 
           callback();
         } catch (error) {
-          callback(ZephyrError.from(error));
+          callback(
+            new ZephyrError(ZeErrors.ERR_INITIALIZE_ZEPHYR_AGENT, { cause: error })
+          );
         }
       })();
     });
@@ -115,21 +124,21 @@ export class ZeMCPPlugin {
     return buildAssetsMap(compilationAssets, extractBuffer, getAssetType);
   }
 
-  private async generateBuildStats(): Promise<Record<string, unknown>> {
+  private async generateBuildStats(): Promise<ZephyrBuildStats> {
     if (!this.zephyrEngine) {
-      throw new ZephyrError('ZephyrEngine not initialized');
+      throw new ZephyrError(ZeErrors.ERR_INITIALIZE_ZEPHYR_AGENT);
     }
 
     const buildStats = await zeBuildDashData(this.zephyrEngine);
-    return customizeBuildStatsForMCP(buildStats, this.mcpMetadata);
+    return customizeBuildStatsForMCP(buildStats, this.mcpOptions);
   }
 
   private async uploadAndFinalize(
     assetsMap: ZeBuildAssetsMap,
-    buildStats: Record<string, unknown>
+    buildStats: ZephyrBuildStats
   ): Promise<void> {
     if (!this.zephyrEngine) {
-      throw new ZephyrError('ZephyrEngine not initialized');
+      throw new ZephyrError(ZeErrors.ERR_INITIALIZE_ZEPHYR_AGENT);
     }
 
     await this.zephyrEngine.upload_assets({

@@ -4,6 +4,9 @@ export interface ZephyrMCPPluginOptions {
   /** Module Federation configuration for the MCP server */
   mfConfig?: moduleFederationPlugin.ModuleFederationPluginOptions;
 
+  /** MCP protocol version (import from '@modelcontextprotocol/sdk/types.js') */
+  mcpVersion?: string;
+
   /** MCP server metadata for Zephyr (stored in snapshot metadata) */
   mcpMetadata?: {
     /** Server description */

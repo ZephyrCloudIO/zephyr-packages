@@ -6,7 +6,6 @@ import {
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-
 // Simple weather MCP server
 class WeatherMCPServer {
   private server: Server;
@@ -24,6 +23,7 @@ class WeatherMCPServer {
         },
       }
     );
+    this.server.getClientVersion();
 
     this.setupHandlers();
   }

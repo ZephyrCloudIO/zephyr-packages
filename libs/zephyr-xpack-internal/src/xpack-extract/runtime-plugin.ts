@@ -18,17 +18,6 @@ interface RuntimePluginData {
   >;
 }
 
-// Type guard to check if a remote has an entry property
-function hasEntry(remote: any): remote is RemoteWithEntry {
-  return (
-    remote !== null &&
-    remote !== undefined &&
-    typeof remote === 'object' &&
-    'entry' in remote &&
-    typeof (remote as any).entry === 'string'
-  );
-}
-
 /** Fetches the zephyr-manifest.json file and returns the runtime plugin data */
 async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
   if (typeof window === 'undefined') {
@@ -111,65 +100,106 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
   return {
     name: 'zephyr-runtime-remote-resolver',
     async beforeRequest(args) {
+      console.log('------ args: ', args);
+      console.log('------ runtimeData: ', runtimeData);
       // Ensure manifest is loaded before processing
       await manifestPromise;
 
-      if (!runtimeData) {
+      const remotes = identifyRemotes(args, runtimeData, processedRemotes);
+
+      if (!remotes) {
         return args;
       }
 
-      const { builder, resolvedRemotes } = runtimeData;
+      const { targetRemote, resolvedRemote } = remotes;
 
-      // For repack, we don't need to modify URLs
-      if (builder === 'repack') {
-        return args;
-      }
+      // Get the resolved URL, checking session storage first
+      const resolvedUrl = getResolvedRemoteUrl(resolvedRemote);
 
-      // Extract remote name from args.id (format: "remoteName/componentName")
-      // initial hit will be "remoteName" but just in case, we can process all path requests too.
-      const remoteName = args.id.split('/')[0];
+      // Update the remote entry URL
+      targetRemote.entry = resolvedUrl;
 
-      // Check if this remote has already been processed
-      if (processedRemotes.has(remoteName)) {
-        return args;
-      }
-
-      const resolvedRemote = resolvedRemotes[remoteName];
-      if (!resolvedRemote) {
-        return args;
-      }
-
-      if (resolvedRemote && args.options.remotes) {
-        // Find the matching remote in the remotes array
-        const targetRemote = args.options.remotes.find(
-          (remote) =>
-            hasEntry(remote) &&
-            (remote.name === remoteName || remote.alias === remoteName)
-        );
-
-        if (targetRemote && hasEntry(targetRemote)) {
-          const originalUrl = targetRemote.entry;
-          // Get the resolved URL, checking session storage first
-          const resolvedUrl = getResolvedRemoteUrl(resolvedRemote);
-
-          // Only log if we're actually changing the URL
-          if (originalUrl !== resolvedUrl) {
-            console.log(
-              `[Zephyr Runtime] Resolved ${remoteName}: ${originalUrl} → ${resolvedUrl}`
-            );
-          }
-
-          // Update the remote entry URL
-          targetRemote.entry = resolvedUrl;
-
-          // Mark this remote as processed
-          processedRemotes.add(remoteName);
-        }
-      }
+      // Mark this remote as processed
+      processedRemotes.add(targetRemote.name);
 
       return args;
     },
   };
+}
+
+type Args = Parameters<NonNullable<FederationRuntimePlugin['beforeRequest']>>[0];
+type IdentifiedRemotes = {
+  targetRemote: RemoteWithEntry;
+  resolvedRemote: RuntimePluginData['resolvedRemotes'][string];
+};
+
+function identifyRemotes(
+  args: Args,
+  runtimeData: RuntimePluginData | null,
+  processedRemotes: Set<string>
+): IdentifiedRemotes | undefined {
+  // No runtime plugin configured
+  if (!runtimeData) {
+    console.log('runtimeData');
+    return;
+  }
+
+  // No remotes defined
+  if (!args.options.remotes.length) {
+    console.log('args.options.remotes.length');
+    return;
+  }
+
+  const { builder, resolvedRemotes } = runtimeData;
+
+  // For repack, we don't need to modify URLs
+  if (builder === 'repack') {
+    console.log('repack');
+    return;
+  }
+
+  // Extract remote name from args.id (format: "remoteName/componentName")
+  // initial hit will be "remoteName" but just in case, we can process all path requests too.
+  const remoteName = args.id.split('/')[0];
+
+  // Check if this remote has already been processed
+  if (processedRemotes.has(remoteName)) {
+    console.log('(processedRemotes.has(remoteName)');
+    return;
+  }
+
+  // Find the matching remote in the remotes array
+  const targetRemote = args.options.remotes.find(
+    (remote) =>
+      hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
+  )!;
+
+  const resolvedRemote = resolvedRemotes[targetRemote.alias ?? targetRemote.name];
+
+  // Check for resolved remotes entry for this specific remote called
+  // in runtime by the application
+  if (!resolvedRemote) {
+    console.log('resolvedRemote');
+    return;
+  }
+
+  // Type guard to check if a remote has an entry property
+  if (!hasEntry(targetRemote)) {
+    console.log('hasEntry(targetRemote)');
+    return;
+  }
+
+  return { targetRemote, resolvedRemote };
+}
+
+function hasEntry(remote: any): remote is RemoteWithEntry {
+  return (
+    remote !== null &&
+    remote !== undefined &&
+    typeof remote === 'object' &&
+    'entry' in remote &&
+    typeof (remote as any).entry === 'string'
+  );
 }
 
 /** Resolves the actual remote URL, checking session storage for overrides */

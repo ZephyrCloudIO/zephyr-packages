@@ -106,11 +106,8 @@ export async function createSnapshot(
       },
       {} as Record<string, SnapshotAsset>
     ),
+    zephyrManifest: manifestReference,
   };
-
-  // Add the manifest reference as a custom field
-  // We'll use a type assertion to bypass the type check for now
-  (snapshot as any)['zephyr:dependencies'] = manifestReference;
 
   ze_log.snapshot('Created snapshot with ID:', snapshot.snapshot_id);
   if (manifestReference) {

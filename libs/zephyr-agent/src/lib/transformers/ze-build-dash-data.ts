@@ -32,7 +32,7 @@ export async function zeBuildDashData(
   const to_raw = _recordToRawDependency;
 
   // Build zephyr:dependencies from federated_dependencies
-  const zephyrDependencies: Record<string, any> = {};
+  const zephyrDependencies: ZephyrBuildStats['zephyr:dependencies'] = {};
   if (zephyr_engine.federated_dependencies) {
     ze_log.buildstats('Building zephyr:dependencies for dashboard');
     ze_log.buildstats(

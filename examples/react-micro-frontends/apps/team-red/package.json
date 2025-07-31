@@ -11,6 +11,6 @@
   "private": true,
   "zephyr:dependencies": {
     "team-blue": "zephyr:team-blue@*",
-    "team-green": "zephyr:team-blue@*"
+    "team-green": "zephyr:team-green@*"
   }
 }

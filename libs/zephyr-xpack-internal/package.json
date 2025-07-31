@@ -21,19 +21,19 @@
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "catalog:module-federation",
-    "@module-federation/runtime": "catalog:module-federation",
     "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
+    "@module-federation/runtime": "catalog:module-federation",
+    "@module-federation/sdk": "catalog:module-federation",
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
-    "@module-federation/sdk": "catalog:module-federation"
+    "ts-jest": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public",

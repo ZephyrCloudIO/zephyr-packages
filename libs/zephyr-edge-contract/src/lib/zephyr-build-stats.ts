@@ -126,16 +126,7 @@ export interface ZephyrBuildStats {
   /** @deprecated */
   type: unknown;
   /** Resolved zephyr dependencies */
-  'zephyr:dependencies'?: Record<
-    string,
-    {
-      application_uid: string;
-      remote_entry_url: string;
-      default_url: string;
-      name: string;
-      library_type: string;
-    }
-  >;
+  'zephyr:dependencies'?: Record<string, ZephyrDependency>;
 }
 
 enum DeploymentIntegrationPlatform {
@@ -144,6 +135,14 @@ enum DeploymentIntegrationPlatform {
   NETLIFY = 'netlify',
   AZURE = 'azure',
   GCP = 'gcp',
+}
+
+export interface ZephyrDependency {
+  application_uid: string;
+  remote_entry_url: string;
+  default_url: string;
+  name: string;
+  library_type: string;
 }
 
 export interface RawDependency {

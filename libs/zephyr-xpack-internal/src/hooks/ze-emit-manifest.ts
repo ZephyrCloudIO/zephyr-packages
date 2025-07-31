@@ -1,4 +1,4 @@
-import { ze_log, type ZephyrEngine } from 'zephyr-agent';
+import { createManifestContent, ze_log, type ZephyrEngine } from 'zephyr-agent';
 
 interface EmitManifestOptions {
   pluginName: string;
@@ -56,27 +56,10 @@ export function setupManifestEmission<
           return;
         }
 
-        // Create the manifest content
-        const manifest = {
-          version: '1.0.0',
-          timestamp: new Date().toISOString(),
-          dependencies: {} as Record<string, any>,
-        };
-
-        // Add dependencies to manifest
-        zephyr_engine.federated_dependencies.forEach((dep) => {
-          manifest.dependencies[dep.name] = {
-            name: dep.name,
-            application_uid: dep.application_uid,
-            remote_entry_url: dep.remote_entry_url,
-            default_url: dep.default_url,
-          };
-        });
-
         // Convert to JSON
-        const manifestContent = JSON.stringify(manifest, null, 2);
-
-        ze_log.manifest(`Dependencies: ${Object.keys(manifest.dependencies).join(', ')}`);
+        const manifestContent = createManifestContent(
+          zephyr_engine.federated_dependencies
+        );
 
         // Emit the asset
         compilation.emitAsset('zephyr-manifest.json', new RawSource(manifestContent));

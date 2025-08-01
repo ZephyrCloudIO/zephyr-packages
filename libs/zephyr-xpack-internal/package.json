@@ -27,8 +27,6 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@module-federation/runtime": "catalog:module-federation",
-    "@module-federation/sdk": "catalog:module-federation",
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",

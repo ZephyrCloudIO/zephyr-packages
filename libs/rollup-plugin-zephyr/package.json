@@ -32,7 +32,7 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
+    "@opentelemetry/api": "^1.9.0",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"

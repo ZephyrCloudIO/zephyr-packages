@@ -1,12 +1,13 @@
 import type { ZephyrEngine } from 'zephyr-agent';
+import { getTracer } from 'zephyr-agent';
 
+import type { Compiler } from '@rspack/core';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
   detectAndStoreBaseHref,
   logBuildSteps,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
-import type { Compiler } from '@rspack/core';
 
 const pluginName = 'ZeRspackPlugin';
 
@@ -29,9 +30,57 @@ export class ZeRspackPlugin {
   }
 
   apply(compiler: Compiler): void {
-    this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
-    detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
-    logBuildSteps(this._options, compiler);
-    setupZeDeploy(this._options, compiler);
+    const tracer = getTracer('rspack-plugin-zephyr');
+    const span = tracer.startSpan('rspack-plugin-apply', {
+      attributes: {
+        'zephyr.plugin': 'rspack',
+        'zephyr.operation': 'plugin-apply',
+        'zephyr.output_path': compiler.outputPath,
+      },
+    });
+
+    try {
+      // Set output path
+      this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
+
+      // Detect base href
+      const baseHrefSpan = tracer.startSpan('rspack-base-href-detection', {
+        attributes: {
+          'zephyr.plugin': 'rspack',
+          'zephyr.operation': 'base-href-detection',
+        },
+      });
+      detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
+      baseHrefSpan.end();
+
+      // Log build steps
+      const buildStepsSpan = tracer.startSpan('rspack-build-steps-logging', {
+        attributes: {
+          'zephyr.plugin': 'rspack',
+          'zephyr.operation': 'build-steps-logging',
+        },
+      });
+      logBuildSteps(this._options, compiler);
+      buildStepsSpan.end();
+
+      // Setup deployment
+      const deploySpan = tracer.startSpan('rspack-deployment-setup', {
+        attributes: {
+          'zephyr.plugin': 'rspack',
+          'zephyr.operation': 'deployment-setup',
+          'zephyr.wait_for_index_html': this._options.wait_for_index_html || false,
+        },
+      });
+      setupZeDeploy(this._options, compiler);
+      deploySpan.end();
+
+      span.setStatus({ code: 1 }); // OK
+      span.end();
+    } catch (error) {
+      span.setStatus({ code: 2, message: String(error) }); // ERROR
+      span.recordException(error as Error);
+      span.end();
+      throw error;
+    }
   }
 }

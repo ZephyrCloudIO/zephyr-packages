@@ -54,3 +54,6 @@ export {
 } from './zephyr-engine';
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+
+// telemetry exports
+export { getMetrics, getTracer, initTelemetry } from './lib/telemetry';

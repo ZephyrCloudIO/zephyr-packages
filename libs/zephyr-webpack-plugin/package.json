@@ -28,6 +28,7 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",

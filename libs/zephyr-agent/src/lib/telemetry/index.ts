@@ -3,13 +3,10 @@
 
 import type { Meter } from '@opentelemetry/api';
 import { metrics, trace, type Tracer } from '@opentelemetry/api';
-//import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import {
-  ConsoleMetricExporter,
-  PeriodicExportingMetricReader,
-} from '@opentelemetry/sdk-metrics';
+import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import {
@@ -44,20 +41,20 @@ export async function initTelemetry(): Promise<void> {
   });
 
   // Metrics exporters
-  //const otlpMetricExporter = new OTLPMetricExporter({
-  //  url: `${OTLP_ENDPOINT}/v1/metrics`,
-  //  headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
-  //});
-  const consoleMetricExporter = new ConsoleMetricExporter(); // use this for debuggins only
+  const otlpMetricExporter = new OTLPMetricExporter({
+    url: `${OTLP_ENDPOINT}/v1/metrics`,
+    headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
+  });
+  //const consoleMetricExporter = new ConsoleMetricExporter(); // use this for debuggins only
 
   const resource = resourceFromAttributes({
-    [ATTR_SERVICE_NAME]: 'zephyr-agent',
+    [ATTR_SERVICE_NAME]: 'zephyr-packages',
     [ATTR_SERVICE_VERSION]: '0.0.1',
   });
 
   // Always use the console metric exporter for now
   const metricReader = new PeriodicExportingMetricReader({
-    exporter: consoleMetricExporter,
+    exporter: otlpMetricExporter,
     exportIntervalMillis: 10000, // 10 seconds
     exportTimeoutMillis: 5000, // 5 seconds
   });

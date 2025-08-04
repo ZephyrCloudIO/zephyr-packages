@@ -1,12 +1,9 @@
 // OpenTelemetry Telemetry Setup for Zephyr Agent
-// Best practices: explicit async init, idempotency, auto-instrumentation, resource attributes, shutdown, config flexibility, metrics-ready
+// Best practices: explicit async init, idempotency, auto-instrumentation, resource attributes, shutdown, config flexibility
 
-import type { Meter } from '@opentelemetry/api';
-import { metrics, trace, type Tracer } from '@opentelemetry/api';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
+import { trace, type Tracer } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import {
@@ -40,35 +37,17 @@ export async function initTelemetry(): Promise<void> {
     headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
   });
 
-  // Metrics exporters
-  const otlpMetricExporter = new OTLPMetricExporter({
-    url: `${OTLP_ENDPOINT}/v1/metrics`,
-    headers: parseHeaders(OTEL_EXPORTER_OTLP_HEADERS || 'Not found environemnt headers'),
-  });
-  //const consoleMetricExporter = new ConsoleMetricExporter(); // use this for debuggins only
-
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'zephyr-packages',
     [ATTR_SERVICE_VERSION]: '0.0.1',
   });
 
-  // Always use the console metric exporter for now
-  const metricReader = new PeriodicExportingMetricReader({
-    exporter: otlpMetricExporter,
-    exportIntervalMillis: 10000, // 10 seconds
-    exportTimeoutMillis: 5000, // 5 seconds
-  });
-
-  // add the metric reader to the meter provider
-
-  // Configure span processors for both local and remote telemetry
+  // Configure span processors for tracing
   const spanProcessors = [new SimpleSpanProcessor(otlpExporter)];
 
   sdk = new NodeSDK({
     spanProcessors: spanProcessors,
-    metricReader: metricReader,
     resource: resource,
-    // NOTE: To add more metric exporters, use a custom MeterProvider setup
   });
 
   await sdk.start();
@@ -81,12 +60,6 @@ export async function initTelemetry(): Promise<void> {
 
 export function getTracer(name: string): Tracer {
   return trace.getTracer(name);
-}
-
-// metrics added
-
-export function getMetrics(name: string): Meter {
-  return metrics.getMeter(name);
 }
 
 // TODO: Add logging

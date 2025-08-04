@@ -27,28 +27,12 @@ import { cyanBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
-import { getMetrics, getTracer } from '../lib/telemetry';
+import { getTracer } from '../lib/telemetry';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
-
-// --- OpenTelemetry Metrics (module scope) ---
-const meter = getMetrics('zephyr-agent');
-const buildStartedCounter = meter.createCounter('zephyr_builds_started_total', {
-  description: 'Total number of builds started by Zephyr Agent',
-});
-const buildCompletedCounter = meter.createCounter('zephyr_builds_completed_total', {
-  description: 'Total number of builds completed by Zephyr Agent',
-});
-const buildDuration = meter.createHistogram('zephyr_build_duration_milliseconds', {
-  description: 'Duration of Zephyr builds in milliseconds',
-  unit: 'ms',
-});
-const errorCounter = meter.createCounter('zephyr_errors_total', {
-  description: 'Total number of errors encountered by Zephyr Agent',
-});
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -237,12 +221,6 @@ export class ZephyrEngine {
       span.setStatus({ code: SpanStatusCode.OK });
       return ze;
     } catch (err) {
-      // --- METRICS: Record error ---
-      errorCounter.add(1, {
-        builder,
-        error_type: (err as Error)?.name || 'UnknownError',
-      });
-      // --- END METRICS ---
       // --- TRACING: Record error event ---
       span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
       span.recordException(err as Error);
@@ -384,10 +362,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     const ze = this;
     ze.build_start_time = Date.now();
 
-    // --- METRICS: Record build started ---
-    buildStartedCounter.add(1, { builder: ze.builder });
-    // --- END METRICS ---
-
     if ((await ze.build_id) && (await ze.snapshotId)) {
       ze_log.init('Skip: creating new build because no assets was uploaded');
       return;
@@ -445,26 +419,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 
     const if_target_is_react_native =
       zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
-
-    // --- METRICS: Record build completed ---
-    buildCompletedCounter.add(1, {
-      builder: zephyr_engine.builder,
-      status: versionUrl ? 'success' : 'failure',
-    });
-    // --- END METRICS ---
-
-    // --- METRICS: Record build duration ---
-    if (zeStart) {
-      const durationSeconds = Date.now() - zeStart; // we should record this in miliseconds
-      buildDuration.record(durationSeconds, {
-        project: zephyr_engine.applicationProperties?.project,
-        app: zephyr_engine.applicationProperties?.name,
-        version: zephyr_engine.applicationProperties?.version,
-        branch: zephyr_engine.gitProperties?.git?.branch,
-        status: versionUrl ? 'success' : 'failure', // checking to see if the url exists
-      });
-    }
-    // --- END METRICS ---
 
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {

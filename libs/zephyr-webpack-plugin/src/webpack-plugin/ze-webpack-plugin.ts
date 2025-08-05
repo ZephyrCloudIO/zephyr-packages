@@ -29,9 +29,16 @@ export class ZeWebpackPlugin {
   }
 
   apply(compiler: Compiler): void {
+    // Set output path
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
+
+    // Detect base href
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
+
+    // Log build steps
     logBuildSteps(this._options, compiler);
+
+    // Setup deployment
     setupZeDeploy(this._options, compiler);
   }
 }

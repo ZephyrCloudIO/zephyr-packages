@@ -94,7 +94,7 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
         }
       }
     } catch (error) {
-      console.log('Failed to load manifest:', error);
+      console.error('Failed to load manifest:', error);
     }
 
     return runtimeData;
@@ -106,8 +106,6 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
   return {
     name: 'zephyr-runtime-remote-resolver',
     async beforeRequest(args) {
-      console.log('------ args: ', args);
-      console.log('------ runtimeData: ', runtimeData);
       // Ensure manifest is loaded before processing
       await manifestPromise;
 
@@ -146,13 +144,11 @@ function identifyRemotes(
 ): IdentifiedRemotes | undefined {
   // No runtime plugin configured
   if (!runtimeData) {
-    console.log('runtimeData');
     return;
   }
 
   // No remotes defined
   if (!args.options.remotes.length) {
-    console.log('args.options.remotes.length');
     return;
   }
 
@@ -160,7 +156,6 @@ function identifyRemotes(
 
   // For repack, we don't need to modify URLs
   if (builder === 'repack') {
-    console.log('repack');
     return;
   }
 
@@ -170,7 +165,6 @@ function identifyRemotes(
 
   // Check if this remote has already been processed
   if (processedRemotes.has(remoteName)) {
-    console.log('(processedRemotes.has(remoteName)');
     return;
   }
 
@@ -185,13 +179,11 @@ function identifyRemotes(
   // Check for resolved remotes entry for this specific remote called
   // in runtime by the application
   if (!resolvedRemote) {
-    console.log('resolvedRemote');
     return;
   }
 
   // Type guard to check if a remote has an entry property
   if (!hasEntry(targetRemote)) {
-    console.log('hasEntry(targetRemote)');
     return;
   }
 

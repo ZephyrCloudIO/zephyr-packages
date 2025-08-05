@@ -23,7 +23,7 @@ export function createZephyrManifest(dependencies: ZeResolvedDependency[]): {
   return { content, asset };
 }
 
-export function createManifestContent(dependencies: ZeResolvedDependency[]) {
+export function createManifestContent(dependencies: ZeResolvedDependency[]): string {
   ze_log.manifest('Creating manifest with dependencies:', dependencies?.length || 0);
   // Build the dependencies object
   const dependenciesMap: Record<string, ZephyrDependency> = {};

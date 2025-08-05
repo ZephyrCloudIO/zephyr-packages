@@ -296,10 +296,10 @@ export interface GetModuleFactoryHookArgs {
 }
 
 // Bridge hooks
-export type BeforeBridgeRenderHookArgs = Record<string, any>
-export type AfterBridgeRenderHookArgs = Record<string, any>
-export type BeforeBridgeDestroyHookArgs = Record<string, any>
-export type AfterBridgeDestroyHookArgs = Record<string, any>
+export type BeforeBridgeRenderHookArgs = Record<string, any>;
+export type AfterBridgeRenderHookArgs = Record<string, any>;
+export type BeforeBridgeDestroyHookArgs = Record<string, any>;
+export type AfterBridgeDestroyHookArgs = Record<string, any>;
 
 // Complete FederationRuntimePlugin interface based on @module-federation/runtime-core
 export interface FederationRuntimePlugin {

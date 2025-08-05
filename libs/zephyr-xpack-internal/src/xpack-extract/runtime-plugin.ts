@@ -34,7 +34,11 @@ async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
       return null;
     }
 
-    const manifest = await response.json();
+    const manifest = await response.json().catch(() => null);
+
+    if (!manifest) {
+      return null;
+    }
 
     // Transform manifest dependencies to runtime plugin format
     const resolvedRemotes: RuntimePluginData['resolvedRemotes'] = {};

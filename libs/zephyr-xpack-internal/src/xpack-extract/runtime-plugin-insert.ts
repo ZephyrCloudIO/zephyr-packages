@@ -1,11 +1,9 @@
 import { ze_log, type ZephyrEngine, type ZeResolvedDependency } from 'zephyr-agent';
-import { type XPackConfiguration } from '../xpack.types';
-import { extractFederatedConfig } from './extract-federation-config';
-import { isModuleFederationPlugin } from './is-module-federation-plugin';
+import { type XFederatedRemotesConfig } from '../xpack.types';
 
-export function runtimePluginInsert<Compiler>(
+export function runtimePluginInsert(
+  remotesConfig: XFederatedRemotesConfig,
   zephyr_engine: ZephyrEngine,
-  config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[]
 ): boolean {
   try {
@@ -34,47 +32,23 @@ export function runtimePluginInsert<Compiler>(
       resolvedRemotes: resolvedRemotesMap,
     };
 
+    // __resourceQuery data push
     const runtimePluginWithQuery = runtimePluginPath + `?ze=${JSON.stringify(queryData)}`;
 
-    // Find first Module Federation plugin and add runtime plugin
-    let runtimePluginAdded = false;
-
-    if (!config.plugins) {
-      return false;
+    // Initialize runtimePlugins array if it doesn't exist
+    if (!remotesConfig.runtimePlugins) {
+      remotesConfig.runtimePlugins = [];
     }
 
-    for (const plugin of config.plugins) {
-      if (!isModuleFederationPlugin(plugin)) {
-        continue;
-      }
+    // Add the single runtime plugin with all data
+    remotesConfig.runtimePlugins.push(runtimePluginWithQuery);
+    ze_log.remotes(
+      `Runtime plugin added to Module Federation config with ${Object.keys(resolvedRemotesMap).length} remotes`
+    );
 
-      const remotesConfig = extractFederatedConfig(plugin);
-      if (!remotesConfig) {
-        continue;
-      }
-
-      // Initialize runtimePlugins array if it doesn't exist
-      if (!remotesConfig.runtimePlugins) {
-        remotesConfig.runtimePlugins = [];
-      }
-
-      // Add the single runtime plugin with all data
-      remotesConfig.runtimePlugins.push(runtimePluginWithQuery);
-      ze_log.remotes(
-        `Runtime plugin added to Module Federation config with ${Object.keys(resolvedRemotesMap).length} remotes`
-      );
-      runtimePluginAdded = true;
-      break; // Add only to first MF plugin found
-    }
-
-    if (!runtimePluginAdded) {
-      ze_log.remotes(`Warning: No Module Federation plugin found to add runtime plugin`);
-      return false;
-    }
-
-    return true;
+    return true; // Successfully inserted runtime plugin
   } catch (error) {
     ze_log.remotes(`Failed to resolve runtime plugin path: ${error}`);
-    return false;
+    return false; // Failed to insert runtime plugin
   }
 }

@@ -44,6 +44,8 @@ export interface ModuleFederationPlugin {
   apply: (compiler: unknown) => void;
   /** For Webpack/Rspack */
   _options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
+  /** For Nx Module Federation plugin */
+  options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
   /** Repack specific for now until Repack change how the config should be exposed */
   config?: XFederatedRemotesConfig;
 }

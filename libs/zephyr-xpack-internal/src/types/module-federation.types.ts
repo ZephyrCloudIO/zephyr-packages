@@ -106,20 +106,23 @@ export interface ModuleInfo {
       };
     };
   }>;
-  exposes: Record<string, {
-    id: string;
-    name: string;
-    assets: {
-      js: {
-        sync: string[];
-        async: string[];
+  exposes: Record<
+    string,
+    {
+      id: string;
+      name: string;
+      assets: {
+        js: {
+          sync: string[];
+          async: string[];
+        };
+        css: {
+          sync: string[];
+          async: string[];
+        };
       };
-      css: {
-        sync: string[];
-        async: string[];
-      };
-    };
-  }>;
+    }
+  >;
 }
 
 // Core lifecycle hooks
@@ -198,7 +201,7 @@ export interface AfterResolveHookArgs {
 export interface BeforeLoadShareHookArgs {
   pkgName: string;
   shareInfo?: Shared;
-  shared: Options["shared"];
+  shared: Options['shared'];
   origin: any; // FederationHost
 }
 
@@ -245,7 +248,7 @@ export interface LoadRemoteSnapshotHookArgs {
   manifestJson?: any;
   manifestUrl?: string;
   remoteSnapshot: ModuleInfo;
-  from: "global" | "manifest";
+  from: 'global' | 'manifest';
 }
 
 export interface AfterLoadSnapshotHookArgs {
@@ -293,49 +296,81 @@ export interface GetModuleFactoryHookArgs {
 }
 
 // Bridge hooks
-export interface BeforeBridgeRenderHookArgs extends Record<string, any> {}
-export interface AfterBridgeRenderHookArgs extends Record<string, any> {}
-export interface BeforeBridgeDestroyHookArgs extends Record<string, any> {}
-export interface AfterBridgeDestroyHookArgs extends Record<string, any> {}
+export type BeforeBridgeRenderHookArgs = Record<string, any>
+export type AfterBridgeRenderHookArgs = Record<string, any>
+export type BeforeBridgeDestroyHookArgs = Record<string, any>
+export type AfterBridgeDestroyHookArgs = Record<string, any>
 
 // Complete FederationRuntimePlugin interface based on @module-federation/runtime-core
 export interface FederationRuntimePlugin {
   name: string;
   version?: string;
-  
+
   // Core lifecycle hooks
-  beforeInit?: (args: BeforeInitHookArgs) => BeforeInitHookArgs | Promise<BeforeInitHookArgs>;
+  beforeInit?: (
+    args: BeforeInitHookArgs
+  ) => BeforeInitHookArgs | Promise<BeforeInitHookArgs>;
   init?: (args: InitHookArgs) => void;
-  beforeInitContainer?: (args: BeforeInitContainerHookArgs) => BeforeInitContainerHookArgs | Promise<BeforeInitContainerHookArgs>;
-  initContainer?: (args: InitContainerHookArgs) => InitContainerHookArgs | Promise<InitContainerHookArgs>;
-  
+  beforeInitContainer?: (
+    args: BeforeInitContainerHookArgs
+  ) => BeforeInitContainerHookArgs | Promise<BeforeInitContainerHookArgs>;
+  initContainer?: (
+    args: InitContainerHookArgs
+  ) => InitContainerHookArgs | Promise<InitContainerHookArgs>;
+
   // Remote lifecycle hooks
-  beforeRegisterRemote?: (args: BeforeRegisterRemoteHookArgs) => BeforeRegisterRemoteHookArgs | Promise<BeforeRegisterRemoteHookArgs>;
-  registerRemote?: (args: RegisterRemoteHookArgs) => RegisterRemoteHookArgs | Promise<RegisterRemoteHookArgs>;
-  beforeRequest?: (args: BeforeRequestHookArgs) => BeforeRequestHookArgs | Promise<BeforeRequestHookArgs>;
+  beforeRegisterRemote?: (
+    args: BeforeRegisterRemoteHookArgs
+  ) => BeforeRegisterRemoteHookArgs | Promise<BeforeRegisterRemoteHookArgs>;
+  registerRemote?: (
+    args: RegisterRemoteHookArgs
+  ) => RegisterRemoteHookArgs | Promise<RegisterRemoteHookArgs>;
+  beforeRequest?: (
+    args: BeforeRequestHookArgs
+  ) => BeforeRequestHookArgs | Promise<BeforeRequestHookArgs>;
   onLoad?: (args: OnLoadHookArgs) => void | Promise<void>;
-  
+
   // Shared lifecycle hooks
-  afterResolve?: (args: AfterResolveHookArgs) => AfterResolveHookArgs | Promise<AfterResolveHookArgs>;
-  beforeLoadShare?: (args: BeforeLoadShareHookArgs) => BeforeLoadShareHookArgs | Promise<BeforeLoadShareHookArgs>;
+  afterResolve?: (
+    args: AfterResolveHookArgs
+  ) => AfterResolveHookArgs | Promise<AfterResolveHookArgs>;
+  beforeLoadShare?: (
+    args: BeforeLoadShareHookArgs
+  ) => BeforeLoadShareHookArgs | Promise<BeforeLoadShareHookArgs>;
   loadShare?: (args: LoadShareHookArgs) => false | void | Promise<false | void>;
-  resolveShare?: (args: ResolveShareHookArgs) => ResolveShareHookArgs | Promise<ResolveShareHookArgs>;
-  initContainerShareScopeMap?: (args: InitContainerShareScopeMapHookArgs) => InitContainerShareScopeMapHookArgs | Promise<InitContainerShareScopeMapHookArgs>;
-  
+  resolveShare?: (
+    args: ResolveShareHookArgs
+  ) => ResolveShareHookArgs | Promise<ResolveShareHookArgs>;
+  initContainerShareScopeMap?: (
+    args: InitContainerShareScopeMapHookArgs
+  ) => InitContainerShareScopeMapHookArgs | Promise<InitContainerShareScopeMapHookArgs>;
+
   // Snapshot lifecycle hooks
-  beforeLoadRemoteSnapshot?: (args: BeforeLoadRemoteSnapshotHookArgs) => void | Promise<void>;
-  loadSnapshot?: (args: LoadSnapshotHookArgs) => LoadSnapshotHookArgs | Promise<LoadSnapshotHookArgs>;
-  loadRemoteSnapshot?: (args: LoadRemoteSnapshotHookArgs) => LoadRemoteSnapshotHookArgs | Promise<LoadRemoteSnapshotHookArgs>;
-  afterLoadSnapshot?: (args: AfterLoadSnapshotHookArgs) => AfterLoadSnapshotHookArgs | Promise<AfterLoadSnapshotHookArgs>;
-  
+  beforeLoadRemoteSnapshot?: (
+    args: BeforeLoadRemoteSnapshotHookArgs
+  ) => void | Promise<void>;
+  loadSnapshot?: (
+    args: LoadSnapshotHookArgs
+  ) => LoadSnapshotHookArgs | Promise<LoadSnapshotHookArgs>;
+  loadRemoteSnapshot?: (
+    args: LoadRemoteSnapshotHookArgs
+  ) => LoadRemoteSnapshotHookArgs | Promise<LoadRemoteSnapshotHookArgs>;
+  afterLoadSnapshot?: (
+    args: AfterLoadSnapshotHookArgs
+  ) => AfterLoadSnapshotHookArgs | Promise<AfterLoadSnapshotHookArgs>;
+
   // Loader hooks
   getModuleInfo?: (args: GetModuleInfoHookArgs) => void | { value: any; key: string };
   createScript?: (args: CreateScriptHookArgs) => any; // CreateScriptHookReturn
   createLink?: (args: CreateLinkHookArgs) => void | HTMLLinkElement;
   fetch?: (args: FetchHookArgs) => false | void | Promise<Response>;
-  loadEntryError?: (args: LoadEntryErrorHookArgs) => Promise<(() => Promise<any>) | undefined>;
-  getModuleFactory?: (args: GetModuleFactoryHookArgs) => Promise<(() => Promise<any>) | undefined>;
-  
+  loadEntryError?: (
+    args: LoadEntryErrorHookArgs
+  ) => Promise<(() => Promise<any>) | undefined>;
+  getModuleFactory?: (
+    args: GetModuleFactoryHookArgs
+  ) => Promise<(() => Promise<any>) | undefined>;
+
   // Bridge hooks
   beforeBridgeRender?: (args: BeforeBridgeRenderHookArgs) => void | Record<string, any>;
   afterBridgeRender?: (args: AfterBridgeRenderHookArgs) => void | Record<string, any>;

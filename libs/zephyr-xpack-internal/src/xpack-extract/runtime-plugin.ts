@@ -1,4 +1,7 @@
-import type { FederationRuntimePlugin, RemoteWithEntry } from '../types/module-federation.types';
+import type {
+  FederationRuntimePlugin,
+  RemoteWithEntry,
+} from '../types/module-federation.types';
 
 // Webpack/Rspack-specific global for resourceQuery
 declare const __resourceQuery: string | undefined;

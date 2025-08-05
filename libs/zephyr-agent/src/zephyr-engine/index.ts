@@ -153,7 +153,9 @@ export class ZephyrEngine {
   // todo: extract to a separate fn
   static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
     const { builder } = options;
+    // Create a tracer for this engine instance to track initialization
     const tracer = getTracer('zephyr-agent');
+    // Start a span to track the entire engine creation process
     const span = tracer.startSpan('zephyr-engine-create', {
       attributes: { builder },
     });
@@ -172,7 +174,8 @@ export class ZephyrEngine {
       mut_zephyr_app_uid(ze);
       const application_uid = ze.application_uid;
 
-      // Add more attributes to the root span for observability
+      // Add comprehensive attributes to the span for observability
+      // This helps with debugging and monitoring engine creation
       span.setAttributes({
         'zephyr.application_uid': application_uid,
         'zephyr.project': ze.applicationProperties?.project,
@@ -194,7 +197,7 @@ export class ZephyrEngine {
         .then((appConfig) => {
           const { username, email, EDGE_URL } = appConfig;
           ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
-          // Add user and edge info to the span
+          // Add user and edge info to the span for better observability
           span.setAttributes({
             'zephyr.user': username,
             'zephyr.user.email': email,
@@ -218,15 +221,18 @@ export class ZephyrEngine {
         });
       });
 
+      // Mark the span as successful
       span.setStatus({ code: SpanStatusCode.OK });
       return ze;
     } catch (err) {
       // --- TRACING: Record error event ---
+      // Mark the span as failed and record the exception for debugging
       span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
       span.recordException(err as Error);
       // --- END TRACING ---
       throw err;
     } finally {
+      // Always end the span to ensure proper cleanup
       span.end();
     }
   }

@@ -2,6 +2,7 @@ import { initTelemetry } from './lib/telemetry';
 
 // Initialize OpenTelemetry telemetry at startup
 // Using void to explicitly mark as ignored since this is a top-level initialization
+// This ensures telemetry is available throughout the application lifecycle
 void initTelemetry();
 
 // hack for angular
@@ -55,5 +56,5 @@ export {
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
 
-// telemetry exports
+// telemetry exports - provides tracing capabilities to plugins and consumers
 export { getTracer, initTelemetry } from './lib/telemetry';

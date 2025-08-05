@@ -21,7 +21,6 @@ const OTLP_ENDPOINT =
   process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] || 'http://localhost:4318';
 // OTEL_EXPORTER_OTLP_HEADERS: Authentication headers for the telemetry endpoint
 const OTEL_EXPORTER_OTLP_HEADERS = process.env['OTEL_EXPORTER_OTLP_HEADERS'];
-
 /**
  * Parses OTLP headers from environment variable Expected format:
  * "key1=value1,key2=value2" This is used for authentication with the telemetry endpoint
@@ -36,7 +35,6 @@ function parseHeaders(headers: string): Record<string, string> {
     {} as Record<string, string>
   );
 }
-
 /**
  * Initializes the OpenTelemetry telemetry system
  *
@@ -75,21 +73,13 @@ export async function initTelemetry(): Promise<void> {
 
   // Start the SDK to begin collecting telemetry data
   await sdk.start();
-  // NOTE: OpenTelemetry NodeSDK currently only supports one metricReader directly.
-  // To add more, you must set up a custom MeterProvider and register multiple readers.
-  // See: https://github.com/open-telemetry/opentelemetry-js/issues/3892
 
   initialized = true;
 }
 
-/**
- * Gets a tracer instance for creating spans
- *
- * @param name - The name of the tracer (usually the component/module name)
- * @returns Tracer instance that can be used to create spans
- */
 export function getTracer(name: string): Tracer {
   return trace.getTracer(name);
 }
 
 // TODO: Add logging functionality for telemetry events
+// TODO: Add metrics functionality for telemetry events

@@ -1,5 +1,5 @@
 import { ze_log, type ZephyrEngine, type ZeResolvedDependency } from 'zephyr-agent';
-import { ModuleFederationPlugin, type XFederatedRemotesConfig } from '../xpack.types';
+import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
 import { extractFederatedConfig } from './extract-federation-config';
 
 export function runtimePluginInsert(
@@ -45,7 +45,7 @@ export function runtimePluginInsert(
   }
 }
 
-function applyRuntimePlugin(plugin: ModuleFederationPlugin, runtimePlugin: string) {
+function applyRuntimePlugin(plugin: ModuleFederationPlugin, runtimePlugin: string): void {
   let configRef: Partial<XFederatedRemotesConfig> | undefined =
     extractFederatedConfig(plugin);
 

@@ -33,7 +33,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
     // Try runtime plugin insertion first if not legacy plugin
     if (!isLegacyMFPlugin(plugin)) {
       const success = runtimePluginInsert(
-        remotesConfig,
+        plugin,
         zephyr_engine,
         resolvedDependencyPairs
       );

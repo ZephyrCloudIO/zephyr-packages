@@ -1,8 +1,9 @@
 import { ze_log, type ZephyrEngine, type ZeResolvedDependency } from 'zephyr-agent';
-import { type XFederatedRemotesConfig } from '../xpack.types';
+import { ModuleFederationPlugin, type XFederatedRemotesConfig } from '../xpack.types';
+import { extractFederatedConfig } from './extract-federation-config';
 
 export function runtimePluginInsert(
-  remotesConfig: XFederatedRemotesConfig,
+  plugin: ModuleFederationPlugin,
   zephyr_engine: ZephyrEngine,
   resolvedDependencyPairs: ZeResolvedDependency[]
 ): boolean {
@@ -35,7 +36,7 @@ export function runtimePluginInsert(
     // __resourceQuery data push
     const runtimePluginWithQuery = runtimePluginPath + `?ze=${JSON.stringify(queryData)}`;
 
-    applyRuntimePlugin(remotesConfig, runtimePluginWithQuery);
+    applyRuntimePlugin(plugin, runtimePluginWithQuery);
 
     return true; // Successfully inserted runtime plugin
   } catch (error) {
@@ -44,17 +45,18 @@ export function runtimePluginInsert(
   }
 }
 
-function applyRuntimePlugin(
-  remotesConfig: XFederatedRemotesConfig,
-  runtimePlugin: string
-) {
-  let configRef: Partial<XFederatedRemotesConfig> = remotesConfig;
+function applyRuntimePlugin(plugin: ModuleFederationPlugin, runtimePlugin: string) {
+  let configRef: Partial<XFederatedRemotesConfig> | undefined =
+    extractFederatedConfig(plugin);
+
+  if (!configRef) return;
 
   // handle NxModuleFederationPlugin wrapper
-  if ('configOverride' in remotesConfig) {
-    remotesConfig.configOverride ??= {};
-    configRef = remotesConfig.configOverride;
+  if ('configOverride' in plugin) {
+    plugin.configOverride ??= {};
+    configRef = plugin.configOverride;
   }
+
   // Initialize runtimePlugins array if it doesn't exist
   if (!configRef.runtimePlugins) {
     configRef.runtimePlugins = [];

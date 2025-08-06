@@ -38,11 +38,6 @@ export interface XFederatedRemotesConfig {
   bundle_name?: string;
   /** Runtime plugins for Module Federation */
   runtimePlugins?: string[];
-  /** NxModuleFederationPlugin */
-  configOverride?: Omit<
-    XFederatedRemotesConfig,
-    'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
-  >;
 }
 
 export interface ModuleFederationPlugin {
@@ -53,6 +48,11 @@ export interface ModuleFederationPlugin {
   options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
   /** Repack specific for now until Repack change how the config should be exposed */
   config?: XFederatedRemotesConfig;
+  /** NxModuleFederationPlugin */
+  configOverride?: Omit<
+    XFederatedRemotesConfig,
+    'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
+  >;
 }
 
 interface RemotesObject {

@@ -30,6 +30,7 @@ export interface ZephyrPluginOptions {
     remotes?: Record<string, string>;
     shared?: Record<string, unknown>;
     runtimePlugins?: string[] | undefined;
+    target?: string;
   };
   // for react native and dynamic platforms
   target?: 'ios' | 'android' | 'web' | undefined;

@@ -8,18 +8,9 @@ const { withZephyr } = require('zephyr-mcp-plugin');
 const config = {
   mode: 'production',
   target: 'async-node',
-  entry: './src/index.ts',
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js',
-    chunkFilename: '[id].js',
-    libraryTarget: 'commonjs2',
-    clean: true,
+    chunkFilename: '[id]-[contenthash].js', // important to hash chunks
     publicPath: 'auto',
-  },
-  optimization: {
-    minimize: false, // Disable minimization for easier debugging
-    moduleIds: 'named', // Use named module IDs for easier debugging
   },
   resolve: {
     extensions: ['.ts', '.js', '.json'],
@@ -46,8 +37,7 @@ const config = {
         './weather': './src/weather-tools.ts',
       },
       library: {
-        type: 'commonjs-module',
-        name: 'weather_tools_mcp',
+        type: 'commonjs2',
       },
       runtimePlugins: [require.resolve('@module-federation/node/runtimePlugin')],
       shared: {
@@ -62,9 +52,9 @@ const config = {
 
 // Apply Zephyr plugin for automatic deployment
 module.exports = withZephyr({
-  // Metadata for Zephyr
+  // MCP metadata for Zephyr
   mcpVersion: DEFAULT_NEGOTIATED_PROTOCOL_VERSION,
-  metadata: {
+  mcpMetadata: {
     description: 'Weather tools for MCP - get weather forecasts and current conditions',
     author: 'Example Developer',
     homepage: 'https://github.com/example/weather-tools-mcp',

@@ -30,6 +30,10 @@ export async function zeBuildDashData(
 
   const to_raw = _recordToRawDependency;
 
+  // Extract MCP metadata from package.json or MCP plugin options
+  const mcpMetadata = _extractMCPMetadata(zephyr_engine);
+  const isMCPProject = zephyr_engine.env.target === 'mcp';
+
   return {
     id: application_uid,
     name,
@@ -56,6 +60,10 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
+    build_target: isMCPProject ? 'mcp' : 'web',
+    mcp_version: mcpMetadata.version,
+    mcp_capabilities: mcpMetadata.capabilities,
+    mcp_metadata: mcpMetadata.metadata,
   };
 }
 
@@ -69,4 +77,41 @@ function _recordToRawDependency(
 ): RawDependency[] {
   if (!record) return [];
   return Object.entries(record).map(([name, version]) => ({ name, version }));
+}
+
+interface MCPMetadataResult {
+  version?: string;
+  capabilities?: {
+    tools?: string[];
+    resources?: string[];
+    prompts?: string[];
+    [key: string]: unknown;
+  };
+  metadata?: {
+    name?: string;
+    description?: string;
+    author?: string;
+    homepage?: string;
+    documentation?: string;
+    [key: string]: unknown;
+  };
+}
+
+/** Extract MCP metadata from plugin configuration - MCP options are mandatory */
+function _extractMCPMetadata(zephyr_engine: ZephyrEngine): MCPMetadataResult {
+  // Check if this is an MCP project
+  if (zephyr_engine.env.target !== 'mcp') {
+    return {};
+  }
+
+  // MCP projects MUST have configuration set by the plugin
+  if (!zephyr_engine.mcpConfiguration) {
+    throw new ZephyrError(ZeErrors.ERR_CONVERT_GRAPH_TO_DASHBOARD);
+  }
+
+  return {
+    version: zephyr_engine.mcpConfiguration.version,
+    capabilities: zephyr_engine.mcpConfiguration.capabilities,
+    metadata: zephyr_engine.mcpConfiguration.metadata,
+  };
 }

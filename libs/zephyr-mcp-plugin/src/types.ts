@@ -1,16 +1,16 @@
-import type { moduleFederationPlugin } from '@module-federation/sdk';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 export interface ZephyrMCPPluginOptions {
   /** Module Federation configuration for the MCP server */
-  mfConfig?: moduleFederationPlugin.ModuleFederationPluginOptions;
+  mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
 
-  /** MCP protocol version (import from '@modelcontextprotocol/sdk/types.js') */
-  mcpVersion?: string;
+  /** MCP protocol version (import from '@modelcontextprotocol/sdk/types.js') - REQUIRED */
+  mcpVersion: string;
 
-  /** MCP server metadata for Zephyr (stored in snapshot metadata) */
-  mcpMetadata?: {
-    /** Server description */
-    description?: string;
+  /** MCP server metadata for Zephyr (stored in snapshot metadata) - REQUIRED */
+  mcpMetadata: {
+    /** Server description - REQUIRED */
+    description: string;
 
     /** Server author */
     author?: string;
@@ -21,8 +21,8 @@ export interface ZephyrMCPPluginOptions {
     /** Documentation URL */
     documentation?: string;
 
-    /** Server capabilities */
-    capabilities?: {
+    /** Server capabilities - REQUIRED */
+    capabilities: {
       tools?: string[];
       resources?: string[];
       prompts?: string[];

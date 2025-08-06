@@ -125,6 +125,25 @@ export class ZephyrEngine {
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
 
+  // MCP-specific properties
+  mcpConfiguration: {
+    version?: string;
+    capabilities?: {
+      tools?: string[];
+      resources?: string[];
+      prompts?: string[];
+      [key: string]: unknown;
+    };
+    metadata?: {
+      name?: string;
+      description?: string;
+      author?: string;
+      homepage?: string;
+      documentation?: string;
+      [key: string]: unknown;
+    };
+  } | null = null;
+
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
@@ -470,6 +489,27 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     });
 
     await this.build_finished();
+  }
+
+  /** Configure MCP-specific metadata for the engine */
+  setMCPConfiguration(config: {
+    version?: string;
+    capabilities?: {
+      tools?: string[];
+      resources?: string[];
+      prompts?: string[];
+      [key: string]: unknown;
+    };
+    metadata?: {
+      name?: string;
+      description?: string;
+      author?: string;
+      homepage?: string;
+      documentation?: string;
+      [key: string]: unknown;
+    };
+  }): void {
+    this.mcpConfiguration = config;
   }
 }
 

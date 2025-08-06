@@ -255,11 +255,17 @@ Wind Speed: ${mockData.windSpeed} km/h`,
     await this.server.connect(transport);
     console.error('Weather MCP server running on stdio');
   }
+
+  // Expose the internal server for Module Federation
+  getServer(): Server {
+    return this.server;
+  }
 }
 
 // Export factory function for Module Federation
-export function createWeatherServer() {
-  return new WeatherMCPServer();
+export default function createWeatherServer() {
+  const weatherServer = new WeatherMCPServer();
+  return weatherServer.getServer();
 }
 
 // Allow direct execution

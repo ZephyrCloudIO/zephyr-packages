@@ -1,6 +1,6 @@
 {
   "name": "zephyr-packages",
-  "version": "0.0.55",
+  "version": "0.0.56",
   "license": "Apache-2.0",
   "scripts": {
     "bump-patch": "node scripts/bump-patch-version.js",
@@ -78,7 +78,8 @@
       "webpack-dev-server@<=5.2.0": ">=5.2.2",
       "@rspack/dev-server>http-proxy-middleware": ">=3.0.5",
       "prismjs@<1.30.0": ">=1.30.0",
-      "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5"
+      "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5",
+      "pbkdf2": ">=3.1.3"
     }
   }
 }

@@ -38,6 +38,11 @@ export interface XFederatedRemotesConfig {
   bundle_name?: string;
   /** Runtime plugins for Module Federation */
   runtimePlugins?: string[];
+  /** NxModuleFederationPlugin */
+  configOverride?: Omit<
+    XFederatedRemotesConfig,
+    'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
+  >;
 }
 
 export interface ModuleFederationPlugin {

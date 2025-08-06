@@ -35,20 +35,32 @@ export function runtimePluginInsert(
     // __resourceQuery data push
     const runtimePluginWithQuery = runtimePluginPath + `?ze=${JSON.stringify(queryData)}`;
 
-    // Initialize runtimePlugins array if it doesn't exist
-    if (!remotesConfig.runtimePlugins) {
-      remotesConfig.runtimePlugins = [];
-    }
-
-    // Add the single runtime plugin with all data
-    remotesConfig.runtimePlugins.push(runtimePluginWithQuery);
-    ze_log.remotes(
-      `Runtime plugin added to Module Federation config with ${Object.keys(resolvedRemotesMap).length} remotes`
-    );
+    applyRuntimePlugin(remotesConfig, runtimePluginWithQuery);
 
     return true; // Successfully inserted runtime plugin
   } catch (error) {
     ze_log.remotes(`Failed to resolve runtime plugin path: ${error}`);
     return false; // Failed to insert runtime plugin
   }
+}
+
+function applyRuntimePlugin(
+  remotesConfig: XFederatedRemotesConfig,
+  runtimePlugin: string
+) {
+  let configRef: Partial<XFederatedRemotesConfig> = remotesConfig;
+
+  // handle NxModuleFederationPlugin wrapper
+  if ('configOverride' in remotesConfig) {
+    remotesConfig.configOverride ??= {};
+    configRef = remotesConfig.configOverride;
+  }
+  // Initialize runtimePlugins array if it doesn't exist
+  if (!configRef.runtimePlugins) {
+    configRef.runtimePlugins = [];
+  }
+
+  // Add the single runtime plugin with all data
+  configRef.runtimePlugins.push(runtimePlugin);
+  ze_log.remotes(`Runtime plugin added to Module Federation config`);
 }

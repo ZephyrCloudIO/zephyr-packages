@@ -1,0 +1,1 @@
+rm -rf ~/.zephyr && NX_DAEMON=false pnpm nx run sample-webpack-application:build --skip-nx-cache

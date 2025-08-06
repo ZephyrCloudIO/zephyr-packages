@@ -31,11 +31,11 @@ export type {
 
 // api contract negotiation
 export {
-  ZEPHYR_API_ENDPOINT,
   ZE_API_ENDPOINT,
   ZE_IS_PREVIEW,
   ze_api_gateway,
   ZE_API_ENDPOINT_HOST,
+  ZEPHYR_API_ENDPOINT,
 } from './lib/api-contract-negotiation/get-api-contract';
 
 // promise proto methods

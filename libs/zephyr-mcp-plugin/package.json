@@ -1,7 +1,7 @@
 {
   "name": "zephyr-mcp-plugin",
-  "version": "0.0.1",
-  "description": "Zephyr plugin for bundling and deploying MCP (Model Context Protocol) servers with Rspack",
+  "version": "0.0.56",
+  "description": "Zephyr plugin for bundling and deploying MCP (Model Context Protocol) servers with Rspack or Webpack",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {

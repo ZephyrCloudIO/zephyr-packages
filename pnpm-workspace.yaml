@@ -22,8 +22,8 @@ onlyBuiltDependencies:
   - workerd
 catalogs:
   modernjs:
-    '@modern-js/app-tools': ^2.66.0
-    '@modern-js/tsconfig': ^2.66.0
+    '@modern-js/app-tools': ^2.68.7
+    '@modern-js/tsconfig': ^2.68.7
   parcel:
     'parcel': ^2.14.1
     '@parcel/config-default': ^2.14.1

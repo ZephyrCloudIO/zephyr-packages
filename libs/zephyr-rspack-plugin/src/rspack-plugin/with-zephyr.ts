@@ -26,7 +26,12 @@ export type ZephyrRspackConfig = RspackConfiguration & {
 /** Detects if we're being called from rsbuild context by checking the call stack */
 function isCalledFromRsbuild(): boolean {
   const stack = new Error().stack;
-  return stack ? stack.includes('@rsbuild') || stack.includes('rsbuild') : false;
+  return stack
+    ? stack.includes('@rsbuild') ||
+        stack.includes('rsbuild') ||
+        stack.includes('rspeedy') ||
+        stack.includes('@lynx-js')
+    : false;
 }
 
 /** Common configuration logic shared between rsbuild and rspack contexts */
@@ -81,6 +86,20 @@ function createRsbuildPlugin(options?: ZephyrRspackPluginOptions): RsbuildPlugin
   };
 }
 
+// Overloaded signatures to handle different usage patterns
+export function withZephyr(): (config: Configuration) => Promise<ZephyrRspackConfig>;
+export function withZephyr(): (...args: any[]) => any;
+export function withZephyr(
+  options: ZephyrRspackPluginOptions
+): (config: Configuration) => Promise<ZephyrRspackConfig>;
+export function withZephyr(options: ZephyrRspackPluginOptions): (...args: any[]) => any;
+export function withZephyr(
+  options: ZephyrRspackPluginOptions | undefined
+): (config: Configuration) => Promise<ZephyrRspackConfig>;
+export function withZephyr(
+  options: ZephyrRspackPluginOptions | undefined
+): (...args: any[]) => any;
+
 /**
  * Universal withZephyr function that automatically adapts to context:
  *
@@ -96,30 +115,29 @@ function createRsbuildPlugin(options?: ZephyrRspackPluginOptions): RsbuildPlugin
  *     // rspack config
  *   });
  */
-export function withZephyr(
-  options?: ZephyrRspackPluginOptions
-):
-  | RsbuildPlugin
-  | ((
-      ...args: [] | [Configuration]
-    ) =>
-      | ((config: Configuration) => Promise<ZephyrRspackConfig>)
-      | Promise<ZephyrRspackConfig>) {
-  // Auto-detect context and return appropriate implementation
-  if (isCalledFromRsbuild()) {
+export function withZephyr(options?: ZephyrRspackPluginOptions): any {
+  // Check if this is being called in a more sophisticated context where we need to return a function
+  const stack = new Error().stack;
+  const isInFunctionCall = stack
+    ? stack.includes('rspack(') || stack.includes('modifyRspackConfig')
+    : false;
+
+  // Only return RsbuildPlugin if we're in rsbuild context AND not in a function call
+  if (isCalledFromRsbuild() && !isInFunctionCall) {
     return createRsbuildPlugin(options);
   }
 
-  // Return rspack config transformer
+  // Return rspack config transformer - with proper typing
   const configTransformer = (config: Configuration): Promise<ZephyrRspackConfig> =>
     processRspackConfiguration(config, options);
 
-  return function (...args: [] | [Configuration]) {
+  // Create a callable function that can handle both patterns
+  return (...args: [] | [Configuration]) => {
     if (args.length > 0) {
-      // Called with config: withZephyr(config)
+      // Called with config: withZephyr()(config)
       return configTransformer(args[0] ?? {});
     } else {
-      // Called with no args: withZephyr() - return config transformer
+      // Called with no args: withZephyr()() - return config transformer
       return configTransformer;
     }
   };

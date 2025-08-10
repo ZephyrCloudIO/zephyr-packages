@@ -34,6 +34,14 @@
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
   },
+  "peerDependencies": {
+    "@rsbuild/core": "catalog:rspack"
+  },
+  "peerDependenciesMeta": {
+    "@rsbuild/core": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

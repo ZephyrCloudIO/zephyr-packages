@@ -86,19 +86,21 @@ function createRsbuildPlugin(options?: ZephyrRspackPluginOptions): RsbuildPlugin
   };
 }
 
-// Overloaded signatures to handle different usage patterns
-export function withZephyr(): (config: Configuration) => Promise<ZephyrRspackConfig>;
-export function withZephyr(): (...args: any[]) => any;
-export function withZephyr(
-  options: ZephyrRspackPluginOptions
-): (config: Configuration) => Promise<ZephyrRspackConfig>;
-export function withZephyr(options: ZephyrRspackPluginOptions): (...args: any[]) => any;
+// Type that represents a callable transformer function
+type ZephyrTransformer = {
+  (): (config: Configuration) => Promise<ZephyrRspackConfig>;
+  (config: Configuration): Promise<ZephyrRspackConfig>;
+};
+
+// Universal type that works in both contexts
+type ZephyrUniversal = RsbuildPlugin & ZephyrTransformer;
+
+// Function overloads that return the universal type
+export function withZephyr(): ZephyrUniversal;
+export function withZephyr(options: ZephyrRspackPluginOptions): ZephyrUniversal;
 export function withZephyr(
   options: ZephyrRspackPluginOptions | undefined
-): (config: Configuration) => Promise<ZephyrRspackConfig>;
-export function withZephyr(
-  options: ZephyrRspackPluginOptions | undefined
-): (...args: any[]) => any;
+): ZephyrUniversal;
 
 /**
  * Universal withZephyr function that automatically adapts to context:
@@ -115,24 +117,23 @@ export function withZephyr(
  *     // rspack config
  *   });
  */
-export function withZephyr(options?: ZephyrRspackPluginOptions): any {
+export function withZephyr(options?: ZephyrRspackPluginOptions): ZephyrUniversal {
   // Check if this is being called in a more sophisticated context where we need to return a function
   const stack = new Error().stack;
   const isInFunctionCall = stack
     ? stack.includes('rspack(') || stack.includes('modifyRspackConfig')
     : false;
 
-  // Only return RsbuildPlugin if we're in rsbuild context AND not in a function call
-  if (isCalledFromRsbuild() && !isInFunctionCall) {
-    return createRsbuildPlugin(options);
-  }
-
   // Return rspack config transformer - with proper typing
   const configTransformer = (config: Configuration): Promise<ZephyrRspackConfig> =>
     processRspackConfiguration(config, options);
 
-  // Create a callable function that can handle both patterns
-  return (...args: [] | [Configuration]) => {
+  // Create the base callable transformer function
+  const callableTransformer = (
+    ...args: [] | [Configuration]
+  ):
+    | Promise<ZephyrRspackConfig>
+    | ((config: Configuration) => Promise<ZephyrRspackConfig>) => {
     if (args.length > 0) {
       // Called with config: withZephyr()(config)
       return configTransformer(args[0] ?? {});
@@ -141,6 +142,45 @@ export function withZephyr(options?: ZephyrRspackPluginOptions): any {
       return configTransformer;
     }
   };
+
+  // If we're in rsbuild context AND not in a function call, return the plugin
+  if (isCalledFromRsbuild() && !isInFunctionCall) {
+    const plugin = createRsbuildPlugin(options);
+
+    // Add the callable transformer properties to the plugin
+    Object.defineProperty(plugin, 'call', {
+      value: Function.prototype.call.bind(callableTransformer),
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+
+    Object.defineProperty(plugin, 'apply', {
+      value: Function.prototype.apply.bind(callableTransformer),
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
+
+    return plugin as ZephyrUniversal;
+  }
+
+  // For non-rsbuild contexts, add minimal RsbuildPlugin properties to the callable transformer
+  Object.defineProperty(callableTransformer, 'name', {
+    value: 'zephyr',
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+
+  Object.defineProperty(callableTransformer, 'setup', {
+    value: undefined,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+
+  return callableTransformer as ZephyrUniversal;
 }
 
 /** Processes rspack configuration with Zephyr integration */

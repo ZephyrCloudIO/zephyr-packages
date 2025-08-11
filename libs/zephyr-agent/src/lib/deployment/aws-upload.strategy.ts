@@ -49,8 +49,6 @@ export async function createBucket(application_uid: string): Promise<void> {
     application_uid,
   });
 
-  // const body = '';
-
   const options: RequestInit = {
     method: 'POST',
     headers: {

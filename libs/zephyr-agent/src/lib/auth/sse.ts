@@ -38,7 +38,8 @@ export class AuthListener {
           if (data.type === 'token') {
             clearTimeout(timeout);
             eventSource.close();
-            resolve({ sessionId, token: data.token });
+            const token = data.token ?? data.tokens?.access_token;
+            resolve({ sessionId, token });
           } else if (data.type === 'error') {
             clearTimeout(timeout);
             eventSource.close();

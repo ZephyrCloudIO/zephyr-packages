@@ -46,12 +46,12 @@ Add the plugin to your Rsbuild configuration:
 // rsbuild.config.js
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
-import { zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
+import { withZephyr } from 'zephyr-rsbuild-plugin';
 
 export default defineConfig({
   plugins: [
     pluginReact(),
-    zephyrRsbuildPlugin(), // Add Zephyr plugin
+    withZephyr(), // Add Zephyr plugin
   ],
 });
 ```
@@ -62,12 +62,12 @@ export default defineConfig({
 // rsbuild.config.js
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
-import { zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
+import { withZephyr } from 'zephyr-rsbuild-plugin';
 
 export default defineConfig({
   plugins: [
     pluginReact(),
-    zephyrRsbuildPlugin({
+    withZephyr({
       wait_for_index_html: true, // Wait for HTML processing
     }),
   ],
@@ -80,10 +80,10 @@ export default defineConfig({
 // rsbuild.config.ts
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
-import { zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
+import { withZephyr } from 'zephyr-rsbuild-plugin';
 
 export default defineConfig({
-  plugins: [pluginReact(), zephyrRsbuildPlugin()],
+  plugins: [pluginReact(), withZephyr()],
 });
 ```
 
@@ -94,7 +94,7 @@ export default defineConfig({
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
-import { zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
+import { withZephyr } from 'zephyr-rsbuild-plugin';
 
 export default defineConfig({
   plugins: [
@@ -109,7 +109,7 @@ export default defineConfig({
         'react-dom': { singleton: true },
       },
     }),
-    zephyrRsbuildPlugin(), // Add after Module Federation
+    withZephyr(), // Add after Module Federation
   ],
 });
 ```
@@ -171,7 +171,7 @@ Check out our [examples directory](../../examples/) for complete working example
 
 ## API Reference
 
-### zephyrRsbuildPlugin(options?)
+### withZephyr(options?)
 
 Creates an Rsbuild plugin for Zephyr integration.
 

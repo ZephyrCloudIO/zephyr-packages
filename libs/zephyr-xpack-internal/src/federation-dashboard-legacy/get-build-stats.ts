@@ -60,6 +60,12 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const buildId = await ze_engine.build_id;
   const build_target = ze_engine.env.target ?? 'web';
 
+  // Extract MCP configuration if this is an MCP project
+  const mcpConfig = ze_engine.mcpConfiguration;
+  const mcp_version = mcpConfig?.version;
+  const mcp_capabilities = mcpConfig?.capabilities;
+  const mcp_metadata = mcpConfig?.metadata;
+
   // todo: add support for multiple federation configs
   const mfConfig = Array.isArray(pluginOptions.mfConfig)
     ? pluginOptions.mfConfig[0]
@@ -82,6 +88,10 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context: { isCI },
     build_target,
+    // MCP-specific fields
+    mcp_version,
+    mcp_capabilities,
+    mcp_metadata,
   };
 
   // todo: extend data

@@ -1,5 +1,6 @@
 import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, type ZeResolvedDependency } from 'zephyr-agent';
+import { normalize_app_name } from 'zephyr-edge-contract';
 import type { XPackConfiguration } from '../xpack.types';
 import { parseRemotesAsEntries } from './extract-federated-dependency-pairs';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
@@ -69,7 +70,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       }
 
       resolved_dep.library_type = library_type;
-      resolved_dep.name = remote_name;
+      resolved_dep.name = normalize_app_name(remote_name);
       const runtimeCode = createMfRuntimeCode(
         zephyr_engine,
         resolved_dep,

@@ -1,6 +1,6 @@
 {
   "name": "zephyr-packages",
-  "version": "0.0.56",
+  "version": "0.0.57",
   "license": "Apache-2.0",
   "scripts": {
     "bump-patch": "node scripts/bump-patch-version.js",

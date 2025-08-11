@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { withZephyr } from '../with-zephyr';
-import { zephyrRsbuildPlugin } from '../zephyrRsbuildPlugin';
 import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
+import { withZephyr as zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
 
 jest.mock('../zephyrRspressSSGPlugin', () => ({
   zephyrRspressSSGPlugin: jest.fn(() => ({ name: 'mock-ssg-plugin' })),
 }));
 
-jest.mock('../zephyrRsbuildPlugin', () => ({
-  zephyrRsbuildPlugin: jest.fn(() => ({ name: 'mock-rsbuild-plugin' })),
+jest.mock('zephyr-rsbuild-plugin', () => ({
+  withZephyr: jest.fn(() => ({ name: 'mock-rsbuild-plugin' })),
 }));
 
 describe('withZephyr', () => {

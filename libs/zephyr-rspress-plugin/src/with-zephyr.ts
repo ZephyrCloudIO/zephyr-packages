@@ -1,5 +1,5 @@
 import type { RspressPlugin } from '@rspress/shared';
-import { zephyrRsbuildPlugin } from './zephyrRsbuildPlugin';
+import { withZephyr as zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
 
 export function withZephyr(): RspressPlugin {

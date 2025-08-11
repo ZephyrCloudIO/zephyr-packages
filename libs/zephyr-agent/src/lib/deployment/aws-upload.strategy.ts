@@ -1,5 +1,4 @@
-import { ze_log } from 'zephyr-agent';
-
+import { ze_log } from '../logging';
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';

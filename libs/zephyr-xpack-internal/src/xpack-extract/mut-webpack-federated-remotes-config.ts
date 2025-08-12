@@ -4,7 +4,9 @@ import { normalize_app_name } from 'zephyr-edge-contract';
 import type { XPackConfiguration } from '../xpack.types';
 import { parseRemotesAsEntries } from './extract-federated-dependency-pairs';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
+import { isLegacyMFPlugin } from './is-legacy-mf-plugin';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
+import { runtimePluginInsert } from './runtime-plugin-insert';
 
 export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
@@ -17,7 +19,9 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
     return;
   }
 
-  iterateFederatedRemoteConfig(config, (remotesConfig) => {
+  ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
+
+  iterateFederatedRemoteConfig(config, (remotesConfig, plugin) => {
     const remotes = remotesConfig?.remotes;
     if (!remotes) {
       ze_log.remotes(
@@ -27,6 +31,19 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       return;
     }
 
+    // Try runtime plugin insertion first if not legacy plugin
+    if (!isLegacyMFPlugin(plugin)) {
+      const success = runtimePluginInsert(
+        plugin,
+        zephyr_engine,
+        resolvedDependencyPairs
+      );
+
+      // Skip legacy processing for this config
+      if (success) return;
+    }
+
+    // Legacy processing - only if runtime plugin wasn't inserted or isEnhanced is false
     const library_type = remotesConfig.library?.type ?? 'var';
 
     ze_log.remotes(`Library type: ${library_type}`);
@@ -56,6 +73,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         return;
       }
 
+      // Legacy behavior when runtime plugin is not enabled
       // todo: this is a version with named export logic, we should take this into account later
       const [v_app] = remote_version.includes('@')
         ? remote_version.split('@')

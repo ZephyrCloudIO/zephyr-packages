@@ -35,6 +35,7 @@ catalogs:
     '@module-federation/runtime': ^0.11.1
     '@module-federation/vite': ^1.2.6
     '@module-federation/automatic-vendor-federation': ^1.2.1
+    '@module-federation/sdk': '0.15.0'
   plugin-shared:
     is-ci: ^4.1.0
   babel:

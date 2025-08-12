@@ -23,7 +23,7 @@ import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
-import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
+import { type ZeLogger, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
@@ -210,7 +210,9 @@ export class ZephyrEngine {
   async resolve_remote_dependencies(
     deps: ZeDependencyPair[]
   ): Promise<ZeResolvedDependency[] | null> {
-    if (!deps) {
+    ze_log.remotes('[Zephyr Engine] resolve_remote_dependencies called with deps:', deps);
+    if (!deps || deps.length === 0) {
+      ze_log.remotes('[Zephyr Engine] No dependencies to resolve');
       return null;
     }
 
@@ -314,12 +316,17 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       is_zephyr_resolved_dependency
     );
 
-    // Log resolved remotes for build visibility
-    if (this.federated_dependencies.length > 0) {
-      const remotesList = this.federated_dependencies
-        .map((dep) => `  ${dep.name} → ${dep.remote_entry_url}`)
-        .join('\n');
-      logFn('info', `Resolved remotes:\n${remotesList}`);
+    ze_log.remotes(
+      '[Zephyr Engine] Resolved dependencies:',
+      this.federated_dependencies?.length || 0
+    );
+    if (this.federated_dependencies && this.federated_dependencies.length > 0) {
+      ze_log.remotes(
+        '[Zephyr Engine] Dependencies resolved:',
+        this.federated_dependencies
+          .map((d) => `${d.name} -> ${d.remote_entry_url}`)
+          .join(', ')
+      );
     }
 
     return this.federated_dependencies;

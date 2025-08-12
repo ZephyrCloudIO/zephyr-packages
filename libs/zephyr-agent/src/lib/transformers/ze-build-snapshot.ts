@@ -1,3 +1,4 @@
+import { posix, win32 } from 'node:path';
 import {
   type Snapshot,
   type SnapshotAsset,
@@ -6,10 +7,10 @@ import {
   createApplicationUid,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
-import { applyBaseHrefToAssets } from './ze-basehref-handler';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
-import { posix, win32 } from 'node:path';
+import { ze_log } from '../logging';
+import { applyBaseHrefToAssets } from './ze-basehref-handler';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -48,7 +49,29 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  return {
+  // Check if zephyr-manifest.json exists in the assets
+  let manifestReference: Snapshot['zephyrManifest'];
+
+  const manifestAsset = Object.values(basedAssets).find(
+    (asset) => asset.path === 'zephyr-manifest.json'
+  );
+
+  if (
+    manifestAsset &&
+    zephyr_engine.federated_dependencies &&
+    zephyr_engine.federated_dependencies.length > 0
+  ) {
+    ze_log.snapshot('Found zephyr-manifest.json in assets');
+    manifestReference = {
+      filename: 'zephyr-manifest.json',
+      remotes: zephyr_engine.federated_dependencies.map((dep) => dep.name),
+    };
+    ze_log.snapshot('Created manifest reference:', manifestReference);
+  } else {
+    ze_log.snapshot('No manifest file found in assets or no federated dependencies');
+  }
+
+  const snapshot: Snapshot = {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
@@ -83,7 +106,17 @@ export async function createSnapshot(
       },
       {} as Record<string, SnapshotAsset>
     ),
+    zephyrManifest: manifestReference,
   };
+
+  ze_log.snapshot('Created snapshot with ID:', snapshot.snapshot_id);
+  if (manifestReference) {
+    ze_log.snapshot('Snapshot includes manifest reference:', manifestReference);
+  } else {
+    ze_log.snapshot('Snapshot has no manifest reference');
+  }
+
+  return snapshot;
 }
 
 /**

@@ -6,7 +6,7 @@ import { uploadBuildStatsAndEnableEnvs } from './upload-base/upload-build-stats-
 export async function commonUploadStrategy(
   zephyr_engine: ZephyrEngine,
   { snapshot, getDashData, assets: { assetsMap, missingAssets } }: UploadOptions
-) {
+): Promise<string> {
   const [versionUrl] = await Promise.all([
     zeUploadSnapshot(zephyr_engine, { snapshot }),
     uploadAssets(zephyr_engine, { assetsMap, missingAssets }),

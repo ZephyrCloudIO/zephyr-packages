@@ -503,6 +503,11 @@ Were the required packages in Module federation plugin installed and included in
       'Missing platform target (ios, android or others) from compiler options. Please open an issue on https://github.com/ZephyrCloudIO/zephyr-packages/issues',
     kind: 'config',
   },
+  ERR_MAX_PAYLOAD_SIZE_EXCEEDED: {
+    id: '037',
+    message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
+    kind: 'deploy',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

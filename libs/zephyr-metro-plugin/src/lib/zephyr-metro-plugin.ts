@@ -47,7 +47,7 @@ export class ZephyrMetroPlugin {
 
     this.zephyr_engine.env.target = this.config.platform;
 
-    const dependency_pairs = extract_remotes_dependencies(this.config.mfConfig?.remotes);
+    const dependency_pairs = extract_remotes_dependencies(this.config);
 
     ze_log.config(
       'Resolving and building towards target by zephyr_engine.env.target: ',

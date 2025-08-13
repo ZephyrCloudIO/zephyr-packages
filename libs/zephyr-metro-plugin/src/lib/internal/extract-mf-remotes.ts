@@ -1,15 +1,29 @@
-import type { ZeDependencyPair } from 'zephyr-agent';
+import {
+  is_zephyr_dependency_pair,
+  readPackageJson,
+  type ZeDependencyPair,
+} from 'zephyr-agent';
+import type { ZephyrCommandWrapperConfig } from '../zephyr-metro-plugin';
 
 export function extract_remotes_dependencies(
-  remotes?: Record<string, string>
+  config: ZephyrCommandWrapperConfig
 ): ZeDependencyPair[] {
-  if (!remotes) return [];
+  const depsPairs: ZeDependencyPair[] = [];
 
-  const dependencyPairs: ZeDependencyPair[] = Object.entries(remotes).map(
-    ([name, remote]) => {
-      return { name, version: remote };
-    }
-  );
+  const { zephyrDependencies } = readPackageJson(config.context ?? process.cwd());
+  if (zephyrDependencies) {
+    Object.entries(zephyrDependencies).map(([name, version]) => {
+      depsPairs.push({ name, version } as ZeDependencyPair);
+    });
+  }
 
-  return dependencyPairs;
+  if (config.mfConfig?.remotes) {
+    Object.entries(config.mfConfig.remotes).map(([name, remote]) => {
+      depsPairs.push({ name, version: remote } as ZeDependencyPair);
+    });
+  }
+
+  return depsPairs
+    .flat()
+    .filter((dep): dep is ZeDependencyPair => is_zephyr_dependency_pair(dep));
 }

@@ -1,4 +1,4 @@
-import { ZephyrManifest } from '../zephyr-manifest';
+import type { ZephyrManifest } from '../zephyr-manifest';
 
 export interface PublishTarget {
   url: string;

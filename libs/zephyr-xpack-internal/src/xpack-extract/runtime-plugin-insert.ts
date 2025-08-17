@@ -26,8 +26,10 @@ export function runtimePluginInsert(plugin: ModuleFederationPlugin): boolean {
       configRef.runtimePlugins = [];
     }
 
-    // Add the single runtime plugin with all data
-    configRef.runtimePlugins.push(runtimePluginPath);
+    // Add the runtime plugin only if it's not already present
+    if (!configRef.runtimePlugins.includes(runtimePluginPath)) {
+      configRef.runtimePlugins.push(runtimePluginPath);
+    }
     ze_log.remotes(`Runtime plugin added to Module Federation config`);
 
     return true; // Successfully inserted runtime plugin

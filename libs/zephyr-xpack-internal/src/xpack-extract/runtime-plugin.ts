@@ -1,9 +1,20 @@
-import { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
+import type { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
 import type {
   BeforeRequestHookArgs,
   FederationRuntimePlugin,
   RemoteWithEntry,
 } from '../types/module-federation.types';
+
+const globalKey = '__ZEPHYR_MANIFEST_PROMISE__';
+const _global = typeof window !== 'undefined' ? window : globalThis;
+
+function getGlobalManifestPromise(): Promise<ZephyrManifest | undefined> | undefined {
+  return (_global as any)[globalKey];
+}
+
+function setGlobalManifestPromise(promise: Promise<ZephyrManifest | undefined>): void {
+  (_global as any)[globalKey] = promise;
+}
 
 /**
  * Zephyr Runtime Plugin for Module Federation This plugin handles dynamic remote URL
@@ -11,9 +22,14 @@ import type {
  */
 export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
   let processedRemotes: Record<string, ZephyrDependency> | undefined;
+
   // Start fetching manifest immediately
-  const zephyrManifestPromise = fetchZephyrManifest();
-  console.log('----------- here');
+  let zephyrManifestPromise = getGlobalManifestPromise();
+
+  if (!zephyrManifestPromise) {
+    zephyrManifestPromise = fetchZephyrManifest();
+    setGlobalManifestPromise(zephyrManifestPromise);
+  }
 
   return {
     name: 'zephyr-runtime-remote-resolver',

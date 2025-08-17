@@ -54,7 +54,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
           dep.version === 'latest' ? true : dep.version === remote_version;
         return nameMatch && versionMatch;
       });
-
       ze_log.remotes(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
 
       if (!resolved_dep) {
@@ -68,6 +67,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         );
         return;
       }
+      const remote_entry_url = resolved_dep.remote_entry_url;
 
       // todo: this is a version with named export logic, we should take this into account later
       const [v_app] = remote_version.includes('@')
@@ -76,10 +76,8 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       ze_log.remotes(`v_app: ${v_app}`);
       if (v_app) {
-        resolved_dep.remote_entry_url = [v_app, resolved_dep.remote_entry_url].join('@');
-        ze_log.remotes(
-          `Adding version to remote entry url: ${resolved_dep.remote_entry_url}`
-        );
+        resolved_dep.remote_entry_url = [v_app, remote_entry_url].join('@');
+        ze_log.remotes(`Adding version to remote entry url: ${remote_entry_url}`);
       }
 
       resolved_dep.library_type = library_type;
@@ -97,11 +95,15 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         );
       }
 
+      // Nx remote definition is an Array
       if (Array.isArray(remotes)) {
         const remoteIndex = remotes.indexOf(remote_name);
         if (remoteIndex === -1) return;
+        const nx_remote_value = remote_final_value.startsWith('promise')
+          ? remote_final_value
+          : remote_entry_url; // Only the URL without alias for Nx definition
         // @ts-expect-error - Nx's ModuleFederationPlugin has different remote types
-        remotes.splice(remoteIndex, 1, [remote_name, remote_final_value]);
+        remotes.splice(remoteIndex, 1, [remote_name, nx_remote_value]);
         return;
       }
 

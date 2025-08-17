@@ -1,4 +1,4 @@
-import { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
+import type { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
 import type {
   BeforeRequestHookArgs,
   FederationRuntimePlugin,

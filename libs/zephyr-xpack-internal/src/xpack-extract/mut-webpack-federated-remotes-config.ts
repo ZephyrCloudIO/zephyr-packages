@@ -31,16 +31,12 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       return;
     }
 
-    // Try runtime plugin insertion first if not legacy plugin
-    if (!isLegacyMFPlugin(plugin)) {
-      const success = runtimePluginInsert(
-        plugin,
-        zephyr_engine,
-        resolvedDependencyPairs
-      );
+    let runtimePluginInserted = false;
+    const isRepack = zephyr_engine.builder === 'repack';
 
-      // Skip legacy processing for this config
-      if (success) return;
+    // Try runtime plugin insertion first if not legacy plugin and not Repack
+    if (!isLegacyMFPlugin(plugin) && !isRepack) {
+      runtimePluginInserted = runtimePluginInsert(plugin);
     }
 
     // Legacy processing - only if runtime plugin wasn't inserted or isEnhanced is false
@@ -73,7 +69,6 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         return;
       }
 
-      // Legacy behavior when runtime plugin is not enabled
       // todo: this is a version with named export logic, we should take this into account later
       const [v_app] = remote_version.includes('@')
         ? remote_version.split('@')
@@ -89,21 +84,28 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       resolved_dep.library_type = library_type;
       resolved_dep.name = normalize_app_name(remote_name);
-      const runtimeCode = createMfRuntimeCode(
-        zephyr_engine,
-        resolved_dep,
-        delegate_module_template
-      );
+
+      // Final value can be current one, zephyr delegate
+      // or fixed URL when using Zephyr Runtime plugin
+      let remote_final_value: string = resolved_dep.remote_entry_url;
+
+      if (!runtimePluginInserted && !isRepack) {
+        remote_final_value = createMfRuntimeCode(
+          zephyr_engine,
+          resolved_dep,
+          delegate_module_template
+        );
+      }
 
       if (Array.isArray(remotes)) {
         const remoteIndex = remotes.indexOf(remote_name);
         if (remoteIndex === -1) return;
         // @ts-expect-error - Nx's ModuleFederationPlugin has different remote types
-        remotes.splice(remoteIndex, 1, [remote_name, runtimeCode]);
+        remotes.splice(remoteIndex, 1, [remote_name, remote_final_value]);
         return;
       }
 
-      remotes[remote_name] = runtimeCode;
+      remotes[remote_name] = remote_final_value;
     });
     ze_log.remotes(`Set runtime code for remotes: ${remotes}`);
   });

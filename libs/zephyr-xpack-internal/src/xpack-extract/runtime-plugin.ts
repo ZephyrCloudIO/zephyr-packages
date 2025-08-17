@@ -1,193 +1,105 @@
+import { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
 import type {
+  BeforeRequestHookArgs,
   FederationRuntimePlugin,
   RemoteWithEntry,
 } from '../types/module-federation.types';
 
-// Webpack/Rspack-specific global for resourceQuery
-declare const __resourceQuery: string | undefined;
-
-interface RuntimePluginData {
-  builder: string;
-  resolvedRemotes: Record<
-    string,
-    {
-      application_uid: string;
-      remote_entry_url: string;
-      default_url: string;
-      name: string;
-      library_type: string;
-    }
-  >;
-}
-
-/** Fetches the zephyr-manifest.json file and returns the runtime plugin data */
-async function fetchZephyrManifest(): Promise<RuntimePluginData | null> {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    // Fetch the manifest from the same origin
-    const response = await fetch('/zephyr-manifest.json');
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const manifest = await response.json().catch(() => null);
-
-    if (!manifest) {
-      return null;
-    }
-
-    // Transform manifest dependencies to runtime plugin format
-    const resolvedRemotes: RuntimePluginData['resolvedRemotes'] = {};
-
-    if (manifest.dependencies) {
-      Object.entries(manifest.dependencies).forEach(([name, dep]: [string, any]) => {
-        resolvedRemotes[name] = {
-          application_uid: dep.application_uid,
-          remote_entry_url: dep.remote_entry_url,
-          default_url: dep.default_url,
-          name: dep.name,
-          library_type: 'module', // Default library type
-        };
-      });
-    }
-
-    return {
-      builder: 'webpack', // Default to webpack, can be overridden by resourceQuery
-      resolvedRemotes,
-    };
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Zephyr Runtime Plugin for Module Federation This plugin handles dynamic remote URL
- * resolution at runtime using compile-time information passed via __resourceQuery and
- * beforeRequest hook to mutate URLs on the fly
+ * resolution at runtime using beforeRequest hook to mutate URLs on the fly
  */
 export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
-  // Parse compile-time data from resourceQuery
-  let runtimeData: RuntimePluginData | null = null;
-  let manifestPromise: Promise<RuntimePluginData | null> | null = null;
-
-  // Track which remotes have already been processed to avoid re-processing
-  const processedRemotes = new Set<string>();
-
-  // Initialize manifest fetching
-  const initializeManifest = async (): Promise<RuntimePluginData | null> => {
-    try {
-      // Primary source: fetch the manifest file
-      runtimeData = await fetchZephyrManifest();
-
-      // Fallback for development: check resourceQuery
-      if (!runtimeData && typeof __resourceQuery !== 'undefined' && __resourceQuery) {
-        // Parse query string to get the 'ze' parameter
-        const params = new URLSearchParams(__resourceQuery);
-        const zeData = params.get('ze');
-
-        if (zeData) {
-          runtimeData = JSON.parse(zeData);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load manifest:', error);
-    }
-
-    return runtimeData;
-  };
-
+  let processedRemotes: Record<string, ZephyrDependency> | undefined;
   // Start fetching manifest immediately
-  manifestPromise = initializeManifest();
+  const zephyrManifestPromise = fetchZephyrManifest();
+  console.log('----------- here');
 
   return {
     name: 'zephyr-runtime-remote-resolver',
     async beforeRequest(args) {
-      // Ensure manifest is loaded before processing
-      await manifestPromise;
+      const zephyrManifest = await zephyrManifestPromise;
 
-      const remotes = identifyRemotes(args, runtimeData, processedRemotes);
-
-      if (!remotes) {
-        return args;
+      if (!processedRemotes) {
+        processedRemotes = identifyRemotes(args, zephyrManifest);
       }
 
-      const { targetRemote, resolvedRemote } = remotes;
+      // Extract remote name from args.id (format: "remoteName/componentName")
+      const remoteName = args.id.split('/')[0];
+
+      if (!processedRemotes[remoteName]) {
+        return args; // No matching remote found
+      }
 
       // Get the resolved URL, checking session storage first
-      const resolvedUrl = getResolvedRemoteUrl(resolvedRemote);
+      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
+
+      const targetRemote = args.options.remotes.find(
+        (remote) =>
+          hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
+      )!;
 
       // Update the remote entry URL
       targetRemote.entry = resolvedUrl;
-
-      // Mark this remote as processed
-      processedRemotes.add(targetRemote.name);
 
       return args;
     },
   };
 }
 
-type Args = Parameters<NonNullable<FederationRuntimePlugin['beforeRequest']>>[0];
-type IdentifiedRemotes = {
-  targetRemote: RemoteWithEntry;
-  resolvedRemote: RuntimePluginData['resolvedRemotes'][string];
-};
+/** Fetches the zephyr-manifest.json file and returns the runtime plugin data */
+async function fetchZephyrManifest(): Promise<ZephyrManifest | undefined> {
+  try {
+    // Fetch the manifest from the same origin
+    const response = await fetch('/zephyr-manifest.json');
+
+    if (!response.ok) {
+      return;
+    }
+
+    const manifest = await response.json().catch(() => undefined);
+
+    if (!manifest) {
+      console.error('Failed to parse manifest JSON');
+      return;
+    }
+
+    return manifest;
+  } catch {
+    console.error('Unexpected error fetching manifest');
+    return;
+  }
+}
 
 function identifyRemotes(
-  args: Args,
-  runtimeData: RuntimePluginData | null,
-  processedRemotes: Set<string>
-): IdentifiedRemotes | undefined {
+  args: BeforeRequestHookArgs,
+  zephyrManifest: ZephyrManifest | undefined
+): Record<string, ZephyrDependency> {
+  const identifiedRemotes: Record<string, ZephyrDependency> = {};
+
   // No runtime plugin configured
-  if (!runtimeData) {
-    return;
+  if (!zephyrManifest) {
+    return identifiedRemotes;
   }
 
   // No remotes defined
   if (!args.options.remotes.length) {
-    return;
+    return identifiedRemotes;
   }
 
-  const { builder, resolvedRemotes } = runtimeData;
+  const { dependencies } = zephyrManifest;
 
-  // For repack, we don't need to modify URLs
-  if (builder === 'repack') {
-    return;
-  }
+  const remotes = args.options.remotes;
 
-  // Extract remote name from args.id (format: "remoteName/componentName")
-  // initial hit will be "remoteName" but just in case, we can process all path requests too.
-  const remoteName = args.id.split('/')[0];
+  remotes.forEach((remote) => {
+    const remoteName = remote.alias ?? remote.name;
+    const resolvedRemote = dependencies[remoteName];
+    if (hasEntry(resolvedRemote)) {
+      identifiedRemotes[remoteName] = resolvedRemote;
+    }
+  });
 
-  // Check if this remote has already been processed
-  if (processedRemotes.has(remoteName)) {
-    return;
-  }
-
-  // Find the matching remote in the remotes array
-  const targetRemote = args.options.remotes.find(
-    (remote) =>
-      hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
-  )!;
-
-  const resolvedRemote = resolvedRemotes[targetRemote.alias ?? targetRemote.name];
-
-  // Check for resolved remotes entry for this specific remote called
-  // in runtime by the application
-  if (!resolvedRemote) {
-    return;
-  }
-
-  // Type guard to check if a remote has an entry property
-  if (!hasEntry(targetRemote)) {
-    return;
-  }
-
-  return { targetRemote, resolvedRemote };
+  return identifiedRemotes;
 }
 
 function hasEntry(remote: any): remote is RemoteWithEntry {
@@ -201,9 +113,7 @@ function hasEntry(remote: any): remote is RemoteWithEntry {
 }
 
 /** Resolves the actual remote URL, checking session storage for overrides */
-function getResolvedRemoteUrl(
-  resolvedRemote: RuntimePluginData['resolvedRemotes'][string]
-): string {
+function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
   // Check for session storage override (for development/testing)

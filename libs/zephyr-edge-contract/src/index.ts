@@ -29,7 +29,7 @@ export type {
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
-export type { ZephyrManifest } from './lib/zephyr-manifest';
+export { ZEPHYR_MANIFEST_VERSION, type ZephyrManifest } from './lib/zephyr-manifest';
 
 // api contract negotiation
 export {

@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import type {
-  ZeBuildAsset,
-  ZephyrDependency,
-  ZephyrManifest,
+import {
+  ZEPHYR_MANIFEST_VERSION,
+  type ZeBuildAsset,
+  type ZephyrDependency,
+  type ZephyrManifest,
 } from 'zephyr-edge-contract';
 import type { ZeResolvedDependency } from '../../zephyr-engine/resolve_remote_dependency';
 import { ze_log } from '../logging';
@@ -40,7 +41,7 @@ export function createManifestContent(dependencies: ZeResolvedDependency[]): str
 
   // Create the manifest object
   const manifest: ZephyrManifest = {
-    version: 1,
+    version: ZEPHYR_MANIFEST_VERSION,
     timestamp: new Date().toISOString(),
     dependencies: dependenciesMap,
   };

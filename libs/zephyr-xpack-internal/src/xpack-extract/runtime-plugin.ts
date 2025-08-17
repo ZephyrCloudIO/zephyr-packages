@@ -1,10 +1,11 @@
-import type { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
+import { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
 import type {
   BeforeRequestHookArgs,
   FederationRuntimePlugin,
   RemoteWithEntry,
 } from '../types/module-federation.types';
 
+// Ensure only one fetch is done by the app
 const globalKey = '__ZEPHYR_MANIFEST_PROMISE__';
 const _global = typeof window !== 'undefined' ? window : globalThis;
 
@@ -108,10 +109,9 @@ function identifyRemotes(
   const remotes = args.options.remotes;
 
   remotes.forEach((remote) => {
-    const remoteName = remote.alias ?? remote.name;
-    const resolvedRemote = dependencies[remoteName];
-    if (hasEntry(resolvedRemote)) {
-      identifiedRemotes[remoteName] = resolvedRemote;
+    const resolvedRemote = dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
+    if (resolvedRemote) {
+      identifiedRemotes[resolvedRemote.name] = resolvedRemote;
     }
   });
 

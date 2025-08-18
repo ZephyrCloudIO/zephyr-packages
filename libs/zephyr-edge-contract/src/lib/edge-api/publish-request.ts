@@ -3,7 +3,10 @@ import type { ZephyrManifest } from '../zephyr-manifest';
 export interface PublishTarget {
   url: string;
   hostname: string;
-  zephyrManifest?: ZephyrManifest;
+  zephyrManifestFile?: {
+    content: ZephyrManifest;
+    hash: string;
+  };
 }
 
 // TODO: all tags, envs, cname publish targets should be logged in deployment history

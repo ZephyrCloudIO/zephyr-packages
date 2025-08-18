@@ -24,9 +24,6 @@ runs:
         cache: 'pnpm'
         cache-dependency-path: '**/pnpm-lock.yaml'
         registry-url: 'https://registry.npmjs.org'
-      env:
-        # ipv6 inconsistency on Github Actions
-        NODE_OPTIONS: '--dns-result-order=ipv4first'
     - name: Get pnpm store directory
       shell: bash
       run: |

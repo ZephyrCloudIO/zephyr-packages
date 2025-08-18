@@ -32,6 +32,8 @@ jobs:
           main-branch-name: main
       - name: run build affected
         env:
+          # ipv6 inconsistency on Github Actions
+          NODE_OPTIONS: '--dns-result-order=ipv4first'
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}

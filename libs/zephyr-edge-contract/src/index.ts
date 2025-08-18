@@ -2,8 +2,10 @@
 
 // edge api
 export type {
+  GatewayPublishRequest,
   PublishRequest,
   PublishTarget,
+  PublishTargets,
   StageZeroPublishRequest,
 } from './lib/edge-api/publish-request';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';

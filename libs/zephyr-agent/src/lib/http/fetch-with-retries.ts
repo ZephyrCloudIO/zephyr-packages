@@ -37,7 +37,7 @@ export async function fetchWithRetries(
   try {
     // Create a custom axios instance for this request with CI-friendly settings
     const axiosInstance = axios.create({
-      // Force IPv4 in CI environments or when explicitly requested to avoid IPv6 connectivity issues
+      // Force IPv4 in CI environments to avoid IPv6 connectivity issues
       family: isCI ? IPV4_FAMILY : undefined,
     });
 

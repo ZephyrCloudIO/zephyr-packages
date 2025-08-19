@@ -4,6 +4,31 @@ import axiosRetry from 'axios-retry';
 import isCI from 'is-ci';
 import { ZeErrors, ZephyrError } from '../errors';
 
+const IPV4_FAMILY = 4;
+const RETRY_ERROR_CODES = [
+  'ETIMEDOUT',
+  'ENETUNREACH',
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'EPIPE',
+];
+
+function shouldRetry(error: AxiosError) {
+  // Retry on network errors (no response received)
+  if (!error.response) {
+    const code = error.code;
+    const message = error.message || '';
+    return (
+      (code && RETRY_ERROR_CODES.includes(code)) ||
+      message.includes('network') ||
+      message.includes('timeout')
+    );
+  }
+
+  // Retry on server errors (5xx)
+  return error.response.status >= 500;
+}
+
 export async function fetchWithRetries(
   url: URL,
   options: RequestInit = {},
@@ -13,37 +38,14 @@ export async function fetchWithRetries(
     // Create a custom axios instance for this request with CI-friendly settings
     const axiosInstance = axios.create({
       // Force IPv4 in CI environments or when explicitly requested to avoid IPv6 connectivity issues
-      family: isCI ? 4 : undefined,
+      family: isCI ? IPV4_FAMILY : undefined,
     });
 
     // Configure axios-retry
     axiosRetry(axiosInstance, {
       retries,
       retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: (error: AxiosError) => {
-        // Retry on network errors (no response received)
-        if (!error.response) {
-          const errorCode = error.code;
-          const errorMessage = error.message || '';
-
-          // Retry on connection timeouts, network unreachable, and other network errors
-          const shouldRetry = !!(
-            (errorCode &&
-              (errorCode === 'ETIMEDOUT' ||
-                errorCode === 'ENETUNREACH' ||
-                errorCode === 'ECONNRESET' ||
-                errorCode === 'ECONNREFUSED' ||
-                errorCode === 'EPIPE')) ||
-            errorMessage.includes('network') ||
-            errorMessage.includes('timeout')
-          );
-
-          return shouldRetry;
-        }
-
-        // Retry on server errors (5xx)
-        return error.response.status >= 500;
-      },
+      retryCondition: shouldRetry,
     });
 
     // Convert fetch options to axios options

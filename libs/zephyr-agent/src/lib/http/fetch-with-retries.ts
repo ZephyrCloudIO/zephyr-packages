@@ -13,7 +13,7 @@ const RETRY_ERROR_CODES = [
   'EPIPE',
 ];
 
-function shouldRetry(error: AxiosError) {
+function shouldRetry(error: AxiosError): boolean {
   // Retry on network errors (no response received)
   if (!error.response) {
     const code = error.code;
@@ -38,6 +38,8 @@ export async function fetchWithRetries(
     // Create a custom axios instance for this request with CI-friendly settings
     const axiosInstance = axios.create({
       // Force IPv4 in CI environments to avoid IPv6 connectivity issues
+      // References: https://github.com/actions/runner/issues/3138
+      // https://x.com/matteocollina/status/1640384245834055680
       family: isCI ? IPV4_FAMILY : undefined,
     });
 

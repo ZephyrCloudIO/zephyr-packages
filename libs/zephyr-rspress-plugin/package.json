@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspress-plugin",
-  "version": "0.0.56",
+  "version": "0.0.57",
   "description": "Rspress plugin for Zephyr",
   "repository": {
     "type": "git",

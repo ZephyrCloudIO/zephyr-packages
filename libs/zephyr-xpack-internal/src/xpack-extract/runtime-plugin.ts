@@ -54,7 +54,11 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
       const targetRemote = args.options.remotes.find(
         (remote) =>
           hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
-      )!;
+      );
+
+      if (!targetRemote) {
+        return args;
+      }
 
       // Update the remote entry URL
       targetRemote.entry = resolvedUrl;
@@ -111,7 +115,12 @@ function identifyRemotes(
   remotes.forEach((remote) => {
     const resolvedRemote = dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
     if (resolvedRemote) {
-      identifiedRemotes[resolvedRemote.name] = resolvedRemote;
+      // Map both the original remote name and alias to the resolved remote
+      // Nx replaces aliases calls with the normalized name
+      identifiedRemotes[remote.name] = resolvedRemote;
+      if (remote.alias && remote.alias !== remote.name) {
+        identifiedRemotes[remote.alias] = resolvedRemote;
+      }
     }
   });
 

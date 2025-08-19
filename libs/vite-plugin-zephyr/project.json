@@ -2,7 +2,7 @@
   "name": "vite-plugin-zephyr",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/vite-plugin-zephyr/src",
-  "projectType": "library", 
+  "projectType": "library",
   "tags": [],
   "implicitDependencies": ["zephyr-agent"],
   "targets": {

@@ -25,8 +25,6 @@ export async function resolve_remote_dependency({
   platform?: string;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
-  ze_log.remotes(`Resolving remote dependency: ${application_uid}@${version}`);
-
   const resolveDependency = new URL(
     `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
     ZE_API_ENDPOINT()
@@ -41,7 +39,7 @@ export async function resolve_remote_dependency({
   }
 
   try {
-    ze_log.remotes(`Dependency resolution URL: ${resolveDependency.toString()}`);
+    ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
     const res = await axios.get(resolveDependency.toString(), {
@@ -57,7 +55,6 @@ export async function resolve_remote_dependency({
 
     // Check response status
     if (res.status < 200 || res.status >= 300) {
-      ze_log.remotes(`Dependency resolution failed with status ${res.status}`);
       throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
         appUid: application_uid,
         appName,
@@ -74,10 +71,14 @@ export async function resolve_remote_dependency({
     const response = res.data;
 
     if (response.value) {
-      ze_log.remotes(`Successfully resolved dependency ${application_uid}@${version}:`);
-      ze_log.remotes(`  - remote_entry_url: ${response.value.remote_entry_url}`);
-      ze_log.remotes(`  - default_url: ${response.value.default_url}`);
-      ze_log.remotes(`  - library_type: ${response.value.library_type}`);
+      ze_log.remotes(
+        'resolved dependency:',
+        response.value,
+        'application_uid: ',
+        application_uid,
+        'version: ',
+        version
+      );
       return Object.assign({}, response.value, { version, platform });
     }
 

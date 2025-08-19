@@ -28,14 +28,14 @@ export async function fetchWithRetries(
 
           // Retry on connection timeouts, network unreachable, and other network errors
           const shouldRetry = !!(
-            errorCode &&
-            (errorCode === 'ETIMEDOUT' ||
-              errorCode === 'ENETUNREACH' ||
-              errorCode === 'ECONNRESET' ||
-              errorCode === 'ECONNREFUSED' ||
-              errorCode === 'EPIPE' ||
-              errorMessage.includes('network') ||
-              errorMessage.includes('timeout'))
+            (errorCode &&
+              (errorCode === 'ETIMEDOUT' ||
+                errorCode === 'ENETUNREACH' ||
+                errorCode === 'ECONNRESET' ||
+                errorCode === 'ECONNREFUSED' ||
+                errorCode === 'EPIPE')) ||
+            errorMessage.includes('network') ||
+            errorMessage.includes('timeout')
           );
 
           return shouldRetry;

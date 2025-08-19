@@ -1,8 +1,8 @@
-import { ZeErrors, ZephyrError } from '../errors';
 import type { AxiosRequestConfig } from 'axios';
-import { AxiosError } from 'axios';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
+import isCI from 'is-ci';
+import { ZeErrors, ZephyrError } from '../errors';
 
 export async function fetchWithRetries(
   url: URL,
@@ -10,18 +10,35 @@ export async function fetchWithRetries(
   retries = 3
 ): Promise<Response> {
   try {
-    // Create a custom axios instance for this request
-    const axiosInstance = axios.create();
+    // Create a custom axios instance for this request with CI-friendly settings
+    const axiosInstance = axios.create({
+      // Force IPv4 in CI environments or when explicitly requested to avoid IPv6 connectivity issues
+      family: isCI ? 4 : undefined,
+    });
 
     // Configure axios-retry
     axiosRetry(axiosInstance, {
       retries,
       retryDelay: axiosRetry.exponentialDelay,
       retryCondition: (error: AxiosError) => {
-        // Retry on network errors
+        // Retry on network errors (no response received)
         if (!error.response) {
-          const networkError = error.code || error.message || '';
-          return networkError === 'EPIPE' || networkError.includes('network');
+          const errorCode = error.code;
+          const errorMessage = error.message || '';
+
+          // Retry on connection timeouts, network unreachable, and other network errors
+          const shouldRetry = !!(
+            errorCode &&
+            (errorCode === 'ETIMEDOUT' ||
+              errorCode === 'ENETUNREACH' ||
+              errorCode === 'ECONNRESET' ||
+              errorCode === 'ECONNREFUSED' ||
+              errorCode === 'EPIPE' ||
+              errorMessage.includes('network') ||
+              errorMessage.includes('timeout'))
+          );
+
+          return shouldRetry;
         }
 
         // Retry on server errors (5xx)

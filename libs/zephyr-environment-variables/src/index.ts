@@ -6,10 +6,12 @@ export const VIRTUAL_SPECIFIER = 'env:vars';
 const ZE_REGEX_SIMPLE = /\bprocess\.env\.(ZE_PUBLIC_[A-Z0-9_]+)/g;
 const ZE_REGEX_QUOTED = /\bprocess\.env\[["'`](ZE_PUBLIC_[A-Z0-9_]+)["'`]\]/g;
 const ZE_REGEX_IMPORT_META_SIMPLE = /\bimport\.meta\.env\.(ZE_PUBLIC_[A-Z0-9_]+)/g;
-const ZE_REGEX_IMPORT_META_QUOTED = /\bimport\.meta\.env\[["'`](ZE_PUBLIC_[A-Z0-9_]+)["'`]\]/g;
+const ZE_REGEX_IMPORT_META_QUOTED =
+  /\bimport\.meta\.env\[["'`](ZE_PUBLIC_[A-Z0-9_]+)["'`]\]/g;
 
 // Destructuring patterns (declarations): const { ... } = process.env | import.meta.env
-const ZE_DESTRUCT_DECL = /(const|let|var)\s*\{([^}]+)\}\s*=\s*(process\.env|import\.meta\.env)/g;
+const ZE_DESTRUCT_DECL =
+  /(const|let|var)\s*\{([^}]+)\}\s*=\s*(process\.env|import\.meta\.env)/g;
 // Destructuring patterns (assignment): ({ ... } = process.env) or { ... } = import.meta.env
 const ZE_DESTRUCT_ASSIGN = /\{([^}]+)\}\s*=\s*(process\.env|import\.meta\.env)/g;
 
@@ -36,7 +38,12 @@ function extractDestructuredKeys(raw: string): string[] {
 
 export function detectEnvReads(source: string): Set<string> {
   const names = new Set<string>();
-  const regs = [ZE_REGEX_SIMPLE, ZE_REGEX_QUOTED, ZE_REGEX_IMPORT_META_SIMPLE, ZE_REGEX_IMPORT_META_QUOTED];
+  const regs = [
+    ZE_REGEX_SIMPLE,
+    ZE_REGEX_QUOTED,
+    ZE_REGEX_IMPORT_META_SIMPLE,
+    ZE_REGEX_IMPORT_META_QUOTED,
+  ];
   for (const r of regs) {
     source.replace(r, (_m, name) => {
       names.add(String(name));
@@ -86,7 +93,10 @@ export function rewriteEnvReadsToVirtualModule(
 
   // Ensure an import of the virtual module exists; avoid duplicating if already present
   const escaped = specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const importRe = new RegExp(`from\\s+['\"]${escaped}['\"];?|require\\(['\"]${escaped}['\"]\\)`, 'm');
+  const importRe = new RegExp(
+    `from\\s+['\"]${escaped}['\"];?|require\\(['\"]${escaped}['\"]\\)`,
+    'm'
+  );
   if (!importRe.test(code)) {
     code = `import __ZE_ENV__ from '${specifier}';\n` + code;
   }
@@ -97,7 +107,11 @@ export function buildImportMap(specifier: string, url: string): string {
   return JSON.stringify({ imports: { [specifier]: url } }, null, 0);
 }
 
-export function injectImportMap(html: string, importMapJson: string, opts?: { injectTo?: 'head-prepend' | 'head' | 'body' }) {
+export function injectImportMap(
+  html: string,
+  importMapJson: string,
+  opts?: { injectTo?: 'head-prepend' | 'head' | 'body' }
+) {
   const scriptTag = `<script type="importmap">${importMapJson}</script>`;
   if (html.includes(scriptTag)) return html;
   const injectTo = opts?.injectTo ?? 'head-prepend';
@@ -114,7 +128,10 @@ export function injectBeforeHeadClose(html: string, snippet: string) {
   return html.replace('</head>', `${snippet}</head>`);
 }
 
-export function buildEnvJsonAsset(env: Record<string, string | undefined>): { fileName: string; source: string } {
+export function buildEnvJsonAsset(env: Record<string, string | undefined>): {
+  fileName: string;
+  source: string;
+} {
   const safe: Record<string, string> = {};
   for (const [k, v] of Object.entries(env)) {
     if (!k.startsWith('ZE_PUBLIC_')) continue;

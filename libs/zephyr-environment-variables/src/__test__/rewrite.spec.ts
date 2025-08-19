@@ -93,5 +93,3 @@ describe('rewriteEnvReadsToVirtualModule', () => {
     expect(out).toContain(`__ZE_ENV__.ZE_PUBLIC_A`);
   });
 });
-
-

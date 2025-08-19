@@ -109,13 +109,6 @@ export async function createSnapshot(
     zephyrManifest: manifestReference,
   };
 
-  ze_log.snapshot('Created snapshot with ID:', snapshot.snapshot_id);
-  if (manifestReference) {
-    ze_log.snapshot('Snapshot includes manifest reference:', manifestReference);
-  } else {
-    ze_log.snapshot('Snapshot has no manifest reference');
-  }
-
   return snapshot;
 }
 

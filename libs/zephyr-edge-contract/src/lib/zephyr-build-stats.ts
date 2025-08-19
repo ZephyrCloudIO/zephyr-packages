@@ -126,7 +126,7 @@ export interface ZephyrBuildStats {
   /** @deprecated */
   type: unknown;
   /** Resolved zephyr dependencies */
-  'zephyr:dependencies'?: Record<string, ZephyrDependency>;
+  zephyrDependencies?: Record<string, ZephyrDependency>;
 }
 
 enum DeploymentIntegrationPlatform {

@@ -31,10 +31,10 @@ export async function zeBuildDashData(
 
   const to_raw = _recordToRawDependency;
 
-  // Build zephyr:dependencies from federated_dependencies
-  const zephyrDependencies: ZephyrBuildStats['zephyr:dependencies'] = {};
+  // Build zephyrDependencies from federated_dependencies
+  const zephyrDependencies: ZephyrBuildStats['zephyrDependencies'] = {};
   if (zephyr_engine.federated_dependencies) {
-    ze_log.buildstats('Building zephyr:dependencies for dashboard');
+    ze_log.buildstats('Building zephyrDependencies for dashboard');
     ze_log.buildstats(
       `Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`
     );
@@ -79,11 +79,11 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
-    'zephyr:dependencies': zephyrDependencies,
+    zephyrDependencies,
   };
 
   ze_log.buildstats(
-    `Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyr:dependencies`
+    `Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyrDependencies`
   );
 
   return result;

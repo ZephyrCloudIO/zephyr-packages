@@ -68,7 +68,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const { name, filename } = mfConfig ? (extractFederatedConfig(mfConfig) ?? {}) : {};
   const remotes = ze_engine.federated_dependencies;
 
-  // Build zephyr:dependencies from federated_dependencies
+  // Build zephyrDependencies from federated_dependencies
   const zephyrDependencies: Record<string, any> = {};
   if (remotes) {
     for (const dep of remotes) {
@@ -96,7 +96,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context: { isCI },
     build_target,
-    'zephyr:dependencies': zephyrDependencies,
+    zephyrDependencies,
   };
 
   // todo: extend data

@@ -58,7 +58,7 @@
     "tslib": "catalog:typescript"
   },
   "engines": {
-    "node": "22.x",
+    "node": "24.x",
     "pnpm": "10.x"
   },
   "pnpm": {

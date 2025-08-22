@@ -22,11 +22,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "@rsbuild/core": "^1.3.22",
     "@rspress/shared": "catalog:rspress",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
+    "zephyr-rsbuild-plugin": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
@@ -34,8 +34,7 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
-    "zephyr-rspack-plugin": "workspace:*"
+    "ts-jest": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public",

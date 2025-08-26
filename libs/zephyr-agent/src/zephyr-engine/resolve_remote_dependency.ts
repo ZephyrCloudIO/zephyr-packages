@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../lib/errors';
+import { parseUrl } from '../lib/http/http-request';
 import { ze_log } from '../lib/logging';
 import { getToken } from '../lib/node-persist/token';
 export interface ZeResolvedDependency {
@@ -25,10 +26,12 @@ export async function resolve_remote_dependency({
   platform?: string;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
-  const resolveDependency = new URL(
-    `${ze_api_gateway.resolve}/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`,
-    ZE_API_ENDPOINT()
-  );
+  const depUrl =
+    ZE_API_ENDPOINT() +
+    `/${ze_api_gateway.resolve}/` +
+    `${encodeURIComponent(application_uid)}/` +
+    `${encodeURIComponent(version)}`;
+  const resolveDependency = parseUrl(depUrl);
 
   if (platform) {
     resolveDependency.searchParams.append('build_target', platform);

@@ -28,7 +28,7 @@ export async function resolve_remote_dependency({
 }): Promise<ZeResolvedDependency> {
   const depUrl =
     ZE_API_ENDPOINT() +
-    `/${ze_api_gateway.resolve}/` +
+    `${ze_api_gateway.resolve}/` +
     `${encodeURIComponent(application_uid)}/` +
     `${encodeURIComponent(version)}`;
   const resolveDependency = parseUrl(depUrl);

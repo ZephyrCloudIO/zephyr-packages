@@ -1,8 +1,8 @@
 import { type ZeUploadBuildStats } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { ze_log } from '../logging';
-import { ZeHttpRequest } from '../http/ze-http-request';
 import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
+import { ze_log } from '../logging';
 
 interface ZeEnableSnapshotOnEdgeProps {
   pluginOptions: { application_uid: string };
@@ -15,8 +15,8 @@ export async function zeEnableSnapshotOnPages({
   envs_jwt,
   pages_url,
 }: ZeEnableSnapshotOnEdgeProps): Promise<void> {
-  ze_log('Enabling snapshot on cloudflare pages');
-  ze_log(`Uploading envs to Zephyr, for ${application_uid}`);
+  ze_log.snapshot('Enabling snapshot on cloudflare pages');
+  ze_log.snapshot(`Uploading envs to Zephyr, for ${application_uid}`);
 
   const type = 'pages';
   const json = JSON.stringify({
@@ -28,7 +28,7 @@ export async function zeEnableSnapshotOnPages({
     application_uid,
   });
 
-  const [ok, cause] = await ZeHttpRequest.from(
+  const [ok, cause] = await makeRequest(
     {
       path: '/upload',
       base: EDGE_URL,
@@ -52,5 +52,5 @@ export async function zeEnableSnapshotOnPages({
     });
   }
 
-  ze_log('Build successfully deployed.');
+  ze_log.snapshot('Build successfully deployed.');
 }

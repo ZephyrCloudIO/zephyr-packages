@@ -1,5 +1,5 @@
 {
-  "name": "react-vite-ts",
+  "name": "vite-react-ts",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,6 @@
     "prebuild": "nx build vite-plugin-zephyr",
     "build": "tsc && vite build",
     "build-watch": "tsc && vite build --watch",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {

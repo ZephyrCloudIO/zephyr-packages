@@ -1,0 +1,22 @@
+{
+  "name": "rsbuild-sample-app",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "rsbuild dev --open",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
+  },
+  "dependencies": {
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^1.3.22",
+    "@rsbuild/plugin-react": "catalog:rspack",
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "typescript": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
+}

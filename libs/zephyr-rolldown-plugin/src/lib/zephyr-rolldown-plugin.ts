@@ -1,5 +1,5 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
-import { zeBuildDashData, ZephyrEngine } from 'zephyr-agent';
+import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { cwd } from 'node:process';
 import { getAssetsMap } from './internal/get-assets-map';
 
@@ -22,14 +22,26 @@ export function withZephyr() {
         context: path_to_execution_dir,
       });
     },
-    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
-      const zephyr_engine = await zephyr_engine_defer;
-      await zephyr_engine.start_new_build();
-      await zephyr_engine.upload_assets({
-        assetsMap: getAssetsMap(bundle),
-        buildStats: await zeBuildDashData(zephyr_engine),
-      });
-      await zephyr_engine.build_finished();
+    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
+      try {
+        const zephyr_engine = await zephyr_engine_defer;
+
+        // basehref support
+        zephyr_engine.buildProperties.baseHref = _options.dir;
+
+        // Start a new build
+        await zephyr_engine.start_new_build();
+
+        // Upload assets and finish the build
+        await zephyr_engine.upload_assets({
+          assetsMap: getAssetsMap(bundle),
+          buildStats: await zeBuildDashData(zephyr_engine),
+        });
+
+        await zephyr_engine.build_finished();
+      } catch (error) {
+        logFn('error', ZephyrError.format(error));
+      }
     },
   };
 }

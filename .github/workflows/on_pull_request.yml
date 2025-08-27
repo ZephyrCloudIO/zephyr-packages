@@ -4,17 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: on the master branch
+        description: on the main branch
         required: true
-        default: 'master'
+        default: 'main'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    outputs:
+      has-cache-ubuntu: ${{ matrix.os == 'ubuntu-latest' && steps.check-cache.outputs.has-files == 'true' }}
+      has-cache-windows: ${{ matrix.os == 'windows-latest' && steps.check-cache.outputs.has-files == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,9 +29,39 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
-      - name: run build-all
-        run: pnpm build-all --exclude="examples/**" && exit 0
+          main-branch-name: main
+      - name: run build affected
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+        run: pnpm nx affected -t build --skipRemoteCache
+      - name: Set ZEPHYR_CACHE
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "ZEPHYR_CACHE=$USERPROFILE\\.zephyr" >> $GITHUB_ENV
+          else
+            echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
+          fi
+      - name: Check if cache has files
+        id: check-cache
+        shell: bash
+        run: |
+          if [ -d "${{ env.ZEPHYR_CACHE }}" ] && [ "$(ls -A "${{ env.ZEPHYR_CACHE }}" 2>/dev/null)" ]; then
+            echo "has-files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-files=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Upload built libs and cache
+        if: steps.check-cache.outputs.has-files == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephyr-cache-${{ matrix.os }}
+          path: ${{ env.ZEPHYR_CACHE }}
+          retention-days: 7
+          include-hidden-files: true
 
   lint:
     runs-on: ubuntu-latest
@@ -37,16 +73,15 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: main
       - name: run lint
-        run: pnpm dlx nx affected -t lint
+        run: pnpm nx affected -t lint
 
   test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    environment: development
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,11 +92,45 @@ jobs:
           os: ${{ matrix.os }}
       - uses: nrwl/nx-set-shas@v4
         with:
-          main-branch-name: master
+          main-branch-name: main
       - name: run test
         env:
           ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API }}
-          ZE_API_GATEWAY: ${{ vars.ZE_API_GATEWAY }}
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm dlx nx affected -t test
+        run: pnpm nx affected -t test
+
+  e2e-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    name: End-to-end test of examples
+    needs: build
+    if: needs.build.outputs.has-cache-ubuntu == 'true' || needs.build.outputs.has-cache-windows == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          os: ${{ matrix.os }}
+      - uses: nrwl/nx-set-shas@v4
+        with:
+          main-branch-name: main
+      - name: Set ZEPHYR_CACHE
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "ZEPHYR_CACHE=$USERPROFILE\\.zephyr" >> $GITHUB_ENV
+          else
+            echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
+          fi
+      - name: Download zephyr cache
+        uses: actions/download-artifact@v4
+        with:
+          name: zephyr-cache-${{ matrix.os }}
+          path: ${{ env.ZEPHYR_CACHE }}
+      - name: Run e2e examples test
+        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests

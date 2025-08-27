@@ -3,15 +3,19 @@ on:
   release:
     types: [prereleased]
 
+permissions:
+  id-token: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Build packages
-        run: pnpm dlx nx run-many -t build --projects="libs/*"
+        run: pnpm build
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true

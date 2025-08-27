@@ -8,14 +8,9 @@ import {
   black,
   bold,
   dim,
-  redBright,
 } from './picocolor';
-import { is_debug_enabled } from './debug-enabled';
-import { err } from './error-formatted-message';
-import type { Errors } from './error-codes-messages';
 
 //TODO: this should be traced and logged into new relic
-//TODO: print different colors to it + Capitalize maybe?
 const name = ' ZEPHYR ';
 
 export const dimmedName = dim(name);
@@ -28,32 +23,39 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
-function print_error_with_docs<K extends keyof typeof Errors>(
-  errMsg?: K,
-  ...args: unknown[]
-) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  errMsg
-    ? console.log(`${brightRedBgName} ${err(errMsg)} ${args} \n`)
-    : console.log(brightRedBgName, redBright('Unknown error'), args);
-}
+const createLogger = () => {
+  return {
+    app: debug('zephyr:app'),
+    auth: debug('zephyr:auth'),
+    config: debug('zephyr:config'),
+    git: debug('zephyr:git'),
+    http: debug('zephyr:http'),
+    init: debug('zephyr:init'),
+    mf: debug('zephyr:mf'),
+    misc: debug('zephyr:misc'),
+    package: debug('zephyr:package'),
+    remotes: debug('zephyr:remotes'),
+    snapshot: debug('zephyr:snapshot'),
+    upload: debug('zephyr:upload'),
+  };
+};
 
-export const ze_log = debug('zephyr:log');
+/**
+ * Debug contexts:
+ *
+ * - Ze_log.app: Application config information
+ * - Ze_log.auth: Authentication and token management
+ * - Ze_log.config: Authentication and token management
+ * - Ze_log.git: Git configuration and provider
+ * - Ze_log.http: http requests
+ * - Ze_log.init: Initialization and setup operations
+ * - Ze_log.mf: Module Federation config
+ * - Ze_log.misc: Miscellaneous
+ * - Ze_log.package: Package.json parsing
+ * - Ze_log.remotes: Remote dependency resolution
+ * - Ze_log.snapshot: Snapshot publish
+ * - Ze_log.upload: Asset and build stats upload
+ */
+export const ze_log = createLogger();
 // If debug mode is not enabled just print whatever console output is
 // If debug mode is enabled print the error from our end
-/**
- * `ze_error` is used widely to debug our local build and deployment. You can turn on
- * debug mode or having it work normally to attached documentation with our error codes in
- * [errors](./error-types.ts). We have added unknown class to the error object. If this is
- * an error we haven't defined yet, you will need to do
- *
- * @deprecated
- * @example
- *   ```ts
- *   ze_error('ERR_UNKNOWN', `Error creating dist folder: ${(error as Error).message}`);
- *   ```
- *   to specify this is an undefined error at the front.
- */
-export const ze_error = is_debug_enabled
-  ? debug('zephyr:error')
-  : (print_error_with_docs as typeof print_error_with_docs);

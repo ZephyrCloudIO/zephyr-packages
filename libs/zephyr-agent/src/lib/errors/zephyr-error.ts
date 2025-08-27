@@ -13,13 +13,14 @@ import {
 import {
   isZeErrorEqual,
   ZeErrorCategories,
-  ZeErrorCode,
+  type ZeErrorCode,
   type ZeErrorCodes,
   type ZeErrorKeys,
   ZeErrors,
-  ZeErrorType,
+  type ZeErrorType,
 } from './codes';
-import { FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
+import { type FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
+import { ze_log } from '../logging';
 
 /** Options to construct {@linkcode ZephyrError}. */
 export type ZephyrErrorOpts<T extends ZeErrorType> = {
@@ -62,8 +63,8 @@ export class ZephyrError<
    * `ZephyrError` for the provided type.
    */
   constructor(type: T, opts?: ZephyrErrorOpts<T>) {
+    // Unwraps ERR_UNKNOWN if cause is known
     if (ZephyrError.is(opts?.cause)) {
-      // Unwraps ERR_UNKNOWN if cause is known
       if (isZeErrorEqual(type, ZeErrors.ERR_UNKNOWN)) {
         return opts.cause as ZephyrError<K>;
       }
@@ -205,8 +206,9 @@ Or join our ${blue('Discord')} server at ${cyanBright(discordUrl)}
 function write_error_file(zeError: ZephyrError<ZeErrorKeys>) {
   try {
     const tempPath = path.join(os.tmpdir(), `ze${Math.round(Math.random() * 10e9)}.json`);
-
-    fs.writeFileSync(tempPath, JSON.stringify(format_error(zeError)), 'utf8');
+    const errorString = JSON.stringify(format_error(zeError));
+    ze_log.misc(errorString);
+    fs.writeFileSync(tempPath, errorString, 'utf8');
 
     return tempPath;
   } catch {

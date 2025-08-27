@@ -85,7 +85,7 @@ export interface ZeBuildAsset {
   path: string;
   extname: string;
   hash: string;
-  size: number;
+  size: number; // Size in bytes
   buffer: Buffer | string;
 }
 

@@ -1,6 +1,6 @@
-import { isModuleFederationPlugin } from './is-module-federation-plugin';
-import { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
 import { ze_log } from 'zephyr-agent';
+import type { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
+import { isModuleFederationPlugin } from './is-module-federation-plugin';
 
 export function iterateFederationConfig<Compiler, K = ModuleFederationPlugin>(
   config: XPackConfiguration<Compiler>,
@@ -17,7 +17,7 @@ export function iterateFederationConfig<Compiler, K = ModuleFederationPlugin>(
     }
     results.push(for_remote(plugin));
   }
-  ze_log('iterateFederationConfig.results', results);
+  ze_log.mf('iterateFederationConfig.results', results);
 
   return results;
 }

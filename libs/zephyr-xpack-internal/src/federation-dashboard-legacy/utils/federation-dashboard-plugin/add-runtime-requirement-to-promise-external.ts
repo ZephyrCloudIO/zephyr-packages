@@ -1,4 +1,4 @@
-import { XCompilation, XCompiler, XModule, XChunk } from '../../../xpack.types';
+import type { XCompilation, XCompiler, XModule, XChunk } from '../../../xpack.types';
 
 export class AddRuntimeRequirementToPromiseExternal {
   apply(compiler: XCompiler): void {

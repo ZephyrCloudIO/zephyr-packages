@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "DEBUG=zephyr:log,zephyr:error vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -27,5 +27,10 @@
     "typescript-eslint": "catalog:eslint",
     "vite": "catalog:vite6",
     "vite-plugin-zephyr": "workspace:*"
+  },
+  "zephyr:dependencies": {
+    "vite_remote": "workspace:*",
+    "vite_webpack": "workspace:*",
+    "vite_rspack": "workspace:*"
   }
 }

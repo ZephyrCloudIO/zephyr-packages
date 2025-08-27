@@ -1,5 +1,5 @@
-import { TopLevelPackage } from './validate-params';
-import { LocalPackageJson } from 'zephyr-edge-contract';
+import type { TopLevelPackage } from './validate-params';
+import type { LocalPackageJson } from 'zephyr-edge-contract';
 
 export interface ConvertedDependencies {
   dependencies?: LocalPackageJson[];

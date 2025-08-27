@@ -1,34 +1,44 @@
-import { ZeResolvedDependency } from 'zephyr-agent';
-import {
-  parseRemoteMap,
-  RemoteMapExtraction,
-  replaceProtocolAndHost,
-} from './remote_map_parser';
+import type { ZeResolvedDependency } from 'zephyr-agent';
+import { ze_log } from 'zephyr-agent';
+import { generateRuntimePlugin } from './runtime_plugin';
+import { parseRuntimePlugin } from './runtime_plugins_parser';
 
 export function load_resolved_remotes(
   resolved_remotes: ZeResolvedDependency[],
-  code: string,
-  id: string
-) {
-  const extractedRemotes = parseRemoteMap(code, id);
-  if (extractedRemotes === undefined) return;
+  code: string
+): string {
+  const startTime = Date.now();
 
-  const remotes: RemoteMapExtraction['remotesMap'] = [];
-  const { remotesMap, startIndex, endIndex } = extractedRemotes;
-  for (const remote of remotesMap) {
-    const { name, entry, type } = remote;
-    const remoteDetails = resolved_remotes.find(
-      (r) => r.name === name && r.version === entry
-    );
-    if (!remoteDetails) continue;
+  try {
+    const runtimePluginsExtraction = parseRuntimePlugin(code);
 
-    const updatedUrl = replaceProtocolAndHost(entry, remoteDetails.remote_entry_url);
-    remotes.push({
-      name,
-      type,
-      entryGlobalName: name,
-      entry: updatedUrl,
-    });
+    if (!runtimePluginsExtraction) return code;
+
+    const { pluginsArray, startIndex, endIndex } = runtimePluginsExtraction;
+
+    // Add Zephyr plugin to the array
+    // We need to add a Zephyr plugin to the end of the array
+    // The array is in format: [plugin1(), plugin2(), ...] or []
+    let updatedPluginsArray;
+    const runtimePlugin = generateRuntimePlugin(resolved_remotes);
+
+    if (pluginsArray === '[]') {
+      // Handle empty array case
+      updatedPluginsArray = `[${runtimePlugin}]`;
+    } else {
+      // Handle non-empty array case
+      updatedPluginsArray = pluginsArray.replace(/\]$/, `, ${runtimePlugin}]`);
+    }
+
+    // Replace the original array with the updated one
+    const updatedCode =
+      code.substring(0, startIndex) + updatedPluginsArray + code.substring(endIndex);
+
+    const endTime = Date.now();
+    ze_log.remotes(`load_resolved_remotes took ${endTime - startTime}ms`);
+    return updatedCode;
+  } catch (error) {
+    ze_log.remotes('Error in load_resolved_remotes:', error);
+    return code; // Return original code in case of error
   }
-  return code.slice(0, startIndex) + JSON.stringify(remotes) + code.slice(endIndex);
 }

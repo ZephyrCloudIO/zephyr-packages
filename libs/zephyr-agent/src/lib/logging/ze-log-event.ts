@@ -1,28 +1,22 @@
 import {
   PromiseLazyLoad,
-  stripAnsi,
   ZE_API_ENDPOINT,
+  stripAnsi,
   ze_api_gateway,
 } from 'zephyr-edge-contract';
+import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { ZeGitInfo } from '../build-context/ze-util-get-git-info';
-import { is_debug_enabled } from './debug-enabled';
-import { ze_log } from './index';
+import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
+import { getToken } from '../node-persist/token';
 import {
   brightBlueBgName,
   brightGreenBgName,
   brightRedBgName,
   brightYellowBgName,
 } from './debug';
-import { getToken } from '../node-persist/token';
-import { ZeHttpRequest } from '../http/ze-http-request';
 
 export const logFn = (level: string, msg: unknown): void => {
-  if (is_debug_enabled) {
-    ze_log(msg);
-    return;
-  }
-
   const formatted = formatLogMsg(msg, level);
 
   switch (level) {
@@ -91,7 +85,9 @@ export function logger(props: LoggerOptions): ZeLogger {
     // Prints logs to the console as fast as possible
     for (const log of logs) {
       if (!log.level && !log.action) {
-        throw new Error('log level and action type must be provided');
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Log level and action are required',
+        });
       }
 
       logFn(log.level, log.message);
@@ -99,33 +95,34 @@ export function logger(props: LoggerOptions): ZeLogger {
 
     // Then attempt to upload logs,
     loadLogData()
-      .then(([config, token]) =>
-        ZeHttpRequest.from(
-          url,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
+      .then(
+        ([config, token]) =>
+          void makeRequest<unknown>(
+            url,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
             },
-          },
-          JSON.stringify(
-            logs
-              // some logs are empty to give newline effect in terminal
-              .filter((l) => l.message.length && !l.ignore)
-              .map((log) => ({
-                application_uid: application_uid,
-                userId: config.user_uuid,
-                username: config.username,
-                zeBuildId: buildId,
-                logLevel: log.level,
-                actionType: log.action,
-                git: git,
-                message: stripAnsi(log.message.trim()),
-                createdAt: Date.now(),
-              }))
+            JSON.stringify(
+              logs
+                // some logs are empty to give newline effect in terminal
+                .filter((l) => l.message.length && !l.ignore)
+                .map((log) => ({
+                  application_uid: application_uid,
+                  userId: config.user_uuid,
+                  username: config.username,
+                  zeBuildId: buildId,
+                  logLevel: log.level,
+                  actionType: log.action,
+                  git: git,
+                  message: stripAnsi(log.message.trim()),
+                  createdAt: Date.now(),
+                }))
+            )
           )
-        ).unwrap()
       )
       // This is ok to fail silently
       .catch(() => void 0);

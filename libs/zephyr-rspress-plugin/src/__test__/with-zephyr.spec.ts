@@ -10,9 +10,13 @@ jest.mock('../zephyrRspressSSGPlugin', () => ({
 
 const rsbuildPluginMock = jest.fn(() => ({ name: 'mock-rsbuild-plugin' }));
 
-jest.mock('zephyr-rsbuild-plugin', () => ({
-  withZephyr: () => rsbuildPluginMock(),
-}));
+jest.mock(
+  'zephyr-rsbuild-plugin',
+  () => ({
+    withZephyr: () => rsbuildPluginMock(),
+  }),
+  { virtual: true }
+);
 
 describe('withZephyr', () => {
   beforeEach(() => {

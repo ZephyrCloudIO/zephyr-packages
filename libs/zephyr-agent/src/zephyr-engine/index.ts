@@ -124,6 +124,8 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+  // Store snapshot with env vars for use in buildStats
+  snapshot_with_envs: Snapshot | null = null;
 
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
@@ -451,7 +453,18 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 
     const upload_options: UploadOptions = {
       snapshot,
-      getDashData: () => buildStats,
+      getDashData: (engine) => {
+        // If buildStats has ze_envs already, use it
+        if (buildStats.ze_envs || buildStats.ze_envs_hash) {
+          return buildStats;
+        }
+        // Otherwise, add the env vars from the snapshot
+        return {
+          ...buildStats,
+          ze_envs: (engine || zephyr_engine).snapshot_with_envs?.ze_envs,
+          ze_envs_hash: ((engine || zephyr_engine).snapshot_with_envs as any)?.ze_envs_hash,
+        };
+      },
       assets: {
         assetsMap,
         missingAssets,

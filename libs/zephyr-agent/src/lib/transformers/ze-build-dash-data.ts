@@ -56,6 +56,8 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
+    ze_envs: zephyr_engine.snapshot_with_envs?.ze_envs,
+    ze_envs_hash: (zephyr_engine.snapshot_with_envs as any)?.ze_envs_hash,
   };
 }
 

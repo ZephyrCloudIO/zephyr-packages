@@ -8,6 +8,7 @@
 export function NxWelcome({ title }: { title: string }) {
   return (
     <>
+      Resolved the newness?
       <p>
         <strong>Remote ZE_PUBLIC_VAR: </strong>
         {process.env.ZE_PUBLIC_VAR}
@@ -16,6 +17,7 @@ export function NxWelcome({ title }: { title: string }) {
         <strong>Remote ZE_PUBLIC_SAME: </strong>
         {process.env.ZE_PUBLIC_SAME}
       </p>
+      <p>REMOTE: {process.env.ZE_PUBLIC_NOT_IN_ENV}</p>
       <style
         dangerouslySetInnerHTML={{
           __html: `

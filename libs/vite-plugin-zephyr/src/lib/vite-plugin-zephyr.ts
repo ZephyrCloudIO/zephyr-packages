@@ -1,11 +1,12 @@
 import { federation } from '@module-federation/vite';
-import type { Plugin, ResolvedConfig } from 'vite';
+import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import { rewriteEnvReadsToVirtualModule } from 'zephyr-environment-variables';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
@@ -34,10 +35,12 @@ function zephyrPlugin(): Plugin {
 
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
+  let cachedSpecifier: string | undefined;
 
   return {
     name: 'with-zephyr',
-    enforce: 'post',
+    // Run before Vite's env replacement so we can rewrite import.meta.env.ZE_PUBLIC_*
+    enforce: 'pre',
 
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
@@ -55,21 +58,60 @@ function zephyrPlugin(): Plugin {
         publicDir: config.publicDir,
       });
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
+
+      // Load .env files into process.env so ZE_PUBLIC_* are available to the agent
+      try {
+        const loaded = loadEnv(config.mode || 'production', root, '');
+        for (const [k, v] of Object.entries(loaded)) {
+          if (k.startsWith('ZE_PUBLIC_') && typeof v === 'string') {
+            if (!(k in process.env)) process.env[k] = v;
+          }
+        }
+      } catch (_e) {
+        // ignore if loadEnv unavailable
+      }
+    },
+    resolveId: async (source) => {
+      try {
+        const zephyr_engine = await zephyr_engine_defer;
+        if (!cachedSpecifier) {
+          const appName = zephyr_engine.applicationProperties.name;
+          cachedSpecifier = `env:vars:${appName}`;
+        }
+        if (source === cachedSpecifier) {
+          return { id: source, external: true } as any;
+        }
+      } catch (_e) {
+        // ignore
+      }
+      return null;
     },
     transform: async (code, id) => {
       try {
-        if (!id.includes('virtual:mf-REMOTE_ENTRY_ID') || !mfPlugin) return code;
+        // General env rewrite for app source files
+        if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
+          const zephyr_engine = await zephyr_engine_defer;
+          if (!cachedSpecifier) {
+            const appName = zephyr_engine.applicationProperties.name;
+            cachedSpecifier = `env:vars:${appName}`;
+          }
+          const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
+          if (res && typeof res.code === 'string' && res.code !== code) {
+            code = res.code;
+          }
+        }
 
-        const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-        if (!dependencyPairs) return code;
-
-        const zephyr_engine = await zephyr_engine_defer;
-        const resolved_remotes =
-          await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-
-        if (!resolved_remotes) return code;
-
-        return load_resolved_remotes(resolved_remotes, code);
+        // Module Federation remote resolution for Vite's virtual remote entry
+        if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
+          const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+          if (!dependencyPairs) return code;
+          const zephyr_engine = await zephyr_engine_defer;
+          const resolved_remotes =
+            await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+          if (!resolved_remotes) return code;
+          return load_resolved_remotes(resolved_remotes, code);
+        }
+        return code;
       } catch (error) {
         logFn('error', ZephyrError.format(error));
         // returns the original code in case of error

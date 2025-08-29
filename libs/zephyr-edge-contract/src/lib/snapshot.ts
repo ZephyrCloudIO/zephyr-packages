@@ -28,6 +28,7 @@ export interface Snapshot {
     email: string;
   };
   createdAt: number;
+  meta?: SnapshotMetadata;
   mfConfig?: {
     name: string;
     filename: string;
@@ -48,4 +49,6 @@ export interface SnapshotAsset {
 
 export interface SnapshotMetadata {
   pages_url?: string;
+  // platform identifier (e.g., 'mcp' for MCP servers, 'web' for web apps)
+  platform?: string;
 }

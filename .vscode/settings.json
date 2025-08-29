@@ -3,8 +3,6 @@
   "files.associations": {
     "wrangler.json": "jsonc"
   },
-  "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 300,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",

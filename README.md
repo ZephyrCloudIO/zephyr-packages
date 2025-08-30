@@ -8,6 +8,8 @@
   <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
+![Alt](https://repobeats.axiom.co/api/embed/17e3197a58591981edf92b19c4078320b6decc0a.svg 'Repobeats analytics image')
+
 ## Contributing
 
 We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING.md) for more information.

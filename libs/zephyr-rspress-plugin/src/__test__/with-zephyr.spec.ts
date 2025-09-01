@@ -1,15 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { withZephyr } from '../with-zephyr';
-import { zephyrRsbuildPlugin } from '../zephyrRsbuildPlugin';
-import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
+
+const rspressPluginMock = jest.fn((_: any) => ({ name: 'mock-ssg-plugin' }));
 
 jest.mock('../zephyrRspressSSGPlugin', () => ({
-  zephyrRspressSSGPlugin: jest.fn(() => ({ name: 'mock-ssg-plugin' })),
+  zephyrRspressSSGPlugin: (config: any) => rspressPluginMock(config),
 }));
 
-jest.mock('../zephyrRsbuildPlugin', () => ({
-  zephyrRsbuildPlugin: jest.fn(() => ({ name: 'mock-rsbuild-plugin' })),
-}));
+const rsbuildPluginMock = jest.fn(() => ({ name: 'mock-rsbuild-plugin' }));
+
+jest.mock(
+  'zephyr-rsbuild-plugin',
+  () => ({
+    withZephyr: () => rsbuildPluginMock(),
+  }),
+  { virtual: true }
+);
 
 describe('withZephyr', () => {
   beforeEach(() => {
@@ -31,7 +38,7 @@ describe('withZephyr', () => {
       false
     );
 
-    expect(zephyrRspressSSGPlugin).toHaveBeenCalledWith(config);
+    expect(rspressPluginMock).toHaveBeenCalledWith(config);
     expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
     expect(result).toEqual(config);
   });
@@ -51,7 +58,7 @@ describe('withZephyr', () => {
       false
     );
 
-    expect(zephyrRsbuildPlugin).toHaveBeenCalled();
+    expect(rsbuildPluginMock).toHaveBeenCalled();
     expect(config.builderPlugins).toContainEqual({ name: 'mock-rsbuild-plugin' });
     expect(addPlugin).not.toHaveBeenCalled();
     expect(result).toEqual(config);
@@ -71,13 +78,13 @@ describe('withZephyr', () => {
       false
     );
 
-    expect(zephyrRsbuildPlugin).toHaveBeenCalled();
+    expect(rsbuildPluginMock).toHaveBeenCalled();
     expect(result?.builderPlugins).toContainEqual({ name: 'mock-rsbuild-plugin' });
     expect(addPlugin).not.toHaveBeenCalled();
   });
 
   it('should handle errors thrown by zephyrRspressSSGPlugin', async () => {
-    (zephyrRspressSSGPlugin as jest.Mock).mockImplementation(() => {
+    rspressPluginMock.mockImplementation(() => {
       throw new Error('SSG plugin failed');
     });
 
@@ -104,7 +111,7 @@ describe('withZephyr', () => {
       false
     );
 
-    expect(zephyrRsbuildPlugin).toHaveBeenCalled();
+    expect(rsbuildPluginMock).toHaveBeenCalled();
     expect(result?.builderPlugins).toContainEqual({ name: 'mock-rsbuild-plugin' });
   });
 

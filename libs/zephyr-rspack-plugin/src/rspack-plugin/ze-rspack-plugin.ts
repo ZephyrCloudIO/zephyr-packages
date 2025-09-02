@@ -33,5 +33,46 @@ export class ZeRspackPlugin {
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
     logBuildSteps(this._options, compiler);
     setupZeDeploy(this._options, compiler);
+
+    // Ensure our loader runs on JS/TS to rewrite env reads to virtual module
+    const rules = (compiler as any).options?.module?.rules || [];
+    rules.unshift({
+      test: /\.[jt]sx?$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: require.resolve('./env-virtual-loader.js'),
+          options: {
+            specifier: `env:vars:${this._options.zephyr_engine.applicationProperties.name}`,
+          },
+        },
+      ],
+    });
+    (compiler as any).options.module = (compiler as any).options.module || {};
+    (compiler as any).options.module.rules = rules;
+
+    // Mark the virtual specifier external so it remains an unresolved ESM import
+    // that will be satisfied at serve-time via import maps.
+    const existingExternals = (compiler as any).options?.externals;
+    const PER_APP_SPECIFIER = `env:vars:${this._options.zephyr_engine.applicationProperties.name}`;
+    const virtualExternal = {
+      [PER_APP_SPECIFIER]: `module ${PER_APP_SPECIFIER}`,
+    } as any;
+    if (!existingExternals) {
+      (compiler as any).options.externals = virtualExternal as any;
+    } else if (Array.isArray(existingExternals)) {
+      (compiler as any).options.externals = [
+        ...existingExternals,
+        virtualExternal,
+      ] as any;
+    } else if (typeof existingExternals === 'object') {
+      (compiler as any).options.externals = {
+        ...(existingExternals as any),
+        ...virtualExternal,
+      } as any;
+    } // function externals not supported here; users can extend if needed
+
+    // Note: dev-time HTML/env injection removed. All env injection is handled
+    // at serve time by the worker via import maps.
   }
 }

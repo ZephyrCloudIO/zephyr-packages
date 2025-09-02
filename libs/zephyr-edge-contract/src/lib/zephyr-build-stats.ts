@@ -125,6 +125,10 @@ export interface ZephyrBuildStats {
   build_target?: string;
   /** @deprecated */
   type: unknown;
+  /** Public environment variables captured at build time (ZE_PUBLIC_* only) */
+  ze_envs?: Record<string, string>;
+  /** Content-addressable hash of ze_envs for deduplication */
+  ze_envs_hash?: string;
 }
 
 enum DeploymentIntegrationPlatform {

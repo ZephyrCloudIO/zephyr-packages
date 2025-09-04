@@ -6,7 +6,6 @@ export class AuthListener {
   private workerUrl: URL;
   constructor(workerUrl: URL) {
     workerUrl.pathname = '/sse';
-    // workerUrl.hostname = 'auth.zephyr.local';
     this.workerUrl = workerUrl;
   }
 

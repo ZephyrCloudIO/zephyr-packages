@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "examples/sample-rspack-application/src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/rspack:rspack",
@@ -49,6 +50,5 @@
         "jestConfig": "examples/sample-rspack-application/jest.config.ts"
       }
     }
-  },
-  "tags": []
+  }
 }

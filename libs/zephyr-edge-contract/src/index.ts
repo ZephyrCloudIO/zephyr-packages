@@ -4,7 +4,7 @@
 export type {
   PublishRequest,
   PublishTarget,
-  StageZeroPublishRequest
+  StageZeroPublishRequest,
 } from './lib/edge-api/publish-request';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 
@@ -27,7 +27,7 @@ export type {
   UploadableAsset,
   ZeBuildAsset,
   ZeBuildAssetsMap,
-  ZeUploadAssetsOptions
+  ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
 
 // api contract negotiation
@@ -36,7 +36,7 @@ export {
   ZE_API_ENDPOINT_HOST,
   ze_api_gateway,
   ZE_IS_PREVIEW,
-  ZEPHYR_API_ENDPOINT
+  ZEPHYR_API_ENDPOINT,
 } from './lib/api-contract-negotiation/get-api-contract';
 
 // promise proto methods
@@ -46,10 +46,9 @@ export {
   isSuccessTuple,
   PromiseLazyLoad,
   PromiseTuple,
-  PromiseWithResolvers
+  PromiseWithResolvers,
 } from './lib/promise';
 
 // string proto methods
 export { formatString, type FindTemplates } from './lib/string/string';
 export { stripAnsi } from './lib/string/strip-ansi';
-

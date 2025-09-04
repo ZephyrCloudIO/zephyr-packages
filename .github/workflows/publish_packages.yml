@@ -1,0 +1,129 @@
+name: Publish Packages
+
+on:
+  # Release workflows (automatic)
+  release:
+    types: [released, prereleased]
+
+  # Manual canary workflow
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'canary'
+        type: choice
+        options:
+          - canary
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Manual canary publishing
+  publish-canary:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_type == 'canary'
+    environment: canary-publishing # For security approval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Verify git status
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+            echo "⚠️ Working directory not clean"
+            git status
+            exit 1
+          fi
+
+      - name: Verify package integrity
+        run: pnpm audit --audit-level high
+
+      - name: Build packages
+        run: pnpm nx run-many -t build --projects="libs/*"
+
+      - name: Patch versions
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          pnpm ze-version-patch 0.0.0-canary-$TIMESTAMP
+
+      - name: Publish package on NPM 📦
+        run: pnpm ze-publish --tag=canary
+        env:
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Post Summary
+        continue-on-error: true
+        run: |
+          echo "## Canary version successfully published!" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
+            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
+            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
+            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
+          done
+
+  # Automatic prerelease publishing
+  publish-prerelease:
+    if: github.event_name == 'release' && github.event.action == 'prereleased'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Verify git status
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+            echo "⚠️ Working directory not clean"
+            git status
+            exit 1
+          fi
+
+      - name: Verify package integrity
+        run: pnpm audit --audit-level high
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Publish package on NPM 📦
+        run: pnpm ze-publish --tag=next
+        env:
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Post Summary
+        continue-on-error: true
+        run: |
+          echo "## Pre-release version successfully published!" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Published with tag: \`next\`" >> $GITHUB_STEP_SUMMARY
+
+  # Automatic release tag promotion
+  promote-release:
+    if: github.event_name == 'release' && github.event.action == 'released'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Verify git status
+        run: |
+          if [[ $(git status --porcelain) ]]; then
+            echo "⚠️ Working directory not clean"
+            git status
+            exit 1
+          fi
+
+      - name: Release libraries (promote tags from next to latest)
+        run: pnpm nx run-many -t release --projects="libs/*"
+
+      - name: Post Summary
+        continue-on-error: true
+        run: |
+          echo "## Release version successfully promoted!" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Promoted packages from \`next\` to \`latest\` tag" >> $GITHUB_STEP_SUMMARY

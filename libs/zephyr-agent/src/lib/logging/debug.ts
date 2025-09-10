@@ -23,6 +23,8 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
+export const ze_error = debug('zephyr:error');
+export const ze_debug = debug('zephyr:debug');
 const createLogger = () => {
   return {
     app: debug('zephyr:app'),
@@ -37,6 +39,8 @@ const createLogger = () => {
     remotes: debug('zephyr:remotes'),
     snapshot: debug('zephyr:snapshot'),
     upload: debug('zephyr:upload'),
+    debug: debug('zephyr:debug'),
+    error: debug('zephyr:error'),
   };
 };
 

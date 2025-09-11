@@ -1,6 +1,6 @@
 {
   "name": "create-zephyr-apps",
-  "version": "0.0.57",
+  "version": "0.0.58",
   "description": "A CLI tool to create web applications using Zephyr.",
   "keywords": [
     "zephyr",

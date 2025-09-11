@@ -64,7 +64,7 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
 
     const promise = resolve_remote_dependency({ application_uid, version });
 
-    await expect(promise).rejects.toThrowError(ZephyrError);
+    await expect(promise).rejects.toThrow(ZephyrError);
     expect(axiosMock.get).toHaveBeenCalled();
   });
 
@@ -77,7 +77,7 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
 
     const promise = resolve_remote_dependency({ application_uid, version });
 
-    await expect(promise).rejects.toThrowError(ZephyrError);
+    await expect(promise).rejects.toThrow(ZephyrError);
     expect(axiosMock.get).toHaveBeenCalled();
   });
 

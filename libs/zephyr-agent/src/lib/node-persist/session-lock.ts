@@ -76,8 +76,7 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
   try {
     // The timeout to the whole login process makes sense to keep the lock for the same amount of time
     return lockSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS });
-  } catch (ex: unknown) {
-    const error = ex as { code: string };
+  } catch (error: any) {
     if (error.code === 'ELOCKED') {
       return null;
     }

@@ -33,7 +33,7 @@
     "test": "nx test zephyr-agent"
   },
   "dependencies": {
-    "axios": "^1.9.0",
+    "axios": "^1.12.0",
     "axios-retry": "^4.5.0",
     "cloudflare": "^3.4.0",
     "debug": "^4.3.4",

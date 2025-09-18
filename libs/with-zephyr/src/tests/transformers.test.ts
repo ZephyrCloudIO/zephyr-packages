@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import generate from '@babel/generator';
 import { parse } from '@babel/parser';
 import { beforeEach, describe, expect, it } from '@rstest/core';
@@ -115,9 +116,7 @@ describe('Zephyr Codemod Transformers', () => {
       const result = generate(ast).code;
 
       expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /plugins:\s*\[\s*react\(\),\s*withZephyr\(\)\s*\]/
-      );
+      expect(result).toMatch(/plugins:\s*\[\s*react\(\),\s*withZephyr\(\)\s*\]/);
     });
   });
 
@@ -136,9 +135,7 @@ describe('Zephyr Codemod Transformers', () => {
       const result = generate(ast).code;
 
       expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /plugins:\s*\[\s*angular\(\),\s*withZephyr\(\)\s*\]/
-      );
+      expect(result).toMatch(/plugins:\s*\[\s*angular\(\),\s*withZephyr\(\)\s*\]/);
     });
   });
 
@@ -276,8 +273,7 @@ describe('Zephyr Codemod Transformers', () => {
       const result = generate(ast).code;
 
       // Should not duplicate the plugin function or call
-      const pluginOccurrences = (result.match(/zephyrRSbuildPlugin/g) || [])
-        .length;
+      const pluginOccurrences = (result.match(/zephyrRSbuildPlugin/g) || []).length;
       expect(pluginOccurrences).toBe(2); // Function name and call (function already exists)
     });
   });
@@ -305,9 +301,7 @@ describe('Zephyr Codemod Transformers', () => {
 
       const result = fs.readFileSync(configPath, 'utf8');
       expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /withModuleFederation\(config\),\s*withZephyr\(\),/
-      );
+      expect(result).toMatch(/withModuleFederation\(config\),\s*withZephyr\(\),/);
     });
 
     it('should handle Vite config with complex setup', () => {

@@ -174,10 +174,7 @@ export function addToComposePlugins(ast: BabelNode): void {
         const lastArg = args[args.length - 1];
 
         // If last argument is a function, insert before it
-        if (
-          t.isArrowFunctionExpression(lastArg) ||
-          t.isFunctionExpression(lastArg)
-        ) {
+        if (t.isArrowFunctionExpression(lastArg) || t.isFunctionExpression(lastArg)) {
           args.splice(-1, 0, t.callExpression(t.identifier('withZephyr'), []));
         } else {
           args.push(t.callExpression(t.identifier('withZephyr'), []));
@@ -195,9 +192,7 @@ export function addToPluginsArray(ast: BabelNode): void {
         t.isIdentifier(path.node.key, { name: 'plugins' }) &&
         t.isArrayExpression(path.node.value)
       ) {
-        path.node.value.elements.push(
-          t.callExpression(t.identifier('withZephyr'), [])
-        );
+        path.node.value.elements.push(t.callExpression(t.identifier('withZephyr'), []));
       }
     },
   });
@@ -220,7 +215,7 @@ export function addToVitePluginsInFunction(ast: BabelNode): void {
         const arrowFunc = path.node.arguments[0];
 
         // Handle both parenthesized and direct object expression
-        let objExpr: any = null;
+        let objExpr: t.ObjectExpression | null = null;
         if (
           t.isParenthesizedExpression(arrowFunc.body) &&
           t.isObjectExpression(arrowFunc.body.expression)
@@ -238,9 +233,7 @@ export function addToVitePluginsInFunction(ast: BabelNode): void {
               t.isIdentifier(prop.key, { name: 'plugins' }) &&
               t.isArrayExpression(prop.value)
             ) {
-              prop.value.elements.push(
-                t.callExpression(t.identifier('withZephyr'), [])
-              );
+              prop.value.elements.push(t.callExpression(t.identifier('withZephyr'), []));
               break;
             }
           }
@@ -262,10 +255,7 @@ export function addToRollupFunction(ast: BabelNode): void {
         const pushStatement = t.expressionStatement(
           t.callExpression(
             t.memberExpression(
-              t.memberExpression(
-                t.identifier('config'),
-                t.identifier('plugins')
-              ),
+              t.memberExpression(t.identifier('config'), t.identifier('plugins')),
               t.identifier('push')
             ),
             [t.callExpression(t.identifier('withZephyr'), [])]
@@ -304,10 +294,7 @@ export function addToRSPressPlugins(ast: BabelNode): void {
 }
 
 /** Add to Parcel reporters (JSON config) */
-export function addToParcelReporters(
-  filePath: string,
-  pluginName: string
-): void {
+export function addToParcelReporters(filePath: string, pluginName: string): void {
   const content = fs.readFileSync(filePath, 'utf8');
   const config = JSON.parse(content);
 
@@ -381,13 +368,14 @@ export function addToRollupArrayConfig(ast: BabelNode): void {
 }
 
 /** Skip transformation if already wrapped */
-export function skipAlreadyWrapped(ast: BabelNode): void {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function skipAlreadyWrapped(_ast: BabelNode): void {
   // This transformer does nothing - it's used to skip already wrapped configs
 }
 
 /**
- * Wrap exported function for Re.Pack configuration Pattern: export default
- * config => export default withZephyr()(config)
+ * Wrap exported function for Re.Pack configuration Pattern: export default config =>
+ * export default withZephyr()(config)
  */
 export function wrapExportedFunction(ast: BabelNode): void {
   traverse(ast, {
@@ -404,10 +392,7 @@ export function wrapExportedFunction(ast: BabelNode): void {
           const init = binding.path.node.init;
 
           // Check if it's a function (arrow or regular)
-          if (
-            t.isArrowFunctionExpression(init) ||
-            t.isFunctionExpression(init)
-          ) {
+          if (t.isArrowFunctionExpression(init) || t.isFunctionExpression(init)) {
             // Replace: export default config
             // With: export default withZephyr()(config)
             const newExpression = t.callExpression(
@@ -453,12 +438,7 @@ export function addZephyrRSbuildPlugin(ast: BabelNode): void {
   if (!hasWithZephyrImport) {
     // Add withZephyr import
     const importDeclaration = t.importDeclaration(
-      [
-        t.importSpecifier(
-          t.identifier('withZephyr'),
-          t.identifier('withZephyr')
-        ),
-      ],
+      [t.importSpecifier(t.identifier('withZephyr'), t.identifier('withZephyr'))],
       t.stringLiteral('zephyr-rspack-plugin')
     );
 
@@ -521,10 +501,7 @@ export function addZephyrRSbuildPlugin(ast: BabelNode): void {
                               t.identifier('zephyrConfig'),
                               t.awaitExpression(
                                 t.callExpression(
-                                  t.callExpression(
-                                    t.identifier('withZephyr'),
-                                    []
-                                  ),
+                                  t.callExpression(t.identifier('withZephyr'), []),
                                   [t.identifier('config')]
                                 )
                               )
@@ -550,10 +527,10 @@ export function addZephyrRSbuildPlugin(ast: BabelNode): void {
       ),
     ]);
 
-    // Add type annotation
-    const functionWithType = t.tsTypeAnnotation(
-      t.tsTypeReference(t.identifier('RsbuildPlugin'), null)
-    );
+    // Add type annotation (currently unused but may be needed for future type handling)
+    // const functionWithType = t.tsTypeAnnotation(
+    //   t.tsTypeReference(t.identifier('RsbuildPlugin'), null)
+    // );
 
     traverse(ast, {
       Program(path) {

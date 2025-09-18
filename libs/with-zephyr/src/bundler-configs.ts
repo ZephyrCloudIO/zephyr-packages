@@ -64,12 +64,7 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
 
   // Vite configurations
   vite: {
-    files: [
-      'vite.config.js',
-      'vite.config.ts',
-      'vite.config.mjs',
-      'vite.config.mts',
-    ],
+    files: ['vite.config.js', 'vite.config.ts', 'vite.config.mjs', 'vite.config.mts'],
     plugin: 'vite-plugin-zephyr',
     importName: 'withZephyr',
     patterns: [

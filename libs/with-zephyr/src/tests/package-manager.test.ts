@@ -1,11 +1,9 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import {
-  detectPackageManager,
-  isPackageInstalled,
-} from '../package-manager.js';
+import { detectPackageManager, isPackageInstalled } from '../package-manager.js';
 
 describe('Package Manager Utils', () => {
   let tempDir: string;
@@ -267,9 +265,7 @@ describe('Package Manager Utils', () => {
       fs.writeFileSync('packages/app1/package.json', '{"name": "app1"}');
 
       process.chdir('packages/app1');
-      expect(detectPackageManager(path.join(tempDir, 'packages/app1'))).toBe(
-        'pnpm'
-      );
+      expect(detectPackageManager(path.join(tempDir, 'packages/app1'))).toBe('pnpm');
     });
 
     it('should find package.json in workspace structure', () => {
@@ -300,17 +296,11 @@ describe('Package Manager Utils', () => {
 
       // Should find both local and root dependencies
       expect(
-        isPackageInstalled(
-          'frontend-only',
-          path.join(tempDir, 'packages/frontend')
-        )
+        isPackageInstalled('frontend-only', path.join(tempDir, 'packages/frontend'))
       ).toBe(true);
       expect(isPackageInstalled('shared-dependency', tempDir)).toBe(true);
       expect(
-        isPackageInstalled(
-          'non-existent',
-          path.join(tempDir, 'packages/frontend')
-        )
+        isPackageInstalled('non-existent', path.join(tempDir, 'packages/frontend'))
       ).toBe(false);
     });
   });

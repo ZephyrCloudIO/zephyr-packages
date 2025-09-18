@@ -4,9 +4,7 @@ import path from 'path';
 import type { PackageManager } from './types.js';
 
 /** Detect the package manager being used in the project */
-export function detectPackageManager(
-  directory: string = process.cwd()
-): PackageManager {
+export function detectPackageManager(directory: string = process.cwd()): PackageManager {
   // Priority order for lock file detection
   const lockFiles: Record<string, PackageManager> = {
     'pnpm-lock.yaml': 'pnpm',
@@ -31,9 +29,7 @@ export function detectPackageManager(
     const packageJsonPath = path.join(currentDir, 'package.json');
     if (fs.existsSync(packageJsonPath)) {
       try {
-        const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, 'utf8')
-        );
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
         if (packageJson.packageManager) {
           const packageManager = packageJson.packageManager.toLowerCase();
           if (packageManager.includes('pnpm')) return 'pnpm';
@@ -41,7 +37,7 @@ export function detectPackageManager(
           if (packageManager.includes('bun')) return 'bun';
           if (packageManager.includes('npm')) return 'npm';
         }
-      } catch (error) {
+      } catch {
         // Continue if package.json is invalid
       }
     }
@@ -61,20 +57,18 @@ export function detectPackageManager(
     for (const rootDir of possibleMonorepoRoots) {
       if (
         fs.existsSync(path.join(rootDir, 'pnpm-workspace.yaml')) ||
-        (fs.existsSync(path.join(rootDir, 'pnpm-lock.yaml')) &&
-          rootDir === directory)
+        (fs.existsSync(path.join(rootDir, 'pnpm-lock.yaml')) && rootDir === directory)
       ) {
         return 'pnpm';
       }
       if (
         fs.existsSync(path.join(rootDir, 'lerna.json')) ||
-        (fs.existsSync(path.join(rootDir, 'yarn.lock')) &&
-          rootDir === directory)
+        (fs.existsSync(path.join(rootDir, 'yarn.lock')) && rootDir === directory)
       ) {
         return 'yarn';
       }
     }
-  } catch (error) {
+  } catch {
     // Continue with fallback
   }
 
@@ -105,7 +99,7 @@ export function isPackageInstalled(
       (packageJson.dependencies && packageJson.dependencies[packageName]) ||
       (packageJson.devDependencies && packageJson.devDependencies[packageName])
     );
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -115,7 +109,7 @@ export function installPackage(
   directory: string,
   packageName: string,
   packageManager: PackageManager,
-  isDev: boolean = true
+  isDev = true
 ): boolean {
   const commands: Record<PackageManager, string> = {
     npm: `npm install ${isDev ? '--save-dev' : '--save'} ${packageName}`,
@@ -126,6 +120,7 @@ export function installPackage(
 
   const command = commands[packageManager];
   if (!command) {
+    // eslint-disable-next-line no-restricted-syntax
     throw new Error(`Unsupported package manager: ${packageManager}`);
   }
 
@@ -139,9 +134,7 @@ export function installPackage(
     });
     return true;
   } catch (error) {
-    console.error(
-      `Failed to install ${packageName}: ${(error as Error).message}`
-    );
+    console.error(`Failed to install ${packageName}: ${(error as Error).message}`);
     return false;
   }
 }
@@ -154,7 +147,7 @@ export function getLatestVersion(packageName: string): string {
       timeout: 10000,
     });
     return result.trim();
-  } catch (error) {
+  } catch {
     console.warn(`Could not fetch latest version for ${packageName}`);
     return 'latest';
   }
@@ -164,8 +157,8 @@ export function getLatestVersion(packageName: string): string {
 export function addToPackageJson(
   directory: string,
   packageName: string,
-  version: string = 'latest',
-  isDev: boolean = true
+  version = 'latest',
+  isDev = true
 ): boolean {
   const packageJsonPath = path.join(directory, 'package.json');
   if (!fs.existsSync(packageJsonPath)) {
@@ -182,10 +175,7 @@ export function addToPackageJson(
 
     packageJson[depType][packageName] = `^${version}`;
 
-    fs.writeFileSync(
-      packageJsonPath,
-      JSON.stringify(packageJson, null, 2) + '\n'
-    );
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
     return true;
   } catch (error) {
     console.error(`Failed to update package.json: ${(error as Error).message}`);

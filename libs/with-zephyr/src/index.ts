@@ -101,7 +101,7 @@ function isRepackConfig(filePath: string): boolean {
     ];
 
     return repackIndicators.some((indicator) => indicator.test(content));
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -298,7 +298,6 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
   // Process configuration files
   let processed = 0;
-  let skipped = 0;
   let errors = 0;
 
   for (const { filePath, bundlerName, config } of packagesToProcess) {
@@ -337,7 +336,7 @@ program
     '-b, --bundlers <bundlers...>',
     'Only process specific bundlers (webpack, vite, rollup, etc.)'
   )
-  .action((directory: string, options: any) => {
+  .action((directory: string, options: CodemodOptions) => {
     runCodemod(directory, options);
   });
 

@@ -9,7 +9,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/dist"],
       "options": {
-        "command": "rslib build",
+        "command": "pnpm build",
         "cwd": "libs/with-zephyr"
       }
     },
@@ -33,27 +33,6 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "command": "rstest run",
-        "cwd": "libs/with-zephyr"
-      }
-    },
-    "test:watch": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "rstest --watch",
-        "cwd": "libs/with-zephyr"
-      }
-    },
-    "test:coverage": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "rstest --coverage",
-        "cwd": "libs/with-zephyr"
-      }
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "tsc --noEmit",
         "cwd": "libs/with-zephyr"
       }
     },

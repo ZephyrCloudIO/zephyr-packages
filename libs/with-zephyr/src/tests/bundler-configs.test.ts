@@ -24,7 +24,7 @@ describe('Bundler Configurations', () => {
     });
 
     it('should have valid configuration structure for each bundler', () => {
-      Object.entries(BUNDLER_CONFIGS).forEach(([bundlerName, config]) => {
+      Object.entries(BUNDLER_CONFIGS).forEach(([, config]) => {
         expect(config).toHaveProperty('files');
         expect(config).toHaveProperty('plugin');
         expect(config).toHaveProperty('importName');
@@ -105,9 +105,7 @@ describe('Bundler Configurations', () => {
         (p) => p.type === 'export-wrapped-call'
       );
       expect(wrappedPattern).toBeDefined();
-      expect(wrappedPattern?.matcher.test('export default withZephyr()(')).toBe(
-        true
-      );
+      expect(wrappedPattern?.matcher.test('export default withZephyr()(')).toBe(true);
     });
   });
 
@@ -146,9 +144,7 @@ describe('Bundler Configurations', () => {
     });
 
     it('should handle array export pattern', () => {
-      const arrayPattern = rollupConfig.patterns.find(
-        (p) => p.type === 'export-array'
-      );
+      const arrayPattern = rollupConfig.patterns.find((p) => p.type === 'export-array');
       expect(arrayPattern).toBeDefined();
       expect(arrayPattern?.matcher.test('export default [')).toBe(true);
     });
@@ -231,9 +227,7 @@ describe('Bundler Configurations', () => {
       );
       expect(conditionalPattern).toBeDefined();
       expect(
-        conditionalPattern?.matcher.test(
-          'export default USE_ZEPHYR ? withZephyr()('
-        )
+        conditionalPattern?.matcher.test('export default USE_ZEPHYR ? withZephyr()(')
       ).toBe(true);
     });
 
@@ -242,9 +236,7 @@ describe('Bundler Configurations', () => {
         (p) => p.type === 'export-function-variable'
       );
       expect(functionPattern).toBeDefined();
-      expect(functionPattern?.matcher.test('export default config;')).toBe(
-        true
-      );
+      expect(functionPattern?.matcher.test('export default config;')).toBe(true);
     });
   });
 
@@ -306,9 +298,7 @@ describe('Bundler Configurations', () => {
     });
 
     it('should handle defineConfig pattern', () => {
-      const definePattern = rslibConfig.patterns.find(
-        (p) => p.type === 'define-config'
-      );
+      const definePattern = rslibConfig.patterns.find((p) => p.type === 'define-config');
       expect(definePattern).toBeDefined();
       expect(definePattern?.matcher.test('defineConfig({')).toBe(true);
     });
@@ -336,9 +326,7 @@ describe('Bundler Configurations', () => {
       expect(definePattern?.matcher.test('defineConfig  ({')).toBe(true);
 
       expect(functionPattern?.matcher.test('defineConfig(() => ({')).toBe(true);
-      expect(functionPattern?.matcher.test('defineConfig( () => ({')).toBe(
-        true
-      );
+      expect(functionPattern?.matcher.test('defineConfig( () => ({')).toBe(true);
     });
 
     it('should correctly match plugins array pattern', () => {

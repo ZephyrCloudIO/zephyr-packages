@@ -1,29 +1,10 @@
-import { createHash } from 'node:crypto';
 import {
-  ZEPHYR_MANIFEST_FILENAME,
   ZEPHYR_MANIFEST_VERSION,
-  type ZeBuildAsset,
   type ZephyrDependency,
   type ZephyrManifest,
 } from 'zephyr-edge-contract';
 import type { ZeResolvedDependency } from '../../zephyr-engine/resolve_remote_dependency';
 import { ze_log } from '../logging';
-
-/**
- * Creates a zephyr-manifest.json file with resolved dependencies
- *
- * @param dependencies - The resolved dependencies from the build
- * @returns The manifest content and the asset object
- */
-export function createZephyrManifest(dependencies: ZeResolvedDependency[]): {
-  content: string;
-  asset: ZeBuildAsset;
-} {
-  const content = createManifestContent(dependencies);
-  const asset = createManifestAsset(content);
-
-  return { content, asset };
-}
 
 export function createManifestContent(dependencies: ZeResolvedDependency[]): string {
   ze_log.manifest('Creating manifest with dependencies:', dependencies?.length || 0);
@@ -51,22 +32,4 @@ export function createManifestContent(dependencies: ZeResolvedDependency[]): str
 
   // Convert to JSON string
   return JSON.stringify(manifest);
-}
-
-export function createManifestAsset(content: string): ZeBuildAsset {
-  const contentBuffer = Buffer.from(content);
-
-  // Calculate hash for the content
-  const hash = createHash('sha256')
-    .update(content + ZEPHYR_MANIFEST_FILENAME)
-    .digest('hex');
-
-  // Return the asset object
-  return {
-    path: ZEPHYR_MANIFEST_FILENAME,
-    extname: '.json',
-    hash,
-    size: contentBuffer.length,
-    buffer: contentBuffer,
-  };
 }

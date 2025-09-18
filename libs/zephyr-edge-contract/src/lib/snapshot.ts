@@ -39,8 +39,6 @@ export interface Snapshot {
     remotes?: Record<string, string>;
     shared?: Record<string, unknown>;
   };
-  // resolved remote dependencies from Zephyr API
-  zephyrManifest?: { filename: string; remotes?: string[] };
   // list of files, where key is file path
   assets: Record<string, SnapshotAsset>;
 }

@@ -3,6 +3,17 @@
   "version": "0.0.59",
   "description": "A codemod to automatically add withZephyr plugin to bundler configurations",
   "main": "dist/index.mjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/with-zephyr"
+  },
+  "type": "module",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "license": "Apache-2.0",
   "bin": {
     "with-zephyr": "dist/index.mjs"
   },
@@ -53,7 +64,5 @@
     "rolldown",
     "rspress"
   ],
-  "author": "Zephyr Team",
-  "license": "Apache-2.0",
   "packageManager": "pnpm@10.13.1"
 }

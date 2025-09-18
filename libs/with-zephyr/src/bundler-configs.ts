@@ -213,7 +213,31 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   // RSBuild configurations
   rsbuild: {
     files: ['rsbuild.config.js', 'rsbuild.config.ts', 'rsbuild.config.mjs'],
-    plugin: 'zephyr-rspack-plugin',
+    plugin: 'zephyr-rsbuild-plugin',
+    importName: 'withZephyr',
+    patterns: [
+      {
+        type: 'zephyr-rsbuild-plugin-exists',
+        matcher: /zephyrRSbuildPlugin/,
+        transform: 'skipAlreadyWrapped',
+      },
+      {
+        type: 'define-config',
+        matcher: /defineConfig\s*\(\s*\{/,
+        transform: 'addZephyrRSbuildPlugin',
+      },
+      {
+        type: 'plugins-array',
+        matcher: /plugins\s*:\s*\[/,
+        transform: 'addZephyrRSbuildPlugin',
+      },
+    ],
+  },
+
+  // RSLib configurations (built on RSBuild)
+  rslib: {
+    files: ['rslib.config.js', 'rslib.config.ts', 'rslib.config.mjs'],
+    plugin: 'zephyr-rsbuild-plugin',
     importName: 'withZephyr',
     patterns: [
       {

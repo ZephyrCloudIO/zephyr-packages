@@ -23,10 +23,10 @@ Get your project Zephyr-ready in seconds:
 curl -fsSL https://with.zephyr-cloud.io | node
 
 # Alternative methods:
-# npx with-zephyr
-# pnpm dlx with-zephyr
-# yarn dlx with-zephyr
-# bunx with-zephyr
+npx with-zephyr
+pnpm dlx with-zephyr
+yarn dlx with-zephyr
+bunx with-zephyr
 
 # 2. That's it! Your bundler is now configured for Zephyr deployments
 # Visit https://app.zephyr-cloud.io to deploy your micro-frontends
@@ -34,7 +34,7 @@ curl -fsSL https://with.zephyr-cloud.io | node
 
 ## Supported Bundlers
 
-This codemod supports **10+ bundlers** with their respective Zephyr plugins:
+This codemod supports **11+ bundlers** with their respective Zephyr plugins:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
@@ -44,7 +44,8 @@ This codemod supports **10+ bundlers** with their respective Zephyr plugins:
 - **Modern.js** ([`zephyr-modernjs-plugin`](https://www.npmjs.com/package/zephyr-modernjs-plugin))
 - **RSPress** ([`zephyr-rspress-plugin`](https://www.npmjs.com/package/zephyr-rspress-plugin))
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
-- **RSBuild** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
+- **RSBuild** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
+- **RSLib** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
 - **Re.Pack** (React Native) ([`zephyr-repack-plugin`](https://www.npmjs.com/package/zephyr-repack-plugin))
 
 ## Installation
@@ -242,6 +243,8 @@ The codemod automatically detects and processes these configuration files:
 - `rolldown.config.js/ts/mjs`
 - `modern.config.js/ts/mjs`
 - `rspress.config.js/ts/mjs`
+- `rsbuild.config.js/ts/mjs`
+- `rslib.config.js/ts/mjs`
 - `.parcelrc/.parcelrc.json`
 
 ## Integration Patterns

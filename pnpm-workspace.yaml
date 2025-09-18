@@ -3,9 +3,7 @@ packages:
   - examples/**
   - e2e/**
   - '!**/dist/**'
-installOptions:
-  preferOnline: false
-  frozenLockfile: true
+
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - '@parcel/watcher'
@@ -22,8 +20,8 @@ onlyBuiltDependencies:
   - workerd
 catalogs:
   modernjs:
-    '@modern-js/app-tools': ^2.66.0
-    '@modern-js/tsconfig': ^2.66.0
+    '@modern-js/app-tools': ^2.68.14
+    '@modern-js/tsconfig': ^2.68.14
   parcel:
     'parcel': ^2.14.1
     '@parcel/config-default': ^2.14.1
@@ -52,11 +50,11 @@ catalogs:
     'ts-jest': ^29.2.6
   swc:
     swc-loader: ^0.2.6
-    '@swc/helpers': ^0.5.15
-    '@swc-node/register': ^1.10.10
+    '@swc/helpers': ^0.5.17
+    '@swc-node/register': ^1.11.1
     '@swc/cli': ^0.7.8
-    '@swc/core': ^1.11.11
-    '@swc/jest': 0.2.37
+    '@swc/core': ^1.13.5
+    '@swc/jest': 0.2.39
   webpack5:
     webpack: ^5.98.0
     '@svgr/webpack': ^8.1.0

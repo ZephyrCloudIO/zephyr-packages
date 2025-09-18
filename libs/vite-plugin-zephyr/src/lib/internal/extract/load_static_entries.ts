@@ -1,6 +1,6 @@
 import type { OutputAsset } from 'rollup';
 import { relative, resolve } from 'node:path';
-import { readdirSync, readFile, statSync } from 'node:fs';
+import { readdirSync, readFile, statSync, existsSync } from 'node:fs';
 import { normalizePath } from 'vite';
 import { promisify } from 'node:util';
 
@@ -16,6 +16,11 @@ export async function load_static_entries(
   const publicAssets: OutputAsset[] = [];
 
   const root_dist_dir = resolve(root, props.outDir);
+
+  // Check if the dist directory exists before trying to read it
+  if (!existsSync(root_dist_dir)) {
+    return publicAssets;
+  }
 
   const loadDir = async (destDir: string) => {
     for (const file of readdirSync(destDir)) {

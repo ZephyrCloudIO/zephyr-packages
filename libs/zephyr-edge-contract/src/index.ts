@@ -31,7 +31,11 @@ export type {
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
-export { ZEPHYR_MANIFEST_VERSION, type ZephyrManifest } from './lib/zephyr-manifest';
+export {
+  ZEPHYR_MANIFEST_FILENAME,
+  ZEPHYR_MANIFEST_VERSION,
+  type ZephyrManifest,
+} from './lib/zephyr-manifest';
 
 // api contract negotiation
 export {

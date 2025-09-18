@@ -1,4 +1,5 @@
 import { createManifestContent, ze_log, type ZephyrEngine } from 'zephyr-agent';
+import { ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
 
 interface EmitManifestOptions {
   pluginName: string;
@@ -62,7 +63,7 @@ export function setupManifestEmission<
         );
 
         // Emit the asset
-        compilation.emitAsset('zephyr-manifest.json', new RawSource(manifestContent));
+        compilation.emitAsset(ZEPHYR_MANIFEST_FILENAME, new RawSource(manifestContent));
       }
     );
   });

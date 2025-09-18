@@ -1,8 +1,7 @@
 import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type {
-  ZephyrDependency} from 'zephyr-edge-contract';
+import type { ZephyrDependency } from 'zephyr-edge-contract';
 import {
   type Snapshot,
   ZEPHYR_MANIFEST_FILENAME,

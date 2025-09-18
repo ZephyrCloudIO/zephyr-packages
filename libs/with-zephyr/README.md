@@ -20,10 +20,13 @@ Get your project Zephyr-ready in seconds:
 
 ```bash
 # 1. Run the codemod to add Zephyr plugins to your bundler configs
-npx with-zephyr --install
-# or: pnpm dlx with-zephyr --install
-# or: yarn dlx with-zephyr --install
-# or: bunx with-zephyr --install
+curl -fsSL https://with.zephyr-cloud.io | node
+
+# Alternative methods:
+# npx with-zephyr
+# pnpm dlx with-zephyr
+# yarn dlx with-zephyr
+# bunx with-zephyr
 
 # 2. That's it! Your bundler is now configured for Zephyr deployments
 # Visit https://app.zephyr-cloud.io to deploy your micro-frontends
@@ -46,20 +49,17 @@ This codemod supports **10+ bundlers** with their respective Zephyr plugins:
 
 ## Installation
 
-**No installation required!** Use directly with your package manager:
+**No installation required!** Use directly with one command:
 
 ```bash
-# npm
-npx with-zephyr
+# Recommended: Use the hosted version
+curl -fsSL https://with.zephyr-cloud.io | node
 
-# pnpm
-pnpm dlx with-zephyr
-
-# yarn
-yarn dlx with-zephyr
-
-# bun
-bunx with-zephyr
+# Alternative: Use with your package manager
+npx with-zephyr       # npm
+pnpm dlx with-zephyr  # pnpm
+yarn dlx with-zephyr  # yarn
+bunx with-zephyr      # bun
 ```
 
 > **💡 Tip:** Using `npx`/`dlx`/`bunx` ensures you always get the latest version without cluttering your global packages.
@@ -71,6 +71,10 @@ bunx with-zephyr
 Run the codemod in your project directory:
 
 ```bash
+# Recommended: Use the hosted version
+curl -fsSL https://with.zephyr-cloud.io | node
+
+# Alternative: Use with package managers
 npx with-zephyr
 ```
 
@@ -134,14 +138,9 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
 const { withZephyr } = require('zephyr-webpack-plugin');
 const { composePlugins, withNx, withReact } = require('@nx/webpack');
 
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withZephyr(),
-  (config) => {
-    return config;
-  }
-);
+module.exports = composePlugins(withNx(), withReact(), withZephyr(), (config) => {
+  return config;
+});
 ```
 
 #### Vite Configuration

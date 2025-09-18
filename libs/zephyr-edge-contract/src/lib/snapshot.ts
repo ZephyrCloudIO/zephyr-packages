@@ -5,6 +5,10 @@ export interface Snapshot {
   application_uid: string;
   // package.json version + descriptor `.(user-(ci|ui?)-user_build_counter)`
   version: string;
+  // original and immutable version url
+  version_url?: string;
+  // publishment timestamp (for tags and envs)
+  published_at?: number;
   // version.app.repo.org
   snapshot_id: string;
   // default domain url

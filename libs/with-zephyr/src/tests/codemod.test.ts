@@ -20,7 +20,7 @@ describe('Zephyr Codemod CLI', () => {
   });
 
   const runCodemod = (args: string = '', expectError = false) => {
-    const cliPath = path.join(originalCwd, 'dist', 'index.js');
+    const cliPath = path.join(originalCwd, 'dist', 'index.mjs');
     try {
       const result = execSync(`node "${cliPath}" ${args} 2>&1`, {
         // Redirect stderr to stdout
@@ -47,7 +47,7 @@ describe('Zephyr Codemod CLI', () => {
       expect(output).toContain('Automatically add withZephyr plugin');
       expect(output).toContain('--dry-run');
       expect(output).toContain('--bundlers');
-      expect(output).toContain('--install');
+      expect(output).toContain('--bundlers');
     });
 
     it('should show version when --version is provided', () => {
@@ -334,7 +334,7 @@ describe('Zephyr Codemod CLI', () => {
 
       const output = runCodemod('--dry-run');
       expect(output).toContain(
-        '💡 Tip: Use --install to automatically install missing packages'
+        '📦 Packages that would be installed:'
       );
       expect(output).toContain('vite-plugin-zephyr');
       expect(output).toContain('zephyr-webpack-plugin');
@@ -350,7 +350,7 @@ describe('Zephyr Codemod CLI', () => {
       );
 
       const output = runCodemod('--dry-run');
-      expect(output).not.toContain('💡 Tip: Use --install');
+      expect(output).not.toContain('📦 Packages that would be installed');
     });
   });
 

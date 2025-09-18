@@ -112,28 +112,21 @@ function checkHasZephyr(filePath: string, config: BundlerConfig): boolean {
     if (config.plugin === 'parcel-reporter-zephyr') {
       const content = fs.readFileSync(filePath, 'utf8');
       const parcelConfig = JSON.parse(content);
-      return (
-        parcelConfig.reporters && parcelConfig.reporters.includes(config.plugin)
-      );
+      return parcelConfig.reporters && parcelConfig.reporters.includes(config.plugin);
     } else {
       const ast = parseFile(filePath);
       return hasZephyrPlugin(ast);
     }
   } catch (error) {
     console.warn(
-      chalk.yellow(
-        `Warning: Could not parse ${filePath}: ${(error as Error).message}`
-      )
+      chalk.yellow(`Warning: Could not parse ${filePath}: ${(error as Error).message}`)
     );
     return false;
   }
 }
 
 /** Determine the appropriate transformation pattern for a config file */
-function detectPattern(
-  filePath: string,
-  config: BundlerConfig
-): BundlerPattern | null {
+function detectPattern(filePath: string, config: BundlerConfig): BundlerPattern | null {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
 
@@ -147,9 +140,7 @@ function detectPattern(
     return config.patterns[0] || null;
   } catch (error) {
     console.warn(
-      chalk.yellow(
-        `Warning: Could not read ${filePath}: ${(error as Error).message}`
-      )
+      chalk.yellow(`Warning: Could not read ${filePath}: ${(error as Error).message}`)
     );
     return config.patterns[0] || null;
   }
@@ -181,9 +172,7 @@ function transformConfigFile(
     const pattern = detectPattern(filePath, config);
 
     if (!pattern) {
-      console.warn(
-        chalk.yellow(`Warning: No suitable pattern found for ${filePath}`)
-      );
+      console.warn(chalk.yellow(`Warning: No suitable pattern found for ${filePath}`));
       return false;
     }
 
@@ -204,9 +193,7 @@ function transformConfigFile(
     if (transformer) {
       transformer(ast);
     } else {
-      console.warn(
-        chalk.yellow(`Warning: Unknown transformer ${pattern.transform}`)
-      );
+      console.warn(chalk.yellow(`Warning: Unknown transformer ${pattern.transform}`));
       return false;
     }
 
@@ -228,9 +215,7 @@ function transformConfigFile(
 function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const { dryRun = false, bundlers = null, installPackages = true } = options;
 
-  console.log(
-    chalk.bold(`🚀 Zephyr Codemod - Adding withZephyr to bundler configs`)
-  );
+  console.log(chalk.bold(`🚀 Zephyr Codemod - Adding withZephyr to bundler configs`));
   console.log(chalk.gray(`Directory: ${path.resolve(directory)}`));
 
   if (dryRun) {
@@ -269,9 +254,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     // Check if already has withZephyr
     if (checkHasZephyr(filePath, config)) {
-      console.log(
-        chalk.gray(`⏭️  Skipping ${filePath} (already has withZephyr)`)
-      );
+      console.log(chalk.gray(`⏭️  Skipping ${filePath} (already has withZephyr)`));
       continue;
     }
 
@@ -279,9 +262,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     packagesToProcess.push({ filePath, bundlerName, config });
   }
 
-  console.log(
-    chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`)
-  );
+  console.log(chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`));
 
   // Check and install missing packages
   if (installPackages && requiredPlugins.size > 0 && !dryRun) {
@@ -294,12 +275,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       if (!isPackageInstalled(pluginName, directory)) {
         console.log(chalk.yellow(`Installing ${pluginName}...`));
 
-        const success = installPackage(
-          directory,
-          pluginName,
-          packageManager,
-          true
-        );
+        const success = installPackage(directory, pluginName, packageManager, true);
         if (success) {
           console.log(chalk.green(`✓ Installed ${pluginName}`));
         } else {

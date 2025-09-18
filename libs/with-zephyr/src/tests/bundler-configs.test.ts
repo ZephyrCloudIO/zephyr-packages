@@ -15,6 +15,7 @@ describe('Bundler Configurations', () => {
         'parcel',
         'repack',
         'rsbuild',
+        'rslib',
       ];
 
       expectedBundlers.forEach((bundler) => {
@@ -258,8 +259,8 @@ describe('Bundler Configurations', () => {
       ]);
     });
 
-    it('should use rspack plugin under the hood', () => {
-      expect(rsbuildConfig.plugin).toBe('zephyr-rspack-plugin');
+    it('should use rsbuild plugin', () => {
+      expect(rsbuildConfig.plugin).toBe('zephyr-rsbuild-plugin');
       expect(rsbuildConfig.importName).toBe('withZephyr');
     });
 
@@ -273,6 +274,39 @@ describe('Bundler Configurations', () => {
 
     it('should handle defineConfig pattern', () => {
       const definePattern = rsbuildConfig.patterns.find(
+        (p) => p.type === 'define-config'
+      );
+      expect(definePattern).toBeDefined();
+      expect(definePattern?.matcher.test('defineConfig({')).toBe(true);
+    });
+  });
+
+  describe('RSLib Configuration', () => {
+    const rslibConfig = BUNDLER_CONFIGS.rslib;
+
+    it('should support correct file extensions', () => {
+      expect(rslibConfig.files).toEqual([
+        'rslib.config.js',
+        'rslib.config.ts',
+        'rslib.config.mjs',
+      ]);
+    });
+
+    it('should use rsbuild plugin', () => {
+      expect(rslibConfig.plugin).toBe('zephyr-rsbuild-plugin');
+      expect(rslibConfig.importName).toBe('withZephyr');
+    });
+
+    it('should detect existing zephyr plugin', () => {
+      const existingPattern = rslibConfig.patterns.find(
+        (p) => p.type === 'zephyr-rsbuild-plugin-exists'
+      );
+      expect(existingPattern).toBeDefined();
+      expect(existingPattern?.matcher.test('zephyrRSbuildPlugin')).toBe(true);
+    });
+
+    it('should handle defineConfig pattern', () => {
+      const definePattern = rslibConfig.patterns.find(
         (p) => p.type === 'define-config'
       );
       expect(definePattern).toBeDefined();

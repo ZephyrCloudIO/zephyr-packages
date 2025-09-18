@@ -1,6 +1,8 @@
 import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type {
+  ZephyrDependency} from 'zephyr-edge-contract';
 import {
   type Snapshot,
   ZEPHYR_MANIFEST_FILENAME,
@@ -29,7 +31,10 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
-import { createManifestContent } from '../lib/transformers/ze-create-manifest';
+import {
+  convertResolvedDependencies,
+  createManifestContent,
+} from '../lib/transformers/ze-create-manifest';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
@@ -127,6 +132,10 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+
+  get zephyr_dependencies(): Record<string, ZephyrDependency> {
+    return convertResolvedDependencies(this.federated_dependencies ?? []);
+  }
 
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {

@@ -1,7 +1,6 @@
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
-import { ze_log } from '../logging';
 
 export async function zeBuildDashData(
   zephyr_engine: ZephyrEngine
@@ -31,29 +30,7 @@ export async function zeBuildDashData(
 
   const to_raw = _recordToRawDependency;
 
-  // Build zephyrDependencies from federated_dependencies
-  const zephyrDependencies: ZephyrBuildStats['zephyrDependencies'] = {};
-  if (zephyr_engine.federated_dependencies) {
-    ze_log.buildstats('Building zephyrDependencies for dashboard');
-    ze_log.buildstats(
-      `Processing ${zephyr_engine.federated_dependencies.length} federated dependencies`
-    );
-
-    for (const dep of zephyr_engine.federated_dependencies) {
-      zephyrDependencies[dep.name] = {
-        application_uid: dep.application_uid,
-        remote_entry_url: dep.remote_entry_url,
-        default_url: dep.default_url,
-        name: dep.name,
-        library_type: dep.library_type || 'module',
-      };
-      ze_log.buildstats(`Added ${dep.name} to dashboard data`);
-    }
-  } else {
-    ze_log.buildstats('No federated dependencies to add to dashboard data');
-  }
-
-  const result = {
+  return {
     id: application_uid,
     name,
     environment: '',
@@ -68,7 +45,6 @@ export async function zeBuildDashData(
     devDependencies: to_raw(zephyr_engine.npmProperties.devDependencies),
     optionalDependencies: to_raw(zephyr_engine.npmProperties.optionalDependencies),
     peerDependencies: to_raw(zephyr_engine.npmProperties.peerDependencies),
-
     overrides: [],
     consumes: [],
     modules: [],
@@ -79,14 +55,8 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
-    zephyrDependencies,
+    zephyrDependencies: zephyr_engine.zephyr_dependencies,
   };
-
-  ze_log.buildstats(
-    `Dashboard data created with ${Object.keys(zephyrDependencies).length} zephyrDependencies`
-  );
-
-  return result;
 }
 
 interface RawDependency {

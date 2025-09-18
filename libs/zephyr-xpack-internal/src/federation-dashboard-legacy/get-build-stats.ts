@@ -68,20 +68,6 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const { name, filename } = mfConfig ? (extractFederatedConfig(mfConfig) ?? {}) : {};
   const remotes = ze_engine.federated_dependencies;
 
-  // Build zephyrDependencies from federated_dependencies
-  const zephyrDependencies: Record<string, any> = {};
-  if (remotes) {
-    for (const dep of remotes) {
-      zephyrDependencies[dep.name] = {
-        application_uid: dep.application_uid,
-        remote_entry_url: dep.remote_entry_url,
-        default_url: dep.default_url,
-        name: dep.name,
-        library_type: dep.library_type || 'module',
-      };
-    }
-  }
-
   const data_overrides = {
     id: application_uid,
     name: name,
@@ -96,7 +82,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context: { isCI },
     build_target,
-    zephyrDependencies,
+    zephyrDependencies: ze_engine.zephyr_dependencies,
   };
 
   // todo: extend data

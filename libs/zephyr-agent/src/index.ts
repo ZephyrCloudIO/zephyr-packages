@@ -33,7 +33,10 @@ export {
   type ZeBuildAssetsMap,
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
-export { createManifestContent } from './lib/transformers/ze-create-manifest';
+export {
+  convertResolvedDependencies,
+  createManifestContent,
+} from './lib/transformers/ze-create-manifest';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';

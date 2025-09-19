@@ -1,12 +1,12 @@
-import { withModuleFederation } from '@nx/module-federation/webpack';
-import { withReact } from '@nx/react';
-import { composePlugins, withNx } from '@nx/webpack';
-import { withZephyr } from 'zephyr-webpack-plugin';
+const { withModuleFederation } = require('@nx/module-federation/rspack');
+const { composePlugins, withNx, withReact } = require('@nx/rspack');
+const { withZephyr } = require('zephyr-rspack-plugin');
 
 const mfConfig = {
-  name: 'team-green',
+  name: 'team-blue',
   exposes: {
-    './GreenRecos': './src/app/team-green-recos.tsx',
+    './BlueBasket': './src/app/team-blue-basket.tsx',
+    './BlueBuy': './src/app/team-blue-buy.tsx',
   },
   // Workaround necessary until Nx upgrade.
   // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109

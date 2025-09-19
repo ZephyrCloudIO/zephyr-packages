@@ -90,6 +90,15 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Patch versions with next tag
+        run: |
+          # Get current version from root package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          NEXT_VERSION="${CURRENT_VERSION}-next-${TIMESTAMP}"
+          echo "Setting version to: $NEXT_VERSION"
+          pnpm ze-version-patch $NEXT_VERSION
+
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
         env:
@@ -98,16 +107,32 @@ jobs:
       - name: Post Summary
         continue-on-error: true
         run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          NEXT_VERSION="${CURRENT_VERSION}-next-${TIMESTAMP}"
           echo "## Pre-release version successfully published!" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Published with tag: \`next\`" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`$NEXT_VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
+            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
+            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
+            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
+          done
 
-  # Automatic release tag promotion
-  promote-release:
+  # Automatic release publishing
+  publish-release:
     if: github.event_name == 'release' && github.event.action == 'released'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Fetch the specific git tag that triggered this release
+          ref: ${{ github.event.release.tag_name }}
       - uses: ./.github/actions/setup
 
       - name: Verify git status
@@ -118,12 +143,32 @@ jobs:
             exit 1
           fi
 
-      - name: Release libraries (promote tags from next to latest)
-        run: pnpm nx run-many -t release --projects="libs/*"
+      - name: Verify package integrity
+        run: pnpm audit --audit-level high
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Publish packages to latest tag
+        run: pnpm ze-publish --tag=latest
+        env:
+          NPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true
         run: |
-          echo "## Release version successfully promoted!" > $GITHUB_STEP_SUMMARY
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "## Release version successfully published!" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Promoted packages from \`next\` to \`latest\` tag" >> $GITHUB_STEP_SUMMARY
+          echo "Published packages with \`latest\` tag" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`$CURRENT_VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "Git tag: \`${{ github.event.release.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
+            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
+            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
+            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
+          done

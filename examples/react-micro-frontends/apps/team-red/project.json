@@ -6,16 +6,16 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nx/rspack:rspack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "compiler": "swc",
+        "target": "web",
         "outputPath": "dist/examples/react-micro-frontends/apps/team-red",
         "index": "examples/react-micro-frontends/apps/team-red/src/index.html",
         "baseHref": "/",
         "main": "examples/react-micro-frontends/apps/team-red/src/main.tsx",
-        "tsConfig": "examples/react-micro-frontends/apps/team-red/tsconfig.app.json",
+        "typeCheck": true,
         "assets": [
           {
             "glob": "**/*",
@@ -27,7 +27,7 @@
           "examples/react-micro-frontends/apps/team-red/src/styles.css"
         ],
         "scripts": [],
-        "webpackConfig": "examples/react-micro-frontends/apps/team-red/webpack.config.ts"
+        "rspackConfig": "examples/react-micro-frontends/apps/team-red/rspack.config.js"
       },
       "configurations": {
         "development": {
@@ -45,7 +45,7 @@
       }
     },
     "serve": {
-      "executor": "@nx/webpack:dev-server",
+      "executor": "@nx/rspack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "port": 4500,

@@ -1,5 +1,5 @@
-import type { ZephyrEngine } from '../../zephyr-engine';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 
 export async function zeBuildDashData(
@@ -45,7 +45,6 @@ export async function zeBuildDashData(
     devDependencies: to_raw(zephyr_engine.npmProperties.devDependencies),
     optionalDependencies: to_raw(zephyr_engine.npmProperties.optionalDependencies),
     peerDependencies: to_raw(zephyr_engine.npmProperties.peerDependencies),
-
     overrides: [],
     consumes: [],
     modules: [],
@@ -56,6 +55,7 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
+    zephyrDependencies: zephyr_engine.zephyr_dependencies,
   };
 }
 

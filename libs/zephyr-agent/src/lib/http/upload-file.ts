@@ -10,7 +10,7 @@ export interface UploadFileProps {
 
 export async function uploadFile(
   { hash, asset }: UploadFileProps,
-  { EDGE_URL, jwt }: ZeApplicationConfig
+  { EDGE_URL, jwt, replicationTarget }: ZeApplicationConfig
 ) {
   const type = 'file';
 
@@ -21,6 +21,10 @@ export async function uploadFile(
       'x-file-path': asset.path,
       can_write_jwt: jwt,
       'Content-Type': 'application/octet-stream',
+      // Include replication target for worker to use
+      ...(replicationTarget && {
+        'x-replication-target': JSON.stringify(replicationTarget),
+      }),
     },
   };
 

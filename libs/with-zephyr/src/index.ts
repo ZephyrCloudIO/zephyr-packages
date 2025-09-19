@@ -60,18 +60,24 @@ const TRANSFORMERS: TransformFunctions = {
   addZephyrRSbuildPlugin,
 };
 
+/** Normalize file path separators to forward slashes for consistent output */
+function normalizePathForOutput(filePath: string): string {
+  return filePath.replace(/\\/g, '/');
+}
+
 /** Find all bundler configuration files in the given directory */
 function findConfigFiles(directory: string): ConfigFile[] {
   const configFiles: ConfigFile[] = [];
 
   for (const [bundlerName, config] of Object.entries(BUNDLER_CONFIGS)) {
     for (const fileName of config.files) {
-      const pattern = path.join(directory, '**', fileName);
+      // Use forward slashes for glob pattern, even on Windows
+      const pattern = `${directory}/**/${fileName}`.replace(/\\/g, '/');
       const matches = glob.sync(pattern, { ignore: ['**/node_modules/**'] });
 
       for (const filePath of matches) {
         configFiles.push({
-          filePath,
+          filePath, // Keep original file path for file system operations
           bundlerName,
           config,
         });
@@ -119,7 +125,9 @@ function checkHasZephyr(filePath: string, config: BundlerConfig): boolean {
     }
   } catch (error) {
     console.warn(
-      chalk.yellow(`Warning: Could not parse ${filePath}: ${(error as Error).message}`)
+      chalk.yellow(
+        `Warning: Could not parse ${normalizePathForOutput(filePath)}: ${(error as Error).message}`
+      )
     );
     return false;
   }
@@ -140,7 +148,9 @@ function detectPattern(filePath: string, config: BundlerConfig): BundlerPattern 
     return config.patterns[0] || null;
   } catch (error) {
     console.warn(
-      chalk.yellow(`Warning: Could not read ${filePath}: ${(error as Error).message}`)
+      chalk.yellow(
+        `Warning: Could not read ${normalizePathForOutput(filePath)}: ${(error as Error).message}`
+      )
     );
     return config.patterns[0] || null;
   }
@@ -156,14 +166,18 @@ function transformConfigFile(
   const { dryRun = false } = options;
 
   try {
-    console.log(chalk.blue(`Processing ${bundlerName} config: ${filePath}`));
+    console.log(
+      chalk.blue(`Processing ${bundlerName} config: ${normalizePathForOutput(filePath)}`)
+    );
 
     // Special handling for Parcel JSON configs
     if (config.plugin === 'parcel-reporter-zephyr') {
       if (!dryRun) {
         addToParcelReporters(filePath, config.plugin);
       }
-      console.log(chalk.green(`✓ Added ${config.plugin} to ${filePath}`));
+      console.log(
+        chalk.green(`✓ Added ${config.plugin} to ${normalizePathForOutput(filePath)}`)
+      );
       return true;
     }
 
@@ -172,7 +186,11 @@ function transformConfigFile(
     const pattern = detectPattern(filePath, config);
 
     if (!pattern) {
-      console.warn(chalk.yellow(`Warning: No suitable pattern found for ${filePath}`));
+      console.warn(
+        chalk.yellow(
+          `Warning: No suitable pattern found for ${normalizePathForOutput(filePath)}`
+        )
+      );
       return false;
     }
 
@@ -201,11 +219,13 @@ function transformConfigFile(
       writeFile(filePath, ast);
     }
 
-    console.log(chalk.green(`✓ Added withZephyr to ${filePath}`));
+    console.log(chalk.green(`✓ Added withZephyr to ${normalizePathForOutput(filePath)}`));
     return true;
   } catch (error) {
     console.error(
-      chalk.red(`Error transforming ${filePath}: ${(error as Error).message}`)
+      chalk.red(
+        `Error transforming ${normalizePathForOutput(filePath)}: ${(error as Error).message}`
+      )
     );
     return false;
   }
@@ -254,7 +274,11 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     // Check if already has withZephyr
     if (checkHasZephyr(filePath, config)) {
-      console.log(chalk.gray(`⏭️  Skipping ${filePath} (already has withZephyr)`));
+      console.log(
+        chalk.gray(
+          `⏭️  Skipping ${normalizePathForOutput(filePath)} (already has withZephyr)`
+        )
+      );
       continue;
     }
 

@@ -1,20 +1,23 @@
 #!/usr/bin/env node
 
 /**
- * Patch Version Bump Script
+ * Version Bump Script
  *
- * This script automates the process of bumping patch versions across the monorepo:
+ * This script automates the process of bumping versions across the monorepo:
  *
  * 1. Checks if working directory is clean (exits if not)
  * 2. Gets current git branch and package version
  * 3. If on main/master branch, creates a new feature branch (chore/bump-version-X.X.X)
- * 4. Increments patch version in root package.json and all libs/`*`/package.json files
+ * 4. Increments version (major/minor/patch) in root package.json and all
+ *    libs/`*`/package.json files
  * 5. Stages all changes and creates a commit with conventional commit message
  * 6. Creates a git tag with the new version (vX.X.X)
  * 7. Pushes the branch and tag to origin
  * 8. If a new branch was created, opens a PR using gh CLI
  *
- * Usage: pnpm bump-patch OR node scripts/bump-patch-version.js
+ * Usage: pnpm bump-patch OR node scripts/bump-patch-version.js pnpm bump-minor OR node
+ * scripts/bump-patch-version.js minor pnpm bump-major OR node
+ * scripts/bump-patch-version.js major
  *
  * Requirements:
  *
@@ -54,10 +57,19 @@ function isWorkingDirectoryClean() {
   return status.length === 0;
 }
 
-/** Increments the patch version */
-function incrementPatchVersion(version) {
+/** Increments version based on bump type */
+function incrementVersion(version, bumpType = 'patch') {
   const [major, minor, patch] = version.split('.').map(Number);
-  return `${major}.${minor}.${patch + 1}`;
+
+  switch (bumpType) {
+    case 'major':
+      return `${major + 1}.0.0`;
+    case 'minor':
+      return `${major}.${minor + 1}.0`;
+    case 'patch':
+    default:
+      return `${major}.${minor}.${patch + 1}`;
+  }
 }
 
 /** Updates package.json version */
@@ -85,7 +97,14 @@ function getLibPackagePaths() {
 
 /** Main function */
 function main() {
-  console.log('🚀 Starting patch version bump...');
+  const bumpType = process.argv[2] || 'patch';
+
+  if (!['major', 'minor', 'patch'].includes(bumpType)) {
+    console.error('❌ Invalid bump type. Use: major, minor, or patch');
+    process.exit(1);
+  }
+
+  console.log(`🚀 Starting ${bumpType} version bump...`);
 
   // Check if working directory is clean
   if (!isWorkingDirectoryClean()) {
@@ -102,7 +121,7 @@ function main() {
   const rootPackagePath = path.join(__dirname, '..', 'package.json');
   const rootPackageJson = JSON.parse(fs.readFileSync(rootPackagePath, 'utf8'));
   const currentVersion = rootPackageJson.version;
-  const newVersion = incrementPatchVersion(currentVersion);
+  const newVersion = incrementVersion(currentVersion, bumpType);
 
   console.log(`📦 Version bump: ${currentVersion} → ${newVersion}`);
 
@@ -133,7 +152,7 @@ function main() {
   exec('git add .');
 
   // Commit changes
-  const commitMessage = `chore: bump version to ${newVersion}
+  const commitMessage = `chore: bump ${bumpType} version to ${newVersion}
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
@@ -154,9 +173,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
   // Create PR if we created a new branch
   if (shouldCreatePR) {
     console.log('🔀 Creating pull request...');
-    const prTitle = `chore: bump version to ${newVersion}`;
+    const prTitle = `chore: bump ${bumpType} version to ${newVersion}`;
     const prBody = `## Summary
-• Bump patch version from ${currentVersion} to ${newVersion}
+• Bump ${bumpType} version from ${currentVersion} to ${newVersion}
 • Update root package.json and all lib package.json files
 • Add version tag v${newVersion}
 
@@ -190,4 +209,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main, incrementPatchVersion };
+module.exports = { main, incrementVersion };

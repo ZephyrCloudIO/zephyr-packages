@@ -3,7 +3,9 @@
   "version": "0.0.59",
   "license": "Apache-2.0",
   "scripts": {
-    "bump-patch": "node scripts/bump-patch-version.js",
+    "bump-patch": "node scripts/bump-version.js patch",
+    "bump-minor": "node scripts/bump-version.js minor",
+    "bump-major": "node scripts/bump-version.js major",
     "ze-version-patch": "pnpm --filter \"./libs/**\" patch-version",
     "ze-publish": "pnpm --filter \"./libs/**\" publish --provenance --access public --no-git-checks",
     "build": "nx run-many -t build --projects=\"libs/*\"",

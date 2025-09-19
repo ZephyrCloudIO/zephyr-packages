@@ -21,7 +21,7 @@ describe('Zephyr Codemod CLI', () => {
   });
 
   const runCodemod = (args = '', expectError = false) => {
-    const cliPath = path.join(originalCwd, 'dist', 'index.mjs');
+    const cliPath = path.join(originalCwd, 'dist', 'index.js');
     try {
       const result = execSync(`node "${cliPath}" ${args} 2>&1`, {
         // Redirect stderr to stdout

@@ -2,7 +2,7 @@
   "name": "with-zephyr",
   "version": "0.0.59",
   "description": "A codemod to automatically add withZephyr plugin to bundler configurations",
-  "main": "dist/index.mjs",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
@@ -15,7 +15,7 @@
   },
   "license": "Apache-2.0",
   "bin": {
-    "with-zephyr": "dist/index.mjs"
+    "with-zephyr": "dist/index.js"
   },
   "files": [
     "dist"
@@ -23,7 +23,7 @@
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "start": "node dist/index.mjs",
+    "start": "node dist/index.js",
     "test": "rstest run",
     "test:watch": "rstest --watch",
     "test:coverage": "rstest --coverage",

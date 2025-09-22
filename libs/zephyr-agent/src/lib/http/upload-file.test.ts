@@ -6,6 +6,8 @@ import type { UploadableAsset } from 'zephyr-edge-contract';
 
 // Mock dependencies
 jest.mock('./http-request');
+jest.mock('../auth/login');
+jest.mock('../edge-requests/get-application-configuration');
 
 // Mock the ZeErrors and ZephyrError
 jest.mock('../errors', () => {
@@ -61,6 +63,10 @@ describe('uploadFile', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Mock isTokenStillValid to return true for tests
+    const { isTokenStillValid } = require('../auth/login');
+    jest.mocked(isTokenStillValid).mockReturnValue(true);
   });
 
   it('should upload a file successfully', async () => {

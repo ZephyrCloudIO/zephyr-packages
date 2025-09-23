@@ -1,11 +1,5 @@
 import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
-import {
-  buildAssetsMap,
-  create_minimal_build_stats,
-  resolveCatalogDependencies,
-  ze_log,
-  ZephyrEngine,
-} from 'zephyr-agent';
+import { buildAssetsMap, ze_log, ZephyrEngine } from 'zephyr-agent';
 import type {
   ApplicationConsumes,
   ZeBuildAsset,
@@ -15,6 +9,10 @@ import type {
 import { extractModulesFromExposes } from './internal/extract-modules-from-exposes';
 import { getPackageDependencies } from './internal/get-package-dependencies';
 import { load_static_entries } from './internal/load-static-entries';
+import {
+  createMinimalBuildStats,
+  resolveCatalogDependencies,
+} from './internal/metro-build-stats';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
 import type { OutputAsset } from './internal/types';
 import { extract_remotes_dependencies } from './internal/extract-mf-remotes';
@@ -75,7 +73,7 @@ export class ZephyrMetroPlugin {
 
     await this.zephyr_engine.upload_assets({
       assetsMap,
-      buildStats,
+      buildStats: buildStats as any,
       mfConfig: this.config.mfConfig,
     });
     await this.zephyr_engine.build_finished();
@@ -150,7 +148,7 @@ export class ZephyrMetroPlugin {
   }
 
   private async getBuildStats(bundleMaps: ZeBuildAsset[]) {
-    const minimal_build_stats = await create_minimal_build_stats(this.zephyr_engine);
+    const minimal_build_stats = await createMinimalBuildStats(this.zephyr_engine);
 
     const consumeMap = await this.getConsumeMap(bundleMaps);
 

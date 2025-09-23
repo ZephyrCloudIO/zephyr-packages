@@ -1,4 +1,5 @@
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { ZephyrError, ZeErrors } from 'zephyr-agent';
+import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export type MetroConfig = Record<string, unknown>;
@@ -27,7 +28,7 @@ export async function zephyrCommandWrapper(
       });
 
       if (!(global as any).__METRO_FEDERATION_CONFIG) {
-        throw new ZephyrError(ZeErrors.ERR_MISSING_METRO_FEDERATION_CONFIG);
+        throw new ZephyrError(ERR_MISSING_METRO_FEDERATION_CONFIG);
       }
 
       const zephyrMetroPlugin = new ZephyrMetroPlugin({

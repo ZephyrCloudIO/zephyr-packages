@@ -46,8 +46,17 @@ jobs:
 
       - name: Patch versions
         run: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          pnpm ze-version-patch 0.0.0-canary-$TIMESTAMP
+          echo "Fetching current canary tag for zephyr-agent..."
+
+          # Get the version behind the canary tag (e.g., 0.0.0-canary.42)
+          CURRENT_CANARY=$(npm dist-tag ls zephyr-agent 2>/dev/null \
+            | awk '/canary:/{print $2}')
+
+          # Extract numeric suffix or default to 0
+          HIGHEST_CANARY=$(echo "$CURRENT_CANARY" | grep -oE '[0-9]+$' || echo 0)
+          NEXT_CANARY=$((HIGHEST_CANARY + 1))
+
+          pnpm ze-version-patch "0.0.0-canary.$NEXT_CANARY"
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
@@ -90,6 +99,32 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Patch versions with next tag
+        run: |
+          # Get current version from root package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          echo "Fetching current next tag for zephyr-agent…"
+
+          # Fetch current "next" dist-tag
+          CURRENT_NEXT=$(npm dist-tag ls zephyr-agent 2>/dev/null | awk '/next:/{print $2}')
+
+          # Build a regex for the current prefix: e.g., 1.2.3 → 1\.2\.3-next.NUMBER
+          PREFIX_REGEX="^${CURRENT_VERSION//./\\.}-next\.([0-9]+)$"
+
+          if [[ $CURRENT_NEXT =~ $PREFIX_REGEX ]]; then
+            # Increment from existing number
+            NEXT_NUMBER=$((BASH_REMATCH[1] + 1))
+          else
+            # Start fresh if prefix differs or format invalid
+            NEXT_NUMBER=1
+            echo "Different prefix or invalid format. Starting fresh with 1."
+          fi
+
+          NEXT_VERSION="${CURRENT_VERSION}-next.${NEXT_NUMBER}"
+          echo "Setting version to: $NEXT_VERSION"
+          pnpm ze-version-patch "$NEXT_VERSION"
+
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
         env:
@@ -101,9 +136,18 @@ jobs:
           echo "## Pre-release version successfully published!" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Published with tag: \`next\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
+            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
+            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
+            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
+          done
 
-  # Automatic release tag promotion
-  promote-release:
+  # Automatic release publishing
+  publish-release:
     if: github.event_name == 'release' && github.event.action == 'released'
     runs-on: ubuntu-latest
     steps:
@@ -118,12 +162,32 @@ jobs:
             exit 1
           fi
 
-      - name: Release libraries (promote tags from next to latest)
-        run: pnpm nx run-many -t release --projects="libs/*"
+      - name: Verify package integrity
+        run: pnpm audit --audit-level high
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Publish packages to latest tag
+        run: pnpm ze-publish --tag=latest
+        env:
+          NPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true
         run: |
-          echo "## Release version successfully promoted!" > $GITHUB_STEP_SUMMARY
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "## Release version successfully published!" > $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Promoted packages from \`next\` to \`latest\` tag" >> $GITHUB_STEP_SUMMARY
+          echo "Published packages with \`latest\` tag" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`$CURRENT_VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "Git tag: \`${{ github.event.release.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
+            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
+            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
+            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
+            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
+          done

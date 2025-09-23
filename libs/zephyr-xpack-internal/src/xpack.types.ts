@@ -36,14 +36,23 @@ export interface XFederatedRemotesConfig {
    * actual output js.bundle and they want to put it in filename field)
    */
   bundle_name?: string;
+  /** Runtime plugins for Module Federation */
+  runtimePlugins?: string[];
 }
 
 export interface ModuleFederationPlugin {
   apply: (compiler: unknown) => void;
   /** For Webpack/Rspack */
   _options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
+  /** For Nx Module Federation plugin */
+  options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };
   /** Repack specific for now until Repack change how the config should be exposed */
   config?: XFederatedRemotesConfig;
+  /** NxModuleFederationPlugin */
+  configOverride?: Omit<
+    XFederatedRemotesConfig,
+    'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
+  >;
 }
 
 interface RemotesObject {

@@ -1,5 +1,6 @@
-import * as ReactDOM from 'react-dom/client';
 import { StrictMode } from 'react';
+import * as ReactDOM from 'react-dom/client';
+import '../styles.css';
 import TeamRedLayout from './team-red-layout';
 
 export function App() {

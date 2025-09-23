@@ -19,7 +19,7 @@ export type { ZeApplicationList } from './lib/ze-api/app-list';
 export type { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';
 export type { ConvertedGraph } from './lib/ze-api/converted-graph';
 export type { LocalPackageJson } from './lib/ze-api/local-package-json';
-export type { ZephyrBuildStats } from './lib/zephyr-build-stats';
+export type { ZephyrBuildStats, ZephyrDependency } from './lib/zephyr-build-stats';
 export type {
   Asset,
   SnapshotUploadRes,
@@ -29,6 +29,7 @@ export type {
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
+export { ZEPHYR_MANIFEST_VERSION, type ZephyrManifest } from './lib/zephyr-manifest';
 
 // api contract negotiation
 export {

@@ -48,10 +48,6 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  const mf_resolved_remotes = (zephyr_engine.federated_dependencies || [])
-    .filter((d) => !!d && typeof d.remote_entry_url === 'string')
-    .map((d) => ({ name: d.name, remote_entry_url: d.remote_entry_url }));
-
   return {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
@@ -87,7 +83,6 @@ export async function createSnapshot(
       },
       {} as Record<string, SnapshotAsset>
     ),
-    mf_resolved_remotes,
   };
 }
 

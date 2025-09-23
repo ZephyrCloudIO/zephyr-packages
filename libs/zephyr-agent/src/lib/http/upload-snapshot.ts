@@ -17,8 +17,11 @@ export async function uploadSnapshot({
 
   // Log what we're sending
   console.log('[upload-snapshot] Uploading snapshot with ze_envs:', body.ze_envs);
-  console.log('[upload-snapshot] Uploading snapshot with ze_envs_hash:', (body as any).ze_envs_hash);
-  
+  console.log(
+    '[upload-snapshot] Uploading snapshot with ze_envs_hash:',
+    (body as any).ze_envs_hash
+  );
+
   const json = JSON.stringify(body);
 
   const options: RequestInit = {

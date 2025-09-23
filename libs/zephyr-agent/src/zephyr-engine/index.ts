@@ -126,6 +126,10 @@ export class ZephyrEngine {
   version_url: string | null = null;
   // Store snapshot with env vars for use in buildStats
   snapshot_with_envs: Snapshot | null = null;
+  // Store env vars temporarily for API to use (not in snapshot)
+  ze_env_vars: Record<string, string> | null = null;
+  // Store env vars hash for API to use
+  ze_env_vars_hash: string | null = null;
 
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
@@ -458,11 +462,11 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
         if (buildStats.ze_envs || buildStats.ze_envs_hash) {
           return buildStats;
         }
-        // Otherwise, add the env vars from the snapshot
+        // Otherwise, add the env vars from the engine
         return {
           ...buildStats,
-          ze_envs: (engine || zephyr_engine).snapshot_with_envs?.ze_envs,
-          ze_envs_hash: ((engine || zephyr_engine).snapshot_with_envs as any)?.ze_envs_hash,
+          ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
+          ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
         };
       },
       assets: {

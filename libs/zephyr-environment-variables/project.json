@@ -10,8 +10,8 @@
       "options": {
         "rootDir": "libs/zephyr-environment-variables/src",
         "outputPath": "libs/zephyr-environment-variables/dist",
-        "tsConfig": "libs/zephyr-environment-variables/tsconfig.lib.json",
-        "main": "libs/zephyr-environment-variables/src/index.ts"
+        "main": "libs/zephyr-environment-variables/src/index.ts",
+        "tsConfig": "libs/zephyr-environment-variables/tsconfig.lib.json"
       }
     },
     "lint": {

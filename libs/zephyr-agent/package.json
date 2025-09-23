@@ -46,7 +46,8 @@
     "socket.io-client": "^4.7.5",
     "tslib": "catalog:typescript",
     "uuid": "^8.3.2",
-    "zephyr-edge-contract": "workspace:*"
+    "zephyr-edge-contract": "workspace:*",
+    "zephyr-environment-variables": "workspace:*"
   },
   "devDependencies": {
     "@jest/globals": "catalog:react",

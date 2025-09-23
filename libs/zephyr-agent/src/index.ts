@@ -33,6 +33,11 @@ export {
   type ZeBuildAssetsMap,
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
+export {
+  createZephyrManifest,
+  createManifestContent,
+  createManifestAsset,
+} from './lib/transformers/ze-create-manifest';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
@@ -48,3 +53,11 @@ export {
 } from './zephyr-engine';
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+
+// Environment variable utilities
+export {
+  buildEnvImportMap,
+  buildEnvImportMapScript,
+  buildEnvModuleSource,
+  type RemoteEntry,
+} from './lib/env-variables';

@@ -31,6 +31,7 @@ const createLogger = () => {
     git: debug('zephyr:git'),
     http: debug('zephyr:http'),
     init: debug('zephyr:init'),
+    manifest: debug('zephyr:manifest'),
     mf: debug('zephyr:mf'),
     misc: debug('zephyr:misc'),
     package: debug('zephyr:package'),
@@ -49,6 +50,7 @@ const createLogger = () => {
  * - Ze_log.git: Git configuration and provider
  * - Ze_log.http: http requests
  * - Ze_log.init: Initialization and setup operations
+ * - Ze_log.manifest: Manifest generation and processing
  * - Ze_log.mf: Module Federation config
  * - Ze_log.misc: Miscellaneous
  * - Ze_log.package: Package.json parsing

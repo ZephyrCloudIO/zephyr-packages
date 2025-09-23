@@ -30,11 +30,7 @@ export interface StageZeroPublishRequest {
   application_uid: string;
   snapshot_id: string;
   targets: PublishTarget[];
-  /** Environment-specific variables to override snapshot variables - for single environment */
-  envVars?: Record<string, string>;
-  /** Hash of the environment variables for caching */
-  envVarsHash?: string;
-  /** Per-environment variables - map of hostname to variables for multi-environment publishes */
+  /** Per-environment variables - map of hostname to variables for all deploys */
   environmentVariables?: Record<string, Record<string, string>>;
 }
 

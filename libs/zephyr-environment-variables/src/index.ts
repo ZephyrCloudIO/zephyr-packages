@@ -73,32 +73,34 @@ export function rewriteEnvReadsToVirtualModule(
   const used = detectEnvReads(source);
   if (used.size === 0) return { code: source, used };
 
+  // Replace all env var references with __ZE_MANIFEST__.zeVars.VAR_NAME
   let code = source
-    .replace(ZE_REGEX_SIMPLE, (_m, name) => `__ZE_ENV__.${name}`)
-    .replace(ZE_REGEX_QUOTED, (_m, name) => `__ZE_ENV__.${name}`)
-    .replace(ZE_REGEX_IMPORT_META_SIMPLE, (_m, name) => `__ZE_ENV__.${name}`)
-    .replace(ZE_REGEX_IMPORT_META_QUOTED, (_m, name) => `__ZE_ENV__.${name}`);
+    .replace(ZE_REGEX_SIMPLE, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`)
+    .replace(ZE_REGEX_QUOTED, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`)
+    .replace(ZE_REGEX_IMPORT_META_SIMPLE, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`)
+    .replace(ZE_REGEX_IMPORT_META_QUOTED, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`);
 
-  // Replace destructuring RHS env object with __ZE_ENV__ when ZE_PUBLIC_* keys are present
-  code = code.replace(ZE_DESTRUCT_DECL, (m, decl, inner, rhs) => {
+  // Replace destructuring RHS env object with __ZE_MANIFEST__.zeVars when ZE_PUBLIC_* keys are present
+  code = code.replace(ZE_DESTRUCT_DECL, (m, decl, inner) => {
     const keys = extractDestructuredKeys(String(inner));
     if (!keys.some((k) => k.startsWith('ZE_PUBLIC_'))) return m;
-    return `${decl} {${inner}} = __ZE_ENV__`;
+    return `${decl} {${inner}} = __ZE_MANIFEST__.zeVars`;
   });
-  code = code.replace(ZE_DESTRUCT_ASSIGN, (m, inner, rhs) => {
+  code = code.replace(ZE_DESTRUCT_ASSIGN, (m, inner) => {
     const keys = extractDestructuredKeys(String(inner));
     if (!keys.some((k) => k.startsWith('ZE_PUBLIC_'))) return m;
-    return `{${inner}} = __ZE_ENV__`;
+    return `{${inner}} = __ZE_MANIFEST__.zeVars`;
   });
 
   // Ensure an import of the virtual module exists; avoid duplicating if already present
   const escaped = specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const importRe = new RegExp(
-    `from\\s+['\"]${escaped}['\"];?|require\\(['\"]${escaped}['\"]\\)`,
+    `from\\s+['"]${escaped}['"];?|require\\(['"]${escaped}['"]\\)`,
     'm'
   );
   if (!importRe.test(code)) {
-    code = `import __ZE_ENV__ from '${specifier}';\n` + code;
+    // Simple default import of the JSON manifest
+    code = `import __ZE_MANIFEST__ from '${specifier}' with { type: 'json' };\n` + code;
   }
   return { code, used };
 }
@@ -143,4 +145,55 @@ export function buildEnvJsonAsset(env: Record<string, string | undefined>): {
   for (let i = 0; i < source.length; i++) h = ((h << 5) + h) ^ source.charCodeAt(i);
   const short = (h >>> 0).toString(36);
   return { fileName: `ze-env.${short}.json`, source };
+}
+
+// New functions for zephyr-manifest.json generation
+export function generateManifestContent(
+  envVars: Record<string, string>,
+  dependencies: Record<string, unknown> = {}
+): string {
+  // Filter for ZE_PUBLIC_* variables
+  const publicVars: Record<string, string> = {};
+  for (const [key, value] of Object.entries(envVars)) {
+    if (key.startsWith('ZE_PUBLIC_')) {
+      publicVars[key] = value;
+    }
+  }
+
+  // Build manifest with unified structure
+  const manifest = {
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    dependencies: dependencies,
+    zeVars: publicVars,
+  };
+
+  return JSON.stringify(manifest, null, 2);
+}
+
+export function calculateManifestHash(content: string): string {
+  // Try to use Node.js crypto module if available
+  try {
+    const crypto = require('crypto');
+    return crypto.createHash('sha256').update(content).digest('hex');
+  } catch {
+    // Fallback to djb2 hash for environments without crypto
+    let h = 5381;
+    for (let i = 0; i < content.length; i++) {
+      h = ((h << 5) + h) ^ content.charCodeAt(i);
+    }
+    return (h >>> 0).toString(36);
+  }
+}
+
+export function collectZEPublicVars(
+  env: NodeJS.ProcessEnv | Record<string, string | undefined>
+): Record<string, string> {
+  const vars: Record<string, string> = {};
+  for (const [key, value] of Object.entries(env)) {
+    if (key.startsWith('ZE_PUBLIC_') && typeof value === 'string') {
+      vars[key] = value;
+    }
+  }
+  return vars;
 }

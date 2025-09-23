@@ -41,11 +41,6 @@ export interface Snapshot {
   ze_envs?: Record<string, string>;
   // Content-addressable hash of ze_envs for deduplication
   ze_envs_hash?: string;
-  // Resolved Module Federation remotes for this build (host view)
-  mf_resolved_remotes?: Array<{
-    name: string;
-    remote_entry_url: string;
-  }>;
 }
 
 export interface SnapshotAsset {

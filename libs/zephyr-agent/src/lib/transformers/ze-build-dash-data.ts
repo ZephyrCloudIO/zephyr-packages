@@ -1,5 +1,5 @@
-import type { ZephyrEngine } from '../../zephyr-engine';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
+import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 
 export async function zeBuildDashData(
@@ -56,8 +56,8 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
-    ze_envs: zephyr_engine.snapshot_with_envs?.ze_envs,
-    ze_envs_hash: (zephyr_engine.snapshot_with_envs as any)?.ze_envs_hash,
+    ze_envs: zephyr_engine.ze_env_vars || undefined,
+    ze_envs_hash: zephyr_engine.ze_env_vars_hash || undefined,
   };
 }
 

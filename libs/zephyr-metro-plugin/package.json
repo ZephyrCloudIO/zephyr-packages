@@ -1,0 +1,43 @@
+{
+  "name": "zephyr-metro-plugin",
+  "version": "0.0.1",
+  "description": "Metro plugin for Zephyr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-metro-plugin"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx build zephyr-metro-plugin",
+    "patch-version": "pnpm version",
+    "test": "nx test zephyr-metro-plugin"
+  },
+  "dependencies": {
+    "zephyr-agent": "workspace:*",
+    "zephyr-xpack-internal": "workspace:*",
+    "rollup": "^4.0.0",
+    "vite": "^5.0.0"
+  },
+  "peerDependencies": {
+    "metro-config": "^0.82.4"
+  },
+  "devDependencies": {
+    "@rspack/core": "catalog:rspack",
+    "@types/find-package-json": "^1.2.6",
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -9,6 +9,23 @@ import { collectZEPublicVars } from 'zephyr-environment-variables';
 import type { ZeResolvedDependency } from '../../zephyr-engine/resolve_remote_dependency';
 import { ze_log } from '../logging';
 
+export function convertResolvedDependencies(
+  dependencies: ZeResolvedDependency[]
+): Record<string, ZephyrDependency> {
+  return Object.fromEntries(
+    dependencies.map((dep) => [
+      dep.name,
+      {
+        name: dep.name,
+        application_uid: dep.application_uid,
+        remote_entry_url: dep.remote_entry_url,
+        default_url: dep.default_url,
+        library_type: dep.library_type,
+      },
+    ])
+  );
+}
+
 /**
  * Creates a zephyr-manifest.json file with resolved dependencies and environment
  * variables

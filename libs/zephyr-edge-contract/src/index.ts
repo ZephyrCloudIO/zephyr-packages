@@ -2,8 +2,10 @@
 
 // edge api
 export type {
+  GatewayPublishRequest,
   PublishRequest,
   PublishTarget,
+  PublishTargets,
   StageZeroPublishRequest,
 } from './lib/edge-api/publish-request';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
@@ -29,7 +31,11 @@ export type {
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
-export { ZEPHYR_MANIFEST_VERSION, type ZephyrManifest } from './lib/zephyr-manifest';
+export {
+  ZEPHYR_MANIFEST_FILENAME,
+  ZEPHYR_MANIFEST_VERSION,
+  type ZephyrManifest,
+} from './lib/zephyr-manifest';
 
 // api contract negotiation
 export {

@@ -131,6 +131,8 @@ export interface ZephyrBuildStats {
   ze_envs?: Record<string, string>;
   /** Content-addressable hash of ze_envs for deduplication */
   ze_envs_hash?: string;
+  /** Resolved zephyr dependencies */
+  zephyrDependencies?: Record<string, ZephyrDependency>;
 }
 
 enum DeploymentIntegrationPlatform {

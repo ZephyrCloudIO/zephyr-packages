@@ -1,8 +1,7 @@
-import { withModuleFederation } from '@nx/module-federation/webpack';
-import { withReact } from '@nx/react';
-import { composePlugins, withNx } from '@nx/webpack';
-import { withZephyr } from 'zephyr-webpack-plugin';
-import { isModuleFederationPlugin } from 'zephyr-xpack-internal';
+const { withModuleFederation } = require('@nx/module-federation/rspack');
+const { composePlugins, withNx, withReact } = require('@nx/rspack');
+const { withZephyr } = require('zephyr-rspack-plugin');
+const { isModuleFederationPlugin } = require('zephyr-xpack-internal');
 
 const mfConfig = {
   name: 'team-red',
@@ -33,7 +32,7 @@ const mfConfig = {
 };
 
 // Nx plugins for webpack.
-export default composePlugins(
+module.exports = composePlugins(
   withNx(),
   withReact(),
   withModuleFederation(mfConfig, { dts: false }),
@@ -41,8 +40,10 @@ export default composePlugins(
     // Workaround for aliases while this issue
     // -> https://github.com/nrwl/nx/issues/31346
     // is not resolved.
-    const plugin = config.plugins?.find(isModuleFederationPlugin);
-    if (!plugin?._options) return config;
+    const plugin = config.plugins
+      ? config.plugins.find(isModuleFederationPlugin)
+      : undefined;
+    if (!plugin || !plugin._options) return config;
     if ('config' in plugin._options) return config;
     plugin._options.remotes = Object.fromEntries(
       Object.entries(plugin._options.remotes || {}).map(([name, remote]) => [

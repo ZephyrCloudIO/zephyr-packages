@@ -1,6 +1,6 @@
 {
   "name": "parcel-reporter-zephyr",
-  "version": "0.0.57",
+  "version": "0.1.0",
   "description": "Parcel reporter for Zephyr",
   "repository": {
     "type": "git",

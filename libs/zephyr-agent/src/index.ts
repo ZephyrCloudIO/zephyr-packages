@@ -34,9 +34,10 @@ export {
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export {
-  createZephyrManifest,
-  createManifestContent,
+  convertResolvedDependencies,
   createManifestAsset,
+  createManifestContent,
+  createZephyrManifest,
 } from './lib/transformers/ze-create-manifest';
 
 // Auth related exports

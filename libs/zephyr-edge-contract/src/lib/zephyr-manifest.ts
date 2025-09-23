@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ZephyrDependencySchema } from './zephyr-build-stats';
 
 export const ZEPHYR_MANIFEST_VERSION = '1.0.0';
+export const ZEPHYR_MANIFEST_FILENAME = 'zephyr-manifest.json';
 
 export const ZephyrManifestSchema = z.object({
   version: z.string(),

@@ -1,6 +1,14 @@
-import type { OutputAsset as RollupOutputAsset } from 'rollup';
-
-export type OutputAsset = RollupOutputAsset;
+// Metro-specific asset types
+export interface OutputAsset {
+  fileName: string;
+  name: string;
+  names: string[];
+  needsCodeReference: boolean;
+  source: string | Uint8Array;
+  type: 'asset';
+  originalFileName: string;
+  originalFileNames: string[];
+}
 
 export interface XFederatedSharedConfig {
   singleton?: boolean;

@@ -1,8 +1,12 @@
 import { readdirSync, readFile, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { normalizePath } from 'vite';
 import type { OutputAsset } from './types';
+
+// Metro-compatible path normalization (replaces vite's normalizePath)
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, '/');
+}
 
 interface LoadStaticEntriesOptions {
   root: string;

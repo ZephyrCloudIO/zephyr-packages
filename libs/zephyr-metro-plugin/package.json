@@ -22,9 +22,7 @@
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*",
-    "rollup": "^4.0.0",
-    "vite": "^5.0.0"
+    "zephyr-xpack-internal": "workspace:*"
   },
   "peerDependencies": {
     "metro-config": "^0.82.4"

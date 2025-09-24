@@ -18,7 +18,7 @@ The fastest way to get started is to use `create-zephyr-apps` to generate a new 
 npx create-zephyr-apps@latest
 ```
 
-For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/recipes/modernjs) for Modern.js and Zephyr integration.
+For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/meta-frameworks/modernjs) for Modern.js and Zephyr integration.
 
 ## Installation
 

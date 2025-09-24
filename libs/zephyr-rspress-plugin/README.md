@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/rspress) | [Rspress Docs](https://rspress.dev/) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/meta-frameworks/rspress) | [Rspress Docs](https://rspress.dev/) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
@@ -10,7 +10,7 @@
 
 An Rspress plugin for deploying documentation and static apps with Zephyr Cloud. This plugin enables seamless integration with Rspress to optimize, build, and deploy your site globally with CDN-backed delivery and analytics.
 
-> Learn more in our [documentation](https://docs.zephyr-cloud.io/recipes/rspress).
+> Learn more in our [documentation](https://docs.zephyr-cloud.io/meta-frameworks/rspress).
 
 ---
 
@@ -24,7 +24,7 @@ npx create-zephyr-apps@latest
 
 Select the Rspress example when prompted.
 
-For advanced usage and more recipes, visit our [documentation](https://docs.zephyr-cloud.io/recipes/rspress).
+For advanced usage and more recipes, visit our [documentation](https://docs.zephyr-cloud.io/meta-frameworks/rspress).
 
 ---
 

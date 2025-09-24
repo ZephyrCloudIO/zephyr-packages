@@ -480,7 +480,7 @@ For debugging, check:
 - Network proxy settings if behind corporate firewall
 - API status at https://status.zephyr-cloud.io
 
-Documentation: https://docs.zephyr-cloud.io/how-to/mf-guide
+Documentation: https://docs.zephyr-cloud.io/tutorials/mf-guide
       `,
     kind: 'config',
   },

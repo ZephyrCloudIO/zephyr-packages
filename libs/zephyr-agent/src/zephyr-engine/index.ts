@@ -323,7 +323,7 @@ export class ZephyrEngine {
         message: `Failed to resolve remote dependencies:
 ${errorSummary}\n
 More information on remote dependency resolution please check:
-https://docs.zephyr-cloud.io/how-to/dependency-management`,
+https://docs.zephyr-cloud.io/features/remote-dependencies`,
       });
     }
 

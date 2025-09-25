@@ -24,6 +24,8 @@ export type { LocalPackageJson } from './lib/ze-api/local-package-json';
 export type { ZephyrBuildStats, ZephyrDependency } from './lib/zephyr-build-stats';
 export type {
   Asset,
+  OTACheckRequest,
+  OTAVersionResponse,
   SnapshotUploadRes,
   Source,
   UploadableAsset,

@@ -1,0 +1,31 @@
+{
+  "name": "zephyr-metro-plugin",
+  "version": "0.0.1",
+  "description": "Metro bundler plugin for Zephyr with OTA support",
+  "type": "commonjs",
+  "license": "Apache-2.0",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "require": "./src/index.js",
+      "default": "./src/index.js"
+    }
+  },
+  "peerDependencies": {
+    "metro": ">=0.70.0",
+    "react-native": ">=0.60.0"
+  },
+  "dependencies": {
+    "zephyr-edge-contract": "workspace:*",
+    "zephyr-agent": "workspace:*",
+    "zephyr-xpack-internal": "workspace:*",
+    "zephyr-rn-ota": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-metro-plugin"
+  }
+}

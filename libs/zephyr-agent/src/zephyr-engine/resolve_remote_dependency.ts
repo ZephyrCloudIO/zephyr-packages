@@ -20,12 +20,28 @@ export async function resolve_remote_dependency({
   version,
   platform,
   build_context,
+  dep,
 }: {
   application_uid: string;
   version: string;
   platform?: string;
   build_context: string;
+  dep: string;
 }): Promise<ZeResolvedDependency> {
+  if (version === 'workspace:*') {
+    const [remoteName, remoteUrl] = dep.split('@');
+    const url = new URL(remoteUrl).origin;
+    return {
+      name: remoteName,
+      version,
+      application_uid,
+      default_url: url,
+      remote_entry_url: remoteUrl,
+      library_type: 'var',
+      platform,
+    };
+  }
+
   const depUrl =
     ZE_API_ENDPOINT() +
     `${ze_api_gateway.resolve}/` +

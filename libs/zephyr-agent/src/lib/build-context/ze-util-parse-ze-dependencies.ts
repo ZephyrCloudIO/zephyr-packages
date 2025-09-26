@@ -27,7 +27,7 @@ export function parseZeDependencies(
 /**
  * Parses a single dependency value into a structured ZeDependency object.
  *
- * @param key - The dependency name
+ * @param key - The dependency   name
  * @param value - The dependency version or reference string
  * @returns Structured dependency information
  */

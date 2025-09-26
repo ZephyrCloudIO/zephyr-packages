@@ -26,6 +26,8 @@ export async function resolve_remote_dependency({
   platform?: string;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
+  // test ci, need changes
+  // add comment
   const depUrl =
     ZE_API_ENDPOINT() +
     `${ze_api_gateway.resolve}/` +

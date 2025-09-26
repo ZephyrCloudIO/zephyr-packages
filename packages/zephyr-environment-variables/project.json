@@ -1,17 +1,17 @@
 {
   "name": "zephyr-environment-variables",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/zephyr-environment-variables/src",
+  "sourceRoot": "packages/zephyr-environment-variables/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "rootDir": "libs/zephyr-environment-variables/src",
-        "outputPath": "libs/zephyr-environment-variables/dist",
-        "main": "libs/zephyr-environment-variables/src/index.ts",
-        "tsConfig": "libs/zephyr-environment-variables/tsconfig.lib.json"
+        "rootDir": "packages/zephyr-environment-variables/src",
+        "outputPath": "packages/zephyr-environment-variables/dist",
+        "main": "packages/zephyr-environment-variables/src/index.ts",
+        "tsConfig": "packages/zephyr-environment-variables/tsconfig.lib.json"
       }
     },
     "lint": {
@@ -22,7 +22,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "libs/zephyr-environment-variables/jest.config.ts"
+        "jestConfig": "packages/zephyr-environment-variables/jest.config.ts"
       }
     }
   },

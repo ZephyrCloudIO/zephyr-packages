@@ -1,8 +1,6 @@
 import type { ZephyrManifest } from './zephyr-manifest';
 
-/**
- * Enhanced Runtime Plugin Options for OTA support
- */
+/** Enhanced Runtime Plugin Options for OTA support */
 export interface ZephyrRuntimePluginOTAOptions {
   /** Called when manifest changes are detected */
   onManifestChange?: (newManifest: ZephyrManifest, oldManifest?: ZephyrManifest) => void;
@@ -12,9 +10,7 @@ export interface ZephyrRuntimePluginOTAOptions {
   manifestUrl?: string;
 }
 
-/**
- * Runtime Plugin Instance for programmatic control
- */
+/** Runtime Plugin Instance for programmatic control */
 export interface ZephyrRuntimePluginInstance {
   /** Refresh the manifest and check for changes */
   refresh: () => Promise<ZephyrManifest | undefined>;
@@ -22,9 +18,7 @@ export interface ZephyrRuntimePluginInstance {
   getCurrentManifest: () => Promise<ZephyrManifest | undefined>;
 }
 
-/**
- * Event detail for remote URL changes
- */
+/** Event detail for remote URL changes */
 export interface ZephyrRemoteUrlChangeDetail {
   remoteName: string;
   oldUrl: string;
@@ -32,17 +26,13 @@ export interface ZephyrRemoteUrlChangeDetail {
   manifest: ZephyrManifest;
 }
 
-/**
- * Custom event type for remote URL changes
- */
+/** Custom event type for remote URL changes */
 export interface ZephyrRemoteUrlChangeEvent extends CustomEvent {
   type: 'zephyr:remote-url-changed';
   detail: ZephyrRemoteUrlChangeDetail;
 }
 
-/**
- * Enhanced runtime plugin creation function signature
- */
+/** Enhanced runtime plugin creation function signature */
 export type CreateZephyrRuntimePluginWithOTA = (
   options?: ZephyrRuntimePluginOTAOptions
 ) => {
@@ -50,16 +40,12 @@ export type CreateZephyrRuntimePluginWithOTA = (
   instance: ZephyrRuntimePluginInstance;
 };
 
-/**
- * Manifest cache entry structure for multi-app caching
- */
+/** Manifest cache entry structure for multi-app caching */
 export interface ManifestCacheEntry {
   manifest: ZephyrManifest;
   timestamp: number;
   promise?: Promise<ZephyrManifest | undefined>;
 }
 
-/**
- * Global manifest cache type
- */
+/** Global manifest cache type */
 export type ManifestCache = Record<string, ManifestCacheEntry>;

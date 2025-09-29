@@ -1,14 +1,12 @@
 import type {
   OTACheckRequest,
   OTAVersionResponse,
-  ZephyrRuntimePluginInstance
+  ZephyrRuntimePluginInstance,
 } from 'zephyr-edge-contract';
 import { fetchWithRetries } from '../http/fetch-with-retries';
 import { ze_log } from '../logging';
 
-/**
- * Configuration for the Zephyr OTA Worker
- */
+/** Configuration for the Zephyr OTA Worker */
 export interface ZephyrOTAConfig {
   /** Application UID */
   applicationUid: string;
@@ -24,9 +22,7 @@ export interface ZephyrOTAConfig {
   platform?: 'ios' | 'android';
 }
 
-/**
- * OTA update information
- */
+/** OTA update information */
 export interface ZephyrOTAUpdate {
   version: string;
   description?: string;
@@ -36,9 +32,7 @@ export interface ZephyrOTAUpdate {
   releaseNotes?: string;
 }
 
-/**
- * Callbacks for OTA events
- */
+/** Callbacks for OTA events */
 export interface ZephyrOTACallbacks {
   /** Called when a new update is available */
   onUpdateAvailable?: (update: ZephyrOTAUpdate) => void;
@@ -50,18 +44,14 @@ export interface ZephyrOTACallbacks {
   onUpdateFailed?: (error: Error) => void;
 }
 
-/**
- * Stored version information in AsyncStorage
- */
+/** Stored version information in AsyncStorage */
 interface StoredVersionInfo {
   version: string;
   timestamp: string;
   lastChecked: number;
 }
 
-/**
- * OTA telemetry metrics
- */
+/** OTA telemetry metrics */
 interface OTAMetrics {
   checksPerformed: number;
   updatesAvailable: number;
@@ -71,19 +61,19 @@ interface OTAMetrics {
   lastUpdateTimestamp?: number;
 }
 
-/**
- * Storage keys for AsyncStorage
- */
+/** Storage keys for AsyncStorage */
 const STORAGE_KEYS = {
   CURRENT_VERSION: 'zephyr_ota_current_version',
   LAST_CHECK: 'zephyr_ota_last_check',
   UPDATE_DECLINED: 'zephyr_ota_declined_updates',
+  METRICS: 'zephyr_ota_metrics',
 } as const;
 
 /**
  * React Native OTA Worker for Zephyr
  *
  * Features:
+ *
  * - Polls OTA endpoint using fetchWithRetries
  * - De-dupes work using AsyncStorage for manifest hash storage
  * - Pauses polling in background, resumes on foreground
@@ -97,6 +87,7 @@ export class ZephyrOTAWorker {
   private checkTimer?: NodeJS.Timeout;
   private isActive = false;
   private appStateListener?: any;
+  private metrics: OTAMetrics;
 
   constructor(config: ZephyrOTAConfig, callbacks: ZephyrOTACallbacks = {}) {
     this.config = {
@@ -119,9 +110,7 @@ export class ZephyrOTAWorker {
     });
   }
 
-  /**
-   * Register worker globally so bundler plugins can access it
-   */
+  /** Register worker globally so bundler plugins can access it */
   private registerGlobally(): void {
     const global = this.getGlobalObject();
     global.__ZEPHYR_OTA_WORKER__ = this;
@@ -135,24 +124,18 @@ export class ZephyrOTAWorker {
     return {};
   }
 
-  /**
-   * Default OTA endpoint URL
-   */
+  /** Default OTA endpoint URL */
   private getDefaultEndpoint(applicationUid: string): string {
     return `https://api.zephyr-cloud.io/v1/ota/${applicationUid}/version`;
   }
 
-  /**
-   * Set the runtime plugin instance for manifest refresh
-   */
+  /** Set the runtime plugin instance for manifest refresh */
   setRuntimePlugin(plugin: ZephyrRuntimePluginInstance): void {
     this.runtimePlugin = plugin;
     this.log('Runtime plugin connected');
   }
 
-  /**
-   * Start the OTA worker
-   */
+  /** Start the OTA worker */
   async start(): Promise<void> {
     if (this.isActive) {
       this.log('OTA Worker already active');
@@ -183,9 +166,7 @@ export class ZephyrOTAWorker {
     this.scheduleNextCheck();
   }
 
-  /**
-   * Stop the OTA worker
-   */
+  /** Stop the OTA worker */
   stop(): void {
     if (!this.isActive) return;
 
@@ -203,9 +184,7 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Handle React Native app state changes
-   */
+  /** Handle React Native app state changes */
   private handleAppStateChange = (nextAppState: string): void => {
     if (nextAppState === 'active' && this.isActive) {
       this.log('App became active, checking for updates');
@@ -213,9 +192,7 @@ export class ZephyrOTAWorker {
     }
   };
 
-  /**
-   * Schedule the next update check
-   */
+  /** Schedule the next update check */
   private scheduleNextCheck(): void {
     if (!this.isActive) return;
 
@@ -239,9 +216,7 @@ export class ZephyrOTAWorker {
     }, this.config.checkInterval);
   }
 
-  /**
-   * Perform update check with retry logic
-   */
+  /** Perform update check with retry logic */
   private async performUpdateCheck(): Promise<void> {
     try {
       await this.checkForUpdatesWithRetry();
@@ -252,9 +227,7 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Check for updates with retry logic using fetchWithRetries
-   */
+  /** Check for updates with retry logic using fetchWithRetries */
   private async checkForUpdatesWithRetry(): Promise<void> {
     const currentVersion = await this.getCurrentVersion();
 
@@ -311,9 +284,7 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Apply an available update
-   */
+  /** Apply an available update */
   async applyUpdate(update: ZephyrOTAUpdate): Promise<void> {
     if (!this.runtimePlugin) {
       throw new Error('Runtime plugin not set. Call setRuntimePlugin() first.');
@@ -331,7 +302,10 @@ export class ZephyrOTAWorker {
         timestamp: update.timestamp,
         lastChecked: Date.now(),
       };
-      await this.setStorageItem(STORAGE_KEYS.CURRENT_VERSION, JSON.stringify(versionInfo));
+      await this.setStorageItem(
+        STORAGE_KEYS.CURRENT_VERSION,
+        JSON.stringify(versionInfo)
+      );
 
       // Clear any declined updates
       await this.removeStorageItem(STORAGE_KEYS.UPDATE_DECLINED);
@@ -346,19 +320,18 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Decline an update (won't be offered again for this version)
-   */
+  /** Decline an update (won't be offered again for this version) */
   async declineUpdate(version: string): Promise<void> {
     const declined = await this.getDeclinedUpdates();
     declined.add(version);
-    await this.setStorageItem(STORAGE_KEYS.UPDATE_DECLINED, JSON.stringify([...declined]));
+    await this.setStorageItem(
+      STORAGE_KEYS.UPDATE_DECLINED,
+      JSON.stringify([...declined])
+    );
     this.log('Update declined', version);
   }
 
-  /**
-   * Get current version info from storage
-   */
+  /** Get current version info from storage */
   private async getCurrentVersion(): Promise<StoredVersionInfo | null> {
     try {
       const stored = await this.getStorageItem(STORAGE_KEYS.CURRENT_VERSION);
@@ -368,17 +341,13 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Check if an update version has been declined
-   */
+  /** Check if an update version has been declined */
   private async isUpdateDeclined(version: string): Promise<boolean> {
     const declined = await this.getDeclinedUpdates();
     return declined.has(version);
   }
 
-  /**
-   * Get set of declined update versions
-   */
+  /** Get set of declined update versions */
   private async getDeclinedUpdates(): Promise<Set<string>> {
     try {
       const stored = await this.getStorageItem(STORAGE_KEYS.UPDATE_DECLINED);
@@ -389,16 +358,12 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Check if running in React Native environment
-   */
+  /** Check if running in React Native environment */
   private isReactNative(): boolean {
     return typeof navigator !== 'undefined' && navigator.product === 'ReactNative';
   }
 
-  /**
-   * Get React Native modules
-   */
+  /** Get React Native modules */
   private async getReactNative(): Promise<any> {
     if (this.isReactNative()) {
       // Dynamic import to avoid issues in non-RN environments
@@ -407,13 +372,13 @@ export class ZephyrOTAWorker {
     throw new Error('Not running in React Native environment');
   }
 
-  /**
-   * Storage abstraction - works with AsyncStorage in RN or localStorage in web
-   */
+  /** Storage abstraction - works with AsyncStorage in RN or localStorage in web */
   private async getStorageItem(key: string): Promise<string | null> {
     if (this.isReactNative()) {
       try {
-        const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+        const { default: AsyncStorage } = await import(
+          '@react-native-async-storage/async-storage'
+        );
         return AsyncStorage.getItem(key);
       } catch {
         return null;
@@ -427,7 +392,9 @@ export class ZephyrOTAWorker {
   private async setStorageItem(key: string, value: string): Promise<void> {
     if (this.isReactNative()) {
       try {
-        const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+        const { default: AsyncStorage } = await import(
+          '@react-native-async-storage/async-storage'
+        );
         await AsyncStorage.setItem(key, value);
       } catch {
         // Ignore storage errors
@@ -440,7 +407,9 @@ export class ZephyrOTAWorker {
   private async removeStorageItem(key: string): Promise<void> {
     if (this.isReactNative()) {
       try {
-        const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+        const { default: AsyncStorage } = await import(
+          '@react-native-async-storage/async-storage'
+        );
         await AsyncStorage.removeItem(key);
       } catch {
         // Ignore storage errors
@@ -450,9 +419,64 @@ export class ZephyrOTAWorker {
     }
   }
 
-  /**
-   * Debug logging
-   */
+  /** Load metrics from storage */
+  private async loadMetrics(): Promise<void> {
+    try {
+      const stored = await this.getStorageItem(STORAGE_KEYS.METRICS);
+      if (stored) {
+        this.metrics = { ...this.metrics, ...JSON.parse(stored) };
+      }
+    } catch {
+      // Use default metrics
+    }
+  }
+
+  /** Save metrics to storage */
+  private async saveMetrics(): Promise<void> {
+    try {
+      await this.setStorageItem(STORAGE_KEYS.METRICS, JSON.stringify(this.metrics));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  /** Update and log telemetry metrics */
+  private async updateMetrics(
+    type: 'check' | 'update_available' | 'update_applied' | 'update_failed'
+  ): Promise<void> {
+    switch (type) {
+      case 'check':
+        this.metrics.checksPerformed++;
+        this.metrics.lastCheckTimestamp = Date.now();
+        break;
+      case 'update_available':
+        this.metrics.updatesAvailable++;
+        break;
+      case 'update_applied':
+        this.metrics.updatesApplied++;
+        this.metrics.lastUpdateTimestamp = Date.now();
+        break;
+      case 'update_failed':
+        this.metrics.updatesFailed++;
+        break;
+    }
+
+    await this.saveMetrics();
+
+    // Log telemetry via ze_log for observability
+    ze_log.app('OTA metrics updated', {
+      type,
+      applicationUid: this.config.applicationUid,
+      metrics: this.metrics,
+    });
+  }
+
+  /** Get current metrics for debugging */
+  getMetrics(): OTAMetrics {
+    return { ...this.metrics };
+  }
+
+  /** Debug logging */
   private log(message: string, data?: any): void {
     if (this.config.debug) {
       console.log(`[ZephyrOTA] ${message}`, data || '');
@@ -460,9 +484,7 @@ export class ZephyrOTAWorker {
   }
 }
 
-/**
- * React hook for OTA updates (React Native specific)
- */
+/** React hook for OTA updates (React Native specific) */
 export interface UseZephyrUpdatesOptions {
   worker: ZephyrOTAWorker;
   /** Auto-apply non-critical updates */
@@ -482,15 +504,14 @@ export interface UseZephyrUpdatesResult {
   error: Error | null;
 }
 
-/**
- * React hook for managing OTA updates
- * This should be used in React Native applications
- */
-export function useZephyrUpdates(options: UseZephyrUpdatesOptions): UseZephyrUpdatesResult {
+/** React hook for managing OTA updates This should be used in React Native applications */
+export function useZephyrUpdates(
+  options: UseZephyrUpdatesOptions
+): UseZephyrUpdatesResult {
   // This function should only be used in React environments
   // The actual implementation would depend on React hooks
   throw new Error(
     'useZephyrUpdates is a React hook and should only be used in React components. ' +
-    'Please implement this hook in your React Native application.'
+      'Please implement this hook in your React Native application.'
   );
 }

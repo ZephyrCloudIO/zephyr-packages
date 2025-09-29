@@ -34,8 +34,8 @@ function setGlobalManifestPromise(promise: Promise<ZephyrManifest | undefined>):
 }
 
 /**
- * Enhanced Zephyr Runtime Plugin with caching by application_uid and refresh hooks
- * Now delegates to createZephyrRuntimePluginWithOTA for consistent behavior
+ * Enhanced Zephyr Runtime Plugin with caching by application_uid and refresh hooks Now
+ * delegates to createZephyrRuntimePluginWithOTA for consistent behavior
  */
 export function createZephyrRuntimePlugin(
   options: ZephyrRuntimePluginOTAOptions = {}
@@ -134,8 +134,8 @@ function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
 }
 
 /**
- * Enhanced Zephyr Runtime Plugin with OTA support
- * Features:
+ * Enhanced Zephyr Runtime Plugin with OTA support Features:
+ *
  * - Manifest caching by application_uid
  * - Injected fetchManifest and onManifestChange hooks
  * - Typed event emission for remote URL changes
@@ -155,11 +155,14 @@ export function createZephyrRuntimePluginWithOTA(
 
   // Cache manifests by application_uid for multi-app support
   const manifestCacheKey = `__ZEPHYR_MANIFEST_CACHE__`;
-  const manifestCache: Record<string, {
-    manifest: ZephyrManifest;
-    timestamp: number;
-    promise?: Promise<ZephyrManifest | undefined>;
-  }> = (_global as any)[manifestCacheKey] || {};
+  const manifestCache: Record<
+    string,
+    {
+      manifest: ZephyrManifest;
+      timestamp: number;
+      promise?: Promise<ZephyrManifest | undefined>;
+    }
+  > = (_global as any)[manifestCacheKey] || {};
   (_global as any)[manifestCacheKey] = manifestCache;
 
   function getCachedManifest(appUid?: string): ZephyrManifest | undefined {
@@ -176,7 +179,7 @@ export function createZephyrRuntimePluginWithOTA(
     if (manifest.application_uid) {
       manifestCache[manifest.application_uid] = {
         manifest,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
     }
   }
@@ -221,8 +224,8 @@ export function createZephyrRuntimePluginWithOTA(
                   remoteName,
                   oldUrl: oldDep.remote_entry_url,
                   newUrl: newDep.remote_entry_url,
-                  manifest: newManifest
-                }
+                  manifest: newManifest,
+                },
               });
 
               if (typeof document !== 'undefined') {

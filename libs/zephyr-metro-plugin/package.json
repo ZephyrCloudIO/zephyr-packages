@@ -20,8 +20,7 @@
   "dependencies": {
     "zephyr-edge-contract": "workspace:*",
     "zephyr-agent": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*",
-    "zephyr-rn-ota": "workspace:*"
+    "zephyr-xpack-internal": "workspace:*"
   },
   "repository": {
     "type": "git",

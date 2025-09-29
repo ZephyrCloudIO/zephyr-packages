@@ -36,8 +36,18 @@ export type {
 export {
   ZEPHYR_MANIFEST_FILENAME,
   ZEPHYR_MANIFEST_VERSION,
+  type OTAManifest,
   type ZephyrManifest,
 } from './lib/zephyr-manifest';
+export type {
+  CreateZephyrRuntimePluginWithOTA,
+  ManifestCache,
+  ManifestCacheEntry,
+  ZephyrRemoteUrlChangeDetail,
+  ZephyrRemoteUrlChangeEvent,
+  ZephyrRuntimePluginInstance,
+  ZephyrRuntimePluginOTAOptions,
+} from './lib/ota-runtime-types';
 
 // api contract negotiation
 export {

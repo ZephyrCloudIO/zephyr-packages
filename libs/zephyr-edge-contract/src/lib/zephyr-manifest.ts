@@ -7,22 +7,26 @@ export const ZEPHYR_MANIFEST_FILENAME = 'zephyr-manifest.json';
  * OTA Contract Documentation:
  *
  * VERSIONING RULES:
- * - version field follows semver (major.minor.patch)
- * - timestamp is ISO string for freshness comparison
- * - dependencies map contains immutable remote URLs
+ *
+ * - Version field follows semver (major.minor.patch)
+ * - Timestamp is ISO string for freshness comparison
+ * - Dependencies map contains immutable remote URLs
  *
  * CACHE HEADERS (when serving manifest):
+ *
  * - Content-Type: application/json
  * - Cache-Control: no-cache (force revalidation)
  * - ETag: based on version + timestamp hash
  *
  * AUTH REQUIREMENTS:
+ *
  * - Public manifests: no auth required
  * - Private/enterprise: Bearer token in Authorization header
  * - CORS headers required for browser-based OTA checks
  *
  * IMMUTABLE COUPLING:
- * - urls.version from zeUploadSnapshot response MUST match manifest.version
+ *
+ * - Urls.version from zeUploadSnapshot response MUST match manifest.version
  * - Remote entry URLs in dependencies are immutable per version
  * - Changing any dependency URL requires new version bump
  */

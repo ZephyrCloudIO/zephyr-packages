@@ -1,6 +1,4 @@
-/**
- * @jest-environment jsdom
- */
+/** @jest-environment jsdom */
 
 import { createZephyrRuntimePluginWithOTA } from './runtime-plugin';
 import type { ZephyrManifest } from 'zephyr-edge-contract';
@@ -37,13 +35,13 @@ describe('ZephyrRuntimePlugin', () => {
         timestamp: '2023-01-01T00:00:00Z',
         application_uid: 'test-app-123',
         dependencies: {
-          'remote1': {
+          remote1: {
             application_uid: 'remote1-uid',
             remote_entry_url: 'https://cdn.example.com/remote1/v1.0.0/remoteEntry.js',
             public_path: 'https://cdn.example.com/remote1/v1.0.0/',
-            version: '1.0.0'
-          }
-        }
+            version: '1.0.0',
+          },
+        },
       };
 
       const newManifest: ZephyrManifest = {
@@ -51,27 +49,27 @@ describe('ZephyrRuntimePlugin', () => {
         timestamp: '2023-01-02T00:00:00Z',
         dependencies: {
           ...mockManifest.dependencies,
-          'remote1': {
+          remote1: {
             ...mockManifest.dependencies['remote1'],
-            remote_entry_url: 'https://cdn.example.com/remote1/v1.0.1/remoteEntry.js'
-          }
-        }
+            remote_entry_url: 'https://cdn.example.com/remote1/v1.0.1/remoteEntry.js',
+          },
+        },
       };
 
       const onManifestChange = jest.fn();
       const { instance } = createZephyrRuntimePluginWithOTA({
-        onManifestChange
+        onManifestChange,
       });
 
       // Mock fetch responses
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve(mockManifest)
+          json: () => Promise.resolve(mockManifest),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve(newManifest)
+          json: () => Promise.resolve(newManifest),
         } as Response);
 
       // First call - initial manifest
@@ -89,42 +87,42 @@ describe('ZephyrRuntimePlugin', () => {
         timestamp: '2023-01-01T00:00:00Z',
         application_uid: 'test-app-123',
         dependencies: {
-          'remote1': {
+          remote1: {
             application_uid: 'remote1-uid',
             remote_entry_url: 'https://cdn.example.com/remote1/v1.0.0/remoteEntry.js',
             public_path: 'https://cdn.example.com/remote1/v1.0.0/',
-            version: '1.0.0'
-          }
-        }
+            version: '1.0.0',
+          },
+        },
       };
 
       const newManifest: ZephyrManifest = {
         ...mockManifest,
         timestamp: '2023-01-02T00:00:00Z',
         dependencies: {
-          'remote1': {
+          remote1: {
             ...mockManifest.dependencies['remote1'],
-            remote_entry_url: 'https://cdn.example.com/remote1/v1.0.1/remoteEntry.js'
-          }
-        }
+            remote_entry_url: 'https://cdn.example.com/remote1/v1.0.1/remoteEntry.js',
+          },
+        },
       };
 
       const eventListener = jest.fn();
       document.addEventListener('zephyr:remote-url-changed', eventListener);
 
       const { instance } = createZephyrRuntimePluginWithOTA({
-        onManifestChange: () => {}
+        onManifestChange: () => {},
       });
 
       // Mock fetch responses
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve(mockManifest)
+          json: () => Promise.resolve(mockManifest),
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve(newManifest)
+          json: () => Promise.resolve(newManifest),
         } as Response);
 
       // First call - initial manifest
@@ -140,8 +138,8 @@ describe('ZephyrRuntimePlugin', () => {
             remoteName: 'remote1',
             oldUrl: 'https://cdn.example.com/remote1/v1.0.0/remoteEntry.js',
             newUrl: 'https://cdn.example.com/remote1/v1.0.1/remoteEntry.js',
-            manifest: newManifest
-          })
+            manifest: newManifest,
+          }),
         })
       );
 
@@ -153,14 +151,14 @@ describe('ZephyrRuntimePlugin', () => {
         version: '1.0.0',
         timestamp: '2023-01-01T00:00:00Z',
         application_uid: 'test-app-123',
-        dependencies: {}
+        dependencies: {},
       };
 
       const { instance } = createZephyrRuntimePluginWithOTA();
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockManifest)
+        json: () => Promise.resolve(mockManifest),
       } as Response);
 
       // First call should fetch
@@ -176,7 +174,7 @@ describe('ZephyrRuntimePlugin', () => {
     it('should handle fetch errors gracefully', async () => {
       const onManifestError = jest.fn();
       const { instance } = createZephyrRuntimePluginWithOTA({
-        onManifestError
+        onManifestError,
       });
 
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
@@ -192,14 +190,14 @@ describe('ZephyrRuntimePlugin', () => {
         version: '1.0.0',
         timestamp: '2023-01-01T00:00:00Z',
         application_uid: 'test-app-123',
-        dependencies: {}
+        dependencies: {},
       };
 
       const { instance } = createZephyrRuntimePluginWithOTA();
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockManifest)
+        json: () => Promise.resolve(mockManifest),
       } as Response);
 
       // Initial fetch
@@ -223,18 +221,18 @@ describe('ZephyrRuntimePlugin', () => {
         timestamp: '2023-01-01T00:00:00Z',
         application_uid: 'test-app-123',
         dependencies: {
-          'testRemote': {
+          testRemote: {
             application_uid: 'remote-uid',
             remote_entry_url: 'https://cdn.example.com/testRemote/remoteEntry.js',
             public_path: 'https://cdn.example.com/testRemote/',
-            version: '1.0.0'
-          }
-        }
+            version: '1.0.0',
+          },
+        },
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockManifest)
+        json: () => Promise.resolve(mockManifest),
       } as Response);
 
       const { plugin } = createZephyrRuntimePluginWithOTA();
@@ -245,10 +243,10 @@ describe('ZephyrRuntimePlugin', () => {
           remotes: [
             {
               name: 'testRemote',
-              entry: 'http://localhost:3001/remoteEntry.js'
-            }
-          ]
-        }
+              entry: 'http://localhost:3001/remoteEntry.js',
+            },
+          ],
+        },
       };
 
       const result = await plugin.beforeRequest!(mockArgs as any);

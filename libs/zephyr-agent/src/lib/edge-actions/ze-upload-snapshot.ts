@@ -66,9 +66,9 @@ export async function zeUploadSnapshot(
         otaContract: {
           versionUrl: edgeTodo?.urls?.version,
           manifestPath: 'zephyr-manifest.json',
-          coupling: 'immutable - version URL + manifest must match for OTA updates'
-        }
-      }
+          coupling: 'immutable - version URL + manifest must match for OTA updates',
+        },
+      },
     });
   }
 

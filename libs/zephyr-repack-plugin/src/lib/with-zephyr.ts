@@ -33,9 +33,9 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
         target: config.platform,
       } as ZephyrRepackPluginOptions;
 
-      ze_log.init('updatedZephyrConfig: ', updatedZephyrConfig);
+      ze_log.init('Zephyr config (with OTA support if enabled): ', updatedZephyrConfig);
 
-      // Return the final processed configuration
+      // Return the final processed configuration with OTA enhancements if enabled
       return _zephyr_configuration(userConfig, updatedZephyrConfig);
     };
   };
@@ -67,7 +67,18 @@ async function _zephyr_configuration(
 
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+
+    // Enhanced remote config mutation with OTA support if enabled
+    if (_zephyrOptions?.enableOTA) {
+      mutWebpackFederatedRemotesConfigWithOTA(
+        zephyr_engine,
+        config,
+        resolved_dependency_pairs,
+        _zephyrOptions
+      );
+    } else {
+      mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    }
 
     ze_log.remotes(
       'dependency resolution completed successfully...or at least trying to...'
@@ -84,6 +95,9 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         target: zephyr_engine.env.target,
+        enableOTA: _zephyrOptions?.enableOTA,
+        applicationUid: _zephyrOptions?.applicationUid,
+        otaConfig: _zephyrOptions?.otaConfig,
       })
     );
   } catch (error) {
@@ -91,4 +105,25 @@ async function _zephyr_configuration(
   }
 
   return config;
+}
+
+/** Enhanced remote config mutation that includes OTA runtime plugin setup */
+function mutWebpackFederatedRemotesConfigWithOTA<Compiler>(
+  zephyr_engine: ZephyrEngine,
+  config: any,
+  resolvedDependencyPairs: any[] | null,
+  zephyrOptions: ZephyrRepackPluginOptions
+): void {
+  // First, apply standard remote config mutation
+  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolvedDependencyPairs);
+
+  // Log OTA configuration for user awareness
+  if (zephyrOptions.enableOTA) {
+    ze_log.remotes('OTA support enabled - see documentation for runtime setup');
+    ze_log.remotes('App UID:', zephyrOptions.applicationUid || 'not specified');
+    ze_log.remotes(
+      'OTA endpoint:',
+      zephyrOptions.otaConfig?.otaEndpoint || 'default will be used'
+    );
+  }
 }

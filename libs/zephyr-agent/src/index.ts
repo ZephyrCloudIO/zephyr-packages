@@ -73,3 +73,17 @@ export {
   calculateManifestHash,
   collectZEPublicVars,
 } from './lib/env-variables';
+
+// OTA Worker exports
+export {
+  ZephyrOTAWorker,
+  useZephyrUpdates,
+  type UseZephyrUpdatesOptions,
+  type UseZephyrUpdatesResult,
+  type ZephyrOTACallbacks,
+  type ZephyrOTAConfig,
+  type ZephyrOTAUpdate,
+} from './lib/ota/zephyr-ota-worker';
+
+// HTTP utilities
+export { fetchWithRetries } from './lib/http/fetch-with-retries';

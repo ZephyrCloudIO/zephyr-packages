@@ -219,6 +219,7 @@ export class ZephyrOTAWorker {
   /** Perform update check with retry logic */
   private async performUpdateCheck(): Promise<void> {
     try {
+      await this.updateMetrics('check');
       await this.checkForUpdatesWithRetry();
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown OTA check error');
@@ -270,6 +271,7 @@ export class ZephyrOTAWorker {
           };
 
           this.log('Update available', update);
+          await this.updateMetrics('update_available');
           this.callbacks.onUpdateAvailable?.(update);
         } else {
           this.log('No updates available or update declined');
@@ -311,10 +313,12 @@ export class ZephyrOTAWorker {
       await this.removeStorageItem(STORAGE_KEYS.UPDATE_DECLINED);
 
       this.log('Update applied successfully');
+      await this.updateMetrics('update_applied');
       this.callbacks.onUpdateApplied?.(update.version);
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown update error');
       this.log('Failed to apply update', err.message);
+      await this.updateMetrics('update_failed');
       this.callbacks.onUpdateFailed?.(err);
       throw err;
     }

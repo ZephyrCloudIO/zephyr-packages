@@ -108,7 +108,7 @@ async function _zephyr_configuration(
 }
 
 /** Enhanced remote config mutation that includes OTA runtime plugin setup */
-function mutWebpackFederatedRemotesConfigWithOTA<Compiler>(
+function mutWebpackFederatedRemotesConfigWithOTA(
   zephyr_engine: ZephyrEngine,
   config: any,
   resolvedDependencyPairs: any[] | null,

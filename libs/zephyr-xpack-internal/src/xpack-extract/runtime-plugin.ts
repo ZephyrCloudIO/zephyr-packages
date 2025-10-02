@@ -21,18 +21,10 @@ export interface ZephyrRuntimePluginInstance {
   getCurrentManifest: () => Promise<ZephyrManifest | undefined>;
 }
 
-// Ensure only one fetch is done by the app
-const globalKey = '__ZEPHYR_MANIFEST_PROMISE__';
+// Global object for browser/Node.js compatibility
 const _global = typeof window !== 'undefined' ? window : globalThis;
 
-function getGlobalManifestPromise(): Promise<ZephyrManifest | undefined> | undefined {
-  return (_global as any)[globalKey];
-}
-
-function setGlobalManifestPromise(promise: Promise<ZephyrManifest | undefined>): void {
-  (_global as any)[globalKey] = promise;
-}
-
+// Ensure only one fetch is done by the app
 /**
  * Enhanced Zephyr Runtime Plugin with caching by application_uid and refresh hooks Now
  * delegates to createZephyrRuntimePluginWithOTA for consistent behavior
@@ -46,6 +38,7 @@ export function createZephyrRuntimePlugin(
 }
 
 /** Fetches the zephyr-manifest.json file and returns the runtime plugin data */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function fetchZephyrManifest(): Promise<ZephyrManifest | undefined> {
   try {
     // Fetch the manifest from the same origin
@@ -184,10 +177,7 @@ export function createZephyrRuntimePluginWithOTA(
     }
   }
 
-  async function fetchManifestWithOTA(
-    url: string,
-    skipCache = false
-  ): Promise<ZephyrManifest | undefined> {
+  async function fetchManifestWithOTA(url: string): Promise<ZephyrManifest | undefined> {
     try {
       const response = await fetch(url);
 
@@ -315,7 +305,7 @@ export function createZephyrRuntimePluginWithOTA(
       }
 
       // Fetch fresh manifest
-      zephyrManifestPromise = fetchManifestWithOTA(manifestUrl, true);
+      zephyrManifestPromise = fetchManifestWithOTA(manifestUrl);
       return zephyrManifestPromise;
     },
 

@@ -111,6 +111,7 @@ describe('ZephyrRuntimePlugin', () => {
       document.addEventListener('zephyr:remote-url-changed', eventListener);
 
       const { instance } = createZephyrRuntimePluginWithOTA({
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         onManifestChange: () => {},
       });
 

@@ -30,7 +30,13 @@ jest.mock('../errors', () => {
       template?: Record<string, unknown>;
       cause?: unknown;
 
-      constructor(type: any, opts?: any) {
+      constructor(
+        type: { message?: string },
+        opts?: { cause?: unknown; data?: Record<string, unknown> } & Record<
+          string,
+          unknown
+        >
+      ) {
         super(type.message || 'Mock Error');
 
         // Use direct mapping for ERR_FAILED_UPLOAD

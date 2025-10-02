@@ -114,6 +114,8 @@ export interface OTAVersionResponse {
   description?: string;
   /** Whether this is a critical update that should be applied immediately */
   critical?: boolean;
+  /** Optional release notes */
+  release_notes?: string;
 }
 
 /** OTA Check Request */
@@ -124,4 +126,6 @@ export interface OTACheckRequest {
   current_version?: string;
   /** Current manifest timestamp the client has */
   current_timestamp?: string;
+  /** Platform identifier */
+  platform?: 'ios' | 'android';
 }

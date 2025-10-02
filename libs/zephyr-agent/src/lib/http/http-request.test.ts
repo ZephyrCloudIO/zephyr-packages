@@ -14,7 +14,11 @@ jest.mock('../logging/debug', () => ({
 }));
 jest.mock('zephyr-edge-contract', () => ({
   PromiseWithResolvers: () => {
-    const resolvable: any = {};
+    const resolvable: {
+      promise?: Promise<unknown>;
+      resolve?: (value: unknown) => void;
+      reject?: (reason: unknown) => void;
+    } = {};
     resolvable.promise = new Promise((resolve, reject) => {
       resolvable.resolve = resolve;
       resolvable.reject = reject;

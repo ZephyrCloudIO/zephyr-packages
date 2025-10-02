@@ -401,12 +401,9 @@ export class ZephyrOTAWorker {
   private async getStorageItem(key: string): Promise<string | null> {
     if (this.isReactNative()) {
       try {
-        // Dynamic import with string literal to avoid build-time TypeScript errors
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - @react-native-async-storage/async-storage is an optional peer dependency
-        const AsyncStorageModule = await import(
-          '@react-native-async-storage/async-storage'
-        );
+        // Dynamic import path to avoid TypeScript module resolution at compile time
+        const modulePath = '@react-native-async-storage/async-storage';
+        const AsyncStorageModule = await import(/* webpackIgnore: true */ modulePath);
         const AsyncStorage = AsyncStorageModule.default || AsyncStorageModule;
         return AsyncStorage.getItem(key);
       } catch {
@@ -421,12 +418,9 @@ export class ZephyrOTAWorker {
   private async setStorageItem(key: string, value: string): Promise<void> {
     if (this.isReactNative()) {
       try {
-        // Dynamic import with string literal to avoid build-time TypeScript errors
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - @react-native-async-storage/async-storage is an optional peer dependency
-        const AsyncStorageModule = await import(
-          '@react-native-async-storage/async-storage'
-        );
+        // Dynamic import path to avoid TypeScript module resolution at compile time
+        const modulePath = '@react-native-async-storage/async-storage';
+        const AsyncStorageModule = await import(/* webpackIgnore: true */ modulePath);
         const AsyncStorage = AsyncStorageModule.default || AsyncStorageModule;
         await AsyncStorage.setItem(key, value);
       } catch {
@@ -440,12 +434,9 @@ export class ZephyrOTAWorker {
   private async removeStorageItem(key: string): Promise<void> {
     if (this.isReactNative()) {
       try {
-        // Dynamic import with string literal to avoid build-time TypeScript errors
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - @react-native-async-storage/async-storage is an optional peer dependency
-        const AsyncStorageModule = await import(
-          '@react-native-async-storage/async-storage'
-        );
+        // Dynamic import path to avoid TypeScript module resolution at compile time
+        const modulePath = '@react-native-async-storage/async-storage';
+        const AsyncStorageModule = await import(/* webpackIgnore: true */ modulePath);
         const AsyncStorage = AsyncStorageModule.default || AsyncStorageModule;
         await AsyncStorage.removeItem(key);
       } catch {

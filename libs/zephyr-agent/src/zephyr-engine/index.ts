@@ -96,6 +96,41 @@ export interface ZeUser {
   jwt: string;
 }
 
+export interface ZephyrBuildHooks {
+  onDeployComplete?: (deploymentInfo: DeploymentInfo) => void | Promise<void>;
+}
+
+export interface DeploymentInfo {
+  url: string;
+  moduleName: string;
+  moduleId: string;
+  remoteEntryFilename?: string;
+  buildId: string;
+  snapshotId: string;
+  buildTarget: 'web' | 'ios' | 'android';
+  mfConfig?: {
+    name: string;
+    filename?: string;
+    remotes?: Array<{ name: string; entry: string }>;
+    exposes?: Record<string, string>;
+  };
+  federatedDependencies: Array<{
+    name: string;
+    version: string;
+    applicationUid: string;
+    remoteEntryUrl: string;
+    defaultUrl: string;
+  }>;
+  buildStats: ZephyrBuildStats;
+  git: {
+    branch: string;
+    commit: string;
+    remote?: string;
+  };
+  isCI: boolean;
+  buildDuration: number;
+}
+
 /**
  * IMPORTANT: do NOT add methods to this class, keep it lean! IMPORTANT: use `await
  * ZephyrEngine.create(context)` to create an instance ZephyrEngine instance represents
@@ -436,6 +471,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    hooks?: ZephyrBuildHooks;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -489,6 +525,58 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       urls: [zephyr_engine.version_url],
       snapshot,
     });
+
+    // Call deployment hook if provided
+    if (props.hooks?.onDeployComplete && zephyr_engine.version_url) {
+      try {
+        const buildId = await zephyr_engine.build_id;
+        const snapshotId = await zephyr_engine.snapshotId;
+
+        if (!snapshotId) {
+          ze_log.upload('Warning: snapshotId is null, skipping deployment hook');
+          return;
+        }
+
+        const deploymentInfo: DeploymentInfo = {
+          url: zephyr_engine.version_url,
+
+          moduleName: zephyr_engine.npmProperties.name,
+          moduleId: zephyr_engine.application_uid,
+
+          buildId,
+          snapshotId,
+          buildTarget: zephyr_engine.env.target || 'web',
+
+          federatedDependencies: (zephyr_engine.federated_dependencies || []).map(
+            (dep) => ({
+              name: dep.name,
+              version: dep.version,
+              applicationUid: dep.application_uid,
+              remoteEntryUrl: dep.remote_entry_url,
+              defaultUrl: dep.default_url,
+            })
+          ),
+
+          buildStats,
+
+          git: {
+            branch: zephyr_engine.gitProperties.git.branch,
+            commit: zephyr_engine.gitProperties.git.commit,
+            remote: undefined,
+          },
+
+          isCI: zephyr_engine.env.isCI,
+          buildDuration: zephyr_engine.build_start_time
+            ? Date.now() - zephyr_engine.build_start_time
+            : 0,
+        };
+
+        await props.hooks.onDeployComplete(deploymentInfo);
+      } catch (error: unknown) {
+        // Log hook errors but don't fail the build
+        ze_log.upload('Warning: deployment hook failed', error);
+      }
+    }
 
     await this.build_finished();
   }

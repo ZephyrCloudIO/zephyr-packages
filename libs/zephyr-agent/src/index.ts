@@ -50,5 +50,5 @@ export {
   type ZephyrDependencies,
   type ZephyrEngineOptions,
 } from './zephyr-engine';
-export type { Platform } from './zephyr-engine';
+export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';

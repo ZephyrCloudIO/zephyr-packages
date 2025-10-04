@@ -7,6 +7,7 @@ import {
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
 import type { Compiler } from '@rspack/core';
+import type { ZephyrBuildHooks } from 'zephyr-agent';
 
 const pluginName = 'ZeRspackPlugin';
 
@@ -19,6 +20,7 @@ export interface ZephyrRspackInternalPluginOptions {
   // hacks
   wait_for_index_html?: boolean;
   // outputPath?: string;
+  hooks?: ZephyrBuildHooks;
 }
 
 export class ZeRspackPlugin {

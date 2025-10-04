@@ -15,8 +15,8 @@ module.exports = composePlugins(
         console.log(`   Duration: ${info.buildDuration}ms`);
         console.log(`   Git: ${info.git.branch}@${info.git.commit}`);
         console.log(`   CI: ${info.isCI ? 'Yes' : 'No'}`);
-      }
-    }
+      },
+    },
   }),
   (config) => {
     return config;

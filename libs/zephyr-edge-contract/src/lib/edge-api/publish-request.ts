@@ -31,7 +31,7 @@ export interface GatewayPublishRequest {
   /** Previously `can_write_jwt` */
   jwt: string;
   /** Per-environment variables - map of hostname to variables for all deploys */
-  environmentVariables?: Record<string, Record<string, string>>;
+  envVarSetEnvMap?: Record<string, Record<string, string>>;
 }
 
 export interface StageZeroPublishRequest {
@@ -62,6 +62,8 @@ export interface PublishRequest {
     envs: PublishTarget[];
     cnames: PublishTarget[];
   };
+  envVarsHash?: string;
+  environmentVariables?: Record<string, Record<string, string>>;
 
   // this is can_write_jwt
   jwt: string;

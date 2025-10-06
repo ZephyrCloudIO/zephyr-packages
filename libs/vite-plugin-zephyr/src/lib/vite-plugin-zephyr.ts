@@ -76,6 +76,11 @@ function zephyrPlugin(): Plugin {
         return code;
       }
     },
+    writeBundle: async (options, bundle) => {
+      const vite_internal_options = await vite_internal_options_defer;
+      vite_internal_options.dir = options.dir;
+      vite_internal_options.assets = bundle;
+    },
     closeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([

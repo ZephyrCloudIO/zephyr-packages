@@ -1,9 +1,10 @@
 import { ZephyrError, ZeErrors } from 'zephyr-agent';
+import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export type MetroConfig = Record<string, unknown>;
-export type MetroFederationConfig = Record<string, unknown>; // TODO: Import proper MF config type
+export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
 
 export async function zephyrCommandWrapper(
   bundleFederatedRemote: (...args: any[]) => Promise<any>,

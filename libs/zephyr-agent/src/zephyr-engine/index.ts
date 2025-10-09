@@ -271,7 +271,6 @@ export class ZephyrEngine {
           version: ze_dependency?.version ?? dep.version,
           platform,
           build_context,
-          dep: dep.version,
         })
       );
 

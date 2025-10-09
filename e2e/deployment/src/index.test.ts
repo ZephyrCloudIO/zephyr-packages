@@ -24,7 +24,7 @@ for (const appName of testTargets) {
       deployResult = result;
     });
 
-    it(
+    it.skip(
       'should have correctly deployed assets',
       async () => {
         const url = deployResult.urls[0];

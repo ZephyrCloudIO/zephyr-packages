@@ -34,6 +34,8 @@ function zephyrPlugin(): Plugin {
 
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
+  let isTanStackStart = false;
+  let uploadCompleted = false;
 
   return {
     name: 'with-zephyr',
@@ -42,6 +44,57 @@ function zephyrPlugin(): Plugin {
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
       baseHref = config.base || '/';
+
+      // Detect TanStack Start by checking for 'ssr' and 'client' environments
+      if (config.environments?.['ssr'] && config.environments?.['client']) {
+        isTanStackStart = true;
+        logFn('info', 'Detected TanStack Start - will capture prerendered assets');
+
+        // Wrap the builder.buildApp function to run our upload after it completes
+        if (config.builder?.buildApp) {
+          const originalBuildApp = config.builder.buildApp;
+          config.builder.buildApp = async function (this: any, builder: any) {
+            // Run the original buildApp (including prerendering)
+            await originalBuildApp.call(this, builder);
+
+            // Now upload all assets including prerendered ones
+            try {
+              const [vite_internal_options, zephyr_engine] = await Promise.all([
+                vite_internal_options_defer,
+                zephyr_engine_defer,
+              ]);
+
+              const clientOutDir = config.environments?.['client']?.build?.outDir;
+
+              if (clientOutDir && !uploadCompleted) {
+                const clientOptions: ZephyrInternalOptions = {
+                  ...vite_internal_options,
+                  outDir: clientOutDir,
+                };
+
+                zephyr_engine.buildProperties.baseHref = baseHref;
+
+                logFn('info', 'Uploading all assets including prerendered pages...');
+
+                await zephyr_engine.start_new_build();
+                const assetsMap = await extract_vite_assets_map(
+                  zephyr_engine,
+                  clientOptions
+                );
+                await zephyr_engine.upload_assets({
+                  assetsMap,
+                  buildStats: await zeBuildDashData(zephyr_engine),
+                });
+                await zephyr_engine.build_finished();
+
+                uploadCompleted = true;
+              }
+            } catch (error) {
+              logFn('error', ZephyrError.format(error));
+            }
+          };
+        }
+      }
 
       if (config.command === 'serve') return;
 
@@ -77,6 +130,12 @@ function zephyrPlugin(): Plugin {
       }
     },
     closeBundle: async () => {
+      // If TanStack Start is detected, skip immediate upload
+      // The buildEnd hook will handle it after prerendering
+      if (isTanStackStart) {
+        return;
+      }
+
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,

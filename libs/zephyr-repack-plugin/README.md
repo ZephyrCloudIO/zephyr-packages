@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/repack-mf) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/bundlers/repack) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
@@ -18,7 +18,7 @@ The fastest way to get started is to use `create-zephyr-apps` to generate a new 
 npx create-zephyr-apps@latest
 ```
 
-For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/recipes/repack-mf) for Repack and also a comprehensive guide to work with Re.Pack [here](https://docs.zephyr-cloud.io/recipes/react-native).
+For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/bundlers/repack) for Repack and also a comprehensive guide to work with Re.Pack [here](https://docs.zephyr-cloud.io/integrations/react-native-repack).
 
 ## Installation
 
@@ -135,7 +135,7 @@ To create a complete example of a React Native application, with Zephyr enabled,
 npx create-zephyr-apps@latest
 ```
 
-This will create a new React Native application with Zephyr enabled, configured, and ready to use. [Read more about what this command would create here](https://docs.zephyr-cloud.io/recipes/repack-mf).
+This will create a new React Native application with Zephyr enabled, configured, and ready to use. [Read more about what this command would create here](https://docs.zephyr-cloud.io/bundlers/repack).
 
 ## Features
 

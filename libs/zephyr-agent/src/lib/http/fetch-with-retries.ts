@@ -1,8 +1,33 @@
-import { ZeErrors, ZephyrError } from '../errors';
 import type { AxiosRequestConfig } from 'axios';
-import { AxiosError } from 'axios';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
+import isCI from 'is-ci';
+import { ZeErrors, ZephyrError } from '../errors';
+
+const IPV4_FAMILY = 4;
+const RETRY_ERROR_CODES = [
+  'ETIMEDOUT',
+  'ENETUNREACH',
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'EPIPE',
+];
+
+function shouldRetry(error: AxiosError): boolean {
+  // Retry on network errors (no response received)
+  if (!error.response) {
+    const code = error.code;
+    const message = error.message || '';
+    return (
+      (code && RETRY_ERROR_CODES.includes(code)) ||
+      message.includes('network') ||
+      message.includes('timeout')
+    );
+  }
+
+  // Retry on server errors (5xx)
+  return error.response.status >= 500;
+}
 
 export async function fetchWithRetries(
   url: URL,
@@ -10,23 +35,19 @@ export async function fetchWithRetries(
   retries = 3
 ): Promise<Response> {
   try {
-    // Create a custom axios instance for this request
-    const axiosInstance = axios.create();
+    // Create a custom axios instance for this request with CI-friendly settings
+    const axiosInstance = axios.create({
+      // Force IPv4 in CI environments to avoid IPv6 connectivity issues
+      // References: https://github.com/actions/runner/issues/3138
+      // https://x.com/matteocollina/status/1640384245834055680
+      family: isCI ? IPV4_FAMILY : undefined,
+    });
 
     // Configure axios-retry
     axiosRetry(axiosInstance, {
       retries,
       retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: (error: AxiosError) => {
-        // Retry on network errors
-        if (!error.response) {
-          const networkError = error.code || error.message || '';
-          return networkError === 'EPIPE' || networkError.includes('network');
-        }
-
-        // Retry on server errors (5xx)
-        return error.response.status >= 500;
-      },
+      retryCondition: shouldRetry,
     });
 
     // Convert fetch options to axios options

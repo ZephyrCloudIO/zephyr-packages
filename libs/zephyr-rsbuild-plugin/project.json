@@ -1,0 +1,37 @@
+{
+  "name": "zephyr-rsbuild-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-rsbuild-plugin/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-rsbuild-plugin/src",
+        "outputPath": "libs/zephyr-rsbuild-plugin/dist",
+        "tsConfig": "libs/zephyr-rsbuild-plugin/tsconfig.lib.json",
+        "main": "libs/zephyr-rsbuild-plugin/src/index.ts"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-rsbuild-plugin {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-rsbuild-plugin@$(npm view zephyr-rsbuild-plugin@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-rsbuild-plugin/jest.config.ts"
+      }
+    }
+  }
+}

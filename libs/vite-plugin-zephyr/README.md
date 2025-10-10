@@ -8,7 +8,7 @@
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
-A Vite plugin for deploying applications with Zephyr Cloud. This plugin integrates with Vite's build process to enable seamless deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/recipes/react-vite).
+A Vite plugin for deploying applications with Zephyr Cloud. This plugin integrates with Vite's build process to enable seamless deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/integrations/react-vite).
 
 ## Get Started
 

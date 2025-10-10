@@ -1,13 +1,9 @@
-import type { AstroIntegration, AstroConfig, HookParameters } from 'astro';
+import type { AstroIntegration, HookParameters } from 'astro';
 import { fileURLToPath } from 'node:url';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import { extractAstroAssetsFromBuildHook, extractAstroAssetsMap } from './internal/extract-astro-assets-map';
+import { extractAstroAssetsFromBuildHook } from './internal/extract-astro-assets-map';
 
-interface ZephyrAstroIntegrationOptions {
-  // Add specific Astro integration options here if needed
-}
-
-export function withZephyr(options?: ZephyrAstroIntegrationOptions): AstroIntegration {
+export function withZephyr(): AstroIntegration {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   return {
@@ -26,7 +22,10 @@ export function withZephyr(options?: ZephyrAstroIntegrationOptions): AstroIntegr
           logFn('error', ZephyrError.format(error));
         }
       },
-      'astro:build:done': async ({ dir, ...params }: HookParameters<'astro:build:done'>) => {
+      'astro:build:done': async ({
+        dir,
+        ...params
+      }: HookParameters<'astro:build:done'>) => {
         try {
           const zephyr_engine = await zephyr_engine_defer;
 

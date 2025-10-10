@@ -7,7 +7,7 @@ describe('Integration Export', () => {
 
   it('should create a valid Astro integration', () => {
     const integration = withZephyr();
-    
+
     expect(integration).toMatchObject({
       name: 'with-zephyr',
       hooks: expect.objectContaining({
@@ -20,7 +20,7 @@ describe('Integration Export', () => {
   it('should handle options parameter correctly', () => {
     const options = { customOption: 'test' };
     const integration = withZephyr(options);
-    
+
     expect(integration.name).toBe('with-zephyr');
     expect(integration.hooks).toBeDefined();
   });

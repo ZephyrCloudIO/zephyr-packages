@@ -52,7 +52,7 @@ The integration works out of the box without additional configuration. For advan
 ```js
 withZephyr({
   // Add custom options here when needed
-})
+});
 ```
 
 ## Requirements

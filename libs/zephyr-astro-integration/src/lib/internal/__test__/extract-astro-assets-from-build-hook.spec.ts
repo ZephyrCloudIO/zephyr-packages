@@ -19,11 +19,13 @@ describe('extractAstroAssetsFromBuildHook', () => {
   beforeEach(async () => {
     tempDir = join(tmpdir(), `astro-assets-hook-test-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
-    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    
+    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+      // Mock implementation
+    });
+
     // Mock buildAssetsMap to return a simple hash-based result
     (buildAssetsMap as jest.Mock).mockImplementation((assets) => {
-      const result: any = {};
+      const result: Record<string, unknown> = {};
       Object.keys(assets).forEach((key, index) => {
         const hash = `hash${index + 1}`;
         result[hash] = {
@@ -42,7 +44,7 @@ describe('extractAstroAssetsFromBuildHook', () => {
   afterEach(async () => {
     try {
       await rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
     if (consoleSpy && typeof consoleSpy.mockRestore === 'function') {
@@ -62,7 +64,7 @@ describe('extractAstroAssetsFromBuildHook', () => {
         'style.css': join(tempDir, 'style.css'),
       };
 
-      const result = await extractAstroAssetsFromBuildHook(assets, tempDir);
+      await extractAstroAssetsFromBuildHook(assets, tempDir);
 
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -84,12 +86,11 @@ describe('extractAstroAssetsFromBuildHook', () => {
       // Create test files
       await writeFile(join(tempDir, 'script.js'), 'console.log("hello");');
 
-      const assets = new Map([
-        ['script.js', join(tempDir, 'script.js')],
-      ]);
+      const assets = new Map([['script.js', join(tempDir, 'script.js')]]);
 
-      await extractAstroAssetsFromBuildHook(assets, tempDir);
+      const result = await extractAstroAssetsFromBuildHook(assets, tempDir);
 
+      expect(result).toBeDefined();
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
           'script.js': expect.objectContaining({
@@ -124,9 +125,7 @@ describe('extractAstroAssetsFromBuildHook', () => {
       // Create test files
       await writeFile(join(tempDir, 'image.png'), 'PNG data');
 
-      const assets = [
-        { path: join(tempDir, 'image.png'), size: 1024 },
-      ];
+      const assets = [{ path: join(tempDir, 'image.png'), size: 1024 }];
 
       await extractAstroAssetsFromBuildHook(assets, tempDir);
 
@@ -205,11 +204,8 @@ describe('extractAstroAssetsFromBuildHook', () => {
       await writeFile(join(tempDir, 'complex.json'), '{"nested": "data"}');
 
       const assets = {
-        'route1': [
-          join(tempDir, 'complex.json'),
-          { path: join(tempDir, 'complex.json') },
-        ],
-        'route2': {
+        route1: [join(tempDir, 'complex.json'), { path: join(tempDir, 'complex.json') }],
+        route2: {
           url: join(tempDir, 'complex.json'),
         },
       };

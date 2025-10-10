@@ -20,12 +20,12 @@ describe('File Type Detection', () => {
   beforeEach(async () => {
     tempDir = join(tmpdir(), `file-type-test-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
-    
+
     (buildAssetsMap as jest.Mock).mockImplementation((assets) => {
       return Object.fromEntries(
         Object.entries(assets).map(([key, value], index) => [
           `hash${index}`,
-          { filepath: key, ...(value as any) }
+          { filepath: key, ...(value as Record<string, unknown>) },
         ])
       );
     });
@@ -34,7 +34,7 @@ describe('File Type Detection', () => {
   afterEach(async () => {
     try {
       await rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
     jest.clearAllMocks();
@@ -47,12 +47,12 @@ describe('File Type Detection', () => {
     ['style.css', 'text/css'],
     ['script.js', 'application/javascript'],
     ['module.mjs', 'application/javascript'],
-    
+
     // Data files
     ['data.json', 'application/json'],
     ['config.xml', 'text/xml'],
     ['readme.txt', 'text/plain'],
-    
+
     // Images
     ['logo.png', 'image/png'],
     ['photo.jpg', 'image/jpeg'],
@@ -60,13 +60,13 @@ describe('File Type Detection', () => {
     ['animation.gif', 'image/gif'],
     ['icon.svg', 'image/svg+xml'],
     ['favicon.ico', 'image/x-icon'],
-    
+
     // Fonts
     ['font.woff', 'font/woff'],
     ['font.woff2', 'font/woff2'],
     ['font.ttf', 'font/ttf'],
     ['font.eot', 'application/vnd.ms-fontobject'],
-    
+
     // Unknown/fallback
     ['unknown.xyz', 'application/octet-stream'],
     ['no-extension', 'application/octet-stream'],
@@ -75,12 +75,12 @@ describe('File Type Detection', () => {
 
   test.each(testCases)('should detect %s as %s', async (filename, expectedType) => {
     await writeFile(join(tempDir, filename), 'test content');
-    
+
     await extractAstroAssetsMap(tempDir);
-    
+
     const buildAssetsMapCall = (buildAssetsMap as jest.Mock).mock.calls[0];
     const assets = buildAssetsMapCall[0];
-    
+
     expect(assets[filename]).toHaveProperty('type', expectedType);
   });
 
@@ -97,10 +97,10 @@ describe('File Type Detection', () => {
     }
 
     await extractAstroAssetsMap(tempDir);
-    
+
     const buildAssetsMapCall = (buildAssetsMap as jest.Mock).mock.calls[0];
     const assets = buildAssetsMapCall[0];
-    
+
     testFiles.forEach(([filename, expectedType]) => {
       expect(assets[filename]).toHaveProperty('type', expectedType);
     });

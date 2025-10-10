@@ -16,11 +16,13 @@ describe('extractAstroAssetsMap', () => {
   beforeEach(async () => {
     tempDir = join(tmpdir(), `astro-test-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
-    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    
+    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+      // Mock implementation
+    });
+
     // Mock buildAssetsMap to return a simple hash-based result
     (buildAssetsMap as jest.Mock).mockImplementation((assets) => {
-      const result: any = {};
+      const result: Record<string, unknown> = {};
       Object.keys(assets).forEach((key, index) => {
         const hash = `hash${index + 1}`;
         result[hash] = {
@@ -37,7 +39,7 @@ describe('extractAstroAssetsMap', () => {
   afterEach(async () => {
     try {
       await rm(tempDir, { recursive: true, force: true });
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
     if (consoleSpy && typeof consoleSpy.mockRestore === 'function') {
@@ -79,7 +81,11 @@ describe('extractAstroAssetsMap', () => {
     it('should handle empty directory', async () => {
       const assetsMap = await extractAstroAssetsMap(tempDir);
       expect(Object.keys(assetsMap)).toHaveLength(0);
-      expect(buildAssetsMap).toHaveBeenCalledWith({}, expect.any(Function), expect.any(Function));
+      expect(buildAssetsMap).toHaveBeenCalledWith(
+        {},
+        expect.any(Function),
+        expect.any(Function)
+      );
     });
   });
 
@@ -89,8 +95,9 @@ describe('extractAstroAssetsMap', () => {
       await writeFile(join(tempDir, 'style.css.map'), '{"version":3}');
       await writeFile(join(tempDir, 'script.js.map'), '{"version":3}');
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
 
+      expect(result).toBeDefined();
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
@@ -113,8 +120,9 @@ describe('extractAstroAssetsMap', () => {
       await writeFile(join(tempDir, '.DS_Store'), 'system data');
       await writeFile(join(tempDir, 'Thumbs.db'), 'windows thumbnail');
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
 
+      expect(result).toBeDefined();
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
@@ -131,8 +139,9 @@ describe('extractAstroAssetsMap', () => {
       await writeFile(join(tempDir, '.git', 'config'), 'git config');
       await writeFile(join(tempDir, 'index.html'), '<html></html>');
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
 
+      expect(result).toBeDefined();
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
@@ -160,7 +169,7 @@ describe('extractAstroAssetsMap', () => {
         ['unknown.xyz', 'unknown content', 'application/octet-stream'],
       ];
 
-      for (const [filename, content, expectedType] of testFiles) {
+      for (const [filename, content] of testFiles) {
         await writeFile(join(tempDir, filename), content);
       }
 
@@ -186,8 +195,9 @@ describe('extractAstroAssetsMap', () => {
       await writeFile(join(tempDir, 'assets', 'css', 'style.css'), 'body {}');
       await writeFile(join(tempDir, 'images', 'logo.png'), 'PNG data');
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
 
+      expect(result).toBeDefined();
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
@@ -205,8 +215,9 @@ describe('extractAstroAssetsMap', () => {
       await mkdir(deepPath, { recursive: true });
       await writeFile(join(deepPath, 'deep.txt'), 'deep file');
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
 
+      expect(result).toBeDefined();
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
           'a/b/c/d/e/deep.txt': expect.objectContaining({
@@ -226,20 +237,24 @@ describe('extractAstroAssetsMap', () => {
 
       // Mock readFile to fail for specific file
       const originalReadFile = readFile;
-      jest.spyOn(require('node:fs/promises'), 'readFile').mockImplementation(async (path) => {
-        if (path.toString().includes('good.txt')) {
-          throw new Error('Permission denied');
-        }
-        return originalReadFile(path);
-      });
+      jest
+        .spyOn(require('node:fs/promises'), 'readFile')
+        .mockImplementation(async (path) => {
+          if (path.toString().includes('good.txt')) {
+            throw new Error('Permission denied');
+          }
+          return originalReadFile(path);
+        });
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
+
+      expect(result).toBeDefined();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringMatching(/Failed to read file.*good\.txt/),
         expect.any(Error)
       );
-      
+
       // Should still process the readable file
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -258,14 +273,18 @@ describe('extractAstroAssetsMap', () => {
 
       // Mock readdir to fail for subdirectory
       const originalReaddir = require('node:fs/promises').readdir;
-      jest.spyOn(require('node:fs/promises'), 'readdir').mockImplementation(async (path, options) => {
-        if (path.toString().includes('subdir')) {
-          throw new Error('Access denied');
-        }
-        return originalReaddir(path, options);
-      });
+      jest
+        .spyOn(require('node:fs/promises'), 'readdir')
+        .mockImplementation(async (path, options) => {
+          if (path.toString().includes('subdir')) {
+            throw new Error('Access denied');
+          }
+          return originalReaddir(path, options);
+        });
 
-      const assetsMap = await extractAstroAssetsMap(tempDir);
+      const result = await extractAstroAssetsMap(tempDir);
+
+      expect(result).toBeDefined();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringMatching(/Failed to walk directory.*subdir/),
@@ -283,7 +302,7 @@ describe('extractAstroAssetsMap', () => {
 
       const extractBuffer = (buildAssetsMap as jest.Mock).mock.calls[0][1];
       const testAsset = { content: Buffer.from('test'), type: 'text/plain' };
-      
+
       expect(extractBuffer(testAsset)).toBe(testAsset.content);
     });
 
@@ -293,7 +312,7 @@ describe('extractAstroAssetsMap', () => {
 
       const getAssetType = (buildAssetsMap as jest.Mock).mock.calls[0][2];
       const testAsset = { content: Buffer.from('test'), type: 'text/plain' };
-      
+
       expect(getAssetType(testAsset)).toBe('text/plain');
     });
   });

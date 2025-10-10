@@ -17,8 +17,8 @@ function getAssetType(asset: AstroAsset): string {
 }
 
 /**
- * Extract assets map from Astro's build hook assets parameter.
- * This is more efficient than walking the filesystem manually.
+ * Extract assets map from Astro's build hook assets parameter. This is more efficient
+ * than walking the filesystem manually.
  */
 export async function extractAstroAssetsFromBuildHook(
   assets: any,
@@ -39,7 +39,7 @@ export async function extractAstroAssetsFromBuildHook(
     for (const [filePath, assetInfo] of assetEntries) {
       try {
         let fullPath: string;
-        
+
         // Handle URL objects or string paths
         if (assetInfo && typeof assetInfo === 'object' && 'href' in assetInfo) {
           // It's a URL object
@@ -76,7 +76,9 @@ export async function extractAstroAssetsFromBuildHook(
 
     // If we didn't find any assets from the hook, fallback to filesystem walking
     if (Object.keys(astroAssets).length === 0) {
-      console.warn('No assets found from Astro build hook, falling back to filesystem walking');
+      console.warn(
+        'No assets found from Astro build hook, falling back to filesystem walking'
+      );
       return await extractAstroAssetsMap(outputPath);
     }
 
@@ -89,15 +91,15 @@ export async function extractAstroAssetsFromBuildHook(
 }
 
 /**
- * Extract asset entries from the Astro assets parameter.
- * Handles different possible data structures.
+ * Extract asset entries from the Astro assets parameter. Handles different possible data
+ * structures.
  */
 function extractAssetEntries(assets: any): [string, any][] {
   const entries: [string, any][] = [];
 
   if (Array.isArray(assets)) {
     // Handle array of assets
-    assets.forEach((asset, index) => {
+    assets.forEach((asset) => {
       if (typeof asset === 'string') {
         entries.push([asset, asset]);
       } else if (asset && typeof asset === 'object') {
@@ -137,16 +139,16 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
   async function walkDir(dirPath: string): Promise<void> {
     try {
       const entries = await readdir(dirPath, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = join(dirPath, entry.name);
-        
+
         if (entry.isDirectory()) {
           await walkDir(fullPath);
         } else if (entry.isFile()) {
           // Get relative path from build directory
           const relativePath = relative(buildDir, fullPath);
-          
+
           // Skip certain files that shouldn't be uploaded
           if (shouldSkipFile(relativePath)) {
             continue;
@@ -155,7 +157,7 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
           try {
             const content = await readFile(fullPath);
             const fileType = getFileType(relativePath);
-            
+
             assets[relativePath] = {
               content,
               type: fileType,
@@ -178,37 +180,37 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
 function shouldSkipFile(filePath: string): boolean {
   // Skip common files that shouldn't be uploaded
   const skipPatterns = [
-    /\.map$/,           // Source maps
-    /node_modules/,     // Node modules
-    /\.git/,           // Git files
-    /\.DS_Store$/,     // macOS files
-    /thumbs\.db$/i,    // Windows files
+    /\.map$/, // Source maps
+    /node_modules/, // Node modules
+    /\.git/, // Git files
+    /\.DS_Store$/, // macOS files
+    /thumbs\.db$/i, // Windows files
   ];
 
-  return skipPatterns.some(pattern => pattern.test(filePath));
+  return skipPatterns.some((pattern) => pattern.test(filePath));
 }
 
 function getFileType(filePath: string): string {
   const extension = filePath.split('.').pop()?.toLowerCase() || '';
-  
+
   const typeMap: Record<string, string> = {
-    'html': 'text/html',
-    'css': 'text/css',
-    'js': 'application/javascript',
-    'mjs': 'application/javascript',
-    'json': 'application/json',
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'svg': 'image/svg+xml',
-    'ico': 'image/x-icon',
-    'woff': 'font/woff',
-    'woff2': 'font/woff2',
-    'ttf': 'font/ttf',
-    'eot': 'application/vnd.ms-fontobject',
-    'xml': 'text/xml',
-    'txt': 'text/plain',
+    html: 'text/html',
+    css: 'text/css',
+    js: 'application/javascript',
+    mjs: 'application/javascript',
+    json: 'application/json',
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    ico: 'image/x-icon',
+    woff: 'font/woff',
+    woff2: 'font/woff2',
+    ttf: 'font/ttf',
+    eot: 'application/vnd.ms-fontobject',
+    xml: 'text/xml',
+    txt: 'text/plain',
   };
 
   return typeMap[extension] || 'application/octet-stream';

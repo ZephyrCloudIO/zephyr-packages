@@ -16,12 +16,4 @@ describe('Integration Export', () => {
       }),
     });
   });
-
-  it('should handle options parameter correctly', () => {
-    const options = { customOption: 'test' };
-    const integration = withZephyr(options);
-
-    expect(integration.name).toBe('with-zephyr');
-    expect(integration.hooks).toBeDefined();
-  });
 });

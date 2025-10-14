@@ -21,12 +21,19 @@ function normalizePath(filePath: string): string {
   return filePath.split(sep).join('/');
 }
 
+type AstroAssets =
+  | Record<string, unknown>
+  | Map<string, unknown>
+  | Array<unknown>
+  | undefined
+  | null;
+
 /**
  * Extract assets map from Astro's build hook assets parameter. This is more efficient
  * than walking the filesystem manually.
  */
 export async function extractAstroAssetsFromBuildHook(
-  assets: any,
+  assets: AstroAssets,
   outputPath: string
 ): Promise<ZeBuildAssetsMap> {
   const astroAssets: Record<string, AstroAsset> = {};
@@ -99,8 +106,8 @@ export async function extractAstroAssetsFromBuildHook(
  * Extract asset entries from the Astro assets parameter. Handles different possible data
  * structures.
  */
-function extractAssetEntries(assets: any): [string, any][] {
-  const entries: [string, any][] = [];
+function extractAssetEntries(assets: AstroAssets): [string, unknown][] {
+  const entries: [string, unknown][] = [];
 
   if (Array.isArray(assets)) {
     // Handle array of assets
@@ -109,8 +116,10 @@ function extractAssetEntries(assets: any): [string, any][] {
         entries.push([asset, asset]);
       } else if (asset && typeof asset === 'object') {
         // Could be an object with path/url properties
-        const path = asset.path || asset.url || asset.href || asset.pathname;
-        if (path) {
+        const assetObj = asset as Record<string, unknown>;
+        const path =
+          assetObj['path'] || assetObj['url'] || assetObj['href'] || assetObj['pathname'];
+        if (path && typeof path === 'string') {
           entries.push([path, asset]);
         }
       }

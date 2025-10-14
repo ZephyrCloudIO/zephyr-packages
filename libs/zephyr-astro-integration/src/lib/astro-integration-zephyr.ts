@@ -9,11 +9,11 @@ export function withZephyr(): AstroIntegration {
   return {
     name: 'with-zephyr',
     hooks: {
-      'astro:config:setup': async ({ config }: HookParameters<'astro:config:setup'>) => {
+      'astro:config:done': async ({ config }: HookParameters<'astro:config:done'>) => {
+        // config.root is a URL object, convert to file path
+        const contextPath = fileURLToPath(config.root);
         try {
           // Initialize ZephyrEngine with Astro context
-          // config.root is a URL object, convert to file path
-          const contextPath = config.root ? fileURLToPath(config.root) : process.cwd();
           zephyr_defer_create({
             builder: 'astro',
             context: contextPath,

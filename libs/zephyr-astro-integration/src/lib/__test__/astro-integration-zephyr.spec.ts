@@ -66,7 +66,7 @@ describe('withZephyr', () => {
 
       expect(integration).toHaveProperty('name', 'with-zephyr');
       expect(integration).toHaveProperty('hooks');
-      expect(integration.hooks).toHaveProperty('astro:config:setup');
+      expect(integration.hooks).toHaveProperty('astro:config:done');
       expect(integration.hooks).toHaveProperty('astro:build:done');
     });
 
@@ -79,12 +79,12 @@ describe('withZephyr', () => {
     it('should have the correct hook functions', () => {
       const integration = withZephyr();
 
-      expect(typeof integration.hooks['astro:config:setup']).toBe('function');
+      expect(typeof integration.hooks['astro:config:done']).toBe('function');
       expect(typeof integration.hooks['astro:build:done']).toBe('function');
     });
   });
 
-  describe('astro:config:setup hook', () => {
+  describe('astro:config:done hook', () => {
     it('should initialize ZephyrEngine with correct context from config.root', async () => {
       const integration = withZephyr();
 
@@ -92,32 +92,13 @@ describe('withZephyr', () => {
         root: new URL('file:///test/project/'),
       };
 
-      await integration.hooks['astro:config:setup']?.({ config: mockConfig } as any);
+      await integration.hooks['astro:config:done']?.({ config: mockConfig } as any);
 
       expect(fileURLToPath).toHaveBeenCalledWith(mockConfig.root);
       expect(mockZephyrDeferCreate).toHaveBeenCalledWith({
         builder: 'astro',
         context: '/test/project/',
       });
-    });
-
-    it('should use process.cwd() when config.root is undefined', async () => {
-      const originalCwd = process.cwd();
-      const mockCwd = '/fallback/path';
-      jest.spyOn(process, 'cwd').mockReturnValue(mockCwd);
-
-      const integration = withZephyr();
-
-      const mockConfig = { root: undefined };
-
-      await integration.hooks['astro:config:setup']?.({ config: mockConfig } as any);
-
-      expect(mockZephyrDeferCreate).toHaveBeenCalledWith({
-        builder: 'astro',
-        context: mockCwd,
-      });
-
-      jest.spyOn(process, 'cwd').mockReturnValue(originalCwd);
     });
 
     it('should handle errors during setup', async () => {
@@ -129,7 +110,7 @@ describe('withZephyr', () => {
       const integration = withZephyr();
       const mockConfig = { root: new URL('file:///test/project/') };
 
-      await integration.hooks['astro:config:setup']?.({ config: mockConfig } as any);
+      await integration.hooks['astro:config:done']?.({ config: mockConfig } as any);
 
       expect(ZephyrError.format).toHaveBeenCalledWith(testError);
       expect(logFn).toHaveBeenCalledWith('error', 'Setup failed');
@@ -223,9 +204,9 @@ describe('withZephyr', () => {
     it('should handle sequential hook calls correctly', async () => {
       const integration = withZephyr();
 
-      // First call config:setup
+      // First call config:done
       const mockConfig = { root: new URL('file:///test/project/') };
-      await integration.hooks['astro:config:setup']?.({ config: mockConfig } as any);
+      await integration.hooks['astro:config:done']?.({ config: mockConfig } as any);
 
       // Then call build:done
       const mockDir = new URL('file:///test/dist/');

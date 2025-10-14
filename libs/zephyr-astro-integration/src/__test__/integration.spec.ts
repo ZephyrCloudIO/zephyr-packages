@@ -11,7 +11,7 @@ describe('Integration Export', () => {
     expect(integration).toMatchObject({
       name: 'with-zephyr',
       hooks: expect.objectContaining({
-        'astro:config:setup': expect.any(Function),
+        'astro:config:done': expect.any(Function),
         'astro:build:done': expect.any(Function),
       }),
     });

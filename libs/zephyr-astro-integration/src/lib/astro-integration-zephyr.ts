@@ -3,6 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from './internal/extract-astro-assets-map';
 
+type AstroBuildDoneParams = HookParameters<'astro:build:done'> & {
+  assets?: Record<string, unknown> | Map<string, unknown> | Array<unknown>;
+};
+
 export function withZephyr(): AstroIntegration {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
@@ -39,7 +43,7 @@ export function withZephyr(): AstroIntegration {
           await zephyr_engine.start_new_build();
 
           // Extract assets from params if available (Astro v5+), fallback to filesystem walking
-          const assets = (params as any).assets;
+          const assets = (params as AstroBuildDoneParams).assets;
           const assetsMap = await extractAstroAssetsFromBuildHook(assets, outputPath);
 
           // Upload assets and build stats

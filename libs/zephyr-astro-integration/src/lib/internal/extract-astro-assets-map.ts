@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildAssetsMap, type ZeBuildAssetsMap } from 'zephyr-agent';
+import { buildAssetsMap, logFn, type ZeBuildAssetsMap } from 'zephyr-agent';
 
 interface AstroAsset {
   content: Buffer | string;
@@ -81,14 +81,15 @@ export async function extractAstroAssetsFromBuildHook(
           type: fileType,
         };
       } catch (readError) {
-        console.warn(`Failed to read asset file ${filePath}:`, readError);
+        logFn('warn', `Failed to read asset file ${filePath}: ${readError}`);
         continue;
       }
     }
 
     // If we didn't find any assets from the hook, fallback to filesystem walking
     if (Object.keys(astroAssets).length === 0) {
-      console.warn(
+      logFn(
+        'warn',
         'No assets found from Astro build hook, falling back to filesystem walking'
       );
       return await extractAstroAssetsMap(outputPath);
@@ -96,7 +97,10 @@ export async function extractAstroAssetsFromBuildHook(
 
     return buildAssetsMap(astroAssets, extractBuffer, getAssetType);
   } catch (error) {
-    console.warn('Error processing assets from Astro build hook:', error);
+    logFn(
+      'warn',
+      'Error processing assets from Astro build hook:' + JSON.stringify(error, null, 2)
+    );
     // Fallback to filesystem walking on any error
     return await extractAstroAssetsMap(outputPath);
   }
@@ -177,12 +181,12 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
               type: fileType,
             };
           } catch (readError) {
-            console.warn(`Failed to read file ${fullPath}:`, readError);
+            logFn('warn', `Failed to read file ${fullPath}: ${readError}`);
           }
         }
       }
     } catch (error) {
-      console.warn(`Failed to walk directory ${dirPath}:`, error);
+      logFn('warn', `Failed to walk directory ${dirPath}: ${error}`);
     }
   }
 

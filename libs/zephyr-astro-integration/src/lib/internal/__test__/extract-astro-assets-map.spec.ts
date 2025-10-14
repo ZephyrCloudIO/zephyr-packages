@@ -1,27 +1,24 @@
-import { extractAstroAssetsMap } from '../extract-astro-assets-map';
-import { buildAssetsMap } from 'zephyr-agent';
-import { mkdir, writeFile, rm, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { extractAstroAssetsMap } from '../extract-astro-assets-map';
+
+const buildAssetsMapMock = jest.fn();
+const logFnMock = jest.fn();
 
 // Mock the zephyr-agent buildAssetsMap function
 jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
+  buildAssetsMap: (...args: unknown[]) => buildAssetsMapMock(...args),
+  logFn: (...args: unknown[]) => logFnMock(...args),
 }));
 
 describe('extractAstroAssetsMap', () => {
   let tempDir: string;
-  let consoleSpy: jest.SpyInstance;
 
   beforeEach(async () => {
     tempDir = join(tmpdir(), `astro-test-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
-    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
-      // Mock implementation
-    });
-
-    // Mock buildAssetsMap to return a simple hash-based result
-    (buildAssetsMap as jest.Mock).mockImplementation((assets) => {
+    buildAssetsMapMock.mockImplementation((assets) => {
       const result: Record<string, unknown> = {};
       Object.keys(assets).forEach((key, index) => {
         const hash = `hash${index + 1}`;
@@ -42,8 +39,8 @@ describe('extractAstroAssetsMap', () => {
     } catch {
       // Ignore cleanup errors
     }
-    if (consoleSpy && typeof consoleSpy.mockRestore === 'function') {
-      consoleSpy.mockRestore();
+    if (logFnMock && typeof logFnMock.mockRestore === 'function') {
+      logFnMock.mockRestore();
     }
     jest.clearAllMocks();
   });
@@ -58,7 +55,7 @@ describe('extractAstroAssetsMap', () => {
       const assetsMap = await extractAstroAssetsMap(tempDir);
 
       expect(Object.keys(assetsMap)).toHaveLength(3);
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.objectContaining({
             content: expect.any(Buffer),
@@ -81,7 +78,7 @@ describe('extractAstroAssetsMap', () => {
     it('should handle empty directory', async () => {
       const assetsMap = await extractAstroAssetsMap(tempDir);
       expect(Object.keys(assetsMap)).toHaveLength(0);
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         {},
         expect.any(Function),
         expect.any(Function)
@@ -98,14 +95,14 @@ describe('extractAstroAssetsMap', () => {
       const result = await extractAstroAssetsMap(tempDir);
 
       expect(result).toBeDefined();
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
         }),
         expect.any(Function),
         expect.any(Function)
       );
-      expect(buildAssetsMap).not.toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).not.toHaveBeenCalledWith(
         expect.objectContaining({
           'style.css.map': expect.any(Object),
           'script.js.map': expect.any(Object),
@@ -123,7 +120,7 @@ describe('extractAstroAssetsMap', () => {
       const result = await extractAstroAssetsMap(tempDir);
 
       expect(result).toBeDefined();
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
         }),
@@ -142,7 +139,7 @@ describe('extractAstroAssetsMap', () => {
       const result = await extractAstroAssetsMap(tempDir);
 
       expect(result).toBeDefined();
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
         }),
@@ -170,16 +167,16 @@ describe('extractAstroAssetsMap', () => {
       ];
 
       for (const [filename, content] of testFiles) {
-        await writeFile(join(tempDir, filename), content);
+        await writeFile(join(tempDir, filename.toString()), content);
       }
 
       await extractAstroAssetsMap(tempDir);
 
-      const buildAssetsMapCall = (buildAssetsMap as jest.Mock).mock.calls[0];
+      const buildAssetsMapCall = (buildAssetsMapMock as jest.Mock).mock.calls[0];
       const assets = buildAssetsMapCall[0];
 
       testFiles.forEach(([filename, , expectedType]) => {
-        expect(assets[filename]).toHaveProperty('type', expectedType);
+        expect(assets[filename.toString()]).toHaveProperty('type', expectedType);
       });
     });
   });
@@ -198,7 +195,7 @@ describe('extractAstroAssetsMap', () => {
       const result = await extractAstroAssetsMap(tempDir);
 
       expect(result).toBeDefined();
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
           'assets/js/main.js': expect.any(Object),
@@ -218,7 +215,7 @@ describe('extractAstroAssetsMap', () => {
       const result = await extractAstroAssetsMap(tempDir);
 
       expect(result).toBeDefined();
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'a/b/c/d/e/deep.txt': expect.objectContaining({
             type: 'text/plain',
@@ -239,7 +236,7 @@ describe('extractAstroAssetsMap', () => {
       const originalReadFile = readFile;
       jest
         .spyOn(require('node:fs/promises'), 'readFile')
-        .mockImplementation(async (path) => {
+        .mockImplementation(async (path: any) => {
           if (path.toString().includes('good.txt')) {
             throw new Error('Permission denied');
           }
@@ -250,13 +247,13 @@ describe('extractAstroAssetsMap', () => {
 
       expect(result).toBeDefined();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/Failed to read file.*good\.txt/),
-        expect.any(Error)
+      expect(logFnMock).toHaveBeenCalledWith(
+        'warn',
+        expect.stringMatching(/Failed to read file.*good\.txt/)
       );
 
       // Should still process the readable file
-      expect(buildAssetsMap).toHaveBeenCalledWith(
+      expect(buildAssetsMapMock).toHaveBeenCalledWith(
         expect.objectContaining({
           'index.html': expect.any(Object),
         }),
@@ -275,7 +272,7 @@ describe('extractAstroAssetsMap', () => {
       const originalReaddir = require('node:fs/promises').readdir;
       jest
         .spyOn(require('node:fs/promises'), 'readdir')
-        .mockImplementation(async (path, options) => {
+        .mockImplementation(async (path: any, options) => {
           if (path.toString().includes('subdir')) {
             throw new Error('Access denied');
           }
@@ -286,9 +283,9 @@ describe('extractAstroAssetsMap', () => {
 
       expect(result).toBeDefined();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/Failed to walk directory.*subdir/),
-        expect.any(Error)
+      expect(logFnMock).toHaveBeenCalledWith(
+        'warn',
+        expect.stringMatching(/Failed to walk directory.*subdir/)
       );
 
       jest.restoreAllMocks();
@@ -300,7 +297,7 @@ describe('extractAstroAssetsMap', () => {
       await writeFile(join(tempDir, 'test.txt'), 'test content');
       await extractAstroAssetsMap(tempDir);
 
-      const extractBuffer = (buildAssetsMap as jest.Mock).mock.calls[0][1];
+      const extractBuffer = (buildAssetsMapMock as jest.Mock).mock.calls[0][1];
       const testAsset = { content: Buffer.from('test'), type: 'text/plain' };
 
       expect(extractBuffer(testAsset)).toBe(testAsset.content);
@@ -310,7 +307,7 @@ describe('extractAstroAssetsMap', () => {
       await writeFile(join(tempDir, 'test.txt'), 'test content');
       await extractAstroAssetsMap(tempDir);
 
-      const getAssetType = (buildAssetsMap as jest.Mock).mock.calls[0][2];
+      const getAssetType = (buildAssetsMapMock as jest.Mock).mock.calls[0][2];
       const testAsset = { content: Buffer.from('test'), type: 'text/plain' };
 
       expect(getAssetType(testAsset)).toBe('text/plain');

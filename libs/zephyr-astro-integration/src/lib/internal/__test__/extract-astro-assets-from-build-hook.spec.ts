@@ -1,12 +1,13 @@
-import { extractAstroAssetsFromBuildHook } from '../extract-astro-assets-map';
-import { buildAssetsMap } from 'zephyr-agent';
-import { mkdir, writeFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { buildAssetsMap } from 'zephyr-agent';
+import { extractAstroAssetsFromBuildHook } from '../extract-astro-assets-map';
 
 // Mock the zephyr-agent buildAssetsMap function
 jest.mock('zephyr-agent', () => ({
   buildAssetsMap: jest.fn(),
+  logFn: jest.fn(),
 }));
 
 // This test focuses on the assets parameter parsing logic

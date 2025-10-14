@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildAssetsMap, type ZeBuildAssetsMap } from 'zephyr-agent';
 
@@ -14,6 +14,11 @@ function extractBuffer(asset: AstroAsset): Buffer | string | undefined {
 
 function getAssetType(asset: AstroAsset): string {
   return asset.type;
+}
+
+/** Normalize path separators to forward slashes for cross-platform consistency */
+function normalizePath(filePath: string): string {
+  return filePath.split(sep).join('/');
 }
 
 /**
@@ -55,7 +60,7 @@ export async function extractAstroAssetsFromBuildHook(
         }
 
         // Skip files we don't want to upload
-        const relativePath = relative(outputPath, fullPath);
+        const relativePath = normalizePath(relative(outputPath, fullPath));
         if (shouldSkipFile(relativePath)) {
           continue;
         }
@@ -147,7 +152,7 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
           await walkDir(fullPath);
         } else if (entry.isFile()) {
           // Get relative path from build directory
-          const relativePath = relative(buildDir, fullPath);
+          const relativePath = normalizePath(relative(buildDir, fullPath));
 
           // Skip certain files that shouldn't be uploaded
           if (shouldSkipFile(relativePath)) {

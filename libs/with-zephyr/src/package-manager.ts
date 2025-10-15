@@ -5,7 +5,17 @@ import type { PackageManager } from './types.js';
 
 /** Detect the package manager being used in the project */
 export function detectPackageManager(directory: string = process.cwd()): PackageManager {
-  // Priority order for lock file detection
+  // Priority 1: Check which CLI is actually running (npm_config_user_agent)
+  // This is most accurate when someone runs `pnpm dlx with-zephyr` or `npx with-zephyr`
+  if (process.env.npm_config_user_agent) {
+    const userAgent = process.env.npm_config_user_agent.toLowerCase();
+    if (userAgent.includes('pnpm')) return 'pnpm';
+    if (userAgent.includes('yarn')) return 'yarn';
+    if (userAgent.includes('bun')) return 'bun';
+    if (userAgent.includes('npm')) return 'npm';
+  }
+
+  // Priority 2: Check lock files and package.json by walking up the tree
   const lockFiles: Record<string, PackageManager> = {
     'pnpm-lock.yaml': 'pnpm',
     'yarn.lock': 'yarn',
@@ -13,7 +23,6 @@ export function detectPackageManager(directory: string = process.cwd()): Package
     'package-lock.json': 'npm',
   };
 
-  // First, check current directory and walk up the tree
   let currentDir = path.resolve(directory);
   const root = path.parse(currentDir).root;
 
@@ -46,10 +55,8 @@ export function detectPackageManager(directory: string = process.cwd()): Package
     currentDir = path.dirname(currentDir);
   }
 
-  // Check for global package manager availability and preference
+  // Priority 3: Check for monorepo indicators
   try {
-    // Only check monorepo structure if we haven't found anything in the directory tree
-    // and avoid going up too far to prevent test pollution
     const possibleMonorepoRoots = [
       directory, // Only check current directory for workspace indicators
     ];
@@ -70,14 +77,6 @@ export function detectPackageManager(directory: string = process.cwd()): Package
     }
   } catch {
     // Continue with fallback
-  }
-
-  // Environment-based detection (only if we didn't find anything specific to this directory)
-  if (process.env.npm_config_user_agent) {
-    const userAgent = process.env.npm_config_user_agent.toLowerCase();
-    if (userAgent.includes('pnpm')) return 'pnpm';
-    if (userAgent.includes('yarn')) return 'yarn';
-    if (userAgent.includes('bun')) return 'bun';
   }
 
   return 'npm'; // default fallback

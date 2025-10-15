@@ -212,19 +212,14 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
     importName: 'withZephyr',
     patterns: [
       {
-        type: 'zephyr-rsbuild-plugin-exists',
-        matcher: /zephyrRSbuildPlugin/,
-        transform: 'skipAlreadyWrapped',
-      },
-      {
         type: 'define-config',
         matcher: /defineConfig\s*\(\s*\{/,
-        transform: 'addZephyrRSbuildPlugin',
+        transform: 'addToPluginsArray',
       },
       {
         type: 'plugins-array',
         matcher: /plugins\s*:\s*\[/,
-        transform: 'addZephyrRSbuildPlugin',
+        transform: 'addToPluginsArray',
       },
     ],
   },
@@ -236,19 +231,14 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
     importName: 'withZephyr',
     patterns: [
       {
-        type: 'zephyr-rsbuild-plugin-exists',
-        matcher: /zephyrRSbuildPlugin/,
-        transform: 'skipAlreadyWrapped',
-      },
-      {
         type: 'define-config',
         matcher: /defineConfig\s*\(\s*\{/,
-        transform: 'addZephyrRSbuildPlugin',
+        transform: 'addToPluginsArray',
       },
       {
         type: 'plugins-array',
         matcher: /plugins\s*:\s*\[/,
-        transform: 'addZephyrRSbuildPlugin',
+        transform: 'addToPluginsArray',
       },
     ],
   },

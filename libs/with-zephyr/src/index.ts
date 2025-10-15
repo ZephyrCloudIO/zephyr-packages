@@ -25,7 +25,6 @@ import {
   addToVitePluginsInFunction,
   addZephyrImport,
   addZephyrRequire,
-  addZephyrRSbuildPlugin,
   hasZephyrPlugin,
   parseFile,
   skipAlreadyWrapped,
@@ -57,7 +56,6 @@ const TRANSFORMERS: TransformFunctions = {
   wrapExportDefault,
   skipAlreadyWrapped,
   wrapExportedFunction,
-  addZephyrRSbuildPlugin,
 };
 
 /** Normalize file path separators to forward slashes for consistent output */

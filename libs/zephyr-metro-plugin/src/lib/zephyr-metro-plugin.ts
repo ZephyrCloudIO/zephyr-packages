@@ -27,23 +27,23 @@ export interface ZephyrCommandWrapperConfig {
 }
 
 export class ZephyrMetroPlugin {
-  private config: ZephyrCommandWrapperConfig;
-  public zephyr_engine!: ZephyrEngine;
+  #config: ZephyrCommandWrapperConfig;
+  zephyr_engine!: ZephyrEngine;
 
   constructor(props: ZephyrCommandWrapperConfig) {
-    this.config = props;
+    this.#config = props;
   }
 
-  public async beforeBuild() {
+  async beforeBuild() {
     this.zephyr_engine = await ZephyrEngine.create({
       builder: 'metro',
-      context: this.config.context,
+      context: this.#config.context,
     });
-    ze_log.config('Configuring with Zephyr... \n config: ', this.config);
+    ze_log.config('Configuring with Zephyr... \n config: ', this.#config);
 
-    this.zephyr_engine.env.target = this.config.platform;
+    this.zephyr_engine.env.target = this.#config.platform;
 
-    const dependency_pairs = extract_remotes_dependencies(this.config);
+    const dependency_pairs = extract_remotes_dependencies(this.#config);
 
     ze_log.config(
       'Resolving and building towards target by zephyr_engine.env.target: ',
@@ -53,14 +53,18 @@ export class ZephyrMetroPlugin {
     const resolved_dependency_pairs =
       await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
 
-    if (this.config.mfConfig) {
-      mutateMfConfig(this.zephyr_engine, this.config.mfConfig, resolved_dependency_pairs);
+    if (this.#config.mfConfig) {
+      mutateMfConfig(
+        this.zephyr_engine,
+        this.#config.mfConfig,
+        resolved_dependency_pairs
+      );
     }
 
-    return this.config.mfConfig;
+    return this.#config.mfConfig;
   }
 
-  public async afterBuild() {
+  async afterBuild() {
     await this.zephyr_engine.start_new_build();
 
     const assetsMap = await this.makeAssetsMap();
@@ -74,7 +78,7 @@ export class ZephyrMetroPlugin {
     await this.zephyr_engine.upload_assets({
       assetsMap,
       buildStats: buildStats as any,
-      mfConfig: this.config.mfConfig,
+      mfConfig: this.#config.mfConfig,
     });
     await this.zephyr_engine.build_finished();
   }
@@ -122,15 +126,15 @@ export class ZephyrMetroPlugin {
                   name: componentName,
                   usedIn: [
                     {
-                      file: fileUrl.replace(this.config.context, ''),
-                      url: fileUrl.replace(this.config.context, ''),
+                      file: fileUrl.replace(this.#config.context, ''),
+                      url: fileUrl.replace(this.#config.context, ''),
                     },
                   ],
                 });
                 ze_log.app('Found remote import in promise chain', {
                   remoteName,
                   componentName,
-                  file: fileUrl.replace(this.config.context, ''),
+                  file: fileUrl.replace(this.#config.context, ''),
                 });
               }
             }
@@ -153,20 +157,20 @@ export class ZephyrMetroPlugin {
     const consumeMap = await this.getConsumeMap(bundleMaps);
 
     Object.assign(minimal_build_stats, {
-      name: this.config.mfConfig?.name || this.zephyr_engine.applicationProperties.name,
-      remote: this.config.mfConfig?.filename || 'remoteEntry.js',
-      remotes: this.config.mfConfig?.remotes
-        ? Object.keys(this.config.mfConfig.remotes)
+      name: this.#config.mfConfig?.name || this.zephyr_engine.applicationProperties.name,
+      remote: this.#config.mfConfig?.filename || 'remoteEntry.js',
+      remotes: this.#config.mfConfig?.remotes
+        ? Object.keys(this.#config.mfConfig.remotes)
         : [],
       metadata: {
-        hasFederation: !!this.config.mfConfig,
+        hasFederation: !!this.#config.mfConfig,
       },
       build_target: this.zephyr_engine.env.target,
     }) as ZephyrBuildStats;
 
     // Extract shared dependencies from Module Federation config
-    const overrides = this.config.mfConfig?.shared
-      ? Object.entries(this.config.mfConfig.shared).map(([name, config]) =>
+    const overrides = this.#config.mfConfig?.shared
+      ? Object.entries(this.#config.mfConfig.shared).map(([name, config]) =>
           parseSharedDependencies(name, config, this.zephyr_engine)
         )
       : [];
@@ -176,7 +180,7 @@ export class ZephyrMetroPlugin {
       ...minimal_build_stats,
       overrides,
       modules: extractModulesFromExposes(
-        this.config.mfConfig,
+        this.#config.mfConfig,
         this.zephyr_engine.application_uid
       ),
       // Module Federation related data
@@ -200,11 +204,11 @@ export class ZephyrMetroPlugin {
 
   private async loadStaticAssets(): Promise<Record<string, OutputAsset>> {
     const assets = await load_static_entries({
-      root: this.config.context,
+      root: this.#config.context,
       outDir:
-        this.config.platform === 'ios' || this.config.platform === 'android'
-          ? this.config.outDir + `/${this.config.platform}`
-          : this.config.outDir,
+        this.#config.platform === 'ios' || this.#config.platform === 'android'
+          ? this.#config.outDir + `/${this.#config.platform}`
+          : this.#config.outDir,
     });
 
     return assets.reduce((acc, asset) => {

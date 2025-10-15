@@ -1,4 +1,4 @@
-import { ZephyrError, ZeErrors } from 'zephyr-agent';
+import { ZephyrError, ZeErrors, type Platform } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
@@ -6,19 +6,33 @@ import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 export type MetroConfig = Record<string, unknown>;
 export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
 
+interface MetroBundleOptions {
+  mode: string;
+  platform: Platform;
+}
+
+interface MetroConfigOptions extends MetroConfig {
+  root: string;
+}
+
+interface MetroCliOptions {
+  maxWorkers?: number;
+  resetCache?: boolean;
+  config?: string;
+}
+
+type MetroCommandArgs = [[MetroBundleOptions], MetroConfigOptions, MetroCliOptions];
+
 export async function zephyrCommandWrapper(
-  bundleFederatedRemote: (...args: any[]) => Promise<any>,
-  loadMetroConfig: (
-    config: MetroConfig,
-    options: { maxWorkers?: number; resetCache?: boolean; config?: string }
-  ) => Promise<any>,
+  bundleFederatedRemote: (...args: MetroCommandArgs) => Promise<any>,
+  loadMetroConfig: (config: MetroConfig, options: MetroCliOptions) => Promise<any>,
   updateManifest: () => void
 ) {
-  return async (...args: any[]) => {
+  return async (...args: MetroCommandArgs) => {
     try {
       // before build
-      const isDev = args[0][0]['mode'];
-      const platform = args[0][0]['platform'];
+      const isDev = args[0][0].mode;
+      const platform = args[0][0].platform;
 
       const context = args[1].root;
 

@@ -5,7 +5,6 @@ const NxWelcome = lazy(() => import('rspack_mf_remote/NxWelcome'));
 export function App() {
   return (
     <div>
-      <h1>Host Application Should be version 7</h1>
       <p>
         <strong>Host ZE_PUBLIC_HELLO: </strong>
         {process.env.ZE_PUBLIC_HELLO}

@@ -8,7 +8,6 @@
 export function NxWelcome({ title }: { title: string }) {
   return (
     <>
-      Resolved the newness?
       <p>
         <strong>Remote ZE_PUBLIC_VAR: </strong>
         {process.env.ZE_PUBLIC_VAR}

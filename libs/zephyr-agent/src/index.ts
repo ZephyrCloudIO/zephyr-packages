@@ -35,7 +35,9 @@ export {
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export {
   convertResolvedDependencies,
+  createManifestAsset,
   createManifestContent,
+  createZephyrManifest,
 } from './lib/transformers/ze-create-manifest';
 
 // Auth related exports
@@ -52,3 +54,11 @@ export {
 } from './zephyr-engine';
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+
+// Environment variable utilities
+export {
+  buildEnvImportMap,
+  buildEnvImportMapScript,
+  buildEnvModuleSource,
+  type RemoteEntry,
+} from './lib/env-variables';

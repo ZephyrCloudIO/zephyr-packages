@@ -1,12 +1,13 @@
-import type { ZephyrDependency } from './zephyr-build-stats';
+import { z } from 'zod';
+import { ZephyrDependencySchema } from './zephyr-build-stats';
 
 export const ZEPHYR_MANIFEST_VERSION = '1.0.0';
-
 export const ZEPHYR_MANIFEST_FILENAME = 'zephyr-manifest.json';
 
-/** Changes to this interface should be semanticaly reflect on the const above; */
-export interface ZephyrManifest {
-  version: typeof ZEPHYR_MANIFEST_VERSION;
-  timestamp: string;
-  dependencies: Record<string, ZephyrDependency>;
-}
+export const ZephyrManifestSchema = z.object({
+  version: z.string(),
+  timestamp: z.string(),
+  dependencies: z.record(z.string(), ZephyrDependencySchema),
+  zeVars: z.record(z.string(), z.string()),
+});
+export type ZephyrManifest = z.infer<typeof ZephyrManifestSchema>;

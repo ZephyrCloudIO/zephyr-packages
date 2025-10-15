@@ -12,7 +12,9 @@ export function load_resolved_remotes(
   try {
     const runtimePluginsExtraction = parseRuntimePlugin(code);
 
-    if (!runtimePluginsExtraction) return code;
+    if (!runtimePluginsExtraction) {
+      return code;
+    }
 
     const { pluginsArray, startIndex, endIndex } = runtimePluginsExtraction;
 

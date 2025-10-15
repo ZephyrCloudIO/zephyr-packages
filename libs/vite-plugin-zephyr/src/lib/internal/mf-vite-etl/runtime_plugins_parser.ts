@@ -19,10 +19,15 @@ export function parseRuntimePlugin(code: string): RuntimePluginsExtraction | und
 
   let pluginsArrayNode: acorn.Node | undefined;
 
-  // Find the plugins array in the runtimeInit call
+  // Find the plugins array in the runtimeInit call (both original and minified)
   walk.simple(ast, {
     CallExpression(node: any) {
-      if (node.callee?.name === 'runtimeInit' && node.arguments?.length > 0) {
+      // Check for both 'runtimeInit' and 'p.init' (minified)
+      const isRuntimeInit = node.callee?.name === 'runtimeInit';
+      const isMinifiedInit =
+        node.callee?.object?.name === 'p' && node.callee?.property?.name === 'init';
+
+      if ((isRuntimeInit || isMinifiedInit) && node.arguments?.length > 0) {
         const initArg = node.arguments[0];
 
         if (initArg.type === 'ObjectExpression') {

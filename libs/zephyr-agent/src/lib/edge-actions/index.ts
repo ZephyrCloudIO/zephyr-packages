@@ -3,3 +3,8 @@ export { zeUploadAssets } from './ze-upload-assets';
 export { zeUploadBuildStats } from './ze-upload-build-stats';
 export { zeUploadSnapshot } from './ze-upload-snapshot';
 export { zeEnableSnapshotOnPages } from './ze-enable-snapshot-on-pages';
+export {
+  generateEnvironmentManifest,
+  extractManifestVars,
+} from './generate-manifest-asset';
+export type { ManifestAssetResult } from './generate-manifest-asset';

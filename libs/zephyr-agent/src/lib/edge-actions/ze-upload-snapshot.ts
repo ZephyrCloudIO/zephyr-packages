@@ -53,22 +53,6 @@ export async function zeUploadSnapshot(
     application_uid,
   });
 
-  // Log payload shape in development builds for OTA contract clarity
-  if (buildEnv === 'local' && !zephyr_engine.env.isCI) {
-    const otaInfo = [
-      `URLs: ${edgeTodo?.urls ? Object.keys(edgeTodo.urls).join(', ') : 'none'}`,
-      `Has version URL: ${!!edgeTodo?.urls?.version}`,
-      `Version URL: ${edgeTodo?.urls?.version || 'N/A'}`,
-      `Manifest: zephyr-manifest.json (immutably linked to version URL)`,
-    ].join('\n  ');
-
-    logger({
-      level: 'info',
-      action: 'snapshot:upload:payload-shape',
-      message: `Upload response structure for OTA contract reference:\n  ${otaInfo}`,
-    });
-  }
-
   const versionUrl = edgeTodo?.urls?.version;
 
   if (!versionUrl) {

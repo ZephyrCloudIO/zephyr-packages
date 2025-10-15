@@ -112,143 +112,158 @@ function generateRuntimePluginCode(
   resolved_dependencies: any[]
 ): string {
   const manifestData = resolved_dependencies
-    ? JSON.stringify(
-        {
-          version: '1.0.0',
-          timestamp: new Date().toISOString(),
-          dependencies: resolved_dependencies.reduce((acc, dep) => {
-            acc[dep.name] = {
-              name: dep.name,
-              application_uid: dep.application_uid,
-              remote_entry_url: dep.remote_entry_url,
-              default_url: dep.default_url,
-              library_type: dep.library_type || 'var',
-            };
-            return acc;
-          }, {}),
-        },
-        null,
-        2
-      )
-    : '{}';
+    ? {
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        dependencies: resolved_dependencies.reduce((acc, dep) => {
+          acc[dep.name] = {
+            name: dep.name,
+            application_uid: dep.application_uid,
+            remote_entry_url: dep.remote_entry_url,
+            default_url: dep.default_url,
+            library_type: dep.library_type || 'var',
+          };
+          return acc;
+        }, {}),
+      }
+    : {};
 
-  return `
-// Zephyr Runtime Plugin for React Native
-(function() {
-  if (typeof global !== 'undefined') {
-    // Mock fetch for manifest if not available
-    if (!global.fetch) {
-      global.fetch = function(url) {
-        if (url === '/zephyr-manifest.json' || url.endsWith('/zephyr-manifest.json')) {
-          return Promise.resolve({
-            ok: true,
-            json: function() {
-              return Promise.resolve(${manifestData});
-            }
-          });
-        }
-        return Promise.reject(new Error('Fetch not available in React Native'));
-      };
-    }
+  // Define the runtime initialization function with proper types
+  function zephyrRuntimeInit() {
+    if (typeof global !== 'undefined') {
+      // Mock fetch for manifest if not available
+      if (!global.fetch) {
+        global.fetch = function (url: string) {
+          if (url === '/zephyr-manifest.json' || url.endsWith('/zephyr-manifest.json')) {
+            return Promise.resolve({
+              ok: true,
+              json: function () {
+                return Promise.resolve(__MANIFEST_DATA__);
+              },
+            });
+          }
+          return Promise.reject(new Error('Fetch not available in React Native'));
+        };
+      }
 
-    // Import and initialize runtime plugin
-    try {
-      const { createZephyrRuntimePluginWithOTA } = require('zephyr-xpack-internal/src/xpack-extract/runtime-plugin');
+      // Import and initialize runtime plugin
+      try {
+        const {
+          createZephyrRuntimePluginWithOTA,
+        } = require('zephyr-xpack-internal/src/xpack-extract/runtime-plugin');
 
-      const { plugin, instance } = createZephyrRuntimePluginWithOTA({
-        manifestUrl: '/zephyr-manifest.json',
-        onManifestChange: function(newManifest, oldManifest) {
-          console.log('[Zephyr] Manifest updated:', newManifest.version);
-          global.__ZEPHYR_MANIFEST_CHANGED__ && global.__ZEPHYR_MANIFEST_CHANGED__(newManifest, oldManifest);
-        },
-        onManifestError: function(error) {
-          console.warn('[Zephyr] Manifest error:', error);
-        }
-      });
+        const { plugin, instance } = createZephyrRuntimePluginWithOTA({
+          manifestUrl: '/zephyr-manifest.json',
+          onManifestChange: function (newManifest: any, oldManifest: any) {
+            console.log('[Zephyr] Manifest updated:', newManifest.version);
+            global.__ZEPHYR_MANIFEST_CHANGED__ &&
+              global.__ZEPHYR_MANIFEST_CHANGED__(newManifest, oldManifest);
+          },
+          onManifestError: function (error: Error) {
+            console.warn('[Zephyr] Manifest error:', error);
+          },
+        });
 
-      // Store globally for OTA worker access
-      global.__ZEPHYR_RUNTIME_PLUGIN__ = plugin;
-      global.__ZEPHYR_RUNTIME_PLUGIN_INSTANCE__ = instance;
+        // Store globally for OTA worker access
+        global.__ZEPHYR_RUNTIME_PLUGIN__ = plugin;
+        global.__ZEPHYR_RUNTIME_PLUGIN_INSTANCE__ = instance;
 
-      console.log('[Zephyr] Runtime plugin initialized');
-    } catch (error) {
-      console.warn('[Zephyr] Failed to initialize runtime plugin:', error);
+        console.log('[Zephyr] Runtime plugin initialized');
+      } catch (error) {
+        console.warn('[Zephyr] Failed to initialize runtime plugin:', error);
+      }
     }
   }
-})();
-`;
+
+  // Convert function to string and replace placeholders
+  return `// Zephyr Runtime Plugin for React Native\n(${zephyrRuntimeInit.toString()})();`.replace(
+    '__MANIFEST_DATA__',
+    JSON.stringify(manifestData, null, 2)
+  );
 }
 
 /**
- * Generate OTA worker initialization code FIXED: Avoid require() calls that won't resolve
- * in RN bundles
+ * Generate OTA worker initialization code Uses function stringification to maintain type
+ * safety
  */
 function generateOTACode(zephyrOptions: any): string {
   if (!zephyrOptions.enableOTA) return '';
 
   const otaConfig = zephyrOptions.otaConfig || {};
   const appUid = zephyrOptions.applicationUid || 'unknown';
+  const checkInterval = otaConfig.checkInterval || 30 * 60 * 1000;
+  const debug = Boolean(otaConfig.debug);
 
-  return `
-// Zephyr OTA Initialization - React Native Compatible
-(function() {
-  var globalObj = (function() {
-    if (typeof globalThis !== 'undefined') return globalThis;
-    if (typeof global !== 'undefined') return global;
-    if (typeof window !== 'undefined') return window;
-    return {};
-  })();
+  // Define the OTA initialization function with proper types
+  function zephyrOTAInit() {
+    const globalObj = (function () {
+      if (typeof globalThis !== 'undefined') return globalThis;
+      if (typeof global !== 'undefined') return global;
+      if (typeof window !== 'undefined') return window;
+      return {};
+    })();
 
-  if (globalObj.__ZEPHYR_RUNTIME_PLUGIN_INSTANCE__) {
-    try {
-      // Check if ZephyrOTAWorker is available (must be imported by user)
-      var ZephyrOTAWorker = globalObj.__ZEPHYR_OTA_WORKER_CLASS__;
+    if (globalObj.__ZEPHYR_RUNTIME_PLUGIN_INSTANCE__) {
+      try {
+        // Check if ZephyrOTAWorker is available (must be imported by user)
+        const ZephyrOTAWorker = globalObj.__ZEPHYR_OTA_WORKER_CLASS__;
 
-      if (!ZephyrOTAWorker) {
-        console.warn('[Zephyr OTA] ZephyrOTAWorker not found. Make sure to import it in your app.');
-        return;
-      }
-
-      var otaWorker = new ZephyrOTAWorker({
-        applicationUid: '${appUid}',
-        checkInterval: ${otaConfig.checkInterval || 30 * 60 * 1000},
-        debug: ${Boolean(otaConfig.debug)},
-        enableOTA: true
-      }, {
-        onUpdateAvailable: function(update) {
-          console.log('[Zephyr OTA] Update available:', update.version);
-          globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__ && globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__(update);
-        },
-        onUpdateError: function(error) {
-          console.warn('[Zephyr OTA] Update check error:', error);
-        },
-        onUpdateApplied: function(version) {
-          console.log('[Zephyr OTA] Update applied:', version);
-          // In standard RN, this likely means restart is needed
-          if (globalObj.__ZEPHYR_OTA_RESTART_REQUIRED__) {
-            globalObj.__ZEPHYR_OTA_RESTART_REQUIRED__({ version: version });
-          }
+        if (!ZephyrOTAWorker) {
+          console.warn(
+            '[Zephyr OTA] ZephyrOTAWorker not found. Make sure to import it in your app.'
+          );
+          return;
         }
-      });
 
-      // Connect to runtime plugin
-      otaWorker.setRuntimePlugin(globalObj.__ZEPHYR_RUNTIME_PLUGIN_INSTANCE__);
+        const otaWorker = new ZephyrOTAWorker(
+          {
+            applicationUid: '__APP_UID__',
+            checkInterval: __CHECK_INTERVAL__,
+            debug: __DEBUG__,
+            enableOTA: true,
+          },
+          {
+            onUpdateAvailable: function (update: any) {
+              console.log('[Zephyr OTA] Update available:', update.version);
+              globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__ &&
+                globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__(update);
+            },
+            onUpdateError: function (error: Error) {
+              console.warn('[Zephyr OTA] Update check error:', error);
+            },
+            onUpdateApplied: function (version: string) {
+              console.log('[Zephyr OTA] Update applied:', version);
+              // In standard RN, this likely means restart is needed
+              if (globalObj.__ZEPHYR_OTA_RESTART_REQUIRED__) {
+                globalObj.__ZEPHYR_OTA_RESTART_REQUIRED__({ version: version });
+              }
+            },
+          }
+        );
 
-      // Store globally and auto-start
-      globalObj.__ZEPHYR_OTA_WORKER__ = otaWorker;
+        // Connect to runtime plugin
+        otaWorker.setRuntimePlugin(globalObj.__ZEPHYR_RUNTIME_PLUGIN_INSTANCE__);
 
-      // Check environment capability before starting
-      if (globalObj.__ZEPHYR_BUNDLE_MANAGER__) {
-        var envInfo = globalObj.__ZEPHYR_BUNDLE_MANAGER__.getEnvironmentInfo();
-        console.log('[Zephyr OTA] Environment:', envInfo);
+        // Store globally and auto-start
+        globalObj.__ZEPHYR_OTA_WORKER__ = otaWorker;
+
+        // Check environment capability before starting
+        if (globalObj.__ZEPHYR_BUNDLE_MANAGER__) {
+          const envInfo = globalObj.__ZEPHYR_BUNDLE_MANAGER__.getEnvironmentInfo();
+          console.log('[Zephyr OTA] Environment:', envInfo);
+        }
+
+        otaWorker.start();
+        console.log('[Zephyr OTA] Worker initialized for environment');
+      } catch (error) {
+        console.warn('[Zephyr OTA] Failed to initialize OTA worker:', error);
       }
-
-      otaWorker.start();
-      console.log('[Zephyr OTA] Worker initialized for environment');
-    } catch (error) {
-      console.warn('[Zephyr OTA] Failed to initialize OTA worker:', error);
     }
   }
-})();
-`;
+
+  // Convert function to string and replace placeholders
+  return `// Zephyr OTA Initialization - React Native Compatible\n(${zephyrOTAInit.toString()})();`
+    .replace('__APP_UID__', `'${appUid}'`)
+    .replace('__CHECK_INTERVAL__', String(checkInterval))
+    .replace('__DEBUG__', String(debug));
 }

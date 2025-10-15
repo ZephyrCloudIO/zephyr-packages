@@ -1,6 +1,5 @@
 import type { ConfigT } from 'metro-config';
-import { logFn, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import { createManifestContent } from 'zephyr-agent/src/lib/transformers/ze-create-manifest';
+import { logFn, ZephyrEngine, ZephyrError, createManifestContent } from 'zephyr-agent';
 import path from 'path';
 import fs from 'fs';
 

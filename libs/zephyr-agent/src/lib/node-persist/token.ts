@@ -54,7 +54,7 @@ async function getTokenFromServerToken(
   git_email: string
 ): Promise<string | undefined> {
   const email = getUserEmail() ?? git_email;
-  const [ok, cause, data] = await makeRequest<string>(
+  const [ok, cause, data] = await makeRequest<{ access_token: string }>(
     {
       path: ze_api_gateway.get_access_token_by_server_token,
       base: ZE_API_ENDPOINT(),
@@ -68,15 +68,13 @@ async function getTokenFromServerToken(
   );
 
   if (!ok) {
+    if (cause instanceof Error) {
+      ze_log.error('Failed to get token from server token:', cause.message);
+    } else {
+      ze_log.error('Failed to get token from server token:', cause);
+    }
     return undefined;
   }
-
-  if (cause) {
-    ze_log.error('Failed to get token from server token:', cause);
-    return undefined;
-  }
-
-  saveToken(data);
-
-  return data;
+  await saveToken(data?.access_token ?? '');
+  return data?.access_token;
 }

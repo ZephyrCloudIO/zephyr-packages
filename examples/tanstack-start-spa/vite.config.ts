@@ -22,7 +22,6 @@ const config = defineConfig({
       },
     }),
     viteReact(),
-    // @ts-expect-error quiet
     withZephyr(),
   ],
 });

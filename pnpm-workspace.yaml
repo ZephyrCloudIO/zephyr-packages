@@ -64,13 +64,13 @@ catalogs:
     postcss: ^8.2.1
     postcss-loader: ^8.0.0
   vite6:
-    vite: ^6.2.7
+    vite: ^7.1.10
     globals: ^15.9.0
     autoprefixer: ^10.1.0
     postcss: ^8.2.1
     postcss-loader: ^8.0.0
-    '@vitejs/plugin-react': ^4.3.4
-    '@vitejs/plugin-react-swc': ^3.8.1
+    '@vitejs/plugin-react': ^5.0.4
+    '@vitejs/plugin-react-swc': ^4.1.0
   rspack:
     '@rsdoctor/rspack-plugin': 1.2.3
     '@rspack/cli': ^1.5.5

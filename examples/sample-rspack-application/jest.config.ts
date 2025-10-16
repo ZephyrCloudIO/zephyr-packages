@@ -8,4 +8,5 @@ export default {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/apps/sample-rspack-application',
+  transformIgnorePatterns: ['node_modules/(?!(@babel/runtime)/)'],
 };

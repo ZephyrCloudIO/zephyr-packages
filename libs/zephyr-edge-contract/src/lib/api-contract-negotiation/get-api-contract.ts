@@ -18,4 +18,5 @@ export const ze_api_gateway = {
   resolve: '/resolve',
   application_config: '/application-config',
   websocket: '/websocket',
+  get_access_token_by_server_token: 'get-access-token-by-server-token',
 };

@@ -52,3 +52,17 @@ export {
 } from './zephyr-engine';
 export type { Platform } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+
+// OTA Worker exports
+export {
+  ZephyrOTAWorker,
+  useZephyrUpdates,
+  type UseZephyrUpdatesOptions,
+  type UseZephyrUpdatesResult,
+  type ZephyrOTACallbacks,
+  type ZephyrOTAConfig,
+  type ZephyrOTAUpdate,
+} from './lib/ota/zephyr-ota-worker';
+
+// HTTP utilities
+export { fetchWithRetries } from './lib/http/fetch-with-retries';

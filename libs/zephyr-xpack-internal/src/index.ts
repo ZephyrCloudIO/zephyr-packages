@@ -24,3 +24,10 @@ export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
 
 export { detectAndStoreBaseHref } from './basehref/basehref-integration';
+
+export {
+  createZephyrRuntimePlugin,
+  createZephyrRuntimePluginWithOTA,
+  type ZephyrRuntimePluginInstance,
+  type ZephyrRuntimePluginOTAOptions,
+} from './xpack-extract/runtime-plugin';

@@ -5,14 +5,42 @@
   "projectType": "library",
   "tags": [],
   "targets": {
-    "build": {
+    "build-esm": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{projectRoot}/dist/esm", "{projectRoot}/dist/types"],
       "options": {
         "rootDir": "libs/zephyr-edge-contract/src",
-        "outputPath": "libs/zephyr-edge-contract/dist",
+        "outputPath": "libs/zephyr-edge-contract/dist/esm",
         "main": "libs/zephyr-edge-contract/src/index.ts",
-        "tsConfig": "libs/zephyr-edge-contract/tsconfig.lib.json"
+        "tsConfig": "libs/zephyr-edge-contract/tsconfig.esm.json"
+      }
+    },
+    "build-cjs": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{projectRoot}/dist/cjs"],
+      "options": {
+        "rootDir": "libs/zephyr-edge-contract/src",
+        "outputPath": "libs/zephyr-edge-contract/dist/cjs",
+        "main": "libs/zephyr-edge-contract/src/index.ts",
+        "tsConfig": "libs/zephyr-edge-contract/tsconfig.cjs.json"
+      }
+    },
+    "build-package-json": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "echo '{\"type\":\"module\"}' > libs/zephyr-edge-contract/dist/esm/package.json",
+          "echo '{\"type\":\"commonjs\"}' > libs/zephyr-edge-contract/dist/cjs/package.json"
+        ],
+        "parallel": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "dependsOn": ["build-esm", "build-cjs"],
+      "options": {
+        "commands": ["nx run zephyr-edge-contract:build-package-json"]
       }
     },
     "publish": {

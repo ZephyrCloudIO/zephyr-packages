@@ -2,6 +2,7 @@
   "name": "zephyr-edge-contract",
   "version": "0.1.0",
   "description": "Edge contract for Zephyr",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",

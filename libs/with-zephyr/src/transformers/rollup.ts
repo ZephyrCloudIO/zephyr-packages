@@ -8,20 +8,21 @@ import type { BabelNode } from '../types.js';
  * Handles configs like: module.exports = (config) => { // ... modifications return
  * config; }
  *
- * Inserts config.plugins.push(withZephyr()) before the return statement
+ * Inserts <paramName>.plugins.push(withZephyr()) before the return statement Works with
+ * any parameter name (config, cfg, options, etc.)
  */
 export function addToRollupFunction(ast: BabelNode): void {
   traverse(ast, {
     ArrowFunctionExpression(path) {
-      if (
-        path.node.params.length === 1 &&
-        t.isIdentifier(path.node.params[0], { name: 'config' })
-      ) {
-        // Add config.plugins.push(withZephyr());
+      if (path.node.params.length === 1 && t.isIdentifier(path.node.params[0])) {
+        // Get the actual parameter name (config, cfg, options, etc.)
+        const paramName = (path.node.params[0] as t.Identifier).name;
+
+        // Add <paramName>.plugins.push(withZephyr());
         const pushStatement = t.expressionStatement(
           t.callExpression(
             t.memberExpression(
-              t.memberExpression(t.identifier('config'), t.identifier('plugins')),
+              t.memberExpression(t.identifier(paramName), t.identifier('plugins')),
               t.identifier('push')
             ),
             [t.callExpression(t.identifier('withZephyr'), [])]

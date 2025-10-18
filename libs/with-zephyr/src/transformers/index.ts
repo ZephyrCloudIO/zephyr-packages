@@ -2,34 +2,63 @@
  * Transformer Functions Index
  *
  * This file exports all AST transformation functions organized by category. Each category
- * handles a specific type of transformation pattern.
+ * handles a specific type of transformation pattern. The organization follows the
+ * structure documented in the transformers README.
  */
 
-// Core utilities - File I/O and detection
+// ========================================
+// Category 1: Core Utilities
+// ========================================
+// File I/O, AST parsing, and detection functions
+
 export { parseFile, writeFile, hasZephyrPlugin, skipAlreadyWrapped } from './core.js';
 
-// Import management - ESM and CommonJS
+// ========================================
+// Category 2: Import Management
+// ========================================
+// ESM and CommonJS import/require handling
+
 export { addZephyrImport, addZephyrRequire } from './imports.js';
 
-// Plugin array transformers - Adding to plugins arrays
+// ========================================
+// Category 3: Plugin Array Transformers
+// ========================================
+// Functions for adding withZephyr to existing plugins arrays
+
 export {
   addToPluginsArray,
   addToPluginsArrayOrCreate,
   addToComposePlugins,
 } from './plugins-array.js';
 
-// Vite-specific transformers
+// ========================================
+// Category 4: Vite-Specific Transformers
+// ========================================
+// Transformers for Vite's defineConfig patterns
+
 export { addToVitePlugins, addToVitePluginsInFunction } from './vite.js';
 
-// Rollup-specific transformers
+// ========================================
+// Category 5: Rollup-Specific Transformers
+// ========================================
+// Transformers for Rollup's config patterns
+
 export { addToRollupFunction, addToRollupArrayConfig } from './rollup.js';
 
-// Wrapper transformers - Wrapping exports with withZephyr
+// ========================================
+// Category 6: Wrapper Transformers
+// ========================================
+// Functions that wrap entire configs with withZephyr
+
 export {
   wrapModuleExports,
   wrapExportDefault,
   wrapExportedFunction,
 } from './wrappers.js';
 
-// JSON transformers - Non-AST transformations
+// ========================================
+// Category 7: JSON Transformers
+// ========================================
+// Non-AST transformations for JSON configs (e.g., Parcel)
+
 export { addToParcelReporters } from './json.js';

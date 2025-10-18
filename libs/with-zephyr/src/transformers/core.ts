@@ -58,15 +58,6 @@ export function hasZephyrPlugin(ast: BabelNode): boolean {
         hasPlugin = true;
       }
     },
-    Identifier(path) {
-      if (
-        path.node.name === 'withZephyr' &&
-        t.isCallExpression(path.parent) &&
-        path.parent.callee === path.node
-      ) {
-        hasPlugin = true;
-      }
-    },
   });
 
   return hasPlugin;

@@ -49,17 +49,15 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   repack: repackConfig,
 };
 
-// Export individual configs for testing
-export {
-  modernjsConfig,
-  parcelConfig,
-  repackConfig,
-  rolldownConfig,
-  rollupConfig,
-  rsbuildConfig,
-  rslibConfig,
-  rspackConfig,
-  rspressConfig,
-  viteConfig,
-  webpackConfig,
-};
+// Re-export individual bundler configs for direct imports
+export { webpackConfig } from './webpack.js';
+export { rspackConfig } from './rspack.js';
+export { viteConfig } from './vite.js';
+export { rollupConfig } from './rollup.js';
+export { rolldownConfig } from './rolldown.js';
+export { rsbuildConfig } from './rsbuild.js';
+export { rslibConfig } from './rslib.js';
+export { parcelConfig } from './parcel.js';
+export { modernjsConfig } from './modernjs.js';
+export { rspressConfig } from './rspress.js';
+export { repackConfig } from './repack.js';

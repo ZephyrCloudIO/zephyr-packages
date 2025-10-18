@@ -6,7 +6,20 @@ import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
 
-import { BUNDLER_CONFIGS } from './bundlers/index.js';
+import {
+  webpackConfig,
+  rspackConfig,
+  viteConfig,
+  rollupConfig,
+  rolldownConfig,
+  rsbuildConfig,
+  rslibConfig,
+  parcelConfig,
+  modernjsConfig,
+  rspressConfig,
+  repackConfig,
+} from './bundlers/index.js';
+import type { BundlerConfigs } from './types.js';
 import {
   detectPackageManager,
   installPackage,
@@ -38,6 +51,21 @@ import type {
   ConfigFile,
   TransformFunctions,
 } from './types.js';
+
+// Local registry built from individual imports
+const BUNDLER_CONFIGS: BundlerConfigs = {
+  webpack: webpackConfig,
+  rspack: rspackConfig,
+  vite: viteConfig,
+  rollup: rollupConfig,
+  rolldown: rolldownConfig,
+  rsbuild: rsbuildConfig,
+  rslib: rslibConfig,
+  parcel: parcelConfig,
+  modernjs: modernjsConfig,
+  rspress: rspressConfig,
+  repack: repackConfig,
+};
 
 // Map transform names to functions
 const TRANSFORMERS: TransformFunctions = {

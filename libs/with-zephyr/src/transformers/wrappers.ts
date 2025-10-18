@@ -5,7 +5,7 @@ import type { BabelNode } from '../types.js';
 /**
  * Wrap module.exports with withZephyr
  *
- * Transforms: module.exports = { ... } To: module.exports = withZephyr()
+ * Transforms: module.exports = { ... } To: module.exports = withZephyr()({ ... })
  */
 export function wrapModuleExports(ast: BabelNode): void {
   traverse(ast, {
@@ -16,7 +16,10 @@ export function wrapModuleExports(ast: BabelNode): void {
         t.isIdentifier(path.node.left.property, { name: 'exports' })
       ) {
         // Wrap the exported value with withZephyr call
-        path.node.right = t.callExpression(t.identifier('withZephyr'), []);
+        path.node.right = t.callExpression(
+          t.callExpression(t.identifier('withZephyr'), []),
+          [path.node.right]
+        );
       }
     },
   });

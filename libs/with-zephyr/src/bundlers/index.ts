@@ -48,18 +48,3 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   // React Native
   repack: repackConfig,
 };
-
-// Export individual configs for testing
-export {
-  modernjsConfig,
-  parcelConfig,
-  repackConfig,
-  rolldownConfig,
-  rollupConfig,
-  rsbuildConfig,
-  rslibConfig,
-  rspackConfig,
-  rspressConfig,
-  viteConfig,
-  webpackConfig,
-};

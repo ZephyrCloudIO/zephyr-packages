@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@rstest/core';
-import { BUNDLER_CONFIGS } from '../bundler-configs.js';
+import { BUNDLER_CONFIGS } from '../bundlers/index.js';
 
 describe('Bundler Configurations', () => {
   describe('Configuration Structure', () => {

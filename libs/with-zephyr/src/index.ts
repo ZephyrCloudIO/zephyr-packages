@@ -6,7 +6,7 @@ import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
 
-import { BUNDLER_CONFIGS } from './bundler-configs.js';
+import { BUNDLER_CONFIGS } from './bundlers/index.js';
 import {
   detectPackageManager,
   installPackage,
@@ -14,13 +14,11 @@ import {
 } from './package-manager.js';
 import {
   addToComposePlugins,
-  addToModernJSPlugins,
   addToParcelReporters,
   addToPluginsArray,
-  addToRolldownPlugins,
+  addToPluginsArrayOrCreate,
   addToRollupArrayConfig,
   addToRollupFunction,
-  addToRSPressPlugins,
   addToVitePlugins,
   addToVitePluginsInFunction,
   addZephyrImport,
@@ -32,7 +30,7 @@ import {
   wrapExportedFunction,
   wrapModuleExports,
   writeFile,
-} from './transformers.js';
+} from './transformers/index.js';
 import type {
   BundlerConfig,
   BundlerPattern,
@@ -45,13 +43,11 @@ import type {
 const TRANSFORMERS: TransformFunctions = {
   addToComposePlugins,
   addToPluginsArray,
+  addToPluginsArrayOrCreate,
   addToVitePlugins,
   addToVitePluginsInFunction,
   addToRollupFunction,
   addToRollupArrayConfig,
-  addToRolldownPlugins,
-  addToModernJSPlugins,
-  addToRSPressPlugins,
   wrapModuleExports,
   wrapExportDefault,
   skipAlreadyWrapped,

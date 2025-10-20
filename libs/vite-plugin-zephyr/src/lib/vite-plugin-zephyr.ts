@@ -64,25 +64,33 @@ function zephyrPlugin(): Plugin {
       });
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
     },
-    transform: async (code, id) => {
-      try {
-        if (!id.includes('virtual:mf-REMOTE_ENTRY_ID') || !mfPlugin) return code;
+    transform: {
+      // Hook filter for Rolldown/Vite 7 performance optimization
+      // Only process Module Federation virtual remote entry files
+      filter: {
+        id: /virtual:mf-REMOTE_ENTRY_ID/,
+      },
+      handler: async (code, id) => {
+        try {
+          // Additional check for backward compatibility with older Vite/Rollup versions
+          if (!id.includes('virtual:mf-REMOTE_ENTRY_ID') || !mfPlugin) return code;
 
-        const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-        if (!dependencyPairs) return code;
+          const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+          if (!dependencyPairs) return code;
 
-        const zephyr_engine = await zephyr_engine_defer;
-        const resolved_remotes =
-          await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+          const zephyr_engine = await zephyr_engine_defer;
+          const resolved_remotes =
+            await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
-        if (!resolved_remotes) return code;
+          if (!resolved_remotes) return code;
 
-        return load_resolved_remotes(resolved_remotes, code);
-      } catch (error) {
-        logFn('error', ZephyrError.format(error));
-        // returns the original code in case of error
-        return code;
-      }
+          return load_resolved_remotes(resolved_remotes, code);
+        } catch (error) {
+          logFn('error', ZephyrError.format(error));
+          // returns the original code in case of error
+          return code;
+        }
+      },
     },
     buildApp: {
       handler: async function (builder) {

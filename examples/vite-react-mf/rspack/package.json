@@ -18,7 +18,7 @@
     "@rspack/plugin-react-refresh": "catalog:rspack",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "autoprefixer": "catalog:vite6",
+    "autoprefixer": "catalog:vite7",
     "postcss": "catalog:postcss",
     "postcss-loader": "catalog:postcss",
     "react-refresh": "catalog:react18",

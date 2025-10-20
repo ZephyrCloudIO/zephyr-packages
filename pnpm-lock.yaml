@@ -793,9 +793,9 @@ importers:
       ts-jest:
         specifier: catalog:typescript
         version: 29.3.0(@babel/core@7.28.4)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.4))(esbuild@0.25.1)(jest@30.0.5(@types/node@24.5.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.1))(ts-node@10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@24.5.2)(typescript@5.9.2)))(typescript@5.9.2)
-      zephyr-webpack-plugin:
+      zephyr-rspack-plugin:
         specifier: workspace:*
-        version: link:../../libs/zephyr-webpack-plugin
+        version: link:../../libs/zephyr-rspack-plugin
 
   examples/sample-webpack-application:
     dependencies:

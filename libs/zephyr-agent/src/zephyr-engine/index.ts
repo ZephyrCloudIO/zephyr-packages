@@ -102,33 +102,9 @@ export interface ZephyrBuildHooks {
 
 export interface DeploymentInfo {
   url: string;
-  moduleName: string;
-  moduleId: string;
-  remoteEntryFilename?: string;
-  buildId: string;
-  snapshotId: string;
-  buildTarget: 'web' | 'ios' | 'android';
-  mfConfig?: {
-    name: string;
-    filename?: string;
-    remotes?: Array<{ name: string; entry: string }>;
-    exposes?: Record<string, string>;
-  };
-  federatedDependencies: Array<{
-    name: string;
-    version: string;
-    applicationUid: string;
-    remoteEntryUrl: string;
-    defaultUrl: string;
-  }>;
+  snapshot: Snapshot;
+  federatedDependencies: ZeResolvedDependency[];
   buildStats: ZephyrBuildStats;
-  git: {
-    branch: string;
-    commit: string;
-    remote?: string;
-  };
-  isCI: boolean;
-  buildDuration: number;
 }
 
 /**
@@ -538,36 +514,9 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
         const deploymentInfo: DeploymentInfo = {
           url: zephyr_engine.version_url,
-
-          moduleName: zephyr_engine.npmProperties.name,
-          moduleId: zephyr_engine.application_uid,
-
-          buildId,
-          snapshotId,
-          buildTarget: zephyr_engine.env.target || 'web',
-
-          federatedDependencies: (zephyr_engine.federated_dependencies || []).map(
-            (dep) => ({
-              name: dep.name,
-              version: dep.version,
-              applicationUid: dep.application_uid,
-              remoteEntryUrl: dep.remote_entry_url,
-              defaultUrl: dep.default_url,
-            })
-          ),
-
+          snapshot,
+          federatedDependencies: zephyr_engine.federated_dependencies || [],
           buildStats,
-
-          git: {
-            branch: zephyr_engine.gitProperties.git.branch,
-            commit: zephyr_engine.gitProperties.git.commit,
-            remote: undefined,
-          },
-
-          isCI: zephyr_engine.env.isCI,
-          buildDuration: zephyr_engine.build_start_time
-            ? Date.now() - zephyr_engine.build_start_time
-            : 0,
         };
 
         await props.hooks.onDeployComplete(deploymentInfo);

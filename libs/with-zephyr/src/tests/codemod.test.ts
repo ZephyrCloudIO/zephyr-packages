@@ -225,7 +225,7 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('withZephyr()');
     });
 
-    it('should transform rsbuild config with custom plugin', () => {
+    it('should transform rsbuild config with simple plugin', () => {
       const originalContent = `
         import { defineConfig } from '@rsbuild/core';
         import { pluginReact } from '@rsbuild/plugin-react';
@@ -239,11 +239,8 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('rsbuild.config.ts', 'utf8');
-      expect(content).toContain('import { withZephyr } from "zephyr-rspack-plugin"');
-      expect(content).toContain('RsbuildPlugin');
-      expect(content).toContain('zephyrRSbuildPlugin');
-      expect(content).toContain('api.modifyRspackConfig');
-      expect(content).toContain('pluginReact(), zephyrRSbuildPlugin()');
+      expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
+      expect(content).toContain('pluginReact(), withZephyr()');
     });
   });
 

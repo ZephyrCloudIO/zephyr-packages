@@ -2,11 +2,11 @@ import { createFileRoute } from '@tanstack/react-router';
 
 import {
   Zap,
-  Server,
   Route as RouteIcon,
   Shield,
-  Waves,
+  PackageOpen,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
@@ -17,39 +17,39 @@ function App() {
   const features = [
     {
       icon: <Zap className="w-12 h-12 text-cyan-400" />,
-      title: 'Powerful Server Functions',
+      title: 'Lightning Fast Development',
       description:
-        'Write server-side code that seamlessly integrates with your client components. Type-safe, secure, and simple.',
-    },
-    {
-      icon: <Server className="w-12 h-12 text-cyan-400" />,
-      title: 'Flexible Server Side Rendering',
-      description:
-        'Full-document SSR, streaming, and progressive enhancement out of the box. Control exactly what renders where.',
+        'Hot module replacement and instant feedback loops for rapid development. Build faster with modern tooling.',
     },
     {
       icon: <RouteIcon className="w-12 h-12 text-cyan-400" />,
-      title: 'API Routes',
+      title: 'Type-Safe Routing',
       description:
-        'Build type-safe API endpoints alongside your application. No separate backend needed.',
+        'Fully type-safe routing powered by TanStack Router. Navigate with confidence and catch errors at build time.',
     },
     {
       icon: <Shield className="w-12 h-12 text-cyan-400" />,
-      title: 'Strongly Typed Everything',
+      title: 'Strongly Typed',
       description:
-        'End-to-end type safety from server to client. Catch errors before they reach production.',
+        'End-to-end type safety throughout your application. Catch errors before they reach production.',
     },
     {
-      icon: <Waves className="w-12 h-12 text-cyan-400" />,
-      title: 'Full Streaming Support',
+      icon: <PackageOpen className="w-12 h-12 text-cyan-400" />,
+      title: 'Modern Build Tools',
       description:
-        'Stream data from server to client progressively. Perfect for AI applications and real-time updates.',
+        'Powered by Vite for blazing fast builds and optimal bundle sizes. Experience the future of web tooling.',
+    },
+    {
+      icon: <Layers className="w-12 h-12 text-cyan-400" />,
+      title: 'Component-Based Architecture',
+      description:
+        'Build reusable, composable components with React. Create maintainable applications that scale.',
     },
     {
       icon: <Sparkles className="w-12 h-12 text-cyan-400" />,
-      title: 'Next Generation Ready',
+      title: 'Production Ready',
       description:
-        'Built from the ground up for modern web applications. Deploy anywhere JavaScript runs.',
+        'Optimized for production with code splitting, lazy loading, and modern best practices built in.',
     },
   ];
 
@@ -72,12 +72,12 @@ function App() {
             </h1>
           </div>
           <p className="text-2xl md:text-3xl text-gray-300 mb-4 font-light">
-            The framework for next generation AI applications
+            SPA Mode - Fast, Modern, Type-Safe
           </p>
           <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-            Full-stack framework powered by TanStack Router for React and Solid.
-            Build modern applications with server functions, streaming, and type
-            safety.
+            Build blazing-fast single page applications with TanStack Start's
+            SPA mode. Enjoy type-safe routing, modern build tools, and optimal
+            performance.
           </p>
           <div className="flex flex-col items-center gap-4">
             <a

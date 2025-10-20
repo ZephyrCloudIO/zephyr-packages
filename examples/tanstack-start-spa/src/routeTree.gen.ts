@@ -9,133 +9,72 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root';
+import { Route as FeaturesRouteImport } from './routes/features';
+import { Route as AboutRouteImport } from './routes/about';
 import { Route as IndexRouteImport } from './routes/index';
-import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs';
-import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request';
-import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names';
-import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index';
-import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode';
-import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr';
-import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only';
 
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any);
-const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
-  id: '/demo/start/server-funcs',
-  path: '/demo/start/server-funcs',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DemoStartApiRequestRoute = DemoStartApiRequestRouteImport.update({
-  id: '/demo/start/api-request',
-  path: '/demo/start/api-request',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DemoApiNamesRoute = DemoApiNamesRouteImport.update({
-  id: '/demo/api/names',
-  path: '/demo/api/names',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
-  id: '/demo/start/ssr/',
-  path: '/demo/start/ssr/',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DemoStartSsrSpaModeRoute = DemoStartSsrSpaModeRouteImport.update({
-  id: '/demo/start/ssr/spa-mode',
-  path: '/demo/start/ssr/spa-mode',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DemoStartSsrFullSsrRoute = DemoStartSsrFullSsrRouteImport.update({
-  id: '/demo/start/ssr/full-ssr',
-  path: '/demo/start/ssr/full-ssr',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
-  id: '/demo/start/ssr/data-only',
-  path: '/demo/start/ssr/data-only',
-  getParentRoute: () => rootRouteImport,
-} as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
-  '/demo/api/names': typeof DemoApiNamesRoute;
-  '/demo/start/api-request': typeof DemoStartApiRequestRoute;
-  '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute;
-  '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute;
-  '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute;
-  '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute;
-  '/demo/start/ssr': typeof DemoStartSsrIndexRoute;
+  '/about': typeof AboutRoute;
+  '/features': typeof FeaturesRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
-  '/demo/api/names': typeof DemoApiNamesRoute;
-  '/demo/start/api-request': typeof DemoStartApiRequestRoute;
-  '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute;
-  '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute;
-  '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute;
-  '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute;
-  '/demo/start/ssr': typeof DemoStartSsrIndexRoute;
+  '/about': typeof AboutRoute;
+  '/features': typeof FeaturesRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
-  '/demo/api/names': typeof DemoApiNamesRoute;
-  '/demo/start/api-request': typeof DemoStartApiRequestRoute;
-  '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute;
-  '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute;
-  '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute;
-  '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute;
-  '/demo/start/ssr/': typeof DemoStartSsrIndexRoute;
+  '/about': typeof AboutRoute;
+  '/features': typeof FeaturesRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths:
-    | '/'
-    | '/demo/api/names'
-    | '/demo/start/api-request'
-    | '/demo/start/server-funcs'
-    | '/demo/start/ssr/data-only'
-    | '/demo/start/ssr/full-ssr'
-    | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr';
+  fullPaths: '/' | '/about' | '/features';
   fileRoutesByTo: FileRoutesByTo;
-  to:
-    | '/'
-    | '/demo/api/names'
-    | '/demo/start/api-request'
-    | '/demo/start/server-funcs'
-    | '/demo/start/ssr/data-only'
-    | '/demo/start/ssr/full-ssr'
-    | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr';
-  id:
-    | '__root__'
-    | '/'
-    | '/demo/api/names'
-    | '/demo/start/api-request'
-    | '/demo/start/server-funcs'
-    | '/demo/start/ssr/data-only'
-    | '/demo/start/ssr/full-ssr'
-    | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr/';
+  to: '/' | '/about' | '/features';
+  id: '__root__' | '/' | '/about' | '/features';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
-  DemoApiNamesRoute: typeof DemoApiNamesRoute;
-  DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute;
-  DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute;
-  DemoStartSsrDataOnlyRoute: typeof DemoStartSsrDataOnlyRoute;
-  DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute;
-  DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute;
-  DemoStartSsrIndexRoute: typeof DemoStartSsrIndexRoute;
+  AboutRoute: typeof AboutRoute;
+  FeaturesRoute: typeof FeaturesRoute;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/features': {
+      id: '/features';
+      path: '/features';
+      fullPath: '/features';
+      preLoaderRoute: typeof FeaturesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/about': {
+      id: '/about';
+      path: '/about';
+      fullPath: '/about';
+      preLoaderRoute: typeof AboutRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/': {
       id: '/';
       path: '/';
@@ -143,67 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    '/demo/start/server-funcs': {
-      id: '/demo/start/server-funcs';
-      path: '/demo/start/server-funcs';
-      fullPath: '/demo/start/server-funcs';
-      preLoaderRoute: typeof DemoStartServerFuncsRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/demo/start/api-request': {
-      id: '/demo/start/api-request';
-      path: '/demo/start/api-request';
-      fullPath: '/demo/start/api-request';
-      preLoaderRoute: typeof DemoStartApiRequestRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/demo/api/names': {
-      id: '/demo/api/names';
-      path: '/demo/api/names';
-      fullPath: '/demo/api/names';
-      preLoaderRoute: typeof DemoApiNamesRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/demo/start/ssr/': {
-      id: '/demo/start/ssr/';
-      path: '/demo/start/ssr';
-      fullPath: '/demo/start/ssr';
-      preLoaderRoute: typeof DemoStartSsrIndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/demo/start/ssr/spa-mode': {
-      id: '/demo/start/ssr/spa-mode';
-      path: '/demo/start/ssr/spa-mode';
-      fullPath: '/demo/start/ssr/spa-mode';
-      preLoaderRoute: typeof DemoStartSsrSpaModeRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/demo/start/ssr/full-ssr': {
-      id: '/demo/start/ssr/full-ssr';
-      path: '/demo/start/ssr/full-ssr';
-      fullPath: '/demo/start/ssr/full-ssr';
-      preLoaderRoute: typeof DemoStartSsrFullSsrRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/demo/start/ssr/data-only': {
-      id: '/demo/start/ssr/data-only';
-      path: '/demo/start/ssr/data-only';
-      fullPath: '/demo/start/ssr/data-only';
-      preLoaderRoute: typeof DemoStartSsrDataOnlyRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DemoApiNamesRoute: DemoApiNamesRoute,
-  DemoStartApiRequestRoute: DemoStartApiRequestRoute,
-  DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
-  DemoStartSsrDataOnlyRoute: DemoStartSsrDataOnlyRoute,
-  DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
-  DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
-  DemoStartSsrIndexRoute: DemoStartSsrIndexRoute,
+  AboutRoute: AboutRoute,
+  FeaturesRoute: FeaturesRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

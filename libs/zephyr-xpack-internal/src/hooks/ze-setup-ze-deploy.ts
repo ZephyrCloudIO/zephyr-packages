@@ -2,12 +2,13 @@ import { onDeploymentDone } from '../lifecycle-events/index';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
-import type { XStats } from '../xpack.types';
+import type { XStats, ModuleFederationPlugin } from '../xpack.types';
 
 interface DeployPluginOptions {
   pluginName: string;
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
+  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
 }
 
 interface DeployCompiler {
@@ -49,11 +50,13 @@ export function setupZeDeploy<
 
         await pluginOptions.zephyr_engine.start_new_build();
 
-        process.nextTick(xpack_zephyr_agent, {
-          stats,
-          stats_json,
-          assets,
-          pluginOptions,
+        process.nextTick(() => {
+          void xpack_zephyr_agent({
+            stats,
+            stats_json,
+            assets,
+            pluginOptions,
+          });
         });
 
         if (!pluginOptions.wait_for_index_html) {

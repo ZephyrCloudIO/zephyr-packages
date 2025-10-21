@@ -13,7 +13,7 @@
   "devDependencies": {
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "zephyr-webpack-plugin": "workspace:*",
+    "zephyr-rspack-plugin": "workspace:*",
     "@testing-library/react": "catalog:react",
     "ts-jest": "catalog:typescript",
     "@types/jest": "catalog:typescript"

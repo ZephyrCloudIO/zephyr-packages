@@ -96,6 +96,17 @@ export interface ZeUser {
   jwt: string;
 }
 
+export interface ZephyrBuildHooks {
+  onDeployComplete?: (deploymentInfo: DeploymentInfo) => void | Promise<void>;
+}
+
+export interface DeploymentInfo {
+  url: string;
+  snapshot: Snapshot;
+  federatedDependencies: ZeResolvedDependency[];
+  buildStats: ZephyrBuildStats;
+}
+
 /**
  * IMPORTANT: do NOT add methods to this class, keep it lean! IMPORTANT: use `await
  * ZephyrEngine.create(context)` to create an instance ZephyrEngine instance represents
@@ -435,6 +446,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    hooks?: ZephyrBuildHooks;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -488,6 +500,31 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       urls: [zephyr_engine.version_url],
       snapshot,
     });
+
+    // Call deployment hook if provided
+    if (props.hooks?.onDeployComplete && zephyr_engine.version_url) {
+      try {
+        const buildId = await zephyr_engine.build_id;
+        const snapshotId = await zephyr_engine.snapshotId;
+
+        if (!snapshotId) {
+          ze_log.upload('Warning: snapshotId is null, skipping deployment hook');
+          return;
+        }
+
+        const deploymentInfo: DeploymentInfo = {
+          url: zephyr_engine.version_url,
+          snapshot,
+          federatedDependencies: zephyr_engine.federated_dependencies || [],
+          buildStats,
+        };
+
+        await props.hooks.onDeployComplete(deploymentInfo);
+      } catch (error: unknown) {
+        // Log hook errors but don't fail the build
+        ze_log.upload('Warning: deployment hook failed', error);
+      }
+    }
 
     await this.build_finished();
   }

@@ -3,11 +3,13 @@ import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 import type { ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import type { XStats } from '../xpack.types';
+import type { ZephyrBuildHooks } from 'zephyr-agent';
 
 interface DeployPluginOptions {
   pluginName: string;
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
+  hooks?: ZephyrBuildHooks;
 }
 
 interface DeployCompiler {

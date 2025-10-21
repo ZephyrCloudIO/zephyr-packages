@@ -41,6 +41,7 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
+        hooks: _zephyrOptions?.hooks,
       })
     );
   } catch (error) {

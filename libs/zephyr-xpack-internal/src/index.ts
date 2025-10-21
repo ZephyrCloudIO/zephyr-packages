@@ -2,6 +2,7 @@ export { onDeploymentDone, emitDeploymentDone } from './lifecycle-events';
 
 export { isModuleFederationPlugin } from './xpack-extract/is-module-federation-plugin';
 export {
+  createMfRuntimeCode,
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,

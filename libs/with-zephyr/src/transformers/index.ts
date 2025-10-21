@@ -39,14 +39,21 @@ export {
 export { addToVitePlugins, addToVitePluginsInFunction } from './vite.js';
 
 // ========================================
-// Category 5: Rollup-Specific Transformers
+// Category 5: Astro-Specific Transformers
+// ========================================
+// Transformers for Astro's defineConfig patterns
+
+export { addToAstroIntegrations, addToAstroIntegrationsInFunction } from './astro.js';
+
+// ========================================
+// Category 6: Rollup-Specific Transformers
 // ========================================
 // Transformers for Rollup's config patterns
 
 export { addToRollupFunction, addToRollupArrayConfig } from './rollup.js';
 
 // ========================================
-// Category 6: Wrapper Transformers
+// Category 7: Wrapper Transformers
 // ========================================
 // Functions that wrap entire configs with withZephyr
 
@@ -57,7 +64,7 @@ export {
 } from './wrappers.js';
 
 // ========================================
-// Category 7: JSON Transformers
+// Category 8: JSON Transformers
 // ========================================
 // Non-AST transformations for JSON configs (e.g., Parcel)
 

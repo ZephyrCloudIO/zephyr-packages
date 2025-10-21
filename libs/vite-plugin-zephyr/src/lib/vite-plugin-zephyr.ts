@@ -34,6 +34,7 @@ function zephyrPlugin(): Plugin {
 
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
+  let uploadCompleted = false;
 
   return {
     name: 'with-zephyr',
@@ -84,28 +85,48 @@ function zephyrPlugin(): Plugin {
         }
       },
     },
-    closeBundle: async () => {
-      try {
-        const [vite_internal_options, zephyr_engine] = await Promise.all([
-          vite_internal_options_defer,
-          zephyr_engine_defer,
-        ]);
+    buildApp: {
+      handler: async function (builder) {
+        if (uploadCompleted) return;
 
-        zephyr_engine.buildProperties.baseHref = baseHref;
+        try {
+          const [vite_internal_options, zephyr_engine] = await Promise.all([
+            vite_internal_options_defer,
+            zephyr_engine_defer,
+          ]);
 
-        await zephyr_engine.start_new_build();
-        const assetsMap = await extract_vite_assets_map(
-          zephyr_engine,
-          vite_internal_options
-        );
-        await zephyr_engine.upload_assets({
-          assetsMap,
-          buildStats: await zeBuildDashData(zephyr_engine),
-        });
-        await zephyr_engine.build_finished();
-      } catch (error) {
-        logFn('error', ZephyrError.format(error));
-      }
+          let buildOptions = vite_internal_options;
+
+          // Check if this is an environment-based build (Vite 7+)
+          const clientEnv = builder.environments?.['client'];
+          if (clientEnv?.isBuilt) {
+            const clientOutDir = clientEnv.config.build?.outDir;
+            if (clientOutDir) {
+              buildOptions = {
+                ...vite_internal_options,
+                outDir: clientOutDir,
+              };
+            }
+          }
+
+          zephyr_engine.buildProperties.baseHref = baseHref;
+
+          logFn('info', 'Uploading assets after build...');
+
+          await zephyr_engine.start_new_build();
+          const assetsMap = await extract_vite_assets_map(zephyr_engine, buildOptions);
+          await zephyr_engine.upload_assets({
+            assetsMap,
+            buildStats: await zeBuildDashData(zephyr_engine),
+          });
+          await zephyr_engine.build_finished();
+
+          uploadCompleted = true;
+        } catch (error) {
+          logFn('error', ZephyrError.format(error));
+        }
+      },
+      order: 'post',
     },
   };
 }

@@ -13,7 +13,7 @@ import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
 import { TOKEN_EXPIRY } from './auth-flags';
 import { getServerToken } from '../node-persist/server-token';
-import { ZeGitInfo } from '../build-context/ze-util-get-git-info';
+import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser

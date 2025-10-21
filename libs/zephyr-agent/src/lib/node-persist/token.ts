@@ -7,7 +7,7 @@ import { getServerToken } from './server-token';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { getUserEmail } from './user-email';
 import { ze_log } from '../logging/debug';
-import { ZeGitInfo } from '../build-context/ze-util-get-git-info';
+import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 
 export async function saveToken(token: string): Promise<void> {
   await storage;

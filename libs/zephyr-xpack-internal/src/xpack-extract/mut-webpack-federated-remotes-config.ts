@@ -48,10 +48,20 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     remoteEntries.forEach((remote) => {
       const [remote_name, remote_version] = remote;
+      // TODO(ZE): Investigate global impact of relaxed matching rules below.
+      // Some ecosystems declare remotes as "name@url" or use wildcard '*'.
+      // If this proves too permissive for other bundlers/configs, we should
+      // introduce an explicit normalization step earlier (during extraction)
+      // and keep matching here strict. Track with an issue and tests.
       const resolved_dep = resolvedDependencyPairs.find((dep) => {
         const nameMatch = dep.name === remote_name;
+        // Allow wildcard and Nx-style "name@url" declarations to match
         const versionMatch =
-          dep.version === 'latest' ? true : dep.version === remote_version;
+          dep.version === 'latest' ||
+          dep.version === '*' ||
+          (typeof remote_version === 'string' &&
+            remote_version.startsWith(`${remote_name}@`)) ||
+          dep.version === remote_version;
         return nameMatch && versionMatch;
       });
       ze_log.remotes(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
@@ -97,7 +107,20 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
       // Nx remote definition is an Array
       if (Array.isArray(remotes)) {
-        const remoteIndex = remotes.indexOf(remote_name);
+        // Nx may declare remotes as an array of strings like
+        //  - "name"
+        //  - "name@http://localhost:4201/remoteEntry.js"
+        // Replace the matching entry by name or name@...
+        let remoteIndex = -1;
+        for (let i = 0; i < remotes.length; i++) {
+          const entry = remotes[i] as unknown as string;
+          if (typeof entry === 'string') {
+            if (entry === remote_name || entry.startsWith(`${remote_name}@`)) {
+              remoteIndex = i;
+              break;
+            }
+          }
+        }
         if (remoteIndex === -1) return;
         const nx_remote_value = remote_final_value.startsWith('promise')
           ? remote_final_value

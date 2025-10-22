@@ -25,6 +25,7 @@
     "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
+    "zephyr-environment-variables": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {

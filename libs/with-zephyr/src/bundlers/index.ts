@@ -1,4 +1,5 @@
 import type { BundlerConfigs } from '../types.js';
+import { astroConfig } from './astro.js';
 import { modernjsConfig } from './modernjs.js';
 import { parcelConfig } from './parcel.js';
 import { repackConfig } from './repack.js';
@@ -42,6 +43,7 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   parcel: parcelConfig,
 
   // Framework-specific
+  astro: astroConfig,
   modernjs: modernjsConfig,
   rspress: rspressConfig,
 
@@ -58,6 +60,7 @@ export { rolldownConfig } from './rolldown.js';
 export { rsbuildConfig } from './rsbuild.js';
 export { rslibConfig } from './rslib.js';
 export { parcelConfig } from './parcel.js';
+export { astroConfig } from './astro.js';
 export { modernjsConfig } from './modernjs.js';
 export { rspressConfig } from './rspress.js';
 export { repackConfig } from './repack.js';

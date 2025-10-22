@@ -53,7 +53,8 @@
     "nx": "21.6.4",
     "nyc": "^17.1.0",
     "prettier": "^3.5.3",
-    "serve": "^14.2.5"
+    "serve": "^14.2.5",
+    "zod": "^4.1.5"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^8.35.1",
@@ -87,7 +88,8 @@
       "form-data": ">=4.0.4",
       "sha.js@<=2.4.11": ">=2.4.12",
       "brace-expansion": ">=1.1.12",
-      "axios@<1.12.0": ">=1.12.0"
+      "axios@<1.12.0": ">=1.12.0",
+      "@eslint/plugin-kit": "^0.3.4"
     }
   }
 }

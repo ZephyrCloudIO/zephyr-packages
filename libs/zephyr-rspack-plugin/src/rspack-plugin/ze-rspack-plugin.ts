@@ -1,8 +1,6 @@
-import type { ZephyrEngine } from 'zephyr-agent';
-import { buildEnvImportMap, type RemoteEntry } from 'zephyr-agent';
-
 import type { Compiler } from '@rspack/core';
 import { HtmlRspackPlugin } from '@rspack/core';
+import { buildEnvImportMap, type RemoteEntry, type ZephyrEngine } from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
   detectAndStoreBaseHref,

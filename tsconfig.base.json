@@ -20,9 +20,6 @@
       "vite-plugin-zephyr": ["libs/vite-plugin-zephyr/src/index.ts"],
       "zephyr-agent": ["libs/zephyr-agent/src/index.ts"],
       "zephyr-edge-contract": ["libs/zephyr-edge-contract/src/index.ts"],
-      "zephyr-environment-variables": [
-        "packages/zephyr-environment-variables/src/index.ts"
-      ],
       "zephyr-repack-plugin": ["libs/zephyr-repack-plugin/src/index.ts"],
       "zephyr-rspack-plugin": ["libs/zephyr-rspack-plugin/src/index.ts"],
       "zephyr-webpack-plugin": ["libs/zephyr-webpack-plugin/src/index.ts"],

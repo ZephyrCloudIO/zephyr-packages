@@ -1290,9 +1290,6 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
-      zephyr-environment-variables:
-        specifier: workspace:*
-        version: link:../../packages/zephyr-environment-variables
     devDependencies:
       '@types/is-ci':
         specifier: catalog:typescript
@@ -1406,9 +1403,6 @@ importers:
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
-      zephyr-environment-variables:
-        specifier: workspace:*
-        version: link:../../packages/zephyr-environment-variables
     devDependencies:
       '@jest/globals':
         specifier: catalog:react
@@ -1614,9 +1608,6 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
-      zephyr-environment-variables:
-        specifier: workspace:*
-        version: link:../../packages/zephyr-environment-variables
       zephyr-xpack-internal:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal
@@ -1744,8 +1735,6 @@ importers:
       ts-jest:
         specifier: catalog:typescript
         version: 29.3.0(@babel/core@7.28.4)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.4))(esbuild@0.25.1)(jest@30.0.5(@types/node@24.5.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.1))(ts-node@10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@24.5.2)(typescript@5.9.2)))(typescript@5.9.2)
-
-  packages/zephyr-environment-variables: {}
 
 packages:
 

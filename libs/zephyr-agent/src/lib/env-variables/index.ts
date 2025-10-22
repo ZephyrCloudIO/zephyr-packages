@@ -3,6 +3,20 @@ export interface RemoteEntry {
   remote_entry_url: string;
 }
 
+export {
+  VIRTUAL_SPECIFIER,
+  detectEnvReads,
+  rewriteEnvReadsToVirtualModule,
+  buildImportMap,
+  injectImportMap,
+  buildModulePreload,
+  injectBeforeHeadClose,
+  buildEnvJsonAsset,
+  generateManifestContent,
+  calculateManifestHash,
+  collectZEPublicVars,
+} from './env-var-rewrites';
+
 export function buildEnvImportMap(
   appName: string,
   remotes: RemoteEntry[]

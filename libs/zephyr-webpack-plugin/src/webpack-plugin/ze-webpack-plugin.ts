@@ -5,6 +5,7 @@ import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
   detectAndStoreBaseHref,
   logBuildSteps,
+  setupManifestEmission,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
 
@@ -32,6 +33,7 @@ export class ZeWebpackPlugin {
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
     logBuildSteps(this._options, compiler);
+    setupManifestEmission(this._options, compiler);
     setupZeDeploy(this._options, compiler);
   }
 }

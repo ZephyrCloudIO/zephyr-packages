@@ -27,7 +27,7 @@
     "is-ci": "catalog:plugin-shared",
     "json5": "2.2.3",
     "rollup": "catalog:rollup4",
-    "vite": "catalog:vite6",
+    "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*",
     "zephyr-environment-variables": "workspace:*"
   },

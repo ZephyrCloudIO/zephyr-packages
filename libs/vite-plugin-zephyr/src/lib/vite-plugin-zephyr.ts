@@ -80,51 +80,7 @@ function zephyrPlugin(): Plugin {
         // ignore if loadEnv unavailable
       }
     },
-    // config: (config) => {
-    //   // Configure Vite to handle JSON imports with import assertions
-    //   config.build = config.build || {};
-    //   config.build.rollupOptions = config.build.rollupOptions || {};
 
-    //   // Ensure JSON files are treated as external when imported with import assertions
-    //   const existingExternal = config.build.rollupOptions.external;
-    //   if (typeof existingExternal === 'function') {
-    //     const originalExternal = existingExternal;
-    //     config.build.rollupOptions.external = (
-    //       id: string,
-    //       importer: string | undefined,
-    //       isResolved: boolean
-    //     ) => {
-    //       if (id.endsWith('.json') && id.includes('zephyr-manifest')) {
-    //         return true;
-    //       }
-    //       return originalExternal(id, importer, isResolved);
-    //     };
-    //   } else {
-    //     // Convert to function to handle JSON files
-    //     const externals = Array.isArray(existingExternal)
-    //       ? existingExternal
-    //       : existingExternal
-    //         ? [existingExternal]
-    //         : [];
-    //     config.build.rollupOptions.external = (
-    //       id: string,
-    //       importer: string | undefined,
-    //       isResolved: boolean
-    //     ) => {
-    //       if (id.endsWith('.json') && id.includes('zephyr-manifest')) {
-    //         return true;
-    //       }
-    //       // Check against existing externals
-    //       return externals.some((external) => {
-    //         if (typeof external === 'string') return id === external;
-    //         if (external instanceof RegExp) return external.test(id);
-    //         return false;
-    //       });
-    //     };
-    //   }
-
-    //   return config;
-    // },
     resolveId: async (source) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
@@ -147,56 +103,49 @@ function zephyrPlugin(): Plugin {
       }
       return null;
     },
-    // load: async (id) => {
-    //   // Handle virtual module in dev mode
-    //   if (id.startsWith('\0virtual:zephyr-env-')) {
-    //     try {
-    //       const zephyr_engine = await zephyr_engine_defer;
-    //       const dependencies = zephyr_engine.federated_dependencies || [];
-    //       const manifestContent = createManifestContent(dependencies, true);
-    //       return `export default ${manifestContent};`;
-    //     } catch (error) {
-    //       logFn('error', `Failed to load virtual module: ${ZephyrError.format(error)}`);
-    //       return 'export default {};';
-    //     }
-    //   }
-    //   return null;
-    // },
-    transform: async (code, id) => {
-      try {
-        if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
-          const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-          if (!dependencyPairs) {
-            return code;
+    transform: {
+      // Hook filter for Rolldown/Vite 7 performance optimization
+      // Only process Module Federation virtual remote entry files
+      filter: {
+        id: /virtual:mf-REMOTE_ENTRY_ID/,
+      },
+      handler: async (code, id) => {
+        try {
+          // Additional check for backward compatibility with older Vite/Rollup versions
+          if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
+            const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+            if (!dependencyPairs) {
+              return code;
+            }
+            const zephyr_engine = await zephyr_engine_defer;
+            const resolved_remotes =
+              await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+            if (!resolved_remotes) {
+              return code;
+            }
+            const result = load_resolved_remotes(resolved_remotes, code);
+            return result;
           }
-          const zephyr_engine = await zephyr_engine_defer;
-          const resolved_remotes =
-            await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-          if (!resolved_remotes) {
-            return code;
-          }
-          const result = load_resolved_remotes(resolved_remotes, code);
-          return result;
-        }
 
-        if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
-          const zephyr_engine = await zephyr_engine_defer;
-          if (!cachedSpecifier) {
-            const appName = zephyr_engine.applicationProperties.name;
-            cachedSpecifier = `env:vars:${appName}`;
+          if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
+            const zephyr_engine = await zephyr_engine_defer;
+            if (!cachedSpecifier) {
+              const appName = zephyr_engine.applicationProperties.name;
+              cachedSpecifier = `env:vars:${appName}`;
+            }
+            const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
+            if (res && typeof res.code === 'string' && res.code !== code) {
+              code = res.code;
+            }
           }
-          const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
-          if (res && typeof res.code === 'string' && res.code !== code) {
-            code = res.code;
-          }
-        }
 
-        return code;
-      } catch (error) {
-        logFn('error', ZephyrError.format(error));
-        // returns the original code in case of error
-        return code;
-      }
+          return code;
+        } catch (error) {
+          logFn('error', ZephyrError.format(error));
+          // returns the original code in case of error
+          return code;
+        }
+      },
     },
     generateBundle: async function (options, bundle) {
       // Process remoteEntry.js to inject runtime plugin

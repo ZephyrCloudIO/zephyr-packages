@@ -82,6 +82,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context: { isCI },
     build_target,
+    zephyrDependencies: ze_engine.zephyr_dependencies,
   };
 
   // todo: extend data

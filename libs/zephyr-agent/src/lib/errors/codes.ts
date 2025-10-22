@@ -480,7 +480,7 @@ For debugging, check:
 - Network proxy settings if behind corporate firewall
 - API status at https://status.zephyr-cloud.io
 
-Documentation: https://docs.zephyr-cloud.io/how-to/mf-guide
+Documentation: https://docs.zephyr-cloud.io/tutorials/mf-guide
       `,
     kind: 'config',
   },
@@ -502,6 +502,11 @@ Were the required packages in Module federation plugin installed and included in
     message:
       'Missing platform target (ios, android or others) from compiler options. Please open an issue on https://github.com/ZephyrCloudIO/zephyr-packages/issues',
     kind: 'config',
+  },
+  ERR_MAX_PAYLOAD_SIZE_EXCEEDED: {
+    id: '037',
+    message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
+    kind: 'deploy',
   },
 } as const satisfies {
   [name: string]: {

@@ -1,36 +1,17 @@
-name: On Canary Release
+# This workflow has been replaced by publish_packages.yml
+# Redirect users to use the unified workflow
+
+name: On Canary Release (Deprecated)
 on:
   workflow_dispatch:
 
-permissions:
-  id-token: write
-
 jobs:
-  publish:
+  redirect:
     runs-on: ubuntu-latest
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Build packages
-        run: pnpm dlx nx run-many -t build --projects="libs/*"
-      - name: Patch versions
+      - name: Redirect to unified workflow
         run: |
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          pnpm ze-version-patch 0.0.0-canary-$TIMESTAMP
-      - name: Publish package on NPM 📦
-        run: pnpm ze-publish --tag=canary
-      - name: Post Summary
-        continue-on-error: true
-        run: |
-          echo "## Canary version successfully published!" > $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY
-          pnpm list --recursive --depth -1 --filter="./libs/*" | grep . | while read -r line; do
-            PACKAGE=$(echo "$line" | awk '{print $1}')  # Extracts package name with version
-            VERSION=$(echo "$PACKAGE" | awk -F'@' '{print $2}')  # Extracts version
-            NAME=$(echo "$PACKAGE" | awk -F'@' '{print $1}')  # Extracts package name without version
-            echo "| [$NAME](https://www.npmjs.com/package/$NAME) | $VERSION | [View Versions](https://www.npmjs.com/package/$NAME?activeTab=versions) |" >> $GITHUB_STEP_SUMMARY
-          done
+          echo "⚠️ This workflow is deprecated!"
+          echo "Please use the 'Publish Packages' workflow instead."
+          echo "Go to Actions -> Publish Packages -> Run workflow -> Select 'canary'"
+          exit 1

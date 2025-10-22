@@ -6,16 +6,16 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nx/rspack:rspack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "compiler": "babel",
+        "target": "web",
         "outputPath": "dist/examples/react-micro-frontends/apps/team-blue",
         "index": "examples/react-micro-frontends/apps/team-blue/src/index.html",
         "baseHref": "/",
         "main": "examples/react-micro-frontends/apps/team-blue/src/main.tsx",
-        "tsConfig": "examples/react-micro-frontends/apps/team-blue/tsconfig.app.json",
+        "typeCheck": true,
         "assets": [
           {
             "glob": "**/*",
@@ -27,11 +27,10 @@
           "examples/react-micro-frontends/apps/team-blue/src/styles.css"
         ],
         "scripts": [],
-        "webpackConfig": "examples/react-micro-frontends/apps/team-blue/webpack.config.ts"
+        "rspackConfig": "examples/react-micro-frontends/apps/team-blue/rspack.config.js"
       },
       "configurations": {
         "development": {
-          "extractLicenses": false,
           "optimization": false,
           "sourceMap": true,
           "vendorChunk": true
@@ -47,13 +46,12 @@
           "outputHashing": "all",
           "sourceMap": false,
           "namedChunks": false,
-          "extractLicenses": true,
           "vendorChunk": false
         }
       }
     },
     "serve": {
-      "executor": "@nx/webpack:dev-server",
+      "executor": "@nx/rspack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "port": 4300,

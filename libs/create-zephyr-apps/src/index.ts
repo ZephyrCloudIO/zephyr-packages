@@ -274,7 +274,7 @@ git remote add origin https://github.com/{cyan <name>}/{cyan ${repoName}}.git
     c`
 Make sure to commit and add a remote to the remote repository!
 Read more about how Module Federation works with Zephyr:
-- {cyan https://docs.zephyr-cloud.io/how-to/mf-guide}
+- {cyan https://docs.zephyr-cloud.io/tutorials/mf-guide}
     `.trim(),
     'Read more about Module Federation'
   );
@@ -286,8 +286,8 @@ note(
 - {cyan ${terminalLink(
     'Documentation',
     projectKind === 'web'
-      ? 'https://docs.zephyr-cloud.io/recipes'
-      : 'https://docs.zephyr-cloud.io/recipes/repack-mf'
+      ? 'https://docs.zephyr-cloud.io/bundlers/webpack'
+      : 'https://docs.zephyr-cloud.io/bundlers/repack'
   )}}
 - {cyan ${terminalLink(
     'Open an issue',

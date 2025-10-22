@@ -1,8 +1,8 @@
 import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { makeRequest } from './http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
+import { makeRequest } from './http-request';
 
 export async function uploadSnapshot({
   body,
@@ -16,6 +16,7 @@ export async function uploadSnapshot({
   });
 
   const json = JSON.stringify(body);
+  ze_log.snapshot('Sending snapshot to edge:', JSON.stringify(body, null, 2));
 
   const options: RequestInit = {
     method: 'POST',
@@ -29,6 +30,7 @@ export async function uploadSnapshot({
   const url = new URL('/upload', EDGE_URL);
   url.searchParams.append('type', 'snapshot');
   url.searchParams.append('skip_assets', 'true');
+  ze_log.snapshot('Upload URL:', url.toString());
 
   const [ok, cause, resp] = await makeRequest<SnapshotUploadRes>(url, options, json);
 

@@ -95,6 +95,105 @@ interface ZephyrAgentConfig {
 }
 ```
 
+### Git Repository Requirements
+
+**IMPORTANT**: Zephyr requires a properly initialized Git repository with a remote origin for production deployments.
+
+#### Git Information Handling
+
+When Zephyr cannot find a Git repository with remote origin, it will:
+
+1. **Automatic Package.json-Based Naming**:
+
+   - Extract organization, project, and app names from your `package.json`
+   - Use authenticated user's username as the organization for personal Zephyr org
+   - Follow intelligent naming conventions based on package structure
+   - No user prompts or environment variables required
+
+2. **Enhanced Naming Logic**:
+   - **Scoped packages** (`@scope/name`): project = scope, app = name
+   - **With root package.json**:
+     - If root is scoped (`@scope/name`): project = scope, app = current package name
+     - Otherwise: project = root package name, app = current package name
+   - **Fallback to directory name**: If no root package.json found, uses directory name as project
+   - **Single package**: project = app = package name
+   - **Organization**: Uses authenticated user's username (sanitized for URL safety)
+
+#### Example Scenarios
+
+```bash
+# Recommended: Proper Git setup
+git init
+git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git
+git add . && git commit -m "Initial commit"
+npm run build  # Works perfectly with full Git context
+
+# Automatic fallback (works seamlessly)
+# No git repository - uses package.json naming
+npm run build  # Automatically determines naming from package.json
+
+# Examples of automatic naming:
+# package.json: { "name": "@my-company/my-app" }
+# → org: "jwt-username", project: "my-company", app: "my-app"
+
+# package.json: { "name": "my-project" } (no root package.json)
+# → org: "jwt-username", project: "my-project", app: "my-project"
+
+# package.json: { "name": "my-app" } (root package.json: { "name": "my-workspace" })
+# → org: "jwt-username", project: "my-workspace", app: "my-app"
+
+# package.json: { "name": "my-app" } (root package.json: { "name": "@company/monorepo" })
+# → org: "jwt-username", project: "company", app: "my-app"
+
+# package.json: { "name": "my-app" } (no root package.json found)
+# → org: "jwt-username", project: "current-directory-name", app: "my-app"
+
+# Special characters in username get sanitized:
+# Username: "Néstor López" → org: "n-stor-l-pez"
+```
+
+#### Why Git is Required
+
+Zephyr uses Git information to:
+
+- Determine organization and project structure
+- Track deployment versions and commits
+- Enable collaboration features
+- Provide proper deployment metadata
+
+Without Git, Zephyr cannot guarantee proper functionality, especially for:
+
+- Production deployments
+- Team collaboration
+- Version tracking
+- Rollback capabilities
+
+#### Package.json-Based Naming (Non-Git Environments)
+
+When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr automatically extracts naming information from your `package.json` structure:
+
+**Automatic Organization Detection:**
+
+- Uses the authenticated user's name from your authentication token
+- Requires valid authentication to determine organization
+
+**Project and App Naming Logic:**
+
+1. **Scoped Package** (`@company/app-name`):
+
+   - Project: `company` (scope without @)
+   - App: `app-name`
+
+2. **Monorepo Structure** (root `package.json` exists):
+
+   - If root is scoped (`@company/monorepo`): Project = `company`, App = current package name
+   - Otherwise: Project = root package name, App = current package name
+   - If no root package.json found: Project = current directory name, App = current package name
+
+3. **Single Package**:
+   - Project: Package name
+   - App: Package name
+
 ## Internal APIs
 
 ### Build Context API

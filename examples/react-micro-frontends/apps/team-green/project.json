@@ -6,16 +6,16 @@
   "tags": [],
   "targets": {
     "build": {
-      "executor": "@nx/webpack:webpack",
+      "executor": "@nx/rspack:rspack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "compiler": "babel",
+        "target": "web",
         "outputPath": "dist/examples/react-micro-frontends/apps/team-green",
         "index": "examples/react-micro-frontends/apps/team-green/src/index.html",
         "baseHref": "/",
         "main": "examples/react-micro-frontends/apps/team-green/src/main.tsx",
-        "tsConfig": "examples/react-micro-frontends/apps/team-green/tsconfig.app.json",
+        "typeCheck": true,
         "assets": [
           {
             "glob": "**/*",
@@ -27,11 +27,10 @@
           "examples/react-micro-frontends/apps/team-green/src/styles.css"
         ],
         "scripts": [],
-        "webpackConfig": "examples/react-micro-frontends/apps/team-green/webpack.config.ts"
+        "rspackConfig": "examples/react-micro-frontends/apps/team-green/rspack.config.js"
       },
       "configurations": {
         "development": {
-          "extractLicenses": false,
           "optimization": false,
           "sourceMap": true,
           "vendorChunk": true
@@ -41,13 +40,12 @@
           "outputHashing": "all",
           "sourceMap": false,
           "namedChunks": false,
-          "extractLicenses": true,
           "vendorChunk": false
         }
       }
     },
     "serve": {
-      "executor": "@nx/webpack:dev-server",
+      "executor": "@nx/rspack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "port": 4400,

@@ -1,0 +1,15 @@
+{
+  "name": "zephyr-environment-variables",
+  "version": "0.0.0",
+  "description": "Shared env variable rewriting and helpers for Zephyr bundler plugins",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run zephyr-environment-variables:build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

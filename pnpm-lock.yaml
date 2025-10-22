@@ -339,6 +339,9 @@ importers:
       serve:
         specifier: ^14.2.5
         version: 14.2.5
+      zod:
+        specifier: ^4.1.5
+        version: 4.1.12
 
   e2e/deployment:
     devDependencies:
@@ -1287,6 +1290,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
+      zephyr-environment-variables:
+        specifier: workspace:*
+        version: link:../../packages/zephyr-environment-variables
     devDependencies:
       '@types/is-ci':
         specifier: catalog:typescript
@@ -1400,6 +1406,9 @@ importers:
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
+      zephyr-environment-variables:
+        specifier: workspace:*
+        version: link:../../packages/zephyr-environment-variables
     devDependencies:
       '@jest/globals':
         specifier: catalog:react
@@ -1605,6 +1614,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
+      zephyr-environment-variables:
+        specifier: workspace:*
+        version: link:../../packages/zephyr-environment-variables
       zephyr-xpack-internal:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal
@@ -1732,6 +1744,8 @@ importers:
       ts-jest:
         specifier: catalog:typescript
         version: 29.3.0(@babel/core@7.28.4)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.4))(esbuild@0.25.1)(jest@30.0.5(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.1))(ts-node@10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@22.13.13)(typescript@5.9.2)))(typescript@5.9.2)
+
+  packages/zephyr-environment-variables: {}
 
 packages:
 
@@ -16516,6 +16530,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -22281,7 +22298,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.4
       '@babel/helper-module-imports': 7.27.1(supports-color@5.5.0)
-      '@rollup/pluginutils': 5.1.4(rollup@4.52.5)
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
     optionalDependencies:
       '@types/babel__core': 7.20.5
       rollup: 4.52.5
@@ -22290,31 +22307,31 @@ snapshots:
 
   '@rollup/plugin-commonjs@25.0.8(rollup@4.52.5)':
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.52.5)
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
       commondir: 1.0.1
       estree-walker: 2.0.2
       glob: 8.1.0
       is-reference: 1.2.1
-      magic-string: 0.30.17
+      magic-string: 0.30.19
     optionalDependencies:
       rollup: 4.52.5
 
   '@rollup/plugin-image@3.0.3(rollup@4.52.5)':
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.52.5)
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
       mini-svg-data-uri: 1.4.4
     optionalDependencies:
       rollup: 4.52.5
 
   '@rollup/plugin-json@6.1.0(rollup@4.52.5)':
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.52.5)
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
     optionalDependencies:
       rollup: 4.52.5
 
   '@rollup/plugin-node-resolve@15.3.1(rollup@4.52.5)':
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.52.5)
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
       '@types/resolve': 1.20.2
       deepmerge: 4.3.1
       is-module: 1.0.0
@@ -22324,7 +22341,7 @@ snapshots:
 
   '@rollup/plugin-typescript@12.1.2(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.2)':
     dependencies:
-      '@rollup/pluginutils': 5.1.4(rollup@4.52.5)
+      '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
       resolve: 1.22.10
       typescript: 5.9.2
     optionalDependencies:
@@ -27336,7 +27353,7 @@ snapshots:
 
   estree-util-attach-comments@2.1.1:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
 
   estree-util-attach-comments@3.0.0:
     dependencies:
@@ -28199,7 +28216,7 @@ snapshots:
 
   hast-util-to-estree@2.3.3:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       '@types/estree-jsx': 1.0.5
       '@types/hast': 2.3.10
       '@types/unist': 2.0.11
@@ -28902,7 +28919,7 @@ snapshots:
 
   is-reference@3.0.3:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
 
   is-regex@1.2.1:
     dependencies:
@@ -32461,7 +32478,7 @@ snapshots:
 
   periscopic@3.1.0:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       estree-walker: 3.0.3
       is-reference: 3.0.3
 
@@ -36885,5 +36902,7 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  zod@4.1.12: {}
 
   zwitch@2.0.4: {}

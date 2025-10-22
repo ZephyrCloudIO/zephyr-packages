@@ -9,6 +9,7 @@ import {
   rsbuildConfig,
   rslibConfig,
   parcelConfig,
+  astroConfig,
   modernjsConfig,
   rspressConfig,
   repackConfig,
@@ -23,6 +24,7 @@ describe('Bundler Configurations', () => {
         'vite',
         'rollup',
         'rolldown',
+        'astro',
         'modernjs',
         'rspress',
         'parcel',
@@ -84,6 +86,7 @@ describe('Bundler Configurations', () => {
       expect(rsbuildConfig).toBe(BUNDLER_CONFIGS.rsbuild);
       expect(rslibConfig).toBe(BUNDLER_CONFIGS.rslib);
       expect(parcelConfig).toBe(BUNDLER_CONFIGS.parcel);
+      expect(astroConfig).toBe(BUNDLER_CONFIGS.astro);
       expect(modernjsConfig).toBe(BUNDLER_CONFIGS.modernjs);
       expect(rspressConfig).toBe(BUNDLER_CONFIGS.rspress);
       expect(repackConfig).toBe(BUNDLER_CONFIGS.repack);
@@ -179,6 +182,36 @@ describe('Bundler Configurations', () => {
       const arrayPattern = rollupConfig.patterns.find((p) => p.type === 'export-array');
       expect(arrayPattern).toBeDefined();
       expect(arrayPattern?.matcher.test('export default [')).toBe(true);
+    });
+  });
+
+  describe('Astro Configuration', () => {
+    it('should support correct file extensions including .mts', () => {
+      expect(astroConfig.files).toEqual([
+        'astro.config.js',
+        'astro.config.ts',
+        'astro.config.mjs',
+        'astro.config.mts',
+      ]);
+    });
+
+    it('should use correct plugin package', () => {
+      expect(astroConfig.plugin).toBe('zephyr-astro-integration');
+      expect(astroConfig.importName).toBe('withZephyr');
+    });
+
+    it('should handle function wrapper pattern', () => {
+      const functionPattern = astroConfig.patterns.find(
+        (p) => p.type === 'define-config-function'
+      );
+      expect(functionPattern).toBeDefined();
+      expect(functionPattern?.matcher.test('defineConfig(() => ({')).toBe(true);
+    });
+
+    it('should handle standard defineConfig pattern', () => {
+      const definePattern = astroConfig.patterns.find((p) => p.type === 'define-config');
+      expect(definePattern).toBeDefined();
+      expect(definePattern?.matcher.test('defineConfig({')).toBe(true);
     });
   });
 

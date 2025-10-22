@@ -60,6 +60,7 @@
     "rspack",
     "rsbuild",
     "rslib",
+    "astro",
     "modernjs",
     "rolldown",
     "rspress"

@@ -5,9 +5,9 @@ import {
   type ZephyrDependency,
   type ZephyrManifest,
 } from 'zephyr-edge-contract';
-import { collectZEPublicVars } from 'zephyr-environment-variables';
 import type { ZeResolvedDependency } from '../../zephyr-engine/resolve_remote_dependency';
 import { ze_log } from '../logging';
+import { collectZEPublicVars } from '../env-variables';
 
 export function convertResolvedDependencies(
   dependencies: ZeResolvedDependency[]

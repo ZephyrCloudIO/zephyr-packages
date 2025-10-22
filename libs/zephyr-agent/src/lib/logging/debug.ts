@@ -23,20 +23,26 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
+export const ze_error = debug('zephyr:error');
+export const ze_debug = debug('zephyr:debug');
 const createLogger = () => {
   return {
     app: debug('zephyr:app'),
     auth: debug('zephyr:auth'),
+    buildstats: debug('zephyr:buildstats'),
     config: debug('zephyr:config'),
     git: debug('zephyr:git'),
     http: debug('zephyr:http'),
     init: debug('zephyr:init'),
+    manifest: debug('zephyr:manifest'),
     mf: debug('zephyr:mf'),
     misc: debug('zephyr:misc'),
     package: debug('zephyr:package'),
     remotes: debug('zephyr:remotes'),
     snapshot: debug('zephyr:snapshot'),
     upload: debug('zephyr:upload'),
+    debug: debug('zephyr:debug'),
+    error: debug('zephyr:error'),
   };
 };
 
@@ -45,9 +51,11 @@ const createLogger = () => {
  *
  * - Ze_log.app: Application config information
  * - Ze_log.auth: Authentication and token management
+ * - Ze_log.buildstats: Build information for Dashboard API
  * - Ze_log.config: Authentication and token management
  * - Ze_log.git: Git configuration and provider
  * - Ze_log.http: http requests
+ * - Ze_log.manifest: Generation and inclusion of zephyr manifest
  * - Ze_log.init: Initialization and setup operations
  * - Ze_log.mf: Module Federation config
  * - Ze_log.misc: Miscellaneous

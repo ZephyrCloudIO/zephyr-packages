@@ -4,6 +4,7 @@
   "sourceRoot": "libs/vite-plugin-zephyr/src",
   "projectType": "library",
   "tags": [],
+  "implicitDependencies": ["zephyr-agent"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

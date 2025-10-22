@@ -23,13 +23,13 @@
     "@types/react-dom": "catalog:react18",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@typescript-eslint/parser": "catalog:eslint",
-    "@vitejs/plugin-react": "catalog:vite6",
+    "@vitejs/plugin-react": "catalog:vite7",
     "eslint": "catalog:eslint",
     "eslint-plugin-react-hooks": "catalog:eslint",
     "eslint-plugin-react-refresh": "catalog:eslint",
-    "globals": "catalog:vite6",
+    "globals": "catalog:vite7",
     "typescript": "catalog:typescript",
-    "vite": "catalog:vite6",
+    "vite": "catalog:vite7",
     "vite-plugin-inspect": "^11.0.0",
     "vite-plugin-zephyr": "workspace:*"
   }

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/bundlers/webpack) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
@@ -10,7 +10,7 @@
 
 A Webpack plugin for deploying applications with Zephyr Cloud. This plugin integrates seamlessly with Webpack's ecosystem to enable deployment of your applications with comprehensive Module Federation support.
 
-For more information please refer to our [documentation](https://docs.zephyr-cloud.io/recipes).
+For more information please refer to our [documentation](https://docs.zephyr-cloud.io/bundlers/webpack).
 
 ## Installation
 

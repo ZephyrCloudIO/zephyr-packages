@@ -2,13 +2,13 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/rspack-react) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/bundlers/rspack) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
-An Rspack plugin for deploying applications with Zephyr Cloud. This plugin integrates seamlessly with Rspack's fast bundling to enable deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/recipes/react-rspack-nx).
+An Rspack plugin for deploying applications with Zephyr Cloud. This plugin integrates seamlessly with Rspack's fast bundling to enable deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/integrations/react-rspack-nx).
 
 ## Get Started
 
@@ -18,7 +18,7 @@ The fastest way to get started is to use to use `create-zephyr-apps` to generate
 npx create-zephyr-apps@latest
 ```
 
-For more information please refer to our [documentation](https://docs.zephyr-cloud.io/recipes).
+For more information please refer to our [documentation](https://docs.zephyr-cloud.io/bundlers/rspack).
 
 ## Installation
 

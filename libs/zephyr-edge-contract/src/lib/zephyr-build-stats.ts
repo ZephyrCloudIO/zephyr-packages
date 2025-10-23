@@ -1,7 +1,5 @@
 /* istanbul ignore file */
 
-import { z } from 'zod';
-
 /** Todo: this worst and most outdated model so far, had to be refactored */
 export interface ZephyrBuildStats {
   /** @deprecated */
@@ -143,14 +141,13 @@ enum DeploymentIntegrationPlatform {
   GCP = 'gcp',
 }
 
-export const ZephyrDependencySchema = z.object({
-  application_uid: z.string(),
-  remote_entry_url: z.string(),
-  default_url: z.string(),
-  name: z.string(),
-  library_type: z.string(),
-});
-export type ZephyrDependency = z.infer<typeof ZephyrDependencySchema>;
+export interface ZephyrDependency {
+  application_uid: string;
+  remote_entry_url: string;
+  default_url: string;
+  name: string;
+  library_type: string;
+}
 
 export interface RawDependency {
   name: string;

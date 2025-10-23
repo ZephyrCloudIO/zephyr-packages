@@ -21,8 +21,7 @@
     "test": "nx test zephyr-edge-contract"
   },
   "dependencies": {
-    "tslib": "catalog:typescript",
-    "zod": "^4.1.5"
+    "tslib": "catalog:typescript"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",

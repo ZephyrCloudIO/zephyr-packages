@@ -13,8 +13,11 @@
     "micro-frontends",
     "module-federation"
   ],
-  "author": "Zephyr Team",
-  "license": "MIT",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "license": "Apache-2.0",
   "dependencies": {
     "zephyr-agent": "*",
     "zephyr-edge-contract": "*"
@@ -34,7 +37,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zephyr-cloud/zephyr-packages",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
     "directory": "libs/zephyr-nextjs-adapter"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

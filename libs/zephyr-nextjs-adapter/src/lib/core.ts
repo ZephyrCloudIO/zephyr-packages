@@ -94,14 +94,19 @@ export async function convertToZephyrAssets(
   log.debug.init('Converting Next.js outputs to Zephyr asset format');
 
   // Apply functional transformation step by step for type safety
-  const validOutputs = ctx.outputs || [];
+  // Ensure outputs is an array - handle various formats Next.js might provide
+  const rawOutputs = ctx.outputs || [];
+  const validOutputs = Array.isArray(rawOutputs) ? rawOutputs : [];
+
+  log.debug.misc(`Processing ${validOutputs.length} outputs`);
+
   const categorizedAssets = validOutputs.map((output) =>
     categorizeAsset(output as Record<string, unknown>)
   );
   const zephyrAssets = groupAssetsByCategory(categorizedAssets);
 
   // Handle prerendered pages separately (functional approach)
-  const prerenderedAssets = (ctx.outputs || [])
+  const prerenderedAssets = validOutputs
     .filter((output) => output.fallbackID)
     .map(
       (output) =>

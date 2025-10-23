@@ -8,16 +8,16 @@ import path from 'path';
 import {
   addToComposePlugins,
   addToPluginsArray,
+  addToPluginsArrayOrCreate,
   addToRollupArrayConfig,
   addToVitePlugins,
   addToVitePluginsInFunction,
-  addZephyrRSbuildPlugin,
   hasZephyrPlugin,
   parseFile,
   wrapExportDefault,
   wrapExportedFunction,
   writeFile,
-} from '../transformers.js';
+} from '../transformers/index.js';
 
 describe('Zephyr Codemod Transformers', () => {
   let tempDir: string;
@@ -98,6 +98,68 @@ describe('Zephyr Codemod Transformers', () => {
       expect(result).toMatch(
         /plugins:\s*\[\s*somePlugin\(\),\s*anotherPlugin\(\),\s*withZephyr\(\)\s*\]/
       );
+    });
+  });
+
+  describe('addToPluginsArrayOrCreate', () => {
+    it('should add withZephyr to existing plugins array in defineConfig', () => {
+      const code = `
+        import { defineConfig } from 'rspress/config';
+
+        export default defineConfig({
+          root: './docs',
+          plugins: [existingPlugin()]
+        });
+      `;
+
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: ['typescript'],
+      });
+      addToPluginsArrayOrCreate(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*existingPlugin\(\),\s*withZephyr\(\)\s*\]/);
+    });
+
+    it('should create plugins array when it does not exist in defineConfig', () => {
+      const code = `
+        import { defineConfig } from 'rspress/config';
+
+        export default defineConfig({
+          root: './docs',
+          title: 'My Site',
+          themeConfig: {
+            socialLinks: []
+          }
+        });
+      `;
+
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: ['typescript'],
+      });
+      addToPluginsArrayOrCreate(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*withZephyr\(\)\s*\]/);
+    });
+
+    it('should fallback to addToPluginsArray when no defineConfig found', () => {
+      const code = `
+        export default {
+          plugins: [somePlugin()]
+        };
+      `;
+
+      const ast = parse(code, { sourceType: 'module' });
+      addToPluginsArrayOrCreate(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*somePlugin\(\),\s*withZephyr\(\)\s*\]/);
     });
   });
 
@@ -218,8 +280,8 @@ describe('Zephyr Codemod Transformers', () => {
     });
   });
 
-  describe('addZephyrRSbuildPlugin', () => {
-    it('should add Zephyr RSBuild plugin function and call to defineConfig', () => {
+  describe('addToPluginsArray (RSBuild)', () => {
+    it('should add withZephyr to RSBuild plugins array', () => {
       const code = `
         import { defineConfig } from '@rsbuild/core';
         import { pluginReact } from '@rsbuild/plugin-react';
@@ -233,48 +295,11 @@ describe('Zephyr Codemod Transformers', () => {
         sourceType: 'module',
         plugins: ['typescript'],
       });
-      addZephyrRSbuildPlugin(ast);
+      addToPluginsArray(ast);
       const result = generate(ast).code;
 
-      expect(result).toContain('zephyrRSbuildPlugin');
-      expect(result).toContain('RsbuildPlugin');
-      expect(result).toContain('zephyr-rsbuild-plugin');
-      expect(result).toContain('api.modifyRspackConfig');
-      expect(result).toMatch(
-        /plugins:\s*\[\s*pluginReact\(\),\s*zephyrRSbuildPlugin\(\)\s*\]/
-      );
-    });
-
-    it('should not duplicate zephyrRSbuildPlugin if already exists', () => {
-      const code = `
-        import { defineConfig, RsbuildPlugin } from '@rsbuild/core';
-        import { withZephyr } from 'zephyr-rspack-plugin';
-
-        const zephyrRSbuildPlugin = (): RsbuildPlugin => ({
-          name: 'zephyr-rsbuild-plugin',
-          setup(api) {
-            api.modifyRspackConfig(async (config) => {
-              const zephyrConfig = await withZephyr()(config);
-              config = zephyrConfig;
-            });
-          },
-        });
-
-        export default defineConfig({
-          plugins: [zephyrRSbuildPlugin()]
-        });
-      `;
-
-      const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript'],
-      });
-      addZephyrRSbuildPlugin(ast);
-      const result = generate(ast).code;
-
-      // Should not duplicate the plugin function or call
-      const pluginOccurrences = (result.match(/zephyrRSbuildPlugin/g) || []).length;
-      expect(pluginOccurrences).toBe(2); // Function name and call (function already exists)
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*pluginReact\(\),\s*withZephyr\(\)\s*\]/);
     });
   });
 
@@ -351,15 +376,13 @@ describe('Zephyr Codemod Transformers', () => {
 
       fs.writeFileSync(configPath, code);
       const ast = parseFile(configPath);
-      addZephyrRSbuildPlugin(ast);
+      addToPluginsArray(ast);
       writeFile(configPath, ast);
 
       const result = fs.readFileSync(configPath, 'utf8');
-      expect(result).toContain('import { withZephyr }');
-      expect(result).toContain('RsbuildPlugin');
-      expect(result).toContain('zephyrRSbuildPlugin()');
+      expect(result).toContain('withZephyr()');
       expect(result).toMatch(
-        /plugins:\s*\[\s*pluginReact\(\),\s*pluginSass\(\),\s*zephyrRSbuildPlugin\(\)\s*\]/
+        /plugins:\s*\[\s*pluginReact\(\),\s*pluginSass\(\),\s*withZephyr\(\)\s*\]/
       );
     });
   });

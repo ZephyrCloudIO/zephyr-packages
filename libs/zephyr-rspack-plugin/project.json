@@ -12,7 +12,14 @@
         "rootDir": "libs/zephyr-rspack-plugin/src",
         "outputPath": "libs/zephyr-rspack-plugin/dist",
         "tsConfig": "libs/zephyr-rspack-plugin/tsconfig.lib.json",
-        "main": "libs/zephyr-rspack-plugin/src/index.ts"
+        "main": "libs/zephyr-rspack-plugin/src/index.ts",
+        "assets": [
+          {
+            "input": "libs/zephyr-rspack-plugin/src/rspack-plugin",
+            "glob": "env-virtual-loader.js",
+            "output": "rspack-plugin"
+          }
+        ]
       }
     },
     "publish": {

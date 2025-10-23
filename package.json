@@ -71,7 +71,7 @@
       "@rsdoctor/rspack-plugin": "catalog:rspack",
       "@rspack/core": "catalog:rspack",
       "@vercel/nft": "^0.29.2",
-      "hono": "^4.2.7",
+      "hono": "^4.10.2",
       "esbuild": "catalog:esbuild",
       "@babel/runtime": "catalog:babel",
       "@swc/helpers": "catalog:swc",

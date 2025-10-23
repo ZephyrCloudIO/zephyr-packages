@@ -47,8 +47,7 @@
     "tslib": "catalog:typescript",
     "uuid": "^8.3.2",
     "ws": "^8.18.3",
-    "zephyr-edge-contract": "workspace:*",
-    "zephyr-environment-variables": "workspace:*"
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@jest/globals": "catalog:react",

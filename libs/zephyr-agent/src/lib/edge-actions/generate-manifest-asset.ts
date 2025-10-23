@@ -1,7 +1,4 @@
-import {
-  calculateManifestHash,
-  generateManifestContent,
-} from 'zephyr-environment-variables';
+import { calculateManifestHash, generateManifestContent } from '../env-variables';
 
 export interface ManifestAssetResult {
   content: string;

@@ -29,7 +29,8 @@
   "scripts": {
     "build": "nx run zephyr-nextjs-adapter:build",
     "test": "jest",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "patch-version": "pnpm version"
   },
   "repository": {
     "type": "git",

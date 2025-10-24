@@ -3,7 +3,7 @@ import type { ZeResolvedDependency } from 'zephyr-agent';
 
 export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]): string {
   const remoteMap = Object.fromEntries(
-    resolved_remotes.map((remote) => [remote.name, remote])
+    resolved_remotes.map((remote) => [remote.normalized_js_name ?? remote.name, remote])
   );
 
   const runtimePlugin: FederationRuntimePlugin = {

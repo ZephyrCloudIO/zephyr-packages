@@ -13,16 +13,19 @@ export function convertResolvedDependencies(
   dependencies: ZeResolvedDependency[]
 ): Record<string, ZephyrDependency> {
   return Object.fromEntries(
-    dependencies.map((dep) => [
-      dep.name,
-      {
-        name: dep.name,
-        application_uid: dep.application_uid,
-        remote_entry_url: dep.remote_entry_url,
-        default_url: dep.default_url,
-        library_type: dep.library_type,
-      },
-    ])
+    dependencies.map((dep) => {
+      const key = dep.normalized_js_name ?? dep.name;
+      return [
+        key,
+        {
+          name: key,
+          application_uid: dep.application_uid,
+          remote_entry_url: dep.remote_entry_url,
+          default_url: dep.default_url,
+          library_type: dep.library_type,
+        },
+      ];
+    })
   );
 }
 
@@ -57,8 +60,9 @@ export function createManifestContent(
   const dependenciesMap: Record<string, ZephyrDependency> = {};
 
   dependencies.forEach((dep) => {
-    dependenciesMap[dep.name] = {
-      name: dep.name,
+    const key = dep.normalized_js_name ?? dep.name;
+    dependenciesMap[key] = {
+      name: key,
       application_uid: dep.application_uid,
       remote_entry_url: dep.remote_entry_url,
       default_url: dep.default_url,

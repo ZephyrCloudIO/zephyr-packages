@@ -17,7 +17,13 @@ export function createMfRuntimeCode(
   const strEnd = new RegExp(/;[^)}]+}$/);
   const promiseNewPromise = fnReplace.replace(strStart, strNewStart).replace(strEnd, '');
 
-  const { application_uid, remote_entry_url, default_url, name, library_type } = deps;
+  const {
+    application_uid,
+    remote_entry_url,
+    default_url,
+    normalized_js_name,
+    library_type,
+  } = deps;
 
   // If the builder is `repack` only return the remote url without any changes
   if (zephyr_engine.builder === 'repack') {
@@ -27,7 +33,7 @@ export function createMfRuntimeCode(
   return promiseNewPromise
     .replace('__APPLICATION_UID__', application_uid)
     .replace('__REMOTE_ENTRY_URL__', remote_entry_url)
-    .replace('__REMOTE_NAME__', name)
+    .replace('__REMOTE_NAME__', normalized_js_name ?? '')
     .replace('__DEFAULT_URL__', default_url)
     .replace('__LIBRARY_TYPE__', library_type);
 }

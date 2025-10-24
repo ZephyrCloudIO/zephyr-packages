@@ -15,7 +15,7 @@ export * as ZeUtils from './lib/promise';
 export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';
 export { createSnapshotId, flatCreateSnapshotId } from './lib/utils/create-snapshot-id';
-export { normalize_js_var_name as normalize_app_name } from './lib/utils/normalize-js-var-name';
+export { normalize_js_var_name } from './lib/utils/normalize-js-var-name';
 export { safe_json_parse } from './lib/utils/safe-json-parse';
 export type { ZeApplicationList } from './lib/ze-api/app-list';
 export type { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';

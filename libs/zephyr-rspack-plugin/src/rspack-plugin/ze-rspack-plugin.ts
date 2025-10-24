@@ -1,6 +1,11 @@
 import type { Compiler } from '@rspack/core';
 import { HtmlRspackPlugin } from '@rspack/core';
-import { buildEnvImportMap, type RemoteEntry, type ZephyrEngine } from 'zephyr-agent';
+import {
+  buildEnvImportMap,
+  ze_log,
+  type RemoteEntry,
+  type ZephyrEngine,
+} from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
   detectAndStoreBaseHref,
@@ -113,14 +118,14 @@ export class ZeRspackPlugin {
               });
             }
           } catch (e) {
-            console.warn('Failed to inject import map at build time:', e);
+            ze_log.misc('Failed to inject import map at build time:', e);
           }
 
           return data;
         });
       } catch {
         // HtmlRspackPlugin might not be available if no HTML is being generated
-        console.log('HtmlRspackPlugin not available, skipping import map injection');
+        ze_log.misc('HtmlRspackPlugin not available, skipping import map injection');
       }
     });
   }

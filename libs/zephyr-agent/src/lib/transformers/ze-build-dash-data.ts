@@ -48,7 +48,9 @@ export async function zeBuildDashData(
     overrides: [],
     consumes: [],
     modules: [],
-    remotes: zephyr_engine.federated_dependencies?.map((r) => r.name) ?? [],
+    remotes:
+      zephyr_engine.federated_dependencies?.map((r) => r.normalized_js_name ?? r.name) ??
+      [],
     tags: [],
     project: '',
     metadata: {},

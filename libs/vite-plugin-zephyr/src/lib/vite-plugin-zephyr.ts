@@ -308,7 +308,7 @@ function zephyrPlugin(): Plugin {
         // Convert federated dependencies to remotes format
         const remotes: RemoteEntry[] =
           zephyr_engine.federated_dependencies?.map((dep) => ({
-            name: dep.name,
+            name: dep.normalized_js_name ?? dep.name,
             remote_entry_url: dep.default_url,
           })) || [];
 

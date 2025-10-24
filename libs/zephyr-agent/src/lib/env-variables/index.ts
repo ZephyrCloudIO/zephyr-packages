@@ -1,5 +1,6 @@
 export interface RemoteEntry {
   name: string;
+  application_uid: string;
   remote_entry_url: string;
 }
 
@@ -18,25 +19,25 @@ export {
 } from './env-var-rewrites';
 
 export function buildEnvImportMap(
-  appName: string,
+  appUid: string,
   remotes: RemoteEntry[]
 ): Record<string, string> {
   const imports: Record<string, string> = {};
 
   // Add the main env module mapping - now points to zephyr-manifest.json
-  imports[`env:vars:${appName}`] = '/zephyr-manifest.json';
+  imports[`env:vars:${appUid}`] = '/zephyr-manifest.json';
 
   // Add environment variable manifest entries for remotes
   // Note: Module Federation remotes are loaded by MF runtime, not through import maps
   remotes.forEach((remote) => {
-    if (remote.name && remote.remote_entry_url) {
+    if (remote.application_uid && remote.remote_entry_url) {
       // Environment variables manifest for the remote
       try {
         const urlStr = remote.remote_entry_url.includes('@')
           ? remote.remote_entry_url.split('@')[1]
           : remote.remote_entry_url;
         const origin = new URL(urlStr).origin;
-        imports[`env:vars:${remote.name}`] = `${origin}/zephyr-manifest.json`;
+        imports[`env:vars:${remote.application_uid}`] = `${origin}/zephyr-manifest.json`;
       } catch {
         // If URL parsing fails, skip the env:vars entry
         console.warn(
@@ -80,9 +81,9 @@ ${defaultExport}
 `;
 }
 
-export function buildEnvImportMapScript(appName: string, remotes: RemoteEntry[]): string {
+export function buildEnvImportMapScript(appUid: string, remotes: RemoteEntry[]): string {
   const importMap = {
-    imports: buildEnvImportMap(appName, remotes),
+    imports: buildEnvImportMap(appUid, remotes),
   };
 
   return `<script type="importmap">${JSON.stringify(importMap, null, 2)}</script>`;

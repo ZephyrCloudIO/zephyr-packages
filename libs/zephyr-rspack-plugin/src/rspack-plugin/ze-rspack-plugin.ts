@@ -97,7 +97,7 @@ export class ZeRspackPlugin {
         // Use afterTemplateExecution hook to modify HTML and tags
         hooks.afterTemplateExecution.tapPromise(pluginName, async (data) => {
           try {
-            const appName = this._options.zephyr_engine.applicationProperties.name;
+            const appName = this._options.zephyr_engine.application_uid.split('.')[1];
             const remotes = this.#convertFederatedDepsToRemotes();
 
             // Check if import map already exists

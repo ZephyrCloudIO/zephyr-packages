@@ -303,7 +303,7 @@ function zephyrPlugin(): Plugin {
     transformIndexHtml: async (html) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
-        const appName = zephyr_engine.applicationProperties.name;
+        const appName = zephyr_engine.application_uid.split('.')[1];
 
         // Convert federated dependencies to remotes format
         const remotes: RemoteEntry[] =

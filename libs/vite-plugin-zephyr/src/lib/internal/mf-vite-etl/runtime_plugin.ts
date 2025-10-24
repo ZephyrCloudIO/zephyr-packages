@@ -15,7 +15,6 @@ export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]):
       const _windows = typeof window !== 'undefined' ? window : globalThis;
 
       args.userOptions.remotes.forEach((remote) => {
-
         const resolvedRemote = resolvedRemoteMap[remote.name];
         if (!resolvedRemote) {
           return;
@@ -29,9 +28,7 @@ export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]):
 
         // @ts-expect-error overwriting entry if needed
         remote.entry = urlOverwrite;
-
       });
-
 
       return args;
     },

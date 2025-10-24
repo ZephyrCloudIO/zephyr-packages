@@ -186,7 +186,7 @@ export class ZephyrEngine {
     // starting async load of application configuration, build_id and hash_list
 
     ze_log.init('Initializing: checking authentication...');
-    await checkAuth();
+    await checkAuth(ze.gitProperties);
 
     ze_log.init('Initialized: loading application configuration...');
 

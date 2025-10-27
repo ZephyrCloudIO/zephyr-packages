@@ -6,25 +6,25 @@ export const astroConfig: BundlerConfig = {
   importName: 'withZephyr',
   patterns: [
     // Most specific first: defineConfig with function wrapper
-    // Pattern: defineConfig(() => ({ integrations: [...] }))
+    // Pattern: defineConfig(() => ({ integrations: [...] })) or defineConfig(() => ({ ... }))
     {
       type: 'define-config-function',
       matcher: /defineConfig\s*\(\s*\(\s*\)\s*=>\s*\(\s*\{/,
-      transform: 'addToAstroIntegrationsInFunction',
+      transform: 'addToAstroIntegrationsInFunctionOrCreate',
     },
     // Standard defineConfig with object
-    // Pattern: defineConfig({ integrations: [...] })
+    // Pattern: defineConfig({ integrations: [...] }) or defineConfig({ ... })
     {
       type: 'define-config',
       matcher: /defineConfig\s*\(\s*\{/,
-      transform: 'addToAstroIntegrations',
+      transform: 'addToAstroIntegrationsOrCreate',
     },
     // Plain object export (less common)
-    // Pattern: export default { integrations: [...] }
+    // Pattern: export default { integrations: [...] } or export default { ... }
     {
       type: 'export-default',
       matcher: /export\s+default\s+\{/,
-      transform: 'addToAstroIntegrations',
+      transform: 'addToAstroIntegrationsOrCreate',
     },
   ],
 };

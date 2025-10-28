@@ -146,13 +146,13 @@ function generateRuntimePluginCode(
         };
       }
 
-      // Import and initialize runtime plugin
+      // Import and initialize runtime plugin (mobile version with OTA support)
       try {
         const {
-          createZephyrRuntimePluginWithOTA,
+          createZephyrRuntimePluginMobile,
         } = require('zephyr-xpack-internal/src/xpack-extract/runtime-plugin');
 
-        const { plugin, instance } = createZephyrRuntimePluginWithOTA({
+        const { plugin, instance } = createZephyrRuntimePluginMobile({
           manifestUrl: '/zephyr-manifest.json',
           onManifestChange: function (newManifest: any, oldManifest: any) {
             console.log('[Zephyr] Manifest updated:', newManifest.version);

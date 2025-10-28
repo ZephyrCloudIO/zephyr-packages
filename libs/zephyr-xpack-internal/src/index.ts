@@ -28,7 +28,8 @@ export { detectAndStoreBaseHref } from './basehref/basehref-integration';
 
 export {
   createZephyrRuntimePlugin,
-  createZephyrRuntimePluginWithOTA,
+  createZephyrRuntimePluginMobile,
   type ZephyrRuntimePluginInstance,
-  type ZephyrRuntimePluginOTAOptions,
+  type ZephyrRuntimePluginOptions,
+  type ZephyrRuntimePluginMobileOptions,
 } from './xpack-extract/runtime-plugin';

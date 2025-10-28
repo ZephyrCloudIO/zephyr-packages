@@ -8,6 +8,7 @@ import path from 'path';
 import {
   addToComposePlugins,
   addToPluginsArray,
+  addToPluginsArrayOrCreate,
   addToRollupArrayConfig,
   addToVitePlugins,
   addToVitePluginsInFunction,
@@ -16,7 +17,7 @@ import {
   wrapExportDefault,
   wrapExportedFunction,
   writeFile,
-} from '../transformers.js';
+} from '../transformers/index.js';
 
 describe('Zephyr Codemod Transformers', () => {
   let tempDir: string;
@@ -97,6 +98,68 @@ describe('Zephyr Codemod Transformers', () => {
       expect(result).toMatch(
         /plugins:\s*\[\s*somePlugin\(\),\s*anotherPlugin\(\),\s*withZephyr\(\)\s*\]/
       );
+    });
+  });
+
+  describe('addToPluginsArrayOrCreate', () => {
+    it('should add withZephyr to existing plugins array in defineConfig', () => {
+      const code = `
+        import { defineConfig } from 'rspress/config';
+
+        export default defineConfig({
+          root: './docs',
+          plugins: [existingPlugin()]
+        });
+      `;
+
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: ['typescript'],
+      });
+      addToPluginsArrayOrCreate(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*existingPlugin\(\),\s*withZephyr\(\)\s*\]/);
+    });
+
+    it('should create plugins array when it does not exist in defineConfig', () => {
+      const code = `
+        import { defineConfig } from 'rspress/config';
+
+        export default defineConfig({
+          root: './docs',
+          title: 'My Site',
+          themeConfig: {
+            socialLinks: []
+          }
+        });
+      `;
+
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: ['typescript'],
+      });
+      addToPluginsArrayOrCreate(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*withZephyr\(\)\s*\]/);
+    });
+
+    it('should fallback to addToPluginsArray when no defineConfig found', () => {
+      const code = `
+        export default {
+          plugins: [somePlugin()]
+        };
+      `;
+
+      const ast = parse(code, { sourceType: 'module' });
+      addToPluginsArrayOrCreate(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/plugins:\s*\[\s*somePlugin\(\),\s*withZephyr\(\)\s*\]/);
     });
   });
 

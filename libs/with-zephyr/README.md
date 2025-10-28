@@ -34,13 +34,14 @@ bunx with-zephyr
 
 ## Supported Bundlers
 
-This codemod supports **11+ bundlers** with their respective Zephyr plugins:
+This codemod supports **12+ bundlers** with their respective Zephyr plugins:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
 - **Vite** ([`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
 - **Rollup** ([`rollup-plugin-zephyr`](https://www.npmjs.com/package/rollup-plugin-zephyr))
 - **Rolldown** ([`zephyr-rolldown-plugin`](https://www.npmjs.com/package/zephyr-rolldown-plugin))
+- **Astro** ([`zephyr-astro-integration`](https://www.npmjs.com/package/zephyr-astro-integration))
 - **Modern.js** ([`zephyr-modernjs-plugin`](https://www.npmjs.com/package/zephyr-modernjs-plugin))
 - **RSPress** ([`zephyr-rspress-plugin`](https://www.npmjs.com/package/zephyr-rspress-plugin))
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
@@ -241,6 +242,7 @@ The codemod automatically detects and processes these configuration files:
 - `vite.config.js/ts/mjs`
 - `rollup.config.js/ts/mjs`
 - `rolldown.config.js/ts/mjs`
+- `astro.config.js/ts/mjs/mts`
 - `modern.config.js/ts/mjs`
 - `rspress.config.js/ts/mjs`
 - `rsbuild.config.js/ts/mjs`

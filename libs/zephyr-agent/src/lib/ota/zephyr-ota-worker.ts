@@ -98,7 +98,7 @@ export class ZephyrOTAWorker {
 
   constructor(config: ZephyrOTAConfig, callbacks: ZephyrOTACallbacks = {}) {
     this.config = {
-      otaEndpoint: config.otaEndpoint || this.getDefaultEndpoint(config.applicationUid),
+      otaEndpoint: config.otaEndpoint || this.getDefaultEndpoint(),
       checkInterval: config.checkInterval || 30 * 60 * 1000, // 30 minutes
       retryAttempts: config.retryAttempts || 3,
       debug: config.debug || false,
@@ -135,7 +135,7 @@ export class ZephyrOTAWorker {
    * Default OTA endpoint URL The endpoint uses the same domain as the
    * version/tag/environment it's being served from with the path /**get_version_info**
    */
-  private getDefaultEndpoint(applicationUid: string): string {
+  private getDefaultEndpoint(): string {
     // The endpoint should be relative to the current domain
     // If a custom otaEndpoint is not provided, this will use the current origin
     // Example: https://my-app.zephyr-cloud.io/__get_version_info__

@@ -131,9 +131,16 @@ export class ZephyrOTAWorker {
     return {};
   }
 
-  /** Default OTA endpoint URL */
+  /**
+   * Default OTA endpoint URL
+   * The endpoint uses the same domain as the version/tag/environment
+   * it's being served from with the path /__get_version_info__
+   */
   private getDefaultEndpoint(applicationUid: string): string {
-    return `https://api.zephyr-cloud.io/v1/ota/${applicationUid}/version`;
+    // The endpoint should be relative to the current domain
+    // If a custom otaEndpoint is not provided, this will use the current origin
+    // Example: https://my-app.zephyr-cloud.io/__get_version_info__
+    return '/__get_version_info__';
   }
 
   /** Set the runtime plugin instance for manifest refresh */

@@ -262,8 +262,22 @@ export class ZephyrOTAWorker {
     this.log('Checking for updates', request);
 
     // Use Zephyr's retry helper for consistent behavior
+    // Handle both relative paths (like /__get_version_info__) and absolute URLs
+    // If relative path, construct full URL using current location
+    let endpointUrl: URL;
+    if (this.config.otaEndpoint.startsWith('http')) {
+      endpointUrl = new URL(this.config.otaEndpoint);
+    } else {
+      // For relative paths, use current origin (browser) or default for Node
+      const baseUrl =
+        typeof window !== 'undefined' && window.location
+          ? window.location.origin
+          : 'http://localhost';
+      endpointUrl = new URL(this.config.otaEndpoint, baseUrl);
+    }
+
     const response = await fetchWithRetries(
-      new URL(this.config.otaEndpoint),
+      endpointUrl,
       {
         method: 'POST',
         headers: {

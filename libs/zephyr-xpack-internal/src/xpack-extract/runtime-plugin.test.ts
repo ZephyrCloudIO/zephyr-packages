@@ -14,7 +14,7 @@ const mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
 const mockGlobal = globalThis as any;
 
 // Mock navigator for platform detection
-const mockNavigator = () => {
+const mockNavigator = (): void => {
   Object.defineProperty(global, 'navigator', {
     writable: true,
     configurable: true,
@@ -24,7 +24,7 @@ const mockNavigator = () => {
   });
 };
 
-const resetNavigator = () => {
+const resetNavigator = (): void => {
   Object.defineProperty(global, 'navigator', {
     writable: true,
     configurable: true,

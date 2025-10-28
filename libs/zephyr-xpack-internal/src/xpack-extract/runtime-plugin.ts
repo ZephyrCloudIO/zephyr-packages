@@ -61,7 +61,6 @@ export function createZephyrRuntimePlugin(
   const { manifestUrl = '/zephyr-manifest.json' } = options;
 
   let processedRemotes: Record<string, ZephyrDependency> | undefined;
-  let zephyrManifestPromise: Promise<ZephyrManifest | undefined>;
 
   /** Fetches the zephyr-manifest.json file (basic version without OTA) */
   async function fetchManifest(url: string): Promise<ZephyrManifest | undefined> {
@@ -87,7 +86,7 @@ export function createZephyrRuntimePlugin(
   }
 
   // Initialize manifest fetching
-  zephyrManifestPromise = fetchManifest(manifestUrl);
+  const zephyrManifestPromise = fetchManifest(manifestUrl);
 
   const plugin: FederationRuntimePlugin = {
     name: 'zephyr-runtime-remote-resolver',

@@ -147,7 +147,9 @@ describe('ZephyrRuntimePlugin', () => {
       createZephyrRuntimePluginMobile();
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('createZephyrRuntimePluginMobile is designed for React Native')
+        expect.stringContaining(
+          'createZephyrRuntimePluginMobile is designed for React Native'
+        )
       );
     });
 

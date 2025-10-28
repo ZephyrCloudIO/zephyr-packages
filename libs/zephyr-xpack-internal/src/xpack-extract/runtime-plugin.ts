@@ -32,8 +32,8 @@ export interface ZephyrRuntimePluginInstance {
 const _global = typeof window !== 'undefined' ? window : globalThis;
 
 /**
- * Detects if the runtime environment is React Native
- * Used to ensure OTA features are only enabled on mobile platforms
+ * Detects if the runtime environment is React Native Used to ensure OTA features are only
+ * enabled on mobile platforms
  */
 function isMobilePlatform(): boolean {
   try {
@@ -44,10 +44,11 @@ function isMobilePlatform(): boolean {
 }
 
 /**
- * Basic Zephyr Runtime Plugin (no OTA features)
- * Suitable for web applications that don't need OTA updates
+ * Basic Zephyr Runtime Plugin (no OTA features) Suitable for web applications that don't
+ * need OTA updates
  *
  * Features:
+ *
  * - Simple manifest fetching
  * - Remote URL resolution
  * - Session storage override support
@@ -191,10 +192,11 @@ function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
 }
 
 /**
- * Mobile Zephyr Runtime Plugin with OTA support
- * Designed specifically for React Native applications
+ * Mobile Zephyr Runtime Plugin with OTA support Designed specifically for React Native
+ * applications
  *
  * Features:
+ *
  * - Manifest caching by application_uid
  * - OTA update detection and callbacks
  * - Typed event emission for remote URL changes

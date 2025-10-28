@@ -18,14 +18,14 @@
     "@eslint/js": "catalog:eslint",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "@vitejs/plugin-react": "catalog:vite6",
+    "@vitejs/plugin-react": "catalog:vite7",
     "eslint": "catalog:eslint",
     "eslint-plugin-react-hooks": "catalog:eslint",
     "eslint-plugin-react-refresh": "catalog:eslint",
-    "globals": "catalog:vite6",
+    "globals": "catalog:vite7",
     "typescript": "catalog:typescript",
     "typescript-eslint": "catalog:eslint",
-    "vite": "catalog:vite6",
+    "vite": "catalog:vite7",
     "vite-plugin-zephyr": "workspace:*"
   },
   "zephyr:dependencies": {

@@ -1,0 +1,37 @@
+{
+  "name": "zephyr-astro-integration",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-astro-integration/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-astro-integration/src",
+        "outputPath": "libs/zephyr-astro-integration/dist",
+        "tsConfig": "libs/zephyr-astro-integration/tsconfig.lib.json",
+        "main": "libs/zephyr-astro-integration/src/index.ts"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-astro-integration@$(npm view zephyr-astro-integration@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-astro-integration/jest.config.ts"
+      }
+    }
+  }
+}

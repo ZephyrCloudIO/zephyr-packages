@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
 const output = execSync(
-  'npx nx show projects --affected -t=build --exclude="libs/*,e2e/*"'
+  'npx nx show projects --affected -t=build --exclude="libs/*,e2e/*,packages/*"'
 );
 const testTargets = output.toString().split('\n').filter(Boolean);
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();

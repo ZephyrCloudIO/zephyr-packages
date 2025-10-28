@@ -1,7 +1,6 @@
 import type { ZephyrDependency } from './zephyr-build-stats';
 
 export const ZEPHYR_MANIFEST_VERSION = '1.0.0';
-
 export const ZEPHYR_MANIFEST_FILENAME = 'zephyr-manifest.json';
 
 /**
@@ -33,11 +32,12 @@ export const ZEPHYR_MANIFEST_FILENAME = 'zephyr-manifest.json';
  */
 export interface ZephyrManifest {
   /** Semantic version following major.minor.patch */
-  version: typeof ZEPHYR_MANIFEST_VERSION;
+  version: string;
   /** ISO timestamp for freshness checks */
   timestamp: string;
   /** Immutable remote dependencies for this version */
   dependencies: Record<string, ZephyrDependency>;
+  zeVars: Record<string, string>;
   /** Optional: OTA-specific metadata */
   ota_enabled?: boolean;
   /** Optional: Application identifier for OTA */

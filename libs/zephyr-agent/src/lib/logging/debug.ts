@@ -57,6 +57,7 @@ const createLogger = () => {
  * - Ze_log.http: http requests
  * - Ze_log.manifest: Generation and inclusion of zephyr manifest
  * - Ze_log.init: Initialization and setup operations
+ * - Ze_log.manifest: Manifest generation and processing
  * - Ze_log.mf: Module Federation config
  * - Ze_log.misc: Miscellaneous
  * - Ze_log.package: Package.json parsing

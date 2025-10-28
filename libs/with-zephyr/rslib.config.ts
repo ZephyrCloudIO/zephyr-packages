@@ -10,7 +10,9 @@ export default defineConfig({
   },
   lib: [
     {
-      autoExternal: false,
+      // Set to true to externalize dependencies and reduce bundle size
+      // Dependencies will be installed when users npm install this package
+      autoExternal: true,
       format: 'esm',
       output: {
         distPath: {

@@ -132,9 +132,8 @@ export class ZephyrOTAWorker {
   }
 
   /**
-   * Default OTA endpoint URL
-   * The endpoint uses the same domain as the version/tag/environment
-   * it's being served from with the path /__get_version_info__
+   * Default OTA endpoint URL The endpoint uses the same domain as the
+   * version/tag/environment it's being served from with the path /**get_version_info**
    */
   private getDefaultEndpoint(applicationUid: string): string {
     // The endpoint should be relative to the current domain

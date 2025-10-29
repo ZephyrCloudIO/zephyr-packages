@@ -21,6 +21,7 @@ export { getBuildStats } from './federation-dashboard-legacy/get-build-stats';
 
 export { setupZeDeploy } from './hooks/ze-setup-ze-deploy';
 export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
+export { setupManifestEmission } from './hooks/ze-emit-manifest';
 
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
 

@@ -12,6 +12,8 @@ import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
 import { TOKEN_EXPIRY } from './auth-flags';
+import { getServerToken } from '../node-persist/server-token';
+import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
@@ -19,15 +21,23 @@ import { TOKEN_EXPIRY } from './auth-flags';
  *
  * @returns The token as a string.
  */
-export async function checkAuth(): Promise<void> {
+export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   const secret_token = getSecretToken();
+  const server_token = getServerToken();
 
   if (secret_token) {
     logFn('debug', 'Token found in environment. Using secret token for authentication.');
     return;
   }
 
-  const existingToken = await getToken();
+  if (server_token) {
+    logFn(
+      'debug',
+      'Server token found in environment. Using server token for authentication.'
+    );
+  }
+
+  const existingToken = await getToken(git_config);
 
   if (existingToken) {
     // Check if the token has a valid expiration date.
@@ -77,7 +87,7 @@ export async function checkAuth(): Promise<void> {
     // https://github.com/simonlast/node-persist/issues/108#issuecomment-1442305246
     await waitForUnlock(browserController.signal);
 
-    const token = await getToken();
+    const token = await getToken(git_config);
 
     // Unlock also happens on timeout, so we need to check if the token was
     // actually saved or not

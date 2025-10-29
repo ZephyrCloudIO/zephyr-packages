@@ -23,4 +23,6 @@ export enum StorageKeys {
   ze_fs_cache = 'ze-fs-cache',
   ze_hash_cache = 'ze-hash-cache',
   ze_app_deploy_result = 'ze-app-deploy-result',
+  ze_server_token = 'ZE_SERVER_TOKEN',
+  ze_user_email = 'ZE_USER_EMAIL',
 }

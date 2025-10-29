@@ -41,6 +41,10 @@ export interface Snapshot {
   };
   // list of files, where key is file path
   assets: Record<string, SnapshotAsset>;
+  // Public environment variables captured at build time (ZE_PUBLIC_* only)
+  ze_envs?: Record<string, string>;
+  // Content-addressable hash of ze_envs for deduplication
+  ze_envs_hash?: string;
 }
 
 export interface SnapshotAsset {
@@ -52,4 +56,12 @@ export interface SnapshotAsset {
 
 export interface SnapshotMetadata {
   pages_url?: string;
+  // Optional environment-level overrides for ZE_PUBLIC_* vars
+  public_envs?: Record<string, string>;
+  // Diagnostics / cache-key helpers
+  version?: string;
+  build_id?: string;
+  etag?: string;
+  // Optional nested env shape used by some adapters
+  env?: { public?: Record<string, string> };
 }

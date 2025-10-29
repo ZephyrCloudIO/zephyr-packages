@@ -1,6 +1,6 @@
 {
   "name": "with-zephyr",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A codemod to automatically add withZephyr plugin to bundler configurations",
   "main": "dist/index.js",
   "repository": {
@@ -60,6 +60,7 @@
     "rspack",
     "rsbuild",
     "rslib",
+    "astro",
     "modernjs",
     "rolldown",
     "rspress"

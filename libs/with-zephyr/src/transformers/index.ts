@@ -43,7 +43,12 @@ export { addToVitePlugins, addToVitePluginsInFunction } from './vite.js';
 // ========================================
 // Transformers for Astro's defineConfig patterns
 
-export { addToAstroIntegrations, addToAstroIntegrationsInFunction } from './astro.js';
+export {
+  addToAstroIntegrations,
+  addToAstroIntegrationsInFunction,
+  addToAstroIntegrationsOrCreate,
+  addToAstroIntegrationsInFunctionOrCreate,
+} from './astro.js';
 
 // ========================================
 // Category 6: Rollup-Specific Transformers

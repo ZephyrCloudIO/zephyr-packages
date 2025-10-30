@@ -1,5 +1,6 @@
 packages:
   - libs/**
+  - packages/**
   - examples/**
   - e2e/**
   - '!**/dist/**'
@@ -64,7 +65,7 @@ catalogs:
     postcss: ^8.2.1
     postcss-loader: ^8.0.0
   vite7:
-    vite: ^7.1.10
+    vite: ^7.1.11
     globals: ^15.9.0
     autoprefixer: ^10.1.0
     postcss: ^8.2.1

@@ -83,6 +83,7 @@ type ZephyrEngineBuilderTypes =
   | 'vite'
   | 'rollup'
   | 'parcel'
+  | 'astro'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;
@@ -131,6 +132,12 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+  // Store snapshot with env vars for use in buildStats
+  snapshot_with_envs: Snapshot | null = null;
+  // Store env vars temporarily for API to use (not in snapshot)
+  ze_env_vars: Record<string, string> | null = null;
+  // Store env vars hash for API to use
+  ze_env_vars_hash: string | null = null;
 
   get zephyr_dependencies(): Record<string, ZephyrDependency> {
     return convertResolvedDependencies(this.federated_dependencies ?? []);
@@ -179,7 +186,7 @@ export class ZephyrEngine {
     // starting async load of application configuration, build_id and hash_list
 
     ze_log.init('Initializing: checking authentication...');
-    await checkAuth();
+    await checkAuth(ze.gitProperties);
 
     ze_log.init('Initialized: loading application configuration...');
 
@@ -471,7 +478,18 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
     const upload_options: UploadOptions = {
       snapshot,
-      getDashData: () => buildStats,
+      getDashData: (engine) => {
+        // If buildStats has ze_envs already, use it
+        if (buildStats.ze_envs || buildStats.ze_envs_hash) {
+          return buildStats;
+        }
+        // Otherwise, add the env vars from the engine
+        return {
+          ...buildStats,
+          ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
+          ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+        };
+      },
       assets: {
         assetsMap,
         missingAssets,

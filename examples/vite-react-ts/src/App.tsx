@@ -3,11 +3,22 @@ import reactLogo from './assets/react.svg';
 import viteLogo from '/vite.svg';
 import './App.css';
 
+/*
+ZE_PUBLIC_SECRET="ze_secret value"
+ZE_TEST_PUBLIC="ze_test value"
+VITE_TESTING="None ZE variable"
+*/
+
 function App() {
   const [count, setCount] = useState(0);
 
   return (
     <>
+      <div>
+        <p>ZE_PUBLIC_SECRET: {import.meta.env.ZE_PUBLIC_SECRET}</p>
+        <p>ZE_TEST_PUBLIC: {import.meta.env.ZE_TEST_PUBLIC}</p>
+        <p>VITE_TESTING: {import.meta.env.VITE_TESTING}</p>
+      </div>
       <div>
         <a href="https://vitejs.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />

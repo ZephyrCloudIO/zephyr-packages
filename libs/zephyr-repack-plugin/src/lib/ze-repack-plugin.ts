@@ -1,5 +1,5 @@
 import type { Compiler } from '@rspack/core';
-import type { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import { logBuildSteps, setupZeDeploy } from 'zephyr-xpack-internal';
 import type { Platform } from 'zephyr-agent';
@@ -10,6 +10,7 @@ export interface ZephyrRepackPluginOptions {
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   target: Platform | undefined;
+  hooks?: ZephyrBuildHooks;
 }
 
 export class ZeRepackPlugin {

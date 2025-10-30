@@ -1,11 +1,16 @@
 import { federation } from '@module-federation/vite';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { join } from 'path';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
+  buildEnvImportMap,
+  createManifestContent,
   logFn,
   rewriteEnvReadsToVirtualModule,
   zeBuildDashData,
   ZephyrEngine,
   ZephyrError,
+  type RemoteEntry,
 } from 'zephyr-agent';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
@@ -23,7 +28,8 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const plugins: Plugin[] = [];
   if (mfConfig) {
-    plugins.push(...federation(mfConfig));
+    // Type assertion to handle multiple vite versions in monorepo
+    plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin());
   return plugins;
@@ -40,6 +46,7 @@ function zephyrPlugin(): Plugin {
 
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
+  let cachedSpecifier: string | undefined;
   let uploadCompleted = false;
 
   return {
@@ -144,6 +151,66 @@ function zephyrPlugin(): Plugin {
         }
       },
     },
+    configureServer: async (server) => {
+      // Add route to serve zephyr-manifest.json with correct MIME type
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/zephyr-manifest.json') {
+          void (async () => {
+            try {
+              const zephyr_engine = await zephyr_engine_defer;
+              const dependencies = zephyr_engine.federated_dependencies || [];
+
+              // Use the same function as other plugins to ensure consistency
+              const manifestContent = createManifestContent(dependencies, true);
+
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.end(manifestContent);
+            } catch {
+              // Fallback to empty manifest if there's an error
+              const fallbackManifest = JSON.stringify(
+                {
+                  version: '1.0.0',
+                  timestamp: new Date().toISOString(),
+                  dependencies: {},
+                  zeVars: {},
+                },
+                null,
+                2
+              );
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.end(fallbackManifest);
+            }
+          })();
+        } else {
+          next();
+        }
+      });
+
+      // Upload dev build
+      try {
+        const [vite_internal_options, zephyr_engine] = await Promise.all([
+          vite_internal_options_defer,
+          zephyr_engine_defer,
+        ]);
+
+        zephyr_engine.buildProperties.baseHref = baseHref;
+
+        await zephyr_engine.start_new_build();
+        const assetsMap = await extract_vite_assets_map(
+          zephyr_engine,
+          vite_internal_options
+        );
+        await zephyr_engine.upload_assets({
+          assetsMap,
+          buildStats: await zeBuildDashData(zephyr_engine),
+        });
+        await zephyr_engine.build_finished();
+      } catch (error) {
+        logFn('error', ZephyrError.format(error));
+      }
+    },
     buildApp: {
       handler: async function (builder) {
         if (uploadCompleted) return;
@@ -153,6 +220,17 @@ function zephyrPlugin(): Plugin {
             vite_internal_options_defer,
             zephyr_engine_defer,
           ]);
+
+          // Check if all environments are built before proceeding
+          // This ensures we only run once after all builds (client, SSR, etc.) are complete
+          const environments = builder.environments;
+          if (environments) {
+            const allBuilt = Object.values(environments).every((env) => env.isBuilt);
+            if (!allBuilt) {
+              // Not all environments are built yet, skip this execution
+              return;
+            }
+          }
 
           let buildOptions = vite_internal_options;
 
@@ -166,6 +244,133 @@ function zephyrPlugin(): Plugin {
                 outDir: clientOutDir,
               };
             }
+          }
+
+          const outDir = buildOptions.outDir || 'dist';
+
+          // Process remoteEntry.js to inject runtime plugin
+          if (mfPlugin) {
+            const remoteEntryPath = join(outDir, 'remoteEntry.js');
+            if (existsSync(remoteEntryPath)) {
+              try {
+                const dependencyPairs = extract_remotes_dependencies(
+                  root,
+                  mfPlugin._options
+                );
+                if (dependencyPairs) {
+                  const resolved_remotes =
+                    await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+                  if (resolved_remotes) {
+                    let code = readFileSync(remoteEntryPath, 'utf-8');
+                    code = load_resolved_remotes(resolved_remotes, code);
+                    writeFileSync(remoteEntryPath, code, 'utf-8');
+                  }
+                }
+              } catch (error) {
+                logFn(
+                  'error',
+                  `Failed to process remoteEntry.js: ${ZephyrError.format(error)}`
+                );
+              }
+            }
+          }
+
+          // Ensure import assertions are preserved in the final bundle
+          if (cachedSpecifier) {
+            try {
+              const { readdirSync } = await import('fs');
+              const specifier = cachedSpecifier; // Capture for closure
+              const processDirectory = (dir: string) => {
+                const entries = readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                  const fullPath = join(dir, entry.name);
+                  if (entry.isDirectory()) {
+                    processDirectory(fullPath);
+                  } else if (entry.isFile() && /\.(js|mjs)$/.test(entry.name)) {
+                    try {
+                      let code = readFileSync(fullPath, 'utf-8');
+                      const importWithoutAssertion = new RegExp(
+                        `import\\s+([^\\s]+)\\s+from\\s*['"]${specifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+                        'g'
+                      );
+                      if (code.match(importWithoutAssertion)) {
+                        code = code.replace(
+                          importWithoutAssertion,
+                          `import $1 from '${specifier}' with { type: 'json' }`
+                        );
+                        writeFileSync(fullPath, code, 'utf-8');
+                      }
+                    } catch (error) {
+                      logFn(
+                        'error',
+                        `Failed to process ${fullPath}: ${ZephyrError.format(error)}`
+                      );
+                    }
+                  }
+                }
+              };
+              processDirectory(outDir);
+            } catch (error) {
+              logFn(
+                'error',
+                `Failed to process import assertions: ${ZephyrError.format(error)}`
+              );
+            }
+          }
+
+          // Generate the zephyr manifest
+          try {
+            const dependencies = zephyr_engine.federated_dependencies || [];
+            const manifestContent = createManifestContent(dependencies, true);
+            const manifestPath = join(outDir, 'zephyr-manifest.json');
+            writeFileSync(manifestPath, manifestContent, 'utf-8');
+          } catch (error) {
+            logFn('error', `Failed to generate manifest: ${ZephyrError.format(error)}`);
+            // Fallback to empty manifest if there's an error
+            const manifestPath = join(outDir, 'zephyr-manifest.json');
+            writeFileSync(
+              manifestPath,
+              JSON.stringify(
+                {
+                  version: '1.0.0',
+                  timestamp: new Date().toISOString(),
+                  dependencies: {},
+                  zeVars: {},
+                },
+                null,
+                2
+              ),
+              'utf-8'
+            );
+          }
+
+          // Inject import map into index.html
+          try {
+            const indexPath = join(outDir, 'index.html');
+            if (existsSync(indexPath)) {
+              let html = readFileSync(indexPath, 'utf-8');
+              const appName = zephyr_engine.applicationProperties.name;
+
+              // Convert federated dependencies to remotes format
+              const remotes: RemoteEntry[] =
+                zephyr_engine.federated_dependencies?.map((dep) => ({
+                  name: dep.name,
+                  remote_entry_url: dep.default_url,
+                })) || [];
+
+              // Use the same import map creation as Rspack plugin
+              const importMap = buildEnvImportMap(appName, remotes);
+              const importMapScript = `<script type="importmap">${JSON.stringify({ imports: importMap }, null, 2)}</script>`;
+
+              // Check if import map already exists
+              if (!html.includes('type="importmap"')) {
+                // Inject import map before closing head tag
+                html = html.replace('</head>', `  ${importMapScript}\n</head>`);
+                writeFileSync(indexPath, html, 'utf-8');
+              }
+            }
+          } catch (error) {
+            logFn('error', `Failed to inject import map: ${ZephyrError.format(error)}`);
           }
 
           zephyr_engine.buildProperties.baseHref = baseHref;

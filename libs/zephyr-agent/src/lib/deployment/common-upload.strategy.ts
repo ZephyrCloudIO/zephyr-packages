@@ -1,5 +1,5 @@
 import { zeUploadSnapshot } from '../edge-actions';
-import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
+import { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { uploadAssets } from './upload-base/upload-assets';
 import { uploadBuildStatsAndEnableEnvs } from './upload-base/upload-build-stats-and-enable-envs';
 
@@ -18,3 +18,4 @@ export async function commonUploadStrategy(
 
   return versionUrl;
 }
+

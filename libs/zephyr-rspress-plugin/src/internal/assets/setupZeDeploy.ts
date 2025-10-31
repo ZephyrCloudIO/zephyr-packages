@@ -8,6 +8,7 @@ export async function setupZeDeploy({
   deferEngine,
   outDir,
   files,
+  hooks,
 }: ZephyrRspressPluginOptions): Promise<void> {
   if (!files.length) {
     ze_log.package('ZeRspressPlugin: No files to process.');
@@ -27,6 +28,7 @@ export async function setupZeDeploy({
       pluginName: 'rspress-ssg',
       zephyr_engine: await deferEngine,
       options: {},
+      hooks,
     },
   });
 }

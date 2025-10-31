@@ -1,8 +1,12 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
-import { withZephyr as rspackWithZephyr } from 'zephyr-rspack-plugin';
+import {
+  withZephyr as rspackWithZephyr,
+  type ZephyrBuildHooks,
+} from 'zephyr-rspack-plugin';
 
 export interface ZephyrRsbuildPluginOptions {
   wait_for_index_html?: boolean;
+  hooks?: ZephyrBuildHooks;
 }
 
 export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin {

@@ -84,6 +84,7 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         target: zephyr_engine.env.target,
+        hooks: _zephyrOptions?.hooks,
       })
     );
   } catch (error) {

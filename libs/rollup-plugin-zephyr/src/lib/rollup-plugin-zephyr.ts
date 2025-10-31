@@ -1,5 +1,11 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
-import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import {
+  logFn,
+  zeBuildDashData,
+  ZephyrEngine,
+  ZephyrError,
+  type ZephyrBuildHooks,
+} from 'zephyr-agent';
 import { getAssetsMap } from './transform/get-assets-map';
 import { cwd } from 'node:process';
 
@@ -10,8 +16,9 @@ const getInputFolder = (options: InputOptions): string => {
   return cwd();
 };
 
-export function withZephyr() {
+export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const hooks = options?.hooks;
 
   return {
     name: 'with-zephyr',
@@ -33,6 +40,7 @@ export function withZephyr() {
         await zephyr_engine.upload_assets({
           assetsMap: getAssetsMap(bundle),
           buildStats: await zeBuildDashData(zephyr_engine),
+          hooks,
         });
 
         await zephyr_engine.build_finished();

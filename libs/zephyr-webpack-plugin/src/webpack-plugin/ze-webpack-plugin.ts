@@ -1,5 +1,5 @@
 import type { Compiler } from 'webpack';
-import type { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
@@ -20,6 +20,7 @@ export interface ZephyrWebpackInternalPluginOptions {
   // hacks
   wait_for_index_html?: boolean;
   // outputPath?: string;
+  hooks?: ZephyrBuildHooks;
 }
 
 export class ZeWebpackPlugin {

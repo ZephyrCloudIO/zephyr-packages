@@ -5,6 +5,7 @@ import {
   ze_log,
   type RemoteEntry,
   type ZephyrEngine,
+  type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
@@ -25,6 +26,7 @@ export interface ZephyrRspackInternalPluginOptions {
   // hacks
   wait_for_index_html?: boolean;
   // outputPath?: string;
+  hooks?: ZephyrBuildHooks;
 }
 
 export class ZeRspackPlugin {

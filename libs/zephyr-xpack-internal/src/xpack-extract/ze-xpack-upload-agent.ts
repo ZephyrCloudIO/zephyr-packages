@@ -1,4 +1,4 @@
-import type { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { type Source, type ZephyrBuildStats } from 'zephyr-edge-contract';
@@ -12,6 +12,7 @@ interface UploadAgentPluginOptions {
   wait_for_index_html?: boolean;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+  hooks?: ZephyrBuildHooks;
 }
 
 export interface ZephyrAgentProps<T> {
@@ -58,6 +59,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
         'mfConfig'
       >['mfConfig'],
       buildStats: dashData as unknown as ZephyrBuildStats,
+      hooks: pluginOptions.hooks,
     });
   } catch (err) {
     logFn('error', ZephyrError.format(err));

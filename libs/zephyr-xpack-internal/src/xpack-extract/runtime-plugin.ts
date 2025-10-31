@@ -5,34 +5,90 @@ import type {
   RemoteWithEntry,
 } from '../types/module-federation.types';
 
-// Ensure only one fetch is done by the app
-const globalKey = '__ZEPHYR_MANIFEST_PROMISE__';
-const _global = typeof window !== 'undefined' ? window : globalThis;
-
-function getGlobalManifestPromise(): Promise<ZephyrManifest | undefined> | undefined {
-  return (_global as any)[globalKey];
+/** Options for basic runtime plugin (no OTA) */
+export interface ZephyrRuntimePluginOptions {
+  /** Custom manifest URL (defaults to /zephyr-manifest.json) */
+  manifestUrl?: string;
 }
 
-function setGlobalManifestPromise(promise: Promise<ZephyrManifest | undefined>): void {
-  (_global as any)[globalKey] = promise;
+/** Options for mobile runtime plugin with OTA support */
+export interface ZephyrRuntimePluginMobileOptions {
+  /** Called when manifest changes are detected */
+  onManifestChange?: (newManifest: ZephyrManifest, oldManifest?: ZephyrManifest) => void;
+  /** Called when manifest fetch fails */
+  onManifestError?: (error: Error) => void;
+  /** Custom manifest URL (defaults to /zephyr-manifest.json) */
+  manifestUrl?: string;
+}
+
+export interface ZephyrRuntimePluginInstance {
+  /** Refresh the manifest and check for changes */
+  refresh: () => Promise<ZephyrManifest | undefined>;
+  /** Get the current cached manifest */
+  getCurrentManifest: () => Promise<ZephyrManifest | undefined>;
+}
+
+// Global object for browser/Node.js compatibility
+const _global = typeof window !== 'undefined' ? window : globalThis;
+
+/**
+ * Detects if the runtime environment is React Native Used to ensure OTA features are only
+ * enabled on mobile platforms
+ */
+function isMobilePlatform(): boolean {
+  try {
+    return typeof navigator !== 'undefined' && navigator.product === 'ReactNative';
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Zephyr Runtime Plugin for Module Federation This plugin handles dynamic remote URL
- * resolution at runtime using beforeRequest hook to mutate URLs on the fly
+ * Basic Zephyr Runtime Plugin (no OTA features) Suitable for web applications that don't
+ * need OTA updates
+ *
+ * Features:
+ *
+ * - Simple manifest fetching
+ * - Remote URL resolution
+ * - Session storage override support
+ *
+ * For mobile applications with OTA support, use createZephyrRuntimePluginMobile
  */
-export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
+export function createZephyrRuntimePlugin(
+  options: ZephyrRuntimePluginOptions = {}
+): FederationRuntimePlugin {
+  const { manifestUrl = '/zephyr-manifest.json' } = options;
+
   let processedRemotes: Record<string, ZephyrDependency> | undefined;
 
-  // Start fetching manifest immediately
-  let zephyrManifestPromise = getGlobalManifestPromise();
+  /** Fetches the zephyr-manifest.json file (basic version without OTA) */
+  async function fetchManifest(url: string): Promise<ZephyrManifest | undefined> {
+    try {
+      const response = await fetch(url);
 
-  if (!zephyrManifestPromise) {
-    zephyrManifestPromise = fetchZephyrManifest();
-    setGlobalManifestPromise(zephyrManifestPromise);
+      if (!response.ok) {
+        return;
+      }
+
+      const manifest = await response.json().catch(() => undefined);
+
+      if (!manifest) {
+        console.error('[Zephyr] Failed to parse manifest JSON');
+        return;
+      }
+
+      return manifest;
+    } catch (error) {
+      console.error('[Zephyr] Unexpected error fetching manifest:', error);
+      return;
+    }
   }
 
-  return {
+  // Initialize manifest fetching
+  const zephyrManifestPromise = fetchManifest(manifestUrl);
+
+  const plugin: FederationRuntimePlugin = {
     name: 'zephyr-runtime-remote-resolver',
     async beforeRequest(args) {
       const zephyrManifest = await zephyrManifestPromise;
@@ -66,30 +122,8 @@ export function createZephyrRuntimePlugin(): FederationRuntimePlugin {
       return args;
     },
   };
-}
 
-/** Fetches the zephyr-manifest.json file and returns the runtime plugin data */
-async function fetchZephyrManifest(): Promise<ZephyrManifest | undefined> {
-  try {
-    // Fetch the manifest from the same origin
-    const response = await fetch('/zephyr-manifest.json');
-
-    if (!response.ok) {
-      return;
-    }
-
-    const manifest = await response.json().catch(() => undefined);
-
-    if (!manifest) {
-      console.error('Failed to parse manifest JSON');
-      return;
-    }
-
-    return manifest;
-  } catch {
-    console.error('Unexpected error fetching manifest');
-    return;
-  }
+  return plugin;
 }
 
 function identifyRemotes(
@@ -154,6 +188,211 @@ function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
   }
 
   return edgeUrl;
+}
+
+/**
+ * Mobile Zephyr Runtime Plugin with OTA support Designed specifically for React Native
+ * applications
+ *
+ * Features:
+ *
+ * - Manifest caching by application_uid
+ * - OTA update detection and callbacks
+ * - Typed event emission for remote URL changes
+ * - Async refresh() method for re-fetching manifests
+ * - Platform detection to ensure mobile-only usage
+ *
+ * For web applications without OTA, use createZephyrRuntimePlugin
+ */
+export function createZephyrRuntimePluginMobile(
+  options: ZephyrRuntimePluginMobileOptions = {}
+): { plugin: FederationRuntimePlugin; instance: ZephyrRuntimePluginInstance } {
+  // Platform detection with warning for non-mobile usage
+  if (!isMobilePlatform()) {
+    console.warn(
+      '[Zephyr] createZephyrRuntimePluginMobile is designed for React Native applications. ' +
+        'For web applications, use createZephyrRuntimePlugin instead. ' +
+        'OTA features may not work correctly on non-mobile platforms.'
+    );
+  }
+  const {
+    onManifestChange,
+    onManifestError,
+    manifestUrl = '/zephyr-manifest.json',
+  } = options;
+
+  let processedRemotes: Record<string, ZephyrDependency> | undefined;
+  let currentManifest: ZephyrManifest | undefined;
+
+  // Cache manifests by application_uid for multi-app support
+  const manifestCacheKey = `__ZEPHYR_MANIFEST_CACHE__`;
+  const manifestCache: Record<
+    string,
+    {
+      manifest: ZephyrManifest;
+      timestamp: number;
+      promise?: Promise<ZephyrManifest | undefined>;
+    }
+  > = (_global as any)[manifestCacheKey] || {};
+  (_global as any)[manifestCacheKey] = manifestCache;
+
+  function getCachedManifest(appUid?: string): ZephyrManifest | undefined {
+    if (!appUid) return undefined;
+    const cached = manifestCache[appUid];
+    // Cache valid for 5 minutes
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      return cached.manifest;
+    }
+    return undefined;
+  }
+
+  function setCachedManifest(manifest: ZephyrManifest): void {
+    if (manifest.application_uid) {
+      manifestCache[manifest.application_uid] = {
+        manifest,
+        timestamp: Date.now(),
+      };
+    }
+  }
+
+  async function fetchManifestWithOTA(url: string): Promise<ZephyrManifest | undefined> {
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        return;
+      }
+
+      const newManifest = await response.json().catch(() => undefined);
+
+      if (!newManifest) {
+        const error = new Error('Failed to parse manifest JSON');
+        onManifestError?.(error);
+        console.error('Failed to parse manifest JSON');
+        return;
+      }
+
+      // Check if manifest changed and emit typed events
+      if (currentManifest && onManifestChange) {
+        const hasChanged =
+          newManifest.timestamp !== currentManifest.timestamp ||
+          JSON.stringify(newManifest.dependencies) !==
+            JSON.stringify(currentManifest.dependencies);
+
+        if (hasChanged) {
+          // Check for remote entry URL changes and emit typed events
+          Object.keys(newManifest.dependencies).forEach((remoteName) => {
+            const newDep = newManifest.dependencies[remoteName];
+            const oldDep = currentManifest!.dependencies[remoteName];
+
+            if (newDep && oldDep && newDep.remote_entry_url !== oldDep.remote_entry_url) {
+              // Emit typed event for remote URL change
+              const changeEvent = new CustomEvent('zephyr:remote-url-changed', {
+                detail: {
+                  remoteName,
+                  oldUrl: oldDep.remote_entry_url,
+                  newUrl: newDep.remote_entry_url,
+                  manifest: newManifest,
+                },
+              });
+
+              if (typeof document !== 'undefined') {
+                document.dispatchEvent(changeEvent);
+              }
+            }
+          });
+
+          onManifestChange(newManifest, currentManifest);
+        }
+      }
+
+      // Cache the manifest by application_uid
+      setCachedManifest(newManifest);
+      currentManifest = newManifest;
+      return newManifest;
+    } catch (error) {
+      const err =
+        error instanceof Error ? error : new Error('Unknown manifest fetch error');
+      onManifestError?.(err);
+      console.error('Unexpected error fetching manifest:', error);
+      return;
+    }
+  }
+
+  // Start fetching manifest immediately, check cache first
+  let zephyrManifestPromise: Promise<ZephyrManifest | undefined>;
+
+  async function initializeManifest(): Promise<ZephyrManifest | undefined> {
+    // Try to get from cache first if we know the application_uid
+    const potentialManifest = await fetchManifestWithOTA(manifestUrl);
+    if (potentialManifest?.application_uid) {
+      const cached = getCachedManifest(potentialManifest.application_uid);
+      if (cached) {
+        currentManifest = cached;
+        return cached;
+      }
+    }
+    return potentialManifest;
+  }
+
+  zephyrManifestPromise = initializeManifest();
+
+  const plugin: FederationRuntimePlugin = {
+    name: 'zephyr-runtime-remote-resolver-ota',
+    async beforeRequest(args) {
+      const zephyrManifest = await zephyrManifestPromise;
+
+      if (!processedRemotes) {
+        processedRemotes = identifyRemotes(args, zephyrManifest);
+      }
+
+      // Extract remote name from args.id (format: "remoteName/componentName")
+      const remoteName = args.id.split('/')[0];
+
+      if (!processedRemotes[remoteName]) {
+        return args; // No matching remote found
+      }
+
+      // Get the resolved URL, checking session storage first
+      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
+
+      const targetRemote = args.options.remotes.find(
+        (remote) =>
+          hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
+      );
+
+      if (!targetRemote) {
+        return args;
+      }
+
+      // Update the remote entry URL
+      targetRemote.entry = resolvedUrl;
+
+      return args;
+    },
+  };
+
+  const instance: ZephyrRuntimePluginInstance = {
+    async refresh() {
+      // Clear processed remotes to force re-identification
+      processedRemotes = undefined;
+
+      // Clear cache if we have the application_uid
+      if (currentManifest?.application_uid) {
+        delete manifestCache[currentManifest.application_uid];
+      }
+
+      // Fetch fresh manifest
+      zephyrManifestPromise = fetchManifestWithOTA(manifestUrl);
+      return zephyrManifestPromise;
+    },
+
+    async getCurrentManifest() {
+      return zephyrManifestPromise;
+    },
+  };
+
+  return { plugin, instance };
 }
 
 /** Default export for use with Module Federation runtime plugins array */

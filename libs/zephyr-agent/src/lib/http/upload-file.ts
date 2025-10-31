@@ -10,8 +10,24 @@ export interface UploadFileProps {
 
 export async function uploadFile(
   { hash, asset }: UploadFileProps,
-  { EDGE_URL, jwt }: ZeApplicationConfig
+  { EDGE_URL, jwt, ENVIRONMENTS }: ZeApplicationConfig
 ) {
+  await doUploadFileRequest({hash, asset, jwt, edge_url: EDGE_URL});
+  if (ENVIRONMENTS != null) {
+    const env_edge_urls = Array.from(
+      new Set(Object.values(ENVIRONMENTS).filter((envCfg) => envCfg.edgeUrl !== EDGE_URL))
+    );
+    await Promise.all(
+      env_edge_urls.map((envConfig) =>
+        doUploadFileRequest({ hash, asset, edge_url: envConfig.edgeUrl, jwt })
+      )
+    );
+  }
+}
+
+async function doUploadFileRequest(
+  {hash, asset, jwt, edge_url}: {hash: string, asset: UploadableAsset; jwt: string; edge_url: string;}
+): Promise<void> {
   const type = 'file';
 
   const options: RequestInit = {
@@ -27,7 +43,7 @@ export async function uploadFile(
   const [ok, cause] = await makeRequest(
     {
       path: '/upload',
-      base: EDGE_URL,
+      base: edge_url,
       query: { type, hash, filename: asset.path },
     },
     options,

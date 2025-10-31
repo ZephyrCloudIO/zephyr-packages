@@ -89,14 +89,14 @@ function zephyrPlugin(): Plugin {
       try {
         const zephyr_engine = await zephyr_engine_defer;
         if (!cachedSpecifier) {
-          const appName = zephyr_engine.applicationProperties.name;
-          cachedSpecifier = `env:vars:${appName}`;
+          const appUid = zephyr_engine.application_uid;
+          cachedSpecifier = `env:vars:${appUid}`;
         }
         if (source === cachedSpecifier) {
           // In dev mode, use a virtual module; in build mode, mark as external
           if (process.env['NODE_ENV'] === 'development') {
-            const appName = zephyr_engine.applicationProperties.name;
-            return { id: `\0virtual:zephyr-env-${appName}` };
+            const appUid = zephyr_engine.application_uid;
+            return { id: `\0virtual:zephyr-env-${appUid}` };
           } else {
             // Mark this as external so it gets resolved by the import map at runtime
             return { id: source, external: true };
@@ -134,8 +134,8 @@ function zephyrPlugin(): Plugin {
           if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
             if (!cachedSpecifier) {
-              const appName = zephyr_engine.applicationProperties.name;
-              cachedSpecifier = `env:vars:${appName}`;
+              const appUid = zephyr_engine.application_uid;
+              cachedSpecifier = `env:vars:${appUid}`;
             }
             const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
             if (res && typeof res.code === 'string' && res.code !== code) {

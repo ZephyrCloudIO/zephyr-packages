@@ -1,10 +1,10 @@
-import { defineConfig } from 'vite'
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
-import viteReact from '@vitejs/plugin-react'
-import viteTsConfigPaths from 'vite-tsconfig-paths'
-import tailwindcss from '@tailwindcss/vite'
-import { cloudflare } from '@cloudflare/vite-plugin'
-import { withZephyrTanstackStart } from 'vite-plugin-tanstack-start-zephyr'
+import { defineConfig } from 'vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import viteReact from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+import tailwindcss from '@tailwindcss/vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { withZephyrTanstackStart } from 'vite-plugin-tanstack-start-zephyr';
 
 const config = defineConfig({
   plugins: [
@@ -19,6 +19,6 @@ const config = defineConfig({
     // Zephyr deployment plugin - auto-detects configuration from package.json and git
     withZephyrTanstackStart(),
   ],
-})
+});
 
-export default config
+export default config;

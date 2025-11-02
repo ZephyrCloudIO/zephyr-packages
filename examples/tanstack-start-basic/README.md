@@ -31,6 +31,7 @@ npm run build
 ```
 
 This will:
+
 1. Build the TanStack Start application for SSR
 2. Upload assets to Zephyr using the `vite-plugin-tanstack-start-zephyr` plugin
 3. Create a deployment snapshot with `type: 'ssr'`
@@ -40,7 +41,7 @@ This will:
 The Zephyr plugin is configured in `vite.config.ts`:
 
 ```typescript
-withZephyrTanstackStart()
+withZephyrTanstackStart();
 ```
 
 That's it! The plugin automatically detects:

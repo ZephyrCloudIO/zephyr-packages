@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
+import { useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { createServerFn } from '@tanstack/react-start';
 
 const getCurrentServerTime = createServerFn({
   method: 'GET',
-}).handler(async () => await new Date().toISOString())
+}).handler(async () => await new Date().toISOString());
 
 export const Route = createFileRoute('/demo/start/server-funcs')({
   component: Home,
   loader: async () => await getCurrentServerTime(),
-})
+});
 
 function Home() {
-  const originalTime = Route.useLoaderData()
-  const [time, setTime] = useState(originalTime)
+  const originalTime = Route.useLoaderData();
+  const [time, setTime] = useState(originalTime);
 
   return (
     <div
@@ -37,5 +37,5 @@ function Home() {
         </div>
       </div>
     </div>
-  )
+  );
 }

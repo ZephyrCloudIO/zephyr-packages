@@ -14,11 +14,13 @@ import { posix, win32 } from 'node:path';
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
   assets: ZeBuildAssetsMap;
+  // SSR-specific parameter
+  snapshotType?: 'static' | 'ssr';
 }
 
 export async function createSnapshot(
   zephyr_engine: ZephyrEngine,
-  { mfConfig, assets }: CreateSnapshotProps
+  { mfConfig, assets, snapshotType }: CreateSnapshotProps
 ): Promise<Snapshot> {
   const buildId = await zephyr_engine.build_id;
 
@@ -48,7 +50,7 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  return {
+  const snapshot = {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
@@ -83,7 +85,11 @@ export async function createSnapshot(
       },
       {} as Record<string, SnapshotAsset>
     ),
+    // Add type field for SSR snapshots
+    ...(snapshotType && { type: snapshotType }),
   };
+
+  return snapshot as Snapshot;
 }
 
 /**

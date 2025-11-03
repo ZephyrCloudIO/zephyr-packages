@@ -88,14 +88,14 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       try {
         const zephyr_engine = await zephyr_engine_defer;
         if (!cachedSpecifier) {
-          const appName = zephyr_engine.applicationProperties.name;
-          cachedSpecifier = `env:vars:${appName}`;
+          const appUid = zephyr_engine.application_uid;
+          cachedSpecifier = `env:vars:${appUid}`;
         }
         if (source === cachedSpecifier) {
           // In dev mode, use a virtual module; in build mode, mark as external
           if (process.env['NODE_ENV'] === 'development') {
-            const appName = zephyr_engine.applicationProperties.name;
-            return { id: `\0virtual:zephyr-env-${appName}` };
+            const appUid = zephyr_engine.application_uid;
+            return { id: `\0virtual:zephyr-env-${appUid}` };
           } else {
             // Mark this as external so it gets resolved by the import map at runtime
             return { id: source, external: true };
@@ -133,8 +133,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
             if (!cachedSpecifier) {
-              const appName = zephyr_engine.applicationProperties.name;
-              cachedSpecifier = `env:vars:${appName}`;
+              const appUid = zephyr_engine.application_uid;
+              cachedSpecifier = `env:vars:${appUid}`;
             }
             const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
             if (res && typeof res.code === 'string' && res.code !== code) {
@@ -307,17 +307,18 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     transformIndexHtml: async (html) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
-        const appName = zephyr_engine.applicationProperties.name;
+        const appUid = zephyr_engine.application_uid;
 
         // Convert federated dependencies to remotes format
         const remotes: RemoteEntry[] =
           zephyr_engine.federated_dependencies?.map((dep) => ({
             name: dep.name,
+            application_uid: dep.application_uid,
             remote_entry_url: dep.default_url,
           })) || [];
 
         // Use the same import map creation as Rspack plugin
-        const importMap = buildEnvImportMap(appName, remotes);
+        const importMap = buildEnvImportMap(appUid, remotes);
         const importMapScript = `<script type="importmap">${JSON.stringify({ imports: importMap }, null, 2)}</script>`;
 
         // Check if import map already exists

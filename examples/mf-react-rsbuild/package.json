@@ -4,10 +4,9 @@
   "description": "Rsbuild Module Federation example with Zephyr",
   "private": true,
   "scripts": {
-    "build": "pnpm build-provider && pnpm build-consumer",
-    "build-provider": "pnpm --filter=mf-react-rsbuild-provider build",
-    "build-consumer": "pnpm --filter=mf-react-rsbuild-consumer build",
-    "dev": "pnpm --filter=mf-react-rsbuild-provider dev & pnpm --filter=mf-react-rsbuild-consumer dev"
+    "build": "nx run-many -t build --parallel=1 -p mf-react-rsbuild-provider mf-react-rsbuild-consumer",
+    "dev": "pnpm --filter mf-react-rsbuild-provider run dev & pnpm --filter mf-react-rsbuild-consumer run dev",
+    "preview": "pnpm --filter mf-react-rsbuild-provider run preview & pnpm --filter mf-react-rsbuild-consumer run preview"
   },
   "keywords": [
     "rsbuild",

@@ -1,5 +1,5 @@
 import type { ConfigT } from 'metro-config';
-import { logFn, ZephyrEngine, ZephyrError, createManifestContent } from 'zephyr-agent';
+import { ze_log, ZephyrEngine, ZephyrError, createManifestContent } from 'zephyr-agent';
 import path from 'path';
 import fs from 'fs';
 
@@ -18,7 +18,6 @@ export interface ZephyrMetroOptions {
   otaConfig?: {
     checkInterval?: number;
     debug?: boolean;
-    otaEndpoint?: string;
   };
 }
 
@@ -31,11 +30,11 @@ export interface ZephyrModuleFederationConfig {
 
 /** Metro plugin configuration function for Zephyr */
 export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
-  return (metroConfig: ConfigT): ConfigT => {
+  return async (metroConfig: ConfigT): Promise<ConfigT> => {
     try {
-      return applyZephyrToMetroConfig(metroConfig, zephyrOptions);
+      return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);
     } catch (error) {
-      logFn('error', ZephyrError.format(error));
+      ze_log.error(ZephyrError.format(error));
       return metroConfig; // Return original config on error
     }
   };
@@ -118,7 +117,7 @@ async function applyZephyrToMetroConfig(
             res.setHeader('Cache-Control', 'no-cache');
             res.send(manifestContent);
           } catch (error) {
-            logFn('error', `Failed to serve manifest: ${error}`);
+            ze_log.error(`Failed to serve manifest: ${error}`);
             res.status(500).send({ error: 'Failed to generate manifest' });
           }
         });
@@ -137,14 +136,10 @@ async function applyZephyrToMetroConfig(
 
   // Log OTA configuration if enabled
   if (zephyrOptions.enableOTA) {
-    logFn('info', 'Zephyr Metro plugin configured with OTA support');
-    logFn('info', `App UID: ${zephyrOptions.applicationUid || 'not specified'}`);
-    logFn(
-      'info',
-      `OTA endpoint: ${zephyrOptions.otaConfig?.otaEndpoint || 'default will be used'}`
-    );
+    ze_log.app('Zephyr Metro plugin configured with OTA support');
+    ze_log.app(`App UID: ${zephyrOptions.applicationUid || 'not specified'}`);
   } else {
-    logFn('info', 'Zephyr Metro plugin configured successfully');
+    ze_log.app('Zephyr Metro plugin configured successfully');
   }
 
   return enhancedConfig;
@@ -193,12 +188,12 @@ async function generateManifestFile(
     await fs.promises.writeFile(manifestPath, manifestContent, 'utf-8');
 
     if (zephyrOptions.enableOTA) {
-      logFn('info', `Generated OTA-enhanced manifest at: ${manifestPath}`);
+      ze_log.manifest(`Generated OTA-enhanced manifest at: ${manifestPath}`);
     } else {
-      logFn('info', `Generated manifest at: ${manifestPath}`);
+      ze_log.manifest(`Generated manifest at: ${manifestPath}`);
     }
   } catch (error) {
-    logFn('error', `Failed to generate manifest file: ${error}`);
+    ze_log.error(`Failed to generate manifest file: ${error}`);
   }
 }
 

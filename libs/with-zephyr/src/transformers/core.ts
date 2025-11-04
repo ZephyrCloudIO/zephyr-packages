@@ -1,9 +1,11 @@
 import fs from 'fs';
 import { parse } from '@babel/parser';
 import generate from '@babel/generator';
-import traverse from '@babel/traverse';
+import traverseModule from '@babel/traverse';
 import * as t from '@babel/types';
 import type { BabelNode } from '../types.js';
+
+const traverse = (traverseModule as any).default || traverseModule;
 
 /** Parse JavaScript/TypeScript file into AST */
 export function parseFile(filePath: string): BabelNode {

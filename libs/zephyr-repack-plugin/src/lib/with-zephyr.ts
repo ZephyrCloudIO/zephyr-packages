@@ -68,21 +68,18 @@ async function _zephyr_configuration(
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
 
-    // Enhanced remote config mutation with OTA support if enabled
-    if (_zephyrOptions?.enableOTA) {
-      mutWebpackFederatedRemotesConfigWithOTA(
-        zephyr_engine,
-        config,
-        resolved_dependency_pairs,
-        _zephyrOptions
-      );
-    } else {
-      mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-    }
+    // Apply remote config mutation
+    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
     ze_log.remotes(
       'dependency resolution completed successfully...or at least trying to...'
     );
+
+    // Log OTA configuration if enabled
+    if (_zephyrOptions?.enableOTA) {
+      ze_log.app('OTA support enabled - see documentation for runtime setup');
+      ze_log.app('App UID:', _zephyrOptions.applicationUid || 'not specified');
+    }
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
     // const app_config = await zephyr_engine.application_configuration;
@@ -105,25 +102,4 @@ async function _zephyr_configuration(
   }
 
   return config;
-}
-
-/** Enhanced remote config mutation that includes OTA runtime plugin setup */
-function mutWebpackFederatedRemotesConfigWithOTA(
-  zephyr_engine: ZephyrEngine,
-  config: any,
-  resolvedDependencyPairs: any[] | null,
-  zephyrOptions: ZephyrRepackPluginOptions
-): void {
-  // First, apply standard remote config mutation
-  mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolvedDependencyPairs);
-
-  // Log OTA configuration for user awareness
-  if (zephyrOptions.enableOTA) {
-    ze_log.remotes('OTA support enabled - see documentation for runtime setup');
-    ze_log.remotes('App UID:', zephyrOptions.applicationUid || 'not specified');
-    ze_log.remotes(
-      'OTA endpoint:',
-      zephyrOptions.otaConfig?.otaEndpoint || 'default will be used'
-    );
-  }
 }

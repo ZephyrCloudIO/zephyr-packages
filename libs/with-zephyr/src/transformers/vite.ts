@@ -1,7 +1,9 @@
-import traverse from '@babel/traverse';
+import traverseModule from '@babel/traverse';
 import * as t from '@babel/types';
 import type { BabelNode } from '../types.js';
 import { addToPluginsArray } from './plugins-array.js';
+
+const traverse = (traverseModule as any).default || traverseModule;
 
 /**
  * Transform Vite config to add withZephyr This is a simple wrapper around

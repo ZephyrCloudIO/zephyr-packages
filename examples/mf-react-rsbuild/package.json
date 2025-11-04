@@ -9,7 +9,11 @@
     "build-consumer": "pnpm --filter=mf-react-rsbuild-consumer build",
     "dev": "pnpm --filter=mf-react-rsbuild-provider dev & pnpm --filter=mf-react-rsbuild-consumer dev"
   },
-  "keywords": ["rsbuild", "module-federation", "zephyr"],
+  "keywords": [
+    "rsbuild",
+    "module-federation",
+    "zephyr"
+  ],
   "author": "",
   "license": "MIT"
 }

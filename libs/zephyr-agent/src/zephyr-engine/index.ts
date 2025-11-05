@@ -84,6 +84,7 @@ type ZephyrEngineBuilderTypes =
   | 'rollup'
   | 'parcel'
   | 'astro'
+  | 'lume'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;

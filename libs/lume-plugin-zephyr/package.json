@@ -1,0 +1,37 @@
+{
+  "name": "lume-plugin-zephyr",
+  "version": "0.1.0",
+  "description": "Lume plugin for Zephyr - Deno-only package",
+  "keywords": [
+    "lume",
+    "lume-plugin",
+    "zephyr",
+    "deploy",
+    "static-site-generator",
+    "deno"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/lume-plugin-zephyr"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "patch-version": "pnpm version"
+  },
+  "peerDependencies": {
+    "lume": ">=2.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

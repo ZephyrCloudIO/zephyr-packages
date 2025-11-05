@@ -1,4 +1,4 @@
-import { getItem, removeItem, setItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import { StorageKeys } from './storage-keys';
 import type { ZeApplicationConfig } from './upload-provider-options';
 import { storage } from './storage';
@@ -12,17 +12,19 @@ export async function saveAppConfig(
   json: ZeApplicationConfig
 ): Promise<void> {
   await storage;
-  void (await setItem(get_key(application_uid), json, { ttl: 5 * 60 * 1000 }));
+  void (await nodePersist.setItem(get_key(application_uid), json, {
+    ttl: 5 * 60 * 1000,
+  }));
 }
 
 export async function getAppConfig(
   application_uid: string
 ): Promise<ZeApplicationConfig | undefined> {
   await storage;
-  return getItem(get_key(application_uid));
+  return nodePersist.getItem(get_key(application_uid));
 }
 
 export async function removeAppConfig(application_uid: string): Promise<void> {
   await storage;
-  await removeItem(get_key(application_uid));
+  await nodePersist.removeItem(get_key(application_uid));
 }

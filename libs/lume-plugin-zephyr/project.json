@@ -1,0 +1,26 @@
+{
+  "name": "lume-plugin-zephyr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/lume-plugin-zephyr/src",
+  "projectType": "library",
+  "tags": ["deno"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "echo '✓ lume-plugin-zephyr: Deno-only package, no build required'"
+        ],
+        "cwd": "libs/lume-plugin-zephyr"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "{projectRoot}"
+      }
+    },
+    "release": {
+      "command": "pnpm dist-tag add lume-plugin-zephyr@$(npm view lume-plugin-zephyr@next version) latest"
+    }
+  }
+}

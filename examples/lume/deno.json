@@ -1,0 +1,77 @@
+{
+  "nodeModulesDir": "auto",
+  "imports": {
+    "axios": "npm:axios@^1.13.2",
+    "axios-retry": "npm:axios-retry@^4.5.0",
+    "cloudflare": "npm:cloudflare@^5.2.0",
+    "debug": "npm:debug@^4.4.3",
+    "dotenv": "npm:dotenv@^17.2.3",
+    "eventsource": "npm:eventsource@^4.0.0",
+    "git-url-parse": "npm:git-url-parse@^16.1.0",
+    "glob": "npm:glob@^11.0.3",
+    "is-ci": "npm:is-ci@^4.1.0",
+    "jose": "npm:jose@^6.1.0",
+    "lume/": "https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.1/",
+    "lume/jsx-runtime": "https://cdn.jsdelivr.net/gh/oscarotero/ssx@0.1.12/jsx-runtime.ts",
+    "lume-plugin-zephyr": "../../libs/lume-plugin-zephyr/src/index.ts",
+    "node-persist": "npm:node-persist@^4.0.4",
+    "open": "npm:open@^10.2.0",
+    "proper-lockfile": "npm:proper-lockfile@^4.1.2",
+    "uuid": "npm:uuid@^13.0.0",
+    "ws": "npm:ws@^8.18.3",
+    "zephyr-agent": "../../libs/zephyr-agent/src/index.ts",
+    "zephyr-edge-contract": "../../libs/zephyr-edge-contract/src/index.ts",
+    "@std/fs": "jsr:@std/fs@^1.0.0",
+    "@std/path": "jsr:@std/path@^1.0.0"
+  },
+  "permissions": {
+    "lume": {
+      "read": true,
+      "write": ["./"],
+      "import": [
+        "cdn.jsdelivr.net:443",
+        "jsr.io:443",
+        "deno.land:443",
+        "esm.sh:443"
+      ],
+      "net": [
+        "0.0.0.0",
+        "jsr.io:443",
+        "cdn.jsdelivr.net:443",
+        "data.jsdelivr.com:443",
+        "registry.npmjs.org:443"
+      ],
+      "env": true,
+      "run": true,
+      "ffi": true,
+      "sys": true
+    }
+  },
+  "tasks": {
+    "lume": {
+      "description": "Run Lume command",
+      "command": "deno run --unstable-sloppy-imports -P=lume lume/cli.ts"
+    },
+    "build": {
+      "description": "Build the site for production",
+      "command": "deno task lume"
+    },
+    "serve": {
+      "description": "Run and serve the site for development",
+      "command": "deno task lume -s"
+    }
+  },
+  "compilerOptions": {
+    "types": ["lume/types.ts"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "lume"
+  },
+  "unstable": ["temporal", "fmt-component"],
+  "lint": {
+    "plugins": ["https://cdn.jsdelivr.net/gh/lumeland/lume@3.1.1/lint.ts"],
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
+  },
+  "lock": false
+}

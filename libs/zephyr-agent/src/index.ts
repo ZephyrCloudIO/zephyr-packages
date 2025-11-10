@@ -22,19 +22,6 @@ export {
 export { ze_log } from './lib/logging';
 export { logFn } from './lib/logging/ze-log-event';
 export {
-  getOutputFormat,
-  setOutputFormat,
-  isStructuredOutput,
-  shouldUseColors,
-  type OutputFormat,
-} from './lib/logging/output-config';
-export {
-  formatOutput,
-  createLogData,
-  cleanMessage,
-  type StructuredLogData,
-} from './lib/logging/output-formatter';
-export {
   initializeLogRun,
   getCurrentRunDir,
   resetLogRun,
@@ -43,6 +30,7 @@ export {
   isFileLoggingEnabled,
   getLogBasePath,
   getLogFormat,
+  type StructuredLogData,
 } from './lib/logging/file-logger';
 
 // default transformers

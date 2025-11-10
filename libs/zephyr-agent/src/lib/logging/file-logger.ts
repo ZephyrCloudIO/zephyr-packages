@@ -1,23 +1,29 @@
 /**
- * File-based logging system that writes logs to ~/.zephyr/logs/
- * Each build run gets its own directory with separate log files per type
+ * File-based logging system that writes logs to ~/.zephyr/logs/ Each build run gets its
+ * own directory with separate log files per type
  */
 
-import { appendFileSync, mkdirSync, existsSync } from 'node:fs';
+import { appendFileSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { encode as encodeToon } from '@toon-format/toon';
+import { stripAnsi } from 'zephyr-edge-contract';
 import { ZE_PATH } from '../node-persist/storage-keys';
-import type { StructuredLogData } from './output-formatter';
-import { cleanMessage } from './output-formatter';
 
 let currentRunDir: string | null = null;
 let runStartTime: number | null = null;
 
 type LogFormat = 'json' | 'toon';
 
+export interface StructuredLogData {
+  level: 'info' | 'warn' | 'error' | 'debug';
+  action?: string;
+  message: string;
+  data?: Record<string, unknown>;
+  timestamp?: number;
+}
+
 /**
- * Get the base log directory path
- * Checks ZEPHYR_LOG_PATH env var, defaults to ~/.zephyr/logs/
+ * Get the base log directory path Checks ZEPHYR_LOG_PATH env var, defaults to
+ * ~/.zephyr/logs/
  */
 export function getLogBasePath(): string {
   const customPath = process.env['ZEPHYR_LOG_PATH'];
@@ -27,10 +33,7 @@ export function getLogBasePath(): string {
   return join(ZE_PATH, 'logs');
 }
 
-/**
- * Initialize a new log run directory
- * Called once per build
- */
+/** Initialize a new log run directory Called once per build */
 export function initializeLogRun(): string {
   if (!runStartTime) {
     runStartTime = Date.now();
@@ -52,30 +55,20 @@ export function initializeLogRun(): string {
   return currentRunDir;
 }
 
-/**
- * Get the current run directory
- */
+/** Get the current run directory */
 export function getCurrentRunDir(): string | null {
   return currentRunDir;
 }
 
-/**
- * Reset the run directory (for testing or new builds)
- */
+/** Reset the run directory (for testing or new builds) */
 export function resetLogRun(): void {
   currentRunDir = null;
   runStartTime = null;
 }
 
-/**
- * Extract and parse JSON from message if present
- */
+/** Extract and parse JSON from message if present */
 function extractStructuredData(message: string): { message: string; payload?: unknown } {
   // Find all JSON objects in the message
-  const jsonObjects: unknown[] = [];
-  let cleanMessage = message;
-
-  // Regex to find JSON objects (handles nested braces)
   const jsonRegex = /\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/g;
   const matches = message.match(jsonRegex);
 
@@ -95,11 +88,13 @@ function extractStructuredData(message: string): { message: string; payload?: un
 
     if (allValid && parsed.length > 0) {
       // Remove JSON objects from message
-      cleanMessage = message.replace(jsonRegex, '').trim();
+      let cleanMessage = message.replace(jsonRegex, '').trim();
       // Clean up extra whitespace and newlines
       cleanMessage = cleanMessage.replace(/\s+/g, ' ').trim();
       // Remove trailing colons and "Response:" "Options:" labels
-      cleanMessage = cleanMessage.replace(/\s*(Response|Options|Payload|Data):\s*/gi, ' ').trim();
+      cleanMessage = cleanMessage
+        .replace(/\s*(Response|Options|Payload|Data):\s*/gi, ' ')
+        .trim();
 
       if (!cleanMessage) {
         cleanMessage = 'Structured data';
@@ -114,9 +109,7 @@ function extractStructuredData(message: string): { message: string; payload?: un
   return { message };
 }
 
-/**
- * Write a log entry to the appropriate file
- */
+/** Write a log entry to the appropriate file */
 export function writeLogToFile(logData: StructuredLogData): void {
   const runDir = initializeLogRun();
   const format = getLogFormat();
@@ -140,13 +133,13 @@ export function writeLogToFile(logData: StructuredLogData): void {
 
   const logFilePath = join(runDir, filename);
 
-  // Format the log entry
-  const message = cleanMessage(logData.message);
-  const { message: cleanMsg, payload } = extractStructuredData(message);
+  // Clean message (remove ANSI codes)
+  const cleanMsg = stripAnsi(logData.message);
+  const { message, payload } = extractStructuredData(cleanMsg);
 
   const logEntry: Record<string, unknown> = {
     level: logData.level,
-    message: cleanMsg,
+    message,
     timestamp: logData.timestamp || Date.now(),
   };
 
@@ -163,7 +156,9 @@ export function writeLogToFile(logData: StructuredLogData): void {
   let logLine: string;
   if (format === 'toon') {
     // TOON format - encode the object and add newline
-    logLine = encodeToon(logEntry) + '\n';
+    // Dynamic import to avoid issues with ESM-only package in tests due to Jest not supporting ESM.
+    const { encode } = require('@toon-format/toon');
+    logLine = encode(logEntry) + '\n';
   } else {
     // JSON format - one object per line
     logLine = JSON.stringify(logEntry) + '\n';
@@ -177,9 +172,7 @@ export function writeLogToFile(logData: StructuredLogData): void {
   }
 }
 
-/**
- * Write a summary file with metadata about the run
- */
+/** Write a summary file with metadata about the run */
 export function writeRunSummary(data: {
   buildId?: string;
   applicationUid?: string;
@@ -206,17 +199,15 @@ export function writeRunSummary(data: {
   }
 }
 
-/**
- * Check if file logging is enabled
- */
+/** Check if file logging is enabled */
 export function isFileLoggingEnabled(): boolean {
-  return process.env['ZEPHYR_LOG_TO_FILE'] === 'true' ||
-         process.env['ZEPHYR_LOG_TO_FILE'] === '1';
+  return (
+    process.env['ZEPHYR_LOG_TO_FILE'] === 'true' ||
+    process.env['ZEPHYR_LOG_TO_FILE'] === '1'
+  );
 }
 
-/**
- * Get the log file format (json or toon)
- */
+/** Get the log file format (json or toon) */
 export function getLogFormat(): LogFormat {
   const format = process.env['ZEPHYR_LOG_FORMAT'];
   return format === 'toon' ? 'toon' : 'json';

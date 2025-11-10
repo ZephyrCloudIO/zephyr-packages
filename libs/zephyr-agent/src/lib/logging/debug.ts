@@ -24,9 +24,7 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
-/**
- * Wrap debug logger to support file logging
- */
+/** Wrap debug logger to support file logging */
 type DebugLogger = debug.Debugger;
 
 function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {

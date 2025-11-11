@@ -1,5 +1,13 @@
 {
   "jsc": {
-    "target": "es2016"
+    "target": "es2016",
+    "experimental": {
+      "plugins": [
+        [
+          "@swc/plugin-swc-sdk",
+          {}
+        ]
+      ]
+    },
   }
 }

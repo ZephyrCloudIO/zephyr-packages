@@ -39,7 +39,7 @@ export function buildAssetsMapMock<T>(
               globals: {
                 envs: {
                   ZE_PUBLIC_LOG: '0',
-                  ZE_PUBLIC_COND: '0',
+                  ZE_PUBLIC_COND: '"Test Value!"',
                 },
               },
             },

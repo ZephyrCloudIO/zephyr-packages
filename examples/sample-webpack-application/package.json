@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@sentry/react": "^7.120.3",
-    "@swc/plugin-swc-sdk": "^11.1.0",
+    "@swc/plugin-swc-sdk": "^11.1.2",
     "react": "catalog:react18",
     "react-dom": "catalog:react18"
   },

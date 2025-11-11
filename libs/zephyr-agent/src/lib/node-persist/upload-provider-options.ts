@@ -16,6 +16,20 @@ export interface ZeApplicationConfig {
   user_uuid: string;
   // @deprecated
   username: string;
+
+  // NEW: Single replication target (primary → secondary only)
+  replicationTarget?: ReplicationTarget;
+}
+
+export interface ReplicationTarget {
+  name: string;
+  platform: string;
+  edgeUrl: string;
+  auth: {
+    type: 'jwt' | 'api_key';
+    token: string;
+  };
+  enabled: boolean;
 }
 
 export enum UploadProviderType {

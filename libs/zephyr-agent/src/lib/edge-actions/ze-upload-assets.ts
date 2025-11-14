@@ -1,6 +1,6 @@
 import {
   forEachLimit,
-  ZeBuildAssetsMap,
+  type ZeBuildAssetsMap,
   type ZeBuildAsset,
   type ZeUploadAssetsOptions,
 } from 'zephyr-edge-contract';
@@ -9,7 +9,7 @@ import { uploadFile } from '../http/upload-file';
 import { ze_log } from '../logging';
 import { white, whiteBright } from '../logging/picocolor';
 import { getApplicationHashList } from '../edge-requests/get-application-hash-list';
-import { EnvironmentConfig, ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import type { EnvironmentConfig, ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { get_missing_assets } from '../edge-hash-list/get-missing-assets';
 
 const CLOUDFLARE_BATCH_SIZE = 6;
@@ -25,6 +25,7 @@ export async function zeUploadAssets(
   const envs = appConfig.ENVIRONMENTS;
   if (envs != null) {
     await Promise.all(Object.entries(envs)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_, envCfg]) => envCfg.edgeUrl !== appConfig.EDGE_URL)
       .map(([env, envCfg]) => zeUploadAssetsForEnv(env,envCfg, appConfig, assetsMap))
     );
@@ -127,5 +128,6 @@ export async function zeUploadAssets(
       );
 
     }));
+    ze_log.upload(`Total size uploaded for env: ${whiteBright(env)}: ${totalSize.toFixed(2)}kb`);
   }
 }

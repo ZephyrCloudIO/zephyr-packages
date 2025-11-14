@@ -15,9 +15,10 @@ export async function getApplicationHashList({
 }> {
   let EDGE_URL = edge_url;
   if (!EDGE_URL) {
-    const { EDGE_URL } = await getApplicationConfiguration({
+    const cfg = await getApplicationConfiguration({
       application_uid,
     });
+    EDGE_URL = cfg.EDGE_URL;
   }
 
   const url = new URL('/__get_application_hash_list__', EDGE_URL);

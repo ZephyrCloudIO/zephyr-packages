@@ -133,7 +133,9 @@ export function withZephyrTanstackStart(
         const stillNotBuilt = Object.entries(builder.environments)
           .filter(([, env]) => !env.isBuilt)
           .map(([name]) => name);
-        throw new Error(`Some environments are still not built: ${stillNotBuilt.join(', ')}`);
+        throw new Error(
+          `Some environments are still not built: ${stillNotBuilt.join(', ')}`
+        );
       }
 
       console.log('[TanStack Zephyr] All environments built, processing output...');

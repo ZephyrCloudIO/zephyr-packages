@@ -442,11 +442,13 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    // SSR-specific parameter
+    snapshotType?: 'static' | 'ssr';
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
     ze_log.upload('Initializing: upload assets');
-    const { assetsMap, buildStats, mfConfig } = props;
+    const { assetsMap, buildStats, mfConfig, snapshotType } = props;
 
     if (zephyr_engine.federated_dependencies) {
       const manifest = {
@@ -474,6 +476,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const snapshot = await createSnapshot(zephyr_engine, {
       assets: assetsMap,
       mfConfig,
+      snapshotType,
     });
 
     const upload_options: UploadOptions = {

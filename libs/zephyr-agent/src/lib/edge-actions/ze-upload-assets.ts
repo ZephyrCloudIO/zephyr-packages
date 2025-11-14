@@ -1,5 +1,6 @@
 import {
   forEachLimit,
+  ZeBuildAssetsMap,
   type ZeBuildAsset,
   type ZeUploadAssetsOptions,
 } from 'zephyr-edge-contract';
@@ -7,6 +8,9 @@ import type { ZephyrEngine } from '../../zephyr-engine';
 import { uploadFile } from '../http/upload-file';
 import { ze_log } from '../logging';
 import { white, whiteBright } from '../logging/picocolor';
+import { getApplicationHashList } from '../edge-requests/get-application-hash-list';
+import { EnvironmentConfig, ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import { get_missing_assets } from '../edge-hash-list/get-missing-assets';
 
 const CLOUDFLARE_BATCH_SIZE = 6;
 
@@ -17,6 +21,14 @@ export async function zeUploadAssets(
   const count = Object.keys(assetsMap).length;
   const logger = await zephyr_engine.logger;
   const appConfig = await zephyr_engine.application_configuration;
+
+  const envs = appConfig.ENVIRONMENTS;
+  if (envs != null) {
+    await Promise.all(Object.entries(envs)
+      .filter(([_, envCfg]) => envCfg.edgeUrl !== appConfig.EDGE_URL)
+      .map(([env, envCfg]) => zeUploadAssetsForEnv(env,envCfg, appConfig, assetsMap))
+    );
+  }
 
   if (missingAssets.length === 0) {
     logger({
@@ -77,5 +89,43 @@ export async function zeUploadAssets(
     ze_log.upload(
       `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
     );
+  }
+
+  async function zeUploadAssetsForEnv(env: string, envCfg: EnvironmentConfig, appConfig: ZeApplicationConfig, assetsMap: ZeBuildAssetsMap) {
+    const hash_set = await getApplicationHashList({
+      application_uid: zephyr_engine.application_uid,
+      edge_url: envCfg.edgeUrl,
+    });
+    const missingAssets = get_missing_assets({
+      assetsMap,
+      hash_set: { hash_set: new Set(hash_set.hashes) },
+    });
+    if (missingAssets.length === 0) {
+      return;
+    }
+    let totalSize = 0;
+    await Promise.all(missingAssets.map(async (asset) => {
+      ze_log.upload(`Uploading file ${asset.path} to env: ${whiteBright(env)}`);
+      const start = Date.now();
+      const assetWithBuffer = assetsMap[asset.hash];
+      const assetSize = assetWithBuffer?.buffer?.length / 1024;
+
+      await uploadFile(
+        {
+          hash: asset.hash,
+          asset: assetWithBuffer,
+        },
+        { ...appConfig, EDGE_URL: envCfg.edgeUrl }
+      );
+
+      const fileUploaded = Date.now() - start;
+
+      totalSize += assetSize;
+
+      ze_log.upload(
+        `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb) for env: ${whiteBright(env)}`
+      );
+
+    }));
   }
 }

@@ -14,25 +14,21 @@ export async function uploadSnapshot({
   const { EDGE_URL, jwt, ENVIRONMENTS } = await getApplicationConfiguration({
     application_uid,
   });
-  
+
   const json = JSON.stringify(body);
   ze_log.snapshot('Sending snapshot to edge:', JSON.stringify(body, null, 2));
 
-  const resp = await doUploadSnapshotRequest({ json, edge_url: EDGE_URL, jwt})
+  const resp = await doUploadSnapshotRequest({ json, edge_url: EDGE_URL, jwt });
 
-  
   if (ENVIRONMENTS != null) {
     const env_edge_urls = Array.from(
-      new Set(
-        Object.values(ENVIRONMENTS)
-          .filter((envCfg) => envCfg.edgeUrl !== EDGE_URL)
-      )
+      new Set(Object.values(ENVIRONMENTS).filter((envCfg) => envCfg.edgeUrl !== EDGE_URL))
     );
     await Promise.all(
-      env_edge_urls.map(
-        (envConfig) => doUploadSnapshotRequest({json, edge_url: envConfig.edgeUrl, jwt})
-      )
-    )
+      env_edge_urls.map((envConfig: { edgeUrl: string }): Promise<SnapshotUploadRes> => {
+        return doUploadSnapshotRequest({ json, edge_url: envConfig.edgeUrl, jwt });
+      })
+    );
   }
 
   ze_log.snapshot('Done: snapshot uploaded...', body);
@@ -40,9 +36,15 @@ export async function uploadSnapshot({
   return resp;
 }
 
-async function doUploadSnapshotRequest(
-  {json, edge_url, jwt}: {json:string; edge_url: string; jwt: string;}
-): Promise<SnapshotUploadRes> {
+async function doUploadSnapshotRequest({
+  json,
+  edge_url,
+  jwt,
+}: {
+  json: string;
+  edge_url: string;
+  jwt: string;
+}): Promise<SnapshotUploadRes> {
   const options: RequestInit = {
     method: 'POST',
     headers: {

@@ -1,7 +1,8 @@
 import { type UploadableAsset } from 'zephyr-edge-contract';
+import { ZeErrors, ZephyrError } from '../errors';
+import { ze_log } from '../logging';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { makeRequest } from './http-request';
-import { ZeErrors, ZephyrError } from '../errors';
 
 export interface UploadFileProps {
   hash: string;
@@ -12,22 +13,6 @@ export async function uploadFile(
   { hash, asset }: UploadFileProps,
   { EDGE_URL, jwt, ENVIRONMENTS }: ZeApplicationConfig
 ) {
-  await doUploadFileRequest({hash, asset, jwt, edge_url: EDGE_URL});
-  if (ENVIRONMENTS != null) {
-    const env_edge_urls = Array.from(
-      new Set(Object.values(ENVIRONMENTS).filter((envCfg) => envCfg.edgeUrl !== EDGE_URL))
-    );
-    await Promise.all(
-      env_edge_urls.map((envConfig) =>
-        doUploadFileRequest({ hash, asset, edge_url: envConfig.edgeUrl, jwt })
-      )
-    );
-  }
-}
-
-async function doUploadFileRequest(
-  {hash, asset, jwt, edge_url}: {hash: string, asset: UploadableAsset; jwt: string; edge_url: string;}
-): Promise<void> {
   const type = 'file';
 
   const options: RequestInit = {
@@ -43,7 +28,7 @@ async function doUploadFileRequest(
   const [ok, cause] = await makeRequest(
     {
       path: '/upload',
-      base: edge_url,
+      base: EDGE_URL,
       query: { type, hash, filename: asset.path },
     },
     options,

@@ -4,16 +4,21 @@ import { ZeErrors, ZephyrError } from '../errors';
 
 interface GetApplicationHashListProps {
   application_uid: string;
+  edge_url?: string;
 }
 
 export async function getApplicationHashList({
   application_uid,
+  edge_url
 }: GetApplicationHashListProps): Promise<{
   hashes: string[];
 }> {
-  const { EDGE_URL } = await getApplicationConfiguration({
-    application_uid,
-  });
+  let EDGE_URL = edge_url;
+  if (!EDGE_URL) {
+    const { EDGE_URL } = await getApplicationConfiguration({
+      application_uid,
+    });
+  }
 
   const url = new URL('/__get_application_hash_list__', EDGE_URL);
   url.searchParams.append('application_uid', application_uid);

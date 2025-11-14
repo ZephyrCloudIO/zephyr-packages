@@ -1,6 +1,8 @@
 /** Vite plugin for deploying TanStack Start applications to Zephyr */
 
-import type { Plugin, ResolvedConfig } from 'vite';
+import type { Plugin, ResolvedConfig, BuildEnvironment } from 'vite';
+import type { RollupOutput, RollupWatcher } from 'rollup';
+
 import * as path from 'path';
 import {
   ZephyrEngine,
@@ -67,6 +69,7 @@ export function withZephyrTanstackStart(
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   let config: ResolvedConfig;
   let outputDir: string;
+  let uploadCompleted = false; // Guard to ensure we only upload once
 
   return {
     name: 'vite-plugin-tanstack-start-zephyr',
@@ -80,33 +83,64 @@ export function withZephyrTanstackStart(
       outputDir = options.outputDir || path.join(config.root, 'dist');
 
       console.log(`[TanStack Zephyr] Output directory: ${outputDir}`);
+    },
 
-      // Initialize ZephyrEngine with just context and builder
-      // Everything else (appUid, auth, API endpoints) is auto-detected
+    async buildApp(builder) {
+      // Guard: Only process upload once, even if buildApp is called multiple times
+      if (uploadCompleted) {
+        return;
+      }
+
+      // Initialize ZephyrEngine in buildApp (runs once) instead of configResolved (runs per environment)
+      // This ensures the engine is only created once, and start_new_build() is only called once
+      // NOTE: ZephyrEngine.create() automatically calls start_new_build()
       const engineOptions: ZephyrEngineOptions = {
         builder: 'vite',
         context: config.root,
       };
-
       zephyr_defer_create(engineOptions);
-    },
-
-    async closeBundle() {
-      // Only upload on SSR build (runs after client build)
-      if (this.environment?.name !== 'ssr') {
-        console.log(
-          `[TanStack Zephyr] Skipping ${this.environment?.name || 'unknown'} build - waiting for SSR build`
-        );
-        return;
+      const zephyr_engine = await zephyr_engine_defer;
+      // Log all environments and their build status for debugging
+      const environments = Object.entries(builder.environments);
+      console.log(
+        `[TanStack Zephyr] buildApp hook called with ${environments.length} environment(s):`
+      );
+      for (const [name, env] of environments) {
+        console.log(`  - ${name}: isBuilt=${env.isBuilt}`);
       }
 
-      console.log('[TanStack Zephyr] SSR build completed, processing output...');
+      // Wait for all environments to be built (not just specific ones)
+      // This ensures we have all build outputs before uploading
+      const notBuilt = Object.entries(builder.environments)
+        .filter(([, env]) => !env.isBuilt)
+        .map(([name]) => name);
+
+      if (notBuilt.length > 0) {
+        console.log(
+          `[TanStack Zephyr] Building environments that aren't built yet: ${notBuilt.join(', ')}`
+        );
+        for (const envName of notBuilt) {
+          const env = builder.environments[envName];
+          if (env) {
+            await builder.build(env);
+          }
+        }
+      }
+
+      // Verify all environments are now built
+      const allBuilt = Object.values(builder.environments).every((env) => env.isBuilt);
+      if (!allBuilt) {
+        const stillNotBuilt = Object.entries(builder.environments)
+          .filter(([, env]) => !env.isBuilt)
+          .map(([name]) => name);
+        throw new Error(`Some environments are still not built: ${stillNotBuilt.join(', ')}`);
+      }
+
+      console.log('[TanStack Zephyr] All environments built, processing output...');
 
       try {
-        const zephyr_engine = await zephyr_engine_defer;
-
-        // Start new build
-        await zephyr_engine.start_new_build();
+        // Engine is already initialized above, and ZephyrEngine.create() automatically calls start_new_build()
+        // So we don't need to call start_new_build() again here
 
         // Load ALL build output preserving directory structure
         // This includes server/, client/, and any root files (favicon.ico, etc.)
@@ -127,6 +161,9 @@ export function withZephyrTanstackStart(
 
         // Finish build
         await zephyr_engine.build_finished();
+
+        // Mark upload as completed to prevent multiple calls
+        uploadCompleted = true;
 
         console.log('[TanStack Zephyr] Deployment successful!');
       } catch (error) {

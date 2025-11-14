@@ -34,7 +34,6 @@ export const Route = createRootRoute({
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      Another UNIQUE VERSION
       <head>
         <HeadContent />
       </head>

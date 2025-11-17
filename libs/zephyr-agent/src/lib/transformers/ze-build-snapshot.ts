@@ -48,7 +48,7 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  return {
+  const snapshot: Snapshot = {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
@@ -84,6 +84,13 @@ export async function createSnapshot(
       {} as Record<string, SnapshotAsset>
     ),
   };
+
+  // Set snapshot type if SSR flag is enabled
+  if (zephyr_engine.env.ssr) {
+    snapshot.type = 'ssr';
+  }
+
+  return snapshot;
 }
 
 /**

@@ -2,6 +2,7 @@ export interface CliOptions {
   directory: string;
   target?: 'web' | 'ios' | 'android';
   verbose?: boolean;
+  ssr?: boolean;
 }
 
 /** Parse command line arguments. Simple argument parsing without external dependencies. */
@@ -23,6 +24,8 @@ export function parseArgs(args: string[]): CliOptions {
       }
     } else if (arg === '--verbose' || arg === '-v') {
       options.verbose = true;
+    } else if (arg === '--ssr') {
+      options.ssr = true;
     } else if (arg === '--help' || arg === '-h') {
       printHelp();
       process.exit(0);
@@ -49,6 +52,7 @@ Arguments:
 
 Options:
   --target, -t <target>    Build target: web, ios, or android (default: web)
+  --ssr                    Mark this snapshot as server-side rendered
   --verbose, -v            Enable verbose output
   --help, -h               Show this help message
 
@@ -56,6 +60,7 @@ Examples:
   zephyr ./dist
   zephyr ./build --target web
   zephyr ./dist --target ios --verbose
+  zephyr ./dist --ssr
 
 Note: No configuration file is needed. Zephyr will automatically detect
 application information from your package.json and git repository.

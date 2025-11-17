@@ -47,6 +47,11 @@ async function main(): Promise<void> {
       zephyr_engine.env.target = options.target;
     }
 
+    // Set SSR flag if specified
+    if (options.ssr) {
+      zephyr_engine.env.ssr = true;
+    }
+
     // Extract assets from the directory
     if (options.verbose) {
       logFn('info', 'Extracting assets from directory...');

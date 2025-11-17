@@ -131,6 +131,7 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     target: Platform;
+    ssr?: boolean;
   } = { isCI, target: 'web' };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;

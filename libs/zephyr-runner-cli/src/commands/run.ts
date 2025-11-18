@@ -15,9 +15,7 @@ export interface RunOptions {
   cwd: string;
 }
 
-/**
- * Run command: Execute a build command and automatically upload the resulting assets.
- */
+/** Run command: Execute a build command and automatically upload the resulting assets. */
 export async function runCommand(options: RunOptions): Promise<void> {
   const { commandLine, target, verbose, ssr, cwd } = options;
 
@@ -61,9 +59,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error('[ze-cli]    - etc.');
     console.error('[ze-cli] 2. Or use "ze-cli deploy <dir>" after building');
     console.error('[ze-cli] ');
-    console.error(
-      '[ze-cli] For more info: https://docs.zephyr-cloud.io/integrations'
-    );
+    console.error('[ze-cli] For more info: https://docs.zephyr-cloud.io/integrations');
     console.error('[ze-cli] ');
   }
 
@@ -89,12 +85,8 @@ export async function runCommand(options: RunOptions): Promise<void> {
   // If we couldn't detect the output directory, stop here
   if (!detected.outputDir) {
     console.error('[ze-cli] ');
-    console.error(
-      '[ze-cli] Could not detect output directory. Skipping upload.'
-    );
-    console.error(
-      '[ze-cli] Please use "ze-cli deploy <dir>" to upload manually.'
-    );
+    console.error('[ze-cli] Could not detect output directory. Skipping upload.');
+    console.error('[ze-cli] Please use "ze-cli deploy <dir>" to upload manually.');
     console.error('[ze-cli] ');
     return;
   }

@@ -13,8 +13,8 @@ export interface DeployOptions {
 }
 
 /**
- * Deploy command: Upload pre-built assets from a directory to Zephyr.
- * This is similar to the standalone zephyr-cli tool.
+ * Deploy command: Upload pre-built assets from a directory to Zephyr. This is similar to
+ * the standalone zephyr-cli tool.
  */
 export async function deployCommand(options: DeployOptions): Promise<void> {
   const { directory, target, verbose, ssr, cwd } = options;

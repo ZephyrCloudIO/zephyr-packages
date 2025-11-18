@@ -7,8 +7,8 @@ export interface SpawnResult {
 }
 
 /**
- * Execute a command with full stdio passthrough.
- * All stdin, stdout, and stderr are proxied between the parent and child process.
+ * Execute a command with full stdio passthrough. All stdin, stdout, and stderr are
+ * proxied between the parent and child process.
  *
  * @param parsed - The parsed command to execute
  * @param cwd - The working directory

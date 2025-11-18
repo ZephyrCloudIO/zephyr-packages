@@ -30,6 +30,7 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
+    "jsonc-parser": "^3.3.1",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parse as parseJsonc } from 'jsonc-parser';
 
 export interface PackageJsonConfig {
   scripts?: Record<string, string>;
@@ -25,7 +26,7 @@ export function readPackageJson(cwd: string): PackageJsonConfig | null {
 
   try {
     const content = readFileSync(packageJsonPath, 'utf-8');
-    return JSON.parse(content);
+    return parseJsonc(content);
   } catch (error) {
     return null;
   }
@@ -44,10 +45,10 @@ export function readTsConfig(
 
   try {
     const content = readFileSync(tsConfigPath, 'utf-8');
-    // Simple JSON parse - doesn't handle comments or extends properly
-    // but good enough for basic cases
-    return JSON.parse(content);
+    // Parse JSON with comments support using jsonc-parser
+    return parseJsonc(content);
   } catch (error) {
+    console.error(`Error reading tsconfig.json: ${error}`);
     return null;
   }
 }

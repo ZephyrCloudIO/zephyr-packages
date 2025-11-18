@@ -15,9 +15,7 @@ export interface TsConfigJson {
   [key: string]: unknown;
 }
 
-/**
- * Read and parse package.json from the given directory
- */
+/** Read and parse package.json from the given directory */
 export function readPackageJson(cwd: string): PackageJsonConfig | null {
   const packageJsonPath = join(cwd, 'package.json');
 
@@ -33,10 +31,11 @@ export function readPackageJson(cwd: string): PackageJsonConfig | null {
   }
 }
 
-/**
- * Read and parse tsconfig.json from the given directory
- */
-export function readTsConfig(cwd: string, configPath = 'tsconfig.json'): TsConfigJson | null {
+/** Read and parse tsconfig.json from the given directory */
+export function readTsConfig(
+  cwd: string,
+  configPath = 'tsconfig.json'
+): TsConfigJson | null {
   const tsConfigPath = join(cwd, configPath);
 
   if (!existsSync(tsConfigPath)) {
@@ -53,9 +52,7 @@ export function readTsConfig(cwd: string, configPath = 'tsconfig.json'): TsConfi
   }
 }
 
-/**
- * Check if a file exists and has a .js or .mjs extension
- */
+/** Check if a file exists and has a .js or .mjs extension */
 export function isJavaScriptConfig(cwd: string, baseName: string): boolean {
   const jsExtensions = ['.js', '.mjs', '.cjs'];
 
@@ -69,9 +66,7 @@ export function isJavaScriptConfig(cwd: string, baseName: string): boolean {
   return false;
 }
 
-/**
- * Check if a configuration file exists (any extension)
- */
+/** Check if a configuration file exists (any extension) */
 export function configFileExists(cwd: string, baseName: string): string | null {
   const extensions = ['.json', '.js', '.mjs', '.cjs', '.ts'];
 

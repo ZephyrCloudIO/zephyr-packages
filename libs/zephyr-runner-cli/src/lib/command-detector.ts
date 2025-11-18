@@ -266,8 +266,62 @@ async function detectPackageManagerCommand(
 
   const script = packageJson.scripts[scriptName];
 
-  // Parse the script command to extract the actual tool
+  // Parse the script command - check if there are multiple commands with shell operators
   try {
+    const individualCommands = splitCommands(script);
+
+    // If there are multiple commands in the script, detect each one
+    if (individualCommands.length > 1) {
+      const detectedCommands: DetectedCommand[] = [];
+      const allWarnings: string[] = [...warnings];
+      const outputDirs: string[] = [];
+
+      for (const cmd of individualCommands) {
+        try {
+          const parsedScript = parseShellCommand(cmd);
+          const detected = await detectCommand(parsedScript, cwd, depth + 1);
+          detectedCommands.push(detected);
+
+          if (detected.outputDir) {
+            outputDirs.push(resolve(cwd, detected.outputDir));
+          }
+
+          allWarnings.push(...detected.warnings);
+        } catch (error) {
+          // Skip commands that fail to parse
+          allWarnings.push(`Failed to parse sub-command: ${cmd}`);
+        }
+      }
+
+      // Find the last command that produces output
+      let primaryDetected = detectedCommands.find(d => d.outputDir) || detectedCommands[detectedCommands.length - 1];
+
+      // If multiple output directories, use common ancestor
+      if (outputDirs.length > 1) {
+        const commonOutputDir = findCommonAncestor(outputDirs, cwd);
+        if (commonOutputDir) {
+          primaryDetected = {
+            ...primaryDetected,
+            outputDir: relative(cwd, commonOutputDir) || '.',
+          };
+        }
+      } else if (outputDirs.length === 1) {
+        primaryDetected = {
+          ...primaryDetected,
+          outputDir: relative(cwd, outputDirs[0]) || '.',
+        };
+      }
+
+      // Preserve the package.json reference
+      if (!primaryDetected.configFile) {
+        primaryDetected.configFile = join(cwd, 'package.json');
+      }
+
+      primaryDetected.warnings = allWarnings;
+      return primaryDetected;
+    }
+
+    // Single command - parse normally
     const parsedScript = parseShellCommand(script);
 
     // Recursively detect the actual build tool

@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-import { access } from 'node:fs/promises';
-import { constants } from 'node:fs';
-import { resolve } from 'node:path';
 import { cwd } from 'node:process';
-import { ZephyrEngine, logFn, ZephyrError, ZeErrors } from 'zephyr-agent';
+import { ZephyrError, logFn } from 'zephyr-agent';
 import { parseArgs } from './cli';
-import { extractAssetsFromDirectory } from './lib/extract-assets';
-import { uploadAssets } from './lib/upload';
+import { deployCommand } from './commands/deploy';
+import { runCommand } from './commands/run';
 
 async function main(): Promise<void> {
   try {
@@ -15,71 +12,43 @@ async function main(): Promise<void> {
     const args = process.argv.slice(2);
     const options = parseArgs(args);
 
-    // Resolve the directory path
-    const directoryPath = resolve(cwd(), options.directory);
+    // Get current working directory
+    const workingDir = cwd();
 
-    // Check if directory exists
-    try {
-      await access(directoryPath, constants.F_OK);
-    } catch {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: `Directory does not exist: ${directoryPath}`,
+    // Dispatch to the appropriate command
+    if (options.command === 'deploy') {
+      if (!options.directory) {
+        throw new Error('Directory is required for deploy command');
+      }
+
+      await deployCommand({
+        directory: options.directory,
+        target: options.target,
+        verbose: options.verbose,
+        ssr: options.ssr,
+        cwd: workingDir,
+      });
+    } else if (options.command === 'run') {
+      if (!options.commandLine) {
+        throw new Error('Command line is required for run command');
+      }
+
+      await runCommand({
+        commandLine: options.commandLine,
+        target: options.target,
+        verbose: options.verbose,
+        ssr: options.ssr,
+        cwd: workingDir,
       });
     }
-
-    if (options.verbose) {
-      logFn('info', `Uploading assets from: ${directoryPath}`);
-    }
-
-    // Initialize ZephyrEngine with project root context
-    // ZephyrEngine will auto-detect:
-    // - Application properties from package.json and git
-    // - Git information from repository
-    // - NPM dependencies from package.json
-    // - Application configuration from Zephyr API
-    const zephyr_engine = await ZephyrEngine.create({
-      builder: 'unknown',
-      context: cwd(), // Use project root, not the dist directory
-    });
-
-    // Set build target if specified
-    if (options.target) {
-      zephyr_engine.env.target = options.target;
-    }
-
-    // Set SSR flag if specified
-    if (options.ssr) {
-      zephyr_engine.env.ssr = true;
-    }
-
-    // Extract assets from the directory
-    if (options.verbose) {
-      logFn('info', 'Extracting assets from directory...');
-    }
-    const assetsMap = await extractAssetsFromDirectory(directoryPath);
-
-    if (options.verbose) {
-      const assetCount = Object.keys(assetsMap).length;
-      logFn('info', `Found ${assetCount} assets to upload`);
-    }
-
-    // Upload assets
-    await uploadAssets({
-      zephyr_engine,
-      assetsMap,
-    });
-
-    if (options.verbose) {
-      logFn('info', 'Upload completed successfully');
-    }
   } catch (error) {
-    logFn('error', ZephyrError.format(error));
+    console.error('[ze-cli] Error:', ZephyrError.format(error));
     process.exit(1);
   }
 }
 
 // Run the CLI
 main().catch((error) => {
-  logFn('error', ZephyrError.format(error));
+  console.error('[ze-cli] Fatal error:', ZephyrError.format(error));
   process.exit(1);
 });

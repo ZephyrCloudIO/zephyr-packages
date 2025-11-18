@@ -31,8 +31,7 @@
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*",
-    "sh-syntax": "^0.4.2"
+    "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",

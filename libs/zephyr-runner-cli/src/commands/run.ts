@@ -30,7 +30,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
   // Parse the shell command
   log('info', `Parsing command: ${commandLine}`);
-  const parsed = await parseShellCommand(commandLine);
+  const parsed = parseShellCommand(commandLine);
   log('info', `Detected command: ${parsed.command}`);
 
   // Detect the build tool and configuration

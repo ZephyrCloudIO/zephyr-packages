@@ -78,8 +78,8 @@ export function parseShellCommand(commandLine: string): ParsedCommand {
 }
 
 /**
- * Split a command line into multiple commands based on shell operators (;, &&)
- * Respects quotes and escapes.
+ * Split a command line into multiple commands based on shell operators (;, &&) Respects
+ * quotes and escapes.
  *
  * @example
  *   splitCommands('npm run build && npm run test');

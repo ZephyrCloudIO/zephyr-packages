@@ -24,7 +24,10 @@ export interface DetectedCommand {
   outputDir: string | null;
   /** Warnings to display to the user */
   warnings: string[];
-  /** Sub-commands detected when a command expands to multiple commands (e.g., npm script with &&) */
+  /**
+   * Sub-commands detected when a command expands to multiple commands (e.g., npm script
+   * with &&)
+   */
   subCommands?: DetectedCommand[];
 }
 
@@ -61,7 +64,8 @@ function findArgValue(args: string[], ...flags: string[]): string | null {
  *
  * @param paths - Array of absolute paths
  * @param projectRoot - The project root directory (boundary)
- * @returns The common ancestor path, or null if paths are empty or no common ancestor within project root
+ * @returns The common ancestor path, or null if paths are empty or no common ancestor
+ *   within project root
  */
 export function findCommonAncestor(paths: string[], projectRoot: string): string | null {
   if (paths.length === 0) {
@@ -73,22 +77,22 @@ export function findCommonAncestor(paths: string[], projectRoot: string): string
   }
 
   // Normalize all paths to absolute
-  const normalizedPaths = paths.map(p => resolve(p));
+  const normalizedPaths = paths.map((p) => resolve(p));
   const normalizedRoot = resolve(projectRoot);
 
   // Split each path into segments
-  const pathSegments = normalizedPaths.map(p => p.split(sep));
+  const pathSegments = normalizedPaths.map((p) => p.split(sep));
   const rootSegments = normalizedRoot.split(sep);
 
   // Find the common prefix across all paths
   let commonSegments: string[] = [];
-  const minLength = Math.min(...pathSegments.map(p => p.length));
+  const minLength = Math.min(...pathSegments.map((p) => p.length));
 
   for (let i = 0; i < minLength; i++) {
     const segment = pathSegments[0][i];
 
     // Check if all paths have the same segment at this position
-    if (pathSegments.every(p => p[i] === segment)) {
+    if (pathSegments.every((p) => p[i] === segment)) {
       commonSegments.push(segment);
     } else {
       break;
@@ -147,9 +151,8 @@ export async function detectMultipleCommands(
   }
 
   // Find common ancestor of all output directories
-  const commonOutputDir = outputDirs.length > 0
-    ? findCommonAncestor(outputDirs, cwd)
-    : null;
+  const commonOutputDir =
+    outputDirs.length > 0 ? findCommonAncestor(outputDirs, cwd) : null;
 
   return {
     commands: detectedCommands,
@@ -296,7 +299,9 @@ async function detectPackageManagerCommand(
       }
 
       // Find the last command that produces output
-      let primaryDetected = detectedCommands.find(d => d.outputDir) || detectedCommands[detectedCommands.length - 1];
+      let primaryDetected =
+        detectedCommands.find((d) => d.outputDir) ||
+        detectedCommands[detectedCommands.length - 1];
 
       // If multiple output directories, use common ancestor
       if (outputDirs.length > 1) {

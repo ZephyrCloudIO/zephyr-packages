@@ -5,6 +5,10 @@ import {
   isJavaScriptConfig,
   readPackageJson,
   readTsConfig,
+  loadWebpackConfig,
+  loadViteConfig,
+  loadRollupConfig,
+  loadSwcConfig,
 } from './config-readers';
 import type { ParsedCommand } from './shell-parser';
 import { parseShellCommand } from './shell-parser';
@@ -51,11 +55,11 @@ function findArgValue(args: string[], ...flags: string[]): string | null {
 }
 
 /** Detect the build tool and its configuration from a parsed command */
-export function detectCommand(
+export async function detectCommand(
   parsed: ParsedCommand,
   cwd: string,
   depth = 0
-): DetectedCommand {
+): Promise<DetectedCommand> {
   const { command, args } = parsed;
   const warnings: string[] = [];
 
@@ -73,7 +77,7 @@ export function detectCommand(
 
   // Detect npm/yarn/pnpm commands
   if (['npm', 'yarn', 'pnpm'].includes(command)) {
-    return detectPackageManagerCommand(command, args, cwd, warnings, depth);
+    return await detectPackageManagerCommand(command, args, cwd, warnings, depth);
   }
 
   // Detect tsc (TypeScript compiler)
@@ -83,12 +87,12 @@ export function detectCommand(
 
   // Detect webpack
   if (command === 'webpack' || command === 'webpack-cli') {
-    return detectWebpackCommand(cwd, warnings);
+    return await detectWebpackCommand(cwd, warnings);
   }
 
   // Detect rollup
   if (command === 'rollup') {
-    return detectRollupCommand(cwd, warnings);
+    return await detectRollupCommand(cwd, warnings);
   }
 
   // Detect esbuild
@@ -98,12 +102,12 @@ export function detectCommand(
 
   // Detect vite
   if (command === 'vite') {
-    return detectViteCommand(cwd, warnings);
+    return await detectViteCommand(cwd, warnings);
   }
 
   // Detect swc
   if (command === 'swc') {
-    return detectSwcCommand(cwd, warnings);
+    return await detectSwcCommand(cwd, warnings);
   }
 
   // Unknown command
@@ -119,13 +123,13 @@ export function detectCommand(
   };
 }
 
-function detectPackageManagerCommand(
+async function detectPackageManagerCommand(
   command: string,
   args: string[],
   cwd: string,
   warnings: string[],
   depth: number
-): DetectedCommand {
+): Promise<DetectedCommand> {
   const packageJson = readPackageJson(cwd);
 
   if (!packageJson) {
@@ -165,7 +169,7 @@ function detectPackageManagerCommand(
     const parsedScript = parseShellCommand(script);
 
     // Recursively detect the actual build tool
-    const detected = detectCommand(parsedScript, cwd, depth + 1);
+    const detected = await detectCommand(parsedScript, cwd, depth + 1);
 
     // Preserve the package.json reference
     if (!detected.configFile) {
@@ -222,15 +226,40 @@ function detectTscCommand(
   };
 }
 
-function detectWebpackCommand(cwd: string, warnings: string[]): DetectedCommand {
+async function detectWebpackCommand(
+  cwd: string,
+  warnings: string[]
+): Promise<DetectedCommand> {
   const configFile = configFileExists(cwd, 'webpack.config');
   const isDynamicConfig = isJavaScriptConfig(cwd, 'webpack.config');
 
+  // Try to load the config using cosmiconfig if it's a JS config
   if (isDynamicConfig) {
-    warnings.push(
-      'Webpack configuration is too dynamic to analyze.',
-      'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
-    );
+    try {
+      const loadedConfig = await loadWebpackConfig(cwd);
+
+      if (loadedConfig && loadedConfig.outputDir) {
+        // Successfully loaded and extracted output directory
+        return {
+          tool: 'webpack',
+          configFile: loadedConfig.filepath,
+          isDynamicConfig: true,
+          outputDir: loadedConfig.outputDir,
+          warnings,
+        };
+      }
+
+      // Config loaded but couldn't extract output directory
+      warnings.push(
+        'Webpack configuration loaded but output directory could not be determined.',
+        'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
+      );
+    } catch (error) {
+      warnings.push(
+        'Failed to load Webpack configuration.',
+        'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
+      );
+    }
   }
 
   return {
@@ -242,15 +271,40 @@ function detectWebpackCommand(cwd: string, warnings: string[]): DetectedCommand 
   };
 }
 
-function detectRollupCommand(cwd: string, warnings: string[]): DetectedCommand {
+async function detectRollupCommand(
+  cwd: string,
+  warnings: string[]
+): Promise<DetectedCommand> {
   const configFile = configFileExists(cwd, 'rollup.config');
   const isDynamicConfig = isJavaScriptConfig(cwd, 'rollup.config');
 
+  // Try to load the config using cosmiconfig if it's a JS config
   if (isDynamicConfig) {
-    warnings.push(
-      'Rollup configuration is too dynamic to analyze.',
-      'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
-    );
+    try {
+      const loadedConfig = await loadRollupConfig(cwd);
+
+      if (loadedConfig && loadedConfig.outputDir) {
+        // Successfully loaded and extracted output directory
+        return {
+          tool: 'rollup',
+          configFile: loadedConfig.filepath,
+          isDynamicConfig: true,
+          outputDir: loadedConfig.outputDir,
+          warnings,
+        };
+      }
+
+      // Config loaded but couldn't extract output directory
+      warnings.push(
+        'Rollup configuration loaded but output directory could not be determined.',
+        'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
+      );
+    } catch (error) {
+      warnings.push(
+        'Failed to load Rollup configuration.',
+        'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
+      );
+    }
   }
 
   return {
@@ -290,15 +344,50 @@ function detectEsbuildCommand(args: string[], warnings: string[]): DetectedComma
   };
 }
 
-function detectViteCommand(cwd: string, warnings: string[]): DetectedCommand {
+async function detectViteCommand(
+  cwd: string,
+  warnings: string[]
+): Promise<DetectedCommand> {
   const configFile = configFileExists(cwd, 'vite.config');
   const isDynamicConfig = isJavaScriptConfig(cwd, 'vite.config');
 
+  // Try to load the config using cosmiconfig if it's a JS config
   if (isDynamicConfig) {
-    warnings.push(
-      'Vite configuration is too dynamic to analyze.',
-      'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
-    );
+    try {
+      const loadedConfig = await loadViteConfig(cwd);
+
+      if (loadedConfig && loadedConfig.outputDir) {
+        // Successfully loaded and extracted output directory
+        return {
+          tool: 'vite',
+          configFile: loadedConfig.filepath,
+          isDynamicConfig: true,
+          outputDir: loadedConfig.outputDir,
+          warnings,
+        };
+      }
+
+      // Config loaded but couldn't extract output directory (fallback to default)
+      if (loadedConfig) {
+        return {
+          tool: 'vite',
+          configFile: loadedConfig.filepath,
+          isDynamicConfig: true,
+          outputDir: 'dist', // Vite default
+          warnings,
+        };
+      }
+
+      warnings.push(
+        'Failed to load Vite configuration.',
+        'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
+      );
+    } catch (error) {
+      warnings.push(
+        'Failed to load Vite configuration.',
+        'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
+      );
+    }
   }
 
   return {
@@ -310,9 +399,31 @@ function detectViteCommand(cwd: string, warnings: string[]): DetectedCommand {
   };
 }
 
-function detectSwcCommand(cwd: string, warnings: string[]): DetectedCommand {
+async function detectSwcCommand(
+  cwd: string,
+  warnings: string[]
+): Promise<DetectedCommand> {
   const configFile = configFileExists(cwd, '.swcrc');
   const isDynamicConfig = isJavaScriptConfig(cwd, '.swcrc');
+
+  // Try to load the config using cosmiconfig if it's a JS config
+  if (isDynamicConfig) {
+    try {
+      const loadedConfig = await loadSwcConfig(cwd);
+
+      if (loadedConfig) {
+        return {
+          tool: 'swc',
+          configFile: loadedConfig.filepath,
+          isDynamicConfig: true,
+          outputDir: 'dist', // SWC doesn't have standard output config
+          warnings,
+        };
+      }
+    } catch (error) {
+      warnings.push('Failed to load SWC configuration.');
+    }
+  }
 
   return {
     tool: 'swc',

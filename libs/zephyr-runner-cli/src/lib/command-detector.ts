@@ -22,6 +22,34 @@ export interface DetectedCommand {
   warnings: string[];
 }
 
+/**
+ * Find the value of a command-line argument, supporting both formats:
+ *
+ * - `--flag value` (space-separated)
+ * - `--flag=value` (equals-separated)
+ * - `-f value` (short flag with space)
+ * - `-f=value` (short flag with equals)
+ */
+function findArgValue(args: string[], ...flags: string[]): string | null {
+  for (const flag of flags) {
+    // Look for space-separated format: --flag value
+    const index = args.indexOf(flag);
+    if (index !== -1 && index + 1 < args.length) {
+      return args[index + 1];
+    }
+
+    // Look for equals format: --flag=value
+    const prefix = `${flag}=`;
+    for (const arg of args) {
+      if (arg.startsWith(prefix)) {
+        return arg.substring(prefix.length);
+      }
+    }
+  }
+
+  return null;
+}
+
 /** Detect the build tool and its configuration from a parsed command */
 export function detectCommand(
   parsed: ParsedCommand,
@@ -165,15 +193,7 @@ function detectTscCommand(
   warnings: string[]
 ): DetectedCommand {
   // Look for -p or --project flag
-  let configPath = 'tsconfig.json';
-  const pIndex = args.indexOf('-p');
-  const projectIndex = args.indexOf('--project');
-
-  if (pIndex !== -1 && args[pIndex + 1]) {
-    configPath = args[pIndex + 1];
-  } else if (projectIndex !== -1 && args[projectIndex + 1]) {
-    configPath = args[projectIndex + 1];
-  }
+  const configPath = findArgValue(args, '-p', '--project') || 'tsconfig.json';
 
   const fullConfigPath = join(cwd, configPath);
   const configExists = existsSync(fullConfigPath);
@@ -246,30 +266,15 @@ function detectEsbuildCommand(args: string[], warnings: string[]): DetectedComma
   // Look for --outdir or --outfile in args
   let outputDir: string | null = null;
 
-  // Check for both --outdir and --outdir=value formats
-  const outdirIndex = args.indexOf('--outdir');
-  const outfileIndex = args.indexOf('--outfile');
+  const outdir = findArgValue(args, '--outdir');
+  const outfile = findArgValue(args, '--outfile');
 
-  if (outdirIndex !== -1 && args[outdirIndex + 1]) {
-    outputDir = args[outdirIndex + 1];
-  } else if (outfileIndex !== -1 && args[outfileIndex + 1]) {
+  if (outdir) {
+    outputDir = outdir;
+  } else if (outfile) {
     // Extract directory from outfile
-    const outfile = args[outfileIndex + 1];
     const lastSlash = Math.max(outfile.lastIndexOf('/'), outfile.lastIndexOf('\\'));
     outputDir = lastSlash !== -1 ? outfile.substring(0, lastSlash) : '.';
-  } else {
-    // Check for --outdir=value or --outfile=value format
-    for (const arg of args) {
-      if (arg.startsWith('--outdir=')) {
-        outputDir = arg.substring('--outdir='.length);
-        break;
-      } else if (arg.startsWith('--outfile=')) {
-        const outfile = arg.substring('--outfile='.length);
-        const lastSlash = Math.max(outfile.lastIndexOf('/'), outfile.lastIndexOf('\\'));
-        outputDir = lastSlash !== -1 ? outfile.substring(0, lastSlash) : '.';
-        break;
-      }
-    }
   }
 
   if (!outputDir) {

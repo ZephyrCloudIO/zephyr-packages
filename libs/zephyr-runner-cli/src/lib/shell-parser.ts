@@ -12,6 +12,7 @@ export interface ParsedCommand {
 /**
  * Parse a shell command to extract the actual command, args, and environment variables.
  * Uses simple regex-based parsing to handle common cases like:
+ *
  * - `pnpm build`
  * - `NODE_ENV=production webpack --mode production`
  * - `KEY1=value1 KEY2=value2 command arg1 arg2`
@@ -76,9 +77,7 @@ export function parseShellCommand(commandLine: string): ParsedCommand {
   };
 }
 
-/**
- * Tokenize a command line string, respecting quotes and escapes
- */
+/** Tokenize a command line string, respecting quotes and escapes */
 function tokenizeCommand(commandLine: string): string[] {
   const tokens: string[] = [];
   let current = '';

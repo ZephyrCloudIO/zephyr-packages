@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve, relative, dirname, sep } from 'node:path';
 import {
   configFileExists,
   isJavaScriptConfig,
@@ -11,7 +11,7 @@ import {
   loadSwcConfig,
 } from './config-readers';
 import type { ParsedCommand } from './shell-parser';
-import { parseShellCommand } from './shell-parser';
+import { parseShellCommand, splitCommands } from './shell-parser';
 
 export interface DetectedCommand {
   /** The build tool detected (e.g., 'tsc', 'webpack', 'npm') */
@@ -52,6 +52,108 @@ function findArgValue(args: string[], ...flags: string[]): string | null {
   }
 
   return null;
+}
+
+/**
+ * Find the common ancestor directory of multiple paths, bounded by the project root.
+ *
+ * @param paths - Array of absolute paths
+ * @param projectRoot - The project root directory (boundary)
+ * @returns The common ancestor path, or null if paths are empty or no common ancestor within project root
+ */
+export function findCommonAncestor(paths: string[], projectRoot: string): string | null {
+  if (paths.length === 0) {
+    return null;
+  }
+
+  if (paths.length === 1) {
+    return paths[0];
+  }
+
+  // Normalize all paths to absolute
+  const normalizedPaths = paths.map(p => resolve(p));
+  const normalizedRoot = resolve(projectRoot);
+
+  // Split each path into segments
+  const pathSegments = normalizedPaths.map(p => p.split(sep));
+  const rootSegments = normalizedRoot.split(sep);
+
+  // Find the common prefix across all paths
+  let commonSegments: string[] = [];
+  const minLength = Math.min(...pathSegments.map(p => p.length));
+
+  for (let i = 0; i < minLength; i++) {
+    const segment = pathSegments[0][i];
+
+    // Check if all paths have the same segment at this position
+    if (pathSegments.every(p => p[i] === segment)) {
+      commonSegments.push(segment);
+    } else {
+      break;
+    }
+  }
+
+  // Ensure the common ancestor is within or equal to the project root
+  const commonPath = commonSegments.join(sep) || sep;
+
+  // Check if common path is within project root
+  const relativeToRoot = relative(normalizedRoot, commonPath);
+
+  // If relative path starts with '..' or is absolute, it's outside project root
+  if (relativeToRoot.startsWith('..') || resolve(commonPath) !== commonPath) {
+    return normalizedRoot;
+  }
+
+  // If common path is shallower than project root, use project root
+  if (commonSegments.length < rootSegments.length) {
+    return normalizedRoot;
+  }
+
+  return commonPath;
+}
+
+/**
+ * Detect multiple commands from a command line that may contain shell operators (;, &&).
+ * Returns output directories from all detected commands.
+ */
+export async function detectMultipleCommands(
+  commandLine: string,
+  cwd: string
+): Promise<{
+  commands: DetectedCommand[];
+  outputDirs: string[];
+  commonOutputDir: string | null;
+}> {
+  const individualCommands = splitCommands(commandLine);
+  const detectedCommands: DetectedCommand[] = [];
+  const outputDirs: string[] = [];
+
+  for (const cmd of individualCommands) {
+    try {
+      const parsed = parseShellCommand(cmd);
+      const detected = await detectCommand(parsed, cwd);
+      detectedCommands.push(detected);
+
+      if (detected.outputDir) {
+        const absoluteOutputDir = resolve(cwd, detected.outputDir);
+        outputDirs.push(absoluteOutputDir);
+      }
+    } catch (error) {
+      // Skip commands that fail to parse
+      console.error(`[ze-cli] Warning: Failed to parse command: ${cmd}`);
+    }
+  }
+
+  // Find common ancestor of all output directories
+  const commonOutputDir = outputDirs.length > 0
+    ? findCommonAncestor(outputDirs, cwd)
+    : null;
+
+  return {
+    commands: detectedCommands,
+    outputDirs,
+    commonOutputDir,
+  };
 }
 
 /** Detect the build tool and its configuration from a parsed command */

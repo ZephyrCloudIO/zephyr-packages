@@ -77,6 +77,93 @@ export function parseShellCommand(commandLine: string): ParsedCommand {
   };
 }
 
+/**
+ * Split a command line into multiple commands based on shell operators (;, &&)
+ * Respects quotes and escapes.
+ *
+ * @example
+ *   splitCommands('npm run build && npm run test');
+ *   // Returns: ['npm run build', 'npm run test']
+ *
+ * @example
+ *   splitCommands('echo "hello; world" && npm run build');
+ *   // Returns: ['echo "hello; world"', 'npm run build']
+ */
+export function splitCommands(commandLine: string): string[] {
+  const commands: string[] = [];
+  let current = '';
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let escaped = false;
+
+  for (let i = 0; i < commandLine.length; i++) {
+    const char = commandLine[i];
+    const nextChar = i + 1 < commandLine.length ? commandLine[i + 1] : '';
+
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      current += char;
+      escaped = true;
+      continue;
+    }
+
+    if (char === "'" && !inDoubleQuote) {
+      inSingleQuote = !inSingleQuote;
+      current += char;
+      continue;
+    }
+
+    if (char === '"' && !inSingleQuote) {
+      inDoubleQuote = !inDoubleQuote;
+      current += char;
+      continue;
+    }
+
+    // Check for shell operators outside quotes
+    if (!inSingleQuote && !inDoubleQuote) {
+      // Check for &&
+      if (char === '&' && nextChar === '&') {
+        const trimmed = current.trim();
+        if (trimmed) {
+          commands.push(trimmed);
+        }
+        current = '';
+        i++; // Skip the next &
+        continue;
+      }
+
+      // Check for ;
+      if (char === ';') {
+        const trimmed = current.trim();
+        if (trimmed) {
+          commands.push(trimmed);
+        }
+        current = '';
+        continue;
+      }
+    }
+
+    current += char;
+  }
+
+  // Add the last command if any
+  const trimmed = current.trim();
+  if (trimmed) {
+    commands.push(trimmed);
+  }
+
+  if (inSingleQuote || inDoubleQuote) {
+    throw new Error('Unmatched quote in command line');
+  }
+
+  return commands;
+}
+
 /** Tokenize a command line string, respecting quotes and escapes */
 function tokenizeCommand(commandLine: string): string[] {
   const tokens: string[] = [];

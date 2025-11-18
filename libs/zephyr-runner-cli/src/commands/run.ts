@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 import { ZephyrEngine, logFn, ZephyrError, ZeErrors } from 'zephyr-agent';
-import { detectCommand } from '../lib/command-detector';
+import { detectCommand, detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
-import { parseShellCommand } from '../lib/shell-parser';
+import { parseShellCommand, splitCommands } from '../lib/shell-parser';
 import { executeCommand } from '../lib/spawn-helper';
 import { uploadAssets } from '../lib/upload';
 
@@ -28,21 +28,41 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error(`[ze-cli] ${message}`);
   };
 
-  // Parse the shell command
+  // Parse the shell command - check if there are multiple commands
   log('info', `Parsing command: ${commandLine}`);
-  const parsed = parseShellCommand(commandLine);
-  log('info', `Detected command: ${parsed.command}`);
+  const individualCommands = splitCommands(commandLine);
 
-  // Detect the build tool and configuration
-  const detected = await detectCommand(parsed, cwd);
-  log('info', `Detected tool: ${detected.tool}`);
+  if (individualCommands.length > 1) {
+    log('info', `Detected ${individualCommands.length} commands to execute`);
+  }
 
-  if (detected.configFile) {
-    log('info', `Config file: ${detected.configFile}`);
+  // Detect multiple commands and their output directories
+  const multiDetection = await detectMultipleCommands(commandLine, cwd);
+  const { commands: detectedCommands, outputDirs, commonOutputDir } = multiDetection;
+
+  // Log detected tools
+  for (let i = 0; i < detectedCommands.length; i++) {
+    const detected = detectedCommands[i];
+    log('info', `Command ${i + 1}: ${detected.tool}`);
+
+    if (detected.configFile) {
+      log('info', `  Config file: ${detected.configFile}`);
+    }
+
+    if (detected.outputDir) {
+      const absoluteOutputDir = resolve(cwd, detected.outputDir);
+      log('info', `  Output directory: ${relative(cwd, absoluteOutputDir) || '.'}`);
+    }
+  }
+
+  // If multiple output directories detected, show common ancestor
+  if (outputDirs.length > 1 && commonOutputDir) {
+    log('info', `Multiple output directories detected, using common ancestor: ${relative(cwd, commonOutputDir) || '.'}`);
   }
 
   // Warn about dynamic configs
-  if (detected.isDynamicConfig) {
+  const hasDynamicConfig = detectedCommands.some(d => d.isDynamicConfig);
+  if (hasDynamicConfig) {
     console.error('[ze-cli] WARNING: Configuration is too dynamic to analyze!');
     console.error('[ze-cli] ');
     console.error(
@@ -63,27 +83,51 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error('[ze-cli] ');
   }
 
-  // Display other warnings
-  if (detected.warnings.length > 0 && !detected.isDynamicConfig) {
-    for (const warning of detected.warnings) {
-      console.error(`[ze-cli] Warning: ${warning}`);
+  // Display warnings from all commands
+  for (const detected of detectedCommands) {
+    if (detected.warnings.length > 0 && !detected.isDynamicConfig) {
+      for (const warning of detected.warnings) {
+        console.error(`[ze-cli] Warning: ${warning}`);
+      }
     }
   }
 
-  // Execute the build command
-  log('info', 'Executing build command...');
-  const result = await executeCommand(parsed, cwd);
+  // Execute all build commands sequentially
+  for (let i = 0; i < individualCommands.length; i++) {
+    const cmd = individualCommands[i];
+    log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
 
-  if (result.exitCode !== 0) {
-    throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-      message: `Build command failed with exit code ${result.exitCode}`,
-    });
+    try {
+      const parsed = parseShellCommand(cmd);
+      const result = await executeCommand(parsed, cwd);
+
+      if (result.exitCode !== 0) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: `Build command failed with exit code ${result.exitCode}`,
+        });
+      }
+
+      log('info', `Command ${i + 1} completed successfully`);
+    } catch (error) {
+      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+        message: `Failed to execute command: ${cmd}\n${(error as Error).message}`,
+      });
+    }
   }
 
-  log('info', 'Build completed successfully');
+  log('info', 'All build commands completed successfully');
+
+  // Determine which output directory to use
+  let outputDir: string | null = null;
+
+  if (commonOutputDir) {
+    outputDir = commonOutputDir;
+  } else if (detectedCommands.length === 1 && detectedCommands[0].outputDir) {
+    outputDir = resolve(cwd, detectedCommands[0].outputDir);
+  }
 
   // If we couldn't detect the output directory, stop here
-  if (!detected.outputDir) {
+  if (!outputDir) {
     console.error('[ze-cli] ');
     console.error('[ze-cli] Could not detect output directory. Skipping upload.');
     console.error('[ze-cli] Please use "ze-cli deploy <dir>" to upload manually.');
@@ -91,9 +135,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
     return;
   }
 
-  // Resolve the output directory
-  const outputDir = resolve(cwd, detected.outputDir);
-  log('info', `Output directory: ${outputDir}`);
+  log('info', `Using output directory: ${relative(cwd, outputDir) || '.'}`);
 
   // Check if output directory exists
   if (!existsSync(outputDir)) {
@@ -102,10 +144,13 @@ export async function runCommand(options: RunOptions): Promise<void> {
     });
   }
 
+  // Determine the primary build tool for ZephyrEngine
+  const primaryTool = detectedCommands[0]?.tool || 'unknown';
+
   // Initialize ZephyrEngine with project root context
   log('info', 'Initializing Zephyr Engine...');
   const zephyr_engine = await ZephyrEngine.create({
-    builder: detected.tool as any,
+    builder: primaryTool as any,
     context: cwd,
   });
 

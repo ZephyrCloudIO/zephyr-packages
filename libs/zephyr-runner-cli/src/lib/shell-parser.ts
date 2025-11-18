@@ -16,12 +16,12 @@ export interface ParsedCommand {
  * Uses sh-syntax for proper shell parsing.
  *
  * @example
- * parseShellCommand('NODE_ENV=production webpack --mode production')
- * // Returns: { command: 'webpack', envVars: { NODE_ENV: 'production' }, args: ['--mode', 'production'] }
+ *   parseShellCommand('NODE_ENV=production webpack --mode production');
+ *   // Returns: { command: 'webpack', envVars: { NODE_ENV: 'production' }, args: ['--mode', 'production'] }
  *
  * @example
- * parseShellCommand('pnpm build')
- * // Returns: { command: 'pnpm', envVars: {}, args: ['build'] }
+ *   parseShellCommand('pnpm build');
+ *   // Returns: { command: 'pnpm', envVars: {}, args: ['build'] }
  */
 export function parseShellCommand(commandLine: string): ParsedCommand {
   const envVars: Record<string, string> = {};

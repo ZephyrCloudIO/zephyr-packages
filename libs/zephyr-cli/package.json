@@ -1,12 +1,13 @@
 {
   "name": "zephyr-cli",
-  "version": "0.1.1",
-  "description": "Standalone CLI tool for uploading assets to Zephyr",
+  "version": "0.1.0",
+  "description": "CLI tool for running build commands and uploading assets to Zephyr",
   "keywords": [
     "zephyr",
     "cli",
     "deploy",
-    "upload"
+    "build",
+    "runner"
   ],
   "repository": {
     "type": "git",
@@ -22,13 +23,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "zephyr": "dist/index.js"
+    "ze-cli": "dist/index.js"
   },
   "scripts": {
     "build": "nx run zephyr-cli:build",
     "patch-version": "pnpm version"
   },
   "dependencies": {
+    "cosmiconfig": "^9.0.0",
+    "jsonc-parser": "^3.3.1",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },

@@ -34,7 +34,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
   log('info', `Detected command: ${parsed.command}`);
 
   // Detect the build tool and configuration
-  const detected = detectCommand(parsed, cwd);
+  const detected = await detectCommand(parsed, cwd);
   log('info', `Detected tool: ${detected.tool}`);
 
   if (detected.configFile) {

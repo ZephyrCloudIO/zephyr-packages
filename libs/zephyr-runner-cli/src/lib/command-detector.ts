@@ -21,13 +21,8 @@ export interface DetectedCommand {
   warnings: string[];
 }
 
-/**
- * Detect the build tool and its configuration from a parsed command
- */
-export function detectCommand(
-  parsed: ParsedCommand,
-  cwd: string
-): DetectedCommand {
+/** Detect the build tool and its configuration from a parsed command */
+export function detectCommand(parsed: ParsedCommand, cwd: string): DetectedCommand {
   const { command, args } = parsed;
   const warnings: string[] = [];
 
@@ -107,9 +102,7 @@ function detectPackageManagerCommand(
   }
 
   if (!scriptName || !packageJson.scripts?.[scriptName]) {
-    warnings.push(
-      `Script "${scriptName || 'unknown'}" not found in package.json`
-    );
+    warnings.push(`Script "${scriptName || 'unknown'}" not found in package.json`);
     return {
       tool: command,
       configFile: join(cwd, 'package.json'),
@@ -211,10 +204,7 @@ function detectRollupCommand(cwd: string, warnings: string[]): DetectedCommand {
   };
 }
 
-function detectEsbuildCommand(
-  args: string[],
-  warnings: string[]
-): DetectedCommand {
+function detectEsbuildCommand(args: string[], warnings: string[]): DetectedCommand {
   // Look for --outdir or --outfile in args
   let outputDir: string | null = null;
 

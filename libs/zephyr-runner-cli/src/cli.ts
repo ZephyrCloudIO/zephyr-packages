@@ -11,15 +11,17 @@ export interface CliOptions {
  * Parse command line arguments.
  *
  * Syntax:
- * - ze-cli [options] <command> [args...] - run command (default)
- * - ze-cli deploy <directory> [options] - deploy command
+ *
+ * - Ze-cli [options] <command> [args...] - run command (default)
+ * - Ze-cli deploy <directory> [options] - deploy command
  *
  * Examples:
- * - ze-cli --ssr pnpm build
- * - ze-cli tsc
- * - ze-cli NODE_ENV=production webpack
- * - ze-cli deploy ./dist
- * - ze-cli deploy ./dist --ssr
+ *
+ * - Ze-cli --ssr pnpm build
+ * - Ze-cli tsc
+ * - Ze-cli NODE_ENV=production webpack
+ * - Ze-cli deploy ./dist
+ * - Ze-cli deploy ./dist --ssr
  */
 export function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {

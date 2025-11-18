@@ -1,12 +1,13 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { ParsedCommand } from './shell-parser';
 import {
   configFileExists,
   isJavaScriptConfig,
   readPackageJson,
   readTsConfig,
 } from './config-readers';
+import type { ParsedCommand } from './shell-parser';
+import { parseShellCommand } from './shell-parser';
 
 export interface DetectedCommand {
   /** The build tool detected (e.g., 'tsc', 'webpack', 'npm') */
@@ -22,13 +23,29 @@ export interface DetectedCommand {
 }
 
 /** Detect the build tool and its configuration from a parsed command */
-export function detectCommand(parsed: ParsedCommand, cwd: string): DetectedCommand {
+export function detectCommand(
+  parsed: ParsedCommand,
+  cwd: string,
+  depth = 0
+): DetectedCommand {
   const { command, args } = parsed;
   const warnings: string[] = [];
 
+  // Prevent infinite recursion
+  if (depth > 3) {
+    warnings.push('Max recursion depth reached while parsing scripts');
+    return {
+      tool: command,
+      configFile: null,
+      isDynamicConfig: false,
+      outputDir: null,
+      warnings,
+    };
+  }
+
   // Detect npm/yarn/pnpm commands
   if (['npm', 'yarn', 'pnpm'].includes(command)) {
-    return detectPackageManagerCommand(command, args, cwd, warnings);
+    return detectPackageManagerCommand(command, args, cwd, warnings, depth);
   }
 
   // Detect tsc (TypeScript compiler)
@@ -78,7 +95,8 @@ function detectPackageManagerCommand(
   command: string,
   args: string[],
   cwd: string,
-  warnings: string[]
+  warnings: string[],
+  depth: number
 ): DetectedCommand {
   const packageJson = readPackageJson(cwd);
 
@@ -112,13 +130,33 @@ function detectPackageManagerCommand(
     };
   }
 
-  return {
-    tool: command,
-    configFile: join(cwd, 'package.json'),
-    isDynamicConfig: false,
-    outputDir: 'dist', // Common default, may not be accurate
-    warnings,
-  };
+  const script = packageJson.scripts[scriptName];
+
+  // Parse the script command to extract the actual tool
+  try {
+    const parsedScript = parseShellCommand(script);
+
+    // Recursively detect the actual build tool
+    const detected = detectCommand(parsedScript, cwd, depth + 1);
+
+    // Preserve the package.json reference
+    if (!detected.configFile) {
+      detected.configFile = join(cwd, 'package.json');
+    }
+
+    return detected;
+  } catch (error) {
+    warnings.push(`Failed to parse package.json script "${scriptName}": ${script}`);
+    warnings.push(`Parse error: ${(error as Error).message}`);
+
+    return {
+      tool: command,
+      configFile: join(cwd, 'package.json'),
+      isDynamicConfig: false,
+      outputDir: null,
+      warnings,
+    };
+  }
 }
 
 function detectTscCommand(

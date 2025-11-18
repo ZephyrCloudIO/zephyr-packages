@@ -41,8 +41,19 @@ export async function runCommand(options: RunOptions): Promise<void> {
   const { commands: detectedCommands, outputDirs, commonOutputDir } = multiDetection;
 
   // Log detected tools
-  for (let i = 0; i < detectedCommands.length; i++) {
-    const detected = detectedCommands[i];
+  // Flatten commands if there are sub-commands
+  const allCommands: typeof detectedCommands = [];
+  for (const detected of detectedCommands) {
+    if (detected.subCommands && detected.subCommands.length > 0) {
+      // If there are sub-commands, log them instead of the parent
+      allCommands.push(...detected.subCommands);
+    } else {
+      allCommands.push(detected);
+    }
+  }
+
+  for (let i = 0; i < allCommands.length; i++) {
+    const detected = allCommands[i];
     log('info', `Command ${i + 1}: ${detected.tool}`);
 
     if (detected.configFile) {

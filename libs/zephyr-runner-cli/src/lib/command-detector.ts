@@ -24,6 +24,8 @@ export interface DetectedCommand {
   outputDir: string | null;
   /** Warnings to display to the user */
   warnings: string[];
+  /** Sub-commands detected when a command expands to multiple commands (e.g., npm script with &&) */
+  subCommands?: DetectedCommand[];
 }
 
 /**
@@ -318,6 +320,8 @@ async function detectPackageManagerCommand(
       }
 
       primaryDetected.warnings = allWarnings;
+      // Store sub-commands for logging purposes
+      primaryDetected.subCommands = detectedCommands;
       return primaryDetected;
     }
 

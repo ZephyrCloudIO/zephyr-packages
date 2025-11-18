@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
-import { resolve, relative } from 'node:path';
-import { ZephyrEngine, logFn, ZephyrError, ZeErrors } from 'zephyr-agent';
-import { detectCommand, detectMultipleCommands } from '../lib/command-detector';
+import { relative, resolve } from 'node:path';
+import { ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { parseShellCommand, splitCommands } from '../lib/shell-parser';
 import { executeCommand } from '../lib/spawn-helper';
@@ -68,12 +68,14 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
   // If multiple output directories detected, show common ancestor
   if (outputDirs.length > 1 && commonOutputDir) {
-    log('info', `Multiple output directories detected, using common ancestor: ${relative(cwd, commonOutputDir) || '.'}`);
+    log(
+      'info',
+      `Multiple output directories detected, using common ancestor: ${relative(cwd, commonOutputDir) || '.'}`
+    );
   }
 
   // Warn about dynamic configs
-  const hasDynamicConfig = detectedCommands.some(d => d.isDynamicConfig);
-  if (hasDynamicConfig) {
+  if (!outputDirs.length) {
     console.error('[ze-cli] WARNING: Configuration is too dynamic to analyze!');
     console.error('[ze-cli] ');
     console.error(

@@ -1,7 +1,7 @@
+import { cosmiconfig } from 'cosmiconfig';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse as parseJsonc } from 'jsonc-parser';
-import { cosmiconfig } from 'cosmiconfig';
 
 export interface PackageJsonConfig {
   scripts?: Record<string, string>;
@@ -56,7 +56,7 @@ export function readTsConfig(
 
 /** Check if a file exists and has a .js or .mjs extension */
 export function isJavaScriptConfig(cwd: string, baseName: string): boolean {
-  const jsExtensions = ['.js', '.mjs', '.cjs'];
+  const jsExtensions = ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts'];
 
   for (const ext of jsExtensions) {
     const configPath = join(cwd, `${baseName}${ext}`);
@@ -82,9 +82,7 @@ export function configFileExists(cwd: string, baseName: string): string | null {
   return null;
 }
 
-/**
- * Generic interface for framework configuration with output directory
- */
+/** Generic interface for framework configuration with output directory */
 export interface FrameworkConfig {
   /** The detected output directory from the config */
   outputDir?: string | null;
@@ -94,12 +92,8 @@ export interface FrameworkConfig {
   filepath: string;
 }
 
-/**
- * Load Webpack configuration using cosmiconfig
- */
-export async function loadWebpackConfig(
-  cwd: string
-): Promise<FrameworkConfig | null> {
+/** Load Webpack configuration using cosmiconfig */
+export async function loadWebpackConfig(cwd: string): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('webpack', {
       searchPlaces: [
@@ -143,12 +137,8 @@ export async function loadWebpackConfig(
   }
 }
 
-/**
- * Load Vite configuration using cosmiconfig
- */
-export async function loadViteConfig(
-  cwd: string
-): Promise<FrameworkConfig | null> {
+/** Load Vite configuration using cosmiconfig */
+export async function loadViteConfig(cwd: string): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('vite', {
       searchPlaces: [
@@ -192,12 +182,8 @@ export async function loadViteConfig(
   }
 }
 
-/**
- * Load Rollup configuration using cosmiconfig
- */
-export async function loadRollupConfig(
-  cwd: string
-): Promise<FrameworkConfig | null> {
+/** Load Rollup configuration using cosmiconfig */
+export async function loadRollupConfig(cwd: string): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('rollup', {
       searchPlaces: [
@@ -223,7 +209,8 @@ export async function loadRollupConfig(
         const resolvedConfig = await config({});
         if (Array.isArray(resolvedConfig)) {
           // Multiple outputs - take the first one
-          outputDir = resolvedConfig[0]?.output?.dir || resolvedConfig[0]?.output?.file || null;
+          outputDir =
+            resolvedConfig[0]?.output?.dir || resolvedConfig[0]?.output?.file || null;
         } else {
           outputDir = resolvedConfig?.output?.dir || resolvedConfig?.output?.file || null;
         }
@@ -256,21 +243,11 @@ export async function loadRollupConfig(
   }
 }
 
-/**
- * Load SWC configuration using cosmiconfig
- */
-export async function loadSwcConfig(
-  cwd: string
-): Promise<FrameworkConfig | null> {
+/** Load SWC configuration using cosmiconfig */
+export async function loadSwcConfig(cwd: string): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('swc', {
-      searchPlaces: [
-        '.swcrc',
-        '.swcrc.json',
-        '.swcrc.js',
-        '.swcrc.mjs',
-        '.swcrc.cjs',
-      ],
+      searchPlaces: ['.swcrc', '.swcrc.json', '.swcrc.js', '.swcrc.mjs', '.swcrc.cjs'],
     });
 
     const result = await explorer.search(cwd);

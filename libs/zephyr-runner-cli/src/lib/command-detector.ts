@@ -246,6 +246,7 @@ function detectEsbuildCommand(args: string[], warnings: string[]): DetectedComma
   // Look for --outdir or --outfile in args
   let outputDir: string | null = null;
 
+  // Check for both --outdir and --outdir=value formats
   const outdirIndex = args.indexOf('--outdir');
   const outfileIndex = args.indexOf('--outfile');
 
@@ -256,6 +257,19 @@ function detectEsbuildCommand(args: string[], warnings: string[]): DetectedComma
     const outfile = args[outfileIndex + 1];
     const lastSlash = Math.max(outfile.lastIndexOf('/'), outfile.lastIndexOf('\\'));
     outputDir = lastSlash !== -1 ? outfile.substring(0, lastSlash) : '.';
+  } else {
+    // Check for --outdir=value or --outfile=value format
+    for (const arg of args) {
+      if (arg.startsWith('--outdir=')) {
+        outputDir = arg.substring('--outdir='.length);
+        break;
+      } else if (arg.startsWith('--outfile=')) {
+        const outfile = arg.substring('--outfile='.length);
+        const lastSlash = Math.max(outfile.lastIndexOf('/'), outfile.lastIndexOf('\\'));
+        outputDir = lastSlash !== -1 ? outfile.substring(0, lastSlash) : '.';
+        break;
+      }
+    }
   }
 
   if (!outputDir) {

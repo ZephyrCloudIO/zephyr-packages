@@ -1,5 +1,3 @@
-import { parse } from 'sh-syntax';
-
 export interface ParsedCommand {
   /** The main command to execute (without environment variables) */
   command: string;
@@ -13,7 +11,10 @@ export interface ParsedCommand {
 
 /**
  * Parse a shell command to extract the actual command, args, and environment variables.
- * Uses sh-syntax for proper shell parsing.
+ * Uses simple regex-based parsing to handle common cases like:
+ * - `pnpm build`
+ * - `NODE_ENV=production webpack --mode production`
+ * - `KEY1=value1 KEY2=value2 command arg1 arg2`
  *
  * @example
  *   parseShellCommand('NODE_ENV=production webpack --mode production');
@@ -23,58 +24,49 @@ export interface ParsedCommand {
  *   parseShellCommand('pnpm build');
  *   // Returns: { command: 'pnpm', envVars: {}, args: ['build'] }
  */
-export async function parseShellCommand(
-  commandLine: string
-): Promise<ParsedCommand> {
+export function parseShellCommand(commandLine: string): ParsedCommand {
   const envVars: Record<string, string> = {};
-  let command = '';
-  const args: string[] = [];
+  const trimmed = commandLine.trim();
 
-  // Use sh-syntax for robust parsing
-  const file = await parse(commandLine);
-
-  if (!file.Stmts || file.Stmts.length === 0) {
-    throw new Error(
-      `Failed to parse command: ${commandLine}\nNo statements found in parsed AST`
-    );
+  if (!trimmed) {
+    throw new Error('Empty command line');
   }
 
-  const firstStmt = file.Stmts[0];
-  const cmd = firstStmt.Cmd as any;
+  // Split by whitespace while respecting quotes
+  const tokens = tokenizeCommand(trimmed);
 
-  // Check if this is a CallExpr (simple command)
-  if (!cmd || !cmd.Args) {
-    throw new Error(
-      `Failed to parse command: ${commandLine}\nUnsupported command structure`
-    );
+  if (tokens.length === 0) {
+    throw new Error(`Failed to parse command: ${commandLine}`);
   }
 
-  // Look for assignments (environment variables)
-  if (cmd.Assigns && cmd.Assigns.length > 0) {
-    for (const assign of cmd.Assigns) {
-      if (assign.Name && assign.Value) {
-        const name = (assign.Name as any).Value || '';
-        const value = extractWordValue(assign.Value);
-        if (name) {
-          envVars[name] = value;
-        }
-      }
+  let i = 0;
+
+  // Extract environment variables (KEY=VALUE format at the beginning)
+  while (i < tokens.length) {
+    const token = tokens[i];
+    const match = token.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+
+    if (match) {
+      const [, name, value] = match;
+      envVars[name] = value;
+      i++;
+    } else {
+      break;
     }
   }
 
-  // Extract command and arguments
-  if (cmd.Args && cmd.Args.length > 0) {
-    command = extractWordValue(cmd.Args[0]);
-    for (let i = 1; i < cmd.Args.length; i++) {
-      args.push(extractWordValue(cmd.Args[i]));
-    }
-  }
-
-  if (!command) {
+  // The next token should be the command
+  if (i >= tokens.length) {
     throw new Error(
-      `Failed to parse command: ${commandLine}\nCould not extract command name`
+      `Failed to parse command: ${commandLine}\nNo command found after environment variables`
     );
   }
+
+  const command = tokens[i];
+  i++;
+
+  // Remaining tokens are arguments
+  const args = tokens.slice(i);
 
   return {
     command,
@@ -85,22 +77,57 @@ export async function parseShellCommand(
 }
 
 /**
- * Helper function to extract text value from a Word node
+ * Tokenize a command line string, respecting quotes and escapes
  */
-function extractWordValue(word: any): string {
-  if (!word) return '';
+function tokenizeCommand(commandLine: string): string[] {
+  const tokens: string[] = [];
+  let current = '';
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let escaped = false;
 
-  // If it has a Lit property, use that
-  if (word.Lit) return word.Lit;
+  for (let i = 0; i < commandLine.length; i++) {
+    const char = commandLine[i];
 
-  // If it has Parts, concatenate them
-  if (word.Parts && word.Parts.length > 0) {
-    return word.Parts.map((part: any) => {
-      if (part.Value) return part.Value;
-      if (part.Lit) return part.Lit;
-      return '';
-    }).join('');
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+
+    if (char === "'" && !inDoubleQuote) {
+      inSingleQuote = !inSingleQuote;
+      continue;
+    }
+
+    if (char === '"' && !inSingleQuote) {
+      inDoubleQuote = !inDoubleQuote;
+      continue;
+    }
+
+    if (/\s/.test(char) && !inSingleQuote && !inDoubleQuote) {
+      if (current) {
+        tokens.push(current);
+        current = '';
+      }
+      continue;
+    }
+
+    current += char;
   }
 
-  return '';
+  if (current) {
+    tokens.push(current);
+  }
+
+  if (inSingleQuote || inDoubleQuote) {
+    throw new Error('Unmatched quote in command line');
+  }
+
+  return tokens;
 }

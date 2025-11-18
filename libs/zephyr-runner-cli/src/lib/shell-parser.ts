@@ -1,4 +1,4 @@
-import { parseScript } from 'sh-syntax';
+import { parse } from 'sh-syntax';
 
 export interface ParsedCommand {
   /** The main command to execute (without environment variables) */
@@ -23,63 +23,57 @@ export interface ParsedCommand {
  *   parseShellCommand('pnpm build');
  *   // Returns: { command: 'pnpm', envVars: {}, args: ['build'] }
  */
-export function parseShellCommand(commandLine: string): ParsedCommand {
+export async function parseShellCommand(
+  commandLine: string
+): Promise<ParsedCommand> {
   const envVars: Record<string, string> = {};
   let command = '';
   const args: string[] = [];
 
-  try {
-    const ast = parseScript(commandLine);
+  // Use sh-syntax for robust parsing
+  const file = await parse(commandLine);
 
-    // Find the first command in the script
-    if (ast.commands && ast.commands.length > 0) {
-      const firstCommand = ast.commands[0];
+  if (!file.Stmts || file.Stmts.length === 0) {
+    throw new Error(
+      `Failed to parse command: ${commandLine}\nNo statements found in parsed AST`
+    );
+  }
 
-      if (firstCommand.type === 'Command' && firstCommand.prefix) {
-        // Extract environment variables from prefix
-        for (const item of firstCommand.prefix) {
-          if (item.type === 'AssignmentWord') {
-            const match = item.text.match(/^([^=]+)=(.*)$/);
-            if (match) {
-              envVars[match[1]] = match[2];
-            }
-          }
-        }
-      }
+  const firstStmt = file.Stmts[0];
+  const cmd = firstStmt.Cmd as any;
 
-      // Extract command name and arguments
-      if (firstCommand.type === 'Command' && firstCommand.name) {
-        command = firstCommand.name.text;
+  // Check if this is a CallExpr (simple command)
+  if (!cmd || !cmd.Args) {
+    throw new Error(
+      `Failed to parse command: ${commandLine}\nUnsupported command structure`
+    );
+  }
 
-        if (firstCommand.suffix) {
-          for (const item of firstCommand.suffix) {
-            if (item.type === 'Word') {
-              args.push(item.text);
-            }
-          }
+  // Look for assignments (environment variables)
+  if (cmd.Assigns && cmd.Assigns.length > 0) {
+    for (const assign of cmd.Assigns) {
+      if (assign.Name && assign.Value) {
+        const name = (assign.Name as any).Value || '';
+        const value = extractWordValue(assign.Value);
+        if (name) {
+          envVars[name] = value;
         }
       }
     }
-  } catch (error) {
-    // If parsing fails, fall back to simple splitting
-    // This handles cases where sh-syntax can't parse the command
-    const parts = commandLine.trim().split(/\s+/);
-    let foundCommand = false;
+  }
 
-    for (const part of parts) {
-      if (!foundCommand && part.includes('=')) {
-        // This looks like an environment variable
-        const [key, ...valueParts] = part.split('=');
-        envVars[key] = valueParts.join('=');
-      } else if (!foundCommand) {
-        // First non-env part is the command
-        command = part;
-        foundCommand = true;
-      } else {
-        // Rest are arguments
-        args.push(part);
-      }
+  // Extract command and arguments
+  if (cmd.Args && cmd.Args.length > 0) {
+    command = extractWordValue(cmd.Args[0]);
+    for (let i = 1; i < cmd.Args.length; i++) {
+      args.push(extractWordValue(cmd.Args[i]));
     }
+  }
+
+  if (!command) {
+    throw new Error(
+      `Failed to parse command: ${commandLine}\nCould not extract command name`
+    );
   }
 
   return {
@@ -88,4 +82,25 @@ export function parseShellCommand(commandLine: string): ParsedCommand {
     args,
     fullCommand: commandLine,
   };
+}
+
+/**
+ * Helper function to extract text value from a Word node
+ */
+function extractWordValue(word: any): string {
+  if (!word) return '';
+
+  // If it has a Lit property, use that
+  if (word.Lit) return word.Lit;
+
+  // If it has Parts, concatenate them
+  if (word.Parts && word.Parts.length > 0) {
+    return word.Parts.map((part: any) => {
+      if (part.Value) return part.Value;
+      if (part.Lit) return part.Lit;
+      return '';
+    }).join('');
+  }
+
+  return '';
 }

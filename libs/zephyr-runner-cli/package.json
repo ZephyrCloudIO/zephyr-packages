@@ -1,0 +1,47 @@
+{
+  "name": "zephyr-runner-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for running build commands and uploading assets to Zephyr",
+  "keywords": [
+    "zephyr",
+    "cli",
+    "deploy",
+    "build",
+    "runner"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-runner-cli"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ze-cli": "dist/index.js"
+  },
+  "scripts": {
+    "build": "nx run zephyr-runner-cli:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "tslib": "catalog:typescript",
+    "zephyr-agent": "workspace:*",
+    "sh-syntax": "^0.4.2"
+  },
+  "devDependencies": {
+    "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

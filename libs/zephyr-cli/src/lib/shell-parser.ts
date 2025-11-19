@@ -1,3 +1,5 @@
+import { ZephyrError } from 'zephyr-agent';
+
 export interface ParsedCommand {
   /** The main command to execute (without environment variables) */
   command: string;
@@ -30,14 +32,14 @@ export function parseShellCommand(commandLine: string): ParsedCommand {
   const trimmed = commandLine.trim();
 
   if (!trimmed) {
-    throw new Error('Empty command line');
+    throw new ZephyrError('Empty command line');
   }
 
   // Split by whitespace while respecting quotes
   const tokens = tokenizeCommand(trimmed);
 
   if (tokens.length === 0) {
-    throw new Error(`Failed to parse command: ${commandLine}`);
+    throw new ZephyrError(`Failed to parse command: ${commandLine}`);
   }
 
   let i = 0;
@@ -58,7 +60,7 @@ export function parseShellCommand(commandLine: string): ParsedCommand {
 
   // The next token should be the command
   if (i >= tokens.length) {
-    throw new Error(
+    throw new ZephyrError(
       `Failed to parse command: ${commandLine}\nNo command found after environment variables`
     );
   }
@@ -158,7 +160,7 @@ export function splitCommands(commandLine: string): string[] {
   }
 
   if (inSingleQuote || inDoubleQuote) {
-    throw new Error('Unmatched quote in command line');
+    throw new ZephyrError('Unmatched quote in command line');
   }
 
   return commands;
@@ -212,7 +214,7 @@ function tokenizeCommand(commandLine: string): string[] {
   }
 
   if (inSingleQuote || inDoubleQuote) {
-    throw new Error('Unmatched quote in command line');
+    throw new ZephyrError('Unmatched quote in command line');
   }
 
   return tokens;

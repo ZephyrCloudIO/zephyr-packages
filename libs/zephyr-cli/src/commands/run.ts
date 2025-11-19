@@ -163,6 +163,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
   // Initialize ZephyrEngine with project root context
   log('info', 'Initializing Zephyr Engine...');
   const zephyr_engine = await ZephyrEngine.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     builder: primaryTool as any,
     context: cwd,
   });

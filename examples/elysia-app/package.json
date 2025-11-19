@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "tsx ./src/index.ts",
-    "build": "ze-cli --ssr esbuild src/index.ts --bundle --platform=neutral --main-fields=browser,main --outfile=dist/index.mjs"
+    "build": "pnpm ze-cli --ssr esbuild src/index.ts --bundle --platform=neutral --main-fields=browser,main --outfile=dist/index.mjs"
   },
   "devDependencies": {
     "esbuild": "catalog:esbuild",

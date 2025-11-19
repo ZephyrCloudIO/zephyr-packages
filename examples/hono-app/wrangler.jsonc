@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hono-app",
   "main": "src/index.ts",
-  "compatibility_date": "2025-11-18"
+  "compatibility_date": "2025-11-18",
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],

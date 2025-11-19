@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join, resolve, relative, dirname, sep } from 'node:path';
+import { join, resolve, relative, sep } from 'node:path';
 import {
   configFileExists,
   isJavaScriptConfig,
@@ -85,7 +85,7 @@ export function findCommonAncestor(paths: string[], projectRoot: string): string
   const rootSegments = normalizedRoot.split(sep);
 
   // Find the common prefix across all paths
-  let commonSegments: string[] = [];
+  const commonSegments: string[] = [];
   const minLength = Math.min(...pathSegments.map((p) => p.length));
 
   for (let i = 0; i < minLength; i++) {
@@ -144,7 +144,7 @@ export async function detectMultipleCommands(
         const absoluteOutputDir = resolve(cwd, detected.outputDir);
         outputDirs.push(absoluteOutputDir);
       }
-    } catch (error) {
+    } catch {
       // Skip commands that fail to parse
       console.error(`[ze-cli] Warning: Failed to parse command: ${cmd}`);
     }
@@ -292,7 +292,7 @@ async function detectPackageManagerCommand(
           }
 
           allWarnings.push(...detected.warnings);
-        } catch (error) {
+        } catch {
           // Skip commands that fail to parse
           allWarnings.push(`Failed to parse sub-command: ${cmd}`);
         }
@@ -419,7 +419,7 @@ async function detectWebpackCommand(
         'Webpack configuration loaded but output directory could not be determined.',
         'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
       );
-    } catch (error) {
+    } catch {
       warnings.push(
         'Failed to load Webpack configuration.',
         'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
@@ -464,7 +464,7 @@ async function detectRollupCommand(
         'Rollup configuration loaded but output directory could not be determined.',
         'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
       );
-    } catch (error) {
+    } catch {
       warnings.push(
         'Failed to load Rollup configuration.',
         'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
@@ -547,7 +547,7 @@ async function detectViteCommand(
         'Failed to load Vite configuration.',
         'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
       );
-    } catch (error) {
+    } catch {
       warnings.push(
         'Failed to load Vite configuration.',
         'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
@@ -585,7 +585,7 @@ async function detectSwcCommand(
           warnings,
         };
       }
-    } catch (error) {
+    } catch {
       warnings.push('Failed to load SWC configuration.');
     }
   }

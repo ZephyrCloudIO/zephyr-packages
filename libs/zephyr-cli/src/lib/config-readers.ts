@@ -28,7 +28,7 @@ export function readPackageJson(cwd: string): PackageJsonConfig | null {
   try {
     const content = readFileSync(packageJsonPath, 'utf-8');
     return parseJsonc(content);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -87,6 +87,7 @@ export interface FrameworkConfig {
   /** The detected output directory from the config */
   outputDir?: string | null;
   /** The full configuration object (framework-specific) */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: any;
   /** The file path where the config was loaded from */
   filepath: string;
@@ -131,7 +132,7 @@ export async function loadWebpackConfig(cwd: string): Promise<FrameworkConfig | 
       config: result.config,
       filepath: result.filepath,
     };
-  } catch (error) {
+  } catch {
     // If loading fails, return null
     return null;
   }
@@ -177,7 +178,7 @@ export async function loadViteConfig(cwd: string): Promise<FrameworkConfig | nul
       config: result.config,
       filepath: result.filepath,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -238,7 +239,7 @@ export async function loadRollupConfig(cwd: string): Promise<FrameworkConfig | n
       config: result.config,
       filepath: result.filepath,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -262,7 +263,7 @@ export async function loadSwcConfig(cwd: string): Promise<FrameworkConfig | null
       config: result.config,
       filepath: result.filepath,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

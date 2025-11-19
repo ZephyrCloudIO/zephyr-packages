@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { cwd } from 'node:process';
-import { ZephyrError, logFn } from 'zephyr-agent';
+import { ZephyrError } from 'zephyr-agent';
 import { parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
 import { runCommand } from './commands/run';
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
     // Dispatch to the appropriate command
     if (options.command === 'deploy') {
       if (!options.directory) {
-        throw new Error('Directory is required for deploy command');
+        throw new ZephyrError('Directory is required for deploy command');
       }
 
       await deployCommand({
@@ -30,7 +30,7 @@ async function main(): Promise<void> {
       });
     } else if (options.command === 'run') {
       if (!options.commandLine) {
-        throw new Error('Command line is required for run command');
+        throw new ZephyrError('Command line is required for run command');
       }
 
       await runCommand({

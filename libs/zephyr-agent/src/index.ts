@@ -112,5 +112,15 @@ export {
   type DownloadTask,
 } from './lib/ota/bundle-download-manager';
 
+// OTA Bundle Cache Manager exports
+export {
+  BundleCacheManager,
+  EvictionStrategy,
+  type CacheMetrics,
+  type CachePolicy,
+  type EvictionResult,
+  type VersionInfo,
+} from './lib/ota/bundle-cache-manager';
+
 // HTTP utilities
 export { fetchWithRetries } from './lib/http/fetch-with-retries';

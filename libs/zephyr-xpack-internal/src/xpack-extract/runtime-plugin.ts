@@ -20,6 +20,10 @@ export interface ZephyrRuntimePluginMobileOptions {
   onManifestError?: (error: Error) => void;
   /** Custom manifest URL (defaults to /zephyr-manifest.json) */
   manifestUrl?: string;
+  /** Bundle cache manager for offline bundle loading (optional) */
+  cacheManager?: any; // Type will be BundleCacheManager from zephyr-agent
+  /** Enable debug logging for cache operations */
+  debug?: boolean;
 }
 
 export interface ZephyrRuntimePluginInstance {
@@ -220,6 +224,8 @@ export function createZephyrRuntimePluginMobile(
     onManifestChange,
     onManifestError,
     manifestUrl = '/zephyr-manifest.json',
+    cacheManager,
+    debug = false,
   } = options;
 
   let processedRemotes: Record<string, ZephyrDependency> | undefined;
@@ -342,6 +348,64 @@ export function createZephyrRuntimePluginMobile(
 
   zephyrManifestPromise = initializeManifest();
 
+  /**
+   * Check if bundle is cached and return file:// URL if available Falls back to network
+   * URL if not cached
+   */
+  async function getResolvedUrlWithCache(
+    dependency: ZephyrDependency
+  ): Promise<{ url: string; fromCache: boolean }> {
+    // First check session storage override (for development/testing)
+    const sessionEdgeURL = _global.sessionStorage?.getItem(dependency.application_uid);
+    if (sessionEdgeURL) {
+      let url = sessionEdgeURL;
+      if (url.indexOf('@') !== -1) {
+        const [, urlPart] = url.split('@') as [string, string];
+        url = urlPart;
+      }
+      return { url, fromCache: false };
+    }
+
+    // If cache manager is available, check for cached bundles
+    if (cacheManager && dependency.bundles && dependency.bundles.length > 0) {
+      try {
+        // Check if main bundle (remoteEntry) is cached
+        const mainBundle = dependency.bundles[0]; // Assume first bundle is remoteEntry
+        const isCached = await cacheManager.isCached(mainBundle.checksum);
+
+        if (isCached) {
+          // Get file:// URL from storage layer
+          const storageLayer = (cacheManager as any).storageLayer;
+          if (storageLayer) {
+            const cachedPath = await storageLayer.getBundlePath(mainBundle.checksum);
+            if (cachedPath) {
+              if (debug) {
+                console.log(
+                  `[Zephyr] Loading ${dependency.name} from cache:`,
+                  cachedPath
+                );
+              }
+              return { url: cachedPath, fromCache: true };
+            }
+          }
+        }
+      } catch (error) {
+        if (debug) {
+          console.warn('[Zephyr] Cache check failed, falling back to network:', error);
+        }
+      }
+    }
+
+    // Fallback to network URL
+    let networkUrl = dependency.remote_entry_url;
+    if (networkUrl.indexOf('@') !== -1) {
+      const [, url] = networkUrl.split('@') as [string, string];
+      networkUrl = url;
+    }
+
+    return { url: networkUrl, fromCache: false };
+  }
+
   const plugin: FederationRuntimePlugin = {
     name: 'zephyr-runtime-remote-resolver-ota',
     async beforeRequest(args) {
@@ -358,8 +422,10 @@ export function createZephyrRuntimePluginMobile(
         return args; // No matching remote found
       }
 
-      // Get the resolved URL, checking session storage first
-      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
+      // Get the resolved URL, checking cache first if available
+      const { url: resolvedUrl, fromCache } = await getResolvedUrlWithCache(
+        processedRemotes[remoteName]
+      );
 
       const targetRemote = args.options.remotes.find(
         (remote) =>
@@ -370,8 +436,16 @@ export function createZephyrRuntimePluginMobile(
         return args;
       }
 
-      // Update the remote entry URL
+      // Update the remote entry URL (may be file:// for cached bundles)
       targetRemote.entry = resolvedUrl;
+
+      // Log cache status if debug enabled
+      if (debug) {
+        console.log(`[Zephyr] Loading ${remoteName}:`, {
+          fromCache,
+          url: resolvedUrl,
+        });
+      }
 
       return args;
     },

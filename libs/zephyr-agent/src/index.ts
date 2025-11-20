@@ -85,5 +85,20 @@ export {
   type ZephyrOTAUpdate,
 } from './lib/ota/zephyr-ota-worker';
 
+// OTA Bundle Storage exports
+export {
+  BundleStorageLayer,
+  type BundleStorageConfig,
+  type CacheIndex,
+  type CacheIndexEntry,
+} from './lib/ota/bundle-storage-layer';
+
+// OTA Bundle Integrity exports
+export {
+  BundleIntegrityVerifier,
+  verifyBundleIntegrity,
+  type IntegrityCheckResult,
+} from './lib/ota/bundle-integrity';
+
 // HTTP utilities
 export { fetchWithRetries } from './lib/http/fetch-with-retries';

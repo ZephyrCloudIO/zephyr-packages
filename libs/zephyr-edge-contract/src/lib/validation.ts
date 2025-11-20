@@ -10,6 +10,15 @@ import { z } from 'zod';
  * - External APIs
  */
 
+/** Zod schema for BundleMetadata */
+export const BundleMetadataSchema = z.object({
+  url: z.string().url(),
+  checksum: z.string().regex(/^[a-f0-9]{64}$/i, 'Must be a valid SHA-256 hash'),
+  size: z.number().positive(),
+  contentType: z.string(),
+  path: z.string(),
+});
+
 /** Zod schema for ZephyrDependency */
 export const ZephyrDependencySchema = z.object({
   application_uid: z.string(),
@@ -17,6 +26,7 @@ export const ZephyrDependencySchema = z.object({
   default_url: z.string().url(),
   name: z.string(),
   library_type: z.string(),
+  bundles: z.array(BundleMetadataSchema).optional(),
 });
 
 /** Zod schema for ZephyrManifest */
@@ -99,6 +109,13 @@ export function isOTAMetrics(data: unknown): data is z.infer<typeof OTAMetricsSc
   return OTAMetricsSchema.safeParse(data).success;
 }
 
+/** Type guard for BundleMetadata */
+export function isBundleMetadata(
+  data: unknown
+): data is z.infer<typeof BundleMetadataSchema> {
+  return BundleMetadataSchema.safeParse(data).success;
+}
+
 /**
  * Validates and parses a ZephyrManifest with helpful error messages
  *
@@ -144,6 +161,23 @@ export function validateStoredVersionInfo(
     const errors = result.error.format();
     // eslint-disable-next-line no-restricted-syntax
     throw new Error(`Invalid stored version info: ${JSON.stringify(errors)}`);
+  }
+  return result.data;
+}
+
+/**
+ * Validates and parses BundleMetadata with helpful error messages
+ *
+ * @throws {Error} If validation fails
+ */
+export function validateBundleMetadata(
+  data: unknown
+): z.infer<typeof BundleMetadataSchema> {
+  const result = BundleMetadataSchema.safeParse(data);
+  if (!result.success) {
+    const errors = result.error.format();
+    // eslint-disable-next-line no-restricted-syntax
+    throw new Error(`Invalid bundle metadata: ${JSON.stringify(errors)}`);
   }
   return result.data;
 }

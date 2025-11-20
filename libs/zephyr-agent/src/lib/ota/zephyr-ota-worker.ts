@@ -3,6 +3,7 @@ import type {
   OTAVersionResponse,
   ZephyrRuntimePluginInstance,
 } from 'zephyr-edge-contract';
+import { validateStoredVersionInfo, isOTAMetrics } from 'zephyr-edge-contract';
 import { fetchWithRetries } from '../http/fetch-with-retries';
 import { ze_log } from '../logging';
 import { ZephyrError, ZeErrors } from '../errors';
@@ -73,13 +74,29 @@ const STORAGE_KEYS = {
 /**
  * React Native OTA Worker for Zephyr
  *
+ * **CURRENT IMPLEMENTATION: Manifest-Only OTA**
+ *
+ * This worker currently implements a manifest-only OTA system:
+ *
+ * - Checks for new versions by polling the OTA endpoint
+ * - Fetches and caches updated manifests
+ * - Notifies app of available updates
+ * - Updates manifest on user confirmation
+ *
+ * **LIMITATION**: Does not download or manage JavaScript bundles. Bundle downloads happen
+ * on-demand when the app restarts and loads remote modules using the new manifest URLs.
+ *
+ * For complete OTA functionality, bundle pre-downloading and caching needs to be
+ * implemented. See TODOs in applyUpdate() method.
+ *
  * Features:
  *
- * - Polls OTA endpoint using fetchWithRetries
- * - De-dupes work using AsyncStorage for manifest hash storage
- * - Pauses polling in background, resumes on foreground
- * - Integrates with runtime plugin for refresh calls
- * - Provides typed event callbacks
+ * - Polls OTA endpoint using fetchWithRetries with exponential backoff
+ * - De-duplicates work using storage for version tracking
+ * - Pauses polling in background, resumes on foreground (React Native)
+ * - Integrates with runtime plugin for manifest refresh
+ * - Provides typed event callbacks for update lifecycle
+ * - Comprehensive telemetry and metrics tracking
  */
 export class ZephyrOTAWorker {
   private config: Required<ZephyrOTAConfig>;
@@ -87,6 +104,7 @@ export class ZephyrOTAWorker {
   private runtimePlugin?: ZephyrRuntimePluginInstance;
   private checkTimer?: NodeJS.Timeout;
   private isActive = false;
+  private isApplying = false;
   private appStateListener?: any;
   private metrics: OTAMetrics = {
     checksPerformed: 0,
@@ -317,7 +335,30 @@ export class ZephyrOTAWorker {
     await this.setStorageItem(STORAGE_KEYS.LAST_CHECK, Date.now().toString());
   }
 
-  /** Apply an available update */
+  /**
+   * Apply an available update
+   *
+   * **IMPORTANT LIMITATION**: This method currently only updates the manifest, NOT the
+   * actual JavaScript bundles. This is a manifest-only OTA system.
+   *
+   * TODO: Implement full bundle management for complete OTA functionality:
+   *
+   * 1. Download JavaScript bundles for the new version
+   * 2. Verify bundle integrity (checksum/signature validation)
+   * 3. Cache bundles locally (AsyncStorage or file system)
+   * 4. Atomically swap bundles (old → new)
+   * 5. Handle rollback if bundle loading fails
+   * 6. Implement delta/patch updates for efficiency
+   *
+   * Current behavior:
+   *
+   * - Fetches new manifest via runtime plugin
+   * - Updates manifest cache
+   * - Stores version info in storage
+   * - On next app restart, new manifest URLs will be used
+   *
+   * For true OTA updates, bundles must be pre-downloaded and ready before restart.
+   */
   async applyUpdate(update: ZephyrOTAUpdate): Promise<void> {
     if (!this.runtimePlugin) {
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -325,13 +366,29 @@ export class ZephyrOTAWorker {
       });
     }
 
+    // Prevent concurrent update applications
+    if (this.isApplying) {
+      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+        message:
+          'Update already in progress. Please wait for current update to complete.',
+      });
+    }
+
+    this.isApplying = true;
+
     try {
       this.log('Applying update', update);
 
-      // Call runtime plugin refresh to fetch new manifest
+      // TODO: Before calling refresh, download and cache JavaScript bundles
+      // This ensures bundles are available offline and updates are instant
+
+      // Call runtime plugin refresh to fetch and apply new manifest
+      // This updates the runtime plugin's internal state
       await this.runtimePlugin.refresh();
 
       // Store the new version info
+      // Note: If this fails, the runtime plugin has already been updated,
+      // creating an inconsistency. On next restart, the old version will be loaded.
       const versionInfo: StoredVersionInfo = {
         version: update.version,
         timestamp: update.timestamp,
@@ -359,6 +416,8 @@ export class ZephyrOTAWorker {
       await this.updateMetrics('update_failed');
       this.callbacks.onUpdateFailed?.(err);
       throw err;
+    } finally {
+      this.isApplying = false;
     }
   }
 
@@ -377,8 +436,14 @@ export class ZephyrOTAWorker {
   private async getCurrentVersion(): Promise<StoredVersionInfo | null> {
     try {
       const stored = await this.getStorageItem(STORAGE_KEYS.CURRENT_VERSION);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
+      if (!stored) return null;
+
+      const parsed = JSON.parse(stored);
+      return validateStoredVersionInfo(parsed);
+    } catch (error) {
+      if (this.config.debug) {
+        console.warn('[ZephyrOTA] Failed to parse stored version:', error);
+      }
       return null;
     }
   }
@@ -393,9 +458,25 @@ export class ZephyrOTAWorker {
   private async getDeclinedUpdates(): Promise<Set<string>> {
     try {
       const stored = await this.getStorageItem(STORAGE_KEYS.UPDATE_DECLINED);
-      const array = stored ? JSON.parse(stored) : [];
-      return new Set(array);
-    } catch {
+      if (!stored) return new Set();
+
+      const parsed = JSON.parse(stored);
+      // Validate it's an array of strings
+      if (!Array.isArray(parsed)) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Expected array of strings',
+        });
+      }
+      if (parsed.some((item) => typeof item !== 'string')) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Array contains non-string values',
+        });
+      }
+      return new Set(parsed);
+    } catch (error) {
+      if (this.config.debug) {
+        console.warn('[ZephyrOTA] Failed to parse declined updates:', error);
+      }
       return new Set();
     }
   }
@@ -426,7 +507,10 @@ export class ZephyrOTAWorker {
         const AsyncStorageModule = await import(/* webpackIgnore: true */ modulePath);
         const AsyncStorage = AsyncStorageModule.default || AsyncStorageModule;
         return AsyncStorage.getItem(key);
-      } catch {
+      } catch (error) {
+        if (this.config.debug) {
+          console.warn(`[ZephyrOTA] Failed to get storage item "${key}":`, error);
+        }
         return null;
       }
     } else if (typeof localStorage !== 'undefined') {
@@ -443,8 +527,10 @@ export class ZephyrOTAWorker {
         const AsyncStorageModule = await import(/* webpackIgnore: true */ modulePath);
         const AsyncStorage = AsyncStorageModule.default || AsyncStorageModule;
         await AsyncStorage.setItem(key, value);
-      } catch {
-        // Ignore storage errors
+      } catch (error) {
+        if (this.config.debug) {
+          console.warn(`[ZephyrOTA] Failed to set storage item "${key}":`, error);
+        }
       }
     } else if (typeof localStorage !== 'undefined') {
       localStorage.setItem(key, value);
@@ -459,8 +545,10 @@ export class ZephyrOTAWorker {
         const AsyncStorageModule = await import(/* webpackIgnore: true */ modulePath);
         const AsyncStorage = AsyncStorageModule.default || AsyncStorageModule;
         await AsyncStorage.removeItem(key);
-      } catch {
-        // Ignore storage errors
+      } catch (error) {
+        if (this.config.debug) {
+          console.warn(`[ZephyrOTA] Failed to remove storage item "${key}":`, error);
+        }
       }
     } else if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(key);
@@ -471,10 +559,20 @@ export class ZephyrOTAWorker {
   private async loadMetrics(): Promise<void> {
     try {
       const stored = await this.getStorageItem(STORAGE_KEYS.METRICS);
-      if (stored) {
-        this.metrics = { ...this.metrics, ...JSON.parse(stored) };
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored);
+      if (isOTAMetrics(parsed)) {
+        this.metrics = { ...this.metrics, ...parsed };
+      } else {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Invalid metrics format',
+        });
       }
-    } catch {
+    } catch (error) {
+      if (this.config.debug) {
+        console.warn('[ZephyrOTA] Failed to load metrics:', error);
+      }
       // Use default metrics
     }
   }
@@ -483,8 +581,10 @@ export class ZephyrOTAWorker {
   private async saveMetrics(): Promise<void> {
     try {
       await this.setStorageItem(STORAGE_KEYS.METRICS, JSON.stringify(this.metrics));
-    } catch {
-      // Ignore storage errors
+    } catch (error) {
+      if (this.config.debug) {
+        console.warn('[ZephyrOTA] Failed to save metrics:', error);
+      }
     }
   }
 

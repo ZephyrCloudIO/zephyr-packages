@@ -1,4 +1,5 @@
 import type { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
+import { validateManifest } from 'zephyr-edge-contract';
 import type {
   BeforeRequestHookArgs,
   FederationRuntimePlugin,
@@ -263,12 +264,15 @@ export function createZephyrRuntimePluginMobile(
         return;
       }
 
-      const newManifest = await response.json().catch(() => undefined);
-
-      if (!newManifest) {
-        const error = new Error('Failed to parse manifest JSON');
-        onManifestError?.(error);
-        console.error('Failed to parse manifest JSON');
+      let newManifest: ZephyrManifest;
+      try {
+        const rawManifest = await response.json();
+        newManifest = validateManifest(rawManifest);
+      } catch (error) {
+        const manifestError =
+          error instanceof Error ? error : new Error('Failed to parse manifest JSON');
+        onManifestError?.(manifestError);
+        console.error('Failed to parse or validate manifest:', manifestError.message);
         return;
       }
 
@@ -321,6 +325,7 @@ export function createZephyrRuntimePluginMobile(
 
   // Start fetching manifest immediately, check cache first
   let zephyrManifestPromise: Promise<ZephyrManifest | undefined>;
+  let isRefreshing = false;
 
   async function initializeManifest(): Promise<ZephyrManifest | undefined> {
     // Try to get from cache first if we know the application_uid
@@ -374,17 +379,30 @@ export function createZephyrRuntimePluginMobile(
 
   const instance: ZephyrRuntimePluginInstance = {
     async refresh() {
-      // Clear processed remotes to force re-identification
-      processedRemotes = undefined;
-
-      // Clear cache if we have the application_uid
-      if (currentManifest?.application_uid) {
-        delete manifestCache[currentManifest.application_uid];
+      // Prevent concurrent refresh calls (race condition protection)
+      if (isRefreshing) {
+        // Return the existing in-flight promise instead of creating a new one
+        return zephyrManifestPromise;
       }
 
-      // Fetch fresh manifest
-      zephyrManifestPromise = fetchManifestWithOTA(manifestUrl);
-      return zephyrManifestPromise;
+      isRefreshing = true;
+
+      try {
+        // Clear processed remotes to force re-identification
+        processedRemotes = undefined;
+
+        // Clear cache if we have the application_uid
+        if (currentManifest?.application_uid) {
+          delete manifestCache[currentManifest.application_uid];
+        }
+
+        // Fetch fresh manifest
+        zephyrManifestPromise = fetchManifestWithOTA(manifestUrl);
+        const result = await zephyrManifestPromise;
+        return result;
+      } finally {
+        isRefreshing = false;
+      }
     },
 
     async getCurrentManifest() {

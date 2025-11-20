@@ -53,6 +53,24 @@ export type {
   ZephyrRuntimePluginOTAOptions,
 } from './lib/ota-runtime-types';
 
+// validation schemas and validators
+export {
+  ZephyrDependencySchema,
+  ZephyrManifestSchema,
+  OTAManifestSchema,
+  OTAVersionResponseSchema,
+  OTACheckRequestSchema,
+  StoredVersionInfoSchema,
+  OTAMetricsSchema,
+  isZephyrManifest,
+  isOTAVersionResponse,
+  isStoredVersionInfo,
+  isOTAMetrics,
+  validateManifest,
+  validateOTAVersionResponse,
+  validateStoredVersionInfo,
+} from './lib/validation';
+
 // api contract negotiation
 export {
   ZE_API_ENDPOINT,

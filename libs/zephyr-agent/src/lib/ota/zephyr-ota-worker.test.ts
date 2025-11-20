@@ -209,7 +209,9 @@ describe('ZephyrOTAWorker', () => {
   });
 
   describe('update checking', () => {
-    // TODO: Fix storage mocking - these tests are skipped due to complex React Native/browser storage mocking issues
+    // TODO: Fix browser environment mocking - localStorage operations aren't being captured by mocks
+    // The issue is that while localStorage is mocked, the actual setItem/getItem calls in the worker
+    // aren't triggering the mock functions. This likely requires a different mocking approach.
     it.skip('should check for updates with correct request payload', async () => {
       // Set up localStorage with a current version so the update check can compare
       mockLocalStorage['zephyr_ota_current_version'] = JSON.stringify({
@@ -302,7 +304,7 @@ describe('ZephyrOTAWorker', () => {
   });
 
   describe('update application', () => {
-    // TODO: Fix storage mocking - this test is skipped due to complex React Native/browser storage mocking issues
+    // TODO: Fix browser environment mocking - see comment in "update checking" test
     it.skip('should apply update and call runtime plugin refresh', async () => {
       const worker = new ZephyrOTAWorker({
         applicationUid: 'test-app-123',
@@ -377,7 +379,7 @@ describe('ZephyrOTAWorker', () => {
   });
 
   describe('update decline', () => {
-    // TODO: Fix storage mocking - this test is skipped due to complex React Native/browser storage mocking issues
+    // TODO: Fix browser environment mocking - see comment in "update checking" test
     it.skip('should store declined update version', async () => {
       const worker = new ZephyrOTAWorker({
         applicationUid: 'test-app-123',

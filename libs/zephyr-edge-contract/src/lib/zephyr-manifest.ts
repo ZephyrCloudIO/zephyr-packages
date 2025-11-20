@@ -56,20 +56,7 @@ export interface OTAManifest extends ZephyrManifest {
   min_app_version?: string;
 }
 
-/** OTA version check request */
-export interface OTACheckRequest {
-  application_uid: string;
-  current_version?: string;
-  current_timestamp?: string;
-  platform?: 'ios' | 'android';
-}
-
-/** OTA version check response */
-export interface OTAVersionResponse {
-  version: string;
-  timestamp: string;
-  manifest_url: string;
-  description?: string;
-  critical?: boolean;
-  release_notes?: string;
-}
+/**
+ * Note: OTACheckRequest and OTAVersionResponse types are defined in
+ * zephyr-edge-contract.ts to avoid duplication. Import from there if needed.
+ */

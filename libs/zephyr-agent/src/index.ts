@@ -100,5 +100,17 @@ export {
   type IntegrityCheckResult,
 } from './lib/ota/bundle-integrity';
 
+// OTA Bundle Download Manager exports
+export {
+  BundleDownloadManager,
+  DownloadPriority,
+  DownloadState,
+  NetworkType,
+  type BundleDownloadConfig,
+  type DownloadCallbacks,
+  type DownloadProgressCallback,
+  type DownloadTask,
+} from './lib/ota/bundle-download-manager';
+
 // HTTP utilities
 export { fetchWithRetries } from './lib/http/fetch-with-retries';

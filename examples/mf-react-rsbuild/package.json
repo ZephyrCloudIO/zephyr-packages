@@ -1,12 +1,12 @@
 {
-  "name": "mf-react-rsbuild",
+  "name": "mf-react-rsbuild-suite",
   "version": "1.0.0",
   "description": "Rsbuild Module Federation example with Zephyr",
   "private": true,
   "scripts": {
-    "build": "nx run-many -t build --parallel=1 -p mf-react-rsbuild-provider mf-react-rsbuild-consumer",
-    "dev": "pnpm --filter mf-react-rsbuild-provider run dev & pnpm --filter mf-react-rsbuild-consumer run dev",
-    "preview": "pnpm --filter mf-react-rsbuild-provider run preview & pnpm --filter mf-react-rsbuild-consumer run preview"
+    "build:all": "nx run-many -t build --parallel=1 -p mf-react-rsbuild-provider mf-react-rsbuild",
+    "dev": "pnpm --filter mf-react-rsbuild-provider run dev & pnpm --filter mf-react-rsbuild run dev",
+    "preview": "pnpm --filter mf-react-rsbuild-provider run preview & pnpm --filter mf-react-rsbuild run preview"
   },
   "keywords": [
     "rsbuild",

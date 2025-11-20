@@ -4,13 +4,7 @@ import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephy
 const output = execSync(
   'npx nx show projects --affected -t=build --exclude="libs/*,e2e/*,packages/*"'
 );
-// Exclude parent/meta projects that don't deploy independently
-const excludePatterns = ['mf-react-rsbuild'];
-const testTargets = output
-  .toString()
-  .split('\n')
-  .filter(Boolean)
-  .filter((name) => !excludePatterns.includes(name));
+const testTargets = output.toString().split('\n').filter(Boolean);
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();
 
 for (const appName of testTargets) {

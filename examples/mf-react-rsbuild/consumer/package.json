@@ -1,5 +1,5 @@
 {
-  "name": "mf-react-rsbuild-consumer",
+  "name": "mf-react-rsbuild",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -23,6 +23,6 @@
     "zephyr-rsbuild-plugin": "workspace:*"
   },
   "zephyr:dependencies": {
-    "federation_provider": "zephyr:mf-react-rsbuild-provider.zephyr-packages.zephyrcloudio@*"
+    "mf_react_rsbuild_provider": "zephyr:mf-react-rsbuild-provider.zephyr-packages.zephyrcloudio@*"
   }
 }

@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     pluginReact(),
     pluginModuleFederation({
-      name: 'federation_provider',
+      name: 'mf_react_rsbuild_provider',
       exposes: {
         './button': './src/Button.tsx',
       },

@@ -1,6 +1,6 @@
 import './App.css';
-// The remote component provided by federation_provider
-import ProviderButton from 'federation_provider/button';
+// The remote component provided by mf_react_rsbuild_provider
+import ProviderButton from 'mf_react_rsbuild_provider/button';
 
 const App = () => {
   return (

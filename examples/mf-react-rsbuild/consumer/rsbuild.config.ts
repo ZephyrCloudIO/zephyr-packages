@@ -7,9 +7,10 @@ export default defineConfig({
   plugins: [
     pluginReact(),
     pluginModuleFederation({
-      name: 'federation_consumer',
+      name: 'mf_react_rsbuild',
       remotes: {
-        federation_provider: 'federation_provider@http://localhost:3000/mf-manifest.json',
+        mf_react_rsbuild_provider:
+          'mf_react_rsbuild_provider@http://localhost:3000/mf-manifest.json',
       },
       shared: ['react', 'react-dom'],
     }),

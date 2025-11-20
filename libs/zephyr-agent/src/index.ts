@@ -21,6 +21,17 @@ export {
 // logger
 export { ze_log } from './lib/logging';
 export { logFn } from './lib/logging/ze-log-event';
+export {
+  initializeLogRun,
+  getCurrentRunDir,
+  resetLogRun,
+  writeLogToFile,
+  writeRunSummary,
+  isFileLoggingEnabled,
+  getLogBasePath,
+  getLogFormat,
+  type StructuredLogData,
+} from './lib/logging/file-logger';
 
 // default transformers
 export {

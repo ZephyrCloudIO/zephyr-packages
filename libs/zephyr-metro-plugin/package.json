@@ -1,7 +1,7 @@
 {
   "name": "zephyr-metro-plugin",
   "version": "0.0.1",
-  "description": "Metro bundler plugin for Zephyr with OTA support",
+  "description": "Metro bundler plugin for deploying React Native applications with Zephyr Cloud - OTA updates, Module Federation, and seamless deployment",
   "type": "commonjs",
   "license": "Apache-2.0",
   "main": "./src/index.js",
@@ -12,6 +12,10 @@
       "require": "./src/index.js",
       "default": "./src/index.js"
     }
+  },
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
   },
   "peerDependencies": {
     "metro": ">=0.70.0",
@@ -24,7 +28,34 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
     "directory": "libs/zephyr-metro-plugin"
+  },
+  "devDependencies": {
+    "@rspack/core": "catalog:rspack",
+    "@types/find-package-json": "^1.2.6",
+    "@types/jest": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "keywords": [
+    "metro",
+    "react-native",
+    "zephyr",
+    "zephyr-cloud",
+    "module-federation",
+    "ota",
+    "over-the-air",
+    "deployment",
+    "bundler",
+    "ios",
+    "android",
+    "cross-platform",
+    "micro-frontends",
+    "plugin"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

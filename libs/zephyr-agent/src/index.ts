@@ -84,3 +84,54 @@ export {
   calculateManifestHash,
   collectZEPublicVars,
 } from './lib/env-variables';
+
+// OTA Worker exports
+export {
+  ZephyrOTAWorker,
+  useZephyrUpdates,
+  type UseZephyrUpdatesOptions,
+  type UseZephyrUpdatesResult,
+  type ZephyrOTACallbacks,
+  type ZephyrOTAConfig,
+  type ZephyrOTAUpdate,
+} from './lib/ota/zephyr-ota-worker';
+
+// OTA Bundle Storage exports
+export {
+  BundleStorageLayer,
+  type BundleStorageConfig,
+  type CacheIndex,
+  type CacheIndexEntry,
+} from './lib/ota/bundle-storage-layer';
+
+// OTA Bundle Integrity exports
+export {
+  BundleIntegrityVerifier,
+  verifyBundleIntegrity,
+  type IntegrityCheckResult,
+} from './lib/ota/bundle-integrity';
+
+// OTA Bundle Download Manager exports
+export {
+  BundleDownloadManager,
+  DownloadPriority,
+  DownloadState,
+  NetworkType,
+  type BundleDownloadConfig,
+  type DownloadCallbacks,
+  type DownloadProgressCallback,
+  type DownloadTask,
+} from './lib/ota/bundle-download-manager';
+
+// OTA Bundle Cache Manager exports
+export {
+  BundleCacheManager,
+  EvictionStrategy,
+  type CacheMetrics,
+  type CachePolicy,
+  type EvictionResult,
+  type VersionInfo,
+} from './lib/ota/bundle-cache-manager';
+
+// HTTP utilities
+export { fetchWithRetries } from './lib/http/fetch-with-retries';

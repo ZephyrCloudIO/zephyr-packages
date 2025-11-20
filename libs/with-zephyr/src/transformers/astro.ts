@@ -1,6 +1,8 @@
-import traverse from '@babel/traverse';
+import traverseModule from '@babel/traverse';
 import * as t from '@babel/types';
 import type { BabelNode } from '../types.js';
+
+const traverse = (traverseModule as any).default || traverseModule;
 
 /**
  * Transform Astro config to add withZephyr to integrations array

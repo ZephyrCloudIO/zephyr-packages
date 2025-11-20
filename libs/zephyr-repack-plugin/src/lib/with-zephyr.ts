@@ -33,9 +33,9 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
         target: config.platform,
       } as ZephyrRepackPluginOptions;
 
-      ze_log.init('updatedZephyrConfig: ', updatedZephyrConfig);
+      ze_log.init('Zephyr config (with OTA support if enabled): ', updatedZephyrConfig);
 
-      // Return the final processed configuration
+      // Return the final processed configuration with OTA enhancements if enabled
       return _zephyr_configuration(userConfig, updatedZephyrConfig);
     };
   };
@@ -67,11 +67,19 @@ async function _zephyr_configuration(
 
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
+
+    // Apply remote config mutation
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
     ze_log.remotes(
       'dependency resolution completed successfully...or at least trying to...'
     );
+
+    // Log OTA configuration if enabled
+    if (_zephyrOptions?.enableOTA) {
+      ze_log.app('OTA support enabled - see documentation for runtime setup');
+      ze_log.app('App UID:', _zephyrOptions.applicationUid || 'not specified');
+    }
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
     // const app_config = await zephyr_engine.application_configuration;
@@ -84,6 +92,9 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         target: zephyr_engine.env.target,
+        enableOTA: _zephyrOptions?.enableOTA,
+        applicationUid: _zephyrOptions?.applicationUid,
+        otaConfig: _zephyrOptions?.otaConfig,
       })
     );
   } catch (error) {

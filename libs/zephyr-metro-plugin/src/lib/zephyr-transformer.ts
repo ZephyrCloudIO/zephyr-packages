@@ -1,6 +1,5 @@
 import type { JsTransformOptions, JsTransformerConfig } from 'metro-transform-worker';
 import { logFn } from 'zephyr-agent';
-import path from 'path';
 
 interface ZephyrTransformerOptions {
   zephyr_engine?: any;
@@ -156,8 +155,10 @@ function generateRuntimePluginCode(
           manifestUrl: '/zephyr-manifest.json',
           onManifestChange: function (newManifest: any, oldManifest: any) {
             console.log('[Zephyr] Manifest updated:', newManifest.version);
-            global.__ZEPHYR_MANIFEST_CHANGED__ &&
-              global.__ZEPHYR_MANIFEST_CHANGED__(newManifest, oldManifest);
+            void (
+              global.__ZEPHYR_MANIFEST_CHANGED__ &&
+                global.__ZEPHYR_MANIFEST_CHANGED__(newManifest, oldManifest)
+            );
           },
           onManifestError: function (error: Error) {
             console.warn('[Zephyr] Manifest error:', error);
@@ -225,8 +226,10 @@ function generateOTACode(zephyrOptions: any): string {
           {
             onUpdateAvailable: function (update: any) {
               console.log('[Zephyr OTA] Update available:', update.version);
-              globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__ &&
-                globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__(update);
+              void (
+                globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__ &&
+                  globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__(update)
+              );
             },
             onUpdateError: function (error: Error) {
               console.warn('[Zephyr OTA] Update check error:', error);

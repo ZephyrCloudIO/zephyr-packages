@@ -11,8 +11,15 @@ export const ProjectTypes = [
   },
 ];
 
+export type Template = {
+  name: string;
+  label: string;
+  hint: string;
+  directory: string;
+};
+
 // TODO: Programmatically load templates from the examples repo after cloning it
-export const Templates = [
+export const Templates: Template[] = [
   // Vanilla examples
   {
     name: 'astro',

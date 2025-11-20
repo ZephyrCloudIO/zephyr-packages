@@ -103,6 +103,7 @@ export interface ZephyrBuildHooks {
 
 export interface DeploymentInfo {
   url: string;
+  snapshotId: string | null;
   snapshot: Snapshot;
   federatedDependencies: ZeResolvedDependency[];
   buildStats: ZephyrBuildStats;
@@ -523,19 +524,15 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     if (props.hooks?.onDeployComplete && zephyr_engine.version_url) {
       try {
         const snapshotId = await zephyr_engine.snapshotId;
+        const deploymentInfo: DeploymentInfo = {
+          url: zephyr_engine.version_url,
+          snapshotId,
+          snapshot,
+          federatedDependencies: zephyr_engine.federated_dependencies || [],
+          buildStats: upload_options.getDashData(zephyr_engine),
+        };
 
-        if (!snapshotId) {
-          ze_log.upload('Warning: snapshotId is null, skipping deployment hook');
-        } else {
-          const deploymentInfo: DeploymentInfo = {
-            url: zephyr_engine.version_url,
-            snapshot,
-            federatedDependencies: zephyr_engine.federated_dependencies || [],
-            buildStats,
-          };
-
-          await props.hooks.onDeployComplete(deploymentInfo);
-        }
+        await props.hooks.onDeployComplete(deploymentInfo);
       } catch (error: unknown) {
         // Log hook errors but don't fail the build
         ze_log.upload('Warning: deployment hook failed', error);

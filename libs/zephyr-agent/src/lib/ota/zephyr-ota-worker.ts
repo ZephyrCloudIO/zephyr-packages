@@ -22,6 +22,10 @@ export interface ZephyrOTAConfig {
   debug?: boolean;
   /** Platform identifier */
   platform?: 'ios' | 'android';
+  /** Bundle download manager (optional, enables bundle pre-downloading) */
+  downloadManager?: any; // Type will be BundleDownloadManager from zephyr-agent
+  /** Bundle cache manager (optional, enables cache management) */
+  cacheManager?: any; // Type will be BundleCacheManager from zephyr-agent
 }
 
 /** OTA update information */
@@ -44,6 +48,12 @@ export interface ZephyrOTACallbacks {
   onUpdateApplied?: (version: string) => void;
   /** Called when update application fails */
   onUpdateFailed?: (error: Error) => void;
+  /** Called when bundle download starts */
+  onDownloadStart?: (update: ZephyrOTAUpdate) => void;
+  /** Called when download progress updates */
+  onDownloadProgress?: (progress: { completed: number; total: number; percent: number }) => void;
+  /** Called when all bundles are downloaded */
+  onDownloadComplete?: (update: ZephyrOTAUpdate) => void;
 }
 
 /** Stored version information in AsyncStorage */
@@ -122,6 +132,8 @@ export class ZephyrOTAWorker {
       debug: config.debug || false,
       platform: config.platform || 'android',
       applicationUid: config.applicationUid,
+      downloadManager: config.downloadManager,
+      cacheManager: config.cacheManager,
     };
     this.callbacks = callbacks;
 
@@ -379,8 +391,14 @@ export class ZephyrOTAWorker {
     try {
       this.log('Applying update', update);
 
-      // TODO: Before calling refresh, download and cache JavaScript bundles
-      // This ensures bundles are available offline and updates are instant
+      // Download and cache bundles before applying update (if managers are available)
+      if (this.config.downloadManager && this.config.cacheManager) {
+        await this.downloadBundlesForUpdate(update);
+      } else {
+        this.log(
+          'Download/cache managers not configured - bundles will be fetched on-demand'
+        );
+      }
 
       // Call runtime plugin refresh to fetch and apply new manifest
       // This updates the runtime plugin's internal state
@@ -418,6 +436,145 @@ export class ZephyrOTAWorker {
       throw err;
     } finally {
       this.isApplying = false;
+    }
+  }
+
+  /**
+   * Download bundles for an update before applying it
+   * This ensures bundles are cached and ready for instant loading
+   */
+  private async downloadBundlesForUpdate(update: ZephyrOTAUpdate): Promise<void> {
+    const downloadManager = this.config.downloadManager;
+    const cacheManager = this.config.cacheManager;
+
+    if (!downloadManager || !cacheManager) {
+      return;
+    }
+
+    this.log('Fetching manifest to get bundle metadata', { url: update.manifestUrl });
+
+    // Fetch the new manifest to get bundle metadata
+    try {
+      const response = await fetchWithRetries(new URL(update.manifestUrl), {}, 3);
+      const manifest = await response.json();
+
+      if (!manifest.dependencies) {
+        this.log('No dependencies in manifest, skipping bundle download');
+        return;
+      }
+
+      // Extract all bundles from all dependencies
+      const bundlesToDownload: Array<{
+        bundle: any;
+        applicationUid: string;
+        version: string;
+        priority: number;
+      }> = [];
+
+      for (const [remoteName, dependency] of Object.entries(manifest.dependencies as Record<string, any>)) {
+        if (dependency.bundles && Array.isArray(dependency.bundles)) {
+          for (const bundle of dependency.bundles) {
+            bundlesToDownload.push({
+              bundle,
+              applicationUid: dependency.application_uid || this.config.applicationUid,
+              version: update.version,
+              priority: 1, // HIGH priority for OTA updates
+            });
+          }
+        }
+      }
+
+      if (bundlesToDownload.length === 0) {
+        this.log('No bundles to download in manifest');
+        return;
+      }
+
+      this.log(`Found ${bundlesToDownload.length} bundles to download`);
+      this.callbacks.onDownloadStart?.(update);
+
+      // Track download progress
+      let completedDownloads = 0;
+      const totalDownloads = bundlesToDownload.length;
+
+      // Queue all bundles for download
+      const downloadPromises = bundlesToDownload.map(async ({ bundle, applicationUid, version, priority }) => {
+        try {
+          await downloadManager.queueBundle(bundle, applicationUid, version, priority);
+        } catch (error) {
+          this.log(`Failed to queue bundle ${bundle.checksum}:`, error);
+        }
+      });
+
+      await Promise.all(downloadPromises);
+
+      // Start download manager
+      await downloadManager.start();
+
+      // Monitor progress
+      const checkProgress = async (): Promise<void> => {
+        const stats = downloadManager.getStats();
+        const newCompleted = stats.completed + stats.failed;
+
+        if (newCompleted > completedDownloads) {
+          completedDownloads = newCompleted;
+          const percent = Math.round((completedDownloads / totalDownloads) * 100);
+
+          this.callbacks.onDownloadProgress?.({
+            completed: completedDownloads,
+            total: totalDownloads,
+            percent,
+          });
+
+          this.log(`Download progress: ${completedDownloads}/${totalDownloads} (${percent}%)`);
+        }
+
+        // Check if all downloads are complete
+        if (completedDownloads >= totalDownloads) {
+          downloadManager.stop();
+          this.log('All bundles downloaded');
+          this.callbacks.onDownloadComplete?.(update);
+          return;
+        }
+
+        // Continue monitoring
+        setTimeout(() => void checkProgress(), 500);
+      };
+
+      // Start monitoring progress
+      void checkProgress();
+
+      // Wait for downloads to complete (with timeout)
+      const timeout = 5 * 60 * 1000; // 5 minutes
+      const startTime = Date.now();
+
+      while (completedDownloads < totalDownloads) {
+        if (Date.now() - startTime > timeout) {
+          downloadManager.stop();
+          throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+            message: `Bundle download timeout after ${timeout}ms`,
+          });
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const stats = downloadManager.getStats();
+        completedDownloads = stats.completed + stats.failed;
+      }
+
+      // Check if any downloads failed
+      const finalStats = downloadManager.getStats();
+      if (finalStats.failed > 0) {
+        this.log(`Warning: ${finalStats.failed} bundles failed to download`);
+        // Continue anyway - failed bundles will be fetched from network
+      }
+
+      // Enforce cache limits after download
+      await cacheManager.enforceLimit();
+
+      this.log('Bundle download complete', finalStats);
+    } catch (error) {
+      this.log('Failed to download bundles:', error);
+      // Don't throw - allow update to proceed with on-demand bundle loading
+      // The bundles will be fetched from network when needed
     }
   }
 

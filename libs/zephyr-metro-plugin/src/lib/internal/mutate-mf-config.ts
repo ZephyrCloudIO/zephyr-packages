@@ -68,11 +68,7 @@ export function mutateMfConfig(
     resolved_dep.name = remote_name;
 
     if (remotes[remote_name]) {
-      remotes[remote_name] = createMfRuntimeCode(
-        zephyr_engine,
-        resolved_dep,
-        template
-      );
+      remotes[remote_name] = createMfRuntimeCode(zephyr_engine, resolved_dep, template);
       ze_log.mf(`Setting runtime code for remote: ${remotes}`);
     }
   });

@@ -69,19 +69,6 @@ async function applyZephyrToMetroConfig(
     transformer: {
       ...metroConfig.transformer,
       babelTransformerPath: require.resolve('./zephyr-transformer'),
-      // Pass Zephyr options to transformer
-      additionalTransforms: [
-        ...(metroConfig.transformer?.additionalTransforms || []),
-        {
-          transform: require.resolve('./zephyr-transformer'),
-          filter: () => true, // Apply to all files initially, filter in transformer
-          options: {
-            zephyr_engine,
-            zephyrOptions,
-            resolved_dependencies,
-          },
-        },
-      ],
     },
     resolver: {
       ...metroConfig.resolver,
@@ -98,9 +85,9 @@ async function applyZephyrToMetroConfig(
     server: {
       ...metroConfig.server,
       // Enhance server with manifest endpoint
-      enhanceMiddleware: (middleware, server) => {
+      enhanceMiddleware: (middleware: any, server: any) => {
         // Add zephyr-manifest.json endpoint
-        server.app?.use('/zephyr-manifest.json', async (req, res) => {
+        server.app?.use('/zephyr-manifest.json', async (req: any, res: any) => {
           try {
             let manifestContent = createManifestContent(resolved_dependencies || []);
 

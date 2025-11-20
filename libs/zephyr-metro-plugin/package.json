@@ -22,8 +22,8 @@
     "react-native": ">=0.60.0"
   },
   "dependencies": {
-    "zephyr-edge-contract": "workspace:*",
     "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "repository": {
@@ -36,6 +36,8 @@
     "@types/find-package-json": "^1.2.6",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "metro-config": "^0.83.3",
+    "metro-transform-worker": "^0.83.3",
     "ts-jest": "catalog:typescript"
   },
   "keywords": [

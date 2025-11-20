@@ -1,5 +1,6 @@
 import type { JsTransformOptions, JsTransformerConfig } from 'metro-transform-worker';
 import { logFn } from 'zephyr-agent';
+import './global';
 
 interface ZephyrTransformerOptions {
   zephyr_engine?: any;
@@ -81,7 +82,7 @@ function injectZephyrRuntime(
     // Create runtime plugin initialization code
     const runtimePluginCode = generateRuntimePluginCode(
       zephyrOptions,
-      resolved_dependencies
+      resolved_dependencies || []
     );
 
     // Create OTA initialization code if enabled
@@ -110,39 +111,41 @@ function generateRuntimePluginCode(
   zephyrOptions: any,
   resolved_dependencies: any[]
 ): string {
-  const manifestData = resolved_dependencies
-    ? {
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        dependencies: resolved_dependencies.reduce((acc, dep) => {
-          acc[dep.name] = {
-            name: dep.name,
-            application_uid: dep.application_uid,
-            remote_entry_url: dep.remote_entry_url,
-            default_url: dep.default_url,
-            library_type: dep.library_type || 'var',
-          };
-          return acc;
-        }, {}),
-      }
-    : {};
+  const manifestData =
+    resolved_dependencies && resolved_dependencies.length > 0
+      ? {
+          version: '1.0.0',
+          timestamp: new Date().toISOString(),
+          dependencies: resolved_dependencies.reduce((acc: any, dep: any) => {
+            acc[dep.name] = {
+              name: dep.name,
+              application_uid: dep.application_uid,
+              remote_entry_url: dep.remote_entry_url,
+              default_url: dep.default_url,
+              library_type: dep.library_type || 'var',
+            };
+            return acc;
+          }, {}),
+        }
+      : {};
 
   // Define the runtime initialization function with proper types
   function zephyrRuntimeInit() {
     if (typeof global !== 'undefined') {
       // Mock fetch for manifest if not available
       if (!global.fetch) {
-        global.fetch = function (url: string) {
+        global.fetch = function (url: any) {
           if (url === '/zephyr-manifest.json' || url.endsWith('/zephyr-manifest.json')) {
             return Promise.resolve({
               ok: true,
               json: function () {
+                // @ts-expect-error - placeholder replaced at build time
                 return Promise.resolve(__MANIFEST_DATA__);
               },
-            });
+            } as any);
           }
           return Promise.reject(new Error('Fetch not available in React Native'));
-        };
+        } as any;
       }
 
       // Import and initialize runtime plugin (mobile version with OTA support)
@@ -155,10 +158,9 @@ function generateRuntimePluginCode(
           manifestUrl: '/zephyr-manifest.json',
           onManifestChange: function (newManifest: any, oldManifest: any) {
             console.log('[Zephyr] Manifest updated:', newManifest.version);
-            void (
-              global.__ZEPHYR_MANIFEST_CHANGED__ &&
-                global.__ZEPHYR_MANIFEST_CHANGED__(newManifest, oldManifest)
-            );
+            if (global.__ZEPHYR_MANIFEST_CHANGED__) {
+              global.__ZEPHYR_MANIFEST_CHANGED__(newManifest, oldManifest);
+            }
           },
           onManifestError: function (error: Error) {
             console.warn('[Zephyr] Manifest error:', error);
@@ -197,9 +199,10 @@ function generateOTACode(zephyrOptions: any): string {
 
   // Define the OTA initialization function with proper types
   function zephyrOTAInit() {
-    const globalObj = (function () {
+    const globalObj: any = (function () {
       if (typeof globalThis !== 'undefined') return globalThis;
       if (typeof global !== 'undefined') return global;
+      // @ts-expect-error - window may exist in browser-like environments
       if (typeof window !== 'undefined') return window;
       return {};
     })();
@@ -219,7 +222,9 @@ function generateOTACode(zephyrOptions: any): string {
         const otaWorker = new ZephyrOTAWorker(
           {
             applicationUid: '__APP_UID__',
+            // @ts-expect-error - placeholder replaced at build time
             checkInterval: __CHECK_INTERVAL__,
+            // @ts-expect-error - placeholder replaced at build time
             debug: __DEBUG__,
             enableOTA: true,
           },
@@ -228,7 +233,7 @@ function generateOTACode(zephyrOptions: any): string {
               console.log('[Zephyr OTA] Update available:', update.version);
               void (
                 globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__ &&
-                  globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__(update)
+                globalObj.__ZEPHYR_OTA_UPDATE_AVAILABLE__(update)
               );
             },
             onUpdateError: function (error: Error) {

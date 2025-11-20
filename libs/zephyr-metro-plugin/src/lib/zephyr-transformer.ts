@@ -108,31 +108,13 @@ ${originalCode}
 
 /** Generate runtime plugin initialization code */
 function generateRuntimePluginCode(
-  zephyrOptions: any,
-  resolved_dependencies: any[]
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _zephyrOptions: any,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _resolved_dependencies: any[]
 ): string {
-  const manifestData =
-    resolved_dependencies && resolved_dependencies.length > 0
-      ? {
-          version: '1.0.0',
-          timestamp: new Date().toISOString(),
-          dependencies: resolved_dependencies.reduce((acc: any, dep: any) => {
-            acc[dep.name] = {
-              name: dep.name,
-              application_uid: dep.application_uid,
-              remote_entry_url: dep.remote_entry_url,
-              default_url: dep.default_url,
-              library_type: dep.library_type || 'var',
-            };
-            return acc;
-          }, {}),
-        }
-      : {};
-
   // Generate runtime initialization code using template strings
   // This is more robust than function stringification which can break with minification
-  const manifestDataJson = JSON.stringify(manifestData, null, 2);
-
   return `// Zephyr Runtime Plugin for React Native
 (function() {
   if (typeof global !== 'undefined') {

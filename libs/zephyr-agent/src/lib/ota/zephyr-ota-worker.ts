@@ -51,7 +51,11 @@ export interface ZephyrOTACallbacks {
   /** Called when bundle download starts */
   onDownloadStart?: (update: ZephyrOTAUpdate) => void;
   /** Called when download progress updates */
-  onDownloadProgress?: (progress: { completed: number; total: number; percent: number }) => void;
+  onDownloadProgress?: (progress: {
+    completed: number;
+    total: number;
+    percent: number;
+  }) => void;
   /** Called when all bundles are downloaded */
   onDownloadComplete?: (update: ZephyrOTAUpdate) => void;
 }
@@ -440,8 +444,8 @@ export class ZephyrOTAWorker {
   }
 
   /**
-   * Download bundles for an update before applying it
-   * This ensures bundles are cached and ready for instant loading
+   * Download bundles for an update before applying it This ensures bundles are cached and
+   * ready for instant loading
    */
   private async downloadBundlesForUpdate(update: ZephyrOTAUpdate): Promise<void> {
     const downloadManager = this.config.downloadManager;
@@ -471,7 +475,9 @@ export class ZephyrOTAWorker {
         priority: number;
       }> = [];
 
-      for (const [remoteName, dependency] of Object.entries(manifest.dependencies as Record<string, any>)) {
+      for (const dependency of Object.values(
+        manifest.dependencies as Record<string, any>
+      )) {
         if (dependency.bundles && Array.isArray(dependency.bundles)) {
           for (const bundle of dependency.bundles) {
             bundlesToDownload.push({
@@ -497,13 +503,15 @@ export class ZephyrOTAWorker {
       const totalDownloads = bundlesToDownload.length;
 
       // Queue all bundles for download
-      const downloadPromises = bundlesToDownload.map(async ({ bundle, applicationUid, version, priority }) => {
-        try {
-          await downloadManager.queueBundle(bundle, applicationUid, version, priority);
-        } catch (error) {
-          this.log(`Failed to queue bundle ${bundle.checksum}:`, error);
+      const downloadPromises = bundlesToDownload.map(
+        async ({ bundle, applicationUid, version, priority }) => {
+          try {
+            await downloadManager.queueBundle(bundle, applicationUid, version, priority);
+          } catch (error) {
+            this.log(`Failed to queue bundle ${bundle.checksum}:`, error);
+          }
         }
-      });
+      );
 
       await Promise.all(downloadPromises);
 
@@ -525,7 +533,9 @@ export class ZephyrOTAWorker {
             percent,
           });
 
-          this.log(`Download progress: ${completedDownloads}/${totalDownloads} (${percent}%)`);
+          this.log(
+            `Download progress: ${completedDownloads}/${totalDownloads} (${percent}%)`
+          );
         }
 
         // Check if all downloads are complete

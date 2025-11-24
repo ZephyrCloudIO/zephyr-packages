@@ -1,7 +1,7 @@
 import { getItem, removeItem, setItem } from 'node-persist';
+import { storage } from './storage';
 import { StorageKeys } from './storage-keys';
 import type { ZeApplicationConfig } from './upload-provider-options';
-import { storage } from './storage';
 
 function get_key(application_uid: string): string {
   return [StorageKeys.ze_app_config_token, application_uid].join('.');
@@ -26,8 +26,6 @@ export async function removeAppConfig(application_uid: string): Promise<void> {
   await storage;
   await removeItem(get_key(application_uid));
 }
-
-// --- Multi-CDN support (plural configs) -------------------------------------
 
 function get_multi_key(application_uid: string): string {
   return [StorageKeys.ze_app_config_token, application_uid, 'multi'].join('.');

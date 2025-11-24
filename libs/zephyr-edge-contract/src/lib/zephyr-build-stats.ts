@@ -153,10 +153,6 @@ export interface ZephyrBuildStats {
   type: unknown;
   /** Resolved zephyr dependencies */
   zephyrDependencies?: Record<string, ZephyrDependency>;
-  /**
-   * Multi-CDN deployment results tracking
-   * Contains status information for each CDN deployment (primary and secondaries)
-   */
   deploymentResults?: DeploymentResult[];
 }
 

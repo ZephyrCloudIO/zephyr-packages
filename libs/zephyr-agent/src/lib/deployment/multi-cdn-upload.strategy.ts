@@ -63,13 +63,6 @@ async function deploySingleCdn(
   }
 }
 
-/**
- * Multi-CDN upload strategy:
- * 1. Deploys to primary CDN first
- * 2. Deploys to secondary CDNs in parallel
- * 3. Handles partial failures gracefully
- * 4. Returns all deployment URLs
- */
 export async function multiCdnUploadStrategy(
   zephyr_engine: ZephyrEngine,
   configs: ZeApplicationConfig[],
@@ -81,7 +74,6 @@ export async function multiCdnUploadStrategy(
     });
   }
 
-  // Separate primary and secondary configs
   const primaryConfig = configs.find((c) => c._metadata?.isPrimary);
   const secondaryConfigs = configs.filter((c) => !c._metadata?.isPrimary);
 
@@ -96,7 +88,6 @@ export async function multiCdnUploadStrategy(
     `Multi-CDN deployment: Primary=${primaryConfig._metadata?.integrationName}, Secondaries=${secondaryConfigs.length}`
   );
 
-  // Step 1: Deploy to primary CDN first
   ze_log.upload(
     `Deploying to primary CDN: ${primaryConfig._metadata?.integrationName} (${primaryConfig.PLATFORM})`
   );
@@ -114,7 +105,6 @@ export async function multiCdnUploadStrategy(
       undefined,
       error instanceof Error ? error.message : String(error)
     );
-    // Report primary failure to backend before throwing
     await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
       getDashData: uploadOptions.getDashData,
       versionUrl: undefined,
@@ -129,7 +119,6 @@ export async function multiCdnUploadStrategy(
     });
   }
 
-  // Step 1.5: Report primary deployment success to backend
   ze_log.upload('Reporting primary deployment status to backend...');
   await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
     getDashData: uploadOptions.getDashData,
@@ -137,7 +126,6 @@ export async function multiCdnUploadStrategy(
     deploymentResults: [primaryResult],
   });
 
-  // Step 2: Deploy to secondary CDNs in parallel
   const secondaryResults = await Promise.allSettled(
     secondaryConfigs.map(async (config) => {
       ze_log.upload(
@@ -163,7 +151,6 @@ export async function multiCdnUploadStrategy(
     })
   );
 
-  // Build deployment results for all secondaries (both successful and failed)
   const secondaryDeploymentResults: DeploymentResult[] = secondaryResults.map((result, index) => {
     const config = secondaryConfigs[index];
     if (result.status === 'fulfilled') {
@@ -174,7 +161,6 @@ export async function multiCdnUploadStrategy(
     }
   });
 
-  // Collect successful secondary deployments for return value
   const successfulSecondaries = secondaryResults
     .filter((result): result is PromiseFulfilledResult<{ integrationName: string; url: string;
    platform: UploadProviderType; config: ZeApplicationConfig }> =>
@@ -186,7 +172,6 @@ export async function multiCdnUploadStrategy(
       platform: result.value.platform,
     }));
 
-  // Log any secondary failures (but don't abort)
   const failedSecondaries = secondaryResults.filter((result) => result.status === 'rejected');
   if (failedSecondaries.length > 0) {
     ze_log.upload(
@@ -194,7 +179,6 @@ export async function multiCdnUploadStrategy(
     );
   }
 
-  // Step 2.5: Report secondary deployment statuses to backend
   if (secondaryDeploymentResults.length > 0) {
     ze_log.upload('Reporting secondary deployment statuses to backend...');
     await uploadBuildStatsAndEnableEnvs(zephyr_engine, {

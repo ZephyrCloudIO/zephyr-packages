@@ -21,7 +21,6 @@ export interface ZeApplicationConfig {
   // @deprecated
   username: string;
 
-  // NEW: Single replication target (primary → secondary only)
   replicationTarget?: ReplicationTarget;
 }
 

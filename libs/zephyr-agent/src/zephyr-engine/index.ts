@@ -518,7 +518,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       hash_set: hash_set ?? { hash_set: new Set() },
     });
 
-    // upload data
     const snapshot = await createSnapshot(zephyr_engine, {
       assets: assetsMap,
       mfConfig,
@@ -533,7 +532,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       },
     };
 
-    // Check if multi-CDN deployment is enabled
     const configs = await zephyr_engine.application_configurations;
 
     if (!configs || configs.length === 0) {
@@ -545,7 +543,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     }
 
     if (configs.length > 1) {
-      // Multi-CDN deployment
       ze_log.upload(`Multi-CDN deployment: deploying to ${configs.length} CDNs`);
       const result = await multiCdnUploadStrategy(zephyr_engine, configs, upload_options);
       zephyr_engine.version_url = result.primaryUrl;
@@ -555,7 +552,6 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
         await setAppDeployResult(application_uid, { urls: result.allUrls, snapshot });
       }
     } else {
-      // Single CDN deployment (backward compatible)
       const platform = (await zephyr_engine.application_configuration).PLATFORM;
       const strategy = getUploadStrategy(platform);
       zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);

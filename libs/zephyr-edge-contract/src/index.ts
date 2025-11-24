@@ -21,7 +21,7 @@ export type { ZeApplicationList } from './lib/ze-api/app-list';
 export type { ZeAppVersion, ZeAppVersionResponse } from './lib/ze-api/app-version';
 export type { ConvertedGraph } from './lib/ze-api/converted-graph';
 export type { LocalPackageJson } from './lib/ze-api/local-package-json';
-export type { ZephyrBuildStats, ZephyrDependency } from './lib/zephyr-build-stats';
+export type { ZephyrBuildStats, DeploymentResult, DeploymentStatus, ZephyrDependency } from './lib/zephyr-build-stats';
 export type {
   Asset,
   SnapshotUploadRes,

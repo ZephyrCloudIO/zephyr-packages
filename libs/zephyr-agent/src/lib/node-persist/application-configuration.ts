@@ -26,3 +26,29 @@ export async function removeAppConfig(application_uid: string): Promise<void> {
   await storage;
   await removeItem(get_key(application_uid));
 }
+
+// --- Multi-CDN support (plural configs) -------------------------------------
+
+function get_multi_key(application_uid: string): string {
+  return [StorageKeys.ze_app_config_token, application_uid, 'multi'].join('.');
+}
+
+export async function saveAppConfigs(
+  application_uid: string,
+  configs: ZeApplicationConfig[]
+): Promise<void> {
+  await storage;
+  void (await setItem(get_multi_key(application_uid), configs, { ttl: 5 * 60 * 1000 }));
+}
+
+export async function getAppConfigs(
+  application_uid: string
+): Promise<ZeApplicationConfig[] | undefined> {
+  await storage;
+  return getItem(get_multi_key(application_uid));
+}
+
+export async function removeAppConfigs(application_uid: string): Promise<void> {
+  await storage;
+  await removeItem(get_multi_key(application_uid));
+}

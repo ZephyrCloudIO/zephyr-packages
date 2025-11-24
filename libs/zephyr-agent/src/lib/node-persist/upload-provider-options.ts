@@ -5,6 +5,10 @@ export interface ZeApplicationConfig {
   EDGE_URL: string;
   DELIMITER: string;
   PLATFORM: UploadProviderType;
+  _metadata?: {
+    isPrimary: boolean;
+    integrationName: string;
+  };
   fetched_at?: number;
 
   // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration

@@ -18,9 +18,10 @@ import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
+import { multiCdnUploadStrategy } from '../lib/deployment/multi-cdn-upload.strategy';
 import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
-import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
+import { getApplicationConfiguration, getApplicationConfigurations } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
@@ -111,6 +112,7 @@ export class ZephyrEngine {
 
   // load once properties
   application_configuration!: Promise<ZeApplicationConfig>;
+  application_configurations!: Promise<ZeApplicationConfig[]>; // Multi-CDN support
   applicationProperties!: ZeApplicationProperties;
   logger!: Promise<ZeLogger>;
 
@@ -183,7 +185,45 @@ export class ZephyrEngine {
 
     ze_log.init('Initialized: loading application configuration...');
 
-    ze.application_configuration = getApplicationConfiguration({ application_uid });
+    // Fetch multi-CDN configurations with fallback to legacy endpoint
+    ze.application_configurations = getApplicationConfigurations({ application_uid })
+      .then((configs) => {
+        if (!configs || configs.length === 0) {
+          throw new ZephyrError({
+            code: 'ERR_NO_APPLICATION_CONFIG',
+            message: 'No application configuration found',
+            template: { application_uid },
+          });
+        }
+        return configs;
+      })
+      .catch(async (error) => {
+        // Only fallback to legacy endpoint if the multi-config endpoint doesn't exist (404)
+        // For other errors (auth, network, etc.), propagate them
+        const isEndpointNotFound =
+          ZephyrError.is(error) &&
+          error.cause &&
+          typeof error.cause === 'object' &&
+          'status' in error.cause &&
+          (error.cause.status === 404 || error.cause.status === 400);
+
+        if (isEndpointNotFound) {
+          ze_log.init(
+            'Multi-CDN endpoint not available, falling back to legacy endpoint...'
+          );
+          const singleConfig = await getApplicationConfiguration({ application_uid });
+          // Wrap single config in array for consistency with multi-CDN structure
+          return [singleConfig];
+        }
+
+        // Re-throw other errors (auth failures, network issues, etc.)
+        throw error;
+      });
+
+    // For backward compatibility, keep single config as primary
+    ze.application_configuration = ze.application_configurations.then(
+      (configs) => configs.find((c) => c._metadata?.isPrimary) || configs[0]
+    );
 
     ze.application_configuration
       .then((appConfig) => {
@@ -191,6 +231,21 @@ export class ZephyrEngine {
         ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
       })
       .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
+
+    // Log multi-CDN info if available
+    ze.application_configurations
+      .then((configs) => {
+        if (configs.length > 1) {
+          const primary = configs.find((c) => c._metadata?.isPrimary);
+          const secondaries = configs.filter((c) => !c._metadata?.isPrimary);
+          ze_log.init(
+            `Multi-CDN enabled: Primary=${primary?._metadata?.integrationName}, Secondaries=${secondaries.length}`
+          );
+        }
+      })
+      .catch(() => {
+        // Ignore, already logged above
+      });
 
     await ze.start_new_build();
 
@@ -478,16 +533,38 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       },
     };
 
-    // upload
-    const platform = (await zephyr_engine.application_configuration).PLATFORM;
-    const strategy = getUploadStrategy(platform);
-    zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);
+    // Check if multi-CDN deployment is enabled
+    const configs = await zephyr_engine.application_configurations;
 
-    const application_uid = zephyr_engine.application_uid;
-    await setAppDeployResult(application_uid, {
-      urls: [zephyr_engine.version_url],
-      snapshot,
-    });
+    if (!configs || configs.length === 0) {
+      throw new ZephyrError({
+        code: 'ERR_NO_APPLICATION_CONFIG',
+        message: 'No application configuration available for upload',
+        template: { application_uid: zephyr_engine.application_uid },
+      });
+    }
+
+    if (configs.length > 1) {
+      // Multi-CDN deployment
+      ze_log.upload(`Multi-CDN deployment: deploying to ${configs.length} CDNs`);
+      const result = await multiCdnUploadStrategy(zephyr_engine, configs, upload_options);
+      zephyr_engine.version_url = result.primaryUrl;
+
+      if (isCI) {
+        const application_uid = zephyr_engine.application_uid;
+        await setAppDeployResult(application_uid, { urls: result.allUrls, snapshot });
+      }
+    } else {
+      // Single CDN deployment (backward compatible)
+      const platform = (await zephyr_engine.application_configuration).PLATFORM;
+      const strategy = getUploadStrategy(platform);
+      zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);
+
+      if (isCI) {
+        const application_uid = zephyr_engine.application_uid;
+        await setAppDeployResult(application_uid, { urls: [zephyr_engine.version_url], snapshot });
+      }
+    }
 
     await this.build_finished();
   }

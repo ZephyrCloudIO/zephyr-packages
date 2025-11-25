@@ -1,6 +1,12 @@
 import type { BuildSuccessEvent } from '@parcel/types';
 import path from 'node:path';
-import { type ZephyrEngine, ZephyrError, logFn, zeBuildDashData } from 'zephyr-agent';
+import {
+  type ZephyrEngine,
+  ZephyrError,
+  logFn,
+  zeBuildDashData,
+  type ZephyrBuildHooks,
+} from 'zephyr-agent';
 import { type ParcelOutputAsset, getAssetsMap } from './get-assets-map';
 
 const assets = new Map<string, ParcelOutputAsset>();
@@ -8,10 +14,11 @@ const assets = new Map<string, ParcelOutputAsset>();
 interface OnBuildSuccessProps {
   zephyr_engine_defer: Promise<ZephyrEngine>;
   event: BuildSuccessEvent;
+  hooks?: ZephyrBuildHooks;
 }
 
 export async function onBuildSuccess(props: OnBuildSuccessProps): Promise<void> {
-  const { event, zephyr_engine_defer } = props;
+  const { event, zephyr_engine_defer, hooks } = props;
 
   try {
     const zephyr_engine = await zephyr_engine_defer;
@@ -37,6 +44,7 @@ export async function onBuildSuccess(props: OnBuildSuccessProps): Promise<void> 
     await zephyr_engine.upload_assets({
       assetsMap: getAssetsMap(assets),
       buildStats: await zeBuildDashData(zephyr_engine),
+      hooks,
     });
 
     await zephyr_engine.build_finished();

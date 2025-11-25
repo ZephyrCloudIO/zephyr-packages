@@ -1,14 +1,14 @@
-import { type ZeBuildAsset, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
+import type { ZeBuildAsset, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
 import { ze_log } from '../logging';
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { makeRequest } from '../http/http-request';
 import { zeUploadSnapshot } from '../edge-actions';
-import { UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
+import {type UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
 import { update_hash_list } from '../edge-hash-list/distributed-hash-control';
 import { white, whiteBright } from '../logging/picocolor';
-import { UploadFileProps } from '../http/upload-file';
+import type { UploadFileProps } from '../http/upload-file';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 
 const AWS_MAX_BODY_SIZE = 20971520;

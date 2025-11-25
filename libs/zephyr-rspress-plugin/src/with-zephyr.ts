@@ -1,17 +1,27 @@
 import type { RspressPlugin } from '@rspress/shared';
-import { withZephyr as zephyrRsbuildPlugin } from 'zephyr-rsbuild-plugin';
+import {
+  withZephyr as zephyrRsbuildPlugin,
+  type ZephyrBuildHooks,
+} from 'zephyr-rsbuild-plugin';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
 
-export function withZephyr(): RspressPlugin {
+export interface ZephyrRspressOptions {
+  hooks?: ZephyrBuildHooks;
+}
+
+export function withZephyr(options?: ZephyrRspressOptions): RspressPlugin {
   return {
     name: 'zephyr-rspress-plugin',
     async config(config, { addPlugin }) {
       const { ssg = false } = config;
 
       if (ssg) {
-        addPlugin(zephyrRspressSSGPlugin(config));
+        addPlugin(zephyrRspressSSGPlugin(config, options));
       } else {
-        config.builderPlugins = [...(config.builderPlugins ?? []), zephyrRsbuildPlugin()];
+        config.builderPlugins = [
+          ...(config.builderPlugins ?? []),
+          zephyrRsbuildPlugin(options),
+        ];
       }
       return config;
     },

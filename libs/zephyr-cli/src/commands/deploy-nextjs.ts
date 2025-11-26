@@ -3,31 +3,31 @@
  * functions
  */
 
-import * as path from 'path';
 import * as fs from 'fs';
-import { ZephyrEngine, logFn, ZephyrError, ZeErrors, buildAssetsMap } from 'zephyr-agent';
+import * as path from 'path';
+import { ZephyrEngine, buildAssetsMap, logFn } from 'zephyr-agent';
 import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
-import { uploadAssets } from '../lib/upload';
-import { DeployNextjsOptions, DeploymentPlan, RouteType } from '../lib/nextjs/types';
-import {
-  findNextDir,
-  validateNextBuild,
-  normalizePath,
-  formatBytes,
-  getRelativePath,
-} from '../lib/nextjs/utils';
-import {
-  parseAllManifests,
-  classifyRoutes,
-  getServerlessRoutes,
-  getEdgeRoutes,
-  getStaticRoutes,
-} from '../lib/nextjs/parse-manifests';
 import {
   bundleAllServerlessRoutes,
   cleanupBundles,
   getTotalBundleSize,
 } from '../lib/nextjs/bundle-functions';
+import {
+  classifyRoutes,
+  getEdgeRoutes,
+  getServerlessRoutes,
+  getStaticRoutes,
+  parseAllManifests,
+} from '../lib/nextjs/parse-manifests';
+import { DeployNextjsOptions, DeploymentPlan } from '../lib/nextjs/types';
+import {
+  findNextDir,
+  formatBytes,
+  getRelativePath,
+  normalizePath,
+  validateNextBuild,
+} from '../lib/nextjs/utils';
+import { uploadAssets } from '../lib/upload';
 
 /**
  * Deploy Next.js command
@@ -418,10 +418,13 @@ async function createAssetsMapFromFiles(
       const content = fs.readFileSync(localPath);
       const type = getFileType(localPath);
 
-      // Normalize path for consistent handling
-      const normalizedPath = normalizePath(uploadPath);
+      // Normalize path for consistent handling and remove leading slash
+      let normalizedPath = normalizePath(uploadPath);
+      if (normalizedPath.startsWith('/')) {
+        normalizedPath = normalizedPath.slice(1);
+      }
 
-      assets[normalizedPath] = {
+      assets[`client/${normalizedPath}`] = {
         content,
         type,
       };

@@ -1,5 +1,4 @@
-import { ZeErrors } from 'libs/zephyr-agent/dist';
-import { ZephyrError } from 'zephyr-agent';
+import { ZeErrors, ZephyrError } from 'zephyr-agent';
 
 export interface ParsedCommand {
   /** The main command to execute (without environment variables) */

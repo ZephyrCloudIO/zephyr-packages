@@ -5,6 +5,7 @@ import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import { parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
 import { runCommand } from './commands/run';
+import { deployNextjsCommand } from './commands/deploy-nextjs';
 
 async function main(): Promise<void> {
   try {
@@ -30,6 +31,19 @@ async function main(): Promise<void> {
         ssr: options.ssr,
         cwd: workingDir,
       });
+    } else if (options.command === 'deploy-nextjs') {
+      if (!options.directory) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Directory is required for deploy-nextjs command',
+        });
+      }
+
+      await deployNextjsCommand({
+        directory: options.directory,
+        target: options.target,
+        verbose: options.verbose,
+        cwd: workingDir,
+      });
     } else if (options.command === 'run') {
       if (!options.commandLine) {
         throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -52,7 +66,12 @@ async function main(): Promise<void> {
 }
 
 // Run the CLI
-main().catch((error) => {
-  console.error('[ze-cli] Fatal error:', ZephyrError.format(error));
-  process.exit(1);
-});
+main()
+  .then(() => {
+    // Explicitly exit on success to close any hanging connections
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('[ze-cli] Fatal error:', ZephyrError.format(error));
+    process.exit(1);
+  });

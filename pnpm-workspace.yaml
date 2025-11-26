@@ -24,11 +24,11 @@ catalogs:
     '@modern-js/app-tools': ^2.68.14
     '@modern-js/tsconfig': ^2.68.14
   parcel:
-    'parcel': ^2.14.1
+    'parcel': ^2.16.1
     '@parcel/config-default': ^2.14.1
-    '@parcel/plugin': ^2.13.3
-    '@parcel/types': ^2.13.3
-    '@parcel/core': ^2.13.3
+    '@parcel/plugin': ^2.16.1
+    '@parcel/types': ^2.16.1
+    '@parcel/core': ^2.16.1
   module-federation:
     '@module-federation/enhanced': ^0.11.1
     '@module-federation/runtime': ^0.11.1

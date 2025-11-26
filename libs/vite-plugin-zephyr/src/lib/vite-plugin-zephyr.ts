@@ -9,6 +9,7 @@ import {
   ZephyrEngine,
   ZephyrError,
   type RemoteEntry,
+  type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
@@ -20,19 +21,21 @@ export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
+  hooks?: ZephyrBuildHooks;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
+  const hooks = _options?.hooks;
   const plugins: Plugin[] = [];
   if (mfConfig) {
     plugins.push(...federation(mfConfig));
   }
-  plugins.push(zephyrPlugin());
+  plugins.push(zephyrPlugin(hooks));
   return plugins;
 }
 
-function zephyrPlugin(): Plugin {
+function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
@@ -293,6 +296,7 @@ function zephyrPlugin(): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
+          hooks,
         });
         await zephyr_engine.build_finished();
       } catch (error) {
@@ -361,6 +365,7 @@ function zephyrPlugin(): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats,
+          hooks,
         });
         await zephyr_engine.build_finished();
       } catch (error) {

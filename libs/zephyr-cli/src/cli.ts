@@ -1,7 +1,7 @@
 export interface CliOptions {
-  command: 'run' | 'deploy';
+  command: 'run' | 'deploy' | 'deploy-nextjs';
   commandLine?: string; // For 'run' command
-  directory?: string; // For 'deploy' command
+  directory?: string; // For 'deploy' and 'deploy-nextjs' commands
   target?: 'web' | 'ios' | 'android';
   verbose?: boolean;
   ssr?: boolean;
@@ -95,6 +95,45 @@ export function parseArgs(args: string[]): CliOptions {
         options.verbose = true;
       }
     }
+  } else if (firstArg === 'deploy-nextjs') {
+    options.command = 'deploy-nextjs';
+    const directory = args[commandStartIndex + 1];
+
+    // Directory is optional, defaults to current directory
+    if (directory && !directory.startsWith('-')) {
+      options.directory = directory;
+
+      // Parse any additional flags after the directory
+      for (let i = commandStartIndex + 2; i < args.length; i++) {
+        const arg = args[i];
+
+        if (arg === '--target' || arg === '-t') {
+          const value = args[++i];
+          if (value && ['web', 'ios', 'android'].includes(value)) {
+            options.target = value as 'web' | 'ios' | 'android';
+          }
+        } else if (arg === '--verbose') {
+          options.verbose = true;
+        }
+      }
+    } else {
+      // No directory specified, use current directory
+      options.directory = '.';
+
+      // Parse flags starting from commandStartIndex + 1
+      for (let i = commandStartIndex + 1; i < args.length; i++) {
+        const arg = args[i];
+
+        if (arg === '--target' || arg === '-t') {
+          const value = args[++i];
+          if (value && ['web', 'ios', 'android'].includes(value)) {
+            options.target = value as 'web' | 'ios' | 'android';
+          }
+        } else if (arg === '--verbose') {
+          options.verbose = true;
+        }
+      }
+    }
   } else {
     // It's a run command - everything from commandStartIndex onwards is the command
     options.command = 'run';
@@ -108,6 +147,7 @@ function printHelp(): void {
   console.log(`
 Usage: ze-cli [options] <command> [args...]
        ze-cli deploy <directory> [options]
+       ze-cli deploy-nextjs [directory] [options]
 
 Run a build command and automatically upload assets to Zephyr, or deploy
 pre-built assets from a directory.
@@ -115,6 +155,8 @@ pre-built assets from a directory.
 Commands:
   <command> [args...]      Run a build command and upload (default)
   deploy <directory>       Upload pre-built assets from a directory
+  deploy-nextjs [dir]      Deploy Next.js app with serverless functions
+                           (directory defaults to current directory)
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered
@@ -135,10 +177,18 @@ Examples:
   ze-cli deploy ./dist --ssr
   ze-cli deploy ./build --target ios
 
+  # Deploy Next.js applications
+  ze-cli deploy-nextjs                    # Deploy from current directory
+  ze-cli deploy-nextjs ./my-nextjs-app   # Deploy from specific directory
+  ze-cli deploy-nextjs --verbose         # With detailed logging
+
 How it works:
   - For run commands, ze-cli executes your build command and automatically
     detects the output directory to upload assets.
   - For deploy commands, ze-cli uploads assets from the specified directory.
+  - For deploy-nextjs, ze-cli deploys Next.js apps with serverless functions.
+    Static assets go to /_next/, and each route becomes a serverless function.
+    Make sure to run 'next build' before deploying.
   - All stdout/stderr from build commands are passed through.
   - ze-cli logs are written to stderr only.
 

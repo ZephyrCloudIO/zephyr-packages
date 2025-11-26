@@ -424,7 +424,11 @@ async function createAssetsMapFromFiles(
         normalizedPath = normalizedPath.slice(1);
       }
 
-      assets[`client/${normalizedPath}`] = {
+      if (normalizedPath.startsWith('static/')) {
+        normalizedPath = `client/${normalizedPath}`;
+      }
+
+      assets[normalizedPath] = {
         content,
         type,
       };

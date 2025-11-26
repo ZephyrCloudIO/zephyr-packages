@@ -19,7 +19,11 @@ import {
   getStaticRoutes,
   parseAllManifests,
 } from '../lib/nextjs/parse-manifests';
-import { DeployNextjsOptions, DeploymentPlan } from '../lib/nextjs/types';
+import {
+  DeployNextjsOptions,
+  DeploymentPlan,
+  ServerlessFunction,
+} from '../lib/nextjs/types';
 import {
   findNextDir,
   formatBytes,
@@ -367,16 +371,22 @@ async function uploadNextjsDeployment(
     assetsMap: staticAssetsMap,
   });
 
-  // TODO: Upload serverless functions
-  // This requires extending ZephyrEngine to support function uploads
-  // For now, we'll log what would be uploaded
+  // Upload serverless functions
   if (plan.serverlessFunctions.length > 0) {
     console.error(
-      `[ze-cli] Note: ${plan.serverlessFunctions.length} serverless functions are bundled and ready`
+      `[ze-cli] Uploading ${plan.serverlessFunctions.length} serverless functions...`
     );
-    console.error(
-      '[ze-cli] Function deployment will be implemented when ZephyrEngine function API is ready'
+
+    const serverlessAssetsMap = await createAssetsMapFromFunctions(
+      plan.serverlessFunctions,
+      'serverless',
+      verbose
     );
+
+    await uploadAssets({
+      zephyr_engine,
+      assetsMap: serverlessAssetsMap,
+    });
 
     if (verbose) {
       console.error('\n[ze-cli] Function details:');
@@ -389,14 +399,20 @@ async function uploadNextjsDeployment(
     }
   }
 
-  // TODO: Upload edge functions
+  // Upload edge functions
   if (plan.edgeFunctions.length > 0) {
-    console.error(
-      `[ze-cli] Note: ${plan.edgeFunctions.length} edge functions are bundled and ready`
+    console.error(`[ze-cli] Uploading ${plan.edgeFunctions.length} edge functions...`);
+
+    const edgeAssetsMap = await createAssetsMapFromFunctions(
+      plan.edgeFunctions,
+      'edge',
+      verbose
     );
-    console.error(
-      '[ze-cli] Edge function deployment will be implemented when ZephyrEngine edge API is ready'
-    );
+
+    await uploadAssets({
+      zephyr_engine,
+      assetsMap: edgeAssetsMap,
+    });
   }
 }
 
@@ -424,7 +440,7 @@ async function createAssetsMapFromFiles(
         normalizedPath = normalizedPath.slice(1);
       }
 
-      if (normalizedPath.startsWith('static/')) {
+      if (normalizedPath.startsWith('_next/static/')) {
         normalizedPath = `client/${normalizedPath}`;
       }
 
@@ -437,6 +453,82 @@ async function createAssetsMapFromFiles(
         `[ze-cli] Warning: Failed to read file ${localPath}: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+  }
+
+  return buildAssetsMap(
+    assets,
+    (asset) => asset.content,
+    (asset) => asset.type
+  );
+}
+
+/**
+ * Create ZeBuildAssetsMap from bundled serverless/edge functions
+ *
+ * @param functions - Array of bundled functions
+ * @param functionType - Type of functions ('serverless' or 'edge')
+ * @param verbose - Verbose logging
+ * @returns Assets map
+ */
+async function createAssetsMapFromFunctions(
+  functions: ServerlessFunction[],
+  functionType: 'serverless' | 'edge',
+  verbose: boolean
+): Promise<ZeBuildAssetsMap> {
+  const assets: Record<string, { content: Buffer; type: string }> = {};
+
+  for (const func of functions) {
+    const bundleDir = func.bundleDir;
+
+    // Get all files in the bundle directory
+    const bundleFiles = getAllFilesRecursively(bundleDir);
+
+    if (verbose) {
+      logFn(
+        'info',
+        `Uploading ${functionType} function: ${func.route} (${bundleFiles.length} files)`
+      );
+    }
+
+    for (const filePath of bundleFiles) {
+      // Get relative path from bundle directory
+      const relativePath = path.relative(bundleDir, filePath);
+
+      // Create upload path: server/<functionType>/<route>/<file>
+      // Normalize the route to use as a directory name
+      const routeDir = func.route.replace(/^\//, '').replace(/\//g, '_') || 'root';
+      const uploadPath = `server/${functionType}/${routeDir}/${relativePath}`;
+
+      try {
+        const content = fs.readFileSync(filePath);
+        const type = getFileType(filePath);
+
+        assets[uploadPath] = {
+          content,
+          type,
+        };
+      } catch (error) {
+        console.error(
+          `[ze-cli] Warning: Failed to read function file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    }
+
+    // Also upload function metadata as JSON
+    const metadataPath = `server/${functionType}/${func.route.replace(/^\//, '').replace(/\//g, '_') || 'root'}/_metadata.json`;
+    const metadata = {
+      route: func.route,
+      entryPoint: func.entryPoint,
+      runtime: func.runtime,
+      regex: func.regex,
+      isDynamic: func.isDynamic,
+      routeKeys: func.routeKeys,
+    };
+
+    assets[metadataPath] = {
+      content: Buffer.from(JSON.stringify(metadata, null, 2)),
+      type: 'application/json',
+    };
   }
 
   return buildAssetsMap(

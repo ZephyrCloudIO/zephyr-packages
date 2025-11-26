@@ -344,9 +344,23 @@ function zephyrPlugin(): Plugin {
           zephyr_engine,
           vite_internal_options
         );
+        const modules = Object.entries(mfPlugin?._options.exposes ?? {})
+          .map(([name, file]) => ({
+            name: name.replace('./', ''),
+            file: typeof file === 'string' ? file : file.import,
+          }))
+          .map(({ name, file }) => ({
+            id: name,
+            applicationID: `${name}:${name}`,
+            requires: [],
+            name,
+            file,
+          }));
+        const buildStats = await zeBuildDashData(zephyr_engine);
+        buildStats.modules = modules;
         await zephyr_engine.upload_assets({
           assetsMap,
-          buildStats: await zeBuildDashData(zephyr_engine),
+          buildStats,
         });
         await zephyr_engine.build_finished();
       } catch (error) {

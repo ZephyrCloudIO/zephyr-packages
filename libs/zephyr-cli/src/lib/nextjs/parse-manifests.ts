@@ -261,41 +261,96 @@ function getServerEntryPoint(nextDir: string, routePath: string): string | null 
  */
 function getAppRouterEntryPoint(serverDir: string, routePath: string): string | null {
   // App Router structure:
-  // /          -> app/page.js
-  // /about     -> app/about/page.js
-  // /api/users -> app/api/users/route.js
+  // /          -> app/page.js (or app/(group)/page.js)
+  // /about     -> app/about/page.js (or app/(group)/about/page.js)
+  // /api/users -> app/api/users/route.js (or app/(group)/api/users/route.js)
 
-  let relPath: string;
+  // Next.js uses route groups (folders wrapped in parentheses) which don't affect the URL path
+  // We need to search for the file considering these route groups
 
+  const fileName = routePath.startsWith('/api/') ? 'route.js' : 'page.js';
+  const appDir = path.join(serverDir, 'app');
+
+  if (!fileExists(appDir)) {
+    return null;
+  }
+
+  // For root route
   if (routePath === '/') {
-    // Root page
-    relPath = 'app/page.js';
-  } else if (routePath.startsWith('/api/')) {
-    // API route - use route.js
-    const apiPath = routePath.slice(5); // Remove '/api/'
-    relPath = `app/api/${apiPath}/route.js`;
-  } else {
-    // Regular page - use page.js
-    const pagePath = routePath.slice(1); // Remove leading '/'
-    relPath = `app/${pagePath}/page.js`;
+    const found = findFileInDirectory(appDir, [], fileName);
+    return found ? `app/${found}` : null;
   }
 
-  const fullPath = path.join(serverDir, relPath);
-  if (fileExists(fullPath)) {
-    return relPath;
-  }
+  // Split the route path into segments
+  const segments = routePath.slice(1).split('/').filter((p) => p);
 
-  // Try without nested directory (for catch-all or optional catch-all)
-  if (routePath.includes('[')) {
-    // Dynamic route - try variations
-    const parts = routePath.split('/').filter((p) => p);
-    const fileName = routePath.startsWith('/api/') ? 'route.js' : 'page.js';
+  // Try to find the file considering route groups
+  const found = findFileInDirectory(appDir, segments, fileName);
+  return found ? `app/${found}` : null;
+}
 
-    // Try direct file path
-    const directPath = `app/${parts.join('/')}/${fileName}`;
-    if (fileExists(path.join(serverDir, directPath))) {
-      return directPath;
+/**
+ * Recursively search for a file in a directory, considering route groups
+ *
+ * @param currentDir - Current directory to search
+ * @param remainingSegments - Remaining path segments to match
+ * @param fileName - Target file name (page.js or route.js)
+ * @returns Relative path from app directory, or null if not found
+ */
+function findFileInDirectory(
+  currentDir: string,
+  remainingSegments: string[],
+  fileName: string
+): string | null {
+  const fs = require('fs');
+
+  // Base case: no more segments, look for the file
+  if (remainingSegments.length === 0) {
+    const targetPath = path.join(currentDir, fileName);
+    if (fileExists(targetPath)) {
+      return fileName;
     }
+    return null;
+  }
+
+  if (!fileExists(currentDir)) {
+    return null;
+  }
+
+  const [nextSegment, ...restSegments] = remainingSegments;
+
+  try {
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const dirName = entry.name;
+
+      // Check if this directory matches the next segment (exact match or route group)
+      const isRouteGroup = dirName.startsWith('(') && dirName.endsWith(')');
+      const isMatch = dirName === nextSegment;
+
+      if (isMatch) {
+        // Exact match - continue down this path
+        const subPath = path.join(currentDir, dirName);
+        const result = findFileInDirectory(subPath, restSegments, fileName);
+        if (result) {
+          return path.join(dirName, result);
+        }
+      } else if (isRouteGroup) {
+        // Route group - search inside without consuming a segment
+        const subPath = path.join(currentDir, dirName);
+        const result = findFileInDirectory(subPath, remainingSegments, fileName);
+        if (result) {
+          return path.join(dirName, result);
+        }
+      }
+    }
+  } catch (error) {
+    return null;
   }
 
   return null;

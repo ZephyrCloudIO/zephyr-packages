@@ -226,23 +226,36 @@ function bundleEdgeFunction(
   );
 
   const filesToCopy: string[] = [];
+  const edgeChunkFiles: string[] = []; // Track edge chunk files separately
 
   if (edgeFuncInfo && edgeFuncInfo.files) {
     // Copy all files listed in the middleware manifest
+    // These files must be loaded in order for Turbopack to work correctly
     for (const file of edgeFuncInfo.files) {
       const srcPath = path.join(nextDir, file);
       if (fileExists(srcPath)) {
-        // Remove 'server/' prefix from the file path to avoid duplication
-        // Edge function files are in 'server/edge/...' but we want them at 'edge/...'
+        // For edge functions, we need to preserve the full path structure
+        // so that imports work correctly in the worker
+        // Files are like: server/edge/chunks/xxx.js
+        // We want to keep them as: edge/chunks/xxx.js
         const normalizedFile = file.startsWith('server/') ? file.slice(7) : file;
         const destPath = path.join(bundleDir, normalizedFile);
         copyFile(srcPath, destPath);
         filesToCopy.push(normalizedFile);
 
+        // Track if this is an edge chunk file
+        if (normalizedFile.startsWith('edge/chunks/')) {
+          edgeChunkFiles.push(normalizedFile);
+        }
+
         if (verbose) {
           logFn('debug', `  Copied: ${file} -> ${normalizedFile}`);
         }
       }
+    }
+
+    if (verbose && edgeChunkFiles.length > 0) {
+      logFn('debug', `  Edge chunks: ${edgeChunkFiles.join(', ')}`);
     }
   } else {
     // Fallback: just copy the entry point
@@ -267,6 +280,8 @@ function bundleEdgeFunction(
     regex: route.regex,
     isDynamic: route.isDynamic,
     routeKeys: route.routeKeys,
+    // Store edge chunk files for the worker to load in order
+    edgeChunkFiles,
   };
 }
 

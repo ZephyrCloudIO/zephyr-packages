@@ -21,7 +21,8 @@ export function generateWorkerCode(
   buildId: string,
   basePath: string = '',
   assetsManifest: AssetManifest = {},
-  edgeFunctionChunks: Record<string, string[]> = {}
+  edgeFunctionChunks: Record<string, string[]> = {},
+  config: any = {}
 ): string {
   // Serialize routes for the worker
   const routesJson = JSON.stringify(
@@ -40,6 +41,7 @@ export function generateWorkerCode(
 
   const assetsManifestJson = JSON.stringify(assetsManifest, null, 2);
   const edgeChunksJson = JSON.stringify(edgeFunctionChunks, null, 2);
+  const configJson = JSON.stringify(config, null, 2);
 
   return `/**
  * Next.js Worker Entry Point
@@ -113,6 +115,7 @@ const BASE_PATH = ${JSON.stringify(basePath)};
 const BUILD_ID = ${JSON.stringify(buildId)};
 const ASSETS_MANIFEST = ${assetsManifestJson};
 const EDGE_CHUNKS = ${edgeChunksJson};
+const NEXT_CONFIG = ${configJson};
 
 /**
  * Main fetch handler for the worker
@@ -441,10 +444,13 @@ async function handleServerlessFunction(request, route, match) {
               });
 
               // Create context object for Next.js route handlers
-              // Next.js route handlers expect (request, context) where context = { params }
+              // Next.js route handlers expect (request, context) where context = { params, nextConfig, ... }
+              // nextConfig is required for SSR pages to access config.experimental.ppr, etc.
               const context = {
-                params: match.params || {}
+                params: match.params || {},
+                nextConfig: NEXT_CONFIG
               };
+              console.log('[NextJS Worker] Next Config:', NEXT_CONFIG);
 
               const method = request.method;
 

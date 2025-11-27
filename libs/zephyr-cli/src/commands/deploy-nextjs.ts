@@ -469,7 +469,8 @@ async function uploadNextjsDeployment(
     plan.buildId,
     plan.config?.basePath || '',
     assetsManifest,
-    edgeFunctionChunks
+    edgeFunctionChunks,
+    plan.config || {}
   );
 
   allAssets['server/_worker.js'] = {

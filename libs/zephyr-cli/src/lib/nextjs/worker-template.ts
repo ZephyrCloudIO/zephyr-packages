@@ -328,17 +328,107 @@ async function handleServerlessFunction(request, route, match) {
               console.log('[NextJS Worker] Found handler in _ENTRIES:', key);
               const entryHandler = await globalThis._ENTRIES[key];
 
-              // Try calling the method directly
+              console.log('[NextJS Worker] entryHandler structure:', {
+                type: typeof entryHandler,
+                isFunction: typeof entryHandler === 'function',
+                hasDefault: !!entryHandler.default,
+                defaultType: typeof entryHandler.default,
+                keys: Object.keys(entryHandler),
+                hasGET: !!entryHandler.GET,
+                hasPOST: !!entryHandler.POST,
+                hasComponentMod: !!entryHandler.ComponentMod,
+                componentModType: typeof entryHandler.ComponentMod
+              });
+
+              // Check if ComponentMod has the actual handlers
+              if (entryHandler.ComponentMod) {
+                console.log('[NextJS Worker] ComponentMod structure:', {
+                  type: typeof entryHandler.ComponentMod,
+                  keys: Object.keys(entryHandler.ComponentMod),
+                  hasGET: !!entryHandler.ComponentMod.GET,
+                  hasPOST: !!entryHandler.ComponentMod.POST,
+                  hasHandler: !!entryHandler.ComponentMod.handler,
+                  handlerType: typeof entryHandler.ComponentMod.handler,
+                  hasRouteModule: !!entryHandler.ComponentMod.routeModule,
+                  routeModuleType: typeof entryHandler.ComponentMod.routeModule
+                });
+
+                // Check routeModule structure
+                if (entryHandler.ComponentMod.routeModule) {
+                  console.log('[NextJS Worker] routeModule structure:', {
+                    type: typeof entryHandler.ComponentMod.routeModule,
+                    keys: Object.keys(entryHandler.ComponentMod.routeModule),
+                    hasUserland: !!entryHandler.ComponentMod.routeModule.userland,
+                    userlandType: typeof entryHandler.ComponentMod.routeModule.userland
+                  });
+
+                  // Check userland
+                  if (entryHandler.ComponentMod.routeModule.userland) {
+                    console.log('[NextJS Worker] userland structure:', {
+                      type: typeof entryHandler.ComponentMod.routeModule.userland,
+                      keys: Object.keys(entryHandler.ComponentMod.routeModule.userland),
+                      hasGET: !!entryHandler.ComponentMod.routeModule.userland.GET,
+                      hasPOST: !!entryHandler.ComponentMod.routeModule.userland.POST
+                    });
+                  }
+                }
+              }
+
+              console.log('[NextJS Worker] Request object:', {
+                type: typeof request,
+                hasUrl: !!request.url,
+                url: request.url,
+                method: request.method,
+                constructor: request.constructor?.name
+              });
+
+              // Create context object for Next.js route handlers
+              // Next.js route handlers expect (request, context) where context = { params }
+              const context = {
+                params: match.params || {}
+              };
+
               const method = request.method;
+
+              // Try ComponentMod.routeModule.userland (Next.js 16 Turbopack structure)
+              if (entryHandler.ComponentMod?.routeModule?.userland) {
+                const userland = entryHandler.ComponentMod.routeModule.userland;
+                if (userland[method] && typeof userland[method] === 'function') {
+                  console.log('[NextJS Worker] Calling method from userland:', method);
+                  return await userland[method](request, context);
+                }
+              }
+
+              // Try ComponentMod.handler (might be a general handler)
+              if (entryHandler.ComponentMod?.handler && typeof entryHandler.ComponentMod.handler === 'function') {
+                console.log('[NextJS Worker] Calling ComponentMod.handler');
+                return await entryHandler.ComponentMod.handler(request, context);
+              }
+
+              // Try ComponentMod directly
+              if (entryHandler.ComponentMod) {
+                if (entryHandler.ComponentMod[method] && typeof entryHandler.ComponentMod[method] === 'function') {
+                  console.log('[NextJS Worker] Calling method from ComponentMod:', method);
+                  return await entryHandler.ComponentMod[method](request, context);
+                }
+              }
+
+              // Try calling the method directly
               if (entryHandler[method] && typeof entryHandler[method] === 'function') {
                 console.log('[NextJS Worker] Calling method from _ENTRIES:', method);
-                return await entryHandler[method](request);
+                return await entryHandler[method](request, context);
               }
 
               // Try default export
               if (entryHandler.default && typeof entryHandler.default === 'function') {
                 console.log('[NextJS Worker] Calling default from _ENTRIES');
-                return await entryHandler.default(request);
+                return await entryHandler.default(request, context);
+              }
+
+              // Maybe entryHandler itself is the function?
+              if (typeof entryHandler === 'function') {
+                console.log('[NextJS Worker] Calling entryHandler directly as function');
+                return await entryHandler(request, context);
               }
             }
           }

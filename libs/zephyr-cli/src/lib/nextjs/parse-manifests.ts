@@ -213,13 +213,29 @@ function classifySingleRoute(
 
   // Also check middleware-manifest.json for edge functions
   // This is where Next.js puts edge runtime information when using `export const runtime = 'edge'`
-  if (middleware?.functions?.[routePath]) {
-    runtime = 'edge';
-    type = RouteType.EDGE_FUNCTION;
+  let edgeFunctionKey: string | null = null;
+  if (middleware?.functions) {
+    // First try direct path match
+    if (middleware.functions[routePath]) {
+      runtime = 'edge';
+      type = RouteType.EDGE_FUNCTION;
+      edgeFunctionKey = routePath;
+    } else {
+      // App Router API routes may have /route suffix in the key
+      // Search by matcher patterns instead
+      for (const [key, funcInfo] of Object.entries(middleware.functions)) {
+        if (funcInfo.matchers?.some(m => m.originalSource === routePath)) {
+          runtime = 'edge';
+          type = RouteType.EDGE_FUNCTION;
+          edgeFunctionKey = key;
+          break;
+        }
+      }
+    }
   }
 
   // Determine entry point in .next/server
-  const entryPoint = getServerEntryPoint(nextDir, routePath);
+  const entryPoint = getServerEntryPoint(nextDir, routePath, runtime, edgeFunctionKey, middleware);
 
   return {
     path: routePath,
@@ -238,10 +254,39 @@ function classifySingleRoute(
  *
  * @param nextDir - Path to .next directory
  * @param routePath - Route path
+ * @param runtime - Runtime type (nodejs or edge)
+ * @param edgeFunctionKey - Key in middleware-manifest.json for edge functions
+ * @param middleware - Middleware manifest
  * @returns Relative path to entry point file, or null if not found
  */
-function getServerEntryPoint(nextDir: string, routePath: string): string | null {
+function getServerEntryPoint(
+  nextDir: string,
+  routePath: string,
+  runtime: 'nodejs' | 'edge' = 'nodejs',
+  edgeFunctionKey: string | null = null,
+  middleware: MiddlewareManifest | null = null
+): string | null {
   const serverDir = path.join(nextDir, 'server');
+
+  // For edge functions, use the files array from middleware-manifest.json
+  if (runtime === 'edge' && edgeFunctionKey && middleware?.functions?.[edgeFunctionKey]) {
+    const edgeFunc = middleware.functions[edgeFunctionKey];
+    // Edge functions have their entry point in the files array
+    // The entry point is typically the last file that contains the edge wrapper
+    if (edgeFunc.files && edgeFunc.files.length > 0) {
+      // Look for the edge wrapper file (turbopack-*_edge-wrapper_*.js or similar)
+      const edgeWrapperFile = edgeFunc.files.find(f =>
+        f.includes('edge-wrapper') || f.includes('edge/chunks')
+      );
+      if (edgeWrapperFile) {
+        // Return the wrapper file as the entry point
+        return edgeWrapperFile.replace(/^server\//, '');
+      }
+      // Fallback: use the last file in the array
+      const lastFile = edgeFunc.files[edgeFunc.files.length - 1];
+      return lastFile.replace(/^server\//, '');
+    }
+  }
 
   // For App Router: routes are in server/app/
   // For Pages Router: routes are in server/pages/

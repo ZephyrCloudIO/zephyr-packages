@@ -283,6 +283,9 @@ export interface ServerlessFunction {
 
   /** Route keys for dynamic segments */
   routeKeys?: Record<string, string>;
+
+  /** Edge chunk files (for Turbopack builds) - must be loaded in order */
+  edgeChunkFiles?: string[];
 }
 
 /** Complete parsed Next.js manifests */

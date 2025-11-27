@@ -272,14 +272,17 @@ function getServerEntryPoint(
   if (runtime === 'edge' && edgeFunctionKey && middleware?.functions?.[edgeFunctionKey]) {
     const edgeFunc = middleware.functions[edgeFunctionKey];
     // Edge functions have their entry point in the files array
-    // The entry point is typically the last file that contains the edge wrapper
+    // For Turbopack (Next.js 16+), we need to load all files in order
+    // The last file (edge-wrapper) sets up _ENTRIES global
     if (edgeFunc.files && edgeFunc.files.length > 0) {
       // Look for the edge wrapper file (turbopack-*_edge-wrapper_*.js or similar)
+      // This should be loaded last as it depends on other chunks
       const edgeWrapperFile = edgeFunc.files.find(f =>
-        f.includes('edge-wrapper') || f.includes('edge/chunks')
+        f.includes('edge-wrapper')
       );
       if (edgeWrapperFile) {
         // Return the wrapper file as the entry point
+        // The bundler will copy all files from the middleware manifest
         return edgeWrapperFile.replace(/^server\//, '');
       }
       // Fallback: use the last file in the array

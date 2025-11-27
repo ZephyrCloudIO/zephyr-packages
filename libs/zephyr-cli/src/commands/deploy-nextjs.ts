@@ -448,11 +448,28 @@ async function uploadNextjsDeployment(
 
   // 5. Generate and add worker entry point
   console.error('[ze-cli] Generating worker entry point...');
+
+  // Collect edge function chunks information
+  const edgeFunctionChunks: Record<string, string[]> = {};
+  for (const edgeFunc of plan.edgeFunctions) {
+    if (edgeFunc.edgeChunkFiles && edgeFunc.edgeChunkFiles.length > 0) {
+      edgeFunctionChunks[edgeFunc.route] = edgeFunc.edgeChunkFiles;
+    }
+  }
+
+  if (verbose && Object.keys(edgeFunctionChunks).length > 0) {
+    logFn('info', 'Edge function chunks:');
+    for (const [route, chunks] of Object.entries(edgeFunctionChunks)) {
+      logFn('info', `  ${route}: ${chunks.length} chunks`);
+    }
+  }
+
   const workerCode = generateWorkerCode(
     plan.routes,
     plan.buildId,
     plan.config?.basePath || '',
-    assetsManifest
+    assetsManifest,
+    edgeFunctionChunks
   );
 
   allAssets['server/_worker.js'] = {

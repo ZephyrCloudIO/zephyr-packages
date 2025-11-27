@@ -311,10 +311,17 @@ async function handleServerlessFunction(request, route, match) {
         // After importing all chunks, check if _ENTRIES is populated
         if (globalThis._ENTRIES) {
           // Try different entry key formats that Turbopack uses
+          // For SSR pages: look for /page suffix
+          // For API routes: look for /route suffix
           const possibleKeys = [
+            // Pages (SSR)
+            \`middleware_app\${route.path}/page\`,
+            \`app\${route.path}/page\`,
+            // API Routes
             \`middleware_app\${route.path}/route\`,
-            \`middleware_app\${route.path}\`,
             \`app\${route.path}/route\`,
+            // Fallbacks
+            \`middleware_app\${route.path}\`,
             \`app\${route.path}\`
           ];
 
@@ -390,7 +397,28 @@ async function handleServerlessFunction(request, route, match) {
 
               const method = request.method;
 
-              // Try ComponentMod.routeModule.userland (Next.js 16 Turbopack structure)
+              // For SSR pages, try the render path first
+              if (type === 'serverless-ssr') {
+                // Try routeModule.handle (Next.js 16 Turbopack structure for pages)
+                if (entryHandler.ComponentMod?.routeModule?.handle && typeof entryHandler.ComponentMod.routeModule.handle === 'function') {
+                  console.log('[NextJS Worker] Calling routeModule.handle for SSR page');
+                  return await entryHandler.ComponentMod.routeModule.handle(request, context);
+                }
+
+                // Try routeModule.render
+                if (entryHandler.ComponentMod?.routeModule?.render && typeof entryHandler.ComponentMod.routeModule.render === 'function') {
+                  console.log('[NextJS Worker] Calling routeModule.render for SSR page');
+                  return await entryHandler.ComponentMod.routeModule.render(request, context);
+                }
+
+                // Try calling routeModule as a function
+                if (typeof entryHandler.ComponentMod?.routeModule === 'function') {
+                  console.log('[NextJS Worker] Calling routeModule as function for SSR page');
+                  return await entryHandler.ComponentMod.routeModule(request, context);
+                }
+              }
+
+              // Try ComponentMod.routeModule.userland (Next.js 16 Turbopack structure for API routes)
               if (entryHandler.ComponentMod?.routeModule?.userland) {
                 const userland = entryHandler.ComponentMod.routeModule.userland;
                 if (userland[method] && typeof userland[method] === 'function') {

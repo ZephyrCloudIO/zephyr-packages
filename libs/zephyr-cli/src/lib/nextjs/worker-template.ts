@@ -60,6 +60,11 @@ if (typeof globalThis.process === 'undefined') {
   };
 }
 
+// Next.js config for SSR/Edge runtime
+// This must be set before importing any chunks because SSR logic accesses it during module load
+const NEXT_CONFIG = ${configJson};
+globalThis.nextConfig = NEXT_CONFIG;
+
 // Node.js built-in module stubs for edge runtime
 // Turbopack tries to load these but they should be stubbed in edge runtime
 const nodeBuiltins = {
@@ -115,7 +120,6 @@ const BASE_PATH = ${JSON.stringify(basePath)};
 const BUILD_ID = ${JSON.stringify(buildId)};
 const ASSETS_MANIFEST = ${assetsManifestJson};
 const EDGE_CHUNKS = ${edgeChunksJson};
-const NEXT_CONFIG = ${configJson};
 
 /**
  * Main fetch handler for the worker

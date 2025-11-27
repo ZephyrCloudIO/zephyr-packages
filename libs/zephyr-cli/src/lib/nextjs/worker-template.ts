@@ -454,7 +454,6 @@ async function handleServerlessFunction(request, route, match) {
                 params: match.params || {},
                 nextConfig: NEXT_CONFIG
               };
-              console.log('[NextJS Worker] Next Config:', NEXT_CONFIG);
 
               const method = request.method;
 

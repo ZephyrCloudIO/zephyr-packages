@@ -6,7 +6,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { ZephyrEngine, buildAssetsMap, logFn } from 'zephyr-agent';
-import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import {
   bundleAllServerlessRoutes,
   cleanupBundles,
@@ -379,23 +378,21 @@ async function uploadNextjsDeployment(
 ): Promise<void> {
   console.error('[ze-cli] Uploading deployment...');
 
-  // Convert static files to assets map
+  // Collect all assets into a single map
+  const allAssets: Record<string, { content: Buffer; type: string }> = {};
+
+  // 1. Convert static files to assets
   const staticAssetsMap = await createAssetsMapFromFiles(plan.staticFiles, verbose);
+  Object.assign(allAssets, staticAssetsMap);
 
   if (verbose) {
-    logFn('info', `Uploading ${Object.keys(staticAssetsMap).length} static assets`);
+    logFn('info', `Collected ${Object.keys(staticAssetsMap).length} static assets`);
   }
 
-  // Upload static assets
-  await uploadAssets({
-    zephyr_engine,
-    assetsMap: staticAssetsMap,
-  });
-
-  // Upload serverless functions
+  // 2. Add serverless functions
   if (plan.serverlessFunctions.length > 0) {
     console.error(
-      `[ze-cli] Uploading ${plan.serverlessFunctions.length} serverless functions...`
+      `[ze-cli] Preparing ${plan.serverlessFunctions.length} serverless functions...`
     );
 
     const serverlessAssetsMap = await createAssetsMapFromFunctions(
@@ -403,11 +400,7 @@ async function uploadNextjsDeployment(
       'serverless',
       verbose
     );
-
-    await uploadAssets({
-      zephyr_engine,
-      assetsMap: serverlessAssetsMap,
-    });
+    Object.assign(allAssets, serverlessAssetsMap);
 
     if (verbose) {
       console.error('\n[ze-cli] Function details:');
@@ -420,21 +413,30 @@ async function uploadNextjsDeployment(
     }
   }
 
-  // Upload edge functions
+  // 3. Add edge functions
   if (plan.edgeFunctions.length > 0) {
-    console.error(`[ze-cli] Uploading ${plan.edgeFunctions.length} edge functions...`);
+    console.error(`[ze-cli] Preparing ${plan.edgeFunctions.length} edge functions...`);
 
     const edgeAssetsMap = await createAssetsMapFromFunctions(
       plan.edgeFunctions,
       'edge',
       verbose
     );
-
-    await uploadAssets({
-      zephyr_engine,
-      assetsMap: edgeAssetsMap,
-    });
+    Object.assign(allAssets, edgeAssetsMap);
   }
+
+  // Build final assets map and upload once
+  const finalAssetsMap = buildAssetsMap(
+    allAssets,
+    (asset) => asset.content,
+    (asset) => asset.type
+  );
+
+  console.error(`[ze-cli] Uploading ${Object.keys(allAssets).length} total assets...`);
+  await uploadAssets({
+    zephyr_engine,
+    assetsMap: finalAssetsMap,
+  });
 }
 
 /**
@@ -447,7 +449,7 @@ async function uploadNextjsDeployment(
 async function createAssetsMapFromFiles(
   fileMap: Map<string, string>,
   verbose: boolean
-): Promise<ZeBuildAssetsMap> {
+): Promise<Record<string, { content: Buffer; type: string }>> {
   const assets: Record<string, { content: Buffer; type: string }> = {};
 
   for (const [uploadPath, localPath] of fileMap.entries()) {
@@ -469,7 +471,10 @@ async function createAssetsMapFromFiles(
       //
       // Exception: Server-side assets are handled separately in createAssetsMapFromFunctions
       // and are prefixed with 'server/serverless/' or 'server/edge/'
-      if (normalizedPath.startsWith('_next/static/') || normalizedPath.endsWith('.html')) {
+      if (
+        normalizedPath.startsWith('_next/static/') ||
+        normalizedPath.endsWith('.html')
+      ) {
         normalizedPath = `client/${normalizedPath}`;
       }
 
@@ -484,11 +489,7 @@ async function createAssetsMapFromFiles(
     }
   }
 
-  return buildAssetsMap(
-    assets,
-    (asset) => asset.content,
-    (asset) => asset.type
-  );
+  return assets;
 }
 
 /**
@@ -503,7 +504,7 @@ async function createAssetsMapFromFunctions(
   functions: ServerlessFunction[],
   functionType: 'serverless' | 'edge',
   verbose: boolean
-): Promise<ZeBuildAssetsMap> {
+): Promise<Record<string, { content: Buffer; type: string }>> {
   const assets: Record<string, { content: Buffer; type: string }> = {};
 
   for (const func of functions) {
@@ -560,11 +561,7 @@ async function createAssetsMapFromFunctions(
     };
   }
 
-  return buildAssetsMap(
-    assets,
-    (asset) => asset.content,
-    (asset) => asset.type
-  );
+  return assets;
 }
 
 /**

@@ -14,3 +14,5 @@ export async function POST(request: NextRequest) {
     data: body,
   });
 }
+
+export const runtime = 'edge';

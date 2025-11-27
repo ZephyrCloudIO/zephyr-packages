@@ -116,7 +116,7 @@ export function parseRequiredServerFiles(nextDir: string): RequiredServerFiles {
  */
 export function classifyRoutes(nextDir: string, manifests: NextJsManifests): RouteInfo[] {
   const routes: RouteInfo[] = [];
-  const { routes: routesManifest, prerender, functionsConfig } = manifests;
+  const { routes: routesManifest, prerender, functionsConfig, middleware } = manifests;
 
   // Process static routes (from routes-manifest.json)
   for (const staticRoute of routesManifest.staticRoutes || []) {
@@ -128,7 +128,8 @@ export function classifyRoutes(nextDir: string, manifests: NextJsManifests): Rou
       false,
       staticRoute.routeKeys,
       prerender,
-      functionsConfig
+      functionsConfig,
+      middleware
     );
     routes.push(routeInfo);
   }
@@ -143,7 +144,8 @@ export function classifyRoutes(nextDir: string, manifests: NextJsManifests): Rou
       true,
       dynamicRoute.routeKeys,
       prerender,
-      functionsConfig
+      functionsConfig,
+      middleware
     );
     routes.push(routeInfo);
   }
@@ -161,6 +163,7 @@ export function classifyRoutes(nextDir: string, manifests: NextJsManifests): Rou
  * @param routeKeys - Route keys for dynamic segments
  * @param prerender - Prerender manifest
  * @param functionsConfig - Functions config manifest
+ * @param middleware - Middleware manifest (for edge function detection)
  * @returns Classified route information
  */
 function classifySingleRoute(
@@ -170,7 +173,8 @@ function classifySingleRoute(
   isDynamic: boolean,
   routeKeys: Record<string, string> | undefined,
   prerender: PrerenderManifest,
-  functionsConfig: FunctionsConfigManifest | null
+  functionsConfig: FunctionsConfigManifest | null,
+  middleware: MiddlewareManifest | null
 ): RouteInfo {
   // Determine route type based on prerender status and location
   let type: RouteType;
@@ -198,12 +202,20 @@ function classifySingleRoute(
   }
 
   // Check for runtime configuration
+  // First check functions-config-manifest.json
   if (functionsConfig?.functions[routePath]) {
     const config = functionsConfig.functions[routePath];
     if (config.runtime === 'edge') {
       runtime = 'edge';
       type = RouteType.EDGE_FUNCTION;
     }
+  }
+
+  // Also check middleware-manifest.json for edge functions
+  // This is where Next.js puts edge runtime information when using `export const runtime = 'edge'`
+  if (middleware?.functions?.[routePath]) {
+    runtime = 'edge';
+    type = RouteType.EDGE_FUNCTION;
   }
 
   // Determine entry point in .next/server

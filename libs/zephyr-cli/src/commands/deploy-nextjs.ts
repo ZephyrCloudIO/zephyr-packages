@@ -243,6 +243,13 @@ function collectPrerenderedHtml(
   // Find all index.html files (pre-rendered pages)
   const htmlFiles = findHtmlFiles(serverDir);
 
+  // Create a set of edge function routes that should NOT have HTML
+  const edgeFunctionRoutes = new Set(
+    routes
+      .filter((route) => route.type === 'edge-function' || route.runtime === 'edge')
+      .map((route) => route.path)
+  );
+
   for (const htmlFile of htmlFiles) {
     // Determine the route path from the file location
     const relPath = getRelativePath(serverDir, htmlFile);
@@ -250,6 +257,7 @@ function collectPrerenderedHtml(
     // For App Router: app/page-name/index.html -> /page-name
     // For root: app/index.html -> /
     let uploadPath: string;
+    let routePath: string; // The actual route this HTML represents
 
     if (relPath.startsWith('app/')) {
       const pathParts = relPath.slice(4).split('/'); // Remove 'app/'
@@ -257,8 +265,11 @@ function collectPrerenderedHtml(
 
       if (pathParts.length === 0) {
         uploadPath = '/index.html';
+        routePath = '/';
       } else {
-        uploadPath = '/' + pathParts.join('/') + '.html';
+        const route = '/' + pathParts.join('/');
+        uploadPath = route + '.html';
+        routePath = route;
       }
     } else if (relPath.startsWith('pages/')) {
       // Pages Router
@@ -266,21 +277,31 @@ function collectPrerenderedHtml(
       const fileName = pathParts.pop() || '';
 
       if (fileName === 'index.html') {
-        uploadPath =
-          pathParts.length === 0 ? '/index.html' : '/' + pathParts.join('/') + '.html';
+        routePath = pathParts.length === 0 ? '/' : '/' + pathParts.join('/');
+        uploadPath = pathParts.length === 0 ? '/index.html' : routePath + '.html';
       } else {
         uploadPath = '/' + pathParts.concat(fileName).join('/');
+        routePath = uploadPath.replace(/\.html$/, '');
       }
     } else {
       // Other HTML files, preserve path
       uploadPath = '/' + relPath;
+      routePath = uploadPath.replace(/\.html$/, '');
+    }
+
+    // Skip HTML files for edge function routes (they should invoke the function, not serve HTML)
+    if (edgeFunctionRoutes.has(routePath)) {
+      if (verbose) {
+        logFn('info', `Skipping HTML for edge function route: ${routePath}`);
+      }
+      continue;
     }
 
     staticFiles.set(uploadPath, htmlFile);
   }
 
-  if (verbose && htmlFiles.length > 0) {
-    logFn('info', `Collected ${htmlFiles.length} pre-rendered HTML files`);
+  if (verbose && staticFiles.size > 0) {
+    logFn('info', `Collected ${staticFiles.size} pre-rendered HTML files`);
   }
 }
 
@@ -440,7 +461,15 @@ async function createAssetsMapFromFiles(
         normalizedPath = normalizedPath.slice(1);
       }
 
-      if (normalizedPath.startsWith('_next/static/')) {
+      // All client-side assets (static files and HTML) should be prefixed with 'client/'
+      // This includes:
+      // - _next/static/* (JS, CSS, images, etc.)
+      // - HTML files (index.html, etc.)
+      // - Any other static assets
+      //
+      // Exception: Server-side assets are handled separately in createAssetsMapFromFunctions
+      // and are prefixed with 'server/serverless/' or 'server/edge/'
+      if (normalizedPath.startsWith('_next/static/') || normalizedPath.endsWith('.html')) {
         normalizedPath = `client/${normalizedPath}`;
       }
 

@@ -220,16 +220,16 @@ async function handleServerlessFunction(request, route, match) {
   try {
     // Determine the module path based on runtime
     // The modules are uploaded with the structure: server/<type>/<route_dir>/<entryPoint>
-    // This worker is at index.js, so we need to include 'server/' prefix
+    // This worker is at server/_worker.js, so paths are relative to server/
     let modulePath;
     if (runtime === 'edge') {
       // Edge functions are in server/edge/<route>/
       const routeDir = route.path.replace(/^\\//, '').replace(/\\//g, '_') || 'root';
-      modulePath = \`./server/edge/\${routeDir}/\${entryPoint}\`;
+      modulePath = \`./edge/\${routeDir}/\${entryPoint}\`;
     } else {
       // Serverless functions are in server/serverless/<route>/
       const routeDir = route.path.replace(/^\\//, '').replace(/\\//g, '_') || 'root';
-      modulePath = \`./server/serverless/\${routeDir}/\${entryPoint}\`;
+      modulePath = \`./serverless/\${routeDir}/\${entryPoint}\`;
     }
 
     console.log('[NextJS Worker] Attempting to import:', modulePath);

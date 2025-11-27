@@ -96,6 +96,11 @@ export function bundleServerlessFunction(
   const serverDir = path.join(nextDir, 'server');
   const entryPointPath = path.join(serverDir, route.entryPoint);
 
+  // Edge functions don't use NFT files - they're already bundled by Next.js
+  if (route.runtime === 'edge') {
+    return bundleEdgeFunction(nextDir, route, manifests, verbose);
+  }
+
   // Check if .nft.json exists for this entry point
   const nftPath = `${entryPointPath}.nft.json`;
   if (!fileExists(nftPath)) {
@@ -174,6 +179,86 @@ export function bundleServerlessFunction(
     route: route.path,
     entryPoint: route.entryPoint,
     dependencies,
+    runtime: route.runtime,
+    bundleDir,
+    regex: route.regex,
+    isDynamic: route.isDynamic,
+    routeKeys: route.routeKeys,
+  };
+}
+
+/**
+ * Bundle an edge function (which is already bundled by Next.js)
+ *
+ * @param nextDir - Path to .next directory
+ * @param route - Route information
+ * @param manifests - Parsed Next.js manifests
+ * @param verbose - Verbose logging
+ * @returns Bundled edge function
+ */
+function bundleEdgeFunction(
+  nextDir: string,
+  route: RouteInfo,
+  manifests: NextJsManifests,
+  verbose: boolean = false
+): ServerlessFunction {
+  const serverDir = path.join(nextDir, 'server');
+  const entryPointPath = path.join(serverDir, route.entryPoint!);
+
+  if (verbose) {
+    logFn('debug', `Bundling edge function: ${route.path}`);
+    logFn('debug', `  Entry point: ${route.entryPoint}`);
+  }
+
+  // Verify entry point exists
+  if (!fileExists(entryPointPath)) {
+    throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+      message: `Edge function entry point not found: ${entryPointPath}`,
+    });
+  }
+
+  // Create a temporary bundle directory
+  const bundleDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zephyr-edge-'));
+
+  // Get all files from middleware-manifest.json
+  const edgeFuncInfo = Object.values(manifests.middleware?.functions || {}).find(
+    (func) => func.matchers?.some((m) => m.originalSource === route.path)
+  );
+
+  const filesToCopy: string[] = [];
+
+  if (edgeFuncInfo && edgeFuncInfo.files) {
+    // Copy all files listed in the middleware manifest
+    for (const file of edgeFuncInfo.files) {
+      const srcPath = path.join(nextDir, file);
+      if (fileExists(srcPath)) {
+        const destPath = path.join(bundleDir, file);
+        copyFile(srcPath, destPath);
+        filesToCopy.push(file);
+
+        if (verbose) {
+          logFn('debug', `  Copied: ${file}`);
+        }
+      }
+    }
+  } else {
+    // Fallback: just copy the entry point
+    const destEntryPoint = path.join(bundleDir, route.entryPoint!);
+    copyFile(entryPointPath, destEntryPoint);
+    filesToCopy.push(route.entryPoint!);
+  }
+
+  // Copy required manifests
+  copyRequiredManifests(nextDir, bundleDir, route, verbose);
+
+  if (verbose) {
+    logFn('debug', `✓ Bundled edge function: ${route.path} (${filesToCopy.length} files)`);
+  }
+
+  return {
+    route: route.path,
+    entryPoint: route.entryPoint!,
+    dependencies: filesToCopy, // List all the edge function files
     runtime: route.runtime,
     bundleDir,
     regex: route.regex,

@@ -138,6 +138,7 @@ export interface EdgeFunctionInfo {
   files: string[];
   name: string;
   page: string;
+  matchers?: MiddlewareMatcher[];
   regions?: string | string[];
   wasm?: Array<{ filePath: string; name: string }>;
   assets?: Array<{ filePath: string; name: string }>;

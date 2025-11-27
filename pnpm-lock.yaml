@@ -245,6 +245,7 @@ overrides:
   brace-expansion@>=2.0.0 <=2.0.1: 2.0.2
   axios@<1.12.0: '>=1.12.0'
   '@eslint/plugin-kit': ^0.3.4
+  node-forge@<1.3.2: '>=1.3.2'
 
 importers:
 
@@ -11778,8 +11779,8 @@ packages:
       encoding:
         optional: true
 
-  node-forge@1.3.1:
-    resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
+  node-forge@1.3.2:
+    resolution: {integrity: sha512-6xKiQ+cph9KImrRh0VsjH2d8/GXA4FIMlgU4B757iI1ApvcyA9VlouP0yZJha01V+huImO+kKMU7ih+2+E14fw==}
     engines: {node: '>= 6.13.0'}
 
   node-gyp-build-optional-packages@5.1.1:
@@ -30335,7 +30336,7 @@ snapshots:
     optionalDependencies:
       encoding: 0.1.13
 
-  node-forge@1.3.1: {}
+  node-forge@1.3.2: {}
 
   node-gyp-build-optional-packages@5.1.1:
     dependencies:
@@ -32761,7 +32762,7 @@ snapshots:
   selfsigned@2.4.1:
     dependencies:
       '@types/node-forge': 1.3.11
-      node-forge: 1.3.1
+      node-forge: 1.3.2
 
   semver-regex@4.0.5: {}
 

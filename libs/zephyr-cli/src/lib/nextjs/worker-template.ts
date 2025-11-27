@@ -325,6 +325,78 @@ async function handleStaticHtml(routePath, pathname, env) {
 }
 
 /**
+ * Create a mock Response object for Next.js SSR
+ * Next.js expects a Node.js ServerResponse-like object
+ */
+function createMockResponse() {
+  const headers = new Headers();
+  let statusCode = 200;
+  const chunks = [];
+  let headersSent = false;
+
+  return {
+    statusCode,
+    headers: {},
+    finished: false,
+    headersSent: false,
+
+    setHeader(name, value) {
+      headers.set(name, String(value));
+      this.headers[name] = value;
+    },
+
+    appendHeader(name, value) {
+      const existing = headers.get(name);
+      if (existing) {
+        headers.set(name, existing + ', ' + String(value));
+      } else {
+        headers.set(name, String(value));
+      }
+    },
+
+    getHeader(name) {
+      return headers.get(name);
+    },
+
+    removeHeader(name) {
+      headers.delete(name);
+      delete this.headers[name];
+    },
+
+    write(chunk) {
+      chunks.push(chunk);
+    },
+
+    end(chunk) {
+      if (chunk) {
+        chunks.push(chunk);
+      }
+      this.finished = true;
+    },
+
+    on(event, handler) {
+      // Mock event listener
+    },
+
+    once(event, handler) {
+      // Mock event listener
+    },
+
+    getHeaders() {
+      return this.headers;
+    },
+
+    _getHeadersObject() {
+      return headers;
+    },
+
+    _getChunks() {
+      return chunks;
+    }
+  };
+}
+
+/**
  * Handle serverless functions (API routes and SSR pages)
  */
 async function handleServerlessFunction(request, route, match) {
@@ -424,7 +496,9 @@ async function handleServerlessFunction(request, route, match) {
                     type: typeof entryHandler.ComponentMod.routeModule,
                     keys: Object.keys(entryHandler.ComponentMod.routeModule),
                     hasUserland: !!entryHandler.ComponentMod.routeModule.userland,
-                    userlandType: typeof entryHandler.ComponentMod.routeModule.userland
+                    userlandType: typeof entryHandler.ComponentMod.routeModule.userland,
+                    hasRender: !!entryHandler.ComponentMod.routeModule.render,
+                    renderType: typeof entryHandler.ComponentMod.routeModule.render
                   });
 
                   // Check userland
@@ -462,16 +536,59 @@ async function handleServerlessFunction(request, route, match) {
                 // Create a mutable Request-like object for SSR pages
                 // Next.js SSR sometimes tries to modify Request properties like 'url'
 
-                // Try routeModule.handle (Next.js 16 Turbopack structure for pages)
-                if (entryHandler.ComponentMod?.routeModule?.handle && typeof entryHandler.ComponentMod.routeModule.handle === 'function') {
-                  console.log('[NextJS Worker] Calling routeModule.handle for SSR page');
-                  return await entryHandler.ComponentMod.routeModule.handle(mutableRequest, context);
-                }
-
-                // Try routeModule.render
+                // Try routeModule.render (Next.js 16 Turbopack structure for pages)
+                // routeModule.render expects (request, response, context) - 3 arguments!
                 if (entryHandler.ComponentMod?.routeModule?.render && typeof entryHandler.ComponentMod.routeModule.render === 'function') {
                   console.log('[NextJS Worker] Calling routeModule.render for SSR page');
-                  return await entryHandler.ComponentMod.routeModule.render(mutableRequest, context);
+
+                  // Create a mock response object
+                  const mockResponse = createMockResponse();
+
+                  // Call render with request, response, and context (3 arguments)
+                  const renderResult = await entryHandler.ComponentMod.routeModule.render(mutableRequest, mockResponse, context);
+
+                  console.log('[NextJS Worker] Render result:', {
+                    type: typeof renderResult,
+                    hasToString: typeof renderResult?.toString === 'function',
+                    hasToUnchunkedString: typeof renderResult?.toUnchunkedString === 'function',
+                    hasPipe: typeof renderResult?.pipe === 'function',
+                    hasPipeTo: typeof renderResult?.pipeTo === 'function',
+                    keys: renderResult ? Object.keys(renderResult) : []
+                  });
+
+                  // Convert RenderResult to Response
+                  // RenderResult has methods like toUnchunkedString, pipe, pipeTo
+                  let body;
+                  let contentType = 'text/html; charset=utf-8';
+
+                  // Check if it's a stream/readable
+                  if (renderResult && typeof renderResult.pipeTo === 'function') {
+                    // It's a readable stream
+                    const { readable, writable } = new TransformStream();
+                    renderResult.pipeTo(writable);
+                    body = readable;
+                  } else if (renderResult && typeof renderResult.toUnchunkedString === 'function') {
+                    // Convert to string
+                    body = await renderResult.toUnchunkedString();
+                  } else if (typeof renderResult === 'string') {
+                    body = renderResult;
+                  } else {
+                    // Fallback: try to get body from response chunks
+                    const chunks = mockResponse._getChunks();
+                    if (chunks.length > 0) {
+                      body = chunks.join('');
+                    } else {
+                      body = '';
+                    }
+                  }
+
+                  // Get headers from mock response
+                  const responseHeaders = mockResponse._getHeadersObject();
+
+                  return new Response(body, {
+                    status: mockResponse.statusCode,
+                    headers: responseHeaders
+                  });
                 }
 
                 // Try calling routeModule as a function
@@ -491,9 +608,61 @@ async function handleServerlessFunction(request, route, match) {
               }
 
               // Try ComponentMod.handler (might be a general handler)
+              // For SSR pages, handler expects (request, response, context) - 3 arguments!
               if (entryHandler.ComponentMod?.handler && typeof entryHandler.ComponentMod.handler === 'function') {
                 console.log('[NextJS Worker] Calling ComponentMod.handler');
-                return await entryHandler.ComponentMod.handler(mutableRequest, context);
+
+                // Create a mock response object for SSR
+                const mockResponse = createMockResponse();
+
+                // Call handler with request, response, and context (3 arguments)
+                const handlerResult = await entryHandler.ComponentMod.handler(mutableRequest, mockResponse, context);
+
+                console.log('[NextJS Worker] Handler result:', {
+                  type: typeof handlerResult,
+                  isResponse: handlerResult instanceof Response,
+                  hasToUnchunkedString: typeof handlerResult?.toUnchunkedString === 'function',
+                  hasPipeTo: typeof handlerResult?.pipeTo === 'function',
+                });
+
+                // If it's already a Response, return it
+                if (handlerResult instanceof Response) {
+                  return handlerResult;
+                }
+
+                // Convert RenderResult to Response
+                let body;
+
+                // Check if it's a stream/readable
+                if (handlerResult && typeof handlerResult.pipeTo === 'function') {
+                  // It's a readable stream
+                  const { readable, writable } = new TransformStream();
+                  handlerResult.pipeTo(writable);
+                  body = readable;
+                } else if (handlerResult && typeof handlerResult.toUnchunkedString === 'function') {
+                  // Convert to string
+                  body = await handlerResult.toUnchunkedString();
+                } else if (typeof handlerResult === 'string') {
+                  body = handlerResult;
+                } else if (handlerResult === null || handlerResult === undefined) {
+                  // Handler returned nothing, get body from response chunks
+                  const chunks = mockResponse._getChunks();
+                  if (chunks.length > 0) {
+                    body = chunks.join('');
+                  } else {
+                    body = '';
+                  }
+                } else {
+                  body = '';
+                }
+
+                // Get headers from mock response
+                const responseHeaders = mockResponse._getHeadersObject();
+
+                return new Response(body, {
+                  status: mockResponse.statusCode,
+                  headers: responseHeaders
+                });
               }
 
               // Try ComponentMod directly

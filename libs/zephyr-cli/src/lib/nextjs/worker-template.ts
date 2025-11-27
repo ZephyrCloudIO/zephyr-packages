@@ -47,6 +47,66 @@ export function generateWorkerCode(
  * Build ID: ${buildId}
  */
 
+// Polyfills for Node.js compatibility in edge runtime
+// Next.js/Turbopack edge runtime code expects these globals
+
+// Minimal process global
+if (typeof globalThis.process === 'undefined') {
+  globalThis.process = {
+    env: { NEXT_PHASE: 'phase-production-server', NODE_ENV: 'production' },
+    nextTick: (fn, ...args) => queueMicrotask(() => fn(...args)),
+  };
+}
+
+// Node.js built-in module stubs for edge runtime
+// Turbopack tries to load these but they should be stubbed in edge runtime
+const nodeBuiltins = {
+  'node:buffer': { Buffer: globalThis.Buffer || class Buffer {} },
+  'node:async_hooks': {
+    AsyncLocalStorage: class AsyncLocalStorage {
+      constructor() { this.store = undefined; }
+      getStore() { return this.store; }
+      run(store, fn, ...args) {
+        const prev = this.store;
+        this.store = store;
+        try { return fn(...args); }
+        finally { this.store = prev; }
+      }
+    }
+  },
+  'node:util': {
+    types: {
+      isProxy: () => false,
+      isModuleNamespaceObject: () => false,
+    }
+  },
+  'buffer': { Buffer: globalThis.Buffer || class Buffer {} },
+  'async_hooks': {
+    AsyncLocalStorage: class AsyncLocalStorage {
+      constructor() { this.store = undefined; }
+      getStore() { return this.store; }
+      run(store, fn, ...args) {
+        const prev = this.store;
+        this.store = store;
+        try { return fn(...args); }
+        finally { this.store = prev; }
+      }
+    }
+  },
+};
+
+// Synchronous require for Node.js built-ins
+if (typeof globalThis.require === 'undefined') {
+  globalThis.require = function(moduleName) {
+    if (nodeBuiltins[moduleName]) {
+      return nodeBuiltins[moduleName];
+    }
+    throw new Error(\`Module not found: '\${moduleName}' - Only Node.js built-in stubs are available in edge runtime\`);
+  };
+  // Make it look like a real require
+  globalThis.require.resolve = (id) => id;
+}
+
 // Route definitions from Next.js build
 const ROUTES = ${routesJson};
 const BASE_PATH = ${JSON.stringify(basePath)};

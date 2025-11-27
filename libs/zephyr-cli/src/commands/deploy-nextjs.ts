@@ -30,6 +30,7 @@ import {
   normalizePath,
   validateNextBuild,
 } from '../lib/nextjs/utils';
+import { generateWorkerCode } from '../lib/nextjs/worker-template';
 import { uploadAssets } from '../lib/upload';
 
 /**
@@ -423,6 +424,44 @@ async function uploadNextjsDeployment(
       verbose
     );
     Object.assign(allAssets, edgeAssetsMap);
+  }
+
+  // 4. Generate assets manifest for the worker
+  console.error('[ze-cli] Generating assets manifest...');
+  const assetsManifest: Record<string, { hash: string; contentType: string }> = {};
+
+  // Build assets map includes all assets with their content and type
+  // We need to compute hashes for the manifest
+  const crypto = await import('crypto');
+  for (const [path, asset] of Object.entries(allAssets)) {
+    // Compute SHA-256 hash
+    const hash = crypto.createHash('sha256').update(asset.content).digest('hex');
+    assetsManifest[path] = {
+      hash,
+      contentType: asset.type,
+    };
+  }
+
+  if (verbose) {
+    logFn('info', `Generated manifest for ${Object.keys(assetsManifest).length} assets`);
+  }
+
+  // 5. Generate and add worker entry point
+  console.error('[ze-cli] Generating worker entry point...');
+  const workerCode = generateWorkerCode(
+    plan.routes,
+    plan.buildId,
+    plan.config?.basePath || '',
+    assetsManifest
+  );
+
+  allAssets['server/_worker.js'] = {
+    content: Buffer.from(workerCode, 'utf-8'),
+    type: 'application/javascript',
+  };
+
+  if (verbose) {
+    logFn('info', 'Worker entry point generated at server/_worker.js');
   }
 
   // Build final assets map and upload once

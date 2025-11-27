@@ -11,10 +11,6 @@ import {
   spinner,
   text,
 } from '@clack/prompts';
-import { getCatalogsFromWorkspaceManifest } from '@pnpm/catalogs.config';
-import { resolveFromCatalog } from '@pnpm/catalogs.resolver';
-import { findWorkspacePackagesNoCheck } from '@pnpm/workspace.find-packages';
-import { readWorkspaceManifest } from '@pnpm/workspace.read-manifest';
 import c from 'chalk-template';
 import { exec } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -23,7 +19,7 @@ import path from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import terminalLink from 'terminal-link';
-import { DependencyFields, ProjectTypes, Templates } from './templates.js';
+import { ProjectTypes, Templates } from './templates.js';
 
 const execAsync = promisify(exec);
 
@@ -94,9 +90,9 @@ let examplesRepoName: string;
 let subfolder: string;
 
 if (projectKind === 'web') {
-  const template = await select({
+  const templateName = await select({
     message: 'Pick a template: ',
-    initialValue: 'react-rspack-mf',
+    initialValue: 'mf-react-rsbuild',
     options: Templates.map((temp) => ({
       value: temp.name,
       label: temp.label,
@@ -104,13 +100,20 @@ if (projectKind === 'web') {
     })),
   });
 
-  if (isCancel(template)) {
+  if (isCancel(templateName)) {
     cancel('Operation cancelled.');
     process.exit(0);
   }
 
+  const selectedTemplate = Templates.find((t) => t.name === templateName);
+
+  if (!selectedTemplate) {
+    cancel('Invalid template selected.');
+    process.exit(1);
+  }
+
   examplesRepoName = 'zephyr-examples';
-  subfolder = `examples/${template}`;
+  subfolder = `${selectedTemplate.directory}/examples/${selectedTemplate.name}`;
 } else {
   examplesRepoName = 'zephyr-repack-example';
   subfolder = '';
@@ -144,47 +147,6 @@ try {
   }
 
   const pathToCopy = path.join(tmpDir, subfolder);
-
-  loading.message('Replacing catalogs...');
-
-  // Monorepos uses pnpm catalogs
-  const [manifest, packages] = await Promise.all([
-    readWorkspaceManifest(tmpDir),
-    findWorkspacePackagesNoCheck(tmpDir),
-  ]);
-
-  if (manifest) {
-    const catalogs = getCatalogsFromWorkspaceManifest(manifest);
-
-    for (const pkg of packages) {
-      // Skip packages that are not in the output directory
-      if (!pkg.rootDirRealPath.startsWith(pathToCopy)) {
-        continue;
-      }
-
-      for (const field of DependencyFields) {
-        if (!pkg.manifest[field]) {
-          continue;
-        }
-
-        for (const [alias, pref] of Object.entries<string>(pkg.manifest[field])) {
-          const result = resolveFromCatalog(catalogs, { alias, pref });
-
-          switch (result.type) {
-            case 'found':
-              pkg.manifest[field][alias] = result.resolution.specifier;
-              break;
-            case 'misconfiguration':
-              throw result.error;
-          }
-        }
-
-        // update the catalog contents
-        await pkg.writeProjectManifest(pkg.manifest, true);
-      }
-    }
-  }
-
   const dotGitPath = path.join(pathToCopy, '.git');
 
   loading.message(`Extracting template to ${relativeOutput}...`);

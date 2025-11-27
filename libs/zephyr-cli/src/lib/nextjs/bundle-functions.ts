@@ -232,12 +232,15 @@ function bundleEdgeFunction(
     for (const file of edgeFuncInfo.files) {
       const srcPath = path.join(nextDir, file);
       if (fileExists(srcPath)) {
-        const destPath = path.join(bundleDir, file);
+        // Remove 'server/' prefix from the file path to avoid duplication
+        // Edge function files are in 'server/edge/...' but we want them at 'edge/...'
+        const normalizedFile = file.startsWith('server/') ? file.slice(7) : file;
+        const destPath = path.join(bundleDir, normalizedFile);
         copyFile(srcPath, destPath);
-        filesToCopy.push(file);
+        filesToCopy.push(normalizedFile);
 
         if (verbose) {
-          logFn('debug', `  Copied: ${file}`);
+          logFn('debug', `  Copied: ${file} -> ${normalizedFile}`);
         }
       }
     }

@@ -15,9 +15,23 @@ import {
   brightRedBgName,
   brightYellowBgName,
 } from './debug';
+import { writeLogToFile, isFileLoggingEnabled } from './file-logger';
 
-export const logFn = (level: string, msg: unknown): void => {
-  const formatted = formatLogMsg(msg, level);
+export const logFn = (level: string, msg: unknown, action?: string): void => {
+  const messageStr = String(msg);
+
+  // Write to file if enabled
+  if (isFileLoggingEnabled()) {
+    writeLogToFile({
+      level: level as 'info' | 'warn' | 'error' | 'debug',
+      message: messageStr,
+      action,
+      timestamp: Date.now(),
+    });
+  }
+
+  // Always output plain formatted to console
+  const formatted = formatLogMsg(messageStr, level);
 
   switch (level) {
     case 'warn':
@@ -47,8 +61,8 @@ function toLevelPrefix(level: string) {
   }
 }
 
-export function formatLogMsg(msg: unknown, level = 'info') {
-  return String(msg)
+export function formatLogMsg(msg: string, level = 'info') {
+  return msg
     .split('\n')
     .map((m) => `${toLevelPrefix(level)}  ${m.trimEnd()}`)
     .join('\n');
@@ -90,7 +104,7 @@ export function logger(props: LoggerOptions): ZeLogger {
         });
       }
 
-      logFn(log.level, log.message);
+      logFn(log.level, log.message, log.action);
     }
 
     // Then attempt to upload logs,

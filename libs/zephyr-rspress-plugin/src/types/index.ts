@@ -1,9 +1,10 @@
-import type { ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 
 export interface ZephyrRspressPluginOptions {
   deferEngine: Promise<ZephyrEngine>;
   outDir: string;
   files: string[];
+  hooks?: ZephyrBuildHooks;
 }
 
 export interface Stats {

@@ -95,6 +95,7 @@ async function _zephyr_configuration(
         enableOTA: _zephyrOptions?.enableOTA,
         applicationUid: _zephyrOptions?.applicationUid,
         otaConfig: _zephyrOptions?.otaConfig,
+        hooks: _zephyrOptions?.hooks,
       })
     );
   } catch (error) {

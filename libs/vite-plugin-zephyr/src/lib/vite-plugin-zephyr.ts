@@ -9,6 +9,7 @@ import {
   ZephyrEngine,
   ZephyrError,
   type RemoteEntry,
+  type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
@@ -20,19 +21,21 @@ export type ModuleFederationOptions = Parameters<typeof federation>[0];
 
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
+  hooks?: ZephyrBuildHooks;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
+  const hooks = _options?.hooks;
   const plugins: Plugin[] = [];
   if (mfConfig) {
     plugins.push(...federation(mfConfig));
   }
-  plugins.push(zephyrPlugin());
+  plugins.push(zephyrPlugin(hooks));
   return plugins;
 }
 
-function zephyrPlugin(): Plugin {
+function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
@@ -293,6 +296,7 @@ function zephyrPlugin(): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
+          hooks,
         });
         await zephyr_engine.build_finished();
       } catch (error) {
@@ -344,9 +348,24 @@ function zephyrPlugin(): Plugin {
           zephyr_engine,
           vite_internal_options
         );
+        const modules = Object.entries(mfPlugin?._options.exposes ?? {})
+          .map(([name, file]) => ({
+            name: name.replace('./', ''),
+            file: typeof file === 'string' ? file : file.import,
+          }))
+          .map(({ name, file }) => ({
+            id: name,
+            applicationID: `${name}:${name}`,
+            requires: [],
+            name,
+            file,
+          }));
+        const buildStats = await zeBuildDashData(zephyr_engine);
+        buildStats.modules = modules;
         await zephyr_engine.upload_assets({
           assetsMap,
-          buildStats: await zeBuildDashData(zephyr_engine),
+          buildStats,
+          hooks,
         });
         await zephyr_engine.build_finished();
       } catch (error) {

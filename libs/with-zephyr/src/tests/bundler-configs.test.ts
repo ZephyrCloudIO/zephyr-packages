@@ -146,6 +146,12 @@ describe('Bundler Configurations', () => {
       expect(wrappedPattern).toBeDefined();
       expect(wrappedPattern?.matcher.test('export default withZephyr()(')).toBe(true);
     });
+
+    it('should handle defineConfig export pattern', () => {
+      const definePattern = rspackConfig.patterns.find((p) => p.type === 'define-config');
+      expect(definePattern).toBeDefined();
+      expect(definePattern?.matcher.test('export default defineConfig({')).toBe(true);
+    });
   });
 
   describe('Vite Configuration', () => {

@@ -35,11 +35,18 @@ export function wrapModuleExports(ast: BabelNode): void {
 export function wrapExportDefault(ast: BabelNode): void {
   traverse(ast, {
     ExportDefaultDeclaration(path) {
-      if (t.isObjectExpression(path.node.declaration)) {
+      const declaration = path.node.declaration;
+
+      // Handle exporting an object literal or a factory call (e.g. defineConfig({...}))
+      if (
+        t.isObjectExpression(declaration) ||
+        t.isCallExpression(declaration) ||
+        t.isAwaitExpression(declaration)
+      ) {
         // Wrap with withZephyr()({...})
         path.node.declaration = t.callExpression(
           t.callExpression(t.identifier('withZephyr'), []),
-          [path.node.declaration]
+          [declaration]
         );
       }
     },

@@ -12,6 +12,12 @@ export const rspackConfig: BundlerConfig = {
       matcher: /export\s+default\s+withZephyr\s*\(\s*\)\s*\(/,
       transform: 'skipAlreadyWrapped',
     },
+    // defineConfig wrapper (native rspack)
+    {
+      type: 'define-config',
+      matcher: /export\s+default\s+defineConfig\s*\(/,
+      transform: 'wrapExportDefault',
+    },
     // Nx-style composePlugins - inject withZephyr into plugin composition
     {
       type: 'compose-plugins',

@@ -141,12 +141,31 @@ enum DeploymentIntegrationPlatform {
   GCP = 'gcp',
 }
 
+/**
+ * Metadata for a single JavaScript bundle file Used for OTA bundle downloading, caching,
+ * and integrity verification
+ */
+export interface BundleMetadata {
+  /** CDN URL where the bundle can be downloaded */
+  url: string;
+  /** SHA-256 checksum for integrity verification */
+  checksum: string;
+  /** File size in bytes */
+  size: number;
+  /** MIME type (typically 'application/javascript') */
+  contentType: string;
+  /** Relative path within the cache directory (e.g., 'chunks/main.chunk.js') */
+  path: string;
+}
+
 export interface ZephyrDependency {
   application_uid: string;
   remote_entry_url: string;
   default_url: string;
   name: string;
   library_type: string;
+  /** Optional: JavaScript bundles for OTA updates */
+  bundles?: BundleMetadata[];
 }
 
 export interface RawDependency {

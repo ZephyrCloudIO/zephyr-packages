@@ -101,3 +101,31 @@ export interface SnapshotUploadRes {
   asset_v2_time?: number;
   message?: string;
 }
+
+/** OTA Version Check Response */
+export interface OTAVersionResponse {
+  /** Current deployed version identifier */
+  version: string;
+  /** ISO timestamp of when this version was deployed */
+  timestamp: string;
+  /** URL to fetch the manifest for this version */
+  manifest_url: string;
+  /** Optional release notes or update description */
+  description?: string;
+  /** Whether this is a critical update that should be applied immediately */
+  critical?: boolean;
+  /** Optional release notes */
+  release_notes?: string;
+}
+
+/** OTA Check Request */
+export interface OTACheckRequest {
+  /** Application UID */
+  application_uid: string;
+  /** Current version the client has (optional for first check) */
+  current_version?: string;
+  /** Current manifest timestamp the client has */
+  current_timestamp?: string;
+  /** Platform identifier */
+  platform?: 'ios' | 'android';
+}

@@ -7,6 +7,11 @@ declare global {
   var __ZEPHYR_MANIFEST_CHANGED__:
     | ((newManifest: any, oldManifest: any) => void)
     | undefined;
+  var __ZEPHYR_OTA_WORKER_CLASS__: any;
+  var __ZEPHYR_OTA_UPDATE_AVAILABLE__: ((update: any) => void) | undefined;
+  var __ZEPHYR_OTA_RESTART_REQUIRED__: ((info: any) => void) | undefined;
+  var __ZEPHYR_OTA_WORKER__: any;
+  var __ZEPHYR_BUNDLE_MANAGER__: any;
 
   // Browser environment
   interface Window {

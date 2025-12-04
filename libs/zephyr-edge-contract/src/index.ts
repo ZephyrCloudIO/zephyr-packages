@@ -23,11 +23,14 @@ export type { ConvertedGraph } from './lib/ze-api/converted-graph';
 export type { LocalPackageJson } from './lib/ze-api/local-package-json';
 export type {
   ApplicationConsumes,
+  BundleMetadata,
   ZephyrBuildStats,
   ZephyrDependency,
 } from './lib/zephyr-build-stats';
 export type {
   Asset,
+  OTACheckRequest,
+  OTAVersionResponse,
   SnapshotUploadRes,
   Source,
   UploadableAsset,
@@ -38,8 +41,39 @@ export type {
 export {
   ZEPHYR_MANIFEST_FILENAME,
   ZEPHYR_MANIFEST_VERSION,
+  type OTAManifest,
   type ZephyrManifest,
 } from './lib/zephyr-manifest';
+export type {
+  CreateZephyrRuntimePluginWithOTA,
+  ManifestCache,
+  ManifestCacheEntry,
+  ZephyrRemoteUrlChangeDetail,
+  ZephyrRemoteUrlChangeEvent,
+  ZephyrRuntimePluginInstance,
+  ZephyrRuntimePluginOTAOptions,
+} from './lib/ota-runtime-types';
+
+// validation schemas and validators
+export {
+  BundleMetadataSchema,
+  ZephyrDependencySchema,
+  ZephyrManifestSchema,
+  OTAManifestSchema,
+  OTAVersionResponseSchema,
+  OTACheckRequestSchema,
+  StoredVersionInfoSchema,
+  OTAMetricsSchema,
+  isBundleMetadata,
+  isZephyrManifest,
+  isOTAVersionResponse,
+  isStoredVersionInfo,
+  isOTAMetrics,
+  validateBundleMetadata,
+  validateManifest,
+  validateOTAVersionResponse,
+  validateStoredVersionInfo,
+} from './lib/validation';
 
 // api contract negotiation
 export {

@@ -242,6 +242,25 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
       expect(content).toContain('pluginReact(), withZephyr()');
     });
+
+    it('should wrap rspack defineConfig exports instead of adding to plugins array', () => {
+      const originalContent = `
+        import { defineConfig } from "@rspack/cli";
+        import { rspack } from "@rspack/core";
+
+        export default defineConfig({
+          plugins: [new rspack.HtmlRspackPlugin({ template: "./index.html" })]
+        });
+      `;
+      fs.writeFileSync('rspack.config.ts', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('rspack.config.ts', 'utf8');
+      expect(content).toContain('import { withZephyr } from "zephyr-rspack-plugin"');
+      expect(content).toContain('export default withZephyr()(defineConfig({');
+      expect(content).not.toMatch(/plugins[^]]*withZephyr\(\)/);
+    });
   });
 
   describe('Skip Already Configured', () => {

@@ -1,14 +1,25 @@
 import type { AstroIntegration, HookParameters } from 'astro';
 import { fileURLToPath } from 'node:url';
-import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import {
+  logFn,
+  zeBuildDashData,
+  ZephyrEngine,
+  ZephyrError,
+  type ZephyrBuildHooks,
+} from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from './internal/extract-astro-assets-map';
 
 type AstroBuildDoneParams = HookParameters<'astro:build:done'> & {
   assets?: Record<string, unknown> | Map<string, unknown> | Array<unknown>;
 };
 
-export function withZephyr(): AstroIntegration {
+export interface ZephyrAstroOptions {
+  hooks?: ZephyrBuildHooks;
+}
+
+export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const hooks = options?.hooks;
 
   return {
     name: 'with-zephyr',
@@ -50,6 +61,7 @@ export function withZephyr(): AstroIntegration {
           await zephyr_engine.upload_assets({
             assetsMap,
             buildStats: await zeBuildDashData(zephyr_engine),
+            hooks,
           });
 
           // Mark build as finished

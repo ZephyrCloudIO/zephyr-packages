@@ -1,9 +1,24 @@
 {
   "name": "vite-plugin-tanstack-start-zephyr",
   "version": "0.1.0",
+  "description": "Vite plugin for Zephyr with TanStack Start support",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/vite-plugin-tanstack-start-zephyr"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run vite-plugin-tanstack-start-zephyr:build",
+    "patch-version": "pnpm version"
+  },
   "dependencies": {
     "rollup": "catalog:rollup4",
     "vite": "catalog:vite7",
@@ -14,5 +29,9 @@
   },
   "devDependencies": {
     "@types/node": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

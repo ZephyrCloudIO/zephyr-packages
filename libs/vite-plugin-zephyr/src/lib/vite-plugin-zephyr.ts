@@ -27,12 +27,12 @@ interface VitePluginZephyrOptions {
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const hooks = _options?.hooks;
-  const plugins: Plugin[] = [];
+  const plugins = [];
   if (mfConfig) {
     plugins.push(...federation(mfConfig));
   }
   plugins.push(zephyrPlugin(hooks));
-  return plugins;
+  return plugins as Plugin[];
 }
 
 function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {

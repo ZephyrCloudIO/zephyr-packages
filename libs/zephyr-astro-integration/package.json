@@ -45,6 +45,7 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {

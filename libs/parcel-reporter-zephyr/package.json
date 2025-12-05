@@ -22,6 +22,7 @@
   "dependencies": {
     "@parcel/plugin": "catalog:parcel",
     "@parcel/types": "catalog:parcel",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {

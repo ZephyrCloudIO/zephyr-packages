@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@rspack/core": "catalog:rspack",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },

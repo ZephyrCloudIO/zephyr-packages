@@ -296,7 +296,7 @@ importers:
         version: 21.6.4(@babel/traverse@7.28.4)(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17))(nx@21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17)))
       '@nx/webpack':
         specifier: 21.6.4
-        version: 21.6.4(@babel/traverse@7.28.4)(@rspack/core@1.5.5(@swc/helpers@0.5.17))(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))(lightningcss@1.30.2)(nx@21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17)))(typescript@5.9.3)
+        version: 21.6.4(@babel/traverse@7.28.4)(@rspack/core@1.5.5(@swc/helpers@0.5.17))(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)))(lightningcss@1.30.2)(nx@21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17)))(typescript@5.9.3)
       '@nx/workspace':
         specifier: 21.6.4
         version: 21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17))
@@ -1268,6 +1268,9 @@ importers:
       '@parcel/types':
         specifier: catalog:parcel
         version: 2.16.1(@parcel/core@2.16.1(@swc/helpers@0.5.17))
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1318,6 +1321,9 @@ importers:
       rollup:
         specifier: catalog:rollup4
         version: 4.52.5
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       vite:
         specifier: ^7.1.11
         version: 7.1.12(@types/node@24.5.2)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
@@ -1422,6 +1428,9 @@ importers:
       proper-lockfile:
         specifier: ^4.1.2
         version: 4.1.2
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
@@ -1459,6 +1468,9 @@ importers:
 
   libs/zephyr-astro-integration:
     dependencies:
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1477,6 +1489,10 @@ importers:
         version: 29.3.0(@babel/core@7.28.4)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.4))(esbuild@0.25.1)(jest@30.0.5(@types/node@24.5.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.1))(ts-node@10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@24.5.2)(typescript@5.9.3)))(typescript@5.9.3)
 
   libs/zephyr-edge-contract:
+    dependencies:
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
     devDependencies:
       '@types/jest':
         specifier: catalog:typescript
@@ -1590,6 +1606,9 @@ importers:
       '@rspack/core':
         specifier: ^1.5.5
         version: 1.5.5(@swc/helpers@0.5.17)
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1615,6 +1634,9 @@ importers:
       '@rspress/shared':
         specifier: catalog:rspress
         version: 1.44.0
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -18078,7 +18100,7 @@ snapshots:
       ts-deepmerge: 7.0.2
       ts-loader: 9.4.4(typescript@5.8.3)(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
       webpack: 5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
     transitivePeerDependencies:
       - '@parcel/css'
       - '@rspack/core'
@@ -18157,7 +18179,7 @@ snapshots:
       ts-deepmerge: 7.0.2
       ts-loader: 9.4.4(typescript@5.9.3)(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1))
       webpack: 5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
     transitivePeerDependencies:
       - '@parcel/css'
       - '@rspack/core'
@@ -19345,7 +19367,7 @@ snapshots:
       - supports-color
       - verdaccio
 
-  '@nx/webpack@21.6.4(@babel/traverse@7.28.4)(@rspack/core@1.5.5(@swc/helpers@0.5.17))(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))(lightningcss@1.30.2)(nx@21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17)))(typescript@5.9.3)':
+  '@nx/webpack@21.6.4(@babel/traverse@7.28.4)(@rspack/core@1.5.5(@swc/helpers@0.5.17))(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)))(lightningcss@1.30.2)(nx@21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17)))(typescript@5.9.3)':
     dependencies:
       '@babel/core': 7.28.4
       '@nx/devkit': 21.6.4(nx@21.6.4(@swc-node/register@1.11.1(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.13.5(@swc/helpers@0.5.17)))
@@ -19382,7 +19404,7 @@ snapshots:
       webpack: 5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)
       webpack-dev-server: 5.2.2(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
       webpack-node-externals: 3.0.0
-      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
+      webpack-subresource-integrity: 5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@parcel/css'
@@ -33559,7 +33581,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack-subresource-integrity@5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)):
+  webpack-subresource-integrity@5.1.0(html-webpack-plugin@5.6.4(@rspack/core@1.5.5(@swc/helpers@0.5.17))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)))(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)):
     dependencies:
       typed-assert: 1.0.9
       webpack: 5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)

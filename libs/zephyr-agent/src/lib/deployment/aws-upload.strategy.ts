@@ -5,7 +5,7 @@ import { ZeErrors, ZephyrError } from '../errors';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { makeRequest } from '../http/http-request';
 import { zeUploadSnapshot } from '../edge-actions';
-import {type UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
+import { type UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
 import { update_hash_list } from '../edge-hash-list/distributed-hash-control';
 import { white, whiteBright } from '../logging/picocolor';
 import type { UploadFileProps } from '../http/upload-file';
@@ -15,7 +15,7 @@ const AWS_MAX_BODY_SIZE = 20971520;
 
 export async function awsUploadStrategy(
   zephyr_engine: ZephyrEngine,
-  { snapshot, getDashData, assets: { assetsMap, missingAssets } }: UploadOptions,
+  { snapshot, getDashData, assets: { assetsMap, missingAssets } }: UploadOptions
 ): Promise<string> {
   const snapshotSize = Buffer.byteLength(JSON.stringify(snapshot), 'utf8');
   if (snapshotSize > AWS_MAX_BODY_SIZE) {
@@ -145,12 +145,13 @@ async function zeUploadAssets(
       return;
     }
 
-    const [ok, cause] = await makeRequest(result.url,
+    const [ok, cause] = await makeRequest(
+      result.url,
       {
         method: 'PUT',
         headers: {
           'Content-Type': result.contentType,
-        }
+        },
       },
       asset.buffer
     );
@@ -174,7 +175,7 @@ async function zeUploadAssets(
   async function getUploadUrl(
     { hash, asset }: UploadFileProps,
     { EDGE_URL, jwt }: ZeApplicationConfig
-  ): Promise<{url: string; contentType: string; message?: string;}> {
+  ): Promise<{ url: string; contentType: string; message?: string }> {
     const type = 'uploadUrl';
     const options: RequestInit = {
       method: 'POST',
@@ -186,7 +187,7 @@ async function zeUploadAssets(
       },
     };
 
-    const [ok, cause, data] = await makeRequest<{url: string; contentType: string;}>(
+    const [ok, cause, data] = await makeRequest<{ url: string; contentType: string }>(
       {
         path: '/upload',
         base: EDGE_URL,

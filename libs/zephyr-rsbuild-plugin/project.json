@@ -4,6 +4,7 @@
   "sourceRoot": "libs/zephyr-rsbuild-plugin/src",
   "projectType": "library",
   "tags": [],
+  "implicitDependencies": ["zephyr-rspack-plugin"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

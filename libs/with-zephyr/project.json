@@ -9,6 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/dist"],
+      "dependsOn": ["^build"],
       "options": {
         "command": "pnpm build",
         "cwd": "libs/with-zephyr"

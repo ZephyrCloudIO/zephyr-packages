@@ -59,7 +59,7 @@ runner('ZeAgent', () => {
     if (fs.existsSync(zephyrAppFolder)) {
       const files = fs.readdirSync(zephyrAppFolder);
       files.forEach((file) => {
-        fs.rmSync(path.join(zephyrAppFolder, file));
+        fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
     await exec(`git config --add user.name "${gitUserName}"`);

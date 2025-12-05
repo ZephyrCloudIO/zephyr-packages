@@ -25,3 +25,8 @@ export { setupManifestEmission } from './hooks/ze-emit-manifest';
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
 
 export { detectAndStoreBaseHref } from './basehref/basehref-integration';
+
+export {
+  createZephyrRuntimePlugin,
+  type ZephyrRuntimePluginOptions,
+} from './xpack-extract/runtime-plugin';

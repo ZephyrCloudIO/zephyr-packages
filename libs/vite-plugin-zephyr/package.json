@@ -24,14 +24,11 @@
     "@module-federation/vite": "catalog:module-federation",
     "acorn": "^8.12.1",
     "acorn-walk": "^8.3.4",
-    "is-ci": "catalog:plugin-shared",
-    "json5": "2.2.3",
     "rollup": "catalog:rollup4",
     "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"

@@ -45,7 +45,6 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "catalog:plugin-shared",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {

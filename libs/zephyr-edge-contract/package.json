@@ -20,9 +20,7 @@
     "patch-version": "pnpm version",
     "test": "nx test zephyr-edge-contract"
   },
-  "dependencies": {
-    "tslib": "catalog:typescript"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",

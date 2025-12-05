@@ -26,13 +26,10 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "catalog:plugin-shared",
     "rollup": "catalog:rollup4",
-    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"

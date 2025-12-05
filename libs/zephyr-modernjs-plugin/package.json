@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@modern-js/app-tools": "catalog:modernjs",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },

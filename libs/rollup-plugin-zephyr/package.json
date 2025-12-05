@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "rollup": "catalog:rollup4",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {

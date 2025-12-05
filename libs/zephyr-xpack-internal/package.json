@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "catalog:module-federation",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },

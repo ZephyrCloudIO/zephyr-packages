@@ -22,7 +22,7 @@ jobs:
       has-cache-ubuntu: ${{ matrix.os == 'ubuntu-latest' && steps.check-cache.outputs.has-files == 'true' }}
       has-cache-windows: ${{ matrix.os == 'windows-latest' && steps.check-cache.outputs.has-files == 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
@@ -66,7 +66,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
@@ -83,7 +83,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
@@ -110,7 +110,7 @@ jobs:
     needs: build
     if: needs.build.outputs.has-cache-ubuntu == 'true' || needs.build.outputs.has-cache-windows == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup

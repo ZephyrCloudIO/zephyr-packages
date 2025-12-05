@@ -9,7 +9,7 @@ interface GetApplicationHashListProps {
 
 export async function getApplicationHashList({
   application_uid,
-  edge_url
+  edge_url,
 }: GetApplicationHashListProps): Promise<{
   hashes: string[];
 }> {

@@ -1,14 +1,14 @@
 /** Vite plugin for deploying TanStack Start applications to Zephyr */
 
-import type { Plugin, ResolvedConfig, BuildEnvironment } from 'vite';
-import type { RollupOutput, RollupWatcher } from 'rollup';
-
+import type { Plugin, ResolvedConfig } from 'vite';
 import * as path from 'path';
 import {
   ZephyrEngine,
   type ZephyrEngineOptions,
   zeBuildDashData,
   buildAssetsMap,
+  ZeErrors,
+  ZephyrError,
 } from 'zephyr-agent';
 import { loadTanStackOutput } from './internal/extract/load-tanstack-output';
 
@@ -133,9 +133,9 @@ export function withZephyrTanstackStart(
         const stillNotBuilt = Object.entries(builder.environments)
           .filter(([, env]) => !env.isBuilt)
           .map(([name]) => name);
-        throw new Error(
-          `Some environments are still not built: ${stillNotBuilt.join(', ')}`
-        );
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message: `Some environments are still not built: ${stillNotBuilt.join(', ')}`,
+        });
       }
 
       console.log('[TanStack Zephyr] All environments built, processing output...');

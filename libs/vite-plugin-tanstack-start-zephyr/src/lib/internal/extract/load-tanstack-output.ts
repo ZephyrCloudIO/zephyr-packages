@@ -31,7 +31,6 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
     for (const filePath of files) {
       const relativePath = path.relative(dir, filePath);
       const content = await fs.readFile(filePath);
-      const stats = await fs.stat(filePath);
       const ext = path.extname(filePath);
 
       // Determine if this is a code chunk or asset

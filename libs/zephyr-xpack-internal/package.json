@@ -21,13 +21,11 @@
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "catalog:module-federation",
-    "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",

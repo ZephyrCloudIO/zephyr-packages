@@ -5,6 +5,7 @@ import {
   ze_log,
   type RemoteEntry,
   type ZephyrEngine,
+  type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import {
@@ -25,6 +26,7 @@ export interface ZephyrRspackInternalPluginOptions {
   // hacks
   wait_for_index_html?: boolean;
   // outputPath?: string;
+  hooks?: ZephyrBuildHooks;
 }
 
 export class ZeRspackPlugin {
@@ -53,7 +55,7 @@ export class ZeRspackPlugin {
         {
           loader: require.resolve('./env-virtual-loader.js'),
           options: {
-            specifier: `env:vars:${this._options.zephyr_engine.applicationProperties.name}`,
+            specifier: `env:vars:${this._options.zephyr_engine.application_uid}`,
           },
         },
       ],
@@ -63,7 +65,7 @@ export class ZeRspackPlugin {
 
     // Mark the virtual specifier external so import maps can resolve it
     const existingExternals = compiler.options?.externals;
-    const PER_APP_SPECIFIER = `env:vars:${this._options.zephyr_engine.applicationProperties.name}`;
+    const PER_APP_SPECIFIER = `env:vars:${this._options.zephyr_engine.application_uid}`;
     const virtualExternal = {
       [PER_APP_SPECIFIER]: `module ${PER_APP_SPECIFIER}`,
     };
@@ -83,6 +85,7 @@ export class ZeRspackPlugin {
     return (
       this._options.zephyr_engine.federated_dependencies?.map((dep) => ({
         name: dep.name,
+        application_uid: dep.application_uid,
         remote_entry_url: dep.default_url,
       })) || []
     );
@@ -97,7 +100,7 @@ export class ZeRspackPlugin {
         // Use afterTemplateExecution hook to modify HTML and tags
         hooks.afterTemplateExecution.tapPromise(pluginName, async (data) => {
           try {
-            const appName = this._options.zephyr_engine.applicationProperties.name;
+            const appUid = this._options.zephyr_engine.application_uid;
             const remotes = this.#convertFederatedDepsToRemotes();
 
             // Check if import map already exists
@@ -112,7 +115,7 @@ export class ZeRspackPlugin {
                 tagName: 'script',
                 attributes: { type: 'importmap' },
                 innerHTML: JSON.stringify({
-                  imports: buildEnvImportMap(appName, remotes),
+                  imports: buildEnvImportMap(appUid, remotes),
                 }),
                 voidTag: false,
               });

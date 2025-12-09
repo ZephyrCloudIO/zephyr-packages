@@ -190,4 +190,48 @@ describe('withZephyr', () => {
       expect(result?.builderPlugins?.length).toBe(2);
     });
   });
+
+  // SSG config as object tests (rspress v2 supports object-based ssg config)
+  describe('ssg object config', () => {
+    beforeEach(() => {
+      // Reset mock to default behavior after error test
+      rspressPluginMock.mockImplementation((_: any) => ({ name: 'mock-ssg-plugin' }));
+    });
+
+    it('should enable SSG plugin when ssg is an object', async () => {
+      const addPlugin = jest.fn();
+      const config = {
+        ssg: { experimentalWorker: true },
+        outDir: 'dist',
+      };
+
+      const plugin = withZephyr();
+      const result = await plugin.config?.(
+        config as any,
+        { addPlugin, removePlugin: jest.fn() },
+        false
+      );
+
+      expect(rspressPluginMock).toHaveBeenCalledWith(config);
+      expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
+      expect(result).toEqual(config);
+    });
+
+    it('should not enable SSG plugin when ssg is undefined', async () => {
+      const addPlugin = jest.fn();
+      const config = {
+        outDir: 'dist',
+      };
+
+      const plugin = withZephyr();
+      const result = await plugin.config?.(
+        config as any,
+        { addPlugin, removePlugin: jest.fn() },
+        false
+      );
+
+      expect(rsbuildPluginMock).toHaveBeenCalled();
+      expect(addPlugin).not.toHaveBeenCalled();
+    });
+  });
 });

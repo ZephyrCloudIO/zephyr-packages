@@ -1,5 +1,11 @@
 import type { ConfigT } from 'metro-config';
-import { ze_log, ZephyrEngine, ZephyrError, createManifestContent } from 'zephyr-agent';
+import {
+  ze_log,
+  ZephyrEngine,
+  ZephyrError,
+  ZeErrors,
+  createManifestContent,
+} from 'zephyr-agent';
 import path from 'path';
 import fs from 'fs';
 
@@ -14,6 +20,8 @@ export interface ZephyrMetroOptions {
   manifestPath?: string;
   /** Custom entry file patterns for runtime injection (more conservative targeting) */
   entryFiles?: string[];
+  /** Throw an error if manifest generation fails (default: false - logs warning only) */
+  failOnManifestError?: boolean;
 }
 
 export interface ZephyrModuleFederationConfig {
@@ -120,9 +128,12 @@ async function applyZephyrToMetroConfig(
   );
 
   if (!manifestGenerated) {
-    ze_log.error(
-      'Manifest file generation failed - runtime updates may not work correctly'
-    );
+    const errorMessage =
+      'Manifest file generation failed - runtime updates may not work correctly';
+    if (zephyrOptions.failOnManifestError) {
+      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, { message: errorMessage });
+    }
+    ze_log.error(errorMessage);
   }
 
   ze_log.app('Zephyr Metro plugin configured successfully');

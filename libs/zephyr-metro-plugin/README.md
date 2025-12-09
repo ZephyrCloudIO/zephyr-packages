@@ -12,13 +12,7 @@ A React Native Metro bundler plugin for deploying cross-platform applications wi
 
 ## Get Started
 
-The fastest way to get started is to use `create-zephyr-apps` to generate a new React Native application with Zephyr integration:
-
-```bash
-npx create-zephyr-apps@latest
-```
-
-For more information, please refer to our [documentation](https://docs.zephyr-cloud.io/bundlers/metro) for Metro and comprehensive guides for React Native integration.
+For setup instructions, see [TESTING.md](./TESTING.md) or refer to our [documentation](https://docs.zephyr-cloud.io/bundlers/metro) for Metro and comprehensive guides for React Native integration.
 
 ## Installation
 
@@ -81,7 +75,9 @@ const wrappedBundleCommand = zephyrCommandWrapper(originalBundleFunction, loadMe
 
 ### Module Federation Configuration
 
-The plugin works with Metro's Module Federation setup. Configure your federated modules:
+The plugin works with Metro's Module Federation setup. Configure your federated modules.
+
+> **Note:** Module Federation `exposes` configuration requires [@callstack/repack](https://re-pack.dev/) or a similar Metro Module Federation solution. This plugin handles the Zephyr Cloud deployment and OTA update aspects, while Re.Pack provides the underlying Module Federation runtime for React Native.
 
 #### Host Application Example
 
@@ -115,8 +111,6 @@ const { withZephyr } = require('zephyr-metro-plugin');
 
 const baseConfig = getDefaultConfig(__dirname);
 
-// Note: Module Federation "exposes" configuration is handled separately
-// through @callstack/repack or similar Metro MF solutions
 module.exports = (async () => {
   const zephyrConfig = await withZephyr({
     name: 'MobileCart',
@@ -285,13 +279,14 @@ Main configuration wrapper for Metro config.
 
 **Options (`ZephyrMetroOptions`):**
 
-| Option         | Type                     | Description                                                      |
-| -------------- | ------------------------ | ---------------------------------------------------------------- |
-| `name`         | `string`                 | Application name (optional)                                      |
-| `target`       | `'ios' \| 'android'`     | Target platform (optional)                                       |
-| `remotes`      | `Record<string, string>` | Remote module configurations (optional)                          |
-| `manifestPath` | `string`                 | Custom manifest endpoint path (default: `/zephyr-manifest.json`) |
-| `entryFiles`   | `string[]`               | Custom entry file patterns for runtime injection (optional)      |
+| Option                | Type                     | Description                                                      |
+| --------------------- | ------------------------ | ---------------------------------------------------------------- |
+| `name`                | `string`                 | Application name (optional)                                      |
+| `target`              | `'ios' \| 'android'`     | Target platform (optional)                                       |
+| `remotes`             | `Record<string, string>` | Remote module configurations (optional)                          |
+| `manifestPath`        | `string`                 | Custom manifest endpoint path (default: `/zephyr-manifest.json`) |
+| `entryFiles`          | `string[]`               | Custom entry file patterns for runtime injection (optional)      |
+| `failOnManifestError` | `boolean`                | Throw error if manifest generation fails (default: `false`)      |
 
 **Returns:** Async function that takes Metro `ConfigT` and returns enhanced config
 

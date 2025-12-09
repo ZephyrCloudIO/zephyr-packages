@@ -85,11 +85,20 @@ describe('with-zephyr', () => {
         },
         manifestPath: '/custom-manifest.json',
         entryFiles: ['main.tsx', 'App.tsx'],
+        failOnManifestError: true,
       };
       expect(options.name).toBe('MyApp');
       expect(options.target).toBe('ios');
       expect(options.manifestPath).toBe('/custom-manifest.json');
       expect(options.entryFiles).toContain('main.tsx');
+      expect(options.failOnManifestError).toBe(true);
+    });
+
+    it('should default failOnManifestError to false/undefined', () => {
+      const options = {
+        name: 'MyApp',
+      };
+      expect(options.failOnManifestError).toBeUndefined();
     });
   });
 

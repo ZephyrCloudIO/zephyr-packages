@@ -19,7 +19,7 @@ let mockBeforeBuild: jest.Mock;
 let mockAfterBuild: jest.Mock;
 
 // Mock ZephyrMetroPlugin
-jest.mock('./zephyr-metro-plugin', () => {
+jest.mock('../zephyr-metro-plugin', () => {
   mockBeforeBuild = jest.fn().mockResolvedValue({ name: 'TestApp' });
   mockAfterBuild = jest.fn().mockResolvedValue(undefined);
   return {
@@ -31,11 +31,11 @@ jest.mock('./zephyr-metro-plugin', () => {
 });
 
 // Mock internal errors
-jest.mock('./internal/metro-errors', () => ({
+jest.mock('../internal/metro-errors', () => ({
   ERR_MISSING_METRO_FEDERATION_CONFIG: 'ERR_INVALID_MF_CONFIG',
 }));
 
-import { zephyrCommandWrapper } from './zephyr-metro-command-wrapper';
+import { zephyrCommandWrapper } from '../zephyr-metro-command-wrapper';
 
 describe('zephyrCommandWrapper', () => {
   // Mock functions
@@ -159,7 +159,7 @@ describe('zephyrCommandWrapper', () => {
 
   describe('platform handling', () => {
     it('should pass iOS platform to plugin', async () => {
-      const { ZephyrMetroPlugin } = require('./zephyr-metro-plugin');
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
@@ -177,7 +177,7 @@ describe('zephyrCommandWrapper', () => {
     });
 
     it('should pass Android platform to plugin', async () => {
-      const { ZephyrMetroPlugin } = require('./zephyr-metro-plugin');
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
@@ -197,7 +197,7 @@ describe('zephyrCommandWrapper', () => {
 
   describe('mode handling', () => {
     it('should set development mode when mode is truthy', async () => {
-      const { ZephyrMetroPlugin } = require('./zephyr-metro-plugin');
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
@@ -215,7 +215,7 @@ describe('zephyrCommandWrapper', () => {
     });
 
     it('should set production mode when mode is falsy', async () => {
-      const { ZephyrMetroPlugin } = require('./zephyr-metro-plugin');
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
@@ -330,7 +330,7 @@ describe('zephyrCommandWrapper', () => {
 
   describe('context handling', () => {
     it('should use root from config as context', async () => {
-      const { ZephyrMetroPlugin } = require('./zephyr-metro-plugin');
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,

@@ -20,15 +20,13 @@ jest.mock('zephyr-agent', () => ({
         optionalDependencies: {},
         peerDependencies: {},
       },
-      resolve_remote_dependencies: jest
-        .fn()
-        .mockResolvedValue([
-          {
-            name: 'RemoteApp',
-            version: 'latest',
-            resolved_url: 'http://cdn.example.com/remote.js',
-          },
-        ]),
+      resolve_remote_dependencies: jest.fn().mockResolvedValue([
+        {
+          name: 'RemoteApp',
+          version: 'latest',
+          resolved_url: 'http://cdn.example.com/remote.js',
+        },
+      ]),
       start_new_build: jest.fn().mockResolvedValue(undefined),
       upload_assets: jest.fn().mockResolvedValue(undefined),
       build_finished: jest.fn().mockResolvedValue(undefined),
@@ -38,17 +36,17 @@ jest.mock('zephyr-agent', () => ({
 }));
 
 // Mock internal dependencies
-jest.mock('./internal/extract-mf-remotes', () => ({
+jest.mock('../internal/extract-mf-remotes', () => ({
   extract_remotes_dependencies: jest
     .fn()
     .mockReturnValue([{ name: 'RemoteApp', version: 'latest' }]),
 }));
 
-jest.mock('./internal/mutate-mf-config', () => ({
+jest.mock('../internal/mutate-mf-config', () => ({
   mutateMfConfig: jest.fn(),
 }));
 
-jest.mock('./internal/metro-build-stats', () => ({
+jest.mock('../internal/metro-build-stats', () => ({
   createMinimalBuildStats: jest.fn().mockResolvedValue({
     id: 'test-build-id',
     timestamp: Date.now(),
@@ -56,23 +54,23 @@ jest.mock('./internal/metro-build-stats', () => ({
   resolveCatalogDependencies: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock('./internal/extract-modules-from-exposes', () => ({
+jest.mock('../internal/extract-modules-from-exposes', () => ({
   extractModulesFromExposes: jest.fn().mockReturnValue([]),
 }));
 
-jest.mock('./internal/get-package-dependencies', () => ({
+jest.mock('../internal/get-package-dependencies', () => ({
   getPackageDependencies: jest.fn().mockReturnValue([]),
 }));
 
-jest.mock('./internal/parse-shared-dependencies', () => ({
+jest.mock('../internal/parse-shared-dependencies', () => ({
   parseSharedDependencies: jest.fn().mockReturnValue({}),
 }));
 
-jest.mock('./internal/load-static-entries', () => ({
+jest.mock('../internal/load-static-entries', () => ({
   load_static_entries: jest.fn().mockResolvedValue([]),
 }));
 
-import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
+import { ZephyrMetroPlugin } from '../zephyr-metro-plugin';
 
 describe('ZephyrMetroPlugin', () => {
   beforeEach(() => {
@@ -152,7 +150,7 @@ describe('ZephyrMetroPlugin', () => {
     });
 
     it('should mutate MF config when provided', async () => {
-      const { mutateMfConfig } = require('./internal/mutate-mf-config');
+      const { mutateMfConfig } = require('../internal/mutate-mf-config');
 
       const mfConfig = {
         name: 'TestApp',
@@ -173,7 +171,7 @@ describe('ZephyrMetroPlugin', () => {
     });
 
     it('should not mutate MF config when not provided', async () => {
-      const { mutateMfConfig } = require('./internal/mutate-mf-config');
+      const { mutateMfConfig } = require('../internal/mutate-mf-config');
 
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',

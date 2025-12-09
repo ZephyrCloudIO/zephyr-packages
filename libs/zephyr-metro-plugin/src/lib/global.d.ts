@@ -30,8 +30,8 @@ export type ZephyrManifestChangeCallback = (
 ) => void;
 
 /**
- * Configuration options for creating the Zephyr runtime plugin.
- * Passed to createZephyrRuntimePlugin from zephyr-xpack-internal.
+ * Configuration options for creating the Zephyr runtime plugin. Passed to
+ * createZephyrRuntimePlugin from zephyr-xpack-internal.
  */
 export interface ZephyrRuntimePluginOptions {
   /** URL endpoint to fetch the manifest from (e.g., '/zephyr-manifest.json') */
@@ -43,12 +43,12 @@ export interface ZephyrRuntimePluginOptions {
 }
 
 /**
- * Interface for the Zephyr runtime plugin instance.
- * Created by zephyr-xpack-internal's createZephyrRuntimePlugin function.
+ * Interface for the Zephyr runtime plugin instance. Created by zephyr-xpack-internal's
+ * createZephyrRuntimePlugin function.
  *
- * Note: The actual implementation is in zephyr-xpack-internal which is an
- * optional peer dependency. If not installed, runtime features will be
- * disabled but the app will continue to work.
+ * Note: The actual implementation is in zephyr-xpack-internal which is an optional peer
+ * dependency. If not installed, runtime features will be disabled but the app will
+ * continue to work.
  */
 export interface ZephyrRuntimePlugin {
   /** Manually fetch and apply the latest manifest */
@@ -67,41 +67,42 @@ export interface ZephyrRuntimePlugin {
 
 declare global {
   /**
-   * Zephyr runtime plugin instance - created by zephyr-xpack-internal.
-   * Used for OTA updates and remote module resolution.
+   * Zephyr runtime plugin instance - created by zephyr-xpack-internal. Used for OTA
+   * updates and remote module resolution.
    *
-   * This global is set by the code injected by zephyr-transformer.ts
-   * when the app starts. It will be undefined if:
-   * - zephyr-xpack-internal is not installed
+   * This global is set by the code injected by zephyr-transformer.ts when the app starts.
+   * It will be undefined if:
+   *
+   * - Zephyr-xpack-internal is not installed
    * - The runtime plugin failed to initialize
    * - The code hasn't been executed yet
    */
   var __ZEPHYR_RUNTIME_PLUGIN__: ZephyrRuntimePlugin | undefined;
 
   /**
-   * Zephyr runtime plugin singleton tracker.
-   * Prevents multiple initializations in the same runtime.
-   * Set to the same instance as __ZEPHYR_RUNTIME_PLUGIN__ after initialization.
+   * Zephyr runtime plugin singleton tracker. Prevents multiple initializations in the
+   * same runtime. Set to the same instance as **ZEPHYR_RUNTIME_PLUGIN** after
+   * initialization.
    */
   var __ZEPHYR_RUNTIME_PLUGIN_INSTANCE__: ZephyrRuntimePlugin | undefined;
 
   /**
-   * Optional callback invoked when the manifest changes.
-   * Can be set by application code to react to OTA updates.
+   * Optional callback invoked when the manifest changes. Can be set by application code
+   * to react to OTA updates.
    *
    * @example
-   * ```typescript
-   * global.__ZEPHYR_MANIFEST_CHANGED__ = (newManifest, oldManifest) => {
-   *   console.log('Manifest updated:', newManifest.version);
-   *   // Trigger app reload or notify user
-   * };
-   * ```
+   *   ```typescript
+   *   global.__ZEPHYR_MANIFEST_CHANGED__ = (newManifest, oldManifest) => {
+   *     console.log('Manifest updated:', newManifest.version);
+   *     // Trigger app reload or notify user
+   *   };
+   *   ```;
    */
   var __ZEPHYR_MANIFEST_CHANGED__: ZephyrManifestChangeCallback | undefined;
 
   /**
-   * Module Federation global config set by Metro bundler.
-   * Used by zephyrCommandWrapper to access the MF configuration.
+   * Module Federation global config set by Metro bundler. Used by zephyrCommandWrapper to
+   * access the MF configuration.
    */
   var __METRO_FEDERATION_CONFIG:
     | {

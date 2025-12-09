@@ -5,15 +5,13 @@
 jest.mock('zephyr-agent', () => {
   const mockEngine = {
     env: { target: 'ios' as const },
-    resolve_remote_dependencies: jest
-      .fn()
-      .mockResolvedValue([
-        {
-          name: 'RemoteApp',
-          version: 'latest',
-          resolved_url: 'http://cdn.example.com/remote.js',
-        },
-      ]),
+    resolve_remote_dependencies: jest.fn().mockResolvedValue([
+      {
+        name: 'RemoteApp',
+        version: 'latest',
+        resolved_url: 'http://cdn.example.com/remote.js',
+      },
+    ]),
   };
 
   return {
@@ -47,7 +45,7 @@ jest.mock('fs', () => ({
   },
 }));
 
-import { withZephyr, withZephyrMetro } from './with-zephyr';
+import { withZephyr, withZephyrMetro } from '../with-zephyr';
 
 describe('withZephyr integration', () => {
   // Sample Metro config

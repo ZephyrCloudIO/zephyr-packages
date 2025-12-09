@@ -224,7 +224,7 @@ describe('withZephyr', () => {
       };
 
       const plugin = withZephyr();
-      const result = await plugin.config?.(
+      await plugin.config?.(
         config as any,
         { addPlugin, removePlugin: jest.fn() },
         false

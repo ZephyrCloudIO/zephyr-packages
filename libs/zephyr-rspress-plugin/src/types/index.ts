@@ -15,8 +15,17 @@ export interface ZephyrRspressPluginOptions {
 export type SSGConfig = boolean | Record<string, unknown>;
 
 /**
+ * Minimal builder config shape for plugin injection Both rspress v1 and v2 support this
+ * shape for their builder configuration
+ */
+export interface BuilderConfigWithPlugins {
+  plugins?: unknown[];
+}
+
+/**
  * Generic rspress user config that works with both v1 and v2 Uses intersection of both
- * config shapes
+ * config shapes. The index signature is intentionally omitted to allow compatibility with
+ * stricter types like RsbuildConfig that don't have index signatures.
  */
 export interface RspressUserConfig {
   ssg?: SSGConfig;
@@ -24,12 +33,8 @@ export interface RspressUserConfig {
   outDir?: string;
   // v1 API
   builderPlugins?: unknown[];
-  // v2 API
-  builderConfig?: {
-    plugins?: unknown[];
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
+  // v2 API - use minimal shape to avoid index signature conflicts
+  builderConfig?: BuilderConfigWithPlugins;
 }
 
 /**

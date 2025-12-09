@@ -3,20 +3,25 @@ import {
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
-import type { SSGConfig, RspressUserConfig, RspressPlugin } from './types';
+import type {
+  SSGConfig,
+  RspressUserConfig,
+  RspressPlugin,
+  BuilderConfigWithPlugins,
+} from './types';
 
 export interface ZephyrRspressOptions {
   hooks?: ZephyrBuildHooks;
 }
 
 /**
- * Type guard to detect if rspress v2 API is available v2 uses builderConfig.plugins, v1
- * uses builderPlugins
+ * Type guard to detect if rspress v1 API is being used v1 uses builderPlugins, v2 uses
+ * builderConfig.plugins
  */
-function isRspressV2<T extends RspressUserConfig>(
+function isRspressV1<T extends RspressUserConfig>(
   config: T
-): config is T & { builderConfig?: { plugins?: unknown[] } } {
-  return 'builderConfig' in config || !('builderPlugins' in config);
+): config is T & { builderPlugins: unknown[] } {
+  return 'builderPlugins' in config;
 }
 
 /** Type guard to check if SSG is enabled (can be boolean or object with options) */
@@ -63,21 +68,21 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
         addPlugin(zephyrRspressSSGPlugin(config, options) as RspressPlugin<TConfig>);
       } else {
         // Support both rspress v1 (builderPlugins) and v2 (builderConfig.plugins)
-        if (isRspressV2(config)) {
-          // rspress v2: use builderConfig.plugins
-          config.builderConfig = {
-            ...config.builderConfig,
-            plugins: [
-              ...(config.builderConfig?.plugins ?? []),
-              zephyrRsbuildPlugin(options),
-            ],
-          };
-        } else {
+        if (isRspressV1(config)) {
           // rspress v1: use builderPlugins
-          (config as RspressUserConfig).builderPlugins = [
-            ...((config as RspressUserConfig).builderPlugins ?? []),
+          config.builderPlugins = [
+            ...config.builderPlugins,
             zephyrRsbuildPlugin(options),
           ];
+        } else {
+          // rspress v2: use builderConfig.plugins
+          const existingPlugins = config.builderConfig?.plugins ?? [];
+          const newBuilderConfig: BuilderConfigWithPlugins = {
+            ...config.builderConfig,
+            plugins: [...existingPlugins, zephyrRsbuildPlugin(options)],
+          };
+          (config as { builderConfig?: BuilderConfigWithPlugins }).builderConfig =
+            newBuilderConfig;
         }
       }
       return config;

@@ -48,7 +48,9 @@ describe('withZephyr', () => {
     const removePlugin = jest.fn();
     const config = {
       ssg: false,
-      builderPlugins: [],
+      builderConfig: {
+        plugins: [],
+      },
     };
 
     const plugin = withZephyr();
@@ -59,12 +61,13 @@ describe('withZephyr', () => {
     );
 
     expect(rsbuildPluginMock).toHaveBeenCalled();
-    expect(config.builderPlugins).toContainEqual({ name: 'mock-rsbuild-plugin' });
+    expect(result?.builderConfig?.plugins).toContainEqual({
+      name: 'mock-rsbuild-plugin',
+    });
     expect(addPlugin).not.toHaveBeenCalled();
-    expect(result).toEqual(config);
   });
 
-  it('should handle missing builderPlugins array when ssg is false', async () => {
+  it('should handle missing builderConfig when ssg is false', async () => {
     const addPlugin = jest.fn();
     const removePlugin = jest.fn();
     const config = {
@@ -79,7 +82,9 @@ describe('withZephyr', () => {
     );
 
     expect(rsbuildPluginMock).toHaveBeenCalled();
-    expect(result?.builderPlugins).toContainEqual({ name: 'mock-rsbuild-plugin' });
+    expect(result?.builderConfig?.plugins).toContainEqual({
+      name: 'mock-rsbuild-plugin',
+    });
     expect(addPlugin).not.toHaveBeenCalled();
   });
 
@@ -112,13 +117,17 @@ describe('withZephyr', () => {
     );
 
     expect(rsbuildPluginMock).toHaveBeenCalled();
-    expect(result?.builderPlugins).toContainEqual({ name: 'mock-rsbuild-plugin' });
+    expect(result?.builderConfig?.plugins).toContainEqual({
+      name: 'mock-rsbuild-plugin',
+    });
   });
 
   it('should not add rsbuild plugin twice', async () => {
     const config = {
       ssg: false,
-      builderPlugins: [{ name: 'mock-rsbuild-plugin' }],
+      builderConfig: {
+        plugins: [{ name: 'mock-rsbuild-plugin' }],
+      },
     };
 
     const plugin = withZephyr();
@@ -129,7 +138,9 @@ describe('withZephyr', () => {
     );
 
     const pluginCount =
-      result?.builderPlugins?.filter((p) => p.name === 'mock-rsbuild-plugin').length ?? 0;
+      result?.builderConfig?.plugins?.filter(
+        (p: { name: string }) => p.name === 'mock-rsbuild-plugin'
+      ).length ?? 0;
     expect(pluginCount).toBe(2);
   });
 });

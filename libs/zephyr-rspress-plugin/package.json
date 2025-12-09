@@ -22,12 +22,14 @@
     "test": "jest"
   },
   "dependencies": {
-    "@rspress/shared": "catalog:rspress",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
     "zephyr-rsbuild-plugin": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
+  },
+  "peerDependencies": {
+    "@rspress/core": "catalog:rspress"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",

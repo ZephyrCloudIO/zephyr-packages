@@ -1,4 +1,4 @@
-import type { RspressPlugin, UserConfig } from '@rspress/shared';
+import type { RspressPlugin, UserConfig } from '@rspress/core';
 import { resolve } from 'node:path';
 import {
   ZephyrEngine,

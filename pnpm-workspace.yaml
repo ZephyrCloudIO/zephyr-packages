@@ -81,8 +81,7 @@ catalogs:
     '@rsbuild/plugin-react': ^1.4.0
     '@rsbuild/shared': ^0.7.10
   rspress:
-    'rspress': ^1.44.0
-    '@rspress/shared': ^1.44.0
+    '@rspress/core': ^2.0.0-rc.1
   rolldown:
     rolldown: 1.0.0-beta.3
   rollup4:

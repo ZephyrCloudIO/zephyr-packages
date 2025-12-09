@@ -1,4 +1,4 @@
-import type { RspressPlugin } from '@rspress/shared';
+import type { RspressPlugin } from '@rspress/core';
 import {
   withZephyr as zephyrRsbuildPlugin,
   type ZephyrBuildHooks,
@@ -18,10 +18,13 @@ export function withZephyr(options?: ZephyrRspressOptions): RspressPlugin {
       if (ssg) {
         addPlugin(zephyrRspressSSGPlugin(config, options));
       } else {
-        config.builderPlugins = [
-          ...(config.builderPlugins ?? []),
-          zephyrRsbuildPlugin(options),
-        ];
+        config.builderConfig = {
+          ...config.builderConfig,
+          plugins: [
+            ...(config.builderConfig?.plugins ?? []),
+            zephyrRsbuildPlugin(options),
+          ],
+        };
       }
       return config;
     },

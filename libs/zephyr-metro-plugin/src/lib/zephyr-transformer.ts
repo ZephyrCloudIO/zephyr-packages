@@ -1,6 +1,6 @@
 import type { JsTransformOptions, JsTransformerConfig } from 'metro-transform-worker';
 import { ze_log } from 'zephyr-agent';
-import './global';
+// Note: Global type declarations are in ./global.d.ts (ambient, no runtime import needed)
 
 interface ZephyrTransformerOptions {
   /** Custom manifest endpoint path */

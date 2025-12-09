@@ -98,24 +98,34 @@ async function applyZephyrToMetroConfig(
       ...metroConfig.server,
       // Enhance server with manifest endpoint
       enhanceMiddleware: (middleware: any, server: any) => {
-        // Add configurable manifest endpoint
-        server.app?.use(manifestPath, async (_req: any, res: any) => {
-          try {
-            const manifestContent = createManifestContent(resolved_dependencies || []);
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.send(manifestContent);
-          } catch (error) {
-            ze_log.error(`Failed to serve manifest: ${error}`);
-            res.status(500).send({ error: 'Failed to generate manifest' });
-          }
-        });
+        // Get the base middleware (either enhanced or original)
+        const baseMiddleware = metroConfig.server?.enhanceMiddleware
+          ? metroConfig.server.enhanceMiddleware(middleware, server)
+          : middleware;
 
-        // Call original middleware enhancer if it exists
-        if (metroConfig.server?.enhanceMiddleware) {
-          return metroConfig.server.enhanceMiddleware(middleware, server);
-        }
-        return middleware;
+        // Return a new middleware that intercepts manifest requests
+        return (req: any, res: any, next: any) => {
+          // Check if this is a manifest request
+          const url = req.url?.split('?')[0]; // Remove query string
+          if (url === manifestPath) {
+            try {
+              const manifestContent = createManifestContent(resolved_dependencies || []);
+              res.setHeader('Content-Type', 'application/json');
+              res.setHeader('Cache-Control', 'no-cache');
+              res.end(manifestContent);
+              return;
+            } catch (error) {
+              ze_log.error(`Failed to serve manifest: ${error}`);
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Failed to generate manifest' }));
+              return;
+            }
+          }
+
+          // Pass through to base middleware
+          return baseMiddleware(req, res, next);
+        };
       },
     },
   };

@@ -76,9 +76,6 @@ catalogs:
     '@parcel/config-default':
       specifier: ^2.14.1
       version: 2.14.2
-    '@parcel/core':
-      specifier: ^2.16.1
-      version: 2.16.1
     '@parcel/plugin':
       specifier: ^2.16.1
       version: 2.16.1
@@ -1348,25 +1345,19 @@ importers:
 
   libs/parcel-reporter-zephyr:
     dependencies:
-      '@parcel/core':
-        specifier: catalog:parcel
-        version: 2.16.1(@swc/helpers@0.5.17)
       '@parcel/plugin':
         specifier: catalog:parcel
         version: 2.16.1(@parcel/core@2.16.1(@swc/helpers@0.5.17))
       '@parcel/types':
         specifier: catalog:parcel
         version: 2.16.1(@parcel/core@2.16.1(@swc/helpers@0.5.17))
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1379,9 +1370,6 @@ importers:
 
   libs/rollup-plugin-zephyr:
     dependencies:
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
       rollup:
         specifier: catalog:rollup4
         version: 4.52.5
@@ -1392,9 +1380,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-agent
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1438,15 +1423,12 @@ importers:
       acorn-walk:
         specifier: ^8.3.4
         version: 8.3.4
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
-      json5:
-        specifier: 2.2.3
-        version: 2.2.3
       rollup:
         specifier: catalog:rollup4
         version: 4.52.5
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       vite:
         specifier: ^7.1.11
         version: 7.1.12(@types/node@22.19.1)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
@@ -1454,9 +1436,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-agent
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1533,9 +1512,6 @@ importers:
       axios-retry:
         specifier: ^4.5.0
         version: 4.5.0(axios@1.12.2(debug@4.4.0))
-      cloudflare:
-        specifier: ^3.4.0
-        version: 3.5.0(encoding@0.1.13)
       debug:
         specifier: ^4.3.4
         version: 4.4.0
@@ -1563,12 +1539,6 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-      uuid:
-        specifier: ^8.3.2
-        version: 8.3.2
-      ws:
-        specifier: ^8.18.3
-        version: 8.18.3
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
@@ -1597,9 +1567,6 @@ importers:
       '@types/proper-lockfile':
         specifier: ^4.1.4
         version: 4.1.4
-      '@types/uuid':
-        specifier: ^9.0.8
-        version: 9.0.8
       '@typescript-eslint/eslint-plugin':
         specifier: catalog:eslint
         version: 8.27.0(@typescript-eslint/parser@8.36.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3)
@@ -1609,9 +1576,9 @@ importers:
 
   libs/zephyr-astro-integration:
     dependencies:
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1652,10 +1619,7 @@ importers:
     dependencies:
       '@modern-js/app-tools':
         specifier: catalog:modernjs
-        version: 2.68.14(@rspack/core@1.5.5(@swc/helpers@0.5.17))(@swc/core@1.13.5(@swc/helpers@0.5.17))(encoding@0.1.13)(lightningcss@1.30.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(rollup@4.52.5)(styled-components@5.3.11(@babel/core@7.28.4)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0))(ts-node@10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@22.19.1)(typescript@5.9.3))(tsconfig-paths@4.2.0)(type-fest@4.41.0)(typescript@5.9.3)(webpack-dev-server@5.2.2(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
+        version: 2.68.14(@rspack/core@1.5.5(@swc/helpers@0.5.17))(@swc/core@1.13.5(@swc/helpers@0.5.17))(encoding@0.1.13)(lightningcss@1.30.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(rollup@4.52.5)(styled-components@5.3.11(@babel/core@7.28.4)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0))(ts-node@10.9.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(@types/node@24.5.2)(typescript@5.9.3))(tsconfig-paths@4.2.0)(type-fest@4.41.0)(typescript@5.9.3)(webpack-dev-server@5.2.2(webpack@5.99.9(@swc/core@1.11.31(@swc/helpers@0.5.17))(esbuild@0.25.1)))
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -1671,13 +1635,7 @@ importers:
       zephyr-webpack-plugin:
         specifier: workspace:*
         version: link:../zephyr-webpack-plugin
-      zephyr-xpack-internal:
-        specifier: workspace:*
-        version: link:../zephyr-xpack-internal
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1718,9 +1676,6 @@ importers:
 
   libs/zephyr-rolldown-plugin:
     dependencies:
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
       rolldown:
         specifier: catalog:rolldown
         version: 1.0.0-beta.3(@babel/runtime@7.26.10)(typescript@5.9.3)
@@ -1728,9 +1683,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-agent
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1762,15 +1714,9 @@ importers:
 
   libs/zephyr-rspack-plugin:
     dependencies:
-      '@module-federation/automatic-vendor-federation':
-        specifier: catalog:module-federation
-        version: 1.2.1(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
       '@rspack/core':
         specifier: ^1.5.5
         version: 1.5.5(@swc/helpers@0.5.17)
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -1781,9 +1727,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1818,9 +1761,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1836,12 +1776,6 @@ importers:
 
   libs/zephyr-webpack-plugin:
     dependencies:
-      '@module-federation/automatic-vendor-federation':
-        specifier: catalog:module-federation
-        version: 1.2.1(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -1855,9 +1789,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -1876,9 +1807,6 @@ importers:
       '@module-federation/automatic-vendor-federation':
         specifier: catalog:module-federation
         version: 1.2.1(webpack@5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1))
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -1889,9 +1817,6 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
     devDependencies:
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -7419,17 +7344,23 @@ packages:
   '@types/nlcst@2.0.3':
     resolution: {integrity: sha512-vSYNSDe6Ix3q+6Z7ri9lyWqgGhJTmzRjZRqyq15N0Z/1/UnVsno9G/N40NBijoYx2seFDIl0+B2mgAb9mezUCA==}
 
-  '@types/node-fetch@2.6.12':
-    resolution: {integrity: sha512-8nneRWKCg3rMtF69nLQJnOYUcbafYeFSjqkw3jCRLsqkWFlHaoQrr5mXmofFGOx3DKn7UfmBMyov8ySvLRVldA==}
-
   '@types/node-forge@1.3.11':
     resolution: {integrity: sha512-FQx220y22OKNTqaByeBGqHWYz4cl94tpcxeFdvBo3wjG6XPBuZ0BNgNZRV5J5TFmmcsJ4IzsLkmGRiQbnYsBEQ==}
 
   '@types/node-persist@3.1.8':
     resolution: {integrity: sha512-QLidg6/SadZYPrTKxtxL1A85XBoQlG40bhoMdhu6DH6+eNCMr2j+RGfFZ9I9+IY8W/PDwQonJ+iBWD62jZjMfg==}
 
-  '@types/node@22.19.1':
-    resolution: {integrity: sha512-LCCV0HdSZZZb34qifBsyWlUmok6W7ouER+oQIGBScS8EsZsQbrtFTUrDX4hOl+CS6p7cnNC4td+qrSVGSCTUfQ==}
+  '@types/node@17.0.45':
+    resolution: {integrity: sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==}
+
+  '@types/node@22.13.13':
+    resolution: {integrity: sha512-ClsL5nMwKaBRwPcCvH8E7+nU4GxHVx1axNvMZTFHMEfNI7oahimt26P5zjVCRrjiIWj6YFXfE1v3dEp94wLcGQ==}
+
+  '@types/node@24.0.11':
+    resolution: {integrity: sha512-CJV8eqrYnwQJGMrvcRhQmZfpyniDavB+7nAZYJc6w99hFYJyFN3INV1/2W3QfQrqM36WTLrijJ1fxxvGBmCSxA==}
+
+  '@types/node@24.5.2':
+    resolution: {integrity: sha512-FYxk1I7wPv3K2XBaoyH2cTnocQEu8AOZ60hPbsyukMPLv5/5qr7V1i8PLHdl6Zf87I+xZXFvPCXYjiTFq+YSDQ==}
 
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
@@ -7521,9 +7452,6 @@ packages:
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
-
-  '@types/uuid@9.0.8':
-    resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
 
   '@types/ws@8.18.0':
     resolution: {integrity: sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==}
@@ -8050,10 +7978,6 @@ packages:
   agent-base@7.1.3:
     resolution: {integrity: sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw==}
     engines: {node: '>= 14'}
-
-  agentkeepalive@4.6.0:
-    resolution: {integrity: sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ==}
-    engines: {node: '>= 8.0.0'}
 
   aggregate-error@3.1.0:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
@@ -8920,9 +8844,6 @@ packages:
 
   cloneable-readable@3.0.0:
     resolution: {integrity: sha512-Lkfd9IRx1nfiBr7UHNxJSl/x7DOeUfYmxzCkxYJC2tyc/9vKgV75msgLGurGQsak/NvJDHMWcshzEXRlxfvhqg==}
-
-  cloudflare@3.5.0:
-    resolution: {integrity: sha512-sIRZ4K2WQf8tZ74gZGan3u6+50VY1cB6uNc9XIGGLQa7Ti/nrvvadirm8EPVFlQMG11PUXPsX1Buheh4MPLiew==}
 
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
@@ -10485,9 +10406,6 @@ packages:
       vue-template-compiler:
         optional: true
 
-  form-data-encoder@1.7.2:
-    resolution: {integrity: sha512-qfqtYan3rxrnCk1VYaA4H+Ms9xdpPqvLZa6xmMgFvhO32x7/3J/ExcTd6qpxM0vH2GdMI+poehyBZvqfMTto8A==}
-
   form-data-encoder@2.1.4:
     resolution: {integrity: sha512-yDYSgNMraqvnxiEXO4hi88+YZxaHC6QKzb5N84iRCTDeRO7ZALpir/lVmf/uXUhnwUr2O4HU8s/n6x+yNjQkHw==}
     engines: {node: '>= 14.17'}
@@ -10499,10 +10417,6 @@ packages:
   format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
     engines: {node: '>=0.4.x'}
-
-  formdata-node@4.4.1:
-    resolution: {integrity: sha512-0iirZp3uVDjVGt9p49aTaqjk84TrglENEDuqfdlZQ1roC9CWlPk6Avf8EEnZNcAqPonwkG35x4n3ww/1THYAeQ==}
-    engines: {node: '>= 12.20'}
 
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -11101,9 +11015,6 @@ packages:
   human-signals@5.0.0:
     resolution: {integrity: sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ==}
     engines: {node: '>=16.17.0'}
-
-  humanize-ms@1.2.1:
-    resolution: {integrity: sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==}
 
   husky@9.1.7:
     resolution: {integrity: sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA==}
@@ -13033,11 +12944,6 @@ packages:
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
-
-  node-domexception@1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-    deprecated: Use your platform's native DOMException instead
 
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
@@ -16386,28 +16292,14 @@ packages:
   uncrypto@0.1.3:
     resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
 
-  unctx@2.4.1:
-    resolution: {integrity: sha512-AbaYw0Nm4mK4qjhns67C+kgxR2YWiwlDBPzxrN8h8C6VtAdCgditAY5Dezu3IJy4XVqAnbrXt9oQJvsn3fyozg==}
+  undici-types@6.20.0:
+    resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
 
-  undici-types@5.26.5:
-    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+  undici-types@7.12.0:
+    resolution: {integrity: sha512-goOacqME2GYyOZZfb5Lgtu+1IDmAlAEu5xnD3+xTzS10hT0vzpf0SPjkXwAw9Jm+4n/mQGDP3LO8CPbYROeBfQ==}
 
-  undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
-
-  undici@7.14.0:
-    resolution: {integrity: sha512-Vqs8HTzjpQXZeXdpsfChQTlafcMQaaIwnGwLam1wudSSjlJeQ3bw1j+TLPePgrCnCpUXx7Ba5Pdpf5OBih62NQ==}
-    engines: {node: '>=20.18.1'}
-
-  undici@7.16.0:
-    resolution: {integrity: sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==}
-    engines: {node: '>=20.18.1'}
-
-  unenv@1.10.0:
-    resolution: {integrity: sha512-wY5bskBQFL9n3Eca5XnhH6KbUo/tfvkwm9OpcdCvLaeA7piBNbavbOKJySEwQ1V0RH6HvNlSAFRTpvTqgKRQXQ==}
-
-  unenv@2.0.0-rc.24:
-    resolution: {integrity: sha512-i7qRCmY42zmCwnYlh9H2SvLEypEFGye5iRmEMKjcGi7zk9UquigRjFtTLz0TYqr0ZGLZhaMHl/foy1bZR+Cwlw==}
+  undici-types@7.8.0:
+    resolution: {integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==}
 
   unicode-canonical-property-names-ecmascript@2.0.1:
     resolution: {integrity: sha512-dA8WbNeb2a6oQzAQ55YlT5vQAWGV9WXOsi3SskE3bcCdM0P4SDd+24zS/OCacdRq5BkdsRj9q3Pg6YyQoxIGqg==}
@@ -16880,13 +16772,6 @@ packages:
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
-
-  web-streams-polyfill@4.0.0-beta.3:
-    resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
-    engines: {node: '>= 14'}
-
-  web-vitals@5.1.0:
-    resolution: {integrity: sha512-ArI3kx5jI0atlTtmV0fWU3fjpLmq/nD3Zr1iFFlJLaqa5wLBkUSzINwBPySCX/8jRyjlmy1Volw1kz1g9XE4Jg==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -25919,11 +25804,6 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/node-fetch@2.6.12':
-    dependencies:
-      '@types/node': 22.19.1
-      form-data: 4.0.4
-
   '@types/node-forge@1.3.11':
     dependencies:
       '@types/node': 22.19.1
@@ -25932,9 +25812,19 @@ snapshots:
     dependencies:
       '@types/node': 22.19.1
 
-  '@types/node@22.19.1':
+  '@types/node@17.0.45': {}
+
+  '@types/node@22.13.13':
     dependencies:
-      undici-types: 6.21.0
+      undici-types: 6.20.0
+
+  '@types/node@24.0.11':
+    dependencies:
+      undici-types: 7.8.0
+
+  '@types/node@24.5.2':
+    dependencies:
+      undici-types: 7.12.0
 
   '@types/parse-json@4.0.2': {}
 
@@ -26036,8 +25926,6 @@ snapshots:
   '@types/unist@2.0.11': {}
 
   '@types/unist@3.0.3': {}
-
-  '@types/uuid@9.0.8': {}
 
   '@types/ws@8.18.0':
     dependencies:
@@ -26813,10 +26701,6 @@ snapshots:
       - supports-color
 
   agent-base@7.1.3: {}
-
-  agentkeepalive@4.6.0:
-    dependencies:
-      humanize-ms: 1.2.1
 
   aggregate-error@3.1.0:
     dependencies:
@@ -28017,21 +27901,6 @@ snapshots:
   cloneable-readable@3.0.0:
     dependencies:
       readable-stream: 4.7.0
-
-  cloudflare@3.5.0(encoding@0.1.13):
-    dependencies:
-      '@types/node': 22.19.1
-      '@types/node-fetch': 2.6.12
-      '@types/qs': 6.9.18
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-      qs: 6.14.0
-      web-streams-polyfill: 3.3.3
-    transitivePeerDependencies:
-      - encoding
 
   clsx@2.1.1: {}
 
@@ -29808,8 +29677,6 @@ snapshots:
       typescript: 5.9.3
       webpack: 5.99.9(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.1)
 
-  form-data-encoder@1.7.2: {}
-
   form-data-encoder@2.1.4: {}
 
   form-data@4.0.4:
@@ -29821,11 +29688,6 @@ snapshots:
       mime-types: 2.1.35
 
   format@0.2.2: {}
-
-  formdata-node@4.4.1:
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 4.0.0-beta.3
 
   forwarded@0.2.0: {}
 
@@ -30642,10 +30504,6 @@ snapshots:
   human-signals@2.1.0: {}
 
   human-signals@5.0.0: {}
-
-  humanize-ms@1.2.1:
-    dependencies:
-      ms: 2.1.3
 
   husky@9.1.7: {}
 
@@ -33730,8 +33588,6 @@ snapshots:
   node-addon-api@6.1.0: {}
 
   node-addon-api@7.1.1: {}
-
-  node-domexception@1.0.0: {}
 
   node-fetch-native@1.6.7: {}
 
@@ -37746,15 +37602,6 @@ snapshots:
 
   uncrypto@0.1.3: {}
 
-  unctx@2.4.1:
-    dependencies:
-      acorn: 8.15.0
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-      unplugin: 2.3.11
-
-  undici-types@5.26.5: {}
-
   undici-types@6.21.0: {}
 
   undici@7.14.0: {}
@@ -38382,10 +38229,6 @@ snapshots:
   web-namespaces@2.0.1: {}
 
   web-streams-polyfill@3.3.3: {}
-
-  web-streams-polyfill@4.0.0-beta.3: {}
-
-  web-vitals@5.1.0: {}
 
   webidl-conversions@3.0.1: {}
 

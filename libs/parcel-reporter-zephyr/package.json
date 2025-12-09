@@ -20,14 +20,12 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@parcel/core": "catalog:parcel",
     "@parcel/plugin": "catalog:parcel",
     "@parcel/types": "catalog:parcel",
-    "is-ci": "catalog:plugin-shared",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"

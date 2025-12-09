@@ -3,34 +3,64 @@ import {
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
+import type { SSGConfig, RspressUserConfig, RspressPlugin } from './types';
 
 export interface ZephyrRspressOptions {
   hooks?: ZephyrBuildHooks;
 }
 
 /**
- * Detects if rspress v2 API is available by checking for builderConfig property or if
- * builderPlugins is not present (v2 removed builderPlugins)
+ * Type guard to detect if rspress v2 API is available v2 uses builderConfig.plugins, v1
+ * uses builderPlugins
  */
-function isRspressV2(config: Record<string, unknown>): boolean {
+function isRspressV2<T extends RspressUserConfig>(
+  config: T
+): config is T & { builderConfig?: { plugins?: unknown[] } } {
   return 'builderConfig' in config || !('builderPlugins' in config);
 }
 
-/** Check if SSG is enabled (can be boolean or object with options) */
-function isSsgEnabled(ssg: unknown): boolean {
+/** Type guard to check if SSG is enabled (can be boolean or object with options) */
+function isSsgEnabled(
+  ssg: SSGConfig | undefined
+): ssg is SSGConfig & (true | Record<string, unknown>) {
   return ssg === true || (typeof ssg === 'object' && ssg !== null);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function withZephyr(options?: ZephyrRspressOptions): any {
+/**
+ * Creates a Zephyr plugin for Rspress that works with both v1 and v2
+ *
+ * @example
+ *   ```ts
+ *   // rspress.config.ts (v1)
+ *   import { defineConfig } from 'rspress/config';
+ *   import { withZephyr } from 'zephyr-rspress-plugin';
+ *
+ *   export default defineConfig({
+ *     plugins: [withZephyr()],
+ *   });
+ *   ```;
+ *
+ * @example
+ *   ```ts
+ *   // rspress.config.ts (v2)
+ *   import { defineConfig } from '@rspress/core';
+ *   import { withZephyr } from 'zephyr-rspress-plugin';
+ *
+ *   export default defineConfig({
+ *     plugins: [withZephyr()],
+ *   });
+ *   ```;
+ */
+export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig>(
+  options?: ZephyrRspressOptions
+): RspressPlugin<TConfig> {
   return {
     name: 'zephyr-rspress-plugin',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async config(config: any, { addPlugin }: { addPlugin: (plugin: any) => void }) {
+    async config(config, { addPlugin }) {
       const { ssg } = config;
 
       if (isSsgEnabled(ssg)) {
-        addPlugin(zephyrRspressSSGPlugin(config, options));
+        addPlugin(zephyrRspressSSGPlugin(config, options) as RspressPlugin<TConfig>);
       } else {
         // Support both rspress v1 (builderPlugins) and v2 (builderConfig.plugins)
         if (isRspressV2(config)) {
@@ -44,8 +74,8 @@ export function withZephyr(options?: ZephyrRspressOptions): any {
           };
         } else {
           // rspress v1: use builderPlugins
-          config.builderPlugins = [
-            ...(config.builderPlugins ?? []),
+          (config as RspressUserConfig).builderPlugins = [
+            ...((config as RspressUserConfig).builderPlugins ?? []),
             zephyrRsbuildPlugin(options),
           ];
         }

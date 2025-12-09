@@ -1,5 +1,5 @@
 {
-  "name": "rspress-ssg",
+  "name": "rspress-v1",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
   "dependencies": {
     "@rsbuild/core": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
-    "@rspress/core": "catalog:rspress",
+    "rspress": "^1.40.2",
     "globby": "^14.1.0",
     "webpack-sources": "^3.2.3"
   },

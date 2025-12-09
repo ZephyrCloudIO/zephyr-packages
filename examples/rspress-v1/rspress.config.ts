@@ -1,6 +1,6 @@
 // rspress.config.ts
-import path from 'node:path';
-import { defineConfig } from '@rspress/core';
+import * as path from 'node:path';
+import { defineConfig } from 'rspress/config';
 import { withZephyr } from 'zephyr-rspress-plugin';
 
 export default defineConfig({

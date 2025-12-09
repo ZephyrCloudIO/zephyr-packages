@@ -28,9 +28,6 @@
     "zephyr-rsbuild-plugin": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
-  "peerDependencies": {
-    "@rspress/core": "catalog:rspress"
-  },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",

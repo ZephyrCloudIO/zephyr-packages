@@ -143,4 +143,51 @@ describe('withZephyr', () => {
       ).length ?? 0;
     expect(pluginCount).toBe(2);
   });
+
+  // rspress v1 compatibility tests
+  describe('rspress v1 compatibility', () => {
+    it('should use builderPlugins for rspress v1 config', async () => {
+      const addPlugin = jest.fn();
+      const removePlugin = jest.fn();
+      const config = {
+        ssg: false,
+        builderPlugins: [],
+      };
+
+      const plugin = withZephyr();
+      const result = await plugin.config?.(
+        config as any,
+        { addPlugin, removePlugin },
+        false
+      );
+
+      expect(rsbuildPluginMock).toHaveBeenCalled();
+      expect(result?.builderPlugins).toContainEqual({
+        name: 'mock-rsbuild-plugin',
+      });
+      expect(result?.builderConfig).toBeUndefined();
+      expect(addPlugin).not.toHaveBeenCalled();
+    });
+
+    it('should preserve existing builderPlugins in v1 config', async () => {
+      const existingPlugin = { name: 'existing-plugin' };
+      const config = {
+        ssg: false,
+        builderPlugins: [existingPlugin],
+      };
+
+      const plugin = withZephyr();
+      const result = await plugin.config?.(
+        config as any,
+        { addPlugin: jest.fn(), removePlugin: jest.fn() },
+        false
+      );
+
+      expect(result?.builderPlugins).toContainEqual(existingPlugin);
+      expect(result?.builderPlugins).toContainEqual({
+        name: 'mock-rsbuild-plugin',
+      });
+      expect(result?.builderPlugins?.length).toBe(2);
+    });
+  });
 });

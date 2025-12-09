@@ -50,32 +50,22 @@ For Metro configuration file integration:
 
 ```javascript
 // metro.config.js
-const { getDefaultConfig } = require('@react-native/metro-config');
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const { withZephyr } = require('zephyr-metro-plugin');
 
-const mfConfig = {
-  name: 'MyApp',
-  remotes: {
-    'shared-components': 'SharedComponents@http://localhost:9000/remoteEntry.js',
-  },
-  shared: {
-    react: {
-      singleton: true,
-      eager: true,
-    },
-    'react-native': {
-      singleton: true,
-      eager: true,
-    },
-  },
-};
+const baseConfig = getDefaultConfig(__dirname);
 
-module.exports = withZephyr(
-  __dirname,
-  'ios', // or 'android'
-  'production', // or 'development'
-  'dist'
-)(mfConfig);
+module.exports = (async () => {
+  const zephyrConfig = await withZephyr({
+    name: 'MyApp',
+    target: 'ios', // or 'android'
+    remotes: {
+      SharedComponents: 'SharedComponents@http://localhost:9000/remoteEntry.js',
+    },
+  })(baseConfig);
+
+  return mergeConfig(baseConfig, zephyrConfig);
+})();
 ```
 
 #### 2. Using Command Wrapper
@@ -97,48 +87,44 @@ The plugin works with Metro's Module Federation setup. Configure your federated 
 
 ```javascript
 // metro.config.js
-const mfConfig = {
-  name: 'MobileHost',
-  remotes: {
-    MobileCart: 'MobileCart@http://localhost:9000/ios/MobileCart.bundle',
-    MobileCheckout: 'MobileCheckout@http://localhost:9001/ios/MobileCheckout.bundle',
-  },
-  shared: {
-    react: {
-      singleton: true,
-      eager: true,
-      requiredVersion: '^18.0.0',
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withZephyr } = require('zephyr-metro-plugin');
+
+const baseConfig = getDefaultConfig(__dirname);
+
+module.exports = (async () => {
+  const zephyrConfig = await withZephyr({
+    name: 'MobileHost',
+    target: 'ios', // or 'android'
+    remotes: {
+      MobileCart: 'MobileCart@http://localhost:9000/ios/MobileCart.bundle',
+      MobileCheckout: 'MobileCheckout@http://localhost:9001/ios/MobileCheckout.bundle',
     },
-    'react-native': {
-      singleton: true,
-      eager: true,
-    },
-  },
-};
+  })(baseConfig);
+
+  return mergeConfig(baseConfig, zephyrConfig);
+})();
 ```
 
 #### Remote/Mini-App Example
 
 ```javascript
 // metro.config.js
-const mfConfig = {
-  name: 'MobileCart',
-  filename: 'MobileCart.bundle',
-  exposes: {
-    './CartScreen': './src/screens/CartScreen',
-    './CartWidget': './src/components/CartWidget',
-  },
-  shared: {
-    react: {
-      singleton: true,
-      eager: false,
-    },
-    'react-native': {
-      singleton: true,
-      eager: false,
-    },
-  },
-};
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withZephyr } = require('zephyr-metro-plugin');
+
+const baseConfig = getDefaultConfig(__dirname);
+
+// Note: Module Federation "exposes" configuration is handled separately
+// through @callstack/repack or similar Metro MF solutions
+module.exports = (async () => {
+  const zephyrConfig = await withZephyr({
+    name: 'MobileCart',
+    target: 'ios',
+  })(baseConfig);
+
+  return mergeConfig(baseConfig, zephyrConfig);
+})();
 ```
 
 ### Platform-Specific Configuration
@@ -146,10 +132,21 @@ const mfConfig = {
 The plugin supports both iOS and Android platforms:
 
 ```javascript
-const platform = process.env.PLATFORM || 'ios'; // 'ios' or 'android'
-const mode = process.env.NODE_ENV || 'development';
+// metro.config.js
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withZephyr } = require('zephyr-metro-plugin');
 
-module.exports = withZephyr(__dirname, platform, mode, 'dist')(mfConfig);
+const baseConfig = getDefaultConfig(__dirname);
+const platform = process.env.PLATFORM || 'ios';
+
+module.exports = (async () => {
+  const zephyrConfig = await withZephyr({
+    name: 'MyApp',
+    target: platform,
+  })(baseConfig);
+
+  return mergeConfig(baseConfig, zephyrConfig);
+})();
 ```
 
 ### Build Scripts
@@ -216,23 +213,24 @@ my-react-native-app/
 
 ## Advanced Configuration
 
-### Custom Output Directory
+### Custom Manifest Path
 
 ```javascript
-module.exports = withZephyr(
-  __dirname,
-  'ios',
-  'production',
-  'custom-dist' // Custom output directory
-)(mfConfig);
-```
+// metro.config.js
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withZephyr } = require('zephyr-metro-plugin');
 
-### Development vs Production
+const baseConfig = getDefaultConfig(__dirname);
 
-```javascript
-const isDev = process.env.NODE_ENV === 'development';
+module.exports = (async () => {
+  const zephyrConfig = await withZephyr({
+    name: 'MyApp',
+    target: 'ios',
+    manifestPath: '/custom-manifest.json', // Custom manifest endpoint
+  })(baseConfig);
 
-module.exports = withZephyr(__dirname, 'ios', isDev ? 'development' : 'production', 'dist')(mfConfig);
+  return mergeConfig(baseConfig, zephyrConfig);
+})();
 ```
 
 ## Troubleshooting
@@ -260,15 +258,17 @@ PLATFORM=android react-native bundle
 
 ### Asset Loading Issues
 
-Ensure your output directory is correctly configured and accessible:
+Ensure your Metro config is correctly set up:
 
 ```javascript
-module.exports = withZephyr(
-  __dirname,
-  platform,
-  mode,
-  'dist' // Must match your Metro output path
-)(mfConfig);
+module.exports = (async () => {
+  const zephyrConfig = await withZephyr({
+    name: 'MyApp',
+    target: platform,
+  })(baseConfig);
+
+  return mergeConfig(baseConfig, zephyrConfig);
+})();
 ```
 
 ## Examples
@@ -279,22 +279,37 @@ Check out our [examples directory](../../examples/) for complete working example
 
 ## API Reference
 
-### `withZephyr(context, platform, mode, outDir)`
+### `withZephyr(options)`
 
 Main configuration wrapper for Metro config.
 
-**Parameters:**
+**Options (`ZephyrMetroOptions`):**
 
-- `context` (string): Project root directory (typically `__dirname`)
-- `platform` ('ios' | 'android'): Target platform
-- `mode` ('development' | 'production'): Build mode
-- `outDir` (string): Output directory for built assets (default: 'dist')
+| Option         | Type                     | Description                                                      |
+| -------------- | ------------------------ | ---------------------------------------------------------------- |
+| `name`         | `string`                 | Application name (optional)                                      |
+| `target`       | `'ios' \| 'android'`     | Target platform (optional)                                       |
+| `remotes`      | `Record<string, string>` | Remote module configurations (optional)                          |
+| `manifestPath` | `string`                 | Custom manifest endpoint path (default: `/zephyr-manifest.json`) |
+| `entryFiles`   | `string[]`               | Custom entry file patterns for runtime injection (optional)      |
 
-**Returns:** Function that accepts Module Federation config
+**Returns:** Async function that takes Metro `ConfigT` and returns enhanced config
+
+**Example:**
+
+```javascript
+const enhancedConfig = await withZephyr({
+  name: 'MyApp',
+  target: 'ios',
+  remotes: {
+    SharedUI: 'SharedUI@http://localhost:8081/remoteEntry.js',
+  },
+})(baseMetroConfig);
+```
 
 ### `zephyrCommandWrapper(bundleFn, loadConfigFn, updateManifestFn)`
 
-Advanced CLI-level integration wrapper.
+Advanced CLI-level integration wrapper for custom bundling commands.
 
 **Parameters:**
 

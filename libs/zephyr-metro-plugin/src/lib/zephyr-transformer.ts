@@ -1,20 +1,24 @@
 import type { JsTransformOptions, JsTransformerConfig } from 'metro-transform-worker';
-import { logFn } from 'zephyr-agent';
+import { ze_log } from 'zephyr-agent';
 import './global';
 
 interface ZephyrTransformerOptions {
-  zephyr_engine?: any;
-  zephyrOptions?: any;
-  resolved_dependencies?: any[];
+  /** Custom manifest endpoint path */
+  manifestPath?: string;
+  /** Custom entry file patterns for more conservative targeting */
+  entryFiles?: string[];
 }
+
+/** Default entry file patterns if none specified */
+const DEFAULT_ENTRY_FILES = ['index.js', 'index.ts', 'index.tsx', 'App.js', 'App.tsx'];
 
 /** Metro transformer that injects Zephyr runtime capabilities */
 export async function transform(
-  config: JsTransformerConfig,
+  config: JsTransformerConfig & { zephyrTransformerOptions?: ZephyrTransformerOptions },
   projectRoot: string,
   filename: string,
   data: Buffer,
-  options: JsTransformOptions & { zephyrOptions?: ZephyrTransformerOptions }
+  options: JsTransformOptions
 ): Promise<{
   ast: any;
   code: string;
@@ -24,15 +28,16 @@ export async function transform(
   const upstream = require('metro-react-native-babel-transformer');
   const result = await upstream.transform(config, projectRoot, filename, data, options);
 
-  // Only enhance entry files or files that import React Native
-  const shouldEnhance = isZephyrTargetFile(filename, result.code);
+  // Get Zephyr transformer options from config
+  const zephyrOptions = config.zephyrTransformerOptions;
+  const entryFiles = zephyrOptions?.entryFiles || DEFAULT_ENTRY_FILES;
 
-  if (shouldEnhance && options.zephyrOptions) {
-    const enhancedCode = injectZephyrRuntime(
-      result.code,
-      filename,
-      options.zephyrOptions
-    );
+  // Only enhance entry files - use configurable patterns for more conservative targeting
+  const shouldEnhance = isZephyrTargetFile(filename, result.code, entryFiles);
+
+  if (shouldEnhance) {
+    const manifestPath = zephyrOptions?.manifestPath || '/zephyr-manifest.json';
+    const enhancedCode = injectZephyrRuntime(result.code, filename, manifestPath);
 
     return {
       ...result,
@@ -44,26 +49,30 @@ export async function transform(
 }
 
 /** Check if file should be enhanced with Zephyr runtime */
-function isZephyrTargetFile(filename: string, code: string): boolean {
-  // Target main app entry points
-  if (
-    filename.includes('index.js') ||
-    filename.includes('App.js') ||
-    filename.includes('App.tsx')
-  ) {
+function isZephyrTargetFile(
+  filename: string,
+  code: string,
+  entryFiles: string[]
+): boolean {
+  // Check against configured entry file patterns
+  const isEntryFile = entryFiles.some((pattern) => {
+    // Support glob-like patterns (simple matching)
+    if (pattern.includes('*')) {
+      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      return regex.test(filename);
+    }
+    return filename.endsWith(pattern) || filename.includes(`/${pattern}`);
+  });
+
+  if (isEntryFile) {
     return true;
   }
 
-  // Target files that register the app
+  // Target files that register the app (React Native entry point detection)
   if (
     code.includes('AppRegistry.registerComponent') ||
     code.includes('AppRegistry.runApplication')
   ) {
-    return true;
-  }
-
-  // Target files that import Module Federation or remote components
-  if (code.includes('loadRemote') || code.includes('__webpack_require__')) {
     return true;
   }
 
@@ -74,16 +83,11 @@ function isZephyrTargetFile(filename: string, code: string): boolean {
 function injectZephyrRuntime(
   originalCode: string,
   filename: string,
-  options: ZephyrTransformerOptions
+  manifestPath: string
 ): string {
   try {
-    const { zephyrOptions, resolved_dependencies } = options;
-
     // Create runtime plugin initialization code
-    const runtimePluginCode = generateRuntimePluginCode(
-      zephyrOptions,
-      resolved_dependencies || []
-    );
+    const runtimePluginCode = generateRuntimePluginCode(manifestPath);
 
     // Inject at the top of the file
     const injectedCode = `
@@ -94,44 +98,40 @@ ${runtimePluginCode}
 ${originalCode}
 `;
 
-    logFn('info', `Injected Zephyr runtime into: ${filename}`);
+    ze_log.misc(`Injected Zephyr runtime into: ${filename}`);
     return injectedCode;
   } catch (error) {
-    logFn('error', `Failed to inject Zephyr runtime into ${filename}: ${error}`);
+    ze_log.error(`Failed to inject Zephyr runtime into ${filename}: ${error}`);
     return originalCode; // Return original on error
   }
 }
 
 /** Generate runtime plugin initialization code */
-function generateRuntimePluginCode(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _zephyrOptions: any,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _resolved_dependencies: any[]
-): string {
+function generateRuntimePluginCode(manifestPath: string): string {
   // Generate runtime initialization code using template strings
   // This is more robust than function stringification which can break with minification
   return `// Zephyr Runtime Plugin for React Native
 (function() {
-  if (typeof global !== 'undefined') {
-    // Note: Modern React Native (0.60+) has fetch built-in, so no polyfill needed.
-    // If fetch is not available, the runtime plugin will fail to initialize,
-    // which is the correct behavior to alert developers of the missing dependency.
-
-    // Import and initialize runtime plugin
+  if (typeof global !== 'undefined' && !global.__ZEPHYR_RUNTIME_PLUGIN__) {
+    // Prevent multiple initializations
     try {
-      const { createZephyrRuntimePlugin } = require('zephyr-xpack-internal');
+      var createZephyrRuntimePlugin = require('zephyr-xpack-internal').createZephyrRuntimePlugin;
 
-      const plugin = createZephyrRuntimePlugin({
-        manifestUrl: '/zephyr-manifest.json',
+      var plugin = createZephyrRuntimePlugin({
+        manifestUrl: '${manifestPath}',
       });
 
       // Store globally
       global.__ZEPHYR_RUNTIME_PLUGIN__ = plugin;
 
-      console.log('[Zephyr] Runtime plugin initialized');
+      if (__DEV__) {
+        console.log('[Zephyr] Runtime plugin initialized');
+      }
     } catch (error) {
-      console.warn('[Zephyr] Failed to initialize runtime plugin:', error);
+      // zephyr-xpack-internal is an optional peer dependency
+      if (__DEV__) {
+        console.warn('[Zephyr] Runtime plugin not available:', error.message);
+      }
     }
   }
 })();`;

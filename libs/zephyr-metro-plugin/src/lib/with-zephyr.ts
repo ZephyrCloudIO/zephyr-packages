@@ -10,6 +10,10 @@ export interface ZephyrMetroOptions {
   remotes?: Record<string, string>;
   /** Target platform */
   target?: 'ios' | 'android';
+  /** Custom manifest endpoint path (default: /zephyr-manifest.json) */
+  manifestPath?: string;
+  /** Custom entry file patterns for runtime injection (more conservative targeting) */
+  entryFiles?: string[];
 }
 
 export interface ZephyrModuleFederationConfig {
@@ -36,6 +40,7 @@ async function applyZephyrToMetroConfig(
   zephyrOptions: ZephyrMetroOptions
 ): Promise<ConfigT> {
   const projectRoot = metroConfig.projectRoot || process.cwd();
+  const manifestPath = zephyrOptions.manifestPath || '/zephyr-manifest.json';
 
   // Initialize Zephyr Engine
   const zephyr_engine = await ZephyrEngine.create({
@@ -54,12 +59,20 @@ async function applyZephyrToMetroConfig(
   const resolved_dependencies =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
-  // Enhanced metro config
+  // Enhanced metro config with Zephyr transformer options
+  const zephyrTransformerOptions = {
+    manifestPath,
+    entryFiles: zephyrOptions.entryFiles,
+  };
+
   const enhancedConfig: ConfigT = {
     ...metroConfig,
     transformer: {
       ...metroConfig.transformer,
       babelTransformerPath: require.resolve('./zephyr-transformer'),
+      // Pass zephyr options to transformer via extra data
+      ...(metroConfig.transformer as any),
+      zephyrTransformerOptions,
     },
     resolver: {
       ...metroConfig.resolver,
@@ -77,8 +90,8 @@ async function applyZephyrToMetroConfig(
       ...metroConfig.server,
       // Enhance server with manifest endpoint
       enhanceMiddleware: (middleware: any, server: any) => {
-        // Add zephyr-manifest.json endpoint
-        server.app?.use('/zephyr-manifest.json', async (req: any, res: any) => {
+        // Add configurable manifest endpoint
+        server.app?.use(manifestPath, async (_req: any, res: any) => {
           try {
             const manifestContent = createManifestContent(resolved_dependencies || []);
             res.setHeader('Content-Type', 'application/json');
@@ -100,7 +113,17 @@ async function applyZephyrToMetroConfig(
   };
 
   // Generate manifest file for production builds
-  await generateManifestFile(projectRoot, resolved_dependencies || []);
+  const manifestGenerated = await generateManifestFile(
+    projectRoot,
+    manifestPath,
+    resolved_dependencies || []
+  );
+
+  if (!manifestGenerated) {
+    ze_log.error(
+      'Manifest file generation failed - runtime updates may not work correctly'
+    );
+  }
 
   ze_log.app('Zephyr Metro plugin configured successfully');
 
@@ -121,25 +144,30 @@ function extractMetroRemoteDependencies(remotes: Record<string, string>) {
   });
 }
 
-/** Generate zephyr-manifest.json file */
+/** Generate zephyr-manifest.json file - returns true on success, false on failure */
 async function generateManifestFile(
   projectRoot: string,
+  manifestEndpoint: string,
   resolved_dependencies: any[]
-): Promise<void> {
+): Promise<boolean> {
   try {
     const manifestContent = createManifestContent(resolved_dependencies);
-    const manifestPath = path.join(projectRoot, 'assets', 'zephyr-manifest.json');
+    // Convert endpoint path to filename (e.g., /zephyr-manifest.json -> zephyr-manifest.json)
+    const manifestFilename = manifestEndpoint.replace(/^\//, '');
+    const manifestFilePath = path.join(projectRoot, 'assets', manifestFilename);
 
     // Ensure assets directory exists
-    const assetsDir = path.dirname(manifestPath);
+    const assetsDir = path.dirname(manifestFilePath);
     if (!fs.existsSync(assetsDir)) {
       fs.mkdirSync(assetsDir, { recursive: true });
     }
 
-    await fs.promises.writeFile(manifestPath, manifestContent, 'utf-8');
-    ze_log.manifest(`Generated manifest at: ${manifestPath}`);
+    await fs.promises.writeFile(manifestFilePath, manifestContent, 'utf-8');
+    ze_log.manifest(`Generated manifest at: ${manifestFilePath}`);
+    return true;
   } catch (error) {
-    ze_log.error(`Failed to generate manifest file: ${error}`);
+    ze_log.error(`Failed to generate manifest file: ${ZephyrError.format(error)}`);
+    return false;
   }
 }
 

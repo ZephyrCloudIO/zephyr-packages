@@ -4,13 +4,13 @@
   "description": "Metro bundler plugin for deploying React Native applications with Zephyr Cloud - OTA updates, Module Federation, and seamless deployment",
   "type": "commonjs",
   "license": "Apache-2.0",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "require": "./src/index.js",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "author": {
@@ -19,12 +19,17 @@
   },
   "peerDependencies": {
     "metro": ">=0.70.0",
-    "react-native": ">=0.60.0"
+    "react-native": ">=0.60.0",
+    "zephyr-xpack-internal": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "zephyr-xpack-internal": {
+      "optional": true
+    }
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*"
+    "zephyr-edge-contract": "workspace:*"
   },
   "repository": {
     "type": "git",

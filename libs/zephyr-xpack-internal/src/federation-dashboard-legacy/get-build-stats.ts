@@ -35,13 +35,11 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const ze_engine = pluginOptions.zephyr_engine;
   const app = ze_engine.applicationProperties;
   const { git } = ze_engine.gitProperties;
-  const { isCI } = ze_engine.env;
+  const context = ze_engine.env;
   const dashboardPlugin = new FederationDashboardPlugin({
     app,
     git,
-    context: {
-      isCI,
-    },
+    context,
   });
 
   ze_log.app('process webpack graph.pluginOptions', pluginOptions);
@@ -80,7 +78,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     git,
     remote: filename,
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
-    context: { isCI },
+    context,
     build_target,
     zephyrDependencies: ze_engine.zephyr_dependencies,
   };

@@ -224,11 +224,7 @@ describe('withZephyr', () => {
       };
 
       const plugin = withZephyr();
-      await plugin.config?.(
-        config as any,
-        { addPlugin, removePlugin: jest.fn() },
-        false
-      );
+      await plugin.config?.(config as any, { addPlugin, removePlugin: jest.fn() }, false);
 
       expect(rsbuildPluginMock).toHaveBeenCalled();
       expect(addPlugin).not.toHaveBeenCalled();

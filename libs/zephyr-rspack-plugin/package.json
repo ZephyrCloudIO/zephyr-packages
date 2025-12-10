@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspack-plugin",
-  "version": "0.0.59",
+  "version": "0.1.1",
   "description": "Repack plugin for Zephyr",
   "repository": {
     "type": "git",

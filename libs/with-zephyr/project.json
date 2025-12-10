@@ -1,0 +1,45 @@
+{
+  "name": "with-zephyr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/with-zephyr/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["zephyr-rsbuild-plugin"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "command": "pnpm build",
+        "cwd": "libs/with-zephyr"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "release": {
+      "command": "pnpm dist-tag add with-zephyr@$(npm view with-zephyr@next version) latest"
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rslib build --watch",
+        "cwd": "libs/with-zephyr"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "dependsOn": ["build"],
+      "options": {
+        "command": "rstest run",
+        "cwd": "libs/with-zephyr"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

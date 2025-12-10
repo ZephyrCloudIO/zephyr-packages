@@ -13,7 +13,7 @@ interface GetAssetType<T> {
 
 export type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
-export function buildAssetsMap<T>(
+export function buildAssetsMapMock<T>(
   assets: Record<string, T>,
   extractBuffer: ExtractBuffer<T>,
   getAssetType: GetAssetType<T>

@@ -84,6 +84,7 @@ type ZephyrEngineBuilderTypes =
   | 'vite'
   | 'rollup'
   | 'parcel'
+  | 'astro'
   | 'unknown';
 export interface ZephyrEngineOptions {
   context: string | undefined;
@@ -95,6 +96,18 @@ export interface ZeUser {
   email: string;
   user_uuid: string;
   jwt: string;
+}
+
+export interface ZephyrBuildHooks {
+  onDeployComplete?: (deploymentInfo: DeploymentInfo) => void | Promise<void>;
+}
+
+export interface DeploymentInfo {
+  url: string;
+  snapshotId: string | null;
+  snapshot: Snapshot;
+  federatedDependencies: ZeResolvedDependency[];
+  buildStats: ZephyrBuildStats;
 }
 
 /**
@@ -133,6 +146,12 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+  // Store snapshot with env vars for use in buildStats
+  snapshot_with_envs: Snapshot | null = null;
+  // Store env vars temporarily for API to use (not in snapshot)
+  ze_env_vars: Record<string, string> | null = null;
+  // Store env vars hash for API to use
+  ze_env_vars_hash: string | null = null;
 
   get zephyr_dependencies(): Record<string, ZephyrDependency> {
     return convertResolvedDependencies(this.federated_dependencies ?? []);
@@ -181,7 +200,7 @@ export class ZephyrEngine {
     // starting async load of application configuration, build_id and hash_list
 
     ze_log.init('Initializing: checking authentication...');
-    await checkAuth();
+    await checkAuth(ze.gitProperties);
 
     ze_log.init('Initialized: loading application configuration...');
 
@@ -372,7 +391,7 @@ export class ZephyrEngine {
         message: `Failed to resolve remote dependencies:
 ${errorSummary}\n
 More information on remote dependency resolution please check:
-https://docs.zephyr-cloud.io/how-to/dependency-management`,
+https://docs.zephyr-cloud.io/features/remote-dependencies`,
       });
     }
 
@@ -490,6 +509,7 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    hooks?: ZephyrBuildHooks;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -525,7 +545,18 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
 
     const upload_options: UploadOptions = {
       snapshot,
-      getDashData: () => buildStats,
+      getDashData: (engine) => {
+        // If buildStats has ze_envs already, use it
+        if (buildStats.ze_envs || buildStats.ze_envs_hash) {
+          return buildStats;
+        }
+        // Otherwise, add the env vars from the engine
+        return {
+          ...buildStats,
+          ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
+          ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+        };
+      },
       assets: {
         assetsMap,
         missingAssets,
@@ -559,6 +590,25 @@ https://docs.zephyr-cloud.io/how-to/dependency-management`,
       if (isCI) {
         const application_uid = zephyr_engine.application_uid;
         await setAppDeployResult(application_uid, { urls: [zephyr_engine.version_url], snapshot });
+      }
+    }
+
+    // Call deployment hook if provided
+    if (props.hooks?.onDeployComplete && zephyr_engine.version_url) {
+      try {
+        const snapshotId = await zephyr_engine.snapshotId;
+        const deploymentInfo: DeploymentInfo = {
+          url: zephyr_engine.version_url,
+          snapshotId,
+          snapshot,
+          federatedDependencies: zephyr_engine.federated_dependencies || [],
+          buildStats: upload_options.getDashData(zephyr_engine),
+        };
+
+        await props.hooks.onDeployComplete(deploymentInfo);
+      } catch (error: unknown) {
+        // Log hook errors but don't fail the build
+        ze_log.upload('Warning: deployment hook failed', error);
       }
     }
 

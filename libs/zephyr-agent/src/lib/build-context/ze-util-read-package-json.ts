@@ -98,7 +98,7 @@ export async function getPackageJson(
         'info',
         'No zephyr:dependencies found in package.json, to give you more control over your dependencies, check out our documentation:'
       );
-      logFn('info', 'https://docs.zephyr-cloud.io/how-to/dependency-management');
+      logFn('info', 'https://docs.zephyr-cloud.io/features/remote-dependencies');
     }
 
     ze_log.package('Successfully parsed package.json', {

@@ -84,7 +84,7 @@ export async function makeHttpRequest<T = void>(
   try {
     const response = await fetchWithRetries(url, {
       ...options,
-      body: data,
+      body: data as BodyInit | null | undefined,
     });
 
     const resText = await response.text();

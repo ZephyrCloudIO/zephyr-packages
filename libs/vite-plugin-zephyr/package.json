@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-zephyr",
-  "version": "0.0.59",
+  "version": "0.1.1",
   "description": "Vite plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -27,7 +27,7 @@
     "is-ci": "catalog:plugin-shared",
     "json5": "2.2.3",
     "rollup": "catalog:rollup4",
-    "vite": "catalog:vite6",
+    "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {

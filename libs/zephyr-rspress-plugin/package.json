@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspress-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Rspress plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -30,7 +30,6 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",

@@ -1,6 +1,6 @@
 {
   "name": "zephyr-modernjs-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Modernjs plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -21,14 +21,11 @@
   },
   "dependencies": {
     "@modern-js/app-tools": "catalog:modernjs",
-    "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*"
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",

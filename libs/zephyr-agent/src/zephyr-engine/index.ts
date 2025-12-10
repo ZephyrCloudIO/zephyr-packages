@@ -81,6 +81,7 @@ type ZephyrEngineBuilderTypes =
   | 'webpack'
   | 'rspack'
   | 'repack'
+  | 'metro'
   | 'vite'
   | 'rollup'
   | 'parcel'

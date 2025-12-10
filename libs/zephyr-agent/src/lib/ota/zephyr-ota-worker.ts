@@ -26,6 +26,8 @@ export interface ZephyrOTAConfig {
   downloadManager?: any; // Type will be BundleDownloadManager from zephyr-agent
   /** Bundle cache manager (optional, enables cache management) */
   cacheManager?: any; // Type will be BundleCacheManager from zephyr-agent
+  /** Download timeout in milliseconds (default: 5 minutes) */
+  downloadTimeout?: number;
 }
 
 /** OTA update information */
@@ -80,6 +82,7 @@ interface OTAMetrics {
 /** Storage keys for AsyncStorage */
 const STORAGE_KEYS = {
   CURRENT_VERSION: 'zephyr_ota_current_version',
+  PENDING_VERSION: 'zephyr_ota_pending_version',
   LAST_CHECK: 'zephyr_ota_last_check',
   UPDATE_DECLINED: 'zephyr_ota_declined_updates',
   METRICS: 'zephyr_ota_metrics',
@@ -138,6 +141,7 @@ export class ZephyrOTAWorker {
       applicationUid: config.applicationUid,
       downloadManager: config.downloadManager,
       cacheManager: config.cacheManager,
+      downloadTimeout: config.downloadTimeout || 5 * 60 * 1000, // 5 minutes default
     };
     this.callbacks = callbacks;
 
@@ -377,20 +381,22 @@ export class ZephyrOTAWorker {
    */
   async applyUpdate(update: ZephyrOTAUpdate): Promise<void> {
     if (!this.runtimePlugin) {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: 'Runtime plugin not set. Call setRuntimePlugin() first.',
-      });
+      throw new ZephyrError(ZeErrors.ERR_OTA_RUNTIME_NOT_SET, {});
     }
 
     // Prevent concurrent update applications
     if (this.isApplying) {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message:
-          'Update already in progress. Please wait for current update to complete.',
-      });
+      throw new ZephyrError(ZeErrors.ERR_OTA_UPDATE_IN_PROGRESS, {});
     }
 
     this.isApplying = true;
+
+    // Prepare version info for two-phase commit
+    const versionInfo: StoredVersionInfo = {
+      version: update.version,
+      timestamp: update.timestamp,
+      lastChecked: Date.now(),
+    };
 
     try {
       this.log('Applying update', update);
@@ -404,22 +410,24 @@ export class ZephyrOTAWorker {
         );
       }
 
-      // Call runtime plugin refresh to fetch and apply new manifest
-      // This updates the runtime plugin's internal state
+      // Two-phase commit to prevent race condition:
+      // Phase 1: Store pending version BEFORE applying
+      await this.setStorageItem(
+        STORAGE_KEYS.PENDING_VERSION,
+        JSON.stringify(versionInfo)
+      );
+
+      // Phase 2: Apply the update (refresh runtime plugin)
       await this.runtimePlugin.refresh();
 
-      // Store the new version info
-      // Note: If this fails, the runtime plugin has already been updated,
-      // creating an inconsistency. On next restart, the old version will be loaded.
-      const versionInfo: StoredVersionInfo = {
-        version: update.version,
-        timestamp: update.timestamp,
-        lastChecked: Date.now(),
-      };
+      // Phase 3: Commit - move pending to current
       await this.setStorageItem(
         STORAGE_KEYS.CURRENT_VERSION,
         JSON.stringify(versionInfo)
       );
+
+      // Phase 4: Clean up pending marker
+      await this.removeStorageItem(STORAGE_KEYS.PENDING_VERSION);
 
       // Clear any declined updates
       await this.removeStorageItem(STORAGE_KEYS.UPDATE_DECLINED);
@@ -428,10 +436,17 @@ export class ZephyrOTAWorker {
       await this.updateMetrics('update_applied');
       this.callbacks.onUpdateApplied?.(update.version);
     } catch (error) {
+      // Rollback: remove pending version marker on failure
+      try {
+        await this.removeStorageItem(STORAGE_KEYS.PENDING_VERSION);
+      } catch {
+        // Ignore rollback errors
+      }
+
       const err =
         error instanceof Error
           ? error
-          : new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          : new ZephyrError(ZeErrors.ERR_OTA_NETWORK_FAILED, {
               message: 'Unknown update error',
             });
       this.log('Failed to apply update', err.message);
@@ -501,6 +516,7 @@ export class ZephyrOTAWorker {
       // Track download progress
       let completedDownloads = 0;
       const totalDownloads = bundlesToDownload.length;
+      let monitoringActive = true; // Flag to stop monitoring loop on completion/error
 
       // Queue all bundles for download
       const downloadPromises = bundlesToDownload.map(
@@ -518,8 +534,11 @@ export class ZephyrOTAWorker {
       // Start download manager
       await downloadManager.start();
 
-      // Monitor progress
+      // Monitor progress with cleanup mechanism to prevent memory leak
       const checkProgress = async (): Promise<void> => {
+        // Stop if monitoring was cancelled
+        if (!monitoringActive) return;
+
         const stats = downloadManager.getStats();
         const newCompleted = stats.completed + stats.failed;
 
@@ -540,28 +559,32 @@ export class ZephyrOTAWorker {
 
         // Check if all downloads are complete
         if (completedDownloads >= totalDownloads) {
+          monitoringActive = false; // Stop the monitoring loop
           downloadManager.stop();
           this.log('All bundles downloaded');
           this.callbacks.onDownloadComplete?.(update);
           return;
         }
 
-        // Continue monitoring
-        setTimeout(() => void checkProgress(), 500);
+        // Continue monitoring only if still active
+        if (monitoringActive) {
+          setTimeout(() => void checkProgress(), 500);
+        }
       };
 
       // Start monitoring progress
       void checkProgress();
 
-      // Wait for downloads to complete (with timeout)
-      const timeout = 5 * 60 * 1000; // 5 minutes
+      // Wait for downloads to complete (with configurable timeout)
+      const timeout = this.config.downloadTimeout;
       const startTime = Date.now();
 
       while (completedDownloads < totalDownloads) {
         if (Date.now() - startTime > timeout) {
+          monitoringActive = false; // Stop the monitoring loop
           downloadManager.stop();
-          throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-            message: `Bundle download timeout after ${timeout}ms`,
+          throw new ZephyrError(ZeErrors.ERR_OTA_DOWNLOAD_TIMEOUT, {
+            timeout,
           });
         }
 
@@ -569,6 +592,9 @@ export class ZephyrOTAWorker {
         const stats = downloadManager.getStats();
         completedDownloads = stats.completed + stats.failed;
       }
+
+      // Ensure monitoring is stopped after successful completion
+      monitoringActive = false;
 
       // Check if any downloads failed
       const finalStats = downloadManager.getStats();

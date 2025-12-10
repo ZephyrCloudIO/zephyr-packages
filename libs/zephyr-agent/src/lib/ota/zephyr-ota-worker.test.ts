@@ -374,7 +374,9 @@ describe('ZephyrOTAWorker', () => {
         manifestUrl: 'https://cdn.example.com/manifest.json',
       };
 
-      await expect(worker.applyUpdate(update)).rejects.toThrow('Runtime plugin not set');
+      await expect(worker.applyUpdate(update)).rejects.toThrow(
+        'OTA runtime plugin not configured'
+      );
     });
   });
 

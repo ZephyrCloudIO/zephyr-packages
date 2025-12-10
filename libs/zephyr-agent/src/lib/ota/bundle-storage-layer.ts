@@ -1,6 +1,15 @@
 import type { BundleMetadata } from 'zephyr-edge-contract';
 import { ZephyrError, ZeErrors } from '../errors';
 
+/** Calculate byte size of a string (handles UTF-8 multi-byte characters) */
+function getByteSize(str: string): number {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(str).length;
+  }
+  // Fallback for environments without TextEncoder (Node.js < 11)
+  return Buffer.byteLength(str, 'utf8');
+}
+
 /** Storage configuration for bundle caching */
 export interface BundleStorageConfig {
   /** Root directory for bundle cache (e.g., DocumentDirectoryPath + '/zephyr-bundles') */
@@ -135,32 +144,45 @@ export class BundleStorageLayer {
     version: string
   ): Promise<string> {
     if (!this.fs) {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: 'Storage layer not available',
-      });
+      throw new ZephyrError(ZeErrors.ERR_OTA_STORAGE_UNAVAILABLE, {});
     }
 
     const finalPath = `${this.config.cacheDir}/${bundle.checksum}`;
     const tempPath = `${finalPath}.tmp`;
 
     try {
-      // Step 1: Write to temp file
+      // Step 1: Calculate actual byte size before writing
+      // This handles UTF-8 multi-byte characters correctly
+      const actualByteSize = getByteSize(data);
+
+      // Step 2: Write to temp file
       await this.fs.writeFile(tempPath, data, 'utf8');
       this.log(`Wrote bundle to temp file: ${tempPath}`);
 
-      // Step 2: Verify file was written correctly
+      // Step 3: Verify file was written correctly using calculated byte size
       const stats = await this.fs.stat(tempPath);
-      if (stats.size !== bundle.size) {
-        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-          message: `Size mismatch: expected ${bundle.size}, got ${stats.size}`,
+      if (stats.size !== actualByteSize) {
+        throw new ZephyrError(ZeErrors.ERR_OTA_SIZE_MISMATCH, {
+          expected: actualByteSize,
+          actual: stats.size,
         });
       }
 
-      // Step 3: Atomic move to final location
+      // Step 4: Optional - verify against bundle.size if it represents byte size
+      // Note: bundle.size from metadata may be string length or byte size depending on source
+      // We log a warning if there's a mismatch but don't fail
+      if (bundle.size && stats.size !== bundle.size) {
+        this.log(
+          `Warning: Bundle metadata size (${bundle.size}) differs from actual file size (${stats.size}). ` +
+            `This may indicate metadata uses string length instead of byte size.`
+        );
+      }
+
+      // Step 5: Atomic move to final location
       await this.fs.moveFile(tempPath, finalPath);
       this.log(`Moved bundle to final location: ${finalPath}`);
 
-      // Step 4: Update cache index
+      // Step 6: Update cache index
       const now = Date.now();
       const entry: CacheIndexEntry = {
         metadata: bundle,

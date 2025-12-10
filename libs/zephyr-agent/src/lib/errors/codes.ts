@@ -508,6 +508,70 @@ Were the required packages in Module federation plugin installed and included in
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
   },
+
+  // OTA-specific errors (config category, IDs 010-019)
+  /** OTA: Runtime plugin not configured */
+  ERR_OTA_RUNTIME_NOT_SET: {
+    id: '010',
+    message: `OTA runtime plugin not configured. Call setRuntimePlugin() before applying updates.`,
+    kind: 'config',
+  },
+
+  /** OTA: Update already in progress */
+  ERR_OTA_UPDATE_IN_PROGRESS: {
+    id: '011',
+    message: `An OTA update is already in progress. Please wait for current update to complete.`,
+    kind: 'config',
+  },
+
+  /** OTA: Bundle download timeout */
+  ERR_OTA_DOWNLOAD_TIMEOUT: {
+    id: '012',
+    message: `Bundle download timed out after {{ timeout }}ms. Check network connection and try again.`,
+    kind: 'config',
+  },
+
+  /** OTA: Bundle integrity verification failed */
+  ERR_OTA_INTEGRITY_FAILED: {
+    id: '013',
+    message: `Bundle integrity verification failed. Expected checksum {{ expected }}, got {{ actual }}.`,
+    kind: 'config',
+  },
+
+  /** OTA: Bundle size mismatch */
+  ERR_OTA_SIZE_MISMATCH: {
+    id: '014',
+    message: `Bundle size mismatch. Expected {{ expected }} bytes, got {{ actual }} bytes.`,
+    kind: 'config',
+  },
+
+  /** OTA: Storage layer not available */
+  ERR_OTA_STORAGE_UNAVAILABLE: {
+    id: '015',
+    message: `OTA storage layer not available. Ensure react-native-fs is installed for React Native.`,
+    kind: 'config',
+  },
+
+  /** OTA: Network request failed */
+  ERR_OTA_NETWORK_FAILED: {
+    id: '016',
+    message: `OTA network request failed: {{ message }}`,
+    kind: 'config',
+  },
+
+  /** OTA: Invalid manifest format */
+  ERR_OTA_MANIFEST_INVALID: {
+    id: '017',
+    message: `Invalid OTA manifest format: {{ message }}`,
+    kind: 'config',
+  },
+
+  /** OTA: Version storage failed */
+  ERR_OTA_VERSION_STORAGE_FAILED: {
+    id: '018',
+    message: `Failed to store OTA version info. Update applied but may not persist: {{ message }}`,
+    kind: 'config',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

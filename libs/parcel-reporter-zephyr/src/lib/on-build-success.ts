@@ -16,8 +16,10 @@ export async function onBuildSuccess(props: OnBuildSuccessProps): Promise<void> 
 
   const zephyr_engine = await zephyr_engine_defer;
 
+  // Start a new build
   await zephyr_engine.start_new_build();
 
+  // Collect assets from the build
   event.bundleGraph.getBundles().forEach((bundle) => {
     const filePath = bundle.filePath;
     if (!filePath) return;
@@ -31,6 +33,7 @@ export async function onBuildSuccess(props: OnBuildSuccessProps): Promise<void> 
     });
   });
 
+  // Upload assets and finish the build
   await zephyr_engine.upload_assets({
     assetsMap: getAssetsMap(assets),
     buildStats: await zeBuildDashData(zephyr_engine),

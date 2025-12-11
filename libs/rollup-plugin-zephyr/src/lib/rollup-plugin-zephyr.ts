@@ -32,8 +32,10 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
       await catchAsync(async () => {
         const zephyr_engine = await zephyr_engine_defer;
 
+        // Start a new build
         await zephyr_engine.start_new_build();
 
+        // Upload assets and finish the build
         await zephyr_engine.upload_assets({
           assetsMap: getAssetsMap(bundle),
           buildStats: await zeBuildDashData(zephyr_engine),

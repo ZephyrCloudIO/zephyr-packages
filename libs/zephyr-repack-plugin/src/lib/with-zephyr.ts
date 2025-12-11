@@ -46,6 +46,7 @@ async function _zephyr_configuration(
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
   await catchAsync(async () => {
+    // create instance of ZephyrEngine to track the application
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'repack',
       context: config.context,
@@ -73,6 +74,7 @@ async function _zephyr_configuration(
     );
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
+    // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
     ze_log.app('Application uid created...');

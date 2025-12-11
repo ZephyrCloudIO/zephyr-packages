@@ -89,10 +89,12 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           cachedSpecifier = `env:vars:${appUid}`;
         }
         if (source === cachedSpecifier) {
+          // In dev mode, use a virtual module; in build mode, mark as external
           if (process.env['NODE_ENV'] === 'development') {
             const appUid = zephyr_engine.application_uid;
             return { id: `\0virtual:zephyr-env-${appUid}` };
           } else {
+            // Mark this as external so it gets resolved by the import map at runtime
             return { id: source, external: true };
           }
         }
@@ -107,6 +109,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       },
       handler: async (code, id) => {
         return await catchAsync(async () => {
+          // Additional check for backward compatibility with older Vite/Rollup versions
           if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
             const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
             if (!dependencyPairs) return code;
@@ -132,7 +135,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           }
 
           return code;
-        }, code);
+        }, code); // returns the original code in case of error
       },
     },
     generateBundle: async function (options, bundle) {
@@ -278,6 +281,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         const zephyr_engine = await zephyr_engine_defer;
         const appUid = zephyr_engine.application_uid;
 
+        // Convert federated dependencies to remotes format
         const remotes: RemoteEntry[] =
           zephyr_engine.federated_dependencies?.map((dep) => ({
             name: dep.name,
@@ -285,10 +289,13 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             remote_entry_url: dep.default_url,
           })) || [];
 
+        // Use the same import map creation as Rspack plugin
         const importMap = buildEnvImportMap(appUid, remotes);
         const importMapScript = `<script type="importmap">${JSON.stringify({ imports: importMap }, null, 2)}</script>`;
 
+        // Check if import map already exists
         if (!html.includes('type="importmap"')) {
+          // Inject import map before closing head tag
           return html.replace('</head>', `  ${importMapScript}\n</head>`);
         }
 

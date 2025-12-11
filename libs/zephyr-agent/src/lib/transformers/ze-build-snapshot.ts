@@ -16,11 +16,12 @@ interface CreateSnapshotProps {
   assets: ZeBuildAssetsMap;
   // SSR-specific parameter
   snapshotType?: 'static' | 'ssr';
+  entrypoint?: string;
 }
 
 export async function createSnapshot(
   zephyr_engine: ZephyrEngine,
-  { mfConfig, assets, snapshotType }: CreateSnapshotProps
+  { mfConfig, assets, snapshotType, entrypoint }: CreateSnapshotProps
 ): Promise<Snapshot> {
   const buildId = await zephyr_engine.build_id;
 
@@ -87,6 +88,8 @@ export async function createSnapshot(
     ),
     // Add type field for SSR snapshots
     ...(snapshotType && { type: snapshotType }),
+    // Add entrypoint field if provided
+    ...(entrypoint && { entrypoint }),
   };
 
   return snapshot as Snapshot;

@@ -16,6 +16,8 @@ export interface Snapshot {
   // rendering mode: when set to 'ssr', enables server-side rendering
   // absence of this field indicates a standard static snapshot
   type?: 'ssr';
+  // server entry file path for SSR applications (relative path)
+  entrypoint?: string;
   uid: {
     build: string;
     app_name: string;

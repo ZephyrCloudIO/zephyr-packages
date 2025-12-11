@@ -52,6 +52,11 @@ export interface TanStackStartZephyrOptions {
    * (TanStack Start default)
    */
   outputDir?: string;
+  /**
+   * Server entry file path for SSR Defaults to './dist/server/index.js' (TanStack Start
+   * default)
+   */
+  entrypoint?: string;
 }
 
 /**
@@ -69,6 +74,7 @@ export function withZephyrTanstackStart(
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   let config: ResolvedConfig;
   let outputDir: string;
+  let entrypoint: string;
   let uploadCompleted = false; // Guard to ensure we only upload once
 
   return {
@@ -81,8 +87,10 @@ export function withZephyrTanstackStart(
       // For TanStack Start, always use the root dist directory (contains server/ and client/)
       // Don't use config.build.outDir as it points to dist/server/ during SSR build
       outputDir = options.outputDir || path.join(config.root, 'dist');
+      entrypoint = options.entrypoint || './dist/server/index.js';
 
       console.log(`[TanStack Zephyr] Output directory: ${outputDir}`);
+      console.log(`[TanStack Zephyr] Server entrypoint: ${entrypoint}`);
     },
 
     async buildApp(builder) {
@@ -159,6 +167,7 @@ export function withZephyrTanstackStart(
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
           snapshotType: 'ssr',
+          entrypoint,
         });
 
         // Finish build

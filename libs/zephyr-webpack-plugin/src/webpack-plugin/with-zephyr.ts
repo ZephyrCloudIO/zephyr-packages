@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import { catchAsync, ZephyrEngine, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -17,7 +17,7 @@ async function _zephyr_configuration(
   config: WebpackConfiguration,
   _zephyrOptions?: ZephyrWebpackPluginOptions
 ): Promise<Configuration> {
-  try {
+  await catchAsync(async () => {
     // create instance of ZephyrEngine to track the application
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'webpack',
@@ -44,9 +44,7 @@ async function _zephyr_configuration(
         hooks: _zephyrOptions?.hooks,
       })
     );
-  } catch (error) {
-    logFn('error', ZephyrError.format(error));
-  }
+  });
 
   return config;
 }

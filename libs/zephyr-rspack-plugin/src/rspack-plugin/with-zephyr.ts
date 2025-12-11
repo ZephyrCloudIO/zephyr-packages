@@ -1,5 +1,5 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
-import { ZephyrEngine, ZephyrError, logFn } from 'zephyr-agent';
+import { catchAsync, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -20,7 +20,7 @@ async function _zephyr_configuration(
   config: Configuration,
   _zephyrOptions?: ZephyrRspackPluginOptions
 ): Promise<Configuration> {
-  try {
+  await catchAsync(async () => {
     // create instance of ZephyrEngine to track the application
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'rspack',
@@ -29,7 +29,6 @@ async function _zephyr_configuration(
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);
-
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
@@ -44,9 +43,7 @@ async function _zephyr_configuration(
         hooks: _zephyrOptions?.hooks,
       })
     );
-  } catch (error) {
-    logFn('error', ZephyrError.format(error));
-  }
+  });
 
   return config;
 }

@@ -1,5 +1,5 @@
 import type { Configuration } from '@rspack/core';
-import { ZeErrors, ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import { catchAsync, ZeErrors, ZephyrEngine, ZephyrError, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -45,7 +45,7 @@ async function _zephyr_configuration(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
-  try {
+  await catchAsync(async () => {
     // create instance of ZephyrEngine to track the application
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'repack',
@@ -74,7 +74,6 @@ async function _zephyr_configuration(
     );
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
-    // const app_config = await zephyr_engine.application_configuration;
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
@@ -87,9 +86,7 @@ async function _zephyr_configuration(
         hooks: _zephyrOptions?.hooks,
       })
     );
-  } catch (error) {
-    logFn('error', ZephyrError.format(error));
-  }
+  });
 
   return config;
 }

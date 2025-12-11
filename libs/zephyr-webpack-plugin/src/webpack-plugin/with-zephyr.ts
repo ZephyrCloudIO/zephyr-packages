@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import { catchAsync, ZephyrEngine, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -17,14 +17,12 @@ async function _zephyr_configuration(
   config: WebpackConfiguration,
   _zephyrOptions?: ZephyrWebpackPluginOptions
 ): Promise<Configuration> {
-  try {
-    // create instance of ZephyrEngine to track the application
+  await catchAsync(async () => {
     const zephyr_engine = await ZephyrEngine.create({
       builder: 'webpack',
       context: config.context,
     });
 
-    // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
@@ -35,7 +33,6 @@ async function _zephyr_configuration(
 
     ze_log.mf(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);
 
-    // inject the ZephyrWebpackPlugin
     config.plugins?.push(
       new ZeWebpackPlugin({
         zephyr_engine,
@@ -44,9 +41,7 @@ async function _zephyr_configuration(
         hooks: _zephyrOptions?.hooks,
       })
     );
-  } catch (error) {
-    logFn('error', ZephyrError.format(error));
-  }
+  });
 
   return config;
 }

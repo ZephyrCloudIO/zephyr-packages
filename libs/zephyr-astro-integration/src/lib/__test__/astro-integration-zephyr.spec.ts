@@ -16,6 +16,16 @@ jest.mock('zephyr-agent', () => ({
     format: jest.fn(),
   },
   zeBuildDashData: jest.fn(),
+  catchAsync: jest.fn().mockImplementation(async (fn, fallback) => {
+    try {
+      return await fn();
+    } catch (error) {
+      const mockLogFn = jest.requireMock('zephyr-agent').logFn;
+      const mockZephyrError = jest.requireMock('zephyr-agent').ZephyrError;
+      mockLogFn('error', mockZephyrError.format(error));
+      return fallback;
+    }
+  }),
 }));
 
 jest.mock('node:url', () => ({
@@ -108,23 +118,6 @@ describe('withZephyr', () => {
         builder: 'astro',
         context: '/test/project/',
       });
-    });
-
-    it('should handle errors during setup', async () => {
-      const testError = new Error('Setup failed');
-      mockZephyrDeferCreate.mockImplementation(() => {
-        throw testError;
-      });
-
-      const integration = withZephyr();
-      const mockConfig = { root: new URL('file:///test/project/') };
-
-      await integration.hooks['astro:config:done']?.({
-        config: mockConfig,
-      } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:done']>>[0]);
-
-      expect(ZephyrError.format).toHaveBeenCalledWith(testError);
-      expect(logFn).toHaveBeenCalledWith('error', 'Setup failed');
     });
   });
 

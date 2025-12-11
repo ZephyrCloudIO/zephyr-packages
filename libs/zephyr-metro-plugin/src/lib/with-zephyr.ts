@@ -1,5 +1,6 @@
 import type { ConfigT } from 'metro-config';
 import {
+  catchAsync,
   ze_log,
   ZephyrEngine,
   ZephyrError,
@@ -34,12 +35,12 @@ export interface ZephyrModuleFederationConfig {
 /** Metro plugin configuration function for Zephyr */
 export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
   return async (metroConfig: ConfigT): Promise<ConfigT> => {
-    try {
-      return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);
-    } catch (error) {
-      ze_log.error(ZephyrError.format(error));
-      return metroConfig; // Return original config on error
-    }
+    return (
+      (await catchAsync(
+        async () => await applyZephyrToMetroConfig(metroConfig, zephyrOptions),
+        metroConfig
+      )) ?? metroConfig
+    );
   };
 }
 
@@ -108,19 +109,21 @@ async function applyZephyrToMetroConfig(
           // Check if this is a manifest request
           const url = req.url?.split('?')[0]; // Remove query string
           if (url === manifestPath) {
-            try {
-              const manifestContent = createManifestContent(resolved_dependencies || []);
+            void (async () => {
+              const manifestContent =
+                (await catchAsync(
+                  async () => createManifestContent(resolved_dependencies || []),
+                  JSON.stringify({ error: 'Failed to generate manifest' })
+                )) ?? JSON.stringify({ error: 'Failed to generate manifest' });
+
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'no-cache');
+              if (manifestContent.includes('error')) {
+                res.statusCode = 500;
+              }
               res.end(manifestContent);
-              return;
-            } catch (error) {
-              ze_log.error(`Failed to serve manifest: ${error}`);
-              res.statusCode = 500;
-              res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ error: 'Failed to generate manifest' }));
-              return;
-            }
+            })();
+            return;
           }
 
           // Pass through to base middleware

@@ -1,9 +1,8 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
 import {
-  logFn,
+  catchAsync,
   zeBuildDashData,
   ZephyrEngine,
-  ZephyrError,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { getAssetsMap } from './transform/get-assets-map';
@@ -30,13 +29,11 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
       });
     },
     writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
-      try {
+      await catchAsync(async () => {
         const zephyr_engine = await zephyr_engine_defer;
 
-        // Start a new build
         await zephyr_engine.start_new_build();
 
-        // Upload assets and finish the build
         await zephyr_engine.upload_assets({
           assetsMap: getAssetsMap(bundle),
           buildStats: await zeBuildDashData(zephyr_engine),
@@ -44,9 +41,7 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
         });
 
         await zephyr_engine.build_finished();
-      } catch (error) {
-        logFn('error', ZephyrError.format(error));
-      }
+      });
     },
   };
 }

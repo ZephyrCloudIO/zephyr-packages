@@ -113,6 +113,11 @@ declare global {
         shared?: Record<string, unknown>;
       }
     | undefined;
+  var __ZEPHYR_OTA_WORKER_CLASS__: any;
+  var __ZEPHYR_OTA_UPDATE_AVAILABLE__: ((update: any) => void) | undefined;
+  var __ZEPHYR_OTA_RESTART_REQUIRED__: ((info: any) => void) | undefined;
+  var __ZEPHYR_OTA_WORKER__: any;
+  var __ZEPHYR_BUNDLE_MANAGER__: any;
 
   // Browser/Web environment support (for React Native Web)
   interface Window {

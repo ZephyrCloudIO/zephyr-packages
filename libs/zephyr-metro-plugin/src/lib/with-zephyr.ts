@@ -16,6 +16,15 @@ export interface ZephyrMetroOptions {
   remotes?: Record<string, string>;
   /** Target platform */
   target?: 'ios' | 'android';
+  /** Enable OTA updates */
+  enableOTA?: boolean;
+  /** Application UID for OTA */
+  applicationUid?: string;
+  /** OTA configuration */
+  otaConfig?: {
+    checkInterval?: number;
+    debug?: boolean;
+  };
   /** Custom manifest endpoint path (default: /zephyr-manifest.json) */
   manifestPath?: string;
   /** Custom entry file patterns for runtime injection (more conservative targeting) */
@@ -71,6 +80,9 @@ async function applyZephyrToMetroConfig(
   const zephyrTransformerOptions = {
     manifestPath,
     entryFiles: zephyrOptions.entryFiles,
+    enableOTA: zephyrOptions.enableOTA,
+    applicationUid: zephyrOptions.applicationUid,
+    otaConfig: zephyrOptions.otaConfig,
   };
 
   const enhancedConfig: ConfigT = {
@@ -109,7 +121,17 @@ async function applyZephyrToMetroConfig(
           const url = req.url?.split('?')[0]; // Remove query string
           if (url === manifestPath) {
             try {
-              const manifestContent = createManifestContent(resolved_dependencies || []);
+              let manifestContent = createManifestContent(resolved_dependencies || []);
+
+              // Enhance with OTA metadata if enabled
+              if (zephyrOptions.enableOTA) {
+                const manifest = JSON.parse(manifestContent);
+                manifest.ota_enabled = true;
+                manifest.application_uid = zephyrOptions.applicationUid;
+                manifest.timestamp = new Date().toISOString();
+                manifestContent = JSON.stringify(manifest, null, 2);
+              }
+
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'no-cache');
               res.end(manifestContent);
@@ -134,7 +156,8 @@ async function applyZephyrToMetroConfig(
   const manifestGenerated = await generateManifestFile(
     projectRoot,
     manifestPath,
-    resolved_dependencies || []
+    resolved_dependencies || [],
+    zephyrOptions
   );
 
   if (!manifestGenerated) {
@@ -146,7 +169,13 @@ async function applyZephyrToMetroConfig(
     ze_log.error(errorMessage);
   }
 
-  ze_log.app('Zephyr Metro plugin configured successfully');
+  // Log OTA configuration if enabled
+  if (zephyrOptions.enableOTA) {
+    ze_log.app('Zephyr Metro plugin configured with OTA support');
+    ze_log.app(`App UID: ${zephyrOptions.applicationUid || 'not specified'}`);
+  } else {
+    ze_log.app('Zephyr Metro plugin configured successfully');
+  }
 
   return enhancedConfig;
 }
@@ -169,10 +198,21 @@ function extractMetroRemoteDependencies(remotes: Record<string, string>) {
 async function generateManifestFile(
   projectRoot: string,
   manifestEndpoint: string,
-  resolved_dependencies: any[]
+  resolved_dependencies: any[],
+  zephyrOptions: ZephyrMetroOptions
 ): Promise<boolean> {
   try {
-    const manifestContent = createManifestContent(resolved_dependencies);
+    let manifestContent = createManifestContent(resolved_dependencies);
+
+    // Enhance manifest with OTA metadata if OTA is enabled
+    if (zephyrOptions.enableOTA) {
+      const manifest = JSON.parse(manifestContent);
+      manifest.ota_enabled = true;
+      manifest.application_uid = zephyrOptions.applicationUid;
+      manifest.timestamp = new Date().toISOString();
+      manifestContent = JSON.stringify(manifest, null, 2);
+    }
+
     // Convert endpoint path to filename (e.g., /zephyr-manifest.json -> zephyr-manifest.json)
     const manifestFilename = manifestEndpoint.replace(/^\//, '');
     const manifestFilePath = path.join(projectRoot, 'assets', manifestFilename);
@@ -184,7 +224,12 @@ async function generateManifestFile(
     }
 
     await fs.promises.writeFile(manifestFilePath, manifestContent, 'utf-8');
-    ze_log.manifest(`Generated manifest at: ${manifestFilePath}`);
+
+    if (zephyrOptions.enableOTA) {
+      ze_log.manifest(`Generated OTA-enhanced manifest at: ${manifestFilePath}`);
+    } else {
+      ze_log.manifest(`Generated manifest at: ${manifestFilePath}`);
+    }
     return true;
   } catch (error) {
     ze_log.error(`Failed to generate manifest file: ${ZephyrError.format(error)}`);

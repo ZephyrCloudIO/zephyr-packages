@@ -2,6 +2,7 @@ import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
+import { ZE_ENV } from 'zephyr-edge-contract';
 import {
   type Snapshot,
   ZEPHYR_MANIFEST_FILENAME,
@@ -80,6 +81,7 @@ type ZephyrEngineBuilderTypes =
   | 'webpack'
   | 'rspack'
   | 'repack'
+  | 'metro'
   | 'vite'
   | 'rollup'
   | 'parcel'
@@ -131,7 +133,8 @@ export class ZephyrEngine {
   env: {
     isCI: boolean;
     target: Platform;
-  } = { isCI, target: 'web' };
+    env?: string | undefined;
+  } = { isCI, target: 'web', env: ZE_ENV() };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 
@@ -252,7 +255,11 @@ export class ZephyrEngine {
       isCI,
       branch: this.gitProperties.git.branch,
       username: app_config.username,
+      env: this.env.env,
     };
+    if (this.env.env) {
+      ze_log.config('Using environment:', this.env.env);
+    }
     // convert to base64
     const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
       'base64'
@@ -418,6 +425,17 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
     const if_target_is_react_native =
       zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
+
+    const ze_env = ZE_ENV();
+    if (ze_env) {
+      logger({
+        level: 'info',
+        action: 'build:info:env',
+        ignore: true,
+        message: `Using environment: ${cyanBright(ze_env)}`,
+      });
+      zephyr_engine.env.env = ze_env;
+    }
 
     if (zeStart && versionUrl) {
       if (dependencies && dependencies.length > 0) {

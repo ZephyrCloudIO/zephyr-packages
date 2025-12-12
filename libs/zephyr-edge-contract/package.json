@@ -1,6 +1,6 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Edge contract for Zephyr",
   "repository": {
     "type": "git",
@@ -13,6 +13,14 @@
     "url": "https://github.com/ZephyrCloudIO"
   },
   "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

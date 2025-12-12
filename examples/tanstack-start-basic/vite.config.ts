@@ -17,9 +17,7 @@ const config = defineConfig({
     tanstackStart(),
     viteReact(),
     // Zephyr deployment plugin - auto-detects configuration from package.json and git
-    withZephyrTanstackStart({
-      entrypoint: 'server/index.js',
-    }),
+    withZephyrTanstackStart(),
   ],
 });
 

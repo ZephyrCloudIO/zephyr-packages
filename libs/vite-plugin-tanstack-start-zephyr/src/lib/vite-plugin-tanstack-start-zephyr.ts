@@ -53,10 +53,33 @@ export interface TanStackStartZephyrOptions {
    */
   outputDir?: string;
   /**
-   * Server entry file path for SSR Defaults to './dist/server/index.js' (TanStack Start
-   * default)
+   * Server entry file path for SSR.
+   *
+   * This should be a path **relative to the TanStack Start output directory** (usually
+   * `dist/`). For example: `server/index.js`.
+   *
+   * Defaults to `server/index.js`.
    */
   entrypoint?: string;
+}
+
+function normalizeEntrypoint(entrypoint: string): string {
+  let normalized = entrypoint.trim();
+  // Normalize separators to match snapshot asset keys (posix-style).
+  normalized = normalized.replaceAll('\\', '/');
+
+  // Remove common leading prefixes users may provide.
+  while (normalized.startsWith('./')) {
+    normalized = normalized.slice(2);
+  }
+  while (normalized.startsWith('/')) {
+    normalized = normalized.slice(1);
+  }
+  if (normalized.startsWith('dist/')) {
+    normalized = normalized.slice('dist/'.length);
+  }
+
+  return normalized;
 }
 
 /**
@@ -87,7 +110,7 @@ export function withZephyrTanstackStart(
       // For TanStack Start, always use the root dist directory (contains server/ and client/)
       // Don't use config.build.outDir as it points to dist/server/ during SSR build
       outputDir = options.outputDir || path.join(config.root, 'dist');
-      entrypoint = options.entrypoint || './dist/server/index.js';
+      entrypoint = normalizeEntrypoint(options.entrypoint || 'server/index.js');
 
       console.log(`[TanStack Zephyr] Output directory: ${outputDir}`);
       console.log(`[TanStack Zephyr] Server entrypoint: ${entrypoint}`);

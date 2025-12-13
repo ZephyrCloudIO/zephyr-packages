@@ -29,7 +29,8 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const hooks = _options?.hooks;
   const plugins: Plugin[] = [];
   if (mfConfig) {
-    plugins.push(...federation(mfConfig));
+    // Type assertion needed due to @module-federation/vite using a different Vite type version
+    plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin(hooks));
   return plugins;

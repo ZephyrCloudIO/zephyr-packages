@@ -1,11 +1,11 @@
 {
-  "name": "vite-plugin-zephyr",
-  "version": "0.1.3",
-  "description": "Vite plugin for Zephyr",
+  "name": "vite-plugin-tanstack-start-zephyr",
+  "version": "0.1.0",
+  "description": "Vite plugin for Zephyr with TanStack Start support",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/vite-plugin-zephyr"
+    "directory": "libs/vite-plugin-tanstack-start-zephyr"
   },
   "license": "Apache-2.0",
   "author": {
@@ -16,24 +16,19 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run vite-plugin-zephyr:build",
+    "build": "nx run vite-plugin-tanstack-start-zephyr:build",
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@module-federation/runtime": "catalog:module-federation",
-    "@module-federation/vite": "catalog:module-federation",
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.4",
     "rollup": "catalog:rollup4",
-    "tslib": "catalog:typescript",
     "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },
+  "peerDependencies": {
+    "@tanstack/start": "^1.0.0"
+  },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@types/node": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public",

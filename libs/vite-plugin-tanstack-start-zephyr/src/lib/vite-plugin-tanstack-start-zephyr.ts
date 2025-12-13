@@ -66,7 +66,7 @@ export interface TanStackStartZephyrOptions {
 function normalizeEntrypoint(entrypoint: string): string {
   let normalized = entrypoint.trim();
   // Normalize separators to match snapshot asset keys (posix-style).
-  normalized = normalized.replaceAll('\\', '/');
+  normalized = normalized.split('\\').join('/');
 
   // Remove common leading prefixes users may provide.
   while (normalized.startsWith('./')) {

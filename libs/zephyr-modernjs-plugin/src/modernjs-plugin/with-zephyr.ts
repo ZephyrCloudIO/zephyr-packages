@@ -19,8 +19,7 @@ export const withZephyr = (
       }
 
       const { withZephyr } = await import('zephyr-webpack-plugin');
-      // withZephyr mutates the config in place
-      await withZephyr(zephyrOptions)(config);
+      return await withZephyr(zephyrOptions)(config);
     });
 
     api.modifyRspackConfig(async (config) => {
@@ -30,8 +29,7 @@ export const withZephyr = (
       }
 
       const { withZephyr } = await import('zephyr-rspack-plugin');
-      // withZephyr mutates the config in place
-      await withZephyr(zephyrOptions)(config);
+      return await withZephyr(zephyrOptions)(config);
     });
   },
 

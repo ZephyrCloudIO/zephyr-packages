@@ -20,18 +20,19 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@modern-js/app-tools": "catalog:modernjs",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
+    "@modern-js/app-tools": "catalog:modernjs",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
+    "@modern-js/app-tools": "^2.0.0",
     "zephyr-rspack-plugin": "workspace:*",
     "zephyr-webpack-plugin": "workspace:*"
   },

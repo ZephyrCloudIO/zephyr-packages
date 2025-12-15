@@ -1,14 +1,14 @@
+import fs from 'fs';
 import type { ConfigT } from 'metro-config';
+import path from 'path';
 import {
   catchAsync,
+  createManifestContent,
   ze_log,
+  ZeErrors,
   ZephyrEngine,
   ZephyrError,
-  ZeErrors,
-  createManifestContent,
 } from 'zephyr-agent';
-import path from 'path';
-import fs from 'fs';
 
 export interface ZephyrMetroOptions {
   /** Application name */
@@ -35,11 +35,9 @@ export interface ZephyrModuleFederationConfig {
 /** Metro plugin configuration function for Zephyr */
 export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
   return async (metroConfig: ConfigT): Promise<ConfigT> => {
-    return (
-      (await catchAsync(
-        async () => await applyZephyrToMetroConfig(metroConfig, zephyrOptions),
-        metroConfig
-      )) ?? metroConfig
+    return await catchAsync(
+      async () => await applyZephyrToMetroConfig(metroConfig, zephyrOptions),
+      metroConfig
     );
   };
 }

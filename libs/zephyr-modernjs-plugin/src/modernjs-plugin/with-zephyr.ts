@@ -19,9 +19,10 @@ export const withZephyr = (
       }
 
       const { withZephyr } = await import('zephyr-webpack-plugin');
+      // @ts-expect-error Webpack version type mismatch between @modern-js/app-tools and zephyr-webpack-plugin
       const z_config = await withZephyr(zephyrOptions)(config);
-      /* eslint-disable-next-line */
-      utils.mergeConfig(config as any, z_config as any);
+      // @ts-expect-error Webpack version type mismatch between @modern-js/app-tools and zephyr-webpack-plugin
+      utils.mergeConfig(config, z_config);
     });
 
     api.modifyRspackConfig(async (config, utils) => {
@@ -31,7 +32,9 @@ export const withZephyr = (
       }
 
       const { withZephyr } = await import('zephyr-rspack-plugin');
+      // @ts-expect-error Rspack version type mismatch between @modern-js/app-tools and zephyr-rspack-plugin
       const z_config = await withZephyr(zephyrOptions)(config);
+      // @ts-expect-error Rspack version type mismatch between @modern-js/app-tools and zephyr-rspack-plugin
       utils.mergeConfig(config, z_config);
     });
   },

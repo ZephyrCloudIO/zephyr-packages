@@ -33,8 +33,8 @@
   },
   "peerDependencies": {
     "@modern-js/app-tools": "^2.0.0",
-    "zephyr-rspack-plugin": "workspace:*",
-    "zephyr-webpack-plugin": "workspace:*"
+    "zephyr-rspack-plugin": ">=0.1.0",
+    "zephyr-webpack-plugin": ">=0.1.0"
   },
   "peerDependenciesMeta": {
     "zephyr-rspack-plugin": {

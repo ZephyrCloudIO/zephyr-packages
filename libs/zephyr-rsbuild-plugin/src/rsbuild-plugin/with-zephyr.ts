@@ -24,7 +24,6 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
           for (const config of bundlerConfigs) {
             // Apply Zephyr's rspack transformation
             // The real MF plugin is already present in the config and rspackWithZephyr will extract from it
-            // @ts-expect-error Rspack version type mismatch between @rsbuild/core and zephyr-rspack-plugin
             const result = await rspackWithZephyr(options)(config);
 
             // Merge result back (rspackWithZephyr may return a new config or void)

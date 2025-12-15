@@ -12,30 +12,26 @@ export const withZephyr = (
   pre: ['@modern-js/plugin-module-federation-config'],
 
   async setup(api) {
-    api.modifyWebpackConfig(async (config, utils) => {
+    api.modifyWebpackConfig(async (config) => {
       const currentBundler = api.getAppContext().bundlerType;
       if (currentBundler !== 'webpack') {
         return;
       }
 
       const { withZephyr } = await import('zephyr-webpack-plugin');
-      // @ts-expect-error Webpack version type mismatch between @modern-js/app-tools and zephyr-webpack-plugin
-      const z_config = await withZephyr(zephyrOptions)(config);
-      // @ts-expect-error Webpack version type mismatch between @modern-js/app-tools and zephyr-webpack-plugin
-      utils.mergeConfig(config, z_config);
+      // withZephyr mutates the config in place
+      await withZephyr(zephyrOptions)(config);
     });
 
-    api.modifyRspackConfig(async (config, utils) => {
+    api.modifyRspackConfig(async (config) => {
       const currentBundler = api.getAppContext().bundlerType;
       if (currentBundler !== 'rspack') {
         return;
       }
 
       const { withZephyr } = await import('zephyr-rspack-plugin');
-      // @ts-expect-error Rspack version type mismatch between @modern-js/app-tools and zephyr-rspack-plugin
-      const z_config = await withZephyr(zephyrOptions)(config);
-      // @ts-expect-error Rspack version type mismatch between @modern-js/app-tools and zephyr-rspack-plugin
-      utils.mergeConfig(config, z_config);
+      // withZephyr mutates the config in place
+      await withZephyr(zephyrOptions)(config);
     });
   },
 

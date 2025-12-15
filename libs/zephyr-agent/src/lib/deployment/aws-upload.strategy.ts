@@ -1,15 +1,15 @@
 import type { ZeBuildAsset, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
-import { ze_log } from '../logging';
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
-import { ZeErrors, ZephyrError } from '../errors';
-import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { makeRequest } from '../http/http-request';
 import { zeUploadSnapshot } from '../edge-actions';
-import { type UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
 import { update_hash_list } from '../edge-hash-list/distributed-hash-control';
-import { white, whiteBright } from '../logging/picocolor';
+import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
+import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
 import type { UploadFileProps } from '../http/upload-file';
+import { ze_log } from '../logging';
+import { white, whiteBright } from '../logging/picocolor';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import { type UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
 
 const AWS_MAX_BODY_SIZE = 20971520;
 
@@ -176,7 +176,7 @@ async function zeUploadAssets(
     { hash, asset }: UploadFileProps,
     { EDGE_URL, jwt }: ZeApplicationConfig
   ): Promise<{ url: string; contentType: string; message?: string }> {
-    const type = 'uploadUrl';
+    const type = 'upload';
     const options: RequestInit = {
       method: 'POST',
       headers: {

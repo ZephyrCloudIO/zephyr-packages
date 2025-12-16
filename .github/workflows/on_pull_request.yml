@@ -12,6 +12,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+env:
+  ZE_FAIL_BUILD: true
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -33,7 +36,6 @@ jobs:
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
-          ZE_FAIL_BUILD: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
@@ -97,7 +99,6 @@ jobs:
       - name: run test
         env:
           ZE_IS_PREVIEW: true
-          ZE_FAIL_BUILD: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}

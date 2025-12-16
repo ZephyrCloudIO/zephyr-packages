@@ -5,6 +5,7 @@ import {
   ZephyrError,
   ZeErrors,
   createManifestContent,
+  handleGlobalError,
 } from 'zephyr-agent';
 import path from 'path';
 import fs from 'fs';
@@ -37,7 +38,7 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
     try {
       return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);
     } catch (error) {
-      ze_log.error(ZephyrError.format(error));
+      handleGlobalError(error);
       return metroConfig; // Return original config on error
     }
   };
@@ -115,7 +116,7 @@ async function applyZephyrToMetroConfig(
               res.end(manifestContent);
               return;
             } catch (error) {
-              ze_log.error(`Failed to serve manifest: ${error}`);
+              handleGlobalError(error);
               res.statusCode = 500;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ error: 'Failed to generate manifest' }));

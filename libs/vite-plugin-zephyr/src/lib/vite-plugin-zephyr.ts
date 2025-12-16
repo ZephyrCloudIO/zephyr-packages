@@ -3,11 +3,10 @@ import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
   createManifestContent,
-  logFn,
+  handleGlobalError,
   rewriteEnvReadsToVirtualModule,
   zeBuildDashData,
   ZephyrEngine,
-  ZephyrError,
   type RemoteEntry,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
@@ -29,7 +28,7 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const hooks = _options?.hooks;
   const plugins: Plugin[] = [];
   if (mfConfig) {
-    plugins.push(...federation(mfConfig));
+    plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin(hooks));
   return plugins;
@@ -144,7 +143,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
 
           return code;
         } catch (error) {
-          logFn('error', ZephyrError.format(error));
+          handleGlobalError(error);
           // returns the original code in case of error
           return code;
         }
@@ -179,7 +178,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
               const result = load_resolved_remotes(resolved_remotes, chunk.code);
               chunk.code = result;
             } catch (error) {
-              logFn('error', ZephyrError.format(error));
+              handleGlobalError(error);
             }
           }
         }
@@ -223,7 +222,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           source: manifestContent,
         });
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        handleGlobalError(error);
         // Fallback to empty manifest if there's an error
         this.emitFile({
           type: 'asset',
@@ -300,7 +299,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         });
         await zephyr_engine.build_finished();
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        handleGlobalError(error);
       }
     },
     // Inject import map into HTML
@@ -329,7 +328,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
 
         return html;
       } catch (error) {
-        logFn('error', `Failed to inject import map: ${ZephyrError.format(error)}`);
+        handleGlobalError(error);
         return html;
       }
     },
@@ -369,7 +368,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         });
         await zephyr_engine.build_finished();
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        handleGlobalError(error);
       }
     },
   };

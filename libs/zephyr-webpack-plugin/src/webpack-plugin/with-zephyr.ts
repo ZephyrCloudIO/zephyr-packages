@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import { handleGlobalError, ZephyrEngine, ze_log } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -45,7 +45,7 @@ async function _zephyr_configuration(
       })
     );
   } catch (error) {
-    logFn('error', ZephyrError.format(error));
+    handleGlobalError(error);
   }
 
   return config;

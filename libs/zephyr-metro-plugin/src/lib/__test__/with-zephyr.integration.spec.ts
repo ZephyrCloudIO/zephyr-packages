@@ -14,13 +14,15 @@ jest.mock('zephyr-agent', () => {
     ]),
   };
 
+  const mockZeLog = {
+    config: jest.fn(),
+    app: jest.fn(),
+    error: jest.fn(),
+    manifest: jest.fn(),
+  };
+
   return {
-    ze_log: {
-      config: jest.fn(),
-      app: jest.fn(),
-      error: jest.fn(),
-      manifest: jest.fn(),
-    },
+    ze_log: mockZeLog,
     ZephyrEngine: {
       create: jest.fn().mockResolvedValue(mockEngine),
     },
@@ -33,6 +35,10 @@ jest.mock('zephyr-agent', () => {
     createManifestContent: jest
       .fn()
       .mockReturnValue(JSON.stringify({ version: '1.0.0' })),
+    handleGlobalError: jest.fn().mockImplementation((error) => {
+      mockZeLog.error(String(error));
+    }),
+    logFn: jest.fn(),
   };
 });
 
@@ -124,6 +130,9 @@ describe('withZephyr integration', () => {
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
+      // Wait for async middleware to complete
+      await new Promise(setImmediate);
+
       expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'application/json');
       expect(mockRes.end).toHaveBeenCalled();
       expect(mockNext).not.toHaveBeenCalled();
@@ -145,6 +154,9 @@ describe('withZephyr integration', () => {
       const mockMiddleware = jest.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+
+      // Wait for async middleware to complete
+      await new Promise(setImmediate);
 
       expect(mockRes.end).toHaveBeenCalled();
       expect(mockNext).not.toHaveBeenCalled();
@@ -181,6 +193,9 @@ describe('withZephyr integration', () => {
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
+      // Wait for async middleware to complete
+      await new Promise(setImmediate);
+
       expect(mockRes.end).toHaveBeenCalled();
     });
 
@@ -197,6 +212,9 @@ describe('withZephyr integration', () => {
       const mockMiddleware = jest.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+
+      // Wait for async middleware to complete
+      await new Promise(setImmediate);
 
       expect(mockRes.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
     });

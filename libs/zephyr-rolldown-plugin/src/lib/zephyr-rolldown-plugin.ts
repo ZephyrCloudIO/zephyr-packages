@@ -1,9 +1,8 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
 import {
-  logFn,
+  handleGlobalError,
   zeBuildDashData,
   ZephyrEngine,
-  ZephyrError,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { cwd } from 'node:process';
@@ -33,7 +32,6 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
       try {
         const zephyr_engine = await zephyr_engine_defer;
 
-        // basehref support
         zephyr_engine.buildProperties.baseHref = _options.dir;
 
         // Start a new build
@@ -48,7 +46,7 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
 
         await zephyr_engine.build_finished();
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        handleGlobalError(error);
       }
     },
   };

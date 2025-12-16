@@ -1,12 +1,9 @@
 {
-  "extends": ["../../.eslintrc.json"],
+  "extends": ["../../.eslintrc.js"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],
-      "parserOptions": {
-        "project": ["libs/zephyr-metro-plugin/tsconfig.spec.json"]
-      },
       "rules": {}
     },
     {

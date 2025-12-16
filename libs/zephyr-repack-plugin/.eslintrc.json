@@ -1,12 +1,9 @@
 {
-  "extends": ["../../.eslintrc.json"],
+  "extends": ["../../.eslintrc.js"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],
-      "parserOptions": {
-        "project": ["libs/zephyr-repack-plugin/tsconfig.*?.json"]
-      },
       "rules": {}
     },
     {

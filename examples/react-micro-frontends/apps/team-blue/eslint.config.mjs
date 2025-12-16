@@ -9,4 +9,10 @@ const compat = new FlatCompat({
   recommendedConfig: js.configs.recommended,
 });
 
-export default [...baseConfig, ...compat.extends('plugin:@nx/react')];
+export default [
+  ...baseConfig,
+  ...compat.extends('plugin:@nx/react').map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.tsx'],
+  })),
+];

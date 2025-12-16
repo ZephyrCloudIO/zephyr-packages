@@ -42,7 +42,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
 }
 async function _zephyr_configuration(
   config: Configuration,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
   try {

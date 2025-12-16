@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'create-zephyr-apps',
   preset: '../../jest.preset.js',

@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'parcel-reporter-zephyr',
   preset: '../../jest.preset.js',

@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'zephyr-edge-contract',
   preset: '../../jest.preset.js',

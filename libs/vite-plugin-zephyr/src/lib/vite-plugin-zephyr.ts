@@ -2,8 +2,8 @@ import { federation } from '@module-federation/vite';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
-  handleGlobalError,
   createManifestContent,
+  handleGlobalError,
   rewriteEnvReadsToVirtualModule,
   zeBuildDashData,
   ZephyrEngine,
@@ -78,8 +78,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             if (!(k in process.env)) process.env[k] = v;
           }
         }
-      } catch (error) {
-        handleGlobalError(error);
+      } catch {
+        // ignore if loadEnv unavailable
       }
     },
 
@@ -100,11 +100,10 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             return { id: source, external: true };
           }
         }
-        return null;
-      } catch (error) {
-        handleGlobalError(error);
-        return null;
+      } catch {
+        // ignore
       }
+      return null;
     },
     transform: {
       // Hook filter for Rolldown/Vite 7 performance optimization
@@ -117,14 +116,17 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           // Additional check for backward compatibility with older Vite/Rollup versions
           if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
             const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-            if (!dependencyPairs) return code;
-
+            if (!dependencyPairs) {
+              return code;
+            }
             const zephyr_engine = await zephyr_engine_defer;
             const resolved_remotes =
               await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-            if (!resolved_remotes) return code;
-
-            return load_resolved_remotes(resolved_remotes, code);
+            if (!resolved_remotes) {
+              return code;
+            }
+            const result = load_resolved_remotes(resolved_remotes, code);
+            return result;
           }
 
           if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
@@ -135,14 +137,15 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             }
             const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
             if (res && typeof res.code === 'string' && res.code !== code) {
-              return res.code;
+              code = res.code;
             }
           }
 
           return code;
         } catch (error) {
           handleGlobalError(error);
-          return code; // returns the original code in case of error
+          // returns the original code in case of error
+          return code;
         }
       },
     },
@@ -159,19 +162,19 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             'code' in chunk
           ) {
             try {
-              if (!mfPlugin) return;
-
               const dependencyPairs = extract_remotes_dependencies(
                 root,
                 mfPlugin._options
               );
-              if (!dependencyPairs) return;
-
+              if (!dependencyPairs) {
+                continue;
+              }
               const zephyr_engine = await zephyr_engine_defer;
               const resolved_remotes =
                 await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-              if (!resolved_remotes) return;
-
+              if (!resolved_remotes) {
+                continue;
+              }
               const result = load_resolved_remotes(resolved_remotes, chunk.code);
               chunk.code = result;
             } catch (error) {
@@ -208,31 +211,34 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       }
 
       // Generate the zephyr manifest
-      const fallbackManifest = JSON.stringify(
-        {
-          version: '1.0.0',
-          timestamp: new Date().toISOString(),
-          dependencies: {},
-          zeVars: {},
-        },
-        null,
-        2
-      );
-
-      let manifestContent = fallbackManifest;
       try {
         const zephyr_engine = await zephyr_engine_defer;
         const dependencies = zephyr_engine.federated_dependencies || [];
-        manifestContent = createManifestContent(dependencies, true);
+        const manifestContent = createManifestContent(dependencies, true);
+
+        this.emitFile({
+          type: 'asset',
+          fileName: 'zephyr-manifest.json',
+          source: manifestContent,
+        });
       } catch (error) {
         handleGlobalError(error);
+        // Fallback to empty manifest if there's an error
+        this.emitFile({
+          type: 'asset',
+          fileName: 'zephyr-manifest.json',
+          source: JSON.stringify(
+            {
+              version: '1.0.0',
+              timestamp: new Date().toISOString(),
+              dependencies: {},
+              zeVars: {},
+            },
+            null,
+            2
+          ),
+        });
       }
-
-      this.emitFile({
-        type: 'asset',
-        fileName: 'zephyr-manifest.json',
-        source: manifestContent,
-      });
     },
     // For dev server mode - serve env module and upload when server starts
     configureServer: async (server) => {
@@ -240,29 +246,32 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       server.middlewares.use((req, res, next) => {
         if (req.url === '/zephyr-manifest.json') {
           void (async () => {
-            const fallbackManifest = JSON.stringify(
-              {
-                version: '1.0.0',
-                timestamp: new Date().toISOString(),
-                dependencies: {},
-                zeVars: {},
-              },
-              null,
-              2
-            );
-
-            let manifestContent = fallbackManifest;
             try {
               const zephyr_engine = await zephyr_engine_defer;
               const dependencies = zephyr_engine.federated_dependencies || [];
-              manifestContent = createManifestContent(dependencies, true);
-            } catch (error) {
-              handleGlobalError(error);
-            }
 
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.end(manifestContent);
+              // Use the same function as other plugins to ensure consistency
+              const manifestContent = createManifestContent(dependencies, true);
+
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.end(manifestContent);
+            } catch {
+              // Fallback to empty manifest if there's an error
+              const fallbackManifest = JSON.stringify(
+                {
+                  version: '1.0.0',
+                  timestamp: new Date().toISOString(),
+                  dependencies: {},
+                  zeVars: {},
+                },
+                null,
+                2
+              );
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.setHeader('Access-Control-Allow-Origin', '*');
+              res.end(fallbackManifest);
+            }
           })();
         } else {
           next();
@@ -314,7 +323,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         // Check if import map already exists
         if (!html.includes('type="importmap"')) {
           // Inject import map before closing head tag
-          return html.replace('</head>', `  ${importMapScript}\n</head>`);
+          html = html.replace('</head>', `  ${importMapScript}\n</head>`);
         }
 
         return html;

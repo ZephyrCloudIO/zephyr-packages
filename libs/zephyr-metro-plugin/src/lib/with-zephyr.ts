@@ -1,14 +1,14 @@
-import fs from 'fs';
 import type { ConfigT } from 'metro-config';
-import path from 'path';
 import {
-  handleGlobalError,
-  createManifestContent,
   ze_log,
-  ZeErrors,
   ZephyrEngine,
   ZephyrError,
+  ZeErrors,
+  createManifestContent,
+  handleGlobalError,
 } from 'zephyr-agent';
+import path from 'path';
+import fs from 'fs';
 
 export interface ZephyrMetroOptions {
   /** Application name */
@@ -39,7 +39,7 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
       return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);
     } catch (error) {
       handleGlobalError(error);
-      return metroConfig;
+      return metroConfig; // Return original config on error
     }
   };
 }
@@ -109,24 +109,19 @@ async function applyZephyrToMetroConfig(
           // Check if this is a manifest request
           const url = req.url?.split('?')[0]; // Remove query string
           if (url === manifestPath) {
-            void (async () => {
-              let manifestContent = JSON.stringify({
-                error: 'Failed to generate manifest',
-              });
-              try {
-                manifestContent = createManifestContent(resolved_dependencies || []);
-              } catch (error) {
-                handleGlobalError(error);
-              }
-
+            try {
+              const manifestContent = createManifestContent(resolved_dependencies || []);
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'no-cache');
-              if (manifestContent.includes('error')) {
-                res.statusCode = 500;
-              }
               res.end(manifestContent);
-            })();
-            return;
+              return;
+            } catch (error) {
+              handleGlobalError(error);
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Failed to generate manifest' }));
+              return;
+            }
           }
 
           // Pass through to base middleware

@@ -1,5 +1,5 @@
 import { Reporter } from '@parcel/plugin';
-import { catchAsync, ZephyrEngine, type ZephyrBuildHooks } from 'zephyr-agent';
+import { handleGlobalError, ZephyrEngine, type ZephyrBuildHooks } from 'zephyr-agent';
 import { onBuildStart } from './lib/on-build-start';
 import { onBuildSuccess } from './lib/on-build-success';
 
@@ -14,7 +14,7 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
 
   return new Reporter({
     report: async ({ event, options: parcelOptions }) => {
-      await catchAsync(async () => {
+      try {
         const projectRoot = parcelOptions.inputFS.cwd();
 
         switch (event.type) {
@@ -28,7 +28,9 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
             // ignore unknown build hooks
             break;
         }
-      });
+      } catch (error) {
+        handleGlobalError(error);
+      }
     },
   });
 }

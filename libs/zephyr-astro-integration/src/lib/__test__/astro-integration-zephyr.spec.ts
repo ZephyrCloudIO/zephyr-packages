@@ -16,15 +16,10 @@ jest.mock('zephyr-agent', () => ({
     format: jest.fn(),
   },
   zeBuildDashData: jest.fn(),
-  catchAsync: jest.fn().mockImplementation(async (fn, fallback) => {
-    try {
-      return await fn();
-    } catch (error) {
-      const mockLogFn = jest.requireMock('zephyr-agent').logFn;
-      const mockZephyrError = jest.requireMock('zephyr-agent').ZephyrError;
-      mockLogFn('error', mockZephyrError.format(error));
-      return fallback;
-    }
+  handleGlobalError: jest.fn().mockImplementation((error) => {
+    const mockLogFn = jest.requireMock('zephyr-agent').logFn;
+    const mockZephyrError = jest.requireMock('zephyr-agent').ZephyrError;
+    mockLogFn('error', mockZephyrError.format(error));
   }),
 }));
 

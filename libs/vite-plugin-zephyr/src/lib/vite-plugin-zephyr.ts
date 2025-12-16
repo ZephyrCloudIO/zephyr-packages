@@ -2,7 +2,7 @@ import { federation } from '@module-federation/vite';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
-  catchAsync,
+  handleGlobalError,
   createManifestContent,
   rewriteEnvReadsToVirtualModule,
   zeBuildDashData,
@@ -71,18 +71,20 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
 
       // Load .env files into process.env so ZE_PUBLIC_* are available to the agent
-      await catchAsync(async () => {
+      try {
         const loaded = loadEnv(config.mode || 'production', root, '');
         for (const [k, v] of Object.entries(loaded)) {
           if (k.startsWith('ZE_PUBLIC_') && typeof v === 'string') {
             if (!(k in process.env)) process.env[k] = v;
           }
         }
-      });
+      } catch (error) {
+        handleGlobalError(error);
+      }
     },
 
     resolveId: async (source) => {
-      return await catchAsync(async () => {
+      try {
         const zephyr_engine = await zephyr_engine_defer;
         if (!cachedSpecifier) {
           const appUid = zephyr_engine.application_uid;
@@ -99,7 +101,10 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           }
         }
         return null;
-      }, null);
+      } catch (error) {
+        handleGlobalError(error);
+        return null;
+      }
     },
     transform: {
       // Hook filter for Rolldown/Vite 7 performance optimization
@@ -108,7 +113,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         id: /virtual:mf-REMOTE_ENTRY_ID/,
       },
       handler: async (code, id) => {
-        return await catchAsync(async () => {
+        try {
           // Additional check for backward compatibility with older Vite/Rollup versions
           if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
             const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
@@ -135,7 +140,10 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           }
 
           return code;
-        }, code); // returns the original code in case of error
+        } catch (error) {
+          handleGlobalError(error);
+          return code; // returns the original code in case of error
+        }
       },
     },
     generateBundle: async function (options, bundle) {
@@ -150,7 +158,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             chunk.type === 'chunk' &&
             'code' in chunk
           ) {
-            await catchAsync(async () => {
+            try {
               if (!mfPlugin) return;
 
               const dependencyPairs = extract_remotes_dependencies(
@@ -166,7 +174,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
 
               const result = load_resolved_remotes(resolved_remotes, chunk.code);
               chunk.code = result;
-            });
+            } catch (error) {
+              handleGlobalError(error);
+            }
           }
         }
       }
@@ -209,11 +219,14 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         2
       );
 
-      const manifestContent = await catchAsync(async () => {
+      let manifestContent = fallbackManifest;
+      try {
         const zephyr_engine = await zephyr_engine_defer;
         const dependencies = zephyr_engine.federated_dependencies || [];
-        return createManifestContent(dependencies, true);
-      }, fallbackManifest);
+        manifestContent = createManifestContent(dependencies, true);
+      } catch (error) {
+        handleGlobalError(error);
+      }
 
       this.emitFile({
         type: 'asset',
@@ -238,11 +251,14 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
               2
             );
 
-            const manifestContent = await catchAsync(async () => {
+            let manifestContent = fallbackManifest;
+            try {
               const zephyr_engine = await zephyr_engine_defer;
               const dependencies = zephyr_engine.federated_dependencies || [];
-              return createManifestContent(dependencies, true);
-            }, fallbackManifest);
+              manifestContent = createManifestContent(dependencies, true);
+            } catch (error) {
+              handleGlobalError(error);
+            }
 
             res.setHeader('Content-Type', 'application/json; charset=utf-8');
             res.setHeader('Access-Control-Allow-Origin', '*');
@@ -254,7 +270,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       });
 
       // Upload dev build
-      await catchAsync(async () => {
+      try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,
           zephyr_engine_defer,
@@ -273,11 +289,13 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           hooks,
         });
         await zephyr_engine.build_finished();
-      });
+      } catch (error) {
+        handleGlobalError(error);
+      }
     },
     // Inject import map into HTML
     transformIndexHtml: async (html) => {
-      return await catchAsync(async () => {
+      try {
         const zephyr_engine = await zephyr_engine_defer;
         const appUid = zephyr_engine.application_uid;
 
@@ -300,11 +318,14 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         }
 
         return html;
-      }, html);
+      } catch (error) {
+        handleGlobalError(error);
+        return html;
+      }
     },
     // For production builds
     closeBundle: async () => {
-      await catchAsync(async () => {
+      try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,
           zephyr_engine_defer,
@@ -337,7 +358,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           hooks,
         });
         await zephyr_engine.build_finished();
-      });
+      } catch (error) {
+        handleGlobalError(error);
+      }
     },
   };
 }

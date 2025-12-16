@@ -35,13 +35,8 @@ jest.mock('zephyr-agent', () => {
     createManifestContent: jest
       .fn()
       .mockReturnValue(JSON.stringify({ version: '1.0.0' })),
-    catchAsync: jest.fn().mockImplementation(async (fn, fallback) => {
-      try {
-        return await fn();
-      } catch (error) {
-        mockZeLog.error(String(error));
-        return fallback;
-      }
+    handleGlobalError: jest.fn().mockImplementation((error) => {
+      mockZeLog.error(String(error));
     }),
     logFn: jest.fn(),
   };

@@ -9,7 +9,7 @@ export {
 
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';
-export { catchAsync } from './lib/errors';
+export { handleGlobalError } from './lib/errors';
 
 // deploy result
 export {

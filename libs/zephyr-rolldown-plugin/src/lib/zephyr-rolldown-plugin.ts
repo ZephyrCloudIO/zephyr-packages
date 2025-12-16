@@ -1,6 +1,6 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rolldown';
 import {
-  catchAsync,
+  handleGlobalError,
   zeBuildDashData,
   ZephyrEngine,
   type ZephyrBuildHooks,
@@ -29,7 +29,7 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
       });
     },
     writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
-      await catchAsync(async () => {
+      try {
         const zephyr_engine = await zephyr_engine_defer;
 
         zephyr_engine.buildProperties.baseHref = _options.dir;
@@ -45,7 +45,9 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
         });
 
         await zephyr_engine.build_finished();
-      });
+      } catch (error) {
+        handleGlobalError(error);
+      }
     },
   };
 }

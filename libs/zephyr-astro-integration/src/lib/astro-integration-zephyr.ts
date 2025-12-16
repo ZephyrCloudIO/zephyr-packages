@@ -1,7 +1,7 @@
 import type { AstroIntegration, HookParameters } from 'astro';
 import { fileURLToPath } from 'node:url';
 import {
-  catchAsync,
+  handleGlobalError,
   zeBuildDashData,
   ZephyrEngine,
   type ZephyrBuildHooks,
@@ -36,7 +36,7 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
         dir,
         ...params
       }: HookParameters<'astro:build:done'>) => {
-        await catchAsync(async () => {
+        try {
           const zephyr_engine = await zephyr_engine_defer;
 
           // Convert URL to file system path
@@ -61,7 +61,9 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
 
           // Mark build as finished
           await zephyr_engine.build_finished();
-        });
+        } catch (error) {
+          handleGlobalError(error);
+        }
       },
     },
   };

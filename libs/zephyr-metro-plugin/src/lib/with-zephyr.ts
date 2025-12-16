@@ -2,7 +2,7 @@ import fs from 'fs';
 import type { ConfigT } from 'metro-config';
 import path from 'path';
 import {
-  catchAsync,
+  handleGlobalError,
   createManifestContent,
   ze_log,
   ZeErrors,
@@ -35,10 +35,12 @@ export interface ZephyrModuleFederationConfig {
 /** Metro plugin configuration function for Zephyr */
 export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
   return async (metroConfig: ConfigT): Promise<ConfigT> => {
-    return await catchAsync(
-      async () => await applyZephyrToMetroConfig(metroConfig, zephyrOptions),
-      metroConfig
-    );
+    try {
+      return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);
+    } catch (error) {
+      handleGlobalError(error);
+      return metroConfig;
+    }
   };
 }
 
@@ -108,11 +110,14 @@ async function applyZephyrToMetroConfig(
           const url = req.url?.split('?')[0]; // Remove query string
           if (url === manifestPath) {
             void (async () => {
-              const manifestContent =
-                (await catchAsync(
-                  async () => createManifestContent(resolved_dependencies || []),
-                  JSON.stringify({ error: 'Failed to generate manifest' })
-                )) ?? JSON.stringify({ error: 'Failed to generate manifest' });
+              let manifestContent = JSON.stringify({
+                error: 'Failed to generate manifest',
+              });
+              try {
+                manifestContent = createManifestContent(resolved_dependencies || []);
+              } catch (error) {
+                handleGlobalError(error);
+              }
 
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'no-cache');

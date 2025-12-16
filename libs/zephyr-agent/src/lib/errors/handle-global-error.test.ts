@@ -1,5 +1,5 @@
 import { describe, expect, jest, it, beforeEach, afterEach } from '@jest/globals';
-import { handleGlobalError } from './global-catcher';
+import { handleGlobalError } from './handle-global-error';
 
 jest.mock('../logging/ze-log-event', () => ({
   logFn: jest.fn(),

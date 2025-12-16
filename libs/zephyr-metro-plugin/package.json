@@ -6,6 +6,10 @@
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run zephyr-metro-plugin:build",
+    "patch-version": "pnpm version"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -26,6 +26,7 @@
     "zephyr-rspack-plugin": "workspace:*"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "react": "catalog:react18",
     "react-dom": "catalog:react18"
   }

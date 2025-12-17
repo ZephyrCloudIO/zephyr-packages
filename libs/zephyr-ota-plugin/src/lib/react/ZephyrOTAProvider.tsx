@@ -1,0 +1,364 @@
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
+import type {
+  ZephyrOTAConfig,
+  ZephyrDependencyConfig,
+  RemoteVersionInfo,
+  UpdateCheckResult,
+} from '../types';
+import { ZephyrOTAService } from '../core/ZephyrOTAService';
+import { createScopedLogger } from '../utils/logger';
+
+const logger = createScopedLogger('Provider');
+
+/**
+ * Context value type for ZephyrOTA
+ */
+export interface ZephyrOTAContextValue {
+  /**
+   * Whether an update check is in progress
+   */
+  isChecking: boolean;
+
+  /**
+   * Whether updates are available
+   */
+  hasUpdates: boolean;
+
+  /**
+   * List of remotes with updates available
+   */
+  updates: RemoteVersionInfo[];
+
+  /**
+   * All tracked remotes and their version info
+   */
+  remotes: RemoteVersionInfo[];
+
+  /**
+   * When the last update check occurred
+   */
+  lastChecked: Date | null;
+
+  /**
+   * Any error that occurred during update check
+   */
+  error: Error | null;
+
+  /**
+   * Manually trigger an update check
+   */
+  checkForUpdates: (options?: { force?: boolean }) => Promise<UpdateCheckResult>;
+
+  /**
+   * Apply available updates (will reload the app)
+   */
+  applyUpdates: () => Promise<void>;
+
+  /**
+   * Dismiss update prompts for the configured duration
+   */
+  dismissUpdates: () => Promise<void>;
+
+  /**
+   * Get version info for a specific remote
+   */
+  getRemoteVersion: (remoteName: string) => RemoteVersionInfo | undefined;
+}
+
+const ZephyrOTAContext = createContext<ZephyrOTAContextValue | null>(null);
+
+/**
+ * Props for ZephyrOTAProvider
+ */
+export interface ZephyrOTAProviderProps {
+  /**
+   * Child components
+   */
+  children: React.ReactNode;
+
+  /**
+   * OTA configuration
+   */
+  config: ZephyrOTAConfig;
+
+  /**
+   * Zephyr dependencies configuration
+   * Map of remote names to zephyr: protocol strings
+   */
+  dependencies: ZephyrDependencyConfig;
+
+  /**
+   * Called when updates are available
+   */
+  onUpdateAvailable?: (updates: RemoteVersionInfo[]) => void;
+
+  /**
+   * Called after updates are applied (before reload)
+   */
+  onUpdateApplied?: () => void;
+
+  /**
+   * Called when an error occurs
+   */
+  onError?: (error: Error) => void;
+
+  /**
+   * Custom reload handler (if you want to handle reload differently)
+   */
+  onReloadRequested?: () => void;
+}
+
+/**
+ * Provider component for Zephyr OTA functionality
+ */
+export function ZephyrOTAProvider({
+  children,
+  config,
+  dependencies,
+  onUpdateAvailable,
+  onUpdateApplied,
+  onError,
+}: ZephyrOTAProviderProps): React.ReactElement {
+  const [isChecking, setIsChecking] = useState(false);
+  const [hasUpdates, setHasUpdates] = useState(false);
+  const [updates, setUpdates] = useState<RemoteVersionInfo[]>([]);
+  const [remotes, setRemotes] = useState<RemoteVersionInfo[]>([]);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const appState = useRef<AppStateStatus>(AppState.currentState);
+  const isInitialized = useRef(false);
+  const serviceRef = useRef<ZephyrOTAService | null>(null);
+
+  // Create service instance
+  const service = useMemo(() => {
+    if (!serviceRef.current) {
+      serviceRef.current = ZephyrOTAService.getInstance(config, dependencies);
+    }
+    return serviceRef.current;
+  }, [config, dependencies]);
+
+  // Handle update check results
+  const handleUpdateResult = useCallback(
+    async (result: UpdateCheckResult) => {
+      logger.debug('handleUpdateResult called:', {
+        hasUpdates: result.hasUpdates,
+        remotesCount: result.remotes.length,
+      });
+
+      setLastChecked(new Date(result.timestamp));
+      setRemotes(result.remotes);
+
+      if (result.hasUpdates) {
+        // Check if user has dismissed updates recently
+        const isDismissed = await service.isDismissed();
+        logger.debug('Updates available, isDismissed:', isDismissed);
+
+        if (!isDismissed) {
+          const updatesWithChanges = result.remotes.filter((r) => r.hasUpdate);
+          logger.debug('Setting hasUpdates=true, updates:', updatesWithChanges);
+          setUpdates(updatesWithChanges);
+          setHasUpdates(true);
+          onUpdateAvailable?.(updatesWithChanges);
+        } else {
+          logger.debug('Updates dismissed by user, not showing');
+        }
+      } else {
+        logger.debug('No updates available');
+      }
+    },
+    [service, onUpdateAvailable]
+  );
+
+  // Check for updates
+  const checkForUpdates = useCallback(
+    async (options?: { force?: boolean }): Promise<UpdateCheckResult> => {
+      const force = options?.force ?? true;
+      logger.debug('checkForUpdates called, force:', force);
+
+      if (isChecking) {
+        logger.debug('Already checking, skipping');
+        return {
+          hasUpdates: false,
+          remotes: [],
+          timestamp: Date.now(),
+        };
+      }
+
+      setIsChecking(true);
+      setError(null);
+
+      try {
+        logger.debug('Calling service.checkForUpdates()...');
+        const result = await service.checkForUpdates(force);
+        logger.debug('checkForUpdates result:', result);
+        await handleUpdateResult(result);
+        return result;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Update check failed');
+        logger.error('Check failed:', error);
+        setError(error);
+        onError?.(error);
+        return {
+          hasUpdates: false,
+          remotes: [],
+          timestamp: Date.now(),
+        };
+      } finally {
+        setIsChecking(false);
+      }
+    },
+    [isChecking, service, handleUpdateResult, onError]
+  );
+
+  // Apply updates
+  const applyUpdates = useCallback(async () => {
+    if (updates.length === 0) {
+      return;
+    }
+
+    setIsChecking(true);
+    setError(null);
+
+    try {
+      await service.applyUpdates(updates);
+
+      // Clear update state before reload
+      setHasUpdates(false);
+      setUpdates([]);
+
+      logger.info('Updates applied, reloading app...');
+      onUpdateApplied?.();
+
+      // Note: App will reload, so we don't set isChecking=false
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to apply updates');
+      logger.error('Apply failed:', error);
+      setError(error);
+      setIsChecking(false);
+      onError?.(error);
+    }
+  }, [updates, service, onUpdateApplied, onError]);
+
+  // Dismiss updates
+  const dismissUpdates = useCallback(async () => {
+    await service.dismiss();
+    setHasUpdates(false);
+    setUpdates([]);
+  }, [service]);
+
+  // Get version info for a specific remote
+  const getRemoteVersion = useCallback(
+    (remoteName: string): RemoteVersionInfo | undefined => {
+      return remotes.find((r: RemoteVersionInfo) => r.name === remoteName);
+    },
+    [remotes]
+  );
+
+  // Initialize and set up listeners
+  useEffect(() => {
+    if (isInitialized.current) {
+      return;
+    }
+    isInitialized.current = true;
+
+    // Initialize version tracking on first launch
+    service.initializeVersionTracking();
+
+    // Subscribe to update events from service
+    const unsubscribe = service.onUpdateAvailable(handleUpdateResult);
+
+    // Start periodic checks
+    service.startPeriodicChecks();
+
+    // Do initial check
+    checkForUpdates();
+
+    return () => {
+      unsubscribe();
+      service.stopPeriodicChecks();
+    };
+  }, [service, handleUpdateResult, checkForUpdates]);
+
+  // Handle app state changes (foreground check)
+  useEffect(() => {
+    if (!config.checkOnForeground) {
+      return;
+    }
+
+    const subscription = AppState.addEventListener(
+      'change',
+      (nextAppState: AppStateStatus) => {
+        // App came to foreground
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === 'active'
+        ) {
+          logger.debug('App foregrounded, checking for updates');
+          checkForUpdates();
+        }
+
+        appState.current = nextAppState;
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [config.checkOnForeground, checkForUpdates]);
+
+  const value: ZephyrOTAContextValue = useMemo(
+    () => ({
+      isChecking,
+      hasUpdates,
+      updates,
+      remotes,
+      lastChecked,
+      error,
+      checkForUpdates,
+      applyUpdates,
+      dismissUpdates,
+      getRemoteVersion,
+    }),
+    [
+      isChecking,
+      hasUpdates,
+      updates,
+      remotes,
+      lastChecked,
+      error,
+      checkForUpdates,
+      applyUpdates,
+      dismissUpdates,
+      getRemoteVersion,
+    ]
+  );
+
+  return (
+    <ZephyrOTAContext.Provider value={value}>
+      {children}
+    </ZephyrOTAContext.Provider>
+  );
+}
+
+/**
+ * Get the OTA context (internal use)
+ */
+export function useZephyrOTAContext(): ZephyrOTAContextValue {
+  const context = useContext(ZephyrOTAContext);
+  if (!context) {
+    throw new Error(
+      'useZephyrOTA must be used within a ZephyrOTAProvider'
+    );
+  }
+  return context;
+}

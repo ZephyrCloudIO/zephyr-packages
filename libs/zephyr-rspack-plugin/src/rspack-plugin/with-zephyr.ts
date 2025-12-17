@@ -13,7 +13,14 @@ export type Configuration = RspackConfiguration;
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRspackPluginOptions
 ): (config: Configuration) => Promise<Configuration> {
-  return (config) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config) => {
+    // Skip Zephyr execution during Nx graph calculation
+    // NX_TASK_TARGET_TARGET is only set during actual task execution (build/serve)
+    if (!process.env['NX_TASK_TARGET_TARGET']) {
+      return Promise.resolve(config);
+    }
+    return _zephyr_configuration(config, zephyrPluginOptions);
+  };
 }
 
 async function _zephyr_configuration(

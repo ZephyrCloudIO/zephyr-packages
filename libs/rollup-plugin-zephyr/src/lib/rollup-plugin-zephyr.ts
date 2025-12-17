@@ -1,9 +1,8 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
 import {
-  logFn,
+  handleGlobalError,
   zeBuildDashData,
   ZephyrEngine,
-  ZephyrError,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { getAssetsMap } from './transform/get-assets-map';
@@ -45,7 +44,7 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
 
         await zephyr_engine.build_finished();
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        handleGlobalError(error);
       }
     },
   };

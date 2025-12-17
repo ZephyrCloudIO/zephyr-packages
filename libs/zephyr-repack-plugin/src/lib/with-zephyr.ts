@@ -1,5 +1,11 @@
 import type { Configuration } from '@rspack/core';
-import { ZeErrors, ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import {
+  handleGlobalError,
+  ZeErrors,
+  ZephyrEngine,
+  ZephyrError,
+  ze_log,
+} from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -74,7 +80,6 @@ async function _zephyr_configuration(
     );
 
     const mf_configs = makeCopyOfModuleFederationOptions(config);
-    // const app_config = await zephyr_engine.application_configuration;
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
 
@@ -88,7 +93,7 @@ async function _zephyr_configuration(
       })
     );
   } catch (error) {
-    logFn('error', ZephyrError.format(error));
+    handleGlobalError(error);
   }
 
   return config;

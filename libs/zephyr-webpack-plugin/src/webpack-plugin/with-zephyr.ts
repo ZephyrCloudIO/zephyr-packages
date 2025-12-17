@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { handleGlobalError, ZephyrEngine, ze_log } from 'zephyr-agent';
+import { handleGlobalError, ze_log, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -10,7 +10,19 @@ import type { WebpackConfiguration } from '../types/missing-webpack-types';
 import { ZeWebpackPlugin } from './ze-webpack-plugin';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config: Configuration) => {
+    // Log NX environment variables to see what's available
+    const nxVars = Object.keys(process.env).filter((k) => k.startsWith('NX_'));
+    console.log('--------- NX env vars:', nxVars);
+    console.log('NX_GRAPH_CREATION:', process.env['NX_GRAPH_CREATION']);
+    console.log('NX_TASK_TARGET_TARGET:', process.env['NX_TASK_TARGET_TARGET']);
+    // Skip Zephyr execution during Nx graph calculation
+    // NX_TASK_TARGET_TARGET is only set during actual task execution (build/serve)
+    // if (!process.env['NX_TASK_TARGET_TARGET']) {
+    //   return Promise.resolve(config);
+    // }
+    return _zephyr_configuration(config, zephyrPluginOptions);
+  };
 }
 
 async function _zephyr_configuration(

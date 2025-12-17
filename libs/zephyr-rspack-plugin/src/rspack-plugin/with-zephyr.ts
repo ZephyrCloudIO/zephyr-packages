@@ -13,7 +13,21 @@ export type Configuration = RspackConfiguration;
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRspackPluginOptions
 ): (config: Configuration) => Promise<Configuration> {
-  return (config) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config) => {
+    // Log NX environment variables to see what's available
+    const nxVars = Object.keys(process.env).filter(k => k.startsWith('NX_'));
+    console.log('--------- NX env vars:', nxVars);
+    console.log('NX_GRAPH_CREATION:', process.env['NX_GRAPH_CREATION']);
+    console.log('NX_TASK_TARGET_TARGET:', process.env['NX_TASK_TARGET_TARGET']);
+
+    // TEMPORARILY DISABLED TO SEE ENV VARS
+    // Skip Zephyr execution during Nx graph calculation
+    // NX_TASK_TARGET_TARGET is only set during actual task execution (build/serve)
+    // if (!process.env['NX_TASK_TARGET_TARGET']) {
+    //   return Promise.resolve(config);
+    // }
+    return _zephyr_configuration(config, zephyrPluginOptions);
+  };
 }
 
 async function _zephyr_configuration(

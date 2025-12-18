@@ -129,8 +129,3 @@ export class OTAStorage {
     }
   }
 }
-
-/** Create a new storage instance */
-export function createStorage(config: ZephyrOTAConfig): OTAStorage {
-  return new OTAStorage(config);
-}

@@ -8,10 +8,8 @@ import type {
   StoredVersions,
 } from '../types';
 import { DEFAULT_OTA_CONFIG } from '../types';
-import type { ZephyrAPIClient } from './api-client';
-import { createAPIClient } from './api-client';
-import type { OTAStorage } from './storage';
-import { createStorage } from './storage';
+import { ZephyrAPIClient } from './api-client';
+import { OTAStorage } from './storage';
 import {
   createRemoteVersionInfo,
   createStoredVersionInfo,
@@ -51,8 +49,8 @@ export class ZephyrOTAService {
     this.dependencies = dependencies;
 
     // Initialize components
-    this.apiClient = createAPIClient(this.config);
-    this.storage = createStorage(this.config);
+    this.apiClient = new ZephyrAPIClient(this.config);
+    this.storage = new OTAStorage(this.config);
 
     // Set debug logging
     setDebugEnabled(this.config.debug);

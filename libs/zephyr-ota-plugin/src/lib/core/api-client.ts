@@ -46,9 +46,11 @@ export class ZephyrAPIClient {
     const { applicationUid, versionTag, name } = dependency;
     const buildTarget = getBuildTarget();
 
-    const url = `${this.apiBaseUrl}/resolve/${encodeURIComponent(
-      applicationUid
-    )}/${encodeURIComponent(versionTag)}?build_target=${buildTarget}`;
+    const url = new URL(
+      `/resolve/${encodeURIComponent(applicationUid)}/${encodeURIComponent(versionTag)}`,
+      this.apiBaseUrl
+    );
+    url.searchParams.set('build_target', buildTarget);
 
     logger.debug(`Resolving ${name} from: ${url}`);
 
@@ -136,9 +138,4 @@ export class ZephyrAPIClient {
       return null;
     }
   }
-}
-
-/** Create a new API client instance */
-export function createAPIClient(config: ZephyrOTAConfig): ZephyrAPIClient {
-  return new ZephyrAPIClient(config);
 }

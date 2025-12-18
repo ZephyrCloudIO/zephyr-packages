@@ -29,10 +29,14 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
+    "@rspress/core": "catalog:rspress",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@rspress/core": "^2.0.0"
   },
   "publishConfig": {
     "access": "public",

@@ -16,114 +16,152 @@ import type {
 } from '../types';
 import { ZephyrOTAService } from '../core/ZephyrOTAService';
 import { createScopedLogger } from '../utils/logger';
+import {
+  detectRemotesFromRuntime,
+  buildDependenciesConfig,
+  type EnvironmentOverrides,
+} from '../utils/detect-remotes';
 
 const logger = createScopedLogger('Provider');
 
-/**
- * Context value type for ZephyrOTA
- */
+/** Context value type for ZephyrOTA */
 export interface ZephyrOTAContextValue {
-  /**
-   * Whether an update check is in progress
-   */
+  /** Whether an update check is in progress */
   isChecking: boolean;
 
-  /**
-   * Whether updates are available
-   */
+  /** Whether updates are available */
   hasUpdates: boolean;
 
-  /**
-   * List of remotes with updates available
-   */
+  /** List of remotes with updates available */
   updates: RemoteVersionInfo[];
 
-  /**
-   * All tracked remotes and their version info
-   */
+  /** All tracked remotes and their version info */
   remotes: RemoteVersionInfo[];
 
-  /**
-   * When the last update check occurred
-   */
+  /** When the last update check occurred */
   lastChecked: Date | null;
 
-  /**
-   * Any error that occurred during update check
-   */
+  /** Any error that occurred during update check */
   error: Error | null;
 
-  /**
-   * Manually trigger an update check
-   */
-  checkForUpdates: (options?: { force?: boolean }) => Promise<UpdateCheckResult>;
+  /** Manually trigger an update check */
+  checkForUpdates: (options?: {
+    force?: boolean;
+  }) => Promise<UpdateCheckResult>;
 
-  /**
-   * Apply available updates (will reload the app)
-   */
+  /** Apply available updates (will reload the app) */
   applyUpdates: () => Promise<void>;
 
-  /**
-   * Dismiss update prompts for the configured duration
-   */
+  /** Dismiss update prompts for the configured duration */
   dismissUpdates: () => Promise<void>;
 
-  /**
-   * Get version info for a specific remote
-   */
+  /** Get version info for a specific remote */
   getRemoteVersion: (remoteName: string) => RemoteVersionInfo | undefined;
 }
 
 const ZephyrOTAContext = createContext<ZephyrOTAContextValue | null>(null);
 
-/**
- * Props for ZephyrOTAProvider
- */
+/** Props for ZephyrOTAProvider */
 export interface ZephyrOTAProviderProps {
-  /**
-   * Child components
-   */
+  /** Child components */
   children: React.ReactNode;
 
-  /**
-   * OTA configuration
-   */
-  config: ZephyrOTAConfig;
+  /** OTA configuration (optional) */
+  config?: ZephyrOTAConfig;
 
   /**
-   * Zephyr dependencies configuration
-   * Map of remote names to zephyr: protocol strings
+   * Target environment for OTA updates (e.g., 'staging', 'production'). When
+   * provided, remotes are auto-detected from Module Federation runtime. This is
+   * the recommended approach.
+   *
+   * @example
+   *   ```tsx
+   *   <ZephyrOTAProvider environment="staging">
+   *     <App />
+   *   </ZephyrOTAProvider>
+   *   ```;
    */
-  dependencies: ZephyrDependencyConfig;
+  environment?: string;
 
   /**
-   * Called when updates are available
+   * Per-remote environment overrides. Use this when some remotes should use a
+   * different environment than the default. Only used when `environment` prop
+   * is provided.
+   *
+   * @example
+   *   ```tsx
+   *   <ZephyrOTAProvider
+   *     environment="staging"
+   *     overrides={{ MFTextEditor: 'production' }}
+   *   >
+   *     <App />
+   *   </ZephyrOTAProvider>
+   *   ```;
    */
+  overrides?: EnvironmentOverrides;
+
+  /**
+   * Manual dependencies configuration (legacy). Map of remote names to zephyr:
+   * protocol strings. Use this only if auto-detection doesn't work for your
+   * setup.
+   *
+   * @deprecated Prefer using `environment` prop for auto-detection
+   */
+  dependencies?: ZephyrDependencyConfig;
+
+  /** Called when updates are available */
   onUpdateAvailable?: (updates: RemoteVersionInfo[]) => void;
 
-  /**
-   * Called after updates are applied (before reload)
-   */
+  /** Called after updates are applied (before reload) */
   onUpdateApplied?: () => void;
 
-  /**
-   * Called when an error occurs
-   */
+  /** Called when an error occurs */
   onError?: (error: Error) => void;
 
-  /**
-   * Custom reload handler (if you want to handle reload differently)
-   */
+  /** Custom reload handler (if you want to handle reload differently) */
   onReloadRequested?: () => void;
 }
 
 /**
  * Provider component for Zephyr OTA functionality
+ *
+ * @example
+ *   Auto -
+ *     detection(recommended)```tsx
+ *   <ZephyrOTAProvider environment="staging">
+ *     <App />
+ *   </ZephyrOTAProvider>
+ *   ```;
+ *
+ * @example
+ *   With per-remote overrides
+ *   ```tsx
+ *   <ZephyrOTAProvider
+ *   environment="staging"
+ *   overrides={{ MFTextEditor: 'production' }}
+ *   >
+ *   <App />
+ *   </ZephyrOTAProvider>
+ *   ```
+ *
+ * @example
+ *   Legacy manual configuration
+ *   ```tsx
+ *   <ZephyrOTAProvider
+ *   dependencies={{
+ *   MFTextEditor: 'zephyr:mftexteditor.myproject.myorg@staging',
+ *   }}
+ *   >
+ *   <App />
+ *   </ZephyrOTAProvider>
+ *   ```
  */
 export function ZephyrOTAProvider({
   children,
-  config,
-  dependencies,
+  config = {},
+  environment,
+  overrides,
+  dependencies: manualDependencies,
   onUpdateAvailable,
   onUpdateApplied,
   onError,
@@ -134,22 +172,73 @@ export function ZephyrOTAProvider({
   const [remotes, setRemotes] = useState<RemoteVersionInfo[]>([]);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const [dependencies, setDependencies] =
+    useState<ZephyrDependencyConfig | null>(null);
 
   const appState = useRef<AppStateStatus>(AppState.currentState);
   const isInitialized = useRef(false);
   const serviceRef = useRef<ZephyrOTAService | null>(null);
 
-  // Create service instance
-  const service = useMemo(() => {
-    if (!serviceRef.current) {
-      serviceRef.current = ZephyrOTAService.getInstance(config, dependencies);
+  // Resolve dependencies from either manual config or auto-detection
+  useEffect(() => {
+    if (manualDependencies) {
+      // Legacy: use manually provided dependencies
+      logger.debug('Using manually provided dependencies');
+      setDependencies(manualDependencies);
+    } else if (environment) {
+      // Auto-detect remotes from MF runtime
+      logger.debug(`Auto-detecting remotes for environment: ${environment}`);
+      const detectedRemotes = detectRemotesFromRuntime();
+
+      if (detectedRemotes.length === 0) {
+        logger.warn(
+          'No zephyr remotes detected from Module Federation runtime. ' +
+            'Make sure remotes are configured with zephyr: protocol entries.'
+        );
+        return;
+      }
+
+      const deps = buildDependenciesConfig(
+        detectedRemotes,
+        environment,
+        overrides
+      );
+      logger.info(
+        `Auto-detected ${Object.keys(deps).length} remotes for OTA tracking`
+      );
+      setDependencies(deps);
+    } else {
+      // No configuration provided
+      logger.warn(
+        'ZephyrOTAProvider: No environment or dependencies provided. ' +
+          'OTA updates are disabled. Provide either `environment` (recommended) ' +
+          'or `dependencies` prop.'
+      );
     }
+  }, [environment, overrides, manualDependencies]);
+
+  // Create service instance only when dependencies are ready
+  const service = useMemo(() => {
+    if (!dependencies || Object.keys(dependencies).length === 0) {
+      return null;
+    }
+
+    // Reset service when dependencies change
+    if (serviceRef.current) {
+      serviceRef.current.stopPeriodicChecks();
+      serviceRef.current = null;
+      isInitialized.current = false;
+    }
+
+    serviceRef.current = ZephyrOTAService.getInstance(config, dependencies);
     return serviceRef.current;
   }, [config, dependencies]);
 
   // Handle update check results
   const handleUpdateResult = useCallback(
     async (result: UpdateCheckResult) => {
+      if (!service) return;
+
       logger.debug('handleUpdateResult called:', {
         hasUpdates: result.hasUpdates,
         remotesCount: result.remotes.length,
@@ -182,6 +271,15 @@ export function ZephyrOTAProvider({
   // Check for updates
   const checkForUpdates = useCallback(
     async (options?: { force?: boolean }): Promise<UpdateCheckResult> => {
+      if (!service) {
+        logger.debug('Service not initialized, skipping check');
+        return {
+          hasUpdates: false,
+          remotes: [],
+          timestamp: Date.now(),
+        };
+      }
+
       const force = options?.force ?? true;
       logger.debug('checkForUpdates called, force:', force);
 
@@ -204,7 +302,8 @@ export function ZephyrOTAProvider({
         await handleUpdateResult(result);
         return result;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Update check failed');
+        const error =
+          err instanceof Error ? err : new Error('Update check failed');
         logger.error('Check failed:', error);
         setError(error);
         onError?.(error);
@@ -222,7 +321,7 @@ export function ZephyrOTAProvider({
 
   // Apply updates
   const applyUpdates = useCallback(async () => {
-    if (updates.length === 0) {
+    if (!service || updates.length === 0) {
       return;
     }
 
@@ -241,7 +340,8 @@ export function ZephyrOTAProvider({
 
       // Note: App will reload, so we don't set isChecking=false
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to apply updates');
+      const error =
+        err instanceof Error ? err : new Error('Failed to apply updates');
       logger.error('Apply failed:', error);
       setError(error);
       setIsChecking(false);
@@ -251,6 +351,7 @@ export function ZephyrOTAProvider({
 
   // Dismiss updates
   const dismissUpdates = useCallback(async () => {
+    if (!service) return;
     await service.dismiss();
     setHasUpdates(false);
     setUpdates([]);
@@ -266,22 +367,26 @@ export function ZephyrOTAProvider({
 
   // Initialize and set up listeners
   useEffect(() => {
-    if (isInitialized.current) {
+    if (!service || isInitialized.current) {
       return;
     }
     isInitialized.current = true;
 
+    logger.debug('Initializing OTA service');
+
     // Initialize version tracking on first launch
-    service.initializeVersionTracking();
+    void service.initializeVersionTracking();
 
     // Subscribe to update events from service
-    const unsubscribe = service.onUpdateAvailable(handleUpdateResult);
+    const unsubscribe = service.onUpdateAvailable((result) => {
+      void handleUpdateResult(result);
+    });
 
     // Start periodic checks
     service.startPeriodicChecks();
 
     // Do initial check
-    checkForUpdates();
+    void checkForUpdates();
 
     return () => {
       unsubscribe();
@@ -291,7 +396,9 @@ export function ZephyrOTAProvider({
 
   // Handle app state changes (foreground check)
   useEffect(() => {
-    if (!config.checkOnForeground) {
+    // Default to true if not specified
+    const checkOnForeground = config.checkOnForeground ?? true;
+    if (!checkOnForeground || !service) {
       return;
     }
 
@@ -304,7 +411,7 @@ export function ZephyrOTAProvider({
           nextAppState === 'active'
         ) {
           logger.debug('App foregrounded, checking for updates');
-          checkForUpdates();
+          void checkForUpdates();
         }
 
         appState.current = nextAppState;
@@ -314,7 +421,7 @@ export function ZephyrOTAProvider({
     return () => {
       subscription.remove();
     };
-  }, [config.checkOnForeground, checkForUpdates]);
+  }, [config.checkOnForeground, service, checkForUpdates]);
 
   const value: ZephyrOTAContextValue = useMemo(
     () => ({
@@ -350,15 +457,11 @@ export function ZephyrOTAProvider({
   );
 }
 
-/**
- * Get the OTA context (internal use)
- */
+/** Get the OTA context (internal use) */
 export function useZephyrOTAContext(): ZephyrOTAContextValue {
   const context = useContext(ZephyrOTAContext);
   if (!context) {
-    throw new Error(
-      'useZephyrOTA must be used within a ZephyrOTAProvider'
-    );
+    throw new Error('useZephyrOTA must be used within a ZephyrOTAProvider');
   }
   return context;
 }

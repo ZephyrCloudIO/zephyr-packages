@@ -65,10 +65,7 @@ describe('parseZephyrDependency', () => {
   });
 
   it('should return null for invalid protocol string', () => {
-    const result = parseZephyrDependency(
-      'MFTextEditor',
-      'invalid-protocol-string'
-    );
+    const result = parseZephyrDependency('MFTextEditor', 'invalid-protocol-string');
 
     expect(result).toBeNull();
   });

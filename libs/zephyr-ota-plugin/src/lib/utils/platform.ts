@@ -1,8 +1,6 @@
 import { Platform } from 'react-native';
 
-/**
- * Supported build target platforms
- */
+/** Supported build target platforms */
 export type BuildTarget = 'ios' | 'android';
 
 /**
@@ -14,16 +12,12 @@ export function getBuildTarget(): BuildTarget {
   return Platform.OS as BuildTarget;
 }
 
-/**
- * Check if running on iOS
- */
+/** Check if running on iOS */
 export function isIOS(): boolean {
   return Platform.OS === 'ios';
 }
 
-/**
- * Check if running on Android
- */
+/** Check if running on Android */
 export function isAndroid(): boolean {
   return Platform.OS === 'android';
 }

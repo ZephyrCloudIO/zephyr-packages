@@ -4,12 +4,14 @@ OTA (Over-The-Air) update plugin for React Native applications using Zephyr Clou
 
 ## Features
 
+- **Auto-detection** of remotes from Module Federation runtime
 - Automatic update detection for Module Federation remotes
 - Version tracking using Zephyr Cloud's snapshot IDs
 - Configurable periodic and foreground update checks
 - React hooks for easy integration
 - Full app reload to apply updates
 - Dismiss/snooze functionality
+- Per-remote environment overrides
 
 ## Installation
 
@@ -33,30 +35,45 @@ npm install react react-native @react-native-async-storage/async-storage
 
 ### 1. Wrap your app with the provider
 
+The simplest setup - just specify your target environment and the plugin automatically detects your remotes from the Module Federation runtime:
+
 ```tsx
 import { ZephyrOTAProvider } from 'zephyr-ota-plugin';
 
-// Define your dependencies (same as in metro.config.js)
-const dependencies = {
-  MFTextEditor: 'zephyr:mftexteditor.myproject.myorg@staging',
-  MFNotesList: 'zephyr:mfnoteslist.myproject.myorg@staging',
-};
-
 function App() {
   return (
-    <ZephyrOTAProvider
-      config={{
-        checkOnForeground: true,
-        enablePeriodicChecks: true,
-        debug: __DEV__,
-      }}
-      dependencies={dependencies}
-      onUpdateAvailable={(updates) => console.log('Updates:', updates)}
-    >
+    <ZephyrOTAProvider environment="staging">
       <MainApp />
     </ZephyrOTAProvider>
   );
 }
+```
+
+**With configuration options:**
+
+```tsx
+<ZephyrOTAProvider
+  environment="staging"
+  config={{
+    checkOnForeground: true,
+    enablePeriodicChecks: true,
+    debug: __DEV__,
+  }}
+  onUpdateAvailable={(updates) => console.log('Updates:', updates)}
+>
+  <MainApp />
+</ZephyrOTAProvider>
+```
+
+**With per-remote environment overrides:**
+
+```tsx
+<ZephyrOTAProvider
+  environment="staging"
+  overrides={{ MFTextEditor: 'production' }} // Use production for this remote
+>
+  <MainApp />
+</ZephyrOTAProvider>
 ```
 
 ### 2. Use the hook to show updates
@@ -77,7 +94,7 @@ function UpdateBanner() {
 
   return (
     <View style={styles.banner}>
-      <Text>Updates available for: {updates.map(u => u.name).join(', ')}</Text>
+      <Text>Updates available for: {updates.map((u) => u.name).join(', ')}</Text>
       <View style={styles.buttons}>
         <Button onPress={applyUpdates} title="Update Now" />
         <Button onPress={dismissUpdates} title="Later" />
@@ -91,25 +108,52 @@ function UpdateBanner() {
 
 ### ZephyrOTAConfig
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `authToken` | `string` | `''` | Auth token for private applications |
-| `apiBaseUrl` | `string` | `'https://zeapi.zephyrcloud.app'` | Zephyr Cloud API base URL |
-| `checkInterval` | `number` | `1800000` (30 min) | Periodic check interval in ms |
-| `minCheckInterval` | `number` | `300000` (5 min) | Minimum time between checks (rate limiting) |
-| `dismissDuration` | `number` | `3600000` (1 hour) | How long to suppress prompts after dismiss |
-| `checkOnForeground` | `boolean` | `true` | Check when app comes to foreground |
-| `enablePeriodicChecks` | `boolean` | `true` | Enable periodic background checks |
-| `debug` | `boolean` | `false` | Enable debug logging |
+| Property               | Type      | Default                           | Description                                 |
+| ---------------------- | --------- | --------------------------------- | ------------------------------------------- |
+| `authToken`            | `string`  | `''`                              | Auth token for private applications         |
+| `apiBaseUrl`           | `string`  | `'https://zeapi.zephyrcloud.app'` | Zephyr Cloud API base URL                   |
+| `checkInterval`        | `number`  | `1800000` (30 min)                | Periodic check interval in ms               |
+| `minCheckInterval`     | `number`  | `300000` (5 min)                  | Minimum time between checks (rate limiting) |
+| `dismissDuration`      | `number`  | `3600000` (1 hour)                | How long to suppress prompts after dismiss  |
+| `checkOnForeground`    | `boolean` | `true`                            | Check when app comes to foreground          |
+| `enablePeriodicChecks` | `boolean` | `true`                            | Enable periodic background checks           |
+| `debug`                | `boolean` | `false`                           | Enable debug logging                        |
 
-### ZephyrDependencyConfig
+## Auto-Detection
 
-Map of remote names to zephyr protocol strings:
+The plugin automatically detects remotes from the Module Federation runtime. When you specify the `environment` prop, the plugin:
+
+1. Reads the remotes configuration from `@module-federation/runtime`
+2. Filters for remotes using the `zephyr:` protocol
+3. Extracts the application UID (e.g., `mftexteditor.myproject.myorg`)
+4. Builds OTA tracking configuration using your target environment
+
+This means you don't need to duplicate your remotes configuration - just specify which environment to track.
+
+### Per-Remote Environment Overrides
+
+Use the `overrides` prop when you need different environments for specific remotes:
+
+```tsx
+<ZephyrOTAProvider
+  environment="staging"           // Default environment for all remotes
+  overrides={{
+    MFTextEditor: 'production',   // Use production for MFTextEditor
+    MFNotesList: 'canary',        // Use canary for MFNotesList
+  }}
+>
+```
+
+### Legacy Manual Configuration
+
+If auto-detection doesn't work for your setup, you can manually specify dependencies:
 
 ```typescript
 const dependencies = {
   RemoteName: 'zephyr:appName.projectName.orgName@environment',
 };
+
+<ZephyrOTAProvider dependencies={dependencies}>
 ```
 
 The format matches the remotes defined in your metro.config.js.
@@ -125,17 +169,17 @@ Main hook with full functionality:
 ```typescript
 const {
   // State
-  isChecking,     // boolean - update check in progress
-  hasUpdates,     // boolean - updates available
-  updates,        // RemoteVersionInfo[] - remotes with updates
-  remotes,        // RemoteVersionInfo[] - all tracked remotes
-  lastChecked,    // Date | null - last check time
-  error,          // Error | null - any error
+  isChecking, // boolean - update check in progress
+  hasUpdates, // boolean - updates available
+  updates, // RemoteVersionInfo[] - remotes with updates
+  remotes, // RemoteVersionInfo[] - all tracked remotes
+  lastChecked, // Date | null - last check time
+  error, // Error | null - any error
 
   // Actions
-  checkForUpdates,  // (options?: { force?: boolean }) => Promise<UpdateCheckResult>
-  applyUpdates,     // () => Promise<void> - applies updates and reloads app
-  dismissUpdates,   // () => Promise<void> - dismisses for configured duration
+  checkForUpdates, // (options?: { force?: boolean }) => Promise<UpdateCheckResult>
+  applyUpdates, // () => Promise<void> - applies updates and reloads app
+  dismissUpdates, // () => Promise<void> - dismisses for configured duration
   getRemoteVersion, // (name: string) => RemoteVersionInfo | undefined
 } = useZephyrOTA();
 ```
@@ -149,7 +193,7 @@ const {
   isChecking,
   hasUpdates,
   updateCount,
-  updatedRemotes,  // string[] - names of remotes with updates
+  updatedRemotes, // string[] - names of remotes with updates
   lastChecked,
   error,
 } = useOTAStatus();
@@ -161,13 +205,17 @@ const {
 
 Props:
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `config` | `ZephyrOTAConfig` | Yes | Configuration options |
-| `dependencies` | `ZephyrDependencyConfig` | Yes | Remote dependencies to track |
-| `onUpdateAvailable` | `(updates: RemoteVersionInfo[]) => void` | No | Called when updates are detected |
-| `onUpdateApplied` | `() => void` | No | Called before app reload |
-| `onError` | `(error: Error) => void` | No | Called on errors |
+| Prop                | Type                                     | Required | Description                                                                 |
+| ------------------- | ---------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| `environment`       | `string`                                 | No\*     | Target environment (e.g., 'staging', 'production'). Enables auto-detection. |
+| `overrides`         | `EnvironmentOverrides`                   | No       | Per-remote environment overrides                                            |
+| `dependencies`      | `ZephyrDependencyConfig`                 | No\*     | Manual dependencies (legacy, use `environment` instead)                     |
+| `config`            | `ZephyrOTAConfig`                        | No       | Configuration options                                                       |
+| `onUpdateAvailable` | `(updates: RemoteVersionInfo[]) => void` | No       | Called when updates are detected                                            |
+| `onUpdateApplied`   | `() => void`                             | No       | Called before app reload                                                    |
+| `onError`           | `(error: Error) => void`                 | No       | Called on errors                                                            |
+
+\*Either `environment` (recommended) or `dependencies` should be provided.
 
 ### Service (Advanced)
 
@@ -186,7 +234,7 @@ const result = await service.checkForUpdates(true);
 
 // Apply updates
 if (result.hasUpdates) {
-  await service.applyUpdates(result.remotes.filter(r => r.hasUpdate));
+  await service.applyUpdates(result.remotes.filter((r) => r.hasUpdate));
 }
 ```
 

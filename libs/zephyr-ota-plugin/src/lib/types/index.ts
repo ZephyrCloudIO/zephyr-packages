@@ -3,6 +3,7 @@ export type {
   ZephyrOTAConfig,
   ZephyrDependencyConfig,
   ParsedZephyrDependency,
+  EnvironmentOverrides,
 } from './config';
 export { DEFAULT_OTA_CONFIG } from './config';
 
@@ -15,8 +16,4 @@ export type {
 } from './remote';
 
 // API types
-export type {
-  ZephyrResolveResponse,
-  VersionInfo,
-  ApiResponseWrapper,
-} from './api';
+export type { ZephyrResolveResponse, VersionInfo, ApiResponseWrapper } from './api';

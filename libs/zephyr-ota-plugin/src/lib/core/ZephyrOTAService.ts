@@ -8,8 +8,10 @@ import type {
   StoredVersions,
 } from '../types';
 import { DEFAULT_OTA_CONFIG } from '../types';
-import { ZephyrAPIClient, createAPIClient } from './api-client';
-import { OTAStorage, createStorage } from './storage';
+import type { ZephyrAPIClient } from './api-client';
+import { createAPIClient } from './api-client';
+import type { OTAStorage } from './storage';
+import { createStorage } from './storage';
 import {
   createRemoteVersionInfo,
   createStoredVersionInfo,
@@ -23,14 +25,10 @@ const logger = createScopedLogger('Service');
 // Get DevSettings for app reload functionality
 const { DevSettings } = NativeModules;
 
-/**
- * Listener function type for update events
- */
+/** Listener function type for update events */
 export type UpdateListener = (result: UpdateCheckResult) => void;
 
-/**
- * Main OTA service that orchestrates update checking and application
- */
+/** Main OTA service that orchestrates update checking and application */
 export class ZephyrOTAService {
   private static instance: ZephyrOTAService | null = null;
 
@@ -62,9 +60,7 @@ export class ZephyrOTAService {
     logger.debug('Service created with config:', this.config);
   }
 
-  /**
-   * Get or create singleton instance
-   */
+  /** Get or create singleton instance */
   static getInstance(
     config: ZephyrOTAConfig,
     dependencies: ZephyrDependencyConfig
@@ -75,9 +71,7 @@ export class ZephyrOTAService {
     return ZephyrOTAService.instance;
   }
 
-  /**
-   * Reset singleton instance (useful for testing)
-   */
+  /** Reset singleton instance (useful for testing) */
   static resetInstance(): void {
     if (ZephyrOTAService.instance) {
       ZephyrOTAService.instance.stopPeriodicChecks();
@@ -86,8 +80,8 @@ export class ZephyrOTAService {
   }
 
   /**
-   * Initialize version tracking on first launch
-   * This stores the current versions so we can detect future updates
+   * Initialize version tracking on first launch This stores the current versions so we
+   * can detect future updates
    */
   async initializeVersionTracking(): Promise<void> {
     if (this.isInitialized) {
@@ -139,9 +133,7 @@ export class ZephyrOTAService {
     this.isInitialized = true;
   }
 
-  /**
-   * Check if we can perform an update check (rate limiting)
-   */
+  /** Check if we can perform an update check (rate limiting) */
   private canCheck(): boolean {
     const now = Date.now();
     return now - this.lastCheckTime >= this.config.minCheckInterval;
@@ -241,10 +233,19 @@ export class ZephyrOTAService {
       return;
     }
 
-    logger.info('Applying updates for:', updatesToApply.map((u) => u.name));
+    logger.info(
+      'Applying updates for:',
+      updatesToApply.map((u) => u.name)
+    );
 
     // Clear Module Federation caches
     const federationHost = getInstance();
+
+    // Internal MF host types for cache clearing (not publicly typed)
+    interface MFHostInternal {
+      snapshotHandler?: { manifestCache?: Map<string, unknown> };
+      moduleCache?: Map<string, unknown>;
+    }
 
     for (const update of updatesToApply) {
       logger.debug(
@@ -253,18 +254,18 @@ export class ZephyrOTAService {
 
       try {
         if (federationHost) {
+          const host = federationHost as unknown as MFHostInternal;
+
           // Clear manifest cache if available
-          const snapshotHandler = (federationHost as any).snapshotHandler;
-          if (snapshotHandler?.manifestCache) {
-            snapshotHandler.manifestCache.delete(update.name);
+          if (host.snapshotHandler?.manifestCache) {
+            host.snapshotHandler.manifestCache.delete(update.name);
           }
 
           // Clear module cache entries for this remote
-          const moduleCache = (federationHost as any).moduleCache;
-          if (moduleCache) {
-            for (const key of moduleCache.keys()) {
+          if (host.moduleCache) {
+            for (const key of host.moduleCache.keys()) {
               if (key.startsWith(update.name)) {
-                moduleCache.delete(key);
+                host.moduleCache.delete(key);
               }
             }
           }
@@ -295,9 +296,7 @@ export class ZephyrOTAService {
     this.reloadApp();
   }
 
-  /**
-   * Reload the app to apply updates
-   */
+  /** Reload the app to apply updates */
   private reloadApp(): void {
     if (DevSettings && typeof DevSettings.reload === 'function') {
       // Small delay to ensure state is persisted before reload
@@ -309,24 +308,18 @@ export class ZephyrOTAService {
     }
   }
 
-  /**
-   * Dismiss update prompts for the configured duration
-   */
+  /** Dismiss update prompts for the configured duration */
   async dismiss(): Promise<void> {
     await this.storage.dismiss();
     logger.debug('Updates dismissed');
   }
 
-  /**
-   * Check if updates are currently dismissed
-   */
+  /** Check if updates are currently dismissed */
   async isDismissed(): Promise<boolean> {
     return this.storage.isDismissed();
   }
 
-  /**
-   * Start periodic update checks
-   */
+  /** Start periodic update checks */
   startPeriodicChecks(): void {
     if (!this.config.enablePeriodicChecks) {
       logger.debug('Periodic checks disabled');
@@ -342,13 +335,11 @@ export class ZephyrOTAService {
     logger.info(`Starting periodic checks every ${intervalMinutes} minutes`);
 
     this.periodicCheckInterval = setInterval(() => {
-      this.checkForUpdates(false);
+      void this.checkForUpdates(false);
     }, this.config.checkInterval);
   }
 
-  /**
-   * Stop periodic update checks
-   */
+  /** Stop periodic update checks */
   stopPeriodicChecks(): void {
     if (this.periodicCheckInterval) {
       clearInterval(this.periodicCheckInterval);
@@ -370,9 +361,7 @@ export class ZephyrOTAService {
     };
   }
 
-  /**
-   * Notify all listeners of update check results
-   */
+  /** Notify all listeners of update check results */
   private notifyListeners(result: UpdateCheckResult): void {
     for (const listener of this.listeners) {
       try {
@@ -383,24 +372,18 @@ export class ZephyrOTAService {
     }
   }
 
-  /**
-   * Get the storage instance (for advanced use cases)
-   */
+  /** Get the storage instance (for advanced use cases) */
   getStorage(): OTAStorage {
     return this.storage;
   }
 
-  /**
-   * Get the API client instance (for advanced use cases)
-   */
+  /** Get the API client instance (for advanced use cases) */
   getAPIClient(): ZephyrAPIClient {
     return this.apiClient;
   }
 }
 
-/**
- * Create a new OTA service instance
- */
+/** Create a new OTA service instance */
 export function createZephyrOTAService(
   config: ZephyrOTAConfig,
   dependencies: ZephyrDependencyConfig

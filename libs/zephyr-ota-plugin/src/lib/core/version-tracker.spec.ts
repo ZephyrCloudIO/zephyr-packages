@@ -4,7 +4,11 @@ import {
   createStoredVersionInfo,
   getRemotesWithUpdates,
 } from './version-tracker';
-import type { StoredVersionInfo, ZephyrResolveResponse, RemoteVersionInfo } from '../types';
+import type {
+  StoredVersionInfo,
+  ZephyrResolveResponse,
+  RemoteVersionInfo,
+} from '../types';
 
 describe('hasVersionUpdate', () => {
   const baseResolved: ZephyrResolveResponse = {

@@ -11,9 +11,7 @@ import { createScopedLogger } from '../utils/logger';
 
 const logger = createScopedLogger('API');
 
-/**
- * Client for interacting with Zephyr Cloud API
- */
+/** Client for interacting with Zephyr Cloud API */
 export class ZephyrAPIClient {
   private readonly apiBaseUrl: string;
   private readonly authToken: string;
@@ -23,9 +21,7 @@ export class ZephyrAPIClient {
     this.authToken = config.authToken ?? '';
   }
 
-  /**
-   * Create headers for API requests
-   */
+  /** Create headers for API requests */
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
@@ -66,10 +62,7 @@ export class ZephyrAPIClient {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.warn(
-          `Failed to resolve ${applicationUid}: ${response.status}`,
-          errorText
-        );
+        logger.warn(`Failed to resolve ${applicationUid}: ${response.status}`, errorText);
         return null;
       }
 
@@ -78,8 +71,7 @@ export class ZephyrAPIClient {
         | ZephyrResolveResponse;
 
       // API returns data nested under .value
-      const resolved: ZephyrResolveResponse =
-        'value' in data ? data.value : data;
+      const resolved: ZephyrResolveResponse = 'value' in data ? data.value : data;
 
       logger.debug(`Resolved data for ${name}:`, resolved);
 
@@ -97,9 +89,7 @@ export class ZephyrAPIClient {
         });
       } else {
         // Fallback to remote_entry_url if version info not available
-        logger.warn(
-          `Version info not available for ${name}, falling back to URL`
-        );
+        logger.warn(`Version info not available for ${name}, falling back to URL`);
         if (!resolved.version && resolved.remote_entry_url) {
           resolved.version = resolved.remote_entry_url;
         }
@@ -113,9 +103,9 @@ export class ZephyrAPIClient {
   }
 
   /**
-   * Fetch version info from the /__get_version_info__ endpoint
-   * This returns the actual deployed version metadata (snapshot_id, published_at)
-   * which changes with each deployment
+   * Fetch version info from the /**get_version_info** endpoint This returns the actual
+   * deployed version metadata (snapshot_id, published_at) which changes with each
+   * deployment
    *
    * @param defaultUrl - The default URL for the remote
    * @returns Version info or null if failed
@@ -148,9 +138,7 @@ export class ZephyrAPIClient {
   }
 }
 
-/**
- * Create a new API client instance
- */
+/** Create a new API client instance */
 export function createAPIClient(config: ZephyrOTAConfig): ZephyrAPIClient {
   return new ZephyrAPIClient(config);
 }

@@ -5,18 +5,14 @@ import { createScopedLogger } from '../utils/logger';
 
 const logger = createScopedLogger('Storage');
 
-/**
- * Storage keys used by the OTA plugin
- */
+/** Storage keys used by the OTA plugin */
 const STORAGE_KEYS = {
   VERSIONS: '@zephyr_ota/versions',
   LAST_CHECK: '@zephyr_ota/last_check',
   DISMISS_UNTIL: '@zephyr_ota/dismiss_until',
 } as const;
 
-/**
- * Storage layer for OTA plugin data persistence
- */
+/** Storage layer for OTA plugin data persistence */
 export class OTAStorage {
   private readonly dismissDuration: number;
 
@@ -24,9 +20,7 @@ export class OTAStorage {
     this.dismissDuration = config.dismissDuration ?? DEFAULT_OTA_CONFIG.dismissDuration;
   }
 
-  /**
-   * Get stored versions for all remotes
-   */
+  /** Get stored versions for all remotes */
   async getStoredVersions(): Promise<StoredVersions> {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEYS.VERSIONS);
@@ -39,9 +33,7 @@ export class OTAStorage {
     return {};
   }
 
-  /**
-   * Save versions for all remotes
-   */
+  /** Save versions for all remotes */
   async saveVersions(versions: StoredVersions): Promise<void> {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.VERSIONS, JSON.stringify(versions));
@@ -51,17 +43,13 @@ export class OTAStorage {
     }
   }
 
-  /**
-   * Get stored version for a specific remote
-   */
+  /** Get stored version for a specific remote */
   async getRemoteVersion(remoteName: string): Promise<StoredVersionInfo | null> {
     const versions = await this.getStoredVersions();
     return versions[remoteName] ?? null;
   }
 
-  /**
-   * Save version for a specific remote
-   */
+  /** Save version for a specific remote */
   async saveRemoteVersion(
     remoteName: string,
     versionInfo: StoredVersionInfo
@@ -71,9 +59,7 @@ export class OTAStorage {
     await this.saveVersions(versions);
   }
 
-  /**
-   * Get the timestamp of the last update check
-   */
+  /** Get the timestamp of the last update check */
   async getLastCheckTime(): Promise<number | null> {
     try {
       const lastCheck = await AsyncStorage.getItem(STORAGE_KEYS.LAST_CHECK);
@@ -86,9 +72,7 @@ export class OTAStorage {
     return null;
   }
 
-  /**
-   * Save the timestamp of the last update check
-   */
+  /** Save the timestamp of the last update check */
   async setLastCheckTime(timestamp: number): Promise<void> {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.LAST_CHECK, timestamp.toString());
@@ -97,9 +81,7 @@ export class OTAStorage {
     }
   }
 
-  /**
-   * Check if updates are dismissed (user clicked "Later")
-   */
+  /** Check if updates are dismissed (user clicked "Later") */
   async isDismissed(): Promise<boolean> {
     try {
       const dismissUntil = await AsyncStorage.getItem(STORAGE_KEYS.DISMISS_UNTIL);
@@ -112,9 +94,7 @@ export class OTAStorage {
     return false;
   }
 
-  /**
-   * Dismiss update prompts for the configured duration
-   */
+  /** Dismiss update prompts for the configured duration */
   async dismiss(): Promise<void> {
     try {
       const dismissUntil = Date.now() + this.dismissDuration;
@@ -125,9 +105,7 @@ export class OTAStorage {
     }
   }
 
-  /**
-   * Clear dismiss state (after applying updates)
-   */
+  /** Clear dismiss state (after applying updates) */
   async clearDismiss(): Promise<void> {
     try {
       await AsyncStorage.removeItem(STORAGE_KEYS.DISMISS_UNTIL);
@@ -137,9 +115,7 @@ export class OTAStorage {
     }
   }
 
-  /**
-   * Clear all OTA storage data
-   */
+  /** Clear all OTA storage data */
   async clearAll(): Promise<void> {
     try {
       await AsyncStorage.multiRemove([
@@ -154,9 +130,7 @@ export class OTAStorage {
   }
 }
 
-/**
- * Create a new storage instance
- */
+/** Create a new storage instance */
 export function createStorage(config: ZephyrOTAConfig): OTAStorage {
   return new OTAStorage(config);
 }

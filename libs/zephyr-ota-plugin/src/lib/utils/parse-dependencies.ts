@@ -3,12 +3,13 @@ import type { ParsedZephyrDependency, ZephyrDependencyConfig } from '../types';
 /**
  * Parse a zephyr: protocol string into its components
  *
- * @param value - The zephyr protocol string (e.g., "zephyr:appName.projectName.orgName@staging")
- * @returns Parsed dependency info or null if invalid format
- *
  * @example
- * parseZephyrProtocol("zephyr:mftexteditor.myproject.myorg@staging")
- * // Returns: { applicationUid: "mftexteditor.myproject.myorg", versionTag: "staging" }
+ *   parseZephyrProtocol('zephyr:mftexteditor.myproject.myorg@staging');
+ *   // Returns: { applicationUid: "mftexteditor.myproject.myorg", versionTag: "staging" }
+ *
+ * @param value - The zephyr protocol string (e.g.,
+ *   "zephyr:appName.projectName.orgName@staging")
+ * @returns Parsed dependency info or null if invalid format
  */
 export function parseZephyrProtocol(
   value: string
@@ -28,17 +29,20 @@ export function parseZephyrProtocol(
 /**
  * Parse a single zephyr dependency entry
  *
+ * @example
+ *   parseZephyrDependency(
+ *     'MFTextEditor',
+ *     'zephyr:mftexteditor.myproject.myorg@staging'
+ *   );
+ *   // Returns: {
+ *   //   name: "MFTextEditor",
+ *   //   applicationUid: "mftexteditor.myproject.myorg",
+ *   //   versionTag: "staging"
+ *   // }
+ *
  * @param name - The remote name (key in the dependencies config)
  * @param value - The zephyr protocol string
  * @returns Parsed dependency or null if invalid
- *
- * @example
- * parseZephyrDependency("MFTextEditor", "zephyr:mftexteditor.myproject.myorg@staging")
- * // Returns: {
- * //   name: "MFTextEditor",
- * //   applicationUid: "mftexteditor.myproject.myorg",
- * //   versionTag: "staging"
- * // }
  */
 export function parseZephyrDependency(
   name: string,
@@ -58,14 +62,14 @@ export function parseZephyrDependency(
 /**
  * Parse all zephyr dependencies from a config object
  *
+ * @example
+ *   parseZephyrDependencies({
+ *     MFTextEditor: 'zephyr:mftexteditor.myproject.myorg@staging',
+ *     MFNotesList: 'zephyr:mfnoteslist.myproject.myorg@staging',
+ *   });
+ *
  * @param dependencies - Map of remote names to zephyr protocol strings
  * @returns Array of parsed dependencies (invalid entries are filtered out)
- *
- * @example
- * parseZephyrDependencies({
- *   MFTextEditor: "zephyr:mftexteditor.myproject.myorg@staging",
- *   MFNotesList: "zephyr:mfnoteslist.myproject.myorg@staging",
- * })
  */
 export function parseZephyrDependencies(
   dependencies: ZephyrDependencyConfig
@@ -86,7 +90,7 @@ export function parseZephyrDependencies(
  * Validate that a string is a valid zephyr protocol string
  *
  * @param value - The string to validate
- * @returns true if valid zephyr protocol format
+ * @returns True if valid zephyr protocol format
  */
 export function isValidZephyrProtocol(value: string): boolean {
   return parseZephyrProtocol(value) !== null;

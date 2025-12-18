@@ -23,6 +23,7 @@ export type {
   ZephyrOTAConfig,
   ZephyrDependencyConfig,
   ParsedZephyrDependency,
+  EnvironmentOverrides,
   // State
   RemoteVersionInfo,
   StoredVersionInfo,
@@ -42,16 +43,15 @@ export {
   isValidZephyrProtocol,
 } from './lib/utils/parse-dependencies';
 
-// Platform utilities
+// Auto-detection utilities
 export {
-  getBuildTarget,
-  isIOS,
-  isAndroid,
-  type BuildTarget,
-} from './lib/utils/platform';
+  detectRemotesFromRuntime,
+  buildDependenciesConfig,
+  type DetectedRemote,
+} from './lib/utils/detect-remotes';
+
+// Platform utilities
+export { getBuildTarget, isIOS, isAndroid, type BuildTarget } from './lib/utils/platform';
 
 // Logging utilities (for debugging)
-export {
-  setDebugEnabled,
-  isDebugEnabled,
-} from './lib/utils/logger';
+export { setDebugEnabled, isDebugEnabled } from './lib/utils/logger';

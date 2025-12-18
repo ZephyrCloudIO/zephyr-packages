@@ -94,8 +94,6 @@ export function createStoredVersionInfo(
  * @param remotes - Array of remote version info
  * @returns Array of remotes with updates
  */
-export function getRemotesWithUpdates(
-  remotes: RemoteVersionInfo[]
-): RemoteVersionInfo[] {
+export function getRemotesWithUpdates(remotes: RemoteVersionInfo[]): RemoteVersionInfo[] {
   return remotes.filter((remote) => remote.hasUpdate);
 }

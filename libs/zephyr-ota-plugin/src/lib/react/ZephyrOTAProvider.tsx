@@ -19,10 +19,7 @@ import {
   detectRemotesFromRuntime,
   buildDependenciesConfig,
 } from '../utils/detect-remotes';
-import type {
-  ZephyrOTAContextValue,
-  ZephyrOTAProviderProps,
-} from './types';
+import type { ZephyrOTAContextValue, ZephyrOTAProviderProps } from './types';
 
 export type { ZephyrOTAContextValue, ZephyrOTAProviderProps } from './types';
 

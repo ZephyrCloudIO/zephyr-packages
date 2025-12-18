@@ -48,9 +48,9 @@ export interface ZephyrOTAProviderProps {
   config?: ZephyrOTAConfig;
 
   /**
-   * Target environment for OTA updates (e.g., 'staging', 'production'). When
-   * provided, remotes are auto-detected from Module Federation runtime. This is
-   * the recommended approach.
+   * Target environment for OTA updates (e.g., 'staging', 'production'). When provided,
+   * remotes are auto-detected from Module Federation runtime. This is the recommended
+   * approach.
    *
    * @example
    *   ```tsx
@@ -62,9 +62,8 @@ export interface ZephyrOTAProviderProps {
   environment?: string;
 
   /**
-   * Per-remote environment overrides. Use this when some remotes should use a
-   * different environment than the default. Only used when `environment` prop
-   * is provided.
+   * Per-remote environment overrides. Use this when some remotes should use a different
+   * environment than the default. Only used when `environment` prop is provided.
    *
    * @example
    *   ```tsx
@@ -79,9 +78,8 @@ export interface ZephyrOTAProviderProps {
   overrides?: EnvironmentOverrides;
 
   /**
-   * Manual dependencies configuration (legacy). Map of remote names to zephyr:
-   * protocol strings. Use this only if auto-detection doesn't work for your
-   * setup.
+   * Manual dependencies configuration (legacy). Map of remote names to zephyr: protocol
+   * strings. Use this only if auto-detection doesn't work for your setup.
    *
    * @deprecated Prefer using `environment` prop for auto-detection
    */

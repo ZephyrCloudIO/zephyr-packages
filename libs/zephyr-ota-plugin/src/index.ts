@@ -8,10 +8,7 @@ export {
 } from './lib/core/ZephyrOTAService';
 
 // React integration
-export {
-  ZephyrOTAProvider,
-  useZephyrOTA,
-} from './lib/react/ZephyrOTAProvider';
+export { ZephyrOTAProvider, useZephyrOTA } from './lib/react/ZephyrOTAProvider';
 export type {
   ZephyrOTAProviderProps,
   ZephyrOTAContextValue,

@@ -24,15 +24,19 @@
     "@module-federation/vite": "catalog:module-federation",
     "acorn": "^8.12.1",
     "acorn-walk": "^8.3.4",
-    "rollup": "catalog:rollup4",
     "tslib": "catalog:typescript",
-    "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "rollup": "catalog:rollup4",
+    "ts-jest": "catalog:typescript",
+    "vite": "catalog:vite7"
+  },
+  "peerDependencies": {
+    "rollup": "^4.0.0",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
   },
   "publishConfig": {
     "access": "public",

@@ -20,13 +20,16 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "rolldown": "catalog:rolldown",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "rolldown": "catalog:rolldown",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "rolldown": ">=1.0.0-beta.0"
   },
   "publishConfig": {
     "access": "public",

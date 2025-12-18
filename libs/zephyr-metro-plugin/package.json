@@ -24,7 +24,7 @@
   "peerDependencies": {
     "metro": ">=0.70.0",
     "react-native": ">=0.60.0",
-    "zephyr-xpack-internal": "workspace:*"
+    "zephyr-xpack-internal": ">=0.1.0"
   },
   "peerDependenciesMeta": {
     "zephyr-xpack-internal": {

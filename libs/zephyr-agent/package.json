@@ -33,7 +33,7 @@
     "test": "nx test zephyr-agent"
   },
   "dependencies": {
-    "@toon-format/toon": "^0.8.0",
+    "@toon-format/toon": "^0.9.0",
     "axios": "^1.12.0",
     "axios-retry": "^4.5.0",
     "debug": "^4.3.4",

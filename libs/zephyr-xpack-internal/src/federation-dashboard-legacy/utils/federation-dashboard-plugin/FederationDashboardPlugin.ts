@@ -29,7 +29,7 @@ import type { Exposes } from './federation-dashboard-types';
 import { findPackageJson } from './find-package-json';
 
 // TODO: convert this require to imports
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const AutomaticVendorFederation = require('@module-federation/automatic-vendor-federation');
 
 interface ProcessWebpackGraphParams {

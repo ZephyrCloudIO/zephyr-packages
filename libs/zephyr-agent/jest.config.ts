@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'zephyr-agent',
   preset: '../../jest.preset.js',

@@ -1,4 +1,4 @@
-import { useZephyrOTAContext } from './ZephyrOTAProvider';
+import { useZephyrOTA } from './ZephyrOTAProvider';
 import type { RemoteVersionInfo } from '../types';
 
 /** Return type for useOTAStatus hook */
@@ -44,7 +44,7 @@ export interface OTAStatusResult {
  * @returns Read-only OTA status
  */
 export function useOTAStatus(): OTAStatusResult {
-  const context = useZephyrOTAContext();
+  const context = useZephyrOTA();
 
   return {
     isChecking: context.isChecking,

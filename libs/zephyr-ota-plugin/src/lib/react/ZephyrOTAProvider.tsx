@@ -9,7 +9,6 @@ import React, {
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 import type {
-  ZephyrOTAConfig,
   ZephyrDependencyConfig,
   RemoteVersionInfo,
   UpdateCheckResult,
@@ -19,108 +18,17 @@ import { createScopedLogger } from '../utils/logger';
 import {
   detectRemotesFromRuntime,
   buildDependenciesConfig,
-  type EnvironmentOverrides,
 } from '../utils/detect-remotes';
+import type {
+  ZephyrOTAContextValue,
+  ZephyrOTAProviderProps,
+} from './types';
+
+export type { ZephyrOTAContextValue, ZephyrOTAProviderProps } from './types';
 
 const logger = createScopedLogger('Provider');
 
-/** Context value type for ZephyrOTA */
-export interface ZephyrOTAContextValue {
-  /** Whether an update check is in progress */
-  isChecking: boolean;
-
-  /** Whether updates are available */
-  hasUpdates: boolean;
-
-  /** List of remotes with updates available */
-  updates: RemoteVersionInfo[];
-
-  /** All tracked remotes and their version info */
-  remotes: RemoteVersionInfo[];
-
-  /** When the last update check occurred */
-  lastChecked: Date | null;
-
-  /** Any error that occurred during update check */
-  error: Error | null;
-
-  /** Manually trigger an update check */
-  checkForUpdates: (options?: {
-    force?: boolean;
-  }) => Promise<UpdateCheckResult>;
-
-  /** Apply available updates (will reload the app) */
-  applyUpdates: () => Promise<void>;
-
-  /** Dismiss update prompts for the configured duration */
-  dismissUpdates: () => Promise<void>;
-
-  /** Get version info for a specific remote */
-  getRemoteVersion: (remoteName: string) => RemoteVersionInfo | undefined;
-}
-
 const ZephyrOTAContext = createContext<ZephyrOTAContextValue | null>(null);
-
-/** Props for ZephyrOTAProvider */
-export interface ZephyrOTAProviderProps {
-  /** Child components */
-  children: React.ReactNode;
-
-  /** OTA configuration (optional) */
-  config?: ZephyrOTAConfig;
-
-  /**
-   * Target environment for OTA updates (e.g., 'staging', 'production'). When
-   * provided, remotes are auto-detected from Module Federation runtime. This is
-   * the recommended approach.
-   *
-   * @example
-   *   ```tsx
-   *   <ZephyrOTAProvider environment="staging">
-   *     <App />
-   *   </ZephyrOTAProvider>
-   *   ```;
-   */
-  environment?: string;
-
-  /**
-   * Per-remote environment overrides. Use this when some remotes should use a
-   * different environment than the default. Only used when `environment` prop
-   * is provided.
-   *
-   * @example
-   *   ```tsx
-   *   <ZephyrOTAProvider
-   *     environment="staging"
-   *     overrides={{ MFTextEditor: 'production' }}
-   *   >
-   *     <App />
-   *   </ZephyrOTAProvider>
-   *   ```;
-   */
-  overrides?: EnvironmentOverrides;
-
-  /**
-   * Manual dependencies configuration (legacy). Map of remote names to zephyr:
-   * protocol strings. Use this only if auto-detection doesn't work for your
-   * setup.
-   *
-   * @deprecated Prefer using `environment` prop for auto-detection
-   */
-  dependencies?: ZephyrDependencyConfig;
-
-  /** Called when updates are available */
-  onUpdateAvailable?: (updates: RemoteVersionInfo[]) => void;
-
-  /** Called after updates are applied (before reload) */
-  onUpdateApplied?: () => void;
-
-  /** Called when an error occurs */
-  onError?: (error: Error) => void;
-
-  /** Custom reload handler (if you want to handle reload differently) */
-  onReloadRequested?: () => void;
-}
 
 /**
  * Provider component for Zephyr OTA functionality
@@ -423,32 +331,18 @@ export function ZephyrOTAProvider({
     };
   }, [config.checkOnForeground, service, checkForUpdates]);
 
-  const value: ZephyrOTAContextValue = useMemo(
-    () => ({
-      isChecking,
-      hasUpdates,
-      updates,
-      remotes,
-      lastChecked,
-      error,
-      checkForUpdates,
-      applyUpdates,
-      dismissUpdates,
-      getRemoteVersion,
-    }),
-    [
-      isChecking,
-      hasUpdates,
-      updates,
-      remotes,
-      lastChecked,
-      error,
-      checkForUpdates,
-      applyUpdates,
-      dismissUpdates,
-      getRemoteVersion,
-    ]
-  );
+  const value: ZephyrOTAContextValue = {
+    isChecking,
+    hasUpdates,
+    updates,
+    remotes,
+    lastChecked,
+    error,
+    checkForUpdates,
+    applyUpdates,
+    dismissUpdates,
+    getRemoteVersion,
+  };
 
   return (
     <ZephyrOTAContext.Provider value={value}>
@@ -457,8 +351,31 @@ export function ZephyrOTAProvider({
   );
 }
 
-/** Get the OTA context (internal use) */
-export function useZephyrOTAContext(): ZephyrOTAContextValue {
+/**
+ * Hook to access Zephyr OTA functionality
+ *
+ * Must be used within a ZephyrOTAProvider
+ *
+ * @example
+ *   ```tsx
+ *   function UpdateBanner() {
+ *     const { hasUpdates, updates, applyUpdates, dismissUpdates } = useZephyrOTA();
+ *
+ *     if (!hasUpdates) return null;
+ *
+ *     return (
+ *       <View>
+ *         <Text>Updates available for: {updates.map(u => u.name).join(', ')}</Text>
+ *         <Button onPress={applyUpdates} title="Update Now" />
+ *         <Button onPress={dismissUpdates} title="Later" />
+ *       </View>
+ *     );
+ *   }
+ *   ```;
+ *
+ * @returns OTA context value with state and actions
+ */
+export function useZephyrOTA(): ZephyrOTAContextValue {
   const context = useContext(ZephyrOTAContext);
   if (!context) {
     throw new Error('useZephyrOTA must be used within a ZephyrOTAProvider');

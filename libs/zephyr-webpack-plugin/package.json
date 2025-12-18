@@ -21,7 +21,6 @@
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "webpack": "catalog:webpack5",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
@@ -29,7 +28,11 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "webpack": "catalog:webpack5"
+  },
+  "peerDependencies": {
+    "webpack": "^5.0.0"
   },
   "publishConfig": {
     "access": "public",

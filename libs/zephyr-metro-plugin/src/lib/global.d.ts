@@ -9,8 +9,6 @@
  * @see zephyr-xpack-internal for runtime plugin implementation
  */
 
-/* eslint-disable no-var */
-
 /** Zephyr manifest structure for runtime updates */
 export interface ZephyrRuntimeManifest {
   /** Semantic version of the manifest format */

@@ -5,7 +5,7 @@
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "jest-environment-node": "^29.7.0",
     "ts-jest": "catalog:typescript",
-    "ts-node": "10.9.1",
+    "ts-node": "10.9.2",
     "typescript": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"

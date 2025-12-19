@@ -34,8 +34,8 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@clack/prompts": "0.10.1",
-    "chalk-template": "1.1.0",
+    "@clack/prompts": "0.11.0",
+    "chalk-template": "1.1.2",
     "terminal-link": "^4.0.0"
   },
   "devDependencies": {

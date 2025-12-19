@@ -1,3 +1,5 @@
+import { ZE_API_ENDPOINT } from 'zephyr-edge-contract';
+
 /** Configuration for the Zephyr OTA plugin */
 export interface ZephyrOTAConfig {
   /**
@@ -34,7 +36,7 @@ export interface ZephyrOTAConfig {
 /** Default configuration values */
 export const DEFAULT_OTA_CONFIG: Required<ZephyrOTAConfig> = {
   authToken: '',
-  apiBaseUrl: 'https://zeapi.zephyrcloud.app',
+  apiBaseUrl: ZE_API_ENDPOINT(),
   checkInterval: 30 * 60 * 1000, // 30 minutes
   minCheckInterval: 5 * 60 * 1000, // 5 minutes
   dismissDuration: 60 * 60 * 1000, // 1 hour

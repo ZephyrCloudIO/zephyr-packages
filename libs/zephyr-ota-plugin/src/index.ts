@@ -1,11 +1,7 @@
 /* istanbul ignore file */
 
 // Core service
-export {
-  ZephyrOTAService,
-  createZephyrOTAService,
-  type UpdateListener,
-} from './lib/core/ZephyrOTAService';
+export { ZephyrOTAService, type UpdateListener } from './lib/core/ZephyrOTAService';
 
 // React integration
 export { ZephyrOTAProvider, useZephyrOTA } from './lib/react/ZephyrOTAProvider';

@@ -23,6 +23,24 @@ const logger = createScopedLogger('Service');
 // Get DevSettings for app reload functionality
 const { DevSettings } = NativeModules;
 
+// Maximum concurrent API requests to avoid overwhelming the server
+const MAX_CONCURRENT_REQUESTS = 5;
+
+/** Execute promises with a concurrency limit to avoid overwhelming the API */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency);
+    const batchResults = await Promise.all(batch.map(fn));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 /** Listener function type for update events */
 export type UpdateListener = (result: UpdateCheckResult) => void;
 
@@ -109,13 +127,21 @@ export class ZephyrOTAService {
 
     logger.info('Initializing version tracking (first launch)...');
 
-    // Fetch current versions from Zephyr
+    // Fetch current versions from Zephyr in parallel with concurrency limit
     const parsedDeps = parseZephyrDependencies(this.dependencies);
     const newVersions: StoredVersions = {};
 
-    for (const dep of parsedDeps) {
-      logger.debug(`Resolving initial version for ${dep.name}...`);
-      const resolved = await this.apiClient.resolveRemote(dep);
+    const results = await mapWithConcurrency(
+      parsedDeps,
+      async (dep) => {
+        logger.debug(`Resolving initial version for ${dep.name}...`);
+        const resolved = await this.apiClient.resolveRemote(dep);
+        return { dep, resolved };
+      },
+      MAX_CONCURRENT_REQUESTS
+    );
+
+    for (const { dep, resolved } of results) {
       if (resolved) {
         newVersions[dep.name] = createStoredVersionInfo(resolved);
         logger.debug(
@@ -166,14 +192,16 @@ export class ZephyrOTAService {
 
     const remotes: RemoteVersionInfo[] = [];
 
-    // Resolve all remotes in parallel
+    // Resolve all remotes in parallel with concurrency limit
     logger.debug('Resolving remote versions...');
-    const results = await Promise.all(
-      parsedDeps.map(async (dep) => {
+    const results = await mapWithConcurrency(
+      parsedDeps,
+      async (dep) => {
         const resolved = await this.apiClient.resolveRemote(dep);
         logger.debug(`Resolved ${dep.name}:`, resolved);
         return { dep, resolved };
-      })
+      },
+      MAX_CONCURRENT_REQUESTS
     );
 
     for (const { dep, resolved } of results) {
@@ -379,12 +407,4 @@ export class ZephyrOTAService {
   getAPIClient(): ZephyrAPIClient {
     return this.apiClient;
   }
-}
-
-/** Create a new OTA service instance */
-export function createZephyrOTAService(
-  config: ZephyrOTAConfig,
-  dependencies: ZephyrDependencyConfig
-): ZephyrOTAService {
-  return new ZephyrOTAService(config, dependencies);
 }

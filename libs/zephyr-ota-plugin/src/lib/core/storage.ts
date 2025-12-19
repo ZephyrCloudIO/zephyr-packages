@@ -1,5 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { StoredVersions, StoredVersionInfo, ZephyrOTAConfig } from '../types';
+import type {
+  StoredVersions,
+  StoredVersionInfo,
+  ZephyrOTAConfig,
+  StorageOperation,
+  StorageErrorHandler,
+} from '../types';
 import { DEFAULT_OTA_CONFIG } from '../types';
 import { createScopedLogger } from '../utils/logger';
 
@@ -15,9 +21,30 @@ const STORAGE_KEYS = {
 /** Storage layer for OTA plugin data persistence */
 export class OTAStorage {
   private readonly dismissDuration: number;
+  private readonly onError?: StorageErrorHandler;
 
   constructor(config: ZephyrOTAConfig) {
     this.dismissDuration = config.dismissDuration ?? DEFAULT_OTA_CONFIG.dismissDuration;
+    this.onError = config.onStorageError;
+  }
+
+  /** Report a storage error to the configured handler */
+  private reportError(operation: StorageOperation, error: unknown): void {
+    const storageError = {
+      operation,
+      error: error instanceof Error ? error : new Error(String(error)),
+      timestamp: Date.now(),
+    };
+
+    logger.warn(`Storage operation '${operation}' failed:`, storageError.error);
+
+    if (this.onError) {
+      try {
+        this.onError(storageError);
+      } catch (callbackError) {
+        logger.error('Error in onStorageError callback:', callbackError);
+      }
+    }
   }
 
   /** Get stored versions for all remotes */
@@ -28,7 +55,7 @@ export class OTAStorage {
         return JSON.parse(stored) as StoredVersions;
       }
     } catch (error) {
-      logger.warn('Failed to get stored versions:', error);
+      this.reportError('getVersions', error);
     }
     return {};
   }
@@ -39,7 +66,7 @@ export class OTAStorage {
       await AsyncStorage.setItem(STORAGE_KEYS.VERSIONS, JSON.stringify(versions));
       logger.debug('Saved versions:', versions);
     } catch (error) {
-      logger.warn('Failed to save versions:', error);
+      this.reportError('saveVersions', error);
     }
   }
 
@@ -67,7 +94,7 @@ export class OTAStorage {
         return parseInt(lastCheck, 10);
       }
     } catch (error) {
-      logger.warn('Failed to get last check time:', error);
+      this.reportError('getLastCheck', error);
     }
     return null;
   }
@@ -77,7 +104,7 @@ export class OTAStorage {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.LAST_CHECK, timestamp.toString());
     } catch (error) {
-      logger.warn('Failed to save last check time:', error);
+      this.reportError('setLastCheck', error);
     }
   }
 
@@ -89,7 +116,7 @@ export class OTAStorage {
         return Date.now() < parseInt(dismissUntil, 10);
       }
     } catch (error) {
-      logger.warn('Failed to check dismiss state:', error);
+      this.reportError('isDismissed', error);
     }
     return false;
   }
@@ -101,7 +128,7 @@ export class OTAStorage {
       await AsyncStorage.setItem(STORAGE_KEYS.DISMISS_UNTIL, dismissUntil.toString());
       logger.debug(`Dismissed until ${new Date(dismissUntil).toISOString()}`);
     } catch (error) {
-      logger.warn('Failed to save dismiss state:', error);
+      this.reportError('dismiss', error);
     }
   }
 
@@ -111,7 +138,7 @@ export class OTAStorage {
       await AsyncStorage.removeItem(STORAGE_KEYS.DISMISS_UNTIL);
       logger.debug('Cleared dismiss state');
     } catch (error) {
-      logger.warn('Failed to clear dismiss state:', error);
+      this.reportError('clearDismiss', error);
     }
   }
 
@@ -125,7 +152,7 @@ export class OTAStorage {
       ]);
       logger.info('Cleared all OTA storage');
     } catch (error) {
-      logger.warn('Failed to clear storage:', error);
+      this.reportError('clearAll', error);
     }
   }
 }

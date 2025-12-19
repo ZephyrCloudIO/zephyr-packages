@@ -93,7 +93,4 @@ export interface ZephyrOTAProviderProps {
 
   /** Called when an error occurs */
   onError?: (error: Error) => void;
-
-  /** Custom reload handler (if you want to handle reload differently) */
-  onReloadRequested?: () => void;
 }

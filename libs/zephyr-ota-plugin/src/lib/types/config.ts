@@ -1,5 +1,29 @@
 import { ZE_API_ENDPOINT } from 'zephyr-edge-contract';
 
+/** Storage operation types for error handling */
+export type StorageOperation =
+  | 'getVersions'
+  | 'saveVersions'
+  | 'getLastCheck'
+  | 'setLastCheck'
+  | 'isDismissed'
+  | 'dismiss'
+  | 'clearDismiss'
+  | 'clearAll';
+
+/** Storage error event for error callbacks */
+export interface StorageError {
+  /** The operation that failed */
+  operation: StorageOperation;
+  /** The underlying error */
+  error: Error;
+  /** Timestamp when the error occurred */
+  timestamp: number;
+}
+
+/** Handler for storage errors */
+export type StorageErrorHandler = (error: StorageError) => void;
+
 /** Configuration for the Zephyr OTA plugin */
 export interface ZephyrOTAConfig {
   /**
@@ -31,6 +55,27 @@ export interface ZephyrOTAConfig {
 
   /** Enable debug logging (default: false) */
   debug?: boolean;
+
+  /**
+   * Callback for storage errors. Use this to monitor or handle storage failures (e.g.,
+   * corrupted data, quota exceeded, permission issues).
+   *
+   * @example
+   *   ```tsx
+   *   <ZephyrOTAProvider
+   *   config={{
+   *   onStorageError: (err) => {
+   *   console.error(`Storage ${err.operation} failed:`, err.error);
+   *   // Send to error tracking service
+   *   Sentry.captureException(err.error);
+   *   },
+   *   }}
+   *   >
+   *   <App />
+   *   </ZephyrOTAProvider>
+   *   ```;
+   */
+  onStorageError?: StorageErrorHandler;
 }
 
 /** Default configuration values */
@@ -43,6 +88,7 @@ export const DEFAULT_OTA_CONFIG: Required<ZephyrOTAConfig> = {
   checkOnForeground: true,
   enablePeriodicChecks: true,
   debug: false,
+  onStorageError: undefined as unknown as StorageErrorHandler,
 };
 
 /**

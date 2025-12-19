@@ -113,8 +113,8 @@ export class ZephyrAPIClient {
    * @returns Version info or null if failed
    */
   async fetchVersionInfo(defaultUrl: string): Promise<VersionInfo | null> {
-    const url = `${defaultUrl}/__get_version_info__`;
-    logger.debug(`Fetching version info from: ${url}`);
+    const url = new URL('/__get_version_info__', defaultUrl);
+    logger.debug(`Fetching version info from: ${url.toString()}`);
 
     try {
       const response = await fetch(url, {

@@ -34,6 +34,7 @@
     }
   },
   "dependencies": {
+    "debug": "^4.3.4",
     "zephyr-edge-contract": "workspace:*"
   },
   "repository": {
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@module-federation/runtime": "catalog:module-federation",
     "@react-native-async-storage/async-storage": "^1.23.1",
+    "@types/debug": "^4.1.12",
     "@types/jest": "catalog:typescript",
     "@types/react": "catalog:react18",
     "@types/react-native": "^0.73.0",

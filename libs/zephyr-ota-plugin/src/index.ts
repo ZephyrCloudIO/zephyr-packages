@@ -19,6 +19,10 @@ export type {
   ZephyrDependencyConfig,
   ParsedZephyrDependency,
   EnvironmentOverrides,
+  // Storage errors
+  StorageOperation,
+  StorageError,
+  StorageErrorHandler,
   // State
   RemoteVersionInfo,
   StoredVersionInfo,
@@ -49,4 +53,10 @@ export {
 export { getBuildTarget, isIOS, isAndroid, type BuildTarget } from './lib/utils/platform';
 
 // Logging utilities (for debugging)
-export { setDebugEnabled, isDebugEnabled } from './lib/utils/logger';
+export {
+  enableDebug,
+  disableDebug,
+  isDebugEnabled,
+  setDebugEnabled,
+  ze_ota_log,
+} from './lib/utils/logger';

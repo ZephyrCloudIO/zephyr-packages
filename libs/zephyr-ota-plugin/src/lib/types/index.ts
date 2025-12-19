@@ -4,6 +4,9 @@ export type {
   ZephyrDependencyConfig,
   ParsedZephyrDependency,
   EnvironmentOverrides,
+  StorageOperation,
+  StorageError,
+  StorageErrorHandler,
 } from './config';
 export { DEFAULT_OTA_CONFIG } from './config';
 

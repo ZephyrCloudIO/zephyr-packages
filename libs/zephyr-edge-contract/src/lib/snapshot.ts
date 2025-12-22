@@ -13,6 +13,8 @@ export interface Snapshot {
   snapshot_id: string;
   // default domain url
   domain: string;
+  // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
+  type?: 'ssr' | 'csr';
   uid: {
     build: string;
     app_name: string;

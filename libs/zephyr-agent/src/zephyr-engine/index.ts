@@ -2,17 +2,15 @@ import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
-import { ZE_ENV } from 'zephyr-edge-contract';
 import {
   type Snapshot,
-  ZEPHYR_MANIFEST_FILENAME,
-  type ZeBuildAsset,
+  ZEPHYR_MANIFEST_FILENAME, ZE_ENV, type ZeBuildAsset,
   type ZeBuildAssetsMap,
   ZeUtils,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
   createApplicationUid,
-  flatCreateSnapshotId,
+  flatCreateSnapshotId
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
@@ -134,7 +132,8 @@ export class ZephyrEngine {
     isCI: boolean;
     target: Platform;
     env?: string | undefined;
-  } = { isCI, target: 'web', env: ZE_ENV() };
+    ssr?: boolean;
+  } = { isCI, target: 'web', env: ZE_ENV(), ssr: false };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 

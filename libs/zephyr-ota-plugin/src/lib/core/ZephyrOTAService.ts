@@ -23,24 +23,6 @@ const logger = createScopedLogger('Service');
 // Get DevSettings for app reload functionality
 const { DevSettings } = NativeModules;
 
-// Maximum concurrent API requests to avoid overwhelming the server
-const MAX_CONCURRENT_REQUESTS = 5;
-
-/** Execute promises with a concurrency limit to avoid overwhelming the API */
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  fn: (item: T) => Promise<R>,
-  concurrency: number
-): Promise<R[]> {
-  const results: R[] = [];
-  for (let i = 0; i < items.length; i += concurrency) {
-    const batch = items.slice(i, i + concurrency);
-    const batchResults = await Promise.all(batch.map(fn));
-    results.push(...batchResults);
-  }
-  return results;
-}
-
 /** Listener function type for update events */
 export type UpdateListener = (result: UpdateCheckResult) => void;
 
@@ -127,21 +109,15 @@ export class ZephyrOTAService {
 
     logger.info('Initializing version tracking (first launch)...');
 
-    // Fetch current versions from Zephyr in parallel with concurrency limit
+    // Fetch current versions from Zephyr using batch resolve
     const parsedDeps = parseZephyrDependencies(this.dependencies);
     const newVersions: StoredVersions = {};
 
-    const results = await mapWithConcurrency(
-      parsedDeps,
-      async (dep) => {
-        logger.debug(`Resolving initial version for ${dep.name}...`);
-        const resolved = await this.apiClient.resolveRemote(dep);
-        return { dep, resolved };
-      },
-      MAX_CONCURRENT_REQUESTS
-    );
+    logger.debug(`Resolving initial versions for ${parsedDeps.length} dependencies...`);
+    const resolvedMap = await this.apiClient.resolveRemotesBatch(parsedDeps);
 
-    for (const { dep, resolved } of results) {
+    for (const dep of parsedDeps) {
+      const resolved = resolvedMap.get(dep.name) ?? null;
       if (resolved) {
         newVersions[dep.name] = createStoredVersionInfo(resolved);
         logger.debug(
@@ -192,19 +168,13 @@ export class ZephyrOTAService {
 
     const remotes: RemoteVersionInfo[] = [];
 
-    // Resolve all remotes in parallel with concurrency limit
-    logger.debug('Resolving remote versions...');
-    const results = await mapWithConcurrency(
-      parsedDeps,
-      async (dep) => {
-        const resolved = await this.apiClient.resolveRemote(dep);
-        logger.debug(`Resolved ${dep.name}:`, resolved);
-        return { dep, resolved };
-      },
-      MAX_CONCURRENT_REQUESTS
-    );
+    // Resolve all remotes using batch resolve
+    logger.debug(`Resolving ${parsedDeps.length} remote versions...`);
+    const resolvedMap = await this.apiClient.resolveRemotesBatch(parsedDeps);
 
-    for (const { dep, resolved } of results) {
+    for (const dep of parsedDeps) {
+      const resolved = resolvedMap.get(dep.name) ?? null;
+      logger.debug(`Resolved ${dep.name}:`, resolved);
       if (!resolved) {
         logger.debug(`No resolution for ${dep.name}, skipping`);
         continue;

@@ -4,6 +4,8 @@ import type {
   VersionInfo,
   ApiResponseWrapper,
   ParsedZephyrDependency,
+  BatchResolveRequest,
+  BatchResolveResponse,
 } from '../types';
 import { DEFAULT_OTA_CONFIG } from '../types';
 import { getBuildTarget } from '../utils/platform';
@@ -137,5 +139,154 @@ export class ZephyrAPIClient {
       logger.warn(`Error fetching version info:`, error);
       return null;
     }
+  }
+
+  /**
+   * Resolve multiple remotes in a single batch request
+   *
+   * @param dependencies - Array of parsed zephyr dependencies
+   * @returns Map of dependency name to resolved info (or null if failed)
+   */
+  async resolveRemotesBatch(
+    dependencies: ParsedZephyrDependency[]
+  ): Promise<Map<string, ZephyrResolveResponse | null>> {
+    const buildTarget = getBuildTarget();
+    const results = new Map<string, ZephyrResolveResponse | null>();
+
+    if (dependencies.length === 0) {
+      return results;
+    }
+
+    // Build batch request
+    const batchRequest: BatchResolveRequest = {
+      dependencies: dependencies.map((dep) => ({
+        applicationUid: dep.applicationUid,
+        versionTag: dep.versionTag,
+      })),
+    };
+
+    const url = new URL('/resolve/batch', this.apiBaseUrl);
+    url.searchParams.set('build_target', buildTarget);
+
+    logger.debug(`Batch resolving ${dependencies.length} dependencies from: ${url}`);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          ...this.getHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(batchRequest),
+      });
+
+      logger.debug(`Batch response status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.warn(`Batch resolve failed: ${response.status}`, errorText);
+
+        // Fall back to individual requests
+        logger.debug('Falling back to individual resolve requests');
+        return this.resolveRemotesIndividually(dependencies);
+      }
+
+      const data = (await response.json()) as BatchResolveResponse;
+
+      // Create a lookup map from applicationUid+versionTag to dependency name
+      const depLookup = new Map<string, string>();
+      for (const dep of dependencies) {
+        depLookup.set(`${dep.applicationUid}@${dep.versionTag}`, dep.name);
+      }
+
+      // Process batch results and fetch version info in parallel
+      const versionInfoPromises: Array<{
+        name: string;
+        resolved: ZephyrResolveResponse;
+        promise: Promise<VersionInfo | null>;
+      }> = [];
+
+      for (const item of data.results) {
+        const key = `${item.applicationUid}@${item.versionTag}`;
+        const depName = depLookup.get(key);
+
+        if (!depName) {
+          logger.warn(`Unknown dependency in batch response: ${key}`);
+          continue;
+        }
+
+        if (item.error) {
+          logger.warn(`Batch resolve error for ${depName}: ${item.error}`);
+          results.set(depName, null);
+          continue;
+        }
+
+        if (item.resolved) {
+          logger.debug(`Batch resolved ${depName}:`, item.resolved);
+          versionInfoPromises.push({
+            name: depName,
+            resolved: item.resolved,
+            promise: this.fetchVersionInfo(item.resolved.default_url),
+          });
+        } else {
+          results.set(depName, null);
+        }
+      }
+
+      // Await all version info fetches in parallel
+      const versionInfoResults = await Promise.all(
+        versionInfoPromises.map(async ({ name, resolved, promise }) => {
+          const versionInfo = await promise;
+          return { name, resolved, versionInfo };
+        })
+      );
+
+      // Apply version info to resolved data
+      for (const { name, resolved, versionInfo } of versionInfoResults) {
+        if (versionInfo) {
+          resolved.version = versionInfo.snapshot_id;
+          resolved.published_at = versionInfo.published_at;
+          resolved.version_url = versionInfo.version_url;
+          logger.debug(`Version info for ${name}:`, {
+            snapshot_id: versionInfo.snapshot_id,
+            published_at: versionInfo.published_at,
+          });
+        } else {
+          logger.warn(`Version info not available for ${name}, falling back to URL`);
+          if (!resolved.version && resolved.remote_entry_url) {
+            resolved.version = resolved.remote_entry_url;
+          }
+        }
+        results.set(name, resolved);
+      }
+
+      return results;
+    } catch (error) {
+      logger.warn('Error in batch resolve:', error);
+      // Fall back to individual requests
+      logger.debug('Falling back to individual resolve requests');
+      return this.resolveRemotesIndividually(dependencies);
+    }
+  }
+
+  /** Fallback method to resolve remotes individually when batch fails */
+  private async resolveRemotesIndividually(
+    dependencies: ParsedZephyrDependency[]
+  ): Promise<Map<string, ZephyrResolveResponse | null>> {
+    const results = new Map<string, ZephyrResolveResponse | null>();
+
+    // Resolve all in parallel
+    const resolvePromises = dependencies.map(async (dep) => {
+      const resolved = await this.resolveRemote(dep);
+      return { name: dep.name, resolved };
+    });
+
+    const resolveResults = await Promise.all(resolvePromises);
+
+    for (const { name, resolved } of resolveResults) {
+      results.set(name, resolved);
+    }
+
+    return results;
   }
 }

@@ -47,3 +47,24 @@ export interface VersionInfo {
 export interface ApiResponseWrapper<T> {
   value: T;
 }
+
+/** Request body for batch resolve endpoint */
+export interface BatchResolveRequest {
+  dependencies: Array<{
+    applicationUid: string;
+    versionTag: string;
+  }>;
+}
+
+/** Single item in batch resolve response */
+export interface BatchResolveResponseItem {
+  applicationUid: string;
+  versionTag: string;
+  resolved: ZephyrResolveResponse | null;
+  error?: string;
+}
+
+/** Response from batch resolve endpoint */
+export interface BatchResolveResponse {
+  results: BatchResolveResponseItem[];
+}

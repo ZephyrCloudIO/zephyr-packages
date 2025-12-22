@@ -19,4 +19,11 @@ export type {
 } from './remote';
 
 // API types
-export type { ZephyrResolveResponse, VersionInfo, ApiResponseWrapper } from './api';
+export type {
+  ZephyrResolveResponse,
+  VersionInfo,
+  ApiResponseWrapper,
+  BatchResolveRequest,
+  BatchResolveResponse,
+  BatchResolveResponseItem,
+} from './api';

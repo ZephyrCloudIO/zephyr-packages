@@ -13,6 +13,12 @@ export interface ZeResolvedDependency {
   remote_entry_url: string;
   library_type: string;
   platform?: string;
+  /** Unique deployment identifier (from __get_version_info__) */
+  snapshot_id?: string;
+  /** Timestamp when version was published (from __get_version_info__) */
+  published_at?: number;
+  /** Versioned URL for this specific deployment (from __get_version_info__) */
+  version_url?: string;
 }
 
 export async function resolve_remote_dependency({
@@ -82,7 +88,36 @@ export async function resolve_remote_dependency({
         'version: ',
         version
       );
-      return Object.assign({}, response.value, { version, platform });
+      const resolved = Object.assign({}, response.value, { version, platform });
+
+      // Fetch version info at build time for manifest
+      try {
+        const versionInfoUrl = new URL('/__get_version_info__', resolved.default_url);
+        ze_log.remotes('Fetching version info from:', versionInfoUrl.toString());
+
+        const versionRes = await axios.get(versionInfoUrl.toString(), {
+          headers: { Accept: 'application/json' },
+          timeout: 5000,
+        });
+
+        if (versionRes.status === 200 && versionRes.data) {
+          resolved.snapshot_id = versionRes.data.snapshot_id;
+          resolved.published_at = versionRes.data.published_at;
+          resolved.version_url = versionRes.data.version_url;
+          ze_log.remotes('Version info captured:', {
+            snapshot_id: resolved.snapshot_id,
+            published_at: resolved.published_at,
+          });
+        }
+      } catch (versionError) {
+        ze_log.remotes(
+          'Warning: Could not fetch version info at build time:',
+          ZephyrError.format(versionError)
+        );
+        // Continue without version info - OTA will still work
+      }
+
+      return resolved;
     }
 
     throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {

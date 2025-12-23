@@ -149,6 +149,12 @@ export interface ZephyrDependency {
   default_url: string;
   name: string;
   library_type: string;
+  /** Unique deployment identifier (from __get_version_info__) */
+  snapshot_id?: string;
+  /** Timestamp when version was published (from __get_version_info__) */
+  published_at?: number;
+  /** Versioned URL for this specific deployment (from __get_version_info__) */
+  version_url?: string;
 }
 
 export interface RawDependency {

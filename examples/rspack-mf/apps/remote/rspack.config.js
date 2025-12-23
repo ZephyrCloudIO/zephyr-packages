@@ -6,6 +6,6 @@ const mfConfig = require('./module-federation.config');
 module.exports = composePlugins(
   withNx(),
   withReact(),
-  withModuleFederation(mfConfig),
+  withModuleFederation(mfConfig, { dts: false }),
   withZephyr()
 );

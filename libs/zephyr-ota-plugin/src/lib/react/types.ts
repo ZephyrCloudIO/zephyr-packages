@@ -1,10 +1,4 @@
-import type {
-  ZephyrOTAConfig,
-  ZephyrDependencyConfig,
-  RemoteVersionInfo,
-  UpdateCheckResult,
-} from '../types';
-import type { EnvironmentOverrides } from '../utils/detect-remotes';
+import type { ZephyrOTAConfig, RemoteVersionInfo, UpdateCheckResult } from '../types';
 
 /** Context value type for ZephyrOTA */
 export interface ZephyrOTAContextValue {
@@ -39,51 +33,47 @@ export interface ZephyrOTAContextValue {
   getRemoteVersion: (remoteName: string) => RemoteVersionInfo | undefined;
 }
 
-/** Props for ZephyrOTAProvider */
+/**
+ * Props for ZephyrOTAProvider
+ *
+ * @example
+ *   Basic usage with host URL
+ *   ```tsx
+ *   <ZephyrOTAProvider config={{ hostUrl: 'https://myapp.zephyrcloud.app' }}>
+ *     <App />
+ *   </ZephyrOTAProvider>
+ *   ```
+ *
+ * @example
+ *   With all options
+ *   ```tsx
+ *   <ZephyrOTAProvider
+ *     config={{
+ *       hostUrl: 'https://myapp.zephyrcloud.app',
+ *       checkInterval: 60000, // 1 minute
+ *       debug: true,
+ *     }}
+ *     onUpdateAvailable={(updates) => console.log('Updates:', updates)}
+ *     onError={(error) => console.error('OTA Error:', error)}
+ *   >
+ *     <App />
+ *   </ZephyrOTAProvider>
+ *   ```
+ */
 export interface ZephyrOTAProviderProps {
   /** Child components */
   children: React.ReactNode;
 
-  /** OTA configuration (optional) */
-  config?: ZephyrOTAConfig;
-
   /**
-   * Target environment for OTA updates (e.g., 'staging', 'production'). When provided,
-   * remotes are auto-detected from Module Federation runtime. This is the recommended
-   * approach.
+   * OTA configuration. The `hostUrl` field is required - this is the deployed URL where your
+   * app's zephyr-manifest.json is served.
    *
    * @example
    *   ```tsx
-   *   <ZephyrOTAProvider environment="staging">
-   *     <App />
-   *   </ZephyrOTAProvider>
-   *   ```;
+   *   config={{ hostUrl: 'https://myapp.zephyrcloud.app' }}
+   *   ```
    */
-  environment?: string;
-
-  /**
-   * Per-remote environment overrides. Use this when some remotes should use a different
-   * environment than the default. Only used when `environment` prop is provided.
-   *
-   * @example
-   *   ```tsx
-   *   <ZephyrOTAProvider
-   *     environment="staging"
-   *     overrides={{ MFTextEditor: 'production' }}
-   *   >
-   *     <App />
-   *   </ZephyrOTAProvider>
-   *   ```;
-   */
-  overrides?: EnvironmentOverrides;
-
-  /**
-   * Manual dependencies configuration (legacy). Map of remote names to zephyr: protocol
-   * strings. Use this only if auto-detection doesn't work for your setup.
-   *
-   * @deprecated Prefer using `environment` prop for auto-detection
-   */
-  dependencies?: ZephyrDependencyConfig;
+  config: ZephyrOTAConfig;
 
   /** Called when updates are available */
   onUpdateAvailable?: (updates: RemoteVersionInfo[]) => void;

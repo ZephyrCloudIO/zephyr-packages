@@ -1,9 +1,6 @@
 // Configuration types
 export type {
   ZephyrOTAConfig,
-  ZephyrDependencyConfig,
-  ParsedZephyrDependency,
-  EnvironmentOverrides,
   StorageOperation,
   StorageError,
   StorageErrorHandler,
@@ -20,10 +17,9 @@ export type {
 
 // API types
 export type {
-  ZephyrResolveResponse,
   VersionInfo,
-  ApiResponseWrapper,
-  BatchResolveRequest,
-  BatchResolveResponse,
-  BatchResolveResponseItem,
+  ManifestFetchResult,
+  DependencyVersionCheck,
+  ZephyrManifest,
+  ZephyrDependency,
 } from './api';

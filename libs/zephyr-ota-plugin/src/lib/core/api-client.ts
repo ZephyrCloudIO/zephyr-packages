@@ -1,26 +1,30 @@
 import type {
   ZephyrOTAConfig,
-  ZephyrResolveResponse,
   VersionInfo,
-  ApiResponseWrapper,
-  ParsedZephyrDependency,
-  BatchResolveRequest,
-  BatchResolveResponse,
+  ManifestFetchResult,
+  DependencyVersionCheck,
+  ZephyrManifest,
+  ZephyrDependency,
 } from '../types';
 import { DEFAULT_OTA_CONFIG } from '../types';
-import { getBuildTarget } from '../utils/platform';
 import { createScopedLogger } from '../utils/logger';
 
 const logger = createScopedLogger('API');
 
-/** Client for interacting with Zephyr Cloud API */
+/** Client for interacting with Zephyr Cloud API using manifest-based flow */
 export class ZephyrAPIClient {
-  private readonly apiBaseUrl: string;
+  private readonly hostUrl: string;
+  private readonly manifestPath: string;
   private readonly authToken: string;
 
   constructor(config: ZephyrOTAConfig) {
-    this.apiBaseUrl = config.apiBaseUrl ?? DEFAULT_OTA_CONFIG.apiBaseUrl;
+    this.hostUrl = config.hostUrl;
+    this.manifestPath = config.manifestPath ?? DEFAULT_OTA_CONFIG.manifestPath;
     this.authToken = config.authToken ?? '';
+
+    if (!this.hostUrl) {
+      logger.warn('hostUrl not configured - manifest fetch will fail');
+    }
   }
 
   /** Create headers for API requests */
@@ -37,79 +41,51 @@ export class ZephyrAPIClient {
   }
 
   /**
-   * Resolve a remote's information from Zephyr Cloud
+   * Fetch the zephyr-manifest.json from the host app's deployed URL
    *
-   * @param dependency - Parsed zephyr dependency
-   * @returns Resolved remote info or null if failed
+   * @returns Manifest with fetch timestamp, or null if failed
    */
-  async resolveRemote(
-    dependency: ParsedZephyrDependency
-  ): Promise<ZephyrResolveResponse | null> {
-    const { applicationUid, versionTag, name } = dependency;
-    const buildTarget = getBuildTarget();
+  async fetchManifest(): Promise<ManifestFetchResult | null> {
+    if (!this.hostUrl) {
+      logger.error('Cannot fetch manifest: hostUrl not configured');
+      return null;
+    }
 
-    const url = new URL(
-      `/resolve/${encodeURIComponent(applicationUid)}/${encodeURIComponent(versionTag)}`,
-      this.apiBaseUrl
-    );
-    url.searchParams.set('build_target', buildTarget);
-
-    logger.debug(`Resolving ${name} from: ${url}`);
+    const manifestUrl = new URL(this.manifestPath, this.hostUrl);
+    logger.debug(`Fetching manifest from: ${manifestUrl}`);
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(manifestUrl.toString(), {
         method: 'GET',
-        headers: this.getHeaders(),
+        headers: {
+          ...this.getHeaders(),
+          'Cache-Control': 'no-cache', // Always get fresh manifest
+        },
       });
 
-      logger.debug(`Response status for ${name}: ${response.status}`);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        logger.warn(`Failed to resolve ${applicationUid}: ${response.status}`, errorText);
+        logger.warn(`Failed to fetch manifest: ${response.status}`);
         return null;
       }
 
-      const data = (await response.json()) as
-        | ApiResponseWrapper<ZephyrResolveResponse>
-        | ZephyrResolveResponse;
+      const manifest = (await response.json()) as ZephyrManifest;
+      logger.debug(
+        `Manifest fetched, ${Object.keys(manifest.dependencies || {}).length} dependencies`
+      );
 
-      // API returns data nested under .value
-      const resolved: ZephyrResolveResponse = 'value' in data ? data.value : data;
-
-      logger.debug(`Resolved data for ${name}:`, resolved);
-
-      // Fetch actual version info from /__get_version_info__ endpoint
-      const versionInfo = await this.fetchVersionInfo(resolved.default_url);
-
-      if (versionInfo) {
-        // Use snapshot_id as the version identifier (changes with each deploy)
-        resolved.version = versionInfo.snapshot_id;
-        resolved.published_at = versionInfo.published_at;
-        resolved.version_url = versionInfo.version_url;
-        logger.debug(`Using version info for ${name}:`, {
-          snapshot_id: versionInfo.snapshot_id,
-          published_at: versionInfo.published_at,
-        });
-      } else {
-        // Fallback to remote_entry_url if version info not available
-        logger.warn(`Version info not available for ${name}, falling back to URL`);
-        if (!resolved.version && resolved.remote_entry_url) {
-          resolved.version = resolved.remote_entry_url;
-        }
-      }
-
-      return resolved;
+      return {
+        manifest,
+        fetchedAt: Date.now(),
+      };
     } catch (error) {
-      logger.warn(`Error resolving ${applicationUid}:`, error);
+      logger.warn('Error fetching manifest:', error);
       return null;
     }
   }
 
   /**
-   * Fetch version info from the /**get_version_info** endpoint This returns the actual
-   * deployed version metadata (snapshot_id, published_at) which changes with each
-   * deployment
+   * Fetch version info from a dependency's __get_version_info__ endpoint. This returns the
+   * LATEST deployed version for that remote.
    *
    * @param defaultUrl - The default URL for the remote
    * @returns Version info or null if failed
@@ -119,7 +95,7 @@ export class ZephyrAPIClient {
     logger.debug(`Fetching version info from: ${url.toString()}`);
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -142,149 +118,55 @@ export class ZephyrAPIClient {
   }
 
   /**
-   * Resolve multiple remotes in a single batch request
+   * Check all dependencies in manifest for available updates. Fetches __get_version_info__
+   * for each dependency in parallel and compares with manifest's build-time version.
    *
-   * @param dependencies - Array of parsed zephyr dependencies
-   * @returns Map of dependency name to resolved info (or null if failed)
+   * @param dependencies - Dependencies from the manifest
+   * @returns Map of dependency name to version check result
    */
-  async resolveRemotesBatch(
-    dependencies: ParsedZephyrDependency[]
-  ): Promise<Map<string, ZephyrResolveResponse | null>> {
-    const buildTarget = getBuildTarget();
-    const results = new Map<string, ZephyrResolveResponse | null>();
+  async checkDependenciesForUpdates(
+    dependencies: Record<string, ZephyrDependency>
+  ): Promise<Map<string, DependencyVersionCheck>> {
+    const results = new Map<string, DependencyVersionCheck>();
 
-    if (dependencies.length === 0) {
-      return results;
-    }
+    // Fetch version info for all dependencies in parallel
+    const checkPromises = Object.entries(dependencies).map(async ([name, dep]) => {
+      const latestVersion = await this.fetchVersionInfo(dep.default_url);
 
-    // Build batch request
-    const batchRequest: BatchResolveRequest = {
-      dependencies: dependencies.map((dep) => ({
-        applicationUid: dep.applicationUid,
-        versionTag: dep.versionTag,
-      })),
-    };
-
-    const url = new URL('/resolve/batch', this.apiBaseUrl);
-    url.searchParams.set('build_target', buildTarget);
-
-    logger.debug(`Batch resolving ${dependencies.length} dependencies from: ${url}`);
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          ...this.getHeaders(),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(batchRequest),
-      });
-
-      logger.debug(`Batch response status: ${response.status}`);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        logger.warn(`Batch resolve failed: ${response.status}`, errorText);
-
-        // Fall back to individual requests
-        logger.debug('Falling back to individual resolve requests');
-        return this.resolveRemotesIndividually(dependencies);
-      }
-
-      const data = (await response.json()) as BatchResolveResponse;
-
-      // Create a lookup map from applicationUid+versionTag to dependency name
-      const depLookup = new Map<string, string>();
-      for (const dep of dependencies) {
-        depLookup.set(`${dep.applicationUid}@${dep.versionTag}`, dep.name);
-      }
-
-      // Process batch results and fetch version info in parallel
-      const versionInfoPromises: Array<{
-        name: string;
-        resolved: ZephyrResolveResponse;
-        promise: Promise<VersionInfo | null>;
-      }> = [];
-
-      for (const item of data.results) {
-        const key = `${item.applicationUid}@${item.versionTag}`;
-        const depName = depLookup.get(key);
-
-        if (!depName) {
-          logger.warn(`Unknown dependency in batch response: ${key}`);
-          continue;
-        }
-
-        if (item.error) {
-          logger.warn(`Batch resolve error for ${depName}: ${item.error}`);
-          results.set(depName, null);
-          continue;
-        }
-
-        if (item.resolved) {
-          logger.debug(`Batch resolved ${depName}:`, item.resolved);
-          versionInfoPromises.push({
-            name: depName,
-            resolved: item.resolved,
-            promise: this.fetchVersionInfo(item.resolved.default_url),
-          });
-        } else {
-          results.set(depName, null);
+      // Determine if update is available
+      let hasUpdate = false;
+      if (latestVersion) {
+        // Compare snapshot_id (primary) or published_at (fallback)
+        if (dep.snapshot_id && latestVersion.snapshot_id) {
+          hasUpdate = dep.snapshot_id !== latestVersion.snapshot_id;
+        } else if (dep.published_at && latestVersion.published_at) {
+          hasUpdate = dep.published_at < latestVersion.published_at;
         }
       }
 
-      // Await all version info fetches in parallel
-      const versionInfoResults = await Promise.all(
-        versionInfoPromises.map(async ({ name, resolved, promise }) => {
-          const versionInfo = await promise;
-          return { name, resolved, versionInfo };
-        })
-      );
-
-      // Apply version info to resolved data
-      for (const { name, resolved, versionInfo } of versionInfoResults) {
-        if (versionInfo) {
-          resolved.version = versionInfo.snapshot_id;
-          resolved.published_at = versionInfo.published_at;
-          resolved.version_url = versionInfo.version_url;
-          logger.debug(`Version info for ${name}:`, {
-            snapshot_id: versionInfo.snapshot_id,
-            published_at: versionInfo.published_at,
-          });
-        } else {
-          logger.warn(`Version info not available for ${name}, falling back to URL`);
-          if (!resolved.version && resolved.remote_entry_url) {
-            resolved.version = resolved.remote_entry_url;
-          }
-        }
-        results.set(name, resolved);
-      }
-
-      return results;
-    } catch (error) {
-      logger.warn('Error in batch resolve:', error);
-      // Fall back to individual requests
-      logger.debug('Falling back to individual resolve requests');
-      return this.resolveRemotesIndividually(dependencies);
-    }
-  }
-
-  /** Fallback method to resolve remotes individually when batch fails */
-  private async resolveRemotesIndividually(
-    dependencies: ParsedZephyrDependency[]
-  ): Promise<Map<string, ZephyrResolveResponse | null>> {
-    const results = new Map<string, ZephyrResolveResponse | null>();
-
-    // Resolve all in parallel
-    const resolvePromises = dependencies.map(async (dep) => {
-      const resolved = await this.resolveRemote(dep);
-      return { name: dep.name, resolved };
+      return {
+        name,
+        check: {
+          name,
+          pinnedVersion: {
+            snapshot_id: dep.snapshot_id,
+            published_at: dep.published_at,
+          },
+          latestVersion,
+          hasUpdate,
+        } as DependencyVersionCheck,
+      };
     });
 
-    const resolveResults = await Promise.all(resolvePromises);
+    const checkResults = await Promise.all(checkPromises);
 
-    for (const { name, resolved } of resolveResults) {
-      results.set(name, resolved);
+    for (const { name, check } of checkResults) {
+      results.set(name, check);
+      if (check.hasUpdate) {
+        logger.info(
+          `Update available for ${name}: ${check.pinnedVersion.snapshot_id} -> ${check.latestVersion?.snapshot_id}`
+        );
+      }
     }
 
     return results;

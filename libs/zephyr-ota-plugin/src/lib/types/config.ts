@@ -27,12 +27,27 @@ export type StorageErrorHandler = (error: StorageError) => void;
 /** Configuration for the Zephyr OTA plugin */
 export interface ZephyrOTAConfig {
   /**
+   * Host app's deployed URL where zephyr-manifest.json is served.
+   * This is required for manifest-based update detection.
+   *
+   * @example "https://myapp.zephyrcloud.app"
+   */
+  hostUrl: string;
+
+  /**
+   * Path to manifest file relative to hostUrl.
+   *
+   * @default "/zephyr-manifest.json"
+   */
+  manifestPath?: string;
+
+  /**
    * Auth token for private applications. Can also be set via ZE_AUTH_TOKEN environment
    * variable.
    */
   authToken?: string;
 
-  /** API base URL (default: https://zeapi.zephyrcloud.app) */
+  /** @deprecated No longer used in manifest-based flow */
   apiBaseUrl?: string;
 
   /** Check interval for periodic checks in milliseconds (default: 30 minutes) */
@@ -78,8 +93,9 @@ export interface ZephyrOTAConfig {
   onStorageError?: StorageErrorHandler;
 }
 
-/** Default configuration values */
-export const DEFAULT_OTA_CONFIG: Required<ZephyrOTAConfig> = {
+/** Default configuration values (excludes required hostUrl) */
+export const DEFAULT_OTA_CONFIG = {
+  manifestPath: '/zephyr-manifest.json',
   authToken: '',
   apiBaseUrl: ZE_API_ENDPOINT(),
   checkInterval: 30 * 60 * 1000, // 30 minutes
@@ -89,7 +105,7 @@ export const DEFAULT_OTA_CONFIG: Required<ZephyrOTAConfig> = {
   enablePeriodicChecks: true,
   debug: false,
   onStorageError: undefined as unknown as StorageErrorHandler,
-};
+} satisfies Omit<Required<ZephyrOTAConfig>, 'hostUrl'> & { hostUrl?: never };
 
 /**
  * Dependencies configuration - maps remote names to zephyr: protocol strings Format: {

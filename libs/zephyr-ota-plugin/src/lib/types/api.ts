@@ -68,3 +68,33 @@ export interface BatchResolveResponseItem {
 export interface BatchResolveResponse {
   results: BatchResolveResponseItem[];
 }
+
+// ===== Manifest-based flow types =====
+
+import type { ZephyrManifest, ZephyrDependency } from 'zephyr-edge-contract';
+
+// Re-export for convenience
+export type { ZephyrManifest, ZephyrDependency };
+
+/** Result from fetching the deployed manifest */
+export interface ManifestFetchResult {
+  /** The fetched manifest */
+  manifest: ZephyrManifest;
+  /** Timestamp when the manifest was fetched */
+  fetchedAt: number;
+}
+
+/** Version check result for a single dependency */
+export interface DependencyVersionCheck {
+  /** Name of the dependency */
+  name: string;
+  /** Version pinned at build time (from manifest) */
+  pinnedVersion: {
+    snapshot_id?: string;
+    published_at?: number;
+  };
+  /** Latest version from __get_version_info__ */
+  latestVersion: VersionInfo | null;
+  /** Whether an update is available */
+  hasUpdate: boolean;
+}

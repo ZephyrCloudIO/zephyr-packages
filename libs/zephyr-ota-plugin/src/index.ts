@@ -16,9 +16,6 @@ export type { OTAStatusResult } from './lib/react/useOTAStatus';
 export type {
   // Configuration
   ZephyrOTAConfig,
-  ZephyrDependencyConfig,
-  ParsedZephyrDependency,
-  EnvironmentOverrides,
   // Storage errors
   StorageOperation,
   StorageError,
@@ -28,26 +25,14 @@ export type {
   StoredVersionInfo,
   StoredVersions,
   UpdateCheckResult,
-  // API
-  ZephyrResolveResponse,
+  // API / Manifest types
   VersionInfo,
+  ManifestFetchResult,
+  DependencyVersionCheck,
+  ZephyrManifest,
+  ZephyrDependency,
 } from './lib/types';
 export { DEFAULT_OTA_CONFIG } from './lib/types';
-
-// Utilities
-export {
-  parseZephyrDependency,
-  parseZephyrDependencies,
-  parseZephyrProtocol,
-  isValidZephyrProtocol,
-} from './lib/utils/parse-dependencies';
-
-// Auto-detection utilities
-export {
-  detectRemotesFromRuntime,
-  buildDependenciesConfig,
-  type DetectedRemote,
-} from './lib/utils/detect-remotes';
 
 // Platform utilities
 export { getBuildTarget, isIOS, isAndroid, type BuildTarget } from './lib/utils/platform';

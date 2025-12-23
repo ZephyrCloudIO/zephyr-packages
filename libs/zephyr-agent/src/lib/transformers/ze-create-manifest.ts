@@ -63,6 +63,10 @@ export function createManifestContent(
       remote_entry_url: dep.remote_entry_url,
       default_url: dep.default_url,
       library_type: dep.library_type,
+      // Include version info for OTA update detection
+      snapshot_id: dep.snapshot_id,
+      published_at: dep.published_at,
+      version_url: dep.version_url,
     };
   });
 

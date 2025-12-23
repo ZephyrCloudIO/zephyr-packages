@@ -2,20 +2,14 @@ import { NativeModules } from 'react-native';
 import { getInstance } from '@module-federation/runtime';
 import type {
   ZephyrOTAConfig,
-  ZephyrDependencyConfig,
   RemoteVersionInfo,
   UpdateCheckResult,
   StoredVersions,
+  ZephyrManifest,
 } from '../types';
 import { DEFAULT_OTA_CONFIG } from '../types';
 import { ZephyrAPIClient } from './api-client';
 import { OTAStorage } from './storage';
-import {
-  createRemoteVersionInfo,
-  createStoredVersionInfo,
-  getRemotesWithUpdates,
-} from './version-tracker';
-import { parseZephyrDependencies } from '../utils/parse-dependencies';
 import { setDebugEnabled, createScopedLogger } from '../utils/logger';
 
 const logger = createScopedLogger('Service');
@@ -26,27 +20,37 @@ const { DevSettings } = NativeModules;
 /** Listener function type for update events */
 export type UpdateListener = (result: UpdateCheckResult) => void;
 
-/** Main OTA service that orchestrates update checking and application */
+/**
+ * Main OTA service that orchestrates update checking and application using manifest-based
+ * flow
+ */
 export class ZephyrOTAService {
   private static instance: ZephyrOTAService | null = null;
 
-  private readonly config: Required<ZephyrOTAConfig>;
-  private readonly dependencies: ZephyrDependencyConfig;
+  private readonly config: Required<Omit<ZephyrOTAConfig, 'onStorageError'>> & {
+    onStorageError?: ZephyrOTAConfig['onStorageError'];
+  };
   private readonly apiClient: ZephyrAPIClient;
   private readonly storage: OTAStorage;
 
+  private cachedManifest: ZephyrManifest | null = null;
   private periodicCheckInterval: ReturnType<typeof setInterval> | null = null;
   private listeners: Set<UpdateListener> = new Set();
   private lastCheckTime = 0;
   private isInitialized = false;
 
-  constructor(config: ZephyrOTAConfig, dependencies: ZephyrDependencyConfig) {
+  constructor(config: ZephyrOTAConfig) {
+    // Validate required config
+    if (!config.hostUrl) {
+      // eslint-disable-next-line no-restricted-syntax
+      throw new Error('ZephyrOTAService requires hostUrl to be configured');
+    }
+
     // Merge with defaults
     this.config = {
       ...DEFAULT_OTA_CONFIG,
       ...config,
     };
-    this.dependencies = dependencies;
 
     // Initialize components
     this.apiClient = new ZephyrAPIClient(this.config);
@@ -55,16 +59,16 @@ export class ZephyrOTAService {
     // Set debug logging
     setDebugEnabled(this.config.debug);
 
-    logger.debug('Service created with config:', this.config);
+    logger.debug('Service created with config:', {
+      hostUrl: this.config.hostUrl,
+      manifestPath: this.config.manifestPath,
+    });
   }
 
   /** Get or create singleton instance */
-  static getInstance(
-    config: ZephyrOTAConfig,
-    dependencies: ZephyrDependencyConfig
-  ): ZephyrOTAService {
+  static getInstance(config: ZephyrOTAConfig): ZephyrOTAService {
     if (!ZephyrOTAService.instance) {
-      ZephyrOTAService.instance = new ZephyrOTAService(config, dependencies);
+      ZephyrOTAService.instance = new ZephyrOTAService(config);
     }
     return ZephyrOTAService.instance;
   }
@@ -78,18 +82,29 @@ export class ZephyrOTAService {
   }
 
   /**
-   * Initialize version tracking on first launch This stores the current versions so we
-   * can detect future updates
+   * Initialize version tracking by fetching manifest and storing current versions. This
+   * should be called on first launch to establish the baseline versions.
    */
   async initializeVersionTracking(): Promise<void> {
     if (this.isInitialized) {
       return;
     }
 
-    const storedVersions = await this.storage.getStoredVersions();
-    logger.debug('initializeVersionTracking - stored versions:', storedVersions);
+    logger.info('Initializing version tracking from manifest...');
 
-    // Check if stored versions are valid (have version field)
+    // Fetch manifest from host URL
+    const manifestResult = await this.apiClient.fetchManifest();
+    if (!manifestResult) {
+      logger.error('Failed to fetch manifest - version tracking disabled');
+      return;
+    }
+
+    this.cachedManifest = manifestResult.manifest;
+    const dependencyCount = Object.keys(this.cachedManifest.dependencies || {}).length;
+    logger.debug(`Manifest loaded with ${dependencyCount} dependencies`);
+
+    // Check if we have stored versions
+    const storedVersions = await this.storage.getStoredVersions();
     const hasValidVersions = Object.values(storedVersions).some(
       (v) => v.version !== undefined && v.version !== null
     );
@@ -107,29 +122,24 @@ export class ZephyrOTAService {
       await this.storage.saveVersions({});
     }
 
-    logger.info('Initializing version tracking (first launch)...');
-
-    // Fetch current versions from Zephyr using batch resolve
-    const parsedDeps = parseZephyrDependencies(this.dependencies);
+    // First launch: store versions from manifest
+    logger.info('First launch - storing versions from manifest');
     const newVersions: StoredVersions = {};
 
-    logger.debug(`Resolving initial versions for ${parsedDeps.length} dependencies...`);
-    const resolvedMap = await this.apiClient.resolveRemotesBatch(parsedDeps);
-
-    for (const dep of parsedDeps) {
-      const resolved = resolvedMap.get(dep.name) ?? null;
-      if (resolved) {
-        newVersions[dep.name] = createStoredVersionInfo(resolved);
-        logger.debug(
-          `Initial version for ${dep.name}: ${resolved.version} (published_at: ${resolved.published_at})`
-        );
-      } else {
-        logger.debug(`Failed to resolve initial version for ${dep.name}`);
-      }
+    for (const [name, dep] of Object.entries(this.cachedManifest.dependencies || {})) {
+      newVersions[name] = {
+        version: dep.snapshot_id ?? dep.remote_entry_url,
+        url: dep.remote_entry_url,
+        lastUpdated: Date.now(),
+        publishedAt: dep.published_at,
+      };
+      logger.debug(
+        `Initial version for ${name}: ${dep.snapshot_id ?? dep.remote_entry_url} (published_at: ${dep.published_at})`
+      );
     }
 
     await this.storage.saveVersions(newVersions);
-    logger.info('Version tracking initialized with:', newVersions);
+    logger.info('Version tracking initialized with manifest versions');
     this.isInitialized = true;
   }
 
@@ -140,7 +150,8 @@ export class ZephyrOTAService {
   }
 
   /**
-   * Check all remotes for updates
+   * Check all remotes for updates by comparing manifest versions with live
+   * __get_version_info__
    *
    * @param force - If true, bypasses rate limiting
    * @returns Update check result
@@ -160,30 +171,41 @@ export class ZephyrOTAService {
 
     this.lastCheckTime = Date.now();
 
-    const parsedDeps = parseZephyrDependencies(this.dependencies);
-    logger.debug('Parsed dependencies:', parsedDeps);
-
-    const storedVersions = await this.storage.getStoredVersions();
-    logger.debug('Stored versions:', storedVersions);
-
-    const remotes: RemoteVersionInfo[] = [];
-
-    // Resolve all remotes using batch resolve
-    logger.debug(`Resolving ${parsedDeps.length} remote versions...`);
-    const resolvedMap = await this.apiClient.resolveRemotesBatch(parsedDeps);
-
-    for (const dep of parsedDeps) {
-      const resolved = resolvedMap.get(dep.name) ?? null;
-      logger.debug(`Resolved ${dep.name}:`, resolved);
-      if (!resolved) {
-        logger.debug(`No resolution for ${dep.name}, skipping`);
-        continue;
+    // Ensure manifest is loaded (fetch fresh if not cached)
+    if (!this.cachedManifest) {
+      const manifestResult = await this.apiClient.fetchManifest();
+      if (!manifestResult) {
+        logger.error('Failed to fetch manifest');
+        return { hasUpdates: false, remotes: [], timestamp: Date.now() };
       }
+      this.cachedManifest = manifestResult.manifest;
+    }
 
-      const stored = storedVersions[dep.name] ?? null;
-      const remoteInfo = createRemoteVersionInfo(dep.name, stored, resolved);
+    const dependencies = this.cachedManifest.dependencies || {};
+    logger.debug(`Checking ${Object.keys(dependencies).length} dependencies for updates...`);
 
-      logger.debug(`Version comparison for ${dep.name}:`, {
+    // Check each dependency for updates using __get_version_info__
+    const versionChecks = await this.apiClient.checkDependenciesForUpdates(dependencies);
+
+    // Get stored versions for comparison
+    const storedVersions = await this.storage.getStoredVersions();
+
+    // Build RemoteVersionInfo array
+    const remotes: RemoteVersionInfo[] = [];
+    for (const [name, check] of versionChecks) {
+      const dep = dependencies[name];
+      const stored = storedVersions[name] ?? null;
+
+      const remoteInfo: RemoteVersionInfo = {
+        name,
+        currentVersion: stored?.version ?? check.pinnedVersion.snapshot_id ?? null,
+        latestVersion: check.latestVersion?.snapshot_id ?? dep.remote_entry_url,
+        remoteEntryUrl: dep.remote_entry_url,
+        hasUpdate: check.hasUpdate,
+        publishedAt: check.latestVersion?.published_at,
+      };
+
+      logger.debug(`Version comparison for ${name}:`, {
         currentVersion: remoteInfo.currentVersion,
         latestVersion: remoteInfo.latestVersion,
         hasUpdate: remoteInfo.hasUpdate,
@@ -223,7 +245,7 @@ export class ZephyrOTAService {
    * @param updates - Remotes to update
    */
   async applyUpdates(updates: RemoteVersionInfo[]): Promise<void> {
-    const updatesToApply = getRemotesWithUpdates(updates);
+    const updatesToApply = updates.filter((u) => u.hasUpdate);
     if (updatesToApply.length === 0) {
       logger.debug('No updates to apply');
       return;
@@ -282,6 +304,9 @@ export class ZephyrOTAService {
       };
     }
     await this.storage.saveVersions(storedVersions);
+
+    // Clear manifest cache to force re-fetch
+    this.cachedManifest = null;
 
     // Clear dismiss state so user sees new updates in future
     await this.storage.clearDismiss();
@@ -376,5 +401,19 @@ export class ZephyrOTAService {
   /** Get the API client instance (for advanced use cases) */
   getAPIClient(): ZephyrAPIClient {
     return this.apiClient;
+  }
+
+  /** Get the cached manifest (null if not yet fetched) */
+  getCachedManifest(): ZephyrManifest | null {
+    return this.cachedManifest;
+  }
+
+  /** Force refresh the manifest cache */
+  async refreshManifest(): Promise<ZephyrManifest | null> {
+    const manifestResult = await this.apiClient.fetchManifest();
+    if (manifestResult) {
+      this.cachedManifest = manifestResult.manifest;
+    }
+    return this.cachedManifest;
   }
 }

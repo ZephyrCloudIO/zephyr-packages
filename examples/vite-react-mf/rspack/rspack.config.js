@@ -48,19 +48,7 @@ module.exports = withZephyr()({
       },
       {
         test: /\.css$/,
-        use: [
-          {
-            loader: 'postcss-loader',
-            options: {
-              postcssOptions: {
-                plugins: {
-                  tailwindcss: {},
-                  autoprefixer: {},
-                },
-              },
-            },
-          },
-        ],
+        use: ['postcss-loader'],
         type: 'css',
       },
       {

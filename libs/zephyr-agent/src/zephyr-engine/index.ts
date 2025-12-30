@@ -4,13 +4,15 @@ import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
 import {
   type Snapshot,
-  ZEPHYR_MANIFEST_FILENAME, ZE_ENV, type ZeBuildAsset,
+  ZEPHYR_MANIFEST_FILENAME,
+  ZE_ENV,
+  type ZeBuildAsset,
   type ZeBuildAssetsMap,
   ZeUtils,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
   createApplicationUid,
-  flatCreateSnapshotId
+  flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
@@ -20,9 +22,12 @@ import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
 import { multiCdnUploadStrategy } from '../lib/deployment/multi-cdn-upload.strategy';
 import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
-import { getApplicationConfiguration, getApplicationConfigurations } from '../lib/edge-requests/get-application-configuration';
+import {
+  getApplicationConfiguration,
+  getApplicationConfigurations,
+} from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
-import { ZephyrError } from '../lib/errors';
+import { ZeErrors, ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
 import { cyanBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
@@ -210,11 +215,8 @@ export class ZephyrEngine {
     ze.application_configurations = getApplicationConfigurations({ application_uid })
       .then((configs) => {
         if (!configs || configs.length === 0) {
-          throw new ZephyrError({
-            code: 'ERR_NO_APPLICATION_CONFIG',
-            message: 'No application configuration found',
-            template: { application_uid },
-          });
+          ze_log.init('No application configuration found', { application_uid });
+          throw new ZephyrError(ZeErrors.ERR_NO_APPLICATION_CONFIG);
         }
         return configs;
       })
@@ -583,11 +585,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const configs = await zephyr_engine.application_configurations;
 
     if (!configs || configs.length === 0) {
-      throw new ZephyrError({
-        code: 'ERR_NO_APPLICATION_CONFIG',
-        message: 'No application configuration available for upload',
-        template: { application_uid: zephyr_engine.application_uid },
-      });
+      
+          throw new ZephyrError(ZeErrors.ERR_NO_APPLICATION_CONFIG);
     }
 
     if (configs.length > 1) {
@@ -606,7 +605,10 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
       if (isCI) {
         const application_uid = zephyr_engine.application_uid;
-        await setAppDeployResult(application_uid, { urls: [zephyr_engine.version_url], snapshot });
+        await setAppDeployResult(application_uid, {
+          urls: [zephyr_engine.version_url],
+          snapshot,
+        });
       }
     }
 

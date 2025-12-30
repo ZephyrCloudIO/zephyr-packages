@@ -223,12 +223,23 @@ export class ZephyrEngine {
       .catch(async (error) => {
         // Only fallback to legacy endpoint if the multi-config endpoint doesn't exist (404)
         // For other errors (auth, network, etc.), propagate them
-        const isEndpointNotFound =
+        const status =
           ZephyrError.is(error) &&
           error.cause &&
           typeof error.cause === 'object' &&
-          'status' in error.cause &&
-          (error.cause.status === 404 || error.cause.status === 400);
+          'status' in error.cause
+            ? (error.cause as { status?: unknown }).status
+            : undefined;
+
+        const isEndpointNotFound = status === 404;
+
+        // 400 is a client/validation error — do not fall back, surface the failure instead.
+        if (status === 400) {
+          ze_log.init(
+            'Multi-CDN endpoint returned 400 (Bad Request). Not falling back to legacy endpoint.',
+            { application_uid }
+          );
+        }
 
         if (isEndpointNotFound) {
           ze_log.init(
@@ -585,8 +596,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const configs = await zephyr_engine.application_configurations;
 
     if (!configs || configs.length === 0) {
-      
-          throw new ZephyrError(ZeErrors.ERR_NO_APPLICATION_CONFIG);
+      throw new ZephyrError(ZeErrors.ERR_NO_APPLICATION_CONFIG);
     }
 
     if (configs.length > 1) {

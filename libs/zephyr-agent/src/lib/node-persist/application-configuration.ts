@@ -12,7 +12,7 @@ export async function saveAppConfig(
   json: ZeApplicationConfig
 ): Promise<void> {
   await storage;
-  void (await setItem(get_key(application_uid), json, { ttl: 5 * 60 * 1000 }));
+  await setItem(get_key(application_uid), json, { ttl: 5 * 60 * 1000 });
 }
 
 export async function getAppConfig(

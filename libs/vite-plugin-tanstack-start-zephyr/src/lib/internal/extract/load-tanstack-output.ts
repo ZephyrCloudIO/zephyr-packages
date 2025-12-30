@@ -4,21 +4,12 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { OutputBundle, OutputAsset, OutputChunk } from 'rollup';
 
-/** Recursively get all files in a directory */
-async function getAllFiles(dir: string, baseDir?: string): Promise<string[]> {
-  baseDir = baseDir || dir;
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        return getAllFiles(fullPath, baseDir);
-      } else {
-        return [fullPath];
-      }
-    })
-  );
-  return files.flat();
+/** Recursively get all files in a directory using Node.js native recursive option */
+async function getAllFiles(dir: string): Promise<string[]> {
+  const entries = await fs.readdir(dir, { recursive: true, withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(entry.parentPath ?? entry.path, entry.name));
 }
 
 /** Load files from directory into Rollup OutputBundle format */

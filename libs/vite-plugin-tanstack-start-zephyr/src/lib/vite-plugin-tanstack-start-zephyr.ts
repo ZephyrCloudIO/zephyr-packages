@@ -9,6 +9,8 @@ import {
   buildAssetsMap,
   ZeErrors,
   ZephyrError,
+  ze_log,
+  handleGlobalError,
 } from 'zephyr-agent';
 import { loadTanStackOutput } from './internal/extract/load-tanstack-output';
 
@@ -32,6 +34,7 @@ function extractBuffer(item: any): Buffer {
 function getAssetType(item: { fileName?: string; name?: string }): string {
   const fileName = item.fileName || item.name || '';
   const ext = path.extname(fileName).toLowerCase();
+  // Note: .cjs is intentionally excluded as workers don't support CommonJS
   const typeMap: Record<string, string> = {
     '.js': 'application/javascript',
     '.mjs': 'application/javascript',
@@ -111,9 +114,6 @@ export function withZephyrTanstackStart(
       // Don't use config.build.outDir as it points to dist/server/ during SSR build
       outputDir = options.outputDir || path.join(config.root, 'dist');
       entrypoint = normalizeEntrypoint(options.entrypoint || 'server/index.js');
-
-      console.log(`[TanStack Zephyr] Output directory: ${outputDir}`);
-      console.log(`[TanStack Zephyr] Server entrypoint: ${entrypoint}`);
     },
 
     async buildApp(builder) {
@@ -133,12 +133,9 @@ export function withZephyrTanstackStart(
       const zephyr_engine = await zephyr_engine_defer;
       // Log all environments and their build status for debugging
       const environments = Object.entries(builder.environments);
-      console.log(
-        `[TanStack Zephyr] buildApp hook called with ${environments.length} environment(s):`
+      ze_log.init(
+        `buildApp hook called with ${environments.length} environment(s): ${environments.map(([name, env]) => `${name}(isBuilt=${env.isBuilt})`).join(', ')}`
       );
-      for (const [name, env] of environments) {
-        console.log(`  - ${name}: isBuilt=${env.isBuilt}`);
-      }
 
       // Wait for all environments to be built (not just specific ones)
       // This ensures we have all build outputs before uploading
@@ -147,8 +144,8 @@ export function withZephyrTanstackStart(
         .map(([name]) => name);
 
       if (notBuilt.length > 0) {
-        console.log(
-          `[TanStack Zephyr] Building environments that aren't built yet: ${notBuilt.join(', ')}`
+        ze_log.init(
+          `Building environments that aren't built yet: ${notBuilt.join(', ')}`
         );
         for (const envName of notBuilt) {
           const env = builder.environments[envName];
@@ -169,7 +166,7 @@ export function withZephyrTanstackStart(
         });
       }
 
-      console.log('[TanStack Zephyr] All environments built, processing output...');
+      ze_log.upload('All environments built, processing output...');
 
       try {
         // Engine is already initialized above, and ZephyrEngine.create() automatically calls start_new_build()
@@ -177,13 +174,16 @@ export function withZephyrTanstackStart(
 
         // Load ALL build output preserving directory structure
         // This includes server/, client/, and any root files (favicon.ico, etc.)
+        // Note: We read from disk here (via loadTanStackOutput) rather than using Vite's
+        // generateBundle hook because TanStack Start uses multiple Vite environments
+        // (client, server, etc.) that build separately. The buildApp hook runs after
+        // all environments are complete, making disk reading the simplest approach
+        // that's consistent with vite-plugin-zephyr's loadStaticAssets pattern.
         const bundle = await loadTanStackOutput(outputDir);
 
         const assetsMap = buildAssetsMap(bundle, extractBuffer, getAssetType);
 
-        console.log(
-          `[TanStack Zephyr] Uploading ${Object.keys(assetsMap).length} assets...`
-        );
+        ze_log.upload(`Uploading ${Object.keys(assetsMap).length} assets...`);
 
         // Upload assets with SSR snapshot type
         await zephyr_engine.upload_assets({
@@ -199,10 +199,9 @@ export function withZephyrTanstackStart(
         // Mark upload as completed to prevent multiple calls
         uploadCompleted = true;
 
-        console.log('[TanStack Zephyr] Deployment successful!');
+        ze_log.upload('Deployment successful!');
       } catch (error) {
-        console.error('[TanStack Zephyr] Deployment failed:', error);
-        throw error;
+        handleGlobalError(error);
       }
     },
   };

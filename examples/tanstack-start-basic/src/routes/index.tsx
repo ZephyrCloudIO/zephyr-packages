@@ -53,7 +53,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       <h1 className="text-6xl md:text-7xl font-black text-white text-center py-16">
-        THIS IS A DIFFERENT VERSION
+        THIS IS A DIFFERENT VERSION BOO
       </h1>
 
       <section className="py-16 px-6 max-w-7xl mx-auto">

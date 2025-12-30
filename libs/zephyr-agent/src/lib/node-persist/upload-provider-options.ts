@@ -9,6 +9,7 @@ export interface ZeApplicationConfig {
   _metadata?: {
     isPrimary: boolean;
     integrationName: string;
+    integrationId: string;
   };
   fetched_at?: number;
 

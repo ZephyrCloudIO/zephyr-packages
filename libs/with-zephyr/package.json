@@ -1,6 +1,6 @@
 {
   "name": "with-zephyr",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "A codemod to automatically add withZephyr plugin to bundler configurations",
   "main": "dist/index.js",
   "repository": {
@@ -41,12 +41,12 @@
   },
   "devDependencies": {
     "@babel/types": "^7.28.4",
-    "@rstest/core": "^0.4.0",
+    "@rstest/core": "^0.7.0",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.27.0",
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^24.5.2",
-    "@rslib/core": "^0.13.3",
+    "@rslib/core": "^0.18.0",
     "typescript": "^5.9.2",
     "zephyr-rsbuild-plugin": "workspace:*"
   },
@@ -65,5 +65,5 @@
     "rolldown",
     "rspress"
   ],
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.25.0"
 }

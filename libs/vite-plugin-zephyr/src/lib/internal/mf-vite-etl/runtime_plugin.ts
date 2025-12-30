@@ -1,4 +1,4 @@
-import type { FederationRuntimePlugin } from '@module-federation/runtime';
+import type { ModuleFederationRuntimePlugin } from '@module-federation/runtime';
 import type { ZeResolvedDependency } from 'zephyr-agent';
 
 export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]): string {
@@ -6,7 +6,7 @@ export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]):
     resolved_remotes.map((remote) => [remote.name, remote])
   );
 
-  const runtimePlugin: FederationRuntimePlugin = {
+  const runtimePlugin: ModuleFederationRuntimePlugin = {
     name: 'zephyr-runtime-remote-resolver',
     beforeInit: (args) => {
       const resolvedRemoteMap: Record<string, ZeResolvedDependency> =
@@ -14,7 +14,7 @@ export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]):
 
       const _windows = typeof window !== 'undefined' ? window : globalThis;
 
-      args.userOptions.remotes.forEach((remote) => {
+      args.userOptions.remotes.forEach((remote: any) => {
         const resolvedRemote = resolvedRemoteMap[remote.name];
         if (!resolvedRemote) {
           return;
@@ -26,7 +26,6 @@ export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]):
 
         const urlOverwrite = sessionEdgeURL ?? resolvedRemote.remote_entry_url;
 
-        // @ts-expect-error overwriting entry if needed
         remote.entry = urlOverwrite;
       });
 
@@ -40,7 +39,7 @@ export function generateRuntimePlugin(resolved_remotes: ZeResolvedDependency[]):
   );
 }
 
-function objectToTemplate(obj: FederationRuntimePlugin): string {
+function objectToTemplate(obj: ModuleFederationRuntimePlugin): string {
   const entries = Object.entries(obj).map(([key, value]) => {
     if (typeof value === 'function') {
       return `${key}: ${value.toString()}`;

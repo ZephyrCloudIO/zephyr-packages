@@ -12,27 +12,24 @@ export const withZephyr = (
   pre: ['@modern-js/plugin-module-federation-config'],
 
   async setup(api) {
-    api.modifyWebpackConfig(async (config, utils) => {
+    api.modifyWebpackConfig(async (config) => {
       const currentBundler = api.getAppContext().bundlerType;
       if (currentBundler !== 'webpack') {
         return;
       }
 
       const { withZephyr } = await import('zephyr-webpack-plugin');
-      const z_config = await withZephyr(zephyrOptions)(config);
-      /* eslint-disable-next-line */
-      utils.mergeConfig(config as any, z_config as any);
+      return await withZephyr(zephyrOptions)(config);
     });
 
-    api.modifyRspackConfig(async (config, utils) => {
+    api.modifyRspackConfig(async (config) => {
       const currentBundler = api.getAppContext().bundlerType;
       if (currentBundler !== 'rspack') {
         return;
       }
 
       const { withZephyr } = await import('zephyr-rspack-plugin');
-      const z_config = await withZephyr(zephyrOptions)(config);
-      utils.mergeConfig(config, z_config);
+      return await withZephyr(zephyrOptions)(config);
     });
   },
 

@@ -5,6 +5,7 @@ export interface ZeApplicationConfig {
   EDGE_URL: string;
   DELIMITER: string;
   PLATFORM: UploadProviderType;
+  ENVIRONMENTS?: Record<string, EnvironmentConfig>;
   _metadata?: {
     isPrimary: boolean;
     integrationName: string;
@@ -43,4 +44,11 @@ export enum UploadProviderType {
   GCP = 'gcp',
   FASTLY = 'fastly',
   AKAMAI = 'akamai',
+}
+
+export interface EnvironmentConfig {
+  type: UploadProviderType;
+  edgeUrl: string;
+  delimiter: string;
+  remote_host: string;
 }

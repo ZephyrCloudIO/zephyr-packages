@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { ZephyrEngine, ZephyrError, logFn, ze_log } from 'zephyr-agent';
+import { handleGlobalError, ze_log, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -10,7 +10,14 @@ import type { WebpackConfiguration } from '../types/missing-webpack-types';
 import { ZeWebpackPlugin } from './ze-webpack-plugin';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
-  return (config: Configuration) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config: Configuration) => {
+    // Skip Zephyr execution during Nx graph calculation
+    // NX_TASK_TARGET_TARGET is only set during actual task execution (build/serve)
+    if (!process.env['NX_TASK_TARGET_TARGET']) {
+      return Promise.resolve(config);
+    }
+    return _zephyr_configuration(config, zephyrPluginOptions);
+  };
 }
 
 async function _zephyr_configuration(
@@ -45,7 +52,7 @@ async function _zephyr_configuration(
       })
     );
   } catch (error) {
-    logFn('error', ZephyrError.format(error));
+    handleGlobalError(error);
   }
 
   return config;

@@ -11,6 +11,8 @@ export const ZE_API_ENDPOINT_HOST = () => new URL(ZE_API_ENDPOINT()).host;
 
 export const ZE_IS_PREVIEW = () => process.env['ZE_IS_PREVIEW'] === 'true';
 
+export const ZE_ENV = () => process.env['ZE_ENV'];
+
 export const ze_api_gateway = {
   logs: '/logs',
   build_stats: '/build-stats',

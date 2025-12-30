@@ -1,7 +1,7 @@
 import { type UploadableAsset } from 'zephyr-edge-contract';
+import { ZeErrors, ZephyrError } from '../errors';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { makeRequest } from './http-request';
-import { ZeErrors, ZephyrError } from '../errors';
 
 export interface UploadFileProps {
   hash: string;

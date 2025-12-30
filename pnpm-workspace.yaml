@@ -30,8 +30,8 @@ catalogs:
     '@parcel/types': ^2.16.1
     '@parcel/core': ^2.16.1
   module-federation:
-    '@module-federation/enhanced': ^0.11.1
-    '@module-federation/runtime': ^0.11.1
+    '@module-federation/enhanced': ^0.21.0
+    '@module-federation/runtime': ^0.21.0
     '@module-federation/vite': ^1.2.6
     '@module-federation/automatic-vendor-federation': ^1.2.1
   plugin-shared:
@@ -41,7 +41,7 @@ catalogs:
     '@babel/runtime': ^7.26.10
     '@babel/preset-react': ^7.26.3
   typescript:
-    typescript: ~5.8.2
+    typescript: ~5.9.0
     '@types/jest': 29.5.14
     '@types/node': ^22.13.11
     '@types/is-ci': 3.0.4
@@ -57,7 +57,7 @@ catalogs:
     '@swc/core': ^1.13.5
     '@swc/jest': 0.2.39
   webpack5:
-    webpack: ^5.98.0
+    webpack: ^5.103.0
     '@svgr/webpack': ^8.1.0
   tailwind:
     tailwindcss: ^3.4.11
@@ -73,31 +73,30 @@ catalogs:
     '@vitejs/plugin-react': ^4.3.4
     '@vitejs/plugin-react-swc': ^3.8.1
   rspack:
-    '@rsdoctor/rspack-plugin': 1.2.3
-    '@rspack/cli': ^1.5.5
-    '@rspack/core': ^1.5.5
+    '@rsdoctor/rspack-plugin': 1.3.15
+    '@rspack/cli': ^1.6.0
+    '@rspack/core': ^1.6.0
     '@rspack/plugin-react-refresh': ^1.5.1
     '@rsbuild/core': ^1.5.9
     '@rsbuild/plugin-react': ^1.4.0
     '@rsbuild/shared': ^0.7.10
   rspress:
-    'rspress': ^1.44.0
-    '@rspress/shared': ^1.44.0
+    '@rspress/core': ^2.0.0-rc.1
   rolldown:
-    rolldown: 1.0.0-beta.3
+    rolldown: 1.0.0-beta.54
   rollup4:
     rollup: ^4.36.0
     '@rollup/plugin-url': 8.0.2
     '@svgr/rollup': 8.1.0
   esbuild:
-    esbuild: ^0.25.1
+    esbuild: ^0.27.0
   eslint:
     eslint: ^9.22.0
     '@eslint/compat': ^1.2.7
     '@eslint/eslintrc': ^3.3.0
     '@eslint/js': ^9.22.0
     eslint-config-prettier: ^10.1.1
-    eslint-plugin-import: 2.31.0
+    eslint-plugin-import: 2.32.0
     eslint-plugin-jsx-a11y: 6.10.2
     eslint-plugin-react: ^7.37.4
     eslint-plugin-react-hooks: ^5.2.0
@@ -112,14 +111,14 @@ catalogs:
   react18:
     react: 18.3.1
     react-dom: 18.3.1
-    react-refresh: ^0.16.0
-    '@types/react': 18.3.1
-    '@types/react-dom': 18.3.0
+    react-refresh: ^0.18.0
+    '@types/react': 18.3.27
+    '@types/react-dom': 18.3.7
   react19:
     react: ^19.0.0
     react-dom: ^19.0.0
     '@types/react': ^19.0.12
-    '@types/react-dom': ~19.0.4
+    '@types/react-dom': ~19.2.0
   vitest:
     '@vitest/coverage-v8': ^3.0.9
     '@vitest/ui': ^3.0.9

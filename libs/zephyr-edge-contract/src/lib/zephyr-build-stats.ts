@@ -131,6 +131,8 @@ export interface ZephyrBuildStats {
   context: {
     username?: string;
     isCI: boolean;
+    env?: string;
+    target?: string;
   };
   /**
    * Become the first part of `remote_host` and `remote_entry_url` in database in

@@ -69,7 +69,6 @@ module.exports = withZephyr()({
           {
             loader: 'builtin:swc-loader',
             options: {
-              sourceMap: true,
               jsc: {
                 parser: {
                   syntax: 'typescript',

@@ -1,10 +1,9 @@
 import type { AstroIntegration, HookParameters } from 'astro';
 import { fileURLToPath } from 'node:url';
 import {
-  logFn,
+  handleGlobalError,
   zeBuildDashData,
   ZephyrEngine,
-  ZephyrError,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from './internal/extract-astro-assets-map';
@@ -27,15 +26,11 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
       'astro:config:done': async ({ config }: HookParameters<'astro:config:done'>) => {
         // config.root is a URL object, convert to file path
         const contextPath = fileURLToPath(config.root);
-        try {
-          // Initialize ZephyrEngine with Astro context
-          zephyr_defer_create({
-            builder: 'astro',
-            context: contextPath,
-          });
-        } catch (error) {
-          logFn('error', ZephyrError.format(error));
-        }
+        // Initialize ZephyrEngine with Astro context
+        zephyr_defer_create({
+          builder: 'astro',
+          context: contextPath,
+        });
       },
       'astro:build:done': async ({
         dir,
@@ -67,7 +62,7 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
           // Mark build as finished
           await zephyr_engine.build_finished();
         } catch (error) {
-          logFn('error', ZephyrError.format(error));
+          handleGlobalError(error);
         }
       },
     },

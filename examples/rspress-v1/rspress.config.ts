@@ -1,0 +1,11 @@
+// rspress.config.ts
+import * as path from 'node:path';
+import { defineConfig } from 'rspress/config';
+import { withZephyr } from 'zephyr-rspress-plugin';
+
+export default defineConfig({
+  root: path.join(__dirname, 'docs'),
+  outDir: './doc_build',
+  ssg: true,
+  plugins: [withZephyr()],
+});

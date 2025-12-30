@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspack-plugin",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Repack plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -20,19 +20,19 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@module-federation/automatic-vendor-federation": "catalog:module-federation",
-    "@rspack/core": "catalog:rspack",
-    "is-ci": "catalog:plugin-shared",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
+    "@rspack/core": "catalog:rspack",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@rspack/core": "^1.0.0"
   },
   "publishConfig": {
     "access": "public",

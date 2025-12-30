@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'zephyr-modernjs-plugin',
   preset: '../../jest.preset.js',

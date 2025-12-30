@@ -6,6 +6,10 @@
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run zephyr-metro-plugin:build",
+    "patch-version": "pnpm version"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -20,7 +24,7 @@
   "peerDependencies": {
     "metro": ">=0.70.0",
     "react-native": ">=0.60.0",
-    "zephyr-xpack-internal": "workspace:*"
+    "zephyr-xpack-internal": ">=0.1.0"
   },
   "peerDependenciesMeta": {
     "zephyr-xpack-internal": {

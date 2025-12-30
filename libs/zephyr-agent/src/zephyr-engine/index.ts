@@ -2,10 +2,10 @@ import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
-import { ZE_ENV } from 'zephyr-edge-contract';
 import {
   type Snapshot,
   ZEPHYR_MANIFEST_FILENAME,
+  ZE_ENV,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
   ZeUtils,
@@ -134,7 +134,8 @@ export class ZephyrEngine {
     isCI: boolean;
     target: Platform;
     env?: string | undefined;
-  } = { isCI, target: 'web', env: ZE_ENV() };
+    ssr?: boolean;
+  } = { isCI, target: 'web', env: ZE_ENV(), ssr: false };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 
@@ -473,7 +474,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
     // SSR-specific parameter
-    snapshotType?: 'static' | 'ssr';
+    snapshotType?: 'csr' | 'ssr';
     entrypoint?: string;
     hooks?: ZephyrBuildHooks;
   }): Promise<void> {

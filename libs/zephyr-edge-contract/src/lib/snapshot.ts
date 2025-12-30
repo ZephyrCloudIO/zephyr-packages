@@ -13,11 +13,8 @@ export interface Snapshot {
   snapshot_id: string;
   // default domain url
   domain: string;
-  // rendering mode: when set to 'ssr', enables server-side rendering
-  // absence of this field indicates a standard static snapshot
-  type?: 'ssr';
-  // server entry file path for SSR applications (relative path)
-  entrypoint?: string;
+  // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
+  type?: 'ssr' | 'csr';
   uid: {
     build: string;
     app_name: string;

@@ -26,14 +26,17 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "rollup": "catalog:rollup4",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "rollup": "catalog:rollup4",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "rollup": "^4.0.0"
   },
   "publishConfig": {
     "access": "public",

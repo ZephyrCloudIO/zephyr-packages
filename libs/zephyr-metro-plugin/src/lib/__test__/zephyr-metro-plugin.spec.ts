@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Unit tests for ZephyrMetroPlugin class */
 
 // Mock zephyr-agent - must be before imports

@@ -55,5 +55,5 @@ const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
 };
 
 function replacer(str: string): string {
-  return str.replace(/[^a-zA-Z0-9-]/gi, '-');
+  return str.replace(/[^a-zA-Z0-9-]/gi, '-').toLowerCase();
 }

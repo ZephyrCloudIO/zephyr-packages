@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'zephyr-webpack-plugin',
   preset: '../../jest.preset.js',

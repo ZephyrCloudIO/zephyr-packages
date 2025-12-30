@@ -3,17 +3,15 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 export const ZE_PATH = path.resolve(os.homedir(), '.zephyr');
-export const ZE_PERSIST_PATH = path.resolve(ZE_PATH, 'persist');
 export const ZE_SESSION_LOCK = path.resolve(ZE_PATH, 'session');
 
 try {
-  // Ensures that the directories exist and lockfile is writable
+  // Ensures that the directory exists and lockfile is writable
   fs.mkdirSync(ZE_PATH, { recursive: true });
-  fs.mkdirSync(ZE_PERSIST_PATH, { recursive: true });
 } catch (error) {
   console.error(
     'error',
-    `Could not create ~/.zephyr directories. Please check your permissions: ${error}`
+    `Could not create ~/.zephyr directory. Please check your permissions: ${error}`
   );
 }
 

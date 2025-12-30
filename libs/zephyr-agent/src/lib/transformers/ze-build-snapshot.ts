@@ -15,7 +15,7 @@ interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
   assets: ZeBuildAssetsMap;
   // SSR-specific parameter
-  snapshotType?: 'static' | 'ssr';
+  snapshotType?: 'csr' | 'ssr';
   entrypoint?: string;
 }
 
@@ -51,7 +51,7 @@ export async function createSnapshot(
     zephyr_engine.buildProperties.baseHref
   );
 
-  const snapshot = {
+  const snapshot: Snapshot = {
     // ZeApplicationProperties
     application_uid: createApplicationUid(options.applicationProperties),
     version: `${options.applicationProperties.version}-${version_postfix}`,
@@ -92,7 +92,12 @@ export async function createSnapshot(
     ...(entrypoint && { entrypoint }),
   };
 
-  return snapshot as Snapshot;
+  // Set snapshot type if SSR flag is enabled
+  if (zephyr_engine.env.ssr) {
+    snapshot.type = 'ssr';
+  }
+
+  return snapshot;
 }
 
 /**

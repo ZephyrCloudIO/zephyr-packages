@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'zephyr-astro-integration',
   preset: '../../jest.preset.js',

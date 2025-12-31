@@ -6,7 +6,7 @@ const currDir = path.resolve(__dirname);
 module.exports = {
   name: 'rspack_mf_remote',
   exposes: {
-    './NxWelcome': currDir + '/src/app/nx-welcome.tsx',
+    './NxWelcome': './src/app/nx-welcome.tsx',
   },
   shared: (libName) => {
     const reactShared = [

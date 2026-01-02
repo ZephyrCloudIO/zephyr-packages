@@ -3,7 +3,12 @@ import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
-import { getAppConfig, getAppConfigs, saveAppConfig, saveAppConfigs } from '../node-persist/application-configuration';
+import {
+  getAppConfig,
+  getAppConfigs,
+  saveAppConfig,
+  saveAppConfigs,
+} from '../node-persist/application-configuration';
 import { getToken } from '../node-persist/token';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 
@@ -121,9 +126,7 @@ export function invalidateApplicationConfigCache() {
   cachedConfig = null;
 }
 
-/**
- * Loads multiple application configurations (multi-CDN support)
- */
+/** Loads multiple application configurations (multi-CDN support) */
 async function loadApplicationConfigurations({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig[]> {
@@ -169,20 +172,17 @@ let cachedConfigs: ZeApplicationConfig[] | null = null;
 let cachedConfigsUid: string | null = null;
 
 /**
- * Fetches multiple application configurations (multi-CDN support).
- * Returns an array with primary and secondary CDN configurations.
+ * Fetches multiple application configurations (multi-CDN support). Returns an array with
+ * primary and secondary CDN configurations.
  *
- * For backward compatibility: if only one config is returned, it's a single-CDN deployment.
- * If multiple configs are returned, the first one with _metadata.isPrimary === true is the primary.
+ * For backward compatibility: if only one config is returned, it's a single-CDN
+ * deployment. If multiple configs are returned, the first one with _metadata.isPrimary
+ * === true is the primary.
  */
 export async function getApplicationConfigurations({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig[]> {
-  if (
-    cachedConfigs &&
-    cachedConfigsUid === application_uid &&
-    cachedConfigs.length > 0
-  ) {
+  if (cachedConfigs && cachedConfigsUid === application_uid && cachedConfigs.length > 0) {
     const firstConfig = cachedConfigs[0];
     if (
       isTokenStillValid(firstConfig.jwt) &&

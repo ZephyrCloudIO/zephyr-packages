@@ -1,13 +1,11 @@
 /* istanbul ignore file */
 
-/**
- * Deployment status for multi-CDN tracking
- */
+/** Deployment status for multi-CDN tracking */
 export type DeploymentStatus = 'SUCCESS' | 'FAILED' | 'PENDING';
 
 /**
- * Individual deployment result for a specific CDN integration
- * Used to track multi-CDN deployment status
+ * Individual deployment result for a specific CDN integration Used to track multi-CDN
+ * deployment status
  */
 export interface DeploymentResult {
   /** UUID of the ProjectDeploymentIntegration record in the backend */

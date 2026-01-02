@@ -27,8 +27,14 @@ function createDeploymentResult(
   deployedUrl?: string,
   errorMessage?: string
 ): DeploymentResult {
+  const metadata = (config as any)._metadata;
+  const integrationId =
+    typeof metadata?.integrationId === 'string' && metadata.integrationId.trim() !== ''
+      ? metadata.integrationId
+      : undefined;
+
   return {
-    integrationId: config._metadata?.integrationId || '',
+    integrationId,
     integrationName: config._metadata?.integrationName || 'unknown',
     platform: config.PLATFORM,
     status,
@@ -75,15 +81,12 @@ export async function multiCdnUploadStrategy(
     });
   }
 
-  const primaryConfig = configs.find((c) => c._metadata?.isPrimary);
-  const secondaryConfigs = configs.filter((c) => !c._metadata?.isPrimary);
-
-  if (!primaryConfig) {
-    ze_log.upload('✗ Primary deployment not found');
-    throw new ZephyrError(ZeErrors.PRIMARY_CDN_DEPLOYMENT_FAILED, {
-      cause: 'Primary deployment not found in multi-CDN configs',
-    });
-  }
+  const primaryIndex = Math.max(
+    0,
+    configs.findIndex((c) => c._metadata?.isPrimary)
+  );
+  const primaryConfig = configs[primaryIndex];
+  const secondaryConfigs = configs.filter((_, idx) => idx !== primaryIndex);
 
   ze_log.upload(
     `Multi-CDN deployment: Primary=${primaryConfig._metadata?.integrationName}, Secondaries=${secondaryConfigs.length}`
@@ -106,11 +109,17 @@ export async function multiCdnUploadStrategy(
       undefined,
       error instanceof Error ? error.message : String(error)
     );
-    await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
-      getDashData: uploadOptions.getDashData,
-      versionUrl: undefined,
-      deploymentResults: [primaryResult],
-    });
+    try {
+      await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
+        getDashData: uploadOptions.getDashData,
+        versionUrl: undefined,
+        deploymentResults: [primaryResult],
+      });
+    } catch (reportError) {
+      ze_log.upload('Warning: failed reporting primary deployment failure status', {
+        reportError,
+      });
+    }
     throw new ZephyrError(ZeErrors.PRIMARY_CDN_DEPLOYMENT_FAILED, {
       cause: error,
       data: {
@@ -120,18 +129,25 @@ export async function multiCdnUploadStrategy(
     });
   }
 
-  // Avoid uploading build stats twice (once here and again when reporting secondary deployments).
-  // If there are secondary CDNs, defer the upload until after all secondary attempts complete.
-  if (secondaryConfigs.length === 0) {
+  // Avoid uploading build stats twice. If there are secondary CDNs, defer reporting until
+  // after all secondary attempts complete so we can report all statuses at once.
+  const shouldDeferReporting = secondaryConfigs.length > 0;
+  if (!shouldDeferReporting) {
     ze_log.upload('Reporting primary deployment status to backend...');
-    await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
-      getDashData: uploadOptions.getDashData,
-      versionUrl: primaryUrl,
-      deploymentResults: [primaryResult],
-    });
+    try {
+      await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
+        getDashData: uploadOptions.getDashData,
+        versionUrl: primaryUrl,
+        deploymentResults: [primaryResult],
+      });
+    } catch (reportError) {
+      ze_log.upload('Warning: failed reporting primary deployment status', {
+        reportError,
+      });
+    }
   } else {
     ze_log.upload(
-      'Deferring primary deployment status/build stats upload until after secondary deployments complete...'
+      'Deferring deployment status/build stats upload until after secondary deployments complete...'
     );
   }
 
@@ -199,13 +215,19 @@ export async function multiCdnUploadStrategy(
     );
   }
 
-  if (secondaryDeploymentResults.length > 0) {
-    ze_log.upload('Reporting secondary deployment statuses to backend...');
-    await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
-      getDashData: uploadOptions.getDashData,
-      versionUrl: primaryUrl,
-      deploymentResults: secondaryDeploymentResults,
-    });
+  if (shouldDeferReporting) {
+    ze_log.upload('Reporting primary + secondary deployment statuses to backend...');
+    try {
+      await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
+        getDashData: uploadOptions.getDashData,
+        versionUrl: primaryUrl,
+        deploymentResults: [primaryResult, ...secondaryDeploymentResults],
+      });
+    } catch (reportError) {
+      ze_log.upload('Warning: failed reporting multi-CDN deployment statuses', {
+        reportError,
+      });
+    }
   }
 
   const allUrls = [primaryUrl, ...successfulSecondaries.map((s) => s.url)];

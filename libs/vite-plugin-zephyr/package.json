@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rollup": "catalog:rollup4",
     "ts-jest": "catalog:typescript",

@@ -18,4 +18,11 @@ export default defineConfig({
       },
     },
   ],
+  tools: {
+    rspack: {
+      experiments: {
+        typeReexportsPresence: true,
+      },
+    },
+  },
 });

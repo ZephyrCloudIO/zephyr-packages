@@ -6,6 +6,11 @@ export interface ZeApplicationConfig {
   DELIMITER: string;
   PLATFORM: UploadProviderType;
   ENVIRONMENTS?: Record<string, EnvironmentConfig>;
+  _metadata?: {
+    isPrimary: boolean;
+    integrationName: string;
+    integrationId: string;
+  };
   fetched_at?: number;
 
   // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration
@@ -17,6 +22,19 @@ export interface ZeApplicationConfig {
   user_uuid: string;
   // @deprecated
   username: string;
+
+  replicationTarget?: ReplicationTarget;
+}
+
+export interface ReplicationTarget {
+  name: string;
+  platform: string;
+  edgeUrl: string;
+  auth: {
+    type: 'jwt' | 'api_key';
+    token: string;
+  };
+  enabled: boolean;
 }
 
 export enum UploadProviderType {

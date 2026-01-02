@@ -1,5 +1,29 @@
 /* istanbul ignore file */
 
+/** Deployment status for multi-CDN tracking */
+export type DeploymentStatus = 'SUCCESS' | 'FAILED' | 'PENDING';
+
+/**
+ * Individual deployment result for a specific CDN integration Used to track multi-CDN
+ * deployment status
+ */
+export interface DeploymentResult {
+  /** UUID of the ProjectDeploymentIntegration record in the backend */
+  integrationId: string;
+  /** Human-readable integration name (e.g., "Cloudflare Primary") */
+  integrationName: string;
+  /** CDN platform type */
+  platform: string;
+  /** Deployment status */
+  status: DeploymentStatus;
+  /** Deployed URL (if successful) */
+  deployedUrl?: string;
+  /** Error message (if failed) */
+  errorMessage?: string;
+  /** ISO timestamp when deployment completed */
+  deployedAt: string;
+}
+
 /** Todo: this worst and most outdated model so far, had to be refactored */
 export interface ZephyrBuildStats {
   /** @deprecated */
@@ -133,6 +157,7 @@ export interface ZephyrBuildStats {
   ze_envs_hash?: string;
   /** Resolved zephyr dependencies */
   zephyrDependencies?: Record<string, ZephyrDependency>;
+  deploymentResults?: DeploymentResult[];
 }
 
 enum DeploymentIntegrationPlatform {

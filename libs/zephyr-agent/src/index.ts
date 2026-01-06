@@ -7,6 +7,9 @@ export {
   savePartialAssetMap,
 } from './lib/node-persist/partial-assets-map';
 
+// global utilities
+export { getGlobal } from './lib/utils/get-global';
+
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';
 export { handleGlobalError } from './lib/errors';

@@ -1,6 +1,5 @@
 import type { Configuration } from 'webpack';
-import { handleGlobalError, ze_log, ZephyrEngine } from 'zephyr-agent';
-import { getGlobal } from 'zephyr-edge-contract';
+import { getGlobal, handleGlobalError, ze_log, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,

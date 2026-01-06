@@ -1,6 +1,5 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
-import { handleGlobalError, ZephyrEngine } from 'zephyr-agent';
-import { getGlobal } from 'zephyr-edge-contract';
+import { getGlobal, handleGlobalError, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,

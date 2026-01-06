@@ -34,7 +34,7 @@
     "@modern-js/app-tools": "catalog:modernjs",
     "@modern-js/tsconfig": "catalog:modernjs",
     "@types/jest": "catalog:typescript",
-    "@types/node": "^25.0.3",
+    "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "lint-staged": "~16.2.7",

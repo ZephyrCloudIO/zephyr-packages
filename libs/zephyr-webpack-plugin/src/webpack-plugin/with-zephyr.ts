@@ -1,5 +1,6 @@
 import type { Configuration } from 'webpack';
 import { handleGlobalError, ze_log, ZephyrEngine } from 'zephyr-agent';
+import { getGlobal } from 'zephyr-edge-contract';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -12,8 +13,8 @@ import { ZeWebpackPlugin } from './ze-webpack-plugin';
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
   return (config: Configuration) => {
     // Skip Zephyr execution during Nx graph calculation
-    // NX_TASK_TARGET_TARGET is only set during actual task execution (build/serve)
-    if (!process.env['NX_TASK_TARGET_TARGET']) {
+    // Nx sets global.NX_GRAPH_CREATION = true during graph creation
+    if (getGlobal().NX_GRAPH_CREATION) {
       return Promise.resolve(config);
     }
     return _zephyr_configuration(config, zephyrPluginOptions);

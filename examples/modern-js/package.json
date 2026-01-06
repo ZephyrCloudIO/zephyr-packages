@@ -9,7 +9,6 @@
     "serve": "modern serve",
     "new": "modern new",
     "lint": "biome check",
-    "prepare": "simple-git-hooks",
     "upgrade": "modern upgrade"
   },
   "engines": {
@@ -19,9 +18,6 @@
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
       "biome check --files-ignore-unknown=true"
     ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
   },
   "dependencies": {
     "@modern-js/plugin-ssg": "^2.69.7",
@@ -39,7 +35,6 @@
     "@types/react-dom": "catalog:react19",
     "lint-staged": "~16.2.7",
     "rimraf": "^6.1.2",
-    "simple-git-hooks": "^2.13.1",
     "typescript": "catalog:typescript",
     "zephyr-modernjs-plugin": "workspace:*"
   }

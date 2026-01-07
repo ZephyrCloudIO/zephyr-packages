@@ -1,15 +1,19 @@
 import type { ZeBuildAsset, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
-import { ze_log } from '../logging';
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
-import { ZeErrors, ZephyrError } from '../errors';
-import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
-import { makeRequest } from '../http/http-request';
 import { zeUploadSnapshot } from '../edge-actions';
-import { type UploadAssetsOptions, uploadBuildStatsAndEnableEnvs } from './upload-base';
 import { update_hash_list } from '../edge-hash-list/distributed-hash-control';
-import { white, whiteBright } from '../logging/picocolor';
+import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
+import { ZeErrors, ZephyrError } from '../errors';
+import { makeRequest } from '../http/http-request';
 import type { UploadFileProps } from '../http/upload-file';
+import { ze_log } from '../logging';
+import { white, whiteBright } from '../logging/picocolor';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
+import {
+  uploadAssets as fallbackUploadAssets,
+  type UploadAssetsOptions,
+  uploadBuildStatsAndEnableEnvs,
+} from './upload-base';
 
 const AWS_MAX_BODY_SIZE = 20971520;
 
@@ -39,7 +43,15 @@ export async function awsUploadStrategy(
   }
 
   await createBucket(zephyr_engine.application_uid);
-  await uploadAssets(zephyr_engine, { assetsMap, missingAssets });
+  await uploadAssets(zephyr_engine, { assetsMap, missingAssets }).catch((error) => {
+    // Backwards compatibility after new AWS integration workflow to
+    // enable bigger body size upload.
+    // It can be removed after new AWS integration gets stabilized
+    if (error.cause?.template?.content === 'Not Implemented') {
+      return fallbackUploadAssets(zephyr_engine, { assetsMap, missingAssets });
+    }
+    throw error;
+  });
   const versionUrl = await zeUploadSnapshot(zephyr_engine, { snapshot });
 
   // Waits for the reply to check upload problems, but the reply is a simply

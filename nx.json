@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "tui": {
-    "autoExit": 1,
     "enabled": false
   },
   "targetDefaults": {

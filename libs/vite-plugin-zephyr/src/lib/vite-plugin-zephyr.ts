@@ -13,7 +13,7 @@ import {
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
+import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
@@ -28,6 +28,16 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const hooks = _options?.hooks;
   const plugins = [];
   if (mfConfig) {
+    if (!mfConfig.runtimePlugins) {
+      mfConfig.runtimePlugins = [];
+    }
+    // Add the runtime plugin by resolving the .mjs file
+    // The .mjs extension ensures ESM compatibility - Rollup/Vite can import it natively
+    // without CommonJS interop issues. The __REMOTE_MAP__ placeholder gets replaced
+    // during generateBundle with actual resolved remote data.
+    mfConfig.runtimePlugins.push(
+      require.resolve('./internal/mf-vite-etl/runtime_plugin.mjs')
+    );
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin(hooks));
@@ -125,7 +135,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             if (!resolved_remotes) {
               return code;
             }
-            const result = load_resolved_remotes(resolved_remotes, code);
+            const result = inject_resolved_remotes_map(resolved_remotes, code);
             return result;
           }
 
@@ -175,7 +185,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
               if (!resolved_remotes) {
                 continue;
               }
-              const result = load_resolved_remotes(resolved_remotes, chunk.code);
+              const result = inject_resolved_remotes_map(resolved_remotes, chunk.code);
               chunk.code = result;
             } catch (error) {
               handleGlobalError(error);

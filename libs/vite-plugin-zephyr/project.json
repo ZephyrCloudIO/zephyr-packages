@@ -13,7 +13,14 @@
         "rootDir": "libs/vite-plugin-zephyr/src",
         "outputPath": "libs/vite-plugin-zephyr/dist",
         "tsConfig": "libs/vite-plugin-zephyr/tsconfig.lib.json",
-        "main": "libs/vite-plugin-zephyr/src/index.ts"
+        "main": "libs/vite-plugin-zephyr/src/index.ts",
+        "assets": [
+          {
+            "input": "libs/vite-plugin-zephyr/src",
+            "glob": "**/*.mjs",
+            "output": "."
+          }
+        ]
       }
     },
     "nx-release-publish": {

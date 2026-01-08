@@ -32,12 +32,14 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     if (!mfConfig.runtimePlugins) {
       mfConfig.runtimePlugins = [];
     }
-    // Add the runtime plugin by resolving the .mjs file
+    // Add the runtime plugin using absolute path with forward slashes for cross-platform ESM compatibility
+    // Windows backslashes are converted to forward slashes since ESM imports require forward slashes
     // The .mjs extension ensures ESM compatibility - Rollup/Vite can import it natively
     // without CommonJS interop issues. The __REMOTE_MAP__ placeholder gets replaced
     // during generateBundle with actual resolved remote data.
+    const runtimePluginPath = path.resolve(__dirname, 'internal/mf-vite-etl/runtime_plugin.mjs');
     mfConfig.runtimePlugins.push(
-      path.resolve(__dirname, 'internal/mf-vite-etl/runtime_plugin.mjs')
+      runtimePluginPath.replace(/\\/g, '/')
     );
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }

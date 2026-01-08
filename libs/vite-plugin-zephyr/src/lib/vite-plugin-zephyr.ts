@@ -342,8 +342,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         return html;
       }
     },
-    // For production builds
-    closeBundle: async () => {
+    // For production builds - use writeBundle instead of closeBundle
+    // writeBundle runs AFTER files are written to disk, so dist directory exists
+    writeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,

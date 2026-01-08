@@ -1,4 +1,5 @@
 import { federation } from '@module-federation/vite';
+import * as path from 'path';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
@@ -36,7 +37,7 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     // without CommonJS interop issues. The __REMOTE_MAP__ placeholder gets replaced
     // during generateBundle with actual resolved remote data.
     mfConfig.runtimePlugins.push(
-      require.resolve('./internal/mf-vite-etl/runtime_plugin.mjs')
+      path.resolve(__dirname, 'internal/mf-vite-etl/runtime_plugin.mjs')
     );
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }

@@ -20,8 +20,8 @@
     ]
   },
   "dependencies": {
-    "@modern-js/plugin-ssg": "^2.69.7",
-    "@modern-js/runtime": "^2.69.7",
+    "@modern-js/plugin-ssg": "catalog:modernjs",
+    "@modern-js/runtime": "catalog:modernjs",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },

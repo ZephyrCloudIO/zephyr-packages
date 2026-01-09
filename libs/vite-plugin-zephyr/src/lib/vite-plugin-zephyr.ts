@@ -37,10 +37,11 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     // The .mjs extension ensures ESM compatibility - Rollup/Vite can import it natively
     // without CommonJS interop issues. The __REMOTE_MAP__ placeholder gets replaced
     // during generateBundle with actual resolved remote data.
-    const runtimePluginPath = path.resolve(__dirname, 'internal/mf-vite-etl/runtime_plugin.mjs');
-    mfConfig.runtimePlugins.push(
-      runtimePluginPath.replace(/\\/g, '/')
+    const runtimePluginPath = path.resolve(
+      __dirname,
+      'internal/mf-vite-etl/runtime_plugin.mjs'
     );
+    mfConfig.runtimePlugins.push(runtimePluginPath.replace(/\\/g, '/'));
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin(hooks));
@@ -120,29 +121,18 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     },
     transform: {
       // Hook filter for Rolldown/Vite 7 performance optimization
-      // Only process Module Federation virtual remote entry files
+      // Only process specific file patterns for env variable rewriting
       filter: {
-        id: /virtual:mf-REMOTE_ENTRY_ID/,
+        id: /\.(mjs|cjs|js|ts|jsx|tsx)$/,
       },
       handler: async (code, id) => {
         try {
-          // Additional check for backward compatibility with older Vite/Rollup versions
-          if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
-            const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-            if (!dependencyPairs) {
-              return code;
-            }
-            const zephyr_engine = await zephyr_engine_defer;
-            const resolved_remotes =
-              await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-            if (!resolved_remotes) {
-              return code;
-            }
-            const result = inject_resolved_remotes_map(resolved_remotes, code);
-            return result;
-          }
+          // NOTE: We used to inject resolved remotes here in the transform hook for the virtual module,
+          // but Module Federation regenerates the remoteEntry.js during bundling, so we only need to
+          // inject in generateBundle hook. Keeping this transform hook only for env variable rewriting.
 
-          if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
+          // Filter already ensures file extension matches, we just need to exclude node_modules
+          if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
             if (!cachedSpecifier) {
               const appUid = zephyr_engine.application_uid;

@@ -12,6 +12,7 @@ interface DeployPluginOptions {
 }
 
 interface DeployCompiler {
+  outputPath: string;
   webpack: { Compilation: { PROCESS_ASSETS_STAGE_REPORT: number } };
   hooks: {
     thisCompilation: {
@@ -55,6 +56,7 @@ export function setupZeDeploy<
           stats_json,
           assets,
           pluginOptions,
+          outputPath: compiler.outputPath,
         });
 
         if (!pluginOptions.wait_for_index_html) {

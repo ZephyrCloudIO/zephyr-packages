@@ -1,5 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
-import { logFn, ze_log, ZephyrError } from 'zephyr-agent';
+import { logFn, ze_log, ZephyrError, zeBuildAssets } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { type Source, type ZephyrBuildStats } from 'zephyr-edge-contract';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
@@ -20,6 +22,7 @@ export interface ZephyrAgentProps<T> {
   stats_json: XStatsCompilation;
   pluginOptions: T;
   assets: Record<string, Source>;
+  outputPath?: string;
 }
 
 export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
@@ -27,6 +30,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   stats_json,
   assets,
   pluginOptions,
+  outputPath,
 }: ZephyrAgentProps<T>): Promise<void> {
   ze_log.init('Initiating: Zephyr Webpack Upload Agent');
 
@@ -37,6 +41,23 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     const assetsMap = await buildWebpackAssetMap(assets, {
       wait_for_index_html,
     });
+
+    // share-usage.json이 compilation.assets에 없으면 파일 시스템에서 읽어서 추가
+    const shareUsageKey = Object.keys(assetsMap).find(
+      (key) => assetsMap[key].path === 'share-usage.json'
+    );
+    if (!shareUsageKey && outputPath) {
+      const shareUsagePath = path.join(outputPath, 'share-usage.json');
+      if (fs.existsSync(shareUsagePath)) {
+        const content = fs.readFileSync(shareUsagePath);
+        const shareUsageAsset = zeBuildAssets({
+          filepath: 'share-usage.json',
+          content: content,
+        });
+        assetsMap[shareUsageAsset.hash] = shareUsageAsset;
+        ze_log.misc('share-usage.json added to assets map from file system.');
+      }
+    }
 
     // webpack dash data
     const { EDGE_URL, PLATFORM, DELIMITER } =

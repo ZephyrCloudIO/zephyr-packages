@@ -11,6 +11,21 @@ export interface ZephyrRuntimePluginOptions {
   manifestUrl?: string;
 }
 
+// Global cache key for storing manifest promises across all bundles
+const globalCacheKey = '__ZEPHYR_MANIFEST_CACHE__';
+const _global: any = typeof window !== 'undefined' ? window : globalThis;
+
+/**
+ * Gets the global manifest cache shared across all bundles (host + remotes). Ensures only
+ * one fetch per unique manifest URL across the entire application.
+ */
+function getGlobalManifestCache(): Map<string, Promise<ZephyrManifest | undefined>> {
+  if (!_global[globalCacheKey]) {
+    _global[globalCacheKey] = new Map<string, Promise<ZephyrManifest | undefined>>();
+  }
+  return _global[globalCacheKey];
+}
+
 /**
  * Attempts to determine the base URL of the script that loaded this module. Uses
  * document.currentScript to detect the script origin in browser environments.
@@ -79,8 +94,15 @@ export function createZephyrRuntimePlugin(
     }
   }
 
-  // Initialize manifest fetching
-  const zephyrManifestPromise = fetchManifest(manifestUrl);
+  // Get global cache and check if manifest was already fetched
+  const manifestCache = getGlobalManifestCache();
+
+  if (!manifestCache.has(manifestUrl)) {
+    manifestCache.set(manifestUrl, fetchManifest(manifestUrl));
+  }
+
+  // Reuse cached promise from global cache
+  const zephyrManifestPromise = manifestCache.get(manifestUrl);
 
   const plugin: FederationRuntimePlugin = {
     name: 'zephyr-runtime-remote-resolver',

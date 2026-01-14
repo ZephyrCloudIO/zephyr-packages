@@ -441,7 +441,7 @@ importers:
   examples/hono-app:
     dependencies:
       hono:
-        specifier: ^4.11.4
+        specifier: ^4.10.3
         version: 4.11.4
     devDependencies:
       '@types/node':
@@ -1628,7 +1628,7 @@ importers:
         version: 1.12.2(debug@4.4.0)
       axios-retry:
         specifier: ^4.5.0
-        version: 4.5.0(axios@1.12.2(debug@4.4.0))
+        version: 4.5.0(axios@1.12.2)
       debug:
         specifier: ^4.3.4
         version: 4.4.0
@@ -10964,10 +10964,6 @@ packages:
   homedir-polyfill@1.0.3:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
-
-  hono@4.10.3:
-    resolution: {integrity: sha512-2LOYWUbnhdxdL8MNbNg9XZig6k+cZXm5IjHn2Aviv7honhBMOHb+jxrKIeJRZJRmn+htUCKhaicxwXuUDlchRA==}
-    engines: {node: '>=16.9.0'}
 
   hono@4.11.4:
     resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
@@ -21170,7 +21166,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.3.3
-      hono: 4.10.3
+      hono: 4.11.4
       ts-deepmerge: 7.0.2
     transitivePeerDependencies:
       - react
@@ -21188,7 +21184,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.3.3
-      hono: 4.10.3
+      hono: 4.11.4
       ts-deepmerge: 7.0.2
     transitivePeerDependencies:
       - react
@@ -27484,14 +27480,9 @@ snapshots:
 
   axe-core@4.10.3: {}
 
-  axios-retry@4.5.0(axios@1.12.2(debug@4.4.0)):
-    dependencies:
-      axios: 1.12.2(debug@4.4.0)
-      is-retry-allowed: 2.2.0
-
   axios-retry@4.5.0(axios@1.12.2):
     dependencies:
-      axios: 1.12.2(debug@4.4.3)
+      axios: 1.12.2(debug@4.4.0)
       is-retry-allowed: 2.2.0
 
   axios@1.12.2(debug@4.4.0):
@@ -30813,8 +30804,6 @@ snapshots:
   homedir-polyfill@1.0.3:
     dependencies:
       parse-passwd: 1.0.0
-
-  hono@4.10.3: {}
 
   hono@4.11.4: {}
 

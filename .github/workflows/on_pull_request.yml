@@ -29,6 +29,8 @@ jobs:
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          # Only fetch the ref we're building, skip remote branches to avoid Windows path issues
+          ref: ${{ github.ref }}
       - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
@@ -81,6 +83,8 @@ jobs:
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          # Only fetch the ref we're building, skip remote branches to avoid Windows path issues
+          ref: ${{ github.ref }}
       - uses: ./.github/actions/setup
       - uses: nrwl/nx-set-shas@v4
         with:
@@ -98,6 +102,8 @@ jobs:
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
+          # Only fetch the ref we're building, skip remote branches to avoid Windows path issues
+          ref: ${{ github.ref }}
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
@@ -124,6 +130,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          # Only fetch the ref we're building, skip remote branches to avoid Windows path issues
+          ref: ${{ github.ref }}
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}

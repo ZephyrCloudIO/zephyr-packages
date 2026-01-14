@@ -73,7 +73,7 @@
     "overrides": {
       "@rsdoctor/rspack-plugin": "catalog:rspack",
       "@rspack/core": "catalog:rspack",
-      "@vercel/nft": "^0.30.0",
+      "@vercel/nft": "^1.0.0",
       "hono": "^4.10.3",
       "glob": ">=11.1.0",
       "astro": ">=5.15.8",

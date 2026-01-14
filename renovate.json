@@ -9,5 +9,10 @@
     ":automergeMinor",
     ":disablePeerDependencies",
     ":dependencyDashboard"
-  ]
+  ],
+  "branchName": "{{{branchPrefix}}}{{{additionalBranchPrefix}}}{{{branchTopic}}}",
+  "branchPrefix": "renovate/",
+  "additionalBranchPrefix": "",
+  "commitMessagePrefix": "chore(deps):",
+  "semanticCommits": "enabled"
 }

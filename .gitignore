@@ -94,7 +94,9 @@ tasks/
 
 
 
-**/.claude/settings.local.json
 
 .cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+.github/instructions/nx.instructions.
+
+# Local Claude context files
+**/.claude/*.local.*

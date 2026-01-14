@@ -1,18 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":dependencyDashboard",
-    "schedule:weekly",
-    "group:allNonMajor",
-    ":label(dependencies)",
-    ":automergeMinor",
-    ":disablePeerDependencies",
-    ":dependencyDashboard"
-  ],
-  "branchName": "{{{branchPrefix}}}{{{additionalBranchPrefix}}}{{{branchTopic}}}",
-  "branchPrefix": "renovate/",
-  "additionalBranchPrefix": "",
-  "commitMessagePrefix": "chore(deps):",
-  "semanticCommits": "enabled"
+  "extends": ["local>ZephyrCloudIO/renovate-config"]
 }

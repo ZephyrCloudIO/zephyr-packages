@@ -144,4 +144,4 @@ jobs:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
       - name: Run e2e examples test
-        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests
+        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests --

@@ -19,6 +19,17 @@ export function isLegacyMFPlugin(plugin: ModuleFederationPlugin): boolean {
     return false;
   }
 
+  // KEY DIFFERENTIATOR: Legacy webpack plugin does NOT have a 'name' property at all
+  // Enhanced @module-federation/enhanced plugin DOES have a 'name' property on the instance
+  // This is the simplest and most reliable check!
+  if ('name' in plugin) {
+    ze_log.mf(
+      'Non-legacy Module Federation plugin identified. Plugin has "name" property: ',
+      plugin.name
+    );
+    return false;
+  }
+
   const enhancedFeaturesChecks: Checks[] = [
     // Core enhanced methods (likely present in most versions)
     [plugin, 'getRemoteEntryUrls', 'function'],

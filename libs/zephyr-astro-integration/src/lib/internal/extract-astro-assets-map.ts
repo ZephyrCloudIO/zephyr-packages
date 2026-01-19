@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join, relative, sep, isAbsolute } from 'node:path';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildAssetsMap, logFn, type ZeBuildAssetsMap } from 'zephyr-agent';
 
@@ -194,6 +194,7 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
   const assets: Record<string, AstroAsset> = {};
 
   // Recursively walk through the build directory
+  // TODO: Use readDirRecursive from 'zephyr-agent' here instead
   async function walkDir(dirPath: string): Promise<void> {
     try {
       const entries = await readdir(dirPath, { withFileTypes: true });

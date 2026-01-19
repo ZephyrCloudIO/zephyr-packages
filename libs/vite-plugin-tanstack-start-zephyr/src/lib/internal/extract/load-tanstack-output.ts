@@ -2,9 +2,13 @@
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import type { OutputBundle, OutputAsset, OutputChunk } from 'rollup';
+import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
 
-/** Recursively get all files in a directory using Node.js native recursive option */
+/**
+ * Recursively get all files in a directory using Node.js native recursive option
+ *
+ * @deprecated TODO: Use readDirRecursive from 'zephyr-agent'
+ */
 async function getAllFiles(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { recursive: true, withFileTypes: true });
   return entries

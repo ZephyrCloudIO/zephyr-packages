@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+/** @deprecated Use readDirRecursive from 'zephyr-agent' */
 export async function walkFiles(dir: string, prefix = ''): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files: string[] = [];

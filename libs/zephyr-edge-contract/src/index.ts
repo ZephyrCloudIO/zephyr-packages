@@ -46,9 +46,9 @@ export {
   ZE_API_ENDPOINT,
   ZE_API_ENDPOINT_HOST,
   ze_api_gateway,
+  ZE_ENV,
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
-  ZE_ENV,
 } from './lib/api-contract-negotiation/get-api-contract';
 
 // promise proto methods

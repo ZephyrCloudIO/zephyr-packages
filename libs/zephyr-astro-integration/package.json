@@ -1,6 +1,6 @@
 {
   "name": "zephyr-astro-integration",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "Astro integration for Zephyr Cloud deployment and module federation",
   "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-astro-integration#readme",
   "repository": {

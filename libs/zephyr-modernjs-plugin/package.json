@@ -1,6 +1,6 @@
 {
   "name": "zephyr-modernjs-plugin",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "Modernjs plugin for Zephyr",
   "repository": {
     "type": "git",

@@ -1,4 +1,3 @@
- 
 export default {
   displayName: 'team-green',
   preset: '../../../../jest.preset.js',

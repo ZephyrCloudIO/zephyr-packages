@@ -1,4 +1,5 @@
 import { federation } from '@module-federation/vite';
+import * as path from 'path';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
@@ -13,7 +14,7 @@ import {
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
+import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
@@ -28,6 +29,19 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const hooks = _options?.hooks;
   const plugins = [];
   if (mfConfig) {
+    if (!mfConfig.runtimePlugins) {
+      mfConfig.runtimePlugins = [];
+    }
+    // Add the runtime plugin using absolute path with forward slashes for cross-platform ESM compatibility
+    // Windows backslashes are converted to forward slashes since ESM imports require forward slashes
+    // The .mjs extension ensures ESM compatibility - Rollup/Vite can import it natively
+    // without CommonJS interop issues. The __REMOTE_MAP__ placeholder gets replaced
+    // during generateBundle with actual resolved remote data.
+    const runtimePluginPath = path.resolve(
+      __dirname,
+      'internal/mf-vite-etl/runtime_plugin.mjs'
+    );
+    mfConfig.runtimePlugins.push(runtimePluginPath.replace(/\\/g, '/'));
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin(hooks));
@@ -107,29 +121,18 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     },
     transform: {
       // Hook filter for Rolldown/Vite 7 performance optimization
-      // Only process Module Federation virtual remote entry files
+      // Only process specific file patterns for env variable rewriting
       filter: {
-        id: /virtual:mf-REMOTE_ENTRY_ID/,
+        id: /\.(mjs|cjs|js|ts|jsx|tsx)$/,
       },
       handler: async (code, id) => {
         try {
-          // Additional check for backward compatibility with older Vite/Rollup versions
-          if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
-            const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-            if (!dependencyPairs) {
-              return code;
-            }
-            const zephyr_engine = await zephyr_engine_defer;
-            const resolved_remotes =
-              await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-            if (!resolved_remotes) {
-              return code;
-            }
-            const result = load_resolved_remotes(resolved_remotes, code);
-            return result;
-          }
+          // NOTE: We used to inject resolved remotes here in the transform hook for the virtual module,
+          // but Module Federation regenerates the remoteEntry.js during bundling, so we only need to
+          // inject in generateBundle hook. Keeping this transform hook only for env variable rewriting.
 
-          if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
+          // Filter already ensures file extension matches, we just need to exclude node_modules
+          if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
             if (!cachedSpecifier) {
               const appUid = zephyr_engine.application_uid;
@@ -175,7 +178,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
               if (!resolved_remotes) {
                 continue;
               }
-              const result = load_resolved_remotes(resolved_remotes, chunk.code);
+              const result = inject_resolved_remotes_map(resolved_remotes, chunk.code);
               chunk.code = result;
             } catch (error) {
               handleGlobalError(error);
@@ -332,8 +335,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         return html;
       }
     },
-    // For production builds
-    closeBundle: async () => {
+    // For production builds - use writeBundle instead of closeBundle
+    // writeBundle runs AFTER files are written to disk, so dist directory exists
+    writeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,

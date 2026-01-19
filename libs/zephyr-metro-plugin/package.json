@@ -1,6 +1,6 @@
 {
   "name": "zephyr-metro-plugin",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "Metro bundler plugin for deploying React Native applications with Zephyr Cloud - OTA updates, Module Federation, and seamless deployment",
   "type": "commonjs",
   "license": "Apache-2.0",

@@ -1,0 +1,35 @@
+{
+  "name": "vite-plugin-tanstack-start-zephyr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/vite-plugin-tanstack-start-zephyr/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["zephyr-agent"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/vite-plugin-tanstack-start-zephyr/src",
+        "outputPath": "libs/vite-plugin-tanstack-start-zephyr/dist",
+        "tsConfig": "libs/vite-plugin-tanstack-start-zephyr/tsconfig.lib.json",
+        "main": "libs/vite-plugin-tanstack-start-zephyr/src/index.ts"
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/vite-plugin-tanstack-start-zephyr/jest.config.ts"
+      }
+    }
+  }
+}

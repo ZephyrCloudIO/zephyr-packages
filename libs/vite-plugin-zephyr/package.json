@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-zephyr",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "description": "Vite plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rollup": "catalog:rollup4",
     "ts-jest": "catalog:typescript",

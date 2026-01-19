@@ -13,7 +13,7 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: ['**/dist'],
+    ignores: ['**/dist', 'libs/zephyr-metro-plugin/src/lib/global.d.ts'],
   },
   { plugins: { '@nx': nxEslintPlugin } },
   {

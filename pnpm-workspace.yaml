@@ -20,10 +20,10 @@ onlyBuiltDependencies:
   - workerd
 catalogs:
   modernjs:
-    '@modern-js/app-tools': ^2.70.1
-    '@modern-js/plugin-ssg': ^2.70.1
-    '@modern-js/runtime': ^2.70.1
-    '@modern-js/tsconfig': ^2.70.1
+    '@modern-js/app-tools': ^2.70.2
+    '@modern-js/plugin-ssg': ^2.70.2
+    '@modern-js/runtime': ^2.70.2
+    '@modern-js/tsconfig': ^2.70.2
   parcel:
     'parcel': ^2.16.1
     '@parcel/config-default': ^2.14.1

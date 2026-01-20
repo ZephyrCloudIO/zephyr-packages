@@ -1,7 +1,6 @@
 import type { AxiosRequestConfig } from 'axios';
 import axios, { AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
-import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import isCI from 'is-ci';
 import { ZeErrors, ZephyrError } from '../errors';
@@ -16,15 +15,13 @@ const RETRY_ERROR_CODES = [
 ];
 
 /**
- * Gets proxy URL from environment variables.
+ * Gets HTTPS proxy URL from environment variables.
  * Checks both uppercase and lowercase variants.
+ * Falls back to HTTP_PROXY if HTTPS_PROXY is not set.
  * Returns undefined if no proxy is configured.
  */
-function getProxyUrl(protocol: 'http' | 'https'): string | undefined {
-  const envVars =
-    protocol === 'https'
-      ? ['HTTPS_PROXY', 'https_proxy', 'HTTP_PROXY', 'http_proxy']
-      : ['HTTP_PROXY', 'http_proxy'];
+function getHttpsProxyUrl(): string | undefined {
+  const envVars = ['HTTPS_PROXY', 'https_proxy', 'HTTP_PROXY', 'http_proxy'];
 
   for (const envVar of envVars) {
     const value = process.env[envVar];
@@ -61,24 +58,16 @@ function shouldBypassProxy(hostname: string): boolean {
 }
 
 /**
- * Creates HTTP/HTTPS agents with proxy support if configured via environment variables.
+ * Creates HTTPS agent with proxy support if configured via environment variables.
  */
-function getProxyAgents(url: URL): {
-  httpAgent?: HttpProxyAgent<string>;
-  httpsAgent?: HttpsProxyAgent<string>;
-} {
+function getHttpsProxyAgent(url: URL): HttpsProxyAgent<string> | undefined {
   // Check if this host should bypass the proxy
   if (shouldBypassProxy(url.hostname)) {
-    return {};
+    return undefined;
   }
 
-  const httpProxyUrl = getProxyUrl('http');
-  const httpsProxyUrl = getProxyUrl('https');
-
-  return {
-    httpAgent: httpProxyUrl ? new HttpProxyAgent(httpProxyUrl) : undefined,
-    httpsAgent: httpsProxyUrl ? new HttpsProxyAgent(httpsProxyUrl) : undefined,
-  };
+  const httpsProxyUrl = getHttpsProxyUrl();
+  return httpsProxyUrl ? new HttpsProxyAgent(httpsProxyUrl) : undefined;
 }
 
 function shouldRetry(error: AxiosError): boolean {
@@ -103,8 +92,8 @@ export async function fetchWithRetries(
   retries = 3
 ): Promise<Response> {
   try {
-    // Get proxy agents if configured via environment variables
-    const { httpAgent, httpsAgent } = getProxyAgents(url);
+    // Get HTTPS proxy agent if configured via environment variables
+    const httpsAgent = getHttpsProxyAgent(url);
 
     // Create a custom axios instance for this request with CI-friendly settings
     const axiosInstance = axios.create({
@@ -112,8 +101,7 @@ export async function fetchWithRetries(
       // References: https://github.com/actions/runner/issues/3138
       // https://x.com/matteocollina/status/1640384245834055680
       family: isCI ? IPV4_FAMILY : undefined,
-      // Apply proxy agents if configured
-      httpAgent,
+      // Apply HTTPS proxy agent if configured
       httpsAgent,
     });
 

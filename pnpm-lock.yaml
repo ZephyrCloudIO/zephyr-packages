@@ -1646,9 +1646,6 @@ importers:
       git-url-parse:
         specifier: ^15.0.0
         version: 15.0.0
-      http-proxy-agent:
-        specifier: ^7.0.2
-        version: 7.0.2
       https-proxy-agent:
         specifier: ^7.0.6
         version: 7.0.6

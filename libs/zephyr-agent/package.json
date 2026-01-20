@@ -60,7 +60,6 @@
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
-    "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.6"
   },
   "publishConfig": {

@@ -8,18 +8,20 @@ jest.mock('axios');
 jest.mock('axios-retry');
 jest.mock('is-ci', () => false); // Default to non-CI
 
-// Mock proxy agent classes
-const MockHttpProxyAgent = jest.fn().mockImplementation((url) => ({ proxyUrl: url, type: 'http' }));
-const MockHttpsProxyAgent = jest
-  .fn()
-  .mockImplementation((url) => ({ proxyUrl: url, type: 'https' }));
-
+// Mock proxy agent classes - define mock functions inside factory to avoid hoisting issues
 jest.mock('http-proxy-agent', () => ({
-  HttpProxyAgent: MockHttpProxyAgent,
+  HttpProxyAgent: jest.fn().mockImplementation((url) => ({ proxyUrl: url, type: 'http' })),
 }));
 jest.mock('https-proxy-agent', () => ({
-  HttpsProxyAgent: MockHttpsProxyAgent,
+  HttpsProxyAgent: jest.fn().mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
 }));
+
+// Import mocked modules to access mock functions
+import { HttpProxyAgent } from 'http-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+const MockHttpProxyAgent = HttpProxyAgent as jest.MockedClass<typeof HttpProxyAgent>;
+const MockHttpsProxyAgent = HttpsProxyAgent as jest.MockedClass<typeof HttpsProxyAgent>;
 
 // Setup mocks
 const mockCreate = jest.fn();

@@ -39,8 +39,6 @@
     "debug": "^4.3.4",
     "eventsource": "^4.0.0",
     "git-url-parse": "^15.0.0",
-    "http-proxy-agent": "^7.0.2",
-    "https-proxy-agent": "^7.0.6",
     "is-ci": "catalog:plugin-shared",
     "jose": "^5.10.0",
     "node-persist": "^4.0.1",
@@ -60,6 +58,10 @@
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.6"
   },
   "publishConfig": {
     "access": "public",

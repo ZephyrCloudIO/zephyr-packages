@@ -1,6 +1,6 @@
 {
   "name": "zephyr-agent",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Zephyr plugin agent",
   "repository": {
     "type": "git",
@@ -58,6 +58,10 @@
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "http-proxy-agent": "^7.0.2",
+    "https-proxy-agent": "^7.0.6"
   },
   "publishConfig": {
     "access": "public",

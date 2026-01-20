@@ -549,5 +549,37 @@ describe('fetchWithRetries', () => {
         })
       );
     });
+
+    it('should not initialize HttpProxyAgent or HttpsProxyAgent constructors when no proxy environment variables are present', async () => {
+      // Ensure all proxy env vars are cleared
+      expect(process.env['HTTP_PROXY']).toBeUndefined();
+      expect(process.env['HTTPS_PROXY']).toBeUndefined();
+      expect(process.env['http_proxy']).toBeUndefined();
+      expect(process.env['https_proxy']).toBeUndefined();
+
+      // Mock responses for both requests
+      mockAxiosInstance
+        .mockResolvedValueOnce({
+          status: 200,
+          headers: {},
+          data: 'success',
+        })
+        .mockResolvedValueOnce({
+          status: 200,
+          headers: {},
+          data: 'success',
+        });
+
+      // Make both HTTP and HTTPS requests
+      const httpUrl = new URL('http://example.com/api');
+      const httpsUrl = new URL('https://example.com/api');
+
+      await fetchWithRetries(httpUrl, options);
+      await fetchWithRetries(httpsUrl, options);
+
+      // Verify proxy agent constructors were never invoked
+      expect(MockHttpProxyAgent).toHaveBeenCalledTimes(0);
+      expect(MockHttpsProxyAgent).toHaveBeenCalledTimes(0);
+    });
   });
 });

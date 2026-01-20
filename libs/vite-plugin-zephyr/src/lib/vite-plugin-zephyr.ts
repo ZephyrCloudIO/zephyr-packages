@@ -1,4 +1,5 @@
 import { federation } from '@module-federation/vite';
+import MagicString from 'magic-string';
 import * as path from 'path';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
@@ -141,14 +142,22 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
             if (res && typeof res.code === 'string' && res.code !== code) {
               code = res.code;
+              return {
+                code,
+                map: new MagicString(code).generateMap({
+                  hires: true,
+                }),
+              };
             }
           }
 
-          return code;
+          // returns the original code if no modifications were made
+          return null;
         } catch (error) {
           handleGlobalError(error);
+
           // returns the original code in case of error
-          return code;
+          return null;
         }
       },
     },

@@ -9,6 +9,11 @@ export {
 
 // global utilities
 export { getGlobal } from './lib/utils/get-global';
+export {
+  readDirRecursive,
+  readDirRecursiveWithContents,
+  type FileInfo,
+} from './lib/utils/read-dir-recursive';
 
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';

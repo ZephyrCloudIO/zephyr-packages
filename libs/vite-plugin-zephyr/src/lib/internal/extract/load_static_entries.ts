@@ -1,8 +1,7 @@
 import type { OutputAsset } from 'rollup';
-import { relative, resolve } from 'node:path';
-import { readdirSync, readFile, statSync } from 'node:fs';
+import { basename, resolve } from 'node:path';
 import { normalizePath } from 'vite';
-import { promisify } from 'node:util';
+import { readDirRecursiveWithContents } from 'zephyr-agent';
 
 interface LoadStaticEntriesOptions {
   root: string;
@@ -12,32 +11,23 @@ interface LoadStaticEntriesOptions {
 export async function load_static_entries(
   props: LoadStaticEntriesOptions
 ): Promise<OutputAsset[]> {
-  const { root } = props;
-  const publicAssets: OutputAsset[] = [];
+  const root_dist_dir = resolve(props.root, props.outDir);
+  // Load all files from the output directory - no filtering needed since
+  // we're intentionally reading build outputs, not public assets
+  const files = await readDirRecursiveWithContents(root_dist_dir);
 
-  const root_dist_dir = resolve(root, props.outDir);
+  return files.map((file) => {
+    const fileName = basename(file.fullPath);
 
-  const loadDir = async (destDir: string) => {
-    for (const file of readdirSync(destDir)) {
-      const destFile = resolve(destDir, file);
-      const stat = statSync(destFile);
-      if (stat.isDirectory()) {
-        await loadDir(destFile);
-        continue;
-      }
-      const fileName = normalizePath(relative(root_dist_dir, destFile));
-      publicAssets.push({
-        fileName,
-        name: file,
-        names: [file],
-        needsCodeReference: false,
-        source: await promisify(readFile)(destFile),
-        type: 'asset',
-        originalFileName: file,
-        originalFileNames: [file],
-      });
-    }
-  };
-  await loadDir(root_dist_dir);
-  return publicAssets;
+    return {
+      fileName: normalizePath(file.relativePath),
+      name: fileName,
+      names: [fileName],
+      needsCodeReference: false,
+      source: file.content,
+      type: 'asset' as const,
+      originalFileName: fileName,
+      originalFileNames: [fileName],
+    };
+  });
 }

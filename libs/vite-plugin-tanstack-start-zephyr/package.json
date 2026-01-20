@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-tanstack-start-zephyr",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Vite plugin for Zephyr with TanStack Start support",
   "repository": {
     "type": "git",

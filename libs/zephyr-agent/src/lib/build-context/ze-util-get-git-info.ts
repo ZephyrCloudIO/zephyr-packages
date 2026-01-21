@@ -11,6 +11,7 @@ import { ze_log } from '../logging';
 import { logFn } from '../logging/ze-log-event';
 import { hasSecretToken } from '../node-persist/secret-token';
 import { getToken } from '../node-persist/token';
+import { detectCIBranch } from './ci-branch-detection';
 import { getGitProviderInfo } from './git-provider-utils';
 import { detectMonorepo, getMonorepoRootPackageJson } from './detect-monorepo';
 import { getPackageJson } from './ze-util-read-package-json';
@@ -137,12 +138,36 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
   try {
     const { stdout } = await exec(command);
 
-    const [name, email, remoteOrigin, branch, commit, tagsOutput] = stdout
+    const [name, email, remoteOrigin, gitBranch, commit, tagsOutput] = stdout
       .trim()
       .split(GIT_OUTPUT_DELIMITER)
       .map((x) => x.trim());
     // Parse tags - if multiple tags point to HEAD, they'll be on separate lines
     const tags = tagsOutput ? tagsOutput.split('\n').filter(Boolean) : [];
+
+    // In CI environments with detached HEAD, git returns "HEAD" as branch name
+    // Try to get branch from CI environment variables first
+    let branch = gitBranch;
+    if (isCI && (gitBranch === 'HEAD' || !gitBranch)) {
+      const ciInfo = detectCIBranch();
+      if (ciInfo.branch) {
+        branch = ciInfo.branch;
+        ze_log.git(
+          `Detected branch from ${ciInfo.platform} environment variables: ${branch}`,
+          {
+            platform: ciInfo.platform,
+            branch,
+            isPR: ciInfo.isPR,
+            gitBranch,
+          }
+        );
+      } else {
+        ze_log.git(
+          `Branch detection in CI failed. Git returned: "${gitBranch}", no CI env vars available`,
+          { platform: ciInfo.platform, gitBranch }
+        );
+      }
+    }
 
     return {
       name,

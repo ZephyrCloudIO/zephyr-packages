@@ -10,7 +10,9 @@ jest.mock('is-ci', () => false); // Default to non-CI
 
 // Mock HTTPS proxy agent class - define mock function inside factory to avoid hoisting issues
 jest.mock('https-proxy-agent', () => ({
-  HttpsProxyAgent: jest.fn().mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
+  HttpsProxyAgent: jest
+    .fn()
+    .mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
 }));
 
 // Import mocked module to access mock function
@@ -320,7 +322,9 @@ describe('fetchWithRetries', () => {
       expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
       expect(axios.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          httpsAgent: expect.objectContaining({ proxyUrl: 'http://proxy.example.com:8080' }),
+          httpsAgent: expect.objectContaining({
+            proxyUrl: 'http://proxy.example.com:8080',
+          }),
         })
       );
     });
@@ -336,7 +340,9 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://lowercase-proxy.example.com:8080');
+      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://lowercase-proxy.example.com:8080'
+      );
     });
 
     it('should prefer HTTPS_PROXY over https_proxy', async () => {
@@ -351,7 +357,9 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://uppercase-proxy.example.com:8080');
+      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://uppercase-proxy.example.com:8080'
+      );
     });
 
     it('should fallback to HTTP_PROXY for https requests if HTTPS_PROXY is not set', async () => {
@@ -365,7 +373,9 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://http-proxy.example.com:8080');
+      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://http-proxy.example.com:8080'
+      );
     });
 
     it('should bypass proxy for hosts in NO_PROXY', async () => {
@@ -479,7 +489,9 @@ describe('fetchWithRetries', () => {
       expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
       expect(axios.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          httpsAgent: expect.objectContaining({ proxyUrl: 'http://proxy.example.com:8080' }),
+          httpsAgent: expect.objectContaining({
+            proxyUrl: 'http://proxy.example.com:8080',
+          }),
         })
       );
     });

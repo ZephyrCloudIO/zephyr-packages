@@ -7,6 +7,7 @@ import {
   createManifestContent,
   handleGlobalError,
   rewriteEnvReadsToVirtualModule,
+  ze_log,
   zeBuildDashData,
   ZephyrEngine,
   type RemoteEntry,
@@ -85,6 +86,23 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
 
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
 
+      // Resolve remotes for both dev and build modes
+      // This ensures federated_dependencies is populated early for both modes
+      if (mfPlugin) {
+        try {
+          const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+          if (dependencyPairs) {
+            const zephyr_engine = await zephyr_engine_defer;
+            await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+            ze_log.remotes(
+              `Resolved ${dependencyPairs.length} remote dependencies in configResolved`
+            );
+          }
+        } catch (error) {
+          handleGlobalError(error);
+        }
+      }
+
       // Load .env files into process.env so ZE_PUBLIC_* are available to the agent
       try {
         const loaded = loadEnv(config.mode || 'production', root, '');
@@ -122,16 +140,34 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     },
     transform: {
       // Hook filter for Rolldown/Vite 7 performance optimization
-      // Only process specific file patterns for env variable rewriting
+      // Match all JS files AND remoteEntry.js specifically for both env rewriting and remote injection
       filter: {
-        id: /\.(mjs|cjs|js|ts|jsx|tsx)$/,
+        id: /(\.(mjs|cjs|js|ts|jsx|tsx)$|remoteEntry\.js)/,
       },
       handler: async (code, id) => {
         try {
-          // NOTE: We used to inject resolved remotes here in the transform hook for the virtual module,
-          // but Module Federation regenerates the remoteEntry.js during bundling, so we only need to
-          // inject in generateBundle hook. Keeping this transform hook only for env variable rewriting.
+          // 1. Handle remoteEntry.js transformation for dev mode
+          // In dev mode, Module Federation generates remoteEntry.js in memory with __REMOTE_MAP__ placeholder
+          // The transform hook catches it and injects resolved remotes before serving to the browser
+          if (id.includes('remoteEntry.js') && code.includes('"__REMOTE_MAP__"')) {
+            const zephyr_engine = await zephyr_engine_defer;
+            const resolved_remotes = zephyr_engine.federated_dependencies;
 
+            if (resolved_remotes?.length) {
+              ze_log.remotes(
+                `[transform] Transforming remoteEntry.js with ${resolved_remotes.length} remotes for dev mode`
+              );
+              const result = inject_resolved_remotes_map(resolved_remotes, code);
+              if (result !== code) {
+                return {
+                  code: result,
+                  map: null, // Let Vite generate source map
+                };
+              }
+            }
+          }
+
+          // 2. Handle env variable rewriting (existing logic)
           // Filter already ensures file extension matches, we just need to exclude node_modules
           if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
@@ -174,21 +210,20 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             'code' in chunk
           ) {
             try {
-              const dependencyPairs = extract_remotes_dependencies(
-                root,
-                mfPlugin._options
-              );
-              if (!dependencyPairs) {
-                continue;
-              }
+              // Use already-resolved dependencies from configResolved hook
               const zephyr_engine = await zephyr_engine_defer;
-              const resolved_remotes =
-                await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-              if (!resolved_remotes) {
+              const resolved_remotes = zephyr_engine.federated_dependencies;
+
+              if (!resolved_remotes?.length) {
+                ze_log.remotes('No resolved remotes found in generateBundle');
                 continue;
               }
+
               const result = inject_resolved_remotes_map(resolved_remotes, chunk.code);
               chunk.code = result;
+              ze_log.remotes(
+                `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
+              );
             } catch (error) {
               handleGlobalError(error);
             }

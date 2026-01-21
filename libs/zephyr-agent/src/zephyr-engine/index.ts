@@ -19,6 +19,7 @@ import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
+import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
@@ -376,9 +377,9 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const application_uid = ze.application_uid;
 
     ze_log.init('Initializing: loading of hash list');
-    // ze.hash_list = get_hash_list(application_uid);
+    ze.hash_list = get_hash_list(application_uid);
     ze.hash_list
-      ?.then((hash_set) => {
+      .then((hash_set) => {
         ze.resolved_hash_list = hash_set;
         ze_log.app(`Loaded: hash list with ${hash_set.hash_set.size} entries`);
       })

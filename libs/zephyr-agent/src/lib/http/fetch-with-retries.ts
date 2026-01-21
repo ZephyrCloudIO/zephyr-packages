@@ -15,10 +15,9 @@ const RETRY_ERROR_CODES = [
 ];
 
 /**
- * Gets HTTPS proxy URL from environment variables.
- * Checks both uppercase and lowercase variants.
- * Falls back to HTTP_PROXY if HTTPS_PROXY is not set.
- * Returns undefined if no proxy is configured.
+ * Gets HTTPS proxy URL from environment variables. Checks both uppercase and lowercase
+ * variants. Falls back to HTTP_PROXY if HTTPS_PROXY is not set. Returns undefined if no
+ * proxy is configured.
  */
 function getHttpsProxyUrl(): string | undefined {
   const envVars = ['HTTPS_PROXY', 'https_proxy', 'HTTP_PROXY', 'http_proxy'];
@@ -57,9 +56,7 @@ function shouldBypassProxy(hostname: string): boolean {
   });
 }
 
-/**
- * Creates HTTPS agent with proxy support if configured via environment variables.
- */
+/** Creates HTTPS agent with proxy support if configured via environment variables. */
 function getHttpsProxyAgent(url: URL): HttpsProxyAgent<string> | undefined {
   // Check if this host should bypass the proxy
   if (shouldBypassProxy(url.hostname)) {

@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "lynx",
   "version": "1.0.0",
   "type": "module",

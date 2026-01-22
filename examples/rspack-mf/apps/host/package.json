@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "rspack_mf_host",
   "version": "0.0.0",
   "zephyr:dependencies": {

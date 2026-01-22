@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "team-red",
   "version": "0.1.0",
   "repository": {

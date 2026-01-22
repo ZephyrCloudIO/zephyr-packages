@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "@react-micro-frontends/source",
   "version": "0.0.0",
   "license": "MIT",

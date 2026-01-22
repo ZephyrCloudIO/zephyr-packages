@@ -1,6 +1,6 @@
 {
   "name": "zephyr-cli",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "CLI tool for running build commands and uploading assets to Zephyr",
   "keywords": [
     "zephyr",

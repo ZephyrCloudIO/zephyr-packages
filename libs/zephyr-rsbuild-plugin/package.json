@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rsbuild-plugin",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Rsbuild plugin for Zephyr",
   "repository": {
     "type": "git",

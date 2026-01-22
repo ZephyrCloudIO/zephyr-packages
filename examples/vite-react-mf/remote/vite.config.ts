@@ -6,7 +6,7 @@ const mfConfig = {
   name: 'vite-remote',
   filename: 'remoteEntry.js',
   dts: {
-    // tsconfigPath: './tsconfig.app.json',
+    tsconfigPath: './tsconfig.app.json',
     generateTypes: true,
   },
   exposes: {

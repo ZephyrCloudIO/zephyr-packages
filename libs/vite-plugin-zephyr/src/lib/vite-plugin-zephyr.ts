@@ -1,6 +1,6 @@
 import { federation } from '@module-federation/vite';
 import MagicString from 'magic-string';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import * as path from 'path';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
@@ -26,7 +26,17 @@ export type ModuleFederationOptions = Parameters<typeof federation>[0];
 const DEFAULT_DTS_TYPES_FOLDER = '@mf-types';
 const DTS_WAIT_TIMEOUT_MS = 15_000;
 const DTS_WAIT_INTERVAL_MS = 200;
+const DTS_STABLE_CHECKS = 2;
 
+/**
+ * Resolve the Module Federation DTS output folder from MF options.
+ *
+ * Priority order:
+ *
+ * 1. Dts.generateTypes.typesFolder
+ * 2. Dts.consumeTypes.typesFolder
+ * 3. DEFAULT_DTS_TYPES_FOLDER
+ */
 function resolveDtsTypesFolder(
   dtsOptions: ModuleFederationOptions['dts']
 ): string | undefined {
@@ -55,17 +65,49 @@ function resolveDtsTypesFolder(
   return DEFAULT_DTS_TYPES_FOLDER;
 }
 
+/**
+ * Poll for a file to exist and become size-stable.
+ *
+ * Returns true when the file exists and its size is unchanged across DTS_STABLE_CHECKS
+ * intervals (or false if timeout is reached).
+ */
 async function waitForFile(
   filePath: string,
   timeoutMs = DTS_WAIT_TIMEOUT_MS,
   intervalMs = DTS_WAIT_INTERVAL_MS
 ): Promise<boolean> {
   const start = Date.now();
+  let lastSize: number | undefined;
+  let stableChecks = 0;
   while (Date.now() - start < timeoutMs) {
-    if (existsSync(filePath)) return true;
+    if (existsSync(filePath)) {
+      let size = 0;
+      try {
+        size = statSync(filePath).size;
+      } catch {
+        size = 0;
+      }
+      if (size > 0 && size === lastSize) {
+        stableChecks += 1;
+        if (stableChecks >= DTS_STABLE_CHECKS) {
+          return true;
+        }
+      } else {
+        stableChecks = 0;
+        lastSize = size;
+      }
+    } else {
+      stableChecks = 0;
+      lastSize = undefined;
+    }
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
-  return existsSync(filePath);
+  if (!existsSync(filePath)) return false;
+  try {
+    return statSync(filePath).size > 0;
+  } catch {
+    return false;
+  }
 }
 
 interface VitePluginZephyrOptions {
@@ -109,6 +151,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin[] {
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
+  let writeBundleDir: string | undefined;
+  let writeBundleAssets: OutputBundle | undefined;
 
   const prePlugin: Plugin = {
     name: 'with-zephyr',
@@ -433,9 +477,14 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin[] {
     },
     writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       try {
-        const vite_internal_options = await vite_internal_options_defer;
-        vite_internal_options.dir = options.dir;
-        vite_internal_options.assets = bundle;
+        if (!options.dir) {
+          ze_log.mf(
+            'writeBundle missing output directory; falling back to config outDir'
+          );
+        } else {
+          writeBundleDir = options.dir;
+        }
+        writeBundleAssets = bundle;
       } catch (error) {
         handleGlobalError(error);
       }
@@ -447,28 +496,38 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin[] {
           vite_internal_options_defer,
           zephyr_engine_defer,
         ]);
+        const effective_vite_internal_options: ZephyrInternalOptions = {
+          ...vite_internal_options,
+          dir: writeBundleDir ?? vite_internal_options.dir,
+          assets: writeBundleAssets ?? vite_internal_options.assets,
+        };
 
         zephyr_engine.buildProperties.baseHref = baseHref;
 
         if (mfPlugin) {
           const dtsTypesFolder = resolveDtsTypesFolder(mfPlugin._options.dts);
           const hasExposes = Object.keys(mfPlugin._options.exposes ?? {}).length > 0;
-          if (dtsTypesFolder && hasExposes && vite_internal_options.outDir) {
+          if (dtsTypesFolder && hasExposes && effective_vite_internal_options.outDir) {
             const zipPath = path.isAbsolute(dtsTypesFolder)
               ? `${dtsTypesFolder}.zip`
               : path.resolve(
-                  vite_internal_options.root,
-                  vite_internal_options.outDir,
+                  effective_vite_internal_options.root,
+                  effective_vite_internal_options.outDir,
                   `${dtsTypesFolder}.zip`
                 );
-            await waitForFile(zipPath);
+            const foundZip = await waitForFile(zipPath);
+            if (!foundZip) {
+              ze_log.mf(
+                `DTS types zip not found or not stable within ${DTS_WAIT_TIMEOUT_MS}ms: ${zipPath}`
+              );
+            }
           }
         }
 
         await zephyr_engine.start_new_build();
         const assetsMap = await extract_vite_assets_map(
           zephyr_engine,
-          vite_internal_options
+          effective_vite_internal_options
         );
         const modules = Object.entries(mfPlugin?._options.exposes ?? {})
           .map(([name, file]) => ({

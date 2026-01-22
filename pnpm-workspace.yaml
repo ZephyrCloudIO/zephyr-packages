@@ -33,7 +33,7 @@ catalogs:
   module-federation:
     '@module-federation/enhanced': ^0.21.0
     '@module-federation/runtime': ^0.21.0
-    '@module-federation/vite': ^1.2.6
+    '@module-federation/vite': ^1.9.5
     '@module-federation/automatic-vendor-federation': ^1.2.1
   plugin-shared:
     is-ci: ^4.1.0

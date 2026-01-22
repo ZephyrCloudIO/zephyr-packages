@@ -139,17 +139,18 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       return null;
     },
     transform: {
+      order: 'post',
       // Hook filter for Rolldown/Vite 7 performance optimization
-      // Match all JS files AND remoteEntry.js specifically for both env rewriting and remote injection
+      // Only process specific file patterns for env variable rewriting
       filter: {
-        id: /(\.(mjs|cjs|js|ts|jsx|tsx)$|remoteEntry\.js)/,
+        id: /(\.(mjs|cjs|js|ts|jsx|tsx)$|virtual:mf-REMOTE_ENTRY_ID)/,
       },
       handler: async (code, id) => {
         try {
           // 1. Handle remoteEntry.js transformation for dev mode
           // In dev mode, Module Federation generates remoteEntry.js in memory with __REMOTE_MAP__ placeholder
           // The transform hook catches it and injects resolved remotes before serving to the browser
-          if (id.includes('remoteEntry.js') && code.includes('"__REMOTE_MAP__"')) {
+          if (code.includes('"__REMOTE_MAP__"')) {
             const zephyr_engine = await zephyr_engine_defer;
             const resolved_remotes = zephyr_engine.federated_dependencies;
 

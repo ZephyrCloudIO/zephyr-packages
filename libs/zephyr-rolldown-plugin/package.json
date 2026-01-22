@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rolldown-plugin",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Rolldown plugin for Zephyr",
   "repository": {
     "type": "git",

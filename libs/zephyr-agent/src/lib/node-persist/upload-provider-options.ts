@@ -27,6 +27,7 @@ export enum UploadProviderType {
   GCP = 'gcp',
   FASTLY = 'fastly',
   AKAMAI = 'akamai',
+  CUSTOM = 'custom',
 }
 
 export interface EnvironmentConfig {

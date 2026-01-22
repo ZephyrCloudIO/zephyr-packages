@@ -1,6 +1,8 @@
 import { federation } from '@module-federation/vite';
 import MagicString from 'magic-string';
+import { existsSync } from 'node:fs';
 import * as path from 'path';
+import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
@@ -20,6 +22,51 @@ import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resol
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
+
+const DEFAULT_DTS_TYPES_FOLDER = '@mf-types';
+const DTS_WAIT_TIMEOUT_MS = 15_000;
+const DTS_WAIT_INTERVAL_MS = 200;
+
+function resolveDtsTypesFolder(
+  dtsOptions: ModuleFederationOptions['dts']
+): string | undefined {
+  if (!dtsOptions) return undefined;
+  if (dtsOptions === true) return DEFAULT_DTS_TYPES_FOLDER;
+  if (typeof dtsOptions !== 'object') return undefined;
+
+  if (dtsOptions.generateTypes === false) return undefined;
+
+  if (
+    dtsOptions.generateTypes &&
+    typeof dtsOptions.generateTypes === 'object' &&
+    dtsOptions.generateTypes.typesFolder
+  ) {
+    return dtsOptions.generateTypes.typesFolder;
+  }
+
+  if (
+    dtsOptions.consumeTypes &&
+    typeof dtsOptions.consumeTypes === 'object' &&
+    dtsOptions.consumeTypes.typesFolder
+  ) {
+    return dtsOptions.consumeTypes.typesFolder;
+  }
+
+  return DEFAULT_DTS_TYPES_FOLDER;
+}
+
+async function waitForFile(
+  filePath: string,
+  timeoutMs = DTS_WAIT_TIMEOUT_MS,
+  intervalMs = DTS_WAIT_INTERVAL_MS
+): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (existsSync(filePath)) return true;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  return existsSync(filePath);
+}
 
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
@@ -46,11 +93,11 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     mfConfig.runtimePlugins.push(runtimePluginPath.replace(/\\/g, '/'));
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
-  plugins.push(zephyrPlugin(hooks));
+  plugins.push(...zephyrPlugin(hooks));
   return plugins as Plugin[];
 }
 
-function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
+function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin[] {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
@@ -63,7 +110,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
 
-  return {
+  const prePlugin: Plugin = {
     name: 'with-zephyr',
     // Run before Vite's env replacement so we can rewrite import.meta.env.ZE_PUBLIC_*
     enforce: 'pre',
@@ -197,96 +244,6 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         }
       },
     },
-    generateBundle: async function (options, bundle) {
-      // Process remoteEntry.js to inject runtime plugin
-      if (mfPlugin) {
-        for (const [fileName, chunk] of Object.entries(bundle)) {
-          if (
-            fileName === 'remoteEntry.js' &&
-            chunk &&
-            typeof chunk === 'object' &&
-            'type' in chunk &&
-            chunk.type === 'chunk' &&
-            'code' in chunk
-          ) {
-            try {
-              // Use already-resolved dependencies from configResolved hook
-              const zephyr_engine = await zephyr_engine_defer;
-              const resolved_remotes = zephyr_engine.federated_dependencies;
-
-              if (!resolved_remotes?.length) {
-                ze_log.remotes('No resolved remotes found in generateBundle');
-                continue;
-              }
-
-              const result = inject_resolved_remotes_map(resolved_remotes, chunk.code);
-              chunk.code = result;
-              ze_log.remotes(
-                `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
-              );
-            } catch (error) {
-              handleGlobalError(error);
-            }
-          }
-        }
-      }
-
-      // Ensure import assertions are preserved in the final bundle
-      if (cachedSpecifier) {
-        for (const [, chunk] of Object.entries(bundle)) {
-          if (
-            chunk &&
-            typeof chunk === 'object' &&
-            'type' in chunk &&
-            chunk.type === 'chunk' &&
-            'code' in chunk
-          ) {
-            // Replace imports without assertions with imports that have assertions
-            const importWithoutAssertion = new RegExp(
-              `import\\s+([^\\s]+)\\s+from\\s*['"]${cachedSpecifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
-              'g'
-            );
-
-            if (chunk.code.match(importWithoutAssertion)) {
-              chunk.code = chunk.code.replace(
-                importWithoutAssertion,
-                `import $1 from '${cachedSpecifier}' with { type: 'json' }`
-              );
-            }
-          }
-        }
-      }
-
-      // Generate the zephyr manifest
-      try {
-        const zephyr_engine = await zephyr_engine_defer;
-        const dependencies = zephyr_engine.federated_dependencies || [];
-        const manifestContent = createManifestContent(dependencies, true);
-
-        this.emitFile({
-          type: 'asset',
-          fileName: 'zephyr-manifest.json',
-          source: manifestContent,
-        });
-      } catch (error) {
-        handleGlobalError(error);
-        // Fallback to empty manifest if there's an error
-        this.emitFile({
-          type: 'asset',
-          fileName: 'zephyr-manifest.json',
-          source: JSON.stringify(
-            {
-              version: '1.0.0',
-              timestamp: new Date().toISOString(),
-              dependencies: {},
-              zeVars: {},
-            },
-            null,
-            2
-          ),
-        });
-      }
-    },
     // For dev server mode - serve env module and upload when server starts
     configureServer: async (server) => {
       // Add route to serve zephyr-manifest.json with correct MIME type
@@ -379,9 +336,112 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         return html;
       }
     },
-    // For production builds - use writeBundle instead of closeBundle
-    // writeBundle runs AFTER files are written to disk, so dist directory exists
-    writeBundle: async () => {
+  };
+
+  const postPlugin: Plugin = {
+    name: 'with-zephyr:post',
+    enforce: 'post',
+    generateBundle: async function (options, bundle) {
+      // Process remoteEntry.js to inject runtime plugin
+      if (mfPlugin) {
+        for (const [fileName, chunk] of Object.entries(bundle)) {
+          if (
+            fileName === 'remoteEntry.js' &&
+            chunk &&
+            typeof chunk === 'object' &&
+            'type' in chunk &&
+            chunk.type === 'chunk' &&
+            'code' in chunk
+          ) {
+            try {
+              // Use already-resolved dependencies from configResolved hook
+              const zephyr_engine = await zephyr_engine_defer;
+              const resolved_remotes = zephyr_engine.federated_dependencies;
+
+              if (!resolved_remotes?.length) {
+                ze_log.remotes('No resolved remotes found in generateBundle');
+                continue;
+              }
+
+              const result = inject_resolved_remotes_map(resolved_remotes, chunk.code);
+              chunk.code = result;
+              ze_log.remotes(
+                `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
+              );
+            } catch (error) {
+              handleGlobalError(error);
+            }
+          }
+        }
+      }
+
+      // Ensure import assertions are preserved in the final bundle
+      if (cachedSpecifier) {
+        for (const [, chunk] of Object.entries(bundle)) {
+          if (
+            chunk &&
+            typeof chunk === 'object' &&
+            'type' in chunk &&
+            chunk.type === 'chunk' &&
+            'code' in chunk
+          ) {
+            // Replace imports without assertions with imports that have assertions
+            const importWithoutAssertion = new RegExp(
+              `import\\s+([^\\s]+)\\s+from\\s*['"]${cachedSpecifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+              'g'
+            );
+
+            if (chunk.code.match(importWithoutAssertion)) {
+              chunk.code = chunk.code.replace(
+                importWithoutAssertion,
+                `import $1 from '${cachedSpecifier}' with { type: 'json' }`
+              );
+            }
+          }
+        }
+      }
+
+      // Generate the zephyr manifest
+      try {
+        const zephyr_engine = await zephyr_engine_defer;
+        const dependencies = zephyr_engine.federated_dependencies || [];
+        const manifestContent = createManifestContent(dependencies, true);
+
+        this.emitFile({
+          type: 'asset',
+          fileName: 'zephyr-manifest.json',
+          source: manifestContent,
+        });
+      } catch (error) {
+        handleGlobalError(error);
+        // Fallback to empty manifest if there's an error
+        this.emitFile({
+          type: 'asset',
+          fileName: 'zephyr-manifest.json',
+          source: JSON.stringify(
+            {
+              version: '1.0.0',
+              timestamp: new Date().toISOString(),
+              dependencies: {},
+              zeVars: {},
+            },
+            null,
+            2
+          ),
+        });
+      }
+    },
+    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
+      try {
+        const vite_internal_options = await vite_internal_options_defer;
+        vite_internal_options.dir = options.dir;
+        vite_internal_options.assets = bundle;
+      } catch (error) {
+        handleGlobalError(error);
+      }
+    },
+    // For production builds - wait until all plugins have finished writing assets
+    closeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,
@@ -389,6 +449,21 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         ]);
 
         zephyr_engine.buildProperties.baseHref = baseHref;
+
+        if (mfPlugin) {
+          const dtsTypesFolder = resolveDtsTypesFolder(mfPlugin._options.dts);
+          const hasExposes = Object.keys(mfPlugin._options.exposes ?? {}).length > 0;
+          if (dtsTypesFolder && hasExposes && vite_internal_options.outDir) {
+            const zipPath = path.isAbsolute(dtsTypesFolder)
+              ? `${dtsTypesFolder}.zip`
+              : path.resolve(
+                  vite_internal_options.root,
+                  vite_internal_options.outDir,
+                  `${dtsTypesFolder}.zip`
+                );
+            await waitForFile(zipPath);
+          }
+        }
 
         await zephyr_engine.start_new_build();
         const assetsMap = await extract_vite_assets_map(
@@ -420,4 +495,6 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       }
     },
   };
+
+  return [prePlugin, postPlugin];
 }

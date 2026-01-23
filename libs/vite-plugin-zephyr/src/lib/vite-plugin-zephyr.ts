@@ -25,26 +25,11 @@ export type ModuleFederationOptions = Parameters<typeof federation>[0];
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
   hooks?: ZephyrBuildHooks;
-  /**
-   * Client-side entrypoint file path for CSR applications.
-   *
-   * This should be a path relative to the Vite project root or build output. Common
-   * values: 'index.html', 'src/main.ts', 'src/main.tsx'
-   *
-   * If not specified, will be auto-detected from Vite's build.rollupOptions.input or
-   * default to 'index.html' (standard Vite convention).
-   *
-   * @example
-   *   withZephyr({ entrypoint: 'index.html' });
-   *   withZephyr({ entrypoint: 'src/main.tsx' });
-   */
-  entrypoint?: string;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const hooks = _options?.hooks;
-  const userEntrypoint = _options?.entrypoint;
   const plugins = [];
   if (mfConfig) {
     if (!mfConfig.runtimePlugins) {
@@ -62,11 +47,11 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     mfConfig.runtimePlugins.push(runtimePluginPath.replace(/\\/g, '/'));
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
-  plugins.push(zephyrPlugin(hooks, userEntrypoint));
+  plugins.push(zephyrPlugin(hooks));
   return plugins as Plugin[];
 }
 
-function zephyrPlugin(hooks?: ZephyrBuildHooks, userEntrypoint?: string): Plugin {
+function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
@@ -89,8 +74,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks, userEntrypoint?: string): Plugin
       root = config.root;
       baseHref = config.base || '/';
 
-      // Extract and normalize entrypoint
-      entrypoint = extractEntrypoint(config, userEntrypoint);
+      // Extract and normalize entrypoint from Vite config
+      entrypoint = extractEntrypoint(config);
 
       // Initialize Zephyr engine for both serve and build
       zephyr_defer_create({

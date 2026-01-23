@@ -1,0 +1,47 @@
+{
+  "name": "ze-types",
+  "version": "0.1.8",
+  "description": "Generate Module Federation types from Zephyr URLs",
+  "keywords": [
+    "zephyr",
+    "types",
+    "module-federation",
+    "mf",
+    "dts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/ze-types"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ze-types": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "nx run ze-types:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "@module-federation/dts-plugin": "^0.23.0",
+    "tslib": "catalog:typescript",
+    "zephyr-edge-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "ts-jest": "catalog:typescript"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

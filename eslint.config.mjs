@@ -83,6 +83,12 @@ export default [
     ignores: ['**/*.test.js', '**/*.spec.js', '**/*.test.ts', '**/*.spec.ts'],
   },
   {
+    files: ['libs/ze-types/**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/consistent-type-imports': 'error',

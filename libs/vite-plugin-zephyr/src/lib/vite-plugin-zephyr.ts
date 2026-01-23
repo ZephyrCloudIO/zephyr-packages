@@ -143,7 +143,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       // Hook filter for Rolldown/Vite 7 performance optimization
       // Only process specific file patterns for env variable rewriting
       filter: {
-        id: /(\.(mjs|cjs|js|ts|jsx|tsx)$|virtual:mf-REMOTE_ENTRY_ID)/,
+        id: /(\.(mjs|cjs|js|ts|jsx|tsx)|virtual:mf-REMOTE_ENTRY_ID)/,
       },
       handler: async (code, id) => {
         try {

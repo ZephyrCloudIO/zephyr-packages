@@ -13,6 +13,7 @@ import {
   type RemoteEntry,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
+import { extractEntrypoint } from './internal/extract/extract-entrypoint';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -24,11 +25,26 @@ export type ModuleFederationOptions = Parameters<typeof federation>[0];
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
   hooks?: ZephyrBuildHooks;
+  /**
+   * Client-side entrypoint file path for CSR applications.
+   *
+   * This should be a path relative to the Vite project root or build output. Common
+   * values: 'index.html', 'src/main.ts', 'src/main.tsx'
+   *
+   * If not specified, will be auto-detected from Vite's build.rollupOptions.input or
+   * default to 'index.html' (standard Vite convention).
+   *
+   * @example
+   *   withZephyr({ entrypoint: 'index.html' });
+   *   withZephyr({ entrypoint: 'src/main.tsx' });
+   */
+  entrypoint?: string;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const hooks = _options?.hooks;
+  const userEntrypoint = _options?.entrypoint;
   const plugins = [];
   if (mfConfig) {
     if (!mfConfig.runtimePlugins) {
@@ -46,11 +62,11 @@ export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
     mfConfig.runtimePlugins.push(runtimePluginPath.replace(/\\/g, '/'));
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
-  plugins.push(zephyrPlugin(hooks));
+  plugins.push(zephyrPlugin(hooks, userEntrypoint));
   return plugins as Plugin[];
 }
 
-function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
+function zephyrPlugin(hooks?: ZephyrBuildHooks, userEntrypoint?: string): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
@@ -62,6 +78,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
+  let entrypoint: string;
 
   return {
     name: 'with-zephyr',
@@ -71,6 +88,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
       baseHref = config.base || '/';
+
+      // Extract and normalize entrypoint
+      entrypoint = extractEntrypoint(config, userEntrypoint);
 
       // Initialize Zephyr engine for both serve and build
       zephyr_defer_create({
@@ -342,6 +362,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();
@@ -412,6 +434,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats,
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();

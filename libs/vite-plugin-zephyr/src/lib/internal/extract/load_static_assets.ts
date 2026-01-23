@@ -9,11 +9,6 @@ export async function loadStaticAssets(
   const bundle: OutputBundle = {};
 
   for await (const assets of [
-    load_static_entries({
-      root: vite_internal_options.root,
-      outDir: vite_internal_options.outDir,
-    }),
-
     // Only load if specified
     vite_internal_options.publicDir
       ? load_public_dir({
@@ -21,6 +16,10 @@ export async function loadStaticAssets(
           publicDir: vite_internal_options.publicDir,
         })
       : [],
+    load_static_entries({
+      root: vite_internal_options.root,
+      outDir: vite_internal_options.outDir,
+    }),
   ]) {
     for (const asset of assets) {
       bundle[asset.fileName] = asset;

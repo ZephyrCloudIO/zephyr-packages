@@ -62,6 +62,9 @@ export {
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
+export { checkAuth } from './lib/auth/login';
+export { getGitInfo, type ZeGitInfo } from './lib/build-context/ze-util-get-git-info';
+export { getToken as getAuthToken } from './lib/node-persist/token';
 
 // Zephyr Edge is the main class which should be used
 export {

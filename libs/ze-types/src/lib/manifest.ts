@@ -35,7 +35,9 @@ export async function fetchZephyrManifest(manifestUrl: string): Promise<ZephyrMa
       },
     });
   } catch (cause) {
-    throw new Error(`ze-types: failed to fetch ${manifestUrl}`, { cause });
+    const error = new Error(`ze-types: failed to fetch ${manifestUrl}`);
+    (error as { cause?: unknown }).cause = cause;
+    throw error;
   }
 
   if (!response.ok) {

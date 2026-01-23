@@ -13,11 +13,10 @@ const PACKAGE_NAME = 'ze-types';
 function logDebug(enabled: boolean, message: string, meta?: unknown) {
   if (!enabled) return;
   if (meta) {
-     
     console.log(`[${PACKAGE_NAME}] ${message}`, meta);
     return;
   }
-   
+
   console.log(`[${PACKAGE_NAME}] ${message}`);
 }
 
@@ -109,6 +108,7 @@ export async function generateZeTypes(
         projectRoot,
         packageJsonPath: options.packageJsonPath,
         token: options.token,
+        autoLogin: options.autoLogin,
         abortOnError: options.abortOnError,
         debug,
       })

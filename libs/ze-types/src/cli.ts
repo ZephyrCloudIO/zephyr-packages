@@ -5,6 +5,7 @@ import { generateZeTypes } from './lib/generate';
 const HELP = `ze-types
 
 Usage:
+  ze-types login
   ze-types                       (default: read zephyr:dependencies)
   ze-types --url <zephyr-app-url> [--url <zephyr-app-url>]
   ze-types --from-package
@@ -16,6 +17,7 @@ Options:
   --from-package           Read zephyr:dependencies from package.json
   --package <path>         Explicit package.json path or directory
   --token <token>          Zephyr auth token (or set ZE_SECRET_TOKEN)
+  --no-login               Disable auto-login prompt
   --debug                  Verbose logging
   -h, --help               Show help
 
@@ -29,6 +31,7 @@ Env:
 `;
 
 type ParsedArgs = {
+  command: 'generate' | 'login';
   urls: string[];
   root?: string;
   packageJsonPath?: string;
@@ -36,6 +39,7 @@ type ParsedArgs = {
   token?: string;
   debug: boolean;
   help: boolean;
+  autoLogin: boolean;
 };
 
 function splitUrls(value: string): string[] {
@@ -53,11 +57,18 @@ function parseArgs(args: string[]): ParsedArgs {
   let token: string | undefined;
   let debug = false;
   let help = false;
+  let command: ParsedArgs['command'] = 'generate';
+  let autoLogin = true;
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
 
     if (arg === 'generate') {
+      continue;
+    }
+
+    if (arg === 'login') {
+      command = 'login';
       continue;
     }
 
@@ -68,6 +79,11 @@ function parseArgs(args: string[]): ParsedArgs {
 
     if (arg === '--debug') {
       debug = true;
+      continue;
+    }
+
+    if (arg === '--no-login') {
+      autoLogin = false;
       continue;
     }
 
@@ -143,7 +159,28 @@ function parseArgs(args: string[]): ParsedArgs {
     usePackageJson = true;
   }
 
-  return { urls, root, packageJsonPath, usePackageJson, token, debug, help };
+  return {
+    command,
+    urls,
+    root,
+    packageJsonPath,
+    usePackageJson,
+    token,
+    debug,
+    help,
+    autoLogin,
+  };
+}
+
+async function runLogin(root?: string): Promise<void> {
+  if (root) {
+    process.chdir(root);
+  }
+
+  const { checkAuth, getGitInfo } = await import('zephyr-agent');
+  const gitInfo = await getGitInfo();
+  await checkAuth(gitInfo);
+  process.stdout.write('[ze-types] login complete\n');
 }
 
 async function main(): Promise<void> {
@@ -161,12 +198,18 @@ async function main(): Promise<void> {
       return;
     }
 
+    if (parsed.command === 'login') {
+      await runLogin(parsed.root);
+      return;
+    }
+
     const result = await generateZeTypes({
       zephyrUrls: parsed.urls,
       projectRoot: parsed.root,
       packageJsonPath: parsed.packageJsonPath,
       usePackageJson: parsed.usePackageJson,
       token: parsed.token,
+      autoLogin: parsed.autoLogin && parsed.usePackageJson,
       debug: parsed.debug,
       abortOnError: false,
     });

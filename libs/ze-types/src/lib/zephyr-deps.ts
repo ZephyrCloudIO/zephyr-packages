@@ -17,6 +17,7 @@ export interface ResolveZephyrDepsOptions {
   projectRoot: string;
   packageJsonPath?: string;
   token?: string;
+  autoLogin?: boolean;
   abortOnError?: boolean;
   debug?: boolean;
 }
@@ -34,11 +35,10 @@ const URL_PREFIXES = ['http://', 'https://', 'file://'];
 function logDebug(enabled: boolean, message: string, meta?: unknown) {
   if (!enabled) return;
   if (meta) {
-     
     console.log(`[ze-types] ${message}`, meta);
     return;
   }
-   
+
   console.log(`[ze-types] ${message}`);
 }
 
@@ -89,7 +89,7 @@ function getRepoSlugFromPackageJson(pkg: Record<string, unknown>): {
   org: string;
   project: string;
 } | null {
-  const repo = pkg.repository;
+  const repo = pkg['repository'];
   const repoUrl =
     typeof repo === 'string'
       ? repo
@@ -214,8 +214,16 @@ function resolveApplicationUid(options: {
   });
 }
 
+function isInteractive(): boolean {
+  if (process.env['CI']) return false;
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
 async function resolveAuthToken(options: {
   token?: string;
+  autoLogin?: boolean;
+  projectRoot: string;
+  debug?: boolean;
 }): Promise<string | undefined> {
   if (options.token) {
     return options.token;
@@ -228,8 +236,17 @@ async function resolveAuthToken(options: {
     return envToken;
   }
 
+  const storedToken = await getStoredAuthToken();
+  if (storedToken) {
+    return storedToken;
+  }
+
   const serverToken = process.env['ZE_SERVER_TOKEN'];
   if (!serverToken) {
+    if (options.autoLogin) {
+      await tryLogin(options);
+      return await getStoredAuthToken();
+    }
     return undefined;
   }
 
@@ -238,6 +255,10 @@ async function resolveAuthToken(options: {
     process.env['GIT_AUTHOR_EMAIL'] ||
     process.env['GIT_COMMITTER_EMAIL'];
   if (!email) {
+    if (options.autoLogin) {
+      await tryLogin(options);
+      return await getStoredAuthToken();
+    }
     return undefined;
   }
 
@@ -254,11 +275,48 @@ async function resolveAuthToken(options: {
   });
 
   if (!response.ok) {
+    if (options.autoLogin) {
+      await tryLogin(options);
+      return await getStoredAuthToken();
+    }
     return undefined;
   }
 
   const data = (await response.json()) as { access_token?: string };
   return data.access_token;
+}
+
+async function getStoredAuthToken(): Promise<string | undefined> {
+  try {
+    const { getAuthToken } = await import('zephyr-agent');
+    if (typeof getAuthToken !== 'function') {
+      return undefined;
+    }
+    return await getAuthToken();
+  } catch {
+    return undefined;
+  }
+}
+
+async function tryLogin(options: {
+  autoLogin?: boolean;
+  projectRoot: string;
+  debug?: boolean;
+}): Promise<void> {
+  if (!options.autoLogin) return;
+  if (!isInteractive()) return;
+
+  logDebug(Boolean(options.debug), 'auth missing; prompting login');
+
+  const cwd = process.cwd();
+  try {
+    process.chdir(options.projectRoot);
+    const { checkAuth, getGitInfo } = await import('zephyr-agent');
+    const gitInfo = await getGitInfo();
+    await checkAuth(gitInfo);
+  } finally {
+    process.chdir(cwd);
+  }
 }
 
 async function resolveRemoteDependency(options: {
@@ -276,7 +334,7 @@ async function resolveRemoteDependency(options: {
     'Content-Type': 'application/json',
   };
   if (options.token) {
-    headers.Authorization = `Bearer ${options.token}`;
+    headers['Authorization'] = `Bearer ${options.token}`;
   }
 
   const response = await fetch(endpoint.toString(), { headers });
@@ -311,7 +369,7 @@ export async function resolveZephyrDependencies(
   }
 
   const orgProject = getOrgProject({ projectRoot: options.projectRoot, packageJson });
-  const token = await resolveAuthToken({ token: options.token });
+  let token: string | undefined;
 
   const remotes: Record<string, string> = {};
   const entries = Object.entries(zephyrDepsRaw);
@@ -337,8 +395,17 @@ export async function resolveZephyrDependencies(
     const version = normalizeVersion(parsed.version);
 
     if (!token) {
+      token = await resolveAuthToken({
+        token: options.token,
+        autoLogin: options.autoLogin,
+        projectRoot: options.projectRoot,
+        debug: options.debug,
+      });
+    }
+
+    if (!token) {
       throw new Error(
-        'ze-types: missing auth token. Set ZE_SECRET_TOKEN or ZE_AUTH_TOKEN to resolve zephyr:dependencies.'
+        'ze-types: missing auth token. Run "ze-types login" or set ZE_SECRET_TOKEN/ZE_AUTH_TOKEN to resolve zephyr:dependencies.'
       );
     }
 

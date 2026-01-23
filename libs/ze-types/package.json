@@ -32,6 +32,7 @@
   "dependencies": {
     "@module-federation/dts-plugin": "^0.23.0",
     "tslib": "catalog:typescript",
+    "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {

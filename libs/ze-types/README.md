@@ -51,6 +51,12 @@ Provide auth token for resolution:
 ZE_SECRET_TOKEN=... npx ze-types --from-package
 ```
 
+Or login once (stores token in ~/.zephyr). The CLI will prompt login if needed:
+
+```bash
+npx ze-types login
+```
+
 ## tsconfig
 
 ```json
@@ -64,5 +70,6 @@ ZE_SECRET_TOKEN=... npx ze-types --from-package
 ## Notes
 
 - Uses `zephyr-manifest.json` or `zephyr:dependencies` for remotes.
-- Dependency resolution uses Zephyr API; set `ZE_SECRET_TOKEN` (or `ZE_AUTH_TOKEN`).
+- Dependency resolution uses Zephyr API; set `ZE_SECRET_TOKEN` (or `ZE_AUTH_TOKEN`) or run `ze-types login`.
+- Use `--no-login` to disable the login prompt.
 - Re-run after remote deploys to keep types fresh.

@@ -5,6 +5,7 @@ export interface GenerateZeTypesOptions {
   packageJsonPath?: string;
   usePackageJson?: boolean;
   token?: string;
+  autoLogin?: boolean;
   remoteTypesFolder?: string;
   abortOnError?: boolean;
   debug?: boolean;

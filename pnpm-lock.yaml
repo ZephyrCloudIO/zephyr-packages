@@ -1627,6 +1627,34 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-rsbuild-plugin
 
+  libs/ze-types:
+    dependencies:
+      '@module-federation/dts-plugin':
+        specifier: ^0.23.0
+        version: 0.23.0(typescript@5.9.3)
+      tslib:
+        specifier: catalog:typescript
+        version: 2.8.1
+      zephyr-agent:
+        specifier: workspace:*
+        version: link:../zephyr-agent
+      zephyr-edge-contract:
+        specifier: workspace:*
+        version: link:../zephyr-edge-contract
+    devDependencies:
+      '@types/jest':
+        specifier: catalog:typescript
+        version: 29.5.14
+      '@types/node':
+        specifier: ^22.13.11
+        version: 22.13.13
+      '@typescript-eslint/eslint-plugin':
+        specifier: catalog:eslint
+        version: 8.51.0(@typescript-eslint/parser@8.51.0(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.23.0(jiti@2.6.1))(typescript@5.9.3)
+      ts-jest:
+        specifier: catalog:typescript
+        version: 29.3.0(@babel/core@7.28.5)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.5))(esbuild@0.27.2)(jest@30.2.0(@types/node@22.13.13)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.27.2))(ts-node@10.9.2(@swc/core@1.15.8(@swc/helpers@0.5.17))(@types/node@22.13.13)(typescript@5.9.3)))(typescript@5.9.3)
+
   libs/zephyr-agent:
     dependencies:
       '@toon-format/toon':
@@ -4209,6 +4237,15 @@ packages:
       vue-tsc:
         optional: true
 
+  '@module-federation/dts-plugin@0.23.0':
+    resolution: {integrity: sha512-DIA2ht2SkGgdRWSVnxBGBS4XqeSiWIFPwyULZVZ0TTYr/47betlSVSRU6CTPokalrlryzMhEiqcvYJPCkOVP5w==}
+    peerDependencies:
+      typescript: ^4.9.0 || ^5.0.0
+      vue-tsc: '>=1.0.24'
+    peerDependenciesMeta:
+      vue-tsc:
+        optional: true
+
   '@module-federation/enhanced@0.18.3':
     resolution: {integrity: sha512-whjh2fw8E+R4C2QlHNoSw/ltYyF5Tu7UYG2dR7vIG+MuKuCUiJKmigv5s0zv6AaqNdO7ft9xLfVoWwrI8TJNNg==}
     hasBin: true
@@ -4248,6 +4285,9 @@ packages:
   '@module-federation/error-codes@0.22.0':
     resolution: {integrity: sha512-xF9SjnEy7vTdx+xekjPCV5cIHOGCkdn3pIxo9vU7gEZMIw0SvAEdsy6Uh17xaCpm8V0FWvR0SZoK9Ik6jGOaug==}
 
+  '@module-federation/error-codes@0.23.0':
+    resolution: {integrity: sha512-CzcKOPKh/qB1wPkVBC0iEK/Cg4jRAS1DnZsTx7b3JUCIXDcIaRq/XkTdo+EQ0cAsF5Os9lQ0f50O9DC/uFC8eA==}
+
   '@module-federation/error-codes@0.8.12':
     resolution: {integrity: sha512-K+F4iiV62KY+IpjK6ggn3vI5Yt/T/LUb6xuazY78bhAGwLaHe1DYr7BfSutKMpiB+Dcs6U4dYOBogSMnnl0j4Q==}
 
@@ -4266,6 +4306,9 @@ packages:
 
   '@module-federation/managers@0.21.2':
     resolution: {integrity: sha512-AZIqm7wj2l78OwBh4aEABXecSbRV2WIxde3kIgf1FSd3FAML8r1gjIgLVvCrXgHiTJyqy7l6DwgQSl6Rm5UpXQ==}
+
+  '@module-federation/managers@0.23.0':
+    resolution: {integrity: sha512-Stqu04QUiYBhWLW+0+EoZ4e5pFrrTxcEI4StJ7jOPtn2Ll6ImvGWk2KVNfbTjz0TRhIx5rl2wc+YPnYJ9tdVag==}
 
   '@module-federation/manifest@0.18.3':
     resolution: {integrity: sha512-Z+wxfdMC/INrk1/3flWS+6Cel3SUqrS6JMAdaAzUy6SQ7q/TO804zjdAlGU6/bfH+xyADm5VN8kTOJAVgDgB4g==}
@@ -4363,6 +4406,9 @@ packages:
   '@module-federation/sdk@0.22.0':
     resolution: {integrity: sha512-x4aFNBKn2KVQRuNVC5A7SnrSCSqyfIWmm1DvubjbO9iKFe7ith5niw8dqSFBekYBg2Fwy+eMg4sEFNVvCAdo6g==}
 
+  '@module-federation/sdk@0.23.0':
+    resolution: {integrity: sha512-1+DICHIF1z6yggtsZypmcn1gL35iitiSDXcsaqWynK4v5aw9MBRUS4zP3kG7eQDFTMmIo+rGbPN37AUsOq/RRQ==}
+
   '@module-federation/sdk@0.8.12':
     resolution: {integrity: sha512-zFgXYBHbzwIqlrLfn6ewIRXDZCctDDQT2nFhbsZr29yWQgpmW1fm2kJCxQsG0DENGGN1KpzfDoxjjvSKJS/ZHA==}
 
@@ -4371,6 +4417,9 @@ packages:
 
   '@module-federation/third-party-dts-extractor@0.21.2':
     resolution: {integrity: sha512-t8kKhD1XigGUpgFXyjpmT71gPSjR5CuTezSCSF6rIRSl+lQESiwzbPPlXHJorpKaaQJYAFtlmtNkcbvVR9nnXg==}
+
+  '@module-federation/third-party-dts-extractor@0.23.0':
+    resolution: {integrity: sha512-/oiLf6QQblhQKuHf89Wd475nUva+PWz5G01wxldy4lXaSTvz5XayCCBDek2SX8Gs4XnqATCm6IriAQ+ORzsgmQ==}
 
   '@module-federation/vite@1.2.6':
     resolution: {integrity: sha512-JG1AXzr5m3LqkKAJ2YeFj/kizvzIAQgHYnjDn3zzij3L0qntqBx3d7YOp8JjAekSCfYlCx2zn550UyJlfdaXDg==}
@@ -18961,6 +19010,31 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@module-federation/dts-plugin@0.23.0(typescript@5.9.3)':
+    dependencies:
+      '@module-federation/error-codes': 0.23.0
+      '@module-federation/managers': 0.23.0
+      '@module-federation/sdk': 0.23.0
+      '@module-federation/third-party-dts-extractor': 0.23.0
+      adm-zip: 0.5.16
+      ansi-colors: 4.1.3
+      axios: 1.12.2(debug@4.4.3)
+      chalk: 3.0.0
+      fs-extra: 9.1.0
+      isomorphic-ws: 5.0.0(ws@8.18.0)
+      koa: 3.1.1
+      lodash.clonedeepwith: 4.5.0
+      log4js: 6.9.1
+      node-schedule: 2.1.1
+      rambda: 9.4.2
+      typescript: 5.9.3
+      ws: 8.18.0
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
   '@module-federation/enhanced@0.18.3(@rspack/core@1.7.0(@swc/helpers@0.5.17))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))':
     dependencies:
       '@module-federation/bridge-react-webpack-plugin': 0.18.3
@@ -19051,6 +19125,8 @@ snapshots:
 
   '@module-federation/error-codes@0.22.0': {}
 
+  '@module-federation/error-codes@0.23.0': {}
+
   '@module-federation/error-codes@0.8.12': {}
 
   '@module-federation/inject-external-runtime-core-plugin@0.18.3(@module-federation/runtime-tools@0.18.3)':
@@ -19070,6 +19146,12 @@ snapshots:
   '@module-federation/managers@0.21.2':
     dependencies:
       '@module-federation/sdk': 0.21.2
+      find-pkg: 2.0.0
+      fs-extra: 9.1.0
+
+  '@module-federation/managers@0.23.0':
+    dependencies:
+      '@module-federation/sdk': 0.23.0
       find-pkg: 2.0.0
       fs-extra: 9.1.0
 
@@ -19248,6 +19330,8 @@ snapshots:
 
   '@module-federation/sdk@0.22.0': {}
 
+  '@module-federation/sdk@0.23.0': {}
+
   '@module-federation/sdk@0.8.12':
     dependencies:
       isomorphic-rslog: 0.0.7
@@ -19259,6 +19343,12 @@ snapshots:
       resolve: 1.22.8
 
   '@module-federation/third-party-dts-extractor@0.21.2':
+    dependencies:
+      find-pkg: 2.0.0
+      fs-extra: 9.1.0
+      resolve: 1.22.8
+
+  '@module-federation/third-party-dts-extractor@0.23.0':
     dependencies:
       find-pkg: 2.0.0
       fs-extra: 9.1.0

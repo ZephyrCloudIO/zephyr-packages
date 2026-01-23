@@ -1,0 +1,39 @@
+{
+  "name": "ze-types",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ze-types/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/ze-types/src",
+        "outputPath": "libs/ze-types/dist",
+        "tsConfig": "libs/ze-types/tsconfig.lib.json",
+        "main": "libs/ze-types/src/index.ts",
+        "assets": [
+          "libs/ze-types/README.md",
+          "libs/ze-types/LICENSE",
+          "libs/ze-types/src/generated/**/*.d.ts"
+        ]
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist\\{projectRoot}"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/ze-types/jest.config.ts"
+      }
+    }
+  }
+}

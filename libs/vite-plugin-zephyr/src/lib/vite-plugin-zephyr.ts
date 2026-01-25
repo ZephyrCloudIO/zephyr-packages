@@ -11,6 +11,7 @@ import {
   zeBuildDashData,
   ZephyrEngine,
   type RemoteEntry,
+  type ZeResolvedDependency,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
@@ -24,6 +25,24 @@ export type ModuleFederationOptions = Parameters<typeof federation>[0];
 interface VitePluginZephyrOptions {
   mfConfig?: ModuleFederationOptions;
   hooks?: ZephyrBuildHooks;
+}
+
+const DEFAULT_LIBRARY_TYPE = 'module';
+
+function ensureLibraryType(
+  remotes: ZeResolvedDependency[] | null
+): ZeResolvedDependency[] | null {
+  if (!remotes) return remotes;
+  let didUpdate = false;
+  const normalized = remotes.map((remote) => {
+    if (remote.library_type) {
+      return remote;
+    }
+    didUpdate = true;
+    return { ...remote, library_type: DEFAULT_LIBRARY_TYPE };
+  });
+
+  return didUpdate ? normalized : remotes;
 }
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
@@ -94,6 +113,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           if (dependencyPairs) {
             const zephyr_engine = await zephyr_engine_defer;
             await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+            zephyr_engine.federated_dependencies = ensureLibraryType(
+              zephyr_engine.federated_dependencies
+            );
             ze_log.remotes(
               `Resolved ${dependencyPairs.length} remote dependencies in configResolved`
             );

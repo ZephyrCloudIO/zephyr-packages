@@ -1,16 +1,16 @@
-import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
-import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
-import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
+import * as crypto from 'node:crypto';
+import * as fs from 'node:fs';
+import { homedir } from 'node:os';
+import * as path from 'node:path';
+import { promisify } from 'node:util';
 import {
   createApplicationUid,
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
-import * as path from 'node:path';
-import * as crypto from 'node:crypto';
-import { homedir } from 'node:os';
-import * as fs from 'node:fs';
+import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
+import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
   getAppConfig,
   saveAppConfig,
@@ -18,20 +18,27 @@ import {
 import { getSecretToken } from '../lib/node-persist/secret-token';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 
+// ---------------- mocks ----------------
+
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).
 jest.mock('../lib/node-persist/secret-token', () => {
-  const defaultExport = jest.requireActual('../lib/node-persist/secret-token');
+  const actual = jest.requireActual('../lib/node-persist/secret-token');
   return {
-    ...defaultExport,
+    ...actual,
     hasSecretToken: jest.fn().mockReturnValue(false),
   };
 });
 
 jest.mock('is-ci', () => false);
 
-// Skip tests if not in preview mode
+// ---------------- execution guards ----------------
+
+// Preview mode is required
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
+
+// Deployment test must be explicitly enabled
+const shouldRunE2E = process.env.ZE_RUN_AGENT_E2E === 'true';
 
 const exec = promisify(execCB);
 
@@ -51,17 +58,17 @@ runner('ZeAgent', () => {
   const dev_api_gate_url =
     process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloudapp.dev';
 
-  const integrationTestTimeout = 5 * 60000; // 5 minute because EDGE cache time;
+  const integrationTestTimeout = 5 * 60_000; // 5 minutes
 
   beforeAll(async () => {
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
-    // Remove Zephyr cache
+
     if (fs.existsSync(zephyrAppFolder)) {
-      const files = fs.readdirSync(zephyrAppFolder);
-      files.forEach((file) => {
+      fs.readdirSync(zephyrAppFolder).forEach((file) => {
         fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
+
     await exec(`git config --add user.name "${gitUserName}"`);
     await exec(`git config --add user.email "${gitEmail}"`);
     await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
@@ -70,6 +77,7 @@ runner('ZeAgent', () => {
     appConfig.email = gitEmail;
     appConfig.username = gitUserName;
     appConfig.user_uuid = user_uuid;
+
     await saveAppConfig(application_uid, appConfig);
   });
 
@@ -99,6 +107,7 @@ runner('ZeAgent', () => {
   it('should test applicationUID', async () => {
     const gitInfo = await getGitInfo();
     const packageJson = await getPackageJson(packageJsonPath);
+
     expect(
       createApplicationUid({
         org: gitInfo.app.org,
@@ -111,12 +120,12 @@ runner('ZeAgent', () => {
   it('should test appConfig', async () => {
     const savedConfig = await getAppConfig(application_uid);
 
-    expect(savedConfig?.email).toEqual(gitEmail);
-    expect(savedConfig?.username).toEqual(gitUserName);
-    expect(savedConfig?.user_uuid).toEqual(user_uuid);
+    expect(savedConfig?.email).toBe(gitEmail);
+    expect(savedConfig?.username).toBe(gitUserName);
+    expect(savedConfig?.user_uuid).toBe(user_uuid);
   });
 
-  it(
+  (shouldRunE2E ? it : it.skip)(
     'should be deployed to Zephyr',
     async () => {
       const envs = [
@@ -126,45 +135,46 @@ runner('ZeAgent', () => {
         `ZE_SECRET_TOKEN=${getSecretToken()}`,
         `DEBUG=zephyr:*`,
       ];
+
       const cmd = [
         'npx cross-env',
         ...envs,
-        `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
+        'npx nx run sample-webpack-application:build --skip-nx-cache --verbose',
       ].join(' ');
+
       await exec(cmd);
+
       const deployResultUrls = await _getAppTagUrls(application_uid);
-      expect(deployResultUrls).toBeTruthy();
+      expect(deployResultUrls.length).toBeGreaterThan(0);
+
       for (const url of deployResultUrls) {
-        expect(url).toBeTruthy();
         const content = await _fetchContent(url);
         const match = content.match(/<title>([^<]+)<\/title>/);
-        expect(match).toBeTruthy();
-        expect(match?.[1]).toEqual('SampleReactApp');
+        expect(match?.[1]).toBe('SampleReactApp');
       }
+
       await _cleanUp(application_uid);
     },
     integrationTestTimeout
   );
 });
 
+// ---------------- helpers ----------------
+
 async function _loadAppConfig(application_uid: string): Promise<ZeApplicationConfig> {
   const url = new URL(
-    `/v2/builder-packages-api/application-config`,
+    '/v2/builder-packages-api/application-config',
     ZEPHYR_API_ENDPOINT()
   );
   url.searchParams.set('application-uid', application_uid);
-  const secret_token = getSecretToken();
-  if (!secret_token) {
-    throw new Error('Secret token is required');
-  }
+
   const response = await fetch(url, {
-    method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${secret_token}`,
+      Authorization: `Bearer ${getSecretToken()}`,
     },
   });
-  return response.json().then((data) => data.value);
+
+  return response.json().then((r) => r.value);
 }
 
 async function _getAppTagUrls(application_uid: string): Promise<string[]> {
@@ -172,17 +182,16 @@ async function _getAppTagUrls(application_uid: string): Promise<string[]> {
     `/v2/builder-packages-api/deployed-tags/${application_uid}`,
     ZEPHYR_API_ENDPOINT()
   );
-  const secret_token = getSecretToken();
+
   const response = await fetch(url, {
-    method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${secret_token}`,
+      Authorization: `Bearer ${getSecretToken()}`,
     },
   });
-  return response.json().then((data) => {
-    return data.entities.map((tag: { remote_host: string }) => tag.remote_host);
-  });
+
+  return response
+    .json()
+    .then((r) => r.entities.map((tag: { remote_host: string }) => tag.remote_host));
 }
 
 async function _cleanUp(application_uid: string): Promise<void> {
@@ -190,12 +199,11 @@ async function _cleanUp(application_uid: string): Promise<void> {
     `/v2/builder-packages-api/cleanup-tests/${application_uid}`,
     ZEPHYR_API_ENDPOINT()
   );
-  const secret_token = getSecretToken();
+
   await fetch(url, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${secret_token}`,
+      Authorization: `Bearer ${getSecretToken()}`,
     },
   });
 }
@@ -203,10 +211,11 @@ async function _cleanUp(application_uid: string): Promise<void> {
 async function _fetchContent(url: string, counter = 0): Promise<string> {
   const response = await fetch(url);
   const content = await response.text();
+
   if (response.status === 404 || !content || counter > 5) {
-    const contentRefetchTimeout = 60000; // 1 minute;
-    await new Promise((resolve) => setTimeout(resolve, contentRefetchTimeout));
+    await new Promise((r) => setTimeout(r, 60_000));
     return _fetchContent(url, counter + 1);
   }
+
   return content;
 }

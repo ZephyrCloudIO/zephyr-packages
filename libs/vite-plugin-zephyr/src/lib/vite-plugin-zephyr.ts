@@ -14,6 +14,7 @@ import {
   type ZeResolvedDependency,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
+import { extractEntrypoint } from './internal/extract/extract-entrypoint';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -81,6 +82,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
+  let entrypoint: string;
 
   return {
     name: 'with-zephyr',
@@ -90,6 +92,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
       baseHref = config.base || '/';
+
+      // Extract and normalize entrypoint from Vite config
+      entrypoint = extractEntrypoint(config);
 
       // Initialize Zephyr engine for both serve and build
       zephyr_defer_create({
@@ -365,6 +370,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();
@@ -435,6 +442,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats,
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();

@@ -78,6 +78,7 @@
       "glob": ">=11.1.0",
       "astro": ">=5.15.8",
       "tmp": ">=0.2.4",
+      "tar": ">=7.5.7",
       "on-headers": ">=1.1.0",
       "esbuild": "catalog:esbuild",
       "@babel/runtime": "catalog:babel",

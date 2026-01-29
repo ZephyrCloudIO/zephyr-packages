@@ -1,0 +1,61 @@
+{
+  "name": "zephyr-nuxt-module",
+  "version": "0.1.10",
+  "description": "Nuxt module for deploying Nuxt applications with Zephyr Cloud",
+  "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-nuxt-module#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-nuxt-module"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "zephyr",
+    "deployment",
+    "module-federation",
+    "ssr",
+    "edge"
+  ],
+  "scripts": {
+    "build": "nx run zephyr-nuxt-module:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1",
+    "zephyr-agent": "^0.1.10"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^4.0.0",
+    "@types/node": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": "^3.0.0 || ^4.0.0",
+    "nuxt": "^3.0.0 || ^4.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

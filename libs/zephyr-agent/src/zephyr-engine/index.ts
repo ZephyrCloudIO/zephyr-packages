@@ -35,6 +35,7 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
+import type { DeployPlanResult } from './display-plan';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
@@ -482,6 +483,29 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const zephyr_engine = this;
     ze_log.upload('Initializing: upload assets');
     const { assetsMap, buildStats, mfConfig, snapshotType, entrypoint } = props;
+
+    // Check for plan mode
+    const isPlanMode = process.env['ZE_PLAN'] === 'true';
+    if (isPlanMode) {
+      const displayPlanModule = await import('./display-plan');
+
+      logFn(
+        'info',
+        'Plan mode detected -- analyzing deployment impact...',
+        'deploy:plan'
+      );
+
+      // Stub plan for now; full API wiring will happen later
+      const stubPlan: DeployPlanResult = {
+        impactedTags: [],
+        impactedEnvs: [],
+        impactedCnames: [],
+        permissions: { canDeploy: true, blockedEnvs: [] },
+      };
+
+      displayPlanModule.displayPlan(zephyr_engine.application_uid, stubPlan);
+      return;
+    }
 
     if (zephyr_engine.federated_dependencies) {
       const manifest = {

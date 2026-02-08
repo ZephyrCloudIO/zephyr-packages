@@ -21,4 +21,6 @@ export const ze_api_gateway = {
   application_config: '/application-config',
   websocket: '/websocket',
   get_access_token_by_server_token: 'get-access-token-by-server-token',
+  deploy_plan: '/deploy/plan',
+  deploy_pre_check: '/deploy/pre-check',
 };

@@ -75,6 +75,10 @@ export {
 export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
 
+// Deploy plan
+export type { DeployPlanResult } from './zephyr-engine/display-plan';
+export { displayPlan } from './zephyr-engine/display-plan';
+
 // Environment variable utilities
 export {
   buildEnvImportMap,

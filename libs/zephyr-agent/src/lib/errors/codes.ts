@@ -508,6 +508,62 @@ Were the required packages in Module federation plugin installed and included in
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
   },
+
+  /** Permission denied for environment deployment */
+  ERR_PERMISSION_DENIED_ENVIRONMENT: {
+    id: '038',
+    message: `You don't have permission to deploy to environment '{{ environment }}'.
+
+Please contact your organization admin to request access.
+
+{{ message }}
+`,
+    kind: 'deploy',
+  },
+
+  /** Permission denied for tag update */
+  ERR_PERMISSION_DENIED_TAG: {
+    id: '039',
+    message: `You don't have permission to update tag '{{ tag }}'.
+
+This tag is protected and requires elevated permissions.
+
+{{ message }}
+`,
+    kind: 'deploy',
+  },
+
+  /** Deployment requires approval */
+  ERR_APPROVAL_REQUIRED: {
+    id: '040',
+    message: `Deployment to '{{ environment }}' requires approval.
+
+Assets have been uploaded. Approve at: {{ approvalUrl }}
+
+{{ message }}
+`,
+    kind: 'deploy',
+  },
+
+  /** Deployment was rejected */
+  ERR_APPROVAL_REJECTED: {
+    id: '041',
+    message: `Deployment was rejected by {{ reviewer }}: {{ reason }}
+
+{{ message }}
+`,
+    kind: 'deploy',
+  },
+
+  /** Plan mode - no deployment executed */
+  ERR_DEPLOYMENT_PLAN_ONLY: {
+    id: '042',
+    message: `Plan mode: no deployment executed. Remove --plan flag or ZE_PLAN=true to deploy.
+
+{{ message }}
+`,
+    kind: 'deploy',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

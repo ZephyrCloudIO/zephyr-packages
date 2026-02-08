@@ -98,8 +98,48 @@ export async function makeHttpRequest<T = void>(
     }
 
     if (response.status === 403) {
+      const body = safe_json_parse<{
+        code?: string;
+        environment?: string;
+        tag?: string;
+        dashboardUrl?: string;
+        reviewer?: string;
+        reason?: string;
+        message?: string;
+      }>(resText);
+
+      if (body?.code === 'APPROVAL_REQUIRED') {
+        throw new ZephyrError(ZeErrors.ERR_APPROVAL_REQUIRED, {
+          environment: body.environment ?? 'unknown',
+          approvalUrl: body.dashboardUrl ?? '',
+          message: body.message ?? '',
+        });
+      }
+
+      if (body?.code === 'PERMISSION_DENIED_ENVIRONMENT') {
+        throw new ZephyrError(ZeErrors.ERR_PERMISSION_DENIED_ENVIRONMENT, {
+          environment: body.environment ?? 'unknown',
+          message: body.message ?? '',
+        });
+      }
+
+      if (body?.code === 'PERMISSION_DENIED_TAG') {
+        throw new ZephyrError(ZeErrors.ERR_PERMISSION_DENIED_TAG, {
+          tag: body.tag ?? 'unknown',
+          message: body.message ?? '',
+        });
+      }
+
+      if (body?.code === 'APPROVAL_REJECTED') {
+        throw new ZephyrError(ZeErrors.ERR_APPROVAL_REJECTED, {
+          reviewer: body.reviewer ?? 'unknown',
+          reason: body.reason ?? 'No reason provided',
+          message: body.message ?? '',
+        });
+      }
+
       throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
-        message: 'Unauthorized request',
+        message: body?.message ?? 'Unauthorized request',
       });
     }
 

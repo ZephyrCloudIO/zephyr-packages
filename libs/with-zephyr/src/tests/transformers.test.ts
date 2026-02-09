@@ -9,6 +9,7 @@ import {
   addToComposePlugins,
   addToPluginsArray,
   addToPluginsArrayOrCreate,
+  addToRsbuildConfig,
   addToRollupArrayConfig,
   addToVitePlugins,
   addToVitePluginsInFunction,
@@ -304,6 +305,51 @@ describe('Zephyr Codemod Transformers', () => {
 
       expect(result).toContain('withZephyr()');
       expect(result).toMatch(/plugins:\s*\[\s*pluginReact\(\),\s*withZephyr\(\)\s*\]/);
+    });
+  });
+
+  describe('addToRsbuildConfig', () => {
+    it('should add output.assetPrefix = "auto"', () => {
+      const code = `
+        import { defineConfig } from '@rsbuild/core';
+        import { pluginReact } from '@rsbuild/plugin-react';
+
+        export default defineConfig({
+          plugins: [pluginReact()]
+        });
+      `;
+
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: ['typescript'],
+      });
+      addToRsbuildConfig(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain('withZephyr()');
+      expect(result).toMatch(/output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/);
+    });
+
+    it('should not overwrite existing output.assetPrefix', () => {
+      const code = `
+        import { defineConfig } from '@rsbuild/core';
+        import { pluginReact } from '@rsbuild/plugin-react';
+
+        export default defineConfig({
+          plugins: [pluginReact()],
+          output: { assetPrefix: '/static/' }
+        });
+      `;
+
+      const ast = parse(code, {
+        sourceType: 'module',
+        plugins: ['typescript'],
+      });
+      addToRsbuildConfig(ast);
+      const result = generate(ast).code;
+
+      expect(result).toContain("assetPrefix: '/static/'");
+      expect(result).not.toContain("assetPrefix: 'auto'");
     });
   });
 

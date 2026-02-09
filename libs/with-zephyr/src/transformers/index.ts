@@ -32,6 +32,12 @@ export {
 } from './plugins-array.js';
 
 // ========================================
+// Category 3b: RSBuild-Specific Transformers
+// ========================================
+
+export { addToRsbuildConfig } from './rsbuild.js';
+
+// ========================================
 // Category 4: Vite-Specific Transformers
 // ========================================
 // Transformers for Vite's defineConfig patterns

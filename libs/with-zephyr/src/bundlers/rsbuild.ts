@@ -8,12 +8,12 @@ export const rsbuildConfig: BundlerConfig = {
     {
       type: 'define-config',
       matcher: /defineConfig\s*\(\s*\{/,
-      transform: 'addToPluginsArray',
+      transform: 'addToRsbuildConfig',
     },
     {
       type: 'plugins-array',
       matcher: /plugins\s*:\s*\[/,
-      transform: 'addToPluginsArray',
+      transform: 'addToRsbuildConfig',
     },
   ],
 };

@@ -29,10 +29,12 @@ async function _zephyr_configuration(
 ): Promise<Configuration> {
   try {
     // create instance of ZephyrEngine to track the application
-    const zephyr_engine = await ZephyrEngine.create({
-      builder: 'rspack',
-      context: config.context,
-    });
+    const zephyr_engine =
+      _zephyrOptions?.zephyr_engine ??
+      (await ZephyrEngine.create({
+        builder: 'rspack',
+        context: config.context,
+      }));
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);
@@ -48,6 +50,9 @@ async function _zephyr_configuration(
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
         hooks: _zephyrOptions?.hooks,
+        disable_upload: _zephyrOptions?.disable_upload,
+        snapshot_type: _zephyrOptions?.snapshot_type,
+        entrypoint: _zephyrOptions?.entrypoint,
       })
     );
   } catch (error) {

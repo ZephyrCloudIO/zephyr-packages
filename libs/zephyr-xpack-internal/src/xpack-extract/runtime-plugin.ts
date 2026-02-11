@@ -126,13 +126,9 @@ export function createZephyrRuntimePlugin(
       }
 
       // Get the resolved URL, checking session storage first.
-      // Pass manifest timestamp for cache-busting so MF runtime treats new builds as
-      // distinct URLs. The timestamp changes on every build, unlike remote_entry_url
-      // which stays stable for tag/environment deployments.
-      const resolvedUrl = getResolvedRemoteUrl(
-        processedRemotes[remoteName],
-        zephyrManifest?.timestamp
-      );
+      // Cache-busting is handled at the edge: the worker appends ?_zv=<snapshot_id>
+      // to remote_entry_url values in zephyr-manifest.json at serve time.
+      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
 
       const targetRemote = args.options.remotes.find(
         (remote) =>
@@ -199,10 +195,7 @@ function hasEntry(remote: any): remote is RemoteWithEntry {
 }
 
 /** Resolves the actual remote URL, checking session storage for overrides */
-function getResolvedRemoteUrl(
-  resolvedRemote: ZephyrDependency,
-  manifestTimestamp?: string
-): string {
+function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
   // Check for session storage override (for development/testing)
@@ -215,15 +208,6 @@ function getResolvedRemoteUrl(
   if (edgeUrl.indexOf('@') !== -1) {
     const [, url] = edgeUrl.split('@') as [string, string];
     edgeUrl = url;
-  }
-
-  // Append manifest timestamp as cache-buster so MF runtime treats each new build as a
-  // distinct URL. The timestamp changes every build, ensuring stale remoteEntry.js is
-  // never served from MF's internal cache.
-  // Skip when using a session storage override (local dev).
-  if (manifestTimestamp && !sessionEdgeURL) {
-    const separator = edgeUrl.includes('?') ? '&' : '?';
-    edgeUrl = `${edgeUrl}${separator}v=${manifestTimestamp}`;
   }
 
   return edgeUrl;

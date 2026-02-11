@@ -3,25 +3,48 @@ import { ze_log, type ZeResolvedDependency } from 'zephyr-agent';
 import { normalize_app_name } from 'zephyr-edge-contract';
 import type { XPackConfiguration } from '../xpack.types';
 import { parseRemotesAsEntries } from './extract-federated-dependency-pairs';
+import {
+  applyFederationDtsOptions,
+  isLocalDevRemote,
+  normalizeFederationHmrOptions,
+  shouldPreserveLocalDevRemotes,
+  type ZephyrFederationHmrOptions,
+} from './federation-hmr-options';
 import { createMfRuntimeCode, xpack_delegate_module_template } from './index';
 import { isLegacyMFPlugin } from './is-legacy-mf-plugin';
 import { iterateFederatedRemoteConfig } from './iterate-federated-remote-config';
 import { runtimePluginInsert } from './runtime-plugin-insert';
 
+export interface MutateFederationRemotesOptions {
+  federationHmr?: boolean | ZephyrFederationHmrOptions;
+}
+
 export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
+  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template,
+  options?: MutateFederationRemotesOptions
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;
   }
 
+  const normalizedHmrOptions = normalizeFederationHmrOptions(
+    options?.federationHmr,
+    config as XPackConfiguration<unknown>
+  );
+
   ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
 
   iterateFederatedRemoteConfig(config, (remotesConfig, plugin) => {
+    applyFederationDtsOptions(
+      remotesConfig,
+      normalizedHmrOptions,
+      config as XPackConfiguration<unknown>
+    );
+
     const remotes = remotesConfig?.remotes;
     if (!remotes) {
       ze_log.remotes(
@@ -33,10 +56,24 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     let runtimePluginInserted = false;
     const isRepack = zephyr_engine.builder === 'repack';
+    const remoteEntries = parseRemotesAsEntries(remotes);
+    const hasLocalDevRemotes = remoteEntries.some(([, remoteVersion]) =>
+      isLocalDevRemote(remoteVersion)
+    );
+    const preserveLocalDevRemotes =
+      shouldPreserveLocalDevRemotes(
+        normalizedHmrOptions,
+        config as XPackConfiguration<unknown>
+      ) && hasLocalDevRemotes;
 
     // Try runtime plugin insertion first if not legacy plugin and not Repack
-    if (!isLegacyMFPlugin(plugin) && !isRepack) {
+    if (!isLegacyMFPlugin(plugin) && !isRepack && !preserveLocalDevRemotes) {
       runtimePluginInserted = runtimePluginInsert(plugin);
+    }
+    if (preserveLocalDevRemotes) {
+      ze_log.remotes(
+        'Skipping Zephyr runtime plugin insertion because local development remotes were detected and federationHmr.preserveDevRemotes is enabled.'
+      );
     }
 
     // Legacy processing - only if runtime plugin wasn't inserted or isEnhanced is false
@@ -44,10 +81,15 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     ze_log.remotes(`Library type: ${library_type}`);
 
-    const remoteEntries = parseRemotesAsEntries(remotes);
-
     remoteEntries.forEach((remote) => {
       const [remote_name, remote_version] = remote;
+      if (preserveLocalDevRemotes && isLocalDevRemote(remote_version)) {
+        ze_log.remotes(
+          `Preserving local development remote for "${remote_name}" with value "${remote_version}".`
+        );
+        return;
+      }
+
       // TODO(ZE): Investigate global impact of relaxed matching rules below.
       // Some ecosystems declare remotes as "name@url" or use wildcard '*'.
       // If this proves too permissive for other bundlers/configs, we should

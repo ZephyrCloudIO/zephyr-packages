@@ -1,5 +1,6 @@
 export interface XPackConfiguration<Compiler> {
   context?: string;
+  mode?: 'none' | 'development' | 'production';
   plugins?: (
     | undefined
     | null
@@ -28,6 +29,25 @@ export interface XFederatedRemotesConfig {
   library?: {
     type?: string;
   };
+  dev?:
+    | boolean
+    | {
+        disableLiveReload?: boolean;
+        disableHotTypesReload?: boolean;
+        disableDynamicRemoteTypeHints?: boolean;
+      };
+  dts?:
+    | boolean
+    | {
+        generateTypes?: boolean | Record<string, unknown>;
+        consumeTypes?:
+          | boolean
+          | {
+              typesOnBuild?: boolean;
+              [key: string]: unknown;
+            };
+        [key: string]: unknown;
+      };
   remotes?: (string | RemotesObject)[] | RemotesObject;
   /** Repack: bundle file name */
   filename?: string;

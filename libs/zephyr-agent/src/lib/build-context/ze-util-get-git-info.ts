@@ -88,7 +88,10 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
     logFn('warn', 'To properly use Zephyr, you MUST:');
     logFn('warn', '1. Initialize git: git init');
     logFn('warn', '2. Add remote: git remote add origin git@github.com:ORG/REPO.git');
-    logFn('warn', '3. Commit your changes: git add . && git commit -m "Initial commit"');
+    logFn(
+      'warn',
+      '3. For CI/production reliability, add at least one commit: git add . && git commit -m "Initial commit"'
+    );
     logFn('warn', '');
     logFn('warn', 'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps');
     logFn('warn', '📝 Documentation: https://docs.zephyr-cloud.io');
@@ -110,6 +113,7 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
 
 // Static delimiter that's unique enough to avoid conflicts with git output
 const GIT_OUTPUT_DELIMITER = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+const NO_GIT_COMMIT = 'no-git-commit';
 
 /** Loads all data in a single command to avoid multiple executions. */
 async function loadGitInfo(hasSecretToken: boolean): Promise<{
@@ -130,9 +134,12 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
     automated ? "git log -1 --pretty=format:'%ae'" : 'git config user.email',
     // TODO: support remote names that are not 'origin'
     'git config --get remote.origin.url',
-    'git rev-parse --abbrev-ref HEAD',
-    'git rev-parse HEAD',
-    'git tag --points-at HEAD',
+    // Handles unborn branches in fresh repositories
+    'git symbolic-ref --short HEAD || git rev-parse --abbrev-ref HEAD',
+    // No commits yet should not block local build metadata extraction
+    `git rev-parse HEAD || echo ${NO_GIT_COMMIT}`,
+    // In repos with no commits, this command exits non-zero - treat as empty tags
+    'git tag --points-at HEAD 2>/dev/null || true',
   ].join(` && echo ${GIT_OUTPUT_DELIMITER} && `);
 
   try {
@@ -167,6 +174,13 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
           { platform: ciInfo.platform, gitBranch }
         );
       }
+    }
+
+    if (isCI && commit === NO_GIT_COMMIT) {
+      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message:
+          'Git commit hash is required in CI environments. Ensure this repository has commit history.',
+      });
     }
 
     return {
@@ -275,7 +289,7 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
         name,
         email,
         branch: generateBranchName('global-git'),
-        commit: 'no-git-commit',
+        commit: NO_GIT_COMMIT,
         tags: [],
       },
       app: {

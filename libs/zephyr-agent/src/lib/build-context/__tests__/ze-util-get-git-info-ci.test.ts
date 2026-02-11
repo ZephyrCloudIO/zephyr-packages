@@ -212,4 +212,23 @@ describe('getGitInfo - CI environments', () => {
 
     expect(result.git.branch).toBe('feature/actual-branch'); // Should use git result
   });
+
+  it('should fail in CI when repository has no commits yet', async () => {
+    mockExec.mockImplementation((_cmd, callback) => {
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+      const output = [
+        'CI User',
+        'ci@example.com',
+        'https://github.com/example/repo.git',
+        'main',
+        'no-git-commit',
+        '',
+      ].join(`\n${delimiter}\n`);
+      callback(null, { stdout: output, stderr: '' });
+    });
+
+    await expect(getGitInfo()).rejects.toThrow(
+      'Git repository information is required in CI environments'
+    );
+  });
 });

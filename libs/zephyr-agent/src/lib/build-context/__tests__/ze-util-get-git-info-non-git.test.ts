@@ -173,6 +173,32 @@ describe('getGitInfo - non-git environments', () => {
     expect(mockLogFn).not.toHaveBeenCalledWith('warn', expect.any(String));
   });
 
+  it('should parse remote origin even when repository has no commits yet', async () => {
+    mockExec.mockImplementation((_cmd, callback) => {
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+      const output = [
+        'John Doe',
+        'john@example.com',
+        'git@github.com:nsttt/git-test.git',
+        'main',
+        'no-git-commit',
+        '',
+      ].join(`\n${delimiter}\n`);
+      callback(null, { stdout: output, stderr: '' });
+    });
+
+    const result = await getGitInfo();
+
+    expect(result.app.org).toBe('nsttt');
+    expect(result.app.project).toBe('git-test');
+    expect(result.git.branch).toBe('main');
+    expect(result.git.commit).toBe('no-git-commit');
+    expect(mockLogFn).not.toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining('Git repository not found')
+    );
+  });
+
   it('should use API user org and package.json project when git is not available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {

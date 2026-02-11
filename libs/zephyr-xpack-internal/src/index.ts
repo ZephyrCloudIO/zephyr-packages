@@ -30,3 +30,7 @@ export {
   createZephyrRuntimePlugin,
   type ZephyrRuntimePluginOptions,
 } from './xpack-extract/runtime-plugin';
+export type {
+  ZephyrFederationHmrMode,
+  ZephyrFederationHmrOptions,
+} from './xpack-extract/federation-hmr-options';

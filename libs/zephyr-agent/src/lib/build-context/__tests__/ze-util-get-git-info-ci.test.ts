@@ -89,6 +89,10 @@ describe('getGitInfo - CI environments', () => {
   it('should use last commit author in CI instead of git config', async () => {
     let capturedCommand = '';
     mockExec.mockImplementation((cmd, callback) => {
+      if (cmd.includes('git tag --points-at HEAD')) {
+        callback(null, { stdout: 'v1.0.0\n', stderr: '' });
+        return;
+      }
       capturedCommand = cmd;
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [

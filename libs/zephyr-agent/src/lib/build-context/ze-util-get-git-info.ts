@@ -138,19 +138,16 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
     'git symbolic-ref --short HEAD || git rev-parse --abbrev-ref HEAD',
     // No commits yet should not block local build metadata extraction
     `git rev-parse HEAD || echo ${NO_GIT_COMMIT}`,
-    // In repos with no commits, this command exits non-zero - treat as empty tags
-    'git tag --points-at HEAD 2>/dev/null || true',
   ].join(` && echo ${GIT_OUTPUT_DELIMITER} && `);
 
   try {
     const { stdout } = await exec(command);
 
-    const [name, email, remoteOrigin, gitBranch, commit, tagsOutput] = stdout
+    const [name, email, remoteOrigin, gitBranch, commit] = stdout
       .trim()
       .split(GIT_OUTPUT_DELIMITER)
       .map((x) => x.trim());
-    // Parse tags - if multiple tags point to HEAD, they'll be on separate lines
-    const tags = tagsOutput ? tagsOutput.split('\n').filter(Boolean) : [];
+    const tags = await loadGitTags();
 
     // In CI environments with detached HEAD, git returns "HEAD" as branch name
     // Try to get branch from CI environment variables first
@@ -200,6 +197,33 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
       message: error?.stderr || error.message,
     });
   }
+}
+
+/** Load tags pointing at HEAD. Missing commits/no tags should not fail local flow. */
+async function loadGitTags(): Promise<string[]> {
+  try {
+    const { stdout } = await exec('git tag --points-at HEAD');
+    return parseTagsOutput(stdout);
+  } catch {
+    return [];
+  }
+}
+
+function parseTagsOutput(stdout: string): string[] {
+  const trimmed = stdout.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  // Defensive parsing for mocked output that reuses the main delimiter format.
+  if (trimmed.includes(GIT_OUTPUT_DELIMITER)) {
+    const parts = trimmed.split(GIT_OUTPUT_DELIMITER).map((x) => x.trim());
+    const possibleTags = parts[parts.length - 1];
+    return possibleTags ? possibleTags.split('\n').filter(Boolean) : [];
+  }
+
+  return trimmed.split('\n').filter(Boolean);
 }
 
 /**

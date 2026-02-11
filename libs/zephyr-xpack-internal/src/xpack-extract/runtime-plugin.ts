@@ -74,7 +74,10 @@ export function createZephyrRuntimePlugin(
   /** Fetches the zephyr-manifest.json file (basic version without OTA) */
   async function fetchManifest(url: string): Promise<ZephyrManifest | undefined> {
     try {
-      const response = await fetch(url);
+      // Append a timestamp query param for SSR compatibility — Node.js fetch ignores
+      // the `cache` option, so this ensures cache-busting in all environments.
+      const cacheBustUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+      const response = await fetch(cacheBustUrl, { cache: 'no-cache' });
 
       if (!response.ok) {
         return;
@@ -94,7 +97,10 @@ export function createZephyrRuntimePlugin(
     }
   }
 
-  // Get global cache and check if manifest was already fetched
+  // Get global cache and check if manifest was already fetched.
+  // Uses "set if not present" to deduplicate concurrent calls from multiple bundles
+  // (host + remotes) within the same page load. On a full page reload, JS re-evaluates
+  // and the global Map is recreated, so a fresh fetch is always triggered.
   const manifestCache = getGlobalManifestCache();
 
   if (!manifestCache.has(manifestUrl)) {
@@ -109,9 +115,8 @@ export function createZephyrRuntimePlugin(
     async beforeRequest(args) {
       const zephyrManifest = await zephyrManifestPromise;
 
-      if (!processedRemotes) {
-        processedRemotes = identifyRemotes(args, zephyrManifest);
-      }
+      // Always re-resolve from fresh manifest to handle HMR and soft-reload scenarios
+      processedRemotes = identifyRemotes(args, zephyrManifest);
 
       // Extract remote name from args.id (format: "remoteName/componentName")
       const remoteName = args.id.split('/')[0];
@@ -120,8 +125,14 @@ export function createZephyrRuntimePlugin(
         return args; // No matching remote found
       }
 
-      // Get the resolved URL, checking session storage first
-      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
+      // Get the resolved URL, checking session storage first.
+      // Pass manifest timestamp for cache-busting so MF runtime treats new builds as
+      // distinct URLs. The timestamp changes on every build, unlike remote_entry_url
+      // which stays stable for tag/environment deployments.
+      const resolvedUrl = getResolvedRemoteUrl(
+        processedRemotes[remoteName],
+        zephyrManifest?.timestamp
+      );
 
       const targetRemote = args.options.remotes.find(
         (remote) =>
@@ -188,7 +199,10 @@ function hasEntry(remote: any): remote is RemoteWithEntry {
 }
 
 /** Resolves the actual remote URL, checking session storage for overrides */
-function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
+function getResolvedRemoteUrl(
+  resolvedRemote: ZephyrDependency,
+  manifestTimestamp?: string
+): string {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
   // Check for session storage override (for development/testing)
@@ -201,6 +215,15 @@ function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
   if (edgeUrl.indexOf('@') !== -1) {
     const [, url] = edgeUrl.split('@') as [string, string];
     edgeUrl = url;
+  }
+
+  // Append manifest timestamp as cache-buster so MF runtime treats each new build as a
+  // distinct URL. The timestamp changes every build, ensuring stale remoteEntry.js is
+  // never served from MF's internal cache.
+  // Skip when using a session storage override (local dev).
+  if (manifestTimestamp && !sessionEdgeURL) {
+    const separator = edgeUrl.includes('?') ? '&' : '?';
+    edgeUrl = `${edgeUrl}${separator}v=${manifestTimestamp}`;
   }
 
   return edgeUrl;

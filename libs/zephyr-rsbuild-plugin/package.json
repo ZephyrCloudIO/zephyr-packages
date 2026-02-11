@@ -20,6 +20,7 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
+    "zephyr-agent": "workspace:*",
     "zephyr-rspack-plugin": "workspace:*"
   },
   "devDependencies": {

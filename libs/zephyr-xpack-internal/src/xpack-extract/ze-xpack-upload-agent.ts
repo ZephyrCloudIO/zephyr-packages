@@ -10,6 +10,8 @@ import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack
 interface UploadAgentPluginOptions {
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
+  snapshot_type?: 'csr' | 'ssr';
+  entrypoint?: string;
   // federated module config
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   hooks?: ZephyrBuildHooks;
@@ -52,6 +54,10 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
       DELIMITER,
     });
 
+    if (pluginOptions.snapshot_type === 'ssr') {
+      zephyr_engine.env.ssr = true;
+    }
+
     await zephyr_engine.upload_assets({
       assetsMap,
       mfConfig: pluginOptions.mfConfig as unknown as Pick<
@@ -59,6 +65,8 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
         'mfConfig'
       >['mfConfig'],
       buildStats: dashData as unknown as ZephyrBuildStats,
+      snapshotType: pluginOptions.snapshot_type,
+      entrypoint: pluginOptions.entrypoint,
       hooks: pluginOptions.hooks,
     });
   } catch (err) {

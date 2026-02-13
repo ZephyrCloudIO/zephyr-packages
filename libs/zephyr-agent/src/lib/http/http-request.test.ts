@@ -4,9 +4,24 @@ import { cleanTokens } from '../node-persist/token';
 import { fetchWithRetries } from './fetch-with-retries';
 import { makeHttpRequest, makeRequest, parseUrl } from './http-request';
 
+const mockInjectTraceHeaders = jest.fn((headers?: HeadersInit) => ({
+  ...(headers as Record<string, string> | undefined),
+  traceparent: '00-test-trace',
+}));
+const mockWithTelemetrySpan = jest.fn(async (_name, work) => work(undefined));
+
 // Mock dependencies
 jest.mock('./fetch-with-retries');
 jest.mock('../node-persist/token');
+jest.mock('../telemetry', () => ({
+  injectTraceHeaders: (headers?: HeadersInit) => mockInjectTraceHeaders(headers),
+  withTelemetrySpan: (
+    name: string,
+    work: unknown,
+    attributes?: unknown,
+    kind?: unknown
+  ) => mockWithTelemetrySpan(name, work, attributes, kind),
+}));
 jest.mock('../logging/debug', () => ({
   ze_log: {
     http: jest.fn(),
@@ -14,12 +29,14 @@ jest.mock('../logging/debug', () => ({
 }));
 jest.mock('zephyr-edge-contract', () => ({
   PromiseWithResolvers: () => {
-    const resolvable: any = {};
-    resolvable.promise = new Promise((resolve, reject) => {
-      resolvable.resolve = resolve;
-      resolvable.reject = reject;
+    let resolve: (value: unknown) => void = () => undefined;
+    let reject: (reason?: unknown) => void = () => undefined;
+    const promise = new Promise<unknown>((res, rej) => {
+      resolve = res;
+      reject = rej;
     });
-    return resolvable;
+
+    return { promise, resolve, reject };
   },
   safe_json_parse: jest.fn((str) => {
     try {
@@ -41,6 +58,8 @@ describe('Pure HTTP Request Functions', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockInjectTraceHeaders.mockClear();
+    mockWithTelemetrySpan.mockClear();
   });
 
   describe('parseUrl', () => {
@@ -94,6 +113,8 @@ describe('Pure HTTP Request Functions', () => {
       expect(ok).toBe(true);
       expect(error).toBeNull();
       expect(data).toEqual({ success: true, data: { id: 123 } });
+      expect(mockWithTelemetrySpan).toHaveBeenCalledTimes(1);
+      expect(mockInjectTraceHeaders).toHaveBeenCalledTimes(1);
     });
 
     it('should handle 401 Unauthorized responses', async () => {
@@ -138,12 +159,18 @@ describe('Pure HTTP Request Functions', () => {
       expect(ok).toBe(true);
       expect(error).toBeNull();
       expect(data).toEqual({ success: true });
+      expect(mockWithTelemetrySpan).toHaveBeenCalledTimes(1);
+      expect(mockInjectTraceHeaders).toHaveBeenCalledTimes(1);
       expect(mockFetchWithRetries).toHaveBeenCalledWith(
         expect.objectContaining({
           href: 'https://api.example.com/endpoint',
           host: 'api.example.com',
         }),
-        expect.any(Object)
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            traceparent: '00-test-trace',
+          }),
+        })
       );
     });
   });

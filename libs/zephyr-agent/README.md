@@ -152,6 +152,22 @@ npm run build  # Automatically determines naming from package.json
 # Username: "Néstor López" → org: "n-stor-l-pez"
 ```
 
+### OpenTelemetry (Optional)
+
+`zephyr-agent` can emit traces/logs to an OTEL collector through `@zephyrcloud/telemetry`.
+
+- `ZE_OTEL_COLLECTOR_ENDPOINT` (or `OTEL_COLLECTOR_ENDPOINT`): collector base URL
+- `ZE_OTEL_TRACES_ENABLED` (default: `true`)
+- `ZE_OTEL_LOGS_ENABLED` (default: `true`)
+- `ZE_OTEL_METRICS_ENABLED` (default: `false`)
+- `ZE_OTEL_DEBUG` (default: `false`)
+
+Auth behavior:
+
+- Telemetry only initializes after Zephyr auth succeeds (`checkAuth`).
+- Collector auth always uses the Zephyr token (`Authorization: Bearer <zephyr-token>`).
+- If collector endpoint or Zephyr token is missing, telemetry stays disabled.
+
 #### Why Git is Required
 
 Zephyr uses Git information to:

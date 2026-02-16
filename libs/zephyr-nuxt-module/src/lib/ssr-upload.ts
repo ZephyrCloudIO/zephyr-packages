@@ -6,6 +6,7 @@ import {
   ze_log,
   type ZephyrEngine,
 } from 'zephyr-agent';
+import { resolve } from 'node:path';
 import { normalizePath, resolveDir, resolveEntrypoint, resolveOutputDir } from './paths';
 import type { NitroLike, NuxtLike, SnapshotType, ZephyrNuxtOptions } from './types';
 
@@ -21,8 +22,74 @@ interface NitroOutput {
   publicDir?: string;
 }
 
+export interface AssetSource {
+  dir: string;
+  prefix?: string;
+}
+
 function getNitroOutput(nitro?: NitroLike, nuxt?: NuxtLike): NitroOutput | undefined {
   return nitro?.options?.output ?? nuxt?.options?.nitro?.output;
+}
+
+function normalizeDirPath(dir: string): string {
+  return normalizePath(resolve(dir)).replace(/\/+$/, '');
+}
+
+function isSubPath(parent: string, child: string): boolean {
+  const normalizedParent = normalizeDirPath(parent);
+  const normalizedChild = normalizeDirPath(child);
+  return (
+    normalizedChild === normalizedParent ||
+    normalizedChild.startsWith(`${normalizedParent}/`)
+  );
+}
+
+function toAssetPath(prefix: string | undefined, relativePath: string): string {
+  const normalizedPath = normalizePath(relativePath);
+  const prefixedPath = prefix ? `${prefix}/${normalizedPath}` : normalizedPath;
+  return prefixedPath.replace(/^\/+/, '');
+}
+
+export function resolveAssetSources(
+  snapshotType: SnapshotType,
+  outputDir: string,
+  publicDir?: string
+): AssetSource[] {
+  if (snapshotType === 'csr') {
+    return [{ dir: publicDir ?? outputDir }];
+  }
+
+  const sources: AssetSource[] = [{ dir: outputDir }];
+  if (!publicDir) {
+    return sources;
+  }
+
+  if (isSubPath(outputDir, publicDir)) {
+    return sources;
+  }
+
+  sources.push({
+    dir: publicDir,
+    prefix: 'public',
+  });
+
+  return sources;
+}
+
+async function loadAssetsFromSources(
+  sources: AssetSource[]
+): Promise<Record<string, Buffer>> {
+  const assets: Record<string, Buffer> = {};
+
+  for (const source of sources) {
+    const files = await readDirRecursiveWithContents(source.dir);
+    for (const file of files) {
+      const assetPath = toAssetPath(source.prefix, file.relativePath);
+      assets[assetPath] = file.content;
+    }
+  }
+
+  return assets;
 }
 
 export function createUploadRunner({
@@ -32,10 +99,11 @@ export function createUploadRunner({
   initEngine,
 }: UploadContext) {
   let uploadCompleted = false;
+  let uploadInProgress = false;
 
   return async (nitro?: NitroLike) => {
-    if (uploadCompleted) return;
-    uploadCompleted = true;
+    if (uploadCompleted || uploadInProgress) return;
+    uploadInProgress = true;
     initEngine();
 
     try {
@@ -66,36 +134,30 @@ export function createUploadRunner({
         entrypoint = undefined;
       }
 
-      const assetsRoot = snapshotType === 'csr' && publicDir ? publicDir : outputDir;
+      const assetSources = resolveAssetSources(snapshotType, outputDir, publicDir);
+      const assetSourcesLog = assetSources
+        .map((source) => (source.prefix ? `${source.dir}=>${source.prefix}` : source.dir))
+        .join(', ');
       ze_log.upload(
-        `Zephyr upload starting. snapshotType=${snapshotType} output=${assetsRoot}`
+        `Zephyr upload starting. snapshotType=${snapshotType} output=${assetSourcesLog}`
       );
       if (entrypoint) {
         ze_log.upload(`Zephyr entrypoint: ${entrypoint}`);
       }
 
       zephyr_engine.env.ssr = snapshotType === 'ssr';
-      zephyr_engine.buildProperties.output = assetsRoot;
+      zephyr_engine.buildProperties.output = outputDir;
 
       const baseHref = nuxt.options.app?.baseURL;
       if (baseHref) {
         zephyr_engine.buildProperties.baseHref = baseHref;
       }
 
-      const files = await readDirRecursiveWithContents(assetsRoot);
-      if (!files.length) {
-        ze_log.upload(`No build output found in ${assetsRoot}`);
+      const assets = await loadAssetsFromSources(assetSources);
+      if (!Object.keys(assets).length) {
+        ze_log.upload(`No build output found in ${assetSourcesLog}`);
         return;
       }
-
-      const assets: Record<string, Buffer> = files.reduce(
-        (memo, file) => {
-          const relativePath = normalizePath(file.relativePath);
-          memo[relativePath] = file.content;
-          return memo;
-        },
-        {} as Record<string, Buffer>
-      );
 
       const assetsMap = buildAssetsMap(
         assets,
@@ -112,9 +174,12 @@ export function createUploadRunner({
       });
 
       await zephyr_engine.build_finished();
+      uploadCompleted = true;
       ze_log.upload('Zephyr upload complete.');
     } catch (error) {
       handleGlobalError(error);
+    } finally {
+      uploadInProgress = false;
     }
   };
 }

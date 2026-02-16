@@ -1,5 +1,6 @@
 import { defineNuxtModule } from '@nuxt/kit';
 import { ZephyrEngine } from 'zephyr-agent';
+import { shouldSkipZephyrUpload } from './runtime-guards';
 import { createUploadRunner } from './ssr-upload';
 import type { NuxtLike, ZephyrNuxtOptions } from './types';
 
@@ -11,7 +12,7 @@ export default defineNuxtModule<ZephyrNuxtOptions>({
   defaults: {},
   setup(options, nuxt) {
     const nuxtLike = nuxt as unknown as NuxtLike;
-    if (nuxtLike.options.dev) return;
+    if (nuxtLike.options.dev || shouldSkipZephyrUpload()) return;
 
     const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
     let initialized = false;

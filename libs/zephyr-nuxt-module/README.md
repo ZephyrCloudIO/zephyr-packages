@@ -49,6 +49,7 @@ export default defineNuxtConfig({
 
 - If no entrypoint is found, the module falls back to a CSR snapshot.
 - Entry points are auto-detected from `server/index.mjs`, `server/index.js`, or `server/index.cjs` when not provided.
+- Upload logic is skipped during `nuxt prepare` (including `postinstall` hooks).
 
 ## License
 

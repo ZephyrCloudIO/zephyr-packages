@@ -1,0 +1,39 @@
+{
+  "name": "zephyr-nitro-preset",
+  "version": "0.1.10",
+  "description": "Nitro preset utilities for Zephyr deployments",
+  "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-nitro-preset#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-nitro-preset"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "nx run zephyr-nitro-preset:build",
+    "patch-version": "pnpm version"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "nitropack": "^2.13.1",
+    "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "nitropack": "^2.0.0 || ^3.0.0-alpha.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

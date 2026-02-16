@@ -52,6 +52,8 @@ package-lock.json
 
 # wrangler
 .wrangler
+**/.nitro
+**/.output
 
 # Used when Agoda asked for help
 **/wwwroot

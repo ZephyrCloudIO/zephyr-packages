@@ -15,6 +15,8 @@ export interface Snapshot {
   domain: string;
   // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
   type?: 'ssr' | 'csr';
+  // server entry file path for SSR applications (relative path)
+  entrypoint?: string;
   uid: {
     build: string;
     app_name: string;

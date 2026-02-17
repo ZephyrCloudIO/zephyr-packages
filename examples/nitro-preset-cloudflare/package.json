@@ -1,5 +1,6 @@
 {
   "name": "nitro-preset-cloudflare-example",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +9,7 @@
     "preview": "nitro preview"
   },
   "devDependencies": {
-    "nitropack": "^2.13.1",
+    "nitro": "^3.0.1-alpha.2",
     "zephyr-nitro-preset": "workspace:*"
   }
 }

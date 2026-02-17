@@ -4,6 +4,8 @@ Nitro preset helpers for Zephyr workflows.
 
 Cloudflare-only base preset: `cloudflare_module`.
 
+Requires `nitro@^3`.
+
 ## Installation
 
 ```bash
@@ -54,10 +56,22 @@ import { createZephyrNitroPreset } from 'zephyr-nitro-preset';
 export default createZephyrNitroPreset({
   metadataFile: '.zephyr/nitro-build.json',
   loggerTag: 'my-nitro-preset',
+  deploy: {
+    enabled: true,
+    // optional; auto-detected from output if omitted
+    entrypoint: 'index.mjs',
+    ssr: true,
+    target: 'web',
+  },
 });
 ```
 
-The preset writes build metadata at `.output/.zephyr/nitro-build.json` by default.
+The preset emits build metadata at `.output/server/.zephyr/nitro-build.json` by default.
+Metadata is emitted through Nitro bundler lifecycle hooks (`rollup:before` + bundler asset emission), not direct filesystem writes.
+The preset also uploads Nitro output to Zephyr on `compiled` by default.
+
+Set `deploy: false` to disable uploads for local-only builds.
+Set `deploy.entrypoint` to override SSR entrypoint if your Nitro output differs from defaults.
 
 ## Workspace examples
 

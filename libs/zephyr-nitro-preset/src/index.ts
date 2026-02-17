@@ -1,7 +1,8 @@
 export {
+  createZephyrNitroMetadata,
+  createZephyrNitroMetadataAsset,
   createZephyrNitroPreset,
   default,
-  writeZephyrNitroMetadata,
 } from './lib/zephyr-nitro-preset';
 export type {
   ZephyrNitroBuildMetadata,

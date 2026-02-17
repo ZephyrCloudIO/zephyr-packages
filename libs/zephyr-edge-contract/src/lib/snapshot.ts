@@ -47,6 +47,12 @@ export interface Snapshot {
   ze_envs?: Record<string, string>;
   // Content-addressable hash of ze_envs for deduplication
   ze_envs_hash?: string;
+  // bundler plugin type (e.g. 'webpack', 'vite', 'rspack')
+  builder?: string;
+  // version of the zephyr plugin (zephyr-edge-contract/zephyr-agent)
+  plugin_version?: string;
+  // version of the edge worker that processed the snapshot
+  worker_version?: string;
 }
 
 export interface SnapshotAsset {

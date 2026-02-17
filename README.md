@@ -25,6 +25,7 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 - [`rollup-plugin-zephyr`](libs/rollup-plugin-zephyr/README.md) - A Rollup plugin for deploying with Zephyr
 - [`vite-plugin-zephyr`](libs/vite-plugin-zephyr/README.md) - A Vite plugin for deploying with Zephyr
 - [`zephyr-modernjs-plugin`](libs/zephyr-modernjs-plugin/README.md) - A Modern.js plugin for deploying with Zephyr
+- [`zephyr-nitro-preset`](libs/zephyr-nitro-preset/README.md) - A Nitro preset helper for Zephyr deployment workflows
 - [`zephyr-repack-plugin`](libs/zephyr-repack-plugin/README.md) - A Rspack plugin for deploying with Zephyr building with React Native and Re.Pack
 - [`zephyr-rolldown-plugin`](libs/zephyr-rolldown-plugin/README.md) - A Rolldown plugin for deploying with Zephyr
 - [`zephyr-rspack-plugin`](libs/zephyr-rspack-plugin/README.md) - A Rspack plugin for deploying with Zephyr

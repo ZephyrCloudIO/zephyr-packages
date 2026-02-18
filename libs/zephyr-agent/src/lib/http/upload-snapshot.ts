@@ -1,19 +1,22 @@
 import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
-import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { makeRequest } from './http-request';
 
+export interface SnapshotUploadConfig {
+  EDGE_URL: string;
+  jwt: string;
+  ENVIRONMENTS?: Record<string, { edgeUrl: string }> | null;
+}
+
 export async function uploadSnapshot({
   body,
-  application_uid,
+  appConfig,
 }: {
   body: Snapshot;
-  application_uid: string;
+  appConfig: SnapshotUploadConfig;
 }): Promise<SnapshotUploadRes> {
-  const { EDGE_URL, jwt, ENVIRONMENTS } = await getApplicationConfiguration({
-    application_uid,
-  });
+  const { EDGE_URL, jwt, ENVIRONMENTS } = appConfig;
 
   const json = JSON.stringify(body);
   ze_log.snapshot('Sending snapshot to edge:', JSON.stringify(body, null, 2));
@@ -22,11 +25,15 @@ export async function uploadSnapshot({
 
   if (ENVIRONMENTS != null) {
     const env_edge_urls = Array.from(
-      new Set(Object.values(ENVIRONMENTS).filter((envCfg) => envCfg.edgeUrl !== EDGE_URL))
+      new Set(
+        Object.values(ENVIRONMENTS)
+          .map((envCfg) => envCfg.edgeUrl)
+          .filter((edgeUrl) => edgeUrl !== EDGE_URL)
+      )
     );
     await Promise.all(
-      env_edge_urls.map((envConfig: { edgeUrl: string }): Promise<SnapshotUploadRes> => {
-        return doUploadSnapshotRequest({ json, edge_url: envConfig.edgeUrl, jwt });
+      env_edge_urls.map((edgeUrl): Promise<SnapshotUploadRes> => {
+        return doUploadSnapshotRequest({ json, edge_url: edgeUrl, jwt });
       })
     );
   }

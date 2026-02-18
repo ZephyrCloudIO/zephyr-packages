@@ -30,6 +30,7 @@ import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
+import { checkPluginVersionWarning } from '../lib/version-check/plugin-version-check';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
 import {
   convertResolvedDependencies,
@@ -214,6 +215,8 @@ export class ZephyrEngine {
         ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
       })
       .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
+
+    void checkPluginVersionWarning();
 
     await ze.start_new_build();
 

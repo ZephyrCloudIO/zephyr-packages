@@ -48,6 +48,7 @@
     "@swc/helpers": "catalog:swc",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "cloudflare": "^5.2.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.7",
     "eslint": "^9.8.0",

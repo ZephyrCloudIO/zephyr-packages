@@ -85,15 +85,4 @@ pnpm install
   - gh CLI installed and authenticated (for automatic PR creation)
   - Git configured with push access to origin
 
-### Release Automation
-
-- `.github/workflows/publish_packages.yml` updates Cloudflare TXT
-  `_ze_version.zephyr-cloud.io` on `release.released` after publishing `latest`.
-- Workflow secrets required:
-  - `CLOUDFLARE_API_TOKEN` (DNS edit permission for zone)
-  - `CLOUDFLARE_ZONE_ID` (zone containing `zephyr-cloud.io`)
-- Script: `scripts/update-plugin-version-dns.js`
-  - Updates `latest=<release version>` (infers from GitHub tag/ref, strips leading `v`)
-  - Preserves existing `schema` and `msg`, and removes legacy `min` / `urgent` keys
-
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

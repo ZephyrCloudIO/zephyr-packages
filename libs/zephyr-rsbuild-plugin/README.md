@@ -69,8 +69,22 @@ export default defineConfig({
     pluginReact(),
     withZephyr({
       wait_for_index_html: true, // Wait for HTML processing
+      upload_strategy: 'auto', // default: auto-detect SSR/server env and combine uploads
     }),
   ],
+});
+```
+
+### SSR / Multi-Environment Uploads
+
+For SSR apps that build multiple Rsbuild environments (for example `web` + `ssr`), use
+combined uploads so client and server artifacts are uploaded as one snapshot:
+
+```typescript
+withZephyr({
+  upload_strategy: 'combined',
+  snapshot_type: 'ssr',
+  entrypoint: 'server/server.js',
 });
 ```
 
@@ -179,6 +193,9 @@ Creates an Rsbuild plugin for Zephyr integration.
 
 - `options` (optional): Configuration options
   - `wait_for_index_html?: boolean` - Wait for HTML processing before deployment
+  - `upload_strategy?: 'auto' | 'per-environment' | 'combined'`
+  - `snapshot_type?: 'csr' | 'ssr'` - snapshot type override for combined upload
+  - `entrypoint?: string` - SSR entrypoint path for combined upload
 
 #### Returns
 

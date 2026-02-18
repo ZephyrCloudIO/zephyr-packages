@@ -8,6 +8,8 @@ interface DeployPluginOptions {
   pluginName: string;
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
+  snapshot_type?: 'csr' | 'ssr';
+  entrypoint?: string;
   hooks?: ZephyrBuildHooks;
 }
 

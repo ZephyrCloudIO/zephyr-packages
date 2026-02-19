@@ -1,37 +1,42 @@
 import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
 import { checkAuth, isTokenStillValid } from '../auth/login';
+import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import {
   getApplicationConfiguration,
   invalidateApplicationConfigCache,
 } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
+import type { HttpResponse } from './http-request';
 import { makeRequest } from './http-request';
 
 export async function uploadSnapshot({
   body,
   application_uid,
+  git_config,
 }: {
   body: Snapshot;
   application_uid: string;
+  git_config: ZeGitInfo;
 }): Promise<SnapshotUploadRes> {
-  const { EDGE_URL, jwt, ENVIRONMENTS } = await getApplicationConfiguration({
-    application_uid,
-  });
+  const appConfig = await getApplicationConfiguration({ application_uid });
+  const { EDGE_URL, ENVIRONMENTS } = appConfig;
+  let { jwt } = appConfig;
 
-  // Check if JWT is still valid before attempting upload
   if (!isTokenStillValid(jwt)) {
-    // Token has expired, trigger re-authentication (this will show the auth popup)
-    await checkAuth();
-    invalidateApplicationConfigCache();
-
-    throw new ZephyrError(ZeErrors.ERR_JWT_INVALID);
+    jwt = await refreshAuthAndJwt({ application_uid, git_config });
   }
 
   const json = JSON.stringify(body);
   ze_log.snapshot('Sending snapshot to edge:', JSON.stringify(body, null, 2));
 
-  const resp = await doUploadSnapshotRequest({ json, edge_url: EDGE_URL, jwt });
+  const resp = await uploadSnapshotWithRetry({
+    json,
+    edge_url: EDGE_URL,
+    jwt,
+    application_uid,
+    git_config,
+  });
 
   if (ENVIRONMENTS != null) {
     const env_edge_urls = Array.from(
@@ -39,7 +44,13 @@ export async function uploadSnapshot({
     );
     await Promise.all(
       env_edge_urls.map((envConfig: { edgeUrl: string }): Promise<SnapshotUploadRes> => {
-        return doUploadSnapshotRequest({ json, edge_url: envConfig.edgeUrl, jwt });
+        return uploadSnapshotWithRetry({
+          json,
+          edge_url: envConfig.edgeUrl,
+          jwt,
+          application_uid,
+          git_config,
+        });
       })
     );
   }
@@ -57,7 +68,7 @@ async function doUploadSnapshotRequest({
   json: string;
   edge_url: string;
   jwt: string;
-}): Promise<SnapshotUploadRes> {
+}): Promise<HttpResponse<SnapshotUploadRes>> {
   const options: RequestInit = {
     method: 'POST',
     headers: {
@@ -72,24 +83,69 @@ async function doUploadSnapshotRequest({
   url.searchParams.append('skip_assets', 'true');
   ze_log.snapshot('Upload URL:', url.toString());
 
-  const [ok, cause, resp] = await makeRequest<SnapshotUploadRes>(url, options, json);
+  return makeRequest<SnapshotUploadRes>(url, options, json);
+}
+
+function isAuthError(cause: unknown): boolean {
+  return (
+    ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR) ||
+    ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)
+  );
+}
+
+async function refreshAuthAndJwt({
+  application_uid,
+  git_config,
+}: {
+  application_uid: string;
+  git_config: ZeGitInfo;
+}): Promise<string> {
+  try {
+    await checkAuth(git_config);
+    await invalidateApplicationConfigCache(application_uid);
+    const appConfig = await getApplicationConfiguration({ application_uid });
+    return appConfig.jwt;
+  } catch (cause) {
+    throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, { cause });
+  }
+}
+
+async function uploadSnapshotWithRetry({
+  json,
+  edge_url,
+  jwt,
+  application_uid,
+  git_config,
+}: {
+  json: string;
+  edge_url: string;
+  jwt: string;
+  application_uid: string;
+  git_config: ZeGitInfo;
+}): Promise<SnapshotUploadRes> {
+  let [ok, cause, resp] = await doUploadSnapshotRequest({ json, edge_url, jwt });
+
+  if (!ok && isAuthError(cause)) {
+    const refreshedJwt = await refreshAuthAndJwt({ application_uid, git_config });
+    [ok, cause, resp] = await doUploadSnapshotRequest({
+      json,
+      edge_url,
+      jwt: refreshedJwt,
+    });
+  }
 
   if (!ok) {
-    // Check if the error is auth-related and token has expired since our check
-    if (
-      cause &&
-      ZephyrError.is(cause) &&
-      (cause.code === 'ZE10018' || cause.code === 'ZE10022')
-    ) {
-      // This is an auth error - trigger re-authentication
-      await checkAuth();
-      invalidateApplicationConfigCache();
-
-      throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, {
-        cause,
-      });
+    if (isAuthError(cause)) {
+      throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, { cause });
     }
 
+    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+      type: 'snapshot',
+      cause,
+    });
+  }
+
+  if (!resp) {
     throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
       type: 'snapshot',
       cause,

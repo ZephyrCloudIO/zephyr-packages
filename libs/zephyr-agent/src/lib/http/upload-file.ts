@@ -1,6 +1,10 @@
 import { type UploadableAsset } from 'zephyr-edge-contract';
 import { checkAuth, isTokenStillValid } from '../auth/login';
-import { invalidateApplicationConfigCache } from '../edge-requests/get-application-configuration';
+import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
+import {
+  getApplicationConfiguration,
+  invalidateApplicationConfigCache,
+} from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { makeRequest } from './http-request';
@@ -10,17 +14,25 @@ export interface UploadFileProps {
   asset: UploadableAsset;
 }
 
+export interface UploadFileAuthContext {
+  application_uid: string;
+  git_config: ZeGitInfo;
+}
+
 export async function uploadFile(
   { hash, asset }: UploadFileProps,
-  { EDGE_URL, jwt }: ZeApplicationConfig
+  applicationConfig: ZeApplicationConfig,
+  authContext: UploadFileAuthContext
 ) {
-  // Check if JWT is still valid before attempting upload
-  if (!isTokenStillValid(jwt)) {
-    // Token has expired, trigger re-authentication (this will show the auth popup)
-    await checkAuth();
-    invalidateApplicationConfigCache();
+  const targetEdgeUrl = applicationConfig.EDGE_URL;
+  let currentConfig = applicationConfig;
 
-    throw new ZephyrError(ZeErrors.ERR_JWT_INVALID);
+  if (!isTokenStillValid(currentConfig.jwt)) {
+    currentConfig = await refreshAuthAndConfig(
+      authContext,
+      targetEdgeUrl,
+      ZeErrors.ERR_JWT_INVALID
+    );
   }
 
   const type = 'file';
@@ -30,39 +42,89 @@ export async function uploadFile(
     headers: {
       'x-file-size': asset.size.toString(),
       'x-file-path': asset.path,
-      can_write_jwt: jwt,
+      can_write_jwt: currentConfig.jwt,
       'Content-Type': 'application/octet-stream',
     },
   };
 
-  const [ok, cause] = await makeRequest(
+  let [ok, cause] = await makeRequest(
     {
       path: '/upload',
-      base: EDGE_URL,
+      base: targetEdgeUrl,
       query: { type, hash, filename: asset.path },
     },
     options,
     asset.buffer
   );
 
-  if (!ok) {
-    // Check if the error is auth-related and token has expired since our check
-    if (
-      cause &&
-      ZephyrError.is(cause) &&
-      (cause.code === 'ZE10018' || cause.code === 'ZE10022')
-    ) {
-      // This is an auth error - trigger re-authentication
-      await checkAuth();
-      invalidateApplicationConfigCache();
+  if (!ok && isAuthError(cause)) {
+    currentConfig = await refreshAuthAndConfig(
+      authContext,
+      targetEdgeUrl,
+      ZeErrors.ERR_JWT_INVALID,
+      {
+        cause,
+      }
+    );
 
+    const retryOptions: RequestInit = {
+      ...options,
+      headers: {
+        ...options.headers,
+        can_write_jwt: currentConfig.jwt,
+      },
+    };
+
+    [ok, cause] = await makeRequest(
+      {
+        path: '/upload',
+        base: targetEdgeUrl,
+        query: { type, hash, filename: asset.path },
+      },
+      retryOptions,
+      asset.buffer
+    );
+  }
+
+  if (!ok) {
+    if (isAuthError(cause)) {
       throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, {
         cause,
       });
     }
-
     throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
       type: 'file',
+      cause,
+    });
+  }
+}
+
+function isAuthError(cause: unknown): boolean {
+  return (
+    ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR) ||
+    ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)
+  );
+}
+
+async function refreshAuthAndConfig(
+  authContext: UploadFileAuthContext,
+  targetEdgeUrl: string,
+  errorType: typeof ZeErrors.ERR_JWT_INVALID,
+  errorOptions?: { cause?: unknown }
+): Promise<ZeApplicationConfig> {
+  try {
+    await checkAuth(authContext.git_config);
+    await invalidateApplicationConfigCache(authContext.application_uid);
+    const refreshedConfig = await getApplicationConfiguration({
+      application_uid: authContext.application_uid,
+    });
+    return {
+      ...refreshedConfig,
+      EDGE_URL: targetEdgeUrl,
+    };
+  } catch (cause) {
+    throw new ZephyrError(errorType, {
+      ...errorOptions,
       cause,
     });
   }

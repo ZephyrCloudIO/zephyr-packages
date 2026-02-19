@@ -105,6 +105,8 @@ export interface ZephyrBuildStats {
   context: {
     username?: string;
     isCI: boolean;
+    env?: string;
+    target?: string;
   };
   /**
    * Become the first part of `remote_host` and `remote_entry_url` in database in
@@ -125,6 +127,10 @@ export interface ZephyrBuildStats {
   build_target?: string;
   /** @deprecated */
   type: unknown;
+  /** Public environment variables captured at build time (ZE_PUBLIC_* only) */
+  ze_envs?: Record<string, string>;
+  /** Content-addressable hash of ze_envs for deduplication */
+  ze_envs_hash?: string;
   /** Resolved zephyr dependencies */
   zephyrDependencies?: Record<string, ZephyrDependency>;
 }

@@ -1,0 +1,42 @@
+{
+  "name": "zephyr-metro-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/zephyr-metro-plugin/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "rootDir": "libs/zephyr-metro-plugin/src",
+        "outputPath": "libs/zephyr-metro-plugin/dist",
+        "main": "libs/zephyr-metro-plugin/src/index.ts",
+        "tsConfig": "libs/zephyr-metro-plugin/tsconfig.lib.json",
+        "assets": ["libs/zephyr-metro-plugin/*.md"]
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs zephyr-metro-plugin {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "release": {
+      "command": "pnpm dist-tag add zephyr-metro-plugin@$(npm view zephyr-metro-plugin@next version) latest"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-metro-plugin/jest.config.ts"
+      }
+    }
+  }
+}

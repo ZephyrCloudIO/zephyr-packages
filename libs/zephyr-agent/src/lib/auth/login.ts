@@ -1,22 +1,19 @@
 import * as jose from 'jose';
 import * as readline from 'node:readline';
-import {
-  PromiseWithResolvers,
-  ZEPHYR_API_ENDPOINT,
-  ZE_API_ENDPOINT,
-  ze_api_gateway,
-} from 'zephyr-edge-contract';
+import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
-import { ze_log } from '../logging';
+import { ze_debug, ze_log } from '../logging';
 import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picocolor';
 import { formatLogMsg, logFn } from '../logging/ze-log-event';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getSessionKey, waitForUnlock } from '../node-persist/session-lock';
 import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
-import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './auth-flags';
-import { createSocket } from './websocket';
+import { AuthListener } from './sse';
+import { TOKEN_EXPIRY } from './auth-flags';
+import { getServerToken } from '../node-persist/server-token';
+import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 
 /**
  * Check if the user is already authenticated. If not, ask if they want to open a browser
@@ -24,15 +21,23 @@ import { createSocket } from './websocket';
  *
  * @returns The token as a string.
  */
-export async function checkAuth(): Promise<void> {
+export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   const secret_token = getSecretToken();
+  const server_token = getServerToken();
 
   if (secret_token) {
     logFn('debug', 'Token found in environment. Using secret token for authentication.');
     return;
   }
 
-  const existingToken = await getToken();
+  if (server_token) {
+    logFn(
+      'debug',
+      'Server token found in environment. Using server token for authentication.'
+    );
+  }
+
+  const existingToken = await getToken(git_config);
 
   if (existingToken) {
     // Check if the token has a valid expiration date.
@@ -82,7 +87,7 @@ export async function checkAuth(): Promise<void> {
     // https://github.com/simonlast/node-persist/issues/108#issuecomment-1442305246
     await waitForUnlock(browserController.signal);
 
-    const token = await getToken();
+    const token = await getToken(git_config);
 
     // Unlock also happens on timeout, so we need to check if the token was
     // actually saved or not
@@ -164,8 +169,12 @@ async function openUrl(url: string): Promise<void> {
 
 /** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
+  ze_log.auth(
+    'getAuthenticationURL',
+    `${ZE_API_ENDPOINT()}${ze_api_gateway.authorize_link}?state=${state}`
+  );
   const [ok, cause, data] = await makeRequest<string>({
-    path: ze_api_gateway.auth_link,
+    path: ze_api_gateway.authorize_link,
     base: ZE_API_ENDPOINT(),
     query: { state },
   });
@@ -180,66 +189,11 @@ async function getAuthenticationURL(state: string): Promise<string> {
   return data;
 }
 
-/** Waits for the access token to be received from the websocket. */
 async function waitForAccessToken(sessionKey: string): Promise<string> {
-  const { promise, resolve, reject } = PromiseWithResolvers<string>();
-  const socket = createSocket(ZEPHYR_API_ENDPOINT());
-  let timeoutHandle: NodeJS.Timeout | null = null;
-
-  // Helper to properly cleanup socket
-  const cleanupSocket = () => {
-    if (timeoutHandle) {
-      clearTimeout(timeoutHandle);
-      timeoutHandle = null;
-    }
-
-    socket.removeAllListeners();
-    socket.disconnect();
-    socket.close();
-  };
-
-  try {
-    socket.once('access-token', (token) => {
-      cleanupSocket();
-      resolve(token);
-    });
-
-    // Creating errors outside of the listener closure makes the stack trace point
-    // to waitForAccessToken fn instead of socket.io internals event emitter code.
-    socket.once('access-token-error', (cause) => {
-      cleanupSocket();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          cause,
-          message: 'Error getting access token',
-        })
-      );
-    });
-
-    socket.once('connect_error', (cause) => {
-      cleanupSocket();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: 'Could not connect to socket.',
-          cause,
-        })
-      );
-    });
-
-    socket.emit('joinAccessTokenRoom', { state: sessionKey });
-
-    // The user has a specified amount of time to log in through the browser.
-    timeoutHandle = setTimeout(() => {
-      cleanupSocket();
-      reject(
-        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: `Authentication timed out. Couldn't receive access token in ${DEFAULT_AUTH_COMPLETION_TIMEOUT_MS / 1000} seconds. Please try again.`,
-        })
-      );
-    }, DEFAULT_AUTH_COMPLETION_TIMEOUT_MS);
-
-    return await promise;
-  } finally {
-    cleanupSocket();
-  }
+  const url = new URL(ze_api_gateway.websocket, ZE_API_ENDPOINT());
+  url.searchParams.set('sessionId', sessionKey);
+  const authListener = new AuthListener(url);
+  const resp = await authListener.waitForToken();
+  ze_debug('waitForAccessToken', `Received token for session ${resp.sessionId}`);
+  return resp.token;
 }

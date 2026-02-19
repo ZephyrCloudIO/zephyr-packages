@@ -1,29 +1,30 @@
-import type { OutputAsset, OutputBundle } from 'rollup';
+import type { OutputBundle } from 'rollup';
+import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
 import { load_public_dir } from './load_public_dir';
 import { load_static_entries } from './load_static_entries';
-import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
 
 export async function loadStaticAssets(
   vite_internal_options: ZephyrInternalOptions
 ): Promise<OutputBundle> {
-  const publicAssets: OutputAsset[] = [];
+  const bundle: OutputBundle = {};
 
-  if (vite_internal_options.publicDir) {
-    const _public_assets = await load_public_dir({
+  for await (const assets of [
+    // Only load if specified
+    vite_internal_options.publicDir
+      ? load_public_dir({
+          outDir: vite_internal_options.outDir,
+          publicDir: vite_internal_options.publicDir,
+        })
+      : [],
+    load_static_entries({
+      root: vite_internal_options.root,
       outDir: vite_internal_options.outDir,
-      publicDir: vite_internal_options.publicDir,
-    });
-    publicAssets.push(..._public_assets);
+    }),
+  ]) {
+    for (const asset of assets) {
+      bundle[asset.fileName] = asset;
+    }
   }
 
-  const _static_assets = await load_static_entries({
-    root: vite_internal_options.root,
-    outDir: vite_internal_options.outDir,
-  });
-  publicAssets.push(..._static_assets);
-
-  return publicAssets.reduce((acc, asset) => {
-    acc[asset.fileName] = asset;
-    return acc;
-  }, {} as OutputBundle);
+  return bundle;
 }

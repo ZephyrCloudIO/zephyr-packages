@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'vite-plugin-zephyr',
   preset: '../../jest.preset.js',

@@ -50,18 +50,7 @@ export function getSessionKey(): SessionLock {
 
     // If we are the holder of the lock, unlock it and clean up the lockfile
     [Symbol.dispose]() {
-      if (unlock) {
-        unlock();
-
-        // TODO: Remove this in the future, once >=0.0.48 is the minimum version
-        //
-        // Removes the lockfile to prevent older plugin versions (<0.0.48) from crashing
-        // because `node-persist#forgiveParseErrors` wasn't set to true yet.
-        setTimeout(fs.unlink, UNLOCK_INTERVAL, ZE_SESSION_LOCK, () => {
-          // no need to care about errors here, if the file is not there, it's fine
-          ze_log.misc('Lock released and lockfile removed');
-        });
-      }
+      unlock?.();
     },
   };
 }
@@ -76,7 +65,8 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
   try {
     // The timeout to the whole login process makes sense to keep the lock for the same amount of time
     return lockSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS });
-  } catch (error: any) {
+  } catch (ex: unknown) {
+    const error = ex as { code: string };
     if (error.code === 'ELOCKED') {
       return null;
     }

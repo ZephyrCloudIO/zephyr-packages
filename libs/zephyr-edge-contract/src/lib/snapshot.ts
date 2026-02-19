@@ -13,6 +13,10 @@ export interface Snapshot {
   snapshot_id: string;
   // default domain url
   domain: string;
+  // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
+  type?: 'ssr' | 'csr';
+  // server entry file path for SSR applications (relative path)
+  entrypoint?: string;
   uid: {
     build: string;
     app_name: string;
@@ -41,6 +45,16 @@ export interface Snapshot {
   };
   // list of files, where key is file path
   assets: Record<string, SnapshotAsset>;
+  // Public environment variables captured at build time (ZE_PUBLIC_* only)
+  ze_envs?: Record<string, string>;
+  // Content-addressable hash of ze_envs for deduplication
+  ze_envs_hash?: string;
+  // bundler plugin type (e.g. 'webpack', 'vite', 'rspack')
+  builder?: string;
+  // version of the zephyr plugin (zephyr-edge-contract/zephyr-agent)
+  plugin_version?: string;
+  // version of the edge worker that processed the snapshot
+  worker_version?: string;
 }
 
 export interface SnapshotAsset {
@@ -52,4 +66,12 @@ export interface SnapshotAsset {
 
 export interface SnapshotMetadata {
   pages_url?: string;
+  // Optional environment-level overrides for ZE_PUBLIC_* vars
+  public_envs?: Record<string, string>;
+  // Diagnostics / cache-key helpers
+  version?: string;
+  build_id?: string;
+  etag?: string;
+  // Optional nested env shape used by some adapters
+  env?: { public?: Record<string, string> };
 }

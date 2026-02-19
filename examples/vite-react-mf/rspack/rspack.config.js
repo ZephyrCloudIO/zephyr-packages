@@ -48,19 +48,7 @@ module.exports = withZephyr()({
       },
       {
         test: /\.css$/,
-        use: [
-          {
-            loader: 'postcss-loader',
-            options: {
-              postcssOptions: {
-                plugins: {
-                  tailwindcss: {},
-                  autoprefixer: {},
-                },
-              },
-            },
-          },
-        ],
+        use: ['postcss-loader'],
         type: 'css',
       },
       {
@@ -69,7 +57,6 @@ module.exports = withZephyr()({
           {
             loader: 'builtin:swc-loader',
             options: {
-              sourceMap: true,
               jsc: {
                 parser: {
                   syntax: 'typescript',

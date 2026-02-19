@@ -27,7 +27,7 @@ jobs:
     environment: canary-publishing # For security approval
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
 
       - name: Verify git status
@@ -42,6 +42,11 @@ jobs:
         run: pnpm audit --audit-level high
 
       - name: Build packages
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm nx run-many -t build --projects="libs/*"
 
       - name: Patch versions
@@ -82,7 +87,7 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'prereleased'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
 
       - name: Verify git status
@@ -97,6 +102,11 @@ jobs:
         run: pnpm audit --audit-level high
 
       - name: Build packages
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm build
 
       - name: Patch versions with next tag
@@ -151,7 +161,7 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'released'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
 
       - name: Verify git status
@@ -166,6 +176,11 @@ jobs:
         run: pnpm audit --audit-level high
 
       - name: Build packages
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm build
 
       - name: Publish packages to latest tag

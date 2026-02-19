@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspress-plugin",
-  "version": "0.1.0",
+  "version": "0.1.11",
   "description": "Rspress plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -22,7 +22,6 @@
     "test": "jest"
   },
   "dependencies": {
-    "@rspress/shared": "catalog:rspress",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*",
@@ -30,11 +29,14 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
+    "@rspress/core": "catalog:rspress",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@rspress/core": "^2.0.0"
   },
   "publishConfig": {
     "access": "public",

@@ -1,14 +1,21 @@
 import {
   forEachLimit,
   type ZeBuildAsset,
+  type ZeBuildAssetsMap,
   type ZeUploadAssetsOptions,
 } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from '../../zephyr-engine';
+import { get_missing_assets } from '../edge-hash-list/get-missing-assets';
+import { getApplicationHashList } from '../edge-requests/get-application-hash-list';
 import { uploadFile } from '../http/upload-file';
 import { ze_log } from '../logging';
 import { white, whiteBright } from '../logging/picocolor';
+import type {
+  EnvironmentConfig,
+  ZeApplicationConfig,
+} from '../node-persist/upload-provider-options';
 
-const CLOUDFLARE_BATCH_SIZE = 6;
+const MAX_MATCH_SIZE = 6;
 
 export async function zeUploadAssets(
   zephyr_engine: ZephyrEngine,
@@ -17,6 +24,16 @@ export async function zeUploadAssets(
   const count = Object.keys(assetsMap).length;
   const logger = await zephyr_engine.logger;
   const appConfig = await zephyr_engine.application_configuration;
+
+  const envs = appConfig.ENVIRONMENTS;
+  if (envs != null) {
+    await Promise.all(
+      Object.entries(envs)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .filter(([_, envCfg]) => envCfg.edgeUrl !== appConfig.EDGE_URL)
+        .map(([env, envCfg]) => zeUploadAssetsForEnv(env, envCfg, appConfig, assetsMap))
+    );
+  }
 
   if (missingAssets.length === 0) {
     logger({
@@ -31,19 +48,10 @@ export async function zeUploadAssets(
   const start = Date.now();
   let totalSize = 0;
 
-  // If the target is iOS or Android, we upload the assets in a 6 request batch to avoid cloudflare worker requests limit
-  // Reference: https://developers.cloudflare.com/workers/platform/limits/#simultaneous-open-connections:~:text=Once%20an%20invocation%20has%20six%20connections%20open%2C%20it%20can%20still%20attempt%20to%20open%20additional%20connections.
-  if (zephyr_engine.env.target !== 'ios' && zephyr_engine.env.target !== 'android') {
-    await Promise.all(missingAssets.map(upload_missing_asset));
-  } else {
-    ze_log.upload(
-      "The target platform is 'ios' and 'android' so we are switching to batch upload."
-    );
-    await forEachLimit<void>(
-      missingAssets.map((asset) => () => upload_missing_asset(asset)),
-      CLOUDFLARE_BATCH_SIZE
-    );
-  }
+  await forEachLimit<void>(
+    missingAssets.map((asset) => () => upload_missing_asset(asset)),
+    MAX_MATCH_SIZE
+  );
 
   logger({
     level: 'info',
@@ -76,6 +84,53 @@ export async function zeUploadAssets(
 
     ze_log.upload(
       `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`
+    );
+  }
+
+  async function zeUploadAssetsForEnv(
+    env: string,
+    envCfg: EnvironmentConfig,
+    appConfig: ZeApplicationConfig,
+    assetsMap: ZeBuildAssetsMap
+  ) {
+    const hash_set = await getApplicationHashList({
+      application_uid: zephyr_engine.application_uid,
+      edge_url: envCfg.edgeUrl,
+    });
+    const missingAssets = get_missing_assets({
+      assetsMap,
+      hash_set: { hash_set: new Set(hash_set.hashes) },
+    });
+    if (missingAssets.length === 0) {
+      return;
+    }
+    let totalSize = 0;
+    await Promise.all(
+      missingAssets.map(async (asset) => {
+        ze_log.upload(`Uploading file ${asset.path} to env: ${whiteBright(env)}`);
+        const start = Date.now();
+        const assetWithBuffer = assetsMap[asset.hash];
+        const assetSize = assetWithBuffer?.buffer?.length / 1024;
+
+        await uploadFile(
+          {
+            hash: asset.hash,
+            asset: assetWithBuffer,
+          },
+          { ...appConfig, EDGE_URL: envCfg.edgeUrl }
+        );
+
+        const fileUploaded = Date.now() - start;
+
+        totalSize += assetSize;
+
+        ze_log.upload(
+          `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb) for env: ${whiteBright(env)}`
+        );
+      })
+    );
+    ze_log.upload(
+      `Total size uploaded for env: ${whiteBright(env)}: ${totalSize.toFixed(2)}kb`
     );
   }
 }

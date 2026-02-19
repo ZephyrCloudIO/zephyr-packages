@@ -1,6 +1,6 @@
 {
   "name": "parcel-reporter-zephyr",
-  "version": "0.1.0",
+  "version": "0.1.11",
   "description": "Parcel reporter for Zephyr",
   "repository": {
     "type": "git",
@@ -20,17 +20,19 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "@parcel/core": "catalog:parcel",
-    "@parcel/plugin": "catalog:parcel",
-    "@parcel/types": "catalog:parcel",
-    "is-ci": "catalog:plugin-shared",
+    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
+    "@parcel/plugin": "catalog:parcel",
+    "@parcel/types": "catalog:parcel",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@parcel/plugin": "^2.0.0",
+    "@parcel/types": "^2.0.0"
   },
   "publishConfig": {
     "access": "public",

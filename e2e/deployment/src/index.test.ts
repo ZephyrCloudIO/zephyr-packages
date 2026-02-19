@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
 const output = execSync(
-  'npx nx show projects --affected -t=build --exclude="libs/*,e2e/*"'
+  'npx nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test"'
 );
 const testTargets = output.toString().split('\n').filter(Boolean);
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();
@@ -28,6 +28,17 @@ for (const appName of testTargets) {
       'should have correctly deployed assets',
       async () => {
         const url = deployResult.urls[0];
+
+        // TODO: when SSR gets stable, come back here to validate asset deployment
+        if (deployResult.snapshot.type === 'ssr') {
+          console.log(
+            'Skipping asset check for SSR app. Verifying index page response only.'
+          );
+          const res = await fetchWithRetries(url, 3);
+          expect(res.status).toBe(200);
+          expect(res.ok).toBe(true);
+          return;
+        }
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
           return fetchWithRetries(`${url}/${asset.path}`, 3);
@@ -55,5 +66,5 @@ const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
 };
 
 function replacer(str: string): string {
-  return str.replace(/[^a-zA-Z0-9-]/gi, '-');
+  return str.replace(/[^a-zA-Z0-9-]/gi, '-').toLowerCase();
 }

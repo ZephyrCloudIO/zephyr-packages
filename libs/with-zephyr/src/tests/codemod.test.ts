@@ -225,7 +225,7 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('withZephyr()');
     });
 
-    it('should transform rsbuild config with custom plugin', () => {
+    it('should transform rsbuild config with simple plugin', () => {
       const originalContent = `
         import { defineConfig } from '@rsbuild/core';
         import { pluginReact } from '@rsbuild/plugin-react';
@@ -239,11 +239,28 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('rsbuild.config.ts', 'utf8');
+      expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
+      expect(content).toContain('pluginReact(), withZephyr()');
+      expect(content).toMatch(/output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/);
+    });
+
+    it('should wrap rspack defineConfig exports instead of adding to plugins array', () => {
+      const originalContent = `
+        import { defineConfig } from "@rspack/cli";
+        import { rspack } from "@rspack/core";
+
+        export default defineConfig({
+          plugins: [new rspack.HtmlRspackPlugin({ template: "./index.html" })]
+        });
+      `;
+      fs.writeFileSync('rspack.config.ts', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('rspack.config.ts', 'utf8');
       expect(content).toContain('import { withZephyr } from "zephyr-rspack-plugin"');
-      expect(content).toContain('RsbuildPlugin');
-      expect(content).toContain('zephyrRSbuildPlugin');
-      expect(content).toContain('api.modifyRspackConfig');
-      expect(content).toContain('pluginReact(), zephyrRSbuildPlugin()');
+      expect(content).toContain('export default withZephyr()(defineConfig({');
+      expect(content).not.toMatch(/plugins[^]]*withZephyr\(\)/);
     });
   });
 

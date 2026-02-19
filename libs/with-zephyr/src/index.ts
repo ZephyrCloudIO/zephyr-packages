@@ -6,7 +6,21 @@ import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
 
-import { BUNDLER_CONFIGS } from './bundler-configs.js';
+import {
+  webpackConfig,
+  rspackConfig,
+  viteConfig,
+  rollupConfig,
+  rolldownConfig,
+  rsbuildConfig,
+  rslibConfig,
+  parcelConfig,
+  astroConfig,
+  modernjsConfig,
+  rspressConfig,
+  repackConfig,
+} from './bundlers/index.js';
+import type { BundlerConfigs } from './types.js';
 import {
   detectPackageManager,
   installPackage,
@@ -14,18 +28,20 @@ import {
 } from './package-manager.js';
 import {
   addToComposePlugins,
-  addToModernJSPlugins,
   addToParcelReporters,
   addToPluginsArray,
-  addToRolldownPlugins,
+  addToPluginsArrayOrCreate,
+  addToRsbuildConfig,
   addToRollupArrayConfig,
   addToRollupFunction,
-  addToRSPressPlugins,
   addToVitePlugins,
   addToVitePluginsInFunction,
+  addToAstroIntegrations,
+  addToAstroIntegrationsInFunction,
+  addToAstroIntegrationsOrCreate,
+  addToAstroIntegrationsInFunctionOrCreate,
   addZephyrImport,
   addZephyrRequire,
-  addZephyrRSbuildPlugin,
   hasZephyrPlugin,
   parseFile,
   skipAlreadyWrapped,
@@ -33,7 +49,7 @@ import {
   wrapExportedFunction,
   wrapModuleExports,
   writeFile,
-} from './transformers.js';
+} from './transformers/index.js';
 import type {
   BundlerConfig,
   BundlerPattern,
@@ -42,22 +58,40 @@ import type {
   TransformFunctions,
 } from './types.js';
 
+// Local registry built from individual imports
+const BUNDLER_CONFIGS: BundlerConfigs = {
+  webpack: webpackConfig,
+  rspack: rspackConfig,
+  vite: viteConfig,
+  rollup: rollupConfig,
+  rolldown: rolldownConfig,
+  rsbuild: rsbuildConfig,
+  rslib: rslibConfig,
+  parcel: parcelConfig,
+  astro: astroConfig,
+  modernjs: modernjsConfig,
+  rspress: rspressConfig,
+  repack: repackConfig,
+};
+
 // Map transform names to functions
 const TRANSFORMERS: TransformFunctions = {
   addToComposePlugins,
   addToPluginsArray,
+  addToPluginsArrayOrCreate,
+  addToRsbuildConfig,
   addToVitePlugins,
   addToVitePluginsInFunction,
+  addToAstroIntegrations,
+  addToAstroIntegrationsInFunction,
+  addToAstroIntegrationsOrCreate,
+  addToAstroIntegrationsInFunctionOrCreate,
   addToRollupFunction,
   addToRollupArrayConfig,
-  addToRolldownPlugins,
-  addToModernJSPlugins,
-  addToRSPressPlugins,
   wrapModuleExports,
   wrapExportDefault,
   skipAlreadyWrapped,
   wrapExportedFunction,
-  addZephyrRSbuildPlugin,
 };
 
 /** Normalize file path separators to forward slashes for consistent output */

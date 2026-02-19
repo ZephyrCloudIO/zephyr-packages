@@ -1,5 +1,5 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
-import { ZephyrEngine, ZephyrError, logFn } from 'zephyr-agent';
+import { getGlobal, handleGlobalError, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -13,7 +13,14 @@ export type Configuration = RspackConfiguration;
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRspackPluginOptions
 ): (config: Configuration) => Promise<Configuration> {
-  return (config) => _zephyr_configuration(config, zephyrPluginOptions);
+  return (config) => {
+    // Skip Zephyr execution during Nx graph calculation
+    // Nx sets global.NX_GRAPH_CREATION = true during graph creation
+    if (getGlobal().NX_GRAPH_CREATION) {
+      return Promise.resolve(config);
+    }
+    return _zephyr_configuration(config, zephyrPluginOptions);
+  };
 }
 
 async function _zephyr_configuration(
@@ -29,7 +36,6 @@ async function _zephyr_configuration(
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);
-
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
@@ -41,10 +47,11 @@ async function _zephyr_configuration(
         zephyr_engine,
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
+        hooks: _zephyrOptions?.hooks,
       })
     );
   } catch (error) {
-    logFn('error', ZephyrError.format(error));
+    handleGlobalError(error);
   }
 
   return config;

@@ -5,6 +5,7 @@ export interface ZeApplicationConfig {
   EDGE_URL: string;
   DELIMITER: string;
   PLATFORM: UploadProviderType;
+  ENVIRONMENTS?: Record<string, EnvironmentConfig>;
   fetched_at?: number;
 
   // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration
@@ -26,4 +27,12 @@ export enum UploadProviderType {
   GCP = 'gcp',
   FASTLY = 'fastly',
   AKAMAI = 'akamai',
+  CUSTOM = 'custom',
+}
+
+export interface EnvironmentConfig {
+  type: UploadProviderType;
+  edgeUrl: string;
+  delimiter: string;
+  remote_host: string;
 }

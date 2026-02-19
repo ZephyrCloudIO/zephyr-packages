@@ -3,15 +3,17 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 export const ZE_PATH = path.resolve(os.homedir(), '.zephyr');
+export const ZE_STORAGE_PATH = path.resolve(ZE_PATH, 'storage');
 export const ZE_SESSION_LOCK = path.resolve(ZE_PATH, 'session');
 
 try {
-  // Ensures that the directory exists and lockfile is writable
-  fs.mkdirSync(ZE_PATH, { recursive: true });
+  // Dedicated node-persist directory to avoid clashes with other .zephyr assets (logs, etc).
+  fs.mkdirSync(ZE_STORAGE_PATH, { recursive: true });
 } catch (error) {
   console.error(
     'error',
-    `Could not create ~/.zephyr directory. Please check your permissions: ${error}`
+    `Could not create ~/.zephyr/storage directory. Please check your permissions.`,
+    error
   );
 }
 
@@ -23,4 +25,6 @@ export enum StorageKeys {
   ze_fs_cache = 'ze-fs-cache',
   ze_hash_cache = 'ze-hash-cache',
   ze_app_deploy_result = 'ze-app-deploy-result',
+  ze_server_token = 'ZE_SERVER_TOKEN',
+  ze_user_email = 'ZE_USER_EMAIL',
 }

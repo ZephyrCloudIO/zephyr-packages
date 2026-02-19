@@ -1,5 +1,19 @@
 import { describe, expect, it } from '@rstest/core';
-import { BUNDLER_CONFIGS } from '../bundler-configs.js';
+import {
+  BUNDLER_CONFIGS,
+  webpackConfig,
+  rspackConfig,
+  viteConfig,
+  rollupConfig,
+  rolldownConfig,
+  rsbuildConfig,
+  rslibConfig,
+  parcelConfig,
+  astroConfig,
+  modernjsConfig,
+  rspressConfig,
+  repackConfig,
+} from '../bundlers/index.js';
 
 describe('Bundler Configurations', () => {
   describe('Configuration Structure', () => {
@@ -10,6 +24,7 @@ describe('Bundler Configurations', () => {
         'vite',
         'rollup',
         'rolldown',
+        'astro',
         'modernjs',
         'rspress',
         'parcel',
@@ -57,11 +72,37 @@ describe('Bundler Configurations', () => {
         });
       });
     });
+
+    it('should support direct imports of individual bundler configs', () => {
+      // Test that individual configs can be imported directly
+      // This ensures the modular structure exports work correctly
+
+      // Verify they match the registry entries
+      expect(webpackConfig).toBe(BUNDLER_CONFIGS.webpack);
+      expect(viteConfig).toBe(BUNDLER_CONFIGS.vite);
+      expect(rspackConfig).toBe(BUNDLER_CONFIGS.rspack);
+      expect(rollupConfig).toBe(BUNDLER_CONFIGS.rollup);
+      expect(rolldownConfig).toBe(BUNDLER_CONFIGS.rolldown);
+      expect(rsbuildConfig).toBe(BUNDLER_CONFIGS.rsbuild);
+      expect(rslibConfig).toBe(BUNDLER_CONFIGS.rslib);
+      expect(parcelConfig).toBe(BUNDLER_CONFIGS.parcel);
+      expect(astroConfig).toBe(BUNDLER_CONFIGS.astro);
+      expect(modernjsConfig).toBe(BUNDLER_CONFIGS.modernjs);
+      expect(rspressConfig).toBe(BUNDLER_CONFIGS.rspress);
+      expect(repackConfig).toBe(BUNDLER_CONFIGS.repack);
+
+      // Verify they have the expected structure
+      expect(webpackConfig).toHaveProperty('files');
+      expect(webpackConfig).toHaveProperty('plugin');
+      expect(webpackConfig.plugin).toBe('zephyr-webpack-plugin');
+
+      expect(viteConfig).toHaveProperty('files');
+      expect(viteConfig).toHaveProperty('plugin');
+      expect(viteConfig.plugin).toBe('vite-plugin-zephyr');
+    });
   });
 
   describe('Webpack Configuration', () => {
-    const webpackConfig = BUNDLER_CONFIGS.webpack;
-
     it('should support correct file extensions', () => {
       expect(webpackConfig.files).toEqual([
         'webpack.config.js',
@@ -85,8 +126,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('Rspack Configuration', () => {
-    const rspackConfig = BUNDLER_CONFIGS.rspack;
-
     it('should support correct file extensions', () => {
       expect(rspackConfig.files).toEqual([
         'rspack.config.js',
@@ -107,11 +146,15 @@ describe('Bundler Configurations', () => {
       expect(wrappedPattern).toBeDefined();
       expect(wrappedPattern?.matcher.test('export default withZephyr()(')).toBe(true);
     });
+
+    it('should handle defineConfig export pattern', () => {
+      const definePattern = rspackConfig.patterns.find((p) => p.type === 'define-config');
+      expect(definePattern).toBeDefined();
+      expect(definePattern?.matcher.test('export default defineConfig({')).toBe(true);
+    });
   });
 
   describe('Vite Configuration', () => {
-    const viteConfig = BUNDLER_CONFIGS.vite;
-
     it('should support correct file extensions including .mts', () => {
       expect(viteConfig.files).toEqual([
         'vite.config.js',
@@ -136,8 +179,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('Rollup Configuration', () => {
-    const rollupConfig = BUNDLER_CONFIGS.rollup;
-
     it('should use correct plugin package', () => {
       expect(rollupConfig.plugin).toBe('rollup-plugin-zephyr');
       expect(rollupConfig.importName).toBe('withZephyr');
@@ -150,9 +191,37 @@ describe('Bundler Configurations', () => {
     });
   });
 
-  describe('Modern.js Configuration', () => {
-    const modernjsConfig = BUNDLER_CONFIGS.modernjs;
+  describe('Astro Configuration', () => {
+    it('should support correct file extensions including .mts', () => {
+      expect(astroConfig.files).toEqual([
+        'astro.config.js',
+        'astro.config.ts',
+        'astro.config.mjs',
+        'astro.config.mts',
+      ]);
+    });
 
+    it('should use correct plugin package', () => {
+      expect(astroConfig.plugin).toBe('zephyr-astro-integration');
+      expect(astroConfig.importName).toBe('withZephyr');
+    });
+
+    it('should handle function wrapper pattern', () => {
+      const functionPattern = astroConfig.patterns.find(
+        (p) => p.type === 'define-config-function'
+      );
+      expect(functionPattern).toBeDefined();
+      expect(functionPattern?.matcher.test('defineConfig(() => ({')).toBe(true);
+    });
+
+    it('should handle standard defineConfig pattern', () => {
+      const definePattern = astroConfig.patterns.find((p) => p.type === 'define-config');
+      expect(definePattern).toBeDefined();
+      expect(definePattern?.matcher.test('defineConfig({')).toBe(true);
+    });
+  });
+
+  describe('Modern.js Configuration', () => {
     it('should support correct file extensions', () => {
       expect(modernjsConfig.files).toEqual([
         'modern.config.js',
@@ -168,8 +237,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('RSPress Configuration', () => {
-    const rspressConfig = BUNDLER_CONFIGS.rspress;
-
     it('should support correct file extensions', () => {
       expect(rspressConfig.files).toEqual([
         'rspress.config.js',
@@ -185,8 +252,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('Parcel Configuration', () => {
-    const parcelConfig = BUNDLER_CONFIGS.parcel;
-
     it('should support JSON configuration files', () => {
       expect(parcelConfig.files).toEqual(['.parcelrc', '.parcelrc.json']);
     });
@@ -206,8 +271,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('Re.Pack Configuration', () => {
-    const repackConfig = BUNDLER_CONFIGS.repack;
-
     it('should use rspack config files', () => {
       expect(repackConfig.files).toEqual([
         'rspack.config.js',
@@ -241,8 +304,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('RSBuild Configuration', () => {
-    const rsbuildConfig = BUNDLER_CONFIGS.rsbuild;
-
     it('should support correct file extensions', () => {
       expect(rsbuildConfig.files).toEqual([
         'rsbuild.config.js',
@@ -256,14 +317,6 @@ describe('Bundler Configurations', () => {
       expect(rsbuildConfig.importName).toBe('withZephyr');
     });
 
-    it('should detect existing zephyr plugin', () => {
-      const existingPattern = rsbuildConfig.patterns.find(
-        (p) => p.type === 'zephyr-rsbuild-plugin-exists'
-      );
-      expect(existingPattern).toBeDefined();
-      expect(existingPattern?.matcher.test('zephyrRSbuildPlugin')).toBe(true);
-    });
-
     it('should handle defineConfig pattern', () => {
       const definePattern = rsbuildConfig.patterns.find(
         (p) => p.type === 'define-config'
@@ -274,8 +327,6 @@ describe('Bundler Configurations', () => {
   });
 
   describe('RSLib Configuration', () => {
-    const rslibConfig = BUNDLER_CONFIGS.rslib;
-
     it('should support correct file extensions', () => {
       expect(rslibConfig.files).toEqual([
         'rslib.config.js',
@@ -287,14 +338,6 @@ describe('Bundler Configurations', () => {
     it('should use rsbuild plugin', () => {
       expect(rslibConfig.plugin).toBe('zephyr-rsbuild-plugin');
       expect(rslibConfig.importName).toBe('withZephyr');
-    });
-
-    it('should detect existing zephyr plugin', () => {
-      const existingPattern = rslibConfig.patterns.find(
-        (p) => p.type === 'zephyr-rsbuild-plugin-exists'
-      );
-      expect(existingPattern).toBeDefined();
-      expect(existingPattern?.matcher.test('zephyrRSbuildPlugin')).toBe(true);
     });
 
     it('should handle defineConfig pattern', () => {

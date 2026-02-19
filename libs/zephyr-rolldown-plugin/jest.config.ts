@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'zephyr-rolldown-plugin',
   preset: '../../jest.preset.js',

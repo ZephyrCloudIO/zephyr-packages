@@ -34,13 +34,14 @@ bunx with-zephyr
 
 ## Supported Bundlers
 
-This codemod supports **11+ bundlers** with their respective Zephyr plugins:
+This codemod supports **12+ bundlers** with their respective Zephyr plugins:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
 - **Vite** ([`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
 - **Rollup** ([`rollup-plugin-zephyr`](https://www.npmjs.com/package/rollup-plugin-zephyr))
 - **Rolldown** ([`zephyr-rolldown-plugin`](https://www.npmjs.com/package/zephyr-rolldown-plugin))
+- **Astro** ([`zephyr-astro-integration`](https://www.npmjs.com/package/zephyr-astro-integration))
 - **Modern.js** ([`zephyr-modernjs-plugin`](https://www.npmjs.com/package/zephyr-modernjs-plugin))
 - **RSPress** ([`zephyr-rspress-plugin`](https://www.npmjs.com/package/zephyr-rspress-plugin))
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
@@ -92,9 +93,6 @@ This will:
 # Show what would be changed without modifying files
 npx with-zephyr --dry-run
 
-# Automatically install missing plugin packages
-npx with-zephyr --install
-
 # Specify a different directory
 npx with-zephyr ./my-project
 
@@ -102,10 +100,10 @@ npx with-zephyr ./my-project
 npx with-zephyr --bundlers webpack vite
 
 # Combine options
-npx with-zephyr ./src --dry-run --bundlers rollup --install
+npx with-zephyr ./src --dry-run --bundlers rollup
 
 # Use with other package managers
-pnpm dlx with-zephyr --install
+pnpm dlx with-zephyr
 yarn dlx with-zephyr --dry-run
 bunx with-zephyr --bundlers vite rollup
 ```
@@ -115,7 +113,8 @@ bunx with-zephyr --bundlers vite rollup
 - `[directory]` - Directory to search for config files (default: current directory)
 - `-d, --dry-run` - Show what would be changed without modifying files
 - `-b, --bundlers <bundlers...>` - Only process specific bundlers
-- `-i, --install` - Automatically install missing plugin packages
+
+> The codemod automatically installs missing Zephyr plugins using your detected package manager (npm/yarn/pnpm/bun). In `--dry-run` it will only list what would be installed.
 
 ## Examples
 
@@ -192,7 +191,7 @@ module.exports = (config) => {
 
 ## Package Management
 
-The codemod can automatically install missing Zephyr plugin packages using the `--install` flag.
+The codemod automatically installs missing Zephyr plugin packages when not running in `--dry-run` mode.
 
 ### Package Manager Detection
 
@@ -216,21 +215,10 @@ The tool automatically detects your package manager by checking for:
 - **pnpm**: `pnpm add --save-dev <package>`
 - **bun**: `bun add --dev <package>`
 
-### Usage with Package Installation
+### Package Installation Behavior
 
-```bash
-# Install packages and update configs in one command
-npx with-zephyr --install
-
-# Preview what packages would be installed
-npx with-zephyr --dry-run --install
-
-# The tool will show you which packages need to be installed if you don't use --install
-npx with-zephyr
-# Output: 💡 Tip: Use --install to automatically install missing packages:
-#           vite-plugin-zephyr
-#           zephyr-webpack-plugin
-```
+- `npx with-zephyr` will install any required Zephyr plugins that are missing.
+- `npx with-zephyr --dry-run` will list the packages it would install without making changes.
 
 ## Configuration File Detection
 
@@ -241,6 +229,7 @@ The codemod automatically detects and processes these configuration files:
 - `vite.config.js/ts/mjs`
 - `rollup.config.js/ts/mjs`
 - `rolldown.config.js/ts/mjs`
+- `astro.config.js/ts/mjs/mts`
 - `modern.config.js/ts/mjs`
 - `rspress.config.js/ts/mjs`
 - `rsbuild.config.js/ts/mjs`
@@ -304,7 +293,7 @@ Refer to the individual plugin documentation for specific setup instructions.
 
 ### Building
 
-The codemod is written in TypeScript and bundled with tsup:
+The codemod is written in TypeScript and built with Rspack/RSLib:
 
 ```bash
 # Install dependencies
@@ -318,17 +307,22 @@ pnpm run dev
 
 # Type checking
 pnpm run typecheck
+
+# Run the locally built CLI (no publish needed)
+pnpm nx build with-zephyr
+node ./libs/with-zephyr/dist/index.js --bundlers rspack /path/to/project
+node ./libs/with-zephyr/dist/index.js --bundlers repack /path/to/react-native-project
 ```
 
 ### Project Structure
 
 ```
 src/
-├── index.ts           # Main CLI entry point
-├── types.ts           # TypeScript type definitions
-├── bundler-configs.ts # Bundler configuration definitions
-├── transformers.ts    # AST transformation functions
-└── package-manager.ts # Package management utilities
+├── bundlers/          # Per-bundler configs + registry
+├── transformers/      # AST transforms (imports, plugin arrays, wrappers, etc.)
+├── package-manager.ts # Package management utilities
+├── index.ts           # CLI entry point and orchestration
+└── types.ts           # Shared types
 ```
 
 ## Contributing

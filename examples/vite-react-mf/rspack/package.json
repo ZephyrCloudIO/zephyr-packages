@@ -18,7 +18,7 @@
     "@rspack/plugin-react-refresh": "catalog:rspack",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "autoprefixer": "catalog:vite6",
+    "autoprefixer": "catalog:vite7",
     "postcss": "catalog:postcss",
     "postcss-loader": "catalog:postcss",
     "react-refresh": "catalog:react18",
@@ -26,6 +26,7 @@
     "zephyr-rspack-plugin": "workspace:*"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "react": "catalog:react18",
     "react-dom": "catalog:react18"
   }

@@ -1,8 +1,7 @@
 import { defineConfig } from '@rslib/core';
-import { withZephyr } from 'zephyr-rsbuild-plugin';
 
 export default defineConfig({
-  plugins: [withZephyr()],
+  // plugins: [withZephyr()],
   source: {
     entry: {
       index: 'src/index.ts',
@@ -19,4 +18,11 @@ export default defineConfig({
       },
     },
   ],
+  tools: {
+    rspack: {
+      experiments: {
+        typeReexportsPresence: true,
+      },
+    },
+  },
 });

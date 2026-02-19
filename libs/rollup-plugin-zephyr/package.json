@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-zephyr",
-  "version": "0.1.0",
+  "version": "0.1.11",
   "description": "Rollup plugin for Zephyr",
   "keywords": [
     "rollup",
@@ -26,16 +26,17 @@
     "patch-version": "pnpm version"
   },
   "dependencies": {
-    "is-ci": "catalog:plugin-shared",
-    "rollup": "catalog:rollup4",
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "rollup": "catalog:rollup4",
     "ts-jest": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "rollup": "^4.0.0"
   },
   "publishConfig": {
     "access": "public",

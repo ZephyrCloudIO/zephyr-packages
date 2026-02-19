@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/recipes/rsbuild-react) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
+[Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io/bundlers/rsbuild) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
 
 <hr/>
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
@@ -18,7 +18,7 @@ The fastest way to get started is to use `create-zephyr-apps` to generate a new 
 npx create-zephyr-apps@latest
 ```
 
-For more information please refer to our [documentation](https://docs.zephyr-cloud.io/recipes).
+For more information please refer to our [documentation](https://docs.zephyr-cloud.io/bundlers/rsbuild).
 
 ## Installation
 

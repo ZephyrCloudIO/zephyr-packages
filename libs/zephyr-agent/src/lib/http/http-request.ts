@@ -4,9 +4,16 @@ import {
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
+import {
+  ATTR_HTTP_REQUEST_METHOD,
+  ATTR_HTTP_RESPONSE_STATUS_CODE,
+  ATTR_URL_FULL,
+  SpanKind,
+} from '@zephyrcloud/telemetry';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
+import { injectTraceHeaders, withTelemetrySpan } from '../telemetry';
 import { fetchWithRetries } from './fetch-with-retries';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
@@ -79,67 +86,84 @@ export async function makeHttpRequest<T = void>(
   options: RequestInit = {},
   data?: string | Buffer
 ): Promise<HttpResponse<T>> {
-  const startTime = Date.now();
+  return withTelemetrySpan(
+    'zephyr.http.request',
+    async (span) => {
+      const startTime = Date.now();
+      const method = options.method?.toUpperCase() ?? 'GET';
 
-  try {
-    const response = await fetchWithRetries(url, {
-      ...options,
-      body: data as BodyInit | null | undefined,
-    });
+      span?.setAttribute(ATTR_HTTP_REQUEST_METHOD, method);
+      span?.setAttribute(ATTR_URL_FULL, url.toString());
 
-    const resText = await response.text();
+      try {
+        const response = await fetchWithRetries(url, {
+          ...options,
+          headers: injectTraceHeaders(options.headers),
+          body: data as BodyInit | null | undefined,
+        });
 
-    if (response.status === 401) {
-      // Clean the tokens and throw an error
-      await cleanTokens();
-      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-        message: 'Unauthenticated request',
-      });
-    }
+        span?.setAttribute(ATTR_HTTP_RESPONSE_STATUS_CODE, response.status);
 
-    if (response.status === 403) {
-      throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
-        message: 'Unauthorized request',
-      });
-    }
+        const resText = await response.text();
 
-    const message = redactResponse(url, options, data, resText, startTime);
+        if (response.status === 401) {
+          // Clean the tokens and throw an error
+          await cleanTokens();
+          throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+            message: 'Unauthenticated request',
+          });
+        }
 
-    if (message === 'Not Implemented') {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: 'Not implemented yet. Please get in contact with our support.',
-      });
-    }
+        if (response.status === 403) {
+          throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+            message: 'Unauthorized request',
+          });
+        }
 
-    if (response.status === undefined) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        content: 'No status code found',
-        method: options.method?.toUpperCase() ?? 'GET',
-        url: url.toString(),
-        status: -1,
-      });
-    }
+        const message = redactResponse(url, options, data, resText, startTime);
 
-    if (!url.pathname.includes('application/logs')) {
-      ze_log.http(message);
-    }
+        if (message === 'Not Implemented') {
+          throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+            message: 'Not implemented yet. Please get in contact with our support.',
+          });
+        }
 
-    // Only parses data if reply content is json
-    const resData = safe_json_parse<unknown>(resText) ?? resText;
+        if (response.status === undefined) {
+          throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+            content: 'No status code found',
+            method,
+            url: url.toString(),
+            status: -1,
+          });
+        }
 
-    if (response.status >= 300) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        status: response.status,
-        url: url.toString(),
-        content: typeof resData === 'string' ? resData : JSON.stringify(resData),
-        method: options.method?.toUpperCase() ?? 'GET',
-      });
-    }
+        if (!url.pathname.includes('application/logs')) {
+          ze_log.http(message);
+        }
 
-    return [true, null, resData as T];
-  } catch (error) {
-    return [false, error as Error];
-  }
+        // Only parses data if reply content is json
+        const resData = safe_json_parse<unknown>(resText) ?? resText;
+
+        if (response.status >= 300) {
+          throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+            status: response.status,
+            url: url.toString(),
+            content: typeof resData === 'string' ? resData : JSON.stringify(resData),
+            method,
+          });
+        }
+
+        return [true, null, resData as T];
+      } catch (error) {
+        return [false, error as Error];
+      }
+    },
+    {
+      [ATTR_HTTP_REQUEST_METHOD]: options.method?.toUpperCase() ?? 'GET',
+      [ATTR_URL_FULL]: url.toString(),
+    },
+    SpanKind.CLIENT
+  );
 }
 
 /** Creates a request that returns a promise for the HTTP response */

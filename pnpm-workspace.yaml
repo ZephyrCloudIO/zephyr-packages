@@ -25,11 +25,11 @@ catalogs:
     '@modern-js/runtime': ^2.70.1
     '@modern-js/tsconfig': ^2.70.1
   parcel:
-    'parcel': ^2.16.1
-    '@parcel/config-default': ^2.14.1
-    '@parcel/plugin': ^2.16.1
-    '@parcel/types': ^2.16.1
-    '@parcel/core': ^2.16.1
+    'parcel': ^2.16.4
+    '@parcel/config-default': ^2.16.4
+    '@parcel/plugin': ^2.16.4
+    '@parcel/types': ^2.16.4
+    '@parcel/core': ^2.16.4
   module-federation:
     '@module-federation/enhanced': ^0.21.0
     '@module-federation/runtime': ^0.21.0
@@ -44,7 +44,7 @@ catalogs:
   typescript:
     typescript: ~5.9.0
     '@types/jest': 29.5.14
-    '@types/node': ^22.13.11
+    '@types/node': 22.13.13
     '@types/is-ci': 3.0.4
     '@types/node-persist': ^3.1.8
     '@types/yargs': ^17.0.33

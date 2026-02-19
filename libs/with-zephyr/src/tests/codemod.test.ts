@@ -241,6 +241,7 @@ describe('Zephyr Codemod CLI', () => {
       const content = fs.readFileSync('rsbuild.config.ts', 'utf8');
       expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
       expect(content).toContain('pluginReact(), withZephyr()');
+      expect(content).toMatch(/output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/);
     });
 
     it('should wrap rspack defineConfig exports instead of adding to plugins array', () => {

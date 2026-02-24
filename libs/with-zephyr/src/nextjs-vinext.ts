@@ -164,6 +164,7 @@ export function bootstrapNextJsVinext(
     updatedPackageJson: packageJsonChanged,
     packageRequirements: [
       { name: 'vinext', isDev: false },
+      { name: '@vitejs/plugin-rsc', isDev: false },
       { name: 'vite-plugin-vinext-zephyr', isDev: true },
       { name: '@cloudflare/vite-plugin', isDev: true },
       { name: 'vite', isDev: true },

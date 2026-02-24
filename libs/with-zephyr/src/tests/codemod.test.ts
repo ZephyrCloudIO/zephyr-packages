@@ -162,6 +162,7 @@ describe('Zephyr Codemod CLI', () => {
             dependencies: {
               next: '^15.0.0',
               vinext: '^0.0.4',
+              '@vitejs/plugin-rsc': '^0.5.19',
             },
             devDependencies: {
               'vite-plugin-vinext-zephyr': '^0.1.11',

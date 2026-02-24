@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-vinext-zephyr",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Vite plugin for deploying Vinext applications with Zephyr",
   "repository": {
     "type": "git",

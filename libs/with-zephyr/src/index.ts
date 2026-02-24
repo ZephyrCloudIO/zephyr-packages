@@ -26,6 +26,7 @@ import {
   installPackage,
   isPackageInstalled,
 } from './package-manager.js';
+import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
 import {
   addToComposePlugins,
   addToParcelReporters,
@@ -276,17 +277,42 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     console.log(chalk.yellow(`🔍 Dry run mode - no files will be modified\n`));
   }
 
+  const nextJsBootstrap = bootstrapNextJsVinext(directory, { dryRun });
+  if (nextJsBootstrap.isNextJsApp) {
+    if (nextJsBootstrap.createdFiles.length > 0) {
+      for (const createdFile of nextJsBootstrap.createdFiles) {
+        const message = dryRun
+          ? `Would create ${createdFile} for Vinext`
+          : `Created ${createdFile} for Vinext`;
+        console.log(chalk.green(`✓ ${message}`));
+      }
+    }
+    if (nextJsBootstrap.updatedPackageJson) {
+      const message = dryRun
+        ? 'Would update package.json scripts to vinext commands'
+        : 'Updated package.json scripts to vinext commands';
+      console.log(chalk.green(`✓ ${message}`));
+    }
+    if (nextJsBootstrap.createdFiles.length > 0 || nextJsBootstrap.updatedPackageJson) {
+      console.log();
+    }
+  }
+
   const configFiles = findConfigFiles(directory);
 
-  if (configFiles.length === 0) {
+  if (configFiles.length === 0 && !nextJsBootstrap.isNextJsApp) {
     console.log(chalk.yellow('No bundler configuration files found.'));
     return;
   }
 
   // Collect unique plugins that need to be installed
-  const requiredPlugins = new Set<string>();
+  const requiredPackages = new Map<string, PackageRequirement>();
   const packagesToProcess: ConfigFile[] = [];
   const filteredConfigFiles: ConfigFile[] = [];
+
+  for (const packageRequirement of nextJsBootstrap.packageRequirements) {
+    requiredPackages.set(packageRequirement.name, packageRequirement);
+  }
 
   for (const { filePath, bundlerName, config } of configFiles) {
     // Filter by specific bundlers if requested
@@ -316,39 +342,44 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       continue;
     }
 
-    requiredPlugins.add(config.plugin);
+    requiredPackages.set(config.plugin, { name: config.plugin, isDev: true });
     packagesToProcess.push({ filePath, bundlerName, config });
   }
 
   console.log(chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`));
 
   // Check and install missing packages
-  if (installPackages && requiredPlugins.size > 0 && !dryRun) {
+  if (installPackages && requiredPackages.size > 0 && !dryRun) {
     console.log(chalk.blue(`\n📦 Checking package dependencies...\n`));
 
     const packageManager = detectPackageManager(directory);
     console.log(chalk.gray(`Detected package manager: ${packageManager}`));
 
-    for (const pluginName of requiredPlugins) {
-      if (!isPackageInstalled(pluginName, directory)) {
-        console.log(chalk.yellow(`Installing ${pluginName}...`));
+    for (const packageRequirement of requiredPackages.values()) {
+      if (!isPackageInstalled(packageRequirement.name, directory)) {
+        console.log(chalk.yellow(`Installing ${packageRequirement.name}...`));
 
-        const success = installPackage(directory, pluginName, packageManager, true);
+        const success = installPackage(
+          directory,
+          packageRequirement.name,
+          packageManager,
+          packageRequirement.isDev
+        );
         if (success) {
-          console.log(chalk.green(`✓ Installed ${pluginName}`));
+          console.log(chalk.green(`✓ Installed ${packageRequirement.name}`));
         } else {
-          console.log(chalk.red(`✗ Failed to install ${pluginName}`));
+          console.log(chalk.red(`✗ Failed to install ${packageRequirement.name}`));
         }
       } else {
-        console.log(chalk.gray(`✓ ${pluginName} already installed`));
+        console.log(chalk.gray(`✓ ${packageRequirement.name} already installed`));
       }
     }
     console.log();
-  } else if (installPackages && requiredPlugins.size > 0 && dryRun) {
+  } else if (installPackages && requiredPackages.size > 0 && dryRun) {
     console.log(chalk.blue(`\n📦 Packages that would be installed:\n`));
-    for (const pluginName of requiredPlugins) {
-      if (!isPackageInstalled(pluginName, directory)) {
-        console.log(chalk.yellow(`  - ${pluginName}`));
+    for (const packageRequirement of requiredPackages.values()) {
+      if (!isPackageInstalled(packageRequirement.name, directory)) {
+        console.log(chalk.yellow(`  - ${packageRequirement.name}`));
       }
     }
     console.log();

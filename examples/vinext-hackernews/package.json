@@ -1,0 +1,23 @@
+{
+  "name": "vinext-hackernews",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@cloudflare/vite-plugin": "^1.25.0",
+    "@vitejs/plugin-rsc": "^0.5.19",
+    "ms": "3.0.0-canary.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "server-only": "^0.0.1",
+    "vinext": "0.0.4",
+    "vite-plugin-vinext-zephyr": "workspace:*",
+    "vite": "^7.3.1",
+    "wrangler": "^4.68.1"
+  }
+}

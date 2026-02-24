@@ -15,11 +15,25 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "nx run vite-plugin-vinext-zephyr:build",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "prepack": "pnpm build"
   },
   "dependencies": {
+    "tslib": "catalog:typescript",
     "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },

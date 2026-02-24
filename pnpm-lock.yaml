@@ -222,7 +222,7 @@ overrides:
   '@rspack/core': ^1.7.0
   '@vercel/nft': ^0.30.0
   '@isaacs/brace-expansion': 5.0.1
-  fast-xml-parser: 5.3.4
+  fast-xml-parser: 5.3.5
   hono: ^4.10.3
   glob: '>=11.1.0'
   '@modern-js/render>react-server-dom-webpack': 19.2.4
@@ -1652,7 +1652,7 @@ importers:
         version: 1.13.5(debug@4.4.3)
       axios-retry:
         specifier: ^4.5.0
-        version: 4.5.0(axios@1.13.5(debug@4.4.3))
+        version: 4.5.0(axios@1.13.5)
       debug:
         specifier: ^4.3.4
         version: 4.4.3(supports-color@5.5.0)
@@ -9812,8 +9812,8 @@ packages:
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
 
-  fast-xml-parser@5.3.4:
-    resolution: {integrity: sha512-EFd6afGmXlCx8H8WTZHhAoDaWaGyuIBoZJ2mknrNxug+aZKjkp0a0dlars9Izl+jF+7Gu1/5f/2h68cQpe0IiA==}
+  fast-xml-parser@5.3.5:
+    resolution: {integrity: sha512-JeaA2Vm9ffQKp9VjvfzObuMCjUYAp5WDYhRYL5LrBPY/jUDlUtOvDfot0vKSkB9tuX885BDHjtw4fZadD95wnA==}
     hasBin: true
 
   fastest-levenshtein@1.0.16:
@@ -15045,8 +15045,8 @@ packages:
   strip-literal@3.0.0:
     resolution: {integrity: sha512-TcccoMhJOM3OebGhSBEmp3UZ2SfDMZUEBdRA/9ynfLi8yYajyWX3JiXArcJt4Umh4vISpspkQIY8ZZoCqjbviA==}
 
-  strnum@2.1.1:
-    resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
+  strnum@2.1.2:
+    resolution: {integrity: sha512-l63NF9y/cLROq/yqKXSLtcMeeyOfnSQlfMSlzFt/K73oIaD8DGaQWd7Z34X9GPiKqP5rbSh84Hl4bOlLcjiSrQ==}
 
   strtok3@9.1.1:
     resolution: {integrity: sha512-FhwotcEqjr241ZbjFzjlIYg6c5/L/s4yBGWSMvJ9UoExiSqL+FnFA/CaeZx17WGaZMS/4SOZp8wH18jSS4R4lw==}
@@ -16660,7 +16660,7 @@ snapshots:
 
   '@astrojs/rss@4.0.12':
     dependencies:
-      fast-xml-parser: 5.3.4
+      fast-xml-parser: 5.3.5
       kleur: 4.1.5
 
   '@astrojs/sitemap@3.6.0':
@@ -24655,7 +24655,7 @@ snapshots:
 
   axe-core@4.10.3: {}
 
-  axios-retry@4.5.0(axios@1.13.5(debug@4.4.3)):
+  axios-retry@4.5.0(axios@1.13.5):
     dependencies:
       axios: 1.13.5(debug@4.4.3)
       is-retry-allowed: 2.2.0
@@ -27108,9 +27108,9 @@ snapshots:
 
   fast-uri@3.0.6: {}
 
-  fast-xml-parser@5.3.4:
+  fast-xml-parser@5.3.5:
     dependencies:
-      strnum: 2.1.1
+      strnum: 2.1.2
 
   fastest-levenshtein@1.0.16: {}
 
@@ -34004,7 +34004,7 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
-  strnum@2.1.1: {}
+  strnum@2.1.2: {}
 
   strtok3@9.1.1:
     dependencies:
@@ -35791,7 +35791,7 @@ snapshots:
     dependencies:
       '@toon-format/toon': 0.8.0
       axios: 1.13.5(debug@4.4.3)
-      axios-retry: 4.5.0(axios@1.13.5(debug@4.4.3))
+      axios-retry: 4.5.0(axios@1.13.5)
       cloudflare: 3.5.0(encoding@0.1.13)
       debug: 4.4.3(supports-color@5.5.0)
       eventsource: 4.0.0

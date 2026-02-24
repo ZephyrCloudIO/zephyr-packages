@@ -11,6 +11,7 @@ import {
   ze_log,
 } from 'zephyr-agent';
 import {
+  collectStaticClientAssets,
   collectAssetsFromBundle,
   detectEntrypointFromBundle,
   injectRscAssetsManifest,
@@ -37,6 +38,23 @@ function resolveOutputDir(root: string, outputDir?: string): string {
   return path.isAbsolute(outputDir) ? outputDir : path.resolve(root, outputDir);
 }
 
+function resolveEnvironmentOutDir(
+  config: ResolvedConfig,
+  environmentName: string
+): string | undefined {
+  const outDir = (
+    config as unknown as {
+      environments?: Record<string, { build?: { outDir?: string } }>;
+    }
+  ).environments?.[environmentName]?.build?.outDir;
+
+  if (!outDir) {
+    return undefined;
+  }
+
+  return path.isAbsolute(outDir) ? outDir : path.resolve(config.root, outDir);
+}
+
 function getRscPluginManager(config: ResolvedConfig): RscPluginManagerLike | undefined {
   const plugin = config.plugins.find((item) => item?.name === 'rsc:minimal') as
     | { api?: { manager?: RscPluginManagerLike } }
@@ -54,6 +72,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
   let outputDir = '';
   let hasSsrEnvironment = false;
   let hasClientEnvironment = false;
+  let clientOutDir: string | undefined;
   let detectedEntrypoint: string | undefined;
   let rscPluginManager: RscPluginManagerLike | undefined;
   let engineCreated = false;
@@ -150,6 +169,8 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
       );
       hasSsrEnvironment = configuredEnvironments.includes('ssr');
       hasClientEnvironment = configuredEnvironments.includes('client');
+      clientOutDir =
+        resolveEnvironmentOutDir(config, 'client') ?? path.join(outputDir, 'client');
     },
 
     writeBundle(outputOptions, bundle) {
@@ -200,6 +221,8 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
         if (!options.entrypoint && !detectedEntrypoint) {
           return;
         }
+
+        await collectStaticClientAssets(collectedAssets, outputDir, clientOutDir);
 
         injectRscAssetsManifest(collectedAssets, outputDir, rscPluginManager);
 

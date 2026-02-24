@@ -1,4 +1,8 @@
+import * as fs from 'node:fs/promises';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import {
+  collectStaticClientAssets,
   collectAssetsFromBundle,
   detectEntrypointFromBundle,
   injectRscAssetsManifest,
@@ -111,5 +115,58 @@ describe('vinext-output helpers', () => {
     expect(assets['server/__vite_rsc_assets_manifest.js']?.type).toBe(
       'application/javascript'
     );
+  });
+
+  it('collects static client output files for upload', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
+    try {
+      const outputDir = path.join(tempDir, 'dist');
+      const clientDir = path.join(outputDir, 'client');
+
+      await fs.mkdir(path.join(clientDir, '.vite'), { recursive: true });
+      await fs.mkdir(path.join(clientDir, 'nested'), { recursive: true });
+      await fs.writeFile(path.join(clientDir, 'next.svg'), '<svg></svg>', 'utf-8');
+      await fs.writeFile(path.join(clientDir, 'nested', 'icon.txt'), 'icon', 'utf-8');
+      await fs.writeFile(path.join(clientDir, '_headers'), '/assets/*', 'utf-8');
+
+      const assets = {};
+      await collectStaticClientAssets(assets, outputDir, clientDir);
+
+      expect(Object.keys(assets).sort()).toEqual([
+        'client/_headers',
+        'client/nested/icon.txt',
+        'client/next.svg',
+      ]);
+      expect(assets['client/next.svg']?.type).toBe('image/svg+xml');
+      expect(assets['client/_headers']?.content.toString('utf-8')).toContain('/assets/*');
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not overwrite existing bundle assets when collecting static files', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
+    try {
+      const outputDir = path.join(tempDir, 'dist');
+      const clientDir = path.join(outputDir, 'client');
+
+      await fs.mkdir(clientDir, { recursive: true });
+      await fs.writeFile(path.join(clientDir, 'next.svg'), '<svg>public</svg>', 'utf-8');
+
+      const assets = {
+        'client/next.svg': {
+          content: Buffer.from('<svg>bundle</svg>', 'utf-8'),
+          type: 'image/svg+xml',
+        },
+      };
+
+      await collectStaticClientAssets(assets, outputDir, clientDir);
+
+      expect(assets['client/next.svg']?.content.toString('utf-8')).toBe(
+        '<svg>bundle</svg>'
+      );
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
   });
 });

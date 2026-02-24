@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { promises as fs } from 'node:fs';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
 
 export interface VinextBuildAsset {
@@ -117,6 +118,81 @@ export function collectAssetsFromBundle(
 
     assets[snapshotPath] = {
       content: toBuffer(item),
+      type: getAssetType(snapshotPath),
+    };
+  }
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function walkFiles(rootDir: string): Promise<string[]> {
+  const stack = [rootDir];
+  const files: string[] = [];
+
+  while (stack.length > 0) {
+    const currentDir = stack.pop();
+    if (!currentDir) {
+      continue;
+    }
+
+    const entries = await fs.readdir(currentDir, { withFileTypes: true });
+    for (const entry of entries) {
+      const absolutePath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(absolutePath);
+        continue;
+      }
+      if (entry.isFile()) {
+        files.push(absolutePath);
+      }
+    }
+  }
+
+  return files;
+}
+
+function buildSnapshotPath(relativeDir: string, relativeFilePath: string): string {
+  const normalizedRelativeFilePath = normalizePathForSnapshot(relativeFilePath);
+  return relativeDir
+    ? `${relativeDir}/${normalizedRelativeFilePath}`
+    : normalizedRelativeFilePath;
+}
+
+export async function collectStaticClientAssets(
+  assets: Record<string, VinextBuildAsset>,
+  outputRootDir: string,
+  clientOutDir: string | undefined
+): Promise<void> {
+  if (!clientOutDir) {
+    return;
+  }
+
+  const relativeClientDir = getRelativeDirFromRoot(outputRootDir, clientOutDir);
+  if (!relativeClientDir) {
+    return;
+  }
+
+  if (!(await pathExists(clientOutDir))) {
+    return;
+  }
+
+  const clientFiles = await walkFiles(clientOutDir);
+  for (const clientFile of clientFiles) {
+    const relativeClientPath = path.relative(clientOutDir, clientFile);
+    const snapshotPath = buildSnapshotPath(relativeClientDir, relativeClientPath);
+    if (assets[snapshotPath]) {
+      continue;
+    }
+
+    assets[snapshotPath] = {
+      content: await fs.readFile(clientFile),
       type: getAssetType(snapshotPath),
     };
   }

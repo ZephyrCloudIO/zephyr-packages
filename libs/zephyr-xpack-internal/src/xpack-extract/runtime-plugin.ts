@@ -74,7 +74,10 @@ export function createZephyrRuntimePlugin(
   /** Fetches the zephyr-manifest.json file (basic version without OTA) */
   async function fetchManifest(url: string): Promise<ZephyrManifest | undefined> {
     try {
-      const response = await fetch(url);
+      // Append a timestamp query param for SSR compatibility — Node.js fetch ignores
+      // the `cache` option, so this ensures cache-busting in all environments.
+      const cacheBustUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+      const response = await fetch(cacheBustUrl, { cache: 'no-cache' });
 
       if (!response.ok) {
         return;
@@ -94,7 +97,10 @@ export function createZephyrRuntimePlugin(
     }
   }
 
-  // Get global cache and check if manifest was already fetched
+  // Get global cache and check if manifest was already fetched.
+  // Uses "set if not present" to deduplicate concurrent calls from multiple bundles
+  // (host + remotes) within the same page load. On a full page reload, JS re-evaluates
+  // and the global Map is recreated, so a fresh fetch is always triggered.
   const manifestCache = getGlobalManifestCache();
 
   if (!manifestCache.has(manifestUrl)) {
@@ -109,9 +115,8 @@ export function createZephyrRuntimePlugin(
     async beforeRequest(args) {
       const zephyrManifest = await zephyrManifestPromise;
 
-      if (!processedRemotes) {
-        processedRemotes = identifyRemotes(args, zephyrManifest);
-      }
+      // Always re-resolve from fresh manifest to handle HMR and soft-reload scenarios
+      processedRemotes = identifyRemotes(args, zephyrManifest);
 
       // Extract remote name from args.id (format: "remoteName/componentName")
       const remoteName = args.id.split('/')[0];
@@ -120,7 +125,9 @@ export function createZephyrRuntimePlugin(
         return args; // No matching remote found
       }
 
-      // Get the resolved URL, checking session storage first
+      // Get the resolved URL, checking session storage first.
+      // Cache-busting is handled at the edge: the worker appends ?_zv=<snapshot_id>
+      // to remote_entry_url values in zephyr-manifest.json at serve time.
       const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
 
       const targetRemote = args.options.remotes.find(

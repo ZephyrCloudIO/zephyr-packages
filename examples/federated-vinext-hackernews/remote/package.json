@@ -1,0 +1,23 @@
+{
+  "name": "stories-remote",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 5174",
+    "build": "vite build",
+    "preview": "vite preview --port 5174"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "ms": "3.0.0-canary.1",
+    "@module-federation/runtime": "catalog:module-federation"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "catalog:vite7",
+    "@module-federation/vite": "catalog:module-federation",
+    "vite": "catalog:vite7",
+    "typescript": "catalog:typescript"
+  }
+}

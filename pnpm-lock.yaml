@@ -457,6 +457,70 @@ importers:
         specifier: workspace:*
         version: link:../../libs/zephyr-cli
 
+  examples/federated-vinext-hackernews/host:
+    dependencies:
+      '@cloudflare/vite-plugin':
+        specifier: ^1.25.0
+        version: 1.25.5(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260302.0)(wrangler@4.68.1)
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 0.21.2
+      '@vitejs/plugin-rsc':
+        specifier: ^0.5.19
+        version: 0.5.20(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.3)))(react@19.2.4)(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))
+      ms:
+        specifier: 3.0.0-canary.1
+        version: 3.0.0-canary.1
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.4
+        version: 19.2.4(react@19.2.4)
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+      vinext:
+        specifier: 0.0.4
+        version: 0.0.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.3))
+      vite:
+        specifier: ^7.1.11
+        version: 7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
+      vite-plugin-vinext-zephyr:
+        specifier: workspace:*
+        version: link:../../../libs/vite-plugin-vinext-zephyr
+      wrangler:
+        specifier: ^4.59.3
+        version: 4.68.1
+
+  examples/federated-vinext-hackernews/remote:
+    dependencies:
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 0.21.2
+      ms:
+        specifier: 3.0.0-canary.1
+        version: 3.0.0-canary.1
+      react:
+        specifier: ^19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.4
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@module-federation/vite':
+        specifier: catalog:module-federation
+        version: 1.9.5(rollup@4.52.5)(typescript@5.9.3)(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))
+      '@vitejs/plugin-react':
+        specifier: catalog:vite7
+        version: 4.3.4(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))
+      typescript:
+        specifier: catalog:typescript
+        version: 5.9.3
+      vite:
+        specifier: ^7.1.11
+        version: 7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
+
   examples/hono-app:
     dependencies:
       hono:
@@ -11487,9 +11551,6 @@ packages:
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
 
-  jsonfile@6.2.0:
-    resolution: {integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==}
-
   jstransformer@1.0.0:
     resolution: {integrity: sha512-C9YK3Rf8q6VAPDCCU9fnqo3mAfOH6vUGnMcP4AQAYIEpWtfGLpwOTmZ+igtdK5y+VvI2n3CyYSzy4Qh34eq24A==}
 
@@ -15240,9 +15301,6 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  strip-literal@3.0.0:
-    resolution: {integrity: sha512-TcccoMhJOM3OebGhSBEmp3UZ2SfDMZUEBdRA/9ynfLi8yYajyWX3JiXArcJt4Umh4vISpspkQIY8ZZoCqjbviA==}
-
   strip-literal@3.1.0:
     resolution: {integrity: sha512-8r3mkIM/2+PpjHoOtiAW8Rg3jJLHaV7xPwG+YRGrv6FP0wwk/toTpATxWYOW0BKdWwl82VT2tFYi5DlROa0Mxg==}
 
@@ -18704,7 +18762,7 @@ snapshots:
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit-x: 0.2.2
-      glob: 13.0.0
+      glob: 13.0.1
       graceful-fs: 4.2.11
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-instrument: 6.0.3
@@ -19309,10 +19367,10 @@ snapshots:
   '@modern-js/babel-plugin-module-resolver@2.70.1':
     dependencies:
       '@swc/helpers': 0.5.17
-      glob: 13.0.0
+      glob: 13.0.1
       pkg-up: 3.1.0
       reselect: 4.1.8
-      resolve: 1.22.10
+      resolve: 1.22.11
 
   '@modern-js/babel-preset@2.70.1(@rsbuild/core@1.7.2)':
     dependencies:
@@ -19588,7 +19646,7 @@ snapshots:
       browserslist: 4.24.4
       cssnano: 6.1.2(postcss@8.5.6)
       es-module-lexer: 1.7.0
-      glob: 13.0.0
+      glob: 13.0.1
       html-minifier-terser: 7.2.0
       html-webpack-plugin: 5.6.5(@rspack/core@1.7.0(@swc/helpers@0.5.17))(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
       jiti: 1.21.7
@@ -19667,7 +19725,7 @@ snapshots:
       browserslist: 4.24.4
       cssnano: 6.1.2(postcss@8.5.6)
       es-module-lexer: 1.7.0
-      glob: 13.0.0
+      glob: 13.0.1
       html-minifier-terser: 7.2.0
       html-webpack-plugin: 5.6.5(@rspack/core@1.7.0(@swc/helpers@0.5.17))(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.3))
       jiti: 1.21.7
@@ -21743,7 +21801,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.5
       '@babel/parser': 7.28.5
-      glob: 13.0.0
+      glob: 13.0.1
       hermes-parser: 0.32.0
       invariant: 2.2.4
       nullthrows: 1.1.1
@@ -21873,7 +21931,7 @@ snapshots:
       '@rollup/pluginutils': 5.3.0(rollup@4.52.5)
       commondir: 1.0.1
       estree-walker: 2.0.2
-      glob: 13.0.0
+      glob: 13.0.1
       is-reference: 1.2.1
       magic-string: 0.30.17
     optionalDependencies:
@@ -24223,7 +24281,7 @@ snapshots:
       async-sema: 3.1.1
       bindings: 1.5.0
       estree-walker: 2.0.2
-      glob: 13.0.0
+      glob: 13.0.1
       graceful-fs: 4.2.11
       node-gyp-build: 4.8.4
       picomatch: 4.0.3
@@ -24302,7 +24360,7 @@ snapshots:
     dependencies:
       '@vitest/utils': 3.2.4
       pathe: 2.0.3
-      strip-literal: 3.0.0
+      strip-literal: 3.1.0
 
   '@vitest/snapshot@3.2.4':
     dependencies:
@@ -27680,9 +27738,8 @@ snapshots:
   fs-extra@11.3.3:
     dependencies:
       graceful-fs: 4.2.11
-      jsonfile: 6.2.0
+      jsonfile: 6.1.0
       universalify: 2.0.1
-    optional: true
 
   fs-extra@8.1.0:
     dependencies:
@@ -28946,7 +29003,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 4.3.1
       deepmerge: 4.3.1
-      glob: 13.0.0
+      glob: 13.0.1
       graceful-fs: 4.2.11
       jest-circus: 30.2.0(babel-plugin-macros@3.1.0)
       jest-docblock: 30.2.0
@@ -28980,7 +29037,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 4.3.1
       deepmerge: 4.3.1
-      glob: 13.0.0
+      glob: 13.0.1
       graceful-fs: 4.2.11
       jest-circus: 30.2.0(babel-plugin-macros@3.1.0)
       jest-docblock: 30.2.0
@@ -29217,7 +29274,7 @@ snapshots:
       chalk: 4.1.2
       cjs-module-lexer: 2.1.0
       collect-v8-coverage: 1.0.2
-      glob: 13.0.0
+      glob: 13.0.1
       graceful-fs: 4.2.11
       jest-haste-map: 30.2.0
       jest-message-util: 30.2.0
@@ -29500,13 +29557,6 @@ snapshots:
       universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
-
-  jsonfile@6.2.0:
-    dependencies:
-      universalify: 2.0.1
-    optionalDependencies:
-      graceful-fs: 4.2.11
-    optional: true
 
   jstransformer@1.0.0:
     dependencies:
@@ -32597,7 +32647,7 @@ snapshots:
       jstransformer: 1.0.0
       pug-error: 2.1.0
       pug-walk: 2.0.0
-      resolve: 1.22.10
+      resolve: 1.22.11
 
   pug-lexer@5.0.1:
     dependencies:
@@ -33244,7 +33294,6 @@ snapshots:
       is-core-module: 2.16.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    optional: true
 
   resolve@1.22.8:
     dependencies:
@@ -33307,7 +33356,7 @@ snapshots:
 
   rimraf@3.0.2:
     dependencies:
-      glob: 13.0.0
+      glob: 13.0.1
 
   rimraf@6.1.2:
     dependencies:
@@ -33426,7 +33475,7 @@ snapshots:
 
   rspack-plugin-virtual-module@0.1.13:
     dependencies:
-      fs-extra: 11.3.0
+      fs-extra: 11.3.3
 
   rspress@1.44.0(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.3)):
     dependencies:
@@ -34360,10 +34409,6 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  strip-literal@3.0.0:
-    dependencies:
-      js-tokens: 9.0.1
-
   strip-literal@3.1.0:
     dependencies:
       js-tokens: 9.0.1
@@ -34448,7 +34493,7 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.13
       commander: 4.1.1
-      glob: 13.0.0
+      glob: 13.0.1
       lines-and-columns: 1.2.4
       mz: 2.7.0
       pirates: 4.0.7
@@ -34664,7 +34709,7 @@ snapshots:
   test-exclude@6.0.0:
     dependencies:
       '@istanbuljs/schema': 0.1.3
-      glob: 13.0.0
+      glob: 13.0.1
       minimatch: 3.1.3
 
   text-decoder@1.2.3:
@@ -35475,7 +35520,7 @@ snapshots:
 
   vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1):
     dependencies:
-      esbuild: 0.27.2
+      esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
       postcss: 8.5.6

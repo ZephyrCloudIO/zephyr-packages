@@ -1,0 +1,47 @@
+.item {
+  display: flex;
+  margin: 10px 0;
+}
+
+.count {
+  flex-basis: auto;
+  flex-grow: 1;
+  font-size: 14px;
+  padding-right: 5px;
+  display: block;
+  width: 12px;
+  text-align: right;
+}
+
+.count::after {
+  content: '.';
+}
+
+.story {
+  flex: 100;
+  display: inline-block;
+}
+
+.footer {
+  padding: 10px 0 0 32px;
+}
+
+.footer a {
+  color: #000;
+  font-size: 14px;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.skeleton {
+  height: 40px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  margin: 10px 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

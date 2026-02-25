@@ -18,6 +18,8 @@ export async function zeUploadSnapshot(
   const logger = await zephyr_engine.logger;
   const buildEnv = zephyr_engine.env.isCI ? 'ci' : 'local';
 
+  const appConfig = await zephyr_engine.application_configuration;
+
   // Collect env vars for hash generation (needed by API)
   // but don't store them in snapshot (they're in the manifest asset)
   const envs = process.env;
@@ -50,7 +52,7 @@ export async function zeUploadSnapshot(
 
   const edgeTodo = await uploadSnapshot({
     body: snapshot,
-    application_uid,
+    appConfig,
   });
 
   const versionUrl = edgeTodo?.urls?.version;

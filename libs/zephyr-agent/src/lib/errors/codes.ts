@@ -508,6 +508,18 @@ Were the required packages in Module federation plugin installed and included in
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
   },
+
+  ERR_NO_APPLICATION_CONFIG: {
+    id: '038',
+    message: 'No application configuration found',
+    kind: 'build',
+  },
+
+  PRIMARY_CDN_DEPLOYMENT_FAILED: {
+    id: '039',
+    message: 'Primary CDN deployment failed in multi-CDN upload strategy',
+    kind: 'deploy',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

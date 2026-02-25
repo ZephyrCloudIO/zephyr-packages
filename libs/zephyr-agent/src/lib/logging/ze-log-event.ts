@@ -9,6 +9,7 @@ import { getApplicationConfiguration } from '../edge-requests/get-application-co
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { getToken } from '../node-persist/token';
+import { emitTelemetryLog, getActiveTraceContext } from '../telemetry';
 import {
   brightBlueBgName,
   brightGreenBgName,
@@ -19,11 +20,13 @@ import { writeLogToFile, isFileLoggingEnabled } from './file-logger';
 
 export const logFn = (level: string, msg: unknown, action?: string): void => {
   const messageStr = String(msg);
+  const traceContext = getActiveTraceContext();
+  const normalizedLevel = level || 'info';
 
   // Write to file if enabled
   if (isFileLoggingEnabled()) {
     writeLogToFile({
-      level: level as 'info' | 'warn' | 'error' | 'debug',
+      level: normalizedLevel as 'info' | 'warn' | 'error' | 'debug',
       message: messageStr,
       action,
       timestamp: Date.now(),
@@ -31,9 +34,9 @@ export const logFn = (level: string, msg: unknown, action?: string): void => {
   }
 
   // Always output plain formatted to console
-  const formatted = formatLogMsg(messageStr, level);
+  const formatted = formatLogMsg(messageStr, normalizedLevel);
 
-  switch (level) {
+  switch (normalizedLevel) {
     case 'warn':
       console.warn(formatted);
       break;
@@ -46,6 +49,16 @@ export const logFn = (level: string, msg: unknown, action?: string): void => {
     default:
       console.log(formatted);
   }
+
+  emitTelemetryLog({
+    level: normalizedLevel,
+    body: stripAnsi(messageStr),
+    attributes: {
+      ...(action ? { 'zephyr.log.action': action } : {}),
+      ...(traceContext?.traceId ? { 'zephyr.trace.trace_id': traceContext.traceId } : {}),
+      ...(traceContext?.spanId ? { 'zephyr.trace.span_id': traceContext.spanId } : {}),
+    },
+  });
 };
 
 function toLevelPrefix(level: string) {
@@ -124,17 +137,23 @@ export function logger(props: LoggerOptions): ZeLogger {
               logs
                 // some logs are empty to give newline effect in terminal
                 .filter((l) => l.message.length && !l.ignore)
-                .map((log) => ({
-                  application_uid: application_uid,
-                  userId: config.user_uuid,
-                  username: config.username,
-                  zeBuildId: buildId,
-                  logLevel: log.level,
-                  actionType: log.action,
-                  git: git,
-                  message: stripAnsi(log.message.trim()),
-                  createdAt: Date.now(),
-                }))
+                .map((log) => {
+                  const traceContext = getActiveTraceContext();
+
+                  return {
+                    application_uid: application_uid,
+                    userId: config.user_uuid,
+                    username: config.username,
+                    zeBuildId: buildId,
+                    logLevel: log.level,
+                    actionType: log.action,
+                    git: git,
+                    message: stripAnsi(log.message.trim()),
+                    createdAt: Date.now(),
+                    ...(traceContext?.traceId ? { traceId: traceContext.traceId } : {}),
+                    ...(traceContext?.spanId ? { spanId: traceContext.spanId } : {}),
+                  };
+                })
             )
           )
       )

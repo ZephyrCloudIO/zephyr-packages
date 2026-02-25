@@ -51,6 +51,7 @@ export async function zeUploadSnapshot(
   const edgeTodo = await uploadSnapshot({
     body: snapshot,
     application_uid,
+    git_config: zephyr_engine.gitProperties,
   });
 
   const versionUrl = edgeTodo?.urls?.version;

@@ -3,7 +3,11 @@ import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
-import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
+import {
+  getAppConfig,
+  removeAppConfig,
+  saveAppConfig,
+} from '../node-persist/application-configuration';
 import { getToken } from '../node-persist/token';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 
@@ -117,6 +121,10 @@ export async function getApplicationConfiguration({
 }
 
 /** Invalidate the cached application configuration */
-export function invalidateApplicationConfigCache() {
+export async function invalidateApplicationConfigCache(application_uid?: string) {
   cachedConfig = null;
+
+  if (application_uid) {
+    await removeAppConfig(application_uid);
+  }
 }

@@ -1969,6 +1969,9 @@ importers:
 
   libs/zephyr-rsbuild-plugin:
     dependencies:
+      zephyr-agent:
+        specifier: workspace:*
+        version: link:../zephyr-agent
       zephyr-rspack-plugin:
         specifier: workspace:*
         version: link:../zephyr-rspack-plugin

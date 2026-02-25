@@ -25,6 +25,9 @@ export interface ZephyrRspackInternalPluginOptions {
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   // hacks
   wait_for_index_html?: boolean;
+  disable_upload?: boolean;
+  snapshot_type?: 'csr' | 'ssr';
+  entrypoint?: string;
   // outputPath?: string;
   hooks?: ZephyrBuildHooks;
 }
@@ -41,7 +44,11 @@ export class ZeRspackPlugin {
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
     logBuildSteps(this._options, compiler);
     setupManifestEmission(this._options, compiler);
-    setupZeDeploy(this._options, compiler);
+    if (!this._options.disable_upload) {
+      setupZeDeploy(this._options, compiler);
+    } else {
+      ze_log.upload('Skipping per-compilation upload (disable_upload=true)');
+    }
 
     // Inject import map into HTML at build time for consistent structure
     this.#injectImportMapAtBuildTime(compiler);

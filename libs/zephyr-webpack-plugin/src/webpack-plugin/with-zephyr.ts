@@ -36,7 +36,15 @@ async function _zephyr_configuration(
     const resolved_dependency_pairs =
       await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    mutWebpackFederatedRemotesConfig(
+      zephyr_engine,
+      config,
+      resolved_dependency_pairs,
+      undefined,
+      {
+        federationHmr: _zephyrOptions?.federationHmr,
+      }
+    );
 
     const mfConfig = makeCopyOfModuleFederationOptions(config);
 

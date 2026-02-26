@@ -12,3 +12,11 @@ export { iterateFederationConfig } from './iterate-federation-config';
 export { makeCopyOfModuleFederationOptions } from './make-copy-of-module-federation-options';
 export { mutWebpackFederatedRemotesConfig } from './mut-webpack-federated-remotes-config';
 export { createZephyrRuntimePlugin } from './runtime-plugin';
+export {
+  normalizeFederationHmrOptions,
+  applyFederationDtsOptions,
+  isLocalDevRemote,
+  shouldPreserveLocalDevRemotes,
+  type ZephyrFederationHmrMode,
+  type ZephyrFederationHmrOptions,
+} from './federation-hmr-options';

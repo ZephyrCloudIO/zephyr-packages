@@ -35,6 +35,7 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
+import type { DeployPlanResult } from './display-plan';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
@@ -109,6 +110,8 @@ export interface DeploymentInfo {
   snapshot: Snapshot;
   federatedDependencies: ZeResolvedDependency[];
   buildStats: ZephyrBuildStats;
+  impactedTags?: Array<{ name: string; version: string }>;
+  impactedEnvironments?: Array<{ name: string; status: string }>;
 }
 
 /**
@@ -154,6 +157,10 @@ export class ZephyrEngine {
   ze_env_vars: Record<string, string> | null = null;
   // Store env vars hash for API to use
   ze_env_vars_hash: string | null = null;
+
+  // Impacted tags and environments from deploy response
+  private impactedTags?: Array<{ name: string; version: string }>;
+  private impactedEnvironments?: Array<{ name: string; status: string }>;
 
   get zephyr_dependencies(): Record<string, ZephyrDependency> {
     return convertResolvedDependencies(this.federated_dependencies ?? []);
@@ -461,6 +468,29 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           `${Date.now() - zeStart}`
         )}ms.\n\n${cyanBright(versionUrl)}`,
       });
+
+      if (this.impactedTags && this.impactedTags.length > 0) {
+        logger({
+          level: 'info',
+          action: 'deploy:tags',
+          ignore: true,
+          message: `Tags updated:\n${this.impactedTags.map((tag) => `  ${tag.name} → ${tag.version}`).join('\n')}`,
+        });
+      }
+
+      if (this.impactedEnvironments && this.impactedEnvironments.length > 0) {
+        logger({
+          level: 'info',
+          action: 'deploy:environments',
+          ignore: true,
+          message: `Environments:\n${this.impactedEnvironments
+            .map((env) => {
+              const icon = env.status === 'deployed' ? '✓' : '🔒';
+              return `  ${env.name} → ${env.status} ${icon}`;
+            })
+            .join('\n')}`,
+        });
+      }
     }
 
     this.build_id = null;
@@ -482,6 +512,29 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const zephyr_engine = this;
     ze_log.upload('Initializing: upload assets');
     const { assetsMap, buildStats, mfConfig, snapshotType, entrypoint } = props;
+
+    // Check for plan mode
+    const isPlanMode = process.env['ZE_PLAN'] === 'true';
+    if (isPlanMode) {
+      const displayPlanModule = await import('./display-plan');
+
+      logFn(
+        'info',
+        'Plan mode detected -- analyzing deployment impact...',
+        'deploy:plan'
+      );
+
+      // Stub plan for now; full API wiring will happen later
+      const stubPlan: DeployPlanResult = {
+        impactedTags: [],
+        impactedEnvs: [],
+        impactedCnames: [],
+        permissions: { canDeploy: true, blockedEnvs: [] },
+      };
+
+      displayPlanModule.displayPlan(zephyr_engine.application_uid, stubPlan);
+      return;
+    }
 
     if (zephyr_engine.federated_dependencies) {
       const manifest = {

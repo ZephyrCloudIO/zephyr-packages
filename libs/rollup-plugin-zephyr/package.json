@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-zephyr",
-  "version": "0.1.10",
+  "version": "0.1.13",
   "description": "Rollup plugin for Zephyr",
   "keywords": [
     "rollup",

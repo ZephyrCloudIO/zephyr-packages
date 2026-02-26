@@ -87,6 +87,15 @@ This will:
 3. Add the appropriate `withZephyr` plugin configuration
 4. Add the necessary import/require statements
 
+For **Next.js** apps (detected via `next` in `package.json`), when no `vite.config.ts`
+exists it will also scaffold a Vinext setup:
+
+1. Create `vite.config.ts` with `vinext`, `@cloudflare/vite-plugin`, and `withZephyr`
+2. Create `wrangler.jsonc` for `vinext/server/app-router-entry`
+3. Replace `scripts.dev/build/start` with `vinext dev/build/start`
+4. Set `package.json` `type` to `module` for ESM Vite/Vinext config loading
+5. Ensure required Vinext deps are installed (`vinext`, `@vitejs/plugin-rsc`, etc.)
+
 ### Command Line Options
 
 ```bash

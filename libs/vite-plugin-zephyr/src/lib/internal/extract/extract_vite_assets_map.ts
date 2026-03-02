@@ -25,7 +25,26 @@ export async function extract_vite_assets_map(
     ...Object.values(partialAssetMap ?? {}),
     runtime_assets
   );
-  return buildAssetsMap(complete_assets, extractBuffer, getAssetType);
+  const filtered_assets: Record<string, OutputChunk | OutputAsset> = {};
+  for (const [assetPath, asset] of Object.entries(complete_assets)) {
+    if (!shouldSkipAsset(assetPath) && isRollupOutput(asset)) {
+      filtered_assets[assetPath] = asset;
+    }
+  }
+
+  return buildAssetsMap(filtered_assets, extractBuffer, getAssetType);
+}
+
+function shouldSkipAsset(assetPath: string): boolean {
+  return /(^|\/)\.vite-inspect(\/|$)/.test(assetPath);
+}
+
+function isRollupOutput(asset: unknown): asset is OutputChunk | OutputAsset {
+  if (!asset || typeof asset !== 'object' || !('type' in asset)) {
+    return false;
+  }
+
+  return asset.type === 'chunk' || asset.type === 'asset';
 }
 
 function getAssetType(asset: OutputChunk | OutputAsset): string {

@@ -4,27 +4,23 @@ import { zeBuildAssets } from './ze-build-assets';
 
 const MAX_UPLOAD_PAYLOAD_BYTES = 25 * 1024 * 1024;
 
-function shouldCompressAsset(
-  extname: string,
-  size: number,
-  contentEncoding?: string
-): boolean {
+function shouldCompressAsset(size: number, contentEncoding?: string): boolean {
   if (contentEncoding) {
     return false;
   }
 
-  return extname.toLowerCase() === '.wasm' && size > MAX_UPLOAD_PAYLOAD_BYTES;
+  return size > MAX_UPLOAD_PAYLOAD_BYTES;
 }
 
 /**
- * Compresses WASM assets before upload and marks them with content encoding metadata.
+ * Compresses large assets before upload and marks them with content encoding metadata.
  *
  * This keeps transport payloads significantly smaller while preserving the original asset
  * path and extension for runtime lookup.
  */
-export function compressWasmAssets(assetsMap: ZeBuildAssetsMap): ZeBuildAssetsMap {
+export function compressLargeAssets(assetsMap: ZeBuildAssetsMap): ZeBuildAssetsMap {
   return Object.values(assetsMap).reduce((memo, asset) => {
-    if (!shouldCompressAsset(asset.extname, asset.size, asset.contentEncoding)) {
+    if (!shouldCompressAsset(asset.size, asset.contentEncoding)) {
       memo[asset.hash] = asset;
       return memo;
     }

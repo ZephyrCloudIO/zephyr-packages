@@ -21,7 +21,7 @@ The Zephyr Agent is the core engine that powers all Zephyr bundler plugins. It p
 - **Authentication**: Manages secure communication with Zephyr Cloud services
 - **Build Context**: Provides build-time context and metadata for plugins
 - **Edge Communication**: Handles communication with Zephyr's edge network
-- **Large WASM Optimization**: Gzips `.wasm` assets larger than 25MB before upload
+- **Large Asset Optimization**: Gzips assets larger than 25MB before upload
 
 ## Architecture
 

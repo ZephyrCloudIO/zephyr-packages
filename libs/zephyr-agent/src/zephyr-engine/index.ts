@@ -30,7 +30,7 @@ import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
-import { compressWasmAssets } from '../lib/transformers/ze-compress-assets';
+import { compressLargeAssets } from '../lib/transformers/ze-compress-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
 import {
   convertResolvedDependencies,
@@ -494,7 +494,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       assetsMap[manifestAsset.hash] = manifestAsset;
     }
 
-    const optimizedAssetsMap = compressWasmAssets(assetsMap);
+    const optimizedAssetsMap = compressLargeAssets(assetsMap);
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
       ze_log.upload('Failed to upload assets: missing application_uid or build_id');

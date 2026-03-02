@@ -21,6 +21,7 @@ The Zephyr Agent is the core engine that powers all Zephyr bundler plugins. It p
 - **Authentication**: Manages secure communication with Zephyr Cloud services
 - **Build Context**: Provides build-time context and metadata for plugins
 - **Edge Communication**: Handles communication with Zephyr's edge network
+- **Large Asset Optimization**: Gzips assets larger than 25MB before upload
 
 ## Architecture
 
@@ -43,6 +44,7 @@ The agent is structured into several key modules:
 - Implements deployment strategies for different CDN providers
 - Supports Cloudflare, Fastly, and Netlify deployment targets
 - Handles asset uploads and build stats publication
+- Preserves asset `contentEncoding` metadata in snapshots for correct edge serving
 
 ### Edge Actions (`lib/edge-actions/`)
 

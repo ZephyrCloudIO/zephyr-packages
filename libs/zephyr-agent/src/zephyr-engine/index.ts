@@ -30,6 +30,7 @@ import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
+import { compressLargeAssets } from '../lib/transformers/ze-compress-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
 import {
   convertResolvedDependencies,
@@ -481,7 +482,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
     ze_log.upload('Initializing: upload assets');
-    const { assetsMap, buildStats, mfConfig, snapshotType, entrypoint } = props;
+    const { buildStats, mfConfig, snapshotType, entrypoint } = props;
+    const assetsMap: ZeBuildAssetsMap = { ...props.assetsMap };
 
     if (zephyr_engine.federated_dependencies) {
       const manifest = {
@@ -492,6 +494,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       assetsMap[manifestAsset.hash] = manifestAsset;
     }
 
+    const optimizedAssetsMap = compressLargeAssets(assetsMap);
+
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
       ze_log.upload('Failed to upload assets: missing application_uid or build_id');
       return;
@@ -501,13 +505,13 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const hash_set = zephyr_engine.resolved_hash_list;
 
     const missingAssets = get_missing_assets({
-      assetsMap,
+      assetsMap: optimizedAssetsMap,
       hash_set: hash_set ?? { hash_set: new Set() },
     });
 
     // upload data
     const snapshot = await createSnapshot(zephyr_engine, {
-      assets: assetsMap,
+      assets: optimizedAssetsMap,
       mfConfig,
       snapshotType,
       entrypoint,
@@ -528,7 +532,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         };
       },
       assets: {
-        assetsMap,
+        assetsMap: optimizedAssetsMap,
         missingAssets,
       },
     };

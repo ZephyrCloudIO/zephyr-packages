@@ -30,7 +30,6 @@
     "globals": "catalog:vite7",
     "typescript": "catalog:typescript",
     "vite": "catalog:vite7",
-    "vite-plugin-inspect": "^11.0.0",
     "vite-plugin-zephyr": "workspace:*"
   }
 }

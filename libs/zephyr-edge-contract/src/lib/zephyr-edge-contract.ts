@@ -72,6 +72,7 @@ export interface UploadableAsset {
   hash: string;
   size: number;
   buffer: Buffer | string;
+  contentEncoding?: 'gzip' | 'br';
 }
 
 export interface ZeUploadAssetsOptions {
@@ -87,6 +88,7 @@ export interface ZeBuildAsset {
   hash: string;
   size: number; // Size in bytes
   buffer: Buffer | string;
+  contentEncoding?: 'gzip' | 'br';
 }
 
 export interface ZeBuildAssetsMap {

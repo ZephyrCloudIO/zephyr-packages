@@ -79,9 +79,15 @@ export async function createSnapshot(
     assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
         const asset = basedAssets[hash];
-        const { path, extname, size } = asset;
+        const { path, extname, size, contentEncoding } = asset;
         const normalizedPath = normalizePathSeparators(path);
-        memo[normalizedPath] = { path: normalizedPath, extname, hash: asset.hash, size };
+        memo[normalizedPath] = {
+          path: normalizedPath,
+          extname,
+          hash: asset.hash,
+          size,
+          ...(contentEncoding ? { contentEncoding } : {}),
+        };
         return memo;
       },
       {} as Record<string, SnapshotAsset>

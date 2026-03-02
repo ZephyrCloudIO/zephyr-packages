@@ -5,9 +5,11 @@ import { extname } from 'node:path';
 export function zeBuildAssets({
   filepath,
   content,
+  contentEncoding,
 }: {
   filepath: string;
   content: string | Buffer;
+  contentEncoding?: 'gzip' | 'br';
 }): ZeBuildAsset {
   const buffer = typeof content === 'string' ? Buffer.from(content, 'utf8') : content;
 
@@ -22,5 +24,6 @@ export function zeBuildAssets({
     hash,
     size: buffer.length,
     buffer: buffer,
+    ...(contentEncoding ? { contentEncoding } : {}),
   };
 }

@@ -25,12 +25,11 @@ export async function extract_vite_assets_map(
     ...Object.values(partialAssetMap ?? {}),
     runtime_assets
   );
-  const filtered_assets: Record<string, OutputChunk | OutputAsset> = {};
-  for (const [assetPath, asset] of Object.entries(complete_assets)) {
-    if (!shouldSkipAsset(assetPath) && isRollupOutput(asset)) {
-      filtered_assets[assetPath] = asset;
-    }
-  }
+  const filtered_assets = Object.fromEntries(
+    Object.entries(complete_assets)
+      .map(toRollupOutputEntry)
+      .filter((entry): entry is [string, OutputChunk | OutputAsset] => entry !== null)
+  );
 
   return buildAssetsMap(filtered_assets, extractBuffer, getAssetType);
 }
@@ -45,6 +44,16 @@ function isRollupOutput(asset: unknown): asset is OutputChunk | OutputAsset {
   }
 
   return asset.type === 'chunk' || asset.type === 'asset';
+}
+
+function toRollupOutputEntry([assetPath, asset]: [string, unknown]):
+  | [string, OutputChunk | OutputAsset]
+  | null {
+  if (shouldSkipAsset(assetPath) || !isRollupOutput(asset)) {
+    return null;
+  }
+
+  return [assetPath, asset];
 }
 
 function getAssetType(asset: OutputChunk | OutputAsset): string {

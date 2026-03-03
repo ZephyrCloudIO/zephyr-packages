@@ -7,6 +7,14 @@ export {
   savePartialAssetMap,
 } from './lib/node-persist/partial-assets-map';
 
+// global utilities
+export { getGlobal } from './lib/utils/get-global';
+export {
+  readDirRecursive,
+  readDirRecursiveWithContents,
+  type FileInfo,
+} from './lib/utils/read-dir-recursive';
+
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';
 export { handleGlobalError } from './lib/errors';

@@ -1,8 +1,8 @@
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { UploadProviderType } from '../node-persist/upload-provider-options';
-import { commonUploadStrategy } from './common-upload.strategy';
 import { awsUploadStrategy } from './aws-upload.strategy';
+import { commonUploadStrategy } from './common-upload.strategy';
 
 type UploadStrategy = (
   zephyr_engine: ZephyrEngine,
@@ -15,6 +15,7 @@ export function getUploadStrategy(platform: UploadProviderType): UploadStrategy 
     case UploadProviderType.NETLIFY:
     case UploadProviderType.FASTLY:
     case UploadProviderType.AKAMAI:
+    case UploadProviderType.CUSTOM:
       return commonUploadStrategy;
     case UploadProviderType.AWS:
       return awsUploadStrategy;

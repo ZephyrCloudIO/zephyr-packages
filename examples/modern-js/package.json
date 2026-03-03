@@ -9,7 +9,6 @@
     "serve": "modern serve",
     "new": "modern new",
     "lint": "biome check",
-    "prepare": "simple-git-hooks",
     "upgrade": "modern upgrade"
   },
   "engines": {
@@ -20,26 +19,23 @@
       "biome check --files-ignore-unknown=true"
     ]
   },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
-  },
   "dependencies": {
-    "@modern-js/plugin-ssg": "^2.68.14",
-    "@modern-js/runtime": "^2.68.14",
+    "@modern-js/plugin-ssg": "catalog:modernjs",
+    "@modern-js/runtime": "catalog:modernjs",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "react-server-dom-webpack": "19.2.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.3.11",
     "@modern-js/app-tools": "catalog:modernjs",
     "@modern-js/tsconfig": "catalog:modernjs",
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "lint-staged": "~15.5.0",
-    "rimraf": "^6.0.1",
-    "simple-git-hooks": "^2.12.1",
+    "lint-staged": "~16.2.7",
+    "rimraf": "^6.1.2",
     "typescript": "catalog:typescript",
     "zephyr-modernjs-plugin": "workspace:*"
   }

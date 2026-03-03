@@ -122,11 +122,16 @@ When Zephyr cannot find a Git repository with remote origin, it will:
 #### Example Scenarios
 
 ```bash
-# Recommended: Proper Git setup
+# Recommended: Proper Git setup (required for CI)
 git init
 git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git
 git add . && git commit -m "Initial commit"
 npm run build  # Works perfectly with full Git context
+
+# Local-only metadata mode (no commit yet)
+git init
+git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git
+npm run build  # Works for local builds; CI still requires commit history
 
 # Automatic fallback (works seamlessly)
 # No git repository - uses package.json naming

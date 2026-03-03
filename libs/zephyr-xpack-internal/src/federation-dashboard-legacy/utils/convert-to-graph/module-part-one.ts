@@ -1,5 +1,6 @@
 import { join, sep } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { ze_log } from 'zephyr-agent';
 import { getLicenses } from './get-licenses';
 // import { StatsModule } from 'webpack';
 import type { NpmModules } from './convert-dependencies';
@@ -131,13 +132,29 @@ export function modulePartOne(modules: XStatsModule[] | undefined): ModulePartOn
         const existingPackage = npmModules.get(packageJson.name);
         if (existingPackage) {
           const existingReference = existingPackage[packageJson.version];
+
+          // Detect duplicate dependency: multiple versions of same package
+          if (!existingReference) {
+            ze_log.buildstats(
+              'Duplicate dependency detected:',
+              `${packageJson.name}@${packageJson.version}`,
+              'already tracking:',
+              Object.keys(existingPackage).join(', '),
+              'in:',
+              nameForCondition
+            );
+          }
+
+          // Use optional chaining to safely access size property
+          const existingSize = existingReference?.size ?? 0;
           const data = {
             name: packageJson.name,
             version: packageJson.version,
             homepage: packageJson.homepage,
             license: getLicenses(packageJson),
-            size: (Number(existingReference.size) || 0) + (size ?? 0),
+            size: (Number(existingSize) || 0) + (size ?? 0),
           };
+
           if (existingReference) {
             Object.assign(existingReference, data);
           } else {

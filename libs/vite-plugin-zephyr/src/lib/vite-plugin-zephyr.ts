@@ -1,19 +1,24 @@
 import { federation } from '@module-federation/vite';
+import MagicString from 'magic-string';
+import * as path from 'path';
 import { loadEnv, type Plugin, type ResolvedConfig } from 'vite';
 import {
   buildEnvImportMap,
   createManifestContent,
   handleGlobalError,
   rewriteEnvReadsToVirtualModule,
+  ze_log,
   zeBuildDashData,
   ZephyrEngine,
   type RemoteEntry,
+  type ZeResolvedDependency,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
+import { extractEntrypoint } from './internal/extract/extract-entrypoint';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { load_resolved_remotes } from './internal/mf-vite-etl/load_resolved_remotes';
+import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export type ModuleFederationOptions = Parameters<typeof federation>[0];
@@ -23,11 +28,42 @@ interface VitePluginZephyrOptions {
   hooks?: ZephyrBuildHooks;
 }
 
+const DEFAULT_LIBRARY_TYPE = 'module';
+
+function ensureLibraryType(
+  remotes: ZeResolvedDependency[] | null
+): ZeResolvedDependency[] | null {
+  if (!remotes) return remotes;
+  let didUpdate = false;
+  const normalized = remotes.map((remote) => {
+    if (remote.library_type) {
+      return remote;
+    }
+    didUpdate = true;
+    return { ...remote, library_type: DEFAULT_LIBRARY_TYPE };
+  });
+
+  return didUpdate ? normalized : remotes;
+}
+
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
   const hooks = _options?.hooks;
   const plugins = [];
   if (mfConfig) {
+    if (!mfConfig.runtimePlugins) {
+      mfConfig.runtimePlugins = [];
+    }
+    // Add the runtime plugin using absolute path with forward slashes for cross-platform ESM compatibility
+    // Windows backslashes are converted to forward slashes since ESM imports require forward slashes
+    // The .mjs extension ensures ESM compatibility - Rollup/Vite can import it natively
+    // without CommonJS interop issues. The __REMOTE_MAP__ placeholder gets replaced
+    // during generateBundle with actual resolved remote data.
+    const runtimePluginPath = path.resolve(
+      __dirname,
+      'internal/mf-vite-etl/runtime_plugin.mjs'
+    );
+    mfConfig.runtimePlugins.push(runtimePluginPath.replace(/\\/g, '/'));
     plugins.push(...(federation(mfConfig) as Plugin[]));
   }
   plugins.push(zephyrPlugin(hooks));
@@ -46,6 +82,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
+  let entrypoint: string;
 
   return {
     name: 'with-zephyr',
@@ -55,6 +92,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
       baseHref = config.base || '/';
+
+      // Extract and normalize entrypoint from Vite config
+      entrypoint = extractEntrypoint(config);
 
       // Initialize Zephyr engine for both serve and build
       zephyr_defer_create({
@@ -69,6 +109,26 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       });
 
       mfPlugin = extract_mf_plugin(config.plugins ?? []);
+
+      // Resolve remotes for both dev and build modes
+      // This ensures federated_dependencies is populated early for both modes
+      if (mfPlugin) {
+        try {
+          const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
+          if (dependencyPairs) {
+            const zephyr_engine = await zephyr_engine_defer;
+            await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+            zephyr_engine.federated_dependencies = ensureLibraryType(
+              zephyr_engine.federated_dependencies
+            );
+            ze_log.remotes(
+              `Resolved ${dependencyPairs.length} remote dependencies in configResolved`
+            );
+          }
+        } catch (error) {
+          handleGlobalError(error);
+        }
+      }
 
       // Load .env files into process.env so ZE_PUBLIC_* are available to the agent
       try {
@@ -106,30 +166,38 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       return null;
     },
     transform: {
+      order: 'post',
       // Hook filter for Rolldown/Vite 7 performance optimization
-      // Only process Module Federation virtual remote entry files
+      // Only process specific file patterns for env variable rewriting
       filter: {
-        id: /virtual:mf-REMOTE_ENTRY_ID/,
+        id: /(\.(mjs|cjs|js|ts|jsx|tsx)|virtual:mf-REMOTE_ENTRY_ID)/,
       },
       handler: async (code, id) => {
         try {
-          // Additional check for backward compatibility with older Vite/Rollup versions
-          if (id.includes('virtual:mf-REMOTE_ENTRY_ID') && mfPlugin) {
-            const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
-            if (!dependencyPairs) {
-              return code;
-            }
+          // 1. Handle remoteEntry.js transformation for dev mode
+          // In dev mode, Module Federation generates remoteEntry.js in memory with __REMOTE_MAP__ placeholder
+          // The transform hook catches it and injects resolved remotes before serving to the browser
+          if (code.includes('"__REMOTE_MAP__"')) {
             const zephyr_engine = await zephyr_engine_defer;
-            const resolved_remotes =
-              await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-            if (!resolved_remotes) {
-              return code;
+            const resolved_remotes = zephyr_engine.federated_dependencies;
+
+            if (resolved_remotes?.length) {
+              ze_log.remotes(
+                `[transform] Transforming remoteEntry.js with ${resolved_remotes.length} remotes for dev mode`
+              );
+              const result = inject_resolved_remotes_map(resolved_remotes, code);
+              if (result !== code) {
+                return {
+                  code: result,
+                  map: null, // Let Vite generate source map
+                };
+              }
             }
-            const result = load_resolved_remotes(resolved_remotes, code);
-            return result;
           }
 
-          if (/\.(mjs|cjs|js|ts|jsx|tsx)$/.test(id) && !id.includes('node_modules')) {
+          // 2. Handle env variable rewriting (existing logic)
+          // Filter already ensures file extension matches, we just need to exclude node_modules
+          if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
             if (!cachedSpecifier) {
               const appUid = zephyr_engine.application_uid;
@@ -138,14 +206,22 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
             if (res && typeof res.code === 'string' && res.code !== code) {
               code = res.code;
+              return {
+                code,
+                map: new MagicString(code).generateMap({
+                  hires: true,
+                }),
+              };
             }
           }
 
-          return code;
+          // returns the original code if no modifications were made
+          return null;
         } catch (error) {
           handleGlobalError(error);
+
           // returns the original code in case of error
-          return code;
+          return null;
         }
       },
     },
@@ -162,21 +238,20 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
             'code' in chunk
           ) {
             try {
-              const dependencyPairs = extract_remotes_dependencies(
-                root,
-                mfPlugin._options
-              );
-              if (!dependencyPairs) {
-                continue;
-              }
+              // Use already-resolved dependencies from configResolved hook
               const zephyr_engine = await zephyr_engine_defer;
-              const resolved_remotes =
-                await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-              if (!resolved_remotes) {
+              const resolved_remotes = zephyr_engine.federated_dependencies;
+
+              if (!resolved_remotes?.length) {
+                ze_log.remotes('No resolved remotes found in generateBundle');
                 continue;
               }
-              const result = load_resolved_remotes(resolved_remotes, chunk.code);
+
+              const result = inject_resolved_remotes_map(resolved_remotes, chunk.code);
               chunk.code = result;
+              ze_log.remotes(
+                `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
+              );
             } catch (error) {
               handleGlobalError(error);
             }
@@ -295,6 +370,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();
@@ -332,8 +409,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         return html;
       }
     },
-    // For production builds
-    closeBundle: async () => {
+    // For production builds - use writeBundle instead of closeBundle
+    // writeBundle runs AFTER files are written to disk, so dist directory exists
+    writeBundle: async () => {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,
@@ -364,6 +442,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats,
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();

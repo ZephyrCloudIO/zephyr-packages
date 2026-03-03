@@ -15,6 +15,8 @@ export interface Snapshot {
   domain: string;
   // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
   type?: 'ssr' | 'csr';
+  // server entry file path for SSR applications (relative path)
+  entrypoint?: string;
   uid: {
     build: string;
     app_name: string;
@@ -47,6 +49,12 @@ export interface Snapshot {
   ze_envs?: Record<string, string>;
   // Content-addressable hash of ze_envs for deduplication
   ze_envs_hash?: string;
+  // bundler plugin type (e.g. 'webpack', 'vite', 'rspack')
+  builder?: string;
+  // version of the zephyr plugin (zephyr-edge-contract/zephyr-agent)
+  plugin_version?: string;
+  // version of the edge worker that processed the snapshot
+  worker_version?: string;
 }
 
 export interface SnapshotAsset {

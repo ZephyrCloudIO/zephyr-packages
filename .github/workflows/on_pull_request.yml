@@ -33,6 +33,14 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: main
+      # Build plugins first to avoid race conditions on Windows
+      - name: run build plugins
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+        run: pnpm nx affected --exclude='!libs/**' -t build --skipRemoteCache
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
@@ -136,4 +144,4 @@ jobs:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
       - name: Run e2e examples test
-        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests
+        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests --skipRemoteCache

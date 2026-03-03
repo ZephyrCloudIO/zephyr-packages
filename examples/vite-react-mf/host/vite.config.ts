@@ -30,6 +30,7 @@ const mfConfig: ModuleFederationOptions = {
       singleton: true,
     },
   },
+  dts: false,
 };
 
 export default defineConfig({

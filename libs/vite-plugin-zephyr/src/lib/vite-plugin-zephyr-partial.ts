@@ -28,18 +28,16 @@ export function withZephyrPartial() {
         publicDir: config.publicDir,
       });
     },
+    // writeBundle is called after files are written to disk - safe to read from filesystem
     writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
       const vite_internal_options = await vite_internal_options_defer;
       vite_internal_options.dir = options.dir;
       vite_internal_options.assets = bundle;
-    },
 
-    closeBundle: async () => {
+      // Extract and save assets after bundle is written to disk
       try {
-        const vite_internal_options = await vite_internal_options_defer;
         const zephyr_engine = await zephyr_engine_defer;
         const application_uid = zephyr_engine.application_uid;
-        // context import ^
         const assetsMap = await extract_vite_assets_map(
           zephyr_engine,
           vite_internal_options

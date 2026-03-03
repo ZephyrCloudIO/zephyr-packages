@@ -30,6 +30,7 @@ export async function extractAssetsFromDirectory(
   const assets: Record<string, DirectoryAsset> = {};
 
   // Recursively walk through the build directory
+  // TODO: Use readDirRecursive from 'zephyr-agent' here instead
   async function walkDir(dirPath: string): Promise<void> {
     try {
       const entries = await readdir(dirPath, { withFileTypes: true });

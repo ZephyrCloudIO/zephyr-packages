@@ -41,12 +41,8 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
 
   let reference = value;
 
-  if (reference === 'workspace:*') {
-    return dependency;
-  }
-
   // if reference variable has ':' then cut it off and store dependency.registry
-  if (reference.includes(':')) {
+  if (reference.includes(':') && !reference.includes('workspace:*')) {
     const reference_parts = reference.split(':');
     dependency.registry = reference_parts[0];
     reference = reference_parts[1];

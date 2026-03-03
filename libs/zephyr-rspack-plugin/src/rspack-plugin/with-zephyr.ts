@@ -1,5 +1,5 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
-import { handleGlobalError, ZephyrEngine } from 'zephyr-agent';
+import { getGlobal, handleGlobalError, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   makeCopyOfModuleFederationOptions,
@@ -15,8 +15,8 @@ export function withZephyr(
 ): (config: Configuration) => Promise<Configuration> {
   return (config) => {
     // Skip Zephyr execution during Nx graph calculation
-    // NX_TASK_TARGET_TARGET is only set during actual task execution (build/serve)
-    if (!process.env['NX_TASK_TARGET_TARGET']) {
+    // Nx sets global.NX_GRAPH_CREATION = true during graph creation
+    if (getGlobal().NX_GRAPH_CREATION) {
       return Promise.resolve(config);
     }
     return _zephyr_configuration(config, zephyrPluginOptions);

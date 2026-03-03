@@ -1,6 +1,7 @@
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { getZephyrAgentVersion } from '../version/zephyr-agent-version';
 
 export async function zeBuildDashData(
   zephyr_engine: ZephyrEngine
@@ -55,6 +56,8 @@ export async function zeBuildDashData(
     default: false,
     remote: 'remoteEntry.js',
     type: 'app',
+    builder: zephyr_engine.builder,
+    plugin_version: getZephyrAgentVersion(),
     zephyrDependencies: zephyr_engine.zephyr_dependencies,
     ze_envs: zephyr_engine.ze_env_vars || undefined,
     ze_envs_hash: zephyr_engine.ze_env_vars_hash || undefined,

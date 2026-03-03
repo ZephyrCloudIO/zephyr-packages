@@ -328,7 +328,8 @@ node ./libs/with-zephyr/dist/index.js --bundlers repack /path/to/react-native-pr
 ```
 src/
 ├── bundlers/          # Per-bundler configs + registry
-├── transformers/      # AST transforms (imports, plugin arrays, wrappers, etc.)
+├── engine/            # ast-grep execution layer
+├── operations.ts      # Ordered operation handlers per bundler
 ├── package-manager.ts # Package management utilities
 ├── index.ts           # CLI entry point and orchestration
 └── types.ts           # Shared types

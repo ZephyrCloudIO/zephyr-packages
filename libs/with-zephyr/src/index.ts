@@ -27,37 +27,8 @@ import {
   isPackageInstalled,
 } from './package-manager.js';
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
-import {
-  addToComposePlugins,
-  addToParcelReporters,
-  addToPluginsArray,
-  addToPluginsArrayOrCreate,
-  addToRsbuildConfig,
-  addToRollupArrayConfig,
-  addToRollupFunction,
-  addToVitePlugins,
-  addToVitePluginsInFunction,
-  addToAstroIntegrations,
-  addToAstroIntegrationsInFunction,
-  addToAstroIntegrationsOrCreate,
-  addToAstroIntegrationsInFunctionOrCreate,
-  addZephyrImport,
-  addZephyrRequire,
-  hasZephyrPlugin,
-  parseFile,
-  skipAlreadyWrapped,
-  wrapExportDefault,
-  wrapExportedFunction,
-  wrapModuleExports,
-  writeFile,
-} from './transformers/index.js';
-import type {
-  BundlerConfig,
-  BundlerPattern,
-  CodemodOptions,
-  ConfigFile,
-  TransformFunctions,
-} from './types.js';
+import { applyBundlerOperations, hasZephyrCall } from './operations.js';
+import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
 
 // Local registry built from individual imports
 const BUNDLER_CONFIGS: BundlerConfigs = {
@@ -73,26 +44,6 @@ const BUNDLER_CONFIGS: BundlerConfigs = {
   modernjs: modernjsConfig,
   rspress: rspressConfig,
   repack: repackConfig,
-};
-
-// Map transform names to functions
-const TRANSFORMERS: TransformFunctions = {
-  addToComposePlugins,
-  addToPluginsArray,
-  addToPluginsArrayOrCreate,
-  addToRsbuildConfig,
-  addToVitePlugins,
-  addToVitePluginsInFunction,
-  addToAstroIntegrations,
-  addToAstroIntegrationsInFunction,
-  addToAstroIntegrationsOrCreate,
-  addToAstroIntegrationsInFunctionOrCreate,
-  addToRollupFunction,
-  addToRollupArrayConfig,
-  wrapModuleExports,
-  wrapExportDefault,
-  skipAlreadyWrapped,
-  wrapExportedFunction,
 };
 
 /** Normalize file path separators to forward slashes for consistent output */
@@ -112,7 +63,7 @@ function findConfigFiles(directory: string): ConfigFile[] {
 
       for (const filePath of matches) {
         configFiles.push({
-          filePath, // Keep original file path for file system operations
+          filePath,
           bundlerName,
           config,
         });
@@ -128,7 +79,6 @@ function isRepackConfig(filePath: string): boolean {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
 
-    // Look for repack-specific imports or patterns
     const repackIndicators = [
       /@react-native-community\/cli-platform-android/,
       /@react-native-community\/cli-platform-ios/,
@@ -147,17 +97,24 @@ function isRepackConfig(filePath: string): boolean {
   }
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** Check if a configuration file already has withZephyr */
 function checkHasZephyr(filePath: string, config: BundlerConfig): boolean {
   try {
     if (config.plugin === 'parcel-reporter-zephyr') {
       const content = fs.readFileSync(filePath, 'utf8');
-      const parcelConfig = JSON.parse(content);
-      return parcelConfig.reporters && parcelConfig.reporters.includes(config.plugin);
-    } else {
-      const ast = parseFile(filePath);
-      return hasZephyrPlugin(ast);
+      const parcelConfig = JSON.parse(content) as { reporters?: string[] };
+      return (
+        Array.isArray(parcelConfig.reporters) &&
+        parcelConfig.reporters.includes(config.plugin)
+      );
     }
+
+    const result = hasZephyrCall(filePath);
+    return result.status === 'changed';
   } catch (error) {
     console.warn(
       chalk.yellow(
@@ -168,26 +125,60 @@ function checkHasZephyr(filePath: string, config: BundlerConfig): boolean {
   }
 }
 
-/** Determine the appropriate transformation pattern for a config file */
-function detectPattern(filePath: string, config: BundlerConfig): BundlerPattern | null {
+function ensureZephyrImportOrRequire(
+  filePath: string,
+  config: BundlerConfig,
+  options: { dryRun?: boolean } = {}
+): { status: 'changed' | 'no-change' | 'error'; error?: string } {
+  const { dryRun = false } = options;
+
+  if (!config.importName) {
+    return { status: 'no-change' };
+  }
+
   try {
     const content = fs.readFileSync(filePath, 'utf8');
+    const plugin = config.plugin;
+    const importName = config.importName;
 
-    for (const pattern of config.patterns) {
-      if (pattern.matcher.test(content)) {
-        return pattern;
+    const hasPluginImport = new RegExp(
+      `from\\s+['"]${escapeRegExp(plugin)}['"]|require\\(\\s*['"]${escapeRegExp(plugin)}['"]\\s*\\)`
+    ).test(content);
+
+    if (hasPluginImport) {
+      return { status: 'no-change' };
+    }
+
+    const hasESMSyntax = content.includes('import ') || content.includes('export ');
+    const isCommonJS = filePath.endsWith('.js') && !hasESMSyntax;
+
+    let nextContent = content;
+
+    if (isCommonJS) {
+      const requireLine = `const { ${importName} } = require("${plugin}");\n`;
+      nextContent = `${requireLine}${content}`;
+    } else {
+      const importLine = `import { ${importName} } from "${plugin}";`;
+      const firstImportMatch = content.match(/^\s*import[^\n]*\n?/m);
+
+      if (firstImportMatch && firstImportMatch.index !== undefined) {
+        const insertionPoint = firstImportMatch.index + firstImportMatch[0].length;
+        nextContent = `${content.slice(0, insertionPoint)}${importLine}\n${content.slice(insertionPoint)}`;
+      } else {
+        nextContent = `${importLine}\n${content}`;
       }
     }
 
-    // Default to the first pattern if none match
-    return config.patterns[0] || null;
+    if (nextContent !== content && !dryRun) {
+      fs.writeFileSync(filePath, nextContent);
+    }
+
+    return nextContent === content ? { status: 'no-change' } : { status: 'changed' };
   } catch (error) {
-    console.warn(
-      chalk.yellow(
-        `Warning: Could not read ${normalizePathForOutput(filePath)}: ${(error as Error).message}`
-      )
-    );
-    return config.patterns[0] || null;
+    return {
+      status: 'error',
+      error: (error as Error).message,
+    };
   }
 }
 
@@ -205,53 +196,42 @@ function transformConfigFile(
       chalk.blue(`Processing ${bundlerName} config: ${normalizePathForOutput(filePath)}`)
     );
 
-    // Special handling for Parcel JSON configs
-    if (config.plugin === 'parcel-reporter-zephyr') {
-      if (!dryRun) {
-        addToParcelReporters(filePath, config.plugin);
-      }
-      console.log(
-        chalk.green(`✓ Added ${config.plugin} to ${normalizePathForOutput(filePath)}`)
-      );
-      return true;
-    }
+    const operationResult = applyBundlerOperations({
+      filePath,
+      config,
+      dryRun,
+    });
 
-    // Parse JavaScript/TypeScript config files
-    const ast = parseFile(filePath);
-    const pattern = detectPattern(filePath, config);
-
-    if (!pattern) {
-      console.warn(
-        chalk.yellow(
-          `Warning: No suitable pattern found for ${normalizePathForOutput(filePath)}`
+    if (operationResult.status === 'error') {
+      console.error(
+        chalk.red(
+          `Error transforming ${normalizePathForOutput(filePath)}: ${
+            operationResult.error || 'Operation failed'
+          }`
         )
       );
       return false;
     }
 
-    // Add import/require statement
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    const hasESMSyntax =
-      fileContent.includes('import ') || fileContent.includes('export ');
-    const isCommonJS = filePath.endsWith('.js') && !hasESMSyntax;
-
-    if (isCommonJS) {
-      addZephyrRequire(ast, config.plugin, config.importName);
-    } else {
-      addZephyrImport(ast, config.plugin, config.importName);
-    }
-
-    // Apply transformation
-    const transformer = TRANSFORMERS[pattern.transform];
-    if (transformer) {
-      transformer(ast);
-    } else {
-      console.warn(chalk.yellow(`Warning: Unknown transformer ${pattern.transform}`));
+    if (operationResult.status === 'no-match') {
+      console.error(
+        chalk.red(
+          `Error transforming ${normalizePathForOutput(filePath)}: No applicable transformation operation`
+        )
+      );
       return false;
     }
 
-    if (!dryRun) {
-      writeFile(filePath, ast);
+    const importResult = ensureZephyrImportOrRequire(filePath, config, { dryRun });
+    if (importResult.status === 'error') {
+      console.error(
+        chalk.red(
+          `Error transforming ${normalizePathForOutput(filePath)}: ${
+            importResult.error || 'Failed to update imports'
+          }`
+        )
+      );
+      return false;
     }
 
     console.log(chalk.green(`✓ Added withZephyr to ${normalizePathForOutput(filePath)}`));

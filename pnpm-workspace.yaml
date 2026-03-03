@@ -86,7 +86,7 @@ catalogs:
   rolldown:
     rolldown: 1.0.0-beta.54
   rollup4:
-    rollup: ^4.36.0
+    rollup: ^4.59.0
     '@rollup/plugin-url': 8.0.2
     '@svgr/rollup': 8.1.0
   esbuild:

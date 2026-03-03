@@ -62,3 +62,25 @@ export function extractEntrypoint(config: ResolvedConfig): string {
   ze_log.init('No entrypoint specified, using Vite default: index.html');
   return 'index.html';
 }
+
+interface ResolveUploadEntrypointOptions {
+  hasModuleFederation?: boolean;
+}
+
+/**
+ * Resolves the snapshot entrypoint to send during upload.
+ *
+ * For MF builds, we intentionally omit entrypoint to preserve remoteEntry resolution
+ * semantics used before CSR entrypoint support.
+ */
+export function resolveUploadEntrypoint(
+  config: ResolvedConfig,
+  options?: ResolveUploadEntrypointOptions
+): string | undefined {
+  if (options?.hasModuleFederation) {
+    ze_log.init('Module Federation detected. Skipping CSR snapshot entrypoint.');
+    return undefined;
+  }
+
+  return extractEntrypoint(config);
+}

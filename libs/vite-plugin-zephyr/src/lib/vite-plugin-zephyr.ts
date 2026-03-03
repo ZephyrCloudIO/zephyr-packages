@@ -14,7 +14,7 @@ import {
   type ZeResolvedDependency,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
-import { extractEntrypoint } from './internal/extract/extract-entrypoint';
+import { resolveUploadEntrypoint } from './internal/extract/extract-entrypoint';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -82,7 +82,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
-  let entrypoint: string;
+  let entrypoint: string | undefined;
 
   return {
     name: 'with-zephyr',
@@ -93,8 +93,10 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
       root = config.root;
       baseHref = config.base || '/';
 
-      // Extract and normalize entrypoint from Vite config
-      entrypoint = extractEntrypoint(config);
+      mfPlugin = extract_mf_plugin(config.plugins ?? []);
+      entrypoint = resolveUploadEntrypoint(config, {
+        hasModuleFederation: Boolean(mfPlugin),
+      });
 
       // Initialize Zephyr engine for both serve and build
       zephyr_defer_create({
@@ -107,8 +109,6 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
       });
-
-      mfPlugin = extract_mf_plugin(config.plugins ?? []);
 
       // Resolve remotes for both dev and build modes
       // This ensures federated_dependencies is populated early for both modes

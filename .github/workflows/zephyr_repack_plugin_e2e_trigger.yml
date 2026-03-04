@@ -8,6 +8,7 @@ on:
 jobs:
   trigger-zephyr-repack-example:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
         uses: actions/github-script@v8

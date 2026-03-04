@@ -136,6 +136,107 @@ describe('Ast-grep Operations', () => {
     });
   });
 
+  describe('astro integrations operations', () => {
+    it('should append withZephyr to integrations when defineConfig has other properties', () => {
+      const filePath = path.join(tempDir, 'astro.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          site: 'https://example.com',
+          integrations: [mdx(), sitemap()],
+        });
+      `
+      );
+
+      const result = runBundlerOperation('astro-integrations-or-create', {
+        filePath,
+        config: createConfig(
+          'astro-integrations-or-create',
+          'first-success',
+          'zephyr-astro-integration'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('integrations: [mdx(), sitemap(), withZephyr()]');
+      expect(next.match(/integrations:\s*\[/g)?.length ?? 0).toBe(1);
+    });
+
+    it('should not create duplicate integrations when using astro operation chain', () => {
+      const filePath = path.join(tempDir, 'astro.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          site: 'https://example.com',
+          integrations: [mdx(), sitemap()],
+        });
+      `
+      );
+
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-astro-integration',
+        importName: 'withZephyr',
+        strategy: 'first-success',
+        operations: [
+          'astro-integrations-function-or-create',
+          'astro-integrations-or-create',
+        ],
+      };
+
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('integrations: [mdx(), sitemap(), withZephyr()]');
+      expect(next).not.toContain('],,');
+      expect(next.match(/integrations:\s*\[/g)?.length ?? 0).toBe(1);
+    });
+
+    it('should append withZephyr for defineConfig arrow function integrations', () => {
+      const filePath = path.join(tempDir, 'astro.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig((env) => ({
+          site: env.site,
+          integrations: [mdx(), sitemap()],
+        }));
+      `
+      );
+
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-astro-integration',
+        importName: 'withZephyr',
+        strategy: 'first-success',
+        operations: [
+          'astro-integrations-function-or-create',
+          'astro-integrations-or-create',
+        ],
+      };
+
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('integrations: [mdx(), sitemap(), withZephyr()]');
+      expect(next.match(/integrations:\s*\[/g)?.length ?? 0).toBe(1);
+    });
+  });
+
   describe('wrappers', () => {
     it('should wrap export default defineConfig for rspack', () => {
       const filePath = path.join(tempDir, 'rspack.config.ts');

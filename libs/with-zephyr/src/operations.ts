@@ -70,6 +70,46 @@ function appendToArrayProperty(
   ]);
 }
 
+function appendToDefineConfigArrayProperty(
+  context: OperationContext,
+  propertyName: string
+): OperationResult {
+  return runRewriteSequence(context, [
+    {
+      pattern: `defineConfig({ $$$REST, ${propertyName}: [$$$ITEMS] })`,
+      rewrite: `defineConfig({ $$$REST, ${propertyName}: [$$$ITEMS, withZephyr()] })`,
+    },
+    {
+      pattern: `defineConfig({ ${propertyName}: [$$$ITEMS], $$$REST })`,
+      rewrite: `defineConfig({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST })`,
+    },
+    {
+      pattern: `defineConfig({ ${propertyName}: [$$$ITEMS] })`,
+      rewrite: `defineConfig({ ${propertyName}: [$$$ITEMS, withZephyr()] })`,
+    },
+  ]);
+}
+
+function appendToDefineConfigFunctionArrayProperty(
+  context: OperationContext,
+  propertyName: string
+): OperationResult {
+  return runRewriteSequence(context, [
+    {
+      pattern: `defineConfig(($$$ARGS) => ({ $$$REST, ${propertyName}: [$$$ITEMS] }))`,
+      rewrite: `defineConfig(($$$ARGS) => ({ $$$REST, ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
+    },
+    {
+      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS], $$$REST }))`,
+      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST }))`,
+    },
+    {
+      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS] }))`,
+      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
+    },
+  ]);
+}
+
 function createArrayPropertyInDefineConfig(
   context: OperationContext,
   propertyName: string
@@ -217,6 +257,14 @@ function handlePluginsArrayOrCreate(context: OperationContext): OperationResult 
 }
 
 function handleAstroIntegrationsOrCreate(context: OperationContext): OperationResult {
+  const appendInDefineConfigResult = appendToDefineConfigArrayProperty(
+    context,
+    'integrations'
+  );
+  if (appendInDefineConfigResult.status !== 'no-match') {
+    return appendInDefineConfigResult;
+  }
+
   const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
     return appendResult;
@@ -228,6 +276,18 @@ function handleAstroIntegrationsOrCreate(context: OperationContext): OperationRe
 function handleAstroIntegrationsFunctionOrCreate(
   context: OperationContext
 ): OperationResult {
+  const content = fs.readFileSync(context.filePath, 'utf8');
+  const hasDefineConfigArrow =
+    /defineConfig\s*\(\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>/.test(content);
+  if (!hasDefineConfigArrow) {
+    return { status: 'no-match' };
+  }
+
+  const appendResult = appendToDefineConfigFunctionArrayProperty(context, 'integrations');
+  if (appendResult.status !== 'no-match') {
+    return appendResult;
+  }
+
   return createArrayPropertyInDefineConfigFunction(context, 'integrations');
 }
 

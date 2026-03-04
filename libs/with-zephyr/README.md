@@ -123,7 +123,7 @@ bunx with-zephyr --bundlers vite rollup
 - `-d, --dry-run` - Show what would be changed without modifying files
 - `-b, --bundlers <bundlers...>` - Only process specific bundlers
 
-> The codemod automatically installs missing Zephyr plugins using your detected package manager (npm/yarn/pnpm/bun). In `--dry-run` it will only list what would be installed.
+> The codemod stages missing packages in `package.json`, applies file changes, then runs one install pass with your detected package manager (npm/yarn/pnpm/bun). In `--dry-run` it only lists what would be installed.
 
 ## Examples
 
@@ -219,14 +219,15 @@ The tool automatically detects your package manager by checking for:
 
 ### Supported Package Managers
 
-- **npm**: `npm install --save-dev <package>`
-- **yarn**: `yarn add --dev <package>`
-- **pnpm**: `pnpm add --save-dev <package>`
-- **bun**: `bun add --dev <package>`
+- **npm**: `npm install`
+- **yarn**: `yarn install`
+- **pnpm**: `pnpm install`
+- **bun**: `bun install`
 
 ### Package Installation Behavior
 
 - `npx with-zephyr` will install any required Zephyr plugins that are missing.
+- The codemod applies config/script/file changes first, then installs dependencies once.
 - `npx with-zephyr --dry-run` will list the packages it would install without making changes.
 
 ## Configuration File Detection
@@ -328,7 +329,8 @@ node ./libs/with-zephyr/dist/index.js --bundlers repack /path/to/react-native-pr
 ```
 src/
 ├── bundlers/          # Per-bundler configs + registry
-├── transformers/      # AST transforms (imports, plugin arrays, wrappers, etc.)
+├── engine/            # ast-grep execution layer
+├── operations.ts      # Ordered operation handlers per bundler
 ├── package-manager.ts # Package management utilities
 ├── index.ts           # CLI entry point and orchestration
 └── types.ts           # Shared types

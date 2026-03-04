@@ -25,10 +25,13 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
 /** Wrap debug logger to support file logging */
-type DebugLogger = debug.Debugger;
+type DebugLogger = ((...args: unknown[]) => void) & {
+  enabled?: boolean;
+  namespace?: string;
+};
 
 function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
-  const wrappedFn = (...args: Parameters<DebugLogger>) => {
+  const wrappedFn = (...args: unknown[]) => {
     const message = args
       .map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
       .join(' ');
@@ -55,28 +58,47 @@ function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
 }
 
 const rawLoggers = {
-  app: debug('zephyr:app'),
-  auth: debug('zephyr:auth'),
-  buildstats: debug('zephyr:buildstats'),
-  config: debug('zephyr:config'),
-  git: debug('zephyr:git'),
-  http: debug('zephyr:http'),
-  init: debug('zephyr:init'),
-  manifest: debug('zephyr:manifest'),
-  mf: debug('zephyr:mf'),
-  misc: debug('zephyr:misc'),
-  package: debug('zephyr:package'),
-  remotes: debug('zephyr:remotes'),
-  snapshot: debug('zephyr:snapshot'),
-  upload: debug('zephyr:upload'),
-  debug: debug('zephyr:debug'),
-  error: debug('zephyr:error'),
+  app: debug('zephyr:app') as DebugLogger,
+  auth: debug('zephyr:auth') as DebugLogger,
+  buildstats: debug('zephyr:buildstats') as DebugLogger,
+  config: debug('zephyr:config') as DebugLogger,
+  git: debug('zephyr:git') as DebugLogger,
+  http: debug('zephyr:http') as DebugLogger,
+  init: debug('zephyr:init') as DebugLogger,
+  manifest: debug('zephyr:manifest') as DebugLogger,
+  mf: debug('zephyr:mf') as DebugLogger,
+  misc: debug('zephyr:misc') as DebugLogger,
+  package: debug('zephyr:package') as DebugLogger,
+  remotes: debug('zephyr:remotes') as DebugLogger,
+  snapshot: debug('zephyr:snapshot') as DebugLogger,
+  upload: debug('zephyr:upload') as DebugLogger,
+  debug: debug('zephyr:debug') as DebugLogger,
+  error: debug('zephyr:error') as DebugLogger,
 };
 
-export const ze_error = wrapDebugLogger(rawLoggers.error, 'error');
-export const ze_debug = wrapDebugLogger(rawLoggers.debug, 'debug');
+type ZeLoggers = {
+  app: DebugLogger;
+  auth: DebugLogger;
+  buildstats: DebugLogger;
+  config: DebugLogger;
+  git: DebugLogger;
+  http: DebugLogger;
+  init: DebugLogger;
+  manifest: DebugLogger;
+  mf: DebugLogger;
+  misc: DebugLogger;
+  package: DebugLogger;
+  remotes: DebugLogger;
+  snapshot: DebugLogger;
+  upload: DebugLogger;
+  debug: DebugLogger;
+  error: DebugLogger;
+};
 
-const createLogger = () => {
+export const ze_error: DebugLogger = wrapDebugLogger(rawLoggers.error, 'error');
+export const ze_debug: DebugLogger = wrapDebugLogger(rawLoggers.debug, 'debug');
+
+const createLogger = (): ZeLoggers => {
   return {
     app: wrapDebugLogger(rawLoggers.app, 'app'),
     auth: wrapDebugLogger(rawLoggers.auth, 'auth'),
@@ -116,6 +138,6 @@ const createLogger = () => {
  * - Ze_log.snapshot: Snapshot publish
  * - Ze_log.upload: Asset and build stats upload
  */
-export const ze_log = createLogger();
+export const ze_log: ZeLoggers = createLogger();
 // If debug mode is not enabled just print whatever console output is
 // If debug mode is enabled print the error from our end

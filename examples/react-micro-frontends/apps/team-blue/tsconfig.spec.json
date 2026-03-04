@@ -2,10 +2,12 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": ["jest", "node"]
+    "composite": true,
+    "incremental": true,
+    "types": ["@rstest/core/globals", "jest", "node"]
   },
   "include": [
-    "jest.config.ts",
+    "rstest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.tsx",
@@ -16,5 +18,4 @@
     "src/**/*.spec.jsx",
     "src/**/*.d.ts"
   ],
-  "types": ["@nx/react/typings/cssmodule.d.ts", "@nx/react/typings/image.d.ts"]
 }

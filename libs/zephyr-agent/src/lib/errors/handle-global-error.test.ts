@@ -1,13 +1,9 @@
-import { describe, expect, jest, it, beforeEach, afterEach } from '@jest/globals';
+import { describe, expect, rs, it, beforeEach, afterEach } from '@rstest/core';
 import { handleGlobalError } from './handle-global-error';
+import * as logEvent from '../logging/ze-log-event';
 
-jest.mock('../logging/ze-log-event', () => ({
-  logFn: jest.fn(),
-}));
-
-import { logFn } from '../logging/ze-log-event';
-
-const mockLogFn = logFn as jest.MockedFunction<typeof logFn>;
+const jest = rs;
+const mockLogFn = jest.spyOn(logEvent, 'logFn').mockImplementation(() => undefined);
 
 describe('handleGlobalError', () => {
   const originalEnv = process.env['ZE_FAIL_BUILD'];

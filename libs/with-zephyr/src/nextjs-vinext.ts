@@ -65,7 +65,9 @@ function getWranglerTemplate(workerName: string): string {
 }
 
 function hasNextDependency(packageJson: PackageJsonShape): boolean {
-  return Boolean(packageJson.dependencies?.next || packageJson.devDependencies?.next);
+  return Boolean(
+    packageJson.dependencies?.['next'] || packageJson.devDependencies?.['next']
+  );
 }
 
 function getPackageNameForWorker(

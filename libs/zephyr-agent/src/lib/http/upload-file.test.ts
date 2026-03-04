@@ -1,4 +1,5 @@
 // Importing for mocks
+import { rs as jest } from '@rstest/core';
 import '../errors';
 import * as httpRequest from './http-request';
 import { uploadFile } from './upload-file';
@@ -8,8 +9,8 @@ import type { UploadableAsset } from 'zephyr-edge-contract';
 jest.mock('./http-request');
 
 // Mock the ZeErrors and ZephyrError
-jest.mock('../errors', () => {
-  const originalModule = jest.requireActual('../errors');
+jest.mock('../errors', async () => {
+  const originalModule = await jest.importActual<typeof import('../errors')>('../errors');
 
   // Create mock error code
   const ZE_ERR_FAILED_UPLOAD = 'ZE40017';

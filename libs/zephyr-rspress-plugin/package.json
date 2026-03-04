@@ -16,10 +16,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run zephyr-rspress-plugin:build",
-    "dev": "nx run zephyr-rspress-plugin:build --watch",
+    "build": "tsgo -p tsconfig.json",
+    "dev": "tsgo -p tsconfig.json --watch",
     "patch-version": "pnpm version",
-    "test": "jest"
+    "test": "rstest --passWithNoTests",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -33,7 +35,7 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "@rspress/core": "^2.0.0"

@@ -1,47 +1,48 @@
+import { rs } from '@rstest/core';
 import path from 'node:path';
-import { ZephyrEngine, logFn } from 'zephyr-agent';
-import { setupZeDeploy } from '../internal/assets/setupZeDeploy';
-import { showFiles } from '../internal/files/showFiles';
-import { walkFiles } from '../internal/files/walkFiles';
 import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
 
-jest.mock('zephyr-agent', () => {
-  const actual = jest.requireActual('zephyr-agent');
-  return {
-    ...actual,
-    ZephyrEngine: {
-      defer_create: jest.fn(),
-    },
-    ze_log: {
-      upload: jest.fn(),
-    },
-    logFn: jest.fn(),
-    ZephyrError: {
-      format: jest.fn((err) => `Formatted: ${err.message}`),
-    },
-  };
-});
+const deferCreateMock = rs.fn();
+const logFnMock = rs.fn();
+const zeLogUploadMock = rs.fn();
+const zephyrErrorFormatMock = rs.fn((err: Error) => `Formatted: ${err.message}`);
+const walkFilesMock = rs.fn();
+const showFilesMock = rs.fn();
+const setupZeDeployMock = rs.fn();
 
-jest.mock('../internal/files/walkFiles', () => ({
-  walkFiles: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  ZephyrEngine: {
+    defer_create: (...args: unknown[]) => deferCreateMock(...args),
+  },
+  ze_log: {
+    upload: (...args: unknown[]) => zeLogUploadMock(...args),
+  },
+  logFn: (...args: unknown[]) => logFnMock(...args),
+  ZephyrError: {
+    format: (...args: unknown[]) => zephyrErrorFormatMock(...args),
+  },
 }));
 
-jest.mock('../internal/files/showFiles', () => ({
-  showFiles: jest.fn(),
+rs.mock('../internal/files/walkFiles', () => ({
+  walkFiles: (...args: unknown[]) => walkFilesMock(...args),
 }));
 
-jest.mock('../internal/assets/setupZeDeploy', () => ({
-  setupZeDeploy: jest.fn(),
+rs.mock('../internal/files/showFiles', () => ({
+  showFiles: (...args: unknown[]) => showFilesMock(...args),
+}));
+
+rs.mock('../internal/assets/setupZeDeploy', () => ({
+  setupZeDeploy: (...args: unknown[]) => setupZeDeployMock(...args),
 }));
 
 describe('zephyrRspressSSGPlugin', () => {
-  const mockZephyrDefer = jest.fn();
+  const mockZephyrDefer = rs.fn();
   const mockEngine = Promise.resolve({ engine: 'mock' });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
 
-    (ZephyrEngine.defer_create as jest.Mock).mockReturnValue({
+    deferCreateMock.mockReturnValue({
       zephyr_engine_defer: mockEngine,
       zephyr_defer_create: mockZephyrDefer,
     });
@@ -50,7 +51,7 @@ describe('zephyrRspressSSGPlugin', () => {
   it('should call zephyr_defer_create with correct context', () => {
     zephyrRspressSSGPlugin({ outDir: 'custom-out' });
 
-    expect(ZephyrEngine.defer_create).toHaveBeenCalled();
+    expect(deferCreateMock).toHaveBeenCalled();
     expect(mockZephyrDefer).toHaveBeenCalledWith({
       builder: 'rspack',
       context: path.resolve(),
@@ -59,26 +60,27 @@ describe('zephyrRspressSSGPlugin', () => {
 
   it('should show files and run setupZeDeploy if files are found', async () => {
     const mockFiles = ['index.html', 'main.js'];
-    (walkFiles as jest.Mock).mockResolvedValue(mockFiles);
+    walkFilesMock.mockResolvedValue(mockFiles);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
     await plugin.afterBuild?.({}, false);
 
-    expect(showFiles).toHaveBeenCalledWith(path.resolve('dist'), mockFiles);
-    expect(setupZeDeploy).toHaveBeenCalledWith({
+    expect(showFilesMock).toHaveBeenCalledWith(path.resolve('dist'), mockFiles);
+    expect(setupZeDeployMock).toHaveBeenCalledWith({
       deferEngine: mockEngine,
       outDir: path.resolve('dist'),
       files: mockFiles,
+      hooks: undefined,
     });
   });
 
   it('should log error using logFn if afterBuild throws', async () => {
     const err = new Error('walk failed');
-    (walkFiles as jest.Mock).mockRejectedValue(err);
+    walkFilesMock.mockRejectedValue(err);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
     await plugin.afterBuild?.({}, false);
 
-    expect(logFn).toHaveBeenCalledWith('error', 'Formatted: walk failed');
+    expect(logFnMock).toHaveBeenCalledWith('error', 'Formatted: walk failed');
   });
 });

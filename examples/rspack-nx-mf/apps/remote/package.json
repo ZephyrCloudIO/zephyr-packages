@@ -1,5 +1,18 @@
 {
   "name": "rspack_nx_mf_remote",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "rspack build --config rspack.config.js --mode production",
+    "start": "rspack serve --config rspack.config.js --mode development --port 4201",
+    "test": "rstest --passWithNoTests",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*",
+    "@rstest/core": "^0.7.7"
+  }
 }

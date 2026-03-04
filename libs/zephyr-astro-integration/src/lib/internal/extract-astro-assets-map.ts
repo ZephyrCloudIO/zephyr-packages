@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import * as fsPromises from 'node:fs/promises';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildAssetsMap, logFn, type ZeBuildAssetsMap } from 'zephyr-agent';
@@ -117,7 +117,7 @@ export async function extractAstroAssetsFromBuildHook(
         }
 
         // Read the file content
-        const content = await readFile(fullPath);
+        const content = await fsPromises.readFile(fullPath);
         const fileType = getFileType(relativePath);
 
         astroAssets[relativePath] = {
@@ -197,7 +197,7 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
   // TODO: Use readDirRecursive from 'zephyr-agent' here instead
   async function walkDir(dirPath: string): Promise<void> {
     try {
-      const entries = await readdir(dirPath, { withFileTypes: true });
+      const entries = await fsPromises.readdir(dirPath, { withFileTypes: true });
 
       for (const entry of entries) {
         const fullPath = join(dirPath, entry.name);
@@ -214,7 +214,7 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
           }
 
           try {
-            const content = await readFile(fullPath);
+            const content = await fsPromises.readFile(fullPath);
             const fileType = getFileType(relativePath);
 
             assets[relativePath] = {

@@ -4,7 +4,7 @@
   "description": "Rsbuild Module Federation example with Zephyr",
   "private": true,
   "scripts": {
-    "build:all": "nx run-many -t build --parallel=1 -p mf-react-rsbuild-provider mf-react-rsbuild",
+    "build:all": "pnpm --workspace-concurrency=1 --filter mf-react-rsbuild-provider --filter mf-react-rsbuild build",
     "dev": "pnpm --filter mf-react-rsbuild-provider run dev & pnpm --filter mf-react-rsbuild run dev",
     "preview": "pnpm --filter mf-react-rsbuild-provider run preview & pnpm --filter mf-react-rsbuild run preview"
   },

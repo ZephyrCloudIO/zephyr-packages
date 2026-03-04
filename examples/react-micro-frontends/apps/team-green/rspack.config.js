@@ -1,45 +1,88 @@
-const { withModuleFederation } = require('@nx/module-federation/rspack');
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
+const path = require('path');
+const rspack = require('@rspack/core');
+const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
 const { withZephyr } = require('zephyr-rspack-plugin');
 
-const mfConfig = {
-  name: 'team-green',
-  exposes: {
-    './GreenRecos': './src/app/team-green-recos.tsx',
-  },
-  // Workaround necessary until Nx upgrade.
-  // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109
-  additionalShared: [
-    {
-      libraryName: 'react',
-      sharedConfig: { singleton: true },
-    },
-    {
-      libraryName: 'react-dom',
-      sharedConfig: { singleton: true },
-    },
-    {
-      libraryName: 'react/jsx-runtime',
-      sharedConfig: { singleton: true },
-    },
-    {
-      libraryName: 'react/jsx-dev-runtime',
-      sharedConfig: { singleton: true },
-    },
-  ],
-};
+const isDev = process.env.NODE_ENV !== 'production';
 
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(mfConfig, { dts: false }),
-  // Workaround for incomplete resolution of https://github.com/nrwl/nx/issues/31114
-  (config) => {
-    if (config.optimization) {
-      config.optimization.runtimeChunk = false;
-    }
-    return config;
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = withZephyr()({
+  context: __dirname,
+  entry: {
+    main: './src/main.tsx',
   },
-  withZephyr()
-);
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].[contenthash].js',
+    clean: true,
+    publicPath: 'auto',
+  },
+  experiments: {
+    css: true,
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: {
+                  syntax: 'typescript',
+                  tsx: true,
+                },
+                transform: {
+                  react: {
+                    runtime: 'automatic',
+                    development: isDev,
+                    refresh: isDev,
+                  },
+                },
+                target: 'es2020',
+              },
+            },
+          },
+        ],
+      },
+      {
+        test: /\.css$/,
+        type: 'css',
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg|ico)$/i,
+        type: 'asset/resource',
+      },
+    ],
+  },
+  optimization: {
+    runtimeChunk: false,
+  },
+  plugins: [
+    new rspack.container.ModuleFederationPlugin({
+      name: 'team_green',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './GreenRecos': './src/app/team-green-recos.tsx',
+      },
+      shared: {
+        react: { singleton: true },
+        'react-dom': { singleton: true },
+        'react/jsx-runtime': { singleton: true },
+        'react/jsx-dev-runtime': { singleton: true },
+      },
+    }),
+    new rspack.HtmlRspackPlugin({ template: './src/index.html' }),
+    isDev ? new ReactRefreshPlugin() : null,
+  ].filter(Boolean),
+  devServer: {
+    port: 4400,
+    hot: false,
+    historyApiFallback: true,
+  },
+});

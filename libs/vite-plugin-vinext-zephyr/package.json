@@ -28,9 +28,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "nx run vite-plugin-vinext-zephyr:build",
+    "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
-    "prepack": "pnpm build"
+    "prepack": "pnpm build",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -41,7 +44,7 @@
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "vite": "^7.0.0"

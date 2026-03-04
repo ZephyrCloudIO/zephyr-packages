@@ -41,8 +41,11 @@
     "performance"
   ],
   "scripts": {
-    "build": "nx run zephyr-astro-integration:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -52,7 +55,7 @@
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "astro": "^5.16.1",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "astro": "^4.0.0 || ^5.15.8"

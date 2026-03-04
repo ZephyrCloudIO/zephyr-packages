@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "forceConsistentCasingInFileNames": true,
@@ -8,16 +8,22 @@
     "noPropertyAccessFromIndexSignature": true,
     "esModuleInterop": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "types": [
+      "node"
+    ],
+    "composite": true,
+    "incremental": true
   },
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
+  "include": [
+    "src/**/*.ts",
+    "src/index.ts"
+  ],
+  "exclude": [
+    "rstest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
   ]
 }

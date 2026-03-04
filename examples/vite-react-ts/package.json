@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "nx build vite-plugin-zephyr",
-    "build": "tsc && vite build",
-    "build-watch": "tsc && vite build --watch",
+    "prebuild": "pnpm --filter vite-plugin-zephyr build",
+    "build": "tsgo && vite build",
+    "build-watch": "tsgo && vite build --watch",
     "preview": "vite preview"
   },
   "dependencies": {

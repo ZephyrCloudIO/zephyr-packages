@@ -1,9 +1,13 @@
-import { describe, expect, jest, it, beforeEach } from '@jest/globals';
+import { describe, expect, rs, it, beforeEach } from '@rstest/core';
 import { isTokenStillValid } from './login';
 import * as jose from 'jose';
 
+const jest = rs;
+
 // Mock dependencies
-jest.mock('jose');
+rs.mock('jose', () => ({
+  decodeJwt: rs.fn(),
+}));
 
 describe('auth/login', () => {
   // Mock implementation

@@ -7,6 +7,15 @@
   "devDependencies": {
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "zephyr-rspack-plugin": "workspace:*"
+    "zephyr-rspack-plugin": "workspace:*",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack"
+  },
+  "scripts": {
+    "start": "pnpm --parallel --filter rspack_mf_remote --filter rspack_mf_host start",
+    "build-all": "pnpm --workspace-concurrency=1 --filter rspack_mf_remote --filter rspack_mf_host build",
+    "build:remote": "pnpm --filter rspack_mf_remote build",
+    "build:host": "pnpm --filter rspack_mf_host build"
   }
 }

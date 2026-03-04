@@ -16,8 +16,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run vite-plugin-zephyr:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@module-federation/runtime": "catalog:module-federation",
@@ -33,9 +36,9 @@
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rollup": "catalog:rollup4",
-    "ts-jest": "catalog:typescript",
     "typescript": "catalog:typescript",
-    "vite": "catalog:vite7"
+    "vite": "catalog:vite7",
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "rollup": "^4.0.0",

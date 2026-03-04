@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import {
   buildAssetsMap,
@@ -10,14 +11,16 @@ import type { ZephyrInternalOptions } from '../../types/zephyr-internal-options'
 import { extract_vite_assets_map } from '../extract_vite_assets_map';
 import { loadStaticAssets } from '../load_static_assets';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  getPartialAssetMap: jest.fn(),
-  removePartialAssetMap: jest.fn(),
+const jest = rs;
+
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: rs.fn(),
+  getPartialAssetMap: rs.fn(),
+  removePartialAssetMap: rs.fn(),
 }));
 
-jest.mock('../load_static_assets', () => ({
-  loadStaticAssets: jest.fn(),
+rs.mock('../load_static_assets', () => ({
+  loadStaticAssets: rs.fn(),
 }));
 
 const mockBuildAssetsMap = buildAssetsMap as jest.MockedFunction<typeof buildAssetsMap>;

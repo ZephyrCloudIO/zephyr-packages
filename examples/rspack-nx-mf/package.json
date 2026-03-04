@@ -7,9 +7,17 @@
   },
   "devDependencies": {
     "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "ts-node": "10.9.1",
     "zephyr-rspack-plugin": "workspace:*"
+  },
+  "scripts": {
+    "start": "pnpm --parallel --filter rspack_nx_mf_remote --filter rspack_nx_mf_host start",
+    "build-all": "pnpm --workspace-concurrency=1 --filter rspack_nx_mf_remote --filter rspack_nx_mf_host build",
+    "build:remote": "pnpm --filter rspack_nx_mf_remote build",
+    "build:host": "pnpm --filter rspack_nx_mf_host build"
   }
 }

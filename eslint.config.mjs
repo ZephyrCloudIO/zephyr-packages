@@ -1,77 +1,35 @@
-import { FlatCompat } from '@eslint/eslintrc';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import js from '@eslint/js';
-import nxEslintPlugin from '@nx/eslint-plugin';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
+import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['**/dist', 'libs/zephyr-metro-plugin/src/lib/global.d.ts'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      '.turbo/**',
+      'tmp/**',
+      'libs/zephyr-metro-plugin/src/lib/global.d.ts',
+    ],
   },
-  { plugins: { '@nx': nxEslintPlugin } },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: false,
-          allow: [],
-          depConstraints: [
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
-          ],
-        },
-      ],
-    },
-  },
-  ...compat
-    .config({
-      extends: ['plugin:@nx/typescript'],
-    })
-    .map((config) => ({
-      ...config,
-      files: ['**/*.ts', '**/*.tsx', '**/*.cts', '**/*.mts'],
-      rules: {
-        ...config.rules,
-        '@typescript-eslint/no-unused-vars': 'error',
-        '@typescript-eslint/ban-ts-comment': ['warn', {}],
-      },
-    })),
-  ...compat
-    .config({
-      env: {
-        jest: true,
-      },
-    })
-    .map((config) => ({
-      ...config,
-      files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx'],
-      rules: {
-        ...config.rules,
-      },
-    })),
-  {
-    files: ['**/*.json'],
-    rules: {
-      '@nx/dependency-checks': 'off',
-    },
-    languageOptions: {
-      parser: await import('jsonc-eslint-parser'),
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/ban-ts-comment': ['warn', {}],
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   {
-    files: ['**/*.js', '**/*.ts'],
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     rules: {
+      'no-undef': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       'no-restricted-syntax': [
         'error',
         {
@@ -83,21 +41,23 @@ export default [
     ignores: ['**/*.test.js', '**/*.spec.js', '**/*.test.ts', '**/*.spec.ts'],
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/*.ts'],
     rules: {
-      '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "ThrowStatement > NewExpression[callee.name='Error']",
+          message: 'Use ZephyrError instead of Error',
+        },
+      ],
     },
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: __dirname,
-      },
-    },
-    ignores: ['**/webpack.config.ts', '**/jest.config.ts', '**/*.spec.tsx'],
+    ignores: ['**/*.test.ts', '**/*.spec.ts'],
   },
   {
-    ignores: ['dist', 'tmp', 'legacy'],
+    files: ['**/*.json'],
+    languageOptions: {
+      parser: await import('jsonc-eslint-parser'),
+    },
+    rules: {},
   },
 ];

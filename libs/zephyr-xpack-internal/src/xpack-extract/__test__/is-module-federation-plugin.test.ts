@@ -1,4 +1,4 @@
-import { describe, expect } from '@jest/globals';
+import { describe, expect } from '@rstest/core';
 import { isModuleFederationPlugin } from '../is-module-federation-plugin';
 import type { XPackConfiguration } from '../../xpack.types';
 

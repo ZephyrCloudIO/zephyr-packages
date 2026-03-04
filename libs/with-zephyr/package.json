@@ -27,7 +27,7 @@
     "test": "rstest run",
     "test:watch": "rstest --watch",
     "test:coverage": "rstest --coverage",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo -p tsconfig.json --noEmit",
     "patch-version": "pnpm version"
   },
   "dependencies": {

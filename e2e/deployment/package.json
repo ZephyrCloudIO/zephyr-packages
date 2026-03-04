@@ -3,11 +3,14 @@
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "jest-environment-node": "^29.7.0",
-    "ts-jest": "catalog:typescript",
     "ts-node": "10.9.2",
     "typescript": "catalog:typescript",
     "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*"
+    "zephyr-edge-contract": "workspace:*",
+    "@rstest/core": "^0.7.7"
+  },
+  "scripts": {
+    "test": "rstest --passWithNoTests",
+    "lint": "eslint src --ext .ts"
   }
 }

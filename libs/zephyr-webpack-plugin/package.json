@@ -16,8 +16,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run zephyr-webpack-plugin:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -28,8 +31,8 @@
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
-    "webpack": "catalog:webpack5"
+    "webpack": "catalog:webpack5",
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "webpack": "^5.0.0"

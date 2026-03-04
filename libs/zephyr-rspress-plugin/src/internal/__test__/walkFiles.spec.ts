@@ -1,48 +1,28 @@
-import type { Dirent, PathLike } from 'node:fs';
-import fs from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { walkFiles } from '../files/walkFiles';
 
-jest.mock('node:fs/promises');
-
-const mockedFs = fs as jest.Mocked<typeof fs>;
-
 describe('walkFiles', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
+  let rootDir: string;
+
+  beforeEach(async () => {
+    rootDir = await mkdtemp(path.join(tmpdir(), 'walk-files-'));
+  });
+
+  afterEach(async () => {
+    await rm(rootDir, { recursive: true, force: true });
   });
 
   it('recursively lists all files in nested directories', async () => {
-    mockedFs.readdir.mockImplementation(async (dir: PathLike) => {
-      const dirStr = dir.toString();
+    await mkdir(path.join(rootDir, 'sub', 'deep'), { recursive: true });
+    await writeFile(path.join(rootDir, 'a.txt'), 'a');
+    await writeFile(path.join(rootDir, 'sub', 'b.txt'), 'b');
+    await writeFile(path.join(rootDir, 'sub', 'deep', 'c.txt'), 'c');
 
-      const mockDirent = (name: string, isDir: boolean): Dirent =>
-        ({
-          name,
-          isDirectory: () => isDir,
-          isFile: () => !isDir,
-          isBlockDevice: () => false,
-          isCharacterDevice: () => false,
-          isFIFO: () => false,
-          isSocket: () => false,
-          isSymbolicLink: () => false,
-        }) as unknown as Dirent;
+    const result = await walkFiles(rootDir);
 
-      switch (dirStr) {
-        case 'root':
-          return [mockDirent('a.txt', false), mockDirent('sub', true)];
-        case path.join('root', 'sub'):
-          return [mockDirent('b.txt', false), mockDirent('deep', true)];
-        case path.join('root', 'sub', 'deep'):
-          return [mockDirent('c.txt', false)];
-        default:
-          return [];
-      }
-    });
-
-    const result = await walkFiles('root');
-
-    expect(result).toEqual([
+    expect(result.sort()).toEqual([
       'a.txt',
       path.join('sub', 'b.txt'),
       path.join('sub', 'deep', 'c.txt'),
@@ -50,36 +30,19 @@ describe('walkFiles', () => {
   });
 
   it('returns an empty array for an empty directory', async () => {
-    mockedFs.readdir.mockImplementation(async () => []);
-    const result = await walkFiles('empty');
+    const result = await walkFiles(rootDir);
     expect(result).toEqual([]);
   });
 
   it('skips symbolic links to avoid infinite loops', async () => {
-    mockedFs.readdir.mockImplementation(async (dir: PathLike) => {
-      const mockDirent = (name: string, isDir: boolean, isSymlink = false): Dirent =>
-        ({
-          name,
-          isDirectory: () => isDir,
-          isFile: () => !isDir,
-          isBlockDevice: () => false,
-          isCharacterDevice: () => false,
-          isFIFO: () => false,
-          isSocket: () => false,
-          isSymbolicLink: () => isSymlink,
-        }) as unknown as Dirent;
+    await mkdir(path.join(rootDir, 'real-dir'), { recursive: true });
+    await writeFile(path.join(rootDir, 'real.txt'), 'real');
+    await writeFile(path.join(rootDir, 'real-dir', 'nested.txt'), 'nested');
+    await symlink(path.join(rootDir, 'real-dir'), path.join(rootDir, 'link-to-dir'));
 
-      if (dir.toString() === 'loop') {
-        return [
-          mockDirent('link', true, true), // Simulated symlink to directory
-          mockDirent('real.txt', false),
-        ];
-      }
+    const result = await walkFiles(rootDir);
 
-      return [];
-    });
-
-    const result = await walkFiles('loop');
-    expect(result).toEqual(['real.txt']);
+    expect(result.sort()).toEqual([path.join('real-dir', 'nested.txt'), 'real.txt']);
+    expect(result).not.toContain(path.join('link-to-dir', 'nested.txt'));
   });
 });

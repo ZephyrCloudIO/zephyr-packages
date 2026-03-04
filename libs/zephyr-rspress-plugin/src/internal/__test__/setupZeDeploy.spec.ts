@@ -1,41 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ze_log } from 'zephyr-agent';
-import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
-import { buildAssetMapFromFiles } from '../assets/buildAssets';
+import { rs } from '@rstest/core';
 import { setupZeDeploy } from '../assets/setupZeDeploy';
-import { buildStats } from '../stats/buildStats';
 
-jest.mock('zephyr-xpack-internal', () => ({
-  xpack_zephyr_agent: jest.fn(),
+const xpackZephyrAgentMock = rs.fn();
+const buildAssetMapFromFilesMock = rs.fn();
+const buildStatsMock = rs.fn();
+const zeLogPackageMock = rs.fn();
+
+rs.mock('zephyr-xpack-internal', () => ({
+  xpack_zephyr_agent: (...args: unknown[]) => xpackZephyrAgentMock(...args),
 }));
 
-jest.mock('../assets/buildAssets', () => ({
-  buildAssetMapFromFiles: jest.fn(),
+rs.mock('../assets/buildAssets', () => ({
+  buildAssetMapFromFiles: (...args: unknown[]) => buildAssetMapFromFilesMock(...args),
 }));
 
-jest.mock('../stats/buildStats', () => ({
-  buildStats: jest.fn(),
+rs.mock('../stats/buildStats', () => ({
+  buildStats: (...args: unknown[]) => buildStatsMock(...args),
 }));
 
-jest.mock('zephyr-agent', () => ({
+rs.mock('zephyr-agent', () => ({
   ze_log: {
-    package: jest.fn(),
+    package: (...args: unknown[]) => zeLogPackageMock(...args),
   },
 }));
-
-// @ts-expect-error Get reference to ze_log.package mock
-const mockedZeLog = ze_log.package as jest.Mock;
 
 describe('setupZeDeploy', () => {
   const mockAssets = { 'file.js': { type: 'asset', size: 123 } };
   const mockStats = {
-    toJson: jest.fn().mockReturnValue({ some: 'json' }),
+    toJson: rs.fn().mockReturnValue({ some: 'json' }),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (buildAssetMapFromFiles as jest.Mock).mockResolvedValue(mockAssets);
-    (buildStats as jest.Mock).mockReturnValue(mockStats);
+    rs.clearAllMocks();
+    buildAssetMapFromFilesMock.mockResolvedValue(mockAssets);
+    buildStatsMock.mockReturnValue(mockStats);
   });
 
   it('should log and return early if no files are provided', async () => {
@@ -45,10 +44,10 @@ describe('setupZeDeploy', () => {
       files: [],
     });
 
-    expect(mockedZeLog).toHaveBeenCalledWith('ZeRspressPlugin: No files to process.');
-    expect(buildAssetMapFromFiles).not.toHaveBeenCalled();
-    expect(buildStats).not.toHaveBeenCalled();
-    expect(xpack_zephyr_agent).not.toHaveBeenCalled();
+    expect(zeLogPackageMock).toHaveBeenCalledWith('ZeRspressPlugin: No files to process.');
+    expect(buildAssetMapFromFilesMock).not.toHaveBeenCalled();
+    expect(buildStatsMock).not.toHaveBeenCalled();
+    expect(xpackZephyrAgentMock).not.toHaveBeenCalled();
   });
 
   it('should build assets and stats and call xpack_zephyr_agent', async () => {
@@ -58,14 +57,14 @@ describe('setupZeDeploy', () => {
       files: ['index.html', 'main.js'],
     });
 
-    await new Promise(process.nextTick); // Allow promises to resolve
+    await new Promise(process.nextTick);
 
-    expect(buildAssetMapFromFiles).toHaveBeenCalledWith('/doc_build', [
+    expect(buildAssetMapFromFilesMock).toHaveBeenCalledWith('/doc_build', [
       'index.html',
       'main.js',
     ]);
-    expect(buildStats).toHaveBeenCalledWith('/doc_build', ['index.html', 'main.js']);
-    expect(xpack_zephyr_agent).toHaveBeenCalledWith({
+    expect(buildStatsMock).toHaveBeenCalledWith('/doc_build', ['index.html', 'main.js']);
+    expect(xpackZephyrAgentMock).toHaveBeenCalledWith({
       stats: mockStats,
       stats_json: { some: 'json' },
       assets: mockAssets,
@@ -73,6 +72,7 @@ describe('setupZeDeploy', () => {
         pluginName: 'rspress-ssg',
         zephyr_engine: { engine: 'mock' },
         options: {},
+        hooks: undefined,
       },
     });
   });

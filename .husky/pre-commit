@@ -1,6 +1,4 @@
 #!/usr/bin/env sh
 
-npx nx format
-npx nx affected -t test --no-watch
-npx nx affected -t lint --fix
-git add -A
+pnpm exec turbo lint --affected
+pnpm exec turbo test --affected

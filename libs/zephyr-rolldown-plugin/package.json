@@ -16,8 +16,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run zephyr-rolldown-plugin:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
@@ -26,7 +29,7 @@
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rolldown": "catalog:rolldown",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "rolldown": ">=1.0.0-beta.0"

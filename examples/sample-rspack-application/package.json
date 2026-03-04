@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "nx run sample-rspack-application:serve",
-    "build": "nx run sample-rspack-application:build"
+    "start": "rspack serve --config rspack.config.js --mode development --port 4301",
+    "build": "rspack build --config rspack.config.js --mode production",
+    "build-watch": "rspack build --config rspack.config.js --mode development --watch"
   },
   "dependencies": {
     "react": "catalog:react18",
@@ -13,10 +14,12 @@
   "devDependencies": {
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "zephyr-webpack-plugin": "workspace:*",
     "@testing-library/react": "catalog:react",
-    "ts-jest": "catalog:typescript",
-    "@types/jest": "catalog:typescript"
+    "@types/jest": "catalog:typescript",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*"
   },
   "repository": {
     "type": "git",

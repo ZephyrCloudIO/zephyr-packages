@@ -1,11 +1,74 @@
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
-const { withModuleFederation } = require('@nx/module-federation/rspack');
+const path = require('path');
+const rspack = require('@rspack/core');
+const ReactRefreshPlugin = require('@rspack/plugin-react-refresh');
 const { withZephyr } = require('zephyr-rspack-plugin');
 const mfConfig = require('./module-federation.config');
 
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(mfConfig),
-  withZephyr()
-);
+const isDev = process.env.NODE_ENV !== 'production';
+
+/** @type {import('@rspack/cli').Configuration} */
+module.exports = withZephyr()({
+  context: __dirname,
+  entry: {
+    main: './src/main.tsx',
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].[contenthash].js',
+    clean: true,
+    publicPath: 'auto',
+  },
+  experiments: {
+    css: true,
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js', '.jsx', '.json'],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.[jt]sx?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: {
+                  syntax: 'typescript',
+                  tsx: true,
+                },
+                transform: {
+                  react: {
+                    runtime: 'automatic',
+                    development: isDev,
+                    refresh: isDev,
+                  },
+                },
+                target: 'es2020',
+              },
+            },
+          },
+        ],
+      },
+      {
+        test: /\.css$/,
+        type: 'css',
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg|ico)$/i,
+        type: 'asset/resource',
+      },
+    ],
+  },
+  plugins: [
+    new rspack.container.ModuleFederationPlugin(mfConfig),
+    new rspack.HtmlRspackPlugin({ template: './src/index.html' }),
+    isDev ? new ReactRefreshPlugin() : null,
+  ].filter(Boolean),
+  devServer: {
+    port: 4200,
+    hot: true,
+    historyApiFallback: true,
+  },
+});

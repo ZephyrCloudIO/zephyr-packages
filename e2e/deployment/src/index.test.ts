@@ -1,10 +1,20 @@
 import { execSync } from 'node:child_process';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
-const output = execSync(
-  'npx nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test"'
-);
-const testTargets = output.toString().split('\n').filter(Boolean);
+const output = execSync('pnpm exec turbo ls --filter=./examples/** --output=json', {
+  encoding: 'utf8',
+});
+
+const turboLs = JSON.parse(output) as {
+  packages?: { items?: Array<{ name?: string }> };
+  items?: Array<{ name?: string }>;
+};
+
+const testTargets = (
+  turboLs.packages?.items?.map((pkg) => pkg.name) ??
+  turboLs.items?.map((pkg) => pkg.name) ??
+  []
+).filter((name): name is string => Boolean(name) && name !== 'zephyr-cli-test');
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();
 
 for (const appName of testTargets) {

@@ -29,9 +29,12 @@
     "create-zephyr-apps": "dist/index.js"
   },
   "scripts": {
-    "build": "nx run create-zephyr-apps:build",
+    "build": "tsgo -p tsconfig.json",
     "dev": "tsx src/index.ts",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@clack/prompts": "0.11.0",
@@ -42,9 +45,9 @@
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
     "tsx": "^4.19.3",
-    "typescript": "catalog:typescript"
+    "typescript": "catalog:typescript",
+    "@rstest/core": "^0.7.7"
   },
   "publishConfig": {
     "access": "public",

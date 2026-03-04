@@ -28,9 +28,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx build zephyr-agent",
+    "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
-    "test": "nx test zephyr-agent"
+    "test": "rstest --passWithNoTests",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@toon-format/toon": "^0.9.0",
@@ -48,7 +50,6 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@jest/globals": "catalog:react",
     "@types/debug": "^4.1.12",
     "@types/eventsource": "^3.0.0",
     "@types/git-url-parse": "^9.0.3",
@@ -57,7 +58,7 @@
     "@types/node-persist": "catalog:typescript",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "peerDependencies": {
     "https-proxy-agent": "^7.0.6"

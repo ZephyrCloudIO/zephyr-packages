@@ -1,7 +1,9 @@
 # rollup-sample-lib
 
-This library was generated with [Nx](https://nx.dev).
+Rollup library example wired to `rollup-plugin-zephyr`.
 
-## Running unit tests
+## Build
 
-Run `nx test rollup-sample-lib` to execute the unit tests via [Jest](https://jestjs.io).
+```bash
+pnpm --filter rollup-sample-lib build
+```

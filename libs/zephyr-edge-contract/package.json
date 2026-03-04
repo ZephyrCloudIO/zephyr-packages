@@ -24,9 +24,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx build zephyr-edge-contract",
+    "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
-    "test": "nx test zephyr-edge-contract"
+    "test": "rstest --passWithNoTests",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "tslib": "catalog:typescript"
@@ -35,7 +37,7 @@
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "publishConfig": {
     "access": "public",

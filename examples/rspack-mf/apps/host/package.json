@@ -3,5 +3,15 @@
   "version": "0.0.0",
   "zephyr:dependencies": {
     "rspack_mf_remote": "rspack_mf_remote@*"
+  },
+  "scripts": {
+    "build": "rspack build --config rspack.config.js --mode production",
+    "start": "rspack serve --config rspack.config.js --mode development --port 4200"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*"
   }
 }

@@ -1,12 +1,12 @@
-import * as React from 'react';
+import { lazy, Suspense } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
-import NxWelcome from './nx-welcome';
+import HostWelcome from './host-welcome';
 
-const Remote = React.lazy(() => import('rspack_nx_mf_remote/Module'));
+const Remote = lazy(() => import('rspack_nx_mf_remote/Module'));
 
 export function App() {
   return (
-    <React.Suspense fallback={null}>
+    <Suspense fallback={null}>
       <ul>
         <li>
           <Link to="/">Home</Link>
@@ -16,10 +16,10 @@ export function App() {
         </li>
       </ul>
       <Routes>
-        <Route path="/" element={<NxWelcome title="host" />} />
+        <Route path="/" element={<HostWelcome />} />
         <Route path="/remote" element={<Remote />} />
       </Routes>
-    </React.Suspense>
+    </Suspense>
   );
 }
 

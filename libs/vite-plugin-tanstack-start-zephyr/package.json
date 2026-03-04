@@ -16,8 +16,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "nx run vite-plugin-tanstack-start-zephyr:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "rollup": "catalog:rollup4",
@@ -28,7 +31,8 @@
     "@tanstack/react-start": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "catalog:typescript"
+    "@types/node": "catalog:typescript",
+    "@rstest/core": "^0.7.7"
   },
   "publishConfig": {
     "access": "public",

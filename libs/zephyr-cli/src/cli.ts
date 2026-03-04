@@ -18,7 +18,7 @@ export interface CliOptions {
  * Examples:
  *
  * - Ze-cli --ssr pnpm build
- * - Ze-cli tsc
+ * - Ze-cli tsgo
  * - Ze-cli NODE_ENV=production webpack
  * - Ze-cli deploy ./dist
  * - Ze-cli deploy ./dist --ssr
@@ -126,7 +126,7 @@ Examples:
   # Run build commands
   ze-cli pnpm build
   ze-cli yarn build
-  ze-cli tsc
+  ze-cli tsgo
   ze-cli NODE_ENV=production webpack
   ze-cli --ssr pnpm build
 

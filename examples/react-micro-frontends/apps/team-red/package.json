@@ -6,11 +6,21 @@
     "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
   },
   "scripts": {
-    "build": "nx run team-red:build --skip-nx-cache"
+    "build": "rspack build --config rspack.config.js --mode production",
+    "start": "rspack serve --config rspack.config.js --mode development --port 4500",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests"
   },
   "private": true,
   "zephyr:dependencies": {
     "team-blue": "zephyr:team-blue@*",
     "team-green": "zephyr:team-green@*"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*",
+    "@rstest/core": "^0.7.7"
   }
 }

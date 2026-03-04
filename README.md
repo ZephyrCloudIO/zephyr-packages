@@ -39,7 +39,7 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 ## Repository Structure
 
-This is an [Nx](https://nx.dev) monorepo.
+This is a Turborepo monorepo.
 
 - `libs` - Contains all the plugins and utility packages.
 - `examples` - Contains examples to use and test the plugins.

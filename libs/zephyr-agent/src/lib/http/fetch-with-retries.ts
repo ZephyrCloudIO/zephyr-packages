@@ -83,6 +83,58 @@ function shouldRetry(error: AxiosError): boolean {
   return error.response.status >= 500;
 }
 
+function isAxiosErrorLike(error: unknown): error is AxiosError {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  if (typeof AxiosError === 'function' && error instanceof AxiosError) {
+    return true;
+  }
+
+  const maybeAxiosError = error as Partial<AxiosError> & { isAxiosError?: boolean };
+  return (
+    Boolean(maybeAxiosError.isAxiosError) ||
+    maybeAxiosError.response !== undefined ||
+    maybeAxiosError.code !== undefined
+  );
+}
+
+function normalizeHeaders(headers: RequestInit['headers']): Record<string, string> {
+  const normalized: Record<string, string> = {};
+
+  if (!headers) {
+    return normalized;
+  }
+
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      normalized[key] = value;
+    });
+    return normalized;
+  }
+
+  if (Array.isArray(headers)) {
+    headers.forEach(([key, value]) => {
+      normalized[key] = String(value);
+    });
+    return normalized;
+  }
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (Array.isArray(value)) {
+      normalized[key] = value.join(', ');
+      continue;
+    }
+
+    if (value !== undefined) {
+      normalized[key] = String(value);
+    }
+  }
+
+  return normalized;
+}
+
 export async function fetchWithRetries(
   url: URL,
   options: RequestInit = {},
@@ -118,25 +170,7 @@ export async function fetchWithRetries(
     };
 
     if (options.headers) {
-      // Convert HeadersInit to a format compatible with axios headers
-      if (options.headers instanceof Headers) {
-        // Convert Headers object to record
-        const headersRecord: Record<string, string> = {};
-        options.headers.forEach((value, key) => {
-          headersRecord[key] = value;
-        });
-        axiosConfig.headers = headersRecord;
-      } else if (Array.isArray(options.headers)) {
-        // Convert header entries array to record
-        const headersRecord: Record<string, string> = {};
-        options.headers.forEach(([key, value]) => {
-          headersRecord[key] = value;
-        });
-        axiosConfig.headers = headersRecord;
-      } else {
-        // Already a record object
-        axiosConfig.headers = options.headers;
-      }
+      axiosConfig.headers = normalizeHeaders(options.headers);
     }
 
     // Make the request with retries
@@ -164,22 +198,21 @@ export async function fetchWithRetries(
       json: async () => response.data,
     } as Response;
   } catch (error) {
+    const axiosError = error as AxiosError;
+
     // Handle errors after all retries have been exhausted
-    if (error instanceof AxiosError && error.response) {
+    if (isAxiosErrorLike(error) && axiosError.response) {
       // Client errors (4xx)
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        status: error.response.status,
+        status: axiosError.response.status,
         url: url.toString(),
-        content: error.response.data,
+        content: axiosError.response.data,
         method: options.method?.toUpperCase() ?? 'GET',
       });
     }
 
     // Unknown errors
-    if (
-      error instanceof AxiosError &&
-      (error.code === 'EPIPE' || (error.message && error.message.includes('network')))
-    ) {
+    if (isAxiosErrorLike(error) && (axiosError.code === 'EPIPE' || axiosError.message?.includes('network'))) {
       // Max retries reached for network error
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: -1,

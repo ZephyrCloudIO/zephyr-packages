@@ -9,5 +9,18 @@
   "peerDependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18"
+  },
+  "scripts": {
+    "build": "rspack build --config rspack.config.js --mode production",
+    "start": "rspack serve --config rspack.config.js --mode development --port 4400",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*",
+    "@rstest/core": "^0.7.7"
   }
 }

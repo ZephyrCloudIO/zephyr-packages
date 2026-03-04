@@ -4,11 +4,11 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "start": "nx run-many -t serve --parallel=5 -p team-blue team-red team-green",
-    "build-all": "nx run-many -t build --parallel=1 --skip-nx-cache -p team-blue team-green team-red",
-    "build:team-red": "nx run team-red:build:production --skip-nx-cache --verbose",
-    "build:team-blue": "nx run team-blue:build:production --skip-nx-cache",
-    "build:team-green": "nx run team-green:build:production --skip-nx-cache  --verbose"
+    "start": "pnpm --parallel --filter team-blue --filter team-red --filter team-green start",
+    "build-all": "pnpm --workspace-concurrency=1 --filter team-blue --filter team-green --filter team-red build",
+    "build:team-red": "pnpm --filter team-red build",
+    "build:team-blue": "pnpm --filter team-blue build",
+    "build:team-green": "pnpm --filter team-green build"
   },
   "dependencies": {
     "react": "19.0.0",
@@ -30,20 +30,20 @@
     "@types/react-dom": "catalog:react19",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@typescript-eslint/parser": "catalog:eslint",
-    "babel-jest": "^29.7.0",
     "eslint": "catalog:eslint",
     "eslint-config-prettier": "catalog:eslint",
     "eslint-plugin-import": "catalog:eslint",
     "eslint-plugin-jsx-a11y": "catalog:eslint",
     "eslint-plugin-react": "catalog:eslint",
     "eslint-plugin-react-hooks": "catalog:eslint",
-    "jest-environment-jsdom": "^29.7.0",
     "react-refresh": "catalog:react18",
-    "ts-jest": "^29.2.6",
     "ts-node": "10.9.2",
     "tsutils": "^3.21.0",
     "url-loader": "^4.1.1",
     "zephyr-rspack-plugin": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*"
+    "zephyr-xpack-internal": "workspace:*",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack"
   }
 }

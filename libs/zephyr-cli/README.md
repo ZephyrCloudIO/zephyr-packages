@@ -31,7 +31,7 @@ ze-cli yarn build
 ze-cli npm run build
 
 # Run build tools directly
-ze-cli tsc
+ze-cli tsgo
 ze-cli swc
 ze-cli esbuild --bundle
 
@@ -91,7 +91,7 @@ ze-cli deploy ./dist --ssr
 The CLI automatically detects configuration files for:
 
 - **npm/yarn/pnpm**: Reads `package.json` for scripts
-- **TypeScript (tsc)**: Reads `tsconfig.json` or the file specified with `-p` flag
+- **TypeScript (tsgo)**: Reads `tsconfig.json` or the file specified with `-p` flag
 - **Other tools**: Basic detection and suggestions
 
 ## Dynamic Configuration Warning

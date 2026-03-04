@@ -1,32 +1,39 @@
-import { exec as node_exec } from 'node:child_process';
+import { rs } from '@rstest/core';
 import { getGitInfo } from '../ze-util-get-git-info';
 
-jest.mock('node:child_process', () => ({
-  exec: jest.fn(),
+const jest = rs;
+const { mockExec } = rs.hoisted(() => ({
+  mockExec: rs.fn(),
 }));
 
-jest.mock('../../node-persist/secret-token', () => ({
-  hasSecretToken: jest.fn().mockReturnValue(false),
+rs.mock('node:child_process', () => ({
+  exec: mockExec,
 }));
 
-jest.mock('../../logging', () => ({
+rs.mock('../../node-persist/secret-token', () => ({
+  hasSecretToken: rs.fn().mockReturnValue(false),
+  getSecretToken: rs.fn().mockReturnValue(''),
+}));
+
+rs.mock('../../logging', () => ({
   ze_log: {
-    git: jest.fn(),
+    git: rs.fn(),
   },
 }));
 
-jest.mock('../../logging/ze-log-event', () => ({
-  logFn: jest.fn(),
+rs.mock('../../logging/ze-log-event', () => ({
+  logFn: rs.fn(),
 }));
 
-// Mock is-ci to return true for CI environment testing
-jest.mock('is-ci', () => true);
+// Mock is-ci with explicit default export shape for transpiled default import
+rs.mock('is-ci', () => ({
+  __esModule: true,
+  default: true,
+}));
 
 let originalEnv: NodeJS.ProcessEnv;
 
 describe('getGitInfo - CI environments', () => {
-  const mockExec = node_exec as unknown as jest.Mock;
-
   beforeEach(() => {
     jest.clearAllMocks();
     originalEnv = { ...process.env };

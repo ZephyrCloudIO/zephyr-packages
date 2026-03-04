@@ -80,7 +80,9 @@ export function createZephyrRuntimePlugin(
         return;
       }
 
-      const manifest = await response.json().catch(() => undefined);
+      const manifest = (await response.json().catch(() => undefined)) as
+        | ZephyrManifest
+        | undefined;
 
       if (!manifest) {
         console.error('[Zephyr] Failed to parse manifest JSON');

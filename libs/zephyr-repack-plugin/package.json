@@ -16,9 +16,11 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-    "build": "nx build zephyr-repack-plugin",
+    "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
-    "test": "nx test zephyr-repack-plugin"
+    "test": "rstest --passWithNoTests",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -29,7 +31,7 @@
     "@types/find-package-json": "^1.2.6",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "^0.7.7"
   },
   "publishConfig": {
     "access": "public",

@@ -14,7 +14,7 @@ import type { ParsedCommand } from './shell-parser';
 import { parseShellCommand, splitCommands } from './shell-parser';
 
 export interface DetectedCommand {
-  /** The build tool detected (e.g., 'tsc', 'webpack', 'npm') */
+  /** The build tool detected (e.g., 'tsgo', 'webpack', 'npm') */
   tool: string;
   /** The configuration file path, if detected */
   configFile: string | null;
@@ -187,9 +187,9 @@ export async function detectCommand(
     return await detectPackageManagerCommand(command, args, cwd, warnings, depth);
   }
 
-  // Detect tsc (TypeScript compiler)
-  if (command === 'tsc') {
-    return detectTscCommand(args, cwd, warnings);
+  // Detect tsgo (TypeScript compiler)
+  if (command === 'tsgo') {
+    return detectTsgoCommand(args, cwd, warnings);
   }
 
   // Detect webpack
@@ -356,7 +356,7 @@ async function detectPackageManagerCommand(
   }
 }
 
-function detectTscCommand(
+function detectTsgoCommand(
   args: string[],
   cwd: string,
   warnings: string[]
@@ -370,7 +370,7 @@ function detectTscCommand(
   if (!configExists) {
     warnings.push(`TypeScript config not found: ${configPath}`);
     return {
-      tool: 'tsc',
+      tool: 'tsgo',
       configFile: null,
       isDynamicConfig: false,
       outputDir: null,
@@ -383,7 +383,7 @@ function detectTscCommand(
   const outDir = tsConfig?.compilerOptions?.outDir || null;
 
   return {
-    tool: 'tsc',
+    tool: 'tsgo',
     configFile: fullConfigPath,
     isDynamicConfig: false,
     outputDir: outDir,

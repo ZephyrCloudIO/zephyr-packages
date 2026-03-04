@@ -14,6 +14,8 @@ concurrency:
 
 env:
   ZE_FAIL_BUILD: true
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+  TURBO_SCM_HEAD: ${{ github.sha }}
 
 jobs:
   build:
@@ -28,27 +30,23 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
-      # Build plugins first to avoid race conditions on Windows
-      - name: run build plugins
+      - name: run build libs
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected --exclude='!libs/**' -t build --skipRemoteCache
+        run: pnpm build
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t build --skipRemoteCache
+        run: pnpm exec turbo build --affected
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -81,14 +79,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: run lint
-        run: pnpm nx affected -t lint
+        run: pnpm exec turbo lint --affected
 
   test:
     runs-on: ${{ matrix.os }}
@@ -99,21 +94,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: run test
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t test
+        run: pnpm exec turbo test --affected
 
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -131,9 +123,6 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -148,4 +137,4 @@ jobs:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
       - name: Run e2e examples test
-        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests --skipRemoteCache
+        run: pnpm test:examples

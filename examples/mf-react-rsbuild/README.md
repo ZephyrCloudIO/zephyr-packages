@@ -9,16 +9,10 @@ pnpm --filter mf-react-rsbuild-provider run build
 pnpm --filter mf-react-rsbuild run build
 ```
 
-Or use the root script (uses NX for proper dependency ordering):
+Or use the root script for dependency ordering:
 
 ```bash
 pnpm run build:all
-```
-
-Or use NX directly:
-
-```bash
-nx run-many -t build -p mf-react-rsbuild-provider mf-react-rsbuild
 ```
 
 ## Serve:

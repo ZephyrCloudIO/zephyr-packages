@@ -219,7 +219,7 @@ overrides:
   '@vercel/nft': ^0.30.0
   '@isaacs/brace-expansion': 5.0.1
   fast-xml-parser: '>=5.3.6'
-  hono: ^4.10.3
+  hono: ^4.12.4
   glob: '>=11.1.0'
   '@modern-js/render>react-server-dom-webpack': 19.2.4
   react-server-dom-webpack: 19.2.4
@@ -458,8 +458,8 @@ importers:
   examples/hono-app:
     dependencies:
       hono:
-        specifier: ^4.10.3
-        version: 4.11.4
+        specifier: ^4.12.4
+        version: 4.12.5
     devDependencies:
       '@types/node':
         specifier: 22.13.13
@@ -1652,18 +1652,9 @@ importers:
 
   libs/with-zephyr:
     dependencies:
-      '@babel/core':
-        specifier: ^7.28.4
-        version: 7.28.5
-      '@babel/generator':
-        specifier: ^7.28.3
-        version: 7.28.5
-      '@babel/parser':
-        specifier: ^7.28.4
-        version: 7.28.5
-      '@babel/traverse':
-        specifier: ^7.28.4
-        version: 7.28.5(supports-color@5.5.0)
+      '@ast-grep/napi':
+        specifier: ^0.41.0
+        version: 0.41.0
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -1674,24 +1665,12 @@ importers:
         specifier: '>=11.1.0'
         version: 13.0.0
     devDependencies:
-      '@babel/types':
-        specifier: ^7.28.4
-        version: 7.28.5
       '@rslib/core':
         specifier: ^0.18.0
         version: 0.18.6(@microsoft/api-extractor@7.51.1(@types/node@22.13.13))(typescript@5.9.3)
       '@rstest/core':
         specifier: ^0.7.0
         version: 0.7.7(jsdom@27.3.0(postcss@8.5.6))
-      '@types/babel__core':
-        specifier: ^7.20.5
-        version: 7.20.5
-      '@types/babel__generator':
-        specifier: ^7.27.0
-        version: 7.27.0
-      '@types/babel__traverse':
-        specifier: ^7.28.0
-        version: 7.28.0
       '@types/node':
         specifier: 22.13.13
         version: 22.13.13
@@ -2142,8 +2121,20 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  '@ast-grep/napi-darwin-arm64@0.41.0':
+    resolution: {integrity: sha512-SoAzCj1o9/mdtOdj6pZI1qpZkfncd+2DsWAa2ZmoomKc7CFKCzPniJtThXeOq+IJKcufS8zFGbk57ScMpDgd5A==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
   '@ast-grep/napi-darwin-x64@0.37.0':
     resolution: {integrity: sha512-zvcvdgekd4ySV3zUbUp8HF5nk5zqwiMXTuVzTUdl/w08O7JjM6XPOIVT+d2o/MqwM9rsXdzdergY5oY2RdhSPA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@ast-grep/napi-darwin-x64@0.41.0':
+    resolution: {integrity: sha512-SSQeJzm19nNQ+caTgLLFgmhhjhyL8C+8yDSYSYYwOwqkj/Zx5sZHFvND2f8XeOM9Tey7Lkvaf1Prp4l/NwrskA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
@@ -2154,8 +2145,20 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  '@ast-grep/napi-linux-arm64-gnu@0.41.0':
+    resolution: {integrity: sha512-Td7ciWtsbuYlFV4OC8bg7s+DexXsGLy29yKJqI1ZvoE+9SpWPdFVojeIu9qiQinGh27uggOAZ25WCROnZ2kJpw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
   '@ast-grep/napi-linux-arm64-musl@0.37.0':
     resolution: {integrity: sha512-LF9sAvYy6es/OdyJDO3RwkX3I82Vkfsng1sqUBcoWC1jVb1wX5YVzHtpQox9JrEhGl+bNp7FYxB4Qba9OdA5GA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-arm64-musl@0.41.0':
+    resolution: {integrity: sha512-2wx0SfNZ7eBJN40ne9ncuODoU8ck85wXJ94WV40Ol8Pr4owtrd1yFXQqZTMrq5xYcf4Z3yQWwmEhaH6TJAoBbg==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -2166,8 +2169,20 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  '@ast-grep/napi-linux-x64-gnu@0.41.0':
+    resolution: {integrity: sha512-OzaoOpW4/uX9T5D6h2mXCncCaQ+Ph/hzzH3c91ozNrFYqsQ7MDS04PUhRJQ4Z79H4yuXx2jkbXaj3+ZNR3DP6g==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
   '@ast-grep/napi-linux-x64-musl@0.37.0':
     resolution: {integrity: sha512-/BcCH33S9E3ovOAEoxYngUNXgb+JLg991sdyiNP2bSoYd30a9RHrG7CYwW6fMgua3ijQ474eV6cq9yZO1bCpXg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@ast-grep/napi-linux-x64-musl@0.41.0':
+    resolution: {integrity: sha512-Oeg3BhOC+FA32mW3FHfXXW/AelvicfRhQIrWq5YNS44Sdy9scA34b2FiBPLaj4dHwBgg3ebEfDgmiYBQOMkXaw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -2178,8 +2193,20 @@ packages:
     cpu: [arm64]
     os: [win32]
 
+  '@ast-grep/napi-win32-arm64-msvc@0.41.0':
+    resolution: {integrity: sha512-6rE9lQbey3rRfr3wQxrfGMcLeyNRydjA4rfdfAciWQApQ+lat5QI7tlgqPqo5EKITUNwap6YY+IxfwBxsLbHYg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
   '@ast-grep/napi-win32-ia32-msvc@0.37.0':
     resolution: {integrity: sha512-uNmVka8fJCdYsyOlF9aZqQMLTatEYBynjChVTzUfFMDfmZ0bihs/YTqJVbkSm8TZM7CUX82apvn50z/dX5iWRA==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@ast-grep/napi-win32-ia32-msvc@0.41.0':
+    resolution: {integrity: sha512-ITtAD7tI3/vImz13wJUUns3UDIsrE3d2/JhhLN3CE1YqNItuNoW53nWqR3YcC/KsfSJnDddD6R0gMVkmlXapAg==}
     engines: {node: '>= 10'}
     cpu: [ia32]
     os: [win32]
@@ -2190,8 +2217,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@ast-grep/napi-win32-x64-msvc@0.41.0':
+    resolution: {integrity: sha512-DSqDh4KJ5+8x+gfAtWdXdeRpGfTjgm00kTW/pqUxhMdW6DVShMSDrFR+lj3dL9FmzMrwVGb+mcN8dWNqGA85Cw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
   '@ast-grep/napi@0.37.0':
     resolution: {integrity: sha512-Hb4o6h1Pf6yRUAX07DR4JVY7dmQw+RVQMW5/m55GoiAT/VRoKCWBtIUPPOnqDVhbx1Cjfil9b6EDrgJsUAujEQ==}
+    engines: {node: '>= 10'}
+
+  '@ast-grep/napi@0.41.0':
+    resolution: {integrity: sha512-3kK6hCxyinsxZIM6p/gWoN33v0GgxBXU6uDbM/J2j3t7f9lXRvA1J+8HeiemCtXNA75H1EK5Oo7/E28HOhYHDg==}
     engines: {node: '>= 10'}
 
   '@astrojs/compiler@2.13.0':
@@ -10575,8 +10612,8 @@ packages:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
 
-  hono@4.11.4:
-    resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+  hono@4.12.5:
+    resolution: {integrity: sha512-3qq+FUBtlTHhtYxbxheZgY8NIFnkkC/MR8u5TTsr7YZ3wixryQ3cCwn3iZbg8p8B88iDBBAYSfZDS75t8MN7Vg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -16795,28 +16832,55 @@ snapshots:
   '@ast-grep/napi-darwin-arm64@0.37.0':
     optional: true
 
+  '@ast-grep/napi-darwin-arm64@0.41.0':
+    optional: true
+
   '@ast-grep/napi-darwin-x64@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-darwin-x64@0.41.0':
     optional: true
 
   '@ast-grep/napi-linux-arm64-gnu@0.37.0':
     optional: true
 
+  '@ast-grep/napi-linux-arm64-gnu@0.41.0':
+    optional: true
+
   '@ast-grep/napi-linux-arm64-musl@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-linux-arm64-musl@0.41.0':
     optional: true
 
   '@ast-grep/napi-linux-x64-gnu@0.37.0':
     optional: true
 
+  '@ast-grep/napi-linux-x64-gnu@0.41.0':
+    optional: true
+
   '@ast-grep/napi-linux-x64-musl@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-linux-x64-musl@0.41.0':
     optional: true
 
   '@ast-grep/napi-win32-arm64-msvc@0.37.0':
     optional: true
 
+  '@ast-grep/napi-win32-arm64-msvc@0.41.0':
+    optional: true
+
   '@ast-grep/napi-win32-ia32-msvc@0.37.0':
     optional: true
 
+  '@ast-grep/napi-win32-ia32-msvc@0.41.0':
+    optional: true
+
   '@ast-grep/napi-win32-x64-msvc@0.37.0':
+    optional: true
+
+  '@ast-grep/napi-win32-x64-msvc@0.41.0':
     optional: true
 
   '@ast-grep/napi@0.37.0':
@@ -16830,6 +16894,18 @@ snapshots:
       '@ast-grep/napi-win32-arm64-msvc': 0.37.0
       '@ast-grep/napi-win32-ia32-msvc': 0.37.0
       '@ast-grep/napi-win32-x64-msvc': 0.37.0
+
+  '@ast-grep/napi@0.41.0':
+    optionalDependencies:
+      '@ast-grep/napi-darwin-arm64': 0.41.0
+      '@ast-grep/napi-darwin-x64': 0.41.0
+      '@ast-grep/napi-linux-arm64-gnu': 0.41.0
+      '@ast-grep/napi-linux-arm64-musl': 0.41.0
+      '@ast-grep/napi-linux-x64-gnu': 0.41.0
+      '@ast-grep/napi-linux-x64-musl': 0.41.0
+      '@ast-grep/napi-win32-arm64-msvc': 0.41.0
+      '@ast-grep/napi-win32-ia32-msvc': 0.41.0
+      '@ast-grep/napi-win32-x64-msvc': 0.41.0
 
   '@astrojs/compiler@2.13.0': {}
 
@@ -19518,7 +19594,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.3.3
-      hono: 4.11.4
+      hono: 4.12.5
       ts-deepmerge: 7.0.2
     transitivePeerDependencies:
       - react
@@ -28203,7 +28279,7 @@ snapshots:
     dependencies:
       parse-passwd: 1.0.0
 
-  hono@4.11.4: {}
+  hono@4.12.5: {}
 
   hookable@5.5.3: {}
 

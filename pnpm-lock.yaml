@@ -219,7 +219,7 @@ overrides:
   '@vercel/nft': ^0.30.0
   '@isaacs/brace-expansion': 5.0.1
   fast-xml-parser: '>=5.3.6'
-  hono: ^4.10.3
+  hono: ^4.12.4
   glob: '>=11.1.0'
   '@modern-js/render>react-server-dom-webpack': 19.2.4
   react-server-dom-webpack: 19.2.4
@@ -458,8 +458,8 @@ importers:
   examples/hono-app:
     dependencies:
       hono:
-        specifier: ^4.10.3
-        version: 4.11.4
+        specifier: ^4.12.4
+        version: 4.12.5
     devDependencies:
       '@types/node':
         specifier: 22.13.13
@@ -10612,8 +10612,8 @@ packages:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
 
-  hono@4.11.4:
-    resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+  hono@4.12.5:
+    resolution: {integrity: sha512-3qq+FUBtlTHhtYxbxheZgY8NIFnkkC/MR8u5TTsr7YZ3wixryQ3cCwn3iZbg8p8B88iDBBAYSfZDS75t8MN7Vg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -19594,7 +19594,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.3.3
-      hono: 4.11.4
+      hono: 4.12.5
       ts-deepmerge: 7.0.2
     transitivePeerDependencies:
       - react
@@ -28279,7 +28279,7 @@ snapshots:
     dependencies:
       parse-passwd: 1.0.0
 
-  hono@4.11.4: {}
+  hono@4.12.5: {}
 
   hookable@5.5.3: {}
 

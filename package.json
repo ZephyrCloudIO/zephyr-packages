@@ -119,6 +119,22 @@
       "seroval@<=1.4.0": ">=1.4.1",
       "wrangler": "^4.59.3",
       "mdast-util-to-hast@>=13.0.0 <13.2.1": ">=13.2.1"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "@parcel/watcher",
+      "@swc/core",
+      "core-js",
+      "core-js-pure",
+      "esbuild",
+      "lmdb",
+      "msgpackr-extract",
+      "msw",
+      "nx",
+      "oxc-resolver",
+      "sharp",
+      "unrs-resolver",
+      "workerd"
+    ]
   }
 }

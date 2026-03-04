@@ -22,8 +22,11 @@ import {
 } from './bundlers/index.js';
 import type { BundlerConfigs } from './types.js';
 import {
+  addToPackageJson,
   detectPackageManager,
-  installPackage,
+  getLatestVersion,
+  installDependencies,
+  installPackages as installPackagesDirect,
   isPackageInstalled,
 } from './package-manager.js';
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
@@ -327,40 +330,19 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   }
 
   console.log(chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`));
-
-  // Check and install missing packages
-  if (installPackages && requiredPackages.size > 0 && !dryRun) {
-    console.log(chalk.blue(`\n📦 Checking package dependencies...\n`));
-
-    const packageManager = detectPackageManager(directory);
-    console.log(chalk.gray(`Detected package manager: ${packageManager}`));
-
+  const missingPackages: PackageRequirement[] = [];
+  if (installPackages) {
     for (const packageRequirement of requiredPackages.values()) {
       if (!isPackageInstalled(packageRequirement.name, directory)) {
-        console.log(chalk.yellow(`Installing ${packageRequirement.name}...`));
-
-        const success = installPackage(
-          directory,
-          packageRequirement.name,
-          packageManager,
-          packageRequirement.isDev
-        );
-        if (success) {
-          console.log(chalk.green(`✓ Installed ${packageRequirement.name}`));
-        } else {
-          console.log(chalk.red(`✗ Failed to install ${packageRequirement.name}`));
-        }
-      } else {
-        console.log(chalk.gray(`✓ ${packageRequirement.name} already installed`));
+        missingPackages.push(packageRequirement);
       }
     }
-    console.log();
-  } else if (installPackages && requiredPackages.size > 0 && dryRun) {
+  }
+
+  if (installPackages && missingPackages.length > 0 && dryRun) {
     console.log(chalk.blue(`\n📦 Packages that would be installed:\n`));
-    for (const packageRequirement of requiredPackages.values()) {
-      if (!isPackageInstalled(packageRequirement.name, directory)) {
-        console.log(chalk.yellow(`  - ${packageRequirement.name}`));
-      }
+    for (const packageRequirement of missingPackages) {
+      console.log(chalk.yellow(`  - ${packageRequirement.name}`));
     }
     console.log();
   }
@@ -378,6 +360,93 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     } else {
       errors++;
     }
+  }
+
+  if (installPackages && missingPackages.length > 0 && !dryRun) {
+    console.log(chalk.blue(`\n📦 Checking package dependencies...\n`));
+
+    const packageManager = detectPackageManager(directory);
+    console.log(chalk.gray(`Detected package manager: ${packageManager}`));
+
+    const packageJsonPath = path.join(directory, 'package.json');
+    const stagedPackages: PackageRequirement[] = [];
+    const fallbackPackages: PackageRequirement[] = [];
+
+    if (fs.existsSync(packageJsonPath)) {
+      for (const packageRequirement of missingPackages) {
+        const latestVersion = getLatestVersion(packageRequirement.name);
+        const added = addToPackageJson(
+          directory,
+          packageRequirement.name,
+          latestVersion,
+          packageRequirement.isDev
+        );
+        if (added) {
+          stagedPackages.push(packageRequirement);
+          console.log(chalk.green(`✓ Added ${packageRequirement.name} to package.json`));
+        } else {
+          fallbackPackages.push(packageRequirement);
+          console.log(
+            chalk.red(
+              `✗ Failed to stage ${packageRequirement.name} in package.json, falling back`
+            )
+          );
+        }
+      }
+    } else {
+      fallbackPackages.push(...missingPackages);
+      console.log(
+        chalk.yellow('No package.json found; falling back to direct package manager add')
+      );
+    }
+
+    if (stagedPackages.length > 0) {
+      const installSuccess = installDependencies(directory, packageManager);
+      if (installSuccess) {
+        console.log(chalk.green('✓ Installed dependencies from package.json'));
+      } else {
+        console.log(chalk.red('✗ Failed to install dependencies from package.json'));
+      }
+    }
+
+    if (fallbackPackages.length > 0) {
+      const prodPackages = fallbackPackages
+        .filter((packageRequirement) => !packageRequirement.isDev)
+        .map((packageRequirement) => packageRequirement.name);
+      const devPackages = fallbackPackages
+        .filter((packageRequirement) => packageRequirement.isDev)
+        .map((packageRequirement) => packageRequirement.name);
+
+      if (prodPackages.length > 0) {
+        const success = installPackagesDirect(
+          directory,
+          prodPackages,
+          packageManager,
+          false
+        );
+        if (success) {
+          console.log(chalk.green(`✓ Installed ${prodPackages.join(', ')}`));
+        } else {
+          console.log(chalk.red(`✗ Failed to install ${prodPackages.join(', ')}`));
+        }
+      }
+
+      if (devPackages.length > 0) {
+        const success = installPackagesDirect(
+          directory,
+          devPackages,
+          packageManager,
+          true
+        );
+        if (success) {
+          console.log(chalk.green(`✓ Installed ${devPackages.join(', ')}`));
+        } else {
+          console.log(chalk.red(`✗ Failed to install ${devPackages.join(', ')}`));
+        }
+      }
+    }
+
+    console.log();
   }
 
   console.log(`\n${chalk.bold('Summary:')}`);

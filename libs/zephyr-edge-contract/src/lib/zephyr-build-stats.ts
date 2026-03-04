@@ -158,6 +158,12 @@ export interface ZephyrBuildStats {
   /** Resolved zephyr dependencies */
   zephyrDependencies?: Record<string, ZephyrDependency>;
   deploymentResults?: DeploymentResult[];
+  /** Bundler plugin type (e.g. 'webpack', 'vite', 'rspack') */
+  builder?: string;
+  /** Version of the zephyr plugin (zephyr-agent) */
+  plugin_version?: string;
+  /** Version of the edge worker that handled deployment forwarding */
+  worker_version?: string;
 }
 
 enum DeploymentIntegrationPlatform {

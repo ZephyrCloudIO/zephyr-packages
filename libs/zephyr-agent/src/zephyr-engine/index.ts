@@ -35,6 +35,7 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   convertResolvedDependencies,
   createManifestContent,
@@ -581,15 +582,19 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const upload_options: UploadOptions = {
       snapshot,
       getDashData: (engine) => {
-        // If buildStats has ze_envs already, use it
-        if (buildStats.ze_envs || buildStats.ze_envs_hash) {
-          return buildStats;
-        }
-        // Otherwise, add the env vars from the engine
+        const dash_data =
+          buildStats.ze_envs || buildStats.ze_envs_hash
+            ? buildStats
+            : {
+                ...buildStats,
+                ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
+                ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+              };
+
         return {
-          ...buildStats,
-          ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
-          ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+          ...dash_data,
+          builder: dash_data.builder ?? zephyr_engine.builder,
+          plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
         };
       },
       assets: {

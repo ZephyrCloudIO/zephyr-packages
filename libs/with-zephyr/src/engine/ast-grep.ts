@@ -1,7 +1,7 @@
-import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
+import type { Edit, NapiConfig, SgNode } from '@ast-grep/napi';
 
 export type AstGrepLanguage = 'js' | 'ts' | 'json';
 
@@ -24,26 +24,14 @@ export interface AstGrepResult {
   stdout: string;
 }
 
-function resolveSgBinary(): string {
-  const envBinary = process.env.ZEPHYR_SG_PATH;
-  if (envBinary && envBinary.trim().length > 0) {
-    return envBinary.trim();
-  }
+interface AstGrepRuntime {
+  parse: (language: string, source: string) => { root: () => SgNode };
+}
 
-  const require = createRequire(import.meta.url);
-  try {
-    const packageJsonPath = require.resolve('@ast-grep/cli/package.json');
-    const packageDir = path.dirname(packageJsonPath);
-    const binaryName = process.platform === 'win32' ? 'sg.cmd' : 'sg';
-    const candidate = path.join(packageDir, binaryName);
-    if (fs.existsSync(candidate)) {
-      return candidate;
-    }
-  } catch {
-    // fall through
-  }
+const require = createRequire(import.meta.url);
 
-  return 'sg';
+function getAstGrepRuntime(): AstGrepRuntime {
+  return require('@ast-grep/napi') as AstGrepRuntime;
 }
 
 function detectLanguage(filePath: string): AstGrepLanguage {
@@ -62,128 +50,135 @@ function detectLanguage(filePath: string): AstGrepLanguage {
   return 'js';
 }
 
-function shouldDisableHiddenIgnore(filePath: string): boolean {
-  return path.basename(filePath).startsWith('.');
+function toNapiLanguage(language: AstGrepLanguage): string {
+  if (language === 'ts') {
+    return 'TypeScript';
+  }
+
+  // ast-grep napi does not expose a dedicated JSON language. JavaScript parser
+  // can still handle JSON-like documents and keeps behavior stable for current usage.
+  return 'JavaScript';
 }
 
-function runAstGrep(args: string[]): AstGrepResult {
-  const runWithBinary = (binary: string, binaryArgs: string[]) =>
-    spawnSync(binary, binaryArgs, {
-      encoding: 'utf8',
-    });
-
-  const result = runWithBinary(resolveSgBinary(), args);
-
-  const stderr = result.stderr ?? '';
-  const isBrokenBootstrap =
-    stderr.includes('This script should have been replaced') ||
-    stderr.includes('line 1: This: command not found') ||
-    stderr.includes('line 2: N.B.: command not found');
-  const canFallbackByError =
-    result.error?.code === 'ENOEXEC' || result.error?.code === 'ENOENT';
-
-  const fallbackResult =
-    isBrokenBootstrap || canFallbackByError
-      ? runWithBinary('pnpm', ['--package=@ast-grep/cli', 'dlx', 'sg', ...args])
-      : null;
-
-  const effectiveResult = fallbackResult ?? result;
-
-  if (effectiveResult.error) {
-    return {
-      status: 'error',
-      stdout: '',
-      stderr: effectiveResult.error.message,
-    };
+function buildMatcher(options: AstGrepRunOptions): string | NapiConfig {
+  if (!options.selector && !options.strictness) {
+    return options.pattern;
   }
 
-  const effectiveStderr = effectiveResult.stderr ?? '';
-  const effectiveStdout = effectiveResult.stdout ?? '';
+  const patternObject: Record<string, string> = {
+    context: options.pattern,
+  };
 
-  if (effectiveResult.status === 0) {
-    return {
-      status: 'match',
-      stdout: effectiveStdout,
-      stderr: effectiveStderr,
-    };
+  if (options.selector) {
+    patternObject.selector = options.selector;
   }
 
-  if (effectiveResult.status === 1) {
-    return {
-      status: 'no-match',
-      stdout: effectiveStdout,
-      stderr: effectiveStderr,
-    };
+  if (options.strictness) {
+    patternObject.strictness = options.strictness;
   }
 
   return {
-    status: 'error',
-    stdout: effectiveStdout,
-    stderr:
-      effectiveStderr ||
-      effectiveStdout ||
-      `ast-grep failed with exit code ${effectiveResult.status}`,
-  };
+    rule: {
+      pattern: patternObject,
+    },
+  } as unknown as NapiConfig;
+}
+
+function sliceNodeText(source: string, node: SgNode | null): string {
+  if (!node) {
+    return '';
+  }
+
+  const range = node.range();
+  return source.slice(range.start.index, range.end.index);
+}
+
+function sliceMultiMatchText(source: string, nodes: SgNode[]): string {
+  if (nodes.length === 0) {
+    return '';
+  }
+
+  const start = nodes[0].range().start.index;
+  const end = nodes[nodes.length - 1].range().end.index;
+  return source.slice(start, end);
+}
+
+function renderRewriteTemplate(node: SgNode, source: string, rewrite: string): string {
+  return rewrite.replace(
+    /\$\$\$([A-Za-z_]\w*)|\$([A-Za-z_]\w*)/g,
+    (_, multiName: string | undefined, singleName: string | undefined) => {
+      if (multiName) {
+        return sliceMultiMatchText(source, node.getMultipleMatches(multiName));
+      }
+
+      if (singleName) {
+        return sliceNodeText(source, node.getMatch(singleName));
+      }
+
+      return '';
+    }
+  );
 }
 
 export function searchWithAstGrep(options: AstGrepRunOptions): AstGrepResult {
-  const language = options.language ?? detectLanguage(options.filePath);
-  const args = [
-    'run',
-    '--lang',
-    language,
-    '--pattern',
-    options.pattern,
-    '--color',
-    'never',
-  ];
+  try {
+    const language = options.language ?? detectLanguage(options.filePath);
+    const source = fs.readFileSync(options.filePath, 'utf8');
+    const { parse } = getAstGrepRuntime();
+    const root = parse(toNapiLanguage(language), source);
+    const match = root.root().find(buildMatcher(options));
 
-  if (options.selector) {
-    args.push('--selector', options.selector);
+    return {
+      status: match ? 'match' : 'no-match',
+      stdout: '',
+      stderr: '',
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      stdout: '',
+      stderr: (error as Error).message,
+    };
   }
-
-  if (options.strictness) {
-    args.push('--strictness', options.strictness);
-  }
-
-  if (shouldDisableHiddenIgnore(options.filePath)) {
-    args.push('--no-ignore', 'hidden');
-  }
-
-  args.push(options.filePath);
-  return runAstGrep(args);
 }
 
 export function rewriteWithAstGrep(options: AstGrepRewriteOptions): AstGrepResult {
-  const language = options.language ?? detectLanguage(options.filePath);
-  const args = [
-    'run',
-    '--lang',
-    language,
-    '--pattern',
-    options.pattern,
-    '--rewrite',
-    options.rewrite,
-    '--color',
-    'never',
-  ];
+  try {
+    const language = options.language ?? detectLanguage(options.filePath);
+    const source = fs.readFileSync(options.filePath, 'utf8');
+    const { parse } = getAstGrepRuntime();
+    const root = parse(toNapiLanguage(language), source);
+    const matches = root.root().findAll(buildMatcher(options));
 
-  if (options.selector) {
-    args.push('--selector', options.selector);
+    if (matches.length === 0) {
+      return {
+        status: 'no-match',
+        stdout: '',
+        stderr: '',
+      };
+    }
+
+    if (options.updateAll) {
+      const edits: Edit[] = matches.map((match) =>
+        match.replace(renderRewriteTemplate(match, source, options.rewrite))
+      );
+
+      const nextSource = root.root().commitEdits(edits);
+      if (nextSource !== source) {
+        fs.writeFileSync(options.filePath, nextSource);
+      }
+    }
+
+    return {
+      status: 'match',
+      stdout: '',
+      stderr: '',
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      stdout: '',
+      stderr: (error as Error).message,
+    };
   }
-
-  if (options.strictness) {
-    args.push('--strictness', options.strictness);
-  }
-
-  if (shouldDisableHiddenIgnore(options.filePath)) {
-    args.push('--no-ignore', 'hidden');
-  }
-
-  if (options.updateAll) {
-    args.push('--update-all');
-  }
-
-  args.push(options.filePath);
-  return runAstGrep(args);
 }

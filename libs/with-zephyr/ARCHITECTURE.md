@@ -29,7 +29,7 @@ libs/with-zephyr/
 │   │   └── repack.ts
 │   │
 │   ├── engine/
-│   │   └── ast-grep.ts        # ast-grep runner (search/rewrite + fallback)
+│   │   └── ast-grep.ts        # ast-grep napi runner (search/rewrite)
 │   │
 │   ├── operations.ts          # Operation handlers and orchestration
 │   ├── package-manager.ts     # Package manager detection + installs
@@ -84,8 +84,8 @@ Handler behavior:
 
 - Language detection (`js` / `ts` / `json`) from file path
 - `searchWithAstGrep` and `rewriteWithAstGrep`
-- Hidden file support for dotfiles (e.g. `.parcelrc`)
-- Runtime fallback for environments where local `@ast-grep/cli` bootstrap is unavailable
+- In-process matching and rewrite using `@ast-grep/napi`
+- Template-based rewrite interpolation for `$VAR` / `$$$VAR`
 
 ## CLI Flow
 
@@ -121,7 +121,6 @@ Important types in `src/types.ts`:
 
 Primary runtime dependencies:
 
-- `@ast-grep/cli`
 - `@ast-grep/napi`
 - `chalk`
 - `commander`

@@ -15,7 +15,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "server-only": "^0.0.1",
-    "vinext": "0.0.4",
+    "vinext": "0.0.19",
     "vite-plugin-vinext-zephyr": "workspace:*",
     "vite": "^7.3.1",
     "wrangler": "^4.68.1"

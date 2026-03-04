@@ -1,3 +1,4 @@
+import { resolve as resolvePath } from 'node:path';
 import { ZeErrors, ZephyrError } from './errors';
 import { uploadOutputToZephyr } from './upload-output-to-zephyr';
 import { buildAssetsMapMock } from './transformers/ze-build-assets-map';
@@ -171,7 +172,65 @@ describe('uploadOutputToZephyr', () => {
         rootDir: '/tmp/project',
         outputDir: '/tmp/project/.output',
       })
-    ).rejects.toThrow('Could not detect SSR entrypoint');
+    ).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_SSR_ENTRYPOINT_NOT_FOUND),
+    });
+  });
+
+  it('normalizes relative outputDir/publicDir before mapping public assets', async () => {
+    const cwd = process.cwd();
+    const engine = {
+      env: {
+        target: 'web',
+        ssr: false,
+      },
+      upload_assets: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockZephyrEngineCreate.mockResolvedValue(
+      engine as unknown as Awaited<ReturnType<typeof ZephyrEngine.create>>
+    );
+    mockZeBuildDashData.mockResolvedValue({ build: 'stats' } as unknown as Awaited<
+      ReturnType<typeof zeBuildDashData>
+    >);
+    mockReadDirRecursiveWithContents.mockResolvedValue([
+      {
+        fullPath: `${cwd}/.output/server/index.mjs`,
+        relativePath: 'server/index.mjs',
+        content: Buffer.from('server'),
+        isDirectory: false,
+      },
+      {
+        fullPath: `${cwd}/.output/client/docs/app.js`,
+        relativePath: 'client/docs/app.js',
+        content: Buffer.from('client'),
+        isDirectory: false,
+      },
+    ]);
+
+    mockBuildAssetsMap.mockImplementation((assets) => {
+      expect(Object.keys(assets)).toEqual(
+        expect.arrayContaining(['server/index.mjs', 'client/static/app.js'])
+      );
+
+      return {
+        hash1: {
+          hash: 'hash1',
+          path: 'server/index.mjs',
+          buffer: Buffer.from('server'),
+          size: 6,
+        },
+      } as unknown as ReturnType<typeof buildAssetsMapMock>;
+    });
+
+    await uploadOutputToZephyr({
+      rootDir: cwd,
+      outputDir: '.output',
+      publicDir: '.output/client/docs',
+      baseURL: '/static/',
+    });
+
+    expect(mockReadDirRecursiveWithContents).toHaveBeenCalledWith(resolvePath('.output'));
   });
 
   it('supports non-SSR uploads without requiring entrypoint', async () => {

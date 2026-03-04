@@ -1,3 +1,4 @@
+import { resolve as resolvePath } from 'node:path';
 import type { Platform, ZephyrBuildHooks, ZephyrEngineOptions } from '../zephyr-engine';
 import { ZephyrEngine } from '../zephyr-engine';
 import { ZeErrors, ZephyrError } from './errors';
@@ -117,10 +118,12 @@ function resolveDeployEntrypoint(
 export async function uploadOutputToZephyr(
   opts: UploadOutputToZephyrOptions
 ): Promise<UploadOutputToZephyrResult> {
-  const files = await readDirRecursiveWithContents(opts.outputDir);
+  const outputDir = resolvePath(opts.outputDir);
+  const publicDir = opts.publicDir ? resolvePath(opts.publicDir) : undefined;
+  const files = await readDirRecursiveWithContents(outputDir);
 
   const assets = files.reduce<Record<string, DirectoryAsset>>((memo, file) => {
-    const relativePath = resolveAssetPath(file, opts.publicDir, opts.baseURL);
+    const relativePath = resolveAssetPath(file, publicDir, opts.baseURL);
     if (shouldSkipDeployAsset(relativePath)) {
       return memo;
     }
@@ -138,8 +141,9 @@ export async function uploadOutputToZephyr(
   const ssr = opts.ssr ?? DEFAULT_DEPLOY_SSR;
   const entrypoint = resolveDeployEntrypoint(assets);
   if (ssr && !entrypoint) {
-    throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-      message: `Could not detect SSR entrypoint in ${opts.outputDir}. Expected one of: ${DEPLOY_ENTRYPOINT_CANDIDATES.join(', ')}.`,
+    throw new ZephyrError(ZeErrors.ERR_SSR_ENTRYPOINT_NOT_FOUND, {
+      outputDir,
+      candidates: DEPLOY_ENTRYPOINT_CANDIDATES.join(', '),
     });
   }
 

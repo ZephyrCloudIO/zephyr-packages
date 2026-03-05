@@ -28,6 +28,8 @@ export interface BundlerConfig {
 - `plugins-array`
 - `plugins-array-or-create`
 - `wrap-module-exports`
+- `wrap-module-exports-async`
+- `wrap-export-default-async`
 - `wrap-export-default-define-config`
 - `wrap-export-default-object`
 - `rollup-function`

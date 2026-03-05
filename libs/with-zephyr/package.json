@@ -56,7 +56,9 @@
     "astro",
     "modernjs",
     "rolldown",
-    "rspress"
+    "rspress",
+    "metro",
+    "react-native"
   ],
   "packageManager": "pnpm@10.25.0"
 }

@@ -252,14 +252,15 @@ overrides:
   '@eslint/plugin-kit': ^0.5.0
   qs@<6.14.1: '>=6.14.1'
   '@remix-run/router@<=1.23.1': '>=1.23.2'
-  react-router@>=6.0.0 <6.30.2: '>=6.30.2'
+  react-router@>=6.0.0 <6.30.2: ^6.30.2
+  react-router-dom@>=6.0.0 <6.30.2: ^6.30.2
   react-router@>=7.0.0 <=7.11.0: '>=7.12.0'
   js-yaml: '>=4.1.1'
   devalue@>=5.1.0 <5.6.2: '>=5.6.2'
   h3@<=1.15.4: '>=1.15.5'
   devalue@>=5.3.0 <=5.6.1: '>=5.6.2'
   seroval@<=1.4.0: '>=1.4.1'
-  wrangler: ^4.59.3
+  wrangler: ^4.70.0
   mdast-util-to-hast@>=13.0.0 <13.2.1: '>=13.2.1'
 
 importers:
@@ -583,7 +584,7 @@ importers:
     dependencies:
       '@modern-js/plugin-ssg':
         specifier: catalog:modernjs
-        version: 2.70.1(@types/express@4.17.21)(@types/node@22.13.13)(react-dom@19.2.3(react@19.2.3))(react-router-dom@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+        version: 2.70.1(@types/express@4.17.21)(@types/node@22.13.13)(react-dom@19.2.3(react@19.2.3))(react-router-dom@6.30.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@modern-js/runtime':
         specifier: catalog:modernjs
         version: 2.70.1(react-dom@19.2.3(react@19.2.3))(react-server-dom-webpack@19.2.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2)))(react@19.2.3)
@@ -1091,7 +1092,7 @@ importers:
     devDependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.21.1
-        version: 1.21.1(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260301.1)(wrangler@4.59.3)
+        version: 1.21.1(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260301.1)(wrangler@4.70.0)
       '@testing-library/dom':
         specifier: ^10.4.0
         version: 10.4.0
@@ -1136,7 +1137,7 @@ importers:
     dependencies:
       '@cloudflare/vite-plugin':
         specifier: ^1.25.0
-        version: 1.26.0(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260116.0)(wrangler@4.59.3)
+        version: 1.26.0(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260301.1)(wrangler@4.70.0)
       '@vitejs/plugin-rsc':
         specifier: ^0.5.19
         version: 0.5.21(react-dom@19.2.4(react@19.2.4))(react-server-dom-webpack@19.2.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2)))(react@19.2.4)(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))
@@ -1162,8 +1163,8 @@ importers:
         specifier: workspace:*
         version: link:../../libs/vite-plugin-vinext-zephyr
       wrangler:
-        specifier: ^4.59.3
-        version: 4.59.3
+        specifier: ^4.70.0
+        version: 4.70.0
 
   examples/vite-react-mf/host:
     dependencies:
@@ -1689,7 +1690,7 @@ importers:
         version: 1.13.6(debug@4.4.3)
       axios-retry:
         specifier: ^4.5.0
-        version: 4.5.0(axios@1.13.6(debug@4.4.3))
+        version: 4.5.0(axios@1.13.6)
       debug:
         specifier: ^4.3.4
         version: 4.4.3(supports-color@5.5.0)
@@ -3103,13 +3104,13 @@ packages:
     resolution: {integrity: sha512-wcHkETnyi69l1J1AoKDRFmk+1ltJRd5u4oOKshNVMmj3lrGuhd2e2oo59k1SFtEbxf0kQ9A0YfKkCdX3uAgrQQ==}
     peerDependencies:
       vite: ^7.1.11
-      wrangler: ^4.59.3
+      wrangler: ^4.70.0
 
   '@cloudflare/vite-plugin@1.26.0':
     resolution: {integrity: sha512-F5jSOj9JeWMp9iQa2x+Ocjz++SCfK6Phcca/YLkaddPw5ie7W1VvEWudQ/gxYtRd47mQ/PfCLkE9QGyy6OGEng==}
     peerDependencies:
       vite: ^7.1.11
-      wrangler: ^4.59.3
+      wrangler: ^4.70.0
 
   '@cloudflare/workerd-darwin-64@1.20260116.0':
     resolution: {integrity: sha512-0LF2jR/5bfCIMYsqtCXHqaZRlXEMgnz4NzG/8KVmHROlKb06SJezYYoNKw+7s6ji4fgi1BcYAJBmWbC4nzMbqw==}
@@ -4226,7 +4227,7 @@ packages:
   '@modern-js/plugin-ssg@2.70.1':
     resolution: {integrity: sha512-3j7SHBuPDj0T0ECt1ppNZblgUgjxl/FV7HXBR46qowhclVsH5jcvAJq+c27fA46mL7q0R5DmmRFUn8Dez8X/+w==}
     peerDependencies:
-      react-router-dom: '>=5.1.2'
+      react-router-dom: ^6.30.2
     peerDependenciesMeta:
       react-router-dom:
         optional: true
@@ -13875,13 +13876,6 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  react-router-dom@6.27.0:
-    resolution: {integrity: sha512-+bvtFWMC0DgAFrfKXKG9Fc+BcXWRUO1aJIihbB79xaeq0v5UzfvnM5houGUm1Y461WVRcgAQ+Clh5rdb1eCx4g==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      react: '>=16.8'
-      react-dom: '>=16.8'
-
   react-router-dom@6.30.2:
     resolution: {integrity: sha512-l2OwHn3UUnEVUqc6/1VMmR1cvZryZ3j3NzapC2eUXO1dB0sYp5mvwdjiXhpUbRb21eFow3qSxpP8Yv6oAU824Q==}
     engines: {node: '>=14.0.0'}
@@ -16412,12 +16406,12 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@4.59.3:
-    resolution: {integrity: sha512-zl+nqoGzWJ4K+NEMjy4GiaIi9ix59FkOzd7UsDb8CQADwy3li1DSNAzHty/BWYa3ZvMxr/G4pogMBb5vcSrNvQ==}
+  wrangler@4.70.0:
+    resolution: {integrity: sha512-PNDZ9o4e+B5x+1bUbz62Hmwz6G9lw+I9pnYe/AguLddJFjfIyt2cmFOUOb3eOZSoXsrhcEPUg2YidYIbVwUkfw==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
-      '@cloudflare/workers-types': ^4.20260116.0
+      '@cloudflare/workers-types': ^4.20260226.1
     peerDependenciesMeta:
       '@cloudflare/workers-types':
         optional: true
@@ -17819,44 +17813,38 @@ snapshots:
 
   '@cloudflare/kv-asset-handler@0.4.2': {}
 
-  '@cloudflare/unenv-preset@2.10.0(unenv@2.0.0-rc.24)(workerd@1.20260116.0)':
-    dependencies:
-      unenv: 2.0.0-rc.24
-    optionalDependencies:
-      workerd: 1.20260116.0
-
   '@cloudflare/unenv-preset@2.10.0(unenv@2.0.0-rc.24)(workerd@1.20260301.1)':
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
       workerd: 1.20260301.1
 
-  '@cloudflare/unenv-preset@2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260116.0)':
+  '@cloudflare/unenv-preset@2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260301.1)':
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
-      workerd: 1.20260116.0
+      workerd: 1.20260301.1
 
-  '@cloudflare/vite-plugin@1.21.1(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260301.1)(wrangler@4.59.3)':
+  '@cloudflare/vite-plugin@1.21.1(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260301.1)(wrangler@4.70.0)':
     dependencies:
       '@cloudflare/unenv-preset': 2.10.0(unenv@2.0.0-rc.24)(workerd@1.20260301.1)
       miniflare: 4.20260116.0
       unenv: 2.0.0-rc.24
       vite: 7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
-      wrangler: 4.59.3
+      wrangler: 4.70.0
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
       - workerd
 
-  '@cloudflare/vite-plugin@1.26.0(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260116.0)(wrangler@4.59.3)':
+  '@cloudflare/vite-plugin@1.26.0(vite@7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))(workerd@1.20260301.1)(wrangler@4.70.0)':
     dependencies:
-      '@cloudflare/unenv-preset': 2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260116.0)
+      '@cloudflare/unenv-preset': 2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260301.1)
       miniflare: 4.20260301.1
       unenv: 2.0.0-rc.24
       vite: 7.1.12(@types/node@22.13.13)(jiti@2.6.1)(less@4.1.3)(lightningcss@1.30.2)(sass-embedded@1.92.1)(sass@1.92.1)(stylus@0.64.0)(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
-      wrangler: 4.59.3
+      wrangler: 4.70.0
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
@@ -19166,7 +19154,7 @@ snapshots:
       '@modern-js/utils': 2.70.1
       '@swc/helpers': 0.5.17
 
-  '@modern-js/plugin-ssg@2.70.1(@types/express@4.17.21)(@types/node@22.13.13)(react-dom@19.2.3(react@19.2.3))(react-router-dom@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
+  '@modern-js/plugin-ssg@2.70.1(@types/express@4.17.21)(@types/node@22.13.13)(react-dom@19.2.3(react@19.2.3))(react-router-dom@6.30.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@modern-js/prod-server': 2.70.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@modern-js/utils': 2.70.1
@@ -19175,7 +19163,7 @@ snapshots:
       normalize-path: 3.0.0
       portfinder: 1.0.38
     optionalDependencies:
-      react-router-dom: 7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react-router-dom: 6.30.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     transitivePeerDependencies:
       - '@types/express'
       - '@types/node'
@@ -19258,7 +19246,7 @@ snapshots:
       '@remix-run/router': 1.23.2
       '@swc/helpers': 0.5.17
       lru-cache: 10.4.3
-      react-router-dom: 6.27.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react-router-dom: 6.30.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       serialize-javascript: 7.0.4
     optionalDependencies:
       react: 19.2.3
@@ -19271,7 +19259,7 @@ snapshots:
       '@remix-run/router': 1.23.2
       '@swc/helpers': 0.5.17
       lru-cache: 10.4.3
-      react-router-dom: 6.27.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react-router-dom: 6.30.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       serialize-javascript: 7.0.4
     optionalDependencies:
       react: 19.2.4
@@ -24909,7 +24897,7 @@ snapshots:
 
   axe-core@4.10.3: {}
 
-  axios-retry@4.5.0(axios@1.13.6(debug@4.4.3)):
+  axios-retry@4.5.0(axios@1.13.6):
     dependencies:
       axios: 1.13.6(debug@4.4.3)
       is-retry-allowed: 2.2.0
@@ -32497,20 +32485,6 @@ snapshots:
       react: 19.2.4
       react-reconciler: 0.33.0(react@19.2.4)
 
-  react-router-dom@6.27.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      '@remix-run/router': 1.23.2
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      react-router: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-
-  react-router-dom@6.27.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    dependencies:
-      '@remix-run/router': 1.23.2
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      react-router: 7.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-
   react-router-dom@6.30.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@remix-run/router': 1.23.2
@@ -32525,18 +32499,18 @@ snapshots:
       react-dom: 19.2.3(react@19.2.3)
       react-router: 6.30.2(react@19.2.3)
 
+  react-router-dom@6.30.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      '@remix-run/router': 1.23.2
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      react-router: 6.30.2(react@19.2.4)
+
   react-router-dom@7.10.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-router: 7.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-
-  react-router-dom@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      react-router: 7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    optional: true
 
   react-router-dom@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -32554,13 +32528,10 @@ snapshots:
       '@remix-run/router': 1.23.2
       react: 19.2.3
 
-  react-router@7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-router@6.30.2(react@19.2.4):
     dependencies:
-      cookie: 1.1.1
-      react: 19.2.3
-      set-cookie-parser: 2.7.2
-    optionalDependencies:
-      react-dom: 19.2.3(react@19.2.3)
+      '@remix-run/router': 1.23.2
+      react: 19.2.4
 
   react-router@7.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -32569,15 +32540,6 @@ snapshots:
       set-cookie-parser: 2.7.2
     optionalDependencies:
       react-dom: 19.2.4(react@19.2.4)
-
-  react-router@7.13.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      cookie: 1.1.1
-      react: 19.2.3
-      set-cookie-parser: 2.7.2
-    optionalDependencies:
-      react-dom: 19.2.3(react@19.2.3)
-    optional: true
 
   react-router@7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
@@ -35676,16 +35638,16 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260301.1
       '@cloudflare/workerd-windows-64': 1.20260301.1
 
-  wrangler@4.59.3:
+  wrangler@4.70.0:
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.2
-      '@cloudflare/unenv-preset': 2.10.0(unenv@2.0.0-rc.24)(workerd@1.20260116.0)
+      '@cloudflare/unenv-preset': 2.14.0(unenv@2.0.0-rc.24)(workerd@1.20260301.1)
       blake3-wasm: 2.1.5
       esbuild: 0.27.2
-      miniflare: 4.20260116.0
+      miniflare: 4.20260301.1
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
-      workerd: 1.20260116.0
+      workerd: 1.20260301.1
     optionalDependencies:
       fsevents: 2.3.3
     transitivePeerDependencies:
@@ -35842,7 +35804,7 @@ snapshots:
     dependencies:
       '@toon-format/toon': 0.8.0
       axios: 1.13.6(debug@4.4.3)
-      axios-retry: 4.5.0(axios@1.13.6(debug@4.4.3))
+      axios-retry: 4.5.0(axios@1.13.6)
       cloudflare: 3.5.0(encoding@0.1.13)
       debug: 4.4.3(supports-color@5.5.0)
       eventsource: 4.0.0

@@ -13,6 +13,7 @@
     "build-slow": "nx run-many -t build --all --parallel=1 --verbose --skip-nx-cache",
     "lint": "nx run-many -t lint --projects='libs/**'",
     "lint:examples": "nx run-many -t lint --projects='examples/**'",
+    "format": "prettier --write .",
     "test": "nx run-many -t test --projects='libs/**'",
     "test:examples": "nx run e2e-deployment:e2e-test --skip-nx-cache",
     "prepare": "husky install",

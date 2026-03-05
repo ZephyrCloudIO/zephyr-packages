@@ -14,6 +14,11 @@ export {
   readDirRecursiveWithContents,
   type FileInfo,
 } from './lib/utils/read-dir-recursive';
+export {
+  uploadOutputToZephyr,
+  type UploadOutputToZephyrOptions,
+  type UploadOutputToZephyrResult,
+} from './lib/upload-output-to-zephyr';
 
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';

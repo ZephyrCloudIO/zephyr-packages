@@ -1880,10 +1880,10 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
       zephyr-rspack-plugin:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../zephyr-rspack-plugin
       zephyr-webpack-plugin:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../zephyr-webpack-plugin
     devDependencies:
       '@modern-js/app-tools':

@@ -288,6 +288,87 @@ describe('Ast-grep Operations', () => {
       const next = fs.readFileSync(filePath, 'utf8');
       expect(next).toContain('export default withZephyr()(config);');
     });
+
+    it('should wrap module exports with async withZephyr call for metro', () => {
+      const filePath = path.join(tempDir, 'metro.config.js');
+      fs.writeFileSync(
+        filePath,
+        `
+        const { getDefaultConfig } = require('@react-native/metro-config');
+        module.exports = getDefaultConfig(__dirname);
+      `
+      );
+
+      const result = runBundlerOperation('wrap-module-exports-async', {
+        filePath,
+        config: createConfig(
+          'wrap-module-exports-async',
+          'first-success',
+          'zephyr-metro-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('const __zephyrConfig = await getDefaultConfig(__dirname);');
+      expect(next).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
+    });
+
+    it('should invoke exported config function references for metro', () => {
+      const filePath = path.join(tempDir, 'metro.config.js');
+      fs.writeFileSync(
+        filePath,
+        `
+        const getConfig = () => ({ resolver: {} });
+        module.exports = getConfig;
+      `
+      );
+
+      const result = runBundlerOperation('wrap-module-exports-async', {
+        filePath,
+        config: createConfig(
+          'wrap-module-exports-async',
+          'first-success',
+          'zephyr-metro-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('const __zephyrConfig = await getConfig;');
+      expect(next).toContain('await __zephyrConfig()');
+    });
+
+    it('should wrap export default config with async withZephyr call for metro', () => {
+      const filePath = path.join(tempDir, 'metro.config.mjs');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default {
+          resolver: { sourceExts: ['js'] },
+        };
+      `
+      );
+
+      const result = runBundlerOperation('wrap-export-default-async', {
+        filePath,
+        config: createConfig(
+          'wrap-export-default-async',
+          'first-success',
+          'zephyr-metro-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('export default (async () => {');
+      expect(next).toContain('return withZephyr()(');
+    });
   });
 
   describe('rsbuild-asset-prefix', () => {

@@ -34,7 +34,7 @@ bunx with-zephyr
 
 ## Supported Bundlers
 
-This codemod supports **12+ bundlers** with their respective Zephyr plugins:
+This codemod supports **13+ bundlers** with their respective Zephyr plugins:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
@@ -47,6 +47,7 @@ This codemod supports **12+ bundlers** with their respective Zephyr plugins:
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
 - **RSBuild** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
 - **RSLib** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
+- **Metro** (React Native) ([`zephyr-metro-plugin`](https://www.npmjs.com/package/zephyr-metro-plugin))
 - **Re.Pack** (React Native) ([`zephyr-repack-plugin`](https://www.npmjs.com/package/zephyr-repack-plugin))
 
 ## Installation
@@ -244,6 +245,7 @@ The codemod automatically detects and processes these configuration files:
 - `rspress.config.js/ts/mjs`
 - `rsbuild.config.js/ts/mjs`
 - `rslib.config.js/ts/mjs`
+- `metro.config.js/ts/mjs/cjs`
 - `.parcelrc/.parcelrc.json`
 
 ## Integration Patterns
@@ -255,6 +257,10 @@ The codemod recognizes and handles various configuration patterns:
 - `composePlugins()` calls (Nx style)
 - `plugins: []` arrays
 - Direct `module.exports` assignments
+
+### Metro (React Native)
+
+- `module.exports = ...` config exports (wrapped with async `withZephyr` call)
 
 ### Vite/Rolldown
 

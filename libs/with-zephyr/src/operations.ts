@@ -184,6 +184,26 @@ function handleWrapModuleExports(context: OperationContext): OperationResult {
   ]);
 }
 
+function handleWrapModuleExportsAsync(context: OperationContext): OperationResult {
+  return runRewriteSequence(context, [
+    {
+      pattern: 'module.exports = $VALUE',
+      rewrite:
+        'module.exports = (async () => { const __zephyrConfig = await $VALUE; return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig); })()',
+    },
+  ]);
+}
+
+function handleWrapExportDefaultAsync(context: OperationContext): OperationResult {
+  return runRewriteSequence(context, [
+    {
+      pattern: 'export default $VALUE',
+      rewrite:
+        'export default (async () => { const __zephyrConfig = await $VALUE; return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig); })()',
+    },
+  ]);
+}
+
 function handleWrapExportDefaultDefineConfig(context: OperationContext): OperationResult {
   return runRewriteSequence(context, [
     {
@@ -400,6 +420,8 @@ const OPERATION_HANDLERS: Record<
   'plugins-array': (context) => appendToArrayProperty(context, 'plugins'),
   'plugins-array-or-create': handlePluginsArrayOrCreate,
   'wrap-module-exports': handleWrapModuleExports,
+  'wrap-module-exports-async': handleWrapModuleExportsAsync,
+  'wrap-export-default-async': handleWrapExportDefaultAsync,
   'wrap-export-default-define-config': handleWrapExportDefaultDefineConfig,
   'wrap-export-default-object': handleWrapExportDefaultObject,
   'rollup-function': handleRollupFunction,

@@ -14,6 +14,7 @@ concurrency:
 
 env:
   ZE_FAIL_BUILD: true
+  NX_DAEMON: false
 
 jobs:
   build:
@@ -41,14 +42,14 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected --exclude='!libs/**' -t build --skipRemoteCache
+        run: pnpm nx affected --exclude='!libs/**' -t build --skipRemoteCache --outputStyle=stream
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t build --skipRemoteCache
+        run: pnpm nx affected -t build --skipRemoteCache --outputStyle=stream
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -113,7 +114,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t test
+        run: pnpm nx affected -t test --outputStyle=stream
 
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -148,4 +149,4 @@ jobs:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
       - name: Run e2e examples test
-        run: pnpm nx run e2e-deployment:e2e-test -- --passWithNoTests --skipRemoteCache
+        run: pnpm nx run e2e-deployment:e2e-test --passWithNoTests --skipRemoteCache --outputStyle=stream

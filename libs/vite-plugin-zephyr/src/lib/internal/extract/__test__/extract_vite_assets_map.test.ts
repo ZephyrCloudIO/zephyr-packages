@@ -89,9 +89,6 @@ describe('extract_vite_assets_map', () => {
       expect.objectContaining({
         'static-asset.css': mockStaticAssets['static-asset.css'],
         'runtime-asset.js': mockViteInternalOptions.assets!['runtime-asset.js'],
-        // partial assets are spread using Object.values, which spreads their properties
-        type: 'chunk',
-        code: 'console.log("partial");',
       }),
       expect.any(Function), // extractBuffer
       expect.any(Function) // getAssetType
@@ -121,6 +118,38 @@ describe('extract_vite_assets_map', () => {
       expect.any(Function)
     );
     expect(result).toBe(mockBuildResult);
+  });
+
+  it('should skip vite inspect artifacts from upload map', async () => {
+    const mockStaticAssets = {
+      '.vite-inspect/index.html': {
+        type: 'asset',
+        source: '<html></html>',
+      } as OutputAsset,
+      'assets/app.js': {
+        type: 'chunk',
+        code: 'console.log("app");',
+      } as OutputChunk,
+    };
+    const mockBuildResult = { assets: 'mock-build-result' };
+
+    mockLoadStaticAssets.mockResolvedValue(mockStaticAssets);
+    mockGetPartialAssetMap.mockResolvedValue(undefined);
+    mockRemovePartialAssetMap.mockResolvedValue();
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+
+    await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
+
+    const submittedAssets = mockBuildAssetsMap.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
+    expect(submittedAssets).toEqual(
+      expect.objectContaining({
+        'assets/app.js': mockStaticAssets['assets/app.js'],
+      })
+    );
+    expect(submittedAssets['.vite-inspect/index.html']).toBeUndefined();
   });
 });
 

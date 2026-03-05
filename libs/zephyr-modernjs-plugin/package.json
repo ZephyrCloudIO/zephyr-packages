@@ -1,6 +1,6 @@
 {
   "name": "zephyr-modernjs-plugin",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Modernjs plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -33,8 +33,8 @@
   },
   "peerDependencies": {
     "@modern-js/app-tools": "^2.0.0",
-    "zephyr-rspack-plugin": ">=0.1.0",
-    "zephyr-webpack-plugin": ">=0.1.0"
+    "zephyr-rspack-plugin": "workspace:^",
+    "zephyr-webpack-plugin": "workspace:^"
   },
   "peerDependenciesMeta": {
     "zephyr-rspack-plugin": {

@@ -35,11 +35,11 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
-import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
@@ -309,7 +309,8 @@ export class ZephyrEngine {
    *   or `android`
    */
   async resolve_remote_dependencies(
-    deps: ZeDependencyPair[]
+    deps: ZeDependencyPair[],
+    defaultLibraryType = 'var'
   ): Promise<ZeResolvedDependency[] | null> {
     if (!deps) {
       return null;
@@ -384,7 +385,10 @@ export class ZephyrEngine {
         return tuple[1];
       }
 
-      return Object.assign({}, tuple[1], { name: dep.name, version: dep.version });
+      return Object.assign({ library_type: defaultLibraryType }, tuple[1], {
+        name: dep.name,
+        version: dep.version,
+      });
     });
 
     const resolution_results = await Promise.all(tasks);

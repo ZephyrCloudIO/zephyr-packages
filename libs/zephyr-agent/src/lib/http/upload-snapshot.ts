@@ -38,7 +38,7 @@ export async function uploadSnapshot({
     );
   }
 
-  ze_log.snapshot('Done: snapshot uploaded...', body);
+  ze_log.snapshot('Done: snapshot uploaded');
 
   return resp;
 }

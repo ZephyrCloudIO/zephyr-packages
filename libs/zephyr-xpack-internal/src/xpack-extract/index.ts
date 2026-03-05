@@ -7,6 +7,7 @@ export {
   parseRemotesAsEntries,
 } from './extract-federated-dependency-pairs';
 export { extractFederatedConfig } from './extract-federation-config';
+export { extractLibraryType } from './extract-library-type';
 export { isModuleFederationPlugin } from './is-module-federation-plugin';
 export { iterateFederationConfig } from './iterate-federation-config';
 export { makeCopyOfModuleFederationOptions } from './make-copy-of-module-federation-options';

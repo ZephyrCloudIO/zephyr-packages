@@ -2,6 +2,7 @@ import type { Configuration as RspackConfiguration } from '@rspack/core';
 import { getGlobal, handleGlobalError, ZephyrEngine } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
+  extractLibraryType,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
@@ -36,8 +37,10 @@ async function _zephyr_configuration(
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);
-    const resolved_dependency_pairs =
-      await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
+    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
+      dependencyPairs,
+      extractLibraryType(config.output?.library)
+    );
 
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 

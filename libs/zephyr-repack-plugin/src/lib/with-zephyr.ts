@@ -8,6 +8,7 @@ import {
 } from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
+  extractLibraryType,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
@@ -71,8 +72,10 @@ async function _zephyr_configuration(
       zephyr_engine.env.target
     );
 
-    const resolved_dependency_pairs =
-      await zephyr_engine.resolve_remote_dependencies(dependency_pairs);
+    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
+      dependency_pairs,
+      extractLibraryType(config.output?.library)
+    );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
     ze_log.remotes(

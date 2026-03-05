@@ -629,6 +629,9 @@ importers:
       zephyr-modernjs-plugin:
         specifier: workspace:*
         version: link:../../libs/zephyr-modernjs-plugin
+      zephyr-rspack-plugin:
+        specifier: workspace:*
+        version: link:../../libs/zephyr-rspack-plugin
 
   examples/parcel-react:
     dependencies:
@@ -1875,11 +1878,11 @@ importers:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
       zephyr-rspack-plugin:
-        specifier: '>=0.1.0'
-        version: 0.1.2(@swc/helpers@0.5.17)(encoding@0.1.13)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
+        specifier: workspace:*
+        version: link:../zephyr-rspack-plugin
       zephyr-webpack-plugin:
-        specifier: '>=0.1.0'
-        version: 0.1.2(@swc/core@1.15.8(@swc/helpers@0.5.17))(encoding@0.1.13)(esbuild@0.27.2)
+        specifier: workspace:*
+        version: link:../zephyr-webpack-plugin
     devDependencies:
       '@modern-js/app-tools':
         specifier: catalog:modernjs
@@ -16873,12 +16876,6 @@ packages:
   zephyr-edge-contract@0.1.2:
     resolution: {integrity: sha512-nERy80QrPn8DGA/kiUQZSLq4f7UdZ1elps/UEvF06QZ83n3YRWiFmP8aQaCu+/f4oWCS1NG9/CkFW28Yxp8tEw==}
 
-  zephyr-rspack-plugin@0.1.2:
-    resolution: {integrity: sha512-Kb8xyH7kfV750Nj3oZFI3zDeU3HHpdbBSEy/mWVuxjURQN2wazZfGz5BsKXa/vBDz/h9bPqQMOFGRIFOh2WOUg==}
-
-  zephyr-webpack-plugin@0.1.2:
-    resolution: {integrity: sha512-OE/o9tSytj4x7Qtyb1/HmAE33+1fcKicV6yhugIPaXK5FAsrpc3BkxziC/NUXcQ9LZoqcWO9cTwhBaksdcgJwQ==}
-
   zephyr-xpack-internal@0.1.2:
     resolution: {integrity: sha512-PFWwQ/2RQSY+UkLw1zJOhFbk5Ge0BXl+emI+BokQLesG5XH066BvtcNtZa/kMTMl78zkAvsswztSEUIJ9AM68Q==}
 
@@ -19943,11 +19940,6 @@ snapshots:
       caniuse-lite: 1.0.30001762
       lodash: 4.17.21
       rslog: 1.2.11
-
-  '@module-federation/automatic-vendor-federation@1.2.1(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))':
-    dependencies:
-      find-package-json: 1.2.0
-      webpack: 5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2)
 
   '@module-federation/automatic-vendor-federation@1.2.1(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.3))':
     dependencies:
@@ -36682,54 +36674,6 @@ snapshots:
   zephyr-edge-contract@0.1.2:
     dependencies:
       tslib: 2.8.1
-
-  zephyr-rspack-plugin@0.1.2(@swc/helpers@0.5.17)(encoding@0.1.13)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2)):
-    dependencies:
-      '@module-federation/automatic-vendor-federation': 1.2.1(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
-      '@rspack/core': 1.7.0(@swc/helpers@0.5.17)
-      is-ci: 4.1.0
-      tslib: 2.8.1
-      zephyr-agent: 0.1.2(encoding@0.1.13)
-      zephyr-xpack-internal: 0.1.2(encoding@0.1.13)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
-    transitivePeerDependencies:
-      - '@swc/helpers'
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-      - webpack
-
-  zephyr-webpack-plugin@0.1.2(@swc/core@1.15.8(@swc/helpers@0.5.17))(encoding@0.1.13)(esbuild@0.27.2):
-    dependencies:
-      '@module-federation/automatic-vendor-federation': 1.2.1(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
-      is-ci: 4.1.0
-      tslib: 2.8.1
-      webpack: 5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2)
-      zephyr-agent: 0.1.2(encoding@0.1.13)
-      zephyr-xpack-internal: 0.1.2(encoding@0.1.13)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
-    transitivePeerDependencies:
-      - '@swc/core'
-      - bufferutil
-      - encoding
-      - esbuild
-      - supports-color
-      - uglify-js
-      - utf-8-validate
-      - webpack-cli
-
-  zephyr-xpack-internal@0.1.2(encoding@0.1.13)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2)):
-    dependencies:
-      '@module-federation/automatic-vendor-federation': 1.2.1(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.2))
-      is-ci: 4.1.0
-      tslib: 2.8.1
-      zephyr-agent: 0.1.2(encoding@0.1.13)
-      zephyr-edge-contract: 0.1.2
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-      - webpack
 
   zephyr-xpack-internal@0.1.2(encoding@0.1.13)(webpack@5.104.1(@swc/core@1.15.8(@swc/helpers@0.5.17))(esbuild@0.27.3)):
     dependencies:

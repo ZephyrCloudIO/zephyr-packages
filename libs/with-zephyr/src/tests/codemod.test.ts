@@ -314,6 +314,43 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('export default withZephyr()(defineConfig({');
       expect(content).not.toMatch(/plugins[^]]*withZephyr\(\)/);
     });
+
+    it('should transform metro config with async wrapper', () => {
+      const originalContent = `
+        const { getDefaultConfig } = require('@react-native/metro-config');
+        module.exports = getDefaultConfig(__dirname);
+      `;
+      fs.writeFileSync('metro.config.js', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('metro.config.js', 'utf8');
+      expect(content).toContain('const { withZephyr } = require("zephyr-metro-plugin");');
+      expect(content).toContain(
+        'const __zephyrConfig = await getDefaultConfig(__dirname);'
+      );
+      expect(content).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
+    });
+
+    it('should transform metro ESM config with async wrapper', () => {
+      const originalContent = `
+        export default {
+          resolver: { sourceExts: ['js', 'ts'] }
+        };
+      `;
+      fs.writeFileSync('metro.config.mjs', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('metro.config.mjs', 'utf8');
+      expect(content).toContain('import { withZephyr } from "zephyr-metro-plugin";');
+      expect(content).toContain('export default (async () => {');
+      expect(content).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
+    });
   });
 
   describe('Skip Already Configured', () => {

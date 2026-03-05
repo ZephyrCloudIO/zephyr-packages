@@ -18,6 +18,7 @@ import {
   astroConfig,
   modernjsConfig,
   rspressConfig,
+  metroConfig,
   repackConfig,
 } from './bundlers/index.js';
 import type { BundlerConfigs } from './types.js';
@@ -46,6 +47,7 @@ const BUNDLER_CONFIGS: BundlerConfigs = {
   astro: astroConfig,
   modernjs: modernjsConfig,
   rspress: rspressConfig,
+  metro: metroConfig,
   repack: repackConfig,
 };
 

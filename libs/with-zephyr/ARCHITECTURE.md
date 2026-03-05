@@ -26,6 +26,7 @@ libs/with-zephyr/
 │   │   ├── rspress.ts
 │   │   ├── astro.ts
 │   │   ├── parcel.ts
+│   │   ├── metro.ts
 │   │   └── repack.ts
 │   │
 │   ├── engine/

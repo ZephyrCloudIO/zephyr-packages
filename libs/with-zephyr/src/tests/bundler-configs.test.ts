@@ -12,6 +12,7 @@ import {
   astroConfig,
   modernjsConfig,
   rspressConfig,
+  metroConfig,
   repackConfig,
 } from '../bundlers/index.js';
 
@@ -28,6 +29,7 @@ describe('Bundler Configurations', () => {
         'modernjs',
         'rspress',
         'parcel',
+        'metro',
         'repack',
         'rsbuild',
         'rslib',
@@ -72,6 +74,7 @@ describe('Bundler Configurations', () => {
       expect(astroConfig).toBe(BUNDLER_CONFIGS.astro);
       expect(modernjsConfig).toBe(BUNDLER_CONFIGS.modernjs);
       expect(rspressConfig).toBe(BUNDLER_CONFIGS.rspress);
+      expect(metroConfig).toBe(BUNDLER_CONFIGS.metro);
       expect(repackConfig).toBe(BUNDLER_CONFIGS.repack);
     });
   });
@@ -89,6 +92,7 @@ describe('Bundler Configurations', () => {
       expect(astroConfig.plugin).toBe('zephyr-astro-integration');
       expect(modernjsConfig.plugin).toBe('zephyr-modernjs-plugin');
       expect(rspressConfig.plugin).toBe('zephyr-rspress-plugin');
+      expect(metroConfig.plugin).toBe('zephyr-metro-plugin');
       expect(repackConfig.plugin).toBe('zephyr-repack-plugin');
     });
 
@@ -119,6 +123,19 @@ describe('Bundler Configurations', () => {
         'rspack.config.js',
         'rspack.config.ts',
         'rspack.config.mjs',
+      ]);
+    });
+
+    it('should use async module.exports wrapping operation for metro', () => {
+      expect(metroConfig.operations).toEqual([
+        'wrap-module-exports-async',
+        'wrap-export-default-async',
+      ]);
+      expect(metroConfig.files).toEqual([
+        'metro.config.js',
+        'metro.config.ts',
+        'metro.config.mjs',
+        'metro.config.cjs',
       ]);
     });
   });

@@ -3,7 +3,6 @@
  * specific properties
  */
 declare global {
-   
   var NX_GRAPH_CREATION: boolean | undefined;
 }
 

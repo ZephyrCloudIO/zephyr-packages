@@ -36,9 +36,9 @@ import {
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
+import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import {
   resolveZephyrPluginPackageName,
-  setZephyrPluginPackageName,
 } from '../lib/version/plugin-package-name';
 import {
   type ZeResolvedDependency,
@@ -197,9 +197,11 @@ export class ZephyrEngine {
     ze_log.init('Initializing: npm package info...');
 
     ze.npmProperties = await getPackageJson(context);
-    setZephyrPluginPackageName(
-      resolveZephyrPluginPackageName(ze.npmProperties, options.builder)
+    const pluginPackageName = resolveZephyrPluginPackageName(
+      ze.npmProperties,
+      options.builder
     );
+    void maybeShowOutdatedPluginWarning(pluginPackageName);
 
     ze_log.init('Initializing: git info...');
     ze.gitProperties = await getGitInfo();

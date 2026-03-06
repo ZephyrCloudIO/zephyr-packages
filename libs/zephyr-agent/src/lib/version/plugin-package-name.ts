@@ -52,8 +52,6 @@ const KNOWN_PLUGIN_PACKAGES = [
   'zephyr-cli',
 ] as const;
 
-let currentPluginPackageName = FALLBACK_PLUGIN_PACKAGE_NAME;
-
 function collectDeclaredPackageNames(packageJson: ZePackageJson): Set<string> {
   return new Set([
     ...Object.keys(packageJson.dependencies ?? {}),
@@ -82,12 +80,4 @@ export function resolveZephyrPluginPackageName(
   }
 
   return BUILDER_PLUGIN_CANDIDATES[builder][0] ?? FALLBACK_PLUGIN_PACKAGE_NAME;
-}
-
-export function setZephyrPluginPackageName(packageName: string): void {
-  currentPluginPackageName = packageName || FALLBACK_PLUGIN_PACKAGE_NAME;
-}
-
-export function getZephyrPluginPackageName(): string {
-  return currentPluginPackageName;
 }

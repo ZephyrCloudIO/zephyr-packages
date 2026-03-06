@@ -4,7 +4,6 @@ import { ZeErrors, ZephyrError } from '../lib/errors';
 import { parseUrl } from '../lib/http/http-request';
 import { ze_log } from '../lib/logging';
 import { getToken } from '../lib/node-persist/token';
-import { maybeShowOutdatedVersionWarning } from '../lib/version/outdated-version-warning';
 export interface ZeResolvedDependency {
   name: string;
   version: string;
@@ -53,7 +52,6 @@ export async function resolve_remote_dependency({
         Accept: 'application/json',
       },
     });
-    maybeShowOutdatedVersionWarning(res.headers);
 
     // used only for error logging
     const [appName, projectName, orgName] = application_uid.split('.');

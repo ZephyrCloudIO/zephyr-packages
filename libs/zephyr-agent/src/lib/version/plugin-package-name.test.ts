@@ -1,10 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import type { ZePackageJson } from '../build-context/ze-package-json.type';
-import {
-  getZephyrPluginPackageName,
-  resolveZephyrPluginPackageName,
-  setZephyrPluginPackageName,
-} from './plugin-package-name';
+import { resolveZephyrPluginPackageName } from './plugin-package-name';
 
 describe('plugin-package-name', () => {
   it('resolves plugin package from declared dependencies', () => {
@@ -33,11 +29,5 @@ describe('plugin-package-name', () => {
     const pluginPackageName = resolveZephyrPluginPackageName(packageJson, 'rollup');
 
     expect(pluginPackageName).toBe('rollup-plugin-zephyr');
-  });
-
-  it('stores and returns active plugin package name', () => {
-    setZephyrPluginPackageName('zephyr-webpack-plugin');
-
-    expect(getZephyrPluginPackageName()).toBe('zephyr-webpack-plugin');
   });
 });

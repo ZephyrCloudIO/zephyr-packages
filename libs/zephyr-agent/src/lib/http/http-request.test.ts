@@ -122,44 +122,6 @@ describe('Pure HTTP Request Functions', () => {
       expect(error?.message).toBe('Network error');
     });
 
-    it('should show an outdated-version error only once per version pair', async () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-      mockFetchWithRetries
-        .mockResolvedValueOnce({
-          status: 200,
-          text: async () => JSON.stringify({ success: true }),
-          ok: true,
-          headers: {
-            'x-zephyr-agent-warning': 'outdated_client',
-            'x-zephyr-agent-current-version': '9.9.9',
-            'x-zephyr-agent-latest-version': '10.0.0',
-          },
-        } as unknown as Response)
-        .mockResolvedValueOnce({
-          status: 200,
-          text: async () => JSON.stringify({ success: true }),
-          ok: true,
-          headers: {
-            'x-zephyr-agent-warning': 'outdated_client',
-            'x-zephyr-agent-current-version': '9.9.9',
-            'x-zephyr-agent-latest-version': '10.0.0',
-          },
-        } as unknown as Response);
-
-      const url = new URL('https://api.example.com/endpoint');
-      await makeHttpRequest(url);
-      await makeHttpRequest(url);
-
-      expect(errorSpy).toHaveBeenCalledTimes(1);
-      expect(errorSpy.mock.calls[0]?.[0]).toContain(
-        'Your Zephyr Plugin version is outdated'
-      );
-      expect(errorSpy.mock.calls[0]?.[0]).toContain(
-        'If you are facing any issue, upgrade zephyr-packages first.'
-      );
-
-      errorSpy.mockRestore();
-    });
   });
 
   describe('makeRequest', () => {

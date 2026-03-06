@@ -19,7 +19,6 @@ import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
-import { multiCdnUploadStrategy } from '../lib/deployment/multi-cdn-upload.strategy';
 import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import {
@@ -613,27 +612,18 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       throw new ZephyrError(ZeErrors.ERR_NO_APPLICATION_CONFIG);
     }
 
-    if (configs.length > 1) {
-      ze_log.upload(`Multi-CDN deployment: deploying to ${configs.length} CDNs`);
-      const result = await multiCdnUploadStrategy(zephyr_engine, configs, upload_options);
-      zephyr_engine.version_url = result.primaryUrl;
+    // Always deploy to primary integration only.
+    // Secondary integrations are propagated server-side by the gateway worker.
+    const platform = (await zephyr_engine.application_configuration).PLATFORM;
+    const strategy = getUploadStrategy(platform);
+    zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);
 
-      if (isCI) {
-        const application_uid = zephyr_engine.application_uid;
-        await setAppDeployResult(application_uid, { urls: result.allUrls, snapshot });
-      }
-    } else {
-      const platform = (await zephyr_engine.application_configuration).PLATFORM;
-      const strategy = getUploadStrategy(platform);
-      zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);
-
-      if (isCI) {
-        const application_uid = zephyr_engine.application_uid;
-        await setAppDeployResult(application_uid, {
-          urls: [zephyr_engine.version_url],
-          snapshot,
-        });
-      }
+    if (isCI) {
+      const application_uid = zephyr_engine.application_uid;
+      await setAppDeployResult(application_uid, {
+        urls: [zephyr_engine.version_url],
+        snapshot,
+      });
     }
 
     // Call deployment hook if provided

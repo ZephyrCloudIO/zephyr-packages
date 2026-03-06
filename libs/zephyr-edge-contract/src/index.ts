@@ -23,8 +23,6 @@ export type { ConvertedGraph } from './lib/ze-api/converted-graph';
 export type { LocalPackageJson } from './lib/ze-api/local-package-json';
 export type {
   ApplicationConsumes,
-  DeploymentResult,
-  DeploymentStatus,
   ZephyrBuildStats,
   ZephyrDependency,
 } from './lib/zephyr-build-stats';

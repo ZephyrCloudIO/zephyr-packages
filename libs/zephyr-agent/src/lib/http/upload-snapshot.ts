@@ -22,15 +22,11 @@ export async function uploadSnapshot({
 
   if (ENVIRONMENTS != null) {
     const env_edge_urls = Array.from(
-      new Set(
-        Object.values(ENVIRONMENTS)
-          .map((envCfg) => envCfg.edgeUrl)
-          .filter((edgeUrl) => edgeUrl !== EDGE_URL)
-      )
+      new Set(Object.values(ENVIRONMENTS).filter((envCfg) => envCfg.edgeUrl !== EDGE_URL))
     );
     await Promise.all(
-      env_edge_urls.map((edgeUrl): Promise<SnapshotUploadRes> => {
-        return doUploadSnapshotRequest({ json, edge_url: edgeUrl, jwt });
+      env_edge_urls.map((envConfig: { edgeUrl: string }): Promise<SnapshotUploadRes> => {
+        return doUploadSnapshotRequest({ json, edge_url: envConfig.edgeUrl, jwt });
       })
     );
   }

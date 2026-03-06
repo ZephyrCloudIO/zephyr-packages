@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "nx build vite-plugin-zephyr",
     "build": "tsc && vite build",
     "build-watch": "tsc && vite build --watch",
     "preview": "vite preview"

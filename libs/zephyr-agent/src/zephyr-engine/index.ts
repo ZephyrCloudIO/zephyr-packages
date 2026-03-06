@@ -31,11 +31,11 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
-import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
@@ -211,8 +211,18 @@ export class ZephyrEngine {
 
     ze.application_configuration
       .then((appConfig) => {
-        const { username, email, EDGE_URL } = appConfig;
+        const { username, email, EDGE_URL, isRemoved } = appConfig;
         ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
+        if (isRemoved) {
+          void ze.logger.then(async (logger) => {
+            logger({
+              level: 'warn',
+              action: 'build:warning',
+              ignore: true,
+              message: `Application ${application_uid} has been removed. Please restore it to view new versions or perform actions on it.`,
+            });
+          });
+        }
       })
       .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
 

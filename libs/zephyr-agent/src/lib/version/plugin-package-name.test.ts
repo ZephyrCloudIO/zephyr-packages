@@ -30,4 +30,18 @@ describe('plugin-package-name', () => {
 
     expect(pluginPackageName).toBe('rollup-plugin-zephyr');
   });
+
+  it('does not throw for unknown runtime builder values', () => {
+    const packageJson = {
+      name: 'app',
+      version: '1.0.0',
+    } satisfies ZePackageJson;
+
+    const pluginPackageName = resolveZephyrPluginPackageName(
+      packageJson,
+      'elysia-app'
+    );
+
+    expect(pluginPackageName).toBe('zephyr-packages');
+  });
 });

@@ -63,11 +63,13 @@ function collectDeclaredPackageNames(packageJson: ZePackageJson): Set<string> {
 
 export function resolveZephyrPluginPackageName(
   packageJson: ZePackageJson,
-  builder: ZephyrEngineBuilderTypes
+  builder: string
 ): string {
   const declaredPackageNames = collectDeclaredPackageNames(packageJson);
+  const builderCandidates =
+    BUILDER_PLUGIN_CANDIDATES[builder as ZephyrEngineBuilderTypes] ?? [];
 
-  for (const candidate of BUILDER_PLUGIN_CANDIDATES[builder]) {
+  for (const candidate of builderCandidates) {
     if (declaredPackageNames.has(candidate)) {
       return candidate;
     }
@@ -79,5 +81,5 @@ export function resolveZephyrPluginPackageName(
     }
   }
 
-  return BUILDER_PLUGIN_CANDIDATES[builder][0] ?? FALLBACK_PLUGIN_PACKAGE_NAME;
+  return builderCandidates[0] ?? FALLBACK_PLUGIN_PACKAGE_NAME;
 }

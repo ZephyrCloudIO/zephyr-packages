@@ -207,6 +207,7 @@ The codemod automatically installs missing Zephyr plugin packages when not runni
 The tool automatically detects your package manager by checking for:
 
 1. **Lock files** (in order of priority):
+
    - `pnpm-lock.yaml` → pnpm
    - `yarn.lock` → yarn
    - `package-lock.json` → npm

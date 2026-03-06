@@ -163,7 +163,7 @@ async function loadApplicationConfigurations({
 }
 
 /** The single shared promise for multi-config (null when no request is in flight). */
-let inFlightMulti: Promise<ZeApplicationConfig[]> | null = null;
+let inFlightConfigs: Promise<ZeApplicationConfig[]> | null = null;
 
 /** The last successful multi-config result (null until we have fetched at least once). */
 let cachedConfigs: ZeApplicationConfig[] | null = null;
@@ -196,11 +196,11 @@ export async function getApplicationConfigurations({
     cachedConfigsUid = null;
   }
 
-  if (inFlightMulti) return inFlightMulti;
+  if (inFlightConfigs) return inFlightConfigs;
 
   ze_log.app('Getting application configurations (multi-CDN) from node-persist');
 
-  inFlightMulti = (async () => {
+  inFlightConfigs = (async () => {
     const storedAppConfigs = await getAppConfigs(application_uid);
 
     if (
@@ -225,10 +225,10 @@ export async function getApplicationConfigurations({
       return configs;
     })
     .finally(() => {
-      inFlightMulti = null;
+      inFlightConfigs = null;
     });
 
-  return inFlightMulti;
+  return inFlightConfigs;
 }
 
 export function invalidateApplicationConfigsCache() {

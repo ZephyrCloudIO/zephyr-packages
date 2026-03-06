@@ -211,8 +211,18 @@ export class ZephyrEngine {
 
     ze.application_configuration
       .then((appConfig) => {
-        const { username, email, EDGE_URL } = appConfig;
+        const { username, email, EDGE_URL, isRemoved } = appConfig;
         ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
+        if (isRemoved) {
+          void ze.logger.then(async (logger) => {
+            logger({
+              level: 'warn',
+              action: 'build:warning',
+              ignore: true,
+              message: `Application ${application_uid} has been removed. Please restore it to view new versions or perform actions on it.`,
+            });
+          });
+        }
       })
       .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
 

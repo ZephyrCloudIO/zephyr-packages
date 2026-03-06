@@ -7,7 +7,7 @@ export interface ZeApplicationConfig {
   PLATFORM: UploadProviderType;
   ENVIRONMENTS?: Record<string, EnvironmentConfig>;
   fetched_at?: number;
-
+  isRemoved?: boolean;
   // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration
   // @deprecated
   email: string;

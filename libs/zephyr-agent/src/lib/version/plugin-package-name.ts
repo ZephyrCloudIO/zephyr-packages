@@ -1,15 +1,5 @@
 import type { ZePackageJson } from '../build-context/ze-package-json.type';
-
-type ZephyrEngineBuilderTypes =
-  | 'webpack'
-  | 'rspack'
-  | 'repack'
-  | 'metro'
-  | 'vite'
-  | 'rollup'
-  | 'parcel'
-  | 'astro'
-  | 'unknown';
+import type { ZephyrEngineBuilderTypes } from '../../zephyr-engine/zephyr-engine.types';
 
 const FALLBACK_PLUGIN_PACKAGE_NAME = 'zephyr-packages';
 

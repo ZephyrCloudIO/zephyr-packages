@@ -37,13 +37,14 @@ import {
 } from '../lib/transformers/ze-create-manifest';
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
-import {
-  resolveZephyrPluginPackageName,
-} from '../lib/version/plugin-package-name';
+import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
+import type { ZephyrEngineBuilderTypes, ZephyrEngineOptions } from './zephyr-engine.types';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+
+export type { ZephyrEngineBuilderTypes, ZephyrEngineOptions } from './zephyr-engine.types';
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -80,21 +81,6 @@ export function is_zephyr_resolved_dependency(
   dep: ZeResolvedDependency | null
 ): dep is ZeResolvedDependency {
   return dep !== null;
-}
-
-type ZephyrEngineBuilderTypes =
-  | 'webpack'
-  | 'rspack'
-  | 'repack'
-  | 'metro'
-  | 'vite'
-  | 'rollup'
-  | 'parcel'
-  | 'astro'
-  | 'unknown';
-export interface ZephyrEngineOptions {
-  context: string | undefined;
-  builder: ZephyrEngineBuilderTypes;
 }
 
 export interface ZeUser {

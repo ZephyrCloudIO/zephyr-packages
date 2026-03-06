@@ -1,7 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { safe_json_parse } from 'zephyr-edge-contract';
+import { fetchWithRetries } from '../http/fetch-with-retries';
 import { brightRedBgName } from '../logging/debug';
 import { getZephyrAgentVersion } from './zephyr-agent-version';
 
 const warnedVersionPairs = new Set<string>();
+const NPM_FETCH_TIMEOUT_MS = 1_500;
+const requireFromHere = createRequire(__filename);
 
 function parseSemver(version: string): [number, number, number] | null {
   const sanitized = version.trim().replace(/^v/i, '');
@@ -34,30 +40,49 @@ function isOlderVersion(currentVersion: string, latestVersion: string): boolean 
 }
 
 async function fetchLatestVersion(packageName: string): Promise<string | null> {
-  if (typeof fetch !== 'function') {
-    return null;
-  }
+  const npmDistTagsUrl = new URL(
+    `https://registry.npmjs.org/-/package/${encodeURIComponent(packageName)}/dist-tags`
+  );
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), NPM_FETCH_TIMEOUT_MS);
 
   try {
-    const response = await fetch(
-      `https://registry.npmjs.org/-/package/${encodeURIComponent(packageName)}/dist-tags`
+    const response = await fetchWithRetries(
+      npmDistTagsUrl,
+      { signal: abortController.signal },
+      2
     );
-
-    if (!response.ok) {
-      return null;
-    }
-
     const payload = (await response.json()) as { latest?: unknown };
     return typeof payload.latest === 'string' ? payload.latest : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
+
+function resolveInstalledPluginVersion(pluginPackageName: string): string {
+  try {
+    const packageJsonPath = requireFromHere.resolve(`${pluginPackageName}/package.json`, {
+      paths: [process.cwd()],
+    });
+    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
+    const parsed = safe_json_parse<{ version?: unknown }>(packageJsonContent);
+
+    if (parsed?.version && typeof parsed.version === 'string') {
+      return parsed.version;
+    }
+  } catch {
+    // Ignore and fallback to zephyr-agent version.
+  }
+
+  return getZephyrAgentVersion();
 }
 
 export async function maybeShowOutdatedPluginWarning(
   pluginPackageName: string
 ): Promise<void> {
-  const currentVersion = getZephyrAgentVersion();
+  const currentVersion = resolveInstalledPluginVersion(pluginPackageName);
   const latestVersion = await fetchLatestVersion(pluginPackageName);
 
   if (!latestVersion) {

@@ -94,4 +94,30 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     await expect(promise).rejects.toThrow(ZephyrError);
     expect(axiosMock.get).toHaveBeenCalled();
   });
+
+  it('should show outdated-version error from resolve response headers', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: mock_api_response },
+      headers: {
+        'x-zephyr-agent-warning': 'outdated_client',
+        'x-zephyr-agent-current-version': '9.9.8',
+        'x-zephyr-agent-latest-version': '10.0.0',
+      },
+    });
+
+    await resolve_remote_dependency({ application_uid, version });
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0]?.[0]).toContain(
+      'Your zephyr-packages version is outdated'
+    );
+    expect(errorSpy.mock.calls[0]?.[0]).toContain(
+      'If you are facing any issue, upgrade {package name} first.'
+    );
+
+    errorSpy.mockRestore();
+  });
 });

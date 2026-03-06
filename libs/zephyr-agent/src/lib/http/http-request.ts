@@ -7,6 +7,7 @@ import {
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
+import { maybeShowOutdatedVersionWarning } from '../version/outdated-version-warning';
 import { fetchWithRetries } from './fetch-with-retries';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
@@ -86,6 +87,7 @@ export async function makeHttpRequest<T = void>(
       ...options,
       body: data as BodyInit | null | undefined,
     });
+    maybeShowOutdatedVersionWarning(response.headers);
 
     const resText = await response.text();
 

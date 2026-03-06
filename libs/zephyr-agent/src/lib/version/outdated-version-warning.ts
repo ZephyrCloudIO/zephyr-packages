@@ -56,7 +56,7 @@ export function maybeShowOutdatedVersionWarning(headers: HeaderBag): void {
   const pluginPackageName = getZephyrPluginPackageName();
 
   const message = [
-    `${brightRedBgName}  Your zephyr-packages version is outdated (current: ${currentVersion}, latest: ${latestVersion}).`,
+    `${brightRedBgName}  Your Zephyr Plugin version is outdated (current: ${currentVersion}, latest: ${latestVersion}).`,
     `${brightRedBgName}  Older versions can cause unexpected build and deployment issues.`,
     `${brightRedBgName}  If you are facing any issue, upgrade ${pluginPackageName} first.`,
   ].join('\n');

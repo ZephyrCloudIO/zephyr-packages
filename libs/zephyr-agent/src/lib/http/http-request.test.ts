@@ -152,7 +152,7 @@ describe('Pure HTTP Request Functions', () => {
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy.mock.calls[0]?.[0]).toContain(
-        'Your zephyr-packages version is outdated'
+        'Your Zephyr Plugin version is outdated'
       );
       expect(errorSpy.mock.calls[0]?.[0]).toContain(
         'If you are facing any issue, upgrade zephyr-packages first.'

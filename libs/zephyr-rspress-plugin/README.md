@@ -38,7 +38,7 @@ npm install --save-dev zephyr-rspress-plugin
 yarn add --dev zephyr-rspress-plugin
 
 # pnpm
-pnpm add --dev zephyr-rspress-plugin
+pnpm add --save-dev zephyr-rspress-plugin
 
 # bun
 bun add --dev zephyr-rspress-plugin

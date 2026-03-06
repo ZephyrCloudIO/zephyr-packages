@@ -121,7 +121,6 @@ describe('Pure HTTP Request Functions', () => {
       expect(error).toBeInstanceOf(Error);
       expect(error?.message).toBe('Network error');
     });
-
   });
 
   describe('makeRequest', () => {

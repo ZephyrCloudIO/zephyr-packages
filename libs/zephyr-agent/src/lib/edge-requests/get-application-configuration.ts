@@ -3,10 +3,7 @@ import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
-import {
-  getAppConfig,
-  saveAppConfig,
-} from '../node-persist/application-configuration';
+import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
 import { getToken } from '../node-persist/token';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 

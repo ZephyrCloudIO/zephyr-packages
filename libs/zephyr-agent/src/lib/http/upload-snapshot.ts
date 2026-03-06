@@ -1,22 +1,19 @@
 import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
+import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import { makeRequest } from './http-request';
 
-export interface SnapshotUploadConfig {
-  EDGE_URL: string;
-  jwt: string;
-  ENVIRONMENTS?: Record<string, { edgeUrl: string }> | null;
-}
-
 export async function uploadSnapshot({
   body,
-  appConfig,
+  application_uid,
 }: {
   body: Snapshot;
-  appConfig: SnapshotUploadConfig;
+  application_uid: string;
 }): Promise<SnapshotUploadRes> {
-  const { EDGE_URL, jwt, ENVIRONMENTS } = appConfig;
+  const { EDGE_URL, jwt, ENVIRONMENTS } = await getApplicationConfiguration({
+    application_uid,
+  });
 
   const json = JSON.stringify(body);
   ze_log.snapshot('Sending snapshot to edge:', JSON.stringify(body, null, 2));
@@ -38,7 +35,7 @@ export async function uploadSnapshot({
     );
   }
 
-  ze_log.snapshot('Done: snapshot uploaded');
+  ze_log.snapshot('Done: snapshot uploaded...', body);
 
   return resp;
 }

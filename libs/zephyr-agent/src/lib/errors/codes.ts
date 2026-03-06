@@ -239,17 +239,6 @@ Try to remove ~/.zephyr folder and try again.
     kind: 'deploy',
   },
 
-  /** SSR entrypoint could not be detected from output assets. */
-  ERR_SSR_ENTRYPOINT_NOT_FOUND: {
-    id: '015',
-    message: `
-Could not detect SSR entrypoint in {{ outputDir }}.
-
-Expected one of: {{ candidates }}.
-`,
-    kind: 'deploy',
-  },
-
   /** Did not receive envs from build stats upload */
   ERR_NOT_RECEIVE_ENVS_FROM_BUILD_STATS: {
     id: '016',
@@ -518,12 +507,6 @@ Were the required packages in Module federation plugin installed and included in
     id: '037',
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
-  },
-
-  ERR_NO_APPLICATION_CONFIG: {
-    id: '038',
-    message: 'No application configuration found',
-    kind: 'build',
   },
 } as const satisfies {
   [name: string]: {

@@ -75,7 +75,11 @@ export async function zeUploadAssets(
         hash: asset.hash,
         asset: assetWithBuffer,
       },
-      appConfig
+      appConfig,
+      {
+        application_uid: zephyr_engine.application_uid,
+        git_config: zephyr_engine.gitProperties,
+      }
     );
 
     const fileUploaded = Date.now() - start;
@@ -117,7 +121,11 @@ export async function zeUploadAssets(
             hash: asset.hash,
             asset: assetWithBuffer,
           },
-          { ...appConfig, EDGE_URL: envCfg.edgeUrl }
+          { ...appConfig, EDGE_URL: envCfg.edgeUrl },
+          {
+            application_uid: zephyr_engine.application_uid,
+            git_config: zephyr_engine.gitProperties,
+          }
         );
 
         const fileUploaded = Date.now() - start;

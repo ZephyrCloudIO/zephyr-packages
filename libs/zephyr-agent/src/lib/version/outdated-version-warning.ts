@@ -1,4 +1,5 @@
 import { brightRedBgName } from '../logging/debug';
+import { getZephyrPluginPackageName } from './plugin-package-name';
 
 const ZEPHYR_AGENT_WARNING_HEADER = 'x-zephyr-agent-warning';
 const ZEPHYR_AGENT_CURRENT_VERSION_HEADER = 'x-zephyr-agent-current-version';
@@ -52,11 +53,12 @@ export function maybeShowOutdatedVersionWarning(headers: HeaderBag): void {
   }
 
   notifiedVersionPairs.add(versionPair);
+  const pluginPackageName = getZephyrPluginPackageName();
 
   const message = [
     `${brightRedBgName}  Your zephyr-packages version is outdated (current: ${currentVersion}, latest: ${latestVersion}).`,
     `${brightRedBgName}  Older versions can cause unexpected build and deployment issues.`,
-    `${brightRedBgName}  If you are facing any issue, upgrade {package name} first.`,
+    `${brightRedBgName}  If you are facing any issue, upgrade ${pluginPackageName} first.`,
   ].join('\n');
 
   console.error(message);

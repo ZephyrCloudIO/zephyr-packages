@@ -155,7 +155,7 @@ describe('Pure HTTP Request Functions', () => {
         'Your zephyr-packages version is outdated'
       );
       expect(errorSpy.mock.calls[0]?.[0]).toContain(
-        'If you are facing any issue, upgrade {package name} first.'
+        'If you are facing any issue, upgrade zephyr-packages first.'
       );
 
       errorSpy.mockRestore();

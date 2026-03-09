@@ -53,6 +53,12 @@ export async function zeUploadSnapshot(
     application_uid,
   });
 
+  const worker_version = edgeTodo?.worker_version;
+  if (typeof worker_version === 'string' && worker_version.length > 0) {
+    zephyr_engine.worker_version = worker_version;
+    snapshot.worker_version = snapshot.worker_version ?? worker_version;
+  }
+
   const versionUrl = edgeTodo?.urls?.version;
 
   if (!versionUrl) {

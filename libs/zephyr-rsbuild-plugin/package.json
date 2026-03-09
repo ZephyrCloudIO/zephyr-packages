@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rsbuild-plugin",
-  "version": "0.1.10",
+  "version": "0.1.15",
   "description": "Rsbuild plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
-    "@rsbuild/core": "^1.0.0"
+    "@rsbuild/core": "^1.0.0 || ^2.0.0-0"
   },
   "publishConfig": {
     "access": "public",

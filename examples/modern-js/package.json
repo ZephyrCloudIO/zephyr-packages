@@ -23,7 +23,8 @@
     "@modern-js/plugin-ssg": "catalog:modernjs",
     "@modern-js/runtime": "catalog:modernjs",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "react-server-dom-webpack": "19.2.4"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",
@@ -36,6 +37,7 @@
     "lint-staged": "~16.2.7",
     "rimraf": "^6.1.2",
     "typescript": "catalog:typescript",
-    "zephyr-modernjs-plugin": "workspace:*"
+    "zephyr-modernjs-plugin": "workspace:*",
+    "zephyr-rspack-plugin": "workspace:*"
   }
 }

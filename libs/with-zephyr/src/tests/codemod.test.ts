@@ -152,6 +152,58 @@ describe('Zephyr Codemod CLI', () => {
     });
   });
 
+  describe('Next.js Vinext Scaffold', () => {
+    it('should scaffold vite and wrangler config for Next.js apps', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify(
+          {
+            name: '@acme/next-app',
+            dependencies: {
+              next: '^15.0.0',
+              vinext: '^0.0.4',
+              '@vitejs/plugin-rsc': '^0.5.19',
+            },
+            devDependencies: {
+              'vite-plugin-vinext-zephyr': '^0.1.11',
+              '@cloudflare/vite-plugin': '^1.25.0',
+              vite: '^7.3.1',
+              wrangler: '^4.68.1',
+            },
+            scripts: {
+              dev: 'next dev',
+              build: 'next build',
+              start: 'next start',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      runCodemod('.');
+
+      expect(fs.existsSync('vite.config.ts')).toBe(true);
+      expect(fs.existsSync('wrangler.jsonc')).toBe(true);
+
+      const viteConfig = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(viteConfig).toContain("import vinext from 'vinext';");
+      expect(viteConfig).toContain(
+        "import { withZephyr } from 'vite-plugin-vinext-zephyr';"
+      );
+
+      const wranglerConfig = fs.readFileSync('wrangler.jsonc', 'utf8');
+      expect(wranglerConfig).toContain('"main": "vinext/server/app-router-entry"');
+      expect(wranglerConfig).toContain('"name": "acme-next-app"');
+
+      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      expect(updatedPackageJson.type).toBe('module');
+      expect(updatedPackageJson.scripts.dev).toBe('vinext dev');
+      expect(updatedPackageJson.scripts.build).toBe('vinext build');
+      expect(updatedPackageJson.scripts.start).toBe('vinext start');
+    });
+  });
+
   describe('Actual Transformations', () => {
     it('should transform webpack config with composePlugins', () => {
       const originalContent = `
@@ -241,6 +293,7 @@ describe('Zephyr Codemod CLI', () => {
       const content = fs.readFileSync('rsbuild.config.ts', 'utf8');
       expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
       expect(content).toContain('pluginReact(), withZephyr()');
+      expect(content).toMatch(/output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/);
     });
 
     it('should wrap rspack defineConfig exports instead of adding to plugins array', () => {
@@ -260,6 +313,43 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('import { withZephyr } from "zephyr-rspack-plugin"');
       expect(content).toContain('export default withZephyr()(defineConfig({');
       expect(content).not.toMatch(/plugins[^]]*withZephyr\(\)/);
+    });
+
+    it('should transform metro config with async wrapper', () => {
+      const originalContent = `
+        const { getDefaultConfig } = require('@react-native/metro-config');
+        module.exports = getDefaultConfig(__dirname);
+      `;
+      fs.writeFileSync('metro.config.js', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('metro.config.js', 'utf8');
+      expect(content).toContain('const { withZephyr } = require("zephyr-metro-plugin");');
+      expect(content).toContain(
+        'const __zephyrConfig = await getDefaultConfig(__dirname);'
+      );
+      expect(content).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
+    });
+
+    it('should transform metro ESM config with async wrapper', () => {
+      const originalContent = `
+        export default {
+          resolver: { sourceExts: ['js', 'ts'] }
+        };
+      `;
+      fs.writeFileSync('metro.config.mjs', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('metro.config.mjs', 'utf8');
+      expect(content).toContain('import { withZephyr } from "zephyr-metro-plugin";');
+      expect(content).toContain('export default (async () => {');
+      expect(content).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
     });
   });
 

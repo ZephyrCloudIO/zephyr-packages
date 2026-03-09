@@ -1,18 +1,28 @@
-import type { Node as BabelNode } from '@babel/types';
+export type BundlerStrategy = 'first-success' | 'run-all';
 
-export type { BabelNode };
-
-export interface BundlerPattern {
-  type: string;
-  matcher: RegExp;
-  transform: string;
-}
+export type BundlerOperationId =
+  | 'compose-plugins'
+  | 'plugins-array'
+  | 'plugins-array-or-create'
+  | 'wrap-module-exports'
+  | 'wrap-module-exports-async'
+  | 'wrap-export-default-async'
+  | 'wrap-export-default-define-config'
+  | 'wrap-export-default-object'
+  | 'rollup-function'
+  | 'rollup-array'
+  | 'astro-integrations-or-create'
+  | 'astro-integrations-function-or-create'
+  | 'rsbuild-asset-prefix'
+  | 'wrap-exported-function'
+  | 'parcel-reporters';
 
 export interface BundlerConfig {
   files: string[];
   plugin: string;
   importName: string | null;
-  patterns: BundlerPattern[];
+  strategy: BundlerStrategy;
+  operations: BundlerOperationId[];
 }
 
 export interface BundlerConfigs {
@@ -31,12 +41,9 @@ export interface CodemodOptions {
   installPackages?: boolean;
 }
 
-export interface TransformFunction {
-  (ast: BabelNode): void;
-}
-
-export interface TransformFunctions {
-  [key: string]: TransformFunction;
+export interface OperationResult {
+  status: 'changed' | 'no-match' | 'error';
+  error?: string;
 }
 
 export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';

@@ -1,602 +1,524 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
-import generate from '@babel/generator';
-import { parse } from '@babel/parser';
 import { beforeEach, describe, expect, it } from '@rstest/core';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {
-  addToComposePlugins,
-  addToPluginsArray,
-  addToPluginsArrayOrCreate,
-  addToRollupArrayConfig,
-  addToVitePlugins,
-  addToVitePluginsInFunction,
-  addToAstroIntegrations,
-  addToAstroIntegrationsInFunction,
-  addToAstroIntegrationsOrCreate,
-  addToAstroIntegrationsInFunctionOrCreate,
-  hasZephyrPlugin,
-  parseFile,
-  wrapExportDefault,
-  wrapExportedFunction,
-  writeFile,
-} from '../transformers/index.js';
+  applyBundlerOperations,
+  hasZephyrCall,
+  runBundlerOperation,
+} from '../operations.js';
+import type { BundlerConfig, BundlerOperationId, BundlerStrategy } from '../types.js';
 
-describe('Zephyr Codemod Transformers', () => {
+function createConfig(
+  operation: BundlerOperationId,
+  strategy: BundlerStrategy = 'first-success',
+  plugin = 'vite-plugin-zephyr'
+): BundlerConfig {
+  return {
+    files: [],
+    plugin,
+    importName: plugin === 'parcel-reporter-zephyr' ? null : 'withZephyr',
+    strategy,
+    operations: [operation],
+  };
+}
+
+describe('Ast-grep Operations', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zephyr-test-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zephyr-ops-test-'));
   });
 
-  describe('hasZephyrPlugin', () => {
+  describe('hasZephyrCall', () => {
     it('should detect withZephyr call expression', () => {
-      const code = `
+      const filePath = path.join(tempDir, 'vite.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
         import { withZephyr } from 'vite-plugin-zephyr';
-        export default withZephyr()({
-          plugins: []
-        });
-      `;
-      const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript'],
-      });
-      expect(hasZephyrPlugin(ast)).toBe(true);
+        export default withZephyr()({ plugins: [] });
+      `
+      );
+
+      const result = hasZephyrCall(filePath);
+      expect(result.status).toBe('changed');
     });
 
-    it('should return false when withZephyr is not present', () => {
-      const code = `
-        export default {
-          plugins: []
-        };
-      `;
-      const ast = parse(code, { sourceType: 'module' });
-      expect(hasZephyrPlugin(ast)).toBe(false);
+    it('should return no-match when withZephyr call does not exist', () => {
+      const filePath = path.join(tempDir, 'vite.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default { plugins: [] };
+      `
+      );
+
+      const result = hasZephyrCall(filePath);
+      expect(result.status).toBe('no-match');
     });
   });
 
-  describe('addToComposePlugins', () => {
-    it('should add withZephyr to composePlugins call', () => {
-      const code = `
-        import { composePlugins, withNx } from '@nx/webpack';
-        import { withReact } from '@nx/react';
-
+  describe('compose-plugins', () => {
+    it('should inject withZephyr before terminal config function', () => {
+      const filePath = path.join(tempDir, 'webpack.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
         export default composePlugins(
           withNx(),
           withReact(),
           (config) => config
         );
-      `;
-
-      const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript'],
-      });
-      addToComposePlugins(ast);
-      const result = generate(ast).code;
-
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /composePlugins\s*\(\s*withNx\(\),\s*withReact\(\),\s*withZephyr\(\)/
+      `
       );
-    });
-  });
 
-  describe('addToPluginsArray', () => {
-    it('should add withZephyr to plugins array', () => {
-      const code = `
-        export default {
-          plugins: [
-            somePlugin(),
-            anotherPlugin()
-          ]
-        };
-      `;
-
-      const ast = parse(code, { sourceType: 'module' });
-      addToPluginsArray(ast);
-      const result = generate(ast).code;
-
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /plugins:\s*\[\s*somePlugin\(\),\s*anotherPlugin\(\),\s*withZephyr\(\)\s*\]/
-      );
-    });
-  });
-
-  describe('addToPluginsArrayOrCreate', () => {
-    it('should add withZephyr to existing plugins array in defineConfig', () => {
-      const code = `
-        import { defineConfig } from 'rspress/config';
-
-        export default defineConfig({
-          root: './docs',
-          plugins: [existingPlugin()]
-        });
-      `;
-
-      const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript'],
+      const result = runBundlerOperation('compose-plugins', {
+        filePath,
+        config: createConfig('compose-plugins', 'first-success', 'zephyr-webpack-plugin'),
+        dryRun: false,
       });
-      addToPluginsArrayOrCreate(ast);
-      const result = generate(ast).code;
 
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/plugins:\s*\[\s*existingPlugin\(\),\s*withZephyr\(\)\s*\]/);
-    });
-
-    it('should create plugins array when it does not exist in defineConfig', () => {
-      const code = `
-        import { defineConfig } from 'rspress/config';
-
-        export default defineConfig({
-          root: './docs',
-          title: 'My Site',
-          themeConfig: {
-            socialLinks: []
-          }
-        });
-      `;
-
-      const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript'],
-      });
-      addToPluginsArrayOrCreate(ast);
-      const result = generate(ast).code;
-
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/plugins:\s*\[\s*withZephyr\(\)\s*\]/);
-    });
-
-    it('should fallback to addToPluginsArray when no defineConfig found', () => {
-      const code = `
-        export default {
-          plugins: [somePlugin()]
-        };
-      `;
-
-      const ast = parse(code, { sourceType: 'module' });
-      addToPluginsArrayOrCreate(ast);
-      const result = generate(ast).code;
-
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/plugins:\s*\[\s*somePlugin\(\),\s*withZephyr\(\)\s*\]/);
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toMatch(/withReact\(\),\s*withZephyr\(\),\s*\(config\) => config/);
     });
   });
 
-  describe('addToVitePlugins', () => {
-    it('should add withZephyr to Vite defineConfig', () => {
-      const code = `
-        import { defineConfig } from 'vite';
-
+  describe('plugins-array operations', () => {
+    it('should append withZephyr to existing plugins array', () => {
+      const filePath = path.join(tempDir, 'vite.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
         export default defineConfig({
           plugins: [react()]
         });
-      `;
+      `
+      );
 
-      const ast = parse(code, { sourceType: 'module' });
-      addToVitePlugins(ast);
-      const result = generate(ast).code;
+      const result = runBundlerOperation('plugins-array', {
+        filePath,
+        config: createConfig('plugins-array'),
+        dryRun: false,
+      });
 
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/plugins:\s*\[\s*react\(\),\s*withZephyr\(\)\s*\]/);
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('plugins: [react(), withZephyr()]');
+    });
+
+    it('should create plugins array when using plugins-array-or-create', () => {
+      const filePath = path.join(tempDir, 'modern.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          source: { alias: {} }
+        });
+      `
+      );
+
+      const result = runBundlerOperation('plugins-array-or-create', {
+        filePath,
+        config: createConfig(
+          'plugins-array-or-create',
+          'first-success',
+          'zephyr-modernjs-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('plugins: [withZephyr()]');
     });
   });
 
-  describe('addToVitePluginsInFunction', () => {
-    it('should add withZephyr to Vite config with function wrapper', () => {
-      const code = `
-        import { defineConfig } from 'vite';
+  describe('astro integrations operations', () => {
+    it('should append withZephyr to integrations when defineConfig has other properties', () => {
+      const filePath = path.join(tempDir, 'astro.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          site: 'https://example.com',
+          integrations: [mdx(), sitemap()],
+        });
+      `
+      );
 
-        export default defineConfig(() => ({
-          plugins: [angular()]
+      const result = runBundlerOperation('astro-integrations-or-create', {
+        filePath,
+        config: createConfig(
+          'astro-integrations-or-create',
+          'first-success',
+          'zephyr-astro-integration'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('integrations: [mdx(), sitemap(), withZephyr()]');
+      expect(next.match(/integrations:\s*\[/g)?.length ?? 0).toBe(1);
+    });
+
+    it('should not create duplicate integrations when using astro operation chain', () => {
+      const filePath = path.join(tempDir, 'astro.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          site: 'https://example.com',
+          integrations: [mdx(), sitemap()],
+        });
+      `
+      );
+
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-astro-integration',
+        importName: 'withZephyr',
+        strategy: 'first-success',
+        operations: [
+          'astro-integrations-function-or-create',
+          'astro-integrations-or-create',
+        ],
+      };
+
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('integrations: [mdx(), sitemap(), withZephyr()]');
+      expect(next).not.toContain('],,');
+      expect(next.match(/integrations:\s*\[/g)?.length ?? 0).toBe(1);
+    });
+
+    it('should append withZephyr for defineConfig arrow function integrations', () => {
+      const filePath = path.join(tempDir, 'astro.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig((env) => ({
+          site: env.site,
+          integrations: [mdx(), sitemap()],
         }));
-      `;
+      `
+      );
 
-      const ast = parse(code, { sourceType: 'module' });
-      addToVitePluginsInFunction(ast);
-      const result = generate(ast).code;
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-astro-integration',
+        importName: 'withZephyr',
+        strategy: 'first-success',
+        operations: [
+          'astro-integrations-function-or-create',
+          'astro-integrations-or-create',
+        ],
+      };
 
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/plugins:\s*\[\s*angular\(\),\s*withZephyr\(\)\s*\]/);
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('integrations: [mdx(), sitemap(), withZephyr()]');
+      expect(next.match(/integrations:\s*\[/g)?.length ?? 0).toBe(1);
     });
   });
 
-  describe('addToRollupArrayConfig', () => {
-    it('should add withZephyr to Rollup array config', () => {
-      const code = `
-        export default [{
-          input: 'src/index.ts',
-          plugins: [
-            resolve(),
-            babel()
-          ]
-        }];
-      `;
+  describe('wrappers', () => {
+    it('should wrap export default defineConfig for rspack', () => {
+      const filePath = path.join(tempDir, 'rspack.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          plugins: [new rspack.HtmlRspackPlugin()]
+        });
+      `
+      );
 
-      const ast = parse(code, { sourceType: 'module' });
-      addToRollupArrayConfig(ast);
-      const result = generate(ast).code;
+      const result = runBundlerOperation('wrap-export-default-define-config', {
+        filePath,
+        config: createConfig(
+          'wrap-export-default-define-config',
+          'first-success',
+          'zephyr-rspack-plugin'
+        ),
+        dryRun: false,
+      });
 
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /plugins:\s*\[\s*resolve\(\),\s*babel\(\),\s*withZephyr\(\)\s*\]/
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('export default withZephyr()(defineConfig(');
+    });
+
+    it('should wrap exported function reference for repack', () => {
+      const filePath = path.join(tempDir, 'rspack.config.mjs');
+      fs.writeFileSync(
+        filePath,
+        `
+        const config = env => ({ mode: env.mode });
+        export default config;
+      `
+      );
+
+      const result = runBundlerOperation('wrap-exported-function', {
+        filePath,
+        config: createConfig(
+          'wrap-exported-function',
+          'first-success',
+          'zephyr-repack-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('export default withZephyr()(config);');
+    });
+
+    it('should wrap module exports with async withZephyr call for metro', () => {
+      const filePath = path.join(tempDir, 'metro.config.js');
+      fs.writeFileSync(
+        filePath,
+        `
+        const { getDefaultConfig } = require('@react-native/metro-config');
+        module.exports = getDefaultConfig(__dirname);
+      `
+      );
+
+      const result = runBundlerOperation('wrap-module-exports-async', {
+        filePath,
+        config: createConfig(
+          'wrap-module-exports-async',
+          'first-success',
+          'zephyr-metro-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('const __zephyrConfig = await getDefaultConfig(__dirname);');
+      expect(next).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
       );
     });
-  });
 
-  describe('wrapExportDefault', () => {
-    it('should wrap export default object with withZephyr', () => {
-      const code = `
+    it('should invoke exported config function references for metro', () => {
+      const filePath = path.join(tempDir, 'metro.config.js');
+      fs.writeFileSync(
+        filePath,
+        `
+        const getConfig = () => ({ resolver: {} });
+        module.exports = getConfig;
+      `
+      );
+
+      const result = runBundlerOperation('wrap-module-exports-async', {
+        filePath,
+        config: createConfig(
+          'wrap-module-exports-async',
+          'first-success',
+          'zephyr-metro-plugin'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('const __zephyrConfig = await getConfig;');
+      expect(next).toContain('await __zephyrConfig()');
+    });
+
+    it('should wrap export default config with async withZephyr call for metro', () => {
+      const filePath = path.join(tempDir, 'metro.config.mjs');
+      fs.writeFileSync(
+        filePath,
+        `
         export default {
-          mode: 'development',
-          entry: './src/index.js'
+          resolver: { sourceExts: ['js'] },
         };
-      `;
+      `
+      );
 
-      const ast = parse(code, { sourceType: 'module' });
-      wrapExportDefault(ast);
-      const result = generate(ast).code;
+      const result = runBundlerOperation('wrap-export-default-async', {
+        filePath,
+        config: createConfig(
+          'wrap-export-default-async',
+          'first-success',
+          'zephyr-metro-plugin'
+        ),
+        dryRun: false,
+      });
 
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/export default withZephyr\(\)\(\{[\s\S]*\}\);/);
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('export default (async () => {');
+      expect(next).toContain('return withZephyr()(');
     });
   });
 
-  describe('wrapExportedFunction', () => {
-    it('should wrap exported function with withZephyr for Re.Pack', () => {
-      const code = `
-        const config = env => {
-          const {mode, platform} = env;
-          return {
-            mode,
-            entry: './index.js'
-          };
-        };
-
-        export default config;
-      `;
-
-      const ast = parse(code, { sourceType: 'module' });
-      wrapExportedFunction(ast);
-      const result = generate(ast).code;
-
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/export default withZephyr\(\)\(config\);/);
-    });
-
-    it('should skip conditional exports that already have withZephyr', () => {
-      const code = `
-        const config = env => ({ mode: 'development' });
-        export default USE_ZEPHYR ? withZephyr()(config) : config;
-      `;
-
-      const ast = parse(code, { sourceType: 'module' });
-      wrapExportedFunction(ast);
-      const result = generate(ast).code;
-
-      // Should not modify the conditional expression
-      expect(result).toContain('USE_ZEPHYR ? withZephyr()(config) : config');
-      expect(result.split('withZephyr').length).toBe(2); // Only one occurrence
-    });
-  });
-
-  describe('addToPluginsArray (RSBuild)', () => {
-    it('should add withZephyr to RSBuild plugins array', () => {
-      const code = `
-        import { defineConfig } from '@rsbuild/core';
-        import { pluginReact } from '@rsbuild/plugin-react';
-
+  describe('rsbuild-asset-prefix', () => {
+    it('should add output.assetPrefix = "auto" when missing', () => {
+      const filePath = path.join(tempDir, 'rsbuild.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
         export default defineConfig({
           plugins: [pluginReact()]
         });
-      `;
-
-      const ast = parse(code, {
-        sourceType: 'module',
-        plugins: ['typescript'],
-      });
-      addToPluginsArray(ast);
-      const result = generate(ast).code;
-
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/plugins:\s*\[\s*pluginReact\(\),\s*withZephyr\(\)\s*\]/);
-    });
-  });
-
-  describe('Astro Transformers', () => {
-    describe('addToAstroIntegrations', () => {
-      it('should add withZephyr to existing integrations array', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-          import mdx from '@astrojs/mdx';
-          import sitemap from '@astrojs/sitemap';
-
-          export default defineConfig({
-            integrations: [mdx(), sitemap()]
-          });
-        `;
-
-        const ast = parse(code, {
-          sourceType: 'module',
-          plugins: ['typescript'],
-        });
-        addToAstroIntegrations(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(
-          /integrations:\s*\[\s*mdx\(\),\s*sitemap\(\),\s*withZephyr\(\)\s*\]/
-        );
-      });
-
-      it('should handle plain object export', () => {
-        const code = `
-          export default {
-            integrations: [mdx()]
-          };
-        `;
-
-        const ast = parse(code, { sourceType: 'module' });
-        addToAstroIntegrations(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*mdx\(\),\s*withZephyr\(\)\s*\]/);
-      });
-    });
-
-    describe('addToAstroIntegrationsInFunction', () => {
-      it('should add withZephyr to integrations in function wrapper', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-          import react from '@astrojs/react';
-
-          export default defineConfig(() => ({
-            integrations: [react()]
-          }));
-        `;
-
-        const ast = parse(code, {
-          sourceType: 'module',
-          plugins: ['typescript'],
-        });
-        addToAstroIntegrationsInFunction(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*react\(\),\s*withZephyr\(\)\s*\]/);
-      });
-
-      it('should handle parenthesized object expression', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-
-          export default defineConfig(() => ({
-            integrations: []
-          }));
-        `;
-
-        const ast = parse(code, { sourceType: 'module' });
-        addToAstroIntegrationsInFunction(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-      });
-    });
-
-    describe('addToAstroIntegrationsOrCreate', () => {
-      it('should add withZephyr to existing integrations array in defineConfig', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-          import mdx from '@astrojs/mdx';
-
-          export default defineConfig({
-            site: 'https://example.com',
-            integrations: [mdx()]
-          });
-        `;
-
-        const ast = parse(code, {
-          sourceType: 'module',
-          plugins: ['typescript'],
-        });
-        addToAstroIntegrationsOrCreate(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*mdx\(\),\s*withZephyr\(\)\s*\]/);
-      });
-
-      it('should create integrations array when it does not exist in defineConfig', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-
-          export default defineConfig({
-            site: 'https://example.com',
-            output: 'static',
-            base: '/my-app'
-          });
-        `;
-
-        const ast = parse(code, {
-          sourceType: 'module',
-          plugins: ['typescript'],
-        });
-        addToAstroIntegrationsOrCreate(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*withZephyr\(\)\s*\]/);
-        expect(result).toContain('site:');
-        expect(result).toContain('output:');
-      });
-
-      it('should fallback to addToAstroIntegrations when no defineConfig found', () => {
-        const code = `
-          export default {
-            integrations: [mdx()]
-          };
-        `;
-
-        const ast = parse(code, { sourceType: 'module' });
-        addToAstroIntegrationsOrCreate(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*mdx\(\),\s*withZephyr\(\)\s*\]/);
-      });
-    });
-
-    describe('addToAstroIntegrationsInFunctionOrCreate', () => {
-      it('should add withZephyr to existing integrations array in function', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-          import react from '@astrojs/react';
-
-          export default defineConfig(() => ({
-            site: 'https://example.com',
-            integrations: [react()]
-          }));
-        `;
-
-        const ast = parse(code, {
-          sourceType: 'module',
-          plugins: ['typescript'],
-        });
-        addToAstroIntegrationsInFunctionOrCreate(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*react\(\),\s*withZephyr\(\)\s*\]/);
-      });
-
-      it('should create integrations array when it does not exist in function', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-
-          export default defineConfig(() => ({
-            site: 'https://example.com',
-            output: 'server'
-          }));
-        `;
-
-        const ast = parse(code, {
-          sourceType: 'module',
-          plugins: ['typescript'],
-        });
-        addToAstroIntegrationsInFunctionOrCreate(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*withZephyr\(\)\s*\]/);
-        expect(result).toContain('site:');
-        expect(result).toContain('output:');
-      });
-
-      it('should handle direct object expression in arrow function', () => {
-        const code = `
-          import { defineConfig } from 'astro/config';
-
-          export default defineConfig(() => ({
-            base: '/docs'
-          }));
-        `;
-
-        const ast = parse(code, { sourceType: 'module' });
-        addToAstroIntegrationsInFunctionOrCreate(ast);
-        const result = generate(ast).code;
-
-        expect(result).toContain('withZephyr()');
-        expect(result).toMatch(/integrations:\s*\[\s*withZephyr\(\)\s*\]/);
-      });
-    });
-  });
-
-  describe('Integration Tests', () => {
-    it('should handle webpack config with composePlugins', () => {
-      const configPath = path.join(tempDir, 'webpack.config.ts');
-      const code = `
-        import { composePlugins, withNx } from '@nx/webpack';
-        import { withReact } from '@nx/react';
-        import { withModuleFederation } from '@nx/react/module-federation';
-
-        export default composePlugins(
-          withNx(),
-          withReact(),
-          withModuleFederation(config),
-          (config) => config
-        );
-      `;
-
-      fs.writeFileSync(configPath, code);
-      const ast = parseFile(configPath);
-      addToComposePlugins(ast);
-      writeFile(configPath, ast);
-
-      const result = fs.readFileSync(configPath, 'utf8');
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(/withModuleFederation\(config\),\s*withZephyr\(\),/);
-    });
-
-    it('should handle Vite config with complex setup', () => {
-      const configPath = path.join(tempDir, 'vite.config.ts');
-      const code = `
-        import { defineConfig } from 'vite';
-        import react from '@vitejs/plugin-react';
-        import { resolve } from 'path';
-
-        export default defineConfig({
-          plugins: [react()],
-          resolve: {
-            alias: {
-              '@': resolve(__dirname, 'src')
-            }
-          },
-          server: {
-            port: 3000
-          }
-        });
-      `;
-
-      fs.writeFileSync(configPath, code);
-      const ast = parseFile(configPath);
-      addToVitePlugins(ast);
-      writeFile(configPath, ast);
-
-      const result = fs.readFileSync(configPath, 'utf8');
-      expect(result).toContain('withZephyr()');
-      expect(result).toContain('react(), withZephyr()');
-    });
-
-    it('should handle RSBuild config transformation end-to-end', () => {
-      const configPath = path.join(tempDir, 'rsbuild.config.ts');
-      const code = `
-        import { defineConfig } from '@rsbuild/core';
-        import { pluginReact } from '@rsbuild/plugin-react';
-        import { pluginSass } from '@rsbuild/plugin-sass';
-
-        export default defineConfig({
-          plugins: [pluginReact(), pluginSass()],
-          html: {
-            template: './public/index.html'
-          }
-        });
-      `;
-
-      fs.writeFileSync(configPath, code);
-      const ast = parseFile(configPath);
-      addToPluginsArray(ast);
-      writeFile(configPath, ast);
-
-      const result = fs.readFileSync(configPath, 'utf8');
-      expect(result).toContain('withZephyr()');
-      expect(result).toMatch(
-        /plugins:\s*\[\s*pluginReact\(\),\s*pluginSass\(\),\s*withZephyr\(\)\s*\]/
+      `
       );
+
+      const result = runBundlerOperation('rsbuild-asset-prefix', {
+        filePath,
+        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toMatch(/assetPrefix:\s*["']auto["']/);
+    });
+
+    it('should not overwrite existing output.assetPrefix', () => {
+      const filePath = path.join(tempDir, 'rsbuild.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          output: { assetPrefix: '/static/' }
+        });
+      `
+      );
+
+      const result = runBundlerOperation('rsbuild-asset-prefix', {
+        filePath,
+        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('no-match');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain("assetPrefix: '/static/'");
+      expect(next).not.toContain('assetPrefix: "auto"');
+    });
+  });
+
+  describe('parcel-reporters', () => {
+    it('should append reporter once', () => {
+      const filePath = path.join(tempDir, '.parcelrc.json');
+      fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+          {
+            reporters: ['...'],
+          },
+          null,
+          2
+        )
+      );
+
+      const config = createConfig(
+        'parcel-reporters',
+        'run-all',
+        'parcel-reporter-zephyr'
+      );
+
+      const first = runBundlerOperation('parcel-reporters', {
+        filePath,
+        config,
+        dryRun: false,
+      });
+      const second = runBundlerOperation('parcel-reporters', {
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(first.status).toBe('changed');
+      expect(second.status).toBe('no-match');
+
+      const next = JSON.parse(fs.readFileSync(filePath, 'utf8')) as {
+        reporters: string[];
+      };
+      expect(next.reporters).toContain('parcel-reporter-zephyr');
+      expect(next.reporters.filter((r) => r === 'parcel-reporter-zephyr').length).toBe(1);
+    });
+  });
+
+  describe('applyBundlerOperations', () => {
+    it('should honor first-success strategy', () => {
+      const filePath = path.join(tempDir, 'webpack.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default composePlugins(withNx(), withReact(), (config) => config);
+      `
+      );
+
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-webpack-plugin',
+        importName: 'withZephyr',
+        strategy: 'first-success',
+        operations: ['compose-plugins', 'plugins-array'],
+      };
+
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('withZephyr()');
+      expect(next).not.toContain('plugins: [withZephyr()]');
+    });
+
+    it('should run all operations for run-all strategy', () => {
+      const filePath = path.join(tempDir, 'rsbuild.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          html: { template: './index.html' }
+        });
+      `
+      );
+
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-rsbuild-plugin',
+        importName: 'withZephyr',
+        strategy: 'run-all',
+        operations: ['plugins-array-or-create', 'rsbuild-asset-prefix'],
+      };
+
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('plugins: [withZephyr()]');
+      expect(next).toMatch(/assetPrefix:\s*["']auto["']/);
     });
   });
 });

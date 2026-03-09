@@ -11,9 +11,9 @@ import {
   zeBuildDashData,
   ZephyrEngine,
   type RemoteEntry,
-  type ZeResolvedDependency,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
+import { extractEntrypoint } from './internal/extract/extract-entrypoint';
 import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
@@ -28,22 +28,6 @@ interface VitePluginZephyrOptions {
 }
 
 const DEFAULT_LIBRARY_TYPE = 'module';
-
-function ensureLibraryType(
-  remotes: ZeResolvedDependency[] | null
-): ZeResolvedDependency[] | null {
-  if (!remotes) return remotes;
-  let didUpdate = false;
-  const normalized = remotes.map((remote) => {
-    if (remote.library_type) {
-      return remote;
-    }
-    didUpdate = true;
-    return { ...remote, library_type: DEFAULT_LIBRARY_TYPE };
-  });
-
-  return didUpdate ? normalized : remotes;
-}
 
 export function withZephyr(_options?: VitePluginZephyrOptions): Plugin[] {
   const mfConfig = _options?.mfConfig;
@@ -81,6 +65,7 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
   let baseHref = '/';
   let mfPlugin: (Plugin & { _options: ModuleFederationOptions }) | undefined;
   let cachedSpecifier: string | undefined;
+  let entrypoint: string;
 
   return {
     name: 'with-zephyr',
@@ -90,6 +75,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
     configResolved: async (config: ResolvedConfig) => {
       root = config.root;
       baseHref = config.base || '/';
+
+      // Extract and normalize entrypoint from Vite config
+      entrypoint = extractEntrypoint(config);
 
       // Initialize Zephyr engine for both serve and build
       zephyr_defer_create({
@@ -112,9 +100,9 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
           const dependencyPairs = extract_remotes_dependencies(root, mfPlugin._options);
           if (dependencyPairs) {
             const zephyr_engine = await zephyr_engine_defer;
-            await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
-            zephyr_engine.federated_dependencies = ensureLibraryType(
-              zephyr_engine.federated_dependencies
+            await zephyr_engine.resolve_remote_dependencies(
+              dependencyPairs,
+              DEFAULT_LIBRARY_TYPE
             );
             ze_log.remotes(
               `Resolved ${dependencyPairs.length} remote dependencies in configResolved`
@@ -365,6 +353,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: await zeBuildDashData(zephyr_engine),
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();
@@ -435,6 +425,8 @@ function zephyrPlugin(hooks?: ZephyrBuildHooks): Plugin {
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats,
+          snapshotType: 'csr',
+          entrypoint,
           hooks,
         });
         await zephyr_engine.build_finished();

@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspack-plugin",
-  "version": "0.1.10",
+  "version": "0.1.15",
   "description": "Repack plugin for Zephyr",
   "repository": {
     "type": "git",
@@ -32,7 +32,7 @@
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
-    "@rspack/core": "^1.0.0"
+    "@rspack/core": "^1.0.0 || ^2.0.0-0"
   },
   "publishConfig": {
     "access": "public",

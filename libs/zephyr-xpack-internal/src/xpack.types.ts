@@ -12,9 +12,18 @@ export interface XPackConfiguration<Compiler> {
   output?:
     | {
         publicPath?: string;
+        library?: Library;
       }
     | any;
 }
+
+export type Library =
+  | string
+  | string[]
+  | {
+      type?: string;
+      amd?: string;
+    };
 
 interface WebpackPluginInstance<Compiler> {
   [index: string]: any;

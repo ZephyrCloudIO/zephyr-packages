@@ -161,14 +161,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
   console.log('💾 Creating commit...');
   exec(`git commit -m "${commitMessage}"`);
 
-  // Create tag
-  console.log(`🏷️  Creating tag: v${newVersion}`);
-  exec(`git tag v${newVersion}`);
-
-  // Push branch and tag
+  // Push branch
   console.log('⬆️  Pushing changes...');
   exec(`git push origin ${branchName}`);
-  exec(`git push origin v${newVersion}`);
 
   // Create PR if we created a new branch
   if (shouldCreatePR) {
@@ -177,11 +172,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
     const prBody = `## Summary
 • Bump ${bumpType} version from ${currentVersion} to ${newVersion}
 • Update root package.json and all lib package.json files
-• Add version tag v${newVersion}
-
 ## Test plan
 - [ ] Verify all package.json files have correct version
-- [ ] Verify git tag is created
 - [ ] Verify no breaking changes
 
 🤖 Generated with [Claude Code](https://claude.ai/code)`;
@@ -201,7 +193,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
 
   console.log('🎉 Version bump completed successfully!');
   console.log(`📦 New version: ${newVersion}`);
-  console.log(`🏷️  Tag: v${newVersion}`);
   console.log(`🌿 Branch: ${branchName}`);
 }
 

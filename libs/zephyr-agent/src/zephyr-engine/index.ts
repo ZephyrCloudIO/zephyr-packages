@@ -38,13 +38,19 @@ import {
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
-import type { ZephyrEngineBuilderTypes, ZephyrEngineOptions } from './zephyr-engine.types';
+import type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
 
-export type { ZephyrEngineBuilderTypes, ZephyrEngineOptions } from './zephyr-engine.types';
+export type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -145,6 +151,8 @@ export class ZephyrEngine {
   ze_env_vars: Record<string, string> | null = null;
   // Store env vars hash for API to use
   ze_env_vars_hash: string | null = null;
+  // Version of worker engine that processed snapshot upload
+  worker_version: string | null = null;
 
   get zephyr_dependencies(): Record<string, ZephyrDependency> {
     return convertResolvedDependencies(this.federated_dependencies ?? []);
@@ -529,6 +537,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           ...dash_data,
           builder: dash_data.builder ?? zephyr_engine.builder,
           plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
+          worker_version:
+            dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
         };
       },
       assets: {

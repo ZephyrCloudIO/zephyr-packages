@@ -4,6 +4,7 @@ export type BundlerOperationId =
   | 'compose-plugins'
   | 'plugins-array'
   | 'plugins-array-or-create'
+  | 'nuxt-modules-or-create'
   | 'wrap-module-exports'
   | 'wrap-module-exports-async'
   | 'wrap-export-default-async'

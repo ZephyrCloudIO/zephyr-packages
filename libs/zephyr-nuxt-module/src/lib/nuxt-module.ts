@@ -4,7 +4,7 @@ import { shouldSkipZephyrUpload } from './runtime-guards';
 import { createUploadRunner } from './ssr-upload';
 import type { NuxtLike, ZephyrNuxtOptions } from './types';
 
-export default defineNuxtModule<ZephyrNuxtOptions>({
+const zephyrNuxtModule = defineNuxtModule<ZephyrNuxtOptions>({
   meta: {
     name: 'zephyr-nuxt-module',
     configKey: 'zephyr',
@@ -38,3 +38,5 @@ export default defineNuxtModule<ZephyrNuxtOptions>({
     });
   },
 });
+
+export default zephyrNuxtModule;

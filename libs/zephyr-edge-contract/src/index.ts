@@ -2,6 +2,8 @@
 
 // edge api
 export type {
+  PublishEnvironmentEdgeConfig,
+  PublishEnvironmentsMap,
   GatewayPublishRequest,
   PublishRequest,
   PublishTarget,
@@ -17,6 +19,10 @@ export {
   DeploymentRoomEvents,
   DeploymentStatusEvents,
   type DeploymentStatusEventPayload,
+  type DeploymentStatusReportPayload,
+  type DeploymentStatusReportStatus,
+  type DeploymentStatusReportStreamStatus,
+  type DeploymentStatusSource,
   type DeploymentStreamStatus,
 } from './lib/edge-api/deployment-status-events';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';

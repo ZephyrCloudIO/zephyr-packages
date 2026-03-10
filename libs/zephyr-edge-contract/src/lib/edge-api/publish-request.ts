@@ -26,6 +26,7 @@ export interface PublishTargets {
 export interface GatewayPublishRequest {
   EDGE_URL: string;
   application_uid: string;
+  applicationVersionId: string;
   snapshot_id: string;
   targets: PublishTargets;
   /** Previously `can_write_jwt` */
@@ -45,6 +46,7 @@ export interface StageZeroPublishRequest {
 export interface PublishRequest {
   EDGE_URL: string;
   application_uid: string;
+  applicationVersionId?: string;
   app_version: {
     snapshot_id?: string;
   };

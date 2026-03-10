@@ -1,7 +1,8 @@
 export interface CliOptions {
-  command: 'run' | 'deploy';
+  command: 'run' | 'deploy' | 'deploy-status';
   commandLine?: string; // For 'run' command
   directory?: string; // For 'deploy' command
+  buildId?: string; // For 'deploy-status' command
   target?: 'web' | 'ios' | 'android';
   verbose?: boolean;
   ssr?: boolean;
@@ -95,6 +96,17 @@ export function parseArgs(args: string[]): CliOptions {
         options.verbose = true;
       }
     }
+  } else if (firstArg === 'deploy-status') {
+    options.command = 'deploy-status';
+    const buildId = args[commandStartIndex + 1];
+
+    if (!buildId) {
+      console.error('Error: deploy-status command requires a buildId argument');
+      console.error('Usage: ze-cli deploy-status <buildId>');
+      process.exit(1);
+    }
+
+    options.buildId = buildId;
   } else {
     // It's a run command - everything from commandStartIndex onwards is the command
     options.command = 'run';
@@ -108,6 +120,7 @@ function printHelp(): void {
   console.log(`
 Usage: ze-cli [options] <command> [args...]
        ze-cli deploy <directory> [options]
+       ze-cli deploy-status <buildId>
 
 Run a build command and automatically upload assets to Zephyr, or deploy
 pre-built assets from a directory.
@@ -115,6 +128,7 @@ pre-built assets from a directory.
 Commands:
   <command> [args...]      Run a build command and upload (default)
   deploy <directory>       Upload pre-built assets from a directory
+  deploy-status <buildId>  Wait for terminal deployment status
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered
@@ -134,6 +148,7 @@ Examples:
   ze-cli deploy ./dist
   ze-cli deploy ./dist --ssr
   ze-cli deploy ./build --target ios
+  ze-cli deploy-status 1f0d4ec8-6d68-4a5f-8acb-2d86174b1e54
 
 How it works:
   - For run commands, ze-cli executes your build command and automatically

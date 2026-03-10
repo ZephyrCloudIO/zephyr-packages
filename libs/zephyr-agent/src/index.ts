@@ -98,3 +98,5 @@ export {
   calculateManifestHash,
   collectZEPublicVars,
 } from './lib/env-variables';
+
+export { waitForDeploymentStatus } from './lib/deployment/wait-for-deployment-status';

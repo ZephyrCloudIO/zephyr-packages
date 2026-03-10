@@ -37,10 +37,7 @@ describe('plugin-package-name', () => {
       version: '1.0.0',
     } satisfies ZePackageJson;
 
-    const pluginPackageName = resolveZephyrPluginPackageName(
-      packageJson,
-      'elysia-app'
-    );
+    const pluginPackageName = resolveZephyrPluginPackageName(packageJson, 'elysia-app');
 
     expect(pluginPackageName).toBe('zephyr-packages');
   });

@@ -19,6 +19,10 @@ interface RewriteAttempt {
   language?: AstGrepLanguage;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function tryRewrite(context: OperationContext, attempt: RewriteAttempt): OperationResult {
   const result = rewriteWithAstGrep({
     filePath: context.filePath,
@@ -57,57 +61,149 @@ function runRewriteSequence(
   return { status: 'no-match' };
 }
 
+function findMatchingArrayBracket(source: string, openBracketIndex: number): number {
+  let depth = 0;
+  let inString: "'" | '"' | '`' | null = null;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let isEscaped = false;
+
+  for (let index = openBracketIndex; index < source.length; index += 1) {
+    const char = source[index];
+    const nextChar = source[index + 1];
+
+    if (inLineComment) {
+      if (char === '\n') {
+        inLineComment = false;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === '*' && nextChar === '/') {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        isEscaped = true;
+        continue;
+      }
+
+      if (char === inString) {
+        inString = null;
+      }
+      continue;
+    }
+
+    if (char === '/' && nextChar === '/') {
+      inLineComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '/' && nextChar === '*') {
+      inBlockComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === "'" || char === '"' || char === '`') {
+      inString = char;
+      continue;
+    }
+
+    if (char === '[') {
+      depth += 1;
+      continue;
+    }
+
+    if (char === ']') {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+
+  return -1;
+}
+
+function appendToNamedArrayProperty(
+  source: string,
+  propertyName: string,
+  appendedValue: string
+): string | null {
+  const propertyPattern = new RegExp(
+    `\\b${escapeRegExp(propertyName)}\\b\\s*:\\s*\\[`,
+    'g'
+  );
+
+  for (const match of source.matchAll(propertyPattern)) {
+    if (match.index === undefined) {
+      continue;
+    }
+
+    const openBracketIndex = match.index + match[0].lastIndexOf('[');
+    const closeBracketIndex = findMatchingArrayBracket(source, openBracketIndex);
+    if (closeBracketIndex === -1) {
+      continue;
+    }
+
+    const arrayContent = source.slice(openBracketIndex + 1, closeBracketIndex);
+    const trimmedEnd = arrayContent.trimEnd();
+    const trailingWhitespace = arrayContent.slice(trimmedEnd.length);
+
+    let nextArrayContent: string;
+    if (trimmedEnd.length === 0) {
+      nextArrayContent = `${appendedValue}${trailingWhitespace}`;
+    } else if (trimmedEnd.endsWith(',')) {
+      nextArrayContent = `${trimmedEnd} ${appendedValue}${trailingWhitespace}`;
+    } else {
+      nextArrayContent = `${trimmedEnd}, ${appendedValue}${trailingWhitespace}`;
+    }
+
+    return (
+      source.slice(0, openBracketIndex + 1) +
+      nextArrayContent +
+      source.slice(closeBracketIndex)
+    );
+  }
+
+  return null;
+}
+
 function appendToArrayProperty(
   context: OperationContext,
   propertyName: string
 ): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: `{ ${propertyName}: [$$$ITEMS] }`,
-      selector: 'pair',
-      rewrite: `${propertyName}: [$$$ITEMS, withZephyr()]`,
-    },
-  ]);
-}
+  try {
+    const content = fs.readFileSync(context.filePath, 'utf8');
+    const nextContent = appendToNamedArrayProperty(content, propertyName, 'withZephyr()');
 
-function appendToDefineConfigArrayProperty(
-  context: OperationContext,
-  propertyName: string
-): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: `defineConfig({ $$$REST, ${propertyName}: [$$$ITEMS] })`,
-      rewrite: `defineConfig({ $$$REST, ${propertyName}: [$$$ITEMS, withZephyr()] })`,
-    },
-    {
-      pattern: `defineConfig({ ${propertyName}: [$$$ITEMS], $$$REST })`,
-      rewrite: `defineConfig({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST })`,
-    },
-    {
-      pattern: `defineConfig({ ${propertyName}: [$$$ITEMS] })`,
-      rewrite: `defineConfig({ ${propertyName}: [$$$ITEMS, withZephyr()] })`,
-    },
-  ]);
-}
+    if (!nextContent || nextContent === content) {
+      return { status: 'no-match' };
+    }
 
-function appendToDefineConfigFunctionArrayProperty(
-  context: OperationContext,
-  propertyName: string
-): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ $$$REST, ${propertyName}: [$$$ITEMS] }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ $$$REST, ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
-    },
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS], $$$REST }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST }))`,
-    },
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS] }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
-    },
-  ]);
+    if (!context.dryRun) {
+      fs.writeFileSync(context.filePath, nextContent);
+    }
+
+    return { status: 'changed' };
+  } catch (error) {
+    return {
+      status: 'error',
+      error: (error as Error).message,
+    };
+  }
 }
 
 function createArrayPropertyInDefineConfig(
@@ -277,14 +373,6 @@ function handlePluginsArrayOrCreate(context: OperationContext): OperationResult 
 }
 
 function handleAstroIntegrationsOrCreate(context: OperationContext): OperationResult {
-  const appendInDefineConfigResult = appendToDefineConfigArrayProperty(
-    context,
-    'integrations'
-  );
-  if (appendInDefineConfigResult.status !== 'no-match') {
-    return appendInDefineConfigResult;
-  }
-
   const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
     return appendResult;
@@ -303,7 +391,7 @@ function handleAstroIntegrationsFunctionOrCreate(
     return { status: 'no-match' };
   }
 
-  const appendResult = appendToDefineConfigFunctionArrayProperty(context, 'integrations');
+  const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
     return appendResult;
   }

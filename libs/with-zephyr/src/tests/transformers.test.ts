@@ -109,6 +109,29 @@ describe('Ast-grep Operations', () => {
       expect(next).toContain('plugins: [react(), withZephyr()]');
     });
 
+    it('should normalize trailing commas when appending withZephyr', () => {
+      const filePath = path.join(tempDir, 'vite.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          plugins: [react(),],
+        });
+      `
+      );
+
+      const result = runBundlerOperation('plugins-array', {
+        filePath,
+        config: createConfig('plugins-array'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('plugins: [react(), withZephyr()]');
+      expect(next).not.toContain(',,');
+    });
+
     it('should create plugins array when using plugins-array-or-create', () => {
       const filePath = path.join(tempDir, 'modern.config.ts');
       fs.writeFileSync(

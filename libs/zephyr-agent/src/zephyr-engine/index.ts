@@ -539,6 +539,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
           worker_version:
             dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
+          waitForCompletion: process.env['ZE_WAIT_FOR_DEPLOYMENTS'] === '1',
         };
       },
       assets: {

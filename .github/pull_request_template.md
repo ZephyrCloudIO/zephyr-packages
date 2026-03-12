@@ -1,37 +1,35 @@
-### What's added in this PR?
+## 🎫 Ticket
 
-> _Provide an implementation summary. What did you add beyond the described task? What are the additional details you'd like people to pay attention to? To help people review this PR understand what's changed._
+<!-- Link to the ClickUp ticket. e.g. https://app.clickup.com/t/9013031642/ZE-1234 -->
 
-#### Screenshots
+-
 
-> _If applicable, add some screenshots of the expected behavior._
+## 🧠 Why
 
-### What's the issues or discussion related to this PR ?
+<!--
+What problem does this solve? Why are these changes needed?
+e.g. "Users couldn't save org settings when the name contained special characters."
+-->
 
-> _Provide some background information related to this PR, including issues or task. Prior to this PR what's the behavior that wasn't expected._
+## 📝 What changed
 
-> _If there wasn't discussion related to this PR, you can include the reasoning behind this PR of why you did it._
+<!--
+Summarize key changes. Call out anything non-obvious or risky.
+e.g. "Added input sanitization to org settings form, updated validation schema in ze-sdk."
+-->
 
-### What are the steps to test this PR?
+## 🧪 How to test
 
-> _To help reviewer and tester to understand what's needed_
+<!--
+Step-by-step instructions for reviewers or QA.
+e.g.
+| Step | Expected result |
+|------|-----------------|
+| Go to Org Settings > General | Settings page loads |
+| Enter `My Org & Co.` in the name field | No validation error |
+| Click Save | Success toast appears, name persists on reload |
+-->
 
-### Documentation update for this PR (if applicable)?
+## 📸 Screenshots
 
-> _Add documentation if how the application will behave differently than previous state. Copy paste your PR in [zephyr-documentation](https://github.com/ZephyrCloudIO/zephyr-documentation) PR link here._
-
-### (Optional) What's left to be done for this PR?
-
-### (Optional) What's the potential risk and how to mitigate it?
-
-<!-- ### Who do you wish to review this PR other than required reviewers? -->
-
-<!-- @valorkin @zmzlois @arthurfiorette @zackarychapple -->
-
-### (Required) Pre-PR/Merge checklist
-
-- [ ] I have added/updated/opened a PR to [documentation](https://github.com/ZephyrCloudIO/zephyr-documentation) to cover this new behavior
-- [ ] I have added an explanation of my changes
-- [ ] I have written new tests (if applicable)
-- [ ] I have tested this locally (standing from a first time user point of view, never touch this app before)
-- [ ] I have/will run tests, or ask for help to add test
+<!-- Before/after screenshots or recordings for UI changes. Delete section if not applicable. -->

@@ -1,0 +1,61 @@
+name: Maintenance
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 3 AM UTC daily
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  stale-pull-requests:
+    name: Stale Pull Requests
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v10
+        with:
+          # Only process pull requests (not issues)
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+
+          # PR staleness: 14 days inactive → label, 7 more days → close
+          days-before-pr-stale: 14
+          days-before-pr-close: 7
+          stale-pr-label: 'Status: Stale PR'
+          stale-pr-message: >
+            This PR has been inactive for 14 days. It will be closed in 7 days
+            if there is no further activity. Remove the `stale` label or push a
+            commit to reset the timer.
+          close-pr-message: >
+            Closing this PR due to 21 days of inactivity. Feel free to reopen
+            if work resumes.
+
+          # Exemptions
+          exempt-draft-pr: true
+          exempt-all-pr-assignees: false
+
+          # Performance
+          operations-per-run: 100
+
+  stale-branches:
+    name: Delete stale branches
+    runs-on: depot-ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: read
+    steps:
+      - name: 🗑️ Delete old merged branches
+        uses: crs-k/stale-branches@v8.2.2
+        with:
+          repo-token: ${{ github.token }}
+          days-before-stale: 14
+          days-before-delete: 21
+          pr-check: true
+          dry-run: true
+          stale-branch-label: 'Status: Stale Branch'
+          tag-committer: true

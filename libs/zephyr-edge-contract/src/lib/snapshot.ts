@@ -62,6 +62,7 @@ export interface SnapshotAsset {
   extname: string;
   hash: string;
   size: number;
+  contentEncoding?: 'gzip' | 'br';
 }
 
 export interface SnapshotMetadata {

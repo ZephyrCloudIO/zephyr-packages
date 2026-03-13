@@ -1,6 +1,7 @@
 import fs from 'fs';
 import type { BundlerConfig, BundlerOperationId, OperationResult } from './types.js';
 import {
+  findFirstMatchTextWithAstGrep,
   rewriteWithAstGrep,
   searchWithAstGrep,
   type AstGrepLanguage,
@@ -17,10 +18,6 @@ interface RewriteAttempt {
   rewrite: string;
   selector?: string;
   language?: AstGrepLanguage;
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function tryRewrite(context: OperationContext, attempt: RewriteAttempt): OperationResult {
@@ -61,149 +58,53 @@ function runRewriteSequence(
   return { status: 'no-match' };
 }
 
-function findMatchingArrayBracket(source: string, openBracketIndex: number): number {
-  let depth = 0;
-  let inString: "'" | '"' | '`' | null = null;
-  let inLineComment = false;
-  let inBlockComment = false;
-  let isEscaped = false;
-
-  for (let index = openBracketIndex; index < source.length; index += 1) {
-    const char = source[index];
-    const nextChar = source[index + 1];
-
-    if (inLineComment) {
-      if (char === '\n') {
-        inLineComment = false;
-      }
-      continue;
-    }
-
-    if (inBlockComment) {
-      if (char === '*' && nextChar === '/') {
-        inBlockComment = false;
-        index += 1;
-      }
-      continue;
-    }
-
-    if (inString) {
-      if (isEscaped) {
-        isEscaped = false;
-        continue;
-      }
-
-      if (char === '\\') {
-        isEscaped = true;
-        continue;
-      }
-
-      if (char === inString) {
-        inString = null;
-      }
-      continue;
-    }
-
-    if (char === '/' && nextChar === '/') {
-      inLineComment = true;
-      index += 1;
-      continue;
-    }
-
-    if (char === '/' && nextChar === '*') {
-      inBlockComment = true;
-      index += 1;
-      continue;
-    }
-
-    if (char === "'" || char === '"' || char === '`') {
-      inString = char;
-      continue;
-    }
-
-    if (char === '[') {
-      depth += 1;
-      continue;
-    }
-
-    if (char === ']') {
-      depth -= 1;
-      if (depth === 0) {
-        return index;
-      }
-    }
-  }
-
-  return -1;
-}
-
-function appendToNamedArrayProperty(
-  source: string,
-  propertyName: string,
-  appendedValue: string
-): string | null {
-  const propertyPattern = new RegExp(
-    `\\b${escapeRegExp(propertyName)}\\b\\s*:\\s*\\[`,
-    'g'
-  );
-
-  for (const match of source.matchAll(propertyPattern)) {
-    if (match.index === undefined) {
-      continue;
-    }
-
-    const openBracketIndex = match.index + match[0].lastIndexOf('[');
-    const closeBracketIndex = findMatchingArrayBracket(source, openBracketIndex);
-    if (closeBracketIndex === -1) {
-      continue;
-    }
-
-    const arrayContent = source.slice(openBracketIndex + 1, closeBracketIndex);
-    const trimmedEnd = arrayContent.trimEnd();
-    const trailingWhitespace = arrayContent.slice(trimmedEnd.length);
-
-    let nextArrayContent: string;
-    if (trimmedEnd.length === 0) {
-      nextArrayContent = `${appendedValue}${trailingWhitespace}`;
-    } else if (trimmedEnd.endsWith(',')) {
-      nextArrayContent = `${trimmedEnd} ${appendedValue}${trailingWhitespace}`;
-    } else {
-      nextArrayContent = `${trimmedEnd}, ${appendedValue}${trailingWhitespace}`;
-    }
-
-    return (
-      source.slice(0, openBracketIndex + 1) +
-      nextArrayContent +
-      source.slice(closeBracketIndex)
-    );
-  }
-
-  return null;
-}
-
 function appendToArrayProperty(
   context: OperationContext,
   propertyName: string
 ): OperationResult {
-  try {
-    const content = fs.readFileSync(context.filePath, 'utf8');
-    const nextContent = appendToNamedArrayProperty(content, propertyName, 'withZephyr()');
+  const matchText = findFirstMatchTextWithAstGrep({
+    filePath: context.filePath,
+    pattern: `{ ${propertyName}: [$$$ITEMS] }`,
+    selector: 'pair',
+  });
 
-    if (!nextContent || nextContent === content) {
-      return { status: 'no-match' };
-    }
-
-    if (!context.dryRun) {
-      fs.writeFileSync(context.filePath, nextContent);
-    }
-
-    return { status: 'changed' };
-  } catch (error) {
-    return {
-      status: 'error',
-      error: (error as Error).message,
-    };
+  if (!matchText) {
+    return { status: 'no-match' };
   }
+
+  const hasTrailingComma = /,\s*\]$/.test(matchText);
+  const attempts: RewriteAttempt[] = hasTrailingComma
+    ? [
+        {
+          pattern: `{ ${propertyName}: [$ONLY,] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$ONLY, withZephyr()]`,
+        },
+        {
+          pattern: `{ ${propertyName}: [$FIRST, $$$REST,] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$FIRST, $$$REST, withZephyr()]`,
+        },
+      ]
+    : [
+        {
+          pattern: `{ ${propertyName}: [] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [withZephyr()]`,
+        },
+        {
+          pattern: `{ ${propertyName}: [$ONLY] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$ONLY, withZephyr()]`,
+        },
+        {
+          pattern: `{ ${propertyName}: [$FIRST, $$$REST] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$FIRST, $$$REST, withZephyr()]`,
+        },
+      ];
+
+  return runRewriteSequence(context, attempts);
 }
 
 function createArrayPropertyInDefineConfig(

@@ -6,6 +6,8 @@ import { StorageKeys } from './storage-keys';
 export interface DeployResult {
   urls: string[];
   snapshot: Snapshot;
+  /** Stored to make later deploy-status checks reproducible from local cache. */
+  deploymentId?: string;
 }
 
 export async function setAppDeployResult(

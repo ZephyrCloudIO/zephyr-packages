@@ -1,6 +1,7 @@
 import {
   ZE_API_ENDPOINT,
   ze_api_gateway,
+  type BuildStatsResponse,
   type ZephyrBuildStats,
 } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
@@ -9,8 +10,10 @@ import { ze_log } from '../logging';
 import { dimmedName } from '../logging/debug';
 import { getToken } from '../node-persist/token';
 
-/** Returns true if build stats are uploaded successfully, false otherwise. */
-export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<boolean> {
+/** Uploads build stats and returns deployment tracking metadata. */
+export async function zeUploadBuildStats(
+  dashData: ZephyrBuildStats
+): Promise<{ status: 'ok' | 'accepted'; buildId: string | null }> {
   // Add dots here to indicate this is an async operation
   ze_log.upload(`${dimmedName} Uploading build stats to Zephyr...`);
 
@@ -18,7 +21,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<bo
 
   const url = new URL(ze_api_gateway.build_stats, ZE_API_ENDPOINT());
 
-  const [ok, cause, res] = await makeRequest<{ status: string }>(
+  const [ok, cause, res] = await makeRequest<BuildStatsResponse>(
     url,
     {
       method: 'POST',
@@ -41,7 +44,13 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<bo
     });
   }
 
+  if (res.buildId) {
+    ze_log.debug(
+      `Received buildId ${res.buildId} from Zephyr for the uploaded build stats`
+    );
+  }
+
   ze_log.upload('Build stats uploaded to Zephyr...');
 
-  return true;
+  return { status: res.status, buildId: res.buildId };
 }

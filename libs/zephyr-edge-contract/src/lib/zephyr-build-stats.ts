@@ -108,6 +108,8 @@ export interface ZephyrBuildStats {
     env?: string;
     target?: string;
   };
+  /** When true, plugin waits for terminal deployment status before finishing. */
+  waitForCompletion?: boolean;
   /**
    * Become the first part of `remote_host` and `remote_entry_url` in database in
    * `ApplicationTag` table

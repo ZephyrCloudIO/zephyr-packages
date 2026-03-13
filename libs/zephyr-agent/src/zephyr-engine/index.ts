@@ -19,13 +19,14 @@ import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
+import { waitForDeploymentStatus } from '../lib/deployment/wait-for-deployment-status';
 import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
-import { ZephyrError } from '../lib/errors';
+import { ZeErrors, ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
-import { cyanBright, white, yellow } from '../lib/logging/picocolor';
+import { cyanBright, gray, green, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
@@ -35,22 +36,23 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
-import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
-import type {
-  ZephyrEngineBuilderTypes,
-  ZephyrEngineOptions,
-} from './zephyr-engine.types';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+import type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 
 export type {
   ZephyrEngineBuilderTypes,
   ZephyrEngineOptions,
 } from './zephyr-engine.types';
+
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -106,6 +108,11 @@ export interface DeploymentInfo {
   snapshot: Snapshot;
   federatedDependencies: ZeResolvedDependency[];
   buildStats: ZephyrBuildStats;
+  /**
+   * The deploymentId used to track deployment status, not to be confused with buildId
+   * which is an internal identifier for a build
+   */
+  deploymentId: string | null;
 }
 
 /**
@@ -153,6 +160,8 @@ export class ZephyrEngine {
   ze_env_vars_hash: string | null = null;
   // Version of worker engine that processed snapshot upload
   worker_version: string | null = null;
+  // ApplicationVersion.id returned by build-stats response
+  deployment_build_id: string | null = null;
 
   get zephyr_dependencies(): Record<string, ZephyrDependency> {
     return convertResolvedDependencies(this.federated_dependencies ?? []);
@@ -424,6 +433,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     );
   }
 
+  /** Final output changes when deploy waiting already provided explicit status logs. */
   async build_finished(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -474,6 +484,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     this.build_id = null;
     this.snapshotId = null;
     this.version_url = null;
+    this.deployment_build_id = null;
     this.build_start_time = null;
   }
 
@@ -556,21 +567,36 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     await setAppDeployResult(application_uid, {
       urls: [zephyr_engine.version_url],
       snapshot,
+      deploymentId: zephyr_engine.deployment_build_id ?? undefined,
     });
+
+    const deploymentId = zephyr_engine.deployment_build_id;
+
+    if (buildStats.waitForCompletion) {
+      if (!deploymentId) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOYMENT_STATUS_WAIT_FAILED, {
+          buildId: 'unknown',
+          message: 'Missing deployment id from build-stats response.',
+        });
+      }
+
+      /** Blocking wait is intentionally last to avoid interrupting upload/hook completion. */
+      logFn('trace', gray(`Waiting on deployment ${deploymentId}`));
+      await waitForDeploymentStatus({ applicationVersionId: deploymentId });
+      logFn('trace', green('Deployment successful'));
+    }
 
     // Call deployment hook if provided
     if (props.hooks?.onDeployComplete && zephyr_engine.version_url) {
       try {
-        const snapshotId = await zephyr_engine.snapshotId;
-        const deploymentInfo: DeploymentInfo = {
+        await props.hooks.onDeployComplete({
+          deploymentId,
           url: zephyr_engine.version_url,
-          snapshotId,
+          snapshotId: await zephyr_engine.snapshotId,
           snapshot,
           federatedDependencies: zephyr_engine.federated_dependencies || [],
           buildStats: upload_options.getDashData(zephyr_engine),
-        };
-
-        await props.hooks.onDeployComplete(deploymentInfo);
+        });
       } catch (error: unknown) {
         // Log hook errors but don't fail the build
         ze_log.upload('Warning: deployment hook failed', error);

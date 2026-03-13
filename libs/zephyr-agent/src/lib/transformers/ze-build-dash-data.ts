@@ -18,6 +18,12 @@ export async function zeBuildDashData(
 
   const application_uid = zephyr_engine.application_uid;
   const isCI = zephyr_engine.env.isCI;
+  /**
+   * Undefined keeps async behavior for existing clients unless wait is explicitly
+   * enabled.
+   */
+  const waitForCompletion =
+    process.env['ZE_WAIT_FOR_DEPLOYMENT'] === 'true' ? true : undefined;
 
   const git = zephyr_engine.gitProperties.git;
   const app = zephyr_engine.applicationProperties;
@@ -41,7 +47,11 @@ export async function zeBuildDashData(
     }),
     version: snapshotId,
     git,
-    context: { isCI, username },
+    waitForCompletion,
+    context: {
+      isCI,
+      username,
+    },
     dependencies: to_raw(zephyr_engine.npmProperties.dependencies),
     devDependencies: to_raw(zephyr_engine.npmProperties.devDependencies),
     optionalDependencies: to_raw(zephyr_engine.npmProperties.optionalDependencies),

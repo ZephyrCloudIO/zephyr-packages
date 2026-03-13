@@ -1,9 +1,10 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import type { VinextBuildAsset } from './vinext-output';
 import {
-  collectStaticClientAssets,
   collectAssetsFromBundle,
+  collectStaticClientAssets,
   detectEntrypointFromBundle,
   injectRscAssetsManifest,
   normalizeEntrypoint,
@@ -13,7 +14,7 @@ import {
 
 describe('vinext-output helpers', () => {
   it('collects bundle assets using output root relative paths', () => {
-    const assets = {};
+    const assets: Record<string, VinextBuildAsset> = {};
     const bundle: OutputBundleLike = {
       entry: {
         type: 'chunk',
@@ -90,7 +91,7 @@ describe('vinext-output helpers', () => {
   });
 
   it('injects rsc assets manifest for rsc and ssr output directories', () => {
-    const assets = {};
+    const assets: Record<string, VinextBuildAsset> = {};
 
     injectRscAssetsManifest(assets, '/repo/dist', {
       buildAssetsManifest: {
@@ -129,7 +130,7 @@ describe('vinext-output helpers', () => {
       await fs.writeFile(path.join(clientDir, 'nested', 'icon.txt'), 'icon', 'utf-8');
       await fs.writeFile(path.join(clientDir, '_headers'), '/assets/*', 'utf-8');
 
-      const assets = {};
+      const assets: Record<string, VinextBuildAsset> = {};
       await collectStaticClientAssets(assets, outputDir, clientDir);
 
       expect(Object.keys(assets).sort()).toEqual([

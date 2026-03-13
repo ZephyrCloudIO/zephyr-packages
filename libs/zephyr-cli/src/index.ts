@@ -4,6 +4,7 @@ import { cwd } from 'node:process';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import { parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
+import { deployStatusCommand } from './commands/deploy-status';
 import { runCommand } from './commands/run';
 
 async function main(): Promise<void> {
@@ -29,6 +30,16 @@ async function main(): Promise<void> {
         verbose: options.verbose,
         ssr: options.ssr,
         cwd: workingDir,
+      });
+    } else if (options.command === 'deploy-status') {
+      if (!options.buildId) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: 'Build ID is required for deploy-status command',
+        });
+      }
+
+      await deployStatusCommand({
+        buildId: options.buildId,
       });
     } else if (options.command === 'run') {
       if (!options.commandLine) {

@@ -11,7 +11,6 @@ export interface DeployOptions {
   ssr?: boolean;
   cwd: string;
 }
-
 /**
  * Deploy command: Upload pre-built assets from a directory to Zephyr. This is similar to
  * the standalone zephyr-cli tool.

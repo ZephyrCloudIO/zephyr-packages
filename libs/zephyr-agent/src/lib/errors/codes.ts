@@ -519,6 +519,17 @@ Were the required packages in Module federation plugin installed and included in
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
   },
+
+  /** Waiting for terminal deployment status failed or timed out. */
+  ERR_DEPLOYMENT_STATUS_WAIT_FAILED: {
+    id: '038',
+    message: `
+Deployment did not complete for build {{ buildId }}.
+
+{{ message }}
+`,
+    kind: 'deploy',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

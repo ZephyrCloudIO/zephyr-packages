@@ -9,6 +9,15 @@ export interface PublishTarget {
   };
 }
 
+/** Captures edge target metadata when one app fans out to multiple integration edges. */
+export interface PublishEnvironmentEdgeConfig {
+  edgeUrl: string;
+  name: string;
+}
+
+/** Keyed by environment name to preserve original target mapping from control plane. */
+export type PublishEnvironmentsMap = Record<string, PublishEnvironmentEdgeConfig>;
+
 // TODO: all tags, envs, cname publish targets should be logged in deployment history
 export interface PublishTargets {
   /**
@@ -26,6 +35,7 @@ export interface PublishTargets {
 export interface GatewayPublishRequest {
   EDGE_URL: string;
   application_uid: string;
+  applicationVersionId: string;
   snapshot_id: string;
   targets: PublishTargets;
   /** Previously `can_write_jwt` */
@@ -45,6 +55,7 @@ export interface StageZeroPublishRequest {
 export interface PublishRequest {
   EDGE_URL: string;
   application_uid: string;
+  applicationVersionId?: string;
   app_version: {
     snapshot_id?: string;
   };
@@ -64,6 +75,8 @@ export interface PublishRequest {
   };
   envVarsHash?: string;
   environmentVariables?: Record<string, Record<string, string>>;
+  /** Provided only when cloud computes additional environment edge fanout targets. */
+  ENVIRONMENTS?: PublishEnvironmentsMap;
 
   // this is can_write_jwt
   jwt: string;

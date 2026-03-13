@@ -2,12 +2,29 @@
 
 // edge api
 export type {
+  PublishEnvironmentEdgeConfig,
+  PublishEnvironmentsMap,
   GatewayPublishRequest,
   PublishRequest,
   PublishTarget,
   PublishTargets,
   StageZeroPublishRequest,
 } from './lib/edge-api/publish-request';
+export type {
+  BuildStatsAcceptedResponse,
+  BuildStatsOkResponse,
+  BuildStatsResponse,
+} from './lib/edge-api/build-stats-response';
+export {
+  DeploymentRoomEvents,
+  DeploymentStatusEvents,
+  type DeploymentStatusEventPayload,
+  type DeploymentStatusReportPayload,
+  type DeploymentStatusReportStatus,
+  type DeploymentStatusReportStreamStatus,
+  type DeploymentStatusSource,
+  type DeploymentStreamStatus,
+} from './lib/edge-api/deployment-status-events';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 
 export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-plugin-options';

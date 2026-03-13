@@ -17,6 +17,7 @@ import {
   parcelConfig,
   astroConfig,
   modernjsConfig,
+  nuxtConfig,
   rspressConfig,
   metroConfig,
   repackConfig,
@@ -46,6 +47,7 @@ const BUNDLER_CONFIGS: BundlerConfigs = {
   parcel: parcelConfig,
   astro: astroConfig,
   modernjs: modernjsConfig,
+  nuxt: nuxtConfig,
   rspress: rspressConfig,
   metro: metroConfig,
   repack: repackConfig,
@@ -106,7 +108,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Check if a configuration file already has withZephyr */
+/** Check if a configuration file already has Zephyr integration */
 function checkHasZephyr(filePath: string, config: BundlerConfig): boolean {
   try {
     if (config.plugin === 'parcel-reporter-zephyr') {
@@ -118,7 +120,7 @@ function checkHasZephyr(filePath: string, config: BundlerConfig): boolean {
       );
     }
 
-    const result = hasZephyrCall(filePath);
+    const result = hasZephyrCall(filePath, config);
     return result.status === 'changed';
   } catch (error) {
     console.warn(
@@ -187,7 +189,7 @@ function ensureZephyrImportOrRequire(
   }
 }
 
-/** Transform a configuration file to add withZephyr */
+/** Transform a configuration file to add Zephyr integration */
 function transformConfigFile(
   filePath: string,
   bundlerName: string,
@@ -239,7 +241,9 @@ function transformConfigFile(
       return false;
     }
 
-    console.log(chalk.green(`✓ Added withZephyr to ${normalizePathForOutput(filePath)}`));
+    console.log(
+      chalk.green(`✓ Added Zephyr integration to ${normalizePathForOutput(filePath)}`)
+    );
     return true;
   } catch (error) {
     console.error(
@@ -255,7 +259,7 @@ function transformConfigFile(
 function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const { dryRun = false, bundlers = null, installPackages = true } = options;
 
-  console.log(chalk.bold(`🚀 Zephyr Codemod - Adding withZephyr to bundler configs`));
+  console.log(chalk.bold(`🚀 Zephyr Codemod - Adding Zephyr integration to configs`));
   console.log(chalk.gray(`Directory: ${path.resolve(directory)}`));
 
   if (dryRun) {
@@ -317,11 +321,11 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     filteredConfigFiles.push({ filePath, bundlerName, config });
 
-    // Check if already has withZephyr
+    // Check if already has Zephyr integration
     if (checkHasZephyr(filePath, config)) {
       console.log(
         chalk.gray(
-          `⏭️  Skipping ${normalizePathForOutput(filePath)} (already has withZephyr)`
+          `⏭️  Skipping ${normalizePathForOutput(filePath)} (already has Zephyr integration)`
         )
       );
       continue;
@@ -468,7 +472,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 // CLI setup
 program
   .name('zephyr-codemod')
-  .description('Automatically add withZephyr plugin to bundler configurations')
+  .description('Automatically add Zephyr integration to supported project configs')
   .version('1.0.2')
   .argument('[directory]', 'Directory to search for config files', '.')
   .option('-d, --dry-run', 'Show what would be changed without modifying files')

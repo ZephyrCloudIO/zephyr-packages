@@ -111,15 +111,6 @@ export async function makeHttpRequest<T = void>(
       });
     }
 
-    if (response.status === undefined) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-        content: 'No status code found',
-        method: options.method?.toUpperCase() ?? 'GET',
-        url: url.toString(),
-        status: -1,
-      });
-    }
-
     if (!url.pathname.includes('application/logs')) {
       ze_log.http(message);
     }
@@ -127,7 +118,7 @@ export async function makeHttpRequest<T = void>(
     // Only parses data if reply content is json
     const resData = safe_json_parse<unknown>(resText) ?? resText;
 
-    if (response.status >= 300) {
+    if (!response.status || response.status >= 300) {
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: response.status,
         url: url.toString(),

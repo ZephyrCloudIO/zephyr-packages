@@ -73,7 +73,6 @@ pnpm install
 - `pnpm bump-patch` - Automated patch version bump across all packages
 
   This script automates the complete patch version release process:
-
   - Increments patch version in root and all lib package.json files
   - Creates a commit with conventional commit message
   - Creates a git tag (vX.X.X)
@@ -81,7 +80,6 @@ pnpm install
   - Pushes changes and tags to origin
 
   **Requirements:**
-
   - Clean working directory (no uncommitted changes)
   - gh CLI installed and authenticated (for automatic PR creation)
   - Git configured with push access to origin

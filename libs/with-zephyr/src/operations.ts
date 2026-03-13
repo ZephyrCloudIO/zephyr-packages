@@ -1,6 +1,7 @@
 import fs from 'fs';
 import type { BundlerConfig, BundlerOperationId, OperationResult } from './types.js';
 import {
+  findFirstMatchTextWithAstGrep,
   rewriteWithAstGrep,
   searchWithAstGrep,
   type AstGrepLanguage,
@@ -61,53 +62,49 @@ function appendToArrayProperty(
   context: OperationContext,
   propertyName: string
 ): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: `{ ${propertyName}: [$$$ITEMS] }`,
-      selector: 'pair',
-      rewrite: `${propertyName}: [$$$ITEMS, withZephyr()]`,
-    },
-  ]);
-}
+  const matchText = findFirstMatchTextWithAstGrep({
+    filePath: context.filePath,
+    pattern: `{ ${propertyName}: [$$$ITEMS] }`,
+    selector: 'pair',
+  });
 
-function appendToDefineConfigArrayProperty(
-  context: OperationContext,
-  propertyName: string
-): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: `defineConfig({ $$$REST, ${propertyName}: [$$$ITEMS] })`,
-      rewrite: `defineConfig({ $$$REST, ${propertyName}: [$$$ITEMS, withZephyr()] })`,
-    },
-    {
-      pattern: `defineConfig({ ${propertyName}: [$$$ITEMS], $$$REST })`,
-      rewrite: `defineConfig({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST })`,
-    },
-    {
-      pattern: `defineConfig({ ${propertyName}: [$$$ITEMS] })`,
-      rewrite: `defineConfig({ ${propertyName}: [$$$ITEMS, withZephyr()] })`,
-    },
-  ]);
-}
+  if (!matchText) {
+    return { status: 'no-match' };
+  }
 
-function appendToDefineConfigFunctionArrayProperty(
-  context: OperationContext,
-  propertyName: string
-): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ $$$REST, ${propertyName}: [$$$ITEMS] }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ $$$REST, ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
-    },
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS], $$$REST }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST }))`,
-    },
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS] }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
-    },
-  ]);
+  const hasTrailingComma = /,\s*\]$/.test(matchText);
+  const attempts: RewriteAttempt[] = hasTrailingComma
+    ? [
+        {
+          pattern: `{ ${propertyName}: [$ONLY,] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$ONLY, withZephyr()]`,
+        },
+        {
+          pattern: `{ ${propertyName}: [$FIRST, $$$REST,] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$FIRST, $$$REST, withZephyr()]`,
+        },
+      ]
+    : [
+        {
+          pattern: `{ ${propertyName}: [] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [withZephyr()]`,
+        },
+        {
+          pattern: `{ ${propertyName}: [$ONLY] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$ONLY, withZephyr()]`,
+        },
+        {
+          pattern: `{ ${propertyName}: [$FIRST, $$$REST] }`,
+          selector: 'pair',
+          rewrite: `${propertyName}: [$FIRST, $$$REST, withZephyr()]`,
+        },
+      ];
+
+  return runRewriteSequence(context, attempts);
 }
 
 function createArrayPropertyInDefineConfig(
@@ -311,14 +308,6 @@ function handleNuxtModulesOrCreate(context: OperationContext): OperationResult {
 }
 
 function handleAstroIntegrationsOrCreate(context: OperationContext): OperationResult {
-  const appendInDefineConfigResult = appendToDefineConfigArrayProperty(
-    context,
-    'integrations'
-  );
-  if (appendInDefineConfigResult.status !== 'no-match') {
-    return appendInDefineConfigResult;
-  }
-
   const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
     return appendResult;
@@ -337,7 +326,7 @@ function handleAstroIntegrationsFunctionOrCreate(
     return { status: 'no-match' };
   }
 
-  const appendResult = appendToDefineConfigFunctionArrayProperty(context, 'integrations');
+  const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
     return appendResult;
   }

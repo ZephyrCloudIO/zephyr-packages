@@ -244,6 +244,25 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('react(), withZephyr()');
     });
 
+    it('should transform vite config with a trailing comma in plugins array', () => {
+      const originalContent = `
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+
+        export default defineConfig({
+          plugins: [react(),],
+        });
+      `;
+      fs.writeFileSync('vite.config.ts', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(content).toContain('import { withZephyr } from "vite-plugin-zephyr"');
+      expect(content).toContain('plugins: [react(), withZephyr()]');
+      expect(content).not.toContain(',,');
+    });
+
     it('should transform rollup array config', () => {
       const originalContent = `
         export default [{

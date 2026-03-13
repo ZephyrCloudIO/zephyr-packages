@@ -39,7 +39,15 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
 
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    mutWebpackFederatedRemotesConfig(
+      zephyr_engine,
+      config,
+      resolved_dependency_pairs,
+      undefined,
+      {
+        federationHmr: _zephyrOptions?.federationHmr,
+      }
+    );
 
     const mfConfig = makeCopyOfModuleFederationOptions(config);
 

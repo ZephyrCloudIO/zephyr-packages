@@ -204,6 +204,61 @@ describe('Zephyr Codemod CLI', () => {
     });
   });
 
+  describe('Slidev Scaffold', () => {
+    it('should scaffold vite config and package metadata for Slidev apps', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify(
+          {
+            name: 'slidev-app',
+            private: true,
+            dependencies: {
+              '@slidev/cli': '^52.14.1',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      runCodemod('.');
+
+      expect(fs.existsSync('vite.config.ts')).toBe(true);
+
+      const viteConfig = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(viteConfig).toContain("import { withZephyr } from 'vite-plugin-zephyr';");
+      expect(viteConfig).toContain('plugins: [withZephyr()]');
+
+      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      expect(updatedPackageJson.name).toBe('slidev-app');
+      expect(updatedPackageJson.version).toBe('1.0.0');
+    });
+
+    it('should report Slidev scaffold actions in dry run mode', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify(
+          {
+            private: true,
+            devDependencies: {
+              '@slidev/cli': '^52.14.1',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      const output = runCodemod('--dry-run');
+
+      expect(output).toContain('Would create vite.config.ts for Slidev');
+      expect(output).toContain(
+        'Would update package.json name/version for Zephyr compatibility'
+      );
+      expect(output).toContain('vite-plugin-zephyr');
+    });
+  });
+
   describe('Actual Transformations', () => {
     it('should transform webpack config with composePlugins', () => {
       const originalContent = `

@@ -35,17 +35,17 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
-import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
-import type {
-  ZephyrEngineBuilderTypes,
-  ZephyrEngineOptions,
-} from './zephyr-engine.types';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+import type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 
 export type {
   ZephyrEngineBuilderTypes,
@@ -539,7 +539,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
           worker_version:
             dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
-          waitForCompletion: process.env['ZE_WAIT_FOR_DEPLOYMENTS'] === '1',
+          waitForCompletion: !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim(),
         };
       },
       assets: {

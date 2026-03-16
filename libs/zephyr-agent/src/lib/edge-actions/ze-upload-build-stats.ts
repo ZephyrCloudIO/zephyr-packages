@@ -6,13 +6,12 @@ import {
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
-import { dimmedName } from '../logging/debug';
 import { getToken } from '../node-persist/token';
 
 /** Returns true if build stats are uploaded successfully, false otherwise. */
 export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<boolean> {
   // Add dots here to indicate this is an async operation
-  ze_log.upload(`${dimmedName} Uploading build stats to Zephyr...`);
+  ze_log.upload('Uploading build stats to Zephyr...', dashData);
 
   const token = await getToken();
 

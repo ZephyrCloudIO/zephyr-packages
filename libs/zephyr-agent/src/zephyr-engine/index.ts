@@ -521,6 +521,18 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       entrypoint,
     });
 
+    const waitForCompletion = !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim();
+
+    if (waitForCompletion) {
+      const logger = await this.logger;
+
+      logger({
+        action: 'deploy:wait',
+        level: 'info',
+        message: `Waiting for deployment to complete...`,
+      });
+    }
+
     const upload_options: UploadOptions = {
       snapshot,
       getDashData: (engine) => {
@@ -539,7 +551,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
           worker_version:
             dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
-          waitForCompletion: !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim(),
+          waitForCompletion,
         };
       },
       assets: {

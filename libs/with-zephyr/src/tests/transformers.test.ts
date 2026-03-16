@@ -58,6 +58,23 @@ describe('Ast-grep Operations', () => {
       const result = hasZephyrCall(filePath);
       expect(result.status).toBe('no-match');
     });
+
+    it('should detect zephyr-nuxt-module in modules array', () => {
+      const filePath = path.join(tempDir, 'nuxt.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineNuxtConfig({
+          modules: ['zephyr-nuxt-module']
+        });
+      `
+      );
+
+      const result = hasZephyrCall(filePath, {
+        plugin: 'zephyr-nuxt-module',
+      });
+      expect(result.status).toBe('changed');
+    });
   });
 
   describe('compose-plugins', () => {
@@ -109,6 +126,52 @@ describe('Ast-grep Operations', () => {
       expect(next).toContain('plugins: [react(), withZephyr()]');
     });
 
+    it('should normalize trailing commas when appending withZephyr', () => {
+      const filePath = path.join(tempDir, 'vite.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          plugins: [react(),],
+        });
+      `
+      );
+
+      const result = runBundlerOperation('plugins-array', {
+        filePath,
+        config: createConfig('plugins-array'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('plugins: [react(), withZephyr()]');
+      expect(next).not.toContain(',,');
+    });
+
+    it('should preserve multi-item trailing comma arrays when appending withZephyr', () => {
+      const filePath = path.join(tempDir, 'vite.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          plugins: [resolve(), babel(),],
+        });
+      `
+      );
+
+      const result = runBundlerOperation('plugins-array', {
+        filePath,
+        config: createConfig('plugins-array'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('plugins: [resolve(), babel(), withZephyr()]');
+      expect(next).not.toContain(',,');
+    });
+
     it('should create plugins array when using plugins-array-or-create', () => {
       const filePath = path.join(tempDir, 'modern.config.ts');
       fs.writeFileSync(
@@ -133,6 +196,60 @@ describe('Ast-grep Operations', () => {
       expect(result.status).toBe('changed');
       const next = fs.readFileSync(filePath, 'utf8');
       expect(next).toContain('plugins: [withZephyr()]');
+    });
+  });
+
+  describe('nuxt modules operations', () => {
+    it('should append zephyr-nuxt-module to existing modules array', () => {
+      const filePath = path.join(tempDir, 'nuxt.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineNuxtConfig({
+          modules: ['nitro-cloudflare-dev']
+        });
+      `
+      );
+
+      const result = runBundlerOperation('nuxt-modules-or-create', {
+        filePath,
+        config: createConfig(
+          'nuxt-modules-or-create',
+          'first-success',
+          'zephyr-nuxt-module'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('modules: [\'nitro-cloudflare-dev\', "zephyr-nuxt-module"]');
+    });
+
+    it('should create modules array when missing from defineNuxtConfig', () => {
+      const filePath = path.join(tempDir, 'nuxt.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineNuxtConfig({
+          devtools: { enabled: true }
+        });
+      `
+      );
+
+      const result = runBundlerOperation('nuxt-modules-or-create', {
+        filePath,
+        config: createConfig(
+          'nuxt-modules-or-create',
+          'first-success',
+          'zephyr-nuxt-module'
+        ),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('modules: ["zephyr-nuxt-module"]');
     });
   });
 

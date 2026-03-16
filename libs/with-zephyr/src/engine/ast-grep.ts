@@ -142,6 +142,20 @@ export function searchWithAstGrep(options: AstGrepRunOptions): AstGrepResult {
   }
 }
 
+export function findFirstMatchTextWithAstGrep(options: AstGrepRunOptions): string | null {
+  const language = options.language ?? detectLanguage(options.filePath);
+  const source = fs.readFileSync(options.filePath, 'utf8');
+  const { parse } = getAstGrepRuntime();
+  const root = parse(toNapiLanguage(language), source);
+  const match = root.root().find(buildMatcher(options));
+
+  if (!match) {
+    return null;
+  }
+
+  return source.slice(match.range().start.index, match.range().end.index);
+}
+
 export function rewriteWithAstGrep(options: AstGrepRewriteOptions): AstGrepResult {
   try {
     const language = options.language ?? detectLanguage(options.filePath);

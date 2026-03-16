@@ -273,6 +273,40 @@ function handlePluginsArrayOrCreate(context: OperationContext): OperationResult 
   return createArrayPropertyInDefineConfig(context, 'plugins');
 }
 
+function handleNuxtModulesOrCreate(context: OperationContext): OperationResult {
+  const moduleName = context.config.plugin;
+  const appendResult = runRewriteSequence(context, [
+    {
+      pattern: '{ modules: [$$$ITEMS] }',
+      selector: 'pair',
+      rewrite: `modules: [$$$ITEMS, "${moduleName}"]`,
+    },
+  ]);
+
+  if (appendResult.status !== 'no-match') {
+    return appendResult;
+  }
+
+  return runRewriteSequence(context, [
+    {
+      pattern: 'defineNuxtConfig({$$$PROPS})',
+      selector: 'object',
+      rewrite: `{
+  $$$PROPS,
+  modules: ["${moduleName}"]
+}`,
+    },
+    {
+      pattern: 'export default {$$$PROPS}',
+      selector: 'object',
+      rewrite: `{
+  $$$PROPS,
+  modules: ["${moduleName}"]
+}`,
+    },
+  ]);
+}
+
 function handleAstroIntegrationsOrCreate(context: OperationContext): OperationResult {
   const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
@@ -408,6 +442,7 @@ const OPERATION_HANDLERS: Record<
   'compose-plugins': handleComposePlugins,
   'plugins-array': (context) => appendToArrayProperty(context, 'plugins'),
   'plugins-array-or-create': handlePluginsArrayOrCreate,
+  'nuxt-modules-or-create': handleNuxtModulesOrCreate,
   'wrap-module-exports': handleWrapModuleExports,
   'wrap-module-exports-async': handleWrapModuleExportsAsync,
   'wrap-export-default-async': handleWrapExportDefaultAsync,
@@ -455,7 +490,17 @@ export function applyBundlerOperations(context: OperationContext): OperationResu
   return { status: 'no-match' };
 }
 
-export function hasZephyrCall(filePath: string): OperationResult {
+export function hasZephyrCall(
+  filePath: string,
+  config?: Pick<BundlerConfig, 'plugin'>
+): OperationResult {
+  if (config?.plugin === 'zephyr-nuxt-module') {
+    const content = fs.readFileSync(filePath, 'utf8');
+    if (/['"]zephyr-nuxt-module['"]/.test(content)) {
+      return { status: 'changed' };
+    }
+  }
+
   const result = searchWithAstGrep({
     filePath,
     pattern: 'withZephyr()',

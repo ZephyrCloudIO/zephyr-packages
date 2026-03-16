@@ -4,6 +4,7 @@ export type ZephyrEngineBuilderTypes =
   | 'repack'
   | 'metro'
   | 'vite'
+  | 'nuxt'
   | 'rollup'
   | 'parcel'
   | 'astro'

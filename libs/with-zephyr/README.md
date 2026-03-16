@@ -34,11 +34,12 @@ bunx with-zephyr
 
 ## Supported Bundlers
 
-This codemod supports **14+ bundlers/framework configs** with their respective Zephyr integrations:
+This codemod supports **15+ bundlers/framework configs** with their respective Zephyr integrations:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
 - **Vite** ([`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
+- **Slidev** (scaffolded to Vite using [`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
 - **Rollup** ([`rollup-plugin-zephyr`](https://www.npmjs.com/package/rollup-plugin-zephyr))
 - **Rolldown** ([`zephyr-rolldown-plugin`](https://www.npmjs.com/package/zephyr-rolldown-plugin))
 - **Astro** ([`zephyr-astro-integration`](https://www.npmjs.com/package/zephyr-astro-integration))

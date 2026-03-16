@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:eslint",
+    "@types/node": "catalog:typescript",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "@vitejs/plugin-react": "catalog:vite7",

@@ -12,8 +12,8 @@
     "react-dom": "catalog:react18"
   },
   "devDependencies": {
-    "@rsbuild/core": "^1.3.22",
-    "@rsbuild/plugin-react": "catalog:rspack",
+    "@rsbuild/core": "^2.0.0-beta.7",
+    "@rsbuild/plugin-react": "^1.4.5",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "typescript": "catalog:typescript",

@@ -35,10 +35,22 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
+import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
+import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
+import type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+
+export type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 export interface ZeApplicationProperties {
   org: string;
   project: string;
@@ -75,21 +87,6 @@ export function is_zephyr_resolved_dependency(
   dep: ZeResolvedDependency | null
 ): dep is ZeResolvedDependency {
   return dep !== null;
-}
-
-type ZephyrEngineBuilderTypes =
-  | 'webpack'
-  | 'rspack'
-  | 'repack'
-  | 'metro'
-  | 'vite'
-  | 'rollup'
-  | 'parcel'
-  | 'astro'
-  | 'unknown';
-export interface ZephyrEngineOptions {
-  context: string | undefined;
-  builder: ZephyrEngineBuilderTypes;
 }
 
 export interface ZeUser {
@@ -154,6 +151,8 @@ export class ZephyrEngine {
   ze_env_vars: Record<string, string> | null = null;
   // Store env vars hash for API to use
   ze_env_vars_hash: string | null = null;
+  // Version of worker engine that processed snapshot upload
+  worker_version: string | null = null;
 
   get zephyr_dependencies(): Record<string, ZephyrDependency> {
     return convertResolvedDependencies(this.federated_dependencies ?? []);
@@ -192,6 +191,11 @@ export class ZephyrEngine {
     ze_log.init('Initializing: npm package info...');
 
     ze.npmProperties = await getPackageJson(context);
+    const pluginPackageName = resolveZephyrPluginPackageName(
+      ze.npmProperties,
+      options.builder
+    );
+    void maybeShowOutdatedPluginWarning(pluginPackageName);
 
     ze_log.init('Initializing: git info...');
     ze.gitProperties = await getGitInfo();
@@ -242,7 +246,8 @@ export class ZephyrEngine {
    *   or `android`
    */
   async resolve_remote_dependencies(
-    deps: ZeDependencyPair[]
+    deps: ZeDependencyPair[],
+    defaultLibraryType = 'var'
   ): Promise<ZeResolvedDependency[] | null> {
     if (!deps) {
       return null;
@@ -317,7 +322,10 @@ export class ZephyrEngine {
         return tuple[1];
       }
 
-      return Object.assign({}, tuple[1], { name: dep.name, version: dep.version });
+      return Object.assign({ library_type: defaultLibraryType }, tuple[1], {
+        name: dep.name,
+        version: dep.version,
+      });
     });
 
     const resolution_results = await Promise.all(tasks);
@@ -516,15 +524,21 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const upload_options: UploadOptions = {
       snapshot,
       getDashData: (engine) => {
-        // If buildStats has ze_envs already, use it
-        if (buildStats.ze_envs || buildStats.ze_envs_hash) {
-          return buildStats;
-        }
-        // Otherwise, add the env vars from the engine
+        const dash_data =
+          buildStats.ze_envs || buildStats.ze_envs_hash
+            ? buildStats
+            : {
+                ...buildStats,
+                ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
+                ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+              };
+
         return {
-          ...buildStats,
-          ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
-          ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+          ...dash_data,
+          builder: dash_data.builder ?? zephyr_engine.builder,
+          plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
+          worker_version:
+            dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
         };
       },
       assets: {

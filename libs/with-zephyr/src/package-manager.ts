@@ -103,18 +103,23 @@ export function isPackageInstalled(
   }
 }
 
-/** Install a package using the detected package manager */
-export function installPackage(
-  directory: string,
-  packageName: string,
+/** Build an add command for one or more packages */
+export function buildAddCommand(
   packageManager: PackageManager,
+  packageNames: string[],
   isDev = true
-): boolean {
+): string {
+  if (packageNames.length === 0) {
+    // eslint-disable-next-line no-restricted-syntax
+    throw new Error('No packages specified');
+  }
+
+  const packageArgs = packageNames.join(' ');
   const commands: Record<PackageManager, string> = {
-    npm: `npm install ${isDev ? '--save-dev' : '--save'} ${packageName}`,
-    yarn: `yarn add ${isDev ? '--dev' : ''} ${packageName}`.trim(),
-    pnpm: `pnpm add ${isDev ? '--save-dev' : '--save-prod'} ${packageName}`,
-    bun: `bun add ${isDev ? '--dev' : ''} ${packageName}`.trim(),
+    npm: `npm install ${isDev ? '--save-dev' : '--save'} ${packageArgs}`,
+    yarn: `yarn add ${isDev ? '--dev' : ''} ${packageArgs}`.trim(),
+    pnpm: `pnpm add ${isDev ? '--save-dev' : '--save-prod'} ${packageArgs}`,
+    bun: `bun add ${isDev ? '--dev' : ''} ${packageArgs}`.trim(),
   };
 
   const command = commands[packageManager];
@@ -123,6 +128,39 @@ export function installPackage(
     throw new Error(`Unsupported package manager: ${packageManager}`);
   }
 
+  return command;
+}
+
+/** Build an install command for the current package manager */
+export function buildInstallCommand(packageManager: PackageManager): string {
+  const commands: Record<PackageManager, string> = {
+    npm: 'npm install',
+    yarn: 'yarn install',
+    pnpm: 'pnpm install',
+    bun: 'bun install',
+  };
+
+  const command = commands[packageManager];
+  if (!command) {
+    // eslint-disable-next-line no-restricted-syntax
+    throw new Error(`Unsupported package manager: ${packageManager}`);
+  }
+
+  return command;
+}
+
+/** Install multiple packages using the detected package manager */
+export function installPackages(
+  directory: string,
+  packageNames: string[],
+  packageManager: PackageManager,
+  isDev = true
+): boolean {
+  if (packageNames.length === 0) {
+    return true;
+  }
+
+  const command = buildAddCommand(packageManager, packageNames, isDev);
   console.log(`Running: ${command}`);
 
   try {
@@ -133,7 +171,40 @@ export function installPackage(
     });
     return true;
   } catch (error) {
-    console.error(`Failed to install ${packageName}: ${(error as Error).message}`);
+    console.error(
+      `Failed to install ${packageNames.join(', ')}: ${(error as Error).message}`
+    );
+    return false;
+  }
+}
+
+/** Install a package using the detected package manager */
+export function installPackage(
+  directory: string,
+  packageName: string,
+  packageManager: PackageManager,
+  isDev = true
+): boolean {
+  return installPackages(directory, [packageName], packageManager, isDev);
+}
+
+/** Install dependencies from package.json exactly once */
+export function installDependencies(
+  directory: string,
+  packageManager: PackageManager
+): boolean {
+  const command = buildInstallCommand(packageManager);
+  console.log(`Running: ${command}`);
+
+  try {
+    execSync(command, {
+      cwd: directory,
+      stdio: 'inherit',
+      timeout: 120000, // 2 minute timeout for slow networks
+    });
+    return true;
+  } catch (error) {
+    console.error(`Failed to run ${command}: ${(error as Error).message}`);
     return false;
   }
 }

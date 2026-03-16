@@ -104,7 +104,6 @@ interface ZephyrAgentConfig {
 When Zephyr cannot find a Git repository with remote origin, it will:
 
 1. **Automatic Package.json-Based Naming**:
-
    - Extract organization, project, and app names from your `package.json`
    - Use authenticated user's username as the organization for personal Zephyr org
    - Follow intelligent naming conventions based on package structure
@@ -185,12 +184,10 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
 **Project and App Naming Logic:**
 
 1. **Scoped Package** (`@company/app-name`):
-
    - Project: `company` (scope without @)
    - App: `app-name`
 
 2. **Monorepo Structure** (root `package.json` exists):
-
    - If root is scoped (`@company/monorepo`): Project = `company`, App = current package name
    - Otherwise: Project = root package name, App = current package name
    - If no root package.json found: Project = current directory name, App = current package name

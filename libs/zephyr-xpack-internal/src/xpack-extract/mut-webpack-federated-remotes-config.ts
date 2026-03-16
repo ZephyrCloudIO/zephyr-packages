@@ -53,7 +53,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       // If this proves too permissive for other bundlers/configs, we should
       // introduce an explicit normalization step earlier (during extraction)
       // and keep matching here strict. Track with an issue and tests.
-      const resolved_dep = resolvedDependencyPairs.find((dep) => {
+      const dep_match = resolvedDependencyPairs.find((dep) => {
         const nameMatch = dep.name === remote_name;
         // Allow wildcard and Nx-style "name@url" declarations to match
         const versionMatch =
@@ -66,7 +66,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       });
       ze_log.remotes(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
 
-      if (!resolved_dep) {
+      if (!dep_match) {
         ze_log.remotes(
           `Resolved dependency pair not found for remote: ${JSON.stringify(
             remote,
@@ -77,6 +77,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
         );
         return;
       }
+      const resolved_dep = { ...dep_match };
       const remote_entry_url = resolved_dep.remote_entry_url;
 
       // todo: this is a version with named export logic, we should take this into account later

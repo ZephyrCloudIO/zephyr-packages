@@ -32,6 +32,7 @@ import {
   isPackageInstalled,
 } from './package-manager.js';
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
+import { bootstrapSlidevVite } from './slidev-vite.js';
 import { applyBundlerOperations, hasZephyrCall } from './operations.js';
 import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
 
@@ -267,6 +268,17 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   }
 
   const nextJsBootstrap = bootstrapNextJsVinext(directory, { dryRun });
+  const slidevBootstrapRequested =
+    !bundlers || bundlers.includes('vite') || bundlers.includes('slidev');
+  const slidevBootstrap = slidevBootstrapRequested
+    ? bootstrapSlidevVite(directory, { dryRun })
+    : {
+        isSlidevApp: false,
+        createdFiles: [],
+        updatedPackageJson: false,
+        packageRequirements: [] as PackageRequirement[],
+      };
+
   if (nextJsBootstrap.isNextJsApp) {
     if (nextJsBootstrap.createdFiles.length > 0) {
       for (const createdFile of nextJsBootstrap.createdFiles) {
@@ -287,9 +299,33 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     }
   }
 
+  if (slidevBootstrap.isSlidevApp) {
+    if (slidevBootstrap.createdFiles.length > 0) {
+      for (const createdFile of slidevBootstrap.createdFiles) {
+        const message = dryRun
+          ? `Would create ${createdFile} for Slidev`
+          : `Created ${createdFile} for Slidev`;
+        console.log(chalk.green(`✓ ${message}`));
+      }
+    }
+    if (slidevBootstrap.updatedPackageJson) {
+      const message = dryRun
+        ? 'Would update package.json name/version for Zephyr compatibility'
+        : 'Updated package.json name/version for Zephyr compatibility';
+      console.log(chalk.green(`✓ ${message}`));
+    }
+    if (slidevBootstrap.createdFiles.length > 0 || slidevBootstrap.updatedPackageJson) {
+      console.log();
+    }
+  }
+
   const configFiles = findConfigFiles(directory);
 
-  if (configFiles.length === 0 && !nextJsBootstrap.isNextJsApp) {
+  if (
+    configFiles.length === 0 &&
+    !nextJsBootstrap.isNextJsApp &&
+    !slidevBootstrap.isSlidevApp
+  ) {
     console.log(chalk.yellow('No bundler configuration files found.'));
     return;
   }
@@ -300,6 +336,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const filteredConfigFiles: ConfigFile[] = [];
 
   for (const packageRequirement of nextJsBootstrap.packageRequirements) {
+    requiredPackages.set(packageRequirement.name, packageRequirement);
+  }
+  for (const packageRequirement of slidevBootstrap.packageRequirements) {
     requiredPackages.set(packageRequirement.name, packageRequirement);
   }
 

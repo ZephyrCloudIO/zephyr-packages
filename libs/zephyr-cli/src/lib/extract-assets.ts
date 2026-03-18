@@ -1,6 +1,9 @@
-import { readdir, readFile } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
-import { buildAssetsMap, logFn, type ZeBuildAssetsMap } from 'zephyr-agent';
+import { sep } from 'node:path';
+import {
+  buildAssetsMap,
+  readDirRecursiveWithContents,
+  type ZeBuildAssetsMap,
+} from 'zephyr-agent';
 
 interface DirectoryAsset {
   content: Buffer | string;
@@ -28,46 +31,21 @@ export async function extractAssetsFromDirectory(
   buildDir: string
 ): Promise<ZeBuildAssetsMap> {
   const assets: Record<string, DirectoryAsset> = {};
+  const files = await readDirRecursiveWithContents(buildDir);
 
-  // Recursively walk through the build directory
-  // TODO: Use readDirRecursive from 'zephyr-agent' here instead
-  async function walkDir(dirPath: string): Promise<void> {
-    try {
-      const entries = await readdir(dirPath, { withFileTypes: true });
+  for (const file of files) {
+    const relativePath = normalizePath(file.relativePath);
 
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry.name);
-
-        if (entry.isDirectory()) {
-          await walkDir(fullPath);
-        } else if (entry.isFile()) {
-          // Get relative path from build directory
-          const relativePath = normalizePath(relative(buildDir, fullPath));
-
-          // Skip certain files that shouldn't be uploaded
-          if (shouldSkipFile(relativePath)) {
-            continue;
-          }
-
-          try {
-            const content = await readFile(fullPath);
-            const fileType = getFileType(relativePath);
-
-            assets[relativePath] = {
-              content,
-              type: fileType,
-            };
-          } catch (readError) {
-            logFn('warn', `Failed to read file ${fullPath}: ${readError}`);
-          }
-        }
-      }
-    } catch (error) {
-      logFn('warn', `Failed to walk directory ${dirPath}: ${error}`);
+    if (shouldSkipFile(relativePath)) {
+      continue;
     }
-  }
 
-  await walkDir(buildDir);
+    const fileType = getFileType(relativePath);
+    assets[relativePath] = {
+      content: file.content,
+      type: fileType,
+    };
+  }
 
   return buildAssetsMap(assets, extractBuffer, getAssetType);
 }

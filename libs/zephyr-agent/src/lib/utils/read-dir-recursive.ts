@@ -2,6 +2,16 @@ import type { Dirent, Stats } from 'node:fs';
 import { readdir, readFile, realpath, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
+/**
+ * Default path patterns that are skipped during recursive directory traversal.
+ *
+ * By default, any path matching one of these patterns will be excluded from results.
+ * This includes:
+ *  - `node_modules`
+ *  - `.git`
+ *  - `.DS_Store`
+ *  - `thumbs.db`
+ */
 const SKIP_PATH_PATTERNS = [
   /(^|\/)node_modules($|\/)/i,
   /(^|\/)\.git($|\/)/i,
@@ -22,8 +32,16 @@ export interface FileInfo {
 }
 
 /**
- * Reads a directory recursively and returns information about all files. Returns an empty
- * array if the directory doesn't exist.
+ * Reads a directory recursively and returns information about all files.
+ *
+ * By default, paths matching a built-in skip list are not included in the results.
+ * The following are always skipped:
+ *  - any path containing `node_modules/`
+ *  - any path containing `.git/`
+ *  - files named `.DS_Store`
+ *  - files named `thumbs.db`
+ *
+ * Returns an empty array if the directory doesn't exist.
  */
 export async function readDirRecursive(
   dirPath: string
@@ -43,8 +61,16 @@ export async function readDirRecursive(
 }
 
 /**
- * Reads a directory recursively and returns file contents along with metadata. Returns an
- * empty array if the directory doesn't exist.
+ * Reads a directory recursively and returns file contents along with metadata.
+ *
+ * By default, paths matching a built-in skip list are not included in the results.
+ * The following are always skipped:
+ *  - any path containing `node_modules/`
+ *  - any path containing `.git/`
+ *  - files named `.DS_Store`
+ *  - files named `thumbs.db`
+ *
+ * Returns an empty array if the directory doesn't exist.
  */
 export async function readDirRecursiveWithContents(
   dirPath: string

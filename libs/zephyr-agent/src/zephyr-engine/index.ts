@@ -25,7 +25,7 @@ import { getApplicationConfiguration } from '../lib/edge-requests/get-applicatio
 import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
-import { cyanBright, white, yellow } from '../lib/logging/picocolor';
+import { cyanBright, greenBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
@@ -35,17 +35,17 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
-import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
-import type {
-  ZephyrEngineBuilderTypes,
-  ZephyrEngineOptions,
-} from './zephyr-engine.types';
+import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+import type {
+  ZephyrEngineBuilderTypes,
+  ZephyrEngineOptions,
+} from './zephyr-engine.types';
 
 export type {
   ZephyrEngineBuilderTypes,
@@ -145,6 +145,10 @@ export class ZephyrEngine {
   hash_list: Promise<{ hash_set: Set<string> }> | null = null;
   resolved_hash_list: { hash_set: Set<string> } | null = null;
   version_url: string | null = null;
+  // set when waitForDeployments is true and build stats are uploaded
+  target_urls: string[] | null = null;
+  // time it took to finish uploading build stats
+  build_stats_time: number | null = null;
   // Store snapshot with env vars for use in buildStats
   snapshot_with_envs: Snapshot | null = null;
   // Store env vars temporarily for API to use (not in snapshot)
@@ -429,7 +433,9 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const zephyr_engine = this;
     const logger = await zephyr_engine.logger;
     const zeStart = zephyr_engine.build_start_time;
+    const buildStatsTime = zephyr_engine.build_stats_time;
     const versionUrl = zephyr_engine.version_url;
+    const targetUrls = zephyr_engine.target_urls;
     const dependencies = zephyr_engine.federated_dependencies;
 
     const if_target_is_react_native =
@@ -471,9 +477,18 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       });
     }
 
+    if (targetUrls?.length && buildStatsTime) {
+      logger({
+        level: 'trace',
+        action: 'deploy:url',
+        message: `\nUpdated ${greenBright(targetUrls.length.toString())} targets in ${yellow(buildStatsTime?.toString())}ms\n- ${targetUrls.join('\n- ')}`,
+      });
+    }
+
     this.build_id = null;
     this.snapshotId = null;
     this.version_url = null;
+    this.target_urls = null;
     this.build_start_time = null;
   }
 
@@ -521,6 +536,18 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       entrypoint,
     });
 
+    const waitForCompletion = !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim();
+
+    if (waitForCompletion) {
+      const logger = await this.logger;
+
+      logger({
+        action: 'deploy:wait',
+        level: 'info',
+        message: `Waiting for deployment to complete...`,
+      });
+    }
+
     const upload_options: UploadOptions = {
       snapshot,
       getDashData: (engine) => {
@@ -539,6 +566,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
           worker_version:
             dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
+          waitForCompletion,
         };
       },
       assets: {

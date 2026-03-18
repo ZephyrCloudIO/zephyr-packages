@@ -1,6 +1,6 @@
 # with-zephyr
 
-A codemod tool that automatically adds the `withZephyr` plugin to bundler configurations in your project.
+A codemod tool that automatically adds Zephyr integration to supported project configurations.
 
 ## What is Zephyr?
 
@@ -34,14 +34,16 @@ bunx with-zephyr
 
 ## Supported Bundlers
 
-This codemod supports **13+ bundlers** with their respective Zephyr plugins:
+This codemod supports **15+ bundlers/framework configs** with their respective Zephyr integrations:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
 - **Vite** ([`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
+- **Slidev** (scaffolded to Vite using [`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
 - **Rollup** ([`rollup-plugin-zephyr`](https://www.npmjs.com/package/rollup-plugin-zephyr))
 - **Rolldown** ([`zephyr-rolldown-plugin`](https://www.npmjs.com/package/zephyr-rolldown-plugin))
 - **Astro** ([`zephyr-astro-integration`](https://www.npmjs.com/package/zephyr-astro-integration))
+- **Nuxt** ([`zephyr-nuxt-module`](https://www.npmjs.com/package/zephyr-nuxt-module))
 - **Modern.js** ([`zephyr-modernjs-plugin`](https://www.npmjs.com/package/zephyr-modernjs-plugin))
 - **RSPress** ([`zephyr-rspress-plugin`](https://www.npmjs.com/package/zephyr-rspress-plugin))
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
@@ -85,8 +87,8 @@ This will:
 
 1. Search for bundler configuration files in the current directory and subdirectories
 2. Detect which bundler each config file is for
-3. Add the appropriate `withZephyr` plugin configuration
-4. Add the necessary import/require statements
+3. Add the appropriate Zephyr integration
+4. Add the necessary import/require statements when applicable
 
 For **Next.js** apps (detected via `next` in `package.json`), when no `vite.config.ts`
 exists it will also scaffold a Vinext setup:
@@ -240,6 +242,7 @@ The codemod automatically detects and processes these configuration files:
 - `rollup.config.js/ts/mjs`
 - `rolldown.config.js/ts/mjs`
 - `astro.config.js/ts/mjs/mts`
+- `nuxt.config.js/ts/mjs/mts`
 - `modern.config.js/ts/mjs`
 - `rspress.config.js/ts/mjs`
 - `rsbuild.config.js/ts/mjs`
@@ -279,6 +282,11 @@ The codemod recognizes and handles various configuration patterns:
 
 - JSON configuration with `reporters` array
 
+### Nuxt
+
+- `defineNuxtConfig()` modules arrays
+- Plain `export default {}` config objects
+
 ## Safety Features
 
 - **Dry run mode**: Preview changes before applying them
@@ -296,7 +304,7 @@ The codemod recognizes and handles various configuration patterns:
 
 ### Manual Configuration
 
-If the codemod doesn't work for your specific configuration, you can manually add the withZephyr plugin:
+If the codemod doesn't work for your specific configuration, you can manually add the Zephyr integration:
 
 1. Install the appropriate plugin package
 2. Import/require the `withZephyr` function

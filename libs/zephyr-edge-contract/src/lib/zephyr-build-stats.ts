@@ -139,6 +139,8 @@ export interface ZephyrBuildStats {
   plugin_version?: string;
   /** Version of the edge worker that handled deployment forwarding */
   worker_version?: string;
+  /** When true, plugin waits for terminal deployment status before finishing. */
+  waitForCompletion?: boolean;
 }
 
 enum DeploymentIntegrationPlatform {

@@ -15,15 +15,43 @@ async function createDirSymlink(targetPath: string, linkPath: string): Promise<v
   await symlink(linkTarget, linkPath, type);
 }
 
+async function createFileSymlink(targetPath: string, linkPath: string): Promise<void> {
+  if (process.platform === 'win32') {
+    await symlink(resolve(targetPath), linkPath, 'file');
+    return;
+  }
+
+  await symlink(targetPath, linkPath);
+}
+
+function isSymlinkPermissionError(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code;
+  return code === 'EPERM' || code === 'EACCES' || code === 'UNKNOWN';
+}
+
 describe('read-dir-recursive', () => {
   let tempRoot = '';
+  let symlinkSupported = true;
 
   beforeEach(async () => {
     tempRoot = await mkdtemp(join(tmpdir(), 'zephyr-read-dir-'));
     await cp(FIXTURE_ROOT, tempRoot, { recursive: true });
 
-    await createDirSymlink(join(tempRoot, 'c'), join(tempRoot, 'a', 'b'));
-    await symlink(join(tempRoot, 'c', 'd.txt'), join(tempRoot, 'a', 'd-link.txt'));
+    symlinkSupported = true;
+    try {
+      await createDirSymlink(join(tempRoot, 'c'), join(tempRoot, 'a', 'b'));
+      await createFileSymlink(
+        join(tempRoot, 'c', 'd.txt'),
+        join(tempRoot, 'a', 'd-link.txt')
+      );
+    } catch (error) {
+      if (isSymlinkPermissionError(error)) {
+        symlinkSupported = false;
+        return;
+      }
+
+      throw error;
+    }
   });
 
   afterEach(async () => {
@@ -43,6 +71,10 @@ describe('read-dir-recursive', () => {
   });
 
   it('resolves symlinked directory contents under the symlink path', async () => {
+    if (!symlinkSupported) {
+      return;
+    }
+
     const files = await readDirRecursiveWithContents(join(tempRoot, 'a'));
     const symlinkedEntry = files.find(
       (file) => normalizePath(file.relativePath) === 'b/d.txt'
@@ -59,6 +91,10 @@ describe('read-dir-recursive', () => {
   });
 
   it('resolves symlinked files under the symlink alias path', async () => {
+    if (!symlinkSupported) {
+      return;
+    }
+
     const files = await readDirRecursiveWithContents(join(tempRoot, 'a'));
     const linkedFile = files.find(
       (file) => normalizePath(file.relativePath) === 'd-link.txt'
@@ -79,6 +115,10 @@ describe('read-dir-recursive', () => {
   });
 
   it('guards against recursive symlink loops', async () => {
+    if (!symlinkSupported) {
+      return;
+    }
+
     await createDirSymlink(join(tempRoot, 'a'), join(tempRoot, 'a', 'loop'));
 
     const files = await readDirRecursive(join(tempRoot, 'a'));

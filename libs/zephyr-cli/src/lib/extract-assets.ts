@@ -1,6 +1,7 @@
 import { sep } from 'node:path';
 import {
   buildAssetsMap,
+  logFn,
   readDirRecursiveWithContents,
   type ZeBuildAssetsMap,
 } from 'zephyr-agent';
@@ -31,20 +32,25 @@ export async function extractAssetsFromDirectory(
   buildDir: string
 ): Promise<ZeBuildAssetsMap> {
   const assets: Record<string, DirectoryAsset> = {};
-  const files = await readDirRecursiveWithContents(buildDir);
 
-  for (const file of files) {
-    const relativePath = normalizePath(file.relativePath);
+  try {
+    const files = await readDirRecursiveWithContents(buildDir);
 
-    if (shouldSkipFile(relativePath)) {
-      continue;
+    for (const file of files) {
+      const relativePath = normalizePath(file.relativePath);
+
+      if (shouldSkipFile(relativePath)) {
+        continue;
+      }
+
+      const fileType = getFileType(relativePath);
+      assets[relativePath] = {
+        content: file.content,
+        type: fileType,
+      };
     }
-
-    const fileType = getFileType(relativePath);
-    assets[relativePath] = {
-      content: file.content,
-      type: fileType,
-    };
+  } catch (error) {
+    logFn('warn', `Failed to read build directory ${buildDir}: ${error}`);
   }
 
   return buildAssetsMap(assets, extractBuffer, getAssetType);

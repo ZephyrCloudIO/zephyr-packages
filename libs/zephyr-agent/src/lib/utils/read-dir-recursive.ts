@@ -87,25 +87,32 @@ async function* resolveDir({
   }
 
   const currentRealDir = await safeRealpath(currentDir);
-  const nextActiveRealDirs = new Set(activeRealDirs);
-  nextActiveRealDirs.add(currentRealDir);
+  if (activeRealDirs.has(currentRealDir)) {
+    return;
+  }
 
-  for (const entry of entries) {
-    const fullPath = resolve(currentDir, entry.name);
-    const relativePath = relativePrefix ? join(relativePrefix, entry.name) : entry.name;
-    const normalizedRelativePath = normalizePath(relativePath);
+  activeRealDirs.add(currentRealDir);
 
-    if (shouldSkipRelativePath(normalizedRelativePath, entry)) {
-      continue;
+  try {
+    for (const entry of entries) {
+      const fullPath = resolve(currentDir, entry.name);
+      const relativePath = relativePrefix ? join(relativePrefix, entry.name) : entry.name;
+      const normalizedRelativePath = normalizePath(relativePath);
+
+      if (shouldSkipRelativePath(normalizedRelativePath, entry)) {
+        continue;
+      }
+
+      yield* resolveFile({
+        fullPath,
+        relativePath,
+        entry,
+        readContents,
+        activeRealDirs,
+      });
     }
-
-    yield* resolveFile({
-      fullPath,
-      relativePath,
-      entry,
-      readContents,
-      activeRealDirs: nextActiveRealDirs,
-    });
+  } finally {
+    activeRealDirs.delete(currentRealDir);
   }
 }
 
@@ -145,10 +152,15 @@ async function* resolveFile({
   }
 
   if (entry.isFile()) {
+    const content = readContents ? await safeReadFile(fullPath) : undefined;
+    if (readContents && !content) {
+      return;
+    }
+
     yield {
       fullPath,
       relativePath,
-      content: readContents ? await readFile(fullPath) : undefined,
+      content,
     };
   }
 }
@@ -180,24 +192,34 @@ async function* resolveSymbolicLink({
       return;
     }
 
-    const nextActiveRealDirs = new Set(activeRealDirs);
-    nextActiveRealDirs.add(realPath);
-
     yield* resolveDir({
       currentDir: realPath,
       relativePrefix: relativePath,
       readContents,
-      activeRealDirs: nextActiveRealDirs,
+      activeRealDirs,
     });
     return;
   }
 
   if (realStat.isFile()) {
+    const content = readContents ? await safeReadFile(realPath) : undefined;
+    if (readContents && !content) {
+      return;
+    }
+
     yield {
       fullPath: realPath,
       relativePath,
-      content: readContents ? await readFile(realPath) : undefined,
+      content,
     };
+  }
+}
+
+async function safeReadFile(path: string): Promise<Buffer | undefined> {
+  try {
+    return await readFile(path);
+  } catch {
+    return undefined;
   }
 }
 

@@ -95,15 +95,18 @@ function resolveAssetPath(
     /\/+$/,
     ''
   );
+  const isWithinPublicAlias =
+    !!publicRelativeRoot && relativePath.startsWith(`${publicRelativeRoot}/`);
 
-  if (
-    fullPath.startsWith(`${publicRoot}/`) ||
-    relativePath === publicRelativeRoot ||
-    relativePath.startsWith(`${publicRelativeRoot}/`)
-  ) {
+  if (fullPath.startsWith(`${publicRoot}/`) || isWithinPublicAlias) {
     const staticRelative = fullPath.startsWith(`${publicRoot}/`)
       ? fullPath.slice(publicRoot.length + 1)
       : relativePath.slice(publicRelativeRoot.length + 1);
+
+    if (!staticRelative) {
+      return relativePath;
+    }
+
     const basePath = normalizeBaseURL(baseURL);
     return basePath ? `client/${basePath}/${staticRelative}` : `client/${staticRelative}`;
   }

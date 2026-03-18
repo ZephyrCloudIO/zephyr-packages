@@ -124,6 +124,58 @@ describe('uploadOutputToZephyr', () => {
     });
   });
 
+  it('maps public assets by relative alias path when fullPath is outside publicDir', async () => {
+    const engine = {
+      env: {
+        target: 'web',
+        ssr: false,
+      },
+      upload_assets: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockZephyrEngineCreate.mockResolvedValue(
+      engine as unknown as Awaited<ReturnType<typeof ZephyrEngine.create>>
+    );
+    mockZeBuildDashData.mockResolvedValue({ build: 'stats' } as unknown as Awaited<
+      ReturnType<typeof zeBuildDashData>
+    >);
+    mockReadDirRecursiveWithContents.mockResolvedValue([
+      {
+        fullPath: '/tmp/project/.output/server/index.mjs',
+        relativePath: 'server/index.mjs',
+        content: Buffer.from('server'),
+      },
+      {
+        fullPath: '/tmp/shared/symlinked.js',
+        relativePath: 'client/docs/symlinked.js',
+        content: Buffer.from('client'),
+      },
+    ]);
+
+    mockBuildAssetsMap.mockImplementation((assets) => {
+      const assetKeys = Object.keys(assets);
+      expect(assetKeys).toEqual(
+        expect.arrayContaining(['server/index.mjs', 'client/docs/symlinked.js'])
+      );
+
+      return {
+        hash1: {
+          hash: 'hash1',
+          path: 'server/index.mjs',
+          buffer: Buffer.from('server'),
+          size: 6,
+        },
+      } as unknown as ReturnType<typeof buildAssetsMapMock>;
+    });
+
+    await uploadOutputToZephyr({
+      rootDir: '/tmp/project',
+      outputDir: '/tmp/project/.output',
+      publicDir: '/tmp/project/.output/client/docs',
+      baseURL: '/docs/',
+    });
+  });
+
   it('throws ERR_ASSETS_NOT_FOUND when no deployable assets exist', async () => {
     mockReadDirRecursiveWithContents.mockResolvedValue([
       {

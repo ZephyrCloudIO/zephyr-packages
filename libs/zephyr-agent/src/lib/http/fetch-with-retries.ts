@@ -175,16 +175,18 @@ export async function fetchWithRetries(
       });
     }
 
-    // Unknown errors
-    if (
+    // Network errors after retries exhausted
+    const isRetryableNetworkError =
       error instanceof AxiosError &&
-      (error.code === 'EPIPE' || (error.message && error.message.includes('network')))
-    ) {
+      ((!!error.code && RETRY_ERROR_CODES.includes(error.code)) ||
+        !!error.message?.includes('network'));
+
+    if (isRetryableNetworkError) {
       // Max retries reached for network error
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: -1,
         url: url.toString(),
-        content: 'Max retries reached for network error',
+        content: `Max retries reached for network error: ${error.code ?? error.message}`,
         method: options.method?.toUpperCase() ?? 'GET',
       });
     }

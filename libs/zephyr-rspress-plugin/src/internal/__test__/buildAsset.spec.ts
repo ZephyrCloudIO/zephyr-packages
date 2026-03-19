@@ -5,6 +5,20 @@ import { ZephyrError } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import { buildAssetMapFromFiles } from '../assets/buildAssets';
 
+jest.mock('zephyr-agent', () => {
+  class MockZephyrError extends Error {
+    constructor(code: string, options?: { message?: string }) {
+      super(options?.message ?? code);
+      this.name = 'ZephyrError';
+    }
+  }
+
+  return {
+    ZeErrors: { ERR_UNKNOWN: 'ERR_UNKNOWN' },
+    ZephyrError: MockZephyrError,
+  };
+});
+
 jest.mock('node:fs/promises');
 const mockedFs = fs as jest.Mocked<typeof fs>;
 

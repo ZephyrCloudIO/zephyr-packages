@@ -1,4 +1,4 @@
-import { resolve as resolvePath } from 'node:path';
+import { relative, resolve as resolvePath } from 'node:path';
 import type { Platform, ZephyrBuildHooks, ZephyrEngineOptions } from '../zephyr-engine';
 import { ZephyrEngine } from '../zephyr-engine';
 import { ZeErrors, ZephyrError } from './errors';
@@ -79,6 +79,7 @@ function normalizeBaseURL(baseURL: string): string {
 
 function resolveAssetPath(
   file: { fullPath: string; relativePath: string },
+  outputDir: string,
   publicDir?: string,
   baseURL = '/'
 ): string {
@@ -89,9 +90,23 @@ function resolveAssetPath(
 
   const fullPath = normalizePath(file.fullPath);
   const publicRoot = normalizePath(publicDir).replace(/\/+$/, '');
+  const outputRoot = normalizePath(outputDir).replace(/\/+$/, '');
+  const publicRelativeRoot = normalizePath(relative(outputRoot, publicRoot)).replace(
+    /\/+$/,
+    ''
+  );
+  const isWithinPublicAlias =
+    !!publicRelativeRoot && relativePath.startsWith(`${publicRelativeRoot}/`);
 
-  if (fullPath.startsWith(`${publicRoot}/`)) {
-    const staticRelative = fullPath.slice(publicRoot.length + 1);
+  if (fullPath.startsWith(`${publicRoot}/`) || isWithinPublicAlias) {
+    const staticRelative = fullPath.startsWith(`${publicRoot}/`)
+      ? fullPath.slice(publicRoot.length + 1)
+      : relativePath.slice(publicRelativeRoot.length + 1);
+
+    if (!staticRelative) {
+      return relativePath;
+    }
+
     const basePath = normalizeBaseURL(baseURL);
     return basePath ? `client/${basePath}/${staticRelative}` : `client/${staticRelative}`;
   }
@@ -123,7 +138,7 @@ export async function uploadOutputToZephyr(
   const files = await readDirRecursiveWithContents(outputDir);
 
   const assets = files.reduce<Record<string, DirectoryAsset>>((memo, file) => {
-    const relativePath = resolveAssetPath(file, publicDir, opts.baseURL);
+    const relativePath = resolveAssetPath(file, outputDir, publicDir, opts.baseURL);
     if (shouldSkipDeployAsset(relativePath)) {
       return memo;
     }

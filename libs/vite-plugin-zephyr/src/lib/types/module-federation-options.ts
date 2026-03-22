@@ -1,3 +1,17 @@
-import type { federation } from '@module-federation/vite';
+export interface ModuleFederationRemoteConfig {
+  name: string;
+  entry: string;
+  type?: string;
+  [key: string]: unknown;
+}
 
-export type ModuleFederationOptions = Parameters<typeof federation>[0];
+export interface ModuleFederationOptions {
+  name?: string;
+  filename?: string;
+  remotes?: Record<string, string | ModuleFederationRemoteConfig>;
+  exposes?: Record<string, string>;
+  runtimePlugins?: string[];
+  shared?: Record<string, unknown>;
+  dts?: boolean | Record<string, unknown>;
+  [key: string]: unknown;
+}

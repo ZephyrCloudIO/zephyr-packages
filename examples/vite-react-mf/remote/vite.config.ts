@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react';
-import { federation } from '@module-federation/vite';
+import { federation, type ModuleFederationOptions } from '@module-federation/vite';
 import { defineConfig } from 'vite';
-import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
+import { withZephyr } from 'vite-plugin-zephyr';
 
 const mfConfig: ModuleFederationOptions = {
   name: 'vite-remote',

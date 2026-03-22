@@ -3,7 +3,6 @@ import MagicString from 'magic-string';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import { loadEnv, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
 import {
-  buildEnvImportMap,
   createManifestContent,
   handleGlobalError,
   rewriteEnvReadsToVirtualModule,
@@ -36,9 +35,19 @@ export interface WithZephyrOptions {
 }
 
 function loadModuleFederationPlugin() {
-  const moduleFederation = require('@module-federation/vite') as {
+  let moduleFederation: {
     federation: (options: ModuleFederationOptions) => Plugin[];
   };
+
+  try {
+    moduleFederation = require('@module-federation/vite') as {
+      federation: (options: ModuleFederationOptions) => Plugin[];
+    };
+  } catch (error) {
+    throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+      message: `vite-plugin-zephyr: @module-federation/vite is required when mfConfig is provided. Install a compatible version of @module-federation/vite to use Module Federation with withZephyr().${error instanceof Error ? ` Original error: ${error.message}` : ''}`,
+    });
+  }
 
   if (typeof moduleFederation.federation !== 'function') {
     throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -142,7 +151,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         }
         if (source === cachedSpecifier) {
           if (process.env['NODE_ENV'] === 'development') {
-            return { id: `\0virtual:zephyr-env-${zephyr_engine.application_uid}` };
+            return '/zephyr-manifest.json';
           }
           return { id: source, external: true };
         }
@@ -310,14 +319,13 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
             const requestUrl = req.url.split('?')[0];
 
-            if (requestUrl === cachedSpecifier) {
+            if (requestUrl === '/zephyr-manifest.json') {
               try {
-                const envMap = buildEnvImportMap(
-                  zephyr_engine.application_uid,
-                  zephyr_engine.federated_dependencies ?? []
-                );
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify(envMap));
+                const dependencies = zephyr_engine.federated_dependencies || [];
+                const manifestContent = createManifestContent(dependencies, true);
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                res.end(manifestContent);
                 return;
               } catch (error) {
                 handleGlobalError(error);

@@ -63,7 +63,7 @@ For microfrontend applications using Module Federation:
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { federation } from '@module-federation/vite';
-import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
+import { withZephyr } from 'vite-plugin-zephyr';
 
 const mfConfig = {
   name: 'my-app',
@@ -90,8 +90,8 @@ export default defineConfig({
 // vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { federation } from '@module-federation/vite';
-import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
+import { federation, type ModuleFederationOptions } from '@module-federation/vite';
+import { withZephyr } from 'vite-plugin-zephyr';
 
 const mfConfig: ModuleFederationOptions = {
   name: 'host-app',

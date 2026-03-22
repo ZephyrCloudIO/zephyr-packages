@@ -35,8 +35,8 @@ catalogs:
   module-federation:
     '@module-federation/automatic-vendor-federation': ^1.2.1
     '@module-federation/enhanced': ^0.21.0
-    '@module-federation/runtime': ^0.21.0
-    '@module-federation/vite': ^1.9.5
+    '@module-federation/runtime': ^2.2.3
+    '@module-federation/vite': ^1.13.2
   parcel:
     '@parcel/config-default': ^2.16.4
     '@parcel/core': ^2.16.4

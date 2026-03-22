@@ -8,7 +8,7 @@
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
-A Vite plugin for deploying applications with Zephyr Cloud. This plugin integrates with Vite's build process to enable seamless deployment of your applications with Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/integrations/react-vite).
+A Vite plugin for deploying applications with Zephyr Cloud. This plugin integrates with Vite's build process to enable seamless deployment of your applications, with optional Module Federation support. Read more from our documentation [here](https://docs.zephyr-cloud.io/integrations/react-vite).
 
 ## Get Started
 
@@ -62,6 +62,7 @@ For microfrontend applications using Module Federation:
 // vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { federation } from '@module-federation/vite';
 import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
 
 const mfConfig = {
@@ -76,10 +77,7 @@ const mfConfig = {
 };
 
 export default defineConfig({
-  plugins: [
-    react(),
-    withZephyr({ mfConfig })
-  ],
+  plugins: [react(), federation(mfConfig), withZephyr()],
   build: {
     target: 'chrome89',
   },
@@ -92,6 +90,7 @@ export default defineConfig({
 // vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { federation } from '@module-federation/vite';
 import { withZephyr, type ModuleFederationOptions } from 'vite-plugin-zephyr';
 
 const mfConfig: ModuleFederationOptions = {
@@ -106,7 +105,7 @@ const mfConfig: ModuleFederationOptions = {
 };
 
 export default defineConfig({
-  plugins: [react(), withZephyr({ mfConfig })],
+  plugins: [react(), federation(mfConfig), withZephyr()],
   build: {
     target: 'chrome89',
   },
@@ -116,7 +115,7 @@ export default defineConfig({
 ## Features
 
 - 🚀 Seamless deployment during Vite build
-- 🏗️ Module Federation support via [@module-federation/vite](https://github.com/module-federation/vite)
+- 🏗️ Optional Module Federation support via [@module-federation/vite](https://github.com/module-federation/vite)
 - 📦 Asset optimization and caching
 - 🔧 Zero-config setup for simple applications
 - 📊 Build analytics and monitoring
@@ -125,7 +124,7 @@ export default defineConfig({
 
 ## Module Federation Support
 
-This plugin uses the official [vite plugin from Module Federation](https://github.com/module-federation/vite) under the hood, providing:
+When you need federation, this plugin works with the official [vite plugin from Module Federation](https://github.com/module-federation/vite), providing:
 
 - **Host Applications**: Consume remote modules from other applications
 - **Remote Applications**: Expose modules for consumption by host applications
@@ -159,6 +158,8 @@ Add these scripts to your `package.json`:
 - Vite 4.x or higher
 - Node.js 18 or higher
 - Zephyr Cloud account (sign up at [zephyr-cloud.io](https://zephyr-cloud.io))
+
+If you use Module Federation, also install `@module-federation/vite`.
 
 ## Examples
 

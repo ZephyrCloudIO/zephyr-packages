@@ -74,6 +74,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
   return {
     name: 'with-zephyr',
+    // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
     enforce: 'pre',
 
     config: (config: UserConfig) => {
@@ -87,8 +88,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     configResolved: async (config: ResolvedConfig) => {
       const root = config.root;
+      // Normalize the entrypoint early so uploads use the same path in serve/build.
       entrypoint = extractEntrypoint(config);
 
+      // Initialize the Zephyr engine in both serve and build flows.
       zephyr_defer_create({
         builder: 'vite',
         context: root,
@@ -108,6 +111,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
       if (mfConfig) {
         try {
+          // Resolve remotes early so dev/build transforms can reuse the same map.
           const dependencyPairs = extract_remotes_dependencies(root, mfConfig);
           if (dependencyPairs) {
             const zephyr_engine = await zephyr_engine_defer;
@@ -125,6 +129,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       }
 
       try {
+        // Mirror ZE_PUBLIC_* into process.env for agent-side manifest generation.
         const loaded = loadEnv(config.mode || 'production', root, '');
         for (const [k, v] of Object.entries(loaded)) {
           if (
@@ -173,11 +178,13 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     transform: {
       order: 'post',
+      // Limit the hook to source-like files plus MF's in-memory remote entry.
       filter: {
         id: /(\.(mjs|cjs|js|ts|jsx|tsx)|virtual:mf-REMOTE_ENTRY_ID)/,
       },
       handler: async (code, id) => {
         try {
+          // In dev, MF serves remoteEntry.js from memory; inject resolved remotes there.
           if (mfConfig && code.includes('"__REMOTE_MAP__"')) {
             const zephyr_engine = await zephyr_engine_defer;
             const resolved_remotes = zephyr_engine.federated_dependencies;
@@ -196,6 +203,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             }
           }
 
+          // Rewrite ZE_PUBLIC_* reads in app code; node_modules stay untouched.
           if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
             if (!cachedSpecifier) {
@@ -213,11 +221,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             }
           }
 
-          // Returning null tells Vite to keep the original module output untouched.
           return null;
         } catch (error) {
           handleGlobalError(error);
-          // Preserve the original chunk when Zephyr-specific transforms fail.
           return null;
         }
       },
@@ -235,6 +241,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             'code' in chunk
           ) {
             try {
+              // Build mode writes remoteEntry.js to disk, so patch the emitted chunk here.
               const zephyr_engine = await zephyr_engine_defer;
               const resolved_remotes = zephyr_engine.federated_dependencies;
 
@@ -263,6 +270,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             chunk.type === 'chunk' &&
             'code' in chunk
           ) {
+            // Preserve JSON import assertions after bundling so runtime import maps still work.
             const importWithoutAssertion = new RegExp(
               `import\\s+([^\\s]+)\\s+from\\s*['"]${cachedSpecifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
               'g'

@@ -1,28 +1,24 @@
-import type { Plugin } from 'vite';
-import type { ModuleFederationOptions } from '../../types/module-federation-options';
+import type { Plugin, PluginOption } from 'vite';
+import type { ModuleFederationOptions } from '../mf-vite-etl/ensure_runtime_plugin';
 
 export interface ViteMFPlugin {
   _options: ModuleFederationOptions;
 }
 
-function flattenPlugins(plugins: readonly unknown[]): Plugin[] {
-  const flat: Plugin[] = [];
+type FlatPluginOption = Plugin | false | null | undefined;
 
-  for (const plugin of plugins) {
-    if (Array.isArray(plugin)) {
-      flat.push(...flattenPlugins(plugin));
-      continue;
-    }
-
-    if (plugin && typeof plugin === 'object' && 'name' in plugin) {
-      flat.push(plugin as Plugin);
-    }
-  }
-
-  return flat;
+function isPlugin(plugin: FlatPluginOption): plugin is Plugin {
+  return !!plugin && typeof plugin === 'object' && 'name' in plugin;
 }
 
-export function extract_mf_plugin(plugins: readonly unknown[]) {
+function flattenPlugins(plugins: readonly PluginOption[]): Plugin[] {
+  const flatPlugins = (plugins as readonly unknown[]).flat(
+    Infinity
+  ) as FlatPluginOption[];
+  return flatPlugins.filter(isPlugin);
+}
+
+export function extract_mf_plugin(plugins: readonly PluginOption[]) {
   return flattenPlugins(plugins).find(
     (plugin) => plugin.name === 'module-federation-vite'
   ) as (Plugin & ViteMFPlugin) | undefined;

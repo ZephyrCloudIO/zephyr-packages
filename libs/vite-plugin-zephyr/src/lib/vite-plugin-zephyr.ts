@@ -21,11 +21,11 @@ import {
   getRuntimePluginPath,
   RESOLVED_ZEPHYR_MF_RUNTIME_PLUGIN_ID,
   ZEPHYR_MF_RUNTIME_PLUGIN_ID,
+  type ModuleFederationOptions,
 } from './internal/mf-vite-etl/ensure_runtime_plugin';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
-import type { ModuleFederationOptions } from './types/module-federation-options';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
 
@@ -77,6 +77,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     enforce: 'pre',
 
     config: (config: UserConfig) => {
+      // If MF was configured separately, inject the Zephyr runtime plugin before MF emits.
       const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
@@ -151,6 +152,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         }
         if (source === cachedSpecifier) {
           if (process.env['NODE_ENV'] === 'development') {
+            // Keep dev env imports aligned with the manifest JSON route used by other Zephyr plugins.
             return '/zephyr-manifest.json';
           }
           return { id: source, external: true };
@@ -211,9 +213,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             }
           }
 
+          // Returning null tells Vite to keep the original module output untouched.
           return null;
         } catch (error) {
           handleGlobalError(error);
+          // Preserve the original chunk when Zephyr-specific transforms fail.
           return null;
         }
       },

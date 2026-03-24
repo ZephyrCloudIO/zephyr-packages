@@ -11,6 +11,6 @@
  */
 
 export {
-  withZephyrTanstackStart,
+  withZephyr,
   type TanStackStartZephyrOptions,
 } from './lib/vite-plugin-tanstack-start-zephyr';

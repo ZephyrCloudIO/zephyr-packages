@@ -1,4 +1,4 @@
-/** Loads TanStack Start build output from .output directory */
+/** Loads TanStack Start build output from the configured output directory */
 
 import * as fs from 'fs/promises';
 import * as path from 'path';

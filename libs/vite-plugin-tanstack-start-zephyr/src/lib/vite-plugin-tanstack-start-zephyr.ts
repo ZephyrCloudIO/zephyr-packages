@@ -94,9 +94,7 @@ function normalizeEntrypoint(entrypoint: string): string {
  * - Git info (org, project, branch)
  * - Zephyr auth (via ze login)
  */
-export function withZephyrTanstackStart(
-  options: TanStackStartZephyrOptions = {}
-): Plugin {
+export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   let config: ResolvedConfig;
   let outputDir: string;

@@ -204,3 +204,6 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
     },
   };
 }
+
+/** @deprecated Please use `withZephyr` instead. */
+export const withZephyrTanstackStart = withZephyr;

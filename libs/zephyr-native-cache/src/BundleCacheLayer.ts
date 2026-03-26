@@ -1,14 +1,11 @@
-import NativeMFECache from './NativeMFECache';
 import { CacheManager } from './CacheManager';
+import NativeMFECache from './NativeMFECache';
 import type { MFECacheConfig } from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
 interface ManifestSource {
-  containerEntry: string;
   extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>;
-  /** Build full download URL from a raw bundle URL (e.g. append dev query params) */
-  buildDownloadUrl?: (url: string) => string;
 }
 
 export class BundleCacheLayer {
@@ -26,7 +23,7 @@ export class BundleCacheLayer {
   // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
-  private static DEFAULT_POLL_INTERVAL_MS = 5 * 1000; // 5 minutes
+  private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
@@ -53,14 +50,10 @@ export class BundleCacheLayer {
 
   registerManifestSource(
     manifestUrl: string,
-    containerEntry: string,
     extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>,
-    buildDownloadUrl?: (url: string) => string,
   ): void {
     this.manifestSources.set(manifestUrl, {
-      containerEntry,
       extractHashes,
-      buildDownloadUrl,
     });
   }
 
@@ -167,58 +160,55 @@ export class BundleCacheLayer {
       for (const [manifestUrl, source] of this.manifestSources) {
         try {
           const resp = await fetch(manifestUrl);
-          if (!resp.ok) continue;
+          if (!resp.ok) {
+            console.warn(
+              `${LOG_PREFIX} manifest fetch failed: ${manifestUrl} → HTTP ${resp.status}`,
+            );
+            continue;
+          }
           const manifest = await resp.json();
 
-          const toContainerUrl =
-            source.buildDownloadUrl ?? ((url: string) => url);
-
-          // --- Container bundle hash ---
-          const containerHash = manifest?.metaData?.buildInfo?.hash;
-          if (containerHash && source.containerEntry) {
-            checked++;
-            const currentHash = this.bundleHashMap[source.containerEntry];
-            if (currentHash !== containerHash) {
-              const downloadUrl = toContainerUrl(source.containerEntry);
-              const didUpdate = await this.cacheManager!.preDownloadBundle(
-                downloadUrl,
-                containerHash,
-              );
-              if (didUpdate) {
-                this.bundleHashMap[source.containerEntry] = containerHash;
-                updated++;
-              }
-            }
-          }
-
-          // --- Exposed & shared bundle hashes (split bundles) ---
+          // Extract all bundle URLs (container + exposed + shared) from manifest
           const newHashes = source.extractHashes(manifest, manifestUrl);
 
-          for (const [bundleUrl, newHash] of newHashes) {
+          for (const [bundleUrl] of newHashes) {
             checked++;
-            const currentHash = this.bundleHashMap[bundleUrl];
-            if (currentHash === newHash) continue;
-            const downloadUrl = source.buildDownloadUrl
-              ? source.buildDownloadUrl(bundleUrl)
-              : bundleUrl;
-            const didUpdate = await this.cacheManager!.preDownloadBundle(
-              downloadUrl,
-              newHash,
+            // Check if this URL is already cached
+            const existing = await this.cacheManager!.getCachedBundle(bundleUrl);
+            if (existing) continue;
+
+            // Not cached — pre-download
+            const remoteName = this.inferRemoteName(bundleUrl);
+            const destPath = await this.cacheManager!.getBundleDestPath(
+              remoteName,
+              bundleUrl,
             );
-            if (didUpdate) {
-              this.bundleHashMap[bundleUrl] = newHash;
+
+            try {
+              const { sha256 } = await NativeMFECache!.downloadFile(
+                bundleUrl,
+                destPath,
+              );
+              await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
+                bundleUrl,
+                bundleHash: sha256,
+              });
               updated++;
+            } catch (dlError) {
+              console.warn(
+                `${LOG_PREFIX} pre-download failed: ${bundleUrl}`,
+                dlError,
+              );
+              // Download failed for this bundle, continue with others
             }
           }
-        } catch {
+        } catch (manifestError) {
+          console.warn(
+            `${LOG_PREFIX} manifest error for ${manifestUrl}`,
+            manifestError,
+          );
           // Non-critical: network error for this manifest, continue with others
         }
-      }
-
-      if (updated > 0) {
-        console.info(
-          `${LOG_PREFIX} poll: ${updated} bundle(s) pre-downloaded out of ${checked} checked`,
-        );
       }
     } finally {
       this.isCheckingUpdates = false;

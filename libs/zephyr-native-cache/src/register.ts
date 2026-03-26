@@ -38,7 +38,7 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
     cacheLayer.stopPolling();
 
   // Auto-start polling unless explicitly disabled
-  const { enablePolling = false, pollIntervalMs } = config;
+  const { enablePolling = true, pollIntervalMs } = config;
   if (enablePolling) {
     cacheLayer.startPolling(pollIntervalMs);
   }

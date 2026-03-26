@@ -2,6 +2,14 @@
   "name": "vite-plugin-tanstack-start-zephyr",
   "version": "0.1.16",
   "description": "Vite plugin for Zephyr with TanStack Start support",
+  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
+  "keywords": [
+    "vite-plugin",
+    "vite",
+    "tanstack-start",
+    "zephyr",
+    "deploy"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
@@ -15,20 +23,41 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "nx run vite-plugin-tanstack-start-zephyr:build",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "prepack": "pnpm build"
   },
   "dependencies": {
-    "rollup": "catalog:rollup4",
-    "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },
   "peerDependencies": {
-    "@tanstack/react-start": "^1.0.0"
+    "@tanstack/react-start": "^1.0.0",
+    "vite": "^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
-    "@types/node": "catalog:typescript"
+    "@types/node": "catalog:typescript",
+    "rollup": "catalog:rollup4",
+    "vite": "catalog:vite7"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "vite": {
+      "type": "compatible",
+      "versions": "^7.0.0 || ^8.0.0",
+      "note": "Requires TanStack Start 1.x."
+    }
   },
   "publishConfig": {
     "access": "public",

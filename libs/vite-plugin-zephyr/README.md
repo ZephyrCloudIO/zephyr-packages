@@ -1,5 +1,7 @@
 # Vite Plugin Zephyr
 
+![Vite compatibility](https://registry.vite.dev/api/badges?package=vite-plugin-zephyr&tool=vite)
+
 <div align="center">
 
 [Zephyr Cloud](https://zephyr-cloud.io) | [Zephyr Docs](https://docs.zephyr-cloud.io) | [Discord](https://zephyr-cloud.io/discord) | [Twitter](https://x.com/ZephyrCloudIO) | [LinkedIn](https://www.linkedin.com/company/zephyr-cloud/)
@@ -155,8 +157,9 @@ Add these scripts to your `package.json`:
 
 ## Requirements
 
-- Vite 4.x or higher
-- Node.js 18 or higher
+- Vite 5.x, 6.x, or 7.x
+- Rollup 4.x
+- Node.js version supported by your Vite toolchain
 - Zephyr Cloud account (sign up at [zephyr-cloud.io](https://zephyr-cloud.io))
 
 If you use Module Federation, also install `@module-federation/vite`.

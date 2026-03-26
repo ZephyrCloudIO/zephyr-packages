@@ -41,7 +41,7 @@ This will:
 The Zephyr plugin is configured in `vite.config.ts`:
 
 ```typescript
-withZephyrTanstackStart();
+withZephyr();
 ```
 
 That's it! The plugin automatically detects:

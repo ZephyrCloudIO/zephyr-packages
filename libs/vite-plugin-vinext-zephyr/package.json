@@ -2,6 +2,14 @@
   "name": "vite-plugin-vinext-zephyr",
   "version": "0.1.16",
   "description": "Vite plugin for deploying Vinext applications with Zephyr",
+  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
+  "keywords": [
+    "vite-plugin",
+    "vite",
+    "vinext",
+    "zephyr",
+    "deploy"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
@@ -44,7 +52,14 @@
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
-    "vite": "^7.0.0"
+    "vite": "^7.0.0 || ^8.0.0"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "vite": {
+      "type": "compatible",
+      "versions": "^7.0.0 || ^8.0.0"
+    }
   },
   "publishConfig": {
     "access": "public",

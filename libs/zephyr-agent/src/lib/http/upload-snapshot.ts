@@ -1,10 +1,12 @@
 import type { Snapshot, SnapshotUploadRes } from 'zephyr-edge-contract';
-import { checkAuth, isTokenStillValid } from '../auth/login';
-import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import {
-  getApplicationConfiguration,
-  invalidateApplicationConfigCache,
-} from '../edge-requests/get-application-configuration';
+  isForbiddenAuthError,
+  isRetryableAuthError,
+  refreshApplicationJwt,
+} from '../auth/refresh-auth';
+import { isTokenStillValid } from '../auth/login';
+import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
+import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
 import type { HttpResponse } from './http-request';
@@ -86,10 +88,6 @@ async function doUploadSnapshotRequest({
   return makeRequest<SnapshotUploadRes>(url, options, json);
 }
 
-function isRetryableAuthError(cause: unknown): boolean {
-  return ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR);
-}
-
 async function refreshAuthAndJwt({
   application_uid,
   git_config,
@@ -98,10 +96,10 @@ async function refreshAuthAndJwt({
   git_config: ZeGitInfo;
 }): Promise<string> {
   try {
-    await checkAuth(git_config);
-    await invalidateApplicationConfigCache(application_uid);
-    const appConfig = await getApplicationConfiguration({ application_uid });
-    return appConfig.jwt;
+    return await refreshApplicationJwt({
+      application_uid,
+      git_config,
+    });
   } catch (cause) {
     throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, { cause });
   }
@@ -132,7 +130,7 @@ async function uploadSnapshotWithRetry({
   }
 
   if (!ok) {
-    if (ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)) {
+    if (isForbiddenAuthError(cause)) {
       throw cause;
     }
 

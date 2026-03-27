@@ -1,10 +1,11 @@
 import { type UploadableAsset } from 'zephyr-edge-contract';
-import { checkAuth, isTokenStillValid } from '../auth/login';
-import type { ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import {
-  getApplicationConfiguration,
-  invalidateApplicationConfigCache,
-} from '../edge-requests/get-application-configuration';
+  type AuthRefreshContext,
+  isForbiddenAuthError,
+  isRetryableAuthError,
+  refreshApplicationConfiguration,
+} from '../auth/refresh-auth';
+import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import { makeRequest } from './http-request';
@@ -14,10 +15,7 @@ export interface UploadFileProps {
   asset: UploadableAsset;
 }
 
-export interface UploadFileAuthContext {
-  application_uid: string;
-  git_config: ZeGitInfo;
-}
+export type UploadFileAuthContext = AuthRefreshContext;
 
 export async function uploadFile(
   { hash, asset }: UploadFileProps,
@@ -87,7 +85,7 @@ export async function uploadFile(
   }
 
   if (!ok) {
-    if (ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)) {
+    if (isForbiddenAuthError(cause)) {
       throw cause;
     }
 
@@ -103,10 +101,6 @@ export async function uploadFile(
   }
 }
 
-function isRetryableAuthError(cause: unknown): boolean {
-  return ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR);
-}
-
 async function refreshAuthAndConfig(
   authContext: UploadFileAuthContext,
   targetEdgeUrl: string,
@@ -114,15 +108,9 @@ async function refreshAuthAndConfig(
   errorOptions?: { cause?: unknown }
 ): Promise<ZeApplicationConfig> {
   try {
-    await checkAuth(authContext.git_config);
-    await invalidateApplicationConfigCache(authContext.application_uid);
-    const refreshedConfig = await getApplicationConfiguration({
-      application_uid: authContext.application_uid,
+    return await refreshApplicationConfiguration(authContext, {
+      edgeUrl: targetEdgeUrl,
     });
-    return {
-      ...refreshedConfig,
-      EDGE_URL: targetEdgeUrl,
-    };
   } catch (cause) {
     throw new ZephyrError(errorType, {
       ...errorOptions,

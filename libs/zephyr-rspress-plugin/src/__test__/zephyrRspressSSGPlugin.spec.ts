@@ -6,9 +6,7 @@ import { walkFiles } from '../internal/files/walkFiles';
 import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
 
 jest.mock('zephyr-agent', () => {
-  const actual = jest.requireActual('zephyr-agent');
   return {
-    ...actual,
     ZephyrEngine: {
       defer_create: jest.fn(),
     },
@@ -62,7 +60,7 @@ describe('zephyrRspressSSGPlugin', () => {
     (walkFiles as jest.Mock).mockResolvedValue(mockFiles);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
-    await plugin.afterBuild?.({}, false);
+    await plugin.afterBuild?.();
 
     expect(showFiles).toHaveBeenCalledWith(path.resolve('dist'), mockFiles);
     expect(setupZeDeploy).toHaveBeenCalledWith({
@@ -77,7 +75,7 @@ describe('zephyrRspressSSGPlugin', () => {
     (walkFiles as jest.Mock).mockRejectedValue(err);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
-    await plugin.afterBuild?.({}, false);
+    await plugin.afterBuild?.();
 
     expect(logFn).toHaveBeenCalledWith('error', 'Formatted: walk failed');
   });

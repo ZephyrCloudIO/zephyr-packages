@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { detectPackageManager, isPackageInstalled } from '../package-manager.js';
+import {
+  buildAddCommand,
+  buildInstallCommand,
+  detectPackageManager,
+  isPackageInstalled,
+} from '../package-manager.js';
 
 describe('Package Manager Utils', () => {
   let tempDir: string;
@@ -302,6 +307,24 @@ describe('Package Manager Utils', () => {
       expect(
         isPackageInstalled('non-existent', path.join(tempDir, 'packages/frontend'))
       ).toBe(false);
+    });
+  });
+
+  describe('Install Command Builders', () => {
+    it('should build a single pnpm add command for multiple dev packages', () => {
+      const command = buildAddCommand(
+        'pnpm',
+        ['vite-plugin-zephyr', 'zephyr-webpack-plugin'],
+        true
+      );
+
+      expect(command).toBe(
+        'pnpm add --save-dev vite-plugin-zephyr zephyr-webpack-plugin'
+      );
+    });
+
+    it('should build install command for pnpm', () => {
+      expect(buildInstallCommand('pnpm')).toBe('pnpm install');
     });
   });
 });

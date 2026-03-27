@@ -9,6 +9,7 @@ import {
 import { applyBaseHrefToAssets } from './ze-basehref-handler';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
+import { getZephyrAgentVersion } from '../version/zephyr-agent-version';
 import { posix, win32 } from 'node:path';
 
 interface CreateSnapshotProps {
@@ -76,6 +77,8 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
+    builder: zephyr_engine.builder,
+    plugin_version: getZephyrAgentVersion(),
     assets: Object.keys(basedAssets).reduce(
       (memo, hash: string) => {
         const asset = basedAssets[hash];

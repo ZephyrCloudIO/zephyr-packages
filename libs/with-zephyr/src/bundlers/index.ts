@@ -1,6 +1,8 @@
 import type { BundlerConfigs } from '../types.js';
 import { astroConfig } from './astro.js';
 import { modernjsConfig } from './modernjs.js';
+import { metroConfig } from './metro.js';
+import { nuxtConfig } from './nuxt.js';
 import { parcelConfig } from './parcel.js';
 import { repackConfig } from './repack.js';
 import { rolldownConfig } from './rolldown.js';
@@ -20,14 +22,15 @@ import { webpackConfig } from './webpack.js';
  * - Files: Config file patterns to search for
  * - Plugin: Package name to install
  * - ImportName: Function name to import (null for JSON configs)
- * - Patterns: Ordered list of transformation patterns to try
+ * - Strategy: Whether to stop at first successful operation or run all operations
+ * - Operations: Ordered list of operation ids to apply
  *
  * To add a new bundler:
  *
  * 1. Create a new file in src/bundlers/{bundler}.ts
  * 2. Export a {bundler}Config constant
  * 3. Import and add it to BUNDLER_CONFIGS below
- * 4. Add transformer functions if needed in src/transformers.ts
+ * 4. Add operation handlers if needed in src/operations.ts
  */
 export const BUNDLER_CONFIGS: BundlerConfigs = {
   // JavaScript bundlers
@@ -45,9 +48,11 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   // Framework-specific
   astro: astroConfig,
   modernjs: modernjsConfig,
+  nuxt: nuxtConfig,
   rspress: rspressConfig,
 
   // React Native
+  metro: metroConfig,
   repack: repackConfig,
 };
 
@@ -62,5 +67,7 @@ export { rslibConfig } from './rslib.js';
 export { parcelConfig } from './parcel.js';
 export { astroConfig } from './astro.js';
 export { modernjsConfig } from './modernjs.js';
+export { nuxtConfig } from './nuxt.js';
+export { metroConfig } from './metro.js';
 export { rspressConfig } from './rspress.js';
 export { repackConfig } from './repack.js';

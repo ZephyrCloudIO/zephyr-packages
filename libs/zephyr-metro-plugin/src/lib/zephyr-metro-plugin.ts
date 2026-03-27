@@ -6,6 +6,7 @@ import type {
   ZephyrBuildStats,
   ZephyrPluginOptions,
 } from 'zephyr-edge-contract';
+import { extract_remotes_dependencies } from './internal/extract-mf-remotes';
 import { extractModulesFromExposes } from './internal/extract-modules-from-exposes';
 import { getPackageDependencies } from './internal/get-package-dependencies';
 import { load_static_entries } from './internal/load-static-entries';
@@ -13,10 +14,9 @@ import {
   createMinimalBuildStats,
   resolveCatalogDependencies,
 } from './internal/metro-build-stats';
+import { mutateMfConfig } from './internal/mutate-mf-config';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
 import type { OutputAsset } from './internal/types';
-import { extract_remotes_dependencies } from './internal/extract-mf-remotes';
-import { mutateMfConfig } from './internal/mutate-mf-config';
 
 export interface ZephyrCommandWrapperConfig {
   platform: Platform;

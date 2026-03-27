@@ -57,7 +57,7 @@ export async function uploadFile(
     asset.buffer
   );
 
-  if (!ok && isAuthError(cause)) {
+  if (!ok && isRetryableAuthError(cause)) {
     currentConfig = await refreshAuthAndConfig(
       authContext,
       targetEdgeUrl,
@@ -87,7 +87,11 @@ export async function uploadFile(
   }
 
   if (!ok) {
-    if (isAuthError(cause)) {
+    if (ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)) {
+      throw cause;
+    }
+
+    if (isRetryableAuthError(cause)) {
       throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, {
         cause,
       });
@@ -99,11 +103,8 @@ export async function uploadFile(
   }
 }
 
-function isAuthError(cause: unknown): boolean {
-  return (
-    ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR) ||
-    ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)
-  );
+function isRetryableAuthError(cause: unknown): boolean {
+  return ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR);
 }
 
 async function refreshAuthAndConfig(

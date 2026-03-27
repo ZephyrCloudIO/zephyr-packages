@@ -166,4 +166,26 @@ describe('uploadSnapshot', () => {
       code: ZephyrError.toZeCode(ZeErrors.ERR_JWT_INVALID),
     });
   });
+
+  it('does not retry and preserves forbidden auth errors', async () => {
+    mockMakeRequest.mockResolvedValueOnce([
+      false,
+      new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+        message: 'Forbidden request',
+      }),
+    ] as never);
+
+    await expect(
+      uploadSnapshot({
+        body: snapshot as never,
+        application_uid,
+        git_config: gitConfig,
+      })
+    ).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR),
+    });
+
+    expect(mockCheckAuth).not.toHaveBeenCalled();
+    expect(mockMakeRequest).toHaveBeenCalledTimes(1);
+  });
 });

@@ -86,11 +86,8 @@ async function doUploadSnapshotRequest({
   return makeRequest<SnapshotUploadRes>(url, options, json);
 }
 
-function isAuthError(cause: unknown): boolean {
-  return (
-    ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR) ||
-    ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)
-  );
+function isRetryableAuthError(cause: unknown): boolean {
+  return ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR);
 }
 
 async function refreshAuthAndJwt({
@@ -125,7 +122,7 @@ async function uploadSnapshotWithRetry({
 }): Promise<SnapshotUploadRes> {
   let [ok, cause, resp] = await doUploadSnapshotRequest({ json, edge_url, jwt });
 
-  if (!ok && isAuthError(cause)) {
+  if (!ok && isRetryableAuthError(cause)) {
     const refreshedJwt = await refreshAuthAndJwt({ application_uid, git_config });
     [ok, cause, resp] = await doUploadSnapshotRequest({
       json,
@@ -135,7 +132,11 @@ async function uploadSnapshotWithRetry({
   }
 
   if (!ok) {
-    if (isAuthError(cause)) {
+    if (ZephyrError.is(cause, ZeErrors.ERR_AUTH_FORBIDDEN_ERROR)) {
+      throw cause;
+    }
+
+    if (isRetryableAuthError(cause)) {
       throw new ZephyrError(ZeErrors.ERR_JWT_INVALID, { cause });
     }
 

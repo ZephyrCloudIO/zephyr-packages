@@ -1,6 +1,8 @@
 import type { BundlerConfigs } from '../types.js';
 import { astroConfig } from './astro.js';
 import { modernjsConfig } from './modernjs.js';
+import { metroConfig } from './metro.js';
+import { nuxtConfig } from './nuxt.js';
 import { parcelConfig } from './parcel.js';
 import { repackConfig } from './repack.js';
 import { rolldownConfig } from './rolldown.js';
@@ -46,9 +48,11 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   // Framework-specific
   astro: astroConfig,
   modernjs: modernjsConfig,
+  nuxt: nuxtConfig,
   rspress: rspressConfig,
 
   // React Native
+  metro: metroConfig,
   repack: repackConfig,
 };
 
@@ -63,5 +67,7 @@ export { rslibConfig } from './rslib.js';
 export { parcelConfig } from './parcel.js';
 export { astroConfig } from './astro.js';
 export { modernjsConfig } from './modernjs.js';
+export { nuxtConfig } from './nuxt.js';
+export { metroConfig } from './metro.js';
 export { rspressConfig } from './rspress.js';
 export { repackConfig } from './repack.js';

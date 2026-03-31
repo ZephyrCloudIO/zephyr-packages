@@ -2,7 +2,7 @@
 
 ## Overview
 
-`with-zephyr` is a codemod CLI that adds `withZephyr` integration to bundler config files.
+`with-zephyr` is a codemod CLI that adds Zephyr integration to supported project config files.
 
 As of this version, transformations are driven by **ast-grep operations** (not Babel AST visitors).
 Each bundler defines an ordered operation strategy, and the CLI applies the first successful
@@ -25,7 +25,9 @@ libs/with-zephyr/
 │   │   ├── modernjs.ts
 │   │   ├── rspress.ts
 │   │   ├── astro.ts
+│   │   ├── nuxt.ts
 │   │   ├── parcel.ts
+│   │   ├── metro.ts
 │   │   └── repack.ts
 │   │
 │   ├── engine/
@@ -96,7 +98,7 @@ Handler behavior:
 5. Install missing plugin packages (unless dry run).
 6. For each file:
    - Apply bundler operations via ast-grep.
-   - Ensure import/require insertion.
+   - Ensure import/require insertion when the integration needs one.
 7. Print summary (`Processed` / `Skipped` / `Errors`).
 
 ## Type System

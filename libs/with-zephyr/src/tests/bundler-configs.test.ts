@@ -11,7 +11,9 @@ import {
   parcelConfig,
   astroConfig,
   modernjsConfig,
+  nuxtConfig,
   rspressConfig,
+  metroConfig,
   repackConfig,
 } from '../bundlers/index.js';
 
@@ -26,8 +28,10 @@ describe('Bundler Configurations', () => {
         'rolldown',
         'astro',
         'modernjs',
+        'nuxt',
         'rspress',
         'parcel',
+        'metro',
         'repack',
         'rsbuild',
         'rslib',
@@ -71,7 +75,9 @@ describe('Bundler Configurations', () => {
       expect(parcelConfig).toBe(BUNDLER_CONFIGS.parcel);
       expect(astroConfig).toBe(BUNDLER_CONFIGS.astro);
       expect(modernjsConfig).toBe(BUNDLER_CONFIGS.modernjs);
+      expect(nuxtConfig).toBe(BUNDLER_CONFIGS.nuxt);
       expect(rspressConfig).toBe(BUNDLER_CONFIGS.rspress);
+      expect(metroConfig).toBe(BUNDLER_CONFIGS.metro);
       expect(repackConfig).toBe(BUNDLER_CONFIGS.repack);
     });
   });
@@ -88,7 +94,9 @@ describe('Bundler Configurations', () => {
       expect(parcelConfig.plugin).toBe('parcel-reporter-zephyr');
       expect(astroConfig.plugin).toBe('zephyr-astro-integration');
       expect(modernjsConfig.plugin).toBe('zephyr-modernjs-plugin');
+      expect(nuxtConfig.plugin).toBe('zephyr-nuxt-module');
       expect(rspressConfig.plugin).toBe('zephyr-rspress-plugin');
+      expect(metroConfig.plugin).toBe('zephyr-metro-plugin');
       expect(repackConfig.plugin).toBe('zephyr-repack-plugin');
     });
 
@@ -119,6 +127,30 @@ describe('Bundler Configurations', () => {
         'rspack.config.js',
         'rspack.config.ts',
         'rspack.config.mjs',
+      ]);
+    });
+
+    it('should use async module.exports wrapping operation for metro', () => {
+      expect(metroConfig.operations).toEqual([
+        'wrap-module-exports-async',
+        'wrap-export-default-async',
+      ]);
+      expect(metroConfig.files).toEqual([
+        'metro.config.js',
+        'metro.config.ts',
+        'metro.config.mjs',
+        'metro.config.cjs',
+      ]);
+    });
+
+    it('should use Nuxt modules array operation without imports', () => {
+      expect(nuxtConfig.operations).toEqual(['nuxt-modules-or-create']);
+      expect(nuxtConfig.importName).toBeNull();
+      expect(nuxtConfig.files).toEqual([
+        'nuxt.config.js',
+        'nuxt.config.ts',
+        'nuxt.config.mjs',
+        'nuxt.config.mts',
       ]);
     });
   });

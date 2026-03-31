@@ -1,6 +1,6 @@
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
-import { zeUploadBuildStats } from '../../edge-actions/ze-upload-build-stats';
 import type { ZephyrEngine } from '../../../zephyr-engine';
+import { zeUploadBuildStats } from '../../edge-actions/ze-upload-build-stats';
 
 interface UploadBuildStatsAndEnableEnvsOptions {
   getDashData: (zephyr_engine: ZephyrEngine) => ZephyrBuildStats;
@@ -14,5 +14,9 @@ export async function uploadBuildStatsAndEnableEnvs(
   const dashData = getDashData(zephyr_engine);
   dashData.edge.versionUrl = versionUrl;
 
-  return zeUploadBuildStats(dashData);
+  const start = Date.now();
+  zephyr_engine.target_urls = await zeUploadBuildStats(dashData);
+  zephyr_engine.build_stats_time = Date.now() - start;
+
+  return true;
 }

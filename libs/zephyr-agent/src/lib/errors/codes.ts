@@ -239,6 +239,17 @@ Try to remove ~/.zephyr folder and try again.
     kind: 'deploy',
   },
 
+  /** SSR entrypoint could not be detected from output assets. */
+  ERR_SSR_ENTRYPOINT_NOT_FOUND: {
+    id: '015',
+    message: `
+Could not detect SSR entrypoint in {{ outputDir }}.
+
+Expected one of: {{ candidates }}.
+`,
+    kind: 'deploy',
+  },
+
   /** Did not receive envs from build stats upload */
   ERR_NOT_RECEIVE_ENVS_FROM_BUILD_STATS: {
     id: '016',

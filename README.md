@@ -24,6 +24,7 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 - [`parcel-reporter-zephyr`](libs/parcel-reporter-zephyr/README.md) - A Parcel reporter plugin for deploying with Zephyr
 - [`rollup-plugin-zephyr`](libs/rollup-plugin-zephyr/README.md) - A Rollup plugin for deploying with Zephyr
 - [`vite-plugin-zephyr`](libs/vite-plugin-zephyr/README.md) - A Vite plugin for deploying with Zephyr
+- [`zephyr-nuxt-module`](libs/zephyr-nuxt-module/README.md) - A Nuxt module for deploying with Zephyr
 - [`vite-plugin-vinext-zephyr`](libs/vite-plugin-vinext-zephyr/README.md) - A Vite plugin for deploying Vinext apps with Zephyr
 - [`zephyr-modernjs-plugin`](libs/zephyr-modernjs-plugin/README.md) - A Modern.js plugin for deploying with Zephyr
 - [`zephyr-repack-plugin`](libs/zephyr-repack-plugin/README.md) - A Rspack plugin for deploying with Zephyr building with React Native and Re.Pack
@@ -73,7 +74,6 @@ pnpm install
 - `pnpm bump-patch` - Automated patch version bump across all packages
 
   This script automates the complete patch version release process:
-
   - Increments patch version in root and all lib package.json files
   - Creates a commit with conventional commit message
   - Creates a git tag (vX.X.X)
@@ -81,7 +81,6 @@ pnpm install
   - Pushes changes and tags to origin
 
   **Requirements:**
-
   - Clean working directory (no uncommitted changes)
   - gh CLI installed and authenticated (for automatic PR creation)
   - Git configured with push access to origin

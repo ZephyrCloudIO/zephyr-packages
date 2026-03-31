@@ -1,9 +1,5 @@
 import NativeMFECache from './NativeMFECache';
-import type {
-  BundleMetadata,
-  CachedBundleResult,
-  MFECacheConfig,
-} from './types';
+import type { BundleMetadata, CachedBundleResult, MFECacheConfig } from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -29,9 +25,7 @@ export class CacheManager {
     if (this.initialized) return;
 
     if (!NativeMFECache) {
-      console.warn(
-        `${LOG_PREFIX} NativeMFECache not available, cache disabled`,
-      );
+      console.warn(`${LOG_PREFIX} NativeMFECache not available, cache disabled`);
       return;
     }
 
@@ -46,14 +40,8 @@ export class CacheManager {
     const storedHostHash =
       this.urlIndex.size > 0 ? (this as any)._hostBuildHash : undefined;
     const currentHostHash = (globalThis as any).__MF_HOST_BUILD_HASH__;
-    if (
-      storedHostHash &&
-      currentHostHash &&
-      storedHostHash !== currentHostHash
-    ) {
-      console.info(
-        `${LOG_PREFIX} host build changed, invalidating all remote caches`,
-      );
+    if (storedHostHash && currentHostHash && storedHostHash !== currentHostHash) {
+      console.info(`${LOG_PREFIX} host build changed, invalidating all remote caches`);
       await this.invalidateAllCaches();
     }
     if (currentHostHash) {
@@ -64,9 +52,7 @@ export class CacheManager {
     await this.evictLRU();
 
     this.initialized = true;
-    console.info(
-      `${LOG_PREFIX} initialized, ${this.urlIndex.size} cached bundles`,
-    );
+    console.info(`${LOG_PREFIX} initialized, ${this.urlIndex.size} cached bundles`);
   }
 
   async getCachedBundle(bundleUrl: string): Promise<CachedBundleResult | null> {
@@ -86,10 +72,7 @@ export class CacheManager {
     return { source: 'disk', filePath: meta.filePath, metadata: meta };
   }
 
-  async getBundleDestPath(
-    remoteName: string,
-    bundleUrl: string,
-  ): Promise<string> {
+  async getBundleDestPath(remoteName: string, bundleUrl: string): Promise<string> {
     try {
       const url = new URL(bundleUrl);
       const hostDir = url.host.replace(/:/g, '_');
@@ -107,7 +90,7 @@ export class CacheManager {
       bundleUrl: string;
       bundleHash?: string;
       buildVersion?: string;
-    },
+    }
   ): Promise<BundleMetadata> {
     const now = Date.now();
     const meta: BundleMetadata = {
@@ -154,13 +137,10 @@ export class CacheManager {
   }
 
   /**
-   * Pre-download a bundle if its hash has changed.
-   * Returns true if a new version was downloaded, false if skipped or failed.
+   * Pre-download a bundle if its hash has changed. Returns true if a new version was
+   * downloaded, false if skipped or failed.
    */
-  async preDownloadBundle(
-    bundleUrl: string,
-    newHash: string,
-  ): Promise<boolean> {
+  async preDownloadBundle(bundleUrl: string, newHash: string): Promise<boolean> {
     if (!NativeMFECache) return false;
 
     const existing = this.urlIndex.get(bundleUrl);
@@ -234,11 +214,7 @@ export class CacheManager {
       const manifest: Record<string, any> = {
         bundles,
       };
-      await NativeMFECache.writeFile(
-        this.manifestPath,
-        JSON.stringify(manifest),
-        'utf8',
-      );
+      await NativeMFECache.writeFile(this.manifestPath, JSON.stringify(manifest), 'utf8');
     } catch {
       // non-critical
     }
@@ -266,7 +242,7 @@ export class CacheManager {
       }
 
       console.info(
-        `${LOG_PREFIX} recovered ${this.urlIndex.size} bundles from disk manifest`,
+        `${LOG_PREFIX} recovered ${this.urlIndex.size} bundles from disk manifest`
       );
     } catch {
       // manifest corrupted or unreadable, start fresh
@@ -283,8 +259,7 @@ export class CacheManager {
       const parsed = new URL(url);
       const pathParts = parsed.pathname.replace(/^\/+/, '').split('/');
       if (pathParts.length > 0) {
-        pathParts[pathParts.length - 1] =
-          pathParts[pathParts.length - 1].split('.')[0];
+        pathParts[pathParts.length - 1] = pathParts[pathParts.length - 1].split('.')[0];
       }
       return pathParts.join('/') || 'unknown';
     } catch {
@@ -306,8 +281,8 @@ export class CacheManager {
   }
 
   /**
-   * Evict bundles based on LRU policy.
-   * Rules:
+   * Evict bundles based on LRU policy. Rules:
+   *
    * 1. Only evict bundles older than maxAgeMs (stale)
    * 2. Stop if total size drops below maxCacheSizeBytes
    * 3. Never go below minCacheSizeBytes
@@ -317,11 +292,9 @@ export class CacheManager {
   async evictLRU(): Promise<void> {
     if (!NativeMFECache) return;
 
-    const maxSize =
-      this.config.maxCacheSizeBytes ?? DEFAULT_MAX_CACHE_SIZE_BYTES;
+    const maxSize = this.config.maxCacheSizeBytes ?? DEFAULT_MAX_CACHE_SIZE_BYTES;
     const maxAge = this.config.maxAgeMs ?? DEFAULT_MAX_AGE_MS;
-    const minSize =
-      this.config.minCacheSizeBytes ?? DEFAULT_MIN_CACHE_SIZE_BYTES;
+    const minSize = this.config.minCacheSizeBytes ?? DEFAULT_MIN_CACHE_SIZE_BYTES;
 
     const now = Date.now();
 

@@ -5,11 +5,7 @@ export interface NativeMFECacheSpec {
   installJSI(): boolean;
 
   // File system operations
-  writeFile(
-    path: string,
-    content: string,
-    encoding: 'utf8' | 'base64',
-  ): Promise<void>;
+  writeFile(path: string, content: string, encoding: 'utf8' | 'base64'): Promise<void>;
   readFile(path: string, encoding: 'utf8' | 'base64'): Promise<string>;
   deleteFile(path: string): Promise<void>;
   fileExists(path: string): Promise<boolean>;
@@ -24,7 +20,7 @@ export interface NativeMFECacheSpec {
   // HTTP download (native: download + write + streaming SHA-256)
   downloadFile(
     url: string,
-    destPath: string,
+    destPath: string
   ): Promise<{ sha256: string; bytesWritten: number }>;
 }
 
@@ -33,7 +29,7 @@ const MFECache = NativeModules.MFECache as NativeMFECacheSpec | undefined;
 if (!MFECache) {
   console.warn(
     '[MFE-Cache] NativeModules.MFECache is not available. ' +
-      'Make sure zephyr-native-cache is properly linked.',
+      'Make sure zephyr-native-cache is properly linked.'
   );
 }
 

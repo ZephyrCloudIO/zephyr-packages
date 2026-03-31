@@ -1,8 +1,4 @@
-export type BundleStatus =
-  | 'active'
-  | 'pendingUpdate'
-  | 'broken'
-  | 'pendingCleanup';
+export type BundleStatus = 'active' | 'pendingUpdate' | 'broken' | 'pendingCleanup';
 
 export interface BundleMetadata {
   remoteName: string;
@@ -23,9 +19,7 @@ export interface CachedBundleResult {
   metadata: BundleMetadata;
 }
 
-/**
- * Unified configuration for the MFE cache layer.
- */
+/** Unified configuration for the MFE cache layer. */
 export interface MFECacheConfig {
   /** Custom bundle storage directory */
   bundleDir?: string;

@@ -34,10 +34,7 @@ export class BundleCacheLayer {
       ((globalThis as any).__MFE_BUNDLE_HASHES__ = {});
 
     // Install JSI bindings if available (provides __MFE_readFileSync)
-    if (
-      NativeMFECache &&
-      typeof (NativeMFECache as any).installJSI === 'function'
-    ) {
+    if (NativeMFECache && typeof (NativeMFECache as any).installJSI === 'function') {
       (NativeMFECache as any).installJSI();
     }
   }
@@ -50,7 +47,7 @@ export class BundleCacheLayer {
 
   registerManifestSource(
     manifestUrl: string,
-    extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>,
+    extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>
   ): void {
     this.manifestSources.set(manifestUrl, {
       extractHashes,
@@ -61,12 +58,13 @@ export class BundleCacheLayer {
 
   /**
    * Load a bundle through the cache layer.
+   *
    * - 'cache-hit': bundle loaded from disk cache (hash matched)
    * - 'downloaded': bundle freshly downloaded, verified, cached, and eval'd
    * - 'skipped': no expected hash, verification failed, or error — caller should fallback
    */
   async loadBundle(
-    bundleUrl: string,
+    bundleUrl: string
   ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
     if (!NativeMFECache) return { status: 'skipped' };
 
@@ -75,9 +73,7 @@ export class BundleCacheLayer {
     try {
       // Strip query params for hash lookup
       const bundleUrlNoQuery = bundleUrl.split('?')[0];
-      const expectedHash = this.bundleHashMap[bundleUrlNoQuery] as
-        | string
-        | undefined;
+      const expectedHash = this.bundleHashMap[bundleUrlNoQuery] as string | undefined;
 
       // No hash in manifest → can't verify integrity, skip cache
       if (!expectedHash) {
@@ -102,13 +98,10 @@ export class BundleCacheLayer {
         const remoteName = this.inferRemoteName(bundleUrl);
         const destPath = await this.cacheManager!.getBundleDestPath(
           remoteName,
-          bundleUrl,
+          bundleUrl
         );
 
-        const { sha256 } = await NativeMFECache.downloadFile(
-          bundleUrl,
-          destPath,
-        );
+        const { sha256 } = await NativeMFECache.downloadFile(bundleUrl, destPath);
 
         // Checksum verification against manifest hash
         if (sha256 !== expectedHash) {
@@ -129,10 +122,7 @@ export class BundleCacheLayer {
         return { status: 'downloaded' };
       }
     } catch (cacheError) {
-      console.warn(
-        `${LOG_PREFIX} cache error, falling back to network:`,
-        cacheError,
-      );
+      console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
       return { status: 'skipped' };
     }
   }
@@ -140,8 +130,8 @@ export class BundleCacheLayer {
   // --- Polling: manifest re-check and pre-download ---
 
   /**
-   * Check all known manifests for updated bundles and pre-download them.
-   * Returns stats about how many bundles were checked and updated.
+   * Check all known manifests for updated bundles and pre-download them. Returns stats
+   * about how many bundles were checked and updated.
    */
   async checkForUpdates(): Promise<{ updated: number; checked: number }> {
     if (!NativeMFECache || this.isCheckingUpdates) {
@@ -162,7 +152,7 @@ export class BundleCacheLayer {
           const resp = await fetch(manifestUrl);
           if (!resp.ok) {
             console.warn(
-              `${LOG_PREFIX} manifest fetch failed: ${manifestUrl} → HTTP ${resp.status}`,
+              `${LOG_PREFIX} manifest fetch failed: ${manifestUrl} → HTTP ${resp.status}`
             );
             continue;
           }
@@ -181,32 +171,23 @@ export class BundleCacheLayer {
             const remoteName = this.inferRemoteName(bundleUrl);
             const destPath = await this.cacheManager!.getBundleDestPath(
               remoteName,
-              bundleUrl,
+              bundleUrl
             );
 
             try {
-              const { sha256 } = await NativeMFECache!.downloadFile(
-                bundleUrl,
-                destPath,
-              );
+              const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
               await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
                 bundleUrl,
                 bundleHash: sha256,
               });
               updated++;
             } catch (dlError) {
-              console.warn(
-                `${LOG_PREFIX} pre-download failed: ${bundleUrl}`,
-                dlError,
-              );
+              console.warn(`${LOG_PREFIX} pre-download failed: ${bundleUrl}`, dlError);
               // Download failed for this bundle, continue with others
             }
           }
         } catch (manifestError) {
-          console.warn(
-            `${LOG_PREFIX} manifest error for ${manifestUrl}`,
-            manifestError,
-          );
+          console.warn(`${LOG_PREFIX} manifest error for ${manifestUrl}`, manifestError);
           // Non-critical: network error for this manifest, continue with others
         }
       }
@@ -254,11 +235,9 @@ export class BundleCacheLayer {
       eval(source);
     } else {
       // Fallback: async read (less ideal — introduces a microtask gap)
-      return NativeMFECache!
-        .readFile(filePath, 'utf8')
-        .then((source: string) => {
-          eval(source);
-        });
+      return NativeMFECache!.readFile(filePath, 'utf8').then((source: string) => {
+        eval(source);
+      });
     }
   }
 

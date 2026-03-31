@@ -5,7 +5,7 @@ export {
   withZephyr,
   withZephyrMetro,
   type ZephyrMetroOptions,
-  type ZephyrModuleFederationConfig
+  type ZephyrModuleFederationConfig,
 } from './lib/with-zephyr';
 
 // CLI command wrapper export for bundle-mf-remote integrations

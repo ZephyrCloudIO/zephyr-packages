@@ -143,12 +143,14 @@ overrides:
   hono@<4.5.8: '>=4.5.8'
   hono@<4.6.5: '>=4.6.5'
   hono@<4.9.7: '>=4.9.7'
+  handlebars@<=4.7.8: '>=4.7.9'
   hono@>=1.1.0 <4.10.2: '>=4.10.2'
   koa@>=3.0.0 <3.1.2: '>=3.1.2'
   node-forge@<1.4.0: '>=1.4.0'
   anymatch>picomatch: 2.3.2
   jest-util>picomatch: 4.0.4
   micromatch>picomatch: 4.0.4
+  path-to-regexp@<0.1.13: '>=0.1.13'
   picomatch@<2.3.2: '>=2.3.2'
   picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
   prismjs@<1.30.0: '>=1.30.0'

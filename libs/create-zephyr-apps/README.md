@@ -39,11 +39,38 @@ Run the command without arguments to start the interactive mode:
 npx create-zephyr-apps@latest
 ```
 
-This will prompt you to choose:
-
-- Project name
-- Project type (Web or React Native)
-- Template
+```
+┌  Bootstrap your project using Zephyr!
+│
+◇  Zephyr Cloud
+│  The only sane way to do micro-frontends
+│  https://docs.zephyr-cloud.io/
+│
+◇  Where should we create your project?
+│  ./react-vite
+│
+◇  What type of project you are creating?
+│  Web
+│
+◇  Pick a template:
+│  React + Rspack
+│
+◇  Project successfully created at react-vite!
+│
+◇  Would you like to initialize a new Git repository?
+│  Yes
+│
+◇  Run the application!
+│  cd ./react-vite
+│  pnpm install
+│  pnpm run build
+│
+◇  Next steps.
+│  - Discord
+│  - Documentation
+│  - Open an issue
+└
+```
 
 ## Available Templates
 
@@ -85,33 +112,6 @@ This will prompt you to choose:
 
 - **nx-rspack-mf** - Monorepo using NX, React, and Rspack with Module Federation
 - **turborepo-rspack-mf** - Monorepo using Turborepo, React, and Rspack with Module Federation
-
-## Getting Started
-
-After creating your application:
-
-1. Navigate to your project directory:
-
-   ```bash
-   cd my-app
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-4. Build for production:
-   ```bash
-   npm run build
-   ```
 
 ## Features
 

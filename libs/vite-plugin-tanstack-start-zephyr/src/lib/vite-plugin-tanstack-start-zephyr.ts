@@ -1,6 +1,6 @@
 /** Vite plugin for deploying TanStack Start applications to Zephyr */
 
-import type { Plugin, ResolvedConfig } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite' with { 'resolution-mode': 'import' };
 import * as path from 'path';
 import {
   ZephyrEngine,

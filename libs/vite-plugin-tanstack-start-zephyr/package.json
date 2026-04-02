@@ -49,7 +49,7 @@
   "devDependencies": {
     "@types/node": "catalog:typescript",
     "rollup": "catalog:rollup4",
-    "vite": "catalog:vite7"
+    "vite": "catalog:vite8"
   },
   "compatiblePackages": {
     "schemaVersion": 1,

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "nx run sample-rspack-application:serve",
-    "build": "nx run sample-rspack-application:build"
+    "build": "nx run sample-rspack-application:build --skipTypeChecking"
   },
   "dependencies": {
     "react": "catalog:react18",

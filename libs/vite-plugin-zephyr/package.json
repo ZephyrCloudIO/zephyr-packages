@@ -20,13 +20,13 @@
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -55,7 +55,7 @@
     "rollup": "catalog:rollup4",
     "ts-jest": "catalog:typescript",
     "typescript": "catalog:typescript",
-    "vite": "catalog:vite7"
+    "vite": "catalog:vite8"
   },
   "peerDependencies": {
     "@module-federation/vite": "^1.13.2",

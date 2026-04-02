@@ -1,6 +1,6 @@
-import type { ResolvedConfig } from 'vite';
+import type { ResolvedConfig } from 'vite' with { 'resolution-mode': 'import' };
 import { ze_log } from 'zephyr-agent';
-import { normalizeEntrypoint } from '../utils/normalize-entrypoint';
+import { normalizeEntrypoint } from '../utils/normalize-entrypoint.js';
 
 /**
  * Extracts and normalizes the entrypoint from Vite config.

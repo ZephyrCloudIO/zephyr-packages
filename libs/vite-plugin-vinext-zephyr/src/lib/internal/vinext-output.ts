@@ -36,6 +36,8 @@ interface OutputAssetLike {
 
 export type OutputBundleLike = Record<string, OutputChunkLike | OutputAssetLike>;
 
+const REDUNDANT_NODE_SIDE_EFFECT_IMPORT_RE = /^import\s+['"]node:(?:fs|path)['"];\r?\n/gm;
+
 const CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   '.avif': 'image/avif',
   '.cjs': 'application/javascript',
@@ -102,6 +104,10 @@ export function normalizeEntrypoint(entrypoint: string): string {
   return normalized;
 }
 
+export function stripRedundantNodeSideEffectImports(code: string): string {
+  return code.replace(REDUNDANT_NODE_SIDE_EFFECT_IMPORT_RE, '');
+}
+
 export function collectAssetsFromBundle(
   assets: Record<string, VinextBuildAsset>,
   outputRootDir: string,
@@ -116,8 +122,13 @@ export function collectAssetsFromBundle(
       ? `${relativeDir}/${normalizedFileName}`
       : normalizedFileName;
 
+    const content =
+      item.type === 'chunk' && snapshotPath === 'server/index.js'
+        ? Buffer.from(stripRedundantNodeSideEffectImports(item.code), 'utf-8')
+        : toBuffer(item);
+
     assets[snapshotPath] = {
-      content: toBuffer(item),
+      content,
       type: getAssetType(snapshotPath),
     };
   }
@@ -196,6 +207,24 @@ export async function collectStaticClientAssets(
       type: getAssetType(snapshotPath),
     };
   }
+}
+
+export async function sanitizeVinextWorkerEntrypoint(
+  outputRootDir: string
+): Promise<void> {
+  const workerEntrypointPath = path.join(outputRootDir, 'server', 'index.js');
+  if (!(await pathExists(workerEntrypointPath))) {
+    return;
+  }
+
+  const originalCode = await fs.readFile(workerEntrypointPath, 'utf-8');
+  const sanitizedCode = stripRedundantNodeSideEffectImports(originalCode);
+
+  if (sanitizedCode === originalCode) {
+    return;
+  }
+
+  await fs.writeFile(workerEntrypointPath, sanitizedCode, 'utf-8');
 }
 
 function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): string {

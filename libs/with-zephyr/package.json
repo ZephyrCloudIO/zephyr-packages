@@ -34,12 +34,12 @@
     "@ast-grep/napi": "^0.41.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
-    "glob": "^11.0.3"
+    "glob": "^13.0.0"
   },
   "devDependencies": {
-    "@rstest/core": "^0.7.0",
+    "@rstest/core": "^0.8.0",
     "@types/node": "^24.5.2",
-    "@rslib/core": "^0.18.0",
+    "@rslib/core": "^0.19.0",
     "typescript": "^5.9.2",
     "zephyr-rsbuild-plugin": "workspace:*"
   },
@@ -60,5 +60,5 @@
     "metro",
     "react-native"
   ],
-  "packageManager": "pnpm@10.25.0"
+  "packageManager": "pnpm@10.30.3"
 }

@@ -33,4 +33,6 @@ export interface MFECacheConfig {
   enablePolling?: boolean;
   /** Polling interval in milliseconds (default: 5 minutes) */
   pollIntervalMs?: number;
+  /** Force enable cache in dev mode (default: false). Production always enables cache. */
+  forceCacheInDev?: boolean;
 }

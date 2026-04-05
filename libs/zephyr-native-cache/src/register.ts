@@ -29,6 +29,33 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   const cacheLayer = new BundleCacheLayer(config);
   (globalThis as any).__MFE_CACHE_LAYER__ = cacheLayer;
 
+  // Determine whether cache is active in the current environment.
+  // Production: always enabled. Dev: only when forceCacheInDev is true.
+  const { forceCacheInDev = false } = config;
+  const cacheEnabled = !(globalThis as any).__DEV__ || forceCacheInDev;
+
+  // Register minimal cache handler for asyncRequire integration.
+  // Only register when cache is enabled — asyncRequire uses the presence of
+  // __MFE_CACHE__ to decide split bundle URL conversion, so it must be absent
+  // when cache is disabled to preserve original path behavior.
+  if (cacheEnabled) {
+    (globalThis as any).__MFE_CACHE__ = async (
+      fallback: (bundlePath: string) => Promise<void>,
+      bundlePath: string
+    ): Promise<void> => {
+      // Only use cache for full URLs (not relative paths like host split bundles)
+      if (/^https?:\/\//.test(bundlePath)) {
+        const { status } = await cacheLayer.loadBundle(bundlePath);
+        if (status === 'skipped') {
+          await fallback(bundlePath);
+        }
+        // cache-hit or downloaded: bundle already eval'd by cache layer
+      } else {
+        await fallback(bundlePath);
+      }
+    };
+  }
+
   // Expose manual polling APIs on globalThis
   (globalThis as any).__MFE_CHECK_UPDATES__ = () => cacheLayer.checkForUpdates();
   (globalThis as any).__MFE_START_UPDATE_POLLING__ = (intervalMs?: number) =>

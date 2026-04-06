@@ -95,6 +95,13 @@ function getLibPackagePaths() {
     .filter((pkgPath) => fs.existsSync(pkgPath));
 }
 
+/** Runs the high severity audit gate before making version changes */
+function runHighSeverityAudit() {
+  console.log('🔒 Running security audit (high severity)...');
+  exec('pnpm audit --audit-level high');
+  console.log('✅ Security audit passed');
+}
+
 /** Main function */
 function main() {
   const bumpType = process.argv[2] || 'patch';
@@ -116,6 +123,9 @@ function main() {
 
   const currentBranch = getCurrentBranch();
   console.log(`📍 Current branch: ${currentBranch}`);
+
+  // Fail fast before mutating versions or creating release artifacts.
+  runHighSeverityAudit();
 
   // Read root package.json
   const rootPackagePath = path.join(__dirname, '..', 'package.json');

@@ -4,7 +4,7 @@ describe('replaceBundleChunkCode', () => {
   it('replaces read-only chunk code by swapping the bundle entry', () => {
     const bundle: Record<string, unknown> = {};
     const chunk = { fileName: 'entry.js', type: 'chunk' as const };
-    let code = 'console.log("before");';
+    const code = 'console.log("before");';
 
     Object.defineProperty(chunk, 'code', {
       configurable: true,

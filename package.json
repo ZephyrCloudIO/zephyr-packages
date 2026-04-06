@@ -94,6 +94,7 @@
       "@babel/runtime": "catalog:babel",
       "@swc/helpers": "catalog:swc",
       "webpack": "catalog:webpack5",
+      "astro>vite": "^6.4.1",
       "vite": "catalog:vite8",
       "@types/node": "catalog:typescript",
       "koa": ">=3.0.1",

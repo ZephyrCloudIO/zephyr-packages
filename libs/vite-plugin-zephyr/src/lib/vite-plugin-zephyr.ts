@@ -28,6 +28,7 @@ import {
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes.js';
 import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes.js';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options.js';
+import { replaceBundleChunkCode } from './internal/utils/replace-bundle-chunk-code.js';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
 const requireModule =
@@ -262,7 +263,8 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                 continue;
               }
 
-              chunk.code = inject_resolved_remotes_map(resolved_remotes, chunk.code);
+              const nextCode = inject_resolved_remotes_map(resolved_remotes, chunk.code);
+              replaceBundleChunkCode(bundle, fileName, chunk, nextCode);
               ze_log.remotes(
                 `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
               );
@@ -274,7 +276,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       }
 
       if (cachedSpecifier) {
-        for (const [, chunk] of Object.entries(bundle)) {
+        for (const [fileName, chunk] of Object.entries(bundle)) {
           if (
             chunk &&
             typeof chunk === 'object' &&
@@ -289,10 +291,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             );
 
             if (chunk.code.match(importWithoutAssertion)) {
-              chunk.code = chunk.code.replace(
+              const nextCode = chunk.code.replace(
                 importWithoutAssertion,
                 `import $1 from '${cachedSpecifier}' with { type: 'json' }`
               );
+              replaceBundleChunkCode(bundle, fileName, chunk, nextCode);
             }
           }
         }

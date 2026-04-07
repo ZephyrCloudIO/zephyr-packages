@@ -2,7 +2,6 @@
   "private": true,
   "name": "sample-webpack-application",
   "version": "1.0.0",
-  "private": true,
   "scripts": {
     "start": "nx run sample-webpack-application:serve",
     "build": "nx run sample-webpack-application:build --skip-nx-cache",

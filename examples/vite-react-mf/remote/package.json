@@ -1,7 +1,6 @@
 {
   "private": true,
   "name": "vite-remote",
-  "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {

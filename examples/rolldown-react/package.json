@@ -2,7 +2,6 @@
   "private": true,
   "name": "rolldown-react",
   "version": "1.0.0",
-  "private": true,
   "scripts": {
     "build": "rolldown --config ./rolldown.config.mjs"
   },

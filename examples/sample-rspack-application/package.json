@@ -2,7 +2,6 @@
   "private": true,
   "name": "sample-rspack-application",
   "version": "1.0.0",
-  "private": true,
   "scripts": {
     "start": "nx run sample-rspack-application:serve",
     "build": "nx run sample-rspack-application:build"

@@ -2,7 +2,6 @@
   "private": true,
   "name": "tanstack-start-basic-example",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite dev --port 3000",

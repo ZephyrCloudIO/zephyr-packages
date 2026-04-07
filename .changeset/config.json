@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@latest/schema.json",
+  "access": "public",
+  "baseBranch": "main",
+  "bumpVersionsWithWorkspaceProtocolOnly": true,
+  "changelog": [
+    "changesets-format-with-issue-links",
+    {
+      "repoBaseUrl": "https://github.com/ZephyrCloudIO/zephyr-packages"
+    }
+  ],
+  "commit": false,
+  "fixed": [],
+  "ignore": [],
+  "linked": [],
+  "privatePackages": false,
+  "updateInternalDependencies": "patch"
+}

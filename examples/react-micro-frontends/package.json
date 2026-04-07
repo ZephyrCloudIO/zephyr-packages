@@ -1,8 +1,8 @@
 {
+  "private": true,
   "name": "@react-micro-frontends/source",
   "version": "0.0.0",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "start": "nx run-many -t serve --parallel=5 -p team-blue team-red team-green",
     "build-all": "nx run-many -t build --parallel=1 --skip-nx-cache -p team-blue team-green team-red",

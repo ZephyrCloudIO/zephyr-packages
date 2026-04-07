@@ -3,9 +3,8 @@
   "version": "1.0.1",
   "license": "Apache-2.0",
   "scripts": {
-    "bump-patch": "node scripts/bump-version.js patch",
-    "bump-minor": "node scripts/bump-version.js minor",
-    "bump-major": "node scripts/bump-version.js major",
+    "ci-publish": "pnpm publish -r --access public && changeset tag",
+    "ci-version": "changeset version && pnpm install --no-frozen-lockfile",
     "ze-version-patch": "pnpm --filter './libs/**' patch-version",
     "ze-publish": "pnpm --filter './libs/**' publish --provenance --access public --no-git-checks",
     "build": "nx run-many -t build --projects='libs/**'",
@@ -26,6 +25,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@eslint/eslintrc": "^2.1.1",
     "@eslint/js": "~8.57.0",
     "@nx/devkit": "22.5.4",
@@ -49,6 +49,7 @@
     "@swc/helpers": "catalog:swc",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "changesets-format-with-issue-links": "^0.3.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.7",
     "eslint": "^9.8.0",

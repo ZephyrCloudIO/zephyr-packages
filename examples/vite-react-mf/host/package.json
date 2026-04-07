@@ -1,6 +1,6 @@
 {
-  "name": "vite-host",
   "private": true,
+  "name": "vite-host",
   "version": "0.0.0",
   "type": "module",
   "scripts": {

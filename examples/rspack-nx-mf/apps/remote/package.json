@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "rspack_nx_mf_remote",
   "version": "0.0.1",
   "private": true

@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "mf-react-rsbuild-suite",
   "version": "1.0.0",
   "description": "Rsbuild Module Federation example with Zephyr",

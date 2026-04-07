@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "rspack-nx-mf",
   "dependencies": {
     "react": "catalog:react19",

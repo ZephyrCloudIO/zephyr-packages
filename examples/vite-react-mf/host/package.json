@@ -5,7 +5,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "DEBUG=zephyr:log,zephyr:error vite",
+    "dev": "vite",
     "build": "vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -16,6 +16,7 @@
     "@module-federation/runtime": "catalog:module-federation"
   },
   "devDependencies": {
+    "@module-federation/vite": "catalog:module-federation",
     "@eslint/js": "catalog:eslint",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",

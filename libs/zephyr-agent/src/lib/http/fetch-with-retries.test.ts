@@ -357,9 +357,14 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
-        'http://uppercase-proxy.example.com:8080'
-      );
+      // On Windows, environment variables are case-insensitive, so the last set value wins
+      // On Unix/macOS, HTTPS_PROXY takes precedence per the implementation order
+      const expectedProxy =
+        process.platform === 'win32'
+          ? 'http://lowercase-proxy.example.com:8080'
+          : 'http://uppercase-proxy.example.com:8080';
+
+      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(expectedProxy);
     });
 
     it('should fallback to HTTP_PROXY for https requests if HTTPS_PROXY is not set', async () => {

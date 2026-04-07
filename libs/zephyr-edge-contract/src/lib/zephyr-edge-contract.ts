@@ -95,6 +95,7 @@ export interface ZeBuildAssetsMap {
 
 export interface SnapshotUploadRes {
   urls: { version: string };
+  worker_version?: string;
   assets: ZeBuildAsset[];
   assets_v2?: ZeBuildAsset[];
   asset_time?: number;

@@ -46,7 +46,7 @@ describe('Zephyr Codemod CLI', () => {
   describe('CLI Options', () => {
     it('should show help when --help is provided', () => {
       const output = runCodemod('--help');
-      expect(output).toContain('Automatically add withZephyr plugin');
+      expect(output).toContain('Automatically add Zephyr integration');
       expect(output).toContain('--dry-run');
       expect(output).toContain('--bundlers');
       expect(output).toContain('--bundlers');
@@ -148,7 +148,114 @@ describe('Zephyr Codemod CLI', () => {
 
       const output = runCodemod('--dry-run');
       expect(output).toContain('Dry run mode - no files will be modified');
-      expect(output).toContain('✓ Added withZephyr to vite.config.js');
+      expect(output).toContain('✓ Added Zephyr integration to vite.config.js');
+    });
+  });
+
+  describe('Next.js Vinext Scaffold', () => {
+    it('should scaffold vite and wrangler config for Next.js apps', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify(
+          {
+            name: '@acme/next-app',
+            dependencies: {
+              next: '^15.0.0',
+              vinext: '^0.0.4',
+              '@vitejs/plugin-rsc': '^0.5.19',
+            },
+            devDependencies: {
+              'vite-plugin-vinext-zephyr': '^0.1.11',
+              '@cloudflare/vite-plugin': '^1.25.0',
+              vite: '^7.3.1',
+              wrangler: '^4.68.1',
+            },
+            scripts: {
+              dev: 'next dev',
+              build: 'next build',
+              start: 'next start',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      runCodemod('.');
+
+      expect(fs.existsSync('vite.config.ts')).toBe(true);
+      expect(fs.existsSync('wrangler.jsonc')).toBe(true);
+
+      const viteConfig = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(viteConfig).toContain("import vinext from 'vinext';");
+      expect(viteConfig).toContain(
+        "import { withZephyr } from 'vite-plugin-vinext-zephyr';"
+      );
+
+      const wranglerConfig = fs.readFileSync('wrangler.jsonc', 'utf8');
+      expect(wranglerConfig).toContain('"main": "vinext/server/app-router-entry"');
+      expect(wranglerConfig).toContain('"name": "acme-next-app"');
+
+      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      expect(updatedPackageJson.type).toBe('module');
+      expect(updatedPackageJson.scripts.dev).toBe('vinext dev');
+      expect(updatedPackageJson.scripts.build).toBe('vinext build');
+      expect(updatedPackageJson.scripts.start).toBe('vinext start');
+    });
+  });
+
+  describe('Slidev Scaffold', () => {
+    it('should scaffold vite config and package metadata for Slidev apps', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify(
+          {
+            name: 'slidev-app',
+            private: true,
+            dependencies: {
+              '@slidev/cli': '^52.14.1',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      runCodemod('.');
+
+      expect(fs.existsSync('vite.config.ts')).toBe(true);
+
+      const viteConfig = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(viteConfig).toContain("import { withZephyr } from 'vite-plugin-zephyr';");
+      expect(viteConfig).toContain('plugins: [withZephyr()]');
+
+      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      expect(updatedPackageJson.name).toBe('slidev-app');
+      expect(updatedPackageJson.version).toBe('1.0.0');
+    });
+
+    it('should report Slidev scaffold actions in dry run mode', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify(
+          {
+            private: true,
+            devDependencies: {
+              '@slidev/cli': '^52.14.1',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      const output = runCodemod('--dry-run');
+
+      expect(output).toContain('Would create vite.config.ts for Slidev');
+      expect(output).toContain(
+        'Would update package.json name/version for Zephyr compatibility'
+      );
+      expect(output).toContain('vite-plugin-zephyr');
     });
   });
 
@@ -190,6 +297,25 @@ describe('Zephyr Codemod CLI', () => {
       const content = fs.readFileSync('vite.config.ts', 'utf8');
       expect(content).toContain('import { withZephyr } from "vite-plugin-zephyr"');
       expect(content).toContain('react(), withZephyr()');
+    });
+
+    it('should transform vite config with a trailing comma in plugins array', () => {
+      const originalContent = `
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+
+        export default defineConfig({
+          plugins: [react(),],
+        });
+      `;
+      fs.writeFileSync('vite.config.ts', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(content).toContain('import { withZephyr } from "vite-plugin-zephyr"');
+      expect(content).toContain('plugins: [react(), withZephyr()]');
+      expect(content).not.toContain(',,');
     });
 
     it('should transform rollup array config', () => {
@@ -241,6 +367,7 @@ describe('Zephyr Codemod CLI', () => {
       const content = fs.readFileSync('rsbuild.config.ts', 'utf8');
       expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
       expect(content).toContain('pluginReact(), withZephyr()');
+      expect(content).toMatch(/output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/);
     });
 
     it('should wrap rspack defineConfig exports instead of adding to plugins array', () => {
@@ -261,6 +388,60 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('export default withZephyr()(defineConfig({');
       expect(content).not.toMatch(/plugins[^]]*withZephyr\(\)/);
     });
+
+    it('should transform metro config with async wrapper', () => {
+      const originalContent = `
+        const { getDefaultConfig } = require('@react-native/metro-config');
+        module.exports = getDefaultConfig(__dirname);
+      `;
+      fs.writeFileSync('metro.config.js', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('metro.config.js', 'utf8');
+      expect(content).toContain('const { withZephyr } = require("zephyr-metro-plugin");');
+      expect(content).toContain(
+        'const __zephyrConfig = await getDefaultConfig(__dirname);'
+      );
+      expect(content).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
+    });
+
+    it('should transform metro ESM config with async wrapper', () => {
+      const originalContent = `
+        export default {
+          resolver: { sourceExts: ['js', 'ts'] }
+        };
+      `;
+      fs.writeFileSync('metro.config.mjs', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('metro.config.mjs', 'utf8');
+      expect(content).toContain('import { withZephyr } from "zephyr-metro-plugin";');
+      expect(content).toContain('export default (async () => {');
+      expect(content).toContain(
+        'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
+      );
+    });
+
+    it('should transform nuxt config by appending zephyr-nuxt-module', () => {
+      const originalContent = `
+        export default defineNuxtConfig({
+          modules: ['nitro-cloudflare-dev']
+        });
+      `;
+      fs.writeFileSync('nuxt.config.ts', originalContent);
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('nuxt.config.ts', 'utf8');
+      expect(content).not.toContain('import { withZephyr }');
+      expect(content).toContain(
+        'modules: [\'nitro-cloudflare-dev\', "zephyr-nuxt-module"]'
+      );
+    });
   });
 
   describe('Skip Already Configured', () => {
@@ -276,7 +457,9 @@ describe('Zephyr Codemod CLI', () => {
       );
 
       const output = runCodemod('--dry-run');
-      expect(output).toContain('Skipping vite.config.js (already has withZephyr)');
+      expect(output).toContain(
+        'Skipping vite.config.js (already has Zephyr integration)'
+      );
       expect(output).toContain('✓ Processed: 0');
       expect(output).toContain('⏭️ Skipped: 1');
     });
@@ -291,7 +474,25 @@ describe('Zephyr Codemod CLI', () => {
       );
 
       const output = runCodemod('--dry-run');
-      expect(output).toContain('Skipping rspack.config.mjs (already has withZephyr)');
+      expect(output).toContain(
+        'Skipping rspack.config.mjs (already has Zephyr integration)'
+      );
+    });
+
+    it('should skip nuxt config when zephyr-nuxt-module is already present', () => {
+      fs.writeFileSync(
+        'nuxt.config.ts',
+        `
+        export default defineNuxtConfig({
+          modules: ['zephyr-nuxt-module']
+        });
+      `
+      );
+
+      const output = runCodemod('--dry-run');
+      expect(output).toContain(
+        'Skipping nuxt.config.ts (already has Zephyr integration)'
+      );
     });
   });
 
@@ -312,7 +513,7 @@ describe('Zephyr Codemod CLI', () => {
       expect(output).toContain('✓ Processed: 1');
       expect(output).toContain('✗ Errors: 1');
       expect(output).toContain('Error transforming webpack.config.js');
-      expect(output).toContain('✓ Added withZephyr to vite.config.js');
+      expect(output).toContain('✓ Added Zephyr integration to vite.config.js');
     });
   });
 
@@ -376,7 +577,7 @@ describe('Zephyr Codemod CLI', () => {
 
       const output = runCodemod('--dry-run');
       expect(output).toContain(
-        '🚀 Zephyr Codemod - Adding withZephyr to bundler configs'
+        '🚀 Zephyr Codemod - Adding Zephyr integration to configs'
       );
       expect(output).toContain('Found 2 configuration file(s)');
       expect(output).toContain('Summary:');
@@ -390,7 +591,7 @@ describe('Zephyr Codemod CLI', () => {
 
       const output = runCodemod('--dry-run');
       expect(output).toContain('Processing vite config: vite.config.js');
-      expect(output).toContain('✓ Added withZephyr to vite.config.js');
+      expect(output).toContain('✓ Added Zephyr integration to vite.config.js');
     });
   });
 });

@@ -2,6 +2,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as util from 'node:util';
+import { type FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
+import { ze_log } from '../logging';
 import {
   blackBright,
   blue,
@@ -19,8 +21,6 @@ import {
   ZeErrors,
   type ZeErrorType,
 } from './codes';
-import { type FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
-import { ze_log } from '../logging';
 
 /** Options to construct {@linkcode ZephyrError}. */
 export type ZephyrErrorOpts<T extends ZeErrorType> = {
@@ -205,13 +205,30 @@ Or join our ${blue('Discord')} server at ${cyanBright(discordUrl)}
 /** Attempts to write the error to a file in the temp directory. */
 function write_error_file(zeError: ZephyrError<ZeErrorKeys>) {
   try {
-    const tempPath = path.join(os.tmpdir(), `ze${Math.round(Math.random() * 10e9)}.json`);
-    const errorString = JSON.stringify(format_error(zeError));
+    let errorString: string;
+    let errorExt: string;
+
+    try {
+      errorString = JSON.stringify(format_error(zeError));
+      errorExt = 'json';
+    } catch {
+      // Handles circular references or other issues with JSON.stringify
+      errorString = util.inspect(zeError, false, 5, false);
+      errorExt = 'log';
+    }
+
     ze_log.misc(errorString);
+
+    const tempPath = path.join(
+      os.tmpdir(),
+      `ze${Math.round(Math.random() * 10e9)}.${errorExt}`
+    );
+
     fs.writeFileSync(tempPath, errorString, 'utf8');
 
     return tempPath;
-  } catch {
+  } catch (error) {
+    ze_log.error('Failed writing error to temp file:', error);
     return undefined;
   }
 }

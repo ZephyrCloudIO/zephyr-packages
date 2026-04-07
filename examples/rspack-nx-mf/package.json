@@ -4,7 +4,7 @@
   "dependencies": {
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router-dom": "6.29.0"
+    "react-router-dom": "6.30.2"
   },
   "devDependencies": {
     "@rspack/cli": "catalog:rspack",

@@ -1,21 +1,21 @@
 import {
   forEachLimit,
-  type ZeBuildAssetsMap,
   type ZeBuildAsset,
+  type ZeBuildAssetsMap,
   type ZeUploadAssetsOptions,
 } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from '../../zephyr-engine';
+import { get_missing_assets } from '../edge-hash-list/get-missing-assets';
+import { getApplicationHashList } from '../edge-requests/get-application-hash-list';
 import { uploadFile } from '../http/upload-file';
 import { ze_log } from '../logging';
 import { white, whiteBright } from '../logging/picocolor';
-import { getApplicationHashList } from '../edge-requests/get-application-hash-list';
 import type {
   EnvironmentConfig,
   ZeApplicationConfig,
 } from '../node-persist/upload-provider-options';
-import { get_missing_assets } from '../edge-hash-list/get-missing-assets';
 
-const CLOUDFLARE_BATCH_SIZE = 6;
+const MAX_MATCH_SIZE = 6;
 
 export async function zeUploadAssets(
   zephyr_engine: ZephyrEngine,
@@ -48,19 +48,10 @@ export async function zeUploadAssets(
   const start = Date.now();
   let totalSize = 0;
 
-  // If the target is iOS or Android, we upload the assets in a 6 request batch to avoid cloudflare worker requests limit
-  // Reference: https://developers.cloudflare.com/workers/platform/limits/#simultaneous-open-connections:~:text=Once%20an%20invocation%20has%20six%20connections%20open%2C%20it%20can%20still%20attempt%20to%20open%20additional%20connections.
-  if (zephyr_engine.env.target !== 'ios' && zephyr_engine.env.target !== 'android') {
-    await Promise.all(missingAssets.map(upload_missing_asset));
-  } else {
-    ze_log.upload(
-      "The target platform is 'ios' and 'android' so we are switching to batch upload."
-    );
-    await forEachLimit<void>(
-      missingAssets.map((asset) => () => upload_missing_asset(asset)),
-      CLOUDFLARE_BATCH_SIZE
-    );
-  }
+  await forEachLimit<void>(
+    missingAssets.map((asset) => () => upload_missing_asset(asset)),
+    MAX_MATCH_SIZE
+  );
 
   logger({
     level: 'info',

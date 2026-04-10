@@ -5,14 +5,17 @@ const _lifecycle_events = new EventEmitter();
 
 const _deployment_done = 'deployment-done';
 
-export function emitDeploymentDone(): void {
+export function emitDeploymentDone(error?: unknown): void {
   ze_log.misc('Deployment done');
-  _lifecycle_events.emit(_deployment_done);
+  _lifecycle_events.emit(_deployment_done, error);
 }
 
-export async function onDeploymentDone(): Promise<string> {
-  return new Promise((resolve) => {
+export async function onDeploymentDone(): Promise<void> {
+  return new Promise((resolve, reject) => {
     ze_log.misc('Waiting for deployment done');
-    _lifecycle_events.once(_deployment_done, resolve);
+    _lifecycle_events.once(_deployment_done, (error?: unknown) => {
+      if (error) reject(error);
+      else resolve();
+    });
   });
 }

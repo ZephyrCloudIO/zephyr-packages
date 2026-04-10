@@ -2,11 +2,11 @@ import { BundleCacheLayer } from './BundleCacheLayer';
 import type { MFECacheConfig } from './types';
 
 /**
- * Register the MFE cache layer on globalThis.
+ * Register the MFE cache layer on globalThis.__FEDERATION__.__NATIVE__.
  *
  * Call this once at app startup (before any remote bundle loading). metro-core reads
- * `globalThis.__MFE_CACHE_LAYER__` — it never imports native-cache directly, keeping the
- * two packages decoupled.
+ * `globalThis.__FEDERATION__.__NATIVE__.__CACHE_LAYER__` — it never imports native-cache
+ * directly, keeping the two packages decoupled.
  *
  * @example
  *   ```ts
@@ -21,13 +21,19 @@ import type { MFECacheConfig } from './types';
  *   ```;
  */
 export function register(config: MFECacheConfig = {}): BundleCacheLayer {
+  // Ensure __FEDERATION__.__NATIVE__ namespace exists (register may run before MF runtime init)
+  const g = globalThis as any;
+  g.__FEDERATION__ = g.__FEDERATION__ || {};
+  g.__FEDERATION__.__NATIVE__ = g.__FEDERATION__.__NATIVE__ || {};
+  const ns = g.__FEDERATION__.__NATIVE__;
+
   // Re-use existing instance if already registered
-  if ((globalThis as any).__MFE_CACHE_LAYER__) {
-    return (globalThis as any).__MFE_CACHE_LAYER__;
+  if (ns.__CACHE_LAYER__) {
+    return ns.__CACHE_LAYER__;
   }
 
   const cacheLayer = new BundleCacheLayer(config);
-  (globalThis as any).__MFE_CACHE_LAYER__ = cacheLayer;
+  ns.__CACHE_LAYER__ = cacheLayer;
 
   // Determine whether cache is active in the current environment.
   // Production: always enabled. Dev: only when forceCacheInDev is true.
@@ -36,14 +42,15 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
 
   // Register minimal cache handler for asyncRequire integration.
   // Only register when cache is enabled — asyncRequire uses the presence of
-  // __MFE_CACHE__ to decide split bundle URL conversion, so it must be absent
-  // when cache is disabled to preserve original path behavior.
+  // __FEDERATION__.__NATIVE__.__CACHE__ to decide split bundle URL conversion,
+  // so it must be absent when cache is disabled to preserve original path behavior.
   if (cacheEnabled) {
-    (globalThis as any).__MFE_CACHE__ = async (
+    ns.__CACHE__ = async (
       fallback: (bundlePath: string) => Promise<void>,
       bundlePath: string
     ): Promise<void> => {
-      // Only use cache for full URLs (not relative paths like host split bundles)
+      // Full URLs (container bundles + remote split bundles) go through cache.
+      // Relative paths are host's own split bundles — handled by Expo directly.
       if (/^https?:\/\//.test(bundlePath)) {
         const { status } = await cacheLayer.loadBundle(bundlePath);
         if (status === 'skipped') {

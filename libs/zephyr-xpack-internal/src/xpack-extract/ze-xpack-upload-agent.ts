@@ -33,7 +33,6 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
 
-  let deployError: unknown;
   try {
     const assetsMap = await buildWebpackAssetMap(assets, {
       wait_for_index_html,
@@ -65,10 +64,10 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
   } catch (err) {
     logFn('error', ZephyrError.format(err));
     if (process.env['ZE_FAIL_BUILD'] === 'true') {
-      deployError = err;
+      process.exitCode = 1;
     }
   } finally {
-    emitDeploymentDone(deployError);
+    emitDeploymentDone();
     ze_log.upload('Zephyr Webpack Upload Agent: Done in', Date.now() - zeStart, 'ms');
   }
 }

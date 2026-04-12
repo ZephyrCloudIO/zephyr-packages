@@ -1,17 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { ZephyrError } from '../../errors';
+import { ZeErrors, ZephyrError } from '../../errors';
 import { find_nearest_package_json } from '../find-nearest-package-json';
 import type { ZeDependency } from '../ze-package-json.type';
 import { parseZeDependencies } from '../ze-util-parse-ze-dependencies';
 import { getPackageJson } from '../ze-util-read-package-json';
+import { logFn } from '../../logging/ze-log-event';
 
 // Mock dependencies
 jest.mock('node:fs');
 jest.mock('node:fs/promises');
 jest.mock('../find-nearest-package-json');
 jest.mock('../ze-util-parse-ze-dependencies');
-jest.mock('../../logging', () => ({ ze_log: { package: jest.fn() } }));
+jest.mock('../../logging', () => ({
+  ze_log: { package: jest.fn(), misc: jest.fn(), error: jest.fn() },
+}));
+jest.mock('../../logging/ze-log-event', () => ({ logFn: jest.fn() }));
 
 describe('getPackageJson', () => {
   // Common mock values
@@ -120,10 +124,12 @@ describe('getPackageJson', () => {
     });
 
     // Act & Assert
-    await expect(getPackageJson(mockStartPath)).rejects.toThrow(ZephyrError);
+    await expect(getPackageJson(mockStartPath)).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME),
+    });
   });
 
-  it('should throw if version is missing', async () => {
+  it('should default version to 0.0.0 and log a warning if version is missing', async () => {
     // Arrange
     const invalidPackageJson = JSON.stringify({
       name: 'test-package',
@@ -134,8 +140,20 @@ describe('getPackageJson', () => {
       json: invalidPackageJson,
     });
 
-    // Act & Assert
-    await expect(getPackageJson(mockStartPath)).rejects.toThrow(ZephyrError);
+    // Act
+    const result = await getPackageJson(mockStartPath);
+
+    // Assert
+    expect(result).toEqual({
+      name: 'test-package',
+      version: '0.0.0',
+    });
+    expect(logFn).toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining(
+        ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)
+      )
+    );
   });
 
   it('should not call parseZeDependencies if zephyr:dependencies is undefined', async () => {
@@ -157,5 +175,16 @@ describe('getPackageJson', () => {
     // Assert
     expect(parseZeDependencies).not.toHaveBeenCalled();
     expect(result).toEqual(packageJsonWithoutZeDeps);
+  });
+
+  it('should not warn when version exists', async () => {
+    await getPackageJson(mockStartPath);
+
+    expect(logFn).not.toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining(
+        ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)
+      )
+    );
   });
 });

@@ -21,8 +21,8 @@ export async function setupZeDeploy({
   ]);
 
   await xpack_zephyr_agent({
-    stats: stats as never,
-    stats_json: stats.toJson() as never,
+    stats,
+    stats_json: stats.toJson(),
     assets,
     pluginOptions: {
       pluginName: 'rspress-ssg',

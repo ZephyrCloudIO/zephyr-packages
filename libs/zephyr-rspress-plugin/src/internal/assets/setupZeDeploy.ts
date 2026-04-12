@@ -20,9 +20,9 @@ export async function setupZeDeploy({
     Promise.resolve(buildStats(outDir, files)),
   ]);
 
-  process.nextTick(xpack_zephyr_agent, {
-    stats,
-    stats_json: stats.toJson(),
+  await xpack_zephyr_agent({
+    stats: stats as never,
+    stats_json: stats.toJson() as never,
     assets,
     pluginOptions: {
       pluginName: 'rspress-ssg',

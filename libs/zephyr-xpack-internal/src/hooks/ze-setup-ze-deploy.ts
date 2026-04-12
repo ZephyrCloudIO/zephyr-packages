@@ -1,4 +1,3 @@
-import { onDeploymentDone } from '../lifecycle-events/index';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
@@ -50,16 +49,12 @@ export function setupZeDeploy<
 
         await pluginOptions.zephyr_engine.start_new_build();
 
-        process.nextTick(xpack_zephyr_agent, {
+        await xpack_zephyr_agent({
           stats,
           stats_json,
           assets,
           pluginOptions,
         });
-
-        if (!pluginOptions.wait_for_index_html) {
-          await onDeploymentDone();
-        }
 
         // empty line to separate logs from other plugins
         console.log();

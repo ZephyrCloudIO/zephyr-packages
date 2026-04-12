@@ -58,8 +58,6 @@ describe('setupZeDeploy', () => {
       files: ['index.html', 'main.js'],
     });
 
-    await new Promise(process.nextTick); // Allow promises to resolve
-
     expect(buildAssetMapFromFiles).toHaveBeenCalledWith('/doc_build', [
       'index.html',
       'main.js',
@@ -75,5 +73,17 @@ describe('setupZeDeploy', () => {
         options: {},
       },
     });
+  });
+
+  it('should propagate upload failures', async () => {
+    (xpack_zephyr_agent as jest.Mock).mockRejectedValueOnce(new Error('deploy failed'));
+
+    await expect(
+      setupZeDeploy({
+        deferEngine: Promise.resolve({ engine: 'mock' } as any),
+        outDir: '/doc_build',
+        files: ['index.html', 'main.js'],
+      })
+    ).rejects.toThrow('deploy failed');
   });
 });

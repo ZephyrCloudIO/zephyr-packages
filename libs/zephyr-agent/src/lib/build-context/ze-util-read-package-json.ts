@@ -79,25 +79,23 @@ export async function getPackageJson(
 
     // Validate required fields
     if (!parsed_package_json.name) {
-      throw new ZephyrError(
-        ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME,
-        `Missing 'name' field in package.json at: ${packageJsonPath}`
-      );
+      throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME, {
+        path: packageJsonPath,
+        data: { path: packageJsonPath },
+      });
     }
 
     if (!parsed_package_json.version) {
       parsed_package_json.version = DEFAULT_PACKAGE_VERSION;
-      logFn(
-        'warn',
-        ZephyrError.format(
-          new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION, {
-            data: {
-              path: packageJsonPath,
-              defaultVersion: DEFAULT_PACKAGE_VERSION,
-            },
-          })
-        )
-      );
+      const warning = new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION, {
+        path: packageJsonPath,
+        defaultVersion: DEFAULT_PACKAGE_VERSION,
+        data: {
+          path: packageJsonPath,
+          defaultVersion: DEFAULT_PACKAGE_VERSION,
+        },
+      });
+      logFn('warn', `${warning.code}: ${warning.message}`);
     }
 
     const zephyr_dependencies = parsed_package_json['zephyr:dependencies'];

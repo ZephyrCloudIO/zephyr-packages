@@ -126,6 +126,10 @@ describe('getPackageJson', () => {
     // Act & Assert
     await expect(getPackageJson(mockStartPath)).rejects.toMatchObject({
       code: ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME),
+      message: `Zephyr needs package.json at ${path.join(
+        mockStartPath,
+        'package.json'
+      )} to have a name field to map your application configuration in deployment.`,
     });
   });
 
@@ -150,9 +154,10 @@ describe('getPackageJson', () => {
     });
     expect(logFn).toHaveBeenCalledWith(
       'warn',
-      expect.stringContaining(
-        ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)
-      )
+      `${ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)}: package.json at ${path.join(
+        mockStartPath,
+        'package.json'
+      )} is missing a version field. Zephyr defaulted the version to 0.0.0.`
     );
   });
 

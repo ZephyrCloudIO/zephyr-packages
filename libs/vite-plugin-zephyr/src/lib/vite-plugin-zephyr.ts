@@ -23,6 +23,7 @@ import {
   ZEPHYR_MF_RUNTIME_PLUGIN_ID,
   type ModuleFederationOptions,
 } from './internal/mf-vite-etl/ensure_runtime_plugin';
+import { applyResolvedRemotesFallback } from './internal/mf-vite-etl/apply_resolved_remotes_fallback';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
@@ -114,13 +115,22 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           const dependencyPairs = extract_remotes_dependencies(root, mfConfig);
           if (dependencyPairs) {
             const zephyr_engine = await zephyr_engine_defer;
-            await zephyr_engine.resolve_remote_dependencies(
+            const resolvedRemotes = await zephyr_engine.resolve_remote_dependencies(
               dependencyPairs,
               DEFAULT_LIBRARY_TYPE
+            );
+            const updatedRemotes = applyResolvedRemotesFallback(
+              mfConfig,
+              resolvedRemotes
             );
             ze_log.remotes(
               `Resolved ${dependencyPairs.length} remote dependencies in configResolved`
             );
+            if (updatedRemotes > 0) {
+              ze_log.remotes(
+                `Applied buildtime fallback for ${updatedRemotes} Module Federation remotes`
+              );
+            }
           }
         } catch (error) {
           handleGlobalError(error);

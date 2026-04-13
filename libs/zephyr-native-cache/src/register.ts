@@ -2,7 +2,7 @@ import { BundleCacheLayer } from './BundleCacheLayer';
 import type { MFECacheConfig } from './types';
 
 /**
- * Register the MFE cache layer on globalThis.__FEDERATION__.__NATIVE__.
+ * Register the MFE cache layer on globalThis.**FEDERATION**.**NATIVE**.
  *
  * Call this once at app startup (before any remote bundle loading). metro-core reads
  * `globalThis.__FEDERATION__.__NATIVE__.__CACHE_LAYER__` — it never imports native-cache

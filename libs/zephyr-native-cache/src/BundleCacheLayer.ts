@@ -75,52 +75,14 @@ export class BundleCacheLayer {
       const bundleUrlNoQuery = bundleUrl.split('?')[0];
       const expectedHash = this.bundleHashMap[bundleUrlNoQuery] as string | undefined;
 
-      // No hash in manifest → can't verify integrity, skip cache
-      if (!expectedHash) {
-        return { status: 'skipped' };
+      if (expectedHash) {
+        return this.loadBundleWithVerification(bundleUrl, expectedHash);
       }
 
-      const cached = await this.cacheManager!.getCachedBundle(bundleUrl);
-
-      // Determine if cache is valid: hash must match manifest
-      const cacheValid =
-        cached &&
-        cached.metadata.bundleHash &&
-        cached.metadata.bundleHash === expectedHash;
-
-      if (cacheValid) {
-        // Path A: cache HIT with matching hash — use cached bundle
-        this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
-        await this.evalFromFile(cached.filePath);
-        return { status: 'cache-hit' };
-      } else {
-        // Path B: cache MISS or EXPIRED — download fresh bundle
-        const remoteName = this.inferRemoteName(bundleUrl);
-        const destPath = await this.cacheManager!.getBundleDestPath(
-          remoteName,
-          bundleUrl
-        );
-
-        const { sha256 } = await NativeMFECache.downloadFile(bundleUrl, destPath);
-
-        // Checksum verification against manifest hash
-        if (sha256 !== expectedHash) {
-          try {
-            await NativeMFECache.deleteFile(destPath);
-          } catch {
-            /* ok */
-          }
-          // Verification failed — caller should fallback to network load
-          return { status: 'skipped' };
-        }
-
-        await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
-          bundleUrl,
-          bundleHash: sha256,
-        });
-        await this.evalFromFile(destPath);
-        return { status: 'downloaded' };
-      }
+      // No hash — skip cache, fetch fresh. Serializer will compute hashes
+      // for next load.
+      console.info(`${LOG_PREFIX} skip (no hash): ${bundleUrlNoQuery}`);
+      return { status: 'skipped' };
     } catch (cacheError) {
       console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
       return { status: 'skipped' };
@@ -214,6 +176,43 @@ export class BundleCacheLayer {
   }
 
   // --- Private helpers ---
+
+  private async loadBundleWithVerification(
+    bundleUrl: string,
+    expectedHash: string
+  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
+    const cached = await this.cacheManager!.getCachedBundle(bundleUrl);
+
+    const cacheValid =
+      cached && cached.metadata.bundleHash && cached.metadata.bundleHash === expectedHash;
+
+    if (cacheValid) {
+      console.info(`${LOG_PREFIX} cache hit: ${bundleUrl.split('?')[0]}`);
+      this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
+      await this.evalFromFile(cached.filePath);
+      return { status: 'cache-hit' };
+    }
+
+    const remoteName = this.inferRemoteName(bundleUrl);
+    const destPath = await this.cacheManager!.getBundleDestPath(remoteName, bundleUrl);
+    const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
+
+    if (sha256 !== expectedHash) {
+      try {
+        await NativeMFECache!.deleteFile(destPath);
+      } catch {
+        /* ok */
+      }
+      return { status: 'skipped' };
+    }
+
+    await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
+      bundleUrl,
+      bundleHash: sha256,
+    });
+    await this.evalFromFile(destPath);
+    return { status: 'downloaded' };
+  }
 
   private async ensureInitialized(): Promise<void> {
     if (this.cacheManager) return;

@@ -40,7 +40,11 @@ export class CacheManager {
     await this.evictLRU();
 
     this.initialized = true;
-    console.info(`${LOG_PREFIX} initialized, ${this.urlIndex.size} cached bundles`);
+    if (this.urlIndex.size > 0) {
+      console.info(`${LOG_PREFIX} ready (${this.urlIndex.size} bundles on disk)`);
+    } else {
+      console.info(`${LOG_PREFIX} ready (empty cache)`);
+    }
   }
 
   async getCachedBundle(bundleUrl: string): Promise<CachedBundleResult | null> {
@@ -229,9 +233,7 @@ export class CacheManager {
         this.urlIndex.set(meta.bundleUrl, meta);
       }
 
-      console.info(
-        `${LOG_PREFIX} recovered ${this.urlIndex.size} bundles from disk manifest`
-      );
+      // logged at init summary
     } catch {
       // manifest corrupted or unreadable, start fresh
     }

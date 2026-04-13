@@ -193,6 +193,7 @@ export class BundleCacheLayer {
       return { status: 'cache-hit' };
     }
 
+    console.info(`${LOG_PREFIX} cache miss: ${bundleUrl.split('?')[0]}`);
     const remoteName = this.inferRemoteName(bundleUrl);
     const destPath = await this.cacheManager!.getBundleDestPath(remoteName, bundleUrl);
     const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);

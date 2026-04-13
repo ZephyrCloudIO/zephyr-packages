@@ -24,7 +24,6 @@ import {
   type ModuleFederationOptions,
 } from './internal/mf-vite-etl/ensure_runtime_plugin';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
@@ -178,31 +177,12 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     transform: {
       order: 'post',
-      // Limit the hook to source-like files plus MF's in-memory remote entry.
+      // Limit the hook to source-like files.
       filter: {
-        id: /(\.(mjs|cjs|js|ts|jsx|tsx)|virtual:mf-REMOTE_ENTRY_ID)/,
+        id: /(\.(mjs|cjs|js|ts|jsx|tsx))/,
       },
       handler: async (code, id) => {
         try {
-          // In dev, MF serves remoteEntry.js from memory; inject resolved remotes there.
-          if (mfConfig && code.includes('"__REMOTE_MAP__"')) {
-            const zephyr_engine = await zephyr_engine_defer;
-            const resolved_remotes = zephyr_engine.federated_dependencies;
-
-            if (resolved_remotes?.length) {
-              ze_log.remotes(
-                `[transform] Transforming remoteEntry.js with ${resolved_remotes.length} remotes for dev mode`
-              );
-              const result = inject_resolved_remotes_map(resolved_remotes, code);
-              if (result !== code) {
-                return {
-                  code: result,
-                  map: null,
-                };
-              }
-            }
-          }
-
           // Rewrite ZE_PUBLIC_* reads in app code; node_modules stay untouched.
           if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
@@ -230,37 +210,6 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     },
 
     generateBundle: async function (_outputOptions, bundle) {
-      if (mfConfig) {
-        for (const [fileName, chunk] of Object.entries(bundle)) {
-          if (
-            fileName === 'remoteEntry.js' &&
-            chunk &&
-            typeof chunk === 'object' &&
-            'type' in chunk &&
-            chunk.type === 'chunk' &&
-            'code' in chunk
-          ) {
-            try {
-              // Build mode writes remoteEntry.js to disk, so patch the emitted chunk here.
-              const zephyr_engine = await zephyr_engine_defer;
-              const resolved_remotes = zephyr_engine.federated_dependencies;
-
-              if (!resolved_remotes?.length) {
-                ze_log.remotes('No resolved remotes found in generateBundle');
-                continue;
-              }
-
-              chunk.code = inject_resolved_remotes_map(resolved_remotes, chunk.code);
-              ze_log.remotes(
-                `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
-              );
-            } catch (error) {
-              handleGlobalError(error);
-            }
-          }
-        }
-      }
-
       if (cachedSpecifier) {
         for (const [, chunk] of Object.entries(bundle)) {
           if (

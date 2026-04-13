@@ -98,3 +98,9 @@ export {
   calculateManifestHash,
   collectZEPublicVars,
 } from './lib/env-variables';
+
+// Module Federation runtime plugin
+export {
+  createZephyrRuntimePlugin,
+  type ZephyrRuntimePluginOptions,
+} from './runtime-plugin';

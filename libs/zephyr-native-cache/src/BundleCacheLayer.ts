@@ -1,6 +1,7 @@
 import { CacheManager } from './CacheManager';
 import NativeMFECache from './NativeMFECache';
-import type { MFECacheConfig } from './types';
+import mitt from 'mitt';
+import type { BundleMetadata, CacheEventMap, MFECacheConfig } from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -24,6 +25,9 @@ export class BundleCacheLayer {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
   private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  // Event emitter for cache lifecycle events
+  readonly events = mitt<CacheEventMap>();
 
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
@@ -82,6 +86,13 @@ export class BundleCacheLayer {
       // No hash — skip cache, fetch fresh. Serializer will compute hashes
       // for next load.
       console.info(`${LOG_PREFIX} skip (no hash): ${bundleUrlNoQuery}`);
+      this.events.emit('bundle:load', {
+        bundleUrl,
+        remoteName: this.inferRemoteName(bundleUrl),
+        status: 'skipped',
+        hash: undefined,
+        timestamp: Date.now(),
+      });
       return { status: 'skipped' };
     } catch (cacheError) {
       console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
@@ -101,6 +112,7 @@ export class BundleCacheLayer {
     }
 
     this.isCheckingUpdates = true;
+    this.events.emit('poll:start');
     let updated = 0;
     let checked = 0;
 
@@ -123,7 +135,7 @@ export class BundleCacheLayer {
           // Extract all bundle URLs (container + exposed + shared) from manifest
           const newHashes = source.extractHashes(manifest, manifestUrl);
 
-          for (const [bundleUrl] of newHashes) {
+          for (const [bundleUrl, newHash] of newHashes) {
             checked++;
             // Check if this URL is already cached
             const existing = await this.cacheManager!.getCachedBundle(bundleUrl);
@@ -131,6 +143,13 @@ export class BundleCacheLayer {
 
             // Not cached — pre-download
             const remoteName = this.inferRemoteName(bundleUrl);
+            this.events.emit('update:available', {
+              bundleUrl,
+              remoteName,
+              oldHash: undefined,
+              newHash,
+              timestamp: Date.now(),
+            });
             const destPath = await this.cacheManager!.getBundleDestPath(
               remoteName,
               bundleUrl
@@ -143,6 +162,12 @@ export class BundleCacheLayer {
                 bundleHash: sha256,
               });
               updated++;
+              this.events.emit('update:downloaded', {
+                bundleUrl,
+                remoteName,
+                newHash: sha256,
+                timestamp: Date.now(),
+              });
             } catch (dlError) {
               console.warn(`${LOG_PREFIX} pre-download failed: ${bundleUrl}`, dlError);
               // Download failed for this bundle, continue with others
@@ -155,6 +180,11 @@ export class BundleCacheLayer {
       }
     } finally {
       this.isCheckingUpdates = false;
+      this.events.emit('poll:complete', {
+        checked,
+        updated,
+        timestamp: Date.now(),
+      });
     }
 
     return { updated, checked };
@@ -175,6 +205,17 @@ export class BundleCacheLayer {
     }
   }
 
+  // --- Public API for UI layer ---
+
+  async clearCache(): Promise<void> {
+    await this.ensureInitialized();
+    await this.cacheManager!.invalidateAllCaches();
+  }
+
+  getLoadedBundles(): BundleMetadata[] {
+    return this.cacheManager?.getAllMetadata() ?? [];
+  }
+
   // --- Private helpers ---
 
   private async loadBundleWithVerification(
@@ -190,6 +231,13 @@ export class BundleCacheLayer {
       console.info(`${LOG_PREFIX} cache hit: ${bundleUrl.split('?')[0]}`);
       this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
       await this.evalFromFile(cached.filePath);
+      this.events.emit('bundle:load', {
+        bundleUrl,
+        remoteName: this.inferRemoteName(bundleUrl),
+        status: 'cache-hit',
+        hash: expectedHash,
+        timestamp: Date.now(),
+      });
       return { status: 'cache-hit' };
     }
 
@@ -204,6 +252,13 @@ export class BundleCacheLayer {
       } catch {
         /* ok */
       }
+      this.events.emit('bundle:load', {
+        bundleUrl,
+        remoteName,
+        status: 'skipped',
+        hash: undefined,
+        timestamp: Date.now(),
+      });
       return { status: 'skipped' };
     }
 
@@ -212,6 +267,13 @@ export class BundleCacheLayer {
       bundleHash: sha256,
     });
     await this.evalFromFile(destPath);
+    this.events.emit('bundle:load', {
+      bundleUrl,
+      remoteName,
+      status: 'downloaded',
+      hash: sha256,
+      timestamp: Date.now(),
+    });
     return { status: 'downloaded' };
   }
 

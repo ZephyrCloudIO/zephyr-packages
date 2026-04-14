@@ -1937,6 +1937,9 @@ importers:
 
   libs/zephyr-native-cache:
     devDependencies:
+      '@module-federation/runtime':
+        specifier: ^2.3.2
+        version: 2.3.2
       '@types/react':
         specifier: ^19.1.0
         version: 19.2.14
@@ -4811,6 +4814,9 @@ packages:
   '@module-federation/error-codes@2.2.3':
     resolution: {integrity: sha512-3+qOylnuljh1XulzXd3iNhALXuVXPVGFUupz9qnUL1paWX48F89Wex3egu6psZhxi3F7y7TA7ykjfWpP0vlrjQ==}
 
+  '@module-federation/error-codes@2.3.2':
+    resolution: {integrity: sha512-Y8F6EG+shNY5mJ0yKcJh4t6HlMYEtqMvABDDmxWulLz/tSV859SL05I5eDR1EvK0jNhLbq8LFipFEToQLqF0AA==}
+
   '@module-federation/inject-external-runtime-core-plugin@0.21.6':
     resolution: {integrity: sha512-DJQne7NQ988AVi3QB8byn12FkNb+C2lBeU1NRf8/WbL0gmHsr6kW8hiEJCm8LYaURwtsQqtsEV7i+8+51qjSmQ==}
     peerDependencies:
@@ -4910,6 +4916,9 @@ packages:
   '@module-federation/runtime-core@2.2.3':
     resolution: {integrity: sha512-muGMkv1AQIkCQy8mIa6lmgHu3qTasl/se+bZHERulD3gddK6ninM/Hc7mHyUVNO9rVhb+5Fv7QiCYahH4pRrIg==}
 
+  '@module-federation/runtime-core@2.3.2':
+    resolution: {integrity: sha512-o4Pfi21uADHtSl3/BHu/3ph5+069pDOXL8Lck12b+rxsHessbeZkNo+MOxwP+gXf8fFsT+f9spOmx+Y5gtyc2A==}
+
   '@module-federation/runtime-tools@0.14.0':
     resolution: {integrity: sha512-y/YN0c2DKsLETE+4EEbmYWjqF9G6ZwgZoDIPkaQ9p0pQu0V4YxzWfQagFFxR0RigYGuhJKmSU/rtNoHq+qF8jg==}
 
@@ -4943,6 +4952,9 @@ packages:
   '@module-federation/runtime@2.2.3':
     resolution: {integrity: sha512-5xAIPhzNPLXL7J61ZJxNiM+kpKfKw2IKf4oAT1KFVxntZnnWZiZFAkzTeRiNlfIjwbgasKqBoARTLbu1GEaydA==}
 
+  '@module-federation/runtime@2.3.2':
+    resolution: {integrity: sha512-JFSAbr0zBDmNF+wcqHw22CmZGuUZjTsa4qzm1+RUVi3blrnKeBj9Y2FppEOBwPc/FHUr4/MDijA/6GFE2cv7gQ==}
+
   '@module-federation/sdk@0.14.0':
     resolution: {integrity: sha512-lg/OWRsh18hsyTCamOOhEX546vbDiA2O4OggTxxH2wTGr156N6DdELGQlYIKfRdU/0StgtQS81Goc0BgDZlx9A==}
 
@@ -4960,6 +4972,14 @@ packages:
 
   '@module-federation/sdk@2.2.3':
     resolution: {integrity: sha512-DUXqwxQRqxlBz7XWW5mEsdTvYEZPWVAgwfh9JtLW1fkxfdG+Czzzs1sXGz8MPF76H3PGzbRdzeCEfiANlANWiw==}
+    peerDependencies:
+      node-fetch: ^3.3.2
+    peerDependenciesMeta:
+      node-fetch:
+        optional: true
+
+  '@module-federation/sdk@2.3.2':
+    resolution: {integrity: sha512-EKiZpLnD2ogy7OcnuU+vkGO5vhh3J25PHwtEzgVGIAsMis3JHYPpY7L1Ue7i0zVrdmI23dVJPBtfGV/Pg7THPA==}
     peerDependencies:
       node-fetch: ^3.3.2
     peerDependenciesMeta:
@@ -22410,6 +22430,8 @@ snapshots:
 
   '@module-federation/error-codes@2.2.3': {}
 
+  '@module-federation/error-codes@2.3.2': {}
+
   '@module-federation/inject-external-runtime-core-plugin@0.21.6(@module-federation/runtime-tools@0.21.6)':
     dependencies:
       '@module-federation/runtime-tools': 0.21.6
@@ -22681,6 +22703,13 @@ snapshots:
     transitivePeerDependencies:
       - node-fetch
 
+  '@module-federation/runtime-core@2.3.2':
+    dependencies:
+      '@module-federation/error-codes': 2.3.2
+      '@module-federation/sdk': 2.3.2
+    transitivePeerDependencies:
+      - node-fetch
+
   '@module-federation/runtime-tools@0.14.0':
     dependencies:
       '@module-federation/runtime': 0.14.0
@@ -22744,6 +22773,14 @@ snapshots:
     transitivePeerDependencies:
       - node-fetch
 
+  '@module-federation/runtime@2.3.2':
+    dependencies:
+      '@module-federation/error-codes': 2.3.2
+      '@module-federation/runtime-core': 2.3.2
+      '@module-federation/sdk': 2.3.2
+    transitivePeerDependencies:
+      - node-fetch
+
   '@module-federation/sdk@0.14.0': {}
 
   '@module-federation/sdk@0.18.0': {}
@@ -22755,6 +22792,8 @@ snapshots:
   '@module-federation/sdk@2.1.0': {}
 
   '@module-federation/sdk@2.2.3': {}
+
+  '@module-federation/sdk@2.3.2': {}
 
   '@module-federation/third-party-dts-extractor@0.21.6':
     dependencies:

@@ -1,12 +1,18 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
 import type { MFECacheConfig } from './types';
 
+let cacheLayerInstance: BundleCacheLayer | null = null;
+
 /**
- * Register the MFE cache layer on globalThis.**FEDERATION**.**NATIVE**.
+ * Register the MFE cache layer.
  *
- * Call this once at app startup (before any remote bundle loading). metro-core reads
- * `globalThis.__FEDERATION__.__NATIVE__.__CACHE_LAYER__` — it never imports native-cache
- * directly, keeping the two packages decoupled.
+ * Call this once at app startup (before any remote bundle loading). Sets up the cache
+ * handler on `globalThis.__FEDERATION__.__NATIVE__` for asyncRequire integration and
+ * starts background polling.
+ *
+ * The runtime plugin (`zephyr-native-cache/runtime-plugin`) must be added separately to
+ * `runtimePlugins` in the metro MF config to enable hash extraction from manifests during
+ * remote resolution.
  *
  * @example
  *   ```ts
@@ -21,24 +27,21 @@ import type { MFECacheConfig } from './types';
  *   ```;
  */
 export function register(config: MFECacheConfig = {}): BundleCacheLayer {
-  // Ensure __FEDERATION__.__NATIVE__ namespace exists (register may run before MF runtime init)
-  const g = globalThis as any;
-  g.__FEDERATION__ = g.__FEDERATION__ || {};
-  g.__FEDERATION__.__NATIVE__ = g.__FEDERATION__.__NATIVE__ || {};
-  const ns = g.__FEDERATION__.__NATIVE__;
+  if (cacheLayerInstance) return cacheLayerInstance;
 
-  // Re-use existing instance if already registered
-  if (ns.__CACHE_LAYER__) {
-    return ns.__CACHE_LAYER__;
-  }
+  // Ensure __FEDERATION__.__NATIVE__ namespace exists (register may run before MF runtime init)
+  globalThis.__FEDERATION__ ??= {} as typeof globalThis.__FEDERATION__;
+  globalThis.__FEDERATION__.__NATIVE__ ??= {};
+  const ns = globalThis.__FEDERATION__.__NATIVE__;
 
   const cacheLayer = new BundleCacheLayer(config);
+  cacheLayerInstance = cacheLayer;
   ns.__CACHE_LAYER__ = cacheLayer;
 
   // Determine whether cache is active in the current environment.
   // Production: always enabled. Dev: only when forceCacheInDev is true.
   const { forceCacheInDev = false } = config;
-  const cacheEnabled = !(globalThis as any).__DEV__ || forceCacheInDev;
+  const cacheEnabled = !__DEV__ || forceCacheInDev;
 
   // Register minimal cache handler for asyncRequire integration.
   // Only register when cache is enabled — asyncRequire uses the presence of
@@ -64,10 +67,10 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   }
 
   // Expose manual polling APIs on globalThis
-  (globalThis as any).__MFE_CHECK_UPDATES__ = () => cacheLayer.checkForUpdates();
-  (globalThis as any).__MFE_START_UPDATE_POLLING__ = (intervalMs?: number) =>
+  globalThis.__MFE_CHECK_UPDATES__ = () => cacheLayer.checkForUpdates();
+  globalThis.__MFE_START_UPDATE_POLLING__ = (intervalMs?: number) =>
     cacheLayer.startPolling(intervalMs);
-  (globalThis as any).__MFE_STOP_UPDATE_POLLING__ = () => cacheLayer.stopPolling();
+  globalThis.__MFE_STOP_UPDATE_POLLING__ = () => cacheLayer.stopPolling();
 
   // Auto-start polling unless explicitly disabled
   const { enablePolling = true, pollIntervalMs } = config;

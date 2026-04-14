@@ -36,6 +36,7 @@
     "react-native": ">=0.79.0"
   },
   "devDependencies": {
+    "@module-federation/runtime": "^2.3.2",
     "@types/react": "^19.1.0",
     "react": "19.1.0",
     "react-native": "0.80.0",

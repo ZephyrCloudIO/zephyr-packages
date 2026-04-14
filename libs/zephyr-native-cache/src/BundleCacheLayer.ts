@@ -1,7 +1,7 @@
 import { CacheManager } from './CacheManager';
+import { CacheEvents } from './events';
 import NativeMFECache from './NativeMFECache';
-import mitt from 'mitt';
-import type { BundleMetadata, CacheEventMap, MFECacheConfig } from './types';
+import type { BundleMetadata, MFECacheConfig } from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -27,7 +27,7 @@ export class BundleCacheLayer {
   private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
   // Event emitter for cache lifecycle events
-  readonly events = mitt<CacheEventMap>();
+  readonly events = new CacheEvents();
 
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
@@ -86,13 +86,12 @@ export class BundleCacheLayer {
       // No hash — skip cache, fetch fresh. Serializer will compute hashes
       // for next load.
       console.info(`${LOG_PREFIX} skip (no hash): ${bundleUrlNoQuery}`);
-      this.events.emit('bundle:load', {
+      this.events.emitBundleLoad(
         bundleUrl,
-        remoteName: this.inferRemoteName(bundleUrl),
-        status: 'skipped',
-        hash: undefined,
-        timestamp: Date.now(),
-      });
+        this.inferRemoteName(bundleUrl),
+        'skipped',
+        undefined
+      );
       return { status: 'skipped' };
     } catch (cacheError) {
       console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
@@ -112,7 +111,7 @@ export class BundleCacheLayer {
     }
 
     this.isCheckingUpdates = true;
-    this.events.emit('poll:start');
+    this.events.emitPollStart();
     let updated = 0;
     let checked = 0;
 
@@ -143,13 +142,7 @@ export class BundleCacheLayer {
 
             // Not cached — pre-download
             const remoteName = this.inferRemoteName(bundleUrl);
-            this.events.emit('update:available', {
-              bundleUrl,
-              remoteName,
-              oldHash: undefined,
-              newHash,
-              timestamp: Date.now(),
-            });
+            this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
             const destPath = await this.cacheManager!.getBundleDestPath(
               remoteName,
               bundleUrl
@@ -162,12 +155,7 @@ export class BundleCacheLayer {
                 bundleHash: sha256,
               });
               updated++;
-              this.events.emit('update:downloaded', {
-                bundleUrl,
-                remoteName,
-                newHash: sha256,
-                timestamp: Date.now(),
-              });
+              this.events.emitUpdateDownloaded(bundleUrl, remoteName, sha256);
             } catch (dlError) {
               console.warn(`${LOG_PREFIX} pre-download failed: ${bundleUrl}`, dlError);
               // Download failed for this bundle, continue with others
@@ -180,11 +168,7 @@ export class BundleCacheLayer {
       }
     } finally {
       this.isCheckingUpdates = false;
-      this.events.emit('poll:complete', {
-        checked,
-        updated,
-        timestamp: Date.now(),
-      });
+      this.events.emitPollComplete(checked, updated);
     }
 
     return { updated, checked };
@@ -231,13 +215,12 @@ export class BundleCacheLayer {
       console.info(`${LOG_PREFIX} cache hit: ${bundleUrl.split('?')[0]}`);
       this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
       await this.evalFromFile(cached.filePath);
-      this.events.emit('bundle:load', {
+      this.events.emitBundleLoad(
         bundleUrl,
-        remoteName: this.inferRemoteName(bundleUrl),
-        status: 'cache-hit',
-        hash: expectedHash,
-        timestamp: Date.now(),
-      });
+        this.inferRemoteName(bundleUrl),
+        'cache-hit',
+        expectedHash
+      );
       return { status: 'cache-hit' };
     }
 
@@ -252,13 +235,7 @@ export class BundleCacheLayer {
       } catch {
         /* ok */
       }
-      this.events.emit('bundle:load', {
-        bundleUrl,
-        remoteName,
-        status: 'skipped',
-        hash: undefined,
-        timestamp: Date.now(),
-      });
+      this.events.emitBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
       return { status: 'skipped' };
     }
 
@@ -267,13 +244,7 @@ export class BundleCacheLayer {
       bundleHash: sha256,
     });
     await this.evalFromFile(destPath);
-    this.events.emit('bundle:load', {
-      bundleUrl,
-      remoteName,
-      status: 'downloaded',
-      hash: sha256,
-      timestamp: Date.now(),
-    });
+    this.events.emitBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
     return { status: 'downloaded' };
   }
 

@@ -6,12 +6,15 @@ export { default as NativeMFECache } from './NativeMFECache';
 export type { NativeMFECacheSpec } from './NativeMFECache';
 export type {
   BundleMetadata,
-  BundleLoadEvent,
   BundleStatus,
   CachedBundleResult,
-  CacheEventMap,
   MFECacheConfig,
+} from './types';
+export { CacheEvents } from './events';
+export type {
+  BundleLoadEvent,
+  CacheEventMap,
   PollCompleteEvent,
   UpdateAvailableEvent,
   UpdateDownloadedEvent,
-} from './types';
+} from './events';

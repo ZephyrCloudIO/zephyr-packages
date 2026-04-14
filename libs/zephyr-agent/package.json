@@ -19,6 +19,11 @@
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./runtime-plugin": {
+      "import": "./dist/runtime-plugin/index.js",
+      "require": "./dist/runtime-plugin/index.js",
+      "types": "./dist/runtime-plugin/index.d.ts"
+    },
     "./node-persist": {
       "import": "./dist/node-persist/index.js",
       "require": "./dist/node-persist/index.js",

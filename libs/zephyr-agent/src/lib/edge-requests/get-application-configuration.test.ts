@@ -15,6 +15,7 @@ jest.mock('../node-persist/application-configuration');
 jest.mock('../logging', () => ({ ze_log: { app: jest.fn() } }));
 jest.mock('zephyr-edge-contract', () => ({
   ZE_API_ENDPOINT: jest.fn(() => 'https://api.zephyr.com'),
+  ZEPHYR_API_ENDPOINT: jest.fn(() => 'https://api-dev.zephyr-cloud.io'),
   ze_api_gateway: {
     application_config: '/api/v1/application-config',
   },
@@ -24,6 +25,7 @@ jest.mock('zephyr-edge-contract', () => ({
 describe('getApplicationConfiguration', () => {
   // Create mocks
   const mockMakeRequest = jest.spyOn(httpRequest, 'makeRequest');
+  const mockMakeHttpRequest = jest.spyOn(httpRequest, 'makeHttpRequest');
   const mockGetToken = getToken as jest.Mock;
   const mockIsTokenStillValid = isTokenStillValid as jest.Mock;
   const mockGetAppConfig = getAppConfig as jest.Mock;
@@ -80,6 +82,31 @@ describe('getApplicationConfiguration', () => {
 
     expect(mockMakeRequest).toHaveBeenCalled();
     expect(mockSaveAppConfig).toHaveBeenCalled();
+    expect(result).toMatchObject(newConfig);
+  });
+
+  it('should retry app config request with production gateway on 5xx error', async () => {
+    mockGetAppConfig.mockResolvedValue(null);
+
+    const newConfig = {
+      application_uid,
+      EDGE_URL: 'https://edge.zephyr.com',
+      jwt: 'new-jwt-token',
+    };
+
+    const transientError = Object.assign(new Error('503'), {
+      template: { status: 503 },
+      data: { status: 503 },
+    });
+
+    mockMakeRequest.mockResolvedValue([false, transientError]);
+
+    mockMakeHttpRequest.mockResolvedValue([true, null, { value: newConfig }]);
+
+    const result = await getApplicationConfiguration({ application_uid });
+
+    expect(mockMakeRequest).toHaveBeenCalledTimes(1);
+    expect(mockMakeHttpRequest).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject(newConfig);
   });
 

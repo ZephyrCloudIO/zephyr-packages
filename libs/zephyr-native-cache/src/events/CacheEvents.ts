@@ -4,6 +4,11 @@ import type { BundleLoadEvent, CacheEventMap } from './types';
 export class CacheEvents {
   private emitter = mitt<CacheEventMap>();
 
+  // bundle:load events fire during MF remote resolution, which happens before
+  // React mounts. UI hooks that subscribe later would miss the initial load
+  // statuses. This buffer lets late subscribers replay what already happened.
+  private loadEventBuffer: BundleLoadEvent[] = [];
+
   on<K extends keyof CacheEventMap>(event: K, handler: Handler<CacheEventMap[K]>): void {
     this.emitter.on(event, handler);
   }
@@ -12,19 +17,31 @@ export class CacheEvents {
     this.emitter.off(event, handler);
   }
 
+  /**
+   * Returns buffered bundle:load events and clears the buffer. Intended to be called once
+   * during UI initialization.
+   */
+  drainLoadEvents(): BundleLoadEvent[] {
+    const events = this.loadEventBuffer;
+    this.loadEventBuffer = [];
+    return events;
+  }
+
   emitBundleLoad(
     bundleUrl: string,
     remoteName: string,
     status: BundleLoadEvent['status'],
     hash: string | undefined
   ): void {
-    this.emitter.emit('bundle:load', {
+    const event: BundleLoadEvent = {
       bundleUrl,
       remoteName,
       status,
       hash,
       timestamp: Date.now(),
-    });
+    };
+    this.loadEventBuffer.push(event);
+    this.emitter.emit('bundle:load', event);
   }
 
   emitPollStart(): void {

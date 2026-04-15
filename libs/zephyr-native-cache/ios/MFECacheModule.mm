@@ -1,5 +1,6 @@
 #import "MFECacheModule.h"
 #import <React/RCTBridge+Private.h>
+#import <React/RCTReloadCommand.h>
 #import <React/RCTUtils.h>
 #import <CommonCrypto/CommonDigest.h>
 #import <jsi/jsi.h>
@@ -65,6 +66,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installJSI)
   runtime.global().setProperty(runtime, "__MFE_readFileSync", std::move(readFileSync));
 }
 
+
+#pragma mark - Restart
+
+RCT_EXPORT_METHOD(restart)
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    RCTTriggerReloadCommandListeners(@"MFECache restart");
+  });
+}
 
 #pragma mark - File System Operations (async bridge methods — unchanged)
 

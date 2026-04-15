@@ -1,5 +1,6 @@
 package com.modulefederation.metrocache
 
+import com.facebook.react.ReactApplication
 import com.facebook.react.bridge.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -35,6 +36,24 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
       }
     } catch (e: Exception) {
       false
+    }
+  }
+
+  // --- Restart ---
+
+  @ReactMethod
+  fun restart() {
+    val activity = currentActivity ?: return
+    val app = activity.application as? ReactApplication ?: return
+
+    activity.runOnUiThread {
+      try {
+        // New arch (bridgeless): ReactHost.reload()
+        app.reactHost?.reload("MFECache restart") ?: throw UnsupportedOperationException()
+      } catch (_: Exception) {
+        // Old arch fallback: recreate the React context via ReactInstanceManager
+        app.reactNativeHost.reactInstanceManager.recreateReactContextInBackground()
+      }
     }
   }
 

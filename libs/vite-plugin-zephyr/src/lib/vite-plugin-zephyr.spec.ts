@@ -99,7 +99,8 @@ describe('vite-plugin-zephyr', () => {
       loadVirtualRuntimePlugin?.('\0virtual:zephyr-mf-runtime-plugin')
     );
 
-    expect(code).toMatch(/runtime-plugin\/index\.js/);
+    expect(code).toContain('import * as runtimePluginModule from');
+    expect(code).toMatch(/runtime-plugin[\\/]index\.js/);
     expect(code).not.toContain("'zephyr-agent/runtime-plugin'");
     expect(code).not.toContain('"zephyr-agent/runtime-plugin"');
   });

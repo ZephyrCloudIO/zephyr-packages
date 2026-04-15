@@ -5,7 +5,7 @@
  * @module-federation/vite. Reuse the shared implementation from zephyr-agent.
  */
 
-import runtimePluginModule from 'zephyr-agent/runtime-plugin';
+import * as runtimePluginModule from 'zephyr-agent/runtime-plugin';
 
 const createZephyrRuntimePlugin =
   runtimePluginModule?.createZephyrRuntimePlugin ??

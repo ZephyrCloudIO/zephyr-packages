@@ -28,6 +28,10 @@ import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
+const RUNTIME_PLUGIN_BARE_SPECIFIER = 'zephyr-agent/runtime-plugin';
+const RUNTIME_PLUGIN_SPECIFIER_PATTERN = new RegExp(
+  `["']${RUNTIME_PLUGIN_BARE_SPECIFIER}["']`
+);
 
 export interface WithZephyrOptions {
   hooks?: ZephyrBuildHooks;
@@ -57,6 +61,14 @@ function loadModuleFederationPlugin() {
   }
 
   return moduleFederation.federation;
+}
+
+function resolveRuntimePluginSpecifier(): string {
+  try {
+    return require.resolve(RUNTIME_PLUGIN_BARE_SPECIFIER);
+  } catch {
+    return RUNTIME_PLUGIN_BARE_SPECIFIER;
+  }
 }
 
 function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
@@ -179,7 +191,13 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     load: async (id) => {
       if (id === RESOLVED_ZEPHYR_MF_RUNTIME_PLUGIN_ID) {
-        return readFile(getRuntimePluginPath(), 'utf8');
+        const runtimePluginTemplate = await readFile(getRuntimePluginPath(), 'utf8');
+        const runtimePluginSpecifier = resolveRuntimePluginSpecifier();
+
+        return runtimePluginTemplate.replace(
+          RUNTIME_PLUGIN_SPECIFIER_PATTERN,
+          JSON.stringify(runtimePluginSpecifier)
+        );
       }
 
       return null;

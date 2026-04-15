@@ -98,9 +98,10 @@ describe('vite-plugin-zephyr', () => {
     const code = await Promise.resolve(
       loadVirtualRuntimePlugin?.('\0virtual:zephyr-mf-runtime-plugin')
     );
+    const normalizedCode = code?.replace(/\\\\/g, '/');
 
     expect(code).toContain('import * as runtimePluginModule from');
-    expect(code).toMatch(/runtime-plugin[\\/]index\.js/);
+    expect(normalizedCode).toMatch(/runtime-plugin\/index\.js/);
     expect(code).not.toContain("'zephyr-agent/runtime-plugin'");
     expect(code).not.toContain('"zephyr-agent/runtime-plugin"');
   });

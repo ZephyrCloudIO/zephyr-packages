@@ -25,6 +25,7 @@ type BeforeInitArgs = Parameters<
 // --- Manifest types (subset used for hash extraction) ---
 
 interface ManifestAssetItem {
+  name?: string;
   hash?: string;
   assets?: { js?: { sync?: string[] } };
 }
@@ -82,6 +83,36 @@ const buildUrlForSplitBundle = (entry: string) => {
   return `${entry}?modulesOnly=true&runModule=false`;
 };
 
+/**
+ * Resolve the bundle paths for a manifest item.
+ *
+ * Dev vs production serves bundles from different locations:
+ * - Dev: Metro serves at source paths (e.g. "src/StatsCard.bundle")
+ *   so we use assets.js.sync with the extension swapped to .bundle.
+ * - Production: the MF Metro serializer writes exposed modules to
+ *   "exposed/<name>.bundle" and shared modules to "shared/<name>.bundle",
+ *   but the manifest's assets.js.sync still contains source paths.
+ *   Shared entries already have correct output paths in assets.js.sync.
+ */
+function resolveBundlePaths(
+  item: ManifestAssetItem,
+  section: 'exposes' | 'shared'
+): string[] {
+  if (__DEV__) {
+    const syncJs = item.assets?.js?.sync;
+    if (!syncJs?.length) return [];
+    return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
+  }
+
+  if (section === 'exposes' && item.name) {
+    return [`exposed/${item.name}.bundle`];
+  }
+
+  const syncJs = item.assets?.js?.sync;
+  if (!syncJs?.length) return [];
+  return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
+}
+
 function extractBundleHashes(
   manifest: Manifest,
   manifestUrl: string
@@ -94,28 +125,21 @@ function extractBundleHashes(
       ? rawPublicPath
       : manifestUrl.replace(/\/[^/]*$/, '');
 
-  function addHashes(items: ManifestAssetItem[] | undefined, isContainer: boolean) {
+  function addHashes(items: ManifestAssetItem[] | undefined, section: 'exposes' | 'shared') {
     if (!Array.isArray(items)) return;
     for (const item of items) {
-      const hash = item.hash;
-      const syncJs = item.assets?.js?.sync;
-      if (hash && syncJs) {
-        for (const assetPath of syncJs) {
-          const bundlePath = assetPath.replace(/\.\w+$/, '.bundle');
-          const bareUrl = resolvedPublicPath
-            ? `${resolvedPublicPath.replace(/\/+$/, '')}/${bundlePath.replace(/^\.?\//, '')}`
-            : bundlePath;
-          const fullUrl = isContainer
-            ? buildUrlForEntryBundle(bareUrl)
-            : buildUrlForSplitBundle(bareUrl);
-          hashes.set(fullUrl, hash);
-        }
+      if (!item.hash) continue;
+      for (const bundlePath of resolveBundlePaths(item, section)) {
+        const bareUrl = resolvedPublicPath
+          ? `${resolvedPublicPath.replace(/\/+$/, '')}/${bundlePath.replace(/^\.?\//, '')}`
+          : bundlePath;
+        hashes.set(buildUrlForSplitBundle(bareUrl), item.hash);
       }
     }
   }
 
-  addHashes(manifest?.exposes, false);
-  addHashes(manifest?.shared, false);
+  addHashes(manifest?.exposes, 'exposes');
+  addHashes(manifest?.shared, 'shared');
 
   const remoteEntry = manifest?.metaData?.remoteEntry;
   const containerHash = manifest?.metaData?.buildInfo?.hash;

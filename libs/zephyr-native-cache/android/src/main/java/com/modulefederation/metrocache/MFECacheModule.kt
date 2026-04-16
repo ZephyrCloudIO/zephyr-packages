@@ -179,6 +179,8 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun downloadFile(url: String, destPath: String, promise: Promise) {
     Thread {
+      val destFile = File(destPath)
+      val tempFile = File("$destPath.tmp")
       try {
         val request = Request.Builder().url(url).get().build()
         httpClient.newCall(request).execute().use { response ->
@@ -193,14 +195,13 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
             return@Thread
           }
 
-          val destFile = File(destPath)
           destFile.parentFile?.mkdirs()
 
           val digest = MessageDigest.getInstance("SHA-256")
           var bytesWritten = 0L
 
           body.byteStream().use { input ->
-            FileOutputStream(destFile).use { output ->
+            FileOutputStream(tempFile).use { output ->
               val buffer = ByteArray(8192)
               var read: Int
               while (input.read(buffer).also { read = it } != -1) {
@@ -209,6 +210,12 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
                 bytesWritten += read
               }
             }
+          }
+
+          destFile.delete()
+          if (!tempFile.renameTo(destFile)) {
+            tempFile.copyTo(destFile, overwrite = true)
+            tempFile.delete()
           }
 
           val sha256 = digest.digest().joinToString("") { "%02x".format(it) }
@@ -220,6 +227,7 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
           promise.resolve(result)
         }
       } catch (e: Exception) {
+        tempFile.delete()
         promise.reject("DOWNLOAD_ERROR", e.message, e)
       }
     }.start()

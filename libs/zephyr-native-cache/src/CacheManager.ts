@@ -68,7 +68,8 @@ export class CacheManager {
     try {
       const url = new URL(bundleUrl);
       const hostDir = url.host.replace(/:/g, '_');
-      const pathname = url.pathname.replace(/^\/+/, '');
+      // Strip trailing slashes — some URL paths end with "/" which creates a directory instead of a file
+      const pathname = url.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
       return `${this.bundleDir}/${hostDir}/${pathname}`;
     } catch {
       return `${this.bundleDir}/${remoteName}/${remoteName}.bundle`;

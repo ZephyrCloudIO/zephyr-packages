@@ -21,6 +21,12 @@ export class BundleCacheLayer {
   // Manifest sources for polling: manifestUrl → ManifestSource
   private manifestSources = new Map<string, ManifestSource>();
 
+  // Inflight dedup: prevents concurrent downloads of the same bundle URL
+  private inflightLoads = new Map<
+    string,
+    Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }>
+  >();
+
   // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
@@ -74,9 +80,26 @@ export class BundleCacheLayer {
 
     await this.ensureInitialized();
 
+    const key = bundleUrl.split('?')[0];
+
+    // Deduplicate concurrent loads of the same bundle
+    const inflight = this.inflightLoads.get(key);
+    if (inflight) return inflight;
+
+    const load = this.doLoadBundle(bundleUrl, key);
+    this.inflightLoads.set(key, load);
     try {
-      // Strip query params for hash lookup
-      const bundleUrlNoQuery = bundleUrl.split('?')[0];
+      return await load;
+    } finally {
+      this.inflightLoads.delete(key);
+    }
+  }
+
+  private async doLoadBundle(
+    bundleUrl: string,
+    bundleUrlNoQuery: string
+  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
+    try {
       const expectedHash = this.bundleHashMap[bundleUrlNoQuery] as string | undefined;
 
       if (expectedHash) {
@@ -136,29 +159,19 @@ export class BundleCacheLayer {
 
           for (const [bundleUrl, newHash] of newHashes) {
             checked++;
-            // Check if this URL is already cached
-            const existing = await this.cacheManager!.getCachedBundle(bundleUrl);
-            if (existing) continue;
 
-            // Not cached — pre-download
+            // Update hash map so subsequent loadBundle() calls use the latest hash
+            this.bundleHashMap[bundleUrl] = newHash;
+
             const remoteName = this.inferRemoteName(bundleUrl);
-            this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
-            const destPath = await this.cacheManager!.getBundleDestPath(
-              remoteName,
-              bundleUrl
+            const didUpdate = await this.cacheManager!.preDownloadBundle(
+              bundleUrl,
+              newHash
             );
-
-            try {
-              const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
-              await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
-                bundleUrl,
-                bundleHash: sha256,
-              });
+            if (didUpdate) {
               updated++;
-              this.events.emitUpdateDownloaded(bundleUrl, remoteName, sha256);
-            } catch (dlError) {
-              console.warn(`${LOG_PREFIX} pre-download failed: ${bundleUrl}`, dlError);
-              // Download failed for this bundle, continue with others
+              this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
+              this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
             }
           }
         } catch (manifestError) {

@@ -271,25 +271,24 @@ RCT_EXPORT_METHOD(downloadFile:(NSString *)urlString
       // Ensure destination directory exists
       NSString *dir = [destPath stringByDeletingLastPathComponent];
       NSFileManager *fm = [NSFileManager defaultManager];
-      if (![fm fileExistsAtPath:dir]) {
-        [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
-      }
+      [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
 
-      // Remove existing file at destPath if any (moveItem fails if dest exists)
-      if ([fm fileExistsAtPath:destPath]) {
-        [fm removeItemAtPath:destPath error:nil];
-      }
+      // Always remove destination first — moveItem/replaceItem fail if dest exists.
+      // No TOCTOU check; just remove unconditionally.
+      [fm removeItemAtPath:destPath error:nil];
 
-      // Move temp file to destination
       NSError *moveError = nil;
       BOOL moved = [fm moveItemAtURL:tempFileURL
                                toURL:[NSURL fileURLWithPath:destPath]
                                error:&moveError];
       if (!moved) {
-        reject(@"DOWNLOAD_ERROR",
-               [NSString stringWithFormat:@"Failed to move file: %@", moveError.localizedDescription],
-               moveError);
-        return;
+        // If the file now exists at dest, a concurrent download placed it — success.
+        if (![fm fileExistsAtPath:destPath]) {
+          reject(@"DOWNLOAD_ERROR",
+                 [NSString stringWithFormat:@"Failed to save bundle: %@", moveError.localizedDescription],
+                 moveError);
+          return;
+        }
       }
 
       resolve(@{

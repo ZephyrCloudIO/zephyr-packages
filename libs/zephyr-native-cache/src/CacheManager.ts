@@ -36,18 +36,6 @@ export class CacheManager {
     // Recover indexes from disk manifest
     await this.recoverFromDiskManifest();
 
-    // Check host build hash
-    const storedHostHash =
-      this.urlIndex.size > 0 ? (this as any)._hostBuildHash : undefined;
-    const currentHostHash = (globalThis as any).__MF_HOST_BUILD_HASH__;
-    if (storedHostHash && currentHostHash && storedHostHash !== currentHostHash) {
-      console.info(`${LOG_PREFIX} host build changed, invalidating all remote caches`);
-      await this.invalidateAllCaches();
-    }
-    if (currentHostHash) {
-      (this as any)._hostBuildHash = currentHostHash;
-    }
-
     // Perform LRU eviction on cold start
     await this.evictLRU();
 

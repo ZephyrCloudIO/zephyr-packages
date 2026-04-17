@@ -14,6 +14,3 @@ export {
   type MetroConfig,
   type MetroFederationConfig,
 } from './lib/zephyr-metro-command-wrapper';
-
-// Transformer (usually not imported directly but referenced by path)
-export { transform as zephyrTransformer } from './lib/zephyr-transformer';

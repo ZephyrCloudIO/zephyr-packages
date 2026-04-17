@@ -23,13 +23,7 @@
   },
   "peerDependencies": {
     "metro": ">=0.70.0",
-    "react-native": ">=0.60.0",
-    "zephyr-xpack-internal": ">=0.1.0"
-  },
-  "peerDependenciesMeta": {
-    "zephyr-xpack-internal": {
-      "optional": true
-    }
+    "react-native": ">=0.60.0"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",

@@ -86,9 +86,7 @@ export function mutateMfConfig(
       // expression) breaks that serializer with "Unterminated string
       // constant". Metro accepts the plain `name@url` form directly.
       remotes[remote_name] = resolved_dep.remote_entry_url;
-      ze_log.mf(
-        `Rewrote remote '${remote_name}' → ${resolved_dep.remote_entry_url}`
-      );
+      ze_log.mf(`Rewrote remote '${remote_name}' → ${resolved_dep.remote_entry_url}`);
     }
   });
 

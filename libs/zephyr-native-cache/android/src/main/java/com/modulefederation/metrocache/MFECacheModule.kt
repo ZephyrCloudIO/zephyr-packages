@@ -7,37 +7,13 @@ import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class MFECacheModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
-  companion object {
-    init {
-      System.loadLibrary("mfecache")
-    }
-  }
-
-  private external fun nativeInstallJSI(runtimePtr: Long)
-
   override fun getName(): String = "MFECache"
-
-  // Called from JS: NativeMFECache.installJSI() — synchronous.
-  // At this point runtime is guaranteed ready (JS is already running).
-  @ReactMethod(isBlockingSynchronousMethod = true)
-  fun installJSI(): Boolean {
-    return try {
-      val jsContext = reactApplicationContext.javaScriptContextHolder?.get() ?: 0L
-      if (jsContext != 0L) {
-        nativeInstallJSI(jsContext)
-        true
-      } else {
-        false
-      }
-    } catch (e: Exception) {
-      false
-    }
-  }
 
   // --- Restart ---
 
@@ -180,7 +156,9 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
   fun downloadFile(url: String, destPath: String, promise: Promise) {
     Thread {
       val destFile = File(destPath)
-      val tempFile = File("$destPath.tmp")
+      // Unique temp name per-call — avoids two concurrent downloads to the same
+      // destPath clobbering each other's .tmp file.
+      val tempFile = File("$destPath.${UUID.randomUUID()}.tmp")
       try {
         val request = Request.Builder().url(url).get().build()
         httpClient.newCall(request).execute().use { response ->

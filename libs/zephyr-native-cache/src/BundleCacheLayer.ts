@@ -42,11 +42,6 @@ export class BundleCacheLayer {
     this.bundleHashMap =
       (globalThis as any).__MFE_BUNDLE_HASHES__ ??
       ((globalThis as any).__MFE_BUNDLE_HASHES__ = {});
-
-    // Install JSI bindings if available (provides __MFE_readFileSync)
-    if (NativeMFECache && typeof (NativeMFECache as any).installJSI === 'function') {
-      (NativeMFECache as any).installJSI();
-    }
   }
 
   // --- Registration (called by bundler integration layer) ---
@@ -275,17 +270,14 @@ export class BundleCacheLayer {
     await this.initPromise;
   }
 
-  /** Read bundle file and eval its source code */
-  private evalFromFile(filePath: string): void | Promise<void> {
-    if (typeof (globalThis as any).__MFE_readFileSync === 'function') {
-      const source = (globalThis as any).__MFE_readFileSync(filePath);
-      eval(source);
-    } else {
-      // Fallback: async read (less ideal — introduces a microtask gap)
-      return NativeMFECache!.readFile(filePath, 'utf8').then((source: string) => {
-        eval(source);
-      });
-    }
+  /**
+   * Read bundle file and eval its source code. All callers `await` this, so the microtask
+   * gap from the async read is not user-visible.
+   */
+  private async evalFromFile(filePath: string): Promise<void> {
+    const source = await NativeMFECache!.readFile(filePath, 'utf8');
+    // eslint-disable-next-line no-eval
+    eval(source);
   }
 
   /** Infer a remote name from a bundle URL for storage path generation */

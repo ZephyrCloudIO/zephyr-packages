@@ -1,11 +1,7 @@
 #import "MFECacheModule.h"
-#import <React/RCTBridge+Private.h>
 #import <React/RCTReloadCommand.h>
 #import <React/RCTUtils.h>
 #import <CommonCrypto/CommonDigest.h>
-#import <jsi/jsi.h>
-
-using namespace facebook;
 
 @implementation MFECacheModule
 
@@ -14,58 +10,6 @@ RCT_EXPORT_MODULE(MFECache)
 + (BOOL)requiresMainQueueSetup {
   return NO;
 }
-
-#pragma mark - JSI Installation (JS-triggered, like react-native-fast-tflite)
-
-/// Called from JS: NativeMFECache.installJSI() — synchronous.
-/// At this point bridge + runtime are guaranteed to be ready (JS is already running).
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installJSI)
-{
-  RCTBridge *bridge = [RCTBridge currentBridge];
-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)bridge;
-  if (!cxxBridge || !cxxBridge.runtime) {
-    return @(NO);
-  }
-
-  auto &runtime = *reinterpret_cast<jsi::Runtime *>(cxxBridge.runtime);
-  [self installReadFileSync:runtime];
-  return @(YES);
-}
-
-/// Install global.__MFE_readFileSync(filePath) — synchronous JSI function.
-/// Reads file from disk and returns content as a JS string, all on the JS thread.
-- (void)installReadFileSync:(jsi::Runtime &)runtime {
-  auto readFileSync = jsi::Function::createFromHostFunction(
-    runtime,
-    jsi::PropNameID::forAscii(runtime, "__MFE_readFileSync"),
-    1, // 1 argument: filePath
-    [](jsi::Runtime &rt,
-       const jsi::Value &thisVal,
-       const jsi::Value *args,
-       size_t count) -> jsi::Value {
-
-      if (count < 1 || !args[0].isString()) {
-        throw jsi::JSError(rt, "__MFE_readFileSync: expected (filePath: string)");
-      }
-
-      std::string filePath = args[0].asString(rt).utf8(rt);
-
-      // Synchronous file read on JS thread
-      NSString *nsPath = [NSString stringWithUTF8String:filePath.c_str()];
-      NSData *data = [NSData dataWithContentsOfFile:nsPath];
-      if (!data) {
-        throw jsi::JSError(rt, std::string("__MFE_readFileSync: file not found: ") + filePath);
-      }
-
-      // Return file content as JS string
-      auto content = std::string(reinterpret_cast<const char *>(data.bytes), data.length);
-      return jsi::String::createFromUtf8(rt, content);
-    }
-  );
-
-  runtime.global().setProperty(runtime, "__MFE_readFileSync", std::move(readFileSync));
-}
-
 
 #pragma mark - Restart
 
@@ -76,7 +20,7 @@ RCT_EXPORT_METHOD(restart)
   });
 }
 
-#pragma mark - File System Operations (async bridge methods — unchanged)
+#pragma mark - File System Operations
 
 RCT_EXPORT_METHOD(writeFile:(NSString *)path
                   content:(NSString *)content

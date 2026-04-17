@@ -1,6 +1,7 @@
 export { emitDeploymentDone, onDeploymentDone } from './lifecycle-events';
 
 export {
+  createMfRuntimeCode,
   extractFederatedDependencyPairs,
   extractLibraryType,
   makeCopyOfModuleFederationOptions,

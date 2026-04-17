@@ -16,6 +16,7 @@ import {
 } from './internal/metro-build-stats';
 import { mutateMfConfig } from './internal/mutate-mf-config';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
+import { resolveMfManifestPath } from './internal/resolve-mf-manifest';
 import type { OutputAsset } from './internal/types';
 
 export interface ZephyrCommandWrapperConfig {
@@ -57,7 +58,8 @@ export class ZephyrMetroPlugin {
       mutateMfConfig(
         this.zephyr_engine,
         this.#config.mfConfig,
-        resolved_dependency_pairs
+        resolved_dependency_pairs,
+        { useManifestEntry: true }
       );
     }
 
@@ -159,6 +161,7 @@ export class ZephyrMetroPlugin {
     Object.assign(minimal_build_stats, {
       name: this.#config.mfConfig?.name || this.zephyr_engine.applicationProperties.name,
       remote: this.#config.mfConfig?.filename || 'remoteEntry.js',
+      mf_manifest: resolveMfManifestPath(this.#config.mfConfig?.manifest),
       remotes: this.#config.mfConfig?.remotes
         ? Object.keys(this.#config.mfConfig.remotes)
         : [],

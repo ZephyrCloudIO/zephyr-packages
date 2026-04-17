@@ -19,6 +19,7 @@ export function convertResolvedDependencies(
         name: dep.name,
         application_uid: dep.application_uid,
         remote_entry_url: dep.remote_entry_url,
+        manifest_url: dep.manifest_url,
         default_url: dep.default_url,
         library_type: dep.library_type,
       },
@@ -61,6 +62,7 @@ export function createManifestContent(
       name: dep.name,
       application_uid: dep.application_uid,
       remote_entry_url: dep.remote_entry_url,
+      manifest_url: dep.manifest_url,
       default_url: dep.default_url,
       library_type: dep.library_type,
     };

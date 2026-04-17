@@ -11,6 +11,7 @@ export interface ZeResolvedDependency {
   application_uid: string;
   default_url: string;
   remote_entry_url: string;
+  manifest_url?: string;
   library_type: string;
   platform?: string;
 }

@@ -162,45 +162,44 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
     Thread {
       try {
         val request = Request.Builder().url(url).get().build()
-        val response = httpClient.newCall(request).execute()
+        httpClient.newCall(request).execute().use { response ->
 
-        if (!response.isSuccessful) {
-          promise.reject("DOWNLOAD_ERROR", "HTTP ${response.code}")
-          response.close()
-          return@Thread
-        }
+          if (!response.isSuccessful) {
+            promise.reject("DOWNLOAD_ERROR", "HTTP ${response.code}")
+            return@Thread
+          }
 
-        val body = response.body ?: run {
-          promise.reject("DOWNLOAD_ERROR", "Empty response body")
-          response.close()
-          return@Thread
-        }
+          val body = response.body ?: run {
+            promise.reject("DOWNLOAD_ERROR", "Empty response body")
+            return@Thread
+          }
 
-        val destFile = File(destPath)
-        destFile.parentFile?.mkdirs()
+          val destFile = File(destPath)
+          destFile.parentFile?.mkdirs()
 
-        val digest = MessageDigest.getInstance("SHA-256")
-        var bytesWritten = 0L
+          val digest = MessageDigest.getInstance("SHA-256")
+          var bytesWritten = 0L
 
-        body.byteStream().use { input ->
-          FileOutputStream(destFile).use { output ->
-            val buffer = ByteArray(8192)
-            var read: Int
-            while (input.read(buffer).also { read = it } != -1) {
-              output.write(buffer, 0, read)
-              digest.update(buffer, 0, read)
-              bytesWritten += read
+          body.byteStream().use { input ->
+            FileOutputStream(destFile).use { output ->
+              val buffer = ByteArray(8192)
+              var read: Int
+              while (input.read(buffer).also { read = it } != -1) {
+                output.write(buffer, 0, read)
+                digest.update(buffer, 0, read)
+                bytesWritten += read
+              }
             }
           }
-        }
 
-        val sha256 = digest.digest().joinToString("") { "%02x".format(it) }
+          val sha256 = digest.digest().joinToString("") { "%02x".format(it) }
 
-        val result = Arguments.createMap().apply {
-          putString("sha256", sha256)
-          putDouble("bytesWritten", bytesWritten.toDouble())
+          val result = Arguments.createMap().apply {
+            putString("sha256", sha256)
+            putDouble("bytesWritten", bytesWritten.toDouble())
+          }
+          promise.resolve(result)
         }
-        promise.resolve(result)
       } catch (e: Exception) {
         promise.reject("DOWNLOAD_ERROR", e.message, e)
       }

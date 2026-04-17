@@ -160,8 +160,9 @@ export class BundleCacheLayer {
           for (const [bundleUrl, newHash] of newHashes) {
             checked++;
 
-            // Update hash map so subsequent loadBundle() calls use the latest hash
-            this.bundleHashMap[bundleUrl] = newHash;
+            // Update hash map so subsequent loadBundle() calls use the latest hash.
+            // loadBundle() looks up by URL-without-query, so key consistently here too.
+            this.bundleHashMap[bundleUrl.split('?')[0]] = newHash;
 
             const remoteName = this.inferRemoteName(bundleUrl);
             const didUpdate = await this.cacheManager!.preDownloadBundle(

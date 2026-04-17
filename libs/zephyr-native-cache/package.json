@@ -20,6 +20,7 @@
     "typecheck": "tsc --noEmit",
     "patch-version": "pnpm version"
   },
+  "private": true,
   "files": [
     "src/",
     "lib/",
@@ -30,10 +31,6 @@
     "zephyr-native-cache.podspec",
     "!**/__tests__"
   ],
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
   "peerDependencies": {
     "react": ">=19.0.0",
     "react-native": ">=0.79.0"

@@ -2,7 +2,7 @@
   "name": "zephyr-native-cache",
   "version": "0.0.1",
   "description": "Native caching module for Module Federation Metro bundles",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
   "react-native": "src/index.ts",

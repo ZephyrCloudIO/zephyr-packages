@@ -7,6 +7,8 @@ import { logFn } from '../logging/ze-log-event';
 import { find_nearest_package_json } from './find-nearest-package-json';
 import type { ZePackageJson } from './ze-package-json.type';
 import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
+
+const DEFAULT_PACKAGE_VERSION = '0.0.0';
 /**
  * Retrieves and parses the package.json file from the given context path or current
  * working directory. The function will search for the nearest package.json file in the
@@ -77,17 +79,23 @@ export async function getPackageJson(
 
     // Validate required fields
     if (!parsed_package_json.name) {
-      throw new ZephyrError(
-        ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION,
-        `Missing 'name' field in package.json at: ${packageJsonPath}`
-      );
+      throw new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME, {
+        path: packageJsonPath,
+        data: { path: packageJsonPath },
+      });
     }
 
     if (!parsed_package_json.version) {
-      throw new ZephyrError(
-        ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION,
-        `Missing 'version' field in package.json at: ${packageJsonPath}`
-      );
+      parsed_package_json.version = DEFAULT_PACKAGE_VERSION;
+      const warning = new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION, {
+        path: packageJsonPath,
+        defaultVersion: DEFAULT_PACKAGE_VERSION,
+        data: {
+          path: packageJsonPath,
+          defaultVersion: DEFAULT_PACKAGE_VERSION,
+        },
+      });
+      logFn('warn', `${warning.code}: ${warning.message}`);
     }
 
     const zephyr_dependencies = parsed_package_json['zephyr:dependencies'];

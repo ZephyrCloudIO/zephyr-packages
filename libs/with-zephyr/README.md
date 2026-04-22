@@ -1,6 +1,6 @@
 # with-zephyr
 
-A codemod tool that automatically adds the `withZephyr` plugin to bundler configurations in your project.
+A codemod tool that automatically adds Zephyr integration to supported project configurations.
 
 ## What is Zephyr?
 
@@ -34,19 +34,22 @@ bunx with-zephyr
 
 ## Supported Bundlers
 
-This codemod supports **12+ bundlers** with their respective Zephyr plugins:
+This codemod supports **15+ bundlers/framework configs** with their respective Zephyr integrations:
 
 - **Webpack** ([`zephyr-webpack-plugin`](https://www.npmjs.com/package/zephyr-webpack-plugin))
 - **Rspack** ([`zephyr-rspack-plugin`](https://www.npmjs.com/package/zephyr-rspack-plugin))
 - **Vite** ([`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
+- **Slidev** (scaffolded to Vite using [`vite-plugin-zephyr`](https://www.npmjs.com/package/vite-plugin-zephyr))
 - **Rollup** ([`rollup-plugin-zephyr`](https://www.npmjs.com/package/rollup-plugin-zephyr))
 - **Rolldown** ([`zephyr-rolldown-plugin`](https://www.npmjs.com/package/zephyr-rolldown-plugin))
 - **Astro** ([`zephyr-astro-integration`](https://www.npmjs.com/package/zephyr-astro-integration))
+- **Nuxt** ([`zephyr-nuxt-module`](https://www.npmjs.com/package/zephyr-nuxt-module))
 - **Modern.js** ([`zephyr-modernjs-plugin`](https://www.npmjs.com/package/zephyr-modernjs-plugin))
 - **RSPress** ([`zephyr-rspress-plugin`](https://www.npmjs.com/package/zephyr-rspress-plugin))
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
 - **RSBuild** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
 - **RSLib** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
+- **Metro** (React Native) ([`zephyr-metro-plugin`](https://www.npmjs.com/package/zephyr-metro-plugin))
 - **Re.Pack** (React Native) ([`zephyr-repack-plugin`](https://www.npmjs.com/package/zephyr-repack-plugin))
 
 ## Installation
@@ -84,8 +87,17 @@ This will:
 
 1. Search for bundler configuration files in the current directory and subdirectories
 2. Detect which bundler each config file is for
-3. Add the appropriate `withZephyr` plugin configuration
-4. Add the necessary import/require statements
+3. Add the appropriate Zephyr integration
+4. Add the necessary import/require statements when applicable
+
+For **Next.js** apps (detected via `next` in `package.json`), when no `vite.config.ts`
+exists it will also scaffold a Vinext setup:
+
+1. Create `vite.config.ts` with `vinext`, `@cloudflare/vite-plugin`, and `withZephyr`
+2. Create `wrangler.jsonc` for `vinext/server/app-router-entry`
+3. Replace `scripts.dev/build/start` with `vinext dev/build/start`
+4. Set `package.json` `type` to `module` for ESM Vite/Vinext config loading
+5. Ensure required Vinext deps are installed (`vinext`, `@vitejs/plugin-rsc`, etc.)
 
 ### Command Line Options
 
@@ -114,7 +126,7 @@ bunx with-zephyr --bundlers vite rollup
 - `-d, --dry-run` - Show what would be changed without modifying files
 - `-b, --bundlers <bundlers...>` - Only process specific bundlers
 
-> The codemod automatically installs missing Zephyr plugins using your detected package manager (npm/yarn/pnpm/bun). In `--dry-run` it will only list what would be installed.
+> The codemod stages missing packages in `package.json`, applies file changes, then runs one install pass with your detected package manager (npm/yarn/pnpm/bun). In `--dry-run` it only lists what would be installed.
 
 ## Examples
 
@@ -210,14 +222,15 @@ The tool automatically detects your package manager by checking for:
 
 ### Supported Package Managers
 
-- **npm**: `npm install --save-dev <package>`
-- **yarn**: `yarn add --dev <package>`
-- **pnpm**: `pnpm add --save-dev <package>`
-- **bun**: `bun add --dev <package>`
+- **npm**: `npm install`
+- **yarn**: `yarn install`
+- **pnpm**: `pnpm install`
+- **bun**: `bun install`
 
 ### Package Installation Behavior
 
 - `npx with-zephyr` will install any required Zephyr plugins that are missing.
+- The codemod applies config/script/file changes first, then installs dependencies once.
 - `npx with-zephyr --dry-run` will list the packages it would install without making changes.
 
 ## Configuration File Detection
@@ -230,10 +243,12 @@ The codemod automatically detects and processes these configuration files:
 - `rollup.config.js/ts/mjs`
 - `rolldown.config.js/ts/mjs`
 - `astro.config.js/ts/mjs/mts`
+- `nuxt.config.js/ts/mjs/mts`
 - `modern.config.js/ts/mjs`
 - `rspress.config.js/ts/mjs`
 - `rsbuild.config.js/ts/mjs`
 - `rslib.config.js/ts/mjs`
+- `metro.config.js/ts/mjs/cjs`
 - `.parcelrc/.parcelrc.json`
 
 ## Integration Patterns
@@ -245,6 +260,10 @@ The codemod recognizes and handles various configuration patterns:
 - `composePlugins()` calls (Nx style)
 - `plugins: []` arrays
 - Direct `module.exports` assignments
+
+### Metro (React Native)
+
+- `module.exports = ...` config exports (wrapped with async `withZephyr` call)
 
 ### Vite/Rolldown
 
@@ -264,6 +283,11 @@ The codemod recognizes and handles various configuration patterns:
 
 - JSON configuration with `reporters` array
 
+### Nuxt
+
+- `defineNuxtConfig()` modules arrays
+- Plain `export default {}` config objects
+
 ## Safety Features
 
 - **Dry run mode**: Preview changes before applying them
@@ -281,7 +305,7 @@ The codemod recognizes and handles various configuration patterns:
 
 ### Manual Configuration
 
-If the codemod doesn't work for your specific configuration, you can manually add the withZephyr plugin:
+If the codemod doesn't work for your specific configuration, you can manually add the Zephyr integration:
 
 1. Install the appropriate plugin package
 2. Import/require the `withZephyr` function
@@ -319,7 +343,8 @@ node ./libs/with-zephyr/dist/index.js --bundlers repack /path/to/react-native-pr
 ```
 src/
 ├── bundlers/          # Per-bundler configs + registry
-├── transformers/      # AST transforms (imports, plugin arrays, wrappers, etc.)
+├── engine/            # ast-grep execution layer
+├── operations.ts      # Ordered operation handlers per bundler
 ├── package-manager.ts # Package management utilities
 ├── index.ts           # CLI entry point and orchestration
 └── types.ts           # Shared types

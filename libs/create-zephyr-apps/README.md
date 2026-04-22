@@ -39,62 +39,79 @@ Run the command without arguments to start the interactive mode:
 npx create-zephyr-apps@latest
 ```
 
-This will prompt you to choose:
-
-- Project name
-- Template type (React, Vue, etc.)
-- Build tool (Vite, Webpack, Rspack, etc.)
-- Additional configurations
-
-### Direct Usage
-
-You can also specify options directly:
-
-```bash
-npx create-zephyr-apps@latest my-app --template vite-react-ts
+```
+┌  Bootstrap your project using Zephyr!
+│
+◇  Zephyr Cloud
+│  The only sane way to do micro-frontends
+│  https://docs.zephyr-cloud.io/
+│
+◇  Where should we create your project?
+│  ./react-vite
+│
+◇  What type of project you are creating?
+│  Web
+│
+◇  Pick a template:
+│  React + Rspack
+│
+◇  Project successfully created at react-vite!
+│
+◇  Would you like to initialize a new Git repository?
+│  Yes
+│
+◇  Run the application!
+│  cd ./react-vite
+│  pnpm install
+│  pnpm run build
+│
+◇  Next steps.
+│  - Discord
+│  - Documentation
+│  - Open an issue
+└
 ```
 
 ## Available Templates
 
-- **angular-vite** - Angular app with Vite
-- **modernjs-app** - A simple ModernJS app
-- **qwik-1.5** - A Qwik v1.5 app using Vite as the bundler
-- **react-airbnb-clone** - Airbnb clone with React, TypeScript, and Module Federation
-- **react-rspack-tractor-2.0** - React application using Rspack as the bundler and Tractor 2.0 as the module federation manager
-- **react-vite-mf** - Federated React apps powered by Vite, Webpack and Rspack
-- **rolldown-react** - A React example using Rolldown
-- **rspack-project** - A simple application build by Rspack
-- **solid** - A Solid app using Vite as the bundler
-- **svelte** - A Svelte app using Vite as the bundler
-- **turbo-rspack-mf** - A monorepo using Turborepo, React, and Rspack as the bundler
-- **vite-react-ts** - A simple React application build by Vite
+### Bundlers
 
-## Getting Started
+- **react-vite** - React app powered by Vite
+- **react-rspack** - React application built with Rspack
+- **parcel-react** - React application using Parcel
+- **rolldown-react** - React example using Rolldown
+- **rollup-react** - React application using Rollup
+- **tsdown** - React component library starter with tsdown
 
-After creating your application:
+### Module Federation
 
-1. Navigate to your project directory:
+- **airbnb-clone** - Airbnb clone with React, TypeScript, and Module Federation
+- **react-rsbuild** - React application with Module Federation using Rsbuild
+- **react-vite-rspack-webpack** - Federated React apps powered by Vite, Webpack, and Rspack
+- **react-webpack** - React application with Module Federation using Webpack
+- **tractor-sample** - Micro-frontend sample with Rspack and Module Federation
 
-   ```bash
-   cd my-app
-   ```
+### Frameworks
 
-2. Install dependencies:
+- **angular-vite** - Angular app powered by Vite
+- **astro** - Astro static site generator example
+- **ember-vite** - Ember application using Vite
+- **modernjs** - ModernJS app
+- **rspress** - Rspress static site generator example
+- **solid-vite** - Solid app using Vite
+- **svelte-vite** - Svelte app using Vite
+- **tanstack-start** - TanStack Start application with Vite
 
-   ```bash
-   npm install
-   ```
+### Server
 
-3. Start the development server:
+- **nitro-hono** - Hono running on Nitro server with Zephyr Cloud deployment
+- **nitro-elysia** - Elysia running on Nitro server with Zephyr Cloud deployment
+- **nitro-hello-world** - Minimal Nitro server with Zephyr Cloud deployment
 
-   ```bash
-   npm run dev
-   ```
+### Build Systems
 
-4. Build for production:
-   ```bash
-   npm run build
-   ```
+- **nx-rspack-mf** - Monorepo using NX, React, and Rspack with Module Federation
+- **turborepo-rspack-mf** - Monorepo using Turborepo, React, and Rspack with Module Federation
 
 ## Features
 
@@ -104,6 +121,7 @@ After creating your application:
 - 🏗️ Module Federation ready templates
 - 📱 React Native support with Re.Pack
 - 🎯 TypeScript support out of the box
+- 🌐 Server-side templates (Nitro)
 
 ## Contributing
 

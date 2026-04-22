@@ -133,6 +133,14 @@ export interface ZephyrBuildStats {
   ze_envs_hash?: string;
   /** Resolved zephyr dependencies */
   zephyrDependencies?: Record<string, ZephyrDependency>;
+  /** Bundler plugin type (e.g. 'webpack', 'vite', 'rspack') */
+  builder?: string;
+  /** Version of the zephyr plugin (zephyr-agent) */
+  plugin_version?: string;
+  /** Version of the edge worker that handled deployment forwarding */
+  worker_version?: string;
+  /** When true, plugin waits for terminal deployment status before finishing. */
+  waitForCompletion?: boolean;
 }
 
 enum DeploymentIntegrationPlatform {

@@ -95,6 +95,13 @@ function getLibPackagePaths() {
     .filter((pkgPath) => fs.existsSync(pkgPath));
 }
 
+/** Runs the high severity audit gate before making version changes */
+function runHighSeverityAudit() {
+  console.log('🔒 Running security audit (high severity)...');
+  exec('pnpm audit --audit-level high');
+  console.log('✅ Security audit passed');
+}
+
 /** Main function */
 function main() {
   const bumpType = process.argv[2] || 'patch';
@@ -116,6 +123,9 @@ function main() {
 
   const currentBranch = getCurrentBranch();
   console.log(`📍 Current branch: ${currentBranch}`);
+
+  // Fail fast before mutating versions or creating release artifacts.
+  runHighSeverityAudit();
 
   // Read root package.json
   const rootPackagePath = path.join(__dirname, '..', 'package.json');
@@ -161,14 +171,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
   console.log('💾 Creating commit...');
   exec(`git commit -m "${commitMessage}"`);
 
-  // Create tag
-  console.log(`🏷️  Creating tag: v${newVersion}`);
-  exec(`git tag v${newVersion}`);
-
-  // Push branch and tag
+  // Push branch
   console.log('⬆️  Pushing changes...');
   exec(`git push origin ${branchName}`);
-  exec(`git push origin v${newVersion}`);
 
   // Create PR if we created a new branch
   if (shouldCreatePR) {
@@ -177,11 +182,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
     const prBody = `## Summary
 • Bump ${bumpType} version from ${currentVersion} to ${newVersion}
 • Update root package.json and all lib package.json files
-• Add version tag v${newVersion}
-
 ## Test plan
 - [ ] Verify all package.json files have correct version
-- [ ] Verify git tag is created
 - [ ] Verify no breaking changes
 
 🤖 Generated with [Claude Code](https://claude.ai/code)`;
@@ -201,7 +203,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
 
   console.log('🎉 Version bump completed successfully!');
   console.log(`📦 New version: ${newVersion}`);
-  console.log(`🏷️  Tag: v${newVersion}`);
   console.log(`🌿 Branch: ${branchName}`);
 }
 

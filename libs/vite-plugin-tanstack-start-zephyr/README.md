@@ -1,15 +1,18 @@
 # vite-plugin-tanstack-start-zephyr
 
+![Vite compatibility](https://registry.vite.dev/api/badges?package=vite-plugin-tanstack-start-zephyr&tool=vite)
+
 Vite plugin for deploying TanStack Start applications to Zephyr with SSR support.
 
 ## Overview
 
-This plugin automatically bundles and uploads your TanStack Start application to Zephyr's edge network during the build process. It supports server-side rendering (SSR) and enables multiple versions of your application to run simultaneously.
+This plugin runs after TanStack Start finishes building, packages the `dist/`
+output, and uploads the server and client assets to Zephyr for SSR deployment.
 
 ## Installation
 
 ```bash
-pnpm add vite-plugin-tanstack-start-zephyr
+pnpm add -D vite-plugin-tanstack-start-zephyr
 ```
 
 ## Usage
@@ -18,45 +21,38 @@ Add the plugin to your `vite.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vite';
-import { TanStackStartVite } from '@tanstack/start/vite';
-import { withZephyrTanstackStart } from 'vite-plugin-tanstack-start-zephyr';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import { withZephyr } from 'vite-plugin-tanstack-start-zephyr';
 
 export default defineConfig({
-  plugins: [
-    TanStackStartVite(),
-    withZephyrTanstackStart({
-      appUid: 'my-app-uid',
-      environment: 'production',
-      apiEndpoint: 'https://api.zephyrcloud.app',
-      apiKey: process.env.ZEPHYR_API_KEY,
-    }),
-  ],
+  plugins: [tanstackStart(), withZephyr()],
 });
 ```
 
 ## Configuration
 
-### Options
+The plugin delegates Zephyr app detection and auth to `zephyr-agent`. In most
+projects, `withZephyr()` is enough.
 
-| Option        | Type     | Required | Description                                    |
-| ------------- | -------- | -------- | ---------------------------------------------- |
-| `appUid`      | `string` | Yes      | Your application's unique identifier           |
-| `environment` | `string` | No       | Deployment environment (default: 'production') |
-| `apiEndpoint` | `string` | No       | Zephyr API endpoint                            |
-| `apiKey`      | `string` | No       | API key for authentication                     |
+### Plugin options
 
-### Environment Variables
+| Option       | Type     | Required | Description                                                          |
+| ------------ | -------- | -------- | -------------------------------------------------------------------- |
+| `outputDir`  | `string` | No       | Build output root. Defaults to `dist/`.                              |
+| `entrypoint` | `string` | No       | Server entry relative to `outputDir`. Defaults to `server/index.js`. |
 
-You can also configure the plugin using environment variables:
+Example with overrides:
 
-- `ZE_APP_UID` - Application UID
-- `ZE_API_ENDPOINT` - API endpoint
-- `ZE_API_KEY` - API key
-- `ZE_ENVIRONMENT` - Deployment environment
+```typescript
+withZephyr({
+  outputDir: 'dist',
+  entrypoint: 'server/index.js',
+});
+```
 
 ## How It Works
 
-1. **Build**: TanStack Start builds your app to `.output/` directory
+1. **Build**: TanStack Start writes its output to `dist/`
 2. **Extract**: Plugin collects server modules and client assets
 3. **Bundle**: Server code is bundled with all dependencies
 4. **Upload**: Both server and client files are uploaded to Zephyr
@@ -68,7 +64,7 @@ You can also configure the plugin using environment variables:
 The plugin processes TanStack Start's build output:
 
 ```
-.output/
+dist/
 ├── server/           # Server-side code
 │   ├── index.js     # Main entry point
 │   └── assets/      # Server bundles
@@ -117,13 +113,13 @@ pnpm link --global vite-plugin-tanstack-start-zephyr
 
 ## Requirements
 
-- Node.js 18+
+- Node.js version supported by Vite 7 and TanStack Start 1.x
 - TanStack Start 1.0+
-- Vite 5+
+- Vite 7+
 
 ## License
 
-MIT
+Apache-2.0
 
 ## Related
 

@@ -5,6 +5,113 @@ packages:
   - e2e/**
   - '!**/dist/**'
 
+catalogs:
+  babel:
+    '@babel/core': ^7.26.10
+    '@babel/preset-react': ^7.26.3
+    '@babel/runtime': ^7.26.10
+  esbuild:
+    esbuild: ^0.27.0
+  eslint:
+    '@eslint/compat': ^1.2.7
+    '@eslint/eslintrc': ^3.3.0
+    '@eslint/js': ^9.22.0
+    '@typescript-eslint/eslint-plugin': ^8.27.0
+    '@typescript-eslint/parser': ^8.27.0
+    '@typescript-eslint/utils': ^8.27.0
+    eslint: ^9.22.0
+    eslint-config-prettier: ^10.1.1
+    eslint-plugin-import: 2.32.0
+    eslint-plugin-jsx-a11y: 6.10.2
+    eslint-plugin-react: ^7.37.4
+    eslint-plugin-react-hooks: ^5.2.0
+    eslint-plugin-react-refresh: ^0.5.0
+    typescript-eslint: ^8.27.0
+  modernjs:
+    '@modern-js/app-tools': ^2.70.1
+    '@modern-js/plugin-ssg': ^2.70.1
+    '@modern-js/runtime': ^2.70.1
+    '@modern-js/tsconfig': ^2.70.1
+  module-federation:
+    '@module-federation/automatic-vendor-federation': ^1.2.1
+    '@module-federation/enhanced': ^0.21.0
+    '@module-federation/runtime': ^2.2.3
+    '@module-federation/vite': ^1.13.2
+  parcel:
+    '@parcel/config-default': ^2.16.4
+    '@parcel/core': ^2.16.4
+    '@parcel/plugin': ^2.16.4
+    '@parcel/types': ^2.16.4
+    parcel: ^2.16.4
+  plugin-shared:
+    is-ci: ^4.1.0
+  postcss:
+    postcss: ^8.2.1
+    postcss-loader: ^8.0.0
+  react:
+    '@jest/globals': ^29.7.0
+    '@testing-library/react': ^16.2.0
+  react18:
+    '@types/react': 18.3.28
+    '@types/react-dom': 18.3.7
+    react: 18.3.1
+    react-dom: 18.3.1
+    react-refresh: ^0.18.0
+  react19:
+    '@types/react': ^19.0.12
+    '@types/react-dom': ~19.2.0
+    react: ^19.0.0
+    react-dom: ^19.0.0
+  rolldown:
+    rolldown: 1.0.0-rc.6
+  rollup4:
+    '@rollup/plugin-url': 8.0.2
+    '@svgr/rollup': 8.1.0
+    rollup: ^4.36.0
+  rspack:
+    '@rsbuild/core': ^1.7.1
+    '@rsbuild/plugin-react': ^1.4.0
+    '@rsbuild/shared': ^0.7.10
+    '@rsdoctor/rspack-plugin': 1.5.2
+    '@rspack/cli': ^1.7.0
+    '@rspack/core': ^1.7.0
+    '@rspack/plugin-react-refresh': ^1.5.1
+  rspress:
+    '@rspress/core': ^2.0.0-rc.1
+  swc:
+    '@swc-node/register': 1.11.1
+    '@swc/cli': 0.8.0
+    '@swc/core': 1.15.8
+    '@swc/helpers': 0.5.19
+    '@swc/jest': 0.2.39
+    swc-loader: ^0.2.6
+  tailwind:
+    tailwindcss: ^3.4.11
+  typescript:
+    '@types/is-ci': 3.0.4
+    '@types/jest': 29.5.14
+    '@types/node': 22.19.13
+    '@types/node-persist': ^3.1.8
+    '@types/yargs': ^17.0.33
+    ts-jest: ^29.2.6
+    tslib: ^2.8.1
+    typescript: ~5.9.0
+  vite7:
+    '@vitejs/plugin-react': ^4.3.4
+    '@vitejs/plugin-react-swc': ^3.8.1
+    autoprefixer: ^10.1.0
+    globals: ^15.9.0
+    postcss: ^8.2.1
+    postcss-loader: ^8.0.0
+    vite: ^7.3.2
+  vitest:
+    '@vitest/coverage-v8': ^3.0.9
+    '@vitest/ui': ^3.0.9
+    vitest: ^3.0.9
+  webpack5:
+    '@svgr/webpack': ^8.1.0
+    webpack: ^5.103.0
+
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - '@parcel/watcher'
@@ -18,109 +125,41 @@ onlyBuiltDependencies:
   - nx
   - sharp
   - workerd
-catalogs:
-  modernjs:
-    '@modern-js/app-tools': ^2.70.1
-    '@modern-js/plugin-ssg': ^2.70.1
-    '@modern-js/runtime': ^2.70.1
-    '@modern-js/tsconfig': ^2.70.1
-  parcel:
-    'parcel': ^2.16.4
-    '@parcel/config-default': ^2.16.4
-    '@parcel/plugin': ^2.16.4
-    '@parcel/types': ^2.16.4
-    '@parcel/core': ^2.16.4
-  module-federation:
-    '@module-federation/enhanced': ^0.21.0
-    '@module-federation/runtime': ^0.21.0
-    '@module-federation/vite': ^1.9.5
-    '@module-federation/automatic-vendor-federation': ^1.2.1
-  plugin-shared:
-    is-ci: ^4.1.0
-  babel:
-    '@babel/core': ^7.26.10
-    '@babel/runtime': ^7.26.10
-    '@babel/preset-react': ^7.26.3
-  typescript:
-    typescript: ~5.9.0
-    '@types/jest': 29.5.14
-    '@types/node': 22.13.13
-    '@types/is-ci': 3.0.4
-    '@types/node-persist': ^3.1.8
-    '@types/yargs': ^17.0.33
-    tslib: ^2.8.1
-    'ts-jest': ^29.2.6
-  swc:
-    swc-loader: ^0.2.6
-    '@swc/helpers': ^0.5.17
-    '@swc-node/register': ^1.11.1
-    '@swc/cli': ^0.7.8
-    '@swc/core': ^1.13.5
-    '@swc/jest': 0.2.39
-  webpack5:
-    webpack: ^5.103.0
-    '@svgr/webpack': ^8.1.0
-  tailwind:
-    tailwindcss: ^3.4.11
-  postcss:
-    postcss: ^8.2.1
-    postcss-loader: ^8.0.0
-  vite7:
-    vite: ^7.1.11
-    globals: ^15.9.0
-    autoprefixer: ^10.1.0
-    postcss: ^8.2.1
-    postcss-loader: ^8.0.0
-    '@vitejs/plugin-react': ^4.3.4
-    '@vitejs/plugin-react-swc': ^3.8.1
-  rspack:
-    '@rsdoctor/rspack-plugin': 1.3.15
-    '@rspack/cli': ^1.7.0
-    '@rspack/core': ^1.7.0
-    '@rspack/plugin-react-refresh': ^1.5.1
-    '@rsbuild/core': ^1.7.1
-    '@rsbuild/plugin-react': ^1.4.0
-    '@rsbuild/shared': ^0.7.10
-  rspress:
-    '@rspress/core': ^2.0.0-rc.1
-  rolldown:
-    rolldown: 1.0.0-beta.54
-  rollup4:
-    rollup: ^4.36.0
-    '@rollup/plugin-url': 8.0.2
-    '@svgr/rollup': 8.1.0
-  esbuild:
-    esbuild: ^0.27.0
-  eslint:
-    eslint: ^9.22.0
-    '@eslint/compat': ^1.2.7
-    '@eslint/eslintrc': ^3.3.0
-    '@eslint/js': ^9.22.0
-    eslint-config-prettier: ^10.1.1
-    eslint-plugin-import: 2.32.0
-    eslint-plugin-jsx-a11y: 6.10.2
-    eslint-plugin-react: ^7.37.4
-    eslint-plugin-react-hooks: ^5.2.0
-    eslint-plugin-react-refresh: ^0.4.19
-    '@typescript-eslint/eslint-plugin': ^8.27.0
-    '@typescript-eslint/parser': ^8.27.0
-    '@typescript-eslint/utils': ^8.27.0
-    typescript-eslint: ^8.27.0
-  react:
-    '@jest/globals': ^29.7.0
-    '@testing-library/react': ^16.2.0
-  react18:
-    react: 18.3.1
-    react-dom: 18.3.1
-    react-refresh: ^0.18.0
-    '@types/react': 18.3.27
-    '@types/react-dom': 18.3.7
-  react19:
-    react: ^19.0.0
-    react-dom: ^19.0.0
-    '@types/react': ^19.0.12
-    '@types/react-dom': ~19.2.0
-  vitest:
-    '@vitest/coverage-v8': ^3.0.9
-    '@vitest/ui': ^3.0.9
-    vitest: ^3.0.9
+
+overrides:
+  '@remix-run/router@<=1.23.1': '>=1.23.2'
+  '@tootallnate/once@<3.0.1': '>=3.0.1'
+  ajv@>=7.0.0-alpha.0 <8.18.0: '>=8.18.0'
+  defu@<=6.1.4: 6.1.6
+  flatted: 3.4.2
+  h3@<1.15.6: '>=1.15.6'
+  h3@>=2.0.0-0 <2.0.1-rc.18: '>=2.0.1-rc.18'
+  '@tanstack/start-server-core>h3-v2': npm:h3@2.0.1-rc.18
+  hono@<4.10.3: '>=4.10.3'
+  hono@<4.11.10: '>=4.11.10'
+  hono@<4.11.4: '>=4.11.4'
+  hono@<4.11.7: '>=4.11.7'
+  hono@<4.12.4: '>=4.12.4'
+  hono@<4.2.7: '>=4.2.7'
+  hono@<4.5.8: '>=4.5.8'
+  hono@<4.6.5: '>=4.6.5'
+  hono@<4.9.7: '>=4.9.7'
+  handlebars@<=4.7.8: '>=4.7.9'
+  hono@>=1.1.0 <4.10.2: '>=4.10.2'
+  koa@>=3.0.0 <3.1.2: '>=3.1.2'
+  lodash-es@<=4.17.23: 4.18.1
+  lodash@<=4.17.23: 4.18.1
+  minimatch@<3.1.4: 3.1.5
+  minimatch@>=5.0.0 <5.1.8: 5.1.9
+  minimatch@>=9.0.0 <9.0.7: 9.0.9
+  node-forge@<1.4.0: '>=1.4.0'
+  anymatch>picomatch: 2.3.2
+  jest-util>picomatch: 4.0.4
+  micromatch>picomatch: 4.0.4
+  path-to-regexp@<0.1.13: '>=0.1.13'
+  picomatch@<2.3.2: '>=2.3.2'
+  picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
+  prismjs@<1.30.0: '>=1.30.0'
+  qs@<6.14.1: '>=6.14.1'
+  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
+  serialize-javascript@<=7.0.2: '>=7.0.3'

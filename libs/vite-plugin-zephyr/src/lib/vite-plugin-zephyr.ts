@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import * as path from 'node:path';
 import MagicString from 'magic-string';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import { loadEnv, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
@@ -71,6 +72,57 @@ function resolveRuntimePluginSpecifier(): string {
   }
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function ensureRuntimePluginCommonJsInterop(config: UserConfig): void {
+  const runtimePluginSpecifier = resolveRuntimePluginSpecifier();
+
+  if (!path.isAbsolute(runtimePluginSpecifier)) {
+    return;
+  }
+
+  const runtimePluginDirectory = path.dirname(runtimePluginSpecifier).replace(/\\/g, '/');
+  const runtimePluginDirectoryPattern = new RegExp(
+    `^${escapeRegExp(runtimePluginDirectory)}(?:/|$)`
+  );
+
+  config.build ??= {};
+
+  const commonjsOptions = config.build.commonjsOptions ?? {};
+  const include = commonjsOptions.include;
+  const includeEntries = Array.isArray(include)
+    ? [...include]
+    : include
+      ? [include]
+      : [/node_modules/];
+
+  const hasRuntimePluginInclude = includeEntries.some((entry) => {
+    if (entry instanceof RegExp) {
+      return (
+        entry.source === runtimePluginDirectoryPattern.source &&
+        entry.flags === runtimePluginDirectoryPattern.flags
+      );
+    }
+
+    const normalizedEntry = String(entry).replace(/\\/g, '/');
+    return (
+      normalizedEntry === runtimePluginDirectory ||
+      normalizedEntry === `${runtimePluginDirectory}/**`
+    );
+  });
+
+  if (!hasRuntimePluginInclude) {
+    includeEntries.push(runtimePluginDirectoryPattern);
+  }
+
+  config.build.commonjsOptions = {
+    ...commonjsOptions,
+    include: includeEntries,
+  };
+}
+
 function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options.hooks;
@@ -95,6 +147,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
       }
+
+      if (mfConfig) {
+        ensureRuntimePluginCommonJsInterop(config);
+      }
+
       return null;
     },
 

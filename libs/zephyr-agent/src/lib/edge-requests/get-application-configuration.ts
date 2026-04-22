@@ -1,7 +1,7 @@
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
-import { makeRequest } from '../http/http-request';
+import { makeHttpRequest, makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
 import { getToken } from '../node-persist/token';
@@ -9,6 +9,51 @@ import type { ZeApplicationConfig } from '../node-persist/upload-provider-option
 
 interface GetApplicationConfigurationProps {
   application_uid: string;
+}
+
+const PRODUCTION_ZEPHYR_API = 'https://api.zephyr-cloud.io';
+const PRODUCTION_ZEPHYR_GATEWAY = 'https://zeapi.zephyrcloud.app';
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined;
+  }
+
+  const errorWithStatus = error as {
+    template?: Record<string, unknown>;
+    data?: Record<string, unknown>;
+  };
+
+  const status = Number(
+    errorWithStatus.template?.['status'] ?? errorWithStatus.data?.['status']
+  );
+
+  return Number.isFinite(status) ? status : undefined;
+}
+
+function shouldRetryWithProductionGateway(error: unknown, requestUrl: URL): boolean {
+  const status = getErrorStatus(error);
+  if (!status || status < 500) {
+    return false;
+  }
+
+  const requestedApiHost = requestUrl.searchParams.get('api_host');
+
+  return (
+    requestUrl.origin !== PRODUCTION_ZEPHYR_GATEWAY ||
+    requestedApiHost !== PRODUCTION_ZEPHYR_API
+  );
+}
+
+function getProductionApplicationConfigUrl(applicationUid: string): URL {
+  const url = new URL(
+    `${ze_api_gateway.application_config}/${applicationUid}`,
+    PRODUCTION_ZEPHYR_GATEWAY
+  );
+
+  url.searchParams.set('api_host', PRODUCTION_ZEPHYR_API);
+
+  return url;
 }
 
 async function loadApplicationConfiguration({
@@ -29,6 +74,37 @@ async function loadApplicationConfiguration({
   }>(application_config_url, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  if (!ok && shouldRetryWithProductionGateway(cause, application_config_url)) {
+    const fallbackUrl = getProductionApplicationConfigUrl(application_uid);
+
+    ze_log.app(
+      `Application config request failed with status ${String(
+        getErrorStatus(cause)
+      )}; retrying with production gateway`
+    );
+
+    const [fallbackOk, fallbackCause, fallbackData] = await makeHttpRequest<{
+      value: ZeApplicationConfig;
+    }>(fallbackUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (fallbackOk && fallbackData?.value) {
+      return {
+        ...fallbackData.value,
+        fetched_at: Date.now(),
+      };
+    }
+
+    throw new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {
+      application_uid,
+      cause: fallbackCause ?? cause,
+      data: {
+        url: fallbackUrl.toString(),
+      },
+    });
+  }
 
   if (!ok || !data?.value) {
     throw new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {

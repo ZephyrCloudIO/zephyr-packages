@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import * as path from 'node:path';
 import MagicString from 'magic-string';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import { loadEnv, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
@@ -23,11 +24,15 @@ import {
   ZEPHYR_MF_RUNTIME_PLUGIN_ID,
   type ModuleFederationOptions,
 } from './internal/mf-vite-etl/ensure_runtime_plugin';
+import { applyResolvedRemotesFallback } from './internal/mf-vite-etl/apply_resolved_remotes_fallback';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
+const RUNTIME_PLUGIN_BARE_SPECIFIER = 'zephyr-agent/runtime-plugin';
+const RUNTIME_PLUGIN_SPECIFIER_PATTERN = new RegExp(
+  `["']${RUNTIME_PLUGIN_BARE_SPECIFIER}["']`
+);
 
 export interface WithZephyrOptions {
   hooks?: ZephyrBuildHooks;
@@ -59,6 +64,65 @@ function loadModuleFederationPlugin() {
   return moduleFederation.federation;
 }
 
+function resolveRuntimePluginSpecifier(): string {
+  try {
+    return require.resolve(RUNTIME_PLUGIN_BARE_SPECIFIER);
+  } catch {
+    return RUNTIME_PLUGIN_BARE_SPECIFIER;
+  }
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function ensureRuntimePluginCommonJsInterop(config: UserConfig): void {
+  const runtimePluginSpecifier = resolveRuntimePluginSpecifier();
+
+  if (!path.isAbsolute(runtimePluginSpecifier)) {
+    return;
+  }
+
+  const runtimePluginDirectory = path.dirname(runtimePluginSpecifier).replace(/\\/g, '/');
+  const runtimePluginDirectoryPattern = new RegExp(
+    `^${escapeRegExp(runtimePluginDirectory)}(?:/|$)`
+  );
+
+  config.build ??= {};
+
+  const commonjsOptions = config.build.commonjsOptions ?? {};
+  const include = commonjsOptions.include;
+  const includeEntries = Array.isArray(include)
+    ? [...include]
+    : include
+      ? [include]
+      : [/node_modules/];
+
+  const hasRuntimePluginInclude = includeEntries.some((entry) => {
+    if (entry instanceof RegExp) {
+      return (
+        entry.source === runtimePluginDirectoryPattern.source &&
+        entry.flags === runtimePluginDirectoryPattern.flags
+      );
+    }
+
+    const normalizedEntry = String(entry).replace(/\\/g, '/');
+    return (
+      normalizedEntry === runtimePluginDirectory ||
+      normalizedEntry === `${runtimePluginDirectory}/**`
+    );
+  });
+
+  if (!hasRuntimePluginInclude) {
+    includeEntries.push(runtimePluginDirectoryPattern);
+  }
+
+  config.build.commonjsOptions = {
+    ...commonjsOptions,
+    include: includeEntries,
+  };
+}
+
 function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options.hooks;
@@ -83,6 +147,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
       }
+
+      if (mfConfig) {
+        ensureRuntimePluginCommonJsInterop(config);
+      }
+
       return null;
     },
 
@@ -115,13 +184,22 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           const dependencyPairs = extract_remotes_dependencies(root, mfConfig);
           if (dependencyPairs) {
             const zephyr_engine = await zephyr_engine_defer;
-            await zephyr_engine.resolve_remote_dependencies(
+            const resolvedRemotes = await zephyr_engine.resolve_remote_dependencies(
               dependencyPairs,
               DEFAULT_LIBRARY_TYPE
+            );
+            const updatedRemotes = applyResolvedRemotesFallback(
+              mfConfig,
+              resolvedRemotes
             );
             ze_log.remotes(
               `Resolved ${dependencyPairs.length} remote dependencies in configResolved`
             );
+            if (updatedRemotes > 0) {
+              ze_log.remotes(
+                `Applied buildtime fallback for ${updatedRemotes} Module Federation remotes`
+              );
+            }
           }
         } catch (error) {
           handleGlobalError(error);
@@ -170,7 +248,13 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     load: async (id) => {
       if (id === RESOLVED_ZEPHYR_MF_RUNTIME_PLUGIN_ID) {
-        return readFile(getRuntimePluginPath(), 'utf8');
+        const runtimePluginTemplate = await readFile(getRuntimePluginPath(), 'utf8');
+        const runtimePluginSpecifier = resolveRuntimePluginSpecifier();
+
+        return runtimePluginTemplate.replace(
+          RUNTIME_PLUGIN_SPECIFIER_PATTERN,
+          JSON.stringify(runtimePluginSpecifier)
+        );
       }
 
       return null;
@@ -178,31 +262,12 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     transform: {
       order: 'post',
-      // Limit the hook to source-like files plus MF's in-memory remote entry.
+      // Limit the hook to source-like files.
       filter: {
-        id: /(\.(mjs|cjs|js|ts|jsx|tsx)|virtual:mf-REMOTE_ENTRY_ID)/,
+        id: /(\.(mjs|cjs|js|ts|jsx|tsx))/,
       },
       handler: async (code, id) => {
         try {
-          // In dev, MF serves remoteEntry.js from memory; inject resolved remotes there.
-          if (mfConfig && code.includes('"__REMOTE_MAP__"')) {
-            const zephyr_engine = await zephyr_engine_defer;
-            const resolved_remotes = zephyr_engine.federated_dependencies;
-
-            if (resolved_remotes?.length) {
-              ze_log.remotes(
-                `[transform] Transforming remoteEntry.js with ${resolved_remotes.length} remotes for dev mode`
-              );
-              const result = inject_resolved_remotes_map(resolved_remotes, code);
-              if (result !== code) {
-                return {
-                  code: result,
-                  map: null,
-                };
-              }
-            }
-          }
-
           // Rewrite ZE_PUBLIC_* reads in app code; node_modules stay untouched.
           if (!id.includes('node_modules')) {
             const zephyr_engine = await zephyr_engine_defer;
@@ -230,37 +295,6 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     },
 
     generateBundle: async function (_outputOptions, bundle) {
-      if (mfConfig) {
-        for (const [fileName, chunk] of Object.entries(bundle)) {
-          if (
-            fileName === 'remoteEntry.js' &&
-            chunk &&
-            typeof chunk === 'object' &&
-            'type' in chunk &&
-            chunk.type === 'chunk' &&
-            'code' in chunk
-          ) {
-            try {
-              // Build mode writes remoteEntry.js to disk, so patch the emitted chunk here.
-              const zephyr_engine = await zephyr_engine_defer;
-              const resolved_remotes = zephyr_engine.federated_dependencies;
-
-              if (!resolved_remotes?.length) {
-                ze_log.remotes('No resolved remotes found in generateBundle');
-                continue;
-              }
-
-              chunk.code = inject_resolved_remotes_map(resolved_remotes, chunk.code);
-              ze_log.remotes(
-                `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
-              );
-            } catch (error) {
-              handleGlobalError(error);
-            }
-          }
-        }
-      }
-
       if (cachedSpecifier) {
         for (const [, chunk] of Object.entries(bundle)) {
           if (

@@ -19,6 +19,9 @@
       "rollup-plugin-zephyr": ["libs/rollup-plugin-zephyr/src/index.ts"],
       "vite-plugin-zephyr": ["libs/vite-plugin-zephyr/src/index.ts"],
       "zephyr-agent": ["libs/zephyr-agent/src/index.ts"],
+      "zephyr-agent/runtime-plugin": [
+        "libs/zephyr-agent/src/runtime-plugin/index.ts"
+      ],
       "zephyr-edge-contract": ["libs/zephyr-edge-contract/src/index.ts"],
       "zephyr-metro-plugin": ["libs/zephyr-metro-plugin/src/index.ts"],
       "zephyr-repack-plugin": ["libs/zephyr-repack-plugin/src/index.ts"],

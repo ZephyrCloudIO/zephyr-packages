@@ -63,4 +63,46 @@ describe('vite-plugin-zephyr', () => {
       ]);
     });
   });
+
+  test('withZephyr runtime virtual module resolves runtime plugin via plugin dependency graph', async () => {
+    let loadVirtualRuntimePlugin:
+      | ((id: string) => Promise<string | null> | string | null)
+      | undefined;
+
+    jest.isolateModules(() => {
+      jest.doMock('vite', () => ({
+        loadEnv: jest.fn(() => ({})),
+      }));
+      jest.doMock('@module-federation/vite', () => ({
+        federation: jest.fn(() => []),
+      }));
+
+      const { withZephyr } = require('./vite-plugin-zephyr') as {
+        withZephyr: (options?: Record<string, unknown>) => Array<{
+          name?: string;
+          load?: (id: string) => Promise<string | null> | string | null;
+        }>;
+      };
+
+      const plugins = withZephyr({
+        mfConfig: {
+          name: 'host',
+        },
+      });
+      loadVirtualRuntimePlugin = plugins.find(
+        (plugin) => plugin.name === 'with-zephyr'
+      )?.load;
+    });
+
+    expect(loadVirtualRuntimePlugin).toBeDefined();
+    const code = await Promise.resolve(
+      loadVirtualRuntimePlugin?.('\0virtual:zephyr-mf-runtime-plugin')
+    );
+    const normalizedCode = code?.replace(/\\\\/g, '/');
+
+    expect(code).toContain('import * as runtimePluginModule from');
+    expect(normalizedCode).toMatch(/runtime-plugin\/index\.js/);
+    expect(code).not.toContain("'zephyr-agent/runtime-plugin'");
+    expect(code).not.toContain('"zephyr-agent/runtime-plugin"');
+  });
 });

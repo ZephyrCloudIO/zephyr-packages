@@ -12,7 +12,14 @@
         "rootDir": "libs/rollup-plugin-zephyr/src",
         "outputPath": "libs/rollup-plugin-zephyr/dist",
         "tsConfig": "libs/rollup-plugin-zephyr/tsconfig.lib.json",
-        "main": "libs/rollup-plugin-zephyr/src/index.ts"
+        "main": "libs/rollup-plugin-zephyr/src/index.ts",
+        "assets": [
+          {
+            "input": "libs/rollup-plugin-zephyr/src",
+            "glob": "index.mjs",
+            "output": "."
+          }
+        ]
       }
     },
     "nx-release-publish": {

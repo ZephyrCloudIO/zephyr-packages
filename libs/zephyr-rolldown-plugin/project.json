@@ -12,7 +12,14 @@
         "rootDir": "libs/zephyr-rolldown-plugin/src",
         "outputPath": "libs/zephyr-rolldown-plugin/dist",
         "tsConfig": "libs/zephyr-rolldown-plugin/tsconfig.lib.json",
-        "main": "libs/zephyr-rolldown-plugin/src/index.ts"
+        "main": "libs/zephyr-rolldown-plugin/src/index.ts",
+        "assets": [
+          {
+            "input": "libs/zephyr-rolldown-plugin/src",
+            "glob": "index.mjs",
+            "output": "."
+          }
+        ]
       }
     },
     "nx-release-publish": {

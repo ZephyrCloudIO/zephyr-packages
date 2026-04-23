@@ -26,6 +26,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     }
@@ -62,5 +63,6 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
-  }
+  },
+  "module": "dist/index.mjs"
 }

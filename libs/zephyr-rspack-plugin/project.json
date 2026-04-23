@@ -19,6 +19,11 @@
             "input": "libs/zephyr-rspack-plugin/src/rspack-plugin",
             "glob": "env-virtual-loader.js",
             "output": "rspack-plugin"
+          },
+          {
+            "input": "libs/zephyr-rspack-plugin/src",
+            "glob": "index.mjs",
+            "output": "."
           }
         ]
       }

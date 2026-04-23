@@ -12,7 +12,14 @@
         "rootDir": "libs/zephyr-modernjs-plugin/src",
         "outputPath": "libs/zephyr-modernjs-plugin/dist",
         "tsConfig": "libs/zephyr-modernjs-plugin/tsconfig.lib.json",
-        "main": "libs/zephyr-modernjs-plugin/src/index.ts"
+        "main": "libs/zephyr-modernjs-plugin/src/index.ts",
+        "assets": [
+          {
+            "input": "libs/zephyr-modernjs-plugin/src",
+            "glob": "index.mjs",
+            "output": "."
+          }
+        ]
       }
     },
     "publish": {

@@ -19,7 +19,7 @@
     "url": "https://github.com/ZephyrCloudIO"
   },
   "type": "commonjs",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "nx run rollup-plugin-zephyr:build",
@@ -46,9 +46,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./dist/index.mjs"
     }
   }
 }

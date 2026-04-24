@@ -1,15 +1,32 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
-import {
-  withZephyr as rspackWithZephyr,
-  type ZephyrBuildHooks,
-} from 'zephyr-rspack-plugin';
+import type * as ZephyrRspackPlugin from 'zephyr-rspack-plugin';
+import type { ZephyrBuildHooks } from 'zephyr-rspack-plugin';
 
 export interface ZephyrRsbuildPluginOptions {
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
 }
 
-type RspackWithZephyrConfig = Parameters<ReturnType<typeof rspackWithZephyr>>[0];
+type RspackWithZephyrFactory = typeof ZephyrRspackPlugin.withZephyr;
+type RspackWithZephyrConfig = Parameters<ReturnType<RspackWithZephyrFactory>>[0];
+type RspackWithZephyrModule = { withZephyr: RspackWithZephyrFactory };
+
+let rspackWithZephyrPromise: Promise<RspackWithZephyrFactory> | undefined;
+
+async function loadRspackWithZephyr(): Promise<RspackWithZephyrFactory> {
+  if (!rspackWithZephyrPromise) {
+    if (process.env['JEST_WORKER_ID']) {
+      const module = require('zephyr-rspack-plugin') as RspackWithZephyrModule;
+      rspackWithZephyrPromise = Promise.resolve(module.withZephyr);
+    } else {
+      rspackWithZephyrPromise = (
+        eval("import('zephyr-rspack-plugin')") as Promise<RspackWithZephyrModule>
+      ).then((module) => module.withZephyr);
+    }
+  }
+
+  return rspackWithZephyrPromise;
+}
 
 export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin {
   return {
@@ -22,6 +39,8 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
       api.onBeforeCreateCompiler({
         order: 'post',
         handler: async ({ bundlerConfigs }) => {
+          const rspackWithZephyr = await loadRspackWithZephyr();
+
           // Process each bundler config (one per environment)
           for (const config of bundlerConfigs) {
             // Rsbuild and the rspack plugin can resolve compatible patch versions

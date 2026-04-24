@@ -1,4 +1,8 @@
-import mod from './index.js';
+import { withZephyr } from './rsbuild-plugin/with-zephyr.js';
 
-export default mod;
-export * from './index.js';
+export { withZephyr };
+export { onDeploymentDone, resolveIndexHtml } from 'zephyr-rspack-plugin';
+
+export default {
+  withZephyr,
+};

@@ -1,7 +1,7 @@
 import type { OutputBundle } from 'rollup';
-import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
-import { load_public_dir } from './load_public_dir';
-import { load_static_entries } from './load_static_entries';
+import type { ZephyrInternalOptions } from '../types/zephyr-internal-options.js';
+import { load_public_dir } from './load_public_dir.js';
+import { load_static_entries } from './load_static_entries.js';
 
 export async function loadStaticAssets(
   vite_internal_options: ZephyrInternalOptions

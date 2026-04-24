@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import type { Compiler } from '@rspack/core';
 import { HtmlRspackPlugin } from '@rspack/core';
 import {
@@ -16,6 +18,38 @@ import {
 } from 'zephyr-xpack-internal';
 
 const pluginName = 'ZeRspackPlugin';
+
+function resolveEnvVirtualLoaderPath(projectRoot: string): string {
+  const candidates = [
+    path.join(
+      projectRoot,
+      'node_modules',
+      'zephyr-rspack-plugin',
+      'dist',
+      'rspack-plugin',
+      'env-virtual-loader.cjs'
+    ),
+    path.join(
+      projectRoot,
+      'node_modules',
+      'zephyr-rspack-plugin',
+      'src',
+      'rspack-plugin',
+      'env-virtual-loader.cjs'
+    ),
+    path.join(
+      projectRoot,
+      'libs',
+      'zephyr-rspack-plugin',
+      'src',
+      'rspack-plugin',
+      'env-virtual-loader.cjs'
+    ),
+  ];
+
+  const existing = candidates.find((candidate) => fs.existsSync(candidate));
+  return existing ?? candidates[0];
+}
 
 export interface ZephyrRspackInternalPluginOptions {
   zephyr_engine: ZephyrEngine;
@@ -37,6 +71,8 @@ export class ZeRspackPlugin {
   }
 
   apply(compiler: Compiler): void {
+    const projectRoot = compiler.context || process.cwd();
+
     this._options.zephyr_engine.buildProperties.output = compiler.outputPath;
     detectAndStoreBaseHref(this._options.zephyr_engine, compiler);
     logBuildSteps(this._options, compiler);
@@ -53,7 +89,7 @@ export class ZeRspackPlugin {
       exclude: /node_modules/,
       use: [
         {
-          loader: require.resolve('./env-virtual-loader.js'),
+          loader: resolveEnvVirtualLoaderPath(projectRoot),
           options: {
             specifier: `env:vars:${this._options.zephyr_engine.application_uid}`,
           },

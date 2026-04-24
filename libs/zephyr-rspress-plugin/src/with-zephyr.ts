@@ -1,34 +1,17 @@
-import type * as ZephyrRsbuildPlugin from 'zephyr-rsbuild-plugin';
-import type { ZephyrBuildHooks } from 'zephyr-rsbuild-plugin';
-import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
+import {
+  withZephyr as zephyrRsbuildPlugin,
+  type ZephyrBuildHooks,
+} from 'zephyr-rsbuild-plugin';
+import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin.js';
 import type {
   SSGConfig,
   RspressUserConfig,
   RspressPlugin,
   BuilderConfigWithPlugins,
-} from './types';
+} from './types/index.js';
 
 export interface ZephyrRspressOptions {
   hooks?: ZephyrBuildHooks;
-}
-
-let zephyrRsbuildPluginPromise: Promise<ZephyrRsbuildPluginFactory> | undefined;
-type ZephyrRsbuildPluginFactory = typeof ZephyrRsbuildPlugin.withZephyr;
-type ZephyrRsbuildPluginModule = { withZephyr: ZephyrRsbuildPluginFactory };
-
-async function loadZephyrRsbuildPlugin(): Promise<ZephyrRsbuildPluginFactory> {
-  if (!zephyrRsbuildPluginPromise) {
-    if (process.env['JEST_WORKER_ID']) {
-      const module = require('zephyr-rsbuild-plugin') as ZephyrRsbuildPluginModule;
-      zephyrRsbuildPluginPromise = Promise.resolve(module.withZephyr);
-    } else {
-      zephyrRsbuildPluginPromise = (
-        eval("import('zephyr-rsbuild-plugin')") as Promise<ZephyrRsbuildPluginModule>
-      ).then((module) => module.withZephyr);
-    }
-  }
-
-  return zephyrRsbuildPluginPromise;
 }
 
 /**
@@ -79,7 +62,6 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
   return {
     name: 'zephyr-rspress-plugin',
     async config(config, { addPlugin }) {
-      const zephyrRsbuildPlugin = await loadZephyrRsbuildPlugin();
       const { ssg } = config;
 
       if (isSsgEnabled(ssg)) {

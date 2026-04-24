@@ -1,6 +1,9 @@
+import { createRequire } from 'node:module';
 import type { JsTransformOptions, JsTransformerConfig } from 'metro-transform-worker';
 import { ze_log } from 'zephyr-agent';
 // Note: Global type declarations are in ./global.d.ts (ambient, no runtime import needed)
+
+const cjsRequire = createRequire(`${process.cwd()}/package.json`);
 
 interface ZephyrTransformerOptions {
   /** Custom manifest endpoint path */
@@ -25,7 +28,7 @@ export async function transform(
   map: any;
 }> {
   // Use default Metro transformer first
-  const upstream = require('metro-react-native-babel-transformer');
+  const upstream = cjsRequire('metro-react-native-babel-transformer');
   const result = await upstream.transform(config, projectRoot, filename, data, options);
 
   // Get Zephyr transformer options from config

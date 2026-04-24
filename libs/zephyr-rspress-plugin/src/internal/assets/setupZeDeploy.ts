@@ -1,8 +1,8 @@
 import { ze_log } from 'zephyr-agent';
 import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
-import type { ZephyrRspressPluginOptions } from '../../types';
-import { buildStats } from '../stats/buildStats';
-import { buildAssetMapFromFiles } from './buildAssets';
+import type { ZephyrRspressPluginOptions } from '../../types/index.js';
+import { buildStats } from '../stats/buildStats.js';
+import { buildAssetMapFromFiles } from './buildAssets.js';
 
 export async function setupZeDeploy({
   deferEngine,

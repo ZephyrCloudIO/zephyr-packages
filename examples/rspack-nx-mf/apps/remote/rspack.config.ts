@@ -6,10 +6,9 @@ import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
 import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
 import { join } from 'path';
 
-import { withZephyr } from 'zephyr-rspack-plugin';
 import config from './module-federation.config';
 
-export default withZephyr()({
+export default {
   output: {
     path: join(__dirname, '../../../../dist/examples/rspack-nx-mf/apps/remote'),
     publicPath: 'auto',
@@ -40,4 +39,4 @@ export default withZephyr()({
     new NxModuleFederationPlugin({ config }, { dts: false }),
     new NxModuleFederationDevServerPlugin({ config }),
   ],
-});
+};

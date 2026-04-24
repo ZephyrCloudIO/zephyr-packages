@@ -44,6 +44,38 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
   };
 }
 
+function resolveZephyrTransformerPath(projectRoot: string): string {
+  const candidates = [
+    path.join(
+      projectRoot,
+      'node_modules',
+      'zephyr-metro-plugin',
+      'dist',
+      'lib',
+      'zephyr-transformer.js'
+    ),
+    path.join(
+      projectRoot,
+      'node_modules',
+      'zephyr-metro-plugin',
+      'src',
+      'lib',
+      'zephyr-transformer.ts'
+    ),
+    path.join(
+      projectRoot,
+      'libs',
+      'zephyr-metro-plugin',
+      'src',
+      'lib',
+      'zephyr-transformer.ts'
+    ),
+  ];
+
+  const existing = candidates.find((candidate) => fs.existsSync(candidate));
+  return existing ?? candidates[0];
+}
+
 async function applyZephyrToMetroConfig(
   metroConfig: ConfigT,
   zephyrOptions: ZephyrMetroOptions
@@ -78,7 +110,7 @@ async function applyZephyrToMetroConfig(
     ...metroConfig,
     transformer: {
       ...metroConfig.transformer,
-      babelTransformerPath: require.resolve('./zephyr-transformer'),
+      babelTransformerPath: resolveZephyrTransformerPath(projectRoot),
       // Pass zephyr options to transformer via extra data
       ...(metroConfig.transformer as any),
       zephyrTransformerOptions,

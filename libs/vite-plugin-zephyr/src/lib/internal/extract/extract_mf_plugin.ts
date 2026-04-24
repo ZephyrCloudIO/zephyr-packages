@@ -1,5 +1,5 @@
 import type { Plugin, PluginOption } from 'vite';
-import type { ModuleFederationOptions } from '../mf-vite-etl/ensure_runtime_plugin';
+import type { ModuleFederationOptions } from '../mf-vite-etl/ensure_runtime_plugin.js';
 
 export interface ViteMFPlugin {
   _options: ModuleFederationOptions;

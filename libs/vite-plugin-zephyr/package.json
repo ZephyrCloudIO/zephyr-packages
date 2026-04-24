@@ -20,13 +20,13 @@
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "commonjs",
-  "main": "dist/index.mjs",
+  "type": "module",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.js"
     }
   },
   "files": [
@@ -81,5 +81,5 @@
     "access": "public",
     "provenance": true
   },
-  "module": "dist/index.mjs"
+  "module": "dist/index.js"
 }

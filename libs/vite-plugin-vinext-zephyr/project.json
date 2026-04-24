@@ -13,14 +13,7 @@
         "rootDir": "libs/vite-plugin-vinext-zephyr/src",
         "outputPath": "libs/vite-plugin-vinext-zephyr/dist",
         "tsConfig": "libs/vite-plugin-vinext-zephyr/tsconfig.lib.json",
-        "main": "libs/vite-plugin-vinext-zephyr/src/index.ts",
-        "assets": [
-          {
-            "input": "libs/vite-plugin-vinext-zephyr/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "main": "libs/vite-plugin-vinext-zephyr/src/index.ts"
       }
     },
     "nx-release-publish": {

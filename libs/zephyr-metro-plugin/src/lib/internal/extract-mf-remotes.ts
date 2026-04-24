@@ -3,7 +3,7 @@ import {
   readPackageJson,
   type ZeDependencyPair,
 } from 'zephyr-agent';
-import type { ZephyrCommandWrapperConfig } from '../zephyr-metro-plugin';
+import type { ZephyrCommandWrapperConfig } from '../zephyr-metro-plugin.js';
 
 export function extract_remotes_dependencies(
   config: ZephyrCommandWrapperConfig

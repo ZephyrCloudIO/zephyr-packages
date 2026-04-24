@@ -1,7 +1,7 @@
 import { readdirSync, readFile, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import type { OutputAsset } from './types';
+import type { OutputAsset } from './types.js';
 
 // Metro-compatible path normalization (replaces vite's normalizePath)
 function normalizePath(path: string): string {

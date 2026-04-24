@@ -13,14 +13,7 @@
         "outputPath": "libs/zephyr-metro-plugin/dist",
         "main": "libs/zephyr-metro-plugin/src/index.ts",
         "tsConfig": "libs/zephyr-metro-plugin/tsconfig.lib.json",
-        "assets": [
-          "libs/zephyr-metro-plugin/*.md",
-          {
-            "input": "libs/zephyr-metro-plugin/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "assets": ["libs/zephyr-metro-plugin/*.md"]
       }
     },
     "nx-release-publish": {

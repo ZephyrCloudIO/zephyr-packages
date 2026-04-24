@@ -1,7 +1,7 @@
 import { ZephyrError, ZeErrors, type Platform } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
-import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
-import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
+import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors.js';
+import { ZephyrMetroPlugin } from './zephyr-metro-plugin.js';
 
 export type MetroConfig = Record<string, unknown>;
 export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];

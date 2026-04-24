@@ -12,14 +12,7 @@
         "rootDir": "libs/zephyr-rspress-plugin/src",
         "outputPath": "libs/zephyr-rspress-plugin/dist",
         "tsConfig": "libs/zephyr-rspress-plugin/tsconfig.lib.json",
-        "main": "libs/zephyr-rspress-plugin/src/index.ts",
-        "assets": [
-          {
-            "input": "libs/zephyr-rspress-plugin/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "main": "libs/zephyr-rspress-plugin/src/index.ts"
       }
     },
     "publish": {

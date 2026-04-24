@@ -1,6 +1,9 @@
+import { createRequire } from 'node:module';
 import type { ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
 import { ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+
+const cjsRequire = createRequire(`${process.cwd()}/package.json`);
 
 export function mutateMfConfig(
   zephyr_engine: ZephyrEngine,
@@ -9,10 +12,9 @@ export function mutateMfConfig(
   delegate_module_template?: () => unknown | undefined
 ) {
   // Lazy load zephyr-xpack-internal to avoid static import
-  const {
-    createMfRuntimeCode,
-    xpack_delegate_module_template,
-  } = require('zephyr-xpack-internal');
+  const { createMfRuntimeCode, xpack_delegate_module_template } = cjsRequire(
+    'zephyr-xpack-internal'
+  );
   const template = delegate_module_template || xpack_delegate_module_template;
   if (!resolvedDependencyPairs?.length) {
     ze_log.mf(`No resolved dependency pairs found, skipping...`);

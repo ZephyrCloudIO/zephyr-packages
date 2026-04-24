@@ -6,9 +6,9 @@ import {
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
-import type { ZephyrWebpackPluginOptions } from '../types';
-import type { WebpackConfiguration } from '../types/missing-webpack-types';
-import { ZeWebpackPlugin } from './ze-webpack-plugin';
+import type { ZephyrWebpackPluginOptions } from '../types/index.js';
+import type { WebpackConfiguration } from '../types/missing-webpack-types.js';
+import { ZeWebpackPlugin } from './ze-webpack-plugin.js';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
   return (config: Configuration) => {

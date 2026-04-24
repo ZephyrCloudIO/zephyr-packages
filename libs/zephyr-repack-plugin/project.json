@@ -13,14 +13,7 @@
         "outputPath": "libs/zephyr-repack-plugin/dist",
         "main": "libs/zephyr-repack-plugin/src/index.ts",
         "tsConfig": "libs/zephyr-repack-plugin/tsconfig.lib.json",
-        "assets": [
-          "libs/zephyr-repack-plugin/*.md",
-          {
-            "input": "libs/zephyr-repack-plugin/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "assets": ["libs/zephyr-repack-plugin/*.md"]
       }
     },
     "nx-release-publish": {

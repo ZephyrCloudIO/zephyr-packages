@@ -12,14 +12,7 @@
         "rootDir": "libs/zephyr-webpack-plugin/src",
         "outputPath": "libs/zephyr-webpack-plugin/dist",
         "tsConfig": "libs/zephyr-webpack-plugin/tsconfig.lib.json",
-        "main": "libs/zephyr-webpack-plugin/src/index.ts",
-        "assets": [
-          {
-            "input": "libs/zephyr-webpack-plugin/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "main": "libs/zephyr-webpack-plugin/src/index.ts"
       }
     },
     "publish": {

@@ -6,10 +6,10 @@ import {
   ze_log,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
-import { setupZeDeploy } from './internal/assets/setupZeDeploy';
-import { showFiles } from './internal/files/showFiles';
-import { walkFiles } from './internal/files/walkFiles';
-import type { RspressUserConfig, RspressPlugin } from './types';
+import { setupZeDeploy } from './internal/assets/setupZeDeploy.js';
+import { showFiles } from './internal/files/showFiles.js';
+import { walkFiles } from './internal/files/walkFiles.js';
+import type { RspressUserConfig, RspressPlugin } from './types/index.js';
 
 export const zephyrRspressSSGPlugin = <
   TConfig extends RspressUserConfig = RspressUserConfig,

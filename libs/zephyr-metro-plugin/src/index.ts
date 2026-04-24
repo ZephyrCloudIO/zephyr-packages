@@ -6,14 +6,14 @@ export {
   withZephyrMetro,
   type ZephyrMetroOptions,
   type ZephyrModuleFederationConfig,
-} from './lib/with-zephyr';
+} from './lib/with-zephyr.js';
 
 // CLI command wrapper export for bundle-mf-remote integrations
 export {
   zephyrCommandWrapper,
   type MetroConfig,
   type MetroFederationConfig,
-} from './lib/zephyr-metro-command-wrapper';
+} from './lib/zephyr-metro-command-wrapper.js';
 
 // Transformer (usually not imported directly but referenced by path)
-export { transform as zephyrTransformer } from './lib/zephyr-transformer';
+export { transform as zephyrTransformer } from './lib/zephyr-transformer.js';

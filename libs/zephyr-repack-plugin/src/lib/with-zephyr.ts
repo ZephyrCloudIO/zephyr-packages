@@ -12,9 +12,9 @@ import {
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
-import type { RepackEnv } from '../type/zephyr-internal-types';
-import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin';
+import type { RepackEnv } from '../type/zephyr-internal-types.js';
+import { verify_mf_fastly_config } from './utils/ze-util-verification.js';
+import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin.js';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function

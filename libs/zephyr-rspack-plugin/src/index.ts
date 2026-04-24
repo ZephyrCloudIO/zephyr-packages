@@ -1,5 +1,5 @@
-export { withZephyr } from './rspack-plugin/with-zephyr';
-export type { ZephyrRspackPluginOptions } from './types';
+export { withZephyr } from './rspack-plugin/with-zephyr.js';
+export type { ZephyrRspackPluginOptions } from './types/index.js';
 export type { ZephyrBuildHooks, DeploymentInfo } from 'zephyr-agent';
 
 // hacks

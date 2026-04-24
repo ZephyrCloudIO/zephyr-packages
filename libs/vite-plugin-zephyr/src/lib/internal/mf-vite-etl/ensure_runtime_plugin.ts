@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 
 export interface ModuleFederationRemoteConfig {
@@ -22,7 +23,32 @@ export const ZEPHYR_MF_RUNTIME_PLUGIN_ID = 'virtual:zephyr-mf-runtime-plugin';
 export const RESOLVED_ZEPHYR_MF_RUNTIME_PLUGIN_ID = `\0${ZEPHYR_MF_RUNTIME_PLUGIN_ID}`;
 
 export function getRuntimePluginPath() {
-  return path.resolve(__dirname, 'runtime_plugin.mjs');
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(
+      cwd,
+      'node_modules',
+      'vite-plugin-zephyr',
+      'dist',
+      'lib',
+      'internal',
+      'mf-vite-etl',
+      'runtime_plugin.mjs'
+    ),
+    path.join(
+      cwd,
+      'libs',
+      'vite-plugin-zephyr',
+      'src',
+      'lib',
+      'internal',
+      'mf-vite-etl',
+      'runtime_plugin.mjs'
+    ),
+  ];
+
+  const existing = candidates.find((candidate) => fs.existsSync(candidate));
+  return existing ?? candidates[0];
 }
 
 export function ensureRuntimePlugin(

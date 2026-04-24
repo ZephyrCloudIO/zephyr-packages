@@ -13,14 +13,7 @@
         "rootDir": "libs/zephyr-rsbuild-plugin/src",
         "outputPath": "libs/zephyr-rsbuild-plugin/dist",
         "tsConfig": "libs/zephyr-rsbuild-plugin/tsconfig.lib.json",
-        "main": "libs/zephyr-rsbuild-plugin/src/index.ts",
-        "assets": [
-          {
-            "input": "libs/zephyr-rsbuild-plugin/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "main": "libs/zephyr-rsbuild-plugin/src/index.ts"
       }
     },
     "publish": {

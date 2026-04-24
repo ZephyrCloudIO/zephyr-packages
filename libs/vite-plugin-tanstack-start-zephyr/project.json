@@ -13,14 +13,7 @@
         "rootDir": "libs/vite-plugin-tanstack-start-zephyr/src",
         "outputPath": "libs/vite-plugin-tanstack-start-zephyr/dist",
         "tsConfig": "libs/vite-plugin-tanstack-start-zephyr/tsconfig.lib.json",
-        "main": "libs/vite-plugin-tanstack-start-zephyr/src/index.ts",
-        "assets": [
-          {
-            "input": "libs/vite-plugin-tanstack-start-zephyr/src",
-            "glob": "index.mjs",
-            "output": "."
-          }
-        ]
+        "main": "libs/vite-plugin-tanstack-start-zephyr/src/index.ts"
       }
     },
     "nx-release-publish": {

@@ -6,7 +6,7 @@ import {
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { cwd } from 'node:process';
-import { getAssetsMap } from './internal/get-assets-map';
+import { getAssetsMap } from './internal/get-assets-map.js';
 
 const getInputFolder = (options: InputOptions): string => {
   if (typeof options.input === 'string') return options.input;

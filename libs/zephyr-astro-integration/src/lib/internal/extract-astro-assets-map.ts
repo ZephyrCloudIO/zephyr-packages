@@ -1,7 +1,12 @@
-import * as fsPromises from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildAssetsMap, logFn, type ZeBuildAssetsMap } from 'zephyr-agent';
+import {
+  buildAssetsMap,
+  logFn,
+  readDirRecursiveWithContents,
+  type ZeBuildAssetsMap,
+} from 'zephyr-agent';
 
 interface AstroAsset {
   content: Buffer | string;
@@ -117,7 +122,7 @@ export async function extractAstroAssetsFromBuildHook(
         }
 
         // Read the file content
-        const content = await fsPromises.readFile(fullPath);
+        const content = await readFile(fullPath);
         const fileType = getFileType(relativePath);
 
         astroAssets[relativePath] = {
@@ -193,45 +198,25 @@ function extractAssetEntries(assets: AstroAssets): [string, unknown][] {
 export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAssetsMap> {
   const assets: Record<string, AstroAsset> = {};
 
-  // Recursively walk through the build directory
-  // TODO: Use readDirRecursive from 'zephyr-agent' here instead
-  async function walkDir(dirPath: string): Promise<void> {
-    try {
-      const entries = await fsPromises.readdir(dirPath, { withFileTypes: true });
+  try {
+    const files = await readDirRecursiveWithContents(buildDir);
 
-      for (const entry of entries) {
-        const fullPath = join(dirPath, entry.name);
+    for (const file of files) {
+      const relativePath = normalizePath(file.relativePath);
 
-        if (entry.isDirectory()) {
-          await walkDir(fullPath);
-        } else if (entry.isFile()) {
-          // Get relative path from build directory
-          const relativePath = normalizePath(relative(buildDir, fullPath));
-
-          // Skip certain files that shouldn't be uploaded
-          if (shouldSkipFile(relativePath)) {
-            continue;
-          }
-
-          try {
-            const content = await fsPromises.readFile(fullPath);
-            const fileType = getFileType(relativePath);
-
-            assets[relativePath] = {
-              content,
-              type: fileType,
-            };
-          } catch (readError) {
-            logFn('warn', `Failed to read file ${fullPath}: ${readError}`);
-          }
-        }
+      if (shouldSkipFile(relativePath)) {
+        continue;
       }
-    } catch (error) {
-      logFn('warn', `Failed to walk directory ${dirPath}: ${error}`);
-    }
-  }
 
-  await walkDir(buildDir);
+      const fileType = getFileType(relativePath);
+      assets[relativePath] = {
+        content: file.content,
+        type: fileType,
+      };
+    }
+  } catch (error) {
+    logFn('warn', `Failed to read build directory ${buildDir}: ${error}`);
+  }
 
   return buildAssetsMap(assets, extractBuffer, getAssetType);
 }

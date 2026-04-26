@@ -3,7 +3,6 @@
  * specific properties
  */
 declare global {
-  // eslint-disable-next-line no-var
   var NX_GRAPH_CREATION: boolean | undefined;
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "zephyr-agent",
-  "version": "0.1.13",
+  "version": "1.0.2",
   "description": "Zephyr plugin agent",
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "prebuild": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('tsconfig.tsbuildinfo', { force: true })\"",
     "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
     "test": "rstest --passWithNoTests",
@@ -36,11 +37,12 @@
   },
   "dependencies": {
     "@toon-format/toon": "^0.9.0",
-    "axios": "^1.12.0",
+    "axios": "^1.15.0",
     "axios-retry": "^4.5.0",
     "debug": "^4.3.4",
     "eventsource": "^4.0.0",
     "git-url-parse": "^15.0.0",
+    "https-proxy-agent": "^7.0.6",
     "is-ci": "catalog:plugin-shared",
     "jose": "^5.10.0",
     "node-persist": "^4.0.1",
@@ -59,9 +61,6 @@
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "@rstest/core": "^0.7.7"
-  },
-  "peerDependencies": {
-    "https-proxy-agent": "^7.0.6"
   },
   "publishConfig": {
     "access": "public",

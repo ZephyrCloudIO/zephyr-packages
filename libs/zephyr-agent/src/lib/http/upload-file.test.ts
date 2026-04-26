@@ -4,13 +4,14 @@ import '../errors';
 import * as httpRequest from './http-request';
 import { uploadFile } from './upload-file';
 import type { UploadableAsset } from 'zephyr-edge-contract';
+import type * as ErrorsModule from '../errors';
 
 // Mock dependencies
 jest.mock('./http-request');
 
 // Mock the ZeErrors and ZephyrError
 jest.mock('../errors', async () => {
-  const originalModule = await jest.importActual<typeof import('../errors')>('../errors');
+  const originalModule = await jest.importActual<typeof ErrorsModule>('../errors');
 
   // Create mock error code
   const ZE_ERR_FAILED_UPLOAD = 'ZE40017';

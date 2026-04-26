@@ -1,9 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { rs } from '@rstest/core';
 
-var zephyrErrorCtorMock = rs.fn().mockImplementation((error, options) => {
-  return { error, options };
-});
+const {
+  zephyrErrorCtorMock,
+  mockBeforeBuild,
+  mockAfterBuild,
+  zephyrMetroPluginCtorMock,
+} = rs.hoisted(() => ({
+  zephyrErrorCtorMock: rs.fn().mockImplementation((error, options) => {
+    return { error, options };
+  }),
+  mockBeforeBuild: rs.fn(),
+  mockAfterBuild: rs.fn(),
+  zephyrMetroPluginCtorMock: rs.fn(),
+}));
 
 function MockZephyrError(this: any, error: unknown, options?: { message?: string }) {
   const message = options?.message || String(error);
@@ -22,12 +31,6 @@ rs.mock('zephyr-agent', () => ({
     ERR_INVALID_MF_CONFIG: 'ERR_INVALID_MF_CONFIG',
   },
 }));
-
-type MockFn = ReturnType<typeof rs.fn>;
-
-let mockBeforeBuild: MockFn = rs.fn();
-let mockAfterBuild: MockFn = rs.fn();
-const zephyrMetroPluginCtorMock = rs.fn();
 
 function MockZephyrMetroPlugin(this: any, ...args: unknown[]) {
   zephyrMetroPluginCtorMock(...args);

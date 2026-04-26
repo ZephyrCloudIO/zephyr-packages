@@ -63,7 +63,7 @@ describe('zephyrRspressSSGPlugin', () => {
     walkFilesMock.mockResolvedValue(mockFiles);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
-    await plugin.afterBuild?.({}, false);
+    await plugin.afterBuild?.();
 
     expect(showFilesMock).toHaveBeenCalledWith(path.resolve('dist'), mockFiles);
     expect(setupZeDeployMock).toHaveBeenCalledWith({
@@ -79,7 +79,7 @@ describe('zephyrRspressSSGPlugin', () => {
     walkFilesMock.mockRejectedValue(err);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
-    await plugin.afterBuild?.({}, false);
+    await plugin.afterBuild?.();
 
     expect(logFnMock).toHaveBeenCalledWith('error', 'Formatted: walk failed');
   });

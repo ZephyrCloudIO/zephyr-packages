@@ -1,32 +1,21 @@
-/** Loads TanStack Start build output from .output directory */
+/** Loads TanStack Start build output from the configured output directory */
 
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
-
-/**
- * Recursively get all files in a directory using Node.js native recursive option
- *
- * @deprecated TODO: Use readDirRecursive from 'zephyr-agent'
- */
-async function getAllFiles(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, { recursive: true, withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isFile())
-    .map((entry) => path.join(entry.parentPath ?? entry.path, entry.name));
-}
+import { readDirRecursiveWithContents } from 'zephyr-agent';
 
 /** Load files from directory into Rollup OutputBundle format */
 export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle> {
   const bundle: OutputBundle = {};
 
   try {
-    const files = await getAllFiles(dir);
+    const files = await readDirRecursiveWithContents(dir);
 
-    for (const filePath of files) {
-      const relativePath = path.relative(dir, filePath);
-      const content = await fs.readFile(filePath);
-      const ext = path.extname(filePath);
+    for (const file of files) {
+      const relativePath = file.relativePath;
+      const content = file.content;
+      const ext = path.extname(relativePath);
 
       // Determine if this is a code chunk or asset
       const isCode = ext === '.js' || ext === '.mjs' || ext === '.cjs';

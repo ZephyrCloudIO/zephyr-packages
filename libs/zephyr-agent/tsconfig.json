@@ -10,6 +10,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
+    "rootDir": "./src",
     "outDir": "./dist",
     "declaration": true,
     "types": [
@@ -19,8 +20,7 @@
     "incremental": true
   },
   "include": [
-    "src/**/*.ts",
-    "package.json"
+    "src/**/*.ts"
   ],
   "exclude": [
     "rstest.config.ts",

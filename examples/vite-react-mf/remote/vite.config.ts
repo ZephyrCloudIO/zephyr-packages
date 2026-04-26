@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { federation, type ModuleFederationOptions } from '@module-federation/vite';
+import { defineConfig } from 'vite';
 import { withZephyr } from 'vite-plugin-zephyr';
 
-const mfConfig = {
+const mfConfig: ModuleFederationOptions = {
   name: 'vite-remote',
   filename: 'remoteEntry.js',
   exposes: {
@@ -12,11 +13,12 @@ const mfConfig = {
     react: { singleton: true },
     'react-dom': { singleton: true },
   },
+  dts: false,
 };
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), withZephyr({ mfConfig })],
+  plugins: [react(), federation(mfConfig), withZephyr()],
   experimental: {
     renderBuiltUrl() {
       return { relative: true };

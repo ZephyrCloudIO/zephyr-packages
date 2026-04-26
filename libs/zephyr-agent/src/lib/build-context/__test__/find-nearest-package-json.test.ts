@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, rs } from '@rstest/core';
+import { describe, expect } from '@rstest/core';
 import { find_nearest_package_json } from '../find-nearest-package-json';
 import { ZeErrors, ZephyrError } from '../../errors';
 

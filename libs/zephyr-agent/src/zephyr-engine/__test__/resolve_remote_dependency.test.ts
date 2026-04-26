@@ -3,7 +3,6 @@ import { resolve_remote_dependency } from '../resolve_remote_dependency';
 import { ZephyrError } from '../../lib/errors';
 import axios from 'axios';
 
-const jest = rs;
 const { mockAxiosGet, getTokenMock } = rs.hoisted(() => ({
   mockAxiosGet: rs.fn(),
   getTokenMock: rs.fn(),

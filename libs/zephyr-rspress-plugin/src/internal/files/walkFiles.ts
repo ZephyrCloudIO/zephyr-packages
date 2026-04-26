@@ -1,21 +1,26 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { readdir } from 'node:fs/promises';
+import { join } from 'node:path';
 
-/** @deprecated Use readDirRecursive from 'zephyr-agent' */
+/** @deprecated Import and use readDirRecursive from 'zephyr-agent' directly. */
 export async function walkFiles(dir: string, prefix = ''): Promise<string[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const entries = await readdir(dir, { withFileTypes: true });
   const files: string[] = [];
 
   for (const entry of entries) {
-    if (entry.isSymbolicLink()) continue;
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
 
-    const rel = path.join(prefix, entry.name);
-    const full = path.join(dir, entry.name);
+    const relativePath = join(prefix, entry.name);
+    const fullPath = join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      files.push(...(await walkFiles(full, rel)));
-    } else {
-      files.push(rel);
+      files.push(...(await walkFiles(fullPath, relativePath)));
+      continue;
+    }
+
+    if (entry.isFile()) {
+      files.push(relativePath);
     }
   }
 

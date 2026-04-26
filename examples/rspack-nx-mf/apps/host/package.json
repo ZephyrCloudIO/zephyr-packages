@@ -15,6 +15,7 @@
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
+    "@testing-library/react": "catalog:react",
     "zephyr-rspack-plugin": "workspace:*",
     "@rstest/core": "^0.7.7"
   }

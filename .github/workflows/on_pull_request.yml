@@ -24,9 +24,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    outputs:
-      has-cache-ubuntu: ${{ matrix.os == 'ubuntu-latest' && steps.check-cache.outputs.has-files == 'true' }}
-      has-cache-windows: ${{ matrix.os == 'windows-latest' && steps.check-cache.outputs.has-files == 'true' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -115,7 +112,6 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     name: End-to-end test of examples
     needs: build
-    if: needs.build.outputs.has-cache-ubuntu == 'true' || needs.build.outputs.has-cache-windows == 'true'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -132,9 +128,24 @@ jobs:
             echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
           fi
       - name: Download zephyr cache
+        id: download-zephyr-cache
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
+      - name: Check if cache has files
+        id: check-cache
+        shell: bash
+        run: |
+          if [ -d "${{ env.ZEPHYR_CACHE }}" ] && [ "$(ls -A "${{ env.ZEPHYR_CACHE }}" 2>/dev/null)" ]; then
+            echo "has-files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-files=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Skip e2e when no cache exists for this OS
+        if: steps.check-cache.outputs.has-files != 'true'
+        run: echo "No Zephyr cache artifact for ${{ matrix.os }}; skipping e2e examples test."
       - name: Run e2e examples test
+        if: steps.check-cache.outputs.has-files == 'true'
         run: pnpm test:examples

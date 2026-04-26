@@ -1,0 +1,68 @@
+{
+  "name": "zephyr-nuxt-module",
+  "version": "1.0.2",
+  "description": "Nuxt module for deploying Nuxt applications with Zephyr Cloud",
+  "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-nuxt-module#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-nuxt-module"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "zephyr",
+    "deployment",
+    "module-federation",
+    "ssr",
+    "edge"
+  ],
+  "scripts": {
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "tslib": "catalog:typescript",
+    "zephyr-agent": "workspace:*"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^4.0.0",
+    "@nuxt/schema": "^4.0.0",
+    "@rstest/core": "^0.7.7",
+    "@types/jest": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "@typescript-eslint/eslint-plugin": "catalog:eslint"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": "^3.0.0 || ^4.0.0",
+    "nuxt": "^3.0.0 || ^4.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -1,39 +1,30 @@
-import { rs } from '@rstest/core';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { beforeEach, describe, expect, it, rs, test } from '@rstest/core';
+import type { buildAssetsMap } from 'zephyr-agent';
 import { extractAstroAssetsMap } from '../extract-astro-assets-map';
 
-const buildAssetsMapMock = rs.fn();
+const { mockBuildAssetsMap, mockReadDirRecursiveWithContents } = rs.hoisted(
+  () => ({
+    mockBuildAssetsMap: rs.fn(),
+    mockReadDirRecursiveWithContents: rs.fn(),
+  })
+);
 
 rs.mock('zephyr-agent', () => ({
-  buildAssetsMap: (...args: unknown[]) => buildAssetsMapMock(...args),
+  buildAssetsMap: mockBuildAssetsMap,
+  readDirRecursiveWithContents: mockReadDirRecursiveWithContents,
 }));
 
 describe('File Type Detection', () => {
-  let tempDir: string;
-
-  beforeEach(async () => {
-    tempDir = join(tmpdir(), `file-type-test-${Date.now()}`);
-    await mkdir(tempDir, { recursive: true });
-
-    buildAssetsMapMock.mockImplementation((assets: Record<string, unknown>) =>
-      Object.fromEntries(
+  beforeEach(() => {
+    rs.clearAllMocks();
+    mockBuildAssetsMap.mockImplementation((assets: Record<string, unknown>) => {
+      return Object.fromEntries(
         Object.entries(assets).map(([key, value], index) => [
           `hash${index}`,
           { filepath: key, ...(value as Record<string, unknown>) },
         ])
-      )
-    );
-  });
-
-  afterEach(async () => {
-    try {
-      await rm(tempDir, { recursive: true, force: true });
-    } catch {
-      // Ignore cleanup errors
-    }
-    rs.clearAllMocks();
+      ) as unknown as ReturnType<typeof buildAssetsMap>;
+    });
   });
 
   const testCases = [
@@ -61,35 +52,47 @@ describe('File Type Detection', () => {
   ];
 
   test.each(testCases)('should detect %s as %s', async (filename, expectedType) => {
-    await writeFile(join(tempDir, filename), 'test content');
+    mockReadDirRecursiveWithContents.mockResolvedValue([
+      {
+        fullPath: `/dist/${filename}`,
+        relativePath: filename,
+        content: Buffer.from('test content'),
+      },
+    ]);
 
-    await extractAstroAssetsMap(tempDir);
+    await extractAstroAssetsMap('/dist');
 
-    const buildAssetsMapCall = buildAssetsMapMock.mock.calls[0];
-    const assets = buildAssetsMapCall[0] as Record<string, { type: string }>;
-
+    const assets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
+      string,
+      { type: string }
+    >;
     expect(assets[filename]).toHaveProperty('type', expectedType);
   });
 
-  it('should handle files with multiple extensions correctly', async () => {
+  it('handles files with multiple extensions correctly', async () => {
     const testFiles = [
       ['script.min.js', 'application/javascript'],
       ['style.min.css', 'text/css'],
       ['backup.tar.gz', 'application/octet-stream'],
       ['data.test.json', 'application/json'],
-    ];
+    ] as const;
 
-    for (const [filename] of testFiles) {
-      await writeFile(join(tempDir, filename), 'content');
-    }
+    mockReadDirRecursiveWithContents.mockResolvedValue(
+      testFiles.map(([filename]) => ({
+        fullPath: `/dist/${filename}`,
+        relativePath: filename,
+        content: Buffer.from('content'),
+      }))
+    );
 
-    await extractAstroAssetsMap(tempDir);
+    await extractAstroAssetsMap('/dist');
 
-    const buildAssetsMapCall = buildAssetsMapMock.mock.calls[0];
-    const assets = buildAssetsMapCall[0] as Record<string, { type: string }>;
-
-    testFiles.forEach(([filename, expectedType]) => {
+    const assets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
+      string,
+      { type: string }
+    >;
+    for (const [filename, expectedType] of testFiles) {
       expect(assets[filename]).toHaveProperty('type', expectedType);
-    });
+    }
   });
 });

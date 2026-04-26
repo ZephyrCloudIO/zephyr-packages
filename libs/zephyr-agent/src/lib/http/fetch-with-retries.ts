@@ -206,18 +206,26 @@ export async function fetchWithRetries(
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: axiosError.response.status,
         url: url.toString(),
-        content: axiosError.response.data,
+        content:
+          typeof axiosError.response.data === 'string'
+            ? axiosError.response.data
+            : JSON.stringify(axiosError.response.data),
         method: options.method?.toUpperCase() ?? 'GET',
       });
     }
 
-    // Unknown errors
-    if (isAxiosErrorLike(error) && (axiosError.code === 'EPIPE' || axiosError.message?.includes('network'))) {
+    // Network errors after retries exhausted
+    const isRetryableNetworkError =
+      isAxiosErrorLike(error) &&
+      ((!!error.code && RETRY_ERROR_CODES.includes(error.code)) ||
+        !!error.message?.includes('network'));
+
+    if (isRetryableNetworkError) {
       // Max retries reached for network error
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: -1,
         url: url.toString(),
-        content: 'Max retries reached for network error',
+        content: `Max retries reached for network error: ${error.code ?? error.message}`,
         method: options.method?.toUpperCase() ?? 'GET',
       });
     }

@@ -1,9 +1,10 @@
 import { rs } from '@rstest/core';
 import fs from 'node:fs';
 import path from 'node:path';
-import { ZephyrError } from '../../errors';
+import { ZeErrors, ZephyrError } from '../../errors';
 import * as findNearestModule from '../find-nearest-package-json';
 import type { ZeDependency } from '../ze-package-json.type';
+import * as logEventModule from '../../logging/ze-log-event';
 import * as parseDepsModule from '../ze-util-parse-ze-dependencies';
 import { getPackageJson } from '../ze-util-read-package-json';
 
@@ -11,6 +12,7 @@ const jest = rs;
 const statSyncMock = jest.spyOn(fs, 'statSync');
 const findNearestPackageJsonMock = jest.spyOn(findNearestModule, 'find_nearest_package_json');
 const parseZeDependenciesMock = jest.spyOn(parseDepsModule, 'parseZeDependencies');
+const logFnMock = jest.spyOn(logEventModule, 'logFn');
 
 describe('getPackageJson', () => {
   // Common mock values
@@ -50,6 +52,7 @@ describe('getPackageJson', () => {
       json: mockPackageJsonStr,
     });
     parseZeDependenciesMock.mockReturnValue(mockParsedZeDeps);
+    logFnMock.mockImplementation(() => undefined);
   });
 
   it('should find and parse package.json successfully', async () => {
@@ -119,10 +122,16 @@ describe('getPackageJson', () => {
     });
 
     // Act & Assert
-    await expect(getPackageJson(mockStartPath)).rejects.toThrow(ZephyrError);
+    await expect(getPackageJson(mockStartPath)).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MUST_HAVE_NAME),
+      message: `Zephyr needs package.json at ${path.join(
+        mockStartPath,
+        'package.json'
+      )} to have a name field to map your application configuration in deployment.`,
+    });
   });
 
-  it('should throw if version is missing', async () => {
+  it('should default version to 0.0.0 and log a warning if version is missing', async () => {
     // Arrange
     const invalidPackageJson = JSON.stringify({
       name: 'test-package',
@@ -133,8 +142,21 @@ describe('getPackageJson', () => {
       json: invalidPackageJson,
     });
 
-    // Act & Assert
-    await expect(getPackageJson(mockStartPath)).rejects.toThrow(ZephyrError);
+    // Act
+    const result = await getPackageJson(mockStartPath);
+
+    // Assert
+    expect(result).toEqual({
+      name: 'test-package',
+      version: '0.0.0',
+    });
+    expect(logFnMock).toHaveBeenCalledWith(
+      'warn',
+      `${ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)}: package.json at ${path.join(
+        mockStartPath,
+        'package.json'
+      )} is missing a version field. Zephyr defaulted the version to 0.0.0.`
+    );
   });
 
   it('should not call parseZeDependencies if zephyr:dependencies is undefined', async () => {
@@ -156,5 +178,16 @@ describe('getPackageJson', () => {
     // Assert
     expect(parseZeDependenciesMock).not.toHaveBeenCalled();
     expect(result).toEqual(packageJsonWithoutZeDeps);
+  });
+
+  it('should not warn when version exists', async () => {
+    await getPackageJson(mockStartPath);
+
+    expect(logFnMock).not.toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining(
+        ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)
+      )
+    );
   });
 });

@@ -1,18 +1,22 @@
+// @ts-check
+
+/** @typedef {import('zephyr-edge-contract').ZephyrDependency} ZephyrDependency */
+/** @typedef {import('zephyr-edge-contract').ZephyrManifest} ZephyrManifest */
+/** @typedef {import('./module-federation.types').BeforeRequestHookArgs} BeforeRequestHookArgs */
+/** @typedef {import('./module-federation.types').FederationRuntimePlugin} FederationRuntimePlugin */
+/** @typedef {import('./module-federation.types').RemoteWithEntry} RemoteWithEntry */
+
 /**
- * Zephyr Runtime Plugin for Module Federation. This file MUST stay in ESM
- * format (.mjs) for Vite/Rollup compatibility.
- *
- * Keep this runtime logic aligned with the xpack runtime plugin at
- * `libs/zephyr-xpack-internal/src/xpack-extract/runtime-plugin.ts`.
- *
- * We intentionally duplicate logic in both plugins for now. Once zephyr-agent
- * supports ESM runtime exports, we can move to a shared runtime
- * implementation.
+ * @typedef ZephyrRuntimePluginOptions
+ * @property {string} [manifestUrl]
  */
 
 const globalCacheKey = '__ZEPHYR_MANIFEST_CACHE__';
-const _global = typeof window !== 'undefined' ? window : globalThis;
+const _global = /** @type {Window & typeof globalThis} */ (
+  typeof window !== 'undefined' ? window : globalThis
+);
 
+/** @returns {Map<string, Promise<ZephyrManifest | undefined>>} */
 function getGlobalManifestCache() {
   if (!_global[globalCacheKey]) {
     _global[globalCacheKey] = new Map();
@@ -20,40 +24,38 @@ function getGlobalManifestCache() {
   return _global[globalCacheKey];
 }
 
+/** @returns {string} */
 function getScriptBaseUrl() {
   if (typeof document !== 'undefined' && document.currentScript) {
     try {
-      const src = document.currentScript.src;
+      const script =
+        document.currentScript instanceof HTMLScriptElement
+          ? document.currentScript
+          : null;
+      const src = script?.src;
       if (src) {
         const url = new URL(src);
         return `${url.protocol}//${url.host}`;
       }
     } catch {
-      // Failed to parse URL, fall through to default.
+      // ignore invalid URL
     }
   }
 
   return '';
 }
 
-function getRemotes(args) {
-  if (Array.isArray(args?.options?.remotes)) {
-    return args.options.remotes;
-  }
-
-  if (Array.isArray(args?.userOptions?.remotes)) {
-    return args.userOptions.remotes;
-  }
-
-  return [];
-}
-
-export default function createZephyrRuntimePlugin(options = {}) {
+/**
+ * @param {ZephyrRuntimePluginOptions} [options]
+ * @returns {FederationRuntimePlugin}
+ */
+export function createZephyrRuntimePlugin(options = {}) {
   const defaultManifestUrl = `${getScriptBaseUrl()}/zephyr-manifest.json`;
   const { manifestUrl = defaultManifestUrl } = options;
 
   let processedRemotes;
 
+  /** @param {string} url */
   async function fetchManifest(url) {
     try {
       const response = await fetch(url);
@@ -93,17 +95,15 @@ export default function createZephyrRuntimePlugin(options = {}) {
         processedRemotes = identifyRemotes(args, zephyrManifest);
       }
 
-      const remoteName =
-        typeof args?.id === 'string' ? args.id.split('/')[0] : undefined;
+      const remoteName = args.id.split('/')[0];
 
-      if (!remoteName || !processedRemotes[remoteName]) {
+      if (!processedRemotes[remoteName]) {
         return args;
       }
 
       const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
-      const remotes = getRemotes(args);
 
-      const targetRemote = remotes.find(
+      const targetRemote = args.options.remotes.find(
         (remote) =>
           hasEntry(remote) &&
           (remote.name === remoteName || remote.alias === remoteName)
@@ -114,27 +114,27 @@ export default function createZephyrRuntimePlugin(options = {}) {
       }
 
       targetRemote.entry = resolvedUrl;
-
       return args;
     },
   };
 }
 
+/**
+ * @param {BeforeRequestHookArgs} args
+ * @param {ZephyrManifest | undefined} zephyrManifest
+ * @returns {Record<string, ZephyrDependency>}
+ */
 function identifyRemotes(args, zephyrManifest) {
+  /** @type {Record<string, ZephyrDependency>} */
   const identifiedRemotes = {};
 
-  if (!zephyrManifest) {
+  if (!zephyrManifest || !args.options.remotes.length) {
     return identifiedRemotes;
   }
 
-  const remotes = getRemotes(args);
-  if (!remotes.length) {
-    return identifiedRemotes;
-  }
+  const { dependencies } = zephyrManifest;
 
-  const dependencies = zephyrManifest.dependencies ?? {};
-
-  remotes.forEach((remote) => {
+  args.options.remotes.forEach((remote) => {
     const resolvedRemote =
       dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
     if (resolvedRemote) {
@@ -148,6 +148,10 @@ function identifyRemotes(args, zephyrManifest) {
   return identifiedRemotes;
 }
 
+/**
+ * @param {unknown} remote
+ * @returns {remote is RemoteWithEntry}
+ */
 function hasEntry(remote) {
   return (
     remote !== null &&
@@ -158,10 +162,13 @@ function hasEntry(remote) {
   );
 }
 
+/**
+ * @param {ZephyrDependency} resolvedRemote
+ * @returns {string}
+ */
 function getResolvedRemoteUrl(resolvedRemote) {
   const _window = typeof window !== 'undefined' ? window : globalThis;
-
-  const sessionEdgeURL = _window.sessionStorage?.getItem?.(
+  const sessionEdgeURL = _window.sessionStorage?.getItem(
     resolvedRemote.application_uid
   );
 
@@ -174,3 +181,5 @@ function getResolvedRemoteUrl(resolvedRemote) {
 
   return edgeUrl;
 }
+
+export default createZephyrRuntimePlugin;

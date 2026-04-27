@@ -1,12 +1,10 @@
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 
-const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const output = execFileSync(
-  pnpm,
+  process.execPath,
   [
-    'exec',
-    'turbo',
+    require.resolve('turbo/bin/turbo'),
     'ls',
     '--affected',
     '--filter=./examples/**',
@@ -15,7 +13,12 @@ const output = execFileSync(
   { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }
 );
 
-const data = JSON.parse(output);
+const jsonStart = output.indexOf('{');
+if (jsonStart === -1) {
+  throw new Error(`Expected Turbo JSON output, received: ${output}`);
+}
+
+const data = JSON.parse(output.slice(jsonStart));
 const items = (data.packages?.items ?? data.items ?? [])
   .map((pkg) => pkg.name)
   .filter((name) => name && name !== 'zephyr-cli-test');

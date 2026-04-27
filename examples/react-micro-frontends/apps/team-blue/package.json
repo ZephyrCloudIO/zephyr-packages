@@ -1,9 +1,23 @@
 {
   "name": "team-blue",
   "version": "1.0.0",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
   },
-  "private": true
+  "scripts": {
+    "build": "rspack build --config rspack.config.js --mode production",
+    "start": "rspack serve --config rspack.config.js --mode development --port 4300",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "@rstest/core": "^0.7.7",
+    "tslib": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
 }

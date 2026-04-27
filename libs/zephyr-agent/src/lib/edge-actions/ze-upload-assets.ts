@@ -31,7 +31,9 @@ export async function zeUploadAssets(
       Object.entries(envs)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .filter(([_, envCfg]) => envCfg.edgeUrl !== appConfig.EDGE_URL)
-        .map(([env, envCfg]) => zeUploadAssetsForEnv(env, envCfg, appConfig, assetsMap))
+        .map(([env, envCfg]) =>
+          zeUploadAssetsForEnv(env, envCfg, appConfig, assetsMap)
+        )
     );
   }
 
@@ -107,7 +109,9 @@ export async function zeUploadAssets(
     let totalSize = 0;
     await Promise.all(
       missingAssets.map(async (asset) => {
-        ze_log.upload(`Uploading file ${asset.path} to env: ${whiteBright(env)}`);
+        ze_log.upload(
+          `Uploading file ${asset.path} to env: ${whiteBright(env)}`
+        );
         const start = Date.now();
         const assetWithBuffer = assetsMap[asset.hash];
         const assetSize = assetWithBuffer?.buffer?.length / 1024;

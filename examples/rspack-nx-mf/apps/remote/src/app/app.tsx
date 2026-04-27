@@ -1,11 +1,9 @@
-// Uncomment this line to use CSS modules
-// import styles from './app.module.css';
-import NxWelcome from './nx-welcome';
+import RemoteWelcome from './remote-welcome';
 
 export function App() {
   return (
     <div>
-      <NxWelcome title="remote" />
+      <RemoteWelcome title="Remote Application" />
     </div>
   );
 }

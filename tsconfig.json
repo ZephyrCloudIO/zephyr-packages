@@ -1,0 +1,94 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "CommonJS",
+    "moduleDetection": "force",
+    "moduleResolution": "Node",
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "ES2022"
+  },
+  "exclude": ["node_modules", "tmp"],
+  "files": [],
+  "references": [
+    {
+      "path": "./libs/create-zephyr-apps/tsconfig.json"
+    },
+    {
+      "path": "./libs/parcel-reporter-zephyr/tsconfig.json"
+    },
+    {
+      "path": "./libs/rollup-plugin-zephyr/tsconfig.json"
+    },
+    {
+      "path": "./libs/vite-plugin-tanstack-start-zephyr/tsconfig.json"
+    },
+    {
+      "path": "./libs/vite-plugin-vinext-zephyr/tsconfig.json"
+    },
+    {
+      "path": "./libs/vite-plugin-zephyr/tsconfig.json"
+    },
+    {
+      "path": "./libs/with-zephyr/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-agent/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-astro-integration/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-cli/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-edge-contract/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-metro-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-modernjs-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-repack-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-rolldown-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-rsbuild-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-rspack-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-rspress-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-webpack-plugin/tsconfig.json"
+    },
+    {
+      "path": "./libs/zephyr-xpack-internal/tsconfig.json"
+    },
+    {
+      "path": "./e2e/deployment/tsconfig.json"
+    }
+  ]
+}

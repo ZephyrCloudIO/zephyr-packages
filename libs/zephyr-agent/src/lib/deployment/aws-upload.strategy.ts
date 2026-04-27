@@ -43,20 +43,28 @@ export async function awsUploadStrategy(
   }
 
   await createBucket(zephyr_engine.application_uid);
-  await uploadAssets(zephyr_engine, { assetsMap, missingAssets }).catch((error) => {
-    // Backwards compatibility after new AWS integration workflow to
-    // enable bigger body size upload.
-    // It can be removed after new AWS integration gets stabilized
-    if (error.cause?.template?.content === 'Not Implemented') {
-      return fallbackUploadAssets(zephyr_engine, { assetsMap, missingAssets });
+  await uploadAssets(zephyr_engine, { assetsMap, missingAssets }).catch(
+    (error) => {
+      // Backwards compatibility after new AWS integration workflow to
+      // enable bigger body size upload.
+      // It can be removed after new AWS integration gets stabilized
+      if (error.cause?.template?.content === 'Not Implemented') {
+        return fallbackUploadAssets(zephyr_engine, {
+          assetsMap,
+          missingAssets,
+        });
+      }
+      throw error;
     }
-    throw error;
-  });
+  );
   const versionUrl = await zeUploadSnapshot(zephyr_engine, { snapshot });
 
   // Waits for the reply to check upload problems, but the reply is a simply
   // 200 OK sent before any processing
-  await uploadBuildStatsAndEnableEnvs(zephyr_engine, { getDashData, versionUrl });
+  await uploadBuildStatsAndEnableEnvs(zephyr_engine, {
+    getDashData,
+    versionUrl,
+  });
 
   return versionUrl;
 }
@@ -199,7 +207,10 @@ async function zeUploadAssets(
       },
     };
 
-    const [ok, cause, data] = await makeRequest<{ url: string; contentType: string }>(
+    const [ok, cause, data] = await makeRequest<{
+      url: string;
+      contentType: string;
+    }>(
       {
         path: '/upload',
         base: EDGE_URL,

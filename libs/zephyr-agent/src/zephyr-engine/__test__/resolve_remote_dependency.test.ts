@@ -1,15 +1,27 @@
-import { describe, expect, jest, it } from '@jest/globals';
+import { describe, expect, rs, it } from '@rstest/core';
 import { resolve_remote_dependency } from '../resolve_remote_dependency';
 import { ZephyrError } from '../../lib/errors';
 import axios from 'axios';
 
+const { mockAxiosGet, getTokenMock } = rs.hoisted(() => ({
+  mockAxiosGet: rs.fn(),
+  getTokenMock: rs.fn(),
+}));
+
 // Mock axios instead of fetch
-jest.mock('axios');
-const axiosMock = axios as jest.Mocked<typeof axios>;
+rs.mock('axios', () => ({
+  __esModule: true,
+  default: {
+    get: mockAxiosGet,
+  },
+  get: mockAxiosGet,
+}));
+const axiosMock = axios as unknown as {
+  get: typeof mockAxiosGet;
+};
 
 const mockToken = 'test-token';
-const getTokenMock = jest.fn();
-jest.mock('../../lib/node-persist/token', () => ({
+rs.mock('../../lib/node-persist/token', () => ({
   getToken: () => getTokenMock(),
 }));
 
@@ -35,7 +47,10 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
       data: { value: mock_api_response },
     });
 
-    const result = await resolve_remote_dependency({ application_uid, version });
+    const result = await resolve_remote_dependency({
+      application_uid,
+      version,
+    });
 
     expect(getTokenMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ ...mock_api_response, version });

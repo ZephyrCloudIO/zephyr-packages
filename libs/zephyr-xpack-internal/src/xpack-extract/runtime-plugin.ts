@@ -19,9 +19,15 @@ const _global: any = typeof window !== 'undefined' ? window : globalThis;
  * Gets the global manifest cache shared across all bundles (host + remotes). Ensures only
  * one fetch per unique manifest URL across the entire application.
  */
-function getGlobalManifestCache(): Map<string, Promise<ZephyrManifest | undefined>> {
+function getGlobalManifestCache(): Map<
+  string,
+  Promise<ZephyrManifest | undefined>
+> {
   if (!_global[globalCacheKey]) {
-    _global[globalCacheKey] = new Map<string, Promise<ZephyrManifest | undefined>>();
+    _global[globalCacheKey] = new Map<
+      string,
+      Promise<ZephyrManifest | undefined>
+    >();
   }
   return _global[globalCacheKey];
 }
@@ -72,7 +78,9 @@ export function createZephyrRuntimePlugin(
   let processedRemotes: Record<string, ZephyrDependency> | undefined;
 
   /** Fetches the zephyr-manifest.json file (basic version without OTA) */
-  async function fetchManifest(url: string): Promise<ZephyrManifest | undefined> {
+  async function fetchManifest(
+    url: string
+  ): Promise<ZephyrManifest | undefined> {
     try {
       const response = await fetch(url);
 
@@ -80,7 +88,9 @@ export function createZephyrRuntimePlugin(
         return;
       }
 
-      const manifest = await response.json().catch(() => undefined);
+      const manifest = (await response.json().catch(() => undefined)) as
+        | ZephyrManifest
+        | undefined;
 
       if (!manifest) {
         console.error('[Zephyr] Failed to parse manifest JSON');
@@ -125,7 +135,8 @@ export function createZephyrRuntimePlugin(
 
       const targetRemote = args.options.remotes.find(
         (remote) =>
-          hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
+          hasEntry(remote) &&
+          (remote.name === remoteName || remote.alias === remoteName)
       );
 
       if (!targetRemote) {
@@ -163,7 +174,8 @@ function identifyRemotes(
   const remotes = args.options.remotes;
 
   remotes.forEach((remote) => {
-    const resolvedRemote = dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
+    const resolvedRemote =
+      dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
     if (resolvedRemote) {
       // Map both the original remote name and alias to the resolved remote
       // Nx replaces aliases calls with the normalized name
@@ -192,7 +204,9 @@ function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
   // Check for session storage override (for development/testing)
-  const sessionEdgeURL = _window.sessionStorage?.getItem(resolvedRemote.application_uid);
+  const sessionEdgeURL = _window.sessionStorage?.getItem(
+    resolvedRemote.application_uid
+  );
 
   // Use session URL if available, otherwise use resolved URL
   let edgeUrl = sessionEdgeURL ?? resolvedRemote.remote_entry_url;

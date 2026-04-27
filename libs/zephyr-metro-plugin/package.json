@@ -2,14 +2,35 @@
   "name": "zephyr-metro-plugin",
   "version": "1.0.2",
   "description": "Metro bundler plugin for deploying React Native applications with Zephyr Cloud - OTA updates, Module Federation, and seamless deployment",
-  "type": "commonjs",
+  "keywords": [
+    "android",
+    "bundler",
+    "cross-platform",
+    "deployment",
+    "ios",
+    "metro",
+    "micro-frontends",
+    "module-federation",
+    "ota",
+    "over-the-air",
+    "plugin",
+    "react-native",
+    "zephyr",
+    "zephyr-cloud"
+  ],
   "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-metro-plugin"
+  },
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "nx run zephyr-metro-plugin:build",
-    "patch-version": "pnpm version"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -17,9 +38,28 @@
       "default": "./dist/index.js"
     }
   },
-  "author": {
-    "name": "ZephyrCloudIO",
-    "url": "https://github.com/ZephyrCloudIO"
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
+  },
+  "dependencies": {
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "^0.7.7",
+    "@types/find-package-json": "^1.2.6",
+    "@types/jest": "catalog:typescript",
+    "metro-config": "^0.84.0",
+    "metro-transform-worker": "^0.84.0"
   },
   "peerDependencies": {
     "metro": ">=0.70.0",
@@ -30,43 +70,5 @@
     "zephyr-xpack-internal": {
       "optional": true
     }
-  },
-  "dependencies": {
-    "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-metro-plugin"
-  },
-  "devDependencies": {
-    "@rspack/core": "catalog:rspack",
-    "@types/find-package-json": "^1.2.6",
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "metro-config": "^0.84.0",
-    "metro-transform-worker": "^0.84.0",
-    "ts-jest": "catalog:typescript"
-  },
-  "keywords": [
-    "metro",
-    "react-native",
-    "zephyr",
-    "zephyr-cloud",
-    "module-federation",
-    "ota",
-    "over-the-air",
-    "deployment",
-    "bundler",
-    "ios",
-    "android",
-    "cross-platform",
-    "micro-frontends",
-    "plugin"
-  ],
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "nx build rollup-sample-lib --skip-nx-cache",
-    "build-watch-not-working": "nx run rollup-sample-lib:build --skip-nx-cache --watch --verbose"
+    "build": "rollup -c rollup.config.js",
+    "build-watch-not-working": "rollup -c rollup.config.js --watch"
   },
   "dependencies": {
     "react": "catalog:react18",
@@ -12,14 +12,13 @@
     "react-router-dom": "^6.30.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.8",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "@types/react-router-dom": "^5.3.3",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "eslint-plugin-react-hooks": "catalog:eslint",
-    "eslint-plugin-jsx-a11y": "catalog:eslint",
-    "eslint-plugin-react": "catalog:eslint",
-    "eslint-plugin-import": "catalog:eslint",
+    "rollup": "catalog:rollup4",
     "rollup-plugin-zephyr": "workspace:*"
   }
 }

@@ -1,62 +1,60 @@
-import type { Stats } from 'node:fs';
-import fs from 'node:fs/promises';
+import { rs } from '@rstest/core';
+import { mkdtemp, rm, truncate, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { ze_log } from 'zephyr-agent';
 import { showFiles } from '../files/showFiles';
 
-jest.mock('node:fs/promises');
+const zeLogPackageMock = rs.fn();
 
-jest.mock('zephyr-agent', () => ({
+rs.mock('zephyr-agent', () => ({
   ze_log: {
-    package: jest.fn(),
+    package: (...args: unknown[]) => zeLogPackageMock(...args),
   },
 }));
 
-const mockedFs = fs as jest.Mocked<typeof fs>;
-const mockedZeLog = ze_log.package as unknown as jest.Mock;
-
 describe('showFiles', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  let rootDir: string;
+
+  beforeEach(async () => {
+    rs.clearAllMocks();
+    rootDir = await mkdtemp(path.join(tmpdir(), 'show-files-'));
+  });
+
+  afterEach(async () => {
+    await rm(rootDir, { recursive: true, force: true });
   });
 
   it('logs size for each file', async () => {
-    const root = '/fake';
     const files = ['a.js', 'b.css'];
 
-    mockedFs.stat.mockImplementation(async (filePath) => {
-      return {
-        size: filePath.toString().includes('a.js') ? 2048 : 1024,
-      } as Stats;
-    });
+    await writeFile(path.join(rootDir, 'a.js'), '');
+    await writeFile(path.join(rootDir, 'b.css'), '');
+    await truncate(path.join(rootDir, 'a.js'), 2048);
+    await truncate(path.join(rootDir, 'b.css'), 1024);
 
-    await showFiles(root, files);
+    await showFiles(rootDir, files);
 
-    expect(mockedFs.stat).toHaveBeenCalledWith(path.join(root, 'a.js'));
-    expect(mockedFs.stat).toHaveBeenCalledWith(path.join(root, 'b.css'));
-    expect(mockedZeLog).toHaveBeenCalledWith('a.js — 2.00 KB');
-    expect(mockedZeLog).toHaveBeenCalledWith('b.css — 1.00 KB');
+    expect(zeLogPackageMock).toHaveBeenCalledWith('a.js — 2.00 KB');
+    expect(zeLogPackageMock).toHaveBeenCalledWith('b.css — 1.00 KB');
   });
 
   it('logs error for file that fails stat', async () => {
-    const root = '/fake';
     const files = ['good.js', 'bad.js'];
+    await writeFile(path.join(rootDir, 'good.js'), '');
+    await truncate(path.join(rootDir, 'good.js'), 1000);
 
-    mockedFs.stat.mockImplementation(async (filePath) => {
-      if (filePath.toString().includes('bad.js')) {
-        throw new Error('fail');
-      }
-      return { size: 1000 } as Stats;
-    });
+    await showFiles(rootDir, files);
 
-    await showFiles(root, files);
-
-    expect(mockedZeLog).toHaveBeenCalledWith('good.js — 0.98 KB');
-    expect(mockedZeLog).toHaveBeenCalledWith('Failed to stat file: bad.js');
+    expect(zeLogPackageMock).toHaveBeenCalledWith('good.js — 0.98 KB');
+    expect(zeLogPackageMock).toHaveBeenCalledWith(
+      'Failed to stat file: bad.js'
+    );
   });
 
   it('logs message for empty file list', async () => {
-    await showFiles('/any', []);
-    expect(mockedZeLog).toHaveBeenCalledWith('No files found in output directory.');
+    await showFiles(rootDir, []);
+    expect(zeLogPackageMock).toHaveBeenCalledWith(
+      'No files found in output directory.'
+    );
   });
 });

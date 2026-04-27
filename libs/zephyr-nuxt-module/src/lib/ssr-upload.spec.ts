@@ -1,28 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { rs } from '@rstest/core';
 import { resolve } from 'node:path';
-import {
-  buildAssetsMap,
-  handleGlobalError,
-  readDirRecursiveWithContents,
-  zeBuildDashData,
-} from 'zephyr-agent';
 import { createUploadRunner, resolveAssetSources } from './ssr-upload';
 import type { NuxtLike } from './types';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  handleGlobalError: jest.fn(),
-  readDirRecursiveWithContents: jest.fn(),
-  zeBuildDashData: jest.fn(),
-  ze_log: {
-    upload: jest.fn(),
-  },
+const {
+  mockedBuildAssetsMap,
+  mockedHandleGlobalError,
+  mockedReadDirRecursiveWithContents,
+  mockedZeBuildDashData,
+} = rs.hoisted(() => ({
+  mockedBuildAssetsMap: rs.fn(),
+  mockedHandleGlobalError: rs.fn(),
+  mockedReadDirRecursiveWithContents: rs.fn(),
+  mockedZeBuildDashData: rs.fn(),
 }));
 
-const mockedBuildAssetsMap = buildAssetsMap as jest.Mock;
-const mockedHandleGlobalError = handleGlobalError as jest.Mock;
-const mockedReadDirRecursiveWithContents = readDirRecursiveWithContents as jest.Mock;
-const mockedZeBuildDashData = zeBuildDashData as jest.Mock;
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: mockedBuildAssetsMap,
+  handleGlobalError: mockedHandleGlobalError,
+  readDirRecursiveWithContents: mockedReadDirRecursiveWithContents,
+  zeBuildDashData: mockedZeBuildDashData,
+  ze_log: {
+    upload: rs.fn(),
+  },
+}));
 
 function makeNuxt(rootDir: string, publicDir?: string): NuxtLike {
   return {
@@ -36,7 +37,7 @@ function makeNuxt(rootDir: string, publicDir?: string): NuxtLike {
         },
       },
     },
-    hook: jest.fn(),
+    hook: rs.fn(),
   };
 }
 
@@ -44,15 +45,19 @@ function makeEngine() {
   return {
     env: {},
     buildProperties: {},
-    upload_assets: jest.fn().mockResolvedValue(undefined),
-    build_finished: jest.fn().mockResolvedValue(undefined),
+    upload_assets: rs.fn().mockResolvedValue(undefined),
+    build_finished: rs.fn().mockResolvedValue(undefined),
   };
 }
 
 describe('resolveAssetSources', () => {
   it('uses only outputDir when publicDir is inside outputDir', () => {
     expect(
-      resolveAssetSources('ssr', '/workspace/.output', '/workspace/.output/public')
+      resolveAssetSources(
+        'ssr',
+        '/workspace/.output',
+        '/workspace/.output/public'
+      )
     ).toEqual([{ dir: '/workspace/.output' }]);
   });
 
@@ -74,8 +79,10 @@ describe('resolveAssetSources', () => {
 
 describe('createUploadRunner', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockedBuildAssetsMap.mockImplementation((assets: Record<string, Buffer>) => assets);
+    rs.clearAllMocks();
+    mockedBuildAssetsMap.mockImplementation(
+      (assets: Record<string, Buffer>) => assets
+    );
     mockedZeBuildDashData.mockResolvedValue({});
   });
 
@@ -84,8 +91,8 @@ describe('createUploadRunner', () => {
     const runner = createUploadRunner({
       nuxt: makeNuxt('/workspace/app'),
       options: { snapshotType: 'csr' },
-      zephyrEngineDefer: Promise.resolve(engine as any),
-      initEngine: jest.fn(),
+      zephyrEngineDefer: Promise.resolve(engine as never),
+      initEngine: rs.fn(),
     });
 
     mockedReadDirRecursiveWithContents
@@ -117,29 +124,31 @@ describe('createUploadRunner', () => {
         snapshotType: 'ssr',
         entrypoint: 'server/index.mjs',
       },
-      zephyrEngineDefer: Promise.resolve(engine as any),
-      initEngine: jest.fn(),
+      zephyrEngineDefer: Promise.resolve(engine as never),
+      initEngine: rs.fn(),
     });
 
-    mockedReadDirRecursiveWithContents.mockImplementation(async (dir: string) => {
-      if (dir === outputDir) {
-        return [
-          {
-            relativePath: 'server/index.mjs',
-            content: Buffer.from('server'),
-          },
-        ];
+    mockedReadDirRecursiveWithContents.mockImplementation(
+      async (dir: string) => {
+        if (dir === outputDir) {
+          return [
+            {
+              relativePath: 'server/index.mjs',
+              content: Buffer.from('server'),
+            },
+          ];
+        }
+        if (dir === publicDir) {
+          return [
+            {
+              relativePath: 'app.js',
+              content: Buffer.from('public'),
+            },
+          ];
+        }
+        return [];
       }
-      if (dir === publicDir) {
-        return [
-          {
-            relativePath: 'app.js',
-            content: Buffer.from('public'),
-          },
-        ];
-      }
-      return [];
-    });
+    );
 
     await runner();
 

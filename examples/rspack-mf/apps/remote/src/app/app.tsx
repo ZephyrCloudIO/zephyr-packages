@@ -1,9 +1,9 @@
-import NxWelcome from './nx-welcome';
+import RemoteWelcome from './remote-welcome';
 
 export function App() {
   return (
     <div>
-      <NxWelcome title="remote" />
+      <RemoteWelcome title="remote" />
     </div>
   );
 }

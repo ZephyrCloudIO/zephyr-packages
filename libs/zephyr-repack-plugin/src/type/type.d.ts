@@ -21,17 +21,12 @@ declare const __webpack_require__: {
   };
 };
 
-type ScriptLocatorResolver = (
-  scriptId?: string,
-  caller?: string,
-  referenceUrl?: string
-) => Promise<{ url: string } | undefined>;
-
-interface ResolverOptions {
-  key: string;
-}
-
 // Reference: https://github.com/callstack/repack/blob/f8af03cd231c3d95a92099719d827e368f707b5c/packages/repack/src/modules/ScriptManager/types.ts#L144
+
+interface ScriptLocator {
+  url: string;
+  [key: string]: unknown;
+}
 
 /**
  * Defines a function to resolve a script locator used in {@link ScriptManagerConfig}. It's
@@ -46,7 +41,7 @@ interface ResolverOptions {
  *   chunk or container.
  */
 type ScriptLocatorResolver = (
-  scriptId: string,
+  scriptId?: string,
   caller?: string,
   referenceUrl?: string
 ) => Promise<ScriptLocator | undefined>;

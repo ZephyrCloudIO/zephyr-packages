@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build-watch": "tsc && vite build --watch",
+    "prebuild": "pnpm --filter vite-plugin-zephyr build",
+    "build": "tsgo && vite build",
+    "build-watch": "tsgo && vite build --watch",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,17 +16,9 @@
     "rollup": "catalog:rollup4"
   },
   "devDependencies": {
-    "@eslint/compat": "catalog:eslint",
-    "@eslint/eslintrc": "catalog:eslint",
-    "@eslint/js": "catalog:eslint",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "@typescript-eslint/parser": "catalog:eslint",
     "@vitejs/plugin-react": "catalog:vite7",
-    "eslint": "catalog:eslint",
-    "eslint-plugin-react-hooks": "catalog:eslint",
-    "eslint-plugin-react-refresh": "catalog:eslint",
     "globals": "catalog:vite7",
     "typescript": "catalog:typescript",
     "vite": "catalog:vite7",

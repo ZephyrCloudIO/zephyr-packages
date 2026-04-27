@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2020",
-    "lib": ["ES2020", "ES2021"],
+    "lib": ["ES2020", "ES2021", "DOM"],
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -11,16 +11,13 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node"],
+    "composite": true,
+    "incremental": true
   },
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["rstest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }

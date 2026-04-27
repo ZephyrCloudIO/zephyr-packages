@@ -1,14 +1,25 @@
 {
   "name": "team-red",
   "version": "0.1.0",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
   },
   "scripts": {
-    "build": "nx run team-red:build --skip-nx-cache"
+    "build": "rspack build --config rspack.config.js --mode production",
+    "start": "rspack serve --config rspack.config.js --mode development --port 4500",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests"
   },
-  "private": true,
+  "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
+    "@rstest/core": "^0.7.7",
+    "tslib": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
+  },
   "zephyr:dependencies": {
     "team-blue": "zephyr:team-blue@*",
     "team-green": "zephyr:team-green@*"

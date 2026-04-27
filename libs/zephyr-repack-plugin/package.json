@@ -2,23 +2,29 @@
   "name": "zephyr-repack-plugin",
   "version": "1.0.2",
   "description": "Repack plugin for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-repack-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-repack-plugin"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx build zephyr-repack-plugin",
+    "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
-    "test": "nx test zephyr-repack-plugin"
+    "test": "rstest --passWithNoTests",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -26,13 +32,8 @@
   },
   "devDependencies": {
     "@rspack/core": "catalog:rspack",
+    "@rstest/core": "^0.7.7",
     "@types/find-package-json": "^1.2.6",
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "@types/jest": "catalog:typescript"
   }
 }

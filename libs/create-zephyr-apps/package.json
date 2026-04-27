@@ -3,35 +3,42 @@
   "version": "1.0.2",
   "description": "A CLI tool to create web applications using Zephyr.",
   "keywords": [
-    "zephyr",
     "create-zephyr-apps",
+    "example",
+    "template",
+    "zephyr",
     "zephyr-apps",
     "zephyr-cli",
     "zephyr-example",
-    "zephyr-template",
-    "example",
-    "template"
+    "zephyr-template"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/create-zephyr-apps"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/create-zephyr-apps"
+  },
   "bin": {
     "create-zephyr-apps": "dist/index.js"
   },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run create-zephyr-apps:build",
+    "build": "tsgo -p tsconfig.json",
     "dev": "tsx src/index.ts",
-    "patch-version": "pnpm version"
+    "patch-version": "pnpm version",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@clack/prompts": "0.11.0",
@@ -39,15 +46,10 @@
     "terminal-link": "^4.0.0"
   },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
     "tsx": "^4.19.3",
     "typescript": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

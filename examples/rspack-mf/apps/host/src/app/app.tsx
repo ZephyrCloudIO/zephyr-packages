@@ -1,6 +1,6 @@
 import { lazy } from 'react';
 
-const NxWelcome = lazy(() => import('rspack_mf_remote/NxWelcome'));
+const RemoteWelcome = lazy(() => import('rspack_mf_remote/RemoteWelcome'));
 
 export function App() {
   return (
@@ -15,7 +15,7 @@ export function App() {
       </p>
       <div>
         <h2>Remote Application</h2>
-        <NxWelcome title="! This is loading from Remote!" />
+        <RemoteWelcome title="This is loading from the remote." />
       </div>
     </div>
   );

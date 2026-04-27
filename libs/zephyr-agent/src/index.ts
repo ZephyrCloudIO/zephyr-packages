@@ -1,5 +1,8 @@
 // hack for angular
-export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index-html';
+export {
+  onIndexHtmlResolved,
+  resolveIndexHtml,
+} from './lib/hacks/resolve-index-html';
 // qwik hack - persist
 export {
   getPartialAssetMap,
@@ -66,7 +69,10 @@ export {
 } from './lib/transformers/ze-create-manifest';
 
 // Auth related exports
-export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
+export {
+  DEFAULT_AUTH_COMPLETION_TIMEOUT_MS,
+  TOKEN_EXPIRY,
+} from './lib/auth/auth-flags';
 
 // Zephyr Edge is the main class which should be used
 export {
@@ -77,7 +83,11 @@ export {
   type ZephyrDependencies,
   type ZephyrEngineOptions,
 } from './zephyr-engine';
-export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
+export type {
+  Platform,
+  ZephyrBuildHooks,
+  DeploymentInfo,
+} from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
 
 // Environment variable utilities

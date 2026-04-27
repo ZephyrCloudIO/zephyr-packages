@@ -1,4 +1,7 @@
-import { calculateManifestHash, generateManifestContent } from '../env-variables';
+import {
+  calculateManifestHash,
+  generateManifestContent,
+} from '../env-variables';
 
 export interface ManifestAssetResult {
   content: string;
@@ -50,7 +53,9 @@ export async function generateEnvironmentManifest(
  * @param manifestContent - JSON content of a zephyr-manifest.json file
  * @returns The zeVars object from the manifest
  */
-export function extractManifestVars(manifestContent: string): Record<string, string> {
+export function extractManifestVars(
+  manifestContent: string
+): Record<string, string> {
   try {
     const manifest = JSON.parse(manifestContent);
     return manifest.zeVars || {};

@@ -1,20 +1,22 @@
-import { buildAssetsMap, readDirRecursiveWithContents } from 'zephyr-agent';
+import { beforeEach, describe, expect, it, rs, test } from '@rstest/core';
+import type { buildAssetsMap } from 'zephyr-agent';
 import { extractAstroAssetsMap } from '../extract-astro-assets-map';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  readDirRecursiveWithContents: jest.fn(),
-}));
+const { mockBuildAssetsMap, mockReadDirRecursiveWithContents } = rs.hoisted(
+  () => ({
+    mockBuildAssetsMap: rs.fn(),
+    mockReadDirRecursiveWithContents: rs.fn(),
+  })
+);
 
-const mockBuildAssetsMap = buildAssetsMap as jest.MockedFunction<typeof buildAssetsMap>;
-const mockReadDirRecursiveWithContents =
-  readDirRecursiveWithContents as jest.MockedFunction<
-    typeof readDirRecursiveWithContents
-  >;
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: mockBuildAssetsMap,
+  readDirRecursiveWithContents: mockReadDirRecursiveWithContents,
+}));
 
 describe('File Type Detection', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     mockBuildAssetsMap.mockImplementation((assets: Record<string, unknown>) => {
       return Object.fromEntries(
         Object.entries(assets).map(([key, value], index) => [
@@ -49,23 +51,26 @@ describe('File Type Detection', () => {
     ['file.', 'application/octet-stream'],
   ];
 
-  test.each(testCases)('should detect %s as %s', async (filename, expectedType) => {
-    mockReadDirRecursiveWithContents.mockResolvedValue([
-      {
-        fullPath: `/dist/${filename}`,
-        relativePath: filename,
-        content: Buffer.from('test content'),
-      },
-    ]);
+  test.each(testCases)(
+    'should detect %s as %s',
+    async (filename, expectedType) => {
+      mockReadDirRecursiveWithContents.mockResolvedValue([
+        {
+          fullPath: `/dist/${filename}`,
+          relativePath: filename,
+          content: Buffer.from('test content'),
+        },
+      ]);
 
-    await extractAstroAssetsMap('/dist');
+      await extractAstroAssetsMap('/dist');
 
-    const assets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
-      string,
-      { type: string }
-    >;
-    expect(assets[filename]).toHaveProperty('type', expectedType);
-  });
+      const assets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
+        string,
+        { type: string }
+      >;
+      expect(assets[filename]).toHaveProperty('type', expectedType);
+    }
+  );
 
   it('handles files with multiple extensions correctly', async () => {
     const testFiles = [

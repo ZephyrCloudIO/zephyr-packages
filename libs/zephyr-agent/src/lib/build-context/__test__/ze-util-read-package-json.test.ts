@@ -1,21 +1,24 @@
+import { rs } from '@rstest/core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ZeErrors, ZephyrError } from '../../errors';
-import { find_nearest_package_json } from '../find-nearest-package-json';
+import * as findNearestModule from '../find-nearest-package-json';
 import type { ZeDependency } from '../ze-package-json.type';
-import { parseZeDependencies } from '../ze-util-parse-ze-dependencies';
+import * as logEventModule from '../../logging/ze-log-event';
+import * as parseDepsModule from '../ze-util-parse-ze-dependencies';
 import { getPackageJson } from '../ze-util-read-package-json';
-import { logFn } from '../../logging/ze-log-event';
 
-// Mock dependencies
-jest.mock('node:fs');
-jest.mock('node:fs/promises');
-jest.mock('../find-nearest-package-json');
-jest.mock('../ze-util-parse-ze-dependencies');
-jest.mock('../../logging', () => ({
-  ze_log: { package: jest.fn(), misc: jest.fn(), error: jest.fn() },
-}));
-jest.mock('../../logging/ze-log-event', () => ({ logFn: jest.fn() }));
+const jest = rs;
+const statSyncMock = jest.spyOn(fs, 'statSync');
+const findNearestPackageJsonMock = jest.spyOn(
+  findNearestModule,
+  'find_nearest_package_json'
+);
+const parseZeDependenciesMock = jest.spyOn(
+  parseDepsModule,
+  'parseZeDependencies'
+);
+const logFnMock = jest.spyOn(logEventModule, 'logFn');
 
 describe('getPackageJson', () => {
   // Common mock values
@@ -49,12 +52,13 @@ describe('getPackageJson', () => {
     jest.resetAllMocks();
 
     // Setup default mocks
-    (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => false });
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    statSyncMock.mockReturnValue({ isFile: () => false } as fs.Stats);
+    findNearestPackageJsonMock.mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: mockPackageJsonStr,
     });
-    (parseZeDependencies as jest.Mock).mockReturnValue(mockParsedZeDeps);
+    parseZeDependenciesMock.mockReturnValue(mockParsedZeDeps);
+    logFnMock.mockImplementation(() => undefined);
   });
 
   it('should find and parse package.json successfully', async () => {
@@ -63,22 +67,22 @@ describe('getPackageJson', () => {
 
     // Assert
     expect(result).toEqual(mockExpectedResultObj);
-    expect(find_nearest_package_json).toHaveBeenCalledWith(mockStartPath);
-    expect(parseZeDependencies).toHaveBeenCalledWith(
+    expect(findNearestPackageJsonMock).toHaveBeenCalledWith(mockStartPath);
+    expect(parseZeDependenciesMock).toHaveBeenCalledWith(
       mockPackageJsonInputObj['zephyr:dependencies']
     );
   });
 
   it('should handle file paths by moving up one directory', async () => {
     // Arrange
-    (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+    statSyncMock.mockReturnValue({ isFile: () => true } as fs.Stats);
     const expectedPath = path.resolve(mockStartPath, '..');
 
     // Act
     await getPackageJson(mockStartPath);
 
     // Assert
-    expect(find_nearest_package_json).toHaveBeenCalledWith(expectedPath);
+    expect(findNearestPackageJsonMock).toHaveBeenCalledWith(expectedPath);
   });
 
   it('should use cwd if no path is provided', async () => {
@@ -90,12 +94,12 @@ describe('getPackageJson', () => {
     await getPackageJson(undefined);
 
     // Assert
-    expect(find_nearest_package_json).toHaveBeenCalledWith(cwd);
+    expect(findNearestPackageJsonMock).toHaveBeenCalledWith(cwd);
   });
 
   it('should throw if package.json is not found', async () => {
     // Arrange
-    (find_nearest_package_json as jest.Mock).mockResolvedValue(null);
+    findNearestPackageJsonMock.mockResolvedValue(null);
 
     // Act & Assert
     await expect(getPackageJson(mockStartPath)).rejects.toThrow(ZephyrError);
@@ -103,7 +107,7 @@ describe('getPackageJson', () => {
 
   it('should throw if package.json cannot be parsed', async () => {
     // Arrange
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    findNearestPackageJsonMock.mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: '{ invalid json }',
     });
@@ -118,7 +122,7 @@ describe('getPackageJson', () => {
       version: '1.0.0',
     });
 
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    findNearestPackageJsonMock.mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: invalidPackageJson,
     });
@@ -139,7 +143,7 @@ describe('getPackageJson', () => {
       name: 'test-package',
     });
 
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    findNearestPackageJsonMock.mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: invalidPackageJson,
     });
@@ -152,7 +156,7 @@ describe('getPackageJson', () => {
       name: 'test-package',
       version: '0.0.0',
     });
-    expect(logFn).toHaveBeenCalledWith(
+    expect(logFnMock).toHaveBeenCalledWith(
       'warn',
       `${ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)}: package.json at ${path.join(
         mockStartPath,
@@ -169,7 +173,7 @@ describe('getPackageJson', () => {
       dependencies: { 'dep-a': '^1.0.0' },
     };
 
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    findNearestPackageJsonMock.mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: JSON.stringify(packageJsonWithoutZeDeps),
     });
@@ -178,14 +182,14 @@ describe('getPackageJson', () => {
     const result = await getPackageJson(mockStartPath);
 
     // Assert
-    expect(parseZeDependencies).not.toHaveBeenCalled();
+    expect(parseZeDependenciesMock).not.toHaveBeenCalled();
     expect(result).toEqual(packageJsonWithoutZeDeps);
   });
 
   it('should not warn when version exists', async () => {
     await getPackageJson(mockStartPath);
 
-    expect(logFn).not.toHaveBeenCalledWith(
+    expect(logFnMock).not.toHaveBeenCalledWith(
       'warn',
       expect.stringContaining(
         ZephyrError.toZeCode(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION)

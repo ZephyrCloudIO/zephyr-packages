@@ -103,7 +103,10 @@ export interface XCompiler {
   plugins: ModuleFederationPlugin[];
   hooks: {
     compilation: {
-      tap: (name: string, callback: (compilation: XCompilation) => void) => void;
+      tap: (
+        name: string,
+        callback: (compilation: XCompilation) => void
+      ) => void;
     };
   };
   webpack: {
@@ -124,11 +127,17 @@ export interface XCompilation {
   hooks: {
     /** This is for Webpack */
     additionalModuleRuntimeRequirements: {
-      tap: (name: string, callback: (module: XModule, set: Set<string>) => void) => void;
+      tap: (
+        name: string,
+        callback: (module: XModule, set: Set<string>) => void
+      ) => void;
     };
     /** This is for Rspack */
     additionalTreeRuntimeRequirements: {
-      tap: (name: string, callback: (chunk: XChunk, set: Set<string>) => void) => void;
+      tap: (
+        name: string,
+        callback: (chunk: XChunk, set: Set<string>) => void
+      ) => void;
     };
   };
 }

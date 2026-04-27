@@ -44,6 +44,19 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
   };
 }
 
+function resolveZephyrTransformerPath(): string {
+  try {
+    return require.resolve('./zephyr-transformer');
+  } catch {
+    try {
+      return require.resolve('./zephyr-transformer.ts');
+    } catch {
+      // RStest/source-mode fallback where modules are bundled and not directly resolvable.
+      return path.join(__dirname, 'zephyr-transformer');
+    }
+  }
+}
+
 async function applyZephyrToMetroConfig(
   metroConfig: ConfigT,
   zephyrOptions: ZephyrMetroOptions
@@ -62,7 +75,9 @@ async function applyZephyrToMetroConfig(
   }
 
   // Extract remote dependencies from zephyr options
-  const dependencyPairs = extractMetroRemoteDependencies(zephyrOptions.remotes || {});
+  const dependencyPairs = extractMetroRemoteDependencies(
+    zephyrOptions.remotes || {}
+  );
 
   // Resolve dependencies through Zephyr
   const resolved_dependencies =
@@ -78,7 +93,7 @@ async function applyZephyrToMetroConfig(
     ...metroConfig,
     transformer: {
       ...metroConfig.transformer,
-      babelTransformerPath: require.resolve('./zephyr-transformer'),
+      babelTransformerPath: resolveZephyrTransformerPath(),
       // Pass zephyr options to transformer via extra data
       ...(metroConfig.transformer as any),
       zephyrTransformerOptions,
@@ -110,7 +125,9 @@ async function applyZephyrToMetroConfig(
           const url = req.url?.split('?')[0]; // Remove query string
           if (url === manifestPath) {
             try {
-              const manifestContent = createManifestContent(resolved_dependencies || []);
+              const manifestContent = createManifestContent(
+                resolved_dependencies || []
+              );
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'no-cache');
               res.end(manifestContent);
@@ -156,7 +173,9 @@ async function applyZephyrToMetroConfig(
 function extractMetroRemoteDependencies(remotes: Record<string, string>) {
   return Object.entries(remotes).map(([name, url]) => {
     // Parse remote URL - could be just URL or name@url format
-    const [remoteName, remoteUrl] = url.includes('@') ? url.split('@') : [name, url];
+    const [remoteName, remoteUrl] = url.includes('@')
+      ? url.split('@')
+      : [name, url];
 
     return {
       name: remoteName,
@@ -188,7 +207,9 @@ async function generateManifestFile(
     ze_log.manifest(`Generated manifest at: ${manifestFilePath}`);
     return true;
   } catch (error) {
-    ze_log.error(`Failed to generate manifest file: ${ZephyrError.format(error)}`);
+    ze_log.error(
+      `Failed to generate manifest file: ${ZephyrError.format(error)}`
+    );
     return false;
   }
 }

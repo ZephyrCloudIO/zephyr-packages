@@ -3,7 +3,10 @@ import { isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
-import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
+import {
+  getAppConfig,
+  saveAppConfig,
+} from '../node-persist/application-configuration';
 import { getToken } from '../node-persist/token';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 
@@ -97,7 +100,9 @@ export async function getApplicationConfiguration({
           Date.now() - storedAppConfig.fetched_at > 60 * 1000))
     ) {
       ze_log.app('Loading Application Configuration from API...');
-      const loadedAppConfig = await loadApplicationConfiguration({ application_uid });
+      const loadedAppConfig = await loadApplicationConfiguration({
+        application_uid,
+      });
       ze_log.app('Saving Application Configuration to node-persist...');
       await saveAppConfig(application_uid, loadedAppConfig);
       return loadedAppConfig;

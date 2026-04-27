@@ -1,6 +1,8 @@
 import type { Library } from '../xpack.types';
 
-export function extractLibraryType(library: Library | undefined): string | undefined {
+export function extractLibraryType(
+  library: Library | undefined
+): string | undefined {
   if (!library) return undefined;
 
   if (typeof library === 'string') {

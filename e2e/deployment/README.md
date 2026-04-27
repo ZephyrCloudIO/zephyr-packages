@@ -1,7 +1,7 @@
 # e2e-deployment
 
-This library was generated with [Nx](https://nx.dev).
+Deployment smoke tests for example applications.
 
-## Running unit tests
+## Running tests
 
-Run `nx test e2e-deployment` to execute the unit tests via [Jest](https://jestjs.io).
+Run `pnpm --filter e2e-deployment test` to execute the tests via [Jest](https://jestjs.io).

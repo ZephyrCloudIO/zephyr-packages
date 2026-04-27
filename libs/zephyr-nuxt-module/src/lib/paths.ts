@@ -1,7 +1,11 @@
 import { access } from 'node:fs/promises';
 import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 
-const ENTRYPOINT_CANDIDATES = ['server/index.mjs', 'server/index.js', 'server/index.cjs'];
+const ENTRYPOINT_CANDIDATES = [
+  'server/index.mjs',
+  'server/index.js',
+  'server/index.cjs',
+];
 
 export function normalizePath(value: string): string {
   return value.split(sep).join(posix.sep).replace(/\\/g, posix.sep);

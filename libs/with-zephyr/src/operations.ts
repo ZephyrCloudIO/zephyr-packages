@@ -1,5 +1,9 @@
 import fs from 'fs';
-import type { BundlerConfig, BundlerOperationId, OperationResult } from './types.js';
+import type {
+  BundlerConfig,
+  BundlerOperationId,
+  OperationResult,
+} from './types.js';
 import {
   findFirstMatchTextWithAstGrep,
   rewriteWithAstGrep,
@@ -20,7 +24,10 @@ interface RewriteAttempt {
   language?: AstGrepLanguage;
 }
 
-function tryRewrite(context: OperationContext, attempt: RewriteAttempt): OperationResult {
+function tryRewrite(
+  context: OperationContext,
+  attempt: RewriteAttempt
+): OperationResult {
   const result = rewriteWithAstGrep({
     filePath: context.filePath,
     pattern: attempt.pattern,
@@ -163,7 +170,8 @@ function handleComposePlugins(context: OperationContext): OperationResult {
     },
     {
       pattern: 'composePlugins($$$PLUGINS, function($$$ARGS) { $$$BODY })',
-      rewrite: 'composePlugins($$$PLUGINS, withZephyr(), function($$$ARGS) { $$$BODY })',
+      rewrite:
+        'composePlugins($$$PLUGINS, withZephyr(), function($$$ARGS) { $$$BODY })',
     },
     {
       pattern: 'composePlugins($$$PLUGINS)',
@@ -181,7 +189,9 @@ function handleWrapModuleExports(context: OperationContext): OperationResult {
   ]);
 }
 
-function handleWrapModuleExportsAsync(context: OperationContext): OperationResult {
+function handleWrapModuleExportsAsync(
+  context: OperationContext
+): OperationResult {
   return runRewriteSequence(context, [
     {
       pattern: 'module.exports = $VALUE',
@@ -191,7 +201,9 @@ function handleWrapModuleExportsAsync(context: OperationContext): OperationResul
   ]);
 }
 
-function handleWrapExportDefaultAsync(context: OperationContext): OperationResult {
+function handleWrapExportDefaultAsync(
+  context: OperationContext
+): OperationResult {
   return runRewriteSequence(context, [
     {
       pattern: 'export default $VALUE',
@@ -201,7 +213,9 @@ function handleWrapExportDefaultAsync(context: OperationContext): OperationResul
   ]);
 }
 
-function handleWrapExportDefaultDefineConfig(context: OperationContext): OperationResult {
+function handleWrapExportDefaultDefineConfig(
+  context: OperationContext
+): OperationResult {
   return runRewriteSequence(context, [
     {
       pattern: 'export default defineConfig($$$ARGS)',
@@ -210,7 +224,9 @@ function handleWrapExportDefaultDefineConfig(context: OperationContext): Operati
   ]);
 }
 
-function handleWrapExportDefaultObject(context: OperationContext): OperationResult {
+function handleWrapExportDefaultObject(
+  context: OperationContext
+): OperationResult {
   return runRewriteSequence(context, [
     {
       pattern: 'export default {$$$PROPS}',
@@ -222,12 +238,14 @@ function handleWrapExportDefaultObject(context: OperationContext): OperationResu
 function handleRollupFunction(context: OperationContext): OperationResult {
   return runRewriteSequence(context, [
     {
-      pattern: 'module.exports = ($PARAM) => { $$$BEFORE return $RET; $$$AFTER }',
+      pattern:
+        'module.exports = ($PARAM) => { $$$BEFORE return $RET; $$$AFTER }',
       rewrite:
         'module.exports = ($PARAM) => { $$$BEFORE $PARAM.plugins.push(withZephyr()); return $RET; $$$AFTER }',
     },
     {
-      pattern: 'module.exports = function($PARAM) { $$$BEFORE return $RET; $$$AFTER }',
+      pattern:
+        'module.exports = function($PARAM) { $$$BEFORE return $RET; $$$AFTER }',
       rewrite:
         'module.exports = function($PARAM) { $$$BEFORE $PARAM.plugins.push(withZephyr()); return $RET; $$$AFTER }',
     },
@@ -253,7 +271,8 @@ function handleRollupArray(context: OperationContext): OperationResult {
     },
     {
       pattern: 'export default [{ plugins: [$$$ITEMS], $$$B }, $$$REST]',
-      rewrite: 'export default [{ plugins: [$$$ITEMS, withZephyr()], $$$B }, $$$REST]',
+      rewrite:
+        'export default [{ plugins: [$$$ITEMS, withZephyr()], $$$B }, $$$REST]',
     },
   ]);
 
@@ -264,7 +283,9 @@ function handleRollupArray(context: OperationContext): OperationResult {
   return appendToArrayProperty(context, 'plugins');
 }
 
-function handlePluginsArrayOrCreate(context: OperationContext): OperationResult {
+function handlePluginsArrayOrCreate(
+  context: OperationContext
+): OperationResult {
   const appendResult = appendToArrayProperty(context, 'plugins');
   if (appendResult.status !== 'no-match') {
     return appendResult;
@@ -307,7 +328,9 @@ function handleNuxtModulesOrCreate(context: OperationContext): OperationResult {
   ]);
 }
 
-function handleAstroIntegrationsOrCreate(context: OperationContext): OperationResult {
+function handleAstroIntegrationsOrCreate(
+  context: OperationContext
+): OperationResult {
   const appendResult = appendToArrayProperty(context, 'integrations');
   if (appendResult.status !== 'no-match') {
     return appendResult;
@@ -321,7 +344,9 @@ function handleAstroIntegrationsFunctionOrCreate(
 ): OperationResult {
   const content = fs.readFileSync(context.filePath, 'utf8');
   const hasDefineConfigArrow =
-    /defineConfig\s*\(\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>/.test(content);
+    /defineConfig\s*\(\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>/.test(
+      content
+    );
   if (!hasDefineConfigArrow) {
     return { status: 'no-match' };
   }
@@ -375,7 +400,9 @@ function handleRsbuildAssetPrefix(context: OperationContext): OperationResult {
   ]);
 }
 
-function handleWrapExportedFunction(context: OperationContext): OperationResult {
+function handleWrapExportedFunction(
+  context: OperationContext
+): OperationResult {
   const content = fs.readFileSync(context.filePath, 'utf8');
   const match = content.match(/export\s+default\s+([A-Za-z_$][\w$]*)\s*;?/);
   if (!match || !match[1]) {
@@ -451,7 +478,8 @@ const OPERATION_HANDLERS: Record<
   'rollup-function': handleRollupFunction,
   'rollup-array': handleRollupArray,
   'astro-integrations-or-create': handleAstroIntegrationsOrCreate,
-  'astro-integrations-function-or-create': handleAstroIntegrationsFunctionOrCreate,
+  'astro-integrations-function-or-create':
+    handleAstroIntegrationsFunctionOrCreate,
   'rsbuild-asset-prefix': handleRsbuildAssetPrefix,
   'wrap-exported-function': handleWrapExportedFunction,
   'parcel-reporters': handleParcelReporters,
@@ -465,7 +493,9 @@ export function runBundlerOperation(
   return handler(context);
 }
 
-export function applyBundlerOperations(context: OperationContext): OperationResult {
+export function applyBundlerOperations(
+  context: OperationContext
+): OperationResult {
   const { strategy, operations } = context.config;
   let hasChanged = false;
 

@@ -2,14 +2,14 @@
   "name": "sample-webpack-application",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "start": "nx run sample-webpack-application:serve",
-    "build": "nx run sample-webpack-application:build --skip-nx-cache",
-    "build-watch": "nx run sample-webpack-application:build --skip-nx-cache --watch"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
+  },
+  "scripts": {
+    "start": "webpack serve --config webpack.config.cjs --mode development",
+    "build": "webpack --config webpack.config.cjs --mode production",
+    "build-watch": "webpack --config webpack.config.cjs --mode development --watch"
   },
   "dependencies": {
     "@sentry/react": "^7.120.3",
@@ -18,18 +18,17 @@
   },
   "devDependencies": {
     "@swc/core": "catalog:swc",
-    "@swc/jest": "catalog:swc",
     "@testing-library/react": "catalog:react",
+    "@types/jest": "catalog:typescript",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "eslint-plugin-react-hooks": "catalog:eslint",
-    "eslint-plugin-jsx-a11y": "catalog:eslint",
-    "eslint-plugin-react": "catalog:eslint",
-    "eslint-plugin-import": "catalog:eslint",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.5",
+    "style-loader": "^4.0.0",
     "swc-loader": "catalog:swc",
-    "zephyr-webpack-plugin": "workspace:*",
-    "ts-jest": "catalog:typescript",
-    "@types/jest": "catalog:typescript"
+    "webpack": "catalog:webpack5",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2",
+    "zephyr-webpack-plugin": "workspace:*"
   }
 }

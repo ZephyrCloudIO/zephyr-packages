@@ -5,7 +5,8 @@ export const VIRTUAL_SPECIFIER = 'env:vars';
 // Only match ZE_PUBLIC_* keys
 const ZE_REGEX_SIMPLE = /\bprocess\.env\.(ZE_PUBLIC_[A-Z0-9_]+)/g;
 const ZE_REGEX_QUOTED = /\bprocess\.env\[["'`](ZE_PUBLIC_[A-Z0-9_]+)["'`]\]/g;
-const ZE_REGEX_IMPORT_META_SIMPLE = /\bimport\.meta\.env\.(ZE_PUBLIC_[A-Z0-9_]+)/g;
+const ZE_REGEX_IMPORT_META_SIMPLE =
+  /\bimport\.meta\.env\.(ZE_PUBLIC_[A-Z0-9_]+)/g;
 const ZE_REGEX_IMPORT_META_QUOTED =
   /\bimport\.meta\.env\[["'`](ZE_PUBLIC_[A-Z0-9_]+)["'`]\]/g;
 
@@ -13,7 +14,8 @@ const ZE_REGEX_IMPORT_META_QUOTED =
 const ZE_DESTRUCT_DECL =
   /(const|let|var)\s*\{([^}]+)\}\s*=\s*(process\.env|import\.meta\.env)/g;
 // Destructuring patterns (assignment): ({ ... } = process.env) or { ... } = import.meta.env
-const ZE_DESTRUCT_ASSIGN = /\{([^}]+)\}\s*=\s*(process\.env|import\.meta\.env)/g;
+const ZE_DESTRUCT_ASSIGN =
+  /\{([^}]+)\}\s*=\s*(process\.env|import\.meta\.env)/g;
 
 function extractDestructuredKeys(raw: string): string[] {
   // raw is the inside of {...}
@@ -77,8 +79,14 @@ export function rewriteEnvReadsToVirtualModule(
   let code = source
     .replace(ZE_REGEX_SIMPLE, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`)
     .replace(ZE_REGEX_QUOTED, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`)
-    .replace(ZE_REGEX_IMPORT_META_SIMPLE, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`)
-    .replace(ZE_REGEX_IMPORT_META_QUOTED, (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`);
+    .replace(
+      ZE_REGEX_IMPORT_META_SIMPLE,
+      (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`
+    )
+    .replace(
+      ZE_REGEX_IMPORT_META_QUOTED,
+      (_m, name) => `__ZE_MANIFEST__.zeVars.${name}`
+    );
 
   // Replace destructuring RHS env object with __ZE_MANIFEST__.zeVars when ZE_PUBLIC_* keys are present
   code = code.replace(ZE_DESTRUCT_DECL, (m, decl, inner) => {
@@ -100,7 +108,9 @@ export function rewriteEnvReadsToVirtualModule(
   );
   if (!importRe.test(code)) {
     // Simple default import of the JSON manifest
-    code = `import __ZE_MANIFEST__ from '${specifier}' with { type: 'json' };\n` + code;
+    code =
+      `import __ZE_MANIFEST__ from '${specifier}' with { type: 'json' };\n` +
+      code;
   }
   return { code, used };
 }
@@ -117,7 +127,8 @@ export function injectImportMap(
   const scriptTag = `<script type="importmap">${importMapJson}</script>`;
   if (html.includes(scriptTag)) return html;
   const injectTo = opts?.injectTo ?? 'head-prepend';
-  if (injectTo === 'body') return html.replace('</body>', `${scriptTag}</body>`);
+  if (injectTo === 'body')
+    return html.replace('</body>', `${scriptTag}</body>`);
   return html.replace('</head>', `${scriptTag}</head>`);
 }
 
@@ -142,7 +153,8 @@ export function buildEnvJsonAsset(env: Record<string, string | undefined>): {
   const source = JSON.stringify(safe);
   // djb2
   let h = 5381;
-  for (let i = 0; i < source.length; i++) h = ((h << 5) + h) ^ source.charCodeAt(i);
+  for (let i = 0; i < source.length; i++)
+    h = ((h << 5) + h) ^ source.charCodeAt(i);
   const short = (h >>> 0).toString(36);
   return { fileName: `ze-env.${short}.json`, source };
 }

@@ -1,4 +1,7 @@
-import { parseZeDependencies, parseZeDependency } from '../ze-util-parse-ze-dependencies';
+import {
+  parseZeDependencies,
+  parseZeDependency,
+} from '../ze-util-parse-ze-dependencies';
 
 describe('parseZeDependencies', () => {
   it('should parse multiple dependencies correctly', () => {
@@ -109,7 +112,10 @@ describe('parseZeDependency', () => {
   });
 
   it('should parse scoped app with tag', () => {
-    const result = parseZeDependency('local-name', 'zephyr:@app-zephyr/host@latest');
+    const result = parseZeDependency(
+      'local-name',
+      'zephyr:@app-zephyr/host@latest'
+    );
     expect(result).toEqual({
       version: 'latest',
       registry: 'zephyr',
@@ -118,7 +124,10 @@ describe('parseZeDependency', () => {
   });
 
   it('should parse scoped app with multiple @ symbols in app_uid', () => {
-    const result = parseZeDependency('local-name', 'zephyr:@org/@scope/app@beta');
+    const result = parseZeDependency(
+      'local-name',
+      'zephyr:@org/@scope/app@beta'
+    );
     expect(result).toEqual({
       version: 'beta',
       registry: 'zephyr',
@@ -127,7 +136,10 @@ describe('parseZeDependency', () => {
   });
 
   it('should handle different registry prefix', () => {
-    const result = parseZeDependency('local-name', 'custom-registry:remote-app@stable');
+    const result = parseZeDependency(
+      'local-name',
+      'custom-registry:remote-app@stable'
+    );
     expect(result).toEqual({
       version: 'stable',
       registry: 'custom-registry',

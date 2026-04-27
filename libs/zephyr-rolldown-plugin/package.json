@@ -2,37 +2,39 @@
   "name": "zephyr-rolldown-plugin",
   "version": "1.0.2",
   "description": "Rolldown plugin for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-rolldown-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-rolldown-plugin"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-rolldown-plugin:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "rolldown": "catalog:rolldown",
-    "ts-jest": "catalog:typescript"
+    "rolldown": "catalog:rolldown"
   },
   "peerDependencies": {
     "rolldown": ">=1.0.0-beta.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

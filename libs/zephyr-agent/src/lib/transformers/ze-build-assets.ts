@@ -9,7 +9,8 @@ export function zeBuildAssets({
   filepath: string;
   content: string | Buffer;
 }): ZeBuildAsset {
-  const buffer = typeof content === 'string' ? Buffer.from(content, 'utf8') : content;
+  const buffer =
+    typeof content === 'string' ? Buffer.from(content, 'utf8') : content;
 
   const hash = createHash('sha256')
     .update(buffer.length ? buffer : Buffer.from(filepath, 'utf8'))

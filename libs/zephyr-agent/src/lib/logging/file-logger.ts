@@ -40,7 +40,10 @@ export function initializeLogRun(): string {
   }
 
   if (!currentRunDir) {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .slice(0, -5);
     const runId = `run-${timestamp}`;
     const logBasePath = getLogBasePath();
     currentRunDir = join(logBasePath, runId);
@@ -67,7 +70,10 @@ export function resetLogRun(): void {
 }
 
 /** Extract and parse JSON from message if present */
-function extractStructuredData(message: string): { message: string; payload?: unknown } {
+function extractStructuredData(message: string): {
+  message: string;
+  payload?: unknown;
+} {
   // Find all JSON objects in the message
   const jsonRegex = /\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/g;
   const matches = message.match(jsonRegex);

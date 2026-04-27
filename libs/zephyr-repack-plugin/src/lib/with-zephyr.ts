@@ -14,7 +14,10 @@ import {
 } from 'zephyr-xpack-internal';
 import type { RepackEnv } from '../type/zephyr-internal-types';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
-import { ZeRepackPlugin, type ZephyrRepackPluginOptions } from './ze-repack-plugin';
+import {
+  ZeRepackPlugin,
+  type ZephyrRepackPluginOptions,
+} from './ze-repack-plugin';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackPluginOptions): (
   // First return: A function taking a config function
@@ -72,11 +75,16 @@ async function _zephyr_configuration(
       zephyr_engine.env.target
     );
 
-    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
-      dependency_pairs,
-      extractLibraryType(config.output?.library)
+    const resolved_dependency_pairs =
+      await zephyr_engine.resolve_remote_dependencies(
+        dependency_pairs,
+        extractLibraryType(config.output?.library)
+      );
+    mutWebpackFederatedRemotesConfig(
+      zephyr_engine,
+      config,
+      resolved_dependency_pairs
     );
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
 
     ze_log.remotes(
       'dependency resolution completed successfully...or at least trying to...'

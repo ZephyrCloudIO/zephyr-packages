@@ -1,58 +1,82 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/** Unit tests for zephyrCommandWrapper */
+import { rs } from '@rstest/core';
 
-// Mock zephyr-agent - must be before imports
-jest.mock('zephyr-agent', () => ({
-  ZephyrError: jest.fn().mockImplementation((error, options) => {
-    const err = new Error(options?.message || error);
-    (err as any).code = error;
-    return err;
+const {
+  zephyrErrorCtorMock,
+  mockBeforeBuild,
+  mockAfterBuild,
+  zephyrMetroPluginCtorMock,
+} = rs.hoisted(() => ({
+  zephyrErrorCtorMock: rs.fn().mockImplementation((error, options) => {
+    return { error, options };
   }),
+  mockBeforeBuild: rs.fn(),
+  mockAfterBuild: rs.fn(),
+  zephyrMetroPluginCtorMock: rs.fn(),
+}));
+
+function MockZephyrError(
+  this: any,
+  error: unknown,
+  options?: { message?: string }
+) {
+  const message = options?.message || String(error);
+  const errorInstance = new Error(message) as Error & { code?: unknown };
+  errorInstance.code = error;
+  zephyrErrorCtorMock(error, options);
+  return errorInstance;
+}
+
+MockZephyrError.prototype = Error.prototype;
+
+rs.mock('zephyr-agent', () => ({
+  ZephyrError: MockZephyrError,
   ZeErrors: {
     ERR_UNKNOWN: 'ERR_UNKNOWN',
     ERR_INVALID_MF_CONFIG: 'ERR_INVALID_MF_CONFIG',
   },
 }));
 
-// Mock functions stored at module level for access in tests
-let mockBeforeBuild: jest.Mock;
-let mockAfterBuild: jest.Mock;
-
-// Mock ZephyrMetroPlugin
-jest.mock('../zephyr-metro-plugin', () => {
-  mockBeforeBuild = jest.fn().mockResolvedValue({ name: 'TestApp' });
-  mockAfterBuild = jest.fn().mockResolvedValue(undefined);
+function MockZephyrMetroPlugin(this: any, ...args: unknown[]) {
+  zephyrMetroPluginCtorMock(...args);
   return {
-    ZephyrMetroPlugin: jest.fn().mockImplementation(() => ({
-      beforeBuild: mockBeforeBuild,
-      afterBuild: mockAfterBuild,
-    })),
+    beforeBuild: (...hookArgs: unknown[]) => mockBeforeBuild(...hookArgs),
+    afterBuild: (...hookArgs: unknown[]) => mockAfterBuild(...hookArgs),
   };
-});
+}
 
-// Mock internal errors
-jest.mock('../internal/metro-errors', () => ({
+rs.mock('../zephyr-metro-plugin', () => ({
+  ZephyrMetroPlugin: MockZephyrMetroPlugin,
+}));
+
+rs.mock('../internal/metro-errors', () => ({
   ERR_MISSING_METRO_FEDERATION_CONFIG: 'ERR_INVALID_MF_CONFIG',
 }));
 
 import { zephyrCommandWrapper } from '../zephyr-metro-command-wrapper';
 
 describe('zephyrCommandWrapper', () => {
-  // Mock functions
-  const mockBundleFederatedRemote = jest.fn().mockResolvedValue({ success: true });
-  const mockLoadMetroConfig = jest.fn().mockResolvedValue({});
-  const mockUpdateManifest = jest.fn();
+  const mockBundleFederatedRemote = rs
+    .fn()
+    .mockResolvedValue({ success: true });
+  const mockLoadMetroConfig = rs.fn().mockResolvedValue({});
+  const mockUpdateManifest = rs.fn();
 
-  // Sample args
   const createMockArgs = (overrides: any = {}): any => [
-    [{ mode: overrides.mode ?? 'production', platform: overrides.platform ?? 'ios' }],
+    [
+      {
+        mode: overrides.mode ?? 'production',
+        platform: overrides.platform ?? 'ios',
+      },
+    ],
     { root: overrides.root ?? '/project', ...overrides.configOptions },
     { maxWorkers: 4, resetCache: false, config: 'metro.config.js' },
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Reset global
+    rs.clearAllMocks();
+    mockBeforeBuild.mockResolvedValue({ name: 'TestApp' });
+    mockAfterBuild.mockResolvedValue(undefined);
+
     (global as any).__METRO_FEDERATION_CONFIG = {
       name: 'TestApp',
       remotes: {},
@@ -143,7 +167,10 @@ describe('zephyrCommandWrapper', () => {
     });
 
     it('should return result from bundle function', async () => {
-      mockBundleFederatedRemote.mockResolvedValue({ bundled: true, files: ['main.js'] });
+      mockBundleFederatedRemote.mockResolvedValue({
+        bundled: true,
+        files: ['main.js'],
+      });
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
@@ -159,8 +186,6 @@ describe('zephyrCommandWrapper', () => {
 
   describe('platform handling', () => {
     it('should pass iOS platform to plugin', async () => {
-      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
-
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
         mockLoadMetroConfig,
@@ -169,7 +194,7 @@ describe('zephyrCommandWrapper', () => {
 
       await wrapper(...createMockArgs({ platform: 'ios' }));
 
-      expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
+      expect(zephyrMetroPluginCtorMock).toHaveBeenCalledWith(
         expect.objectContaining({
           platform: 'ios',
         })
@@ -177,8 +202,6 @@ describe('zephyrCommandWrapper', () => {
     });
 
     it('should pass Android platform to plugin', async () => {
-      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
-
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
         mockLoadMetroConfig,
@@ -187,7 +210,7 @@ describe('zephyrCommandWrapper', () => {
 
       await wrapper(...createMockArgs({ platform: 'android' }));
 
-      expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
+      expect(zephyrMetroPluginCtorMock).toHaveBeenCalledWith(
         expect.objectContaining({
           platform: 'android',
         })
@@ -197,8 +220,6 @@ describe('zephyrCommandWrapper', () => {
 
   describe('mode handling', () => {
     it('should set development mode when mode is truthy', async () => {
-      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
-
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
         mockLoadMetroConfig,
@@ -207,7 +228,7 @@ describe('zephyrCommandWrapper', () => {
 
       await wrapper(...createMockArgs({ mode: 'development' }));
 
-      expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
+      expect(zephyrMetroPluginCtorMock).toHaveBeenCalledWith(
         expect.objectContaining({
           mode: 'development',
         })
@@ -215,8 +236,6 @@ describe('zephyrCommandWrapper', () => {
     });
 
     it('should set production mode when mode is falsy', async () => {
-      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
-
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
         mockLoadMetroConfig,
@@ -225,7 +244,7 @@ describe('zephyrCommandWrapper', () => {
 
       await wrapper(...createMockArgs({ mode: '' }));
 
-      expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
+      expect(zephyrMetroPluginCtorMock).toHaveBeenCalledWith(
         expect.objectContaining({
           mode: 'production',
         })
@@ -330,8 +349,6 @@ describe('zephyrCommandWrapper', () => {
 
   describe('context handling', () => {
     it('should use root from config as context', async () => {
-      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
-
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,
         mockLoadMetroConfig,
@@ -340,7 +357,7 @@ describe('zephyrCommandWrapper', () => {
 
       await wrapper(...createMockArgs({ root: '/custom/project/path' }));
 
-      expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
+      expect(zephyrMetroPluginCtorMock).toHaveBeenCalledWith(
         expect.objectContaining({
           context: '/custom/project/path',
         })

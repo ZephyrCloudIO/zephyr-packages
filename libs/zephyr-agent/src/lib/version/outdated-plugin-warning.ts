@@ -32,7 +32,9 @@ type ComparisonTarget = {
 
 function parseVersion(version: string): ParsedVersion | null {
   const sanitized = version.trim().replace(/^v/i, '');
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:-(canary|next)\.(\d+))?$/.exec(sanitized);
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-(canary|next)\.(\d+))?$/.exec(
+    sanitized
+  );
 
   if (!match) {
     return null;
@@ -47,7 +49,10 @@ function parseVersion(version: string): ParsedVersion | null {
   };
 }
 
-function isOlderVersion(currentVersion: string, latestVersion: string): boolean {
+function isOlderVersion(
+  currentVersion: string,
+  latestVersion: string
+): boolean {
   const current = parseVersion(currentVersion);
   const latest = parseVersion(latestVersion);
 
@@ -109,12 +114,17 @@ function getComparisonTarget(
     : null;
 }
 
-async function fetchDistTags(packageName: string): Promise<DistTagsResponse | null> {
+async function fetchDistTags(
+  packageName: string
+): Promise<DistTagsResponse | null> {
   const npmDistTagsUrl = new URL(
     `https://registry.npmjs.org/-/package/${encodeURIComponent(packageName)}/dist-tags`
   );
   const abortController = new AbortController();
-  const timeoutId = setTimeout(() => abortController.abort(), NPM_FETCH_TIMEOUT_MS);
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    NPM_FETCH_TIMEOUT_MS
+  );
 
   try {
     const response = await fetchWithRetries(
@@ -132,9 +142,12 @@ async function fetchDistTags(packageName: string): Promise<DistTagsResponse | nu
 
 function resolveInstalledPluginVersion(pluginPackageName: string): string {
   try {
-    const packageJsonPath = requireFromHere.resolve(`${pluginPackageName}/package.json`, {
-      paths: [process.cwd()],
-    });
+    const packageJsonPath = requireFromHere.resolve(
+      `${pluginPackageName}/package.json`,
+      {
+        paths: [process.cwd()],
+      }
+    );
     const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
     const parsed = safe_json_parse<{ version?: unknown }>(packageJsonContent);
 

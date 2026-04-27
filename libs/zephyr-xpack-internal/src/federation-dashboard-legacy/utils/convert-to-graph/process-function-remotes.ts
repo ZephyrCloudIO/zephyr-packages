@@ -37,7 +37,8 @@ export function processFunctionRemotes(params: ProcessFunctionRemoteParams): {
         const cleanFile = file.replace('./', '');
         const foundExistingConsume = consumes.find(
           (consumeObj) =>
-            consumeObj.applicationID === applicationID && consumeObj.name === cleanName
+            consumeObj.applicationID === applicationID &&
+            consumeObj.name === cleanName
         );
         if (foundExistingConsume) {
           foundExistingConsume.usedIn.add(cleanFile);

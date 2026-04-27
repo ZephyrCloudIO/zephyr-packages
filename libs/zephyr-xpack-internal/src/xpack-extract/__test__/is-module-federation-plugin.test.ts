@@ -1,9 +1,11 @@
-import { describe, expect } from '@jest/globals';
+import { describe, expect } from '@rstest/core';
 import { isModuleFederationPlugin } from '../is-module-federation-plugin';
 import type { XPackConfiguration } from '../../xpack.types';
 
 // Jest unit tests for isModuleFederationPlugin
-type __webpack_plugin__ = NonNullable<XPackConfiguration<unknown>['plugins']>[number];
+type __webpack_plugin__ = NonNullable<
+  XPackConfiguration<unknown>['plugins']
+>[number];
 
 /** @private type Conversion for testing */
 function __to_plugin__(plugin: unknown): __webpack_plugin__ {
@@ -28,7 +30,9 @@ describe('isModuleFederationPlugin', () => {
   });
 
   it('should return true for object with constructor name containing "ModuleFederationPlugin"', () => {
-    const plugin = __to_plugin__({ constructor: { name: 'ModuleFederationPlugin' } });
+    const plugin = __to_plugin__({
+      constructor: { name: 'ModuleFederationPlugin' },
+    });
     expect(isModuleFederationPlugin(plugin)).toBe(true);
   });
 
@@ -89,7 +93,9 @@ describe('isModuleFederationPlugin', () => {
   });
 
   it('should return false for constructor name that is case insensitive', () => {
-    const plugin = __to_plugin__({ constructor: { name: 'modulefederationplugin' } });
+    const plugin = __to_plugin__({
+      constructor: { name: 'modulefederationplugin' },
+    });
     expect(isModuleFederationPlugin(plugin)).toBe(false);
   });
 

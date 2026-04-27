@@ -15,9 +15,12 @@ export function createMfRuntimeCode(
   const strStart = new RegExp(/^function[\W\S]+return new Promise/);
   const strNewStart = `promise new Promise`;
   const strEnd = new RegExp(/;[^)}]+}$/);
-  const promiseNewPromise = fnReplace.replace(strStart, strNewStart).replace(strEnd, '');
+  const promiseNewPromise = fnReplace
+    .replace(strStart, strNewStart)
+    .replace(strEnd, '');
 
-  const { application_uid, remote_entry_url, default_url, name, library_type } = deps;
+  const { application_uid, remote_entry_url, default_url, name, library_type } =
+    deps;
 
   // If the builder is `repack` only return the remote url without any changes
   if (zephyr_engine.builder === 'repack') {
@@ -35,7 +38,9 @@ export function createMfRuntimeCode(
 export function xpack_delegate_module_template(): unknown {
   return new Promise((resolve, reject) => {
     const _windows = typeof window !== 'undefined' ? window : globalThis;
-    const sessionEdgeURL = _windows.sessionStorage.getItem('__APPLICATION_UID__');
+    const sessionEdgeURL = _windows.sessionStorage.getItem(
+      '__APPLICATION_UID__'
+    );
 
     const remote_entry_url = '__REMOTE_ENTRY_URL__';
     const library_type = '__LIBRARY_TYPE__';
@@ -89,7 +94,10 @@ export function xpack_delegate_module_template(): unknown {
           .catch((err: unknown) => reject(err));
       })
       .catch((err) => {
-        console.error(`Zephyr: error loading remote entry ${remote_entry_url}`, err);
+        console.error(
+          `Zephyr: error loading remote entry ${remote_entry_url}`,
+          err
+        );
       });
   });
 }

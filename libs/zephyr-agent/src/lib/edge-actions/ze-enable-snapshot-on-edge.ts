@@ -1,4 +1,7 @@
-import type { ZephyrPluginOptions, ZeUploadBuildStats } from 'zephyr-edge-contract';
+import type {
+  ZephyrPluginOptions,
+  ZeUploadBuildStats,
+} from 'zephyr-edge-contract';
 import { uploadEnvs } from '../http/upload-envs';
 import { ze_log } from '../logging';
 import { brightBlueBgName } from '../logging/debug';

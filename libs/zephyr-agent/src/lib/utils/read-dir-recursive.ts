@@ -122,7 +122,9 @@ async function* resolveDir({
   try {
     for (const entry of entries) {
       const fullPath = resolve(currentDir, entry.name);
-      const relativePath = relativePrefix ? join(relativePrefix, entry.name) : entry.name;
+      const relativePath = relativePrefix
+        ? join(relativePrefix, entry.name)
+        : entry.name;
       const normalizedRelativePath = normalizePath(relativePath);
 
       if (shouldSkipRelativePath(normalizedRelativePath, entry)) {
@@ -263,7 +265,9 @@ function normalizePath(filePath: string): string {
 
 function shouldSkipRelativePath(relativePath: string, entry: Dirent): boolean {
   if (entry.isDirectory()) {
-    return SKIP_PATH_PATTERNS.some((pattern) => pattern.test(`${relativePath}/`));
+    return SKIP_PATH_PATTERNS.some((pattern) =>
+      pattern.test(`${relativePath}/`)
+    );
   }
 
   return SKIP_PATH_PATTERNS.some((pattern) => pattern.test(relativePath));

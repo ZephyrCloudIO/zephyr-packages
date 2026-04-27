@@ -116,16 +116,23 @@ export function detectCIBranch(): CIBranchInfo {
   }
 
   // Travis CI
-  if (env['TRAVIS'] === 'true' || (env['CI'] === 'true' && env['TRAVIS_BUILD_ID'])) {
+  if (
+    env['TRAVIS'] === 'true' ||
+    (env['CI'] === 'true' && env['TRAVIS_BUILD_ID'])
+  ) {
     const isPR = env['TRAVIS_PULL_REQUEST'] !== 'false';
     return {
       platform: 'Travis CI',
       isCI: true,
       branch:
-        env['TRAVIS_PULL_REQUEST_BRANCH'] || env['TRAVIS_BRANCH'] || env['TRAVIS_TAG'],
+        env['TRAVIS_PULL_REQUEST_BRANCH'] ||
+        env['TRAVIS_BRANCH'] ||
+        env['TRAVIS_TAG'],
       isPR,
       sourceBranch: env['TRAVIS_PULL_REQUEST_BRANCH'],
-      targetBranch: env['TRAVIS_PULL_REQUEST_BRANCH'] ? env['TRAVIS_BRANCH'] : undefined,
+      targetBranch: env['TRAVIS_PULL_REQUEST_BRANCH']
+        ? env['TRAVIS_BRANCH']
+        : undefined,
       tag: env['TRAVIS_TAG'],
     };
   }
@@ -134,7 +141,9 @@ export function detectCIBranch(): CIBranchInfo {
   // Note: TF_BUILD is the official detection variable; AZURE_PIPELINES is not documented
   if (env['TF_BUILD'] === 'True') {
     const isPR = !!env['SYSTEM_PULLREQUEST_PULLREQUESTID'];
-    const prSourceBranch = extractBranchFromRef(env['SYSTEM_PULLREQUEST_SOURCEBRANCH']);
+    const prSourceBranch = extractBranchFromRef(
+      env['SYSTEM_PULLREQUEST_SOURCEBRANCH']
+    );
     const regularBranch =
       env['BUILD_SOURCEBRANCHNAME'] !== 'merge'
         ? env['BUILD_SOURCEBRANCHNAME']
@@ -146,7 +155,9 @@ export function detectCIBranch(): CIBranchInfo {
       branch: prSourceBranch || regularBranch,
       isPR,
       sourceBranch: prSourceBranch,
-      targetBranch: extractBranchFromRef(env['SYSTEM_PULLREQUEST_TARGETBRANCH']),
+      targetBranch: extractBranchFromRef(
+        env['SYSTEM_PULLREQUEST_TARGETBRANCH']
+      ),
     };
   }
 
@@ -170,7 +181,9 @@ export function detectCIBranch(): CIBranchInfo {
       platform: 'Drone CI',
       isCI: true,
       branch:
-        env['DRONE_SOURCE_BRANCH'] || env['DRONE_BRANCH'] || env['DRONE_COMMIT_BRANCH'],
+        env['DRONE_SOURCE_BRANCH'] ||
+        env['DRONE_BRANCH'] ||
+        env['DRONE_COMMIT_BRANCH'],
       isPR,
       sourceBranch: env['DRONE_SOURCE_BRANCH'],
       targetBranch: env['DRONE_TARGET_BRANCH'],
@@ -181,7 +194,8 @@ export function detectCIBranch(): CIBranchInfo {
   // Buildkite
   if (env['BUILDKITE'] === 'true' || env['BUILDKITE_BUILD_ID']) {
     const isPR =
-      !!env['BUILDKITE_PULL_REQUEST'] && env['BUILDKITE_PULL_REQUEST'] !== 'false';
+      !!env['BUILDKITE_PULL_REQUEST'] &&
+      env['BUILDKITE_PULL_REQUEST'] !== 'false';
     return {
       platform: 'Buildkite',
       isCI: true,

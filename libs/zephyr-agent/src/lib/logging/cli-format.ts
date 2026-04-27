@@ -45,7 +45,9 @@ export function renderSection(options: SectionOptions): string {
 
   if (body.length) {
     lines.push(
-      ...body.filter((line): line is string => typeof line === 'string').map(indentLine)
+      ...body
+        .filter((line): line is string => typeof line === 'string')
+        .map(indentLine)
     );
   }
 
@@ -73,5 +75,7 @@ export function renderList(items: string[]): string[] {
 }
 
 export function joinSections(sections: Array<string | undefined>): string {
-  return sections.filter((section): section is string => Boolean(section)).join('\n');
+  return sections
+    .filter((section): section is string => Boolean(section))
+    .join('\n');
 }

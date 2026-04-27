@@ -1,5 +1,8 @@
 import { ze_log } from 'zephyr-agent';
-import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
+import type {
+  ModuleFederationPlugin,
+  XFederatedRemotesConfig,
+} from '../xpack.types';
 import { extractFederatedConfig } from './extract-federation-config';
 
 export function isLegacyMFPlugin(plugin: ModuleFederationPlugin): boolean {
@@ -60,7 +63,11 @@ export function isLegacyMFPlugin(plugin: ModuleFederationPlugin): boolean {
   return true;
 }
 
-type Checks = [ModuleFederationPlugin | XFederatedRemotesConfig, string, string?];
+type Checks = [
+  ModuleFederationPlugin | XFederatedRemotesConfig,
+  string,
+  string?,
+];
 
 const hasProperty = (target: any, property: string, type?: string): boolean => {
   const hasProp = property in target;

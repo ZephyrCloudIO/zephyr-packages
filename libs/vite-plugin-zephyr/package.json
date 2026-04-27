@@ -1,25 +1,30 @@
 {
+  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "vite-plugin-zephyr",
   "version": "1.0.2",
   "description": "Vite plugin for Zephyr",
-  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "keywords": [
-    "vite-plugin",
-    "vite",
+    "deploy",
     "module-federation",
-    "zephyr",
-    "deploy"
+    "vite",
+    "vite-plugin",
+    "zephyr"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/vite-plugin-zephyr"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/vite-plugin-zephyr"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -30,14 +35,16 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run vite-plugin-zephyr:build",
+    "build": "tsgo -p tsconfig.json && node ../../scripts/copy-file.js src/lib/internal/mf-vite-etl/runtime_plugin.mjs dist/lib/internal/mf-vite-etl/runtime_plugin.mjs",
     "patch-version": "pnpm version",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests",
     "prepack": "pnpm build"
   },
   "dependencies": {
@@ -49,11 +56,10 @@
   },
   "devDependencies": {
     "@module-federation/vite": "catalog:module-federation",
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rollup": "catalog:rollup4",
-    "ts-jest": "catalog:typescript",
     "typescript": "catalog:typescript",
     "vite": "catalog:vite7"
   },
@@ -61,6 +67,11 @@
     "@module-federation/vite": "^1.13.2",
     "rollup": "^4.0.0",
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@module-federation/vite": {
+      "optional": true
+    }
   },
   "compatiblePackages": {
     "schemaVersion": 1,
@@ -72,14 +83,5 @@
       "type": "compatible",
       "versions": "^4.0.0"
     }
-  },
-  "peerDependenciesMeta": {
-    "@module-federation/vite": {
-      "optional": true
-    }
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

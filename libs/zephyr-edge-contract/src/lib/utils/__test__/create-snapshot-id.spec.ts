@@ -15,7 +15,9 @@ describe('createSnapshotId', () => {
     };
     const result = createSnapshotId(options);
 
-    expect(result).toBe('test-user-build-123.app-name-2024.my-project-123.my-org-');
+    expect(result).toBe(
+      'test-user-build-123.app-name-2024.my-project-123.my-org-'
+    );
   });
 
   test('should handle empty strings correctly', () => {
@@ -64,7 +66,9 @@ describe('flatCreateSnapshotId', () => {
     };
     const result = flatCreateSnapshotId(props);
 
-    expect(result).toBe('test-user-build-123.app-name-2024.my-project-123.my-org-');
+    expect(result).toBe(
+      'test-user-build-123.app-name-2024.my-project-123.my-org-'
+    );
   });
 
   test('should handle empty strings correctly', () => {

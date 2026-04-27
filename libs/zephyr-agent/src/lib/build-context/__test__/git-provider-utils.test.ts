@@ -92,7 +92,8 @@ describe('Git Provider Utils', () => {
     });
 
     it('should parse GitHub Enterprise SSH URLs with team correctly', () => {
-      const enterpriseGithub = 'git@github.example-org.io:devteam/web-frontend.git';
+      const enterpriseGithub =
+        'git@github.example-org.io:devteam/web-frontend.git';
       const result = getGitProviderInfo(enterpriseGithub);
 
       expect(result).toEqual({
@@ -104,7 +105,8 @@ describe('Git Provider Utils', () => {
     });
 
     it('should parse Bitbucket URLs correctly', () => {
-      const bitbucketUrl = 'https://bitbucket.org/ZephyrCloudIO/zephyr-packages.git';
+      const bitbucketUrl =
+        'https://bitbucket.org/ZephyrCloudIO/zephyr-packages.git';
       const result = getGitProviderInfo(bitbucketUrl);
 
       expect(result).toEqual({
@@ -116,7 +118,8 @@ describe('Git Provider Utils', () => {
     });
 
     it('should parse custom domain Git URLs correctly', () => {
-      const customUrl = 'https://git.custom-domain.com/ZephyrCloudIO/zephyr-packages.git';
+      const customUrl =
+        'https://git.custom-domain.com/ZephyrCloudIO/zephyr-packages.git';
       const result = getGitProviderInfo(customUrl);
 
       expect(result).toEqual({

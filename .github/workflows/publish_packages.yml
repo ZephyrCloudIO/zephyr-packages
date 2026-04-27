@@ -48,7 +48,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx run-many -t build --projects="libs/*"
+        run: pnpm build
 
       - name: Patch versions
         run: |

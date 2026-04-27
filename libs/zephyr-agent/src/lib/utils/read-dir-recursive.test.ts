@@ -1,7 +1,10 @@
 import { cp, mkdtemp, realpath, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { readDirRecursive, readDirRecursiveWithContents } from './read-dir-recursive';
+import {
+  readDirRecursive,
+  readDirRecursiveWithContents,
+} from './read-dir-recursive';
 
 const FIXTURE_ROOT = resolve(__dirname, '__fixtures__/read-dir-recursive');
 
@@ -9,13 +12,20 @@ function normalizePath(value: string): string {
   return value.replace(/\\/g, '/');
 }
 
-async function createDirSymlink(targetPath: string, linkPath: string): Promise<void> {
+async function createDirSymlink(
+  targetPath: string,
+  linkPath: string
+): Promise<void> {
   const type = process.platform === 'win32' ? 'junction' : 'dir';
-  const linkTarget = process.platform === 'win32' ? resolve(targetPath) : targetPath;
+  const linkTarget =
+    process.platform === 'win32' ? resolve(targetPath) : targetPath;
   await symlink(linkTarget, linkPath, type);
 }
 
-async function createFileSymlink(targetPath: string, linkPath: string): Promise<void> {
+async function createFileSymlink(
+  targetPath: string,
+  linkPath: string
+): Promise<void> {
   if (process.platform === 'win32') {
     await symlink(resolve(targetPath), linkPath, 'file');
     return;
@@ -101,14 +111,18 @@ describe('read-dir-recursive', () => {
     );
 
     expect(linkedFile).toBeDefined();
-    expect(linkedFile?.content.toString('utf-8').trim()).toBe('symlink target fixture');
+    expect(linkedFile?.content.toString('utf-8').trim()).toBe(
+      'symlink target fixture'
+    );
   });
 
   it('skips common junk and vcs paths', async () => {
     const files = await readDirRecursive(join(tempRoot, 'a'));
     const relativePaths = files.map((file) => normalizePath(file.relativePath));
 
-    expect(relativePaths.some((path) => path.includes('node_modules'))).toBe(false);
+    expect(relativePaths.some((path) => path.includes('node_modules'))).toBe(
+      false
+    );
     expect(relativePaths.some((path) => path.includes('.git'))).toBe(false);
     expect(relativePaths).not.toContain('.DS_Store');
     expect(relativePaths).not.toContain('Thumbs.db');

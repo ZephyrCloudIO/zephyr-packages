@@ -12,14 +12,18 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
+  delegate_module_template: () =>
+    | unknown
+    | undefined = xpack_delegate_module_template
 ): void {
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;
   }
 
-  ze_log.remotes(`Processing ${resolvedDependencyPairs.length} resolved dependencies`);
+  ze_log.remotes(
+    `Processing ${resolvedDependencyPairs.length} resolved dependencies`
+  );
 
   iterateFederatedRemoteConfig(config, (remotesConfig, plugin) => {
     const remotes = remotesConfig?.remotes;
@@ -64,7 +68,9 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
           dep.version === remote_version;
         return nameMatch && versionMatch;
       });
-      ze_log.remotes(`remote_name: ${remote_name}, remote_version: ${remote_version}`);
+      ze_log.remotes(
+        `remote_name: ${remote_name}, remote_version: ${remote_version}`
+      );
 
       if (!dep_match) {
         ze_log.remotes(
@@ -88,7 +94,9 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       ze_log.remotes(`v_app: ${v_app}`);
       if (v_app) {
         resolved_dep.remote_entry_url = [v_app, remote_entry_url].join('@');
-        ze_log.remotes(`Adding version to remote entry url: ${remote_entry_url}`);
+        ze_log.remotes(
+          `Adding version to remote entry url: ${remote_entry_url}`
+        );
       }
 
       resolved_dep.library_type = library_type;

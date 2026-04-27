@@ -41,7 +41,9 @@ export interface RspressUserConfig {
  * Generic rspress plugin interface that works with both v1 and v2 Uses a generic config
  * type parameter with default
  */
-export interface RspressPlugin<TConfig extends RspressUserConfig = RspressUserConfig> {
+export interface RspressPlugin<
+  TConfig extends RspressUserConfig = RspressUserConfig,
+> {
   name: string;
   config?: (
     config: TConfig,

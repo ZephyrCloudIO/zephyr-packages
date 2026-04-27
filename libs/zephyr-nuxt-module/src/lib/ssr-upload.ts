@@ -7,8 +7,18 @@ import {
   type ZephyrEngine,
 } from 'zephyr-agent';
 import { resolve } from 'node:path';
-import { normalizePath, resolveDir, resolveEntrypoint, resolveOutputDir } from './paths';
-import type { NitroLike, NuxtLike, SnapshotType, ZephyrNuxtOptions } from './types';
+import {
+  normalizePath,
+  resolveDir,
+  resolveEntrypoint,
+  resolveOutputDir,
+} from './paths';
+import type {
+  NitroLike,
+  NuxtLike,
+  SnapshotType,
+  ZephyrNuxtOptions,
+} from './types';
 
 interface UploadContext {
   nuxt: NuxtLike;
@@ -27,7 +37,10 @@ export interface AssetSource {
   prefix?: string;
 }
 
-function getNitroOutput(nitro?: NitroLike, nuxt?: NuxtLike): NitroOutput | undefined {
+function getNitroOutput(
+  nitro?: NitroLike,
+  nuxt?: NuxtLike
+): NitroOutput | undefined {
   return nitro?.options?.output ?? nuxt?.options?.nitro?.output;
 }
 
@@ -134,9 +147,15 @@ export function createUploadRunner({
         entrypoint = undefined;
       }
 
-      const assetSources = resolveAssetSources(snapshotType, outputDir, publicDir);
+      const assetSources = resolveAssetSources(
+        snapshotType,
+        outputDir,
+        publicDir
+      );
       const assetSourcesLog = assetSources
-        .map((source) => (source.prefix ? `${source.dir}=>${source.prefix}` : source.dir))
+        .map((source) =>
+          source.prefix ? `${source.dir}=>${source.prefix}` : source.dir
+        )
         .join(', ');
       ze_log.upload(
         `Zephyr upload starting. snapshotType=${snapshotType} output=${assetSourcesLog}`

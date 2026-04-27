@@ -16,7 +16,8 @@ const zephyrNuxtModule: NuxtModule<ZephyrNuxtOptions> =
       const nuxtLike = nuxt as unknown as NuxtLike;
       if (nuxtLike.options.dev || shouldSkipZephyrUpload()) return;
 
-      const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+      const { zephyr_engine_defer, zephyr_defer_create } =
+        ZephyrEngine.defer_create();
       let initialized = false;
 
       const initEngine = () => {

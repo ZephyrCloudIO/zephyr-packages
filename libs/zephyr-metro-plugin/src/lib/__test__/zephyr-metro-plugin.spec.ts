@@ -1,79 +1,104 @@
-/** Unit tests for ZephyrMetroPlugin class */
+import { rs } from '@rstest/core';
+import { ZephyrMetroPlugin } from '../zephyr-metro-plugin';
 
-// Mock zephyr-agent - must be before imports
-jest.mock('zephyr-agent', () => ({
+const zeLogConfigMock = rs.fn();
+const zeLogAppMock = rs.fn();
+const zeLogErrorMock = rs.fn();
+const zeLogManifestMock = rs.fn();
+const zephyrEngineCreateMock = rs.fn();
+const buildAssetsMapMock = rs.fn().mockReturnValue({});
+
+rs.mock('zephyr-agent', () => ({
   ze_log: {
-    config: jest.fn(),
-    app: jest.fn(),
-    error: jest.fn(),
-    manifest: jest.fn(),
+    config: (...args: unknown[]) => zeLogConfigMock(...args),
+    app: (...args: unknown[]) => zeLogAppMock(...args),
+    error: (...args: unknown[]) => zeLogErrorMock(...args),
+    manifest: (...args: unknown[]) => zeLogManifestMock(...args),
   },
   ZephyrEngine: {
-    create: jest.fn().mockResolvedValue({
-      env: { target: 'ios' as const },
-      applicationProperties: { name: 'TestApp' },
-      application_uid: 'test-app-uid',
-      npmProperties: {
-        dependencies: { react: '^18.0.0' },
-        devDependencies: { typescript: '^5.0.0' },
-        optionalDependencies: {},
-        peerDependencies: {},
-      },
-      resolve_remote_dependencies: jest.fn().mockResolvedValue([
-        {
-          name: 'RemoteApp',
-          version: 'latest',
-          resolved_url: 'http://cdn.example.com/remote.js',
-        },
-      ]),
-      start_new_build: jest.fn().mockResolvedValue(undefined),
-      upload_assets: jest.fn().mockResolvedValue(undefined),
-      build_finished: jest.fn().mockResolvedValue(undefined),
-    }),
+    create: (...args: unknown[]) => zephyrEngineCreateMock(...args),
   },
-  buildAssetsMap: jest.fn().mockReturnValue({}),
+  buildAssetsMap: (...args: unknown[]) => buildAssetsMapMock(...args),
 }));
 
-// Mock internal dependencies
-jest.mock('../internal/extract-mf-remotes', () => ({
-  extract_remotes_dependencies: jest
-    .fn()
-    .mockReturnValue([{ name: 'RemoteApp', version: 'latest' }]),
+const extractRemotesDependenciesMock = rs
+  .fn()
+  .mockReturnValue([{ name: 'RemoteApp', version: 'latest' }]);
+const mutateMfConfigMock = rs.fn();
+const createMinimalBuildStatsMock = rs.fn().mockResolvedValue({
+  id: 'test-build-id',
+  timestamp: Date.now(),
+});
+const resolveCatalogDependenciesMock = rs.fn().mockReturnValue({});
+const extractModulesFromExposesMock = rs.fn().mockReturnValue([]);
+const getPackageDependenciesMock = rs.fn().mockReturnValue([]);
+const parseSharedDependenciesMock = rs.fn().mockReturnValue({});
+const loadStaticEntriesMock = rs.fn().mockResolvedValue([]);
+
+rs.mock('../internal/extract-mf-remotes', () => ({
+  extract_remotes_dependencies: (...args: unknown[]) =>
+    extractRemotesDependenciesMock(...args),
 }));
 
-jest.mock('../internal/mutate-mf-config', () => ({
-  mutateMfConfig: jest.fn(),
+rs.mock('../internal/mutate-mf-config', () => ({
+  mutateMfConfig: (...args: unknown[]) => mutateMfConfigMock(...args),
 }));
 
-jest.mock('../internal/metro-build-stats', () => ({
-  createMinimalBuildStats: jest.fn().mockResolvedValue({
-    id: 'test-build-id',
-    timestamp: Date.now(),
-  }),
-  resolveCatalogDependencies: jest.fn().mockReturnValue({}),
+rs.mock('../internal/metro-build-stats', () => ({
+  createMinimalBuildStats: (...args: unknown[]) =>
+    createMinimalBuildStatsMock(...args),
+  resolveCatalogDependencies: (...args: unknown[]) =>
+    resolveCatalogDependenciesMock(...args),
 }));
 
-jest.mock('../internal/extract-modules-from-exposes', () => ({
-  extractModulesFromExposes: jest.fn().mockReturnValue([]),
+rs.mock('../internal/extract-modules-from-exposes', () => ({
+  extractModulesFromExposes: (...args: unknown[]) =>
+    extractModulesFromExposesMock(...args),
 }));
 
-jest.mock('../internal/get-package-dependencies', () => ({
-  getPackageDependencies: jest.fn().mockReturnValue([]),
+rs.mock('../internal/get-package-dependencies', () => ({
+  getPackageDependencies: (...args: unknown[]) =>
+    getPackageDependenciesMock(...args),
 }));
 
-jest.mock('../internal/parse-shared-dependencies', () => ({
-  parseSharedDependencies: jest.fn().mockReturnValue({}),
+rs.mock('../internal/parse-shared-dependencies', () => ({
+  parseSharedDependencies: (...args: unknown[]) =>
+    parseSharedDependenciesMock(...args),
 }));
 
-jest.mock('../internal/load-static-entries', () => ({
-  load_static_entries: jest.fn().mockResolvedValue([]),
+rs.mock('../internal/load-static-entries', () => ({
+  load_static_entries: (...args: unknown[]) => loadStaticEntriesMock(...args),
 }));
 
-import { ZephyrMetroPlugin } from '../zephyr-metro-plugin';
+function createEngineMock() {
+  return {
+    env: { target: 'ios' as const },
+    applicationProperties: { name: 'TestApp' },
+    application_uid: 'test-app-uid',
+    npmProperties: {
+      dependencies: { react: '^18.0.0' },
+      devDependencies: { typescript: '^5.0.0' },
+      optionalDependencies: {},
+      peerDependencies: {},
+    },
+    resolve_remote_dependencies: rs.fn().mockResolvedValue([
+      {
+        name: 'RemoteApp',
+        version: 'latest',
+        resolved_url: 'http://cdn.example.com/remote.js',
+      },
+    ]),
+    start_new_build: rs.fn().mockResolvedValue(undefined),
+    upload_assets: rs.fn().mockResolvedValue(undefined),
+    build_finished: rs.fn().mockResolvedValue(undefined),
+  };
+}
 
 describe('ZephyrMetroPlugin', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
+    zephyrEngineCreateMock.mockResolvedValue(createEngineMock());
+    buildAssetsMapMock.mockReturnValue({});
   });
 
   describe('constructor', () => {
@@ -107,8 +132,6 @@ describe('ZephyrMetroPlugin', () => {
 
   describe('beforeBuild', () => {
     it('should initialize ZephyrEngine with metro builder', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
-
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
         mode: 'development',
@@ -122,15 +145,13 @@ describe('ZephyrMetroPlugin', () => {
 
       await plugin.beforeBuild();
 
-      expect(ZephyrEngine.create).toHaveBeenCalledWith({
+      expect(zephyrEngineCreateMock).toHaveBeenCalledWith({
         builder: 'metro',
         context: '/project',
       });
     });
 
     it('should resolve remote dependencies', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
-
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
         mode: 'development',
@@ -144,13 +165,11 @@ describe('ZephyrMetroPlugin', () => {
 
       await plugin.beforeBuild();
 
-      // Engine should have been created
-      expect(ZephyrEngine.create).toHaveBeenCalled();
+      expect(zephyrEngineCreateMock).toHaveBeenCalled();
+      expect(extractRemotesDependenciesMock).toHaveBeenCalled();
     });
 
     it('should mutate MF config when provided', async () => {
-      const { mutateMfConfig } = require('../internal/mutate-mf-config');
-
       const mfConfig = {
         name: 'TestApp',
         remotes: { RemoteApp: 'http://localhost:9000/remote.js' },
@@ -166,12 +185,10 @@ describe('ZephyrMetroPlugin', () => {
 
       await plugin.beforeBuild();
 
-      expect(mutateMfConfig).toHaveBeenCalled();
+      expect(mutateMfConfigMock).toHaveBeenCalled();
     });
 
     it('should not mutate MF config when not provided', async () => {
-      const { mutateMfConfig } = require('../internal/mutate-mf-config');
-
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
         mode: 'development',
@@ -182,7 +199,7 @@ describe('ZephyrMetroPlugin', () => {
 
       await plugin.beforeBuild();
 
-      expect(mutateMfConfig).not.toHaveBeenCalled();
+      expect(mutateMfConfigMock).not.toHaveBeenCalled();
     });
 
     it('should return mfConfig from beforeBuild', async () => {
@@ -205,8 +222,6 @@ describe('ZephyrMetroPlugin', () => {
     });
 
     it('should log configuration', async () => {
-      const { ze_log } = require('zephyr-agent');
-
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
         mode: 'development',
@@ -217,14 +232,12 @@ describe('ZephyrMetroPlugin', () => {
 
       await plugin.beforeBuild();
 
-      expect(ze_log.config).toHaveBeenCalled();
+      expect(zeLogConfigMock).toHaveBeenCalled();
     });
   });
 
   describe('afterBuild', () => {
     it('should complete build lifecycle', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
-
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
         mode: 'production',
@@ -239,8 +252,8 @@ describe('ZephyrMetroPlugin', () => {
       await plugin.beforeBuild();
       await plugin.afterBuild();
 
-      // The plugin should have called engine methods
-      expect(ZephyrEngine.create).toHaveBeenCalled();
+      expect(zephyrEngineCreateMock).toHaveBeenCalled();
+      expect(buildAssetsMapMock).toHaveBeenCalled();
     });
   });
 
@@ -272,8 +285,6 @@ describe('ZephyrMetroPlugin', () => {
 
   describe('context handling', () => {
     it('should use provided context path', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
-
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
         mode: 'development',
@@ -284,7 +295,7 @@ describe('ZephyrMetroPlugin', () => {
 
       await plugin.beforeBuild();
 
-      expect(ZephyrEngine.create).toHaveBeenCalledWith({
+      expect(zephyrEngineCreateMock).toHaveBeenCalledWith({
         builder: 'metro',
         context: '/custom/project/path',
       });

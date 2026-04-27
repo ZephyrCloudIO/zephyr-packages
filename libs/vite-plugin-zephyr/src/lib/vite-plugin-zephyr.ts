@@ -1,7 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import MagicString from 'magic-string';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
-import { loadEnv, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
+import {
+  loadEnv,
+  type Plugin,
+  type ResolvedConfig,
+  type UserConfig,
+} from 'vite';
 import {
   createManifestContent,
   handleGlobalError,
@@ -60,13 +65,16 @@ function loadModuleFederationPlugin() {
 }
 
 function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
   const hooks = options.hooks;
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
-  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
-    resolve_vite_internal_options = resolve;
-  });
+  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>(
+    (resolve) => {
+      resolve_vite_internal_options = resolve;
+    }
+  );
 
   let cachedSpecifier: string | undefined;
   let entrypoint: string;
@@ -79,7 +87,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     config: (config: UserConfig) => {
       // If MF was configured separately, inject the Zephyr runtime plugin before MF emits.
-      const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
+      const detectedMfConfig = extract_mf_plugin(
+        config.plugins ?? []
+      )?._options;
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
       }
@@ -103,7 +113,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         publicDir: config.publicDir,
       });
 
-      const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
+      const detectedMfConfig = extract_mf_plugin(
+        config.plugins ?? []
+      )?._options;
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
       }
@@ -193,7 +205,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
               ze_log.remotes(
                 `[transform] Transforming remoteEntry.js with ${resolved_remotes.length} remotes for dev mode`
               );
-              const result = inject_resolved_remotes_map(resolved_remotes, code);
+              const result = inject_resolved_remotes_map(
+                resolved_remotes,
+                code
+              );
               if (result !== code) {
                 return {
                   code: result,
@@ -209,7 +224,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             if (!cachedSpecifier) {
               cachedSpecifier = `env:vars:${zephyr_engine.application_uid}`;
             }
-            const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
+            const res = rewriteEnvReadsToVirtualModule(
+              String(code),
+              cachedSpecifier
+            );
             if (res && typeof res.code === 'string' && res.code !== code) {
               code = res.code;
               return {
@@ -250,7 +268,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                 continue;
               }
 
-              chunk.code = inject_resolved_remotes_map(resolved_remotes, chunk.code);
+              chunk.code = inject_resolved_remotes_map(
+                resolved_remotes,
+                chunk.code
+              );
               ze_log.remotes(
                 `[generateBundle] Injected ${resolved_remotes.length} resolved remotes into remoteEntry.js for build mode`
               );
@@ -334,8 +355,14 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             if (requestUrl === '/zephyr-manifest.json') {
               try {
                 const dependencies = zephyr_engine.federated_dependencies || [];
-                const manifestContent = createManifestContent(dependencies, true);
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                const manifestContent = createManifestContent(
+                  dependencies,
+                  true
+                );
+                res.setHeader(
+                  'Content-Type',
+                  'application/json; charset=utf-8'
+                );
                 res.setHeader('Access-Control-Allow-Origin', '*');
                 res.end(manifestContent);
                 return;
@@ -352,7 +379,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       }
     },
 
-    writeBundle: async function (options: NormalizedOutputOptions, bundle: OutputBundle) {
+    writeBundle: async function (
+      options: NormalizedOutputOptions,
+      bundle: OutputBundle
+    ) {
       try {
         const [vite_internal_options, zephyr_engine] = await Promise.all([
           vite_internal_options_defer,

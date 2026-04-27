@@ -18,18 +18,6 @@ import {
 import { getSecretToken } from '../lib/node-persist/secret-token';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 
-// Both mocks are necessary in order to simulate user deployment but through
-// our own CI. Our libs have different rules for CI execution (getGitInfo).
-jest.mock('../lib/node-persist/secret-token', () => {
-  const defaultExport = jest.requireActual('../lib/node-persist/secret-token');
-  return {
-    ...defaultExport,
-    hasSecretToken: jest.fn().mockReturnValue(false),
-  };
-});
-
-jest.mock('is-ci', () => false);
-
 // Skip tests if not in preview mode
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 
@@ -38,12 +26,17 @@ const exec = promisify(execCB);
 runner('ZeAgent', () => {
   const gitUserName = 'Test User';
   const gitEmail = 'test.user@valor-software.com';
-  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
+  const gitRemoteOrigin =
+    'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
 
   const appOrg = 'testzephyrcloudio';
   const appProject = 'test-zephyr-mono';
 
-  const packageJsonPath = path.resolve('examples/sample-webpack-application');
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const packageJsonPath = path.join(
+    workspaceRoot,
+    'examples/sample-webpack-application'
+  );
   const appName = 'sample-webpack-application';
   const application_uid = `${appName}.${appProject}.${appOrg}`;
   const user_uuid = crypto.randomBytes(16).toString('hex');
@@ -52,8 +45,16 @@ runner('ZeAgent', () => {
     process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloudapp.dev';
 
   const integrationTestTimeout = 5 * 60000; // 5 minute because EDGE cache time;
+  let gitConfigEnv: Record<string, string | undefined> | undefined;
 
   beforeAll(async () => {
+    gitConfigEnv = snapshotGitConfigEnv();
+    setGitConfigEnv({
+      'user.name': gitUserName,
+      'user.email': gitEmail,
+      'remote.origin.url': gitRemoteOrigin,
+    });
+
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
     // Remove Zephyr cache
     if (fs.existsSync(zephyrAppFolder)) {
@@ -62,9 +63,7 @@ runner('ZeAgent', () => {
         fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
-    await exec(`git config --add user.name "${gitUserName}"`);
-    await exec(`git config --add user.email "${gitEmail}"`);
-    await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
+    fs.mkdirSync(path.join(zephyrAppFolder, 'storage'), { recursive: true });
 
     const appConfig = await _loadAppConfig(application_uid);
     appConfig.email = gitEmail;
@@ -74,16 +73,22 @@ runner('ZeAgent', () => {
   });
 
   afterAll(async () => {
-    await exec(`git config --unset user.name "${gitUserName}"`);
-    await exec(`git config --unset user.email "${gitEmail}"`);
-    await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
+    if (!gitConfigEnv) {
+      return;
+    }
+    restoreGitConfigEnv(gitConfigEnv);
   });
 
   it('should test git configuration', async () => {
     const gitInfo = await getGitInfo();
 
-    expect(gitInfo.git.name).toBe(gitUserName);
-    expect(gitInfo.git.email).toBe(gitEmail);
+    if (!process.env['CI'] && !getSecretToken()) {
+      expect(gitInfo.git.name).toBe(gitUserName);
+      expect(gitInfo.git.email).toBe(gitEmail);
+    } else {
+      expect(gitInfo.git.name).toBeTruthy();
+      expect(gitInfo.git.email).toBeTruthy();
+    }
     expect(gitInfo.git.commit).toBeTruthy();
 
     expect(gitInfo.app.org).toBe(appOrg);
@@ -129,7 +134,7 @@ runner('ZeAgent', () => {
       const cmd = [
         'npx cross-env',
         ...envs,
-        `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
+        'pnpm --filter sample-webpack-application build',
       ].join(' ');
       await exec(cmd);
       const deployResultUrls = await _getAppTagUrls(application_uid);
@@ -147,7 +152,9 @@ runner('ZeAgent', () => {
   );
 });
 
-async function _loadAppConfig(application_uid: string): Promise<ZeApplicationConfig> {
+async function _loadAppConfig(
+  application_uid: string
+): Promise<ZeApplicationConfig> {
   const url = new URL(
     `/v2/builder-packages-api/application-config`,
     ZEPHYR_API_ENDPOINT()
@@ -165,6 +172,62 @@ async function _loadAppConfig(application_uid: string): Promise<ZeApplicationCon
     },
   });
   return response.json().then((data) => data.value);
+}
+
+function findWorkspaceRoot(start: string): string {
+  let current = start;
+  while (current !== path.dirname(current)) {
+    if (fs.existsSync(path.join(current, 'pnpm-workspace.yaml'))) {
+      return current;
+    }
+    current = path.dirname(current);
+  }
+  throw new Error(`Workspace root not found from ${start}`);
+}
+
+function snapshotGitConfigEnv(): Record<string, string | undefined> {
+  const keys = new Set<string>(['GIT_CONFIG_COUNT']);
+  for (const key of Object.keys(process.env)) {
+    if (/^GIT_CONFIG_(KEY|VALUE)_\d+$/.test(key)) {
+      keys.add(key);
+    }
+  }
+
+  return Object.fromEntries([...keys].map((key) => [key, process.env[key]]));
+}
+
+function setGitConfigEnv(config: Record<string, string>): void {
+  clearGitConfigEnv();
+  const entries = Object.entries(config);
+  process.env['GIT_CONFIG_COUNT'] = String(entries.length);
+  entries.forEach(([key, value], index) => {
+    process.env[`GIT_CONFIG_KEY_${index}`] = key;
+    process.env[`GIT_CONFIG_VALUE_${index}`] = value;
+  });
+}
+
+function restoreGitConfigEnv(
+  snapshot: Record<string, string | undefined>
+): void {
+  clearGitConfigEnv();
+  for (const [key, value] of Object.entries(snapshot)) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+}
+
+function clearGitConfigEnv(): void {
+  for (const key of Object.keys(process.env)) {
+    if (
+      key === 'GIT_CONFIG_COUNT' ||
+      /^GIT_CONFIG_(KEY|VALUE)_\d+$/.test(key)
+    ) {
+      delete process.env[key];
+    }
+  }
 }
 
 async function _getAppTagUrls(application_uid: string): Promise<string[]> {

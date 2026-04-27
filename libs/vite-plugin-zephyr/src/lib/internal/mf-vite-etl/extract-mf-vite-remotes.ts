@@ -29,14 +29,14 @@ export function extract_remotes_dependencies(
 
   if (!mfConfig.remotes) return;
 
-  const dependencyPairs: ZeDependencyPair[] = Object.entries(mfConfig.remotes).map(
-    ([name, remote]) => {
-      if (typeof remote === 'string') {
-        return { name, version: remote };
-      }
-      return { name, version: remote.entry };
+  const dependencyPairs: ZeDependencyPair[] = Object.entries(
+    mfConfig.remotes
+  ).map(([name, remote]) => {
+    if (typeof remote === 'string') {
+      return { name, version: remote };
     }
-  );
+    return { name, version: remote.entry };
+  });
 
   return dependencyPairs;
 }

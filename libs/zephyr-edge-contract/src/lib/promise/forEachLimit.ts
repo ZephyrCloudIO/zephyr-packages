@@ -9,7 +9,7 @@ export async function forEachLimit<T>(
   tasks: Array<() => Promise<T>>,
   batchSize: number
 ): Promise<T[]> {
-  const results: T[] = new Array(tasks.length);
+  const results: T[] = Array.from({ length: tasks.length });
   let currentIndex = 0;
 
   // Worker function: runs until there are no more tasks left.
@@ -18,6 +18,9 @@ export async function forEachLimit<T>(
     while (currentIndex < tasks.length) {
       const taskIndex = currentIndex++;
       const task = tasks[taskIndex];
+      if (!task) {
+        continue;
+      }
       // Execute the task and store the result in the correct position
       results[taskIndex] = await task();
     }

@@ -1,3 +1,4 @@
+import { rs as jest } from '@rstest/core';
 import { PromiseLazyLoad } from '../index';
 
 describe('PromiseLazyLoad', () => {

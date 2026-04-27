@@ -42,9 +42,8 @@ testem.log
 .DS_Store
 Thumbs.db
 
-# nx
-.nx
-migrations.json
+# turborepo
+.turbo
 
 # Local Netlify folder
 .netlify
@@ -95,6 +94,4 @@ tasks/
 # Local Claude context files
 **/.claude/**/*.local.*
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
 .serena

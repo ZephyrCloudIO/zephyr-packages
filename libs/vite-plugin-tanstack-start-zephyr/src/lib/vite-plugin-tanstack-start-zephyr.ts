@@ -95,7 +95,8 @@ function normalizeEntrypoint(entrypoint: string): string {
  * - Zephyr auth (via ze login)
  */
 export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
   let config: ResolvedConfig;
   let outputDir: string;
   let entrypoint: string;
@@ -154,7 +155,9 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
       }
 
       // Verify all environments are now built
-      const allBuilt = Object.values(builder.environments).every((env) => env.isBuilt);
+      const allBuilt = Object.values(builder.environments).every(
+        (env) => env.isBuilt
+      );
       if (!allBuilt) {
         const stillNotBuilt = Object.entries(builder.environments)
           .filter(([, env]) => !env.isBuilt)

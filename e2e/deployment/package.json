@@ -1,10 +1,12 @@
 {
   "name": "e2e-deployment",
+  "scripts": {
+    "test": "rstest --passWithNoTests",
+    "lint": "oxlint src --no-error-on-unmatched-pattern"
+  },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "jest-environment-node": "^29.7.0",
-    "ts-jest": "catalog:typescript",
     "ts-node": "10.9.2",
     "typescript": "catalog:typescript",
     "zephyr-agent": "workspace:*",

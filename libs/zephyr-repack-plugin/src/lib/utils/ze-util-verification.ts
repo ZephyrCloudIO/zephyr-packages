@@ -39,7 +39,8 @@ export async function verify_mf_fastly_config(
     if (!mfConfig) return;
 
     const condition =
-      mfConfig?.library?.type === 'var' || typeof mfConfig?.library?.type === 'undefined';
+      mfConfig?.library?.type === 'var' ||
+      typeof mfConfig?.library?.type === 'undefined';
 
     if (
       condition &&

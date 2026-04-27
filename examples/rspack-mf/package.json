@@ -1,12 +1,22 @@
 {
   "name": "rspack-mf",
+  "scripts": {
+    "start": "pnpm --parallel --filter rspack_mf_remote --filter rspack_mf_host start",
+    "build-all": "pnpm --workspace-concurrency=1 --filter rspack_mf_remote --filter rspack_mf_host build",
+    "build:remote": "pnpm --filter rspack_mf_remote build",
+    "build:host": "pnpm --filter rspack_mf_host build"
+  },
   "dependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18"
   },
   "devDependencies": {
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
+    "tslib": "catalog:typescript",
     "zephyr-rspack-plugin": "workspace:*"
   }
 }

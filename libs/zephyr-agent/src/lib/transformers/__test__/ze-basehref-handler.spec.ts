@@ -1,4 +1,7 @@
-import { normalizeBasePath, applyBaseHrefToAssets } from '../ze-basehref-handler';
+import {
+  normalizeBasePath,
+  applyBaseHrefToAssets,
+} from '../ze-basehref-handler';
 import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
 describe('ze-basehref-handler', () => {
@@ -94,11 +97,17 @@ describe('ze-basehref-handler', () => {
     };
 
     it('should return the original map when baseHref is null, undefined, or empty', () => {
-      expect(applyBaseHrefToAssets(sampleAssetsMap, null)).toBe(sampleAssetsMap);
-      expect(applyBaseHrefToAssets(sampleAssetsMap, undefined)).toBe(sampleAssetsMap);
+      expect(applyBaseHrefToAssets(sampleAssetsMap, null)).toBe(
+        sampleAssetsMap
+      );
+      expect(applyBaseHrefToAssets(sampleAssetsMap, undefined)).toBe(
+        sampleAssetsMap
+      );
       expect(applyBaseHrefToAssets(sampleAssetsMap, '')).toBe(sampleAssetsMap);
       expect(applyBaseHrefToAssets(sampleAssetsMap, '/')).toBe(sampleAssetsMap);
-      expect(applyBaseHrefToAssets(sampleAssetsMap, './')).toBe(sampleAssetsMap);
+      expect(applyBaseHrefToAssets(sampleAssetsMap, './')).toBe(
+        sampleAssetsMap
+      );
       expect(applyBaseHrefToAssets(sampleAssetsMap, '.')).toBe(sampleAssetsMap);
     });
 
@@ -108,13 +117,17 @@ describe('ze-basehref-handler', () => {
       // Regular assets should have baseHref applied
       expect(result['base/main.js'].path).toBe('base/main.js');
       expect(result['base/styles.css'].path).toBe('base/styles.css');
-      expect(result['base/nested/image.png'].path).toBe('base/nested/image.png');
+      expect(result['base/nested/image.png'].path).toBe(
+        'base/nested/image.png'
+      );
 
       // index.html should remain unchanged
       expect(result['index.html'].path).toBe('index.html');
 
       // Absolute paths should remain unchanged
-      expect(result['/absolute/path/to/file.js'].path).toBe('/absolute/path/to/file.js');
+      expect(result['/absolute/path/to/file.js'].path).toBe(
+        '/absolute/path/to/file.js'
+      );
 
       // External should remain external
       expect(result['https://cdn.example.com/script.js'].path).toBe(
@@ -135,7 +148,9 @@ describe('ze-basehref-handler', () => {
 
       // Should properly join the paths
       expect(result['nested/base/main.js'].path).toBe('nested/base/main.js');
-      expect(result['nested/base/styles.css'].path).toBe('nested/base/styles.css');
+      expect(result['nested/base/styles.css'].path).toBe(
+        'nested/base/styles.css'
+      );
     });
 
     it('should create a new map without modifying the original', () => {

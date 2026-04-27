@@ -1,5 +1,8 @@
 import type { ConvertedDependencies } from '../convert-to-graph/convert-dependencies';
-import type { ModuleObject, Overrides } from '../convert-to-graph/module-part-two';
+import type {
+  ModuleObject,
+  Overrides,
+} from '../convert-to-graph/module-part-two';
 import type { LocalPackageJson } from 'zephyr-edge-contract';
 
 function mergeWithoutDupe(source: LocalPackageJson[]): LocalPackageJson[] {
@@ -85,7 +88,8 @@ export function mergeGraphs(graph1: Graph, graph2: Graph): Graph {
       return (
         sidecarConsumedModule.consumingApplicationID ===
           hostConsumedModule.consumingApplicationID &&
-        sidecarConsumedModule.applicationID === hostConsumedModule.applicationID &&
+        sidecarConsumedModule.applicationID ===
+          hostConsumedModule.applicationID &&
         sidecarConsumedModule.name === hostConsumedModule.name
       );
     });

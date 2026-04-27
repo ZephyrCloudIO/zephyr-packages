@@ -9,9 +9,13 @@ export interface ZephyrRsbuildPluginOptions {
   hooks?: ZephyrBuildHooks;
 }
 
-type RspackWithZephyrConfig = Parameters<ReturnType<typeof rspackWithZephyr>>[0];
+type RspackWithZephyrConfig = Parameters<
+  ReturnType<typeof rspackWithZephyr>
+>[0];
 
-export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin {
+export function withZephyr(
+  options?: ZephyrRsbuildPluginOptions
+): RsbuildPlugin {
   return {
     name: 'zephyr-rsbuild-plugin',
     setup(api) {

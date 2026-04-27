@@ -23,7 +23,8 @@ export async function zeUploadSnapshot(
   const envs = process.env;
   const ze_envs: Record<string, string> = {};
   for (const [key, value] of Object.entries(envs)) {
-    if (key.startsWith('ZE_PUBLIC_') && typeof value === 'string') ze_envs[key] = value;
+    if (key.startsWith('ZE_PUBLIC_') && typeof value === 'string')
+      ze_envs[key] = value;
   }
 
   // Generate hash for environment variables with application scope

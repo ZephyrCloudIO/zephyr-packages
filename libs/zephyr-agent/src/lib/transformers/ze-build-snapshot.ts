@@ -84,7 +84,12 @@ export async function createSnapshot(
         const asset = basedAssets[hash];
         const { path, extname, size } = asset;
         const normalizedPath = normalizePathSeparators(path);
-        memo[normalizedPath] = { path: normalizedPath, extname, hash: asset.hash, size };
+        memo[normalizedPath] = {
+          path: normalizedPath,
+          extname,
+          hash: asset.hash,
+          size,
+        };
         return memo;
       },
       {} as Record<string, SnapshotAsset>

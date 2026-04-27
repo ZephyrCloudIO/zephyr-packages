@@ -8,10 +8,8 @@ describe('App', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('should have a greeting as the title', () => {
-    const { getAllByText } = render(<App />);
-    expect(
-      getAllByText(new RegExp('Welcome remote', 'gi')).length > 0
-    ).toBeTruthy();
+  it('should render remote welcome content', () => {
+    const { getByText } = render(<App />);
+    expect(getByText('Remote Application')).toBeTruthy();
   });
 });

@@ -30,7 +30,9 @@ export function getSessionKey(): SessionLock {
   // Another process has the lock = concurrent login is in progress,
   // use that session key instead
   if (!unlock) {
-    ze_log.misc('Lock is already held by another process, using the same session key');
+    ze_log.misc(
+      'Lock is already held by another process, using the same session key'
+    );
     session = fs.readFileSync(ZE_SESSION_LOCK);
 
     // A second write here helps solve any concurrency between reading and writing
@@ -64,7 +66,9 @@ export interface SessionLock extends Disposable {
 function safeLockSync(createIfNotExists = true): (() => void) | null {
   try {
     // The timeout to the whole login process makes sense to keep the lock for the same amount of time
-    return lockSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS });
+    return lockSync(ZE_SESSION_LOCK, {
+      stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS,
+    });
   } catch (ex: unknown) {
     const error = ex as { code: string };
     if (error.code === 'ELOCKED') {
@@ -87,9 +91,14 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
  */
 export async function waitForUnlock(signal?: AbortSignal): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _ of setInterval(UNLOCK_INTERVAL, null, { ref: false, signal })) {
+  for await (const _ of setInterval(UNLOCK_INTERVAL, null, {
+    ref: false,
+    signal,
+  })) {
     // Stale works as a timeout for the loop
-    if (!checkSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS })) {
+    if (
+      !checkSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS })
+    ) {
       return;
     }
   }

@@ -4,15 +4,10 @@
     "module": "es2022",
     "target": "ES2022",
     "outDir": "../../dist/out-tsc",
-    "types": [
-      "node",
-
-      "@nx/react/typings/cssmodule.d.ts",
-      "@nx/react/typings/image.d.ts"
-    ]
+    "types": ["node"]
   },
   "exclude": [
-    "jest.config.ts",
+    "rstest.config.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.tsx",

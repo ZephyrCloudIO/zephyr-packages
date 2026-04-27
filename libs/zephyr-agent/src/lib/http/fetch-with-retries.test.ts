@@ -1,30 +1,57 @@
-import axios from 'axios';
-import axiosRetry from 'axios-retry';
+import { rs } from '@rstest/core';
 import { ZephyrError } from '../errors';
-import { fetchWithRetries } from './fetch-with-retries';
 
-// Mock axios, axios-retry, isCI, and proxy agents
-jest.mock('axios');
-jest.mock('axios-retry');
-jest.mock('is-ci', () => false); // Default to non-CI
-
-// Mock HTTPS proxy agent class - define mock function inside factory to avoid hoisting issues
-jest.mock('https-proxy-agent', () => ({
-  HttpsProxyAgent: jest
+const jest = rs;
+const {
+  mockCreate,
+  mockAxiosInstance,
+  mockAxiosRetry,
+  mockExponentialDelay,
+  mockHttpsProxyAgent,
+} = rs.hoisted(() => ({
+  mockCreate: rs.fn(),
+  mockAxiosInstance: rs.fn(),
+  mockAxiosRetry: rs.fn(),
+  mockExponentialDelay: rs.fn(),
+  mockHttpsProxyAgent: rs
     .fn()
     .mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
 }));
 
-// Import mocked module to access mock function
-import { HttpsProxyAgent } from 'https-proxy-agent';
+// Mock axios, axios-retry, isCI, and proxy agents
+rs.mock('axios', () => {
+  class MockAxiosError extends Error {}
+  return {
+    __esModule: true,
+    AxiosError: MockAxiosError,
+    default: {
+      create: mockCreate,
+    },
+    create: mockCreate,
+  };
+});
 
-const MockHttpsProxyAgent = HttpsProxyAgent as jest.MockedClass<typeof HttpsProxyAgent>;
+rs.mock('axios-retry', () => {
+  const fn = mockAxiosRetry as unknown as (...args: unknown[]) => unknown;
+  (
+    fn as unknown as { exponentialDelay: typeof mockExponentialDelay }
+  ).exponentialDelay = mockExponentialDelay;
+  return {
+    __esModule: true,
+    default: fn,
+    exponentialDelay: mockExponentialDelay,
+  };
+});
 
-// Setup mocks
-const mockCreate = jest.fn();
-axios.create = mockCreate;
+rs.mock('is-ci', () => false); // Default to non-CI
 
-const mockAxiosInstance = jest.fn();
+// Mock HTTPS proxy agent class - define mock function inside factory to avoid hoisting issues
+rs.mock('https-proxy-agent', () => ({
+  HttpsProxyAgent: mockHttpsProxyAgent,
+}));
+
+import { fetchWithRetries } from './fetch-with-retries';
+
 mockCreate.mockReturnValue(mockAxiosInstance);
 
 // Helper to clean proxy environment variables
@@ -39,10 +66,19 @@ const cleanProxyEnv = () => {
 
 describe('fetchWithRetries', () => {
   const url = new URL('https://example.com/api');
-  const options = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+  const options = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCreate.mockReturnValue(mockAxiosInstance);
+    (
+      mockAxiosRetry as unknown as {
+        exponentialDelay: typeof mockExponentialDelay;
+      }
+    ).exponentialDelay = mockExponentialDelay;
     cleanProxyEnv();
   });
 
@@ -66,17 +102,17 @@ describe('fetchWithRetries', () => {
     expect(typeof result.text).toBe('function');
 
     // Verify axios create was called with default settings (non-CI, no proxy)
-    expect(axios.create).toHaveBeenCalledWith({
+    expect(mockCreate).toHaveBeenCalledWith({
       family: undefined,
       httpsAgent: undefined,
     });
 
     // Verify axios-retry was configured
-    expect(axiosRetry).toHaveBeenCalledWith(
+    expect(mockAxiosRetry).toHaveBeenCalledWith(
       mockAxiosInstance,
       expect.objectContaining({
         retries: 3,
-        retryDelay: axiosRetry.exponentialDelay,
+        retryDelay: mockAxiosRetry.exponentialDelay,
         retryCondition: expect.any(Function),
       })
     );
@@ -103,7 +139,8 @@ describe('fetchWithRetries', () => {
     await fetchWithRetries(url, options);
 
     // Get retry condition function
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock
+      .calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Test retry condition with network error (message-based)
@@ -240,7 +277,7 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options, customRetries);
 
-    expect(axiosRetry).toHaveBeenCalledWith(
+    expect(mockAxiosRetry).toHaveBeenCalledWith(
       mockAxiosInstance,
       expect.objectContaining({
         retries: customRetries,
@@ -260,7 +297,7 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    expect(axios.create).toHaveBeenCalledWith({
+    expect(mockCreate).toHaveBeenCalledWith({
       family: undefined, // Default behavior (both IPv4 and IPv6)
       httpsAgent: undefined,
     });
@@ -275,7 +312,8 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock
+      .calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Error without code should not retry
@@ -295,7 +333,8 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock
+      .calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Non-network error should not retry
@@ -319,8 +358,10 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://proxy.example.com:8080'
+      );
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: expect.objectContaining({
             proxyUrl: 'http://proxy.example.com:8080',
@@ -340,7 +381,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(
         'http://lowercase-proxy.example.com:8080'
       );
     });
@@ -364,7 +405,7 @@ describe('fetchWithRetries', () => {
           ? 'http://lowercase-proxy.example.com:8080'
           : 'http://uppercase-proxy.example.com:8080';
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(expectedProxy);
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(expectedProxy);
     });
 
     it('should fallback to HTTP_PROXY for https requests if HTTPS_PROXY is not set', async () => {
@@ -378,7 +419,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(
         'http://http-proxy.example.com:8080'
       );
     });
@@ -395,7 +436,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -414,7 +455,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -433,7 +474,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -453,7 +494,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(subdomainUrl, options);
 
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -472,7 +513,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -491,8 +532,10 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://proxy.example.com:8080'
+      );
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: expect.objectContaining({
             proxyUrl: 'http://proxy.example.com:8080',
@@ -513,7 +556,7 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -529,8 +572,8 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(MockHttpsProxyAgent).not.toHaveBeenCalled();
-      expect(axios.create).toHaveBeenCalledWith(
+      expect(mockHttpsProxyAgent).not.toHaveBeenCalled();
+      expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: undefined,
         })
@@ -565,7 +608,7 @@ describe('fetchWithRetries', () => {
       await fetchWithRetries(httpsUrl, options);
 
       // Verify proxy agent constructor was never invoked
-      expect(MockHttpsProxyAgent).toHaveBeenCalledTimes(0);
+      expect(mockHttpsProxyAgent).toHaveBeenCalledTimes(0);
     });
   });
 });

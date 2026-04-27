@@ -1,6 +1,10 @@
 import type { BuildSuccessEvent } from '@parcel/types';
 import path from 'node:path';
-import { type ZephyrEngine, zeBuildDashData, type ZephyrBuildHooks } from 'zephyr-agent';
+import {
+  type ZephyrEngine,
+  zeBuildDashData,
+  type ZephyrBuildHooks,
+} from 'zephyr-agent';
 import { type ParcelOutputAsset, getAssetsMap } from './get-assets-map';
 
 const assets = new Map<string, ParcelOutputAsset>();
@@ -11,7 +15,9 @@ interface OnBuildSuccessProps {
   hooks?: ZephyrBuildHooks;
 }
 
-export async function onBuildSuccess(props: OnBuildSuccessProps): Promise<void> {
+export async function onBuildSuccess(
+  props: OnBuildSuccessProps
+): Promise<void> {
   const { event, zephyr_engine_defer, hooks } = props;
 
   const zephyr_engine = await zephyr_engine_defer;

@@ -4,7 +4,8 @@
 const { rewriteEnvReadsToVirtualModule } = require('zephyr-agent');
 
 module.exports = function envVirtualLoader(source) {
-  const options = this && typeof this.getOptions === 'function' ? this.getOptions() : {};
+  const options =
+    this && typeof this.getOptions === 'function' ? this.getOptions() : {};
 
   if (typeof rewriteEnvReadsToVirtualModule !== 'function') {
     return source;

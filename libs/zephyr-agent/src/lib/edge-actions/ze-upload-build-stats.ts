@@ -9,7 +9,9 @@ import { ze_log } from '../logging';
 import { getToken } from '../node-persist/token';
 
 /** @returns Array of deployed tags and envs. Empty array when waitForDeployments is false */
-export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<string[]> {
+export async function zeUploadBuildStats(
+  dashData: ZephyrBuildStats
+): Promise<string[]> {
   // Add dots here to indicate this is an async operation
   ze_log.upload('Uploading build stats to Zephyr...', dashData);
 
@@ -17,7 +19,10 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
 
   const url = new URL(ze_api_gateway.build_stats, ZE_API_ENDPOINT());
 
-  const [ok, cause, res] = await makeRequest<{ status: string; targets?: string[] }>(
+  const [ok, cause, res] = await makeRequest<{
+    status: string;
+    targets?: string[];
+  }>(
     url,
     {
       method: 'POST',

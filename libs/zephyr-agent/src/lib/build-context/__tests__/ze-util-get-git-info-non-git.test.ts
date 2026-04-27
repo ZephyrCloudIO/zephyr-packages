@@ -1,86 +1,84 @@
-import { exec as node_exec } from 'node:child_process';
+import { rs } from '@rstest/core';
 import { getGitInfo } from '../ze-util-get-git-info';
 
-jest.mock('node:child_process', () => ({
-  exec: jest.fn(),
+const jest = rs;
+const {
+  mockExec,
+  mockGitLog,
+  mockLogFn,
+  mockGetPackageJson,
+  mockGetToken,
+  mockIsTokenStillValid,
+  mockMakeRequest,
+} = rs.hoisted(() => ({
+  mockExec: rs.fn(),
+  mockGitLog: rs.fn(),
+  mockLogFn: rs.fn(),
+  mockGetPackageJson: rs.fn(),
+  mockGetToken: rs.fn(),
+  mockIsTokenStillValid: rs.fn(),
+  mockMakeRequest: rs.fn(),
 }));
 
-jest.mock('../../node-persist/secret-token', () => ({
-  hasSecretToken: jest.fn().mockReturnValue(false),
+rs.mock('node:child_process', () => ({
+  exec: mockExec,
 }));
 
-jest.mock('../../logging', () => ({
+rs.mock('../../node-persist/secret-token', () => ({
+  hasSecretToken: rs.fn().mockReturnValue(false),
+  getSecretToken: rs.fn().mockReturnValue(''),
+}));
+
+rs.mock('../../logging', () => ({
   ze_log: {
-    git: jest.fn(),
+    git: mockGitLog,
   },
 }));
 
-jest.mock('../../logging/ze-log-event', () => ({
-  logFn: jest.fn(),
+rs.mock('../../logging/ze-log-event', () => ({
+  logFn: mockLogFn,
 }));
 
-jest.mock('is-ci', () => false);
+rs.mock('is-ci', () => false);
 
-jest.mock('../ze-util-read-package-json', () => ({
-  getPackageJson: jest.fn(),
+rs.mock('../ze-util-read-package-json', () => ({
+  getPackageJson: mockGetPackageJson,
 }));
 
-jest.mock('../../node-persist/token', () => ({
-  getToken: jest.fn(),
+rs.mock('../../node-persist/token', () => ({
+  getToken: mockGetToken,
 }));
 
-jest.mock('../../http/http-request', () => ({
-  makeRequest: jest.fn(),
+rs.mock('../../http/http-request', () => ({
+  makeRequest: mockMakeRequest,
 }));
 
-jest.mock('../../auth/login', () => ({
-  isTokenStillValid: jest.fn(),
+rs.mock('../../auth/login', () => ({
+  isTokenStillValid: mockIsTokenStillValid,
 }));
 
-jest.mock('../detect-monorepo', () => ({
-  detectMonorepo: jest.fn().mockResolvedValue({ type: 'none', root: process.cwd() }),
-  getMonorepoRootPackageJson: jest.fn().mockResolvedValue(null),
+rs.mock('../detect-monorepo', () => ({
+  detectMonorepo: rs
+    .fn()
+    .mockResolvedValue({ type: 'none', root: process.cwd() }),
+  getMonorepoRootPackageJson: rs.fn().mockResolvedValue(null),
 }));
 
 describe('getGitInfo - non-git environments', () => {
-  const mockExec = node_exec as unknown as jest.Mock;
-  let mockGitLog: jest.Mock;
-  let mockLogFn: jest.Mock;
-  let mockGetPackageJson: jest.Mock;
-
   beforeEach(() => {
     jest.clearAllMocks();
 
     // Set NODE_ENV to production for tests expecting 'main' branch
     process.env.NODE_ENV = 'production';
-
-    // Get the mocked ze_log.git function
-    const { ze_log } = require('../../logging');
-    mockGitLog = ze_log.git;
-    mockGitLog.mockClear();
-
-    // Get the mocked logFn function
-    const { logFn } = require('../../logging/ze-log-event');
-    mockLogFn = logFn;
-    mockLogFn.mockClear();
-
-    // Reset package.json mock
-    const { getPackageJson } = require('../ze-util-read-package-json');
-    mockGetPackageJson = getPackageJson;
     mockGetPackageJson.mockResolvedValue({
       name: 'test-project',
       version: '1.0.0',
     });
 
-    // Mock authentication and API calls for fallback scenarios
-    const { getToken } = require('../../node-persist/token');
-    const { isTokenStillValid } = require('../../auth/login');
-    const { makeRequest } = require('../../http/http-request');
-
     // Default token setup
-    getToken.mockResolvedValue('valid-token');
-    isTokenStillValid.mockReturnValue(true);
-    makeRequest.mockResolvedValue([
+    mockGetToken.mockResolvedValue('valid-token');
+    mockIsTokenStillValid.mockReturnValue(true);
+    mockMakeRequest.mockResolvedValue([
       true,
       null,
       {
@@ -102,14 +100,21 @@ describe('getGitInfo - non-git environments', () => {
         } else if (cmd.includes('git config --global user.email')) {
           callback(null, { stdout: 'global@example.com\n', stderr: '' });
         } else {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         }
       } else {
         // Mock promisified exec
         if (cmd.includes('git config --global user.name')) {
           return Promise.resolve({ stdout: 'Global User\n', stderr: '' });
         } else if (cmd.includes('git config --global user.email')) {
-          return Promise.resolve({ stdout: 'global@example.com\n', stderr: '' });
+          return Promise.resolve({
+            stdout: 'global@example.com\n',
+            stderr: '',
+          });
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }
@@ -129,7 +134,11 @@ describe('getGitInfo - non-git environments', () => {
   it('should fall back to API user info when neither local nor global git available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+        callback(
+          new Error('Not a git repository'),
+          '',
+          'fatal: not a git repository'
+        );
       } else {
         return Promise.reject(new Error('Not a git repository'));
       }
@@ -202,7 +211,11 @@ describe('getGitInfo - non-git environments', () => {
   it('should use API user org and package.json project when git is not available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+        callback(
+          new Error('Not a git repository'),
+          '',
+          'fatal: not a git repository'
+        );
       } else {
         return Promise.reject(new Error('Not a git repository'));
       }
@@ -228,7 +241,11 @@ describe('getGitInfo - non-git environments', () => {
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }
@@ -242,8 +259,7 @@ describe('getGitInfo - non-git environments', () => {
 
     it('should use username from API when available', async () => {
       // Mock API response with specific user info
-      const { makeRequest } = require('../../http/http-request');
-      makeRequest.mockResolvedValue([
+      mockMakeRequest.mockResolvedValue([
         true,
         null,
         {
@@ -257,7 +273,11 @@ describe('getGitInfo - non-git environments', () => {
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }
@@ -271,8 +291,7 @@ describe('getGitInfo - non-git environments', () => {
 
     it('should sanitize org name with special characters', async () => {
       // Mock API response with special characters
-      const { makeRequest } = require('../../http/http-request');
-      makeRequest.mockResolvedValue([
+      mockMakeRequest.mockResolvedValue([
         true,
         null,
         {
@@ -286,7 +305,11 @@ describe('getGitInfo - non-git environments', () => {
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }

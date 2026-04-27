@@ -32,13 +32,17 @@ describe('normalize_js_var_name', () => {
     expect(normalize_js_var_name('1invalid-name.test@example')).toBe(
       '_invalid_name_test_example'
     );
-    expect(normalize_js_var_name('123-test.name@domain')).toBe('_23_test_name_domain');
+    expect(normalize_js_var_name('123-test.name@domain')).toBe(
+      '_23_test_name_domain'
+    );
     expect(normalize_js_var_name('---invalid---')).toBe('___invalid___');
   });
 
   test('should handle special characters', () => {
     expect(normalize_js_var_name('name!@#$%^&*()')).toBe('name___$______');
-    expect(normalize_js_var_name('name+=-[]{}|;:,<>?')).toBe('name______________');
+    expect(normalize_js_var_name('name+=-[]{}|;:,<>?')).toBe(
+      'name______________'
+    );
     expect(normalize_js_var_name('name"\'`~')).toBe('name____');
   });
 
@@ -69,7 +73,9 @@ describe('normalize_js_var_name', () => {
   });
 
   test('should handle common package/module name patterns', () => {
-    expect(normalize_js_var_name('@scope/package-name')).toBe('_scope_package_name');
+    expect(normalize_js_var_name('@scope/package-name')).toBe(
+      '_scope_package_name'
+    );
     expect(normalize_js_var_name('lodash.debounce')).toBe('lodash_debounce');
     expect(normalize_js_var_name('react-dom')).toBe('react_dom');
     expect(normalize_js_var_name('my-awesome-lib')).toBe('my_awesome_lib');

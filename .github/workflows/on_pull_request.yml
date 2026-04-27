@@ -14,7 +14,11 @@ concurrency:
 
 env:
   ZE_FAIL_BUILD: true
-  NX_DAEMON: false
+  TURBO_TELEMETRY_DISABLED: 1
+  TURBO_CACHE: remote:rw
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+  TURBO_SCM_HEAD: ${{ github.sha }}
 
 jobs:
   build:
@@ -26,27 +30,23 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
-      # Build plugins first to avoid race conditions on Windows
-      - name: run build plugins
+      - name: run build libs
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected --exclude='!libs/**' -t build --skipRemoteCache --outputStyle=stream
+        run: pnpm build
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t build --skipRemoteCache --outputStyle=stream
+        run: pnpm exec turbo build --affected --filter='./libs/**'
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -55,7 +55,18 @@ jobs:
           else
             echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
           fi
-      - name: Check if cache has files
+      - name: Determine affected examples
+        id: affected-examples
+        run: pnpm ci:affected-examples
+      - name: Build examples for e2e cache
+        if: steps.affected-examples.outputs.has-targets == 'true'
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+        run: pnpm exec turbo build --affected --filter='./examples/**' --filter='!zephyr-cli-test' --force
+      - name: Check if e2e cache has files
         id: check-cache
         shell: bash
         run: |
@@ -64,6 +75,12 @@ jobs:
           else
             echo "has-files=false" >> $GITHUB_OUTPUT
           fi
+      - name: Require Zephyr cache
+        if: steps.affected-examples.outputs.has-targets == 'true' && steps.check-cache.outputs.has-files != 'true'
+        shell: bash
+        run: |
+          echo "Zephyr cache was not produced for affected examples: ${{ steps.affected-examples.outputs.targets }}"
+          exit 1
       - name: Upload built libs and cache
         if: steps.check-cache.outputs.has-files == 'true'
         uses: actions/upload-artifact@v4
@@ -79,14 +96,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
+      - name: run format check
+        run: pnpm format:check
       - name: run lint
-        run: pnpm nx affected -t lint
+        run: pnpm exec turbo lint --affected
 
   test:
     runs-on: ${{ matrix.os }}
@@ -97,21 +113,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: run test
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t test --outputStyle=stream
+        run: pnpm exec turbo test --affected --filter='!e2e-deployment'
 
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -128,9 +141,6 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -139,25 +149,14 @@ jobs:
           else
             echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
           fi
+      - name: Determine affected examples
+        id: affected-examples
+        run: pnpm ci:affected-examples
       - name: Download zephyr cache
-        id: download-zephyr-cache
-        continue-on-error: true
+        if: steps.affected-examples.outputs.has-targets == 'true'
         uses: actions/download-artifact@v4
         with:
           name: zephyr-cache-${{ matrix.os }}
           path: ${{ env.ZEPHYR_CACHE }}
-      - name: Check if cache has files
-        id: check-cache
-        shell: bash
-        run: |
-          if [ -d "${{ env.ZEPHYR_CACHE }}" ] && [ "$(ls -A "${{ env.ZEPHYR_CACHE }}" 2>/dev/null)" ]; then
-            echo "has-files=true" >> $GITHUB_OUTPUT
-          else
-            echo "has-files=false" >> $GITHUB_OUTPUT
-          fi
-      - name: Skip e2e when no cache exists for this OS
-        if: steps.check-cache.outputs.has-files != 'true'
-        run: echo "No Zephyr cache artifact for ${{ matrix.os }}; skipping e2e examples test."
       - name: Run e2e examples test
-        if: steps.check-cache.outputs.has-files == 'true'
-        run: pnpm nx run e2e-deployment:e2e-test --passWithNoTests --skipRemoteCache --outputStyle=stream
+        run: pnpm test:examples

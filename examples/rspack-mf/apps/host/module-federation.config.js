@@ -1,22 +1,28 @@
-/** @type {Parameters<import('@nx/module-federation/rspack').withModuleFederation>[0]} */
 module.exports = {
   name: 'rspack_mf_host',
-  remotes: ['rspack_mf_remote'],
-  shared: (libName) => {
-    const reactShared = [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
-    ];
-    if (reactShared.includes(libName)) {
-      return {
-        singleton: true,
-        version: '18.3.1',
-        requiredVersion: '18.3.1',
-        eager: true,
-      };
-    }
-    return false;
+  remotes: {
+    rspack_mf_remote: 'rspack_mf_remote@http://localhost:4201/remoteEntry.js',
+  },
+  shared: {
+    react: {
+      singleton: true,
+      eager: true,
+      requiredVersion: '18.3.1',
+    },
+    'react-dom': {
+      singleton: true,
+      eager: true,
+      requiredVersion: '18.3.1',
+    },
+    'react/jsx-runtime': {
+      singleton: true,
+      eager: true,
+      requiredVersion: '18.3.1',
+    },
+    'react/jsx-dev-runtime': {
+      singleton: true,
+      eager: true,
+      requiredVersion: '18.3.1',
+    },
   },
 };

@@ -3,9 +3,13 @@
 describe('with-zephyr', () => {
   describe('extractMetroRemoteDependencies', () => {
     // Helper function matching the implementation
-    const extractMetroRemoteDependencies = (remotes: Record<string, string>) => {
+    const extractMetroRemoteDependencies = (
+      remotes: Record<string, string>
+    ) => {
       return Object.entries(remotes).map(([name, url]) => {
-        const [remoteName, remoteUrl] = url.includes('@') ? url.split('@') : [name, url];
+        const [remoteName, remoteUrl] = url.includes('@')
+          ? url.split('@')
+          : [name, url];
 
         return {
           name: remoteName,

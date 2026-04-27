@@ -28,12 +28,16 @@ export function extractModulesFromExposes(
     const normalizedFilePath =
       typeof filePath === 'string'
         ? filePath
-        : typeof filePath === 'object' && filePath !== null && 'import' in filePath
+        : typeof filePath === 'object' &&
+            filePath !== null &&
+            'import' in filePath
           ? String((filePath as { import: string }).import)
           : String(filePath);
 
     // Extract just the module name from the exposed path (removing './')
-    const name = exposedPath.startsWith('./') ? exposedPath.substring(2) : exposedPath;
+    const name = exposedPath.startsWith('./')
+      ? exposedPath.substring(2)
+      : exposedPath;
 
     // Create a unique ID for this module in the format used by Module Federation Dashboard
     const id = `${name}:${name}`;
@@ -51,13 +55,18 @@ export function extractModulesFromExposes(
             .map((item: string | XFederatedSharedConfig) => {
               return typeof item === 'string'
                 ? item
-                : typeof item === 'object' && item !== null && 'libraryName' in item
+                : typeof item === 'object' &&
+                    item !== null &&
+                    'libraryName' in item
                   ? String(item.libraryName)
                   : '';
             })
             .filter(Boolean)
         );
-      } else if (typeof mfConfig.shared === 'object' && mfConfig.shared !== null) {
+      } else if (
+        typeof mfConfig.shared === 'object' &&
+        mfConfig.shared !== null
+      ) {
         // Handle object format: { react: {...}, 'react-dom': {...} }
         requires.push(...Object.keys(mfConfig.shared));
       }

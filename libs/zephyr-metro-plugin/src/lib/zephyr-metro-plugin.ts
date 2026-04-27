@@ -89,7 +89,10 @@ export class ZephyrMetroPlugin {
     bundleMaps.forEach((asset) => {
       try {
         const sourceMap = JSON.parse(asset['buffer'].toString());
-        if (sourceMap.sourcesContent && Array.isArray(sourceMap.sourcesContent)) {
+        if (
+          sourceMap.sourcesContent &&
+          Array.isArray(sourceMap.sourcesContent)
+        ) {
           // Filter out node_modules from sources and sourcesContent
           const filteredSources: string[] = [];
           const filteredSourcesContent: string[] = [];
@@ -97,11 +100,16 @@ export class ZephyrMetroPlugin {
           // Find indices of sources that contain node_modules
           if (sourceMap.sources && Array.isArray(sourceMap.sources)) {
             sourceMap.sources.forEach((source: string, sourceIndex: number) => {
-              if (typeof source === 'string' && !source.includes('node_modules')) {
+              if (
+                typeof source === 'string' &&
+                !source.includes('node_modules')
+              ) {
                 // Keep non-node_modules sources
                 if (sourceMap.sourcesContent[sourceIndex]) {
                   filteredSources.push(source);
-                  filteredSourcesContent.push(sourceMap.sourcesContent[sourceIndex]);
+                  filteredSourcesContent.push(
+                    sourceMap.sourcesContent[sourceIndex]
+                  );
                 }
               }
             });
@@ -111,34 +119,36 @@ export class ZephyrMetroPlugin {
           const searchPattern =
             /import\s+(?:\{[^}]*\}|\w+)\s+from\s+['"]([^'"]+)\/([^'"]+)['"]/g;
 
-          filteredSourcesContent.forEach((content: string, contentIndex: number) => {
-            let match;
-            while ((match = searchPattern.exec(content)) !== null) {
-              if (match.length >= 3) {
-                const remoteName = match[1];
-                const componentName = match[2];
+          filteredSourcesContent.forEach(
+            (content: string, contentIndex: number) => {
+              let match;
+              while ((match = searchPattern.exec(content)) !== null) {
+                if (match.length >= 3) {
+                  const remoteName = match[1];
+                  const componentName = match[2];
 
-                const fileUrl = filteredSources[contentIndex];
+                  const fileUrl = filteredSources[contentIndex];
 
-                consumeMap.set(`${remoteName}-${componentName}`, {
-                  consumingApplicationID: componentName,
-                  applicationID: remoteName,
-                  name: componentName,
-                  usedIn: [
-                    {
-                      file: fileUrl.replace(this.#config.context, ''),
-                      url: fileUrl.replace(this.#config.context, ''),
-                    },
-                  ],
-                });
-                ze_log.app('Found remote import in promise chain', {
-                  remoteName,
-                  componentName,
-                  file: fileUrl.replace(this.#config.context, ''),
-                });
+                  consumeMap.set(`${remoteName}-${componentName}`, {
+                    consumingApplicationID: componentName,
+                    applicationID: remoteName,
+                    name: componentName,
+                    usedIn: [
+                      {
+                        file: fileUrl.replace(this.#config.context, ''),
+                        url: fileUrl.replace(this.#config.context, ''),
+                      },
+                    ],
+                  });
+                  ze_log.app('Found remote import in promise chain', {
+                    remoteName,
+                    componentName,
+                    file: fileUrl.replace(this.#config.context, ''),
+                  });
+                }
               }
             }
-          });
+          );
         }
       } catch (error) {
         ze_log.app('Error parsing bundle map for loadRemote calls', {
@@ -152,12 +162,16 @@ export class ZephyrMetroPlugin {
   }
 
   private async getBuildStats(bundleMaps: ZeBuildAsset[]) {
-    const minimal_build_stats = await createMinimalBuildStats(this.zephyr_engine);
+    const minimal_build_stats = await createMinimalBuildStats(
+      this.zephyr_engine
+    );
 
     const consumeMap = await this.getConsumeMap(bundleMaps);
 
     Object.assign(minimal_build_stats, {
-      name: this.#config.mfConfig?.name || this.zephyr_engine.applicationProperties.name,
+      name:
+        this.#config.mfConfig?.name ||
+        this.zephyr_engine.applicationProperties.name,
       remote: this.#config.mfConfig?.filename || 'remoteEntry.js',
       remotes: this.#config.mfConfig?.remotes
         ? Object.keys(this.#config.mfConfig.remotes)
@@ -185,16 +199,24 @@ export class ZephyrMetroPlugin {
       ),
       // Module Federation related data
       dependencies: getPackageDependencies(
-        resolveCatalogDependencies(this.zephyr_engine.npmProperties.dependencies)
+        resolveCatalogDependencies(
+          this.zephyr_engine.npmProperties.dependencies
+        )
       ),
       devDependencies: getPackageDependencies(
-        resolveCatalogDependencies(this.zephyr_engine.npmProperties.devDependencies)
+        resolveCatalogDependencies(
+          this.zephyr_engine.npmProperties.devDependencies
+        )
       ),
       optionalDependencies: getPackageDependencies(
-        resolveCatalogDependencies(this.zephyr_engine.npmProperties.optionalDependencies)
+        resolveCatalogDependencies(
+          this.zephyr_engine.npmProperties.optionalDependencies
+        )
       ),
       peerDependencies: getPackageDependencies(
-        resolveCatalogDependencies(this.zephyr_engine.npmProperties.peerDependencies)
+        resolveCatalogDependencies(
+          this.zephyr_engine.npmProperties.peerDependencies
+        )
       ),
       consumes: Array.from(consumeMap.values()),
     };

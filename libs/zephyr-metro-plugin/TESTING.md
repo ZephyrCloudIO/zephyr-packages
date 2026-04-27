@@ -11,7 +11,7 @@ Step-by-step guide to test the plugin with a Host + Remote setup.
 ## 1. Build the Plugin
 
 ```bash
-pnpm nx build zephyr-metro-plugin
+pnpm --filter zephyr-metro-plugin build
 ```
 
 ## 2. Create Host App

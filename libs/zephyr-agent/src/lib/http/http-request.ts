@@ -84,7 +84,7 @@ export async function makeHttpRequest<T = void>(
   try {
     const response = await fetchWithRetries(url, {
       ...options,
-      body: data as BodyInit | null | undefined,
+      body: data as RequestInit['body'],
     });
 
     const resText = await response.text();
@@ -122,7 +122,8 @@ export async function makeHttpRequest<T = void>(
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: response.status,
         url: url.toString(),
-        content: typeof resData === 'string' ? resData : JSON.stringify(resData),
+        content:
+          typeof resData === 'string' ? resData : JSON.stringify(resData),
         method: options.method?.toUpperCase() ?? 'GET',
       });
     }
@@ -144,7 +145,9 @@ export function makeRequest<T = void>(
 }
 
 /** Transforms `Promise<HttpResponse<T>>` into `Promise<T>` */
-export async function unwrapResponse<T>(response: Promise<HttpResponse<T>>): Promise<T> {
+export async function unwrapResponse<T>(
+  response: Promise<HttpResponse<T>>
+): Promise<T> {
   const [ok, error, data] = await response;
 
   if (!ok) {

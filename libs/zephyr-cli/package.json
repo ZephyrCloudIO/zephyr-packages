@@ -3,46 +3,49 @@
   "version": "1.0.2",
   "description": "CLI tool for running build commands and uploading assets to Zephyr",
   "keywords": [
-    "zephyr",
+    "build",
     "cli",
     "deploy",
-    "build",
-    "runner"
+    "runner",
+    "zephyr"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-cli"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-cli"
+  },
   "bin": {
     "ze-cli": "dist/index.js"
   },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-cli:build",
-    "patch-version": "pnpm version"
+    "build": "tsgo -p tsconfig.json",
+    "patch-version": "pnpm version",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
+    "test": "rstest --passWithNoTests",
+    "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
     "cosmiconfig": "^9.0.0",
     "jsonc-parser": "^3.3.1",
     "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*"
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "@types/node": "catalog:typescript"
   }
 }

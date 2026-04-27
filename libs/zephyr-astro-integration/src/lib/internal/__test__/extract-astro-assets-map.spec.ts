@@ -1,10 +1,14 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { extractAstroAssetsMap } from '../extract-astro-assets-map';
 
-const buildAssetsMapMock = jest.fn();
-const logFnMock = jest.fn();
-const readDirRecursiveWithContentsMock = jest.fn();
+const { buildAssetsMapMock, logFnMock, readDirRecursiveWithContentsMock } =
+  rs.hoisted(() => ({
+    buildAssetsMapMock: rs.fn(),
+    logFnMock: rs.fn(),
+    readDirRecursiveWithContentsMock: rs.fn(),
+  }));
 
-jest.mock('zephyr-agent', () => {
+rs.mock('zephyr-agent', () => {
   return {
     buildAssetsMap: (...args: unknown[]) => buildAssetsMapMock(...args),
     logFn: (...args: unknown[]) => logFnMock(...args),
@@ -15,7 +19,7 @@ jest.mock('zephyr-agent', () => {
 
 describe('extractAstroAssetsMap', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     buildAssetsMapMock.mockImplementation((assets) => {
       const result: Record<string, unknown> = {};
       Object.keys(assets).forEach((key, index) => {
@@ -58,7 +62,9 @@ describe('extractAstroAssetsMap', () => {
       expect.objectContaining({
         'index.html': expect.objectContaining({ type: 'text/html' }),
         'style.css': expect.objectContaining({ type: 'text/css' }),
-        'script.js': expect.objectContaining({ type: 'application/javascript' }),
+        'script.js': expect.objectContaining({
+          type: 'application/javascript',
+        }),
       }),
       expect.any(Function),
       expect.any(Function)
@@ -101,7 +107,9 @@ describe('extractAstroAssetsMap', () => {
   });
 
   it('logs and returns empty assets when recursive read fails', async () => {
-    readDirRecursiveWithContentsMock.mockRejectedValue(new Error('Access denied'));
+    readDirRecursiveWithContentsMock.mockRejectedValue(
+      new Error('Access denied')
+    );
 
     const result = await extractAstroAssetsMap('/dist');
 

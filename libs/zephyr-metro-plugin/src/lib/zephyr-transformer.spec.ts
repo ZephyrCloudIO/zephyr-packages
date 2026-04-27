@@ -34,20 +34,36 @@ describe('zephyr-transformer', () => {
       return false;
     };
 
-    const defaultEntryFiles = ['index.js', 'index.ts', 'index.tsx', 'App.js', 'App.tsx'];
+    const defaultEntryFiles = [
+      'index.js',
+      'index.ts',
+      'index.tsx',
+      'App.js',
+      'App.tsx',
+    ];
 
     it('should target default entry files', () => {
-      expect(isZephyrTargetFile('/project/index.js', '', defaultEntryFiles)).toBe(true);
-      expect(isZephyrTargetFile('/project/App.tsx', '', defaultEntryFiles)).toBe(true);
-      expect(isZephyrTargetFile('/project/src/App.js', '', defaultEntryFiles)).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/index.js', '', defaultEntryFiles)
+      ).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/App.tsx', '', defaultEntryFiles)
+      ).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/src/App.js', '', defaultEntryFiles)
+      ).toBe(true);
     });
 
     it('should not target non-entry files', () => {
-      expect(isZephyrTargetFile('/project/utils/helper.js', '', defaultEntryFiles)).toBe(
-        false
-      );
       expect(
-        isZephyrTargetFile('/project/components/Button.tsx', '', defaultEntryFiles)
+        isZephyrTargetFile('/project/utils/helper.js', '', defaultEntryFiles)
+      ).toBe(false);
+      expect(
+        isZephyrTargetFile(
+          '/project/components/Button.tsx',
+          '',
+          defaultEntryFiles
+        )
       ).toBe(false);
     });
 
@@ -56,9 +72,9 @@ describe('zephyr-transformer', () => {
         import { AppRegistry } from 'react-native';
         AppRegistry.registerComponent('MyApp', () => App);
       `;
-      expect(isZephyrTargetFile('/project/customEntry.js', code, defaultEntryFiles)).toBe(
-        true
-      );
+      expect(
+        isZephyrTargetFile('/project/customEntry.js', code, defaultEntryFiles)
+      ).toBe(true);
     });
 
     it('should target files with AppRegistry.runApplication', () => {
@@ -66,9 +82,9 @@ describe('zephyr-transformer', () => {
         import { AppRegistry } from 'react-native';
         AppRegistry.runApplication('MyApp', { rootTag: 1 });
       `;
-      expect(isZephyrTargetFile('/project/customEntry.js', code, defaultEntryFiles)).toBe(
-        true
-      );
+      expect(
+        isZephyrTargetFile('/project/customEntry.js', code, defaultEntryFiles)
+      ).toBe(true);
     });
 
     it('should not target files that just import AppRegistry', () => {
@@ -77,23 +93,35 @@ describe('zephyr-transformer', () => {
         export const something = AppRegistry;
       `;
       expect(
-        isZephyrTargetFile('/project/utils/registry.js', code, defaultEntryFiles)
+        isZephyrTargetFile(
+          '/project/utils/registry.js',
+          code,
+          defaultEntryFiles
+        )
       ).toBe(false);
     });
 
     it('should support custom entry file patterns', () => {
       const customEntryFiles = ['main.tsx', 'entry.js'];
-      expect(isZephyrTargetFile('/project/main.tsx', '', customEntryFiles)).toBe(true);
-      expect(isZephyrTargetFile('/project/entry.js', '', customEntryFiles)).toBe(true);
-      expect(isZephyrTargetFile('/project/index.js', '', customEntryFiles)).toBe(false);
+      expect(
+        isZephyrTargetFile('/project/main.tsx', '', customEntryFiles)
+      ).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/entry.js', '', customEntryFiles)
+      ).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/index.js', '', customEntryFiles)
+      ).toBe(false);
     });
 
     it('should support glob patterns in entry files', () => {
       const globEntryFiles = ['src/*/index.tsx', '*.entry.js'];
-      expect(isZephyrTargetFile('/project/src/app/index.tsx', '', globEntryFiles)).toBe(
-        true
-      );
-      expect(isZephyrTargetFile('/project/main.entry.js', '', globEntryFiles)).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/src/app/index.tsx', '', globEntryFiles)
+      ).toBe(true);
+      expect(
+        isZephyrTargetFile('/project/main.entry.js', '', globEntryFiles)
+      ).toBe(true);
     });
   });
 

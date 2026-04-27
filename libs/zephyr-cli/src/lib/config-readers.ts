@@ -94,7 +94,9 @@ export interface FrameworkConfig {
 }
 
 /** Load Webpack configuration using cosmiconfig */
-export async function loadWebpackConfig(cwd: string): Promise<FrameworkConfig | null> {
+export async function loadWebpackConfig(
+  cwd: string
+): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('webpack', {
       searchPlaces: [
@@ -139,7 +141,9 @@ export async function loadWebpackConfig(cwd: string): Promise<FrameworkConfig | 
 }
 
 /** Load Vite configuration using cosmiconfig */
-export async function loadViteConfig(cwd: string): Promise<FrameworkConfig | null> {
+export async function loadViteConfig(
+  cwd: string
+): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('vite', {
       searchPlaces: [
@@ -162,7 +166,10 @@ export async function loadViteConfig(cwd: string): Promise<FrameworkConfig | nul
     // Handle function configs (they receive config env)
     if (typeof config === 'function') {
       try {
-        const resolvedConfig = await config({ mode: 'production', command: 'build' });
+        const resolvedConfig = await config({
+          mode: 'production',
+          command: 'build',
+        });
         outputDir = resolvedConfig?.build?.outDir || 'dist';
       } catch {
         outputDir = 'dist'; // Vite default
@@ -184,7 +191,9 @@ export async function loadViteConfig(cwd: string): Promise<FrameworkConfig | nul
 }
 
 /** Load Rollup configuration using cosmiconfig */
-export async function loadRollupConfig(cwd: string): Promise<FrameworkConfig | null> {
+export async function loadRollupConfig(
+  cwd: string
+): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('rollup', {
       searchPlaces: [
@@ -211,9 +220,12 @@ export async function loadRollupConfig(cwd: string): Promise<FrameworkConfig | n
         if (Array.isArray(resolvedConfig)) {
           // Multiple outputs - take the first one
           outputDir =
-            resolvedConfig[0]?.output?.dir || resolvedConfig[0]?.output?.file || null;
+            resolvedConfig[0]?.output?.dir ||
+            resolvedConfig[0]?.output?.file ||
+            null;
         } else {
-          outputDir = resolvedConfig?.output?.dir || resolvedConfig?.output?.file || null;
+          outputDir =
+            resolvedConfig?.output?.dir || resolvedConfig?.output?.file || null;
         }
       } catch {
         outputDir = null;
@@ -222,13 +234,18 @@ export async function loadRollupConfig(cwd: string): Promise<FrameworkConfig | n
       // Multiple outputs - take the first one
       outputDir = config[0]?.output?.dir || config[0]?.output?.file || null;
     } else if (config?.output) {
-      const output = Array.isArray(config.output) ? config.output[0] : config.output;
+      const output = Array.isArray(config.output)
+        ? config.output[0]
+        : config.output;
       outputDir = output?.dir || output?.file || null;
     }
 
     // If outputDir is a file path, extract the directory
     if (outputDir && outputDir.includes('.')) {
-      const lastSlash = Math.max(outputDir.lastIndexOf('/'), outputDir.lastIndexOf('\\'));
+      const lastSlash = Math.max(
+        outputDir.lastIndexOf('/'),
+        outputDir.lastIndexOf('\\')
+      );
       if (lastSlash !== -1) {
         outputDir = outputDir.substring(0, lastSlash);
       }
@@ -245,10 +262,18 @@ export async function loadRollupConfig(cwd: string): Promise<FrameworkConfig | n
 }
 
 /** Load SWC configuration using cosmiconfig */
-export async function loadSwcConfig(cwd: string): Promise<FrameworkConfig | null> {
+export async function loadSwcConfig(
+  cwd: string
+): Promise<FrameworkConfig | null> {
   try {
     const explorer = cosmiconfig('swc', {
-      searchPlaces: ['.swcrc', '.swcrc.json', '.swcrc.js', '.swcrc.mjs', '.swcrc.cjs'],
+      searchPlaces: [
+        '.swcrc',
+        '.swcrc.json',
+        '.swcrc.js',
+        '.swcrc.mjs',
+        '.swcrc.cjs',
+      ],
     });
 
     const result = await explorer.search(cwd);

@@ -20,7 +20,10 @@ interface BuildStepsCompiler {
   };
 }
 
-export function logBuildSteps<T extends BuildSteps, Compiler extends BuildStepsCompiler>(
+export function logBuildSteps<
+  T extends BuildSteps,
+  Compiler extends BuildStepsCompiler,
+>(
   pluginOptions: T,
   compiler: Compiler
 ): {

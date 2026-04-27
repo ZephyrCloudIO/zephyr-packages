@@ -128,7 +128,9 @@ export class ZeRspackPlugin {
         });
       } catch {
         // HtmlRspackPlugin might not be available if no HTML is being generated
-        ze_log.misc('HtmlRspackPlugin not available, skipping import map injection');
+        ze_log.misc(
+          'HtmlRspackPlugin not available, skipping import map injection'
+        );
       }
     });
   }

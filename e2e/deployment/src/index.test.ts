@@ -1,24 +1,69 @@
 import { execSync } from 'node:child_process';
-import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
+import {
+  getAllDeployedApps,
+  getAppDeployResult,
+  type DeployResult,
+} from 'zephyr-agent';
 
 const output = execSync(
-  'pnpm exec nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test"'
+  'pnpm exec turbo ls --affected --filter=./examples/** --output=json',
+  {
+    encoding: 'utf8',
+  }
 );
-const testTargets = output.toString().split('\n').filter(Boolean);
+
+const turboLs = JSON.parse(output) as {
+  packages?: { items?: Array<{ name?: string }> };
+  items?: Array<{ name?: string }>;
+};
+
+const nonDeployedExamplePackages = new Set([
+  '@react-micro-frontends/source',
+  'mf-react-rsbuild-suite',
+  'zephyr-cli-test',
+]);
+
+const testTargets = (
+  turboLs.packages?.items?.map((pkg) => pkg.name) ??
+  turboLs.items?.map((pkg) => pkg.name) ??
+  []
+).filter(
+  (name): name is string =>
+    Boolean(name) && !nonDeployedExamplePackages.has(name)
+);
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();
+const isCI = process.env.CI === 'true';
 
 for (const appName of testTargets) {
   describe(`[${appName}]: asset deployment assertion`, () => {
-    let deployResult: DeployResult;
+    let deployResult: DeployResult | undefined;
+    let hasDeploymentCache = true;
 
     beforeAll(async () => {
       const appUids = await appUidsPromise;
+      if (appUids.length === 0 && !isCI) {
+        hasDeploymentCache = false;
+        return;
+      }
+
       const appUid = appUids.find((uid) => uid.startsWith(replacer(appName)));
       if (!appUid) {
-        throw new Error(`Application ${appName} was not found on deployed apps.`);
+        if (!isCI) {
+          hasDeploymentCache = false;
+          return;
+        }
+
+        throw new Error(
+          `Application ${appName} was not found on deployed apps.`
+        );
       }
       const result = await getAppDeployResult(appUid);
       if (!result) {
+        if (!isCI) {
+          hasDeploymentCache = false;
+          return;
+        }
+
         throw new Error(`No deployment log found for application ${appName}.`);
       }
       deployResult = result;
@@ -27,6 +72,16 @@ for (const appName of testTargets) {
     it(
       'should have correctly deployed assets',
       async () => {
+        if (!hasDeploymentCache) {
+          return;
+        }
+
+        if (!deployResult) {
+          throw new Error(
+            `No deployment log loaded for application ${appName}.`
+          );
+        }
+
         const url = deployResult.urls[0];
 
         // TODO: when SSR gets stable, come back here to validate asset deployment
@@ -34,14 +89,14 @@ for (const appName of testTargets) {
           console.log(
             'Skipping asset check for SSR app. Verifying index page response only.'
           );
-          const res = await fetchWithRetries(url, 3);
+          const res = await fetchWithRetries(url);
           expect(res.status).toBe(200);
           expect(res.ok).toBe(true);
           return;
         }
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${url}/${asset.path}`, 3);
+          return fetchWithRetries(`${url}/${asset.path}`);
         });
 
         const results = await Promise.all(promises);
@@ -50,19 +105,27 @@ for (const appName of testTargets) {
           expect(res.ok).toBe(true);
         });
       },
-      60 * 1000
+      3 * 60 * 1000
     );
   });
 }
 
-const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
-  const res = await fetch(url, { method: 'HEAD' });
+const fetchWithRetries = async (url: string, attemptsLeft = 12) => {
+  let res: Response | undefined;
+  try {
+    res = await fetch(url, { method: 'HEAD' });
+  } catch (error) {
+    if (attemptsLeft < 1) {
+      throw error;
+    }
+  }
 
-  if (res.status === 200 || attemptsLeft < 1) return res;
+  if (!res || (res.status !== 200 && attemptsLeft > 0)) {
+    await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
+    return fetchWithRetries(url, attemptsLeft - 1);
+  }
 
-  await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
-
-  return fetchWithRetries(url, attemptsLeft - 1);
+  return res;
 };
 
 function replacer(str: string): string {

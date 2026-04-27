@@ -1,5 +1,9 @@
 import { Reporter } from '@parcel/plugin';
-import { handleGlobalError, ZephyrEngine, type ZephyrBuildHooks } from 'zephyr-agent';
+import {
+  handleGlobalError,
+  ZephyrEngine,
+  type ZephyrBuildHooks,
+} from 'zephyr-agent';
 import { onBuildStart } from './lib/on-build-start';
 import { onBuildSuccess } from './lib/on-build-success';
 
@@ -10,7 +14,8 @@ export interface ZephyrParcelReporterOptions {
 function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
   // Create the engine and assets map outside the reporter function
   // so they persist between calls
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
 
   return new Reporter({
     report: async ({ event, options: parcelOptions }) => {
@@ -22,7 +27,11 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
             await onBuildStart({ zephyr_defer_create, projectRoot });
             break;
           case 'buildSuccess':
-            await onBuildSuccess({ zephyr_engine_defer, event, hooks: options?.hooks });
+            await onBuildSuccess({
+              zephyr_engine_defer,
+              event,
+              hooks: options?.hooks,
+            });
             break;
           default:
             // ignore unknown build hooks

@@ -10,6 +10,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "declaration": true,
     "types": ["node"],
     "composite": true,

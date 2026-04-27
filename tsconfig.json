@@ -16,7 +16,6 @@
     "moduleResolution": "Node",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
-    "rootDir": ".",
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "sourceMap": true,

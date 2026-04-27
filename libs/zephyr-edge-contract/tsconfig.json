@@ -11,6 +11,7 @@
     "esModuleInterop": true,
     "composite": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "declaration": true,
     "types": ["node"],
     "incremental": true

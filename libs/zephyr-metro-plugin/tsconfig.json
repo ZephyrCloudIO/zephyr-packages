@@ -13,6 +13,7 @@
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "types": ["node"],
     "composite": true,
     "incremental": true

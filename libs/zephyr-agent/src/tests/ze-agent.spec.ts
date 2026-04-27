@@ -1,6 +1,6 @@
 import { rs as jest } from '@rstest/core';
 import { promisify } from 'node:util';
-import { exec as execCB } from 'node:child_process';
+import { exec as execCB, execFile as execFileCB } from 'node:child_process';
 import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
@@ -38,6 +38,7 @@ jest.mock('is-ci', () => false);
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 
 const exec = promisify(execCB);
+const execFile = promisify(execFileCB);
 
 runner('ZeAgent', () => {
   const gitUserName = 'Test User';
@@ -48,7 +49,11 @@ runner('ZeAgent', () => {
   const appOrg = 'testzephyrcloudio';
   const appProject = 'test-zephyr-mono';
 
-  const packageJsonPath = path.resolve('examples/sample-webpack-application');
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const packageJsonPath = path.join(
+    workspaceRoot,
+    'examples/sample-webpack-application'
+  );
   const appName = 'sample-webpack-application';
   const application_uid = `${appName}.${appProject}.${appOrg}`;
   const user_uuid = crypto.randomBytes(16).toString('hex');
@@ -57,8 +62,15 @@ runner('ZeAgent', () => {
     process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloudapp.dev';
 
   const integrationTestTimeout = 5 * 60000; // 5 minute because EDGE cache time;
+  let gitConfig: Map<string, string[]> | undefined;
 
   beforeAll(async () => {
+    gitConfig = await readGitConfigSnapshot([
+      'user.name',
+      'user.email',
+      'remote.origin.url',
+    ]);
+
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
     // Remove Zephyr cache
     if (fs.existsSync(zephyrAppFolder)) {
@@ -69,9 +81,9 @@ runner('ZeAgent', () => {
     }
     fs.mkdirSync(path.join(zephyrAppFolder, 'storage'), { recursive: true });
 
-    await exec(`git config --add user.name "${gitUserName}"`);
-    await exec(`git config --add user.email "${gitEmail}"`);
-    await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
+    await setGitConfigValue('user.name', gitUserName);
+    await setGitConfigValue('user.email', gitEmail);
+    await setGitConfigValue('remote.origin.url', gitRemoteOrigin);
 
     const appConfig = await _loadAppConfig(application_uid);
     appConfig.email = gitEmail;
@@ -81,9 +93,10 @@ runner('ZeAgent', () => {
   });
 
   afterAll(async () => {
-    await exec(`git config --unset user.name "${gitUserName}"`);
-    await exec(`git config --unset user.email "${gitEmail}"`);
-    await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
+    if (!gitConfig) {
+      return;
+    }
+    await restoreGitConfigSnapshot(gitConfig);
   });
 
   it('should test git configuration', async () => {
@@ -174,6 +187,56 @@ async function _loadAppConfig(
     },
   });
   return response.json().then((data) => data.value);
+}
+
+function findWorkspaceRoot(start: string): string {
+  let current = start;
+  while (current !== path.dirname(current)) {
+    if (fs.existsSync(path.join(current, 'pnpm-workspace.yaml'))) {
+      return current;
+    }
+    current = path.dirname(current);
+  }
+  throw new Error(`Workspace root not found from ${start}`);
+}
+
+async function readGitConfigSnapshot(
+  keys: string[]
+): Promise<Map<string, string[]>> {
+  const snapshot = new Map<string, string[]>();
+  for (const key of keys) {
+    const values = await getGitConfigValues(key);
+    snapshot.set(key, values);
+  }
+  return snapshot;
+}
+
+async function getGitConfigValues(key: string): Promise<string[]> {
+  try {
+    const { stdout } = await execFile('git', ['config', '--get-all', key]);
+    return stdout.toString().split('\n').filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+async function setGitConfigValue(key: string, value: string): Promise<void> {
+  await execFile('git', ['config', '--replace-all', key, value]);
+}
+
+async function restoreGitConfigSnapshot(
+  snapshot: Map<string, string[]>
+): Promise<void> {
+  for (const [key, values] of snapshot) {
+    await execFile('git', ['config', '--unset-all', key]).catch(() => {});
+    if (values.length === 0) {
+      continue;
+    }
+    await execFile('git', ['config', '--add', key, values[0]]);
+    for (const value of values.slice(1)) {
+      await execFile('git', ['config', '--add', key, value]);
+    }
+  }
 }
 
 async function _getAppTagUrls(application_uid: string): Promise<string[]> {

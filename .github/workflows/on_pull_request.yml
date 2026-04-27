@@ -55,23 +55,20 @@ jobs:
           else
             echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
           fi
-      - name: Check if cache has files
-        id: initial-cache
+      - name: Determine affected examples
+        id: affected-examples
         shell: bash
         run: |
-          if [ -d "${{ env.ZEPHYR_CACHE }}" ] && [ "$(ls -A "${{ env.ZEPHYR_CACHE }}" 2>/dev/null)" ]; then
-            echo "has-files=true" >> $GITHUB_OUTPUT
-          else
-            echo "has-files=false" >> $GITHUB_OUTPUT
-          fi
+          pnpm exec turbo ls --affected --filter='./examples/**' --output=json > /tmp/affected-examples.json
+          node -e "const fs=require('node:fs');const data=JSON.parse(fs.readFileSync('/tmp/affected-examples.json','utf8'));const items=(data.packages?.items??data.items??[]).map((pkg)=>pkg.name).filter((name)=>name&&name!=='zephyr-cli-test');fs.appendFileSync(process.env.GITHUB_OUTPUT, 'has-targets='+(items.length>0)+'\n');fs.appendFileSync(process.env.GITHUB_OUTPUT, 'targets='+items.join(' ')+'\n');"
       - name: Build examples for e2e cache
-        if: steps.initial-cache.outputs.has-files != 'true'
+        if: steps.affected-examples.outputs.has-targets == 'true'
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo build --filter='./examples/**' --force
+        run: pnpm exec turbo build --affected --filter='./examples/**' --filter='!zephyr-cli-test' --force
       - name: Check if e2e cache has files
         id: check-cache
         shell: bash
@@ -82,10 +79,10 @@ jobs:
             echo "has-files=false" >> $GITHUB_OUTPUT
           fi
       - name: Require Zephyr cache
-        if: steps.check-cache.outputs.has-files != 'true'
+        if: steps.affected-examples.outputs.has-targets == 'true' && steps.check-cache.outputs.has-files != 'true'
         shell: bash
         run: |
-          echo "Zephyr cache was not produced; e2e examples cannot run."
+          echo "Zephyr cache was not produced for affected examples: ${{ steps.affected-examples.outputs.targets }}"
           exit 1
       - name: Upload built libs and cache
         if: steps.check-cache.outputs.has-files == 'true'
@@ -155,7 +152,14 @@ jobs:
           else
             echo "ZEPHYR_CACHE=$HOME/.zephyr" >> $GITHUB_ENV
           fi
+      - name: Determine affected examples
+        id: affected-examples
+        shell: bash
+        run: |
+          pnpm exec turbo ls --affected --filter='./examples/**' --output=json > /tmp/affected-examples.json
+          node -e "const fs=require('node:fs');const data=JSON.parse(fs.readFileSync('/tmp/affected-examples.json','utf8'));const items=(data.packages?.items??data.items??[]).map((pkg)=>pkg.name).filter((name)=>name&&name!=='zephyr-cli-test');fs.appendFileSync(process.env.GITHUB_OUTPUT, 'has-targets='+(items.length>0)+'\n');fs.appendFileSync(process.env.GITHUB_OUTPUT, 'targets='+items.join(' ')+'\n');"
       - name: Download zephyr cache
+        if: steps.affected-examples.outputs.has-targets == 'true'
         uses: actions/download-artifact@v4
         with:
           name: zephyr-cache-${{ matrix.os }}

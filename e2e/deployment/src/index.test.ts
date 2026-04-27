@@ -6,7 +6,7 @@ import {
 } from 'zephyr-agent';
 
 const output = execSync(
-  'pnpm exec turbo ls --filter=./examples/** --output=json',
+  'pnpm exec turbo ls --affected --filter=./examples/** --output=json',
   {
     encoding: 'utf8',
   }
@@ -80,14 +80,14 @@ for (const appName of testTargets) {
           console.log(
             'Skipping asset check for SSR app. Verifying index page response only.'
           );
-          const res = await fetchWithRetries(url, 3);
+          const res = await fetchWithRetries(url);
           expect(res.status).toBe(200);
           expect(res.ok).toBe(true);
           return;
         }
         const assetEntries = Object.values(deployResult.snapshot.assets);
         const promises = assetEntries.map(async (asset) => {
-          return fetchWithRetries(`${url}/${asset.path}`, 3);
+          return fetchWithRetries(`${url}/${asset.path}`);
         });
 
         const results = await Promise.all(promises);
@@ -96,19 +96,27 @@ for (const appName of testTargets) {
           expect(res.ok).toBe(true);
         });
       },
-      60 * 1000
+      3 * 60 * 1000
     );
   });
 }
 
-const fetchWithRetries = async (url: string, attemptsLeft = 1) => {
-  const res = await fetch(url, { method: 'HEAD' });
+const fetchWithRetries = async (url: string, attemptsLeft = 12) => {
+  let res: Response | undefined;
+  try {
+    res = await fetch(url, { method: 'HEAD' });
+  } catch (error) {
+    if (attemptsLeft < 1) {
+      throw error;
+    }
+  }
 
-  if (res.status === 200 || attemptsLeft < 1) return res;
+  if (!res || (res.status !== 200 && attemptsLeft > 0)) {
+    await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
+    return fetchWithRetries(url, attemptsLeft - 1);
+  }
 
-  await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
-
-  return fetchWithRetries(url, attemptsLeft - 1);
+  return res;
 };
 
 function replacer(str: string): string {

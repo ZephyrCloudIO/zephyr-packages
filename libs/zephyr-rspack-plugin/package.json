@@ -20,7 +20,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.json",
+    "build": "tsgo -p tsconfig.json && node -e \"const fs=require('node:fs');fs.mkdirSync('dist/rspack-plugin',{recursive:true});fs.copyFileSync('src/rspack-plugin/env-virtual-loader.js','dist/rspack-plugin/env-virtual-loader.js')\"",
     "patch-version": "pnpm version",
     "lint": "oxlint src --no-error-on-unmatched-pattern",
     "test": "rstest --passWithNoTests",

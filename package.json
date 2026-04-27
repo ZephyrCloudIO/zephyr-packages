@@ -14,6 +14,7 @@
     "build-slow": "turbo build --filter='./libs/**' --concurrency=1",
     "lint": "turbo lint --filter='./libs/**'",
     "lint:examples": "turbo lint --filter='./examples/**'",
+    "ci:affected-examples": "node scripts/affected-examples.js",
     "format": "oxfmt . --write",
     "test": "turbo test --filter='./libs/**'",
     "test:examples": "turbo test --filter=e2e-deployment",

@@ -40,7 +40,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsgo -p tsconfig.json && node -e \"const fs=require('node:fs');fs.mkdirSync('dist/lib/internal/mf-vite-etl',{recursive:true});fs.copyFileSync('src/lib/internal/mf-vite-etl/runtime_plugin.mjs','dist/lib/internal/mf-vite-etl/runtime_plugin.mjs')\"",
+    "build": "tsgo -p tsconfig.json && node ../../scripts/copy-file.js src/lib/internal/mf-vite-etl/runtime_plugin.mjs dist/lib/internal/mf-vite-etl/runtime_plugin.mjs",
     "patch-version": "pnpm version",
     "lint": "oxlint src --no-error-on-unmatched-pattern",
     "test": "rstest --passWithNoTests",

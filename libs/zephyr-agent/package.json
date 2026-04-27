@@ -32,7 +32,7 @@
     "provenance": true
   },
   "scripts": {
-    "prebuild": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('tsconfig.tsbuildinfo', { force: true })\"",
+    "prebuild": "node ../../scripts/clean-package-build.js",
     "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
     "test": "rstest --passWithNoTests",

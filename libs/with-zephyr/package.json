@@ -41,6 +41,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "start": "node dist/index.js",
+    "pretest": "pnpm run build",
     "test": "rstest run",
     "test:watch": "rstest --watch",
     "test:coverage": "rstest --coverage",

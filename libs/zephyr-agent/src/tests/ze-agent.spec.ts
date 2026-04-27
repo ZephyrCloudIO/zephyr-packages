@@ -1,7 +1,6 @@
 import { rs as jest } from '@rstest/core';
 import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
-import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
   createApplicationUid,
@@ -19,6 +18,7 @@ import {
 import { getSecretToken } from '../lib/node-persist/secret-token';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import type * as SecretTokenModule from '../lib/node-persist/secret-token';
+import type { getGitInfo as getGitInfoFn } from '../lib/build-context/ze-util-get-git-info';
 
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).
@@ -38,6 +38,7 @@ jest.mock('is-ci', () => false);
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 
 const exec = promisify(execCB);
+let getGitInfo: typeof getGitInfoFn;
 
 runner('ZeAgent', () => {
   const gitUserName = 'Test User';
@@ -70,6 +71,8 @@ runner('ZeAgent', () => {
       'user.email': gitEmail,
       'remote.origin.url': gitRemoteOrigin,
     });
+    ({ getGitInfo } =
+      await import('../lib/build-context/ze-util-get-git-info'));
 
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
     // Remove Zephyr cache

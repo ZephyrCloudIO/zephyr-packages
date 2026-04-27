@@ -1,6 +1,6 @@
 import type { ZephyrEngine } from 'zephyr-agent';
-import { resolveCatalogDependencies } from './metro-build-stats';
-import type { XFederatedSharedConfig } from './types';
+import { resolveCatalogDependencies } from './metro-build-stats.js';
+import type { XFederatedSharedConfig } from './types.js';
 
 export function parseSharedDependencies(
   name: string,

@@ -5,7 +5,7 @@ import {
   ZephyrEngine,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
-import { getAssetsMap } from './transform/get-assets-map';
+import { getAssetsMap } from './transform/get-assets-map.js';
 import { cwd } from 'node:process';
 
 const getInputFolder = (options: InputOptions): string => {

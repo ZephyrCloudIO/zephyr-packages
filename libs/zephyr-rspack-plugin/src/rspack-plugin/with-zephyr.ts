@@ -6,8 +6,8 @@ import {
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
-import type { ZephyrRspackPluginOptions } from '../types';
-import { ZeRspackPlugin } from './ze-rspack-plugin';
+import type { ZephyrRspackPluginOptions } from '../types/index.js';
+import { ZeRspackPlugin } from './ze-rspack-plugin.ts';
 
 export type Configuration = RspackConfiguration;
 

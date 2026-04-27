@@ -17,7 +17,7 @@
         "assets": [
           {
             "input": "libs/zephyr-rspack-plugin/src/rspack-plugin",
-            "glob": "env-virtual-loader.js",
+            "glob": "env-virtual-loader.cjs",
             "output": "rspack-plugin"
           }
         ]

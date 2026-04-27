@@ -2,13 +2,13 @@ import {
   withZephyr as zephyrRsbuildPlugin,
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
-import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
+import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin.js';
 import type {
   SSGConfig,
   RspressUserConfig,
   RspressPlugin,
   BuilderConfigWithPlugins,
-} from './types';
+} from './types/index.js';
 
 export interface ZephyrRspressOptions {
   hooks?: ZephyrBuildHooks;

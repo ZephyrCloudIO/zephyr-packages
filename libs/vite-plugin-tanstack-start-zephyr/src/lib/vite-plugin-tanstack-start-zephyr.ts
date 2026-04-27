@@ -12,7 +12,7 @@ import {
   ze_log,
   handleGlobalError,
 } from 'zephyr-agent';
-import { loadTanStackOutput } from './internal/extract/load-tanstack-output';
+import { loadTanStackOutput } from './internal/extract/load-tanstack-output.js';
 
 /** Extract buffer from Rollup output */
 function extractBuffer(item: any): Buffer {

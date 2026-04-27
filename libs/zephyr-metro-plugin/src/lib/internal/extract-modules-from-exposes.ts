@@ -1,4 +1,4 @@
-import type { ModuleFederationPlugin, XFederatedSharedConfig } from './types';
+import type { ModuleFederationPlugin, XFederatedSharedConfig } from './types.js';
 
 /**
  * Extracts exposed modules from Module Federation configuration Creates formatted module

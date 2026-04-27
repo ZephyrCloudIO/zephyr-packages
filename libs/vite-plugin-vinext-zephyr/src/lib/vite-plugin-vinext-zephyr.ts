@@ -19,7 +19,7 @@ import {
   type OutputBundleLike,
   type RscPluginManagerLike,
   type VinextBuildAsset,
-} from './internal/vinext-output';
+} from './internal/vinext-output.js';
 
 export interface VinextZephyrOptions {
   /** Build output directory (default: dist relative to Vite root). */

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import MagicString from 'magic-string';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import { loadEnv, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
@@ -13,21 +14,22 @@ import {
   ZephyrError,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
-import { extractEntrypoint } from './internal/extract/extract-entrypoint';
-import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
-import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
+import { extractEntrypoint } from './internal/extract/extract-entrypoint.js';
+import { extract_mf_plugin } from './internal/extract/extract_mf_plugin.js';
+import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map.js';
 import {
   ensureRuntimePlugin,
   getRuntimePluginPath,
   RESOLVED_ZEPHYR_MF_RUNTIME_PLUGIN_ID,
   ZEPHYR_MF_RUNTIME_PLUGIN_ID,
   type ModuleFederationOptions,
-} from './internal/mf-vite-etl/ensure_runtime_plugin';
-import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes';
-import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+} from './internal/mf-vite-etl/ensure_runtime_plugin.js';
+import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes.js';
+import { inject_resolved_remotes_map } from './internal/mf-vite-etl/inject_resolved_remotes.js';
+import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options.js';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
+const cjsRequire = createRequire(`${process.cwd()}/package.json`);
 
 export interface WithZephyrOptions {
   hooks?: ZephyrBuildHooks;
@@ -40,7 +42,7 @@ function loadModuleFederationPlugin() {
   };
 
   try {
-    moduleFederation = require('@module-federation/vite') as {
+    moduleFederation = cjsRequire('@module-federation/vite') as {
       federation: (options: ModuleFederationOptions) => Plugin[];
     };
   } catch (error) {

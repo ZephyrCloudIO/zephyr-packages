@@ -542,7 +542,11 @@ describe('Ast-grep Operations', () => {
 
       const result = runBundlerOperation('rsbuild-asset-prefix', {
         filePath,
-        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        config: createConfig(
+          'rsbuild-asset-prefix',
+          'run-all',
+          'zephyr-rsbuild-plugin'
+        ),
         dryRun: false,
       });
 

@@ -17,11 +17,20 @@ const turboLs = JSON.parse(output) as {
   items?: Array<{ name?: string }>;
 };
 
+const nonDeployedExamplePackages = new Set([
+  '@react-micro-frontends/source',
+  'mf-react-rsbuild-suite',
+  'zephyr-cli-test',
+]);
+
 const testTargets = (
   turboLs.packages?.items?.map((pkg) => pkg.name) ??
   turboLs.items?.map((pkg) => pkg.name) ??
   []
-).filter((name): name is string => Boolean(name) && name !== 'zephyr-cli-test');
+).filter(
+  (name): name is string =>
+    Boolean(name) && !nonDeployedExamplePackages.has(name)
+);
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();
 const isCI = process.env.CI === 'true';
 

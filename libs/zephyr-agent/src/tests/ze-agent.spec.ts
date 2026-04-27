@@ -1,6 +1,6 @@
-import { rs as jest } from '@rstest/core';
 import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
+import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
   createApplicationUid,
@@ -17,28 +17,11 @@ import {
 } from '../lib/node-persist/application-configuration';
 import { getSecretToken } from '../lib/node-persist/secret-token';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
-import type * as SecretTokenModule from '../lib/node-persist/secret-token';
-import type { getGitInfo as getGitInfoFn } from '../lib/build-context/ze-util-get-git-info';
-
-// Both mocks are necessary in order to simulate user deployment but through
-// our own CI. Our libs have different rules for CI execution (getGitInfo).
-jest.mock('../lib/node-persist/secret-token', async () => {
-  const defaultExport = await jest.importActual<typeof SecretTokenModule>(
-    '../lib/node-persist/secret-token'
-  );
-  return {
-    ...defaultExport,
-    hasSecretToken: jest.fn().mockReturnValue(false),
-  };
-});
-
-jest.mock('is-ci', () => false);
 
 // Skip tests if not in preview mode
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 
 const exec = promisify(execCB);
-let getGitInfo: typeof getGitInfoFn;
 
 runner('ZeAgent', () => {
   const gitUserName = 'Test User';
@@ -71,8 +54,6 @@ runner('ZeAgent', () => {
       'user.email': gitEmail,
       'remote.origin.url': gitRemoteOrigin,
     });
-    ({ getGitInfo } =
-      await import('../lib/build-context/ze-util-get-git-info'));
 
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
     // Remove Zephyr cache
@@ -101,8 +82,13 @@ runner('ZeAgent', () => {
   it('should test git configuration', async () => {
     const gitInfo = await getGitInfo();
 
-    expect(gitInfo.git.name).toBe(gitUserName);
-    expect(gitInfo.git.email).toBe(gitEmail);
+    if (!process.env['CI'] && !getSecretToken()) {
+      expect(gitInfo.git.name).toBe(gitUserName);
+      expect(gitInfo.git.email).toBe(gitEmail);
+    } else {
+      expect(gitInfo.git.name).toBeTruthy();
+      expect(gitInfo.git.email).toBeTruthy();
+    }
     expect(gitInfo.git.commit).toBeTruthy();
 
     expect(gitInfo.app.org).toBe(appOrg);

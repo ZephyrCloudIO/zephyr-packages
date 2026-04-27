@@ -67,6 +67,8 @@ runner('ZeAgent', () => {
         fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
+    fs.mkdirSync(path.join(zephyrAppFolder, 'storage'), { recursive: true });
+
     await exec(`git config --add user.name "${gitUserName}"`);
     await exec(`git config --add user.email "${gitEmail}"`);
     await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);

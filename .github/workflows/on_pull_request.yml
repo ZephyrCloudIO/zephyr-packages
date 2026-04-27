@@ -46,7 +46,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo build --affected
+        run: pnpm exec turbo build --affected --filter='./libs/**'
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |

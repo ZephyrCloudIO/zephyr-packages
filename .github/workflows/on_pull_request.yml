@@ -39,6 +39,7 @@ jobs:
         run: pnpm build
       - name: run build affected
         env:
+          ZE_FAIL_BUILD: ${{ secrets.ZE_SECRET_TOKEN != '' }}
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
@@ -104,7 +105,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo test --affected
+        run: pnpm exec turbo test --affected --filter='!e2e-deployment'
 
   e2e-test:
     runs-on: ${{ matrix.os }}

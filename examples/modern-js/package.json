@@ -24,7 +24,7 @@
     "@modern-js/runtime": "catalog:modernjs",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-server-dom-webpack": "19.2.4"
+    "react-server-dom-webpack": "19.2.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",

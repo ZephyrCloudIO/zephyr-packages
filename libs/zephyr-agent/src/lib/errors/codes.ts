@@ -64,10 +64,17 @@ Unknown error: {{ message }}
     kind: 'build',
   },
 
-  ERR_PACKAGE_JSON_MUST_HAVE_NAME_VERSION: {
+  ERR_PACKAGE_JSON_MUST_HAVE_NAME: {
     id: '013',
     message:
-      'Zephyr need package.json to have name and version field to map your application configuration in deployment. Please ensure these fields exists in your package.json.',
+      'Zephyr needs package.json at {{ path }} to have a name field to map your application configuration in deployment.',
+    kind: 'build',
+  },
+
+  ERR_PACKAGE_JSON_MISSING_VERSION: {
+    id: '025',
+    message:
+      'package.json at {{ path }} is missing a version field. Zephyr defaulted the version to {{ defaultVersion }}.',
     kind: 'build',
   },
 

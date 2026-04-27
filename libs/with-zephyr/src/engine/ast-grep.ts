@@ -1,7 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import { createRequire } from 'module';
 import type { Edit, NapiConfig, SgNode } from '@ast-grep/napi';
+import fs from 'fs';
+import { createRequire } from 'module';
+import path from 'path';
 
 export type AstGrepLanguage = 'js' | 'ts' | 'json';
 
@@ -98,8 +98,17 @@ function sliceMultiMatchText(source: string, nodes: SgNode[]): string {
     return '';
   }
 
+  // ast-grep includes trailing comma syntax tokens in multi-match captures (e.g.
+  // the trailing "," in "{ plugins: [...], }"). Slice up to the last non-comma node
+  // so the expansion doesn't produce ",," when the rewrite template adds its own
+  // separator comma.
+  let lastIndex = nodes.length - 1;
+  while (lastIndex > 0 && nodes[lastIndex].kind() === ',') {
+    lastIndex--;
+  }
+
   const start = nodes[0].range().start.index;
-  const end = nodes[nodes.length - 1].range().end.index;
+  const end = nodes[lastIndex].range().end.index;
   return source.slice(start, end);
 }
 

@@ -529,6 +529,29 @@ describe('Ast-grep Operations', () => {
       expect(next).toMatch(/assetPrefix:\s*["']auto["']/);
     });
 
+    it('should not produce double commas when defineConfig object has trailing comma', () => {
+      const filePath = path.join(tempDir, 'rsbuild.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          plugins: [pluginReact(), withZephyr()],
+        });
+      `
+      );
+
+      const result = runBundlerOperation('rsbuild-asset-prefix', {
+        filePath,
+        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toMatch(/assetPrefix:\s*["']auto["']/);
+      expect(next).not.toContain(',,');
+    });
+
     it('should not overwrite existing output.assetPrefix', () => {
       const filePath = path.join(tempDir, 'rsbuild.config.ts');
       fs.writeFileSync(
@@ -660,6 +683,38 @@ describe('Ast-grep Operations', () => {
       const next = fs.readFileSync(filePath, 'utf8');
       expect(next).toContain('plugins: [withZephyr()]');
       expect(next).toMatch(/assetPrefix:\s*["']auto["']/);
+    });
+
+    it('should not produce double commas for rsbuild config with trailing object comma', () => {
+      const filePath = path.join(tempDir, 'rsbuild.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        export default defineConfig({
+          plugins: [pluginReact()],
+        });
+      `
+      );
+
+      const config: BundlerConfig = {
+        files: [],
+        plugin: 'zephyr-rsbuild-plugin',
+        importName: 'withZephyr',
+        strategy: 'run-all',
+        operations: ['plugins-array-or-create', 'rsbuild-asset-prefix'],
+      };
+
+      const result = applyBundlerOperations({
+        filePath,
+        config,
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('changed');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next).toContain('pluginReact(), withZephyr()');
+      expect(next).toMatch(/assetPrefix:\s*["']auto["']/);
+      expect(next).not.toContain(',,');
     });
   });
 });

@@ -1,5 +1,18 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
+  "remoteCache": {
+    "teamSlug": "l727rgm5x8",
+    "apiUrl": "https://cache.depot.dev",
+    "enabled": true
+  },
+  "globalEnv": [
+    "CI",
+    "ZE_API",
+    "ZE_API_GATE",
+    "ZE_FAIL_BUILD",
+    "ZE_IS_PREVIEW",
+    "ZE_SECRET_TOKEN"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -11,6 +24,11 @@
     },
     "test": {
       "dependsOn": ["^build", "^test"],
+      "outputs": []
+    },
+    "e2e-deployment#test": {
+      "cache": false,
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "dev": {

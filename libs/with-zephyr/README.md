@@ -150,9 +150,14 @@ module.exports = composePlugins(withNx(), withReact(), (config) => {
 const { withZephyr } = require('zephyr-webpack-plugin');
 const { composePlugins, withNx, withReact } = require('@nx/webpack');
 
-module.exports = composePlugins(withNx(), withReact(), withZephyr(), (config) => {
-  return config;
-});
+module.exports = composePlugins(
+  withNx(),
+  withReact(),
+  withZephyr(),
+  (config) => {
+    return config;
+  }
+);
 ```
 
 #### Vite Configuration

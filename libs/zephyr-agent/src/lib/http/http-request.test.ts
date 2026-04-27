@@ -7,7 +7,10 @@ import * as tokenModule from '../node-persist/token';
 
 const jest = rs;
 
-const mockFetchWithRetries = jest.spyOn(fetchWithRetriesModule, 'fetchWithRetries');
+const mockFetchWithRetries = jest.spyOn(
+  fetchWithRetriesModule,
+  'fetchWithRetries'
+);
 const mockCleanTokens = jest.spyOn(tokenModule, 'cleanTokens');
 const mockLogHttp = jest.spyOn(ze_log, 'http');
 

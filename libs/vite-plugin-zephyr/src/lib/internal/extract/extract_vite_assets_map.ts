@@ -28,7 +28,9 @@ export async function extract_vite_assets_map(
   const filtered_assets = Object.fromEntries(
     Object.entries(complete_assets)
       .map(toRollupOutputEntry)
-      .filter((entry): entry is [string, OutputChunk | OutputAsset] => entry !== null)
+      .filter(
+        (entry): entry is [string, OutputChunk | OutputAsset] => entry !== null
+      )
   );
 
   return buildAssetsMap(filtered_assets, extractBuffer, getAssetType);
@@ -67,7 +69,9 @@ function getAssetType(asset: OutputChunk | OutputAsset): string {
  * @returns String for text-based chunks, Buffer for binary assets, undefined for unknown
  *   types
  */
-function extractBuffer(asset: OutputChunk | OutputAsset): string | Buffer | undefined {
+function extractBuffer(
+  asset: OutputChunk | OutputAsset
+): string | Buffer | undefined {
   switch (asset.type) {
     case 'chunk':
       return asset.code;

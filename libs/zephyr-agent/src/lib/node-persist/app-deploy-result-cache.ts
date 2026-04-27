@@ -30,7 +30,9 @@ export async function getAppDeployResult(
   );
 }
 
-export async function removeAppDeployResult(application_uid: string): Promise<void> {
+export async function removeAppDeployResult(
+  application_uid: string
+): Promise<void> {
   await storage;
   await persistentStorage.removeItem(
     `${StorageKeys.ze_app_deploy_result}:${application_uid}`
@@ -48,7 +50,9 @@ export async function getAllDeployedApps(): Promise<string[]> {
   );
 }
 
-export async function getAllAppDeployResults(): Promise<Record<string, DeployResult>> {
+export async function getAllAppDeployResults(): Promise<
+  Record<string, DeployResult>
+> {
   await storage;
   const results: Record<string, DeployResult> = {};
 

@@ -4,10 +4,7 @@
     "outDir": "../../dist/out-tsc",
     "module": "commonjs",
     "moduleResolution": "node10",
-    "types": [
-      "@rstest/core/globals", "jest",
-      "node"
-    ],
+    "types": ["@rstest/core/globals", "jest", "node"],
     "composite": true,
     "incremental": true
   },

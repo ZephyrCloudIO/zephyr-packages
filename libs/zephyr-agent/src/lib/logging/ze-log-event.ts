@@ -90,7 +90,10 @@ export function logger(props: LoggerOptions): ZeLogger {
   const { application_uid, buildId, git } = props;
   // lazy loads the application configuration and token
   const loadLogData = PromiseLazyLoad(() => {
-    return Promise.all([getApplicationConfiguration({ application_uid }), getToken()]);
+    return Promise.all([
+      getApplicationConfiguration({ application_uid }),
+      getToken(),
+    ]);
   });
 
   const url = new URL(ze_api_gateway.logs, ZE_API_ENDPOINT());

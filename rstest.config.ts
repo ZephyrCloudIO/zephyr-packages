@@ -9,5 +9,11 @@ export default defineConfig({
     'examples/**/*.{test,spec}.{ts,tsx,js,jsx}',
     'e2e/**/*.{test,spec}.{ts,tsx,js,jsx}',
   ],
-  exclude: ['**/node_modules/**', '**/dist/**', '**/.turbo/**', '**/coverage/**', '**/tmp/**'],
+  exclude: [
+    '**/node_modules/**',
+    '**/dist/**',
+    '**/.turbo/**',
+    '**/coverage/**',
+    '**/tmp/**',
+  ],
 });

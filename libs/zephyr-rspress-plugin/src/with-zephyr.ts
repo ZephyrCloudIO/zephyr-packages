@@ -56,16 +56,18 @@ function isSsgEnabled(
  *   });
  *   ```;
  */
-export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig>(
-  options?: ZephyrRspressOptions
-): RspressPlugin<TConfig> {
+export function withZephyr<
+  TConfig extends RspressUserConfig = RspressUserConfig,
+>(options?: ZephyrRspressOptions): RspressPlugin<TConfig> {
   return {
     name: 'zephyr-rspress-plugin',
     async config(config, { addPlugin }) {
       const { ssg } = config;
 
       if (isSsgEnabled(ssg)) {
-        addPlugin(zephyrRspressSSGPlugin(config, options) as RspressPlugin<TConfig>);
+        addPlugin(
+          zephyrRspressSSGPlugin(config, options) as RspressPlugin<TConfig>
+        );
       } else {
         // Support both rspress v1 (builderPlugins) and v2 (builderConfig.plugins)
         if (isRspressV1(config)) {
@@ -81,8 +83,9 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
             ...config.builderConfig,
             plugins: [...existingPlugins, zephyrRsbuildPlugin(options)],
           };
-          (config as { builderConfig?: BuilderConfigWithPlugins }).builderConfig =
-            newBuilderConfig;
+          (
+            config as { builderConfig?: BuilderConfigWithPlugins }
+          ).builderConfig = newBuilderConfig;
         }
       }
       return config;

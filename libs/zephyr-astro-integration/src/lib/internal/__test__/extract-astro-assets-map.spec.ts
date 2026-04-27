@@ -1,15 +1,12 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { extractAstroAssetsMap } from '../extract-astro-assets-map';
 
-const {
-  buildAssetsMapMock,
-  logFnMock,
-  readDirRecursiveWithContentsMock,
-} = rs.hoisted(() => ({
-  buildAssetsMapMock: rs.fn(),
-  logFnMock: rs.fn(),
-  readDirRecursiveWithContentsMock: rs.fn(),
-}));
+const { buildAssetsMapMock, logFnMock, readDirRecursiveWithContentsMock } =
+  rs.hoisted(() => ({
+    buildAssetsMapMock: rs.fn(),
+    logFnMock: rs.fn(),
+    readDirRecursiveWithContentsMock: rs.fn(),
+  }));
 
 rs.mock('zephyr-agent', () => {
   return {
@@ -65,7 +62,9 @@ describe('extractAstroAssetsMap', () => {
       expect.objectContaining({
         'index.html': expect.objectContaining({ type: 'text/html' }),
         'style.css': expect.objectContaining({ type: 'text/css' }),
-        'script.js': expect.objectContaining({ type: 'application/javascript' }),
+        'script.js': expect.objectContaining({
+          type: 'application/javascript',
+        }),
       }),
       expect.any(Function),
       expect.any(Function)
@@ -108,7 +107,9 @@ describe('extractAstroAssetsMap', () => {
   });
 
   it('logs and returns empty assets when recursive read fails', async () => {
-    readDirRecursiveWithContentsMock.mockRejectedValue(new Error('Access denied'));
+    readDirRecursiveWithContentsMock.mockRejectedValue(
+      new Error('Access denied')
+    );
 
     const result = await extractAstroAssetsMap('/dist');
 

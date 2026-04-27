@@ -44,7 +44,9 @@ export async function zeBuildDashData(
     context: { isCI, username },
     dependencies: to_raw(zephyr_engine.npmProperties.dependencies),
     devDependencies: to_raw(zephyr_engine.npmProperties.devDependencies),
-    optionalDependencies: to_raw(zephyr_engine.npmProperties.optionalDependencies),
+    optionalDependencies: to_raw(
+      zephyr_engine.npmProperties.optionalDependencies
+    ),
     peerDependencies: to_raw(zephyr_engine.npmProperties.peerDependencies),
     overrides: [],
     consumes: [],

@@ -38,7 +38,11 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
   // Detect multiple commands and their output directories
   const multiDetection = await detectMultipleCommands(commandLine, cwd);
-  const { commands: detectedCommands, outputDirs, commonOutputDir } = multiDetection;
+  const {
+    commands: detectedCommands,
+    outputDirs,
+    commonOutputDir,
+  } = multiDetection;
 
   // Log detected tools
   // Flatten commands if there are sub-commands
@@ -62,7 +66,10 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
     if (detected.outputDir) {
       const absoluteOutputDir = resolve(cwd, detected.outputDir);
-      log('info', `  Output directory: ${relative(cwd, absoluteOutputDir) || '.'}`);
+      log(
+        'info',
+        `  Output directory: ${relative(cwd, absoluteOutputDir) || '.'}`
+      );
     }
   }
 
@@ -81,7 +88,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error(
       '[ze-cli] Your build tool uses a JavaScript configuration file that cannot be'
     );
-    console.error('[ze-cli] statically analyzed. This means ze-cli cannot automatically');
+    console.error(
+      '[ze-cli] statically analyzed. This means ze-cli cannot automatically'
+    );
     console.error('[ze-cli] detect the output directory.');
     console.error('[ze-cli] ');
     console.error('[ze-cli] Recommendations:');
@@ -92,7 +101,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error('[ze-cli]    - etc.');
     console.error('[ze-cli] 2. Or use "ze-cli deploy <dir>" after building');
     console.error('[ze-cli] ');
-    console.error('[ze-cli] For more info: https://docs.zephyr-cloud.io/integrations');
+    console.error(
+      '[ze-cli] For more info: https://docs.zephyr-cloud.io/integrations'
+    );
     console.error('[ze-cli] ');
   }
 
@@ -108,7 +119,10 @@ export async function runCommand(options: RunOptions): Promise<void> {
   // Execute all build commands sequentially
   for (let i = 0; i < individualCommands.length; i++) {
     const cmd = individualCommands[i];
-    log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
+    log(
+      'info',
+      `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`
+    );
 
     try {
       const parsed = parseShellCommand(cmd);
@@ -142,8 +156,12 @@ export async function runCommand(options: RunOptions): Promise<void> {
   // If we couldn't detect the output directory, stop here
   if (!outputDir) {
     console.error('[ze-cli] ');
-    console.error('[ze-cli] Could not detect output directory. Skipping upload.');
-    console.error('[ze-cli] Please use "ze-cli deploy <dir>" to upload manually.');
+    console.error(
+      '[ze-cli] Could not detect output directory. Skipping upload.'
+    );
+    console.error(
+      '[ze-cli] Please use "ze-cli deploy <dir>" to upload manually.'
+    );
     console.error('[ze-cli] ');
     return;
   }

@@ -12,7 +12,8 @@ export async function createMinimalBuildStats(
   const version = (await zephyr_engine.snapshotId) || '0.0.0';
   const application_uid = zephyr_engine.application_uid;
   const buildId = (await zephyr_engine.build_id) || 'unknown';
-  const { EDGE_URL, PLATFORM, DELIMITER } = await zephyr_engine.application_configuration;
+  const { EDGE_URL, PLATFORM, DELIMITER } =
+    await zephyr_engine.application_configuration;
 
   return {
     id: application_uid,

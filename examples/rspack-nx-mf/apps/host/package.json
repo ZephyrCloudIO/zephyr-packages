@@ -2,21 +2,22 @@
   "name": "rspack_nx_mf_host",
   "version": "0.0.1",
   "private": true,
-  "zephyr:dependencies": {
-    "rspack_nx_mf_remote": "workspace:*"
-  },
   "scripts": {
     "build": "rspack build --config rspack.config.js --mode production",
     "start": "rspack serve --config rspack.config.js --mode development --port 4200",
     "test": "rstest --passWithNoTests",
-    "lint": "eslint src --ext .ts,.tsx,.js,.jsx"
+    "lint": "oxlint src --no-error-on-unmatched-pattern"
   },
   "devDependencies": {
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
+    "@rstest/core": "^0.7.7",
     "@testing-library/react": "catalog:react",
-    "zephyr-rspack-plugin": "workspace:*",
-    "@rstest/core": "^0.7.7"
+    "tslib": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
+  },
+  "zephyr:dependencies": {
+    "rspack_nx_mf_remote": "workspace:*"
   }
 }

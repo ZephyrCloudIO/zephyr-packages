@@ -10,18 +10,19 @@ rs.mock('../zephyrRspressSSGPlugin', () => ({
   zephyrRspressSSGPlugin: (...args: unknown[]) => rspressPluginMock(...args),
 }));
 
-rs.mock(
-  'zephyr-rsbuild-plugin',
-  () => ({
-    withZephyr: () => rsbuildPluginMock(),
-  })
-);
+rs.mock('zephyr-rsbuild-plugin', () => ({
+  withZephyr: () => rsbuildPluginMock(),
+}));
 
 describe('withZephyr', () => {
   beforeEach(() => {
     rs.clearAllMocks();
-    rspressPluginMock.mockImplementation((_: any) => ({ name: 'mock-ssg-plugin' }));
-    rsbuildPluginMock.mockImplementation(() => ({ name: 'mock-rsbuild-plugin' }));
+    rspressPluginMock.mockImplementation((_: any) => ({
+      name: 'mock-ssg-plugin',
+    }));
+    rsbuildPluginMock.mockImplementation(() => ({
+      name: 'mock-rsbuild-plugin',
+    }));
   });
 
   it('should add the zephyrRspressSSGPlugin when ssg is true', async () => {
@@ -33,7 +34,11 @@ describe('withZephyr', () => {
     };
 
     const removePlugin = rs.fn();
-    const result = await plugin.config?.(config as any, { addPlugin, removePlugin }, false);
+    const result = await plugin.config?.(
+      config as any,
+      { addPlugin, removePlugin },
+      false
+    );
 
     expect(rspressPluginMock).toHaveBeenCalledWith(config, undefined);
     expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
@@ -51,7 +56,11 @@ describe('withZephyr', () => {
     };
 
     const plugin = withZephyr();
-    const result = await plugin.config?.(config as any, { addPlugin, removePlugin }, false);
+    const result = await plugin.config?.(
+      config as any,
+      { addPlugin, removePlugin },
+      false
+    );
 
     expect(rsbuildPluginMock).toHaveBeenCalled();
     expect(result?.builderConfig?.plugins).toContainEqual({
@@ -68,7 +77,11 @@ describe('withZephyr', () => {
     };
 
     const plugin = withZephyr();
-    const result = await plugin.config?.(config as any, { addPlugin, removePlugin }, false);
+    const result = await plugin.config?.(
+      config as any,
+      { addPlugin, removePlugin },
+      false
+    );
 
     expect(rsbuildPluginMock).toHaveBeenCalled();
     expect(result?.builderConfig?.plugins).toContainEqual({
@@ -99,7 +112,11 @@ describe('withZephyr', () => {
     const config = {};
 
     const plugin = withZephyr();
-    const result = await plugin.config?.(config as any, { addPlugin, removePlugin }, false);
+    const result = await plugin.config?.(
+      config as any,
+      { addPlugin, removePlugin },
+      false
+    );
 
     expect(rsbuildPluginMock).toHaveBeenCalled();
     expect(result?.builderConfig?.plugins).toContainEqual({
@@ -139,7 +156,11 @@ describe('withZephyr', () => {
       };
 
       const plugin = withZephyr();
-      const result = await plugin.config?.(config as any, { addPlugin, removePlugin }, false);
+      const result = await plugin.config?.(
+        config as any,
+        { addPlugin, removePlugin },
+        false
+      );
 
       expect(rsbuildPluginMock).toHaveBeenCalled();
       expect(result?.builderPlugins).toContainEqual({
@@ -198,7 +219,11 @@ describe('withZephyr', () => {
       };
 
       const plugin = withZephyr();
-      await plugin.config?.(config as any, { addPlugin, removePlugin: rs.fn() }, false);
+      await plugin.config?.(
+        config as any,
+        { addPlugin, removePlugin: rs.fn() },
+        false
+      );
 
       expect(rsbuildPluginMock).toHaveBeenCalled();
       expect(addPlugin).not.toHaveBeenCalled();

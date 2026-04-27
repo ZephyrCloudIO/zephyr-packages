@@ -21,9 +21,9 @@ rs.mock('zephyr-agent', () => ({
   buildAssetsMap: (...args: unknown[]) => buildAssetsMapMock(...args),
 }));
 
-const extractRemotesDependenciesMock = rs.fn().mockReturnValue([
-  { name: 'RemoteApp', version: 'latest' },
-]);
+const extractRemotesDependenciesMock = rs
+  .fn()
+  .mockReturnValue([{ name: 'RemoteApp', version: 'latest' }]);
 const mutateMfConfigMock = rs.fn();
 const createMinimalBuildStatsMock = rs.fn().mockResolvedValue({
   id: 'test-build-id',
@@ -36,7 +36,8 @@ const parseSharedDependenciesMock = rs.fn().mockReturnValue({});
 const loadStaticEntriesMock = rs.fn().mockResolvedValue([]);
 
 rs.mock('../internal/extract-mf-remotes', () => ({
-  extract_remotes_dependencies: (...args: unknown[]) => extractRemotesDependenciesMock(...args),
+  extract_remotes_dependencies: (...args: unknown[]) =>
+    extractRemotesDependenciesMock(...args),
 }));
 
 rs.mock('../internal/mutate-mf-config', () => ({
@@ -44,20 +45,25 @@ rs.mock('../internal/mutate-mf-config', () => ({
 }));
 
 rs.mock('../internal/metro-build-stats', () => ({
-  createMinimalBuildStats: (...args: unknown[]) => createMinimalBuildStatsMock(...args),
-  resolveCatalogDependencies: (...args: unknown[]) => resolveCatalogDependenciesMock(...args),
+  createMinimalBuildStats: (...args: unknown[]) =>
+    createMinimalBuildStatsMock(...args),
+  resolveCatalogDependencies: (...args: unknown[]) =>
+    resolveCatalogDependenciesMock(...args),
 }));
 
 rs.mock('../internal/extract-modules-from-exposes', () => ({
-  extractModulesFromExposes: (...args: unknown[]) => extractModulesFromExposesMock(...args),
+  extractModulesFromExposes: (...args: unknown[]) =>
+    extractModulesFromExposesMock(...args),
 }));
 
 rs.mock('../internal/get-package-dependencies', () => ({
-  getPackageDependencies: (...args: unknown[]) => getPackageDependenciesMock(...args),
+  getPackageDependencies: (...args: unknown[]) =>
+    getPackageDependenciesMock(...args),
 }));
 
 rs.mock('../internal/parse-shared-dependencies', () => ({
-  parseSharedDependencies: (...args: unknown[]) => parseSharedDependenciesMock(...args),
+  parseSharedDependencies: (...args: unknown[]) =>
+    parseSharedDependenciesMock(...args),
 }));
 
 rs.mock('../internal/load-static-entries', () => ({

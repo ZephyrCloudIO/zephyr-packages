@@ -87,26 +87,33 @@ export async function getPackageJson(
 
     if (!parsed_package_json.version) {
       parsed_package_json.version = DEFAULT_PACKAGE_VERSION;
-      const warning = new ZephyrError(ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION, {
-        path: packageJsonPath,
-        defaultVersion: DEFAULT_PACKAGE_VERSION,
-        data: {
+      const warning = new ZephyrError(
+        ZeErrors.ERR_PACKAGE_JSON_MISSING_VERSION,
+        {
           path: packageJsonPath,
           defaultVersion: DEFAULT_PACKAGE_VERSION,
-        },
-      });
+          data: {
+            path: packageJsonPath,
+            defaultVersion: DEFAULT_PACKAGE_VERSION,
+          },
+        }
+      );
       logFn('warn', `${warning.code}: ${warning.message}`);
     }
 
     const zephyr_dependencies = parsed_package_json['zephyr:dependencies'];
     if (zephyr_dependencies) {
-      parsed_package_json.zephyrDependencies = parseZeDependencies(zephyr_dependencies);
+      parsed_package_json.zephyrDependencies =
+        parseZeDependencies(zephyr_dependencies);
     } else {
       logFn(
         'info',
         'No zephyr:dependencies found in package.json, to give you more control over your dependencies, check out our documentation:'
       );
-      logFn('info', 'https://docs.zephyr-cloud.io/features/remote-dependencies');
+      logFn(
+        'info',
+        'https://docs.zephyr-cloud.io/features/remote-dependencies'
+      );
     }
 
     ze_log.package('Successfully parsed package.json', {

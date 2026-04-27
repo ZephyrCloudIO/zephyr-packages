@@ -1,8 +1,8 @@
 {
   "name": "@react-micro-frontends/source",
   "version": "0.0.0",
-  "license": "MIT",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "start": "pnpm --parallel --filter team-blue --filter team-red --filter team-green start",
     "build-all": "pnpm --workspace-concurrency=1 --filter team-blue --filter team-green --filter team-red build",
@@ -19,6 +19,9 @@
     "@babel/core": "catalog:babel",
     "@babel/preset-react": "catalog:babel",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspack/plugin-react-refresh": "catalog:rspack",
     "@svgr/webpack": "catalog:webpack5",
     "@swc-node/register": "catalog:swc",
     "@swc/cli": "catalog:swc",
@@ -28,22 +31,11 @@
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "@typescript-eslint/parser": "catalog:eslint",
-    "eslint": "catalog:eslint",
-    "eslint-config-prettier": "catalog:eslint",
-    "eslint-plugin-import": "catalog:eslint",
-    "eslint-plugin-jsx-a11y": "catalog:eslint",
-    "eslint-plugin-react": "catalog:eslint",
-    "eslint-plugin-react-hooks": "catalog:eslint",
     "react-refresh": "catalog:react18",
     "ts-node": "10.9.2",
     "tsutils": "^3.21.0",
     "url-loader": "^4.1.1",
     "zephyr-rspack-plugin": "workspace:*",
-    "zephyr-xpack-internal": "workspace:*",
-    "@rspack/cli": "catalog:rspack",
-    "@rspack/core": "catalog:rspack",
-    "@rspack/plugin-react-refresh": "catalog:rspack"
+    "zephyr-xpack-internal": "workspace:*"
   }
 }

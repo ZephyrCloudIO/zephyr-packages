@@ -144,7 +144,8 @@ export async function extractAstroAssetsFromBuildHook(
   } catch (error) {
     logFn(
       'warn',
-      'Error processing assets from Astro build hook:' + JSON.stringify(error, null, 2)
+      'Error processing assets from Astro build hook:' +
+        JSON.stringify(error, null, 2)
     );
     // Fallback to filesystem walking on any error
     return await extractAstroAssetsMap(outputPath);
@@ -167,7 +168,10 @@ function extractAssetEntries(assets: AstroAssets): [string, unknown][] {
         // Could be an object with path/url properties
         const assetObj = asset as Record<string, unknown>;
         const path =
-          assetObj['path'] || assetObj['url'] || assetObj['href'] || assetObj['pathname'];
+          assetObj['path'] ||
+          assetObj['url'] ||
+          assetObj['href'] ||
+          assetObj['pathname'];
         if (path && typeof path === 'string') {
           entries.push([path, asset]);
         }
@@ -195,7 +199,9 @@ function extractAssetEntries(assets: AstroAssets): [string, unknown][] {
   return entries;
 }
 
-export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAssetsMap> {
+export async function extractAstroAssetsMap(
+  buildDir: string
+): Promise<ZeBuildAssetsMap> {
   const assets: Record<string, AstroAsset> = {};
 
   try {

@@ -38,11 +38,17 @@ describe('walkFiles', () => {
     await mkdir(path.join(rootDir, 'real-dir'), { recursive: true });
     await writeFile(path.join(rootDir, 'real.txt'), 'real');
     await writeFile(path.join(rootDir, 'real-dir', 'nested.txt'), 'nested');
-    await symlink(path.join(rootDir, 'real-dir'), path.join(rootDir, 'link-to-dir'));
+    await symlink(
+      path.join(rootDir, 'real-dir'),
+      path.join(rootDir, 'link-to-dir')
+    );
 
     const result = await walkFiles(rootDir);
 
-    expect(result.sort()).toEqual([path.join('real-dir', 'nested.txt'), 'real.txt']);
+    expect(result.sort()).toEqual([
+      path.join('real-dir', 'nested.txt'),
+      'real.txt',
+    ]);
     expect(result).not.toContain(path.join('link-to-dir', 'nested.txt'));
   });
 });

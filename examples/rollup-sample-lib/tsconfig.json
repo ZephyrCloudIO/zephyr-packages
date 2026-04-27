@@ -6,18 +6,11 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "outDir": "../../dist/out-tsc",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "composite": true,
     "incremental": true
   },
-  "include": [
-    "src/**/*.js",
-    "src/**/*.jsx",
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "extends": "../../tsconfig.json",
   "exclude": [
     "rstest.config.ts",

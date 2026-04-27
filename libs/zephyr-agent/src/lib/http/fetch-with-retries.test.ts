@@ -2,14 +2,21 @@ import { rs } from '@rstest/core';
 import { ZephyrError } from '../errors';
 
 const jest = rs;
-const { mockCreate, mockAxiosInstance, mockAxiosRetry, mockExponentialDelay, mockHttpsProxyAgent } =
-  rs.hoisted(() => ({
-    mockCreate: rs.fn(),
-    mockAxiosInstance: rs.fn(),
-    mockAxiosRetry: rs.fn(),
-    mockExponentialDelay: rs.fn(),
-    mockHttpsProxyAgent: rs.fn().mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
-  }));
+const {
+  mockCreate,
+  mockAxiosInstance,
+  mockAxiosRetry,
+  mockExponentialDelay,
+  mockHttpsProxyAgent,
+} = rs.hoisted(() => ({
+  mockCreate: rs.fn(),
+  mockAxiosInstance: rs.fn(),
+  mockAxiosRetry: rs.fn(),
+  mockExponentialDelay: rs.fn(),
+  mockHttpsProxyAgent: rs
+    .fn()
+    .mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
+}));
 
 // Mock axios, axios-retry, isCI, and proxy agents
 rs.mock('axios', () => {
@@ -26,8 +33,9 @@ rs.mock('axios', () => {
 
 rs.mock('axios-retry', () => {
   const fn = mockAxiosRetry as unknown as (...args: unknown[]) => unknown;
-  (fn as unknown as { exponentialDelay: typeof mockExponentialDelay }).exponentialDelay =
-    mockExponentialDelay;
+  (
+    fn as unknown as { exponentialDelay: typeof mockExponentialDelay }
+  ).exponentialDelay = mockExponentialDelay;
   return {
     __esModule: true,
     default: fn,
@@ -58,13 +66,19 @@ const cleanProxyEnv = () => {
 
 describe('fetchWithRetries', () => {
   const url = new URL('https://example.com/api');
-  const options = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+  const options = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockCreate.mockReturnValue(mockAxiosInstance);
-    (mockAxiosRetry as unknown as { exponentialDelay: typeof mockExponentialDelay }).exponentialDelay =
-      mockExponentialDelay;
+    (
+      mockAxiosRetry as unknown as {
+        exponentialDelay: typeof mockExponentialDelay;
+      }
+    ).exponentialDelay = mockExponentialDelay;
     cleanProxyEnv();
   });
 
@@ -125,7 +139,8 @@ describe('fetchWithRetries', () => {
     await fetchWithRetries(url, options);
 
     // Get retry condition function
-    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock
+      .calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Test retry condition with network error (message-based)
@@ -297,7 +312,8 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock
+      .calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Error without code should not retry
@@ -317,7 +333,8 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (mockAxiosRetry as unknown as jest.Mock).mock
+      .calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Non-network error should not retry
@@ -341,7 +358,9 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(mockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://proxy.example.com:8080'
+      );
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: expect.objectContaining({
@@ -513,7 +532,9 @@ describe('fetchWithRetries', () => {
 
       await fetchWithRetries(url, options);
 
-      expect(mockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
+      expect(mockHttpsProxyAgent).toHaveBeenCalledWith(
+        'http://proxy.example.com:8080'
+      );
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           httpsAgent: expect.objectContaining({

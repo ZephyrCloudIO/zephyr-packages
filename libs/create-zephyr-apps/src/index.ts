@@ -165,7 +165,9 @@ try {
   loading.message('Cleaning up temporary directory...');
 
   // no need to wait this operation, as it is not critical for the user experience
-  void fs.promises.rm(tmpDir, { recursive: true, force: true }).catch(console.error);
+  void fs.promises
+    .rm(tmpDir, { recursive: true, force: true })
+    .catch(console.error);
 
   loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);
 } catch (error) {

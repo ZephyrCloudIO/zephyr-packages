@@ -67,7 +67,7 @@ pnpm install
 ### Linting & Formatting
 
 - `pnpm lint` - Checks code for linting errors
-- `pnpm format` - Formats code using Prettier
+- `pnpm format` - Formats code using Oxfmt
 
 ### Version Management
 

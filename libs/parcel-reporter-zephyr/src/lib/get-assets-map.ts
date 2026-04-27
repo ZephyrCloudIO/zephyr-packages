@@ -9,7 +9,9 @@ export interface ParcelOutputAsset {
   content?: Buffer | string;
 }
 
-export function getAssetsMap(assets: Map<string, ParcelOutputAsset>): ZeBuildAssetsMap {
+export function getAssetsMap(
+  assets: Map<string, ParcelOutputAsset>
+): ZeBuildAssetsMap {
   // Convert Map to a plain object (Record<string, ParcelOutputAsset>)
   const assetsRecord: Record<string, ParcelOutputAsset> = {};
 

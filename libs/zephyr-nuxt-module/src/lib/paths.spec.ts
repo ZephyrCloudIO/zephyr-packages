@@ -23,7 +23,9 @@ describe('resolveEntrypoint', () => {
     await writeFile(join(outputDir, 'server/index.js'), 'js');
     await writeFile(join(outputDir, 'server/index.mjs'), 'mjs');
 
-    await expect(resolveEntrypoint(outputDir)).resolves.toBe('server/index.mjs');
+    await expect(resolveEntrypoint(outputDir)).resolves.toBe(
+      'server/index.mjs'
+    );
   });
 
   it('falls back to server/index.js when mjs is missing', async () => {
@@ -35,15 +37,15 @@ describe('resolveEntrypoint', () => {
   it('normalizes explicit absolute entrypoint to output-relative path', async () => {
     const absoluteEntrypoint = join(outputDir, 'server/index.cjs');
 
-    await expect(resolveEntrypoint(outputDir, absoluteEntrypoint)).resolves.toBe(
-      'server/index.cjs'
-    );
+    await expect(
+      resolveEntrypoint(outputDir, absoluteEntrypoint)
+    ).resolves.toBe('server/index.cjs');
   });
 
   it('normalizes separator variants for explicit entrypoint', async () => {
-    await expect(resolveEntrypoint(outputDir, '.\\server\\index.mjs')).resolves.toBe(
-      'server/index.mjs'
-    );
+    await expect(
+      resolveEntrypoint(outputDir, '.\\server\\index.mjs')
+    ).resolves.toBe('server/index.mjs');
     expect(normalizePath('server\\index.mjs')).toBe('server/index.mjs');
   });
 });

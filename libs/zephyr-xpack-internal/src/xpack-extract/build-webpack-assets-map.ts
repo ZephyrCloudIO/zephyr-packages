@@ -1,4 +1,9 @@
-import { buildAssetsMap, onIndexHtmlResolved, ze_log, zeBuildAssets } from 'zephyr-agent';
+import {
+  buildAssetsMap,
+  onIndexHtmlResolved,
+  ze_log,
+  zeBuildAssets,
+} from 'zephyr-agent';
 import type { Source, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
 function getAssetType(asset: Source): string {
@@ -29,7 +34,11 @@ export async function buildWebpackAssetMap(
   const { wait_for_index_html } = props;
 
   ze_log.upload('Building assets map from webpack assets.');
-  const assetsMap: ZeBuildAssetsMap = buildAssetsMap(assets, extractBuffer, getAssetType);
+  const assetsMap: ZeBuildAssetsMap = buildAssetsMap(
+    assets,
+    extractBuffer,
+    getAssetType
+  );
 
   if (wait_for_index_html) {
     ze_log.upload('Assets map built. Checking for index.html waiter.');

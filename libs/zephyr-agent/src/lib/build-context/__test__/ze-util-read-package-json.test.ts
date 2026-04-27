@@ -10,8 +10,14 @@ import { getPackageJson } from '../ze-util-read-package-json';
 
 const jest = rs;
 const statSyncMock = jest.spyOn(fs, 'statSync');
-const findNearestPackageJsonMock = jest.spyOn(findNearestModule, 'find_nearest_package_json');
-const parseZeDependenciesMock = jest.spyOn(parseDepsModule, 'parseZeDependencies');
+const findNearestPackageJsonMock = jest.spyOn(
+  findNearestModule,
+  'find_nearest_package_json'
+);
+const parseZeDependenciesMock = jest.spyOn(
+  parseDepsModule,
+  'parseZeDependencies'
+);
 const logFnMock = jest.spyOn(logEventModule, 'logFn');
 
 describe('getPackageJson', () => {

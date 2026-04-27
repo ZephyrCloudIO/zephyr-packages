@@ -34,7 +34,10 @@ interface OutputAssetLike {
   source: string | Uint8Array;
 }
 
-export type OutputBundleLike = Record<string, OutputChunkLike | OutputAssetLike>;
+export type OutputBundleLike = Record<
+  string,
+  OutputChunkLike | OutputAssetLike
+>;
 
 const CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   '.avif': 'image/avif',
@@ -66,7 +69,10 @@ function getAssetType(filePath: string): string {
   return CONTENT_TYPES_BY_EXTENSION[extension] ?? 'application/octet-stream';
 }
 
-function getRelativeBundleDir(outputRootDir: string, bundleDir: string): string {
+function getRelativeBundleDir(
+  outputRootDir: string,
+  bundleDir: string
+): string {
   return getRelativeDirFromRoot(outputRootDir, bundleDir);
 }
 
@@ -158,7 +164,10 @@ async function walkFiles(rootDir: string): Promise<string[]> {
   return files;
 }
 
-function buildSnapshotPath(relativeDir: string, relativeFilePath: string): string {
+function buildSnapshotPath(
+  relativeDir: string,
+  relativeFilePath: string
+): string {
   const normalizedRelativeFilePath = normalizePathForSnapshot(relativeFilePath);
   return relativeDir
     ? `${relativeDir}/${normalizedRelativeFilePath}`
@@ -186,7 +195,10 @@ export async function collectStaticClientAssets(
   const clientFiles = await walkFiles(clientOutDir);
   for (const clientFile of clientFiles) {
     const relativeClientPath = path.relative(clientOutDir, clientFile);
-    const snapshotPath = buildSnapshotPath(relativeClientDir, relativeClientPath);
+    const snapshotPath = buildSnapshotPath(
+      relativeClientDir,
+      relativeClientPath
+    );
     if (assets[snapshotPath]) {
       continue;
     }
@@ -198,7 +210,10 @@ export async function collectStaticClientAssets(
   }
 }
 
-function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): string {
+function getRelativeDirFromRoot(
+  outputRootDir: string,
+  targetDir: string
+): string {
   const relativeDir = normalizePathForSnapshot(
     path.relative(path.resolve(outputRootDir), path.resolve(targetDir))
   );
@@ -215,7 +230,10 @@ function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): strin
 }
 
 function serializeBuildAssetsManifest(manifest: unknown): Buffer {
-  return Buffer.from(`export default ${JSON.stringify(manifest, null, 2)}\n`, 'utf-8');
+  return Buffer.from(
+    `export default ${JSON.stringify(manifest, null, 2)}\n`,
+    'utf-8'
+  );
 }
 
 export function injectRscAssetsManifest(

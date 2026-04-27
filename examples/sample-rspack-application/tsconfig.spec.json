@@ -2,10 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": [
-      "@rstest/core/globals", "jest",
-      "node"
-    ],
+    "types": ["@rstest/core/globals", "jest", "node"],
     "composite": true,
     "incremental": true
   },

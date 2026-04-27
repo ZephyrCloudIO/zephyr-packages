@@ -12,7 +12,8 @@ rs.mock('zephyr-xpack-internal', () => ({
 }));
 
 rs.mock('../assets/buildAssets', () => ({
-  buildAssetMapFromFiles: (...args: unknown[]) => buildAssetMapFromFilesMock(...args),
+  buildAssetMapFromFiles: (...args: unknown[]) =>
+    buildAssetMapFromFilesMock(...args),
 }));
 
 rs.mock('../stats/buildStats', () => ({
@@ -44,7 +45,9 @@ describe('setupZeDeploy', () => {
       files: [],
     });
 
-    expect(zeLogPackageMock).toHaveBeenCalledWith('ZeRspressPlugin: No files to process.');
+    expect(zeLogPackageMock).toHaveBeenCalledWith(
+      'ZeRspressPlugin: No files to process.'
+    );
     expect(buildAssetMapFromFilesMock).not.toHaveBeenCalled();
     expect(buildStatsMock).not.toHaveBeenCalled();
     expect(xpackZephyrAgentMock).not.toHaveBeenCalled();
@@ -63,7 +66,10 @@ describe('setupZeDeploy', () => {
       'index.html',
       'main.js',
     ]);
-    expect(buildStatsMock).toHaveBeenCalledWith('/doc_build', ['index.html', 'main.js']);
+    expect(buildStatsMock).toHaveBeenCalledWith('/doc_build', [
+      'index.html',
+      'main.js',
+    ]);
     expect(xpackZephyrAgentMock).toHaveBeenCalledWith({
       stats: mockStats,
       stats_json: { some: 'json' },

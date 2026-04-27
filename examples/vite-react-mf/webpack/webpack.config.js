@@ -2,7 +2,9 @@ const HtmlWebPackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const Dotenv = require('dotenv-webpack');
 const { withZephyr } = require('../../../libs/zephyr-webpack-plugin/dist');
-const { ModuleFederationPlugin } = require('@module-federation/enhanced/webpack');
+const {
+  ModuleFederationPlugin,
+} = require('@module-federation/enhanced/webpack');
 
 const deps = require('./package.json').dependencies;
 

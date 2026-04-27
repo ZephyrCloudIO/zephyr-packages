@@ -1,5 +1,8 @@
 import { ze_log } from 'zephyr-agent';
-import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
+import type {
+  ModuleFederationPlugin,
+  XFederatedRemotesConfig,
+} from '../xpack.types';
 import { extractFederatedConfig } from './extract-federation-config';
 
 export function runtimePluginInsert(plugin: ModuleFederationPlugin): boolean {

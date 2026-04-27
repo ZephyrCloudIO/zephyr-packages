@@ -51,7 +51,10 @@ export function createManifestContent(
   dependencies: ZeResolvedDependency[],
   includeEnvVars = true
 ): string {
-  ze_log.manifest('Creating manifest with dependencies:', dependencies?.length || 0);
+  ze_log.manifest(
+    'Creating manifest with dependencies:',
+    dependencies?.length || 0
+  );
 
   // Build the dependencies object
   const dependenciesMap: Record<string, ZephyrDependency> = {};
@@ -85,7 +88,9 @@ export function createManifestContent(
     }
   }
 
-  ze_log.manifest(`Dependencies: ${Object.keys(dependenciesMap).join(', ') || 'none'}`);
+  ze_log.manifest(
+    `Dependencies: ${Object.keys(dependenciesMap).join(', ') || 'none'}`
+  );
 
   // Convert to JSON string with pretty printing
   return JSON.stringify(manifest, null, 2);

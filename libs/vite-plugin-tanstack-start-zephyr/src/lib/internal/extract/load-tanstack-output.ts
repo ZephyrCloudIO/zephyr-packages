@@ -6,7 +6,9 @@ import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
 import { readDirRecursiveWithContents } from 'zephyr-agent';
 
 /** Load files from directory into Rollup OutputBundle format */
-export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle> {
+export async function loadFilesFromDirectory(
+  dir: string
+): Promise<OutputBundle> {
   const bundle: OutputBundle = {};
 
   try {
@@ -27,7 +29,8 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
           fileName: relativePath,
           name: path.basename(relativePath, ext),
           code: content.toString('utf-8'),
-          isEntry: relativePath === 'index.js' || relativePath.includes('index'),
+          isEntry:
+            relativePath === 'index.js' || relativePath.includes('index'),
           isDynamicEntry: false,
           facadeModuleId: null,
           moduleIds: [],
@@ -72,25 +75,33 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
  * files from the output directory root, maintaining their natural paths (e.g.,
  * server/index.js, client/assets/main.js, favicon.ico)
  */
-export async function loadTanStackOutput(outputDir: string): Promise<OutputBundle> {
+export async function loadTanStackOutput(
+  outputDir: string
+): Promise<OutputBundle> {
   // Load from the root output directory to preserve natural structure
   return loadFilesFromDirectory(outputDir);
 }
 
 /** @deprecated Use loadTanStackOutput instead - this preserves the full structure */
-export async function loadServerOutput(outputDir: string): Promise<OutputBundle> {
+export async function loadServerOutput(
+  outputDir: string
+): Promise<OutputBundle> {
   const serverDir = path.join(outputDir, 'server');
   return loadFilesFromDirectory(serverDir);
 }
 
 /** @deprecated Use loadTanStackOutput instead - this preserves the full structure */
-export async function loadClientOutput(outputDir: string): Promise<OutputBundle> {
+export async function loadClientOutput(
+  outputDir: string
+): Promise<OutputBundle> {
   const clientDir = path.join(outputDir, 'client');
   return loadFilesFromDirectory(clientDir);
 }
 
 /** Check if TanStack Start output directory exists and is valid */
-export async function validateTanStackOutput(outputDir: string): Promise<boolean> {
+export async function validateTanStackOutput(
+  outputDir: string
+): Promise<boolean> {
   try {
     const serverDir = path.join(outputDir, 'server');
     const clientDir = path.join(outputDir, 'client');

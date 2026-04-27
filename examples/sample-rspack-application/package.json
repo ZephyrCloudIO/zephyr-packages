@@ -2,6 +2,10 @@
   "name": "sample-rspack-application",
   "version": "1.0.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
+  },
   "scripts": {
     "start": "rspack serve --config rspack.config.js --mode development --port 4301",
     "build": "rspack build --config rspack.config.js --mode production",
@@ -12,17 +16,14 @@
     "react-dom": "catalog:react18"
   },
   "devDependencies": {
-    "@types/react": "catalog:react18",
-    "@types/react-dom": "catalog:react18",
-    "@testing-library/react": "catalog:react",
-    "@types/jest": "catalog:typescript",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
+    "@testing-library/react": "catalog:react",
+    "@types/jest": "catalog:typescript",
+    "@types/react": "catalog:react18",
+    "@types/react-dom": "catalog:react18",
+    "tslib": "catalog:typescript",
     "zephyr-rspack-plugin": "workspace:*"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
   }
 }

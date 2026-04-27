@@ -79,6 +79,8 @@ jobs:
           # We need full history so Turbo affected can diff against the base commit.
           fetch-depth: 0
       - uses: ./.github/actions/setup
+      - name: run format check
+        run: pnpm format:check
       - name: run lint
         run: pnpm exec turbo lint --affected
 

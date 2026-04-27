@@ -189,9 +189,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
 🤖 Generated with [Claude Code](https://claude.ai/code)`;
 
     try {
-      const prUrl = exec(`gh pr create --title "${prTitle}" --body "${prBody}"`, {
-        silent: true,
-      });
+      const prUrl = exec(
+        `gh pr create --title "${prTitle}" --body "${prBody}"`,
+        {
+          silent: true,
+        }
+      );
       console.log(`✅ Pull request created: ${prUrl}`);
     } catch (error) {
       console.warn(

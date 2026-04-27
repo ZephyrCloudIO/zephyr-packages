@@ -37,7 +37,8 @@ export function buildEnvImportMap(
           ? remote.remote_entry_url.split('@')[1]
           : remote.remote_entry_url;
         const origin = new URL(urlStr).origin;
-        imports[`env:vars:${remote.application_uid}`] = `${origin}/zephyr-manifest.json`;
+        imports[`env:vars:${remote.application_uid}`] =
+          `${origin}/zephyr-manifest.json`;
       } catch {
         // If URL parsing fails, skip the env:vars entry
         console.warn(
@@ -81,7 +82,10 @@ ${defaultExport}
 `;
 }
 
-export function buildEnvImportMapScript(appUid: string, remotes: RemoteEntry[]): string {
+export function buildEnvImportMapScript(
+  appUid: string,
+  remotes: RemoteEntry[]
+): string {
   const importMap = {
     imports: buildEnvImportMap(appUid, remotes),
   };

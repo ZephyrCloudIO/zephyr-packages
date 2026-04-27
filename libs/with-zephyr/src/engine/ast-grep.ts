@@ -103,7 +103,11 @@ function sliceMultiMatchText(source: string, nodes: SgNode[]): string {
   return source.slice(start, end);
 }
 
-function renderRewriteTemplate(node: SgNode, source: string, rewrite: string): string {
+function renderRewriteTemplate(
+  node: SgNode,
+  source: string,
+  rewrite: string
+): string {
   return rewrite.replace(
     /\$\$\$([A-Za-z_]\w*)|\$([A-Za-z_]\w*)/g,
     (_, multiName: string | undefined, singleName: string | undefined) => {
@@ -142,7 +146,9 @@ export function searchWithAstGrep(options: AstGrepRunOptions): AstGrepResult {
   }
 }
 
-export function findFirstMatchTextWithAstGrep(options: AstGrepRunOptions): string | null {
+export function findFirstMatchTextWithAstGrep(
+  options: AstGrepRunOptions
+): string | null {
   const language = options.language ?? detectLanguage(options.filePath);
   const source = fs.readFileSync(options.filePath, 'utf8');
   const { parse } = getAstGrepRuntime();
@@ -156,7 +162,9 @@ export function findFirstMatchTextWithAstGrep(options: AstGrepRunOptions): strin
   return source.slice(match.range().start.index, match.range().end.index);
 }
 
-export function rewriteWithAstGrep(options: AstGrepRewriteOptions): AstGrepResult {
+export function rewriteWithAstGrep(
+  options: AstGrepRewriteOptions
+): AstGrepResult {
   try {
     const language = options.language ?? detectLanguage(options.filePath);
     const source = fs.readFileSync(options.filePath, 'utf8');

@@ -3,11 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2020",
-    "lib": [
-      "ES2020",
-      "ES2021",
-      "DOM"
-    ],
+    "lib": ["ES2020", "ES2021", "DOM"],
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -17,18 +13,10 @@
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "composite": true,
     "incremental": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "rstest.config.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["rstest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }

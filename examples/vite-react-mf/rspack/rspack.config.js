@@ -19,7 +19,8 @@ module.exports = withZephyr()({
     watchFiles: [path.resolve(__dirname, 'src')],
     onListening: function (devServer) {
       const address = devServer.server?.address();
-      const port = typeof address === 'string' ? address.split(':').pop() : address?.port;
+      const port =
+        typeof address === 'string' ? address.split(':').pop() : address?.port;
 
       printCompilationMessage('compiling', port);
 

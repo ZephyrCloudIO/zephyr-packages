@@ -9,6 +9,7 @@
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
+    "tslib": "catalog:typescript",
     "zephyr-rspack-plugin": "workspace:*"
   }
 }

@@ -3,7 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { ze_log } from '../logging/debug';
 
-export type MonorepoType = 'pnpm' | 'yarn' | 'npm' | 'lerna' | 'nx' | 'rush' | 'none';
+export type MonorepoType =
+  | 'pnpm'
+  | 'yarn'
+  | 'npm'
+  | 'lerna'
+  | 'nx'
+  | 'rush'
+  | 'none';
 
 export interface MonorepoInfo {
   type: MonorepoType;
@@ -62,7 +69,9 @@ export async function detectMonorepo(startPath: string): Promise<MonorepoInfo> {
             `Found ${packageJson.packageManager?.startsWith('yarn') ? 'yarn' : 'npm'} workspaces at ${packageJsonPath}`
           );
           return {
-            type: packageJson.packageManager?.startsWith('yarn') ? 'yarn' : 'npm',
+            type: packageJson.packageManager?.startsWith('yarn')
+              ? 'yarn'
+              : 'npm',
             root: currentDir,
             configFile: packageJsonPath,
             workspaces: Array.isArray(packageJson.workspaces)
@@ -116,7 +125,10 @@ export async function getMonorepoRootPackageJson(
     const content = await readFile(packageJsonPath, 'utf8');
     return JSON.parse(content);
   } catch (error) {
-    ze_log.misc(`Error reading root package.json at ${packageJsonPath}:`, error);
+    ze_log.misc(
+      `Error reading root package.json at ${packageJsonPath}:`,
+      error
+    );
     return null;
   }
 }

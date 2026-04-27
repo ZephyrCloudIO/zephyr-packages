@@ -3,7 +3,9 @@ import { handleGlobalError } from './handle-global-error';
 import * as logEvent from '../logging/ze-log-event';
 
 const jest = rs;
-const mockLogFn = jest.spyOn(logEvent, 'logFn').mockImplementation(() => undefined);
+const mockLogFn = jest
+  .spyOn(logEvent, 'logFn')
+  .mockImplementation(() => undefined);
 
 describe('handleGlobalError', () => {
   const originalEnv = process.env['ZE_FAIL_BUILD'];

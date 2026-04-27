@@ -31,7 +31,10 @@ import {
   installPackages as installPackagesDirect,
   isPackageInstalled,
 } from './package-manager.js';
-import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
+import {
+  bootstrapNextJsVinext,
+  type PackageRequirement,
+} from './nextjs-vinext.js';
 import { bootstrapSlidevVite } from './slidev-vite.js';
 import { applyBundlerOperations, hasZephyrCall } from './operations.js';
 import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
@@ -157,7 +160,8 @@ function ensureZephyrImportOrRequire(
       return { status: 'no-change' };
     }
 
-    const hasESMSyntax = content.includes('import ') || content.includes('export ');
+    const hasESMSyntax =
+      content.includes('import ') || content.includes('export ');
     const isCommonJS = filePath.endsWith('.js') && !hasESMSyntax;
 
     let nextContent = content;
@@ -170,7 +174,8 @@ function ensureZephyrImportOrRequire(
       const firstImportMatch = content.match(/^\s*import[^\n]*\n?/m);
 
       if (firstImportMatch && firstImportMatch.index !== undefined) {
-        const insertionPoint = firstImportMatch.index + firstImportMatch[0].length;
+        const insertionPoint =
+          firstImportMatch.index + firstImportMatch[0].length;
         nextContent = `${content.slice(0, insertionPoint)}${importLine}\n${content.slice(insertionPoint)}`;
       } else {
         nextContent = `${importLine}\n${content}`;
@@ -181,7 +186,9 @@ function ensureZephyrImportOrRequire(
       fs.writeFileSync(filePath, nextContent);
     }
 
-    return nextContent === content ? { status: 'no-change' } : { status: 'changed' };
+    return nextContent === content
+      ? { status: 'no-change' }
+      : { status: 'changed' };
   } catch (error) {
     return {
       status: 'error',
@@ -201,7 +208,9 @@ function transformConfigFile(
 
   try {
     console.log(
-      chalk.blue(`Processing ${bundlerName} config: ${normalizePathForOutput(filePath)}`)
+      chalk.blue(
+        `Processing ${bundlerName} config: ${normalizePathForOutput(filePath)}`
+      )
     );
 
     const operationResult = applyBundlerOperations({
@@ -230,7 +239,9 @@ function transformConfigFile(
       return false;
     }
 
-    const importResult = ensureZephyrImportOrRequire(filePath, config, { dryRun });
+    const importResult = ensureZephyrImportOrRequire(filePath, config, {
+      dryRun,
+    });
     if (importResult.status === 'error') {
       console.error(
         chalk.red(
@@ -243,7 +254,9 @@ function transformConfigFile(
     }
 
     console.log(
-      chalk.green(`✓ Added Zephyr integration to ${normalizePathForOutput(filePath)}`)
+      chalk.green(
+        `✓ Added Zephyr integration to ${normalizePathForOutput(filePath)}`
+      )
     );
     return true;
   } catch (error) {
@@ -260,7 +273,9 @@ function transformConfigFile(
 function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const { dryRun = false, bundlers = null, installPackages = true } = options;
 
-  console.log(chalk.bold(`🚀 Zephyr Codemod - Adding Zephyr integration to configs`));
+  console.log(
+    chalk.bold(`🚀 Zephyr Codemod - Adding Zephyr integration to configs`)
+  );
   console.log(chalk.gray(`Directory: ${path.resolve(directory)}`));
 
   if (dryRun) {
@@ -294,7 +309,10 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         : 'Updated package.json scripts to vinext commands';
       console.log(chalk.green(`✓ ${message}`));
     }
-    if (nextJsBootstrap.createdFiles.length > 0 || nextJsBootstrap.updatedPackageJson) {
+    if (
+      nextJsBootstrap.createdFiles.length > 0 ||
+      nextJsBootstrap.updatedPackageJson
+    ) {
       console.log();
     }
   }
@@ -314,7 +332,10 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         : 'Updated package.json name/version for Zephyr compatibility';
       console.log(chalk.green(`✓ ${message}`));
     }
-    if (slidevBootstrap.createdFiles.length > 0 || slidevBootstrap.updatedPackageJson) {
+    if (
+      slidevBootstrap.createdFiles.length > 0 ||
+      slidevBootstrap.updatedPackageJson
+    ) {
       console.log();
     }
   }
@@ -374,7 +395,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     packagesToProcess.push({ filePath, bundlerName, config });
   }
 
-  console.log(chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`));
+  console.log(
+    chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`)
+  );
   const missingPackages: PackageRequirement[] = [];
   if (installPackages) {
     for (const packageRequirement of requiredPackages.values()) {
@@ -428,7 +451,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         );
         if (added) {
           stagedPackages.push(packageRequirement);
-          console.log(chalk.green(`✓ Added ${packageRequirement.name} to package.json`));
+          console.log(
+            chalk.green(`✓ Added ${packageRequirement.name} to package.json`)
+          );
         } else {
           fallbackPackages.push(packageRequirement);
           console.log(
@@ -441,7 +466,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     } else {
       fallbackPackages.push(...missingPackages);
       console.log(
-        chalk.yellow('No package.json found; falling back to direct package manager add')
+        chalk.yellow(
+          'No package.json found; falling back to direct package manager add'
+        )
       );
     }
 
@@ -450,7 +477,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       if (installSuccess) {
         console.log(chalk.green('✓ Installed dependencies from package.json'));
       } else {
-        console.log(chalk.red('✗ Failed to install dependencies from package.json'));
+        console.log(
+          chalk.red('✗ Failed to install dependencies from package.json')
+        );
       }
     }
 
@@ -472,7 +501,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         if (success) {
           console.log(chalk.green(`✓ Installed ${prodPackages.join(', ')}`));
         } else {
-          console.log(chalk.red(`✗ Failed to install ${prodPackages.join(', ')}`));
+          console.log(
+            chalk.red(`✗ Failed to install ${prodPackages.join(', ')}`)
+          );
         }
       }
 
@@ -486,7 +517,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         if (success) {
           console.log(chalk.green(`✓ Installed ${devPackages.join(', ')}`));
         } else {
-          console.log(chalk.red(`✗ Failed to install ${devPackages.join(', ')}`));
+          console.log(
+            chalk.red(`✗ Failed to install ${devPackages.join(', ')}`)
+          );
         }
       }
     }
@@ -511,7 +544,9 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 // CLI setup
 program
   .name('zephyr-codemod')
-  .description('Automatically add Zephyr integration to supported project configs')
+  .description(
+    'Automatically add Zephyr integration to supported project configs'
+  )
   .version('1.0.2')
   .argument('[directory]', 'Directory to search for config files', '.')
   .option('-d, --dry-run', 'Show what would be changed without modifying files')

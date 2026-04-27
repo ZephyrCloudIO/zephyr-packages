@@ -17,7 +17,8 @@ export const zephyrRspressSSGPlugin = <
   config: TConfig,
   options?: { hooks?: ZephyrBuildHooks }
 ): RspressPlugin<TConfig> => {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
   const root = resolve(config.root ?? '');
   const outDir = resolve(config.outDir ?? './doc_build');
 

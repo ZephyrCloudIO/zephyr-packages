@@ -42,7 +42,8 @@ rs.mock('zephyr-agent', () => ({
   ZeErrors: {
     ERR_UNKNOWN: 'ERR_UNKNOWN',
   },
-  createManifestContent: (...args: unknown[]) => createManifestContentMock(...args),
+  createManifestContent: (...args: unknown[]) =>
+    createManifestContentMock(...args),
   handleGlobalError: (...args: unknown[]) => handleGlobalErrorMock(...args),
   logFn: (...args: unknown[]) => logFnMock(...args),
 }));
@@ -148,11 +149,18 @@ describe('withZephyr integration', () => {
       const mockNext = rs.fn();
       const mockMiddleware = rs.fn();
 
-      result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(mockMiddleware, {})(
+        mockReq,
+        mockRes,
+        mockNext
+      );
 
       await new Promise(setImmediate);
 
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Content-Type', 'application/json');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/json'
+      );
       expect(mockRes.end).toHaveBeenCalled();
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -172,7 +180,11 @@ describe('withZephyr integration', () => {
       const mockNext = rs.fn();
       const mockMiddleware = rs.fn();
 
-      result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(mockMiddleware, {})(
+        mockReq,
+        mockRes,
+        mockNext
+      );
 
       await new Promise(setImmediate);
 
@@ -192,7 +204,11 @@ describe('withZephyr integration', () => {
       const mockNext = rs.fn();
       const mockMiddleware = rs.fn();
 
-      result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(mockMiddleware, {})(
+        mockReq,
+        mockRes,
+        mockNext
+      );
 
       expect(mockMiddleware).toHaveBeenCalledWith(mockReq, mockRes, mockNext);
     });
@@ -209,7 +225,11 @@ describe('withZephyr integration', () => {
       const mockNext = rs.fn();
       const mockMiddleware = rs.fn();
 
-      result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(mockMiddleware, {})(
+        mockReq,
+        mockRes,
+        mockNext
+      );
 
       await new Promise(setImmediate);
 
@@ -228,11 +248,18 @@ describe('withZephyr integration', () => {
       const mockNext = rs.fn();
       const mockMiddleware = rs.fn();
 
-      result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(mockMiddleware, {})(
+        mockReq,
+        mockRes,
+        mockNext
+      );
 
       await new Promise(setImmediate);
 
-      expect(mockRes.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        'no-cache'
+      );
     });
   });
 
@@ -244,9 +271,9 @@ describe('withZephyr integration', () => {
       });
       const result = await enhancer(baseMetroConfig);
 
-      expect((result.transformer as any).zephyrTransformerOptions?.manifestPath).toBe(
-        '/custom-path.json'
-      );
+      expect(
+        (result.transformer as any).zephyrTransformerOptions?.manifestPath
+      ).toBe('/custom-path.json');
     });
 
     it('should pass entry files to transformer', async () => {
@@ -256,16 +283,17 @@ describe('withZephyr integration', () => {
       });
       const result = await enhancer(baseMetroConfig);
 
-      expect((result.transformer as any).zephyrTransformerOptions?.entryFiles).toEqual([
-        'main.tsx',
-        'App.tsx',
-      ]);
+      expect(
+        (result.transformer as any).zephyrTransformerOptions?.entryFiles
+      ).toEqual(['main.tsx', 'App.tsx']);
     });
   });
 
   describe('error handling', () => {
     it('should return original config on ZephyrEngine.create error', async () => {
-      zephyrEngineCreateMock.mockRejectedValueOnce(new Error('Engine init failed'));
+      zephyrEngineCreateMock.mockRejectedValueOnce(
+        new Error('Engine init failed')
+      );
 
       const enhancer = withZephyr({ name: 'TestApp' });
       const result = await enhancer(baseMetroConfig);
@@ -322,7 +350,11 @@ describe('withZephyr integration', () => {
       const mockRes = {};
       const mockNext = rs.fn();
 
-      result.server?.enhanceMiddleware?.(rs.fn(), {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(rs.fn(), {})(
+        mockReq,
+        mockRes,
+        mockNext
+      );
 
       expect(existingMiddleware).toHaveBeenCalled();
     });

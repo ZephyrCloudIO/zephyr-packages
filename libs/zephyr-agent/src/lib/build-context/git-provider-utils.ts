@@ -54,11 +54,17 @@ function extractEnterpriseOwner(parsed: gitUrlParse.GitUrl): string {
 }
 
 /** Extracts owner from standard domain providers with special handling */
-function extractStandardOwner(parsed: gitUrlParse.GitUrl, provider: string): string {
+function extractStandardOwner(
+  parsed: gitUrlParse.GitUrl,
+  provider: string
+): string {
   const rawOwner = parsed.owner.toLowerCase();
 
   // For GitLab and Bitbucket with subgroups, extract just the first part as the owner
-  if ((provider === 'gitlab' || provider === 'bitbucket') && rawOwner.includes('/')) {
+  if (
+    (provider === 'gitlab' || provider === 'bitbucket') &&
+    rawOwner.includes('/')
+  ) {
     return rawOwner.split('/')[0];
   }
 

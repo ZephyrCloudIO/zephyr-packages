@@ -1,5 +1,8 @@
 import { ze_log } from 'zephyr-agent';
-import type { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
+import type {
+  ModuleFederationPlugin,
+  XPackConfiguration,
+} from '../xpack.types';
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
 
 export function iterateFederationConfig<Compiler, K = ModuleFederationPlugin>(

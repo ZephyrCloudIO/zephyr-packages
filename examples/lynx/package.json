@@ -1,11 +1,12 @@
 {
   "name": "lynx",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "build": "rspeedy build",
     "dev": "rspeedy dev",
-    "format": "prettier --write .",
+    "format": "oxfmt . --write",
     "preview": "rspeedy preview"
   },
   "dependencies": {
@@ -17,12 +18,10 @@
     "@lynx-js/rspeedy": "^0.11.2",
     "@lynx-js/types": "^3.4.11",
     "@types/react": "catalog:react18",
-    "prettier": "^3.5.3",
     "typescript": "catalog:typescript",
     "zephyr-rspack-plugin": "workspace:*"
   },
   "engines": {
     "node": ">=18"
-  },
-  "private": true
+  }
 }

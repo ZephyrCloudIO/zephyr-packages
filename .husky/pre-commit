@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 
+pnpm format:check
 pnpm exec turbo lint --affected
 pnpm exec turbo test --affected

@@ -17,13 +17,16 @@ export interface ZephyrAstroOptions {
 }
 
 export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
   const hooks = options?.hooks;
 
   return {
     name: 'with-zephyr',
     hooks: {
-      'astro:config:done': async ({ config }: HookParameters<'astro:config:done'>) => {
+      'astro:config:done': async ({
+        config,
+      }: HookParameters<'astro:config:done'>) => {
         // config.root is a URL object, convert to file path
         const contextPath = fileURLToPath(config.root);
         // Initialize ZephyrEngine with Astro context
@@ -50,7 +53,10 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
 
           // Extract assets from params if available (Astro v5+), fallback to filesystem walking
           const assets = (params as AstroBuildDoneParams).assets;
-          const assetsMap = await extractAstroAssetsFromBuildHook(assets, outputPath);
+          const assetsMap = await extractAstroAssetsFromBuildHook(
+            assets,
+            outputPath
+          );
 
           // Upload assets and build stats
           await zephyr_engine.upload_assets({

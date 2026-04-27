@@ -9,7 +9,9 @@ type UploadStrategy = (
   upload_options: UploadOptions
 ) => Promise<string>;
 
-export function getUploadStrategy(platform: UploadProviderType): UploadStrategy {
+export function getUploadStrategy(
+  platform: UploadProviderType
+): UploadStrategy {
   switch (platform) {
     case UploadProviderType.CLOUDFLARE:
     case UploadProviderType.NETLIFY:

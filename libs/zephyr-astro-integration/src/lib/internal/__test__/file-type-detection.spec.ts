@@ -51,23 +51,26 @@ describe('File Type Detection', () => {
     ['file.', 'application/octet-stream'],
   ];
 
-  test.each(testCases)('should detect %s as %s', async (filename, expectedType) => {
-    mockReadDirRecursiveWithContents.mockResolvedValue([
-      {
-        fullPath: `/dist/${filename}`,
-        relativePath: filename,
-        content: Buffer.from('test content'),
-      },
-    ]);
+  test.each(testCases)(
+    'should detect %s as %s',
+    async (filename, expectedType) => {
+      mockReadDirRecursiveWithContents.mockResolvedValue([
+        {
+          fullPath: `/dist/${filename}`,
+          relativePath: filename,
+          content: Buffer.from('test content'),
+        },
+      ]);
 
-    await extractAstroAssetsMap('/dist');
+      await extractAstroAssetsMap('/dist');
 
-    const assets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
-      string,
-      { type: string }
-    >;
-    expect(assets[filename]).toHaveProperty('type', expectedType);
-  });
+      const assets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
+        string,
+        { type: string }
+      >;
+      expect(assets[filename]).toHaveProperty('type', expectedType);
+    }
+  );
 
   it('handles files with multiple extensions correctly', async () => {
     const testFiles = [

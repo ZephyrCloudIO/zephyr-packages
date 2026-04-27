@@ -37,7 +37,10 @@ export function inject_resolved_remotes_map(
 
     // Replace the placeholder with actual JSON data
     // The placeholder is already quoted as '"__REMOTE_MAP__"' so we replace the whole thing
-    const updatedCode = code.replace(REMOTE_MAP_TEMPLATE, JSON.stringify(remoteMap));
+    const updatedCode = code.replace(
+      REMOTE_MAP_TEMPLATE,
+      JSON.stringify(remoteMap)
+    );
 
     const endTime = Date.now();
     ze_log.remotes(`inject_resolved_remotes_map took ${endTime - startTime}ms`);

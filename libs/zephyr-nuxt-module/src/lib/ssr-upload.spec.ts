@@ -53,7 +53,11 @@ function makeEngine() {
 describe('resolveAssetSources', () => {
   it('uses only outputDir when publicDir is inside outputDir', () => {
     expect(
-      resolveAssetSources('ssr', '/workspace/.output', '/workspace/.output/public')
+      resolveAssetSources(
+        'ssr',
+        '/workspace/.output',
+        '/workspace/.output/public'
+      )
     ).toEqual([{ dir: '/workspace/.output' }]);
   });
 
@@ -76,7 +80,9 @@ describe('resolveAssetSources', () => {
 describe('createUploadRunner', () => {
   beforeEach(() => {
     rs.clearAllMocks();
-    mockedBuildAssetsMap.mockImplementation((assets: Record<string, Buffer>) => assets);
+    mockedBuildAssetsMap.mockImplementation(
+      (assets: Record<string, Buffer>) => assets
+    );
     mockedZeBuildDashData.mockResolvedValue({});
   });
 
@@ -122,25 +128,27 @@ describe('createUploadRunner', () => {
       initEngine: rs.fn(),
     });
 
-    mockedReadDirRecursiveWithContents.mockImplementation(async (dir: string) => {
-      if (dir === outputDir) {
-        return [
-          {
-            relativePath: 'server/index.mjs',
-            content: Buffer.from('server'),
-          },
-        ];
+    mockedReadDirRecursiveWithContents.mockImplementation(
+      async (dir: string) => {
+        if (dir === outputDir) {
+          return [
+            {
+              relativePath: 'server/index.mjs',
+              content: Buffer.from('server'),
+            },
+          ];
+        }
+        if (dir === publicDir) {
+          return [
+            {
+              relativePath: 'app.js',
+              content: Buffer.from('public'),
+            },
+          ];
+        }
+        return [];
       }
-      if (dir === publicDir) {
-        return [
-          {
-            relativePath: 'app.js',
-            content: Buffer.from('public'),
-          },
-        ];
-      }
-      return [];
-    });
+    );
 
     await runner();
 

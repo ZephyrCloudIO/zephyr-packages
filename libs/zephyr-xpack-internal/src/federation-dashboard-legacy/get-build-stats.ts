@@ -2,7 +2,11 @@ import type { ZephyrEngine } from 'zephyr-agent';
 import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { extractFederatedConfig } from '../xpack-extract/extract-federation-config';
-import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
+import type {
+  ModuleFederationPlugin,
+  XStats,
+  XStatsCompilation,
+} from '../xpack.types';
 import { FederationDashboardPlugin } from './utils/federation-dashboard-plugin/FederationDashboardPlugin';
 
 interface KnownAgentProps {
@@ -63,7 +67,9 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     ? pluginOptions.mfConfig[0]
     : pluginOptions.mfConfig;
 
-  const { name, filename } = mfConfig ? (extractFederatedConfig(mfConfig) ?? {}) : {};
+  const { name, filename } = mfConfig
+    ? (extractFederatedConfig(mfConfig) ?? {})
+    : {};
   const remotes = ze_engine.federated_dependencies;
 
   const data_overrides = {

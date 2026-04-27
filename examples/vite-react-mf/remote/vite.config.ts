@@ -1,5 +1,8 @@
 import react from '@vitejs/plugin-react';
-import { federation, type ModuleFederationOptions } from '@module-federation/vite';
+import {
+  federation,
+  type ModuleFederationOptions,
+} from '@module-federation/vite';
 import { defineConfig } from 'vite';
 import { withZephyr } from 'vite-plugin-zephyr';
 

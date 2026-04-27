@@ -81,7 +81,9 @@ export class FederationDashboardPlugin {
 
     new AddRuntimeRequirementToPromiseExternal().apply(compiler);
 
-    const FederationPlugin = compiler.options.plugins.find(isModuleFederationPlugin);
+    const FederationPlugin = compiler.options.plugins.find(
+      isModuleFederationPlugin
+    );
 
     // todo: valorkin fixes
     this._options.standalone = typeof FederationPlugin === 'undefined';
@@ -286,7 +288,10 @@ export class FederationDashboardPlugin {
       federationRemoteEntry: RemoteEntryChunk,
       buildHash: stats_json.hash,
       environment: this._options.environment || 'development', // 'development' if not specified
-      version: computeVersionStrategy(stats_json, this._options.versionStrategy),
+      version: computeVersionStrategy(
+        stats_json,
+        this._options.versionStrategy
+      ),
       posted: this._options.posted || new Date(), // Date.now() if not specified
       group: this._options.group || 'default', // 'default' if not specified
       sha: gitSha,

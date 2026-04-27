@@ -11,7 +11,9 @@ rs.mock('jose', () => ({
 
 describe('auth/login', () => {
   // Mock implementation
-  const mockDecodeJwt = jose.decodeJwt as jest.MockedFunction<typeof jose.decodeJwt>;
+  const mockDecodeJwt = jose.decodeJwt as jest.MockedFunction<
+    typeof jose.decodeJwt
+  >;
 
   beforeEach(() => {
     jest.resetAllMocks();

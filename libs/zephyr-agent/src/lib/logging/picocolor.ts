@@ -20,8 +20,12 @@ import { is_debug_enabled } from './debug-enabled';
 import { isatty } from 'node:tty';
 
 export const isTTY =
-  (!is_debug_enabled && !process.env['NO_COLOR'] && process.env['FORCE_COLOR']) ||
-  (isatty(process.stdout.fd) && !process.env['CI'] && process.env['TERM'] !== 'dumb');
+  (!is_debug_enabled &&
+    !process.env['NO_COLOR'] &&
+    process.env['FORCE_COLOR']) ||
+  (isatty(process.stdout.fd) &&
+    !process.env['CI'] &&
+    process.env['TERM'] !== 'dumb');
 
 // const enabled = env
 
@@ -34,7 +38,9 @@ const replaceClose = (
   const start = str.substring(0, index) + replace;
   const end = str.substring(index + close.length);
   const nextIndex = end.indexOf(close);
-  return ~nextIndex ? start + replaceClose(end, close, replace, nextIndex) : start + end;
+  return ~nextIndex
+    ? start + replaceClose(end, close, replace, nextIndex)
+    : start + end;
 };
 
 const formatter = (open: string, close: string, replace = open) => {

@@ -4,8 +4,7 @@
     "module": "es2022",
     "target": "ES2022",
     "outDir": "../../dist/out-tsc",
-    "types": [
-      "node"]
+    "types": ["node"]
   },
   "exclude": [
     "rstest.config.ts",

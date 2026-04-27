@@ -2,7 +2,11 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as util from 'node:util';
-import { type FindTemplates, formatString, stripAnsi } from 'zephyr-edge-contract';
+import {
+  type FindTemplates,
+  formatString,
+  stripAnsi,
+} from 'zephyr-edge-contract';
 import { ze_log } from '../logging';
 import {
   blackBright,
@@ -192,7 +196,9 @@ Or join our ${blue('Discord')} server at ${cyanBright(discordUrl)}
       inspected !== '{}' && inspected,
 
       tmpFile &&
-        blackBright(`Complete error details available at ${whiteBright(tmpFile)}`),
+        blackBright(
+          `Complete error details available at ${whiteBright(tmpFile)}`
+        ),
     ];
 
     return messages

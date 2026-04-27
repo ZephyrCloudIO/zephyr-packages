@@ -6,7 +6,9 @@ export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
   return buildAssetsMap(assets, extractBuffer, getAssetType);
 }
 
-const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {
+const extractBuffer = (
+  asset: OutputChunk | OutputAsset
+): string | undefined => {
   switch (asset.type) {
     case 'chunk':
       return asset.code;

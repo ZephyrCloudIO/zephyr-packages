@@ -53,7 +53,9 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
     const reference_parts = reference.split('@');
     // consider scoped application names
     // e.g.: @app-zephyr/host@latest
-    dependency.app_uid = reference_parts.slice(0, reference_parts.length - 1).join('@');
+    dependency.app_uid = reference_parts
+      .slice(0, reference_parts.length - 1)
+      .join('@');
     dependency.version = reference_parts[reference_parts.length - 1];
   }
   // If it's a semver specification (contains ^, ~, >, <, or =)

@@ -44,7 +44,9 @@ describe('uploadOutputToZephyr', () => {
         ssr: false,
       },
       upload_assets: rs.fn().mockImplementation(async ({ hooks }) => {
-        await hooks?.onDeployComplete?.({ url: 'https://example.zephyrcloud.app' });
+        await hooks?.onDeployComplete?.({
+          url: 'https://example.zephyrcloud.app',
+        });
       }),
     };
 

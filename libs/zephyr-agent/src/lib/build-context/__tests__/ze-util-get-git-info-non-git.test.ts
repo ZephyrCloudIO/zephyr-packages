@@ -58,7 +58,9 @@ rs.mock('../../auth/login', () => ({
 }));
 
 rs.mock('../detect-monorepo', () => ({
-  detectMonorepo: rs.fn().mockResolvedValue({ type: 'none', root: process.cwd() }),
+  detectMonorepo: rs
+    .fn()
+    .mockResolvedValue({ type: 'none', root: process.cwd() }),
   getMonorepoRootPackageJson: rs.fn().mockResolvedValue(null),
 }));
 
@@ -98,14 +100,21 @@ describe('getGitInfo - non-git environments', () => {
         } else if (cmd.includes('git config --global user.email')) {
           callback(null, { stdout: 'global@example.com\n', stderr: '' });
         } else {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         }
       } else {
         // Mock promisified exec
         if (cmd.includes('git config --global user.name')) {
           return Promise.resolve({ stdout: 'Global User\n', stderr: '' });
         } else if (cmd.includes('git config --global user.email')) {
-          return Promise.resolve({ stdout: 'global@example.com\n', stderr: '' });
+          return Promise.resolve({
+            stdout: 'global@example.com\n',
+            stderr: '',
+          });
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }
@@ -125,7 +134,11 @@ describe('getGitInfo - non-git environments', () => {
   it('should fall back to API user info when neither local nor global git available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+        callback(
+          new Error('Not a git repository'),
+          '',
+          'fatal: not a git repository'
+        );
       } else {
         return Promise.reject(new Error('Not a git repository'));
       }
@@ -198,7 +211,11 @@ describe('getGitInfo - non-git environments', () => {
   it('should use API user org and package.json project when git is not available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+        callback(
+          new Error('Not a git repository'),
+          '',
+          'fatal: not a git repository'
+        );
       } else {
         return Promise.reject(new Error('Not a git repository'));
       }
@@ -224,7 +241,11 @@ describe('getGitInfo - non-git environments', () => {
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }
@@ -252,7 +273,11 @@ describe('getGitInfo - non-git environments', () => {
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }
@@ -280,7 +305,11 @@ describe('getGitInfo - non-git environments', () => {
 
       mockExec.mockImplementation((cmd, callback) => {
         if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+          callback(
+            new Error('Not a git repository'),
+            '',
+            'fatal: not a git repository'
+          );
         } else {
           return Promise.reject(new Error('Not a git repository'));
         }

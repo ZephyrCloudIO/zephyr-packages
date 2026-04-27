@@ -1,6 +1,11 @@
 {
   "name": "vite_webpack",
   "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Jack Herrington",
+    "email": "jherr@pobox.com"
+  },
   "scripts": {
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
@@ -8,38 +13,33 @@
     "start": "webpack serve --mode development",
     "start:live": "webpack serve --mode development --live-reload --hot"
   },
-  "license": "MIT",
-  "author": {
-    "name": "Jack Herrington",
-    "email": "jherr@pobox.com"
+  "dependencies": {
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
     "@babel/core": "catalog:babel",
-    "@babel/runtime": "catalog:babel",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-transform-runtime": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "catalog:babel",
     "@babel/preset-typescript": "^7.26.0",
+    "@babel/runtime": "catalog:babel",
+    "@module-federation/enhanced": "catalog:module-federation",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "autoprefixer": "catalog:vite7",
     "babel-loader": "^10.0.0",
     "css-loader": "^7.1.2",
+    "dotenv-webpack": "^8.1.0",
     "html-webpack-plugin": "^5.6.3",
     "postcss": "catalog:postcss",
     "postcss-loader": "catalog:postcss",
     "style-loader": "^4.0.0",
+    "tailwindcss": "catalog:tailwind",
     "typescript": "catalog:typescript",
     "webpack": "catalog:webpack5",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.0",
-    "dotenv-webpack": "^8.1.0",
-    "tailwindcss": "catalog:tailwind",
-    "@module-federation/enhanced": "catalog:module-federation"
-  },
-  "dependencies": {
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
+    "webpack-dev-server": "^5.2.0"
   }
 }

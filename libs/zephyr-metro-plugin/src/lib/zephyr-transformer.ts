@@ -1,4 +1,7 @@
-import type { JsTransformOptions, JsTransformerConfig } from 'metro-transform-worker';
+import type {
+  JsTransformOptions,
+  JsTransformerConfig,
+} from 'metro-transform-worker';
 import { ze_log } from 'zephyr-agent';
 // Note: Global type declarations are in ./global.d.ts (ambient, no runtime import needed)
 
@@ -10,11 +13,19 @@ interface ZephyrTransformerOptions {
 }
 
 /** Default entry file patterns if none specified */
-const DEFAULT_ENTRY_FILES = ['index.js', 'index.ts', 'index.tsx', 'App.js', 'App.tsx'];
+const DEFAULT_ENTRY_FILES = [
+  'index.js',
+  'index.ts',
+  'index.tsx',
+  'App.js',
+  'App.tsx',
+];
 
 /** Metro transformer that injects Zephyr runtime capabilities */
 export async function transform(
-  config: JsTransformerConfig & { zephyrTransformerOptions?: ZephyrTransformerOptions },
+  config: JsTransformerConfig & {
+    zephyrTransformerOptions?: ZephyrTransformerOptions;
+  },
   projectRoot: string,
   filename: string,
   data: Buffer,
@@ -26,7 +37,13 @@ export async function transform(
 }> {
   // Use default Metro transformer first
   const upstream = require('metro-react-native-babel-transformer');
-  const result = await upstream.transform(config, projectRoot, filename, data, options);
+  const result = await upstream.transform(
+    config,
+    projectRoot,
+    filename,
+    data,
+    options
+  );
 
   // Get Zephyr transformer options from config
   const zephyrOptions = config.zephyrTransformerOptions;
@@ -37,7 +54,11 @@ export async function transform(
 
   if (shouldEnhance) {
     const manifestPath = zephyrOptions?.manifestPath || '/zephyr-manifest.json';
-    const enhancedCode = injectZephyrRuntime(result.code, filename, manifestPath);
+    const enhancedCode = injectZephyrRuntime(
+      result.code,
+      filename,
+      manifestPath
+    );
 
     return {
       ...result,

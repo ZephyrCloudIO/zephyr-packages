@@ -7,7 +7,7 @@ export default defineConfig({
   setupFiles: ['../../rstest.setup.ts'],
   coverage: {
     enabled: false,
-    provider: "istanbul",
+    provider: 'istanbul',
     reportsDirectory: '../../coverage/libs/zephyr-repack-plugin',
   },
 });

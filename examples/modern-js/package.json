@@ -8,16 +8,8 @@
     "start": "modern start",
     "serve": "modern serve",
     "new": "modern new",
-    "lint": "biome check",
+    "lint": "oxlint . --no-error-on-unmatched-pattern",
     "upgrade": "modern upgrade"
-  },
-  "engines": {
-    "node": ">=16.18.1"
-  },
-  "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true"
-    ]
   },
   "dependencies": {
     "@modern-js/plugin-ssg": "catalog:modernjs",
@@ -27,7 +19,6 @@
     "react-server-dom-webpack": "19.2.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
     "@modern-js/app-tools": "catalog:modernjs",
     "@modern-js/tsconfig": "catalog:modernjs",
     "@types/jest": "catalog:typescript",
@@ -39,5 +30,14 @@
     "typescript": "catalog:typescript",
     "zephyr-modernjs-plugin": "workspace:*",
     "zephyr-rspack-plugin": "workspace:*"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "oxfmt --write",
+      "oxlint --fix --no-error-on-unmatched-pattern"
+    ]
+  },
+  "engines": {
+    "node": ">=16.18.1"
   }
 }

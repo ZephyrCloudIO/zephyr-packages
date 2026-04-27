@@ -55,7 +55,9 @@ function resolveEnvironmentOutDir(
   return path.isAbsolute(outDir) ? outDir : path.resolve(config.root, outDir);
 }
 
-function getRscPluginManager(config: ResolvedConfig): RscPluginManagerLike | undefined {
+function getRscPluginManager(
+  config: ResolvedConfig
+): RscPluginManagerLike | undefined {
   const plugin = config.plugins.find((item) => item?.name === 'rsc:minimal') as
     | { api?: { manager?: RscPluginManagerLike } }
     | undefined;
@@ -64,7 +66,8 @@ function getRscPluginManager(config: ResolvedConfig): RscPluginManagerLike | und
 }
 
 export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
 
   const collectedAssets: Record<string, VinextBuildAsset> = {};
 
@@ -164,19 +167,23 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
       rscPluginManager = getRscPluginManager(config);
 
       const configuredEnvironments = Object.keys(
-        ((config as unknown as { environments?: Record<string, unknown> }).environments ??
-          {}) as Record<string, unknown>
+        ((config as unknown as { environments?: Record<string, unknown> })
+          .environments ?? {}) as Record<string, unknown>
       );
       hasSsrEnvironment = configuredEnvironments.includes('ssr');
       hasClientEnvironment = configuredEnvironments.includes('client');
       clientOutDir =
-        resolveEnvironmentOutDir(config, 'client') ?? path.join(outputDir, 'client');
+        resolveEnvironmentOutDir(config, 'client') ??
+        path.join(outputDir, 'client');
     },
 
     writeBundle(outputOptions, bundle) {
       try {
         const bundleDir = outputOptions.dir
-          ? path.resolve(resolvedConfig?.root ?? process.cwd(), outputOptions.dir)
+          ? path.resolve(
+              resolvedConfig?.root ?? process.cwd(),
+              outputOptions.dir
+            )
           : outputDir;
 
         collectAssetsFromBundle(
@@ -222,7 +229,11 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           return;
         }
 
-        await collectStaticClientAssets(collectedAssets, outputDir, clientOutDir);
+        await collectStaticClientAssets(
+          collectedAssets,
+          outputDir,
+          clientOutDir
+        );
 
         injectRscAssetsManifest(collectedAssets, outputDir, rscPluginManager);
 

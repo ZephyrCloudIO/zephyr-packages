@@ -13,7 +13,9 @@ export async function saveToken(token: string): Promise<void> {
   await persistentStorage.setItem(StorageKeys.ze_auth_token, token);
 }
 
-export async function getToken(git_config?: ZeGitInfo): Promise<string | undefined> {
+export async function getToken(
+  git_config?: ZeGitInfo
+): Promise<string | undefined> {
   const tokenFromEnv = getSecretToken();
   const server_token = getServerToken();
 

@@ -7,7 +7,10 @@ import type {
 import { extractFederatedConfig } from './extract-federation-config';
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
 
-export function iterateFederatedRemoteConfig<Compiler, K = XFederatedRemotesConfig>(
+export function iterateFederatedRemoteConfig<
+  Compiler,
+  K = XFederatedRemotesConfig,
+>(
   config: XPackConfiguration<Compiler>,
   for_remote: (
     federatedRemoteConfig: XFederatedRemotesConfig,

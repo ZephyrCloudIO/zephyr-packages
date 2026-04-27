@@ -42,7 +42,8 @@ const exec = promisify(execCB);
 runner('ZeAgent', () => {
   const gitUserName = 'Test User';
   const gitEmail = 'test.user@valor-software.com';
-  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
+  const gitRemoteOrigin =
+    'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
 
   const appOrg = 'testzephyrcloudio';
   const appProject = 'test-zephyr-mono';
@@ -151,7 +152,9 @@ runner('ZeAgent', () => {
   );
 });
 
-async function _loadAppConfig(application_uid: string): Promise<ZeApplicationConfig> {
+async function _loadAppConfig(
+  application_uid: string
+): Promise<ZeApplicationConfig> {
   const url = new URL(
     `/v2/builder-packages-api/application-config`,
     ZEPHYR_API_ENDPOINT()

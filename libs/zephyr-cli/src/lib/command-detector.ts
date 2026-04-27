@@ -67,7 +67,10 @@ function findArgValue(args: string[], ...flags: string[]): string | null {
  * @returns The common ancestor path, or null if paths are empty or no common ancestor
  *   within project root
  */
-export function findCommonAncestor(paths: string[], projectRoot: string): string | null {
+export function findCommonAncestor(
+  paths: string[],
+  projectRoot: string
+): string | null {
   if (paths.length === 0) {
     return null;
   }
@@ -184,7 +187,13 @@ export async function detectCommand(
 
   // Detect npm/yarn/pnpm commands
   if (['npm', 'yarn', 'pnpm'].includes(command)) {
-    return await detectPackageManagerCommand(command, args, cwd, warnings, depth);
+    return await detectPackageManagerCommand(
+      command,
+      args,
+      cwd,
+      warnings,
+      depth
+    );
   }
 
   // Detect tsgo (TypeScript compiler)
@@ -259,7 +268,9 @@ async function detectPackageManagerCommand(
   }
 
   if (!scriptName || !packageJson.scripts?.[scriptName]) {
-    warnings.push(`Script "${scriptName || 'unknown'}" not found in package.json`);
+    warnings.push(
+      `Script "${scriptName || 'unknown'}" not found in package.json`
+    );
     return {
       tool: command,
       configFile: join(cwd, 'package.json'),
@@ -343,7 +354,9 @@ async function detectPackageManagerCommand(
 
     return detected;
   } catch (error) {
-    warnings.push(`Failed to parse package.json script "${scriptName}": ${script}`);
+    warnings.push(
+      `Failed to parse package.json script "${scriptName}": ${script}`
+    );
     warnings.push(`Parse error: ${(error as Error).message}`);
 
     return {
@@ -481,7 +494,10 @@ async function detectRollupCommand(
   };
 }
 
-function detectEsbuildCommand(args: string[], warnings: string[]): DetectedCommand {
+function detectEsbuildCommand(
+  args: string[],
+  warnings: string[]
+): DetectedCommand {
   // Look for --outdir or --outfile in args
   let outputDir: string | null = null;
 
@@ -492,7 +508,10 @@ function detectEsbuildCommand(args: string[], warnings: string[]): DetectedComma
     outputDir = outdir;
   } else if (outfile) {
     // Extract directory from outfile
-    const lastSlash = Math.max(outfile.lastIndexOf('/'), outfile.lastIndexOf('\\'));
+    const lastSlash = Math.max(
+      outfile.lastIndexOf('/'),
+      outfile.lastIndexOf('\\')
+    );
     outputDir = lastSlash !== -1 ? outfile.substring(0, lastSlash) : '.';
   }
 

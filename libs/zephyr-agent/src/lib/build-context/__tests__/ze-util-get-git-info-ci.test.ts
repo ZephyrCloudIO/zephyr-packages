@@ -52,7 +52,11 @@ describe('getGitInfo - CI environments', () => {
   it('should fail immediately in CI when git info is not available', async () => {
     mockExec.mockImplementation((cmd, callback) => {
       if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+        callback(
+          new Error('Not a git repository'),
+          '',
+          'fatal: not a git repository'
+        );
       } else {
         return Promise.reject(new Error('Not a git repository'));
       }

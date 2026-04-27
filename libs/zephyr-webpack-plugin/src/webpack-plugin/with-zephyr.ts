@@ -1,5 +1,10 @@
 import type { Configuration } from 'webpack';
-import { getGlobal, handleGlobalError, ze_log, ZephyrEngine } from 'zephyr-agent';
+import {
+  getGlobal,
+  handleGlobalError,
+  ze_log,
+  ZephyrEngine,
+} from 'zephyr-agent';
 import {
   extractFederatedDependencyPairs,
   extractLibraryType,
@@ -34,12 +39,17 @@ async function _zephyr_configuration(
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);
-    const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
-      dependencyPairs,
-      extractLibraryType(config.output?.library)
-    );
+    const resolved_dependency_pairs =
+      await zephyr_engine.resolve_remote_dependencies(
+        dependencyPairs,
+        extractLibraryType(config.output?.library)
+      );
 
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    mutWebpackFederatedRemotesConfig(
+      zephyr_engine,
+      config,
+      resolved_dependency_pairs
+    );
 
     const mfConfig = makeCopyOfModuleFederationOptions(config);
 

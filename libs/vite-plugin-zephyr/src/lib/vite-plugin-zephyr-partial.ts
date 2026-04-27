@@ -1,16 +1,24 @@
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
 import type { ResolvedConfig } from 'vite';
-import { logFn, savePartialAssetMap, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import {
+  logFn,
+  savePartialAssetMap,
+  ZephyrEngine,
+  ZephyrError,
+} from 'zephyr-agent';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export function withZephyrPartial() {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
-  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
-    resolve_vite_internal_options = resolve;
-  });
+  const vite_internal_options_defer = new Promise<ZephyrInternalOptions>(
+    (resolve) => {
+      resolve_vite_internal_options = resolve;
+    }
+  );
 
   return {
     name: 'with-zephyr-partial',
@@ -29,7 +37,10 @@ export function withZephyrPartial() {
       });
     },
     // writeBundle is called after files are written to disk - safe to read from filesystem
-    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (
+      options: NormalizedOutputOptions,
+      bundle: OutputBundle
+    ) => {
       const vite_internal_options = await vite_internal_options_defer;
       vite_internal_options.dir = options.dir;
       vite_internal_options.assets = bundle;

@@ -1,25 +1,30 @@
 {
+  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "vite-plugin-vinext-zephyr",
   "version": "1.0.2",
   "description": "Vite plugin for deploying Vinext applications with Zephyr",
-  "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "keywords": [
-    "vite-plugin",
-    "vite",
+    "deploy",
     "vinext",
-    "zephyr",
-    "deploy"
+    "vite",
+    "vite-plugin",
+    "zephyr"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/vite-plugin-vinext-zephyr"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/vite-plugin-vinext-zephyr"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -30,16 +35,15 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
     "prepack": "pnpm build",
-    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
     "test": "rstest --passWithNoTests",
     "test:coverage": "rstest --coverage --passWithNoTests"
   },
@@ -49,10 +53,9 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "@rstest/core": "^0.7.7"
+    "@types/node": "catalog:typescript"
   },
   "peerDependencies": {
     "vite": "^7.0.0 || ^8.0.0"
@@ -63,9 +66,5 @@
       "type": "compatible",
       "versions": "^7.0.0 || ^8.0.0"
     }
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

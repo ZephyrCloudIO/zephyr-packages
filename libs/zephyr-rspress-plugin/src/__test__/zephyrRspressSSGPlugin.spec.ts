@@ -5,7 +5,9 @@ import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
 const deferCreateMock = rs.fn();
 const logFnMock = rs.fn();
 const zeLogUploadMock = rs.fn();
-const zephyrErrorFormatMock = rs.fn((err: Error) => `Formatted: ${err.message}`);
+const zephyrErrorFormatMock = rs.fn(
+  (err: Error) => `Formatted: ${err.message}`
+);
 const walkFilesMock = rs.fn();
 const showFilesMock = rs.fn();
 const setupZeDeployMock = rs.fn();

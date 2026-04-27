@@ -30,7 +30,10 @@ interface UserInfo {
 }
 
 /** Generate branch name for non-git contexts */
-function generateBranchName(context: 'global-git' | 'no-git', userId?: string): string {
+function generateBranchName(
+  context: 'global-git' | 'no-git',
+  userId?: string
+): string {
   const timestamp = new Date().toISOString().replace(/\D/g, '');
   const userSuffix = userId ? `-${userId.slice(0, 8)}` : '';
   return `${context}${userSuffix}-${timestamp}`;
@@ -87,13 +90,19 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
     logFn('warn', '');
     logFn('warn', 'To properly use Zephyr, you MUST:');
     logFn('warn', '1. Initialize git: git init');
-    logFn('warn', '2. Add remote: git remote add origin git@github.com:ORG/REPO.git');
+    logFn(
+      'warn',
+      '2. Add remote: git remote add origin git@github.com:ORG/REPO.git'
+    );
     logFn(
       'warn',
       '3. For CI/production reliability, add at least one commit: git add . && git commit -m "Initial commit"'
     );
     logFn('warn', '');
-    logFn('warn', 'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps');
+    logFn(
+      'warn',
+      'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps'
+    );
     logFn('warn', '📝 Documentation: https://docs.zephyr-cloud.io');
     ze_log.git('Git repository not found, falling back to global git config');
 
@@ -102,7 +111,10 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
       return globalGitInfo;
     } catch {
       // If global git config also fails, use defaults
-      logFn('warn', 'Global git config not found, using auto-generated defaults');
+      logFn(
+        'warn',
+        'Global git config not found, using auto-generated defaults'
+      );
       ze_log.git('Global git config not found, using auto-generated defaults');
 
       const fallbackInfo = await getFallbackGitInfo();
@@ -282,7 +294,8 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
         'Global git config incomplete: both name and email are missing. Falling back to API user info.'
       );
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message: 'Global git config incomplete: both name and email are missing',
+        message:
+          'Global git config incomplete: both name and email are missing',
       });
     }
 
@@ -325,7 +338,10 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
     ze_log.git('Using global git config (no local repository)', gitInfo);
 
     logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
-    logFn('warn', 'This manual configuration will NOT work for production deployments.');
+    logFn(
+      'warn',
+      'This manual configuration will NOT work for production deployments.'
+    );
     logFn(
       'warn',
       'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
@@ -418,7 +434,10 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
 
   logFn('warn', `Using organization "${org}" from authenticated user.`);
   logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
-  logFn('warn', 'This manual configuration will NOT work for production deployments.');
+  logFn(
+    'warn',
+    'This manual configuration will NOT work for production deployments.'
+  );
   logFn(
     'warn',
     'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
@@ -478,7 +497,9 @@ async function getAppNamingFromPackageJson(
 
     if (monorepoInfo.type !== 'none') {
       // We're in a monorepo
-      const rootPackageJson = await getMonorepoRootPackageJson(monorepoInfo.root);
+      const rootPackageJson = await getMonorepoRootPackageJson(
+        monorepoInfo.root
+      );
 
       if (rootPackageJson && rootPackageJson['name']) {
         const rootName = rootPackageJson['name'] as string;

@@ -1,31 +1,26 @@
 {
   "name": "vite-host",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build --mode production",
-    "lint": "eslint .",
+    "lint": "oxlint . --no-error-on-unmatched-pattern",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@module-federation/runtime": "catalog:module-federation",
     "react": "catalog:react18",
-    "react-dom": "catalog:react18",
-    "@module-federation/runtime": "catalog:module-federation"
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
     "@module-federation/vite": "catalog:module-federation",
-    "@eslint/js": "catalog:eslint",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "@vitejs/plugin-react": "catalog:vite7",
-    "eslint": "catalog:eslint",
-    "eslint-plugin-react-hooks": "catalog:eslint",
-    "eslint-plugin-react-refresh": "catalog:eslint",
     "globals": "catalog:vite7",
     "typescript": "catalog:typescript",
-    "typescript-eslint": "catalog:eslint",
     "vite": "catalog:vite7",
     "vite-plugin-zephyr": "workspace:*"
   },

@@ -10,7 +10,9 @@ describe('rewriteEnvReadsToVirtualModule', () => {
   test('simple member access: process.env.ZE_PUBLIC_FOO', () => {
     const src = `console.log(process.env.ZE_PUBLIC_FOO)`;
     const out = rewrite(src);
-    expect(out).toContain(`import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`);
+    expect(out).toContain(
+      `import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`
+    );
     expect(out).toContain(`__ZE_MANIFEST__.zeVars.ZE_PUBLIC_FOO`);
   });
 
@@ -35,7 +37,9 @@ describe('rewriteEnvReadsToVirtualModule', () => {
   test('destructuring declaration from process.env', () => {
     const src = `const { ZE_PUBLIC_FOO } = process.env; console.log(ZE_PUBLIC_FOO);`;
     const out = rewrite(src);
-    expect(out).toContain(`import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`);
+    expect(out).toContain(
+      `import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`
+    );
     expect(out).toContain(`const { ZE_PUBLIC_FOO } = __ZE_MANIFEST__.zeVars`);
   });
 
@@ -82,7 +86,8 @@ describe('rewriteEnvReadsToVirtualModule', () => {
     const src = `console.log(process.env.ZE_PUBLIC_A, import.meta.env.ZE_PUBLIC_B)`;
     const out = rewrite(src);
     const importCount =
-      out.split(`import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`).length - 1;
+      out.split(`import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`)
+        .length - 1;
     expect(importCount).toBe(1);
     expect(out).toContain(`__ZE_MANIFEST__.zeVars.ZE_PUBLIC_A`);
     expect(out).toContain(`__ZE_MANIFEST__.zeVars.ZE_PUBLIC_B`);
@@ -92,7 +97,8 @@ describe('rewriteEnvReadsToVirtualModule', () => {
     const src = `import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }; console.log(process.env.ZE_PUBLIC_A)`;
     const out = rewrite(src);
     const importCount =
-      out.split(`import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`).length - 1;
+      out.split(`import __ZE_MANIFEST__ from '${SPEC}' with { type: 'json' }`)
+        .length - 1;
     expect(importCount).toBe(1);
     expect(out).toContain(`__ZE_MANIFEST__.zeVars.ZE_PUBLIC_A`);
   });

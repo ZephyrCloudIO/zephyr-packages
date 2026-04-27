@@ -1,9 +1,6 @@
 {
   "name": "rspack_mf_host",
   "version": "0.0.0",
-  "zephyr:dependencies": {
-    "rspack_mf_remote": "rspack_mf_remote@*"
-  },
   "scripts": {
     "build": "rspack build --config rspack.config.js --mode production",
     "start": "rspack serve --config rspack.config.js --mode development --port 4200"
@@ -12,6 +9,10 @@
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
+    "tslib": "catalog:typescript",
     "zephyr-rspack-plugin": "workspace:*"
+  },
+  "zephyr:dependencies": {
+    "rspack_mf_remote": "rspack_mf_remote@*"
   }
 }

@@ -37,7 +37,9 @@ export function mutateMfConfig(
       !remote_version ||
       typeof remote_version !== 'string'
     ) {
-      ze_log.mf(`Invalid remote configuration: ${JSON.stringify(remote)}, skipping...`);
+      ze_log.mf(
+        `Invalid remote configuration: ${JSON.stringify(remote)}, skipping...`
+      );
       return;
     }
     const resolved_dep = resolvedDependencyPairs.find(
@@ -61,14 +63,23 @@ export function mutateMfConfig(
 
     ze_log.mf(`v_app: ${v_app}`);
     if (v_app) {
-      resolved_dep.remote_entry_url = [v_app, resolved_dep.remote_entry_url].join('@');
-      ze_log.mf(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
+      resolved_dep.remote_entry_url = [
+        v_app,
+        resolved_dep.remote_entry_url,
+      ].join('@');
+      ze_log.mf(
+        `Adding version to remote entry url: ${resolved_dep.remote_entry_url}`
+      );
     }
 
     resolved_dep.name = remote_name;
 
     if (remotes[remote_name]) {
-      remotes[remote_name] = createMfRuntimeCode(zephyr_engine, resolved_dep, template);
+      remotes[remote_name] = createMfRuntimeCode(
+        zephyr_engine,
+        resolved_dep,
+        template
+      );
       ze_log.mf(`Setting runtime code for remote: ${remotes}`);
     }
   });

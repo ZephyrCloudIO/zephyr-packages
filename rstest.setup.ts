@@ -23,7 +23,11 @@ function cloneDescriptorWithMockedValue(
   };
 }
 
-function defineSafeProperty(target: object, key: string | symbol, descriptor: PropertyDescriptor): void {
+function defineSafeProperty(
+  target: object,
+  key: string | symbol,
+  descriptor: PropertyDescriptor
+): void {
   try {
     Object.defineProperty(target, key, descriptor);
   } catch {
@@ -33,7 +37,10 @@ function defineSafeProperty(target: object, key: string | symbol, descriptor: Pr
   }
 }
 
-function createAutoMock<T>(value: T, seen: WeakMap<object, unknown> = new WeakMap()): T {
+function createAutoMock<T>(
+  value: T,
+  seen: WeakMap<object, unknown> = new WeakMap()
+): T {
   if (typeof value === 'function') {
     const fn = value as unknown as object;
     if (seen.has(fn)) {
@@ -53,7 +60,11 @@ function createAutoMock<T>(value: T, seen: WeakMap<object, unknown> = new WeakMa
         continue;
       }
 
-      defineSafeProperty(fnMock, key, cloneDescriptorWithMockedValue(descriptor, seen));
+      defineSafeProperty(
+        fnMock,
+        key,
+        cloneDescriptorWithMockedValue(descriptor, seen)
+      );
     }
 
     if (!('default' in fnMock)) {
@@ -85,7 +96,11 @@ function createAutoMock<T>(value: T, seen: WeakMap<object, unknown> = new WeakMa
       continue;
     }
 
-    defineSafeProperty(objectMock, key, cloneDescriptorWithMockedValue(descriptor, seen));
+    defineSafeProperty(
+      objectMock,
+      key,
+      cloneDescriptorWithMockedValue(descriptor, seen)
+    );
   }
 
   if (!('__esModule' in objectMock)) {
@@ -101,7 +116,10 @@ function createAutoMock<T>(value: T, seen: WeakMap<object, unknown> = new WeakMa
 function normalizeMockModule(moduleValue: unknown): unknown {
   if (!moduleValue || typeof moduleValue !== 'object') {
     if (typeof moduleValue === 'function') {
-      const fn = moduleValue as unknown as { default?: unknown; __esModule?: boolean };
+      const fn = moduleValue as unknown as {
+        default?: unknown;
+        __esModule?: boolean;
+      };
       if (fn.default === undefined) {
         fn.default = moduleValue;
       }
@@ -122,7 +140,10 @@ function normalizeMockModule(moduleValue: unknown): unknown {
   return moduleObject;
 }
 
-jestCompat.mock = (moduleName: string | Promise<unknown>, moduleFactory?: unknown) => {
+jestCompat.mock = (
+  moduleName: string | Promise<unknown>,
+  moduleFactory?: unknown
+) => {
   if (typeof moduleName !== 'string') {
     return originalMock(moduleName as Promise<unknown>, moduleFactory as never);
   }

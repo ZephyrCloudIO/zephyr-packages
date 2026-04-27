@@ -76,7 +76,10 @@ describe('Zephyr Codemod CLI', () => {
     });
 
     it('should detect multiple bundler configs', () => {
-      fs.writeFileSync('webpack.config.js', 'module.exports = { plugins: [] };');
+      fs.writeFileSync(
+        'webpack.config.js',
+        'module.exports = { plugins: [] };'
+      );
       fs.writeFileSync('vite.config.ts', 'export default { plugins: [] };');
       fs.writeFileSync('rollup.config.mjs', 'export default { plugins: [] };');
 
@@ -89,8 +92,14 @@ describe('Zephyr Codemod CLI', () => {
 
     it('should ignore node_modules', () => {
       fs.mkdirSync('node_modules', { recursive: true });
-      fs.writeFileSync('node_modules/webpack.config.js', 'module.exports = {};');
-      fs.writeFileSync('webpack.config.js', 'module.exports = { plugins: [] };');
+      fs.writeFileSync(
+        'node_modules/webpack.config.js',
+        'module.exports = {};'
+      );
+      fs.writeFileSync(
+        'webpack.config.js',
+        'module.exports = { plugins: [] };'
+      );
 
       const output = runCodemod('--dry-run');
       expect(output).toContain('Found 1 configuration file(s)');
@@ -100,7 +109,10 @@ describe('Zephyr Codemod CLI', () => {
 
   describe('Bundler Filtering', () => {
     beforeEach(() => {
-      fs.writeFileSync('webpack.config.js', 'module.exports = { plugins: [] };');
+      fs.writeFileSync(
+        'webpack.config.js',
+        'module.exports = { plugins: [] };'
+      );
       fs.writeFileSync('vite.config.ts', 'export default { plugins: [] };');
       fs.writeFileSync('rollup.config.mjs', 'export default { plugins: [] };');
     });
@@ -193,10 +205,14 @@ describe('Zephyr Codemod CLI', () => {
       );
 
       const wranglerConfig = fs.readFileSync('wrangler.jsonc', 'utf8');
-      expect(wranglerConfig).toContain('"main": "vinext/server/app-router-entry"');
+      expect(wranglerConfig).toContain(
+        '"main": "vinext/server/app-router-entry"'
+      );
       expect(wranglerConfig).toContain('"name": "acme-next-app"');
 
-      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      const updatedPackageJson = JSON.parse(
+        fs.readFileSync('package.json', 'utf8')
+      );
       expect(updatedPackageJson.type).toBe('module');
       expect(updatedPackageJson.scripts.dev).toBe('vinext dev');
       expect(updatedPackageJson.scripts.build).toBe('vinext build');
@@ -226,10 +242,14 @@ describe('Zephyr Codemod CLI', () => {
       expect(fs.existsSync('vite.config.ts')).toBe(true);
 
       const viteConfig = fs.readFileSync('vite.config.ts', 'utf8');
-      expect(viteConfig).toContain("import { withZephyr } from 'vite-plugin-zephyr';");
+      expect(viteConfig).toContain(
+        "import { withZephyr } from 'vite-plugin-zephyr';"
+      );
       expect(viteConfig).toContain('plugins: [withZephyr()]');
 
-      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      const updatedPackageJson = JSON.parse(
+        fs.readFileSync('package.json', 'utf8')
+      );
       expect(updatedPackageJson.name).toBe('slidev-app');
       expect(updatedPackageJson.version).toBe('1.0.0');
     });
@@ -276,7 +296,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('webpack.config.ts', 'utf8');
-      expect(content).toContain('import { withZephyr } from "zephyr-webpack-plugin"');
+      expect(content).toContain(
+        'import { withZephyr } from "zephyr-webpack-plugin"'
+      );
       expect(content).toContain('withZephyr()');
       expect(content).toMatch(/withReact\(\),\s*withZephyr\(\),/);
     });
@@ -295,7 +317,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('vite.config.ts', 'utf8');
-      expect(content).toContain('import { withZephyr } from "vite-plugin-zephyr"');
+      expect(content).toContain(
+        'import { withZephyr } from "vite-plugin-zephyr"'
+      );
       expect(content).toContain('react(), withZephyr()');
     });
 
@@ -313,7 +337,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('vite.config.ts', 'utf8');
-      expect(content).toContain('import { withZephyr } from "vite-plugin-zephyr"');
+      expect(content).toContain(
+        'import { withZephyr } from "vite-plugin-zephyr"'
+      );
       expect(content).toContain('plugins: [react(), withZephyr()]');
       expect(content).not.toContain(',,');
     });
@@ -330,7 +356,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('rollup.config.js', 'utf8');
-      expect(content).toContain('import { withZephyr } from "rollup-plugin-zephyr"');
+      expect(content).toContain(
+        'import { withZephyr } from "rollup-plugin-zephyr"'
+      );
       expect(content).toContain('babel(), withZephyr()');
     });
 
@@ -347,7 +375,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('rspack.config.js', 'utf8');
-      expect(content).toContain('import { withZephyr } from "zephyr-rspack-plugin"');
+      expect(content).toContain(
+        'import { withZephyr } from "zephyr-rspack-plugin"'
+      );
       expect(content).toContain('withZephyr()');
     });
 
@@ -365,9 +395,13 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('rsbuild.config.ts', 'utf8');
-      expect(content).toContain('import { withZephyr } from "zephyr-rsbuild-plugin"');
+      expect(content).toContain(
+        'import { withZephyr } from "zephyr-rsbuild-plugin"'
+      );
       expect(content).toContain('pluginReact(), withZephyr()');
-      expect(content).toMatch(/output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/);
+      expect(content).toMatch(
+        /output:\s*\{\s*assetPrefix:\s*["']auto["']\s*\}/
+      );
     });
 
     it('should wrap rspack defineConfig exports instead of adding to plugins array', () => {
@@ -384,7 +418,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('rspack.config.ts', 'utf8');
-      expect(content).toContain('import { withZephyr } from "zephyr-rspack-plugin"');
+      expect(content).toContain(
+        'import { withZephyr } from "zephyr-rspack-plugin"'
+      );
       expect(content).toContain('export default withZephyr()(defineConfig({');
       expect(content).not.toMatch(/plugins[^]]*withZephyr\(\)/);
     });
@@ -399,7 +435,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('metro.config.js', 'utf8');
-      expect(content).toContain('const { withZephyr } = require("zephyr-metro-plugin");');
+      expect(content).toContain(
+        'const { withZephyr } = require("zephyr-metro-plugin");'
+      );
       expect(content).toContain(
         'const __zephyrConfig = await getDefaultConfig(__dirname);'
       );
@@ -419,7 +457,9 @@ describe('Zephyr Codemod CLI', () => {
       runCodemod('.');
 
       const content = fs.readFileSync('metro.config.mjs', 'utf8');
-      expect(content).toContain('import { withZephyr } from "zephyr-metro-plugin";');
+      expect(content).toContain(
+        'import { withZephyr } from "zephyr-metro-plugin";'
+      );
       expect(content).toContain('export default (async () => {');
       expect(content).toContain(
         'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
@@ -520,7 +560,10 @@ describe('Zephyr Codemod CLI', () => {
   describe('Package Installation Hints', () => {
     it('should suggest package installation', () => {
       fs.writeFileSync('vite.config.js', 'export default { plugins: [] };');
-      fs.writeFileSync('webpack.config.js', 'module.exports = { plugins: [] };');
+      fs.writeFileSync(
+        'webpack.config.js',
+        'module.exports = { plugins: [] };'
+      );
 
       const output = runCodemod('--dry-run');
       expect(output).toContain('📦 Packages that would be installed:');
@@ -545,8 +588,14 @@ describe('Zephyr Codemod CLI', () => {
   describe('Directory Targeting', () => {
     it('should work with specific directory', () => {
       fs.mkdirSync('subdir');
-      fs.writeFileSync('subdir/vite.config.js', 'export default { plugins: [] };');
-      fs.writeFileSync('webpack.config.js', 'module.exports = { plugins: [] };');
+      fs.writeFileSync(
+        'subdir/vite.config.js',
+        'export default { plugins: [] };'
+      );
+      fs.writeFileSync(
+        'webpack.config.js',
+        'module.exports = { plugins: [] };'
+      );
 
       const output = runCodemod('subdir --dry-run');
       expect(output).toContain('Found 1 configuration file(s)');
@@ -557,7 +606,10 @@ describe('Zephyr Codemod CLI', () => {
     it('should handle nested directories', () => {
       fs.mkdirSync('apps/frontend', { recursive: true });
       fs.mkdirSync('apps/backend', { recursive: true });
-      fs.writeFileSync('apps/frontend/vite.config.ts', 'export default { plugins: [] };');
+      fs.writeFileSync(
+        'apps/frontend/vite.config.ts',
+        'export default { plugins: [] };'
+      );
       fs.writeFileSync(
         'apps/backend/webpack.config.js',
         'module.exports = { plugins: [] };'
@@ -573,7 +625,10 @@ describe('Zephyr Codemod CLI', () => {
   describe('Output Formatting', () => {
     it('should provide clear success summary', () => {
       fs.writeFileSync('vite.config.js', 'export default { plugins: [] };');
-      fs.writeFileSync('webpack.config.js', 'module.exports = { plugins: [] };');
+      fs.writeFileSync(
+        'webpack.config.js',
+        'module.exports = { plugins: [] };'
+      );
 
       const output = runCodemod('--dry-run');
       expect(output).toContain(

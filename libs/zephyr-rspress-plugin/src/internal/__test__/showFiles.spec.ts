@@ -46,11 +46,15 @@ describe('showFiles', () => {
     await showFiles(rootDir, files);
 
     expect(zeLogPackageMock).toHaveBeenCalledWith('good.js — 0.98 KB');
-    expect(zeLogPackageMock).toHaveBeenCalledWith('Failed to stat file: bad.js');
+    expect(zeLogPackageMock).toHaveBeenCalledWith(
+      'Failed to stat file: bad.js'
+    );
   });
 
   it('logs message for empty file list', async () => {
     await showFiles(rootDir, []);
-    expect(zeLogPackageMock).toHaveBeenCalledWith('No files found in output directory.');
+    expect(zeLogPackageMock).toHaveBeenCalledWith(
+      'No files found in output directory.'
+    );
   });
 });

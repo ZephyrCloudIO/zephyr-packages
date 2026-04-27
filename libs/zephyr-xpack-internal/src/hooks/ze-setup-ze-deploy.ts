@@ -15,7 +15,10 @@ interface DeployCompiler {
   webpack: { Compilation: { PROCESS_ASSETS_STAGE_REPORT: number } };
   hooks: {
     thisCompilation: {
-      tap: (pluginName: string, cb: (compilation: DeployCompilation) => void) => void;
+      tap: (
+        pluginName: string,
+        cb: (compilation: DeployCompilation) => void
+      ) => void;
     };
   };
 }

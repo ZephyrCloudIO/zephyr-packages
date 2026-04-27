@@ -68,6 +68,8 @@ export async function PromiseTuple<P>(
   }
 }
 
-export function isSuccessTuple<P>(tuple: [unknown, P | undefined]): tuple is [null, P] {
+export function isSuccessTuple<P>(
+  tuple: [unknown, P | undefined]
+): tuple is [null, P] {
   return tuple[0] === null;
 }

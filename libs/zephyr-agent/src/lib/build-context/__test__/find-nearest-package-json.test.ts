@@ -25,7 +25,9 @@ describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nea
   };
 
   it('should throw without params', async () => {
-    await expect(find_nearest_package_json as unknown as () => Promise<unknown>).rejects.toThrow();
+    await expect(
+      find_nearest_package_json as unknown as () => Promise<unknown>
+    ).rejects.toThrow();
   });
 
   it('should return void with empty path', async () => {

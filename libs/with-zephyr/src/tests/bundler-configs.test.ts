@@ -111,7 +111,9 @@ describe('Bundler Configurations', () => {
     });
 
     it('should prioritize rspack defineConfig wrapping before plugins array fallback', () => {
-      expect(rspackConfig.operations[0]).toBe('wrap-export-default-define-config');
+      expect(rspackConfig.operations[0]).toBe(
+        'wrap-export-default-define-config'
+      );
       expect(rspackConfig.operations).toContain('plugins-array');
       expect(rspackConfig.operations).toContain('wrap-module-exports');
     });

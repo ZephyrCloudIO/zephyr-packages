@@ -1,5 +1,8 @@
 import { rs } from '@rstest/core';
-import { withZephyr, withZephyrTanstackStart } from './vite-plugin-tanstack-start-zephyr';
+import {
+  withZephyr,
+  withZephyrTanstackStart,
+} from './vite-plugin-tanstack-start-zephyr';
 
 rs.mock('zephyr-agent', () => ({
   ZephyrEngine: {

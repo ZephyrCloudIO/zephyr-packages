@@ -49,7 +49,10 @@ describe('extractAstroAssetsFromBuildHook', () => {
 
   describe('Assets Parameter Handling', () => {
     it('should handle assets as a plain object with file paths', async () => {
-      await writeFile(join(tempDir, 'index.html'), '<html><body>Hello</body></html>');
+      await writeFile(
+        join(tempDir, 'index.html'),
+        '<html><body>Hello</body></html>'
+      );
       await writeFile(join(tempDir, 'style.css'), 'body { color: red; }');
 
       const assets = {
@@ -186,7 +189,10 @@ describe('extractAstroAssetsFromBuildHook', () => {
       await writeFile(join(tempDir, 'complex.json'), '{"nested": "data"}');
 
       const assets = {
-        route1: [join(tempDir, 'complex.json'), { path: join(tempDir, 'complex.json') }],
+        route1: [
+          join(tempDir, 'complex.json'),
+          { path: join(tempDir, 'complex.json') },
+        ],
         route2: {
           url: join(tempDir, 'complex.json'),
         },

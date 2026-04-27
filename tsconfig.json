@@ -10,10 +10,7 @@
     "incremental": true,
     "isolatedModules": true,
     "allowJs": true,
-    "lib": [
-      "ES2020",
-      "DOM"
-    ],
+    "lib": ["ES2020", "DOM"],
     "module": "CommonJS",
     "moduleResolution": "Node",
     "resolveJsonModule": true,
@@ -24,10 +21,7 @@
     "stripInternal": true,
     "target": "ES2017"
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ],
+  "exclude": ["node_modules", "tmp"],
   "files": [],
   "references": [
     {

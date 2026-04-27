@@ -10,7 +10,9 @@ const hideCursor = () => process.stdout.write('\u001B[?25l');
 const showCursor = () => process.stdout.write('\u001B[?25h');
 const clearLine = () => process.stdout.write('\u001B[2K\r');
 
-export async function showSuccessAnimation(message = 'Build complete!'): Promise<void> {
+export async function showSuccessAnimation(
+  message = 'Build complete!'
+): Promise<void> {
   if (!isTTY || !process.stdout.isTTY) {
     return;
   }

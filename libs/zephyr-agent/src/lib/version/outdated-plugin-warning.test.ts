@@ -26,7 +26,9 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning when stable version is older than latest', async () => {
-    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -40,12 +42,16 @@ describe('outdated-plugin-warning', () => {
       'Your Zephyr Plugin version is outdated'
     );
     expect(errorSpy.mock.calls[0]?.[0]).toContain('latest: 1.2.0');
-    expect(errorSpy.mock.calls[0]?.[0]).toContain('upgrade __unknown-plugin__ first.');
+    expect(errorSpy.mock.calls[0]?.[0]).toContain(
+      'upgrade __unknown-plugin__ first.'
+    );
     errorSpy.mockRestore();
   });
 
   it('does not show warning when versions are up to date', async () => {
-    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -59,7 +65,9 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning when canary version is older than latest canary', async () => {
-    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     getZephyrAgentVersionMock.mockReturnValue('0.0.0-canary.44');
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
@@ -80,7 +88,9 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning when next version is older than latest next', async () => {
-    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     getZephyrAgentVersionMock.mockReturnValue('0.1.14-next.1');
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
@@ -101,7 +111,9 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('does not show warning for canary when canary dist-tag is missing', async () => {
-    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     getZephyrAgentVersionMock.mockReturnValue('0.0.0-canary.44');
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
@@ -116,7 +128,9 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning once for the same package and version pair', async () => {
-    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
       ok: true,

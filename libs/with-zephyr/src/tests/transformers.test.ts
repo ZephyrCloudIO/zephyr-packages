@@ -8,7 +8,11 @@ import {
   hasZephyrCall,
   runBundlerOperation,
 } from '../operations.js';
-import type { BundlerConfig, BundlerOperationId, BundlerStrategy } from '../types.js';
+import type {
+  BundlerConfig,
+  BundlerOperationId,
+  BundlerStrategy,
+} from '../types.js';
 
 function createConfig(
   operation: BundlerOperationId,
@@ -93,13 +97,19 @@ describe('Ast-grep Operations', () => {
 
       const result = runBundlerOperation('compose-plugins', {
         filePath,
-        config: createConfig('compose-plugins', 'first-success', 'zephyr-webpack-plugin'),
+        config: createConfig(
+          'compose-plugins',
+          'first-success',
+          'zephyr-webpack-plugin'
+        ),
         dryRun: false,
       });
 
       expect(result.status).toBe('changed');
       const next = fs.readFileSync(filePath, 'utf8');
-      expect(next).toMatch(/withReact\(\),\s*withZephyr\(\),\s*\(config\) => config/);
+      expect(next).toMatch(
+        /withReact\(\),\s*withZephyr\(\),\s*\(config\) => config/
+      );
     });
   });
 
@@ -223,7 +233,9 @@ describe('Ast-grep Operations', () => {
 
       expect(result.status).toBe('changed');
       const next = fs.readFileSync(filePath, 'utf8');
-      expect(next).toContain('modules: [\'nitro-cloudflare-dev\', "zephyr-nuxt-module"]');
+      expect(next).toContain(
+        'modules: [\'nitro-cloudflare-dev\', "zephyr-nuxt-module"]'
+      );
     });
 
     it('should create modules array when missing from defineNuxtConfig', () => {
@@ -428,7 +440,9 @@ describe('Ast-grep Operations', () => {
 
       expect(result.status).toBe('changed');
       const next = fs.readFileSync(filePath, 'utf8');
-      expect(next).toContain('const __zephyrConfig = await getDefaultConfig(__dirname);');
+      expect(next).toContain(
+        'const __zephyrConfig = await getDefaultConfig(__dirname);'
+      );
       expect(next).toContain(
         'return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig);'
       );
@@ -502,7 +516,11 @@ describe('Ast-grep Operations', () => {
 
       const result = runBundlerOperation('rsbuild-asset-prefix', {
         filePath,
-        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        config: createConfig(
+          'rsbuild-asset-prefix',
+          'run-all',
+          'zephyr-rsbuild-plugin'
+        ),
         dryRun: false,
       });
 
@@ -524,7 +542,11 @@ describe('Ast-grep Operations', () => {
 
       const result = runBundlerOperation('rsbuild-asset-prefix', {
         filePath,
-        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        config: createConfig(
+          'rsbuild-asset-prefix',
+          'run-all',
+          'zephyr-rsbuild-plugin'
+        ),
         dryRun: false,
       });
 
@@ -573,7 +595,9 @@ describe('Ast-grep Operations', () => {
         reporters: string[];
       };
       expect(next.reporters).toContain('parcel-reporter-zephyr');
-      expect(next.reporters.filter((r) => r === 'parcel-reporter-zephyr').length).toBe(1);
+      expect(
+        next.reporters.filter((r) => r === 'parcel-reporter-zephyr').length
+      ).toBe(1);
     });
   });
 

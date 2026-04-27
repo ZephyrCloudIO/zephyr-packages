@@ -12,7 +12,10 @@ describe('plugin-package-name', () => {
       },
     } satisfies ZePackageJson;
 
-    const pluginPackageName = resolveZephyrPluginPackageName(packageJson, 'vite');
+    const pluginPackageName = resolveZephyrPluginPackageName(
+      packageJson,
+      'vite'
+    );
 
     expect(pluginPackageName).toBe('vite-plugin-vinext-zephyr');
   });
@@ -26,7 +29,10 @@ describe('plugin-package-name', () => {
       },
     } satisfies ZePackageJson;
 
-    const pluginPackageName = resolveZephyrPluginPackageName(packageJson, 'rollup');
+    const pluginPackageName = resolveZephyrPluginPackageName(
+      packageJson,
+      'rollup'
+    );
 
     expect(pluginPackageName).toBe('rollup-plugin-zephyr');
   });
@@ -37,7 +43,10 @@ describe('plugin-package-name', () => {
       version: '1.0.0',
     } satisfies ZePackageJson;
 
-    const pluginPackageName = resolveZephyrPluginPackageName(packageJson, 'elysia-app');
+    const pluginPackageName = resolveZephyrPluginPackageName(
+      packageJson,
+      'elysia-app'
+    );
 
     expect(pluginPackageName).toBe('zephyr-packages');
   });

@@ -27,7 +27,9 @@ export async function getPartialAssetMap(
   return persistentStorage.getItem(get_key(application_uid));
 }
 
-export async function removePartialAssetMap(application_uid: string): Promise<void> {
+export async function removePartialAssetMap(
+  application_uid: string
+): Promise<void> {
   await storage;
   await persistentStorage.removeItem(get_key(application_uid));
 }

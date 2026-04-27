@@ -50,13 +50,17 @@ describe('buildAssetMapFromFiles', () => {
   it('throws ZephyrError for path traversal attempt', async () => {
     const files = ['../outside.js'];
 
-    await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(ZephyrError);
-    await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(/Invalid file path/);
+    await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(
+      ZephyrError
+    );
+    await expect(buildAssetMapFromFiles(root, files)).rejects.toThrow(
+      /Invalid file path/
+    );
   });
 
   it('should reject path traversal attempts', async () => {
-    await expect(buildAssetMapFromFiles(root, ['../../../etc/passwd'])).rejects.toThrow(
-      'Invalid file path'
-    );
+    await expect(
+      buildAssetMapFromFiles(root, ['../../../etc/passwd'])
+    ).rejects.toThrow('Invalid file path');
   });
 });

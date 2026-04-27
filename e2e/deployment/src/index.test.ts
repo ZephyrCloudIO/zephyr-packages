@@ -1,9 +1,16 @@
 import { execSync } from 'node:child_process';
-import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
+import {
+  getAllDeployedApps,
+  getAppDeployResult,
+  type DeployResult,
+} from 'zephyr-agent';
 
-const output = execSync('pnpm exec turbo ls --filter=./examples/** --output=json', {
-  encoding: 'utf8',
-});
+const output = execSync(
+  'pnpm exec turbo ls --filter=./examples/** --output=json',
+  {
+    encoding: 'utf8',
+  }
+);
 
 const turboLs = JSON.parse(output) as {
   packages?: { items?: Array<{ name?: string }> };
@@ -37,7 +44,9 @@ for (const appName of testTargets) {
           return;
         }
 
-        throw new Error(`Application ${appName} was not found on deployed apps.`);
+        throw new Error(
+          `Application ${appName} was not found on deployed apps.`
+        );
       }
       const result = await getAppDeployResult(appUid);
       if (!result) {
@@ -59,7 +68,9 @@ for (const appName of testTargets) {
         }
 
         if (!deployResult) {
-          throw new Error(`No deployment log loaded for application ${appName}.`);
+          throw new Error(
+            `No deployment log loaded for application ${appName}.`
+          );
         }
 
         const url = deployResult.urls[0];

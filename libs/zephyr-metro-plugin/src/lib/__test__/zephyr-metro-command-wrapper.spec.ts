@@ -14,7 +14,11 @@ const {
   zephyrMetroPluginCtorMock: rs.fn(),
 }));
 
-function MockZephyrError(this: any, error: unknown, options?: { message?: string }) {
+function MockZephyrError(
+  this: any,
+  error: unknown,
+  options?: { message?: string }
+) {
   const message = options?.message || String(error);
   const errorInstance = new Error(message) as Error & { code?: unknown };
   errorInstance.code = error;
@@ -51,12 +55,19 @@ rs.mock('../internal/metro-errors', () => ({
 import { zephyrCommandWrapper } from '../zephyr-metro-command-wrapper';
 
 describe('zephyrCommandWrapper', () => {
-  const mockBundleFederatedRemote = rs.fn().mockResolvedValue({ success: true });
+  const mockBundleFederatedRemote = rs
+    .fn()
+    .mockResolvedValue({ success: true });
   const mockLoadMetroConfig = rs.fn().mockResolvedValue({});
   const mockUpdateManifest = rs.fn();
 
   const createMockArgs = (overrides: any = {}): any => [
-    [{ mode: overrides.mode ?? 'production', platform: overrides.platform ?? 'ios' }],
+    [
+      {
+        mode: overrides.mode ?? 'production',
+        platform: overrides.platform ?? 'ios',
+      },
+    ],
     { root: overrides.root ?? '/project', ...overrides.configOptions },
     { maxWorkers: 4, resetCache: false, config: 'metro.config.js' },
   ];
@@ -156,7 +167,10 @@ describe('zephyrCommandWrapper', () => {
     });
 
     it('should return result from bundle function', async () => {
-      mockBundleFederatedRemote.mockResolvedValue({ bundled: true, files: ['main.js'] });
+      mockBundleFederatedRemote.mockResolvedValue({
+        bundled: true,
+        files: ['main.js'],
+      });
 
       const wrapper = await zephyrCommandWrapper(
         mockBundleFederatedRemote,

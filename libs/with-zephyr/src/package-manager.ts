@@ -4,7 +4,9 @@ import path from 'path';
 import type { PackageManager } from './types.js';
 
 /** Detect the package manager being used in the project */
-export function detectPackageManager(directory: string = process.cwd()): PackageManager {
+export function detectPackageManager(
+  directory: string = process.cwd()
+): PackageManager {
   // Priority 1: Check which CLI is actually running (npm_config_user_agent)
   // This is most accurate when someone runs `pnpm dlx with-zephyr` or `npx with-zephyr`
   if (process.env['npm_config_user_agent']) {
@@ -38,7 +40,9 @@ export function detectPackageManager(directory: string = process.cwd()): Package
     const packageJsonPath = path.join(currentDir, 'package.json');
     if (fs.existsSync(packageJsonPath)) {
       try {
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, 'utf8')
+        );
         if (packageJson.packageManager) {
           const packageManager = packageJson.packageManager.toLowerCase();
           if (packageManager.includes('pnpm')) return 'pnpm';
@@ -64,13 +68,15 @@ export function detectPackageManager(directory: string = process.cwd()): Package
     for (const rootDir of possibleMonorepoRoots) {
       if (
         fs.existsSync(path.join(rootDir, 'pnpm-workspace.yaml')) ||
-        (fs.existsSync(path.join(rootDir, 'pnpm-lock.yaml')) && rootDir === directory)
+        (fs.existsSync(path.join(rootDir, 'pnpm-lock.yaml')) &&
+          rootDir === directory)
       ) {
         return 'pnpm';
       }
       if (
         fs.existsSync(path.join(rootDir, 'lerna.json')) ||
-        (fs.existsSync(path.join(rootDir, 'yarn.lock')) && rootDir === directory)
+        (fs.existsSync(path.join(rootDir, 'yarn.lock')) &&
+          rootDir === directory)
       ) {
         return 'yarn';
       }
@@ -245,7 +251,10 @@ export function addToPackageJson(
 
     packageJson[depType][packageName] = `^${version}`;
 
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2) + '\n'
+    );
     return true;
   } catch (error) {
     console.error(`Failed to update package.json: ${(error as Error).message}`);

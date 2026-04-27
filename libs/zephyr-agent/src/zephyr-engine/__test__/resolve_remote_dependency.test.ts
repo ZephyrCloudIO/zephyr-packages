@@ -47,7 +47,10 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
       data: { value: mock_api_response },
     });
 
-    const result = await resolve_remote_dependency({ application_uid, version });
+    const result = await resolve_remote_dependency({
+      application_uid,
+      version,
+    });
 
     expect(getTokenMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ ...mock_api_response, version });

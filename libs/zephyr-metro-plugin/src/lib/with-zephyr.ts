@@ -75,7 +75,9 @@ async function applyZephyrToMetroConfig(
   }
 
   // Extract remote dependencies from zephyr options
-  const dependencyPairs = extractMetroRemoteDependencies(zephyrOptions.remotes || {});
+  const dependencyPairs = extractMetroRemoteDependencies(
+    zephyrOptions.remotes || {}
+  );
 
   // Resolve dependencies through Zephyr
   const resolved_dependencies =
@@ -123,7 +125,9 @@ async function applyZephyrToMetroConfig(
           const url = req.url?.split('?')[0]; // Remove query string
           if (url === manifestPath) {
             try {
-              const manifestContent = createManifestContent(resolved_dependencies || []);
+              const manifestContent = createManifestContent(
+                resolved_dependencies || []
+              );
               res.setHeader('Content-Type', 'application/json');
               res.setHeader('Cache-Control', 'no-cache');
               res.end(manifestContent);
@@ -169,7 +173,9 @@ async function applyZephyrToMetroConfig(
 function extractMetroRemoteDependencies(remotes: Record<string, string>) {
   return Object.entries(remotes).map(([name, url]) => {
     // Parse remote URL - could be just URL or name@url format
-    const [remoteName, remoteUrl] = url.includes('@') ? url.split('@') : [name, url];
+    const [remoteName, remoteUrl] = url.includes('@')
+      ? url.split('@')
+      : [name, url];
 
     return {
       name: remoteName,
@@ -201,7 +207,9 @@ async function generateManifestFile(
     ze_log.manifest(`Generated manifest at: ${manifestFilePath}`);
     return true;
   } catch (error) {
-    ze_log.error(`Failed to generate manifest file: ${ZephyrError.format(error)}`);
+    ze_log.error(
+      `Failed to generate manifest file: ${ZephyrError.format(error)}`
+    );
     return false;
   }
 }

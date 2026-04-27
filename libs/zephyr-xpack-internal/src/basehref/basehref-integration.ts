@@ -28,7 +28,9 @@ export interface WebpackLikeCompiler {
  * @param options - Plugin options that might contain baseHref
  * @returns The baseHref value or undefined if not found
  */
-function extractBaseHrefFromPluginOptions(options?: BaseHrefOptions): string | undefined {
+function extractBaseHrefFromPluginOptions(
+  options?: BaseHrefOptions
+): string | undefined {
   return options?.baseHref;
 }
 

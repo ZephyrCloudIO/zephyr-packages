@@ -3,28 +3,32 @@
   "version": "1.0.2",
   "description": "Rollup plugin for Zephyr",
   "keywords": [
+    "deploy",
     "rollup",
     "rollup-plugin",
-    "zephyr",
-    "deploy"
+    "zephyr"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/rollup-plugin-zephyr"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/rollup-plugin-zephyr"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
-    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
     "test": "rstest --passWithNoTests",
     "test:coverage": "rstest --coverage --passWithNoTests"
   },
@@ -33,16 +37,11 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "rollup": "catalog:rollup4",
-    "@rstest/core": "^0.7.7"
+    "rollup": "catalog:rollup4"
   },
   "peerDependencies": {
     "rollup": "^4.0.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

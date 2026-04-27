@@ -33,7 +33,9 @@ type DebugLogger = ((...args: unknown[]) => void) & {
 function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
   const wrappedFn = (...args: unknown[]) => {
     const message = args
-      .map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
+      .map((arg) =>
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      )
       .join(' ');
 
     // Always write to file if file logging is enabled, regardless of DEBUG env var

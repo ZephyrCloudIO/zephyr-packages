@@ -2,17 +2,19 @@
   "name": "zephyr-agent",
   "version": "1.0.2",
   "description": "Zephyr plugin agent",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-agent"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-agent"
+  },
   "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -25,14 +27,16 @@
       "types": "./dist/node-persist/index.d.ts"
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "prebuild": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('tsconfig.tsbuildinfo', { force: true })\"",
     "build": "tsgo -p tsconfig.json",
     "patch-version": "pnpm version",
     "test": "rstest --passWithNoTests",
-    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint": "oxlint src --no-error-on-unmatched-pattern",
     "test:coverage": "rstest --coverage --passWithNoTests"
   },
   "dependencies": {
@@ -52,18 +56,13 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
+    "@rstest/core": "^0.7.7",
     "@types/debug": "^4.1.12",
     "@types/eventsource": "^3.0.0",
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
-    "@types/proper-lockfile": "^4.1.4",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "@rstest/core": "^0.7.7"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "@types/proper-lockfile": "^4.1.4"
   }
 }

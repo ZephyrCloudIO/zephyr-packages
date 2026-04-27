@@ -59,7 +59,10 @@ export function setupManifestEmission<
         const manifestContent = createManifestContent(dependencies, true);
 
         // Emit the asset
-        compilation.emitAsset('zephyr-manifest.json', new RawSource(manifestContent));
+        compilation.emitAsset(
+          'zephyr-manifest.json',
+          new RawSource(manifestContent)
+        );
 
         ze_log.manifest('[Zephyr Manifest] Emitted with:', {
           dependencies: dependencies.length,

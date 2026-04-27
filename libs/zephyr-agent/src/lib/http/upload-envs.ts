@@ -47,6 +47,9 @@ export async function uploadEnvs({
       message: 'failed deploying local build to edge',
     });
 
-    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, { type: 'envs', cause: cause });
+    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+      type: 'envs',
+      cause: cause,
+    });
   }
 }

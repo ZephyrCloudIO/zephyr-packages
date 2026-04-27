@@ -74,7 +74,8 @@ function getPackageNameForWorker(
   packageJson: PackageJsonShape,
   directory: string
 ): string {
-  const packageName = packageJson.name || path.basename(path.resolve(directory));
+  const packageName =
+    packageJson.name || path.basename(path.resolve(directory));
   return sanitizeWorkerName(packageName.replace('/', '-'));
 }
 
@@ -157,7 +158,10 @@ export function bootstrapNextJsVinext(
 
   if (packageJsonChanged && !dryRun) {
     packageJson.scripts = scripts;
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2) + '\n'
+    );
   }
 
   return {

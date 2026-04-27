@@ -4,7 +4,15 @@ import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_debug, ze_log } from '../logging';
-import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picocolor';
+import {
+  blue,
+  bold,
+  gray,
+  green,
+  isTTY,
+  white,
+  yellow,
+} from '../logging/picocolor';
 import { formatLogMsg, logFn } from '../logging/ze-log-event';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getSessionKey, waitForUnlock } from '../node-persist/session-lock';
@@ -26,7 +34,10 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   const server_token = getServerToken();
 
   if (secret_token) {
-    logFn('debug', 'Token found in environment. Using secret token for authentication.');
+    logFn(
+      'debug',
+      'Token found in environment. Using secret token for authentication.'
+    );
     return;
   }
 
@@ -41,7 +52,9 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
 
   if (existingToken) {
     // Check if the token has a valid expiration date.
-    if (isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+    if (
+      isTokenStillValid(existingToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)
+    ) {
       ze_log.auth('You are already logged in');
       return;
     }
@@ -56,7 +69,10 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   }
 
   // No valid token found; initiate authentication.
-  logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
+  logFn(
+    '',
+    `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`
+  );
 
   // Get authentication URL first
   using sessionKey = getSessionKey();
@@ -93,7 +109,8 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
     // actually saved or not
     if (!token) {
       throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-        message: 'No token found after authentication finished, did it timeout?',
+        message:
+          'No token found after authentication finished, did it timeout?',
       });
     }
   }
@@ -114,7 +131,9 @@ export function isTokenStillValid(token: string, gap = 0): boolean {
     const decodedToken = jose.decodeJwt(token);
 
     if (decodedToken.exp) {
-      return new Date(decodedToken.exp * 1000) > new Date(Date.now() + gap * 1000);
+      return (
+        new Date(decodedToken.exp * 1000) > new Date(Date.now() + gap * 1000)
+      );
     }
 
     // No expiration date found, invalid token.
@@ -156,7 +175,10 @@ function fallbackManualLogin(url: string): void {
   logFn('', `An unexpected error happened when opening the browser.`);
   logFn('', `${yellow('Please open this URL in your browser to log in:')}`);
   logFn('', url);
-  logFn('', `${blue('⏳')} Waiting for you to complete authentication in browser...`);
+  logFn(
+    '',
+    `${blue('⏳')} Waiting for you to complete authentication in browser...`
+  );
 }
 
 /** Opens the given URL in the default browser. */
@@ -194,6 +216,9 @@ async function waitForAccessToken(sessionKey: string): Promise<string> {
   url.searchParams.set('sessionId', sessionKey);
   const authListener = new AuthListener(url);
   const resp = await authListener.waitForToken();
-  ze_debug('waitForAccessToken', `Received token for session ${resp.sessionId}`);
+  ze_debug(
+    'waitForAccessToken',
+    `Received token for session ${resp.sessionId}`
+  );
   return resp.token;
 }

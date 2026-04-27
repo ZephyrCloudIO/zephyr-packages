@@ -33,7 +33,8 @@ rs.mock('node:url', () => ({
 rs.mock('../internal/extract-astro-assets-map', () => ({
   extractAstroAssetsFromBuildHook: (...args: unknown[]) =>
     mockExtractAstroAssetsFromBuildHook(...args),
-  extractAstroAssetsMap: (...args: unknown[]) => mockExtractAstroAssetsMap(...args),
+  extractAstroAssetsMap: (...args: unknown[]) =>
+    mockExtractAstroAssetsMap(...args),
 }));
 
 type MockFn = ReturnType<typeof rs.fn>;
@@ -111,7 +112,9 @@ describe('withZephyr', () => {
 
       await integration.hooks['astro:config:done']?.({
         config: mockConfig,
-      } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:done']>>[0]);
+      } as Parameters<
+        NonNullable<(typeof integration.hooks)['astro:config:done']>
+      >[0]);
 
       expect(mockFileURLToPath).toHaveBeenCalledWith(mockConfig.root);
       expect(mockZephyrDeferCreate).toHaveBeenCalledWith({
@@ -164,7 +167,9 @@ describe('withZephyr', () => {
 
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
-      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+      } as Parameters<
+        NonNullable<(typeof integration.hooks)['astro:build:done']>
+      >[0]);
 
       expect(mockExtractAstroAssetsFromBuildHook).toHaveBeenCalledWith(
         undefined,
@@ -205,7 +210,9 @@ describe('withZephyr', () => {
 
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
-      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+      } as Parameters<
+        NonNullable<(typeof integration.hooks)['astro:build:done']>
+      >[0]);
 
       expect(mockZephyrErrorFormat).toHaveBeenCalledWith(
         expect.objectContaining({ message: 'Engine failed' })
@@ -221,12 +228,16 @@ describe('withZephyr', () => {
       const mockConfig = { root: new URL('file:///test/project/') };
       await integration.hooks['astro:config:done']?.({
         config: mockConfig,
-      } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:done']>>[0]);
+      } as Parameters<
+        NonNullable<(typeof integration.hooks)['astro:config:done']>
+      >[0]);
 
       const mockDir = new URL('file:///test/dist/');
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
-      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+      } as Parameters<
+        NonNullable<(typeof integration.hooks)['astro:build:done']>
+      >[0]);
 
       expect(mockZephyrEngine.start_new_build).toHaveBeenCalled();
       expect(mockZephyrEngine.build_finished).toHaveBeenCalled();

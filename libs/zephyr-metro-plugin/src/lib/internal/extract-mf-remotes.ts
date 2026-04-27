@@ -10,7 +10,9 @@ export function extract_remotes_dependencies(
 ): ZeDependencyPair[] {
   const depsPairs: ZeDependencyPair[] = [];
 
-  const { zephyrDependencies } = readPackageJson(config.context ?? process.cwd());
+  const { zephyrDependencies } = readPackageJson(
+    config.context ?? process.cwd()
+  );
   if (zephyrDependencies) {
     Object.entries(zephyrDependencies).map(([name, version]) => {
       depsPairs.push({ name, version } as ZeDependencyPair);

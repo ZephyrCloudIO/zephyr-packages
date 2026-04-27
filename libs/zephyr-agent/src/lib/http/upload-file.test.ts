@@ -11,7 +11,8 @@ jest.mock('./http-request');
 
 // Mock the ZeErrors and ZephyrError
 jest.mock('../errors', async () => {
-  const originalModule = await jest.importActual<typeof ErrorsModule>('../errors');
+  const originalModule =
+    await jest.importActual<typeof ErrorsModule>('../errors');
 
   // Create mock error code
   const ZE_ERR_FAILED_UPLOAD = 'ZE40017';

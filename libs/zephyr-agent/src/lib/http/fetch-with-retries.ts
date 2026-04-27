@@ -50,7 +50,9 @@ function shouldBypassProxy(hostname: string): boolean {
     }
     // Handle wildcard domains like .example.com
     if (noProxyHost.startsWith('.')) {
-      return hostLower.endsWith(noProxyHost) || hostLower === noProxyHost.slice(1);
+      return (
+        hostLower.endsWith(noProxyHost) || hostLower === noProxyHost.slice(1)
+      );
     }
     return hostLower === noProxyHost || hostLower.endsWith(`.${noProxyHost}`);
   });
@@ -92,7 +94,9 @@ function isAxiosErrorLike(error: unknown): error is AxiosError {
     return true;
   }
 
-  const maybeAxiosError = error as Partial<AxiosError> & { isAxiosError?: boolean };
+  const maybeAxiosError = error as Partial<AxiosError> & {
+    isAxiosError?: boolean;
+  };
   return (
     Boolean(maybeAxiosError.isAxiosError) ||
     maybeAxiosError.response !== undefined ||
@@ -100,7 +104,9 @@ function isAxiosErrorLike(error: unknown): error is AxiosError {
   );
 }
 
-function normalizeHeaders(headers: RequestInit['headers']): Record<string, string> {
+function normalizeHeaders(
+  headers: RequestInit['headers']
+): Record<string, string> {
   const normalized: Record<string, string> = {};
 
   if (!headers) {

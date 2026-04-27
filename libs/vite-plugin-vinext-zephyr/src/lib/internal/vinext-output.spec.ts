@@ -90,13 +90,19 @@ describe('vinext-output helpers', () => {
   });
 
   it('normalizes custom entrypoint paths', () => {
-    expect(normalizeEntrypoint('/dist/server/index.js')).toBe('server/index.js');
+    expect(normalizeEntrypoint('/dist/server/index.js')).toBe(
+      'server/index.js'
+    );
     expect(normalizeEntrypoint('./worker/index.js')).toBe('worker/index.js');
   });
 
   it('prefers explicit entrypoint override', () => {
     expect(
-      resolveVinextEntrypoint('/repo/dist', 'server/index.js', '/dist/custom/entry.js')
+      resolveVinextEntrypoint(
+        '/repo/dist',
+        'server/index.js',
+        '/dist/custom/entry.js'
+      )
     ).toBe('custom/entry.js');
   });
 
@@ -136,9 +142,21 @@ describe('vinext-output helpers', () => {
 
       await fs.mkdir(path.join(clientDir, '.vite'), { recursive: true });
       await fs.mkdir(path.join(clientDir, 'nested'), { recursive: true });
-      await fs.writeFile(path.join(clientDir, 'next.svg'), '<svg></svg>', 'utf-8');
-      await fs.writeFile(path.join(clientDir, 'nested', 'icon.txt'), 'icon', 'utf-8');
-      await fs.writeFile(path.join(clientDir, '_headers'), '/assets/*', 'utf-8');
+      await fs.writeFile(
+        path.join(clientDir, 'next.svg'),
+        '<svg></svg>',
+        'utf-8'
+      );
+      await fs.writeFile(
+        path.join(clientDir, 'nested', 'icon.txt'),
+        'icon',
+        'utf-8'
+      );
+      await fs.writeFile(
+        path.join(clientDir, '_headers'),
+        '/assets/*',
+        'utf-8'
+      );
 
       const assets: Record<string, VinextBuildAsset> = {};
       await collectStaticClientAssets(assets, outputDir, clientDir);
@@ -149,7 +167,9 @@ describe('vinext-output helpers', () => {
         'client/next.svg',
       ]);
       expect(assets['client/next.svg']?.type).toBe('image/svg+xml');
-      expect(assets['client/_headers']?.content.toString('utf-8')).toContain('/assets/*');
+      expect(assets['client/_headers']?.content.toString('utf-8')).toContain(
+        '/assets/*'
+      );
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true });
     }
@@ -162,7 +182,11 @@ describe('vinext-output helpers', () => {
       const clientDir = path.join(outputDir, 'client');
 
       await fs.mkdir(clientDir, { recursive: true });
-      await fs.writeFile(path.join(clientDir, 'next.svg'), '<svg>public</svg>', 'utf-8');
+      await fs.writeFile(
+        path.join(clientDir, 'next.svg'),
+        '<svg>public</svg>',
+        'utf-8'
+      );
 
       const assets: Record<string, VinextBuildAsset> = {
         'client/next.svg': {

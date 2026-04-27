@@ -19,10 +19,16 @@ export async function getAppHashCache(
   application_uid: string
 ): Promise<{ hashes: string[] } | undefined> {
   await storage;
-  return persistentStorage.getItem(`${StorageKeys.ze_hash_cache}:${application_uid}`);
+  return persistentStorage.getItem(
+    `${StorageKeys.ze_hash_cache}:${application_uid}`
+  );
 }
 
-export async function removeAppHashCache(application_uid: string): Promise<void> {
+export async function removeAppHashCache(
+  application_uid: string
+): Promise<void> {
   await storage;
-  await persistentStorage.removeItem(`${StorageKeys.ze_hash_cache}:${application_uid}`);
+  await persistentStorage.removeItem(
+    `${StorageKeys.ze_hash_cache}:${application_uid}`
+  );
 }

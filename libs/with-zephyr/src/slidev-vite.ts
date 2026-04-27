@@ -31,9 +31,12 @@ function hasSlidevDependency(packageJson: PackageJsonShape): boolean {
 }
 
 function hasAnyViteConfig(directory: string): boolean {
-  return ['vite.config.js', 'vite.config.ts', 'vite.config.mjs', 'vite.config.mts'].some(
-    (fileName) => fs.existsSync(path.join(directory, fileName))
-  );
+  return [
+    'vite.config.js',
+    'vite.config.ts',
+    'vite.config.mjs',
+    'vite.config.mts',
+  ].some((fileName) => fs.existsSync(path.join(directory, fileName)));
 }
 
 export function bootstrapSlidevVite(
@@ -98,7 +101,10 @@ export function bootstrapSlidevVite(
   }
 
   if (packageJsonChanged && !dryRun) {
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2) + '\n'
+    );
   }
 
   return {

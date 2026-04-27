@@ -22,12 +22,22 @@ export async function uploadSnapshot({
 
   if (ENVIRONMENTS != null) {
     const env_edge_urls = Array.from(
-      new Set(Object.values(ENVIRONMENTS).filter((envCfg) => envCfg.edgeUrl !== EDGE_URL))
+      new Set(
+        Object.values(ENVIRONMENTS).filter(
+          (envCfg) => envCfg.edgeUrl !== EDGE_URL
+        )
+      )
     );
     await Promise.all(
-      env_edge_urls.map((envConfig: { edgeUrl: string }): Promise<SnapshotUploadRes> => {
-        return doUploadSnapshotRequest({ json, edge_url: envConfig.edgeUrl, jwt });
-      })
+      env_edge_urls.map(
+        (envConfig: { edgeUrl: string }): Promise<SnapshotUploadRes> => {
+          return doUploadSnapshotRequest({
+            json,
+            edge_url: envConfig.edgeUrl,
+            jwt,
+          });
+        }
+      )
     );
   }
 
@@ -59,7 +69,11 @@ async function doUploadSnapshotRequest({
   url.searchParams.append('skip_assets', 'true');
   ze_log.snapshot('Upload URL:', url.toString());
 
-  const [ok, cause, resp] = await makeRequest<SnapshotUploadRes>(url, options, json);
+  const [ok, cause, resp] = await makeRequest<SnapshotUploadRes>(
+    url,
+    options,
+    json
+  );
 
   if (!ok) {
     throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {

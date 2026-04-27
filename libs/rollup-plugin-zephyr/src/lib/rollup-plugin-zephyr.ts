@@ -1,4 +1,8 @@
-import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
+import type {
+  InputOptions,
+  NormalizedOutputOptions,
+  OutputBundle,
+} from 'rollup';
 import {
   handleGlobalError,
   zeBuildDashData,
@@ -16,7 +20,8 @@ const getInputFolder = (options: InputOptions): string => {
 };
 
 export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
-  const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const { zephyr_engine_defer, zephyr_defer_create } =
+    ZephyrEngine.defer_create();
   const hooks = options?.hooks;
 
   return {
@@ -28,7 +33,10 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
         context: path_to_execution_dir,
       });
     },
-    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    writeBundle: async (
+      _options: NormalizedOutputOptions,
+      bundle: OutputBundle
+    ) => {
       try {
         const zephyr_engine = await zephyr_engine_defer;
 

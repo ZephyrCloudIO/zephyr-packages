@@ -16,7 +16,10 @@ import {
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
-import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
+import {
+  type ZeGitInfo,
+  getGitInfo,
+} from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
 import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
@@ -25,7 +28,12 @@ import { getApplicationConfiguration } from '../lib/edge-requests/get-applicatio
 import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
-import { cyanBright, greenBright, white, yellow } from '../lib/logging/picocolor';
+import {
+  cyanBright,
+  greenBright,
+  white,
+  yellow,
+} from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
@@ -214,14 +222,22 @@ export class ZephyrEngine {
 
     ze_log.init('Initialized: loading application configuration...');
 
-    ze.application_configuration = getApplicationConfiguration({ application_uid });
+    ze.application_configuration = getApplicationConfiguration({
+      application_uid,
+    });
 
     ze.application_configuration
       .then((appConfig) => {
         const { username, email, EDGE_URL } = appConfig;
-        ze_log.init('Loaded: application configuration', { username, email, EDGE_URL });
+        ze_log.init('Loaded: application configuration', {
+          username,
+          email,
+          EDGE_URL,
+        });
       })
-      .catch((err) => ze_log.init(`Failed to get application configuration: ${err}`));
+      .catch((err) =>
+        ze_log.init(`Failed to get application configuration: ${err}`)
+      );
 
     await ze.start_new_build();
 
@@ -271,9 +287,9 @@ export class ZephyrEngine {
       ze_log.config('Using environment:', this.env.env);
     }
     // convert to base64
-    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
-      'base64'
-    );
+    const build_context = Buffer.from(
+      JSON.stringify(build_context_json)
+    ).toString('base64');
 
     ze_log.remotes(
       'resolve_remote_dependencies.deps',
@@ -284,7 +300,8 @@ export class ZephyrEngine {
       ze_dependencies
     );
 
-    const resolution_errors: Array<{ dep: ZeDependencyPair; error: unknown }> = [];
+    const resolution_errors: Array<{ dep: ZeDependencyPair; error: unknown }> =
+      [];
 
     const tasks = deps.map(async (dep) => {
       const [app_name, project_name, org_name] = dep.name.split('.', 3);
@@ -294,7 +311,8 @@ export class ZephyrEngine {
       // Key might be only the app name
       const dep_application_uid = createApplicationUid({
         org: ze_org_name ?? org_name ?? this.gitProperties.app.org,
-        project: ze_project_name ?? project_name ?? this.gitProperties.app.project,
+        project:
+          ze_project_name ?? project_name ?? this.gitProperties.app.project,
         name: ze_app_name ?? app_name,
       });
 
@@ -343,7 +361,9 @@ export class ZephyrEngine {
             ? `Error code: ${error.code}`
             : `Unknown error`;
           const version =
-            ZephyrError.is(error) && error.template && 'version' in error.template
+            ZephyrError.is(error) &&
+            error.template &&
+            'version' in error.template
               ? (error.template.version as string)
               : dep.version;
           return `  - ${dep.name}@${version} -> ${errorMessage}`;
@@ -409,21 +429,29 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       ze.logger = new Promise<ZeLogger>((r) => (resolve = r));
 
       // internally logger will try to load app_config
-      void Promise.all([ze.application_configuration, ze.build_id]).then((record) => {
-        const buildId = record[1];
-        ze_log.init('Initialized: application configuration, build id and hash list');
+      void Promise.all([ze.application_configuration, ze.build_id]).then(
+        (record) => {
+          const buildId = record[1];
+          ze_log.init(
+            'Initialized: application configuration, build id and hash list'
+          );
 
-        resolve(logger({ application_uid, buildId, git: ze.gitProperties.git }));
-      });
+          resolve(
+            logger({ application_uid, buildId, git: ze.gitProperties.git })
+          );
+        }
+      );
     }
     // snapshotId is a flat version of application_uid and build_id
-    ze.snapshotId = Promise.all([ze.application_configuration, ze.build_id]).then(
-      async (record) =>
-        flatCreateSnapshotId({
-          ...ze.applicationProperties,
-          buildId: record[1],
-          username: record[0].username,
-        })
+    ze.snapshotId = Promise.all([
+      ze.application_configuration,
+      ze.build_id,
+    ]).then(async (record) =>
+      flatCreateSnapshotId({
+        ...ze.applicationProperties,
+        buildId: record[1],
+        username: record[0].username,
+      })
     );
   }
 
@@ -438,7 +466,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     const dependencies = zephyr_engine.federated_dependencies;
 
     const if_target_is_react_native =
-      zephyr_engine.env.target === 'ios' || zephyr_engine.env.target === 'android';
+      zephyr_engine.env.target === 'ios' ||
+      zephyr_engine.env.target === 'android';
 
     const ze_env = ZE_ENV();
     if (ze_env) {
@@ -515,7 +544,9 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     }
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
-      ze_log.upload('Failed to upload assets: missing application_uid or build_id');
+      ze_log.upload(
+        'Failed to upload assets: missing application_uid or build_id'
+      );
       return;
     }
 
@@ -556,7 +587,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
             : {
                 ...buildStats,
                 ze_envs: (engine || zephyr_engine).ze_env_vars || undefined,
-                ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
+                ze_envs_hash:
+                  (engine || zephyr_engine).ze_env_vars_hash || undefined,
               };
 
         return {
@@ -564,7 +596,9 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           builder: dash_data.builder ?? zephyr_engine.builder,
           plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
           worker_version:
-            dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
+            dash_data.worker_version ??
+            zephyr_engine.worker_version ??
+            undefined,
           waitForCompletion,
         };
       },

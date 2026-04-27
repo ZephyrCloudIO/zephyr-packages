@@ -1,5 +1,9 @@
 import { relative, resolve as resolvePath } from 'node:path';
-import type { Platform, ZephyrBuildHooks, ZephyrEngineOptions } from '../zephyr-engine';
+import type {
+  Platform,
+  ZephyrBuildHooks,
+  ZephyrEngineOptions,
+} from '../zephyr-engine';
 import { ZephyrEngine } from '../zephyr-engine';
 import { ZeErrors, ZephyrError } from './errors';
 import { buildAssetsMapMock as buildAssetsMap } from './transformers/ze-build-assets-map';
@@ -91,10 +95,9 @@ function resolveAssetPath(
   const fullPath = normalizePath(file.fullPath);
   const publicRoot = normalizePath(publicDir).replace(/\/+$/, '');
   const outputRoot = normalizePath(outputDir).replace(/\/+$/, '');
-  const publicRelativeRoot = normalizePath(relative(outputRoot, publicRoot)).replace(
-    /\/+$/,
-    ''
-  );
+  const publicRelativeRoot = normalizePath(
+    relative(outputRoot, publicRoot)
+  ).replace(/\/+$/, '');
   const isWithinPublicAlias =
     !!publicRelativeRoot && relativePath.startsWith(`${publicRelativeRoot}/`);
 
@@ -108,7 +111,9 @@ function resolveAssetPath(
     }
 
     const basePath = normalizeBaseURL(baseURL);
-    return basePath ? `client/${basePath}/${staticRelative}` : `client/${staticRelative}`;
+    return basePath
+      ? `client/${basePath}/${staticRelative}`
+      : `client/${staticRelative}`;
   }
 
   return relativePath;
@@ -138,7 +143,12 @@ export async function uploadOutputToZephyr(
   const files = await readDirRecursiveWithContents(outputDir);
 
   const assets = files.reduce<Record<string, DirectoryAsset>>((memo, file) => {
-    const relativePath = resolveAssetPath(file, outputDir, publicDir, opts.baseURL);
+    const relativePath = resolveAssetPath(
+      file,
+      outputDir,
+      publicDir,
+      opts.baseURL
+    );
     if (shouldSkipDeployAsset(relativePath)) {
       return memo;
     }

@@ -60,7 +60,7 @@ export class ZephyrError<
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause
    */
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   /**
    * Returns {@linkcode cause} if it's a `ZephyrError`, otherwise creates a new

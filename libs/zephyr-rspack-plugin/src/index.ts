@@ -1,4 +1,4 @@
-export { withZephyr } from './rspack-plugin/with-zephyr.js';
+export { withZephyr } from './rspack-plugin/with-zephyr.ts';
 export type { ZephyrRspackPluginOptions } from './types/index.js';
 export type { ZephyrBuildHooks, DeploymentInfo } from 'zephyr-agent';
 

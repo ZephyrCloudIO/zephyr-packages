@@ -8,7 +8,7 @@ import {
 } from 'zephyr-xpack-internal';
 import type { ZephyrWebpackPluginOptions } from '../types/index.js';
 import type { WebpackConfiguration } from '../types/missing-webpack-types.js';
-import { ZeWebpackPlugin } from './ze-webpack-plugin.js';
+import { ZeWebpackPlugin } from './ze-webpack-plugin.ts';
 
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
   return (config: Configuration) => {

@@ -37,12 +37,5 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
-  },
-  "module": "dist/index.js",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
   }
 }

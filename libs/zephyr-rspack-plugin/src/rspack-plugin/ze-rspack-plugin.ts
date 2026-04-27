@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import type { Compiler } from '@rspack/core';
 import { HtmlRspackPlugin } from '@rspack/core';
 import {
@@ -20,6 +21,14 @@ import {
 const pluginName = 'ZeRspackPlugin';
 
 function resolveEnvVirtualLoaderPath(projectRoot: string): string {
+  const localLoaderPath = fileURLToPath(
+    new URL('./env-virtual-loader.cjs', import.meta.url)
+  );
+
+  if (fs.existsSync(localLoaderPath)) {
+    return localLoaderPath;
+  }
+
   const candidates = [
     path.join(
       projectRoot,

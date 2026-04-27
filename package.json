@@ -33,6 +33,7 @@
     "@swc/core": "catalog:swc",
     "@swc/helpers": "catalog:swc",
     "@types/node": "catalog:typescript",
+    "@typescript/native-preview": "7.0.0-dev.20260220.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.7",
     "husky": "^9.1.7",

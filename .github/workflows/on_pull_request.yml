@@ -76,6 +76,7 @@ jobs:
           retention-days: 7
           include-hidden-files: true
       - name: Zephyr Preview Environments
+        # Run this only once per matrix build to avoid duplicate PR comments.
         if: runner.os == 'Linux'
         uses: ZephyrCloudIO/zephyr-preview-environment-action@main
         with:

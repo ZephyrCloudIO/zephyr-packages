@@ -1,13 +1,11 @@
 import { Route, Link } from 'react-router-dom';
 
-import styles from './sample-rollup-lib.module.css';
-
 /* eslint-disable-next-line */
 export interface SampleRollupLibProps {}
 
 export function SampleRollupLib(props: SampleRollupLibProps) {
   return (
-    <div className={styles['container']}>
+    <div>
       <h1>Welcome to SampleRollupLib!</h1>
 
       <ul>

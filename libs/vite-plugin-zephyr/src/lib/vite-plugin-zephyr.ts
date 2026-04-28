@@ -26,8 +26,8 @@ import {
   type ModuleFederationOptions,
 } from './internal/mf-vite-etl/ensure_runtime_plugin.js';
 import { replaceBundleChunkCode } from './internal/utils/replace-bundle-chunk-code.js';
-import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
-import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes.js';
+import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options.js';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
 const requireModule =

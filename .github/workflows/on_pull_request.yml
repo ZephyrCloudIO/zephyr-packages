@@ -20,6 +20,9 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -72,6 +75,12 @@ jobs:
           path: ${{ env.ZEPHYR_CACHE }}
           retention-days: 7
           include-hidden-files: true
+      - name: Zephyr Preview Environments
+        # Run this only once per matrix build to avoid duplicate PR comments.
+        if: runner.os == 'Linux'
+        uses: ZephyrCloudIO/zephyr-preview-environment-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
     runs-on: ubuntu-latest

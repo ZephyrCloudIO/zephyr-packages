@@ -5,6 +5,14 @@ import type {
   RemoteWithEntry,
 } from '../types/module-federation.types';
 
+/**
+ * Keep this runtime logic aligned with the Vite runtime plugin at
+ * `libs/vite-plugin-zephyr/src/lib/internal/mf-vite-etl/runtime_plugin.mjs`.
+ *
+ * We intentionally duplicate logic in both plugins for now. Once zephyr-agent supports
+ * ESM runtime exports, we can move to a shared runtime implementation.
+ */
+
 /** Options for basic runtime plugin */
 export interface ZephyrRuntimePluginOptions {
   /** Custom manifest URL (defaults to /zephyr-manifest.json) */

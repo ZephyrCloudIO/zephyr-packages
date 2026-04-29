@@ -6,6 +6,7 @@ export interface ZeAppVersion {
   version_id: string;
 
   remote_entry_url: string;
+  manifest_url?: string;
   remote_host: string;
 
   // application name

@@ -32,6 +32,7 @@ jest.mock('zephyr-agent', () => ({
     }),
   },
   buildAssetsMap: jest.fn().mockReturnValue({}),
+  resolveMfManifestPath: jest.fn().mockReturnValue('mf-manifest.json'),
 }));
 
 // Mock internal dependencies

@@ -1,5 +1,10 @@
 import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
-import { buildAssetsMap, ze_log, ZephyrEngine } from 'zephyr-agent';
+import {
+  buildAssetsMap,
+  resolveMfManifestPath,
+  ze_log,
+  ZephyrEngine,
+} from 'zephyr-agent';
 import type {
   ApplicationConsumes,
   ZeBuildAsset,
@@ -159,6 +164,7 @@ export class ZephyrMetroPlugin {
     Object.assign(minimal_build_stats, {
       name: this.#config.mfConfig?.name || this.zephyr_engine.applicationProperties.name,
       remote: this.#config.mfConfig?.filename || 'remoteEntry.js',
+      mf_manifest: resolveMfManifestPath(this.#config.mfConfig?.manifest),
       remotes: this.#config.mfConfig?.remotes
         ? Object.keys(this.#config.mfConfig.remotes)
         : [],

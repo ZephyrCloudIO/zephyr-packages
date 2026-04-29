@@ -1,6 +1,7 @@
 import { xpack_zephyr_agent } from './ze-xpack-upload-agent';
 import { buildWebpackAssetMap } from './build-webpack-assets-map';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
+import { emitDeploymentDone } from '../lifecycle-events/index';
 import { handleGlobalError, ze_log } from 'zephyr-agent';
 
 jest.mock('./build-webpack-assets-map', () => ({
@@ -9,6 +10,10 @@ jest.mock('./build-webpack-assets-map', () => ({
 
 jest.mock('../federation-dashboard-legacy/get-build-stats', () => ({
   getBuildStats: jest.fn(),
+}));
+
+jest.mock('../lifecycle-events/index', () => ({
+  emitDeploymentDone: jest.fn(),
 }));
 
 jest.mock('zephyr-agent', () => ({
@@ -38,6 +43,7 @@ describe('xpack_zephyr_agent', () => {
     } as never);
 
     expect(handleGlobalError).toHaveBeenCalledWith(error);
+    expect(emitDeploymentDone).toHaveBeenCalled();
     expect(ze_log.upload).toHaveBeenCalled();
     expect(getBuildStats).not.toHaveBeenCalled();
   });

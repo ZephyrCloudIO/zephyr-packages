@@ -80,6 +80,32 @@ describe('setupZeDeploy', () => {
     expect(settled).toBe(true);
   });
 
+  it('does not await the upload agent when waiting for index.html', async () => {
+    const uploadPromise = new Promise<void>(() => undefined);
+    (xpack_zephyr_agent as jest.Mock).mockReturnValue(uploadPromise);
+
+    setupZeDeploy(
+      {
+        pluginName: 'ZePlugin',
+        zephyr_engine: {
+          start_new_build: jest.fn().mockResolvedValue(undefined),
+        } as never,
+        mfConfig: undefined,
+        wait_for_index_html: true,
+      },
+      compiler as never
+    );
+
+    const processAssetsCallback = (
+      compilation.hooks.processAssets.tapPromise as jest.Mock
+    ).mock.calls[0][1];
+
+    await processAssetsCallback({});
+    await new Promise(process.nextTick);
+
+    expect(xpack_zephyr_agent).toHaveBeenCalled();
+  });
+
   it('propagates upload agent failures', async () => {
     const error = new Error('deploy failed');
     (xpack_zephyr_agent as jest.Mock).mockRejectedValue(error);

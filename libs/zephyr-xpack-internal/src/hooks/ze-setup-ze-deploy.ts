@@ -1,4 +1,3 @@
-import { onDeploymentDone } from '../lifecycle-events/index';
 import {
   xpack_zephyr_agent,
   type UploadAgentPluginOptions,
@@ -49,15 +48,17 @@ export function setupZeDeploy<
 
         await pluginOptions.zephyr_engine.start_new_build();
 
-        process.nextTick(xpack_zephyr_agent, {
+        const uploadAgentProps = {
           stats,
           stats_json,
           assets,
           pluginOptions,
-        });
+        };
 
-        if (!pluginOptions.wait_for_index_html) {
-          await onDeploymentDone();
+        if (pluginOptions.wait_for_index_html) {
+          process.nextTick(xpack_zephyr_agent, uploadAgentProps);
+        } else {
+          await xpack_zephyr_agent(uploadAgentProps);
         }
 
         // empty line to separate logs from other plugins

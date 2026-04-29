@@ -1,10 +1,5 @@
 import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
-import {
-  buildAssetsMap,
-  resolveMfManifestPath,
-  ze_log,
-  ZephyrEngine,
-} from 'zephyr-agent';
+import { buildAssetsMap, ze_log, ZephyrEngine } from 'zephyr-agent';
 import type {
   ApplicationConsumes,
   ZeBuildAsset,
@@ -21,6 +16,7 @@ import {
 } from './internal/metro-build-stats';
 import { mutateMfConfig } from './internal/mutate-mf-config';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
+import { resolveMfManifestPath } from './internal/resolve-mf-manifest';
 import type { OutputAsset } from './internal/types';
 
 export interface ZephyrCommandWrapperConfig {

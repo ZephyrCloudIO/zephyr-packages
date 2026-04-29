@@ -64,10 +64,6 @@ export {
   createManifestContent,
   createZephyrManifest,
 } from './lib/transformers/ze-create-manifest';
-export {
-  resolveMfManifestPath,
-  type MfManifestConfig,
-} from './lib/transformers/resolve-mf-manifest-path';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';

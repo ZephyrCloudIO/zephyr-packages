@@ -104,6 +104,7 @@ interface ZephyrAgentConfig {
 When Zephyr cannot find a Git repository with remote origin, it will:
 
 1. **Automatic Package.json-Based Naming**:
+
    - Extract organization, project, and app names from your `package.json`
    - Use authenticated user's username as the organization for personal Zephyr org
    - Follow intelligent naming conventions based on package structure
@@ -156,6 +157,22 @@ npm run build  # Automatically determines naming from package.json
 # Username: "Néstor López" → org: "n-stor-l-pez"
 ```
 
+### OpenTelemetry (Optional)
+
+`zephyr-agent` can emit traces/logs to an OTEL collector through `@zephyrcloud/telemetry`.
+
+- `ZE_OTEL_COLLECTOR_ENDPOINT` (or `OTEL_COLLECTOR_ENDPOINT`): collector base URL
+- `ZE_OTEL_TRACES_ENABLED` (default: `true`)
+- `ZE_OTEL_LOGS_ENABLED` (default: `true`)
+- `ZE_OTEL_METRICS_ENABLED` (default: `false`)
+- `ZE_OTEL_DEBUG` (default: `false`)
+
+Auth behavior:
+
+- Telemetry only initializes after Zephyr auth succeeds (`checkAuth`).
+- Collector auth always uses the Zephyr token (`Authorization: Bearer <zephyr-token>`).
+- If collector endpoint or Zephyr token is missing, telemetry stays disabled.
+
 #### Why Git is Required
 
 Zephyr uses Git information to:
@@ -184,10 +201,12 @@ When Git is not available (e.g., AI coding tools, quick prototypes), Zephyr auto
 **Project and App Naming Logic:**
 
 1. **Scoped Package** (`@company/app-name`):
+
    - Project: `company` (scope without @)
    - App: `app-name`
 
 2. **Monorepo Structure** (root `package.json` exists):
+
    - If root is scoped (`@company/monorepo`): Project = `company`, App = current package name
    - Otherwise: Project = root package name, App = current package name
    - If no root package.json found: Project = current directory name, App = current package name

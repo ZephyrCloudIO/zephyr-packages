@@ -76,6 +76,7 @@ pnpm install
 - `pnpm bump-major` - Automated major version bump across all packages
 
   These scripts automate the version release process:
+
   - Runs `pnpm audit --audit-level high` before making any version changes
   - Increments the selected version in root and all lib package.json files
   - Creates a commit with conventional commit message
@@ -84,6 +85,7 @@ pnpm install
   - Pushes changes and tags to origin
 
   **Requirements:**
+
   - Clean working directory (no uncommitted changes)
   - gh CLI installed and authenticated (for automatic PR creation)
   - Git configured with push access to origin

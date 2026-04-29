@@ -26,7 +26,7 @@ export default {
 function hasSlidevDependency(packageJson: PackageJsonShape): boolean {
   return Boolean(
     packageJson.dependencies?.['@slidev/cli'] ||
-    packageJson.devDependencies?.['@slidev/cli']
+      packageJson.devDependencies?.['@slidev/cli']
   );
 }
 

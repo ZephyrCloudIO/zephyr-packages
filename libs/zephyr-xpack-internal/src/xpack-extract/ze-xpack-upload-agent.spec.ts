@@ -65,5 +65,8 @@ describe('xpack_zephyr_agent', () => {
         },
       } as never)
     ).rejects.toThrow('upload failed');
+
+    expect(emitDeploymentDone).toHaveBeenCalled();
+    expect(ze_log.upload).toHaveBeenCalled();
   });
 });

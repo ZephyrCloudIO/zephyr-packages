@@ -2,18 +2,22 @@ import type { ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
 import { ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
+export interface MutateMfConfigOptions {
+  delegate_module_template?: () => unknown;
+}
+
 export function mutateMfConfig(
   zephyr_engine: ZephyrEngine,
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'],
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template?: () => unknown | undefined
+  options?: MutateMfConfigOptions
 ) {
   // Lazy load zephyr-xpack-internal to avoid static import
   const {
     createMfRuntimeCode,
     xpack_delegate_module_template,
   } = require('zephyr-xpack-internal');
-  const template = delegate_module_template || xpack_delegate_module_template;
+  const template = options?.delegate_module_template || xpack_delegate_module_template;
   if (!resolvedDependencyPairs?.length) {
     ze_log.mf(`No resolved dependency pairs found, skipping...`);
     return;
@@ -59,10 +63,25 @@ export function mutateMfConfig(
       ? remote_version.split('@')
       : [remote_name];
 
+    let baseEntryUrl: string;
+    let usingManifest: boolean;
+    if (resolved_dep.manifest_url) {
+      baseEntryUrl = resolved_dep.manifest_url;
+      usingManifest = true;
+    } else {
+      baseEntryUrl = resolved_dep.remote_entry_url;
+      usingManifest = false;
+      ze_log.mf(
+        `manifest_url missing for '${remote_name}', falling back to container URL`
+      );
+    }
+
     ze_log.mf(`v_app: ${v_app}`);
     if (v_app) {
-      resolved_dep.remote_entry_url = [v_app, resolved_dep.remote_entry_url].join('@');
-      ze_log.mf(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
+      resolved_dep.remote_entry_url = [v_app, baseEntryUrl].join('@');
+      ze_log.mf(
+        `Resolved ${usingManifest ? 'manifest' : 'container'} entry URL for '${remote_name}': ${resolved_dep.remote_entry_url}`
+      );
     }
 
     resolved_dep.name = remote_name;

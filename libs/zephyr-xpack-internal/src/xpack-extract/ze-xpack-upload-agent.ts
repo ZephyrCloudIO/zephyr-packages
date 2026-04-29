@@ -7,11 +7,11 @@ import { emitDeploymentDone } from '../lifecycle-events/index';
 import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
 import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
 
-interface UploadAgentPluginOptions {
+export interface UploadAgentPluginOptions {
   zephyr_engine: ZephyrEngine;
   wait_for_index_html?: boolean;
   // federated module config
-  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+  mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   hooks?: ZephyrBuildHooks;
 }
 

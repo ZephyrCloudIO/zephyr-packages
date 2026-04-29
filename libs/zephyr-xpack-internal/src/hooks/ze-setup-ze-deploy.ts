@@ -1,14 +1,12 @@
-import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
-import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
+import {
+  xpack_zephyr_agent,
+  type UploadAgentPluginOptions,
+} from '../xpack-extract/ze-xpack-upload-agent';
 import type { Source } from 'zephyr-edge-contract';
-import type { ModuleFederationPlugin, XStats } from '../xpack.types';
+import type { XStats } from '../xpack.types';
 
-interface DeployPluginOptions {
+interface DeployPluginOptions extends UploadAgentPluginOptions {
   pluginName: string;
-  zephyr_engine: ZephyrEngine;
-  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  wait_for_index_html?: boolean;
-  hooks?: ZephyrBuildHooks;
 }
 
 interface DeployCompiler {
@@ -50,12 +48,18 @@ export function setupZeDeploy<
 
         await pluginOptions.zephyr_engine.start_new_build();
 
-        await xpack_zephyr_agent({
+        const uploadAgentProps = {
           stats,
           stats_json,
           assets,
           pluginOptions,
-        });
+        };
+
+        if (pluginOptions.wait_for_index_html) {
+          process.nextTick(xpack_zephyr_agent, uploadAgentProps);
+        } else {
+          await xpack_zephyr_agent(uploadAgentProps);
+        }
 
         // empty line to separate logs from other plugins
         console.log();

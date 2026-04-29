@@ -4,7 +4,6 @@ import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 export interface MutateMfConfigOptions {
   delegate_module_template?: () => unknown;
-  useManifestEntry?: boolean;
 }
 
 export function mutateMfConfig(
@@ -66,17 +65,15 @@ export function mutateMfConfig(
 
     let baseEntryUrl: string;
     let usingManifest: boolean;
-    if (options?.useManifestEntry && resolved_dep.manifest_url) {
+    if (resolved_dep.manifest_url) {
       baseEntryUrl = resolved_dep.manifest_url;
       usingManifest = true;
     } else {
       baseEntryUrl = resolved_dep.remote_entry_url;
       usingManifest = false;
-      if (options?.useManifestEntry) {
-        ze_log.mf(
-          `useManifestEntry requested but manifest_url missing for '${remote_name}', falling back to container URL`
-        );
-      }
+      ze_log.mf(
+        `manifest_url missing for '${remote_name}', falling back to container URL`
+      );
     }
 
     ze_log.mf(`v_app: ${v_app}`);

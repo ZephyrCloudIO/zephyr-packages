@@ -58,8 +58,7 @@ export class ZephyrMetroPlugin {
       mutateMfConfig(
         this.zephyr_engine,
         this.#config.mfConfig,
-        resolved_dependency_pairs,
-        { useManifestEntry: true }
+        resolved_dependency_pairs
       );
     }
 

@@ -37,7 +37,7 @@ interface ProcessWebpackGraphParams {
   stats_json: XStatsCompilation;
   pluginOptions: {
     zephyr_engine: ZephyrEngine;
-    mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+    mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
     // Repack specific options because there are different targets it build towards
     target?: 'ios' | 'android' | 'web' | undefined;
   };

@@ -20,7 +20,7 @@ export async function setupZeDeploy({
     Promise.resolve(buildStats(outDir, files)),
   ]);
 
-  process.nextTick(xpack_zephyr_agent, {
+  await xpack_zephyr_agent({
     stats,
     stats_json: stats.toJson(),
     assets,

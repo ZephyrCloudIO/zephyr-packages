@@ -72,9 +72,12 @@ pnpm install
 ### Version Management
 
 - `pnpm bump-patch` - Automated patch version bump across all packages
+- `pnpm bump-minor` - Automated minor version bump across all packages
+- `pnpm bump-major` - Automated major version bump across all packages
 
-  This script automates the complete patch version release process:
-  - Increments patch version in root and all lib package.json files
+  These scripts automate the version release process:
+  - Runs `pnpm audit --audit-level high` before making any version changes
+  - Increments the selected version in root and all lib package.json files
   - Creates a commit with conventional commit message
   - Creates a git tag (vX.X.X)
   - If on main/master branch, creates a new feature branch and opens a PR

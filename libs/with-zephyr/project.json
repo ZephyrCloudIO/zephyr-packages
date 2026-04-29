@@ -36,7 +36,8 @@
       "dependsOn": ["build"],
       "options": {
         "command": "rstest run",
-        "cwd": "libs/with-zephyr"
+        "cwd": "libs/with-zephyr",
+        "forwardAllArgs": false
       }
     },
     "lint": {

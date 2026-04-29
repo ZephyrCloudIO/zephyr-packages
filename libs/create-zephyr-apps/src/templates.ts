@@ -20,121 +20,153 @@ export type Template = {
 
 // TODO: Programmatically load templates from the examples repo after cloning it
 export const Templates: Template[] = [
-  // Vanilla examples
+  // Bundlers
   {
-    name: 'astro',
-    label: 'Astro',
-    hint: 'An Astro static site generator example.',
-    directory: 'vanilla' as const,
+    name: 'react-vite',
+    label: 'React + Vite',
+    hint: 'You will be building React app powered by Vite.',
+    directory: 'bundlers',
   },
   {
-    name: 'mf-airbnb-clone',
-    label: 'Airbnb clone',
-    hint: 'You will be building an Airbnb clone with React, TypeScript, and Module Federation.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'mf-react-rsbuild',
-    label: 'React + Rsbuild + Module Federation',
-    hint: 'A React application with Module Federation using Rsbuild.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'mf-react-vite-rspack-webpack',
-    label: 'React + Vite + Webpack + Rspack',
-    hint: 'You will be building federated React apps powered by Vite, Webpack and Rspack.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'mf-react-webpack',
-    label: 'React + Webpack + Module Federation',
-    hint: 'A React application with Module Federation using Webpack.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'mf-tractor-sample',
-    label: 'React + Webpack + Tractor',
-    hint: 'A React application using Webpack as the bundler and Tractor as the module federation manager.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'modernjs',
-    label: 'ModernJS',
-    hint: 'A simple ModernJS app.',
-    directory: 'vanilla' as const,
+    name: 'react-rspack',
+    label: 'React + Rspack',
+    hint: 'A simple React application built by Rspack.',
+    directory: 'bundlers',
   },
   {
     name: 'parcel-react',
     label: 'React + Parcel',
     hint: 'A React application using Parcel as the bundler.',
-    directory: 'vanilla' as const,
+    directory: 'bundlers',
   },
   {
     name: 'rolldown-react',
     label: 'React + Rolldown',
     hint: 'A React example using Rolldown.',
-    directory: 'vanilla' as const,
+    directory: 'bundlers',
   },
   {
     name: 'rollup-react',
     label: 'React + Rollup',
     hint: 'A React application using Rollup as the bundler.',
-    directory: 'vanilla' as const,
+    directory: 'bundlers',
   },
   {
-    name: 'rspack-react',
-    label: 'React + Rspack',
-    hint: 'A simple React application built by Rspack.',
-    directory: 'vanilla' as const,
+    name: 'tsdown',
+    label: 'React + tsdown',
+    hint: 'A React component library starter with tsdown.',
+    directory: 'bundlers',
+  },
+  // Module Federation
+  {
+    name: 'airbnb-clone',
+    label: 'Airbnb clone',
+    hint: 'You will be building an Airbnb clone with React, TypeScript, and Module Federation.',
+    directory: 'module-federation',
+  },
+  {
+    name: 'react-rsbuild',
+    label: 'React + Rsbuild + Module Federation',
+    hint: 'A React application with Module Federation using Rsbuild.',
+    directory: 'module-federation',
+  },
+  {
+    name: 'react-vite-rspack-webpack',
+    label: 'React + Vite + Webpack + Rspack',
+    hint: 'You will be building federated React apps powered by Vite, Webpack and Rspack.',
+    directory: 'module-federation',
+  },
+  {
+    name: 'react-webpack',
+    label: 'React + Webpack + Module Federation',
+    hint: 'A React application with Module Federation using Webpack.',
+    directory: 'module-federation',
+  },
+  {
+    name: 'tractor-sample',
+    label: 'Tractor Store (Module Federation)',
+    hint: 'A micro-frontend sample with Rspack and Module Federation.',
+    directory: 'module-federation',
+  },
+  // Frameworks
+  {
+    name: 'angular-vite',
+    label: 'Angular + Vite',
+    hint: 'You will be building an Angular app powered by Vite.',
+    directory: 'frameworks',
+  },
+  {
+    name: 'astro',
+    label: 'Astro',
+    hint: 'An Astro static site generator example.',
+    directory: 'frameworks',
+  },
+  {
+    name: 'ember-vite',
+    label: 'Ember + Vite',
+    hint: 'An Ember application using Vite as the bundler.',
+    directory: 'frameworks',
+  },
+  {
+    name: 'modernjs',
+    label: 'ModernJS',
+    hint: 'A simple ModernJS app.',
+    directory: 'frameworks',
   },
   {
     name: 'rspress',
     label: 'Rspress SSG',
     hint: 'An Rspress static site generator example.',
-    directory: 'vanilla' as const,
+    directory: 'frameworks',
   },
   {
-    name: 'vite-angular',
-    label: 'Angular + Vite',
-    hint: 'You will be building an Angular app powered by Vite.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'vite-ember',
-    label: 'Ember + Vite',
-    hint: 'An Ember application using Vite as the bundler.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'vite-react',
-    label: 'React + Vite',
-    hint: 'You will be building React app powered by Vite.',
-    directory: 'vanilla' as const,
-  },
-  {
-    name: 'vite-solid',
+    name: 'solid-vite',
     label: 'Solid + Vite',
     hint: 'A Solid app using Vite as the bundler.',
-    directory: 'vanilla' as const,
+    directory: 'frameworks',
   },
   {
-    name: 'vite-svelte',
+    name: 'svelte-vite',
     label: 'Svelte + Vite',
     hint: 'A Svelte app using Vite as the bundler.',
-    directory: 'vanilla' as const,
+    directory: 'frameworks',
   },
-  // NX examples
   {
-    name: 'mf-nx-rspack',
+    name: 'tanstack-start',
+    label: 'TanStack Start',
+    hint: 'A TanStack Start application with Vite.',
+    directory: 'frameworks',
+  },
+  // Server
+  {
+    name: 'nitro-hono',
+    label: 'Nitro + Hono',
+    hint: 'Hono running on Nitro server with Zephyr Cloud deployment.',
+    directory: 'server',
+  },
+  {
+    name: 'nitro-elysia',
+    label: 'Nitro + Elysia',
+    hint: 'Elysia running on Nitro server with Zephyr Cloud deployment.',
+    directory: 'server',
+  },
+  {
+    name: 'nitro-hello-world',
+    label: 'Nitro Hello World',
+    hint: 'Minimal Nitro server with Zephyr Cloud deployment.',
+    directory: 'server',
+  },
+  // Build Systems
+  {
+    name: 'nx-rspack-mf',
     label: 'NX + React + Rspack + Module Federation',
     hint: 'A monorepo using NX, React, and Rspack with Module Federation.',
-    directory: 'nx' as const,
+    directory: 'build-systems',
   },
-  // Turborepo examples
   {
-    name: 'mf-turbo-rspack',
+    name: 'turborepo-rspack-mf',
     label: 'Turbo + Rspack + Module Federation',
     hint: 'A monorepo using Turborepo, React, and Rspack with Module Federation.',
-    directory: 'turborepo' as const,
+    directory: 'build-systems',
   },
 ].sort((a, b) => a.name.localeCompare(b.name));

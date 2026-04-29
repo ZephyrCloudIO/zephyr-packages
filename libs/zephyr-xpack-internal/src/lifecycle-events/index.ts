@@ -10,7 +10,7 @@ export function emitDeploymentDone(): void {
   _lifecycle_events.emit(_deployment_done);
 }
 
-export async function onDeploymentDone(): Promise<string> {
+export async function onDeploymentDone(): Promise<void> {
   return new Promise((resolve) => {
     ze_log.misc('Waiting for deployment done');
     _lifecycle_events.once(_deployment_done, resolve);

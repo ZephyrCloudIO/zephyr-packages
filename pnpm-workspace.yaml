@@ -25,7 +25,7 @@ catalogs:
     eslint-plugin-jsx-a11y: 6.10.2
     eslint-plugin-react: ^7.37.4
     eslint-plugin-react-hooks: ^5.2.0
-    eslint-plugin-react-refresh: ^0.4.19
+    eslint-plugin-react-refresh: ^0.5.0
     typescript-eslint: ^8.27.0
   modernjs:
     '@modern-js/app-tools': ^2.70.1
@@ -52,7 +52,7 @@ catalogs:
     '@jest/globals': ^29.7.0
     '@testing-library/react': ^16.2.0
   react18:
-    '@types/react': 18.3.27
+    '@types/react': 18.3.28
     '@types/react-dom': 18.3.7
     react: 18.3.1
     react-dom: 18.3.1
@@ -63,7 +63,7 @@ catalogs:
     react: ^19.0.0
     react-dom: ^19.0.0
   rolldown:
-    rolldown: 1.0.0-beta.54
+    rolldown: 1.0.0-rc.6
   rollup4:
     '@rollup/plugin-url': 8.0.2
     '@svgr/rollup': 8.1.0
@@ -72,7 +72,7 @@ catalogs:
     '@rsbuild/core': ^1.7.1
     '@rsbuild/plugin-react': ^1.4.0
     '@rsbuild/shared': ^0.7.10
-    '@rsdoctor/rspack-plugin': 1.3.15
+    '@rsdoctor/rspack-plugin': 1.5.2
     '@rspack/cli': ^1.7.0
     '@rspack/core': ^1.7.0
     '@rspack/plugin-react-refresh': ^1.5.1
@@ -80,7 +80,7 @@ catalogs:
     '@rspress/core': ^2.0.0-rc.1
   swc:
     '@swc-node/register': 1.11.1
-    '@swc/cli': 0.7.10
+    '@swc/cli': 0.8.0
     '@swc/core': 1.15.8
     '@swc/helpers': 0.5.19
     '@swc/jest': 0.2.39
@@ -90,7 +90,7 @@ catalogs:
   typescript:
     '@types/is-ci': 3.0.4
     '@types/jest': 29.5.14
-    '@types/node': 22.13.13
+    '@types/node': 22.19.13
     '@types/node-persist': ^3.1.8
     '@types/yargs': ^17.0.33
     ts-jest: ^29.2.6
@@ -103,7 +103,7 @@ catalogs:
     globals: ^15.9.0
     postcss: ^8.2.1
     postcss-loader: ^8.0.0
-    vite: ^7.1.11
+    vite: ^7.3.2
   vitest:
     '@vitest/coverage-v8': ^3.0.9
     '@vitest/ui': ^3.0.9
@@ -130,6 +130,7 @@ overrides:
   '@remix-run/router@<=1.23.1': '>=1.23.2'
   '@tootallnate/once@<3.0.1': '>=3.0.1'
   ajv@>=7.0.0-alpha.0 <8.18.0: '>=8.18.0'
+  defu@<=6.1.4: 6.1.6
   flatted: 3.4.2
   h3@<1.15.6: '>=1.15.6'
   h3@>=2.0.0-0 <2.0.1-rc.18: '>=2.0.1-rc.18'
@@ -143,12 +144,19 @@ overrides:
   hono@<4.5.8: '>=4.5.8'
   hono@<4.6.5: '>=4.6.5'
   hono@<4.9.7: '>=4.9.7'
+  handlebars@<=4.7.8: '>=4.7.9'
   hono@>=1.1.0 <4.10.2: '>=4.10.2'
   koa@>=3.0.0 <3.1.2: '>=3.1.2'
+  lodash-es@<=4.17.23: 4.18.1
+  lodash@<=4.17.23: 4.18.1
+  minimatch@<3.1.4: 3.1.5
+  minimatch@>=5.0.0 <5.1.8: 5.1.9
+  minimatch@>=9.0.0 <9.0.7: 9.0.9
   node-forge@<1.4.0: '>=1.4.0'
   anymatch>picomatch: 2.3.2
   jest-util>picomatch: 4.0.4
   micromatch>picomatch: 4.0.4
+  path-to-regexp@<0.1.13: '>=0.1.13'
   picomatch@<2.3.2: '>=2.3.2'
   picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
   prismjs@<1.30.0: '>=1.30.0'

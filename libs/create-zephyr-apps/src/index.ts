@@ -113,7 +113,7 @@ if (projectKind === 'web') {
   }
 
   examplesRepoName = 'zephyr-examples';
-  subfolder = `${selectedTemplate.directory}/examples/${selectedTemplate.name}`;
+  subfolder = `${selectedTemplate.directory}/${selectedTemplate.name}`;
 } else {
   examplesRepoName = 'zephyr-repack-example';
   subfolder = '';

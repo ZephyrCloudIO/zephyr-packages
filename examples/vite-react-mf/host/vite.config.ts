@@ -32,7 +32,7 @@ const mfConfig: ModuleFederationOptions = {
       singleton: true,
       eager: true,
     },
-  },
+  } as unknown as ModuleFederationOptions['shared'],
   dts: false,
 };
 

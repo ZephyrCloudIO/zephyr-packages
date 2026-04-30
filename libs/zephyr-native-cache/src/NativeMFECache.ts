@@ -1,8 +1,8 @@
 import { NativeModules } from 'react-native';
 
 export interface NativeMFECacheSpec {
-  // Install JSI bindings (synchronous — call once from JS)
-  installJSI(): boolean;
+  // Restart the React Native context (reloads JS bundle without killing the app)
+  restart(): void;
 
   // File system operations
   writeFile(path: string, content: string, encoding: 'utf8' | 'base64'): Promise<void>;

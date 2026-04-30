@@ -1,40 +1,35 @@
 package com.modulefederation.metrocache
 
+import com.facebook.react.ReactApplication
 import com.facebook.react.bridge.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class MFECacheModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
-  companion object {
-    init {
-      System.loadLibrary("mfecache")
-    }
-  }
-
-  private external fun nativeInstallJSI(runtimePtr: Long)
-
   override fun getName(): String = "MFECache"
 
-  // Called from JS: NativeMFECache.installJSI() — synchronous.
-  // At this point runtime is guaranteed ready (JS is already running).
-  @ReactMethod(isBlockingSynchronousMethod = true)
-  fun installJSI(): Boolean {
-    return try {
-      val jsContext = reactApplicationContext.javaScriptContextHolder?.get() ?: 0L
-      if (jsContext != 0L) {
-        nativeInstallJSI(jsContext)
-        true
-      } else {
-        false
+  // --- Restart ---
+
+  @ReactMethod
+  fun restart() {
+    val activity = currentActivity ?: return
+    val app = activity.application as? ReactApplication ?: return
+
+    activity.runOnUiThread {
+      try {
+        // New arch (bridgeless): ReactHost.reload()
+        app.reactHost?.reload("MFECache restart") ?: throw UnsupportedOperationException()
+      } catch (_: Exception) {
+        // Old arch fallback: recreate the React context via ReactInstanceManager
+        app.reactNativeHost.reactInstanceManager.recreateReactContextInBackground()
       }
-    } catch (e: Exception) {
-      false
     }
   }
 
@@ -160,6 +155,10 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun downloadFile(url: String, destPath: String, promise: Promise) {
     Thread {
+      val destFile = File(destPath)
+      // Unique temp name per-call — avoids two concurrent downloads to the same
+      // destPath clobbering each other's .tmp file.
+      val tempFile = File("$destPath.${UUID.randomUUID()}.tmp")
       try {
         val request = Request.Builder().url(url).get().build()
         httpClient.newCall(request).execute().use { response ->
@@ -174,14 +173,13 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
             return@Thread
           }
 
-          val destFile = File(destPath)
           destFile.parentFile?.mkdirs()
 
           val digest = MessageDigest.getInstance("SHA-256")
           var bytesWritten = 0L
 
           body.byteStream().use { input ->
-            FileOutputStream(destFile).use { output ->
+            FileOutputStream(tempFile).use { output ->
               val buffer = ByteArray(8192)
               var read: Int
               while (input.read(buffer).also { read = it } != -1) {
@@ -190,6 +188,12 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
                 bytesWritten += read
               }
             }
+          }
+
+          destFile.delete()
+          if (!tempFile.renameTo(destFile)) {
+            tempFile.copyTo(destFile, overwrite = true)
+            tempFile.delete()
           }
 
           val sha256 = digest.digest().joinToString("") { "%02x".format(it) }
@@ -201,6 +205,7 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
           promise.resolve(result)
         }
       } catch (e: Exception) {
+        tempFile.delete()
         promise.reject("DOWNLOAD_ERROR", e.message, e)
       }
     }.start()

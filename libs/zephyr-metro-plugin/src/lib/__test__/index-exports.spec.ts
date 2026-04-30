@@ -7,10 +7,6 @@ jest.mock('../zephyr-metro-command-wrapper', () => ({
   zephyrCommandWrapper: jest.fn(),
 }));
 
-jest.mock('../zephyr-transformer', () => ({
-  transform: jest.fn(),
-}));
-
 import * as zephyrMetroPlugin from '../../index';
 
 describe('package root exports', () => {

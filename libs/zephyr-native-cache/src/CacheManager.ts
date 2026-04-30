@@ -3,6 +3,13 @@ import type { BundleMetadata, CachedBundleResult, MFECacheConfig } from './types
 
 const LOG_PREFIX = '[MFE-Cache]';
 
+/**
+ * Strip query params so the same physical bundle maps to one cache key regardless of
+ * which caller built the URL (MF runtime vs. manifest extractor use different param
+ * orderings). Query params are still used for the HTTP request itself.
+ */
+const cacheKey = (url: string): string => url.split('?')[0];
+
 // Default configuration values
 const DEFAULT_MAX_CACHE_SIZE_BYTES = 20 * 1024 * 1024; // 20MB
 const DEFAULT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -40,11 +47,15 @@ export class CacheManager {
     await this.evictLRU();
 
     this.initialized = true;
-    console.info(`${LOG_PREFIX} initialized, ${this.urlIndex.size} cached bundles`);
+    if (this.urlIndex.size > 0) {
+      console.info(`${LOG_PREFIX} ready (${this.urlIndex.size} bundles on disk)`);
+    } else {
+      console.info(`${LOG_PREFIX} ready (empty cache)`);
+    }
   }
 
   async getCachedBundle(bundleUrl: string): Promise<CachedBundleResult | null> {
-    const meta = this.urlIndex.get(bundleUrl);
+    const meta = this.urlIndex.get(cacheKey(bundleUrl));
     if (!meta || meta.status !== 'active') return null;
 
     // Verify file still exists on disk
@@ -64,7 +75,8 @@ export class CacheManager {
     try {
       const url = new URL(bundleUrl);
       const hostDir = url.host.replace(/:/g, '_');
-      const pathname = url.pathname.replace(/^\/+/, '');
+      // Strip trailing slashes — some URL paths end with "/" which creates a directory instead of a file
+      const pathname = url.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
       return `${this.bundleDir}/${hostDir}/${pathname}`;
     } catch {
       return `${this.bundleDir}/${remoteName}/${remoteName}.bundle`;
@@ -86,7 +98,7 @@ export class CacheManager {
       bundleHash: metadata.bundleHash ?? '',
       buildVersion: metadata.buildVersion ?? '',
       filePath,
-      bundleUrl: metadata.bundleUrl,
+      bundleUrl: cacheKey(metadata.bundleUrl),
       downloadedAt: now,
       lastUsedAt: now,
       status: 'active',
@@ -103,7 +115,7 @@ export class CacheManager {
   }
 
   async updateLastUsedAt(bundleUrl: string): Promise<void> {
-    const meta = this.urlIndex.get(bundleUrl);
+    const meta = this.urlIndex.get(cacheKey(bundleUrl));
     if (!meta) {
       return;
     }
@@ -131,7 +143,7 @@ export class CacheManager {
   async preDownloadBundle(bundleUrl: string, newHash: string): Promise<boolean> {
     if (!NativeMFECache) return false;
 
-    const existing = this.urlIndex.get(bundleUrl);
+    const existing = this.urlIndex.get(cacheKey(bundleUrl));
     // Already cached with same hash — skip
     if (existing?.bundleHash === newHash) return false;
 
@@ -229,9 +241,7 @@ export class CacheManager {
         this.urlIndex.set(meta.bundleUrl, meta);
       }
 
-      console.info(
-        `${LOG_PREFIX} recovered ${this.urlIndex.size} bundles from disk manifest`
-      );
+      // logged at init summary
     } catch {
       // manifest corrupted or unreadable, start fresh
     }

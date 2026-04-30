@@ -1,6 +1,7 @@
 import { CacheManager } from './CacheManager';
+import { CacheEvents } from './events';
 import NativeMFECache from './NativeMFECache';
-import type { MFECacheConfig } from './types';
+import type { BundleMetadata, MFECacheConfig } from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -20,10 +21,19 @@ export class BundleCacheLayer {
   // Manifest sources for polling: manifestUrl → ManifestSource
   private manifestSources = new Map<string, ManifestSource>();
 
+  // Inflight dedup: prevents concurrent downloads of the same bundle URL
+  private inflightLoads = new Map<
+    string,
+    Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }>
+  >();
+
   // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
   private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  // Event emitter for cache lifecycle events
+  readonly events = new CacheEvents();
 
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
@@ -32,11 +42,6 @@ export class BundleCacheLayer {
     this.bundleHashMap =
       (globalThis as any).__MFE_BUNDLE_HASHES__ ??
       ((globalThis as any).__MFE_BUNDLE_HASHES__ = {});
-
-    // Install JSI bindings if available (provides __MFE_readFileSync)
-    if (NativeMFECache && typeof (NativeMFECache as any).installJSI === 'function') {
-      (NativeMFECache as any).installJSI();
-    }
   }
 
   // --- Registration (called by bundler integration layer) ---
@@ -70,57 +75,42 @@ export class BundleCacheLayer {
 
     await this.ensureInitialized();
 
+    const key = bundleUrl.split('?')[0];
+
+    // Deduplicate concurrent loads of the same bundle
+    const inflight = this.inflightLoads.get(key);
+    if (inflight) return inflight;
+
+    const load = this.doLoadBundle(bundleUrl, key);
+    this.inflightLoads.set(key, load);
     try {
-      // Strip query params for hash lookup
-      const bundleUrlNoQuery = bundleUrl.split('?')[0];
+      return await load;
+    } finally {
+      this.inflightLoads.delete(key);
+    }
+  }
+
+  private async doLoadBundle(
+    bundleUrl: string,
+    bundleUrlNoQuery: string
+  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
+    try {
       const expectedHash = this.bundleHashMap[bundleUrlNoQuery] as string | undefined;
 
-      // No hash in manifest → can't verify integrity, skip cache
-      if (!expectedHash) {
-        return { status: 'skipped' };
+      if (expectedHash) {
+        return this.loadBundleWithVerification(bundleUrl, expectedHash);
       }
 
-      const cached = await this.cacheManager!.getCachedBundle(bundleUrl);
-
-      // Determine if cache is valid: hash must match manifest
-      const cacheValid =
-        cached &&
-        cached.metadata.bundleHash &&
-        cached.metadata.bundleHash === expectedHash;
-
-      if (cacheValid) {
-        // Path A: cache HIT with matching hash — use cached bundle
-        this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
-        await this.evalFromFile(cached.filePath);
-        return { status: 'cache-hit' };
-      } else {
-        // Path B: cache MISS or EXPIRED — download fresh bundle
-        const remoteName = this.inferRemoteName(bundleUrl);
-        const destPath = await this.cacheManager!.getBundleDestPath(
-          remoteName,
-          bundleUrl
-        );
-
-        const { sha256 } = await NativeMFECache.downloadFile(bundleUrl, destPath);
-
-        // Checksum verification against manifest hash
-        if (sha256 !== expectedHash) {
-          try {
-            await NativeMFECache.deleteFile(destPath);
-          } catch {
-            /* ok */
-          }
-          // Verification failed — caller should fallback to network load
-          return { status: 'skipped' };
-        }
-
-        await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
-          bundleUrl,
-          bundleHash: sha256,
-        });
-        await this.evalFromFile(destPath);
-        return { status: 'downloaded' };
-      }
+      // No hash — skip cache, fetch fresh. Serializer will compute hashes
+      // for next load.
+      console.info(`${LOG_PREFIX} skip (no hash): ${bundleUrlNoQuery}`);
+      this.events.emitBundleLoad(
+        bundleUrl,
+        this.inferRemoteName(bundleUrl),
+        'skipped',
+        undefined
+      );
+      return { status: 'skipped' };
     } catch (cacheError) {
       console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
       return { status: 'skipped' };
@@ -139,6 +129,7 @@ export class BundleCacheLayer {
     }
 
     this.isCheckingUpdates = true;
+    this.events.emitPollStart();
     let updated = 0;
     let checked = 0;
 
@@ -161,29 +152,22 @@ export class BundleCacheLayer {
           // Extract all bundle URLs (container + exposed + shared) from manifest
           const newHashes = source.extractHashes(manifest, manifestUrl);
 
-          for (const [bundleUrl] of newHashes) {
+          for (const [bundleUrl, newHash] of newHashes) {
             checked++;
-            // Check if this URL is already cached
-            const existing = await this.cacheManager!.getCachedBundle(bundleUrl);
-            if (existing) continue;
 
-            // Not cached — pre-download
+            // Update hash map so subsequent loadBundle() calls use the latest hash.
+            // loadBundle() looks up by URL-without-query, so key consistently here too.
+            this.bundleHashMap[bundleUrl.split('?')[0]] = newHash;
+
             const remoteName = this.inferRemoteName(bundleUrl);
-            const destPath = await this.cacheManager!.getBundleDestPath(
-              remoteName,
-              bundleUrl
+            const didUpdate = await this.cacheManager!.preDownloadBundle(
+              bundleUrl,
+              newHash
             );
-
-            try {
-              const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
-              await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
-                bundleUrl,
-                bundleHash: sha256,
-              });
+            if (didUpdate) {
               updated++;
-            } catch (dlError) {
-              console.warn(`${LOG_PREFIX} pre-download failed: ${bundleUrl}`, dlError);
-              // Download failed for this bundle, continue with others
+              this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
+              this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
             }
           }
         } catch (manifestError) {
@@ -193,6 +177,7 @@ export class BundleCacheLayer {
       }
     } finally {
       this.isCheckingUpdates = false;
+      this.events.emitPollComplete(checked, updated);
     }
 
     return { updated, checked };
@@ -213,7 +198,64 @@ export class BundleCacheLayer {
     }
   }
 
+  // --- Public API for UI layer ---
+
+  async clearCache(): Promise<void> {
+    await this.ensureInitialized();
+    await this.cacheManager!.invalidateAllCaches();
+  }
+
+  getLoadedBundles(): BundleMetadata[] {
+    return this.cacheManager?.getAllMetadata() ?? [];
+  }
+
   // --- Private helpers ---
+
+  private async loadBundleWithVerification(
+    bundleUrl: string,
+    expectedHash: string
+  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
+    const cached = await this.cacheManager!.getCachedBundle(bundleUrl);
+
+    const cacheValid =
+      cached && cached.metadata.bundleHash && cached.metadata.bundleHash === expectedHash;
+
+    if (cacheValid) {
+      console.info(`${LOG_PREFIX} cache hit: ${bundleUrl.split('?')[0]}`);
+      this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
+      await this.evalFromFile(cached.filePath);
+      this.events.emitBundleLoad(
+        bundleUrl,
+        this.inferRemoteName(bundleUrl),
+        'cache-hit',
+        expectedHash
+      );
+      return { status: 'cache-hit' };
+    }
+
+    console.info(`${LOG_PREFIX} cache miss: ${bundleUrl.split('?')[0]}`);
+    const remoteName = this.inferRemoteName(bundleUrl);
+    const destPath = await this.cacheManager!.getBundleDestPath(remoteName, bundleUrl);
+    const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
+
+    if (sha256 !== expectedHash) {
+      try {
+        await NativeMFECache!.deleteFile(destPath);
+      } catch {
+        /* ok */
+      }
+      this.events.emitBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
+      return { status: 'skipped' };
+    }
+
+    await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
+      bundleUrl,
+      bundleHash: sha256,
+    });
+    await this.evalFromFile(destPath);
+    this.events.emitBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
+    return { status: 'downloaded' };
+  }
 
   private async ensureInitialized(): Promise<void> {
     if (this.cacheManager) return;
@@ -228,17 +270,14 @@ export class BundleCacheLayer {
     await this.initPromise;
   }
 
-  /** Read bundle file and eval its source code */
-  private evalFromFile(filePath: string): void | Promise<void> {
-    if (typeof (globalThis as any).__MFE_readFileSync === 'function') {
-      const source = (globalThis as any).__MFE_readFileSync(filePath);
-      eval(source);
-    } else {
-      // Fallback: async read (less ideal — introduces a microtask gap)
-      return NativeMFECache!.readFile(filePath, 'utf8').then((source: string) => {
-        eval(source);
-      });
-    }
+  /**
+   * Read bundle file and eval its source code. All callers `await` this, so the microtask
+   * gap from the async read is not user-visible.
+   */
+  private async evalFromFile(filePath: string): Promise<void> {
+    const source = await NativeMFECache!.readFile(filePath, 'utf8');
+    // eslint-disable-next-line no-eval
+    eval(source);
   }
 
   /** Infer a remote name from a bundle URL for storage path generation */

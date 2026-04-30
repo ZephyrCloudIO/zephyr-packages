@@ -1,6 +1,6 @@
 {
   "name": "zephyr-nuxt-module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Nuxt module for deploying Nuxt applications with Zephyr Cloud",
   "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-nuxt-module#readme",
   "repository": {

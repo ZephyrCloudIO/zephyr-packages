@@ -2,15 +2,10 @@ import type { ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
 import { ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
-export interface MutateMfConfigOptions {
-  delegate_module_template?: () => unknown;
-}
-
 export function mutateMfConfig(
   _zephyr_engine: ZephyrEngine,
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'],
-  resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  options?: MutateMfConfigOptions
+  resolvedDependencyPairs: ZeResolvedDependency[] | null
 ) {
   if (!resolvedDependencyPairs?.length) {
     ze_log.mf(`No resolved dependency pairs found, skipping...`);

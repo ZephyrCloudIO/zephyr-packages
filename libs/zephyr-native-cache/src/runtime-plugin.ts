@@ -87,12 +87,13 @@ const buildUrlForSplitBundle = (entry: string) => {
  * Resolve the bundle paths for a manifest item.
  *
  * Dev vs production serves bundles from different locations:
- * - Dev: Metro serves at source paths (e.g. "src/StatsCard.bundle")
- *   so we use assets.js.sync with the extension swapped to .bundle.
- * - Production: the MF Metro serializer writes exposed modules to
- *   "exposed/<name>.bundle" and shared modules to "shared/<name>.bundle",
- *   but the manifest's assets.js.sync still contains source paths.
- *   Shared entries already have correct output paths in assets.js.sync.
+ *
+ * - Dev: Metro serves at source paths (e.g. "src/StatsCard.bundle") so we use
+ *   assets.js.sync with the extension swapped to .bundle.
+ * - Production: the MF Metro serializer writes exposed modules to "exposed/<name>.bundle"
+ *   and shared modules to "shared/<name>.bundle", but the manifest's assets.js.sync still
+ *   contains source paths. Shared entries already have correct output paths in
+ *   assets.js.sync.
  */
 function resolveBundlePaths(
   item: ManifestAssetItem,
@@ -125,7 +126,10 @@ function extractBundleHashes(
       ? rawPublicPath
       : manifestUrl.replace(/\/[^/]*$/, '');
 
-  function addHashes(items: ManifestAssetItem[] | undefined, section: 'exposes' | 'shared') {
+  function addHashes(
+    items: ManifestAssetItem[] | undefined,
+    section: 'exposes' | 'shared'
+  ) {
     if (!Array.isArray(items)) return;
     for (const item of items) {
       if (!item.hash) continue;

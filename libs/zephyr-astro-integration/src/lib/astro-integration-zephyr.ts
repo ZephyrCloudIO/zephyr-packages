@@ -2,6 +2,7 @@ import type { AstroIntegration, HookParameters } from 'astro';
 import { fileURLToPath } from 'node:url';
 import {
   handleGlobalError,
+  rewriteEnvReadsToVirtualModule,
   zeBuildDashData,
   ZephyrEngine,
   type ZephyrBuildHooks,
@@ -19,10 +20,91 @@ export interface ZephyrAstroOptions {
 export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options?.hooks;
+  let cachedSpecifier: string | undefined;
+
+  const viteZePublicPlugin = {
+    name: 'with-zephyr-astro-env',
+    enforce: 'pre' as const,
+    configResolved: async (config: { mode?: string; root?: string }) => {
+      try {
+        const vite = require('vite') as {
+          loadEnv?: (
+            mode: string,
+            envDir: string,
+            prefixes: string
+          ) => Record<string, string>;
+        };
+        const loaded =
+          typeof vite.loadEnv === 'function'
+            ? vite.loadEnv(config.mode || 'production', config.root || process.cwd(), '')
+            : {};
+
+        for (const [k, v] of Object.entries(loaded)) {
+          if (
+            k.startsWith('ZE_PUBLIC_') &&
+            typeof v === 'string' &&
+            !(k in process.env)
+          ) {
+            process.env[k] = v;
+          }
+        }
+      } catch {
+        // ignore if vite loadEnv is unavailable
+      }
+    },
+    resolveId: async (source: string) => {
+      try {
+        const zephyr_engine = await zephyr_engine_defer;
+        if (!cachedSpecifier) {
+          cachedSpecifier = `env:vars:${zephyr_engine.application_uid}`;
+        }
+        if (source === cachedSpecifier) {
+          if (process.env['NODE_ENV'] === 'development') {
+            return '/zephyr-manifest.json';
+          }
+          return { id: source, external: true };
+        }
+      } catch {
+        // ignore
+      }
+      return null;
+    },
+    transform: async (code: string, id: string) => {
+      try {
+        if (id.includes('node_modules')) {
+          return null;
+        }
+
+        const zephyr_engine = await zephyr_engine_defer;
+        if (!cachedSpecifier) {
+          cachedSpecifier = `env:vars:${zephyr_engine.application_uid}`;
+        }
+
+        const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
+        if (res && typeof res.code === 'string' && res.code !== code) {
+          return {
+            code: res.code,
+            map: null,
+          };
+        }
+      } catch (error) {
+        handleGlobalError(error);
+      }
+
+      return null;
+    },
+  };
 
   return {
     name: 'with-zephyr',
     hooks: {
+      'astro:config:setup': ({ updateConfig }: HookParameters<'astro:config:setup'>) => {
+        updateConfig({
+          vite: {
+            plugins: [viteZePublicPlugin],
+          },
+        });
+      },
       'astro:config:done': async ({ config }: HookParameters<'astro:config:done'>) => {
         // config.root is a URL object, convert to file path
         const contextPath = fileURLToPath(config.root);

@@ -506,14 +506,12 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     ze_log.upload('Initializing: upload assets');
     const { assetsMap, buildStats, mfConfig, snapshotType, entrypoint } = props;
 
-    if (zephyr_engine.federated_dependencies) {
-      const manifest = {
-        filepath: ZEPHYR_MANIFEST_FILENAME,
-        content: createManifestContent(zephyr_engine.federated_dependencies),
-      };
-      const manifestAsset = zeBuildAssets(manifest);
-      assetsMap[manifestAsset.hash] = manifestAsset;
-    }
+    const manifest = {
+      filepath: ZEPHYR_MANIFEST_FILENAME,
+      content: createManifestContent(zephyr_engine.federated_dependencies ?? []),
+    };
+    const manifestAsset = zeBuildAssets(manifest);
+    assetsMap[manifestAsset.hash] = manifestAsset;
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
       ze_log.upload('Failed to upload assets: missing application_uid or build_id');

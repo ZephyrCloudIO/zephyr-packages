@@ -1,0 +1,54 @@
+{
+  "name": "zephyr-native-cache",
+  "version": "0.0.1",
+  "description": "Native caching module for Module Federation Metro bundles",
+  "license": "Apache-2.0",
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "react-native": "src/index.ts",
+  "types": "lib/typescript/index.d.ts",
+  "source": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-native-cache"
+  },
+  "scripts": {
+    "build": "bob build",
+    "prepare": "bob build",
+    "test": "jest --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "patch-version": "pnpm version"
+  },
+  "private": true,
+  "files": [
+    "src/",
+    "lib/",
+    "ios/",
+    "android/src/",
+    "android/build.gradle",
+    "react-native.config.js",
+    "zephyr-native-cache.podspec",
+    "!**/__tests__"
+  ],
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-native": ">=0.79.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "react": "19.1.0",
+    "react-native": "0.80.0",
+    "react-native-builder-bob": "^0.40.13",
+    "typescript": "^5.8.3"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      "typescript"
+    ]
+  }
+}

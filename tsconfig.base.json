@@ -24,6 +24,7 @@
       "zephyr-repack-plugin": ["libs/zephyr-repack-plugin/src/index.ts"],
       "zephyr-rspack-plugin": ["libs/zephyr-rspack-plugin/src/index.ts"],
       "zephyr-webpack-plugin": ["libs/zephyr-webpack-plugin/src/index.ts"],
+      "zephyr-native-cache": ["libs/zephyr-native-cache/src/index.ts"],
       "zephyr-xpack-internal": ["libs/zephyr-xpack-internal/src/index.ts"]
     },
     "rootDir": ".",

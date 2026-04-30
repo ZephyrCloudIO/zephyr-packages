@@ -1,8 +1,8 @@
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
-import type { ResolvedConfig } from 'vite';
+import type { ResolvedConfig } from 'vite' with { 'resolution-mode': 'import' };
 import { logFn, savePartialAssetMap, ZephyrEngine, ZephyrError } from 'zephyr-agent';
-import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
-import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map.js';
+import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options.js';
 
 export function withZephyrPartial() {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();

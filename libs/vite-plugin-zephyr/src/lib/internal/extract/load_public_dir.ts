@@ -1,7 +1,7 @@
 import { basename, resolve } from 'node:path';
-import type { OutputAsset } from 'rollup';
-import { normalizePath } from 'vite';
 import { readDirRecursiveWithContents } from 'zephyr-agent';
+import type { ZephyrOutputAsset } from '../types/zephyr-output.js';
+import { normalizeVitePath } from '../utils/normalize-vite-path.js';
 
 interface LoadPublicDirOptions {
   outDir: string;
@@ -11,7 +11,7 @@ interface LoadPublicDirOptions {
 export async function load_public_dir({
   publicDir,
   outDir,
-}: LoadPublicDirOptions): Promise<OutputAsset[]> {
+}: LoadPublicDirOptions): Promise<ZephyrOutputAsset[]> {
   const files = await readDirRecursiveWithContents(publicDir);
   const normalizedOutDir = resolve(outDir);
 
@@ -32,7 +32,7 @@ export async function load_public_dir({
         needsCodeReference: false,
         source: file.content,
         type: 'asset' as const,
-        fileName: normalizePath(file.relativePath),
+        fileName: normalizeVitePath(file.relativePath),
         originalFileName: fileName,
         originalFileNames: [fileName],
       };

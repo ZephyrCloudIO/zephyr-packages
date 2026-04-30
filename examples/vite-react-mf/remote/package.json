@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18",
-    "@module-federation/runtime": "catalog:module-federation"
+    "@module-federation/runtime": "catalog:module-federation-vite"
   },
   "devDependencies": {
     "@module-federation/vite": "catalog:module-federation",
@@ -20,14 +20,14 @@
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "@vitejs/plugin-react": "catalog:vite7",
+    "@vitejs/plugin-react": "catalog:vite8",
     "eslint": "catalog:eslint",
     "eslint-plugin-react-hooks": "catalog:eslint",
     "eslint-plugin-react-refresh": "catalog:eslint",
-    "globals": "catalog:vite7",
+    "globals": "catalog:vite8",
     "typescript": "catalog:typescript",
     "typescript-eslint": "catalog:eslint",
-    "vite": "catalog:vite7",
+    "vite": "catalog:vite8",
     "vite-plugin-zephyr": "workspace:*"
   }
 }

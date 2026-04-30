@@ -1,5 +1,5 @@
 import * as path from 'node:path';
-import type { Plugin, ResolvedConfig } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite' with { 'resolution-mode': 'import' };
 import {
   buildAssetsMap,
   handleGlobalError,
@@ -16,6 +16,7 @@ import {
   detectEntrypointFromBundle,
   injectRscAssetsManifest,
   resolveVinextEntrypoint,
+  sanitizeVinextWorkerEntrypoint,
   type OutputBundleLike,
   type RscPluginManagerLike,
   type VinextBuildAsset,
@@ -222,6 +223,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           return;
         }
 
+        await sanitizeVinextWorkerEntrypoint(outputDir);
         await collectStaticClientAssets(collectedAssets, outputDir, clientOutDir);
 
         injectRscAssetsManifest(collectedAssets, outputDir, rscPluginManager);

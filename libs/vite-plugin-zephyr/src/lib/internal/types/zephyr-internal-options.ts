@@ -1,4 +1,4 @@
-import type { OutputBundle } from 'rollup';
+import type { ZephyrOutputBundle } from './zephyr-output.js';
 
 export interface ZephyrInternalOptions {
   root: string;
@@ -6,5 +6,5 @@ export interface ZephyrInternalOptions {
   configFile?: string;
   publicDir?: string;
   dir?: string;
-  assets?: OutputBundle;
+  assets?: ZephyrOutputBundle;
 }

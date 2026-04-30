@@ -167,7 +167,7 @@ describe('Zephyr Codemod CLI', () => {
             devDependencies: {
               'vite-plugin-vinext-zephyr': '^0.1.11',
               '@cloudflare/vite-plugin': '^1.25.0',
-              vite: '^7.3.1',
+              vite: '^8.0.2',
               wrangler: '^4.68.1',
             },
             scripts: {

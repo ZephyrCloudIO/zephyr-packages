@@ -42,14 +42,14 @@
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "vite": "catalog:vite7",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "ts-jest": "catalog:typescript",
+    "vite": "catalog:vite8"
   },
   "peerDependencies": {
     "vite": "^7.0.0 || ^8.0.0"

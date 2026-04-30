@@ -1,4 +1,3 @@
-import type { OutputAsset, OutputChunk } from 'rollup';
 import {
   buildAssetsMap,
   getPartialAssetMap,
@@ -6,8 +5,9 @@ import {
   type ZeBuildAssetsMap,
   type ZephyrEngine,
 } from 'zephyr-agent';
-import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
-import { loadStaticAssets } from './load_static_assets';
+import type { ZephyrInternalOptions } from '../types/zephyr-internal-options.js';
+import type { ZephyrOutput } from '../types/zephyr-output.js';
+import { loadStaticAssets } from './load_static_assets.js';
 
 export async function extract_vite_assets_map(
   zephyr_engine: ZephyrEngine,
@@ -28,7 +28,7 @@ export async function extract_vite_assets_map(
   const filtered_assets = Object.fromEntries(
     Object.entries(complete_assets)
       .map(toRollupOutputEntry)
-      .filter((entry): entry is [string, OutputChunk | OutputAsset] => entry !== null)
+      .filter((entry): entry is [string, ZephyrOutput] => entry !== null)
   );
 
   return buildAssetsMap(filtered_assets, extractBuffer, getAssetType);
@@ -38,7 +38,7 @@ function shouldSkipAsset(assetPath: string): boolean {
   return /(^|\/)\.vite-inspect(\/|$)/.test(assetPath);
 }
 
-function isRollupOutput(asset: unknown): asset is OutputChunk | OutputAsset {
+function isRollupOutput(asset: unknown): asset is ZephyrOutput {
   if (!asset || typeof asset !== 'object' || !('type' in asset)) {
     return false;
   }
@@ -47,7 +47,7 @@ function isRollupOutput(asset: unknown): asset is OutputChunk | OutputAsset {
 }
 
 function toRollupOutputEntry([assetPath, asset]: [string, unknown]):
-  | [string, OutputChunk | OutputAsset]
+  | [string, ZephyrOutput]
   | null {
   if (shouldSkipAsset(assetPath) || !isRollupOutput(asset)) {
     return null;
@@ -56,7 +56,7 @@ function toRollupOutputEntry([assetPath, asset]: [string, unknown]):
   return [assetPath, asset];
 }
 
-function getAssetType(asset: OutputChunk | OutputAsset): string {
+function getAssetType(asset: ZephyrOutput): string {
   return asset.type;
 }
 
@@ -67,7 +67,7 @@ function getAssetType(asset: OutputChunk | OutputAsset): string {
  * @returns String for text-based chunks, Buffer for binary assets, undefined for unknown
  *   types
  */
-function extractBuffer(asset: OutputChunk | OutputAsset): string | Buffer | undefined {
+function extractBuffer(asset: ZephyrOutput): string | Buffer | undefined {
   switch (asset.type) {
     case 'chunk':
       return asset.code;

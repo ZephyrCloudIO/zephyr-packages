@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 export interface ModuleFederationRemoteConfig {
   name: string;
   entry: string;
@@ -20,10 +18,6 @@ export interface ModuleFederationOptions {
 
 export const ZEPHYR_MF_RUNTIME_PLUGIN_ID = 'virtual:zephyr-mf-runtime-plugin';
 export const RESOLVED_ZEPHYR_MF_RUNTIME_PLUGIN_ID = `\0${ZEPHYR_MF_RUNTIME_PLUGIN_ID}`;
-
-export function getRuntimePluginPath() {
-  return path.resolve(__dirname, 'runtime_plugin.mjs');
-}
 
 export function ensureRuntimePlugin(
   mfConfig: ModuleFederationOptions

@@ -18,6 +18,8 @@ import {
   injectRscAssetsManifest,
   normalizeEntrypoint,
   resolveVinextEntrypoint,
+  sanitizeVinextWorkerEntrypoint,
+  stripRedundantNodeSideEffectImports,
   type VinextBuildAsset,
   type OutputBundleLike,
 } from './vinext-output';
@@ -46,6 +48,28 @@ describe('vinext-output helpers', () => {
     ]);
     expect(assets['client/assets/app.js']?.type).toBe('application/javascript');
     expect(assets['client/assets/app.css']?.type).toBe('text/css');
+  });
+
+  it('strips bare node fs and path imports from the worker entrypoint asset', () => {
+    const assets: Record<string, VinextBuildAsset> = {};
+    const bundle: OutputBundleLike = {
+      index: {
+        type: 'chunk',
+        fileName: 'index.js',
+        code: [
+          'import "node:fs";',
+          'import "node:path";',
+          'export default { fetch() {} };',
+          '',
+        ].join('\n'),
+      },
+    };
+
+    collectAssetsFromBundle(assets, '/repo/dist', '/repo/dist/server', bundle);
+
+    expect(assets['server/index.js']?.content.toString('utf-8')).toBe(
+      'export default { fetch() {} };\n'
+    );
   });
 
   it('detects app-router entrypoint from server bundle', () => {
@@ -92,6 +116,21 @@ describe('vinext-output helpers', () => {
   it('normalizes custom entrypoint paths', () => {
     expect(normalizeEntrypoint('/dist/server/index.js')).toBe('server/index.js');
     expect(normalizeEntrypoint('./worker/index.js')).toBe('worker/index.js');
+  });
+
+  it('strips redundant node side-effect imports without touching used imports', () => {
+    expect(
+      stripRedundantNodeSideEffectImports(
+        [
+          'import "node:fs";',
+          'import { join } from "node:path";',
+          'console.log(join("a", "b"));',
+          '',
+        ].join('\n')
+      )
+    ).toBe(
+      ['import { join } from "node:path";', 'console.log(join("a", "b"));', ''].join('\n')
+    );
   });
 
   it('prefers explicit entrypoint override', () => {
@@ -175,6 +214,29 @@ describe('vinext-output helpers', () => {
 
       expect(assets['client/next.svg']?.content.toString('utf-8')).toBe(
         '<svg>bundle</svg>'
+      );
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('rewrites the emitted worker entrypoint on disk when vinext leaves bare node imports', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
+    try {
+      const outputDir = path.join(tempDir, 'dist');
+      const workerEntrypointPath = path.join(outputDir, 'server', 'index.js');
+
+      await fs.mkdir(path.dirname(workerEntrypointPath), { recursive: true });
+      await fs.writeFile(
+        workerEntrypointPath,
+        ['import "node:fs";', 'import "node:path";', 'export default {};', ''].join('\n'),
+        'utf-8'
+      );
+
+      await sanitizeVinextWorkerEntrypoint(outputDir);
+
+      await expect(fs.readFile(workerEntrypointPath, 'utf-8')).resolves.toBe(
+        'export default {};\n'
       );
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true });

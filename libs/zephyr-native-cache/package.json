@@ -1,6 +1,6 @@
 {
   "name": "zephyr-native-cache",
-  "version": "0.0.1",
+  "version": "1.0.3",
   "description": "Native caching module for Module Federation Metro bundles",
   "license": "Apache-2.0",
   "main": "lib/commonjs/index.js",
@@ -20,7 +20,6 @@
     "typecheck": "tsc --noEmit",
     "patch-version": "pnpm version"
   },
-  "private": true,
   "files": [
     "src/",
     "lib/",

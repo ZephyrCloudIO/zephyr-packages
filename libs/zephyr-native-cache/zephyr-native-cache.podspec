@@ -15,6 +15,7 @@ rescue StandardError
 end
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
+podspec_version = package["version"].split("-").first
 min_ios_version = if respond_to?(:min_ios_version_supported, true)
   min_ios_version_supported
 else
@@ -26,7 +27,7 @@ end
 
 Pod::Spec.new do |s|
   s.name         = "zephyr-native-cache"
-  s.version      = package["version"]
+  s.version      = podspec_version
   s.summary      = package["description"]
   s.homepage     = "https://github.com/ZephyrCloudIO/zephyr-packages"
   s.license      = package["license"]

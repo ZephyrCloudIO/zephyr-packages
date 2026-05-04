@@ -1,4 +1,9 @@
 import {
+  type AuthRefreshContext,
+  refreshApplicationConfiguration,
+} from '../auth/refresh-auth';
+import { isTokenStillValid } from '../auth/login';
+import {
   forEachLimit,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
@@ -24,6 +29,17 @@ export async function zeUploadAssets(
   const count = Object.keys(assetsMap).length;
   const logger = await zephyr_engine.logger;
   const appConfig = await zephyr_engine.application_configuration;
+  const authContext: AuthRefreshContext = {
+    application_uid: zephyr_engine.application_uid,
+    git_config: zephyr_engine.gitProperties,
+  };
+  let rootUploadConfig = appConfig;
+
+  if (!isTokenStillValid(rootUploadConfig.jwt)) {
+    rootUploadConfig = await refreshApplicationConfiguration(authContext, {
+      edgeUrl: appConfig.EDGE_URL,
+    });
+  }
 
   const envs = appConfig.ENVIRONMENTS;
   if (envs != null) {
@@ -31,7 +47,9 @@ export async function zeUploadAssets(
       Object.entries(envs)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .filter(([_, envCfg]) => envCfg.edgeUrl !== appConfig.EDGE_URL)
-        .map(([env, envCfg]) => zeUploadAssetsForEnv(env, envCfg, appConfig, assetsMap))
+        .map(([env, envCfg]) =>
+          zeUploadAssetsForEnv(env, envCfg, rootUploadConfig, assetsMap, authContext)
+        )
     );
   }
 
@@ -75,7 +93,8 @@ export async function zeUploadAssets(
         hash: asset.hash,
         asset: assetWithBuffer,
       },
-      appConfig
+      rootUploadConfig,
+      authContext
     );
 
     const fileUploaded = Date.now() - start;
@@ -91,8 +110,20 @@ export async function zeUploadAssets(
     env: string,
     envCfg: EnvironmentConfig,
     appConfig: ZeApplicationConfig,
-    assetsMap: ZeBuildAssetsMap
+    assetsMap: ZeBuildAssetsMap,
+    authContext: AuthRefreshContext
   ) {
+    let envUploadConfig: ZeApplicationConfig = {
+      ...appConfig,
+      EDGE_URL: envCfg.edgeUrl,
+    };
+
+    if (!isTokenStillValid(envUploadConfig.jwt)) {
+      envUploadConfig = await refreshApplicationConfiguration(authContext, {
+        edgeUrl: envCfg.edgeUrl,
+      });
+    }
+
     const hash_set = await getApplicationHashList({
       application_uid: zephyr_engine.application_uid,
       edge_url: envCfg.edgeUrl,
@@ -117,7 +148,8 @@ export async function zeUploadAssets(
             hash: asset.hash,
             asset: assetWithBuffer,
           },
-          { ...appConfig, EDGE_URL: envCfg.edgeUrl }
+          envUploadConfig,
+          authContext
         );
 
         const fileUploaded = Date.now() - start;

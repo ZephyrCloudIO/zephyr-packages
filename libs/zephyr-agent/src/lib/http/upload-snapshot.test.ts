@@ -1,4 +1,3 @@
-import type { UploadableAsset } from 'zephyr-edge-contract';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import { ZeErrors, ZephyrError } from '../errors';
 import {
@@ -7,13 +6,18 @@ import {
 } from '../edge-requests/get-application-configuration';
 import { checkAuth, isTokenStillValid } from '../auth/login';
 import * as httpRequest from './http-request';
-import { uploadFile } from './upload-file';
+import { uploadSnapshot } from './upload-snapshot';
 
 jest.mock('./http-request');
 jest.mock('../auth/login');
 jest.mock('../edge-requests/get-application-configuration');
+jest.mock('../logging', () => ({
+  ze_log: {
+    snapshot: jest.fn(),
+  },
+}));
 
-describe('uploadFile', () => {
+describe('uploadSnapshot', () => {
   const mockMakeRequest = jest.mocked(httpRequest.makeRequest);
   const mockCheckAuth = jest.mocked(checkAuth);
   const mockIsTokenStillValid = jest.mocked(isTokenStillValid);
@@ -21,13 +25,6 @@ describe('uploadFile', () => {
   const mockInvalidateApplicationConfigCache = jest.mocked(
     invalidateApplicationConfigCache
   );
-
-  const hash = 'abc123';
-  const asset: UploadableAsset = {
-    path: 'assets/image.png',
-    size: 1024,
-    buffer: Buffer.from('test-content'),
-  };
 
   const gitConfig: ZeGitInfo = {
     app: {
@@ -43,94 +40,88 @@ describe('uploadFile', () => {
     },
   };
 
-  const authContext = {
-    application_uid: 'zephyr.packages.test-app',
-    git_config: gitConfig,
+  const application_uid = 'zephyr.packages.test-app';
+  const snapshot = {
+    version: 1,
+    data: {
+      foo: 'bar',
+    },
   };
 
   const config = {
-    application_uid: authContext.application_uid,
-    EDGE_URL: 'https://api.zephyr.com',
+    application_uid,
+    EDGE_URL: 'https://edge.zephyr.com',
     jwt: 'test-jwt-token',
+    ENVIRONMENTS: undefined,
   } as const;
+
+  const response = {
+    urls: {
+      version: 'https://edge.zephyr.com/version.json',
+    },
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockCheckAuth.mockResolvedValue();
     mockIsTokenStillValid.mockReturnValue(true);
     mockInvalidateApplicationConfigCache.mockResolvedValue();
-    mockGetApplicationConfiguration.mockResolvedValue({
-      ...config,
-      jwt: 'refreshed-jwt-token',
-    } as never);
+    mockGetApplicationConfiguration.mockResolvedValue(config as never);
   });
 
-  it('uploads a file successfully', async () => {
-    mockMakeRequest.mockResolvedValueOnce([true, null] as never);
+  it('uploads snapshot successfully', async () => {
+    mockMakeRequest.mockResolvedValueOnce([true, null, response] as never);
 
-    await uploadFile({ hash, asset }, config as never, authContext);
+    const resp = await uploadSnapshot({
+      body: snapshot as never,
+      application_uid,
+      git_config: gitConfig,
+    });
 
+    expect(resp).toEqual(response);
     expect(mockMakeRequest).toHaveBeenCalledTimes(1);
     expect(mockMakeRequest).toHaveBeenCalledWith(
-      {
-        path: '/upload',
-        base: config.EDGE_URL,
-        query: {
-          type: 'file',
-          hash,
-          filename: asset.path,
-        },
-      },
-      {
-        method: 'POST',
-        headers: {
-          'x-file-size': '1024',
-          'x-file-path': 'assets/image.png',
-          can_write_jwt: 'test-jwt-token',
-          'Content-Type': 'application/octet-stream',
-        },
-      },
-      asset.buffer
+      expect.any(URL),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          can_write_jwt: config.jwt,
+        }),
+      }),
+      JSON.stringify(snapshot)
     );
   });
 
-  it('throws upload error for non-auth failure', async () => {
-    mockMakeRequest.mockResolvedValueOnce([false, new Error('Upload failed')] as never);
-
-    await expect(
-      uploadFile({ hash, asset }, config as never, authContext)
-    ).rejects.toMatchObject({
-      code: ZephyrError.toZeCode(ZeErrors.ERR_FAILED_UPLOAD),
-    });
-
-    expect(mockCheckAuth).not.toHaveBeenCalled();
-  });
-
-  it('refreshes auth first when jwt is expired', async () => {
+  it('refreshes auth before upload when jwt is expired', async () => {
     mockIsTokenStillValid.mockReturnValue(false);
-    mockMakeRequest.mockResolvedValueOnce([true, null] as never);
+    mockGetApplicationConfiguration
+      .mockResolvedValueOnce(config as never)
+      .mockResolvedValueOnce({ ...config, jwt: 'refreshed-jwt-token' } as never);
+    mockMakeRequest.mockResolvedValueOnce([true, null, response] as never);
 
-    await uploadFile({ hash, asset }, config as never, authContext);
+    await uploadSnapshot({
+      body: snapshot as never,
+      application_uid,
+      git_config: gitConfig,
+    });
 
     expect(mockCheckAuth).toHaveBeenCalledWith(gitConfig);
-    expect(mockInvalidateApplicationConfigCache).toHaveBeenCalledWith(
-      authContext.application_uid
-    );
-    expect(mockGetApplicationConfiguration).toHaveBeenCalledWith({
-      application_uid: authContext.application_uid,
-    });
+    expect(mockInvalidateApplicationConfigCache).toHaveBeenCalledWith(application_uid);
     expect(mockMakeRequest).toHaveBeenCalledWith(
-      expect.any(Object),
+      expect.any(URL),
       expect.objectContaining({
         headers: expect.objectContaining({
           can_write_jwt: 'refreshed-jwt-token',
         }),
       }),
-      asset.buffer
+      JSON.stringify(snapshot)
     );
   });
 
-  it('retries once after auth error with refreshed jwt', async () => {
+  it('retries upload once after auth error', async () => {
+    mockGetApplicationConfiguration.mockResolvedValue({
+      ...config,
+      jwt: 'refreshed-jwt-token',
+    } as never);
     mockMakeRequest
       .mockResolvedValueOnce([
         false,
@@ -138,22 +129,19 @@ describe('uploadFile', () => {
           message: 'Unauthenticated request',
         }),
       ] as never)
-      .mockResolvedValueOnce([true, null] as never);
+      .mockResolvedValueOnce([true, null, response] as never);
 
-    await uploadFile({ hash, asset }, config as never, authContext);
+    await uploadSnapshot({
+      body: snapshot as never,
+      application_uid,
+      git_config: gitConfig,
+    });
 
     expect(mockCheckAuth).toHaveBeenCalledWith(gitConfig);
     expect(mockMakeRequest).toHaveBeenCalledTimes(2);
-    expect(mockMakeRequest.mock.calls[1]?.[1]).toEqual(
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          can_write_jwt: 'refreshed-jwt-token',
-        }),
-      })
-    );
   });
 
-  it('throws jwt invalid when auth still fails after retry', async () => {
+  it('throws jwt invalid if auth still fails after retry', async () => {
     mockMakeRequest
       .mockResolvedValueOnce([
         false,
@@ -169,7 +157,11 @@ describe('uploadFile', () => {
       ] as never);
 
     await expect(
-      uploadFile({ hash, asset }, config as never, authContext)
+      uploadSnapshot({
+        body: snapshot as never,
+        application_uid,
+        git_config: gitConfig,
+      })
     ).rejects.toMatchObject({
       code: ZephyrError.toZeCode(ZeErrors.ERR_JWT_INVALID),
     });
@@ -184,7 +176,11 @@ describe('uploadFile', () => {
     ] as never);
 
     await expect(
-      uploadFile({ hash, asset }, config as never, authContext)
+      uploadSnapshot({
+        body: snapshot as never,
+        application_uid,
+        git_config: gitConfig,
+      })
     ).rejects.toMatchObject({
       code: ZephyrError.toZeCode(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR),
     });

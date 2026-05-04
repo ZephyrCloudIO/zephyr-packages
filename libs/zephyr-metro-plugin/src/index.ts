@@ -14,3 +14,10 @@ export {
   type MetroConfig,
   type MetroFederationConfig,
 } from './lib/zephyr-metro-command-wrapper';
+
+// RNEF plugin export for Module Federation host/remote bundling commands
+export {
+  zephyrMetroRNEFPlugin,
+  type ZephyrMetroRNEFPluginConfig,
+  type RNEFPluginApi,
+} from './lib/zephyr-metro-rnef-plugin';

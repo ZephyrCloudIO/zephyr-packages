@@ -104,7 +104,7 @@ export const zephyrMetroRNEFPlugin =
         outro('Success.');
       },
       options: [
-        ...deps.commands['bundleFederatedHostOptions'],
+        ...(deps.commands['bundleFederatedHostOptions'] ?? []),
         {
           name: '--config-cmd [string]',
           description:
@@ -149,7 +149,7 @@ export const zephyrMetroRNEFPlugin =
         logger.info('Bundle artifacts uploaded to Zephyr.');
         outro('Success.');
       },
-      options: deps.commands['bundleFederatedRemoteOptions'],
+      options: deps.commands['bundleFederatedRemoteOptions'] ?? [],
     });
 
     return {

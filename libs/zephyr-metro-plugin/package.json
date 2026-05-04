@@ -22,8 +22,8 @@
     "url": "https://github.com/ZephyrCloudIO"
   },
   "peerDependencies": {
-    "@module-federation/metro": ">=0.0.0",
-    "@rnef/tools": ">=0.0.0",
+    "@module-federation/metro": "^0.21.6",
+    "@rnef/tools": "^0.7.28",
     "metro": ">=0.70.0",
     "react-native": ">=0.60.0"
   },

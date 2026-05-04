@@ -27,6 +27,14 @@
     "metro": ">=0.70.0",
     "react-native": ">=0.60.0"
   },
+  "peerDependenciesMeta": {
+    "@module-federation/metro": {
+      "optional": true
+    },
+    "@rnef/tools": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"

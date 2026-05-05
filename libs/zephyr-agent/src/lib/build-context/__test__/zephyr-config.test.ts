@@ -14,7 +14,6 @@ describe('zephyr config', () => {
     delete process.env['ZEPHYR_PROJECT'];
     delete process.env['ZEPHYR_APP_NAME'];
     delete process.env['ZEPHYR_ENV_VARS'];
-    delete process.env['ZEPHYR_ENV'];
     delete process.env['ZEPHYR_REMOTE_DEPENDENCIES'];
     root = mkdtempSync(join(tmpdir(), 'zephyr-config-'));
   });
@@ -87,6 +86,34 @@ describe('zephyr config', () => {
         ZE_PUBLIC_FROM_ENV: 'env',
       },
     });
+  });
+
+  it('ignores non-canonical zephyr.config.ts aliases', () => {
+    writeFileSync(
+      join(root, 'zephyr.config.ts'),
+      `export default ${JSON.stringify({
+        organization: 'alias-org',
+        parentOrganization: 'alias-parent',
+        app: 'alias-app',
+        name: 'alias-name',
+        environment: { ZE_PUBLIC_ALIAS: 'alias' },
+        zephyrDependencies: {
+          alias: 'zephyr:alias.alias-project.alias-org@latest',
+        },
+        'zephyr:dependencies': {
+          packageAlias: 'zephyr:pkg.pkg-project.pkg-org@latest',
+        },
+      })};`
+    );
+
+    const config = getZephyrConfig(root);
+
+    expect(config.org).toBeUndefined();
+    expect(config.parentOrg).toBeUndefined();
+    expect(config.app).toBeUndefined();
+    expect(config.env).toEqual({});
+    expect(config.rawZephyrDependencies).toBeUndefined();
+    expect(config.zephyrDependencies).toBeUndefined();
   });
 
   it('applies configured env vars without overwriting process env', () => {

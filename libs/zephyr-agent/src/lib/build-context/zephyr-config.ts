@@ -139,27 +139,14 @@ function loadConfigModule(configPath: string): ZephyrConfigFile | undefined {
 }
 
 function readConfigFromEnv(): ZephyrConfig {
-  const rawZephyrDependencies =
-    parseJsonEnv(process.env['ZEPHYR_REMOTE_DEPENDENCIES']) ??
-    parseJsonEnv(process.env['ZEPHYR_DEPENDENCIES']);
+  const rawZephyrDependencies = parseJsonEnv(process.env['ZEPHYR_REMOTE_DEPENDENCIES']);
 
   return {
-    org: readString(process.env['ZEPHYR_ORG']) ?? readString(process.env['ZE_ORG']),
-    parentOrg:
-      readString(process.env['ZEPHYR_PARENT_ORG']) ??
-      readString(process.env['ZE_PARENT_ORG']),
-    project:
-      readString(process.env['ZEPHYR_PROJECT']) ?? readString(process.env['ZE_PROJECT']),
-    app:
-      readString(process.env['ZEPHYR_APP_NAME']) ??
-      readString(process.env['ZEPHYR_APP']) ??
-      readString(process.env['ZEPHYR_APPLICATION_NAME']) ??
-      readString(process.env['ZE_APP_NAME']) ??
-      readString(process.env['ZE_APP']),
-    env:
-      parseJsonEnv(process.env['ZEPHYR_ENV_VARS']) ??
-      parseJsonEnv(process.env['ZEPHYR_ENV']) ??
-      parseJsonEnv(process.env['ZE_ENV_VARS']),
+    org: readString(process.env['ZEPHYR_ORG']),
+    parentOrg: readString(process.env['ZEPHYR_PARENT_ORG']),
+    project: readString(process.env['ZEPHYR_PROJECT']),
+    app: readString(process.env['ZEPHYR_APP_NAME']),
+    env: parseJsonEnv(process.env['ZEPHYR_ENV_VARS']),
     rawZephyrDependencies,
     zephyrDependencies: rawZephyrDependencies
       ? parseRawDependencies(rawZephyrDependencies)

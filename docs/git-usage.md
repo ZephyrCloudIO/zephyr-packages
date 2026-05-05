@@ -1,3 +1,9 @@
+---
+summary: Defines Zephyr Git metadata requirements for local and CI builds.
+read_when:
+  - Changing Git remote parsing, CI metadata detection, or repository setup docs.
+---
+
 # Zephyr Git Usage
 
 ## Purpose
@@ -64,6 +70,20 @@ ZEPHYR_ENV_VARS='{"ZE_PUBLIC_API_URL":"https://example.com"}'
 ```
 
 Environment variables win over `zephyr.config.ts`. Git remains the richest metadata source, but configured `org`/`project` let builds run without remote-origin parsing.
+
+## Azure DevOps Setup
+
+Azure DevOps SSH remotes are also supported:
+
+```sh
+git remote add origin git@ssh.dev.azure.com:v3/ORG/PROJECT/REPO
+```
+
+Zephyr also supports Azure DevOps SSH host aliases, legacy
+`vs-ssh.visualstudio.com` SSH remotes, and `dev.azure.com` or
+`*.visualstudio.com` HTTPS remotes.
+
+Zephyr uses `ORG` as the organization and `REPO` as the project name.
 
 ## Local-Only Setup (No Commit Yet)
 

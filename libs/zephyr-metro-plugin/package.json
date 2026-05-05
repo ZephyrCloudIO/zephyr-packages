@@ -22,8 +22,18 @@
     "url": "https://github.com/ZephyrCloudIO"
   },
   "peerDependencies": {
+    "@module-federation/metro": "^0.21.6",
+    "@rnef/tools": "^0.7.28",
     "metro": ">=0.70.0",
     "react-native": ">=0.60.0"
+  },
+  "peerDependenciesMeta": {
+    "@module-federation/metro": {
+      "optional": true
+    },
+    "@rnef/tools": {
+      "optional": true
+    }
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -35,6 +45,8 @@
     "directory": "libs/zephyr-metro-plugin"
   },
   "devDependencies": {
+    "@module-federation/metro": "^0.21.6",
+    "@rnef/tools": "^0.7.28",
     "@rspack/core": "catalog:rspack",
     "@types/find-package-json": "^1.2.6",
     "@types/jest": "catalog:typescript",

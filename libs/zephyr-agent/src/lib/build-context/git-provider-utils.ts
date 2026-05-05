@@ -6,6 +6,8 @@ const STANDARD_DOMAINS: Record<string, string> = {
   'github.com': 'github',
   'gitlab.com': 'gitlab',
   'bitbucket.org': 'bitbucket',
+  'dev.azure.com': 'azure',
+  'ssh.dev.azure.com': 'azure',
 };
 
 /**
@@ -55,6 +57,10 @@ function extractEnterpriseOwner(parsed: gitUrlParse.GitUrl): string {
 
 /** Extracts owner from standard domain providers with special handling */
 function extractStandardOwner(parsed: gitUrlParse.GitUrl, provider: string): string {
+  if (provider === 'azure') {
+    return extractAzureOrganization(parsed);
+  }
+
   const rawOwner = parsed.owner.toLowerCase();
 
   // For GitLab and Bitbucket with subgroups, extract just the first part as the owner
@@ -71,6 +77,10 @@ function extractProjectName(
   provider: string,
   isEnterprise: boolean
 ): string {
+  if (provider === 'azure') {
+    return extractAzureRepoName(parsed);
+  }
+
   // Special handling for self-hosted GitLab with deep subgroups
   if (isEnterprise && provider === 'gitlab' && parsed.pathname) {
     const pathParts = parsed.pathname.split('/').filter(Boolean);
@@ -83,4 +93,19 @@ function extractProjectName(
 
   // For all other cases, use the name property directly
   return parsed.name.toLowerCase();
+}
+
+function extractAzureOrganization(parsed: gitUrlParse.GitUrl): string {
+  const pathParts = parsed.pathname.split('/').filter(Boolean);
+  const organization =
+    parsed.organization || (pathParts[0] === 'v3' ? pathParts[1] : pathParts[0]);
+
+  return (organization || parsed.owner).toLowerCase();
+}
+
+function extractAzureRepoName(parsed: gitUrlParse.GitUrl): string {
+  const pathParts = parsed.pathname.split('/').filter(Boolean);
+  const repoName = pathParts[pathParts.length - 1] || parsed.name;
+
+  return repoName.replace(/\.git$/, '').toLowerCase();
 }

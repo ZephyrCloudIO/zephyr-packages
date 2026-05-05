@@ -115,6 +115,31 @@ describe('Git Provider Utils', () => {
       });
     });
 
+    it('should parse Azure DevOps SSH URLs correctly', () => {
+      const azureSshUrl = 'git@ssh.dev.azure.com:v3/BusinessDomain/AddSecure/AddSecure';
+      const result = getGitProviderInfo(azureSshUrl);
+
+      expect(result).toEqual({
+        provider: 'azure',
+        owner: 'businessdomain',
+        project: 'addsecure',
+        isEnterprise: false,
+      });
+    });
+
+    it('should parse Azure DevOps HTTPS URLs correctly', () => {
+      const azureHttpsUrl =
+        'https://BusinessDomain@dev.azure.com/BusinessDomain/AddSecure/_git/Frontend.git';
+      const result = getGitProviderInfo(azureHttpsUrl);
+
+      expect(result).toEqual({
+        provider: 'azure',
+        owner: 'businessdomain',
+        project: 'frontend',
+        isEnterprise: false,
+      });
+    });
+
     it('should parse custom domain Git URLs correctly', () => {
       const customUrl = 'https://git.custom-domain.com/ZephyrCloudIO/zephyr-packages.git';
       const result = getGitProviderInfo(customUrl);

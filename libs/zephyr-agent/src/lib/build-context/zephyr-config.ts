@@ -18,18 +18,11 @@ export interface ZephyrConfig {
 
 interface ZephyrConfigFile {
   org?: unknown;
-  organization?: unknown;
   parentOrg?: unknown;
-  parentOrganization?: unknown;
   project?: unknown;
-  app?: unknown;
   appName?: unknown;
-  name?: unknown;
   env?: unknown;
-  environment?: unknown;
-  zephyrDependencies?: unknown;
   remoteDependencies?: unknown;
-  'zephyr:dependencies'?: unknown;
 }
 
 const CONFIG_FILE_NAME = 'zephyr.config.ts';
@@ -110,21 +103,14 @@ function readConfigFile(context: string | undefined): ZephyrConfig {
     return {};
   }
 
-  const rawZephyrDependencies =
-    readRawDependencies(loadedConfig.zephyrDependencies) ??
-    readRawDependencies(loadedConfig.remoteDependencies) ??
-    readRawDependencies(loadedConfig['zephyr:dependencies']);
+  const rawZephyrDependencies = readRawDependencies(loadedConfig.remoteDependencies);
 
   return {
-    org: readString(loadedConfig.org) ?? readString(loadedConfig.organization),
-    parentOrg:
-      readString(loadedConfig.parentOrg) ?? readString(loadedConfig.parentOrganization),
+    org: readString(loadedConfig.org),
+    parentOrg: readString(loadedConfig.parentOrg),
     project: readString(loadedConfig.project),
-    app:
-      readString(loadedConfig.app) ??
-      readString(loadedConfig.appName) ??
-      readString(loadedConfig.name),
-    env: readStringRecord(loadedConfig.env) ?? readStringRecord(loadedConfig.environment),
+    app: readString(loadedConfig.appName),
+    env: readStringRecord(loadedConfig.env),
     rawZephyrDependencies,
     zephyrDependencies: rawZephyrDependencies
       ? parseZeDependencies(rawZephyrDependencies)

@@ -138,7 +138,7 @@ export default {
   org: 'my-org',
   parentOrg: 'my-parent-org',
   project: 'my-project',
-  app: 'my-app',
+  appName: 'my-app',
   remoteDependencies: {
     remote: 'zephyr:remote.remote-project.remote-org@latest',
   },

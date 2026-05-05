@@ -40,7 +40,7 @@ export default {
   org: 'ORG',
   parentOrg: 'PARENT_ORG',
   project: 'PROJECT',
-  app: 'APP',
+  appName: 'APP',
   remoteDependencies: {
     remote: 'zephyr:remote.project.org@latest',
   },

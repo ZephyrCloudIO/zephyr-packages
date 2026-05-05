@@ -69,7 +69,7 @@ describe('zephyr config', () => {
       `export default ${JSON.stringify({
         org: 'file-org',
         project: 'file-project',
-        app: 'file-app',
+        appName: 'file-app',
         env: { ZE_PUBLIC_FROM_FILE: 'file' },
       })};`
     );

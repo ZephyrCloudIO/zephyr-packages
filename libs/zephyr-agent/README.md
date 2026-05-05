@@ -97,7 +97,7 @@ interface ZephyrAgentConfig {
 
 ### Git Repository Requirements
 
-**IMPORTANT**: Zephyr requires a properly initialized Git repository with a remote origin for production deployments.
+Zephyr can infer app identity from Git, or use explicit `zephyr.config.ts`/environment configuration when builds need to run without Git remote metadata.
 
 #### Git Information Handling
 
@@ -130,9 +130,29 @@ npm run build  # Works perfectly with full Git context
 # Local-only metadata mode (no commit yet)
 git init
 git remote add origin git@github.com:YOUR_ORG/YOUR_REPO.git
-npm run build  # Works for local builds; CI still requires commit history
+npm run build  # Works locally; CI needs commit history unless zephyr.config.ts/env identity is set
 
-# Automatic fallback (works seamlessly)
+# Explicit app identity without Git
+cat > zephyr.config.ts <<'TS'
+export default {
+  org: 'my-org',
+  parentOrg: 'my-parent-org',
+  project: 'my-project',
+  app: 'my-app',
+  remoteDependencies: {
+    remote: 'zephyr:remote.remote-project.remote-org@latest',
+  },
+  env: {
+    ZE_PUBLIC_API_URL: 'https://example.com',
+  },
+};
+TS
+npm run build
+
+# Environment override equivalent
+ZEPHYR_ORG=my-org ZEPHYR_PROJECT=my-project ZEPHYR_APP_NAME=my-app npm run build
+
+# Automatic fallback
 # No git repository - uses package.json naming
 npm run build  # Automatically determines naming from package.json
 
@@ -156,7 +176,7 @@ npm run build  # Automatically determines naming from package.json
 # Username: "Néstor López" → org: "n-stor-l-pez"
 ```
 
-#### Why Git is Required
+#### Why Git is Still Recommended
 
 Zephyr uses Git information to:
 
@@ -165,7 +185,7 @@ Zephyr uses Git information to:
 - Enable collaboration features
 - Provide proper deployment metadata
 
-Without Git, Zephyr cannot guarantee proper functionality, especially for:
+Without Git, configure `zephyr.config.ts` or environment variables for stable app identity. Git is still preferred for:
 
 - Production deployments
 - Team collaboration

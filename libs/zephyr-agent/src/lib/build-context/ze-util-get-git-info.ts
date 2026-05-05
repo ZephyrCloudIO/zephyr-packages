@@ -15,11 +15,14 @@ import { detectCIBranch } from './ci-branch-detection';
 import { getGitProviderInfo } from './git-provider-utils';
 import { detectMonorepo, getMonorepoRootPackageJson } from './detect-monorepo';
 import { getPackageJson } from './ze-util-read-package-json';
+import { type ZephyrConfig, getZephyrConfig } from './zephyr-config';
 
 const exec = promisify(node_exec);
 
 export interface ZeGitInfo {
-  app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
+  app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'> & {
+    parentOrg?: string;
+  };
   git: ZephyrPluginOptions['git'];
 }
 
@@ -37,14 +40,15 @@ function generateBranchName(context: 'global-git' | 'no-git', userId?: string): 
 }
 
 /** Loads the git information from the current repository. */
-export async function getGitInfo(): Promise<ZeGitInfo> {
+export async function getGitInfo(context?: string): Promise<ZeGitInfo> {
   // Always gather fresh git info for build accuracy
-  return await gatherGitInfo();
+  return await gatherGitInfo(context);
 }
 
 /** Internal function that actually gathers git information. */
-async function gatherGitInfo(): Promise<ZeGitInfo> {
+async function gatherGitInfo(context?: string): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
+  const zephyrConfig = getZephyrConfig(context);
 
   try {
     const { name, email, remoteOrigin, branch, commit, tags, stdout } =
@@ -56,7 +60,7 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
       });
     }
 
-    const app = parseGitUrl(remoteOrigin, stdout);
+    const app = applyConfiguredApp(parseGitUrl(remoteOrigin, stdout), zephyrConfig);
 
     const gitInfo = {
       git: { name, email, branch, commit, tags },
@@ -68,44 +72,49 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
     return gitInfo;
   } catch (error) {
     // In CI environments, fail immediately if git info is not available
-    if (isCI) {
+    if (isCI && !hasConfiguredApp(zephyrConfig)) {
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
         message: 'Git repository information is required in CI environments',
         cause: error,
       });
     }
 
-    // If git repo info is not available, try global git config
-    logFn(
-      'warn',
-      'Git repository not found. Zephyr REQUIRES a git repository with remote origin.'
-    );
-    logFn(
-      'warn',
-      'Manual configuration is NOT recommended and WILL cause errors in production.'
-    );
-    logFn('warn', '');
-    logFn('warn', 'To properly use Zephyr, you MUST:');
-    logFn('warn', '1. Initialize git: git init');
-    logFn('warn', '2. Add remote: git remote add origin git@github.com:ORG/REPO.git');
-    logFn(
-      'warn',
-      '3. For CI/production reliability, add at least one commit: git add . && git commit -m "Initial commit"'
-    );
-    logFn('warn', '');
-    logFn('warn', 'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps');
-    logFn('warn', '📝 Documentation: https://docs.zephyr-cloud.io');
+    if (!hasConfiguredApp(zephyrConfig)) {
+      // If git repo info is not available, try global git config
+      logFn(
+        'warn',
+        'Git repository not found. Zephyr REQUIRES a git repository with remote origin.'
+      );
+      logFn(
+        'warn',
+        'Manual configuration is NOT recommended and WILL cause errors in production.'
+      );
+      logFn('warn', '');
+      logFn('warn', 'To properly use Zephyr, you MUST:');
+      logFn('warn', '1. Initialize git: git init');
+      logFn('warn', '2. Add remote: git remote add origin git@github.com:ORG/REPO.git');
+      logFn(
+        'warn',
+        '3. For CI/production reliability, add at least one commit: git add . && git commit -m "Initial commit"'
+      );
+      logFn('warn', '');
+      logFn(
+        'warn',
+        'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps'
+      );
+      logFn('warn', '📝 Documentation: https://docs.zephyr-cloud.io');
+    }
     ze_log.git('Git repository not found, falling back to global git config');
 
     try {
-      const globalGitInfo = await loadGlobalGitInfo();
+      const globalGitInfo = await loadGlobalGitInfo(zephyrConfig);
       return globalGitInfo;
     } catch {
       // If global git config also fails, use defaults
       logFn('warn', 'Global git config not found, using auto-generated defaults');
       ze_log.git('Global git config not found, using auto-generated defaults');
 
-      const fallbackInfo = await getFallbackGitInfo();
+      const fallbackInfo = await getFallbackGitInfo(zephyrConfig);
       return fallbackInfo;
     }
   }
@@ -226,6 +235,21 @@ function parseTagsOutput(stdout: string): string[] {
   return trimmed.split('\n').filter(Boolean);
 }
 
+function hasConfiguredApp(config: ZephyrConfig): boolean {
+  return !!((config.org || config.parentOrg) && config.project);
+}
+
+function applyConfiguredApp(
+  app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>,
+  config: ZephyrConfig
+): ZeGitInfo['app'] {
+  return {
+    org: config.org ?? config.parentOrg ?? app.org,
+    parentOrg: config.parentOrg,
+    project: config.project ?? app.project,
+  };
+}
+
 /**
  * Parses the git url using the `git-url-parse` package.
  *
@@ -266,7 +290,7 @@ function parseGitUrl(
 }
 
 /** Try to load git info from global git config */
-async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
+async function loadGlobalGitInfo(config: ZephyrConfig): Promise<ZeGitInfo> {
   try {
     const [nameResult, emailResult] = await Promise.all([
       exec('git config --global user.name').catch(() => ({ stdout: '' })),
@@ -306,7 +330,7 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
       });
     }
 
-    const { org, project } = await getAppNamingFromPackageJson(name);
+    const app = applyConfiguredApp(await getAppNamingFromPackageJson(name), config);
 
     const gitInfo: ZeGitInfo = {
       git: {
@@ -317,23 +341,29 @@ async function loadGlobalGitInfo(): Promise<ZeGitInfo> {
         tags: [],
       },
       app: {
-        org,
-        project,
+        org: app.org,
+        parentOrg: app.parentOrg,
+        project: app.project,
       },
     };
 
     ze_log.git('Using global git config (no local repository)', gitInfo);
 
-    logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
-    logFn('warn', 'This manual configuration will NOT work for production deployments.');
-    logFn(
-      'warn',
-      'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
-    );
-    logFn(
-      'warn',
-      'Please set up git before your next deployment: https://docs.zephyr-cloud.io'
-    );
+    if (!hasConfiguredApp(config)) {
+      logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
+      logFn(
+        'warn',
+        'This manual configuration will NOT work for production deployments.'
+      );
+      logFn(
+        'warn',
+        'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
+      );
+      logFn(
+        'warn',
+        'Please set up git before your next deployment: https://docs.zephyr-cloud.io'
+      );
+    }
 
     return gitInfo;
   } catch (error) {
@@ -378,7 +408,7 @@ async function getUserInfoFromAPI(): Promise<UserInfo> {
 }
 
 /** Generate fallback git info when git is completely unavailable */
-async function getFallbackGitInfo(): Promise<ZeGitInfo> {
+async function getFallbackGitInfo(config: ZephyrConfig): Promise<ZeGitInfo> {
   let userInfo: UserInfo;
 
   try {
@@ -391,14 +421,17 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   const gitName = userInfo.name;
   const gitEmail = userInfo.email;
 
-  if (isCI) {
+  if (isCI && !hasConfiguredApp(config)) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
       message:
         'Git repository information is required in CI environments. Please ensure your CI workflow includes git repository with proper remote origin.',
     });
   }
 
-  const { org, project } = await getAppNamingFromPackageJson(userInfo.name);
+  const app = applyConfiguredApp(
+    await getAppNamingFromPackageJson(userInfo.name),
+    config
+  );
 
   const gitInfo: ZeGitInfo = {
     git: {
@@ -409,24 +442,27 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
       tags: [`deployed-by:${userInfo.id}`],
     },
     app: {
-      org,
-      project,
+      org: app.org,
+      parentOrg: app.parentOrg,
+      project: app.project,
     },
   };
 
   ze_log.git('Using fallback git info (git not available)', gitInfo);
 
-  logFn('warn', `Using organization "${org}" from authenticated user.`);
-  logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
-  logFn('warn', 'This manual configuration will NOT work for production deployments.');
-  logFn(
-    'warn',
-    'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
-  );
-  logFn(
-    'warn',
-    'Please set up git before your next deployment: https://docs.zephyr-cloud.io'
-  );
+  if (!hasConfiguredApp(config)) {
+    logFn('warn', `Using organization "${app.org}" from authenticated user.`);
+    logFn('warn', 'Configuration accepted for THIS BUILD ONLY.');
+    logFn('warn', 'This manual configuration will NOT work for production deployments.');
+    logFn(
+      'warn',
+      'Zephyr REQUIRES a proper git repository with remote origin to function correctly.'
+    );
+    logFn(
+      'warn',
+      'Please set up git before your next deployment: https://docs.zephyr-cloud.io'
+    );
+  }
 
   return gitInfo;
 }

@@ -41,6 +41,10 @@ Azure DevOps SSH remotes are also supported:
 git remote add origin git@ssh.dev.azure.com:v3/ORG/PROJECT/REPO
 ```
 
+Zephyr also supports Azure DevOps SSH host aliases, legacy
+`vs-ssh.visualstudio.com` SSH remotes, and `dev.azure.com` or
+`*.visualstudio.com` HTTPS remotes.
+
 Zephyr uses `ORG` as the organization and `REPO` as the project name.
 
 ## Local-Only Setup (No Commit Yet)

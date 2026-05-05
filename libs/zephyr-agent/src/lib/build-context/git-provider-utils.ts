@@ -8,6 +8,7 @@ const STANDARD_DOMAINS: Record<string, string> = {
   'bitbucket.org': 'bitbucket',
   'dev.azure.com': 'azure',
   'ssh.dev.azure.com': 'azure',
+  'vs-ssh.visualstudio.com': 'azure',
 };
 
 /**
@@ -29,7 +30,7 @@ export function getGitProviderInfo(gitUrl: string): {
   const resource = parsed.resource.toLowerCase();
 
   // Determine provider type and enterprise status from resource domain
-  const provider = STANDARD_DOMAINS[resource] ?? 'custom';
+  const provider = detectProvider(parsed, resource);
   const isEnterprise = provider === 'custom';
 
   // Extract owner based on provider and enterprise status
@@ -41,6 +42,24 @@ export function getGitProviderInfo(gitUrl: string): {
   const project = extractProjectName(parsed, provider, isEnterprise);
 
   return { provider, owner, project, isEnterprise };
+}
+
+function detectProvider(parsed: gitUrlParse.GitUrl, resource: string): string {
+  const standardProvider = STANDARD_DOMAINS[resource];
+  if (standardProvider) {
+    return standardProvider;
+  }
+
+  if (resource.endsWith('.visualstudio.com')) {
+    return 'azure';
+  }
+
+  const pathParts = getPathParts(parsed);
+  if (pathParts[0] === 'v3' && pathParts.length >= 4) {
+    return 'azure';
+  }
+
+  return 'custom';
 }
 
 /** Extracts organization name from enterprise domain */
@@ -96,16 +115,42 @@ function extractProjectName(
 }
 
 function extractAzureOrganization(parsed: gitUrlParse.GitUrl): string {
-  const pathParts = parsed.pathname.split('/').filter(Boolean);
-  const organization =
-    parsed.organization || (pathParts[0] === 'v3' ? pathParts[1] : pathParts[0]);
+  const pathParts = getPathParts(parsed);
+  if (pathParts[0] === 'v3' && pathParts[1]) {
+    return pathParts[1].toLowerCase();
+  }
+
+  const resource = parsed.resource.toLowerCase();
+  if (resource.endsWith('.visualstudio.com')) {
+    return resource.replace(/\.visualstudio\.com$/, '').toLowerCase();
+  }
+
+  const organization = pathParts[0];
 
   return (organization || parsed.owner).toLowerCase();
 }
 
 function extractAzureRepoName(parsed: gitUrlParse.GitUrl): string {
-  const pathParts = parsed.pathname.split('/').filter(Boolean);
-  const repoName = pathParts[pathParts.length - 1] || parsed.name;
+  const pathParts = getPathParts(parsed);
+  const gitSegmentIndex = pathParts.findIndex((part) => part.toLowerCase() === '_git');
+  const repoName =
+    gitSegmentIndex >= 0
+      ? pathParts[gitSegmentIndex + 1]
+      : pathParts[pathParts.length - 1];
 
-  return repoName.replace(/\.git$/, '').toLowerCase();
+  return sanitizeGitName(repoName || parsed.name);
+}
+
+function getPathParts(parsed: gitUrlParse.GitUrl): string[] {
+  return parsed.pathname.split('/').filter(Boolean);
+}
+
+function sanitizeGitName(name: string): string {
+  try {
+    return decodeURIComponent(name)
+      .replace(/\.git$/, '')
+      .toLowerCase();
+  } catch {
+    return name.replace(/\.git$/, '').toLowerCase();
+  }
 }

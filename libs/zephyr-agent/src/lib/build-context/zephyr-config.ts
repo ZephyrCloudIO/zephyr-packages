@@ -1,8 +1,8 @@
 import fs from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
+import { createJiti } from 'jiti';
 import { safe_json_parse } from 'zephyr-edge-contract';
-import { logFn } from '../logging/ze-log-event';
+import { ZeErrors, ZephyrError } from '../errors';
 import type { ZeDependency } from './ze-package-json.type';
 import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
 
@@ -25,18 +25,82 @@ interface ZephyrConfigFile {
   remoteDependencies?: unknown;
 }
 
-const CONFIG_FILE_NAME = 'zephyr.config.ts';
+const CONFIG_FILE_NAMES = [
+  'zephyr.config.ts',
+  'zephyr.config.mts',
+  'zephyr.config.cts',
+  'zephyr.config.js',
+  'zephyr.config.mjs',
+  'zephyr.config.cjs',
+] as const;
 
-function readString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
-}
+const CONFIG_FILE_FIELDS = [
+  'org',
+  'parentOrg',
+  'project',
+  'appName',
+  'env',
+  'remoteDependencies',
+] as const;
 
-function readStringRecord(value: unknown): Record<string, string> | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+const CONFIG_FILE_FIELD_SET = new Set<string>(CONFIG_FILE_FIELDS);
+
+function readString(
+  value: unknown,
+  field: string,
+  configPath: string
+): string | undefined {
+  if (value === undefined) {
     return undefined;
   }
 
-  const entries = Object.entries(value).flatMap(([key, entry]) => {
+  if (typeof value !== 'string') {
+    throwConfigError(configPath, `${field} must be a string.`);
+  }
+
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function readEnvString(value: string | undefined): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function readStringRecord(
+  value: unknown,
+  field: string,
+  configPath: string
+): Record<string, string> | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throwConfigError(configPath, `${field} must be an object with string values.`);
+  }
+
+  const entries = Object.entries(value).map(([key, entry]) => {
+    if (typeof entry !== 'string') {
+      throwConfigError(configPath, `${field}.${key} must be a string.`);
+    }
+
+    return [key, entry] as const;
+  });
+
+  return Object.fromEntries(entries);
+}
+
+function parseJsonEnv(value: string | undefined): Record<string, string> | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = safe_json_parse<unknown>(value);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return undefined;
+  }
+
+  const entries = Object.entries(parsed).flatMap(([key, entry]) => {
     if (typeof entry !== 'string') {
       return [];
     }
@@ -47,22 +111,11 @@ function readStringRecord(value: unknown): Record<string, string> | undefined {
   return entries.length ? Object.fromEntries(entries) : undefined;
 }
 
-function parseJsonEnv(value: string | undefined): Record<string, string> | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsed = safe_json_parse<unknown>(value);
-  return readStringRecord(parsed);
-}
-
-function readRawDependencies(value: unknown): Record<string, string> | undefined {
-  return readStringRecord(value);
-}
-
-function parseRawDependencies(value: unknown): Record<string, ZeDependency> | undefined {
-  const raw = readRawDependencies(value);
-  return raw ? parseZeDependencies(raw) : undefined;
+function readRawDependencies(
+  value: unknown,
+  configPath: string
+): Record<string, string> | undefined {
+  return readStringRecord(value, 'remoteDependencies', configPath);
 }
 
 function findConfigPath(startingPath: string): string | undefined {
@@ -77,9 +130,11 @@ function findConfigPath(startingPath: string): string | undefined {
   }
 
   while (true) {
-    const configPath = path.join(dir, CONFIG_FILE_NAME);
-    if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
-      return configPath;
+    for (const configFileName of CONFIG_FILE_NAMES) {
+      const configPath = path.join(dir, configFileName);
+      if (fs.existsSync(configPath) && fs.statSync(configPath).isFile()) {
+        return configPath;
+      }
     }
 
     const parent = path.dirname(dir);
@@ -98,19 +153,17 @@ function readConfigFile(context: string | undefined): ZephyrConfig {
   }
 
   const loadedConfig = loadConfigModule(configPath);
-  if (!loadedConfig) {
-    logFn('warn', `Ignoring invalid ${CONFIG_FILE_NAME} at ${configPath}`);
-    return {};
-  }
-
-  const rawZephyrDependencies = readRawDependencies(loadedConfig.remoteDependencies);
+  const rawZephyrDependencies = readRawDependencies(
+    loadedConfig.remoteDependencies,
+    configPath
+  );
 
   return {
-    org: readString(loadedConfig.org),
-    parentOrg: readString(loadedConfig.parentOrg),
-    project: readString(loadedConfig.project),
-    app: readString(loadedConfig.appName),
-    env: readStringRecord(loadedConfig.env),
+    org: readString(loadedConfig.org, 'org', configPath),
+    parentOrg: readString(loadedConfig.parentOrg, 'parentOrg', configPath),
+    project: readString(loadedConfig.project, 'project', configPath),
+    app: readString(loadedConfig.appName, 'appName', configPath),
+    env: readStringRecord(loadedConfig.env, 'env', configPath),
     rawZephyrDependencies,
     zephyrDependencies: rawZephyrDependencies
       ? parseZeDependencies(rawZephyrDependencies)
@@ -118,38 +171,66 @@ function readConfigFile(context: string | undefined): ZephyrConfig {
   };
 }
 
-function loadConfigModule(configPath: string): ZephyrConfigFile | undefined {
+function loadConfigModule(configPath: string): ZephyrConfigFile {
   try {
-    const requireFromConfig = createRequire(configPath);
-    const loaded = requireFromConfig(configPath) as {
+    const jiti = createJiti(configPath, { interopDefault: true });
+    const loaded = jiti(configPath) as {
       default?: unknown;
       __esModule?: boolean;
     };
     const config = loaded?.default ?? loaded;
 
     if (!config || typeof config !== 'object' || Array.isArray(config)) {
-      return undefined;
+      throwConfigError(configPath, 'default export must be an object.');
     }
 
-    return config as ZephyrConfigFile;
+    validateConfigFields(config, configPath);
+
+    return config;
   } catch (error) {
-    logFn('warn', `Failed to load ${CONFIG_FILE_NAME}: ${(error as Error).message}`);
-    return undefined;
+    if (ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_CONFIG_NOT_VALID)) {
+      throw error;
+    }
+
+    throwConfigError(configPath, `failed to load config: ${(error as Error).message}`);
   }
+}
+
+function validateConfigFields(
+  config: object,
+  configPath: string
+): asserts config is ZephyrConfigFile {
+  const unknownFields = Object.keys(config).filter(
+    (field) => !CONFIG_FILE_FIELD_SET.has(field)
+  );
+
+  if (unknownFields.length) {
+    throwConfigError(
+      configPath,
+      `unknown field${unknownFields.length > 1 ? 's' : ''}: ${unknownFields.join(', ')}. ` +
+        `Allowed fields: ${CONFIG_FILE_FIELDS.join(', ')}.`
+    );
+  }
+}
+
+function throwConfigError(configPath: string, message: string): never {
+  throw new ZephyrError(ZeErrors.ERR_ZEPHYR_CONFIG_NOT_VALID, {
+    message: `at ${configPath}: ${message}`,
+  });
 }
 
 function readConfigFromEnv(): ZephyrConfig {
   const rawZephyrDependencies = parseJsonEnv(process.env['ZEPHYR_REMOTE_DEPENDENCIES']);
 
   return {
-    org: readString(process.env['ZEPHYR_ORG']),
-    parentOrg: readString(process.env['ZEPHYR_PARENT_ORG']),
-    project: readString(process.env['ZEPHYR_PROJECT']),
-    app: readString(process.env['ZEPHYR_APP_NAME']),
+    org: readEnvString(process.env['ZEPHYR_ORG']),
+    parentOrg: readEnvString(process.env['ZEPHYR_PARENT_ORG']),
+    project: readEnvString(process.env['ZEPHYR_PROJECT']),
+    app: readEnvString(process.env['ZEPHYR_APP_NAME']),
     env: parseJsonEnv(process.env['ZEPHYR_ENV_VARS']),
     rawZephyrDependencies,
     zephyrDependencies: rawZephyrDependencies
-      ? parseRawDependencies(rawZephyrDependencies)
+      ? parseZeDependencies(rawZephyrDependencies)
       : undefined,
   };
 }

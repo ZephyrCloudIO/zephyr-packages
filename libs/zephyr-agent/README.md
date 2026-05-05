@@ -149,6 +149,12 @@ export default {
 TS
 npm run build
 
+# Supported config files:
+# zephyr.config.ts, zephyr.config.mts, zephyr.config.cts,
+# zephyr.config.js, zephyr.config.mjs, zephyr.config.cjs
+#
+# Valid fields: org, parentOrg, project, appName, remoteDependencies, env
+
 # Environment override equivalent
 ZEPHYR_ORG=my-org ZEPHYR_PROJECT=my-project ZEPHYR_APP_NAME=my-app npm run build
 

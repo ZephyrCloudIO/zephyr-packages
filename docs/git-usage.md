@@ -33,7 +33,7 @@ Use this for production reliability and CI compatibility.
 
 ## Git-Decoupled Setup
 
-Add a `zephyr.config.ts` file at the project root when app identity should not come from Git:
+Add a Zephyr config file at the project root when app identity should not come from Git. Supported file names are `zephyr.config.ts`, `zephyr.config.mts`, `zephyr.config.cts`, `zephyr.config.js`, `zephyr.config.mjs`, and `zephyr.config.cjs`.
 
 ```ts
 export default {
@@ -49,6 +49,8 @@ export default {
   },
 };
 ```
+
+The config file is strict: only `org`, `parentOrg`, `project`, `appName`, `remoteDependencies`, and `env` are valid fields. String fields must be strings; `remoteDependencies` and `env` must be objects with string values. Invalid config files fail the build instead of being ignored.
 
 Equivalent environment overrides:
 

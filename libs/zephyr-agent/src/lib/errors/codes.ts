@@ -469,6 +469,15 @@ Example: "my-remote.my-project.my-org"
     kind: 'config',
   },
 
+  ERR_ZEPHYR_CONFIG_NOT_VALID: {
+    id: '002',
+    message: `
+Invalid Zephyr config: {{ message }}
+
+`,
+    kind: 'config',
+  },
+
   ERR_CANNOT_RESOLVE_APP_NAME_WITH_VERSION: {
     id: '003',
     message: `

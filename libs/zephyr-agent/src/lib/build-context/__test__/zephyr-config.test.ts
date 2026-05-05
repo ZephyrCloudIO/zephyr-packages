@@ -88,7 +88,26 @@ describe('zephyr config', () => {
     });
   });
 
-  it('ignores non-canonical zephyr.config.ts aliases', () => {
+  it('loads JavaScript config file formats', () => {
+    const cases = [
+      ['zephyr.config.js', "module.exports = { appName: 'js-app' };", 'js-app'],
+      ['zephyr.config.mjs', "export default { appName: 'mjs-app' };", 'mjs-app'],
+      ['zephyr.config.cjs', "module.exports = { appName: 'cjs-app' };", 'cjs-app'],
+      ['zephyr.config.mts', "export default { appName: 'mts-app' };", 'mts-app'],
+      ['zephyr.config.cts', "export default { appName: 'cts-app' };", 'cts-app'],
+    ] as const;
+
+    for (const [fileName, content, appName] of cases) {
+      const caseRoot = join(root, fileName.replace(/\./g, '-'));
+      const appDir = join(caseRoot, 'app');
+      mkdirSync(appDir, { recursive: true });
+      writeFileSync(join(caseRoot, fileName), content);
+
+      expect(getZephyrConfig(appDir).app).toBe(appName);
+    }
+  });
+
+  it('rejects non-canonical zephyr.config.ts aliases', () => {
     writeFileSync(
       join(root, 'zephyr.config.ts'),
       `export default ${JSON.stringify({
@@ -106,14 +125,23 @@ describe('zephyr config', () => {
       })};`
     );
 
-    const config = getZephyrConfig(root);
+    expect(() => getZephyrConfig(root)).toThrow(
+      /Invalid Zephyr config.*unknown fields: organization, parentOrganization, app, name, environment, zephyrDependencies, zephyr:dependencies/
+    );
+  });
 
-    expect(config.org).toBeUndefined();
-    expect(config.parentOrg).toBeUndefined();
-    expect(config.app).toBeUndefined();
-    expect(config.env).toEqual({});
-    expect(config.rawZephyrDependencies).toBeUndefined();
-    expect(config.zephyrDependencies).toBeUndefined();
+  it('rejects invalid zephyr.config.ts field values', () => {
+    writeFileSync(
+      join(root, 'zephyr.config.ts'),
+      `export default ${JSON.stringify({
+        org: 123,
+        env: {
+          ZE_PUBLIC_API_URL: false,
+        },
+      })};`
+    );
+
+    expect(() => getZephyrConfig(root)).toThrow(/org must be a string/);
   });
 
   it('applies configured env vars without overwriting process env', () => {

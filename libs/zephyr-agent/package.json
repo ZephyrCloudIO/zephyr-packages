@@ -41,6 +41,7 @@
     "git-url-parse": "^15.0.0",
     "https-proxy-agent": "^7.0.6",
     "is-ci": "catalog:plugin-shared",
+    "jiti": "^2.6.1",
     "jose": "^5.10.0",
     "node-persist": "^4.0.1",
     "open": "^10.1.0",

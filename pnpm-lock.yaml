@@ -1750,6 +1750,9 @@ importers:
       is-ci:
         specifier: catalog:plugin-shared
         version: 4.1.0
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
       jose:
         specifier: ^5.10.0
         version: 5.10.0

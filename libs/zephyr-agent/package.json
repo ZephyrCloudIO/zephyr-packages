@@ -47,6 +47,7 @@
     "open": "^10.1.0",
     "proper-lockfile": "^4.1.2",
     "tslib": "catalog:typescript",
+    "valibot": "^1.4.0",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {

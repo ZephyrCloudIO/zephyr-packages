@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createJiti } from 'jiti';
+import * as v from 'valibot';
 import { safe_json_parse } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import type { ZeDependency } from './ze-package-json.type';
@@ -14,15 +15,6 @@ export interface ZephyrConfig {
   env?: Record<string, string>;
   rawZephyrDependencies?: Record<string, string>;
   zephyrDependencies?: Record<string, ZeDependency>;
-}
-
-interface ZephyrConfigFile {
-  org?: unknown;
-  parentOrg?: unknown;
-  project?: unknown;
-  appName?: unknown;
-  env?: unknown;
-  remoteDependencies?: unknown;
 }
 
 const CONFIG_FILE_NAMES = [
@@ -45,17 +37,23 @@ const CONFIG_FILE_FIELDS = [
 
 const CONFIG_FILE_FIELD_SET = new Set<string>(CONFIG_FILE_FIELDS);
 
-function readString(
-  value: unknown,
-  field: string,
-  configPath: string
-): string | undefined {
+const stringRecordSchema = v.record(v.string(), v.string());
+
+const zephyrConfigFileSchema = v.object({
+  org: v.optional(v.string()),
+  parentOrg: v.optional(v.string()),
+  project: v.optional(v.string()),
+  appName: v.optional(v.string()),
+  env: v.optional(stringRecordSchema),
+  remoteDependencies: v.optional(stringRecordSchema),
+});
+
+type ZephyrConfigFile = v.InferOutput<typeof zephyrConfigFileSchema>;
+type ZephyrConfigIssue = v.InferIssue<typeof zephyrConfigFileSchema>;
+
+function readString(value: string | undefined): string | undefined {
   if (value === undefined) {
     return undefined;
-  }
-
-  if (typeof value !== 'string') {
-    throwConfigError(configPath, `${field} must be a string.`);
   }
 
   const trimmed = value.trim();
@@ -64,30 +62,6 @@ function readString(
 
 function readEnvString(value: string | undefined): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
-}
-
-function readStringRecord(
-  value: unknown,
-  field: string,
-  configPath: string
-): Record<string, string> | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throwConfigError(configPath, `${field} must be an object with string values.`);
-  }
-
-  const entries = Object.entries(value).map(([key, entry]) => {
-    if (typeof entry !== 'string') {
-      throwConfigError(configPath, `${field}.${key} must be a string.`);
-    }
-
-    return [key, entry] as const;
-  });
-
-  return Object.fromEntries(entries);
 }
 
 function parseJsonEnv(value: string | undefined): Record<string, string> | undefined {
@@ -112,10 +86,9 @@ function parseJsonEnv(value: string | undefined): Record<string, string> | undef
 }
 
 function readRawDependencies(
-  value: unknown,
-  configPath: string
+  value: Record<string, string> | undefined
 ): Record<string, string> | undefined {
-  return readStringRecord(value, 'remoteDependencies', configPath);
+  return value;
 }
 
 function findConfigPath(startingPath: string): string | undefined {
@@ -153,17 +126,14 @@ function readConfigFile(context: string | undefined): ZephyrConfig {
   }
 
   const loadedConfig = loadConfigModule(configPath);
-  const rawZephyrDependencies = readRawDependencies(
-    loadedConfig.remoteDependencies,
-    configPath
-  );
+  const rawZephyrDependencies = readRawDependencies(loadedConfig.remoteDependencies);
 
   return {
-    org: readString(loadedConfig.org, 'org', configPath),
-    parentOrg: readString(loadedConfig.parentOrg, 'parentOrg', configPath),
-    project: readString(loadedConfig.project, 'project', configPath),
-    app: readString(loadedConfig.appName, 'appName', configPath),
-    env: readStringRecord(loadedConfig.env, 'env', configPath),
+    org: readString(loadedConfig.org),
+    parentOrg: readString(loadedConfig.parentOrg),
+    project: readString(loadedConfig.project),
+    app: readString(loadedConfig.appName),
+    env: loadedConfig.env,
     rawZephyrDependencies,
     zephyrDependencies: rawZephyrDependencies
       ? parseZeDependencies(rawZephyrDependencies)
@@ -179,14 +149,7 @@ function loadConfigModule(configPath: string): ZephyrConfigFile {
       __esModule?: boolean;
     };
     const config = loaded?.default ?? loaded;
-
-    if (!config || typeof config !== 'object' || Array.isArray(config)) {
-      throwConfigError(configPath, 'default export must be an object.');
-    }
-
-    validateConfigFields(config, configPath);
-
-    return config;
+    return parseConfigFile(config, configPath);
   } catch (error) {
     if (ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_CONFIG_NOT_VALID)) {
       throw error;
@@ -196,10 +159,11 @@ function loadConfigModule(configPath: string): ZephyrConfigFile {
   }
 }
 
-function validateConfigFields(
-  config: object,
-  configPath: string
-): asserts config is ZephyrConfigFile {
+function parseConfigFile(config: unknown, configPath: string): ZephyrConfigFile {
+  if (!isConfigObject(config)) {
+    throwConfigError(configPath, 'default export must be an object.');
+  }
+
   const unknownFields = Object.keys(config).filter(
     (field) => !CONFIG_FILE_FIELD_SET.has(field)
   );
@@ -211,6 +175,45 @@ function validateConfigFields(
         `Allowed fields: ${CONFIG_FILE_FIELDS.join(', ')}.`
     );
   }
+
+  const result = v.safeParse(zephyrConfigFileSchema, config);
+  if (!result.success) {
+    throwConfigError(configPath, formatConfigValidationIssues(result.issues));
+  }
+
+  return result.output;
+}
+
+function isConfigObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function formatConfigValidationIssues(issues: ZephyrConfigIssue[]): string {
+  const issue = issues[0];
+  if (!issue) {
+    return 'invalid config.';
+  }
+
+  const fieldPath = getIssueFieldPath(issue);
+  if (issue.type === 'string' && fieldPath) {
+    return `${fieldPath} must be a string.`;
+  }
+
+  if (issue.type === 'record' && fieldPath) {
+    return `${fieldPath} must be an object with string values.`;
+  }
+
+  return issue.message;
+}
+
+function getIssueFieldPath(issue: ZephyrConfigIssue): string | undefined {
+  const path = issue.path
+    ?.map((pathItem) => pathItem.key)
+    .filter((key): key is string | number => {
+      return typeof key === 'string' || typeof key === 'number';
+    });
+
+  return path?.length ? path.join('.') : undefined;
 }
 
 function throwConfigError(configPath: string, message: string): never {

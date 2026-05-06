@@ -13,7 +13,7 @@ Provide an official React hook that exposes cache status ergonomically for host 
 
 - Add `useCacheStatus` export in `zephyr-native-cache`.
 - Hook should consume `NC-01` APIs (snapshot + subscription), not hidden globals.
-- Include utility actions in hook return where appropriate (clear/reset notification helpers).
+- Keep the hook contract policy-free (state and signals only, no notification helpers).
 
 ## Out of Scope
 
@@ -23,8 +23,10 @@ Provide an official React hook that exposes cache status ergonomically for host 
 ## Proposed Hook Contract (Draft)
 
 ```ts
-const { status, latestUpdateEvent, clearUpdateNotification } = useCacheStatus();
+const { status, latestUpdateEvent } = useCacheStatus();
 ```
+
+Notification UX remains app-defined (toast/modal/restart prompts/silent apply).
 
 ## Proposed Execution
 

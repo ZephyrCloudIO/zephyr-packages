@@ -119,8 +119,10 @@ For React Native UIs, use the built-in hook:
 ```ts
 import { useCacheStatus } from 'zephyr-native-cache';
 
-const { status, latestUpdateEvent, clearUpdateNotification } = useCacheStatus();
+const { status, latestUpdateEvent } = useCacheStatus();
 ```
+
+`useCacheStatus` exposes runtime state and raw update signals only. UI/notification behavior (toasts, banners, restart prompts, silent apply, etc.) is intentionally app-defined.
 
 ## Requirements
 

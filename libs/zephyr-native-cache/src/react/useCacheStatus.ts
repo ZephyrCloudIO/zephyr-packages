@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { UpdateAvailableEvent } from '../events';
 import {
   getCacheStatus,
@@ -22,7 +22,6 @@ const INITIAL_STATUS: CacheStatusSnapshot = {
 export interface UseCacheStatusResult {
   status: CacheStatusSnapshot;
   latestUpdateEvent: UpdateAvailableEvent | null;
-  clearUpdateNotification: () => void;
 }
 
 export function useCacheStatus(): UseCacheStatusResult {
@@ -32,10 +31,6 @@ export function useCacheStatus(): UseCacheStatusResult {
   const [latestUpdateEvent, setLatestUpdateEvent] = useState<UpdateAvailableEvent | null>(
     null
   );
-
-  const clearUpdateNotification = useCallback(() => {
-    setLatestUpdateEvent(null);
-  }, []);
 
   useEffect(() => {
     const unsubscribeStatus = subscribeCacheStatus(setStatus);
@@ -54,5 +49,5 @@ export function useCacheStatus(): UseCacheStatusResult {
     };
   }, []);
 
-  return { status, latestUpdateEvent, clearUpdateNotification };
+  return { status, latestUpdateEvent };
 }

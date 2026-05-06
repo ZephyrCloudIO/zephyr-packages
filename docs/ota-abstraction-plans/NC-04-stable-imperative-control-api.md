@@ -23,6 +23,7 @@ These work, but are not an ideal long-term public API boundary.
 - Define a package-level imperative API that is easy to discover and type-safe.
 - Keep legacy globals as aliases/deprecation bridge.
 - Define deprecation messaging and migration timeline.
+- Keep API strictly runtime-control oriented; notification/UX behavior stays application-owned.
 
 ## In Scope (Planning)
 
@@ -33,6 +34,7 @@ These work, but are not an ideal long-term public API boundary.
 ## Out of Scope (for now)
 
 - Implementing the new API in this phase.
+- Defining notification behavior such as toasts, modals, forced restart prompts, or update banners.
 
 ## Proposed API Direction (Draft)
 

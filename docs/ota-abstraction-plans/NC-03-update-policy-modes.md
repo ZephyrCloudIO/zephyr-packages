@@ -1,6 +1,6 @@
 # NC-03: Update Policy Modes for `checkForUpdates`
 
-Status: Planned
+Status: Completed
 Type: Implementation
 Priority: High
 

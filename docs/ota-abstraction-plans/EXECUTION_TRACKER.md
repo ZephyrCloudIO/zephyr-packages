@@ -18,19 +18,16 @@ Explicitly out of scope per direction:
 
 ## Status Board
 
-| ID    | Title                         | Type           | Status  | Notes                              |
-| ----- | ----------------------------- | -------------- | ------- | ---------------------------------- |
-| NC-01 | Cache status API              | Implementation | Planned | Foundation for NC-02               |
-| NC-02 | React hook API                | Implementation | Planned | Depends on NC-01 primitives        |
-| NC-03 | Update policy modes           | Implementation | Planned | API + behavior updates             |
-| NC-04 | Stable imperative control API | Plan only      | Planned | Backward-compatible migration plan |
+| ID    | Title                         | Type           | Status    | Notes                              |
+| ----- | ----------------------------- | -------------- | --------- | ---------------------------------- |
+| NC-01 | Cache status API              | Implementation | Completed | Foundation for NC-02               |
+| NC-02 | React hook API                | Implementation | Completed | Depends on NC-01 primitives        |
+| NC-03 | Update policy modes           | Implementation | Completed | API + behavior updates             |
+| NC-04 | Stable imperative control API | Plan only      | Planned   | Backward-compatible migration plan |
 
 ## Recommended Execution Order
 
-1. `NC-01` (core status primitives).
-2. `NC-02` (hook built on NC-01).
-3. `NC-03` (policy extensions on cache update flow).
-4. `NC-04` remains plan-only until implementation is authorized.
+1. `NC-04` remains plan-only until implementation is authorized.
 
 ## Dependency Notes
 
@@ -41,3 +38,4 @@ Explicitly out of scope per direction:
 
 - 2026-05-06: Initial tracker created with selected scope and status board.
 - 2026-05-06: Scope narrowed to NC-only items; MP files removed from active plan.
+- 2026-05-06: Completed NC-01, NC-02, and NC-03 implementation work.

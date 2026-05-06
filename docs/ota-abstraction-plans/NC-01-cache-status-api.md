@@ -1,6 +1,6 @@
 # NC-01: First-Class Cache Status API
 
-Status: Planned
+Status: Completed
 Type: Implementation
 Priority: High
 

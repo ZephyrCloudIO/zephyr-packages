@@ -1,6 +1,6 @@
 # NC-02: Official React Hook API (`useCacheStatus`)
 
-Status: Planned
+Status: Completed
 Type: Implementation
 Priority: High
 Depends on: `NC-01`

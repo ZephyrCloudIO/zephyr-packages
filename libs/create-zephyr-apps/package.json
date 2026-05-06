@@ -43,7 +43,7 @@
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript",
-    "tsx": "^4.19.3",
+    "tsx": "4.21.0",
     "typescript": "catalog:typescript"
   },
   "publishConfig": {

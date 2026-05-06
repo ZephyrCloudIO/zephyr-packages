@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |

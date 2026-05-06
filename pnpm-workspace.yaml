@@ -72,7 +72,7 @@ catalogs:
     '@rsbuild/core': ^1.7.1
     '@rsbuild/plugin-react': ^1.4.0
     '@rsbuild/shared': ^0.7.10
-    '@rsdoctor/rspack-plugin': 1.5.2
+    '@rsdoctor/rspack-plugin': 1.5.9
     '@rspack/cli': ^1.7.0
     '@rspack/core': ^1.7.0
     '@rspack/plugin-react-refresh': ^1.5.1

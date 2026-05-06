@@ -80,6 +80,13 @@ It also exposes status helpers:
 - `getCacheStatus()`
 - `subscribeCacheStatus(listener)`
 
+And package-level control helpers (recommended over global deep access):
+
+- `checkForUpdates(options?)`
+- `startUpdatePolling(intervalMs?)`
+- `stopUpdatePolling()`
+- `clearCache()`
+
 It also exposes globals for manual control:
 
 - `globalThis.__MFE_CHECK_UPDATES__(options?)`

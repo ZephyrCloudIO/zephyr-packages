@@ -2,9 +2,13 @@ export { CacheManager } from './CacheManager';
 export { BundleCacheLayer } from './BundleCacheLayer';
 export { default as runtimePlugin } from './runtime-plugin';
 export {
+  checkForUpdates,
+  clearCache,
   getCacheStatus,
   getRegisteredCacheLayer,
   register,
+  startUpdatePolling,
+  stopUpdatePolling,
   subscribeCacheStatus,
 } from './register';
 export { default as NativeMFECache } from './NativeMFECache';

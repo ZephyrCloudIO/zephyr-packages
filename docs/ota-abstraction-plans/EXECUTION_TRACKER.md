@@ -10,6 +10,7 @@ This tracker covers only the NC items selected for execution/planning:
 - `NC-02` Add official React hook API for cache status.
 - `NC-03` Add update policy modes.
 - `NC-04` Create plan for stable imperative control API.
+- `NC-06` Abstract host control surface away from deep MF globals.
 
 Explicitly out of scope per direction:
 
@@ -18,12 +19,13 @@ Explicitly out of scope per direction:
 
 ## Status Board
 
-| ID    | Title                         | Type           | Status    | Notes                              |
-| ----- | ----------------------------- | -------------- | --------- | ---------------------------------- |
-| NC-01 | Cache status API              | Implementation | Completed | Foundation for NC-02               |
-| NC-02 | React hook API                | Implementation | Completed | Depends on NC-01 primitives        |
-| NC-03 | Update policy modes           | Implementation | Completed | API + behavior updates             |
-| NC-04 | Stable imperative control API | Plan only      | Planned   | Backward-compatible migration plan |
+| ID    | Title                            | Type           | Status    | Notes                                      |
+| ----- | -------------------------------- | -------------- | --------- | ------------------------------------------ |
+| NC-01 | Cache status API                 | Implementation | Completed | Foundation for NC-02                       |
+| NC-02 | React hook API                   | Implementation | Completed | Depends on NC-01 primitives                |
+| NC-03 | Update policy modes              | Implementation | Completed | API + behavior updates                     |
+| NC-04 | Stable imperative control API    | Plan only      | Planned   | Backward-compatible migration plan         |
+| NC-06 | Host control surface abstraction | Implementation | Completed | Package helpers replace deep global access |
 
 ## Recommended Execution Order
 
@@ -39,3 +41,4 @@ Explicitly out of scope per direction:
 - 2026-05-06: Initial tracker created with selected scope and status board.
 - 2026-05-06: Scope narrowed to NC-only items; MP files removed from active plan.
 - 2026-05-06: Completed NC-01, NC-02, and NC-03 implementation work.
+- 2026-05-06: Completed NC-06 control-surface abstraction work.

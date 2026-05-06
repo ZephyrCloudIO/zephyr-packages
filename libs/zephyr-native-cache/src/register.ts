@@ -3,6 +3,7 @@ import type {
   CacheStatusListener,
   CacheStatusSnapshot,
   CheckForUpdatesOptions,
+  CheckForUpdatesResult,
   MFECacheConfig,
 } from './types';
 
@@ -98,4 +99,26 @@ export function getCacheStatus(): CacheStatusSnapshot | null {
 export function subscribeCacheStatus(listener: CacheStatusListener): () => void {
   if (!cacheLayerInstance) return () => {};
   return cacheLayerInstance.subscribeStatus(listener);
+}
+
+export async function checkForUpdates(
+  options?: CheckForUpdatesOptions
+): Promise<CheckForUpdatesResult> {
+  if (!cacheLayerInstance) {
+    return { updated: 0, checked: 0, applied: false };
+  }
+  return cacheLayerInstance.checkForUpdates(options);
+}
+
+export function startUpdatePolling(intervalMs?: number): void {
+  cacheLayerInstance?.startPolling(intervalMs);
+}
+
+export function stopUpdatePolling(): void {
+  cacheLayerInstance?.stopPolling();
+}
+
+export async function clearCache(): Promise<void> {
+  if (!cacheLayerInstance) return;
+  await cacheLayerInstance.clearCache();
 }

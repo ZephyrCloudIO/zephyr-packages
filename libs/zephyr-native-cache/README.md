@@ -70,9 +70,28 @@ register({
 - `clearCache()`
 - `getLoadedBundles()`
 
+`checkForUpdates` also supports policy options:
+
+- `checkForUpdates({ policy: 'downloadOnly' })`
+- `checkForUpdates({ policy: 'downloadAndApply' })`
+
+It also exposes status helpers:
+
+- `getCacheStatus()`
+- `subscribeCacheStatus(listener)`
+
+And package-level control helpers (recommended over global deep access):
+
+- `checkForUpdates(options?)`
+- `startUpdatePolling(intervalMs?)`
+- `stopUpdatePolling()`
+- `clearCache()`
+
 It also exposes globals for manual control:
 
-- `globalThis.__MFE_CHECK_UPDATES__()`
+- `globalThis.__MFE_CHECK_UPDATES__(options?)`
+  - e.g. `globalThis.__MFE_CHECK_UPDATES__({ policy: 'downloadOnly' })`
+  - default when omitted: `{ policy: 'downloadOnly' }`
 - `globalThis.__MFE_START_UPDATE_POLLING__(intervalMs?)`
 - `globalThis.__MFE_STOP_UPDATE_POLLING__()`
 
@@ -101,6 +120,21 @@ cache.events.on('poll:complete', (event) => {
   console.log('[cache] poll complete', event.updated, '/', event.checked);
 });
 ```
+
+## React Hook
+
+For React Native UIs, use the built-in hook:
+
+```ts
+import { useCacheStatus } from 'zephyr-native-cache';
+
+export function CacheStatusPanel() {
+  const { status, latestUpdateEvent } = useCacheStatus();
+  return null;
+}
+```
+
+`useCacheStatus` exposes runtime state and raw update signals only. UI/notification behavior (toasts, banners, restart prompts, silent apply, etc.) is intentionally app-defined.
 
 ## Requirements
 

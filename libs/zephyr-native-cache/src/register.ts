@@ -1,5 +1,11 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
-import type { MFECacheConfig } from './types';
+import type {
+  CacheStatusListener,
+  CacheStatusSnapshot,
+  CheckForUpdatesOptions,
+  CheckForUpdatesResult,
+  MFECacheConfig,
+} from './types';
 
 let cacheLayerInstance: BundleCacheLayer | null = null;
 
@@ -67,7 +73,8 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   }
 
   // Expose manual polling APIs on globalThis
-  globalThis.__MFE_CHECK_UPDATES__ = () => cacheLayer.checkForUpdates();
+  globalThis.__MFE_CHECK_UPDATES__ = (options?: CheckForUpdatesOptions) =>
+    cacheLayer.checkForUpdates(options);
   globalThis.__MFE_START_UPDATE_POLLING__ = (intervalMs?: number) =>
     cacheLayer.startPolling(intervalMs);
   globalThis.__MFE_STOP_UPDATE_POLLING__ = () => cacheLayer.stopPolling();
@@ -79,4 +86,39 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   }
 
   return cacheLayer;
+}
+
+export function getRegisteredCacheLayer(): BundleCacheLayer | null {
+  return cacheLayerInstance;
+}
+
+export function getCacheStatus(): CacheStatusSnapshot | null {
+  return cacheLayerInstance?.getStatus() ?? null;
+}
+
+export function subscribeCacheStatus(listener: CacheStatusListener): () => void {
+  if (!cacheLayerInstance) return () => {};
+  return cacheLayerInstance.subscribeStatus(listener);
+}
+
+export async function checkForUpdates(
+  options?: CheckForUpdatesOptions
+): Promise<CheckForUpdatesResult> {
+  if (!cacheLayerInstance) {
+    return { updated: 0, checked: 0, applied: false };
+  }
+  return cacheLayerInstance.checkForUpdates(options);
+}
+
+export function startUpdatePolling(intervalMs?: number): void {
+  cacheLayerInstance?.startPolling(intervalMs);
+}
+
+export function stopUpdatePolling(): void {
+  cacheLayerInstance?.stopPolling();
+}
+
+export async function clearCache(): Promise<void> {
+  if (!cacheLayerInstance) return;
+  await cacheLayerInstance.clearCache();
 }

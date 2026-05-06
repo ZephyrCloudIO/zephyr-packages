@@ -1,7 +1,15 @@
 import { CacheManager } from './CacheManager';
 import { CacheEvents } from './events';
 import NativeMFECache from './NativeMFECache';
-import type { BundleMetadata, MFECacheConfig } from './types';
+import type {
+  BundleMetadata,
+  CacheStatusListener,
+  CacheStatusSnapshot,
+  CheckForUpdatesOptions,
+  CheckForUpdatesResult,
+  MFECacheConfig,
+  UpdatePolicy,
+} from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -35,6 +43,10 @@ export class BundleCacheLayer {
   // Event emitter for cache lifecycle events
   readonly events = new CacheEvents();
 
+  // Public status snapshot for UI/hooks/integration tooling
+  private status: CacheStatusSnapshot;
+  private statusListeners = new Set<CacheStatusListener>();
+
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
 
@@ -42,6 +54,17 @@ export class BundleCacheLayer {
     this.bundleHashMap =
       (globalThis as any).__MFE_BUNDLE_HASHES__ ??
       ((globalThis as any).__MFE_BUNDLE_HASHES__ = {});
+
+    this.status = {
+      remotes: {},
+      pollingEnabled: false,
+      pollIntervalMs:
+        this.config.pollIntervalMs ?? BundleCacheLayer.DEFAULT_POLL_INTERVAL_MS,
+      isPolling: false,
+      lastPollAt: undefined,
+      lastPollResult: undefined,
+      pendingUpdates: [],
+    };
   }
 
   // --- Registration (called by bundler integration layer) ---
@@ -104,7 +127,7 @@ export class BundleCacheLayer {
       // No hash — skip cache, fetch fresh. Serializer will compute hashes
       // for next load.
       console.info(`${LOG_PREFIX} skip (no hash): ${bundleUrlNoQuery}`);
-      this.events.emitBundleLoad(
+      this.recordBundleLoad(
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'skipped',
@@ -123,20 +146,28 @@ export class BundleCacheLayer {
    * Check all known manifests for updated bundles and pre-download them. Returns stats
    * about how many bundles were checked and updated.
    */
-  async checkForUpdates(): Promise<{ updated: number; checked: number }> {
+  async checkForUpdates(
+    options: CheckForUpdatesOptions = {}
+  ): Promise<CheckForUpdatesResult> {
     if (!NativeMFECache || this.isCheckingUpdates) {
-      return { updated: 0, checked: 0 };
+      return { updated: 0, checked: 0, applied: false };
     }
 
+    const policy: UpdatePolicy = options.policy ?? 'downloadOnly';
     this.isCheckingUpdates = true;
+    this.status.isPolling = true;
+    this.notifyStatusChange();
     this.events.emitPollStart();
     let updated = 0;
     let checked = 0;
+    let applied = false;
 
     try {
       await this.ensureInitialized();
 
-      if (!this.manifestSources.size) return { updated: 0, checked: 0 };
+      if (!this.manifestSources.size) {
+        return { updated: 0, checked: 0, applied: false };
+      }
 
       for (const [manifestUrl, source] of this.manifestSources) {
         try {
@@ -167,6 +198,10 @@ export class BundleCacheLayer {
             if (didUpdate) {
               updated++;
               this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
+              if (!this.status.pendingUpdates.includes(remoteName)) {
+                this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
+                this.notifyStatusChange();
+              }
               this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
             }
           }
@@ -175,17 +210,32 @@ export class BundleCacheLayer {
           // Non-critical: network error for this manifest, continue with others
         }
       }
+
+      if (updated > 0 && policy === 'downloadAndApply') {
+        applied = this.applyDownloadedUpdates();
+        if (applied) {
+          this.status.pendingUpdates = [];
+          this.notifyStatusChange();
+        }
+      }
     } finally {
       this.isCheckingUpdates = false;
+      this.status.isPolling = false;
+      this.status.lastPollAt = Date.now();
+      this.status.lastPollResult = { checked, updated };
+      this.notifyStatusChange();
       this.events.emitPollComplete(checked, updated);
     }
 
-    return { updated, checked };
+    return { updated, checked, applied };
   }
 
   startPolling(intervalMs?: number): void {
     this.stopPolling();
     const interval = intervalMs ?? BundleCacheLayer.DEFAULT_POLL_INTERVAL_MS;
+    this.status.pollingEnabled = true;
+    this.status.pollIntervalMs = interval;
+    this.notifyStatusChange();
     this.pollTimer = setInterval(() => {
       this.checkForUpdates().catch(() => {});
     }, interval);
@@ -196,6 +246,9 @@ export class BundleCacheLayer {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
+    this.status.pollingEnabled = false;
+    this.status.isPolling = false;
+    this.notifyStatusChange();
   }
 
   // --- Public API for UI layer ---
@@ -209,7 +262,77 @@ export class BundleCacheLayer {
     return this.cacheManager?.getAllMetadata() ?? [];
   }
 
+  getStatus(): CacheStatusSnapshot {
+    const remotes = Object.fromEntries(
+      Object.entries(this.status.remotes).map(([key, remote]) => [key, { ...remote }])
+    );
+
+    return {
+      remotes,
+      pollingEnabled: this.status.pollingEnabled,
+      pollIntervalMs: this.status.pollIntervalMs,
+      isPolling: this.status.isPolling,
+      lastPollAt: this.status.lastPollAt,
+      lastPollResult: this.status.lastPollResult
+        ? { ...this.status.lastPollResult }
+        : undefined,
+      pendingUpdates: [...this.status.pendingUpdates],
+    };
+  }
+
+  subscribeStatus(listener: CacheStatusListener): () => void {
+    this.statusListeners.add(listener);
+    listener(this.getStatus());
+    return () => {
+      this.statusListeners.delete(listener);
+    };
+  }
+
   // --- Private helpers ---
+
+  private notifyStatusChange(): void {
+    const snapshot = this.getStatus();
+    for (const listener of this.statusListeners) {
+      try {
+        listener(snapshot);
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} status listener failed`, error);
+      }
+    }
+  }
+
+  private recordBundleLoad(
+    bundleUrl: string,
+    remoteName: string,
+    status: 'cache-hit' | 'downloaded' | 'skipped',
+    hash: string | undefined
+  ): void {
+    this.status.remotes[remoteName] = {
+      remoteName,
+      bundleUrl,
+      status,
+      hash,
+      loadedAt: Date.now(),
+    };
+    if (status === 'cache-hit' || status === 'downloaded') {
+      this.status.pendingUpdates = this.status.pendingUpdates.filter(
+        (name) => name !== remoteName
+      );
+    }
+    this.notifyStatusChange();
+    this.events.emitBundleLoad(bundleUrl, remoteName, status, hash);
+  }
+
+  private applyDownloadedUpdates(): boolean {
+    if (!NativeMFECache) return false;
+    try {
+      NativeMFECache.restart();
+      return true;
+    } catch (error) {
+      console.warn(`${LOG_PREFIX} failed to apply downloaded updates`, error);
+      return false;
+    }
+  }
 
   private async loadBundleWithVerification(
     bundleUrl: string,
@@ -224,7 +347,7 @@ export class BundleCacheLayer {
       console.info(`${LOG_PREFIX} cache hit: ${bundleUrl.split('?')[0]}`);
       this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
       await this.evalFromFile(cached.filePath);
-      this.events.emitBundleLoad(
+      this.recordBundleLoad(
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'cache-hit',
@@ -244,7 +367,7 @@ export class BundleCacheLayer {
       } catch {
         /* ok */
       }
-      this.events.emitBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
+      this.recordBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
       return { status: 'skipped' };
     }
 
@@ -253,7 +376,7 @@ export class BundleCacheLayer {
       bundleHash: sha256,
     });
     await this.evalFromFile(destPath);
-    this.events.emitBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
+    this.recordBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
     return { status: 'downloaded' };
   }
 

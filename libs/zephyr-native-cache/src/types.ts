@@ -1,5 +1,9 @@
 export type BundleStatus = 'active' | 'pendingUpdate' | 'broken' | 'pendingCleanup';
 
+export type BundleLoadStatus = 'cache-hit' | 'downloaded' | 'skipped' | 'pending';
+
+export type UpdatePolicy = 'downloadOnly' | 'downloadAndApply';
+
 export interface BundleMetadata {
   remoteName: string;
   bundleHash: string;
@@ -36,3 +40,38 @@ export interface MFECacheConfig {
   /** Force enable cache in dev mode (default: false). Production always enables cache. */
   forceCacheInDev?: boolean;
 }
+
+export interface CacheStatusRemoteEntry {
+  remoteName: string;
+  bundleUrl: string;
+  status: BundleLoadStatus;
+  hash: string | undefined;
+  loadedAt: number | undefined;
+}
+
+export interface CachePollResult {
+  checked: number;
+  updated: number;
+}
+
+export interface CacheStatusSnapshot {
+  remotes: Record<string, CacheStatusRemoteEntry>;
+  pollingEnabled: boolean;
+  pollIntervalMs: number;
+  isPolling: boolean;
+  lastPollAt: number | undefined;
+  lastPollResult: CachePollResult | undefined;
+  pendingUpdates: string[];
+}
+
+export interface CheckForUpdatesOptions {
+  policy?: UpdatePolicy;
+}
+
+export interface CheckForUpdatesResult {
+  updated: number;
+  checked: number;
+  applied: boolean;
+}
+
+export type CacheStatusListener = (status: CacheStatusSnapshot) => void;

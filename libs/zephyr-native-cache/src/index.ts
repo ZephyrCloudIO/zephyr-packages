@@ -8,6 +8,8 @@ export {
   subscribeCacheStatus,
 } from './register';
 export { default as NativeMFECache } from './NativeMFECache';
+export { useCacheStatus } from './react/useCacheStatus';
+export type { UseCacheStatusResult } from './react/useCacheStatus';
 export type { NativeMFECacheSpec } from './NativeMFECache';
 export type {
   CachePollResult,

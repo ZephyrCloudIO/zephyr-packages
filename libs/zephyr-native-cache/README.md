@@ -70,6 +70,11 @@ register({
 - `clearCache()`
 - `getLoadedBundles()`
 
+It also exposes status helpers:
+
+- `getCacheStatus()`
+- `subscribeCacheStatus(listener)`
+
 It also exposes globals for manual control:
 
 - `globalThis.__MFE_CHECK_UPDATES__()`
@@ -100,6 +105,16 @@ cache.events.on('bundle:load', (event) => {
 cache.events.on('poll:complete', (event) => {
   console.log('[cache] poll complete', event.updated, '/', event.checked);
 });
+```
+
+## React Hook
+
+For React Native UIs, use the built-in hook:
+
+```ts
+import { useCacheStatus } from 'zephyr-native-cache';
+
+const { status, latestUpdateEvent, clearUpdateNotification } = useCacheStatus();
 ```
 
 ## Requirements

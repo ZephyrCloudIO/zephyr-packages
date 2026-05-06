@@ -53,6 +53,9 @@ describe('getGitInfo - non-git environments', () => {
 
     // Set NODE_ENV to production for tests expecting 'main' branch
     process.env.NODE_ENV = 'production';
+    delete process.env['ZEPHYR_ORG'];
+    delete process.env['ZEPHYR_PROJECT'];
+    delete process.env['ZEPHYR_APP_NAME'];
 
     // Get the mocked ze_log.git function
     const { ze_log } = require('../../logging');
@@ -197,6 +200,29 @@ describe('getGitInfo - non-git environments', () => {
       'warn',
       expect.stringContaining('Git repository not found')
     );
+  });
+
+  it('should let env config override git-derived app metadata', async () => {
+    process.env['ZEPHYR_ORG'] = 'configured-org';
+    process.env['ZEPHYR_PROJECT'] = 'configured-project';
+
+    mockExec.mockImplementation((_cmd, callback) => {
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+      const output = [
+        'John Doe',
+        'john@example.com',
+        'https://github.com/example/repo.git',
+        'main',
+        'abc123def456',
+        '',
+      ].join(`\n${delimiter}\n`);
+      callback(null, { stdout: output, stderr: '' });
+    });
+
+    const result = await getGitInfo();
+
+    expect(result.app.org).toBe('configured-org');
+    expect(result.app.project).toBe('configured-project');
   });
 
   it('should use API user org and package.json project when git is not available', async () => {

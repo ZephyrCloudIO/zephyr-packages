@@ -1750,6 +1750,9 @@ importers:
       is-ci:
         specifier: catalog:plugin-shared
         version: 4.1.0
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
       jose:
         specifier: ^5.10.0
         version: 5.10.0
@@ -1765,6 +1768,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      valibot:
+        specifier: ^1.4.0
+        version: 1.4.0(typescript@5.9.3)
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
@@ -17220,6 +17226,14 @@ packages:
   v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
+
+  valibot@1.4.0:
+    resolution: {integrity: sha512-iC/x7fVcSyOwlm/VSt7RlHnzNGLGvR9GnxdifUeWoCJo0q4ZZvrVkIHC6faTlkxG47I2Y4UrFquPuVHCrOnrLg==}
+    peerDependencies:
+      typescript: '>=5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
@@ -38424,6 +38438,10 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
+
+  valibot@1.4.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   varint@6.0.0: {}
 

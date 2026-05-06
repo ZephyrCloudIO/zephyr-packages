@@ -1,4 +1,29 @@
 describe('vite-plugin-zephyr', () => {
+  const mockZephyrAgent = () => {
+    jest.doMock('zephyr-agent', () => ({
+      createManifestContent: jest.fn(() => '{}'),
+      handleGlobalError: jest.fn(),
+      rewriteEnvReadsToVirtualModule: jest.fn(() => null),
+      ze_log: {
+        remotes: jest.fn(),
+      },
+      zeBuildDashData: jest.fn(),
+      ZeErrors: {
+        ERR_UNKNOWN: 'ERR_UNKNOWN',
+      },
+      ZephyrEngine: {
+        defer_create: jest.fn(() => ({
+          zephyr_engine_defer: Promise.resolve({
+            application_uid: 'test-app',
+            federated_dependencies: [],
+          }),
+          zephyr_defer_create: jest.fn(),
+        })),
+      },
+      ZephyrError: class ZephyrError extends Error {},
+    }));
+  };
+
   afterEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
@@ -7,6 +32,7 @@ describe('vite-plugin-zephyr', () => {
 
   test('withZephyr without mfConfig does not load module federation', () => {
     jest.isolateModules(() => {
+      mockZephyrAgent();
       jest.doMock('vite', () => ({
         loadEnv: jest.fn(() => ({})),
       }));
@@ -26,6 +52,7 @@ describe('vite-plugin-zephyr', () => {
 
   test('withZephyr with mfConfig injects runtime plugin and delegates to mf plugin', () => {
     jest.isolateModules(() => {
+      mockZephyrAgent();
       jest.doMock('vite', () => ({
         loadEnv: jest.fn(() => ({})),
       }));

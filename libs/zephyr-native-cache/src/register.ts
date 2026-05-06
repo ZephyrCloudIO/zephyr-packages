@@ -1,5 +1,5 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
-import type { MFECacheConfig } from './types';
+import type { CacheStatusListener, CacheStatusSnapshot, MFECacheConfig } from './types';
 
 let cacheLayerInstance: BundleCacheLayer | null = null;
 
@@ -79,4 +79,17 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   }
 
   return cacheLayer;
+}
+
+export function getRegisteredCacheLayer(): BundleCacheLayer | null {
+  return cacheLayerInstance;
+}
+
+export function getCacheStatus(): CacheStatusSnapshot | null {
+  return cacheLayerInstance?.getStatus() ?? null;
+}
+
+export function subscribeCacheStatus(listener: CacheStatusListener): () => void {
+  if (!cacheLayerInstance) return () => {};
+  return cacheLayerInstance.subscribeStatus(listener);
 }

@@ -136,14 +136,10 @@ npm run build  # Works locally; CI needs commit history unless zephyr.config.ts/
 cat > zephyr.config.ts <<'TS'
 export default {
   org: 'my-org',
-  parentOrg: 'my-parent-org',
   project: 'my-project',
   appName: 'my-app',
   remoteDependencies: {
     remote: 'zephyr:remote.remote-project.remote-org@latest',
-  },
-  env: {
-    ZE_PUBLIC_API_URL: 'https://example.com',
   },
 };
 TS
@@ -153,7 +149,7 @@ npm run build
 # zephyr.config.ts, zephyr.config.mts, zephyr.config.cts,
 # zephyr.config.js, zephyr.config.mjs, zephyr.config.cjs
 #
-# Valid fields: org, parentOrg, project, appName, remoteDependencies, env
+# Valid fields: org, project, appName, remoteDependencies
 
 # Environment override equivalent
 ZEPHYR_ORG=my-org ZEPHYR_PROJECT=my-project ZEPHYR_APP_NAME=my-app npm run build

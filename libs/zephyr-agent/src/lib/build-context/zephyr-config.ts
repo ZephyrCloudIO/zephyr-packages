@@ -9,7 +9,6 @@ import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
 
 export interface ZephyrConfig {
   org?: string;
-  parentOrg?: string;
   project?: string;
   app?: string;
   env?: Record<string, string>;
@@ -26,14 +25,7 @@ const CONFIG_FILE_NAMES = [
   'zephyr.config.cjs',
 ] as const;
 
-const CONFIG_FILE_FIELDS = [
-  'org',
-  'parentOrg',
-  'project',
-  'appName',
-  'env',
-  'remoteDependencies',
-] as const;
+const CONFIG_FILE_FIELDS = ['org', 'project', 'appName', 'remoteDependencies'] as const;
 
 const CONFIG_FILE_FIELD_SET = new Set<string>(CONFIG_FILE_FIELDS);
 
@@ -41,10 +33,8 @@ const stringRecordSchema = v.record(v.string(), v.string());
 
 const zephyrConfigFileSchema = v.object({
   org: v.optional(v.string()),
-  parentOrg: v.optional(v.string()),
   project: v.optional(v.string()),
   appName: v.optional(v.string()),
-  env: v.optional(stringRecordSchema),
   remoteDependencies: v.optional(stringRecordSchema),
 });
 
@@ -130,10 +120,8 @@ function readConfigFile(context: string | undefined): ZephyrConfig {
 
   return {
     org: readString(loadedConfig.org),
-    parentOrg: readString(loadedConfig.parentOrg),
     project: readString(loadedConfig.project),
     app: readString(loadedConfig.appName),
-    env: loadedConfig.env,
     rawZephyrDependencies,
     zephyrDependencies: rawZephyrDependencies
       ? parseZeDependencies(rawZephyrDependencies)
@@ -227,7 +215,6 @@ function readConfigFromEnv(): ZephyrConfig {
 
   return {
     org: readEnvString(process.env['ZEPHYR_ORG']),
-    parentOrg: readEnvString(process.env['ZEPHYR_PARENT_ORG']),
     project: readEnvString(process.env['ZEPHYR_PROJECT']),
     app: readEnvString(process.env['ZEPHYR_APP_NAME']),
     env: parseJsonEnv(process.env['ZEPHYR_ENV_VARS']),
@@ -244,7 +231,6 @@ export function getZephyrConfig(context?: string): ZephyrConfig {
 
   return {
     org: envConfig.org ?? fileConfig.org,
-    parentOrg: envConfig.parentOrg ?? fileConfig.parentOrg,
     project: envConfig.project ?? fileConfig.project,
     app: envConfig.app ?? fileConfig.app,
     env: {

@@ -20,9 +20,7 @@ import { type ZephyrConfig, getZephyrConfig } from './zephyr-config';
 const exec = promisify(node_exec);
 
 export interface ZeGitInfo {
-  app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'> & {
-    parentOrg?: string;
-  };
+  app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
   git: ZephyrPluginOptions['git'];
 }
 
@@ -236,7 +234,7 @@ function parseTagsOutput(stdout: string): string[] {
 }
 
 function hasConfiguredApp(config: ZephyrConfig): boolean {
-  return !!((config.org || config.parentOrg) && config.project);
+  return !!(config.org && config.project);
 }
 
 function applyConfiguredApp(
@@ -244,8 +242,7 @@ function applyConfiguredApp(
   config: ZephyrConfig
 ): ZeGitInfo['app'] {
   return {
-    org: config.org ?? config.parentOrg ?? app.org,
-    parentOrg: config.parentOrg,
+    org: config.org ?? app.org,
     project: config.project ?? app.project,
   };
 }
@@ -342,7 +339,6 @@ async function loadGlobalGitInfo(config: ZephyrConfig): Promise<ZeGitInfo> {
       },
       app: {
         org: app.org,
-        parentOrg: app.parentOrg,
         project: app.project,
       },
     };
@@ -443,7 +439,6 @@ async function getFallbackGitInfo(config: ZephyrConfig): Promise<ZeGitInfo> {
     },
     app: {
       org: app.org,
-      parentOrg: app.parentOrg,
       project: app.project,
     },
   };

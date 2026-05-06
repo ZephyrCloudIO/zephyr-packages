@@ -54,7 +54,6 @@ describe('getGitInfo - non-git environments', () => {
     // Set NODE_ENV to production for tests expecting 'main' branch
     process.env.NODE_ENV = 'production';
     delete process.env['ZEPHYR_ORG'];
-    delete process.env['ZEPHYR_PARENT_ORG'];
     delete process.env['ZEPHYR_PROJECT'];
     delete process.env['ZEPHYR_APP_NAME'];
 
@@ -205,7 +204,6 @@ describe('getGitInfo - non-git environments', () => {
 
   it('should let env config override git-derived app metadata', async () => {
     process.env['ZEPHYR_ORG'] = 'configured-org';
-    process.env['ZEPHYR_PARENT_ORG'] = 'configured-parent';
     process.env['ZEPHYR_PROJECT'] = 'configured-project';
 
     mockExec.mockImplementation((_cmd, callback) => {
@@ -224,7 +222,6 @@ describe('getGitInfo - non-git environments', () => {
     const result = await getGitInfo();
 
     expect(result.app.org).toBe('configured-org');
-    expect(result.app.parentOrg).toBe('configured-parent');
     expect(result.app.project).toBe('configured-project');
   });
 

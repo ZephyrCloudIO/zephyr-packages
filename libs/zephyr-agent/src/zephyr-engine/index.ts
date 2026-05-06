@@ -58,7 +58,6 @@ export type {
 } from './zephyr-engine.types';
 export interface ZeApplicationProperties {
   org: string;
-  parentOrg?: string;
   project: string;
   name: string;
   version: string;
@@ -620,7 +619,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 function mut_zephyr_app_uid(ze: ZephyrEngine): void {
   ze.applicationProperties = {
     org: ze.gitProperties.app.org,
-    parentOrg: ze.gitProperties.app.parentOrg,
     project: ze.gitProperties.app.project,
     name: ze.zephyrConfig.app ?? ze.npmProperties.name,
     version: ze.npmProperties.version,

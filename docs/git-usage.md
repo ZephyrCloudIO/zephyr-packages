@@ -44,29 +44,23 @@ Add a Zephyr config file at the project root when app identity should not come f
 ```ts
 export default {
   org: 'ORG',
-  parentOrg: 'PARENT_ORG',
   project: 'PROJECT',
   appName: 'APP',
   remoteDependencies: {
     remote: 'zephyr:remote.project.org@latest',
   },
-  env: {
-    ZE_PUBLIC_API_URL: 'https://example.com',
-  },
 };
 ```
 
-The config file is strict: only `org`, `parentOrg`, `project`, `appName`, `remoteDependencies`, and `env` are valid fields. String fields must be strings; `remoteDependencies` and `env` must be objects with string values. Invalid config files fail the build instead of being ignored.
+The config file is strict: only `org`, `project`, `appName`, and `remoteDependencies` are valid fields. String fields must be strings; `remoteDependencies` must be an object with string values. Invalid config files fail the build instead of being ignored.
 
 Equivalent environment overrides:
 
 ```sh
 ZEPHYR_ORG=ORG
-ZEPHYR_PARENT_ORG=PARENT_ORG
 ZEPHYR_PROJECT=PROJECT
 ZEPHYR_APP_NAME=APP
 ZEPHYR_REMOTE_DEPENDENCIES='{"remote":"zephyr:remote.project.org@latest"}'
-ZEPHYR_ENV_VARS='{"ZE_PUBLIC_API_URL":"https://example.com"}'
 ```
 
 Environment variables win over `zephyr.config.ts`. Git remains the richest metadata source, but configured `org`/`project` let builds run without remote-origin parsing.

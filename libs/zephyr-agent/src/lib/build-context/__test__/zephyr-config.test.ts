@@ -10,7 +10,6 @@ describe('zephyr config', () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
     delete process.env['ZEPHYR_ORG'];
-    delete process.env['ZEPHYR_PARENT_ORG'];
     delete process.env['ZEPHYR_PROJECT'];
     delete process.env['ZEPHYR_APP_NAME'];
     delete process.env['ZEPHYR_ENV_VARS'];
@@ -23,21 +22,17 @@ describe('zephyr config', () => {
     process.env = { ...originalEnv };
   });
 
-  it('loads app metadata, remote dependencies, and env values from zephyr.config.ts', () => {
+  it('loads app metadata and remote dependencies from zephyr.config.ts', () => {
     const appDir = join(root, 'apps', 'web');
     mkdirSync(appDir, { recursive: true });
     writeFileSync(
       join(root, 'zephyr.config.ts'),
       `export default ${JSON.stringify({
         org: 'configured-org',
-        parentOrg: 'configured-parent',
         project: 'configured-project',
         appName: 'configured-app',
         remoteDependencies: {
           'remote-app': 'zephyr:remote-app.remote-project.remote-org@latest',
-        },
-        env: {
-          ZE_PUBLIC_API_URL: 'https://example.com',
         },
       })} satisfies Record<string, unknown>;`
     );
@@ -46,14 +41,10 @@ describe('zephyr config', () => {
 
     expect(config).toMatchObject({
       org: 'configured-org',
-      parentOrg: 'configured-parent',
       project: 'configured-project',
       app: 'configured-app',
       rawZephyrDependencies: {
         'remote-app': 'zephyr:remote-app.remote-project.remote-org@latest',
-      },
-      env: {
-        ZE_PUBLIC_API_URL: 'https://example.com',
       },
     });
     expect(config.zephyrDependencies?.['remote-app']).toMatchObject({
@@ -69,7 +60,6 @@ describe('zephyr config', () => {
         org: 'file-org',
         project: 'file-project',
         appName: 'file-app',
-        env: { ZE_PUBLIC_FROM_FILE: 'file' },
       })};`
     );
     process.env['ZEPHYR_ORG'] = 'env-org';
@@ -82,7 +72,6 @@ describe('zephyr config', () => {
       project: 'env-project',
       app: 'env-app',
       env: {
-        ZE_PUBLIC_FROM_FILE: 'file',
         ZE_PUBLIC_FROM_ENV: 'env',
       },
     });
@@ -112,10 +101,12 @@ describe('zephyr config', () => {
       join(root, 'zephyr.config.ts'),
       `export default ${JSON.stringify({
         organization: 'alias-org',
+        parentOrg: 'alias-parent',
         parentOrganization: 'alias-parent',
         app: 'alias-app',
         name: 'alias-name',
         environment: { ZE_PUBLIC_ALIAS: 'alias' },
+        env: { ZE_PUBLIC_ALIAS: 'alias' },
         zephyrDependencies: {
           alias: 'zephyr:alias.alias-project.alias-org@latest',
         },
@@ -126,7 +117,7 @@ describe('zephyr config', () => {
     );
 
     expect(() => getZephyrConfig(root)).toThrow(
-      /Invalid Zephyr config.*unknown fields: organization, parentOrganization, app, name, environment, zephyrDependencies, zephyr:dependencies/
+      /Invalid Zephyr config.*unknown fields: organization, parentOrg, parentOrganization, app, name, environment, env, zephyrDependencies, zephyr:dependencies/
     );
   });
 
@@ -135,9 +126,6 @@ describe('zephyr config', () => {
       join(root, 'zephyr.config.ts'),
       `export default ${JSON.stringify({
         org: 123,
-        env: {
-          ZE_PUBLIC_API_URL: false,
-        },
       })};`
     );
 

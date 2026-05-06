@@ -51,8 +51,8 @@ Expose a stable status surface from `zephyr-native-cache` so apps can read cache
 
 ## Checklist
 
-- [ ] Finalize status snapshot shape
-- [ ] Implement snapshot state tracking
-- [ ] Implement get/subscribe APIs
-- [ ] Add tests
-- [ ] Mark completed in `EXECUTION_TRACKER.md`
+- [x] Finalize status snapshot shape
+- [x] Implement snapshot state tracking
+- [x] Implement get/subscribe APIs
+- [x] Add tests
+- [x] Mark completed in `EXECUTION_TRACKER.md`

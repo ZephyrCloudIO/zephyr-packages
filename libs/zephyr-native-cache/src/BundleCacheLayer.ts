@@ -263,8 +263,12 @@ export class BundleCacheLayer {
   }
 
   getStatus(): CacheStatusSnapshot {
+    const remotes = Object.fromEntries(
+      Object.entries(this.status.remotes).map(([key, remote]) => [key, { ...remote }])
+    );
+
     return {
-      remotes: { ...this.status.remotes },
+      remotes,
       pollingEnabled: this.status.pollingEnabled,
       pollIntervalMs: this.status.pollIntervalMs,
       isPolling: this.status.isPolling,
@@ -289,7 +293,11 @@ export class BundleCacheLayer {
   private notifyStatusChange(): void {
     const snapshot = this.getStatus();
     for (const listener of this.statusListeners) {
-      listener(snapshot);
+      try {
+        listener(snapshot);
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} status listener failed`, error);
+      }
     }
   }
 

@@ -55,9 +55,9 @@ cache.checkForUpdates({ policy: 'downloadAndApply' });
 
 ## Checklist
 
-- [ ] Finalize policy enum and default
-- [ ] Implement policy branching
-- [ ] Ensure polling compatibility
-- [ ] Add tests
-- [ ] Update docs
-- [ ] Mark completed in `EXECUTION_TRACKER.md`
+- [x] Finalize policy enum and default
+- [x] Implement policy branching
+- [x] Ensure polling compatibility
+- [x] Add tests
+- [x] Update docs
+- [x] Mark completed in `EXECUTION_TRACKER.md`

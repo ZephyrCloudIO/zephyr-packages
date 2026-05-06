@@ -54,8 +54,8 @@ Notification UX remains app-defined (toast/modal/restart prompts/silent apply).
 
 ## Checklist
 
-- [ ] Finalize hook return shape
-- [ ] Implement hook with subscription cleanup
-- [ ] Add tests
-- [ ] Update docs
-- [ ] Mark completed in `EXECUTION_TRACKER.md`
+- [x] Finalize hook return shape
+- [x] Implement hook with subscription cleanup
+- [x] Add tests
+- [x] Update docs
+- [x] Mark completed in `EXECUTION_TRACKER.md`

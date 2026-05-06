@@ -26,7 +26,7 @@
   },
   "private": true,
   "devDependencies": {
-    "@eslint/eslintrc": "^2.1.1",
+    "@eslint/eslintrc": "^3.0.0",
     "@eslint/js": "~8.57.0",
     "@nx/devkit": "22.5.4",
     "@nx/esbuild": "22.5.4",

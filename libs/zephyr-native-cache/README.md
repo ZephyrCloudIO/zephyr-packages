@@ -70,6 +70,11 @@ register({
 - `clearCache()`
 - `getLoadedBundles()`
 
+`checkForUpdates` also supports policy options:
+
+- `checkForUpdates({ policy: 'downloadOnly' })`
+- `checkForUpdates({ policy: 'downloadAndApply' })`
+
 It also exposes status helpers:
 
 - `getCacheStatus()`

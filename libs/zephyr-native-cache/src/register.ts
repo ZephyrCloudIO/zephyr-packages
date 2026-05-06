@@ -1,5 +1,10 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
-import type { CacheStatusListener, CacheStatusSnapshot, MFECacheConfig } from './types';
+import type {
+  CacheStatusListener,
+  CacheStatusSnapshot,
+  CheckForUpdatesOptions,
+  MFECacheConfig,
+} from './types';
 
 let cacheLayerInstance: BundleCacheLayer | null = null;
 
@@ -67,7 +72,8 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   }
 
   // Expose manual polling APIs on globalThis
-  globalThis.__MFE_CHECK_UPDATES__ = () => cacheLayer.checkForUpdates();
+  globalThis.__MFE_CHECK_UPDATES__ = (options?: CheckForUpdatesOptions) =>
+    cacheLayer.checkForUpdates(options);
   globalThis.__MFE_START_UPDATE_POLLING__ = (intervalMs?: number) =>
     cacheLayer.startPolling(intervalMs);
   globalThis.__MFE_STOP_UPDATE_POLLING__ = () => cacheLayer.stopPolling();

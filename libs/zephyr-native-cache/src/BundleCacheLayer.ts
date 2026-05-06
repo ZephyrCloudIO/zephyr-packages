@@ -5,7 +5,10 @@ import type {
   BundleMetadata,
   CacheStatusListener,
   CacheStatusSnapshot,
+  CheckForUpdatesOptions,
+  CheckForUpdatesResult,
   MFECacheConfig,
+  UpdatePolicy,
 } from './types';
 
 const LOG_PREFIX = '[MFE-Cache]';
@@ -143,23 +146,27 @@ export class BundleCacheLayer {
    * Check all known manifests for updated bundles and pre-download them. Returns stats
    * about how many bundles were checked and updated.
    */
-  async checkForUpdates(): Promise<{ updated: number; checked: number }> {
+  async checkForUpdates(
+    options: CheckForUpdatesOptions = {}
+  ): Promise<CheckForUpdatesResult> {
     if (!NativeMFECache || this.isCheckingUpdates) {
-      return { updated: 0, checked: 0 };
+      return { updated: 0, checked: 0, applied: false };
     }
 
+    const policy: UpdatePolicy = options.policy ?? 'downloadOnly';
     this.isCheckingUpdates = true;
     this.status.isPolling = true;
     this.notifyStatusChange();
     this.events.emitPollStart();
     let updated = 0;
     let checked = 0;
+    let applied = false;
 
     try {
       await this.ensureInitialized();
 
       if (!this.manifestSources.size) {
-        return { updated: 0, checked: 0 };
+        return { updated: 0, checked: 0, applied: false };
       }
 
       for (const [manifestUrl, source] of this.manifestSources) {
@@ -203,6 +210,14 @@ export class BundleCacheLayer {
           // Non-critical: network error for this manifest, continue with others
         }
       }
+
+      if (updated > 0 && policy === 'downloadAndApply') {
+        applied = this.applyDownloadedUpdates();
+        if (applied) {
+          this.status.pendingUpdates = [];
+          this.notifyStatusChange();
+        }
+      }
     } finally {
       this.isCheckingUpdates = false;
       this.status.isPolling = false;
@@ -212,7 +227,7 @@ export class BundleCacheLayer {
       this.events.emitPollComplete(checked, updated);
     }
 
-    return { updated, checked };
+    return { updated, checked, applied };
   }
 
   startPolling(intervalMs?: number): void {
@@ -298,6 +313,17 @@ export class BundleCacheLayer {
     }
     this.notifyStatusChange();
     this.events.emitBundleLoad(bundleUrl, remoteName, status, hash);
+  }
+
+  private applyDownloadedUpdates(): boolean {
+    if (!NativeMFECache) return false;
+    try {
+      NativeMFECache.restart();
+      return true;
+    } catch (error) {
+      console.warn(`${LOG_PREFIX} failed to apply downloaded updates`, error);
+      return false;
+    }
   }
 
   private async loadBundleWithVerification(

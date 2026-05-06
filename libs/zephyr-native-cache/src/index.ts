@@ -16,11 +16,14 @@ export type {
   CacheStatusListener,
   CacheStatusRemoteEntry,
   CacheStatusSnapshot,
+  CheckForUpdatesOptions,
+  CheckForUpdatesResult,
   BundleMetadata,
   BundleLoadStatus,
   BundleStatus,
   CachedBundleResult,
   MFECacheConfig,
+  UpdatePolicy,
 } from './types';
 export { CacheEvents } from './events';
 export type {

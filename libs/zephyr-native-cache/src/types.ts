@@ -2,6 +2,8 @@ export type BundleStatus = 'active' | 'pendingUpdate' | 'broken' | 'pendingClean
 
 export type BundleLoadStatus = 'cache-hit' | 'downloaded' | 'skipped' | 'pending';
 
+export type UpdatePolicy = 'downloadOnly' | 'downloadAndApply';
+
 export interface BundleMetadata {
   remoteName: string;
   bundleHash: string;
@@ -60,6 +62,16 @@ export interface CacheStatusSnapshot {
   lastPollAt: number | undefined;
   lastPollResult: CachePollResult | undefined;
   pendingUpdates: string[];
+}
+
+export interface CheckForUpdatesOptions {
+  policy?: UpdatePolicy;
+}
+
+export interface CheckForUpdatesResult {
+  updated: number;
+  checked: number;
+  applied: boolean;
 }
 
 export type CacheStatusListener = (status: CacheStatusSnapshot) => void;

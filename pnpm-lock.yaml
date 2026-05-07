@@ -1952,6 +1952,9 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+      zephyr-edge-contract:
+        specifier: workspace:*
+        version: link:../zephyr-edge-contract
     devDependencies:
       '@module-federation/runtime':
         specifier: ^2.3.2

@@ -87,6 +87,14 @@ And package-level control helpers (recommended over global deep access):
 - `stopUpdatePolling()`
 - `clearCache()`
 
+Zephyr-owned runtime state is also exposed under:
+
+- `globalThis.__ZEPHYR__.runtime.nativeCache`
+  - `refs.cacheLayer`
+  - `refs.bundleHashes`
+  - `state`
+  - `controls`
+
 It also exposes globals for manual control:
 
 - `globalThis.__MFE_CHECK_UPDATES__(options?)`

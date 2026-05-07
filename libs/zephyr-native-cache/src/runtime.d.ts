@@ -1,10 +1,9 @@
-import type { BundleCacheLayer } from './BundleCacheLayer';
 import type { CheckForUpdatesOptions, CheckForUpdatesResult } from './types';
+import type { ZephyrGlobalNamespace } from 'zephyr-edge-contract';
 
 declare module '@module-federation/runtime' {
   interface Federation {
     __NATIVE__: {
-      __CACHE_LAYER__?: BundleCacheLayer;
       __CACHE__?: (
         fallback: (bundlePath: string) => Promise<void>,
         bundlePath: string
@@ -20,6 +19,7 @@ declare global {
   var __FUSEBOX_HAS_FULL_CONSOLE_SUPPORT__: boolean;
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   var __FEDERATION__: import('@module-federation/runtime').Federation;
+  var __ZEPHYR__: ZephyrGlobalNamespace | undefined;
   var __MFE_CHECK_UPDATES__: (
     options?: CheckForUpdatesOptions
   ) => Promise<CheckForUpdatesResult>;

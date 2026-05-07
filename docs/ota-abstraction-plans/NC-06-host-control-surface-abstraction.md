@@ -13,7 +13,7 @@ Remove app-level deep access to Module Federation runtime globals in host apps b
 Host UIs were using low-level paths such as:
 
 - `globalThis.__MFE_CHECK_UPDATES__`
-- `globalThis.__FEDERATION__.__NATIVE__.__CACHE_LAYER__.clearCache()`
+- `globalThis.__ZEPHYR__.runtime.nativeCache.refs.cacheLayer.clearCache()`
 
 These are implementation details and are brittle as app-facing integration points.
 

@@ -10,6 +10,7 @@ import type {
   MFECacheConfig,
   UpdatePolicy,
 } from './types';
+import { ensureZephyrNativeCacheRefs } from './zephyr-global';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -23,7 +24,8 @@ export class BundleCacheLayer {
   private config: MFECacheConfig;
 
   // Bundle hash map: bundleUrl (without query params) → expected hash
-  // Shared via globalThis.__MFE_BUNDLE_HASHES__ for cross-instance access
+  // Shared via globalThis.__ZEPHYR__.runtime.nativeCache.refs.bundleHashes
+  // for cross-instance access.
   private bundleHashMap: Record<string, string>;
 
   // Manifest sources for polling: manifestUrl → ManifestSource
@@ -50,10 +52,10 @@ export class BundleCacheLayer {
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
 
-    // Share bundleHashMap via globalThis for cross-instance access
-    this.bundleHashMap =
-      (globalThis as any).__MFE_BUNDLE_HASHES__ ??
-      ((globalThis as any).__MFE_BUNDLE_HASHES__ = {});
+    // Share bundleHashMap via Zephyr global namespace for cross-instance access.
+    const nativeCacheRefs = ensureZephyrNativeCacheRefs();
+    nativeCacheRefs.bundleHashes ??= {};
+    this.bundleHashMap = nativeCacheRefs.bundleHashes;
 
     this.status = {
       remotes: {},

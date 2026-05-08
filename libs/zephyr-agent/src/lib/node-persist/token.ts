@@ -3,11 +3,12 @@ import { getSecretToken } from './secret-token';
 import { storage } from './storage';
 import { StorageKeys } from './storage-keys';
 import { makeRequest } from '../http/http-request';
-import { getServerToken } from './server-token';
+import { getCiToken, getServerToken } from './server-token';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { getUserEmail } from './user-email';
 import { ze_log } from '../logging/debug';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
+import { inferCiTokenIdentity } from './ci-token-identity';
 
 export async function saveToken(token: string): Promise<void> {
   await storage;
@@ -17,9 +18,21 @@ export async function saveToken(token: string): Promise<void> {
 export async function getToken(git_config?: ZeGitInfo): Promise<string | undefined> {
   const tokenFromEnv = getSecretToken();
   const server_token = getServerToken();
+  const ci_token = getCiToken();
 
   if (tokenFromEnv) {
     return tokenFromEnv;
+  }
+
+  if (ci_token) {
+    const ciIdentity = await inferCiTokenIdentity();
+    if (ciIdentity) {
+      ze_log.auth(`Using ${ciIdentity.provider} ${ciIdentity.source} identity for CI token attribution`);
+      return await getTokenFromCiToken(ci_token, ciIdentity);
+    }
+
+    ze_log.error(`${StorageKeys.ci_token} was provided, but no supported CI identity was detected`);
+    return undefined;
   }
 
   await storage;
@@ -75,6 +88,39 @@ async function getTokenFromServerToken(
     }
     return undefined;
   }
+  await saveToken(data?.access_token ?? '');
+  return data?.access_token;
+}
+
+async function getTokenFromCiToken(
+  ci_token: string,
+  identity: { provider: string; email: string; source?: string }
+): Promise<string | undefined> {
+  const [ok, cause, data] = await makeRequest<{ access_token: string }>(
+    {
+      path: ze_api_gateway.ci_token_exchange,
+      base: ZE_API_ENDPOINT(),
+      query: {},
+    },
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${ci_token}`,
+        'Content-Type': 'application/json',
+      },
+    },
+    JSON.stringify(identity)
+  );
+
+  if (!ok) {
+    if (cause instanceof Error) {
+      ze_log.error('Failed to get token from CI token:', cause.message);
+    } else {
+      ze_log.error('Failed to get token from CI token:', cause);
+    }
+    return undefined;
+  }
+
   await saveToken(data?.access_token ?? '');
   return data?.access_token;
 }

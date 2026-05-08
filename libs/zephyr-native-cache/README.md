@@ -37,9 +37,9 @@ runtimePlugins: [require.resolve('zephyr-native-cache/runtime-plugin')];
 Register the cache once at app startup before loading remotes:
 
 ```ts
-import { register } from 'zephyr-native-cache';
+import { ZephyrNativeCache } from 'zephyr-native-cache';
 
-register({
+ZephyrNativeCache.register({
   maxCacheSizeBytes: 50 * 1024 * 1024,
   maxAgeMs: 3 * 24 * 60 * 60 * 1000,
   enablePolling: true,
@@ -49,7 +49,7 @@ register({
 
 ## Configuration
 
-`register(config)` accepts:
+`ZephyrNativeCache.register(config)` accepts:
 
 - `bundleDir`: custom storage directory for cached bundles
 - `maxCacheSizeBytes`: max cache size before LRU eviction (default `20MB`)
@@ -61,7 +61,19 @@ register({
 
 ## Runtime APIs
 
-`register` returns a `BundleCacheLayer` instance:
+`ZephyrNativeCache` is the recommended app-facing API:
+
+- `register(config?)`
+- `getStatus()`
+- `subscribe(listener)`
+- `checkForUpdates(options?)`
+- `startUpdatePolling(intervalMs?)`
+- `stopUpdatePolling()`
+- `clearCache()`
+- `reloadApp()` — reloads the React Native JS context after an update is ready
+- `restart()` — alias for `reloadApp()` for compatibility with existing app code
+
+`ZephyrNativeCache.register` returns a `BundleCacheLayer` instance:
 
 - `loadBundle(bundleUrl)`
 - `checkForUpdates()`
@@ -75,17 +87,19 @@ register({
 - `checkForUpdates({ policy: 'downloadOnly' })`
 - `checkForUpdates({ policy: 'downloadAndApply' })`
 
-It also exposes status helpers:
+The package also exposes status helpers as named exports:
 
 - `getCacheStatus()`
 - `subscribeCacheStatus(listener)`
 
-And package-level control helpers (recommended over global deep access):
+And package-level control helpers for existing integrations:
 
 - `checkForUpdates(options?)`
 - `startUpdatePolling(intervalMs?)`
 - `stopUpdatePolling()`
 - `clearCache()`
+
+The raw React Native native module is intentionally not exported from the root API. Use `ZephyrNativeCache.reloadApp()` instead of calling native module methods directly.
 
 Zephyr-owned runtime state is also exposed under:
 
@@ -116,9 +130,9 @@ Use `CacheEvents` to observe cache lifecycle events:
 Example:
 
 ```ts
-import { register } from 'zephyr-native-cache';
+import { ZephyrNativeCache } from 'zephyr-native-cache';
 
-const cache = register();
+const cache = ZephyrNativeCache.register();
 
 cache.events.on('bundle:load', (event) => {
   console.log('[cache]', event.status, event.remoteName);
@@ -134,7 +148,7 @@ cache.events.on('poll:complete', (event) => {
 For React Native UIs, use the built-in hook:
 
 ```ts
-import { useCacheStatus } from 'zephyr-native-cache';
+import { useCacheStatus } from 'zephyr-native-cache/react';
 
 export function CacheStatusPanel() {
   const { status, latestUpdateEvent } = useCacheStatus();

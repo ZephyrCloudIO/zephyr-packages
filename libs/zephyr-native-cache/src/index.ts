@@ -11,10 +11,10 @@ export {
   stopUpdatePolling,
   subscribeCacheStatus,
 } from './register';
-export { default as NativeMFECache } from './NativeMFECache';
+export { ZephyrNativeCache } from './ZephyrNativeCache';
 export { useCacheStatus } from './react/useCacheStatus';
 export type { UseCacheStatusResult } from './react/useCacheStatus';
-export type { NativeMFECacheSpec } from './NativeMFECache';
+export type { ZephyrNativeCacheApi } from './ZephyrNativeCache';
 export type {
   CachePollResult,
   CacheStatusListener,

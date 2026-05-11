@@ -12,7 +12,8 @@ import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
 import { TOKEN_EXPIRY } from './auth-flags';
-import { getCiToken, getServerToken } from '../node-persist/server-token';
+import { getCiToken } from '../node-persist/ci-token';
+import { getServerToken } from '../node-persist/server-token';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 
 /**

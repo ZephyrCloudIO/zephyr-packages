@@ -4,7 +4,11 @@ type CiProvider = 'gitlab' | 'github';
 
 interface CiTokenIdentity {
   provider: CiProvider;
-  email: string;
+  email?: string;
+  emails?: string[];
+  issuer?: string;
+  providerSubject?: string;
+  username?: string;
   source: 'jwt' | 'api' | 'env' | 'event' | 'noreply';
 }
 
@@ -27,6 +31,7 @@ interface GitLabJobResponse {
     project_id?: number;
   };
   user?: {
+    id?: number | string | null;
     name?: string | null;
     username?: string | null;
     email?: string | null;
@@ -98,12 +103,16 @@ function isGitHubActions(env: NodeJS.ProcessEnv): boolean {
 
 async function inferGitLabIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
   const payload = decodeJwtPayload(env['CI_JOB_TOKEN']);
-  const jwtEmail = getEmailClaim(payload, ['user_email', 'email']);
+  const jwtEmails = getEmailClaims(payload, ['user_email', 'email']);
 
-  if (payload && jwtEmail && gitLabClaimsMatchEnvironment(payload, env)) {
+  if (payload && jwtEmails.length > 0 && gitLabClaimsMatchEnvironment(payload, env)) {
     return {
       provider: 'gitlab',
-      email: jwtEmail,
+      email: jwtEmails[0],
+      emails: jwtEmails,
+      issuer: getGitLabIssuer(env),
+      providerSubject: getStringClaim(payload, ['user_id', 'user_login', 'sub']),
+      username: getStringClaim(payload, ['user_login', 'username']),
       source: 'jwt',
     };
   }
@@ -118,6 +127,10 @@ async function inferGitLabIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdent
     return {
       provider: 'gitlab',
       email: envEmail,
+      emails: [envEmail],
+      issuer: getGitLabIssuer(env),
+      providerSubject: env['GITLAB_USER_ID']?.trim(),
+      username: env['GITLAB_USER_LOGIN']?.trim() || undefined,
       source: 'env',
     };
   }
@@ -138,19 +151,33 @@ async function inferGitLabIdentityFromApi(env: NodeJS.ProcessEnv): Promise<CiTok
       return undefined;
     }
 
-    const email = getEmail(job.user?.email) ?? getEmail(job.user?.public_email) ?? getEmail(job.commit?.author_email);
-    if (!email) {
+    const emails = getEmails([job.user?.email, job.user?.public_email, job.commit?.author_email]);
+    if (emails.length === 0) {
       return undefined;
     }
 
     return {
       provider: 'gitlab',
-      email,
+      email: emails[0],
+      emails,
+      issuer: getGitLabIssuer(env),
+      providerSubject: stringifyId(job.user?.id) ?? env['GITLAB_USER_ID']?.trim(),
+      username: job.user?.username?.trim() || undefined,
       source: 'api',
     };
   } catch {
     return undefined;
   }
+}
+
+function getGitLabIssuer(env: NodeJS.ProcessEnv): string | undefined {
+  const serverUrl = env['CI_SERVER_URL']?.trim();
+  if (serverUrl) {
+    return serverUrl.replace(/\/+$/, '').toLowerCase();
+  }
+
+  const apiUrl = env['CI_API_V4_URL']?.trim();
+  return apiUrl ? apiUrl.replace(/\/api\/v4\/?$/, '').replace(/\/+$/, '').toLowerCase() : undefined;
 }
 
 function getGitLabApiUrl(env: NodeJS.ProcessEnv): string | undefined {
@@ -180,20 +207,32 @@ async function fetchGitLabJob(apiUrl: string, jobToken: string): Promise<GitLabJ
 
 async function inferGitHubIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
   const event = await readGitHubEventPayload(env);
-  const eventEmail = getGitHubEventEmail(event, env);
-  if (eventEmail) {
+  const eventEmails = getGitHubEventEmails(event, env);
+  const noreplyEmail = getGitHubNoreplyEmail(env, event);
+  const emails = getEmails([...eventEmails, noreplyEmail]);
+  const providerSubject = getGitHubActorId(env, event);
+  const username = getGitHubActor(env, event);
+
+  if (eventEmails.length > 0 || providerSubject) {
     return {
       provider: 'github',
-      email: eventEmail,
-      source: 'event',
+      email: emails[0],
+      emails,
+      issuer: getGitHubIssuer(env),
+      providerSubject,
+      username,
+      source: eventEmails.length > 0 ? 'event' : 'noreply',
     };
   }
 
-  const noreplyEmail = getGitHubNoreplyEmail(env, event);
   if (noreplyEmail) {
     return {
       provider: 'github',
       email: noreplyEmail,
+      emails: [noreplyEmail],
+      issuer: getGitHubIssuer(env),
+      providerSubject,
+      username,
       source: 'noreply',
     };
   }
@@ -214,19 +253,19 @@ async function readGitHubEventPayload(env: NodeJS.ProcessEnv): Promise<GitHubEve
   }
 }
 
-function getGitHubEventEmail(event: GitHubEventPayload | undefined, env: NodeJS.ProcessEnv): string | undefined {
+function getGitHubEventEmails(event: GitHubEventPayload | undefined, env: NodeJS.ProcessEnv): string[] {
   if (!event) {
-    return undefined;
+    return [];
   }
 
   const matchingCommit = getGitHubMatchingCommit(event, env);
-  return (
-    getEmail(matchingCommit?.author?.email) ??
-    getEmail(matchingCommit?.committer?.email) ??
-    getEmail(event.head_commit?.author?.email) ??
-    getEmail(event.head_commit?.committer?.email) ??
-    getEmail(event.pusher?.email)
-  );
+  return getEmails([
+    matchingCommit?.author?.email,
+    matchingCommit?.committer?.email,
+    event.head_commit?.author?.email,
+    event.head_commit?.committer?.email,
+    event.pusher?.email,
+  ]);
 }
 
 function getGitHubMatchingCommit(
@@ -249,14 +288,26 @@ function getGitHubNoreplyEmail(
   env: NodeJS.ProcessEnv,
   event: GitHubEventPayload | undefined
 ): string | undefined {
-  const actor = env['GITHUB_TRIGGERING_ACTOR']?.trim() || env['GITHUB_ACTOR']?.trim() || event?.sender?.login?.trim();
-  const actorId = env['GITHUB_ACTOR_ID']?.trim() || stringifyId(event?.sender?.id);
+  const actor = getGitHubActor(env, event);
+  const actorId = getGitHubActorId(env, event);
 
   if (!actor) {
     return undefined;
   }
 
   return actorId ? `${actorId}+${actor}@users.noreply.github.com` : `${actor}@users.noreply.github.com`;
+}
+
+function getGitHubActor(env: NodeJS.ProcessEnv, event: GitHubEventPayload | undefined): string | undefined {
+  return env['GITHUB_TRIGGERING_ACTOR']?.trim() || env['GITHUB_ACTOR']?.trim() || event?.sender?.login?.trim();
+}
+
+function getGitHubActorId(env: NodeJS.ProcessEnv, event: GitHubEventPayload | undefined): string | undefined {
+  return env['GITHUB_ACTOR_ID']?.trim() || stringifyId(event?.sender?.id);
+}
+
+function getGitHubIssuer(env: NodeJS.ProcessEnv): string {
+  return (env['GITHUB_SERVER_URL']?.trim() || 'https://github.com').replace(/\/+$/, '').toLowerCase();
 }
 
 function stringifyId(value: unknown): string | undefined {
@@ -285,19 +336,26 @@ function toBase64(base64Url: string): string {
   return normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
 }
 
-function getEmailClaim(payload: JwtPayload | undefined, keys: string[]): string | undefined {
+function getEmailClaims(payload: JwtPayload | undefined, keys: string[]): string[] {
+  if (!payload) {
+    return [];
+  }
+
+  return getEmails(keys.map((key) => payload[key]));
+}
+
+function getStringClaim(payload: JwtPayload | undefined, keys: string[]): string | undefined {
   if (!payload) {
     return undefined;
   }
 
-  for (const key of keys) {
-    const email = getEmail(payload[key]);
-    if (email) {
-      return email;
-    }
-  }
+  return keys
+    .map((key) => stringifyId(payload[key]))
+    .find((value): value is string => Boolean(value));
+}
 
-  return undefined;
+function getEmails(values: unknown[]): string[] {
+  return Array.from(new Set(values.map((value) => getEmail(value)).filter((email): email is string => Boolean(email))));
 }
 
 function getEmail(value: unknown): string | undefined {

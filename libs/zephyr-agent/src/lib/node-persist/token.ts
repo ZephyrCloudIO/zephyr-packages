@@ -95,7 +95,15 @@ async function getTokenFromServerToken(
 
 async function getTokenFromCiToken(
   ci_token: string,
-  identity: { provider: string; email: string; source?: string }
+  identity: {
+    provider: string;
+    email?: string;
+    emails?: string[];
+    issuer?: string;
+    providerSubject?: string;
+    username?: string;
+    source?: string;
+  }
 ): Promise<string | undefined> {
   const [ok, cause, data] = await makeRequest<{ access_token: string }>(
     {

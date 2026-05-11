@@ -25,8 +25,11 @@ describe('inferCiTokenIdentity', () => {
   it('infers GitLab actor email from CI_JOB_TOKEN JWT claims', async () => {
     const identity = await inferCiTokenIdentity({
       GITLAB_CI: 'true',
+      CI_SERVER_URL: 'https://gitlab.example.com',
       CI_JOB_TOKEN: jwt({
         user_email: 'builder@example.com',
+        user_id: 42,
+        user_login: 'builder',
         job_id: 123,
         project_id: 456,
         pipeline_id: 789,
@@ -39,6 +42,10 @@ describe('inferCiTokenIdentity', () => {
     expect(identity).toEqual({
       provider: 'gitlab',
       email: 'builder@example.com',
+      emails: ['builder@example.com'],
+      issuer: 'https://gitlab.example.com',
+      providerSubject: '42',
+      username: 'builder',
       source: 'jwt',
     });
   });
@@ -53,7 +60,10 @@ describe('inferCiTokenIdentity', () => {
             project_id: 456,
           },
           user: {
+            id: 42,
+            username: 'builder',
             email: 'builder@example.com',
+            public_email: 'public-builder@example.com',
           },
         }),
         { status: 200, headers: { 'content-type': 'application/json' } }
@@ -72,6 +82,10 @@ describe('inferCiTokenIdentity', () => {
     expect(identity).toEqual({
       provider: 'gitlab',
       email: 'builder@example.com',
+      emails: ['builder@example.com', 'public-builder@example.com'],
+      issuer: 'https://gitlab.example.com',
+      providerSubject: '42',
+      username: 'builder',
       source: 'api',
     });
     expect(global.fetch).toHaveBeenCalledWith('https://gitlab.example.com/api/v4/job', {
@@ -109,13 +123,20 @@ describe('inferCiTokenIdentity', () => {
 
     const identity = await inferCiTokenIdentity({
       GITLAB_CI: 'true',
+      CI_SERVER_URL: 'https://gitlab.example.com',
       CI_JOB_TOKEN: 'legacy-token',
       GITLAB_USER_EMAIL: 'builder@example.com',
+      GITLAB_USER_ID: '42',
+      GITLAB_USER_LOGIN: 'builder',
     });
 
     expect(identity).toEqual({
       provider: 'gitlab',
       email: 'builder@example.com',
+      emails: ['builder@example.com'],
+      issuer: 'https://gitlab.example.com',
+      providerSubject: '42',
+      username: 'builder',
       source: 'env',
     });
   });
@@ -129,6 +150,9 @@ describe('inferCiTokenIdentity', () => {
         id: 'abc123',
         author: {
           email: 'author@example.com',
+        },
+        committer: {
+          email: 'committer@example.com',
         },
       },
     });
@@ -144,6 +168,15 @@ describe('inferCiTokenIdentity', () => {
     expect(identity).toEqual({
       provider: 'github',
       email: 'author@example.com',
+      emails: [
+        'author@example.com',
+        'committer@example.com',
+        'pusher@example.com',
+        '12345+octocat@users.noreply.github.com',
+      ],
+      issuer: 'https://github.com',
+      providerSubject: '12345',
+      username: 'octocat',
       source: 'event',
     });
   });
@@ -166,6 +199,10 @@ describe('inferCiTokenIdentity', () => {
     expect(identity).toEqual({
       provider: 'github',
       email: 'pusher@example.com',
+      emails: ['pusher@example.com', '12345+octocat@users.noreply.github.com'],
+      issuer: 'https://github.com',
+      providerSubject: '12345',
+      username: 'octocat',
       source: 'event',
     });
   });
@@ -188,6 +225,10 @@ describe('inferCiTokenIdentity', () => {
     expect(identity).toEqual({
       provider: 'github',
       email: '12345+octocat@users.noreply.github.com',
+      emails: ['12345+octocat@users.noreply.github.com'],
+      issuer: 'https://github.com',
+      providerSubject: '12345',
+      username: 'octocat',
       source: 'noreply',
     });
   });

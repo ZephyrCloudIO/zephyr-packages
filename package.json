@@ -80,7 +80,7 @@
       "fast-xml-parser": ">=5.3.6",
       "glob": ">=11.1.0",
       "@modern-js/render>react-server-dom-webpack": "19.2.5",
-      "react-server-dom-webpack": "19.2.5",
+      "react-server-dom-webpack": "19.2.6",
       "astro": ">=5.15.8",
       "tmp": ">=0.2.4",
       "tar": "^7.5.11",

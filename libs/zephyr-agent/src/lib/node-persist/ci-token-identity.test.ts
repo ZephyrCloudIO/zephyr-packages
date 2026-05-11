@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { inferCiTokenIdentity } from './ci-token-identity';
 
 function jwt(payload: Record<string, unknown>): string {
@@ -10,9 +13,13 @@ function jwt(payload: Record<string, unknown>): string {
 
 describe('inferCiTokenIdentity', () => {
   const originalFetch = global.fetch;
+  let tempDirs: string[] = [];
 
   afterEach(() => {
     global.fetch = originalFetch;
+    const dirs = tempDirs;
+    tempDirs = [];
+    return Promise.all(dirs.map((dir) => rm(dir, { force: true, recursive: true })));
   });
 
   it('infers GitLab actor email from CI_JOB_TOKEN JWT claims', async () => {
@@ -112,4 +119,84 @@ describe('inferCiTokenIdentity', () => {
       source: 'env',
     });
   });
+
+  it('infers GitHub Actions actor email from the matching event commit', async () => {
+    const eventPath = await writeGitHubEvent({
+      pusher: {
+        email: 'pusher@example.com',
+      },
+      head_commit: {
+        id: 'abc123',
+        author: {
+          email: 'author@example.com',
+        },
+      },
+    });
+
+    const identity = await inferCiTokenIdentity({
+      GITHUB_ACTIONS: 'true',
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_SHA: 'abc123',
+      GITHUB_ACTOR: 'octocat',
+      GITHUB_ACTOR_ID: '12345',
+    });
+
+    expect(identity).toEqual({
+      provider: 'github',
+      email: 'author@example.com',
+      source: 'event',
+    });
+  });
+
+  it('falls back to GitHub pusher email from the event payload', async () => {
+    const eventPath = await writeGitHubEvent({
+      pusher: {
+        email: 'pusher@example.com',
+      },
+    });
+
+    const identity = await inferCiTokenIdentity({
+      GITHUB_ACTIONS: 'true',
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_SHA: 'abc123',
+      GITHUB_ACTOR: 'octocat',
+      GITHUB_ACTOR_ID: '12345',
+    });
+
+    expect(identity).toEqual({
+      provider: 'github',
+      email: 'pusher@example.com',
+      source: 'event',
+    });
+  });
+
+  it('falls back to GitHub noreply email when the event has no actor email', async () => {
+    const eventPath = await writeGitHubEvent({
+      sender: {
+        id: 12345,
+        login: 'octocat',
+      },
+    });
+
+    const identity = await inferCiTokenIdentity({
+      GITHUB_ACTIONS: 'true',
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_ACTOR: 'octocat',
+      GITHUB_ACTOR_ID: '12345',
+    });
+
+    expect(identity).toEqual({
+      provider: 'github',
+      email: '12345+octocat@users.noreply.github.com',
+      source: 'noreply',
+    });
+  });
+
+  async function writeGitHubEvent(payload: Record<string, unknown>): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), 'zephyr-github-event-'));
+    tempDirs.push(dir);
+    const eventPath = join(dir, 'event.json');
+    await writeFile(eventPath, JSON.stringify(payload), 'utf8');
+    return eventPath;
+  }
 });

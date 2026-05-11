@@ -61,10 +61,11 @@ Local build can still deploy, and Zephyr can infer org/project from `origin`.
 - In CI, commit history is required.
 - Without commits in local, Zephyr uses placeholder commit metadata (`no-git-commit`) but keeps local flow working.
 - If no Git metadata is available at all, Zephyr falls back to global Git config, then token/user-based fallback metadata.
-- In GitLab CI with `ZE_CI_TOKEN`, Zephyr infers the build actor in the plugin. The first implementation reads GitLab's
-  built-in `CI_JOB_TOKEN` JWT claims locally, then falls back to GitLab's `/job` API from the runner and GitLab's
-  predefined `GITLAB_USER_EMAIL` for legacy/non-JWT job tokens. No GitLab CI YAML changes are required for this path.
-  Legacy `ZE_SERVER_TOKEN` behavior is unchanged.
+- In CI with `ZE_CI_TOKEN`, Zephyr infers the build actor in the plugin. GitLab reads built-in `CI_JOB_TOKEN` JWT
+  claims locally, then falls back to GitLab's `/job` API from the runner and GitLab's predefined `GITLAB_USER_EMAIL` for
+  legacy/non-JWT job tokens. GitHub Actions reads `GITHUB_EVENT_PATH` commit/pusher emails, then falls back to GitHub
+  noreply email from `GITHUB_ACTOR_ID` and `GITHUB_ACTOR`. No GitLab/GitHub CI YAML changes are required beyond setting
+  `ZE_CI_TOKEN`. Legacy `ZE_SERVER_TOKEN` behavior is unchanged.
 
 ## Troubleshooting
 

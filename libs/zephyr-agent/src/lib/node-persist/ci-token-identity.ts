@@ -1,9 +1,11 @@
-type CiProvider = 'gitlab';
+import { readFile } from 'node:fs/promises';
+
+type CiProvider = 'gitlab' | 'github';
 
 interface CiTokenIdentity {
   provider: CiProvider;
   email: string;
-  source: 'jwt' | 'api' | 'env';
+  source: 'jwt' | 'api' | 'env' | 'event' | 'noreply';
 }
 
 interface CiIdentityProvider {
@@ -33,11 +35,39 @@ interface GitLabJobResponse {
   };
 }
 
+interface GitHubCommitUser {
+  email?: string | null;
+}
+
+interface GitHubCommit {
+  id?: string | null;
+  author?: GitHubCommitUser | null;
+  committer?: GitHubCommitUser | null;
+}
+
+interface GitHubEventPayload {
+  after?: string | null;
+  sender?: {
+    id?: number | string | null;
+    login?: string | null;
+  } | null;
+  pusher?: {
+    email?: string | null;
+  } | null;
+  head_commit?: GitHubCommit | null;
+  commits?: GitHubCommit[] | null;
+}
+
 const ciIdentityProviders: CiIdentityProvider[] = [
   {
     provider: 'gitlab',
     detect: isGitLabCi,
     infer: inferGitLabIdentity,
+  },
+  {
+    provider: 'github',
+    detect: isGitHubActions,
+    infer: inferGitHubIdentity,
   },
 ];
 
@@ -60,6 +90,10 @@ export async function inferCiTokenIdentity(
 
 function isGitLabCi(env: NodeJS.ProcessEnv): boolean {
   return env['GITLAB_CI'] === 'true' || env['CI_SERVER_NAME'] === 'GitLab';
+}
+
+function isGitHubActions(env: NodeJS.ProcessEnv): boolean {
+  return env['GITHUB_ACTIONS'] === 'true';
 }
 
 async function inferGitLabIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
@@ -142,6 +176,95 @@ async function fetchGitLabJob(apiUrl: string, jobToken: string): Promise<GitLabJ
   }
 
   return (await response.json()) as GitLabJobResponse;
+}
+
+async function inferGitHubIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
+  const event = await readGitHubEventPayload(env);
+  const eventEmail = getGitHubEventEmail(event, env);
+  if (eventEmail) {
+    return {
+      provider: 'github',
+      email: eventEmail,
+      source: 'event',
+    };
+  }
+
+  const noreplyEmail = getGitHubNoreplyEmail(env, event);
+  if (noreplyEmail) {
+    return {
+      provider: 'github',
+      email: noreplyEmail,
+      source: 'noreply',
+    };
+  }
+
+  return undefined;
+}
+
+async function readGitHubEventPayload(env: NodeJS.ProcessEnv): Promise<GitHubEventPayload | undefined> {
+  const eventPath = env['GITHUB_EVENT_PATH']?.trim();
+  if (!eventPath) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(await readFile(eventPath, 'utf8')) as GitHubEventPayload;
+  } catch {
+    return undefined;
+  }
+}
+
+function getGitHubEventEmail(event: GitHubEventPayload | undefined, env: NodeJS.ProcessEnv): string | undefined {
+  if (!event) {
+    return undefined;
+  }
+
+  const matchingCommit = getGitHubMatchingCommit(event, env);
+  return (
+    getEmail(matchingCommit?.author?.email) ??
+    getEmail(matchingCommit?.committer?.email) ??
+    getEmail(event.head_commit?.author?.email) ??
+    getEmail(event.head_commit?.committer?.email) ??
+    getEmail(event.pusher?.email)
+  );
+}
+
+function getGitHubMatchingCommit(
+  event: GitHubEventPayload,
+  env: NodeJS.ProcessEnv
+): GitHubCommit | undefined {
+  const sha = env['GITHUB_SHA']?.trim();
+  if (!sha) {
+    return undefined;
+  }
+
+  if (event.head_commit?.id === sha) {
+    return event.head_commit;
+  }
+
+  return event.commits?.find((commit) => commit.id === sha);
+}
+
+function getGitHubNoreplyEmail(
+  env: NodeJS.ProcessEnv,
+  event: GitHubEventPayload | undefined
+): string | undefined {
+  const actor = env['GITHUB_TRIGGERING_ACTOR']?.trim() || env['GITHUB_ACTOR']?.trim() || event?.sender?.login?.trim();
+  const actorId = env['GITHUB_ACTOR_ID']?.trim() || stringifyId(event?.sender?.id);
+
+  if (!actor) {
+    return undefined;
+  }
+
+  return actorId ? `${actorId}+${actor}@users.noreply.github.com` : `${actor}@users.noreply.github.com`;
+}
+
+function stringifyId(value: unknown): string | undefined {
+  if (typeof value === 'number') {
+    return String(value);
+  }
+
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
 function decodeJwtPayload(token: string | undefined): JwtPayload | undefined {

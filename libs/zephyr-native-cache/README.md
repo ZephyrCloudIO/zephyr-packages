@@ -87,6 +87,8 @@ ZephyrNativeCache.register({
 - `checkForUpdates({ policy: 'downloadOnly' })`
 - `checkForUpdates({ policy: 'downloadAndApply' })`
 
+`downloadAndApply` reloads the React Native JS context through the native reload path after a successful download. Avoid using it in flows that cannot tolerate an immediate reload, or persist any critical UI state before calling it.
+
 The package also exposes status helpers as named exports:
 
 - `getCacheStatus()`

@@ -138,6 +138,12 @@ export class BundleCacheLayer {
       return { status: 'skipped' };
     } catch (cacheError) {
       console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
+      this.recordBundleLoad(
+        bundleUrl,
+        this.inferRemoteName(bundleUrl),
+        'skipped',
+        undefined
+      );
       return { status: 'skipped' };
     }
   }
@@ -234,7 +240,10 @@ export class BundleCacheLayer {
 
   startPolling(intervalMs?: number): void {
     this.stopPolling();
-    const interval = intervalMs ?? BundleCacheLayer.DEFAULT_POLL_INTERVAL_MS;
+    const interval =
+      intervalMs ??
+      this.config.pollIntervalMs ??
+      BundleCacheLayer.DEFAULT_POLL_INTERVAL_MS;
     this.status.pollingEnabled = true;
     this.status.pollIntervalMs = interval;
     this.notifyStatusChange();
@@ -283,8 +292,9 @@ export class BundleCacheLayer {
   }
 
   subscribeStatus(listener: CacheStatusListener): () => void {
+    const snapshot = this.getStatus();
+    listener(snapshot);
     this.statusListeners.add(listener);
-    listener(this.getStatus());
     return () => {
       this.statusListeners.delete(listener);
     };

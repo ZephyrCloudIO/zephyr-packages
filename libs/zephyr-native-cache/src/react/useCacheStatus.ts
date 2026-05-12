@@ -3,6 +3,7 @@ import type { UpdateAvailableEvent } from '../events';
 import {
   getCacheStatus,
   getRegisteredCacheLayer,
+  subscribeCacheLayerRegistration,
   subscribeCacheStatus,
 } from '../register';
 import type { CacheStatusSnapshot } from '../types';
@@ -33,19 +34,34 @@ export function useCacheStatus(): UseCacheStatusResult {
   );
 
   useEffect(() => {
-    const unsubscribeStatus = subscribeCacheStatus(setStatus);
-    const cacheLayer = getRegisteredCacheLayer();
-    if (!cacheLayer) return unsubscribeStatus;
+    let unsubscribeStatus = () => {};
+    let unsubscribeUpdateAvailable = () => {};
 
     const onUpdateAvailable = (event: UpdateAvailableEvent) => {
       setLatestUpdateEvent(event);
     };
 
-    cacheLayer.events.on('update:available', onUpdateAvailable);
+    const bindCacheLayer = () => {
+      unsubscribeStatus();
+      unsubscribeUpdateAvailable();
+
+      const cacheLayer = getRegisteredCacheLayer();
+      if (!cacheLayer) return;
+
+      unsubscribeStatus = subscribeCacheStatus(setStatus);
+      cacheLayer.events.on('update:available', onUpdateAvailable);
+      unsubscribeUpdateAvailable = () => {
+        cacheLayer.events.off('update:available', onUpdateAvailable);
+      };
+    };
+
+    bindCacheLayer();
+    const unsubscribeRegistration = subscribeCacheLayerRegistration(bindCacheLayer);
 
     return () => {
+      unsubscribeRegistration();
       unsubscribeStatus();
-      cacheLayer.events.off('update:available', onUpdateAvailable);
+      unsubscribeUpdateAvailable();
     };
   }, []);
 

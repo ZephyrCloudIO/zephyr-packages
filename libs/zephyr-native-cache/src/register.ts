@@ -13,6 +13,17 @@ import {
 } from './zephyr-global';
 
 let cacheLayerInstance: BundleCacheLayer | null = null;
+const cacheLayerRegistrationListeners = new Set<(cacheLayer: BundleCacheLayer) => void>();
+
+function notifyCacheLayerRegistered(cacheLayer: BundleCacheLayer): void {
+  for (const listener of cacheLayerRegistrationListeners) {
+    try {
+      listener(cacheLayer);
+    } catch (error) {
+      console.warn('[MFE-Cache] registration listener failed', error);
+    }
+  }
+}
 
 /**
  * Register the MFE cache layer.
@@ -122,6 +133,8 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
     cacheLayer.startPolling(pollIntervalMs);
   }
 
+  notifyCacheLayerRegistered(cacheLayer);
+
   return cacheLayer;
 }
 
@@ -136,6 +149,15 @@ export function getCacheStatus(): CacheStatusSnapshot | null {
 export function subscribeCacheStatus(listener: CacheStatusListener): () => void {
   if (!cacheLayerInstance) return () => {};
   return cacheLayerInstance.subscribeStatus(listener);
+}
+
+export function subscribeCacheLayerRegistration(
+  listener: (cacheLayer: BundleCacheLayer) => void
+): () => void {
+  cacheLayerRegistrationListeners.add(listener);
+  return () => {
+    cacheLayerRegistrationListeners.delete(listener);
+  };
 }
 
 export async function checkForUpdates(

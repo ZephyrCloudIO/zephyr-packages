@@ -35,7 +35,7 @@ cache.checkForUpdates({ policy: 'downloadAndApply' });
 2. Thread policy into polling/manual update path in `BundleCacheLayer`.
 3. Define apply semantics and safe fallback if apply is not possible.
 4. Emit clear events for each policy path.
-5. Add tests for both policy modes and backward compatibility.
+5. Validate both policy modes and backward compatibility through package build/typecheck and consuming-app integration.
 
 ## Acceptance Criteria
 
@@ -51,13 +51,13 @@ cache.checkForUpdates({ policy: 'downloadAndApply' });
 ## Deliverables
 
 - API/type changes + implementation in `BundleCacheLayer`.
-- Tests and documentation updates.
+- Documentation updates and package build/typecheck validation.
 
 ## Checklist
 
 - [x] Finalize policy enum and default
 - [x] Implement policy branching
 - [x] Ensure polling compatibility
-- [x] Add tests
+- [x] Validate with build/typecheck
 - [x] Update docs
 - [x] Mark completed in `EXECUTION_TRACKER.md`

@@ -1,76 +1,87 @@
-# NC-04: Stable Imperative Control API (Planning)
+# NC-04: Stable Imperative Control API
 
-Status: Planned
-Type: Plan Only (implementation later)
+Status: Completed
+Type: Implementation
 Priority: Medium
 
 ## Objective
 
-Design a stable imperative control surface for `zephyr-native-cache` that replaces ad-hoc global control usage while preserving backward compatibility.
+Provide a stable imperative control surface for `zephyr-native-cache` that replaces ad-hoc global control usage while preserving backward compatibility.
 
 ## Current State
 
-Current controls are exposed globally:
+Controls are now exposed through the app-facing `ZephyrNativeCache` facade and package-level helpers:
+
+- `ZephyrNativeCache.checkForUpdates(options?)`
+- `ZephyrNativeCache.startUpdatePolling(intervalMs?)`
+- `ZephyrNativeCache.stopUpdatePolling()`
+- `ZephyrNativeCache.clearCache()`
+- `ZephyrNativeCache.reloadApp()`
+
+The legacy globals remain available as compatibility aliases:
 
 - `globalThis.__MFE_CHECK_UPDATES__`
 - `globalThis.__MFE_START_UPDATE_POLLING__`
 - `globalThis.__MFE_STOP_UPDATE_POLLING__`
 
-These work, but are not an ideal long-term public API boundary.
+These globals work, but are not the recommended public API boundary for app code.
 
-## Planning Goals
+## Goals
 
 - Define a package-level imperative API that is easy to discover and type-safe.
 - Keep legacy globals as aliases/deprecation bridge.
-- Define deprecation messaging and migration timeline.
+- Provide a native reload wrapper so apps do not import the raw native module.
 - Keep API strictly runtime-control oriented; notification/UX behavior stays application-owned.
 
-## In Scope (Planning)
+## In Scope
 
-- API proposal and migration strategy.
-- Compatibility strategy with existing apps and scripts.
-- Testing requirements for old + new paths.
+- `ZephyrNativeCache` facade with register, status, subscription, update, polling, cache, and reload controls.
+- Package-level helper exports for existing integrations.
+- Backward-compatible global aliases.
+- Documentation for the preferred public surface.
 
-## Out of Scope (for now)
+## Out of Scope
 
-- Implementing the new API in this phase.
 - Defining notification behavior such as toasts, modals, forced restart prompts, or update banners.
+- Defining a deprecation/removal timeline for legacy globals.
 
-## Proposed API Direction (Draft)
+## Implemented API
 
-Option A: exported controls bound to singleton cache layer:
+Facade API:
+
+```ts
+import { ZephyrNativeCache } from 'zephyr-native-cache';
+
+ZephyrNativeCache.checkForUpdates({ policy: 'downloadOnly' });
+ZephyrNativeCache.startUpdatePolling();
+ZephyrNativeCache.stopUpdatePolling();
+await ZephyrNativeCache.clearCache();
+ZephyrNativeCache.reloadApp();
+```
+
+Package-level helpers remain exported for integrations that prefer named functions:
 
 ```ts
 import { checkForUpdates, startUpdatePolling, stopUpdatePolling } from 'zephyr-native-cache';
 ```
 
-Option B: explicit control object from register:
+## Migration Strategy
 
-```ts
-const cache = register();
-cache.controls.checkForUpdates();
-cache.controls.startPolling();
-cache.controls.stopPolling();
-```
+1. Prefer `ZephyrNativeCache` in app code.
+2. Keep package-level helpers for existing integrations.
+3. Keep globals as pass-through aliases for backward compatibility.
+4. Defer deprecation warnings and removal timeline until a later compatibility decision.
 
-Preferred draft: Option B (clear ownership and easier multi-instance reasoning if needed later).
+## Acceptance Criteria
 
-## Migration Strategy (Draft)
-
-1. Introduce new API.
-2. Keep globals as pass-through aliases.
-3. Emit development warning once per session when legacy globals are accessed.
-4. Document migration and deprecation timeline.
-
-## Acceptance Criteria (Planning)
-
-- API proposal is approved.
-- Migration/deprecation approach is approved.
-- Implementation work items are broken down and estimable.
+- App code can use stable controls without touching deep globals.
+- Existing global aliases continue to work.
+- Runtime-control API remains policy-only and does not impose notification UX.
 
 ## Checklist
 
-- [ ] Approve API direction
-- [ ] Approve migration/deprecation timeline
-- [ ] Create implementation tasks
-- [ ] Mark as ready-for-implementation in `EXECUTION_TRACKER.md`
+- [x] Add `ZephyrNativeCache` facade
+- [x] Add package-level helper exports
+- [x] Keep global aliases
+- [x] Document preferred control surface
+- [x] Mark completed in `EXECUTION_TRACKER.md`

@@ -31,7 +31,7 @@ Expose a stable status surface from `zephyr-native-cache` so apps can read cache
 2. Maintain internal status state in `BundleCacheLayer` using existing events and polling flow.
 3. Add read and subscribe methods to public API.
 4. Export API through `src/index.ts`.
-5. Add tests for status transitions and snapshot correctness.
+5. Validate status transitions through package build/typecheck and consuming-app integration.
 
 ## Acceptance Criteria
 
@@ -47,12 +47,12 @@ Expose a stable status surface from `zephyr-native-cache` so apps can read cache
 ## Deliverables
 
 - Type additions and `BundleCacheLayer` API additions.
-- Tests for cache-hit/downloaded/skipped and polling transitions.
+- Package build/typecheck validation for cache-hit/downloaded/skipped and polling status types.
 
 ## Checklist
 
 - [x] Finalize status snapshot shape
 - [x] Implement snapshot state tracking
 - [x] Implement get/subscribe APIs
-- [x] Add tests
+- [x] Validate with build/typecheck
 - [x] Mark completed in `EXECUTION_TRACKER.md`

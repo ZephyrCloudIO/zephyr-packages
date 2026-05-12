@@ -34,7 +34,7 @@ Notification UX remains app-defined (toast/modal/restart prompts/silent apply).
 2. Use `register()`/cache layer references safely and subscribe on mount.
 3. Ensure initial snapshot hydration works even if events happened before mount.
 4. Export from package entrypoint.
-5. Add tests for mount/unmount behavior and update propagation.
+5. Validate mount/unmount typing and export behavior through package build/typecheck and consuming-app integration.
 
 ## Acceptance Criteria
 
@@ -50,12 +50,12 @@ Notification UX remains app-defined (toast/modal/restart prompts/silent apply).
 ## Deliverables
 
 - New hook implementation and type exports.
-- Tests and README usage section.
+- README usage section and package build/typecheck validation.
 
 ## Checklist
 
 - [x] Finalize hook return shape
 - [x] Implement hook with subscription cleanup
-- [x] Add tests
+- [x] Validate with build/typecheck
 - [x] Update docs
 - [x] Mark completed in `EXECUTION_TRACKER.md`

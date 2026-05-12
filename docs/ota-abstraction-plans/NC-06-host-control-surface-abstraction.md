@@ -19,7 +19,12 @@ These are implementation details and are brittle as app-facing integration point
 
 ## In Scope
 
-- Add package-level control helpers:
+- Add app-facing facade and package-level control helpers:
+  - `ZephyrNativeCache.checkForUpdates(options?)`
+  - `ZephyrNativeCache.startUpdatePolling(intervalMs?)`
+  - `ZephyrNativeCache.stopUpdatePolling()`
+  - `ZephyrNativeCache.clearCache()`
+  - `ZephyrNativeCache.reloadApp()`
   - `checkForUpdates(options?)`
   - `startUpdatePolling(intervalMs?)`
   - `stopUpdatePolling()`

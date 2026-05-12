@@ -39,7 +39,7 @@
   },
   "scripts": {
     "build": "bob build",
-    "prepare": "bob build",
+    "prepare": "pnpm --filter zephyr-edge-contract build && bob build",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "patch-version": "pnpm version"

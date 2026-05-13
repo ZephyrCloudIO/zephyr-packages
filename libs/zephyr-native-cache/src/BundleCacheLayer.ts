@@ -220,11 +220,13 @@ export class BundleCacheLayer {
       }
 
       if (updated > 0 && policy === 'downloadAndApply') {
+        // Clear pendingUpdates and notify BEFORE triggering the native reload.
+        // NativeMFECache.restart() tears down the JS context, so any state
+        // mutation or listener invocation after applyDownloadedUpdates() may
+        // never run. Synchronous listeners observe the clean snapshot here.
+        this.status.pendingUpdates = [];
+        this.notifyStatusChange();
         applied = this.applyDownloadedUpdates();
-        if (applied) {
-          this.status.pendingUpdates = [];
-          this.notifyStatusChange();
-        }
       }
     } finally {
       this.isCheckingUpdates = false;
@@ -291,9 +293,12 @@ export class BundleCacheLayer {
     };
   }
 
+  /**
+   * Subscribe to status changes. The listener fires on every status mutation; it is NOT
+   * invoked synchronously at subscribe time — call `getStatus()` yourself if you need the
+   * current snapshot before the next change.
+   */
   subscribeStatus(listener: CacheStatusListener): () => void {
-    const snapshot = this.getStatus();
-    listener(snapshot);
     this.statusListeners.add(listener);
     return () => {
       this.statusListeners.delete(listener);
@@ -338,6 +343,9 @@ export class BundleCacheLayer {
   private applyDownloadedUpdates(): boolean {
     if (!NativeMFECache) return false;
     try {
+      // restart() reloads the JS context; control rarely returns here
+      // before the runtime is torn down. The `true` return is informational
+      // for synchronous callers — don't rely on observing it after a reload.
       NativeMFECache.restart();
       return true;
     } catch (error) {

@@ -12,8 +12,9 @@ export {
   subscribeCacheStatus,
 } from './register';
 export { ZephyrNativeCache } from './ZephyrNativeCache';
-export { useCacheStatus } from './react/useCacheStatus';
-export type { UseCacheStatusResult } from './react/useCacheStatus';
+// React hook (useCacheStatus) is intentionally NOT re-exported from the root
+// barrel — import it from 'zephyr-native-cache/react' so non-React consumers
+// don't pull React into their bundle (Metro/CJS output doesn't tree-shake).
 export type { ZephyrNativeCacheApi } from './ZephyrNativeCache';
 export type {
   CachePollResult,

@@ -27,8 +27,6 @@ export interface ZephyrNativeCacheApi {
   clearCache(): Promise<void>;
   /** Reloads the React Native JS context without terminating the native app. */
   reloadApp(): void;
-  /** Alias for reloadApp(). Prefer reloadApp for new code. */
-  restart(): void;
 }
 
 function reloadApp(): void {
@@ -44,5 +42,4 @@ export const ZephyrNativeCache: ZephyrNativeCacheApi = {
   stopUpdatePolling,
   clearCache,
   reloadApp,
-  restart: reloadApp,
 };

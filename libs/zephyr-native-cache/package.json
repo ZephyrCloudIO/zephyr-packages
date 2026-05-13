@@ -38,8 +38,8 @@
     "directory": "libs/zephyr-native-cache"
   },
   "scripts": {
-    "build": "bob build",
-    "prepare": "pnpm --filter zephyr-edge-contract build && bob build",
+    "build": "nx build zephyr-native-cache",
+    "prepare": "nx build zephyr-native-cache",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "patch-version": "pnpm version"

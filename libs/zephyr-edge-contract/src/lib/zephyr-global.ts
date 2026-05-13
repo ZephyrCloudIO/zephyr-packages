@@ -21,9 +21,6 @@ export interface ZephyrRuntimeNamespace {
 }
 
 export interface ZephyrNativeCacheNamespace {
-  /** Schema version for the native cache runtime namespace. */
-  version: 1;
-
   /** App-facing or internal control functions. */
   controls?: ZephyrNativeCacheControls;
 

@@ -108,6 +108,10 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   }
 
   const nativeCacheControls = ensureZephyrNativeCacheControls();
+  // `unknown` for options matches the loose shape on
+  // ZephyrNativeCacheControls — edge-contract intentionally doesn't depend on
+  // native-cache types. Callers using the typed entry points
+  // (ZephyrNativeCache.checkForUpdates / package-level helpers) get full types.
   const checkForUpdatesControl = (options?: unknown) =>
     cacheLayer.checkForUpdates(options as CheckForUpdatesOptions);
   const startUpdatePollingControl = (intervalMs?: number) =>
@@ -127,9 +131,11 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   globalThis.__MFE_START_UPDATE_POLLING__ = startUpdatePollingControl;
   globalThis.__MFE_STOP_UPDATE_POLLING__ = stopUpdatePollingControl;
 
-  // Auto-start polling unless explicitly disabled
+  // Auto-start polling unless explicitly disabled. When cache is disabled
+  // (dev without forceCacheInDev), skip polling — manifest hashes would be
+  // collected but never used because __CACHE__ isn't registered.
   const { enablePolling = true, pollIntervalMs } = config;
-  if (enablePolling) {
+  if (enablePolling && cacheEnabled) {
     cacheLayer.startPolling(pollIntervalMs);
   }
 
@@ -151,6 +157,13 @@ export function subscribeCacheStatus(listener: CacheStatusListener): () => void 
   return cacheLayerInstance.subscribeStatus(listener);
 }
 
+/**
+ * Internal: subscribe to the one-time cache-layer registration event. Used by the React
+ * hook (`useCacheStatus`) to handle mounts that happen before `register()` is called. Not
+ * part of the public package surface — prefer `ZephyrNativeCache.register()` +
+ * `ZephyrNativeCache.subscribe()` for app code. The listener only fires for the initial
+ * registration; subsequent `register()` calls short-circuit and do not notify.
+ */
 export function subscribeCacheLayerRegistration(
   listener: (cacheLayer: BundleCacheLayer) => void
 ): () => void {

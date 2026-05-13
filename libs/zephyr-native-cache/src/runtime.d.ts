@@ -1,5 +1,8 @@
 import type { CheckForUpdatesOptions, CheckForUpdatesResult } from './types';
-import type { ZephyrGlobalNamespace } from 'zephyr-edge-contract';
+
+// __ZEPHYR__ is declared in zephyr-edge-contract/src/lib/zephyr-global.ts —
+// importing any type from 'zephyr-edge-contract' (as the runtime helpers do)
+// pulls in that ambient declaration, so we don't re-declare it here.
 
 declare module '@module-federation/runtime' {
   interface Federation {
@@ -19,7 +22,6 @@ declare global {
   var __FUSEBOX_HAS_FULL_CONSOLE_SUPPORT__: boolean;
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   var __FEDERATION__: import('@module-federation/runtime').Federation;
-  var __ZEPHYR__: ZephyrGlobalNamespace | undefined;
   var __MFE_CHECK_UPDATES__: (
     options?: CheckForUpdatesOptions
   ) => Promise<CheckForUpdatesResult>;

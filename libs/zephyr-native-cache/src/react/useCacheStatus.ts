@@ -48,6 +48,12 @@ export function useCacheStatus(): UseCacheStatusResult {
       const cacheLayer = getRegisteredCacheLayer();
       if (!cacheLayer) return;
 
+      // Sync to the current snapshot. subscribeCacheStatus no longer fires
+      // immediately on subscribe, so we pull once here to cover late
+      // registrations between initial render and effect.
+      const current = cacheLayer.getStatus();
+      setStatus((prev) => (prev === current ? prev : current));
+
       unsubscribeStatus = subscribeCacheStatus(setStatus);
       cacheLayer.events.on('update:available', onUpdateAvailable);
       unsubscribeUpdateAvailable = () => {

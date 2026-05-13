@@ -6,8 +6,11 @@ import type {
   ZephyrNativeCacheState,
 } from 'zephyr-edge-contract';
 
+// Schema version for the entire `globalThis.__ZEPHYR__` shape.
+// Versioning lives at the top level only — sub-namespaces (runtime.nativeCache,
+// etc.) evolve together with this version. Bumping requires a compat plan
+// because last-writer-wins on shared installs.
 const ZEPHYR_GLOBAL_VERSION = 1 as const;
-const ZEPHYR_NATIVE_CACHE_VERSION = 1 as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -42,15 +45,10 @@ export function ensureZephyrNativeCacheNamespace(): ZephyrNativeCacheNamespace {
   const zephyrGlobal = ensureZephyrGlobalNamespace();
 
   if (!isRecord(zephyrGlobal.runtime.nativeCache)) {
-    zephyrGlobal.runtime.nativeCache = {
-      version: ZEPHYR_NATIVE_CACHE_VERSION,
-    };
+    zephyrGlobal.runtime.nativeCache = {};
   }
 
-  const nativeCache = zephyrGlobal.runtime.nativeCache;
-  nativeCache.version = ZEPHYR_NATIVE_CACHE_VERSION;
-
-  return nativeCache;
+  return zephyrGlobal.runtime.nativeCache;
 }
 
 export function ensureZephyrNativeCacheRefs(): ZephyrNativeCacheRefs {

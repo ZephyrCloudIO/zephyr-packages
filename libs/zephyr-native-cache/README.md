@@ -103,15 +103,7 @@ And package-level control helpers for existing integrations:
 
 The raw React Native native module is intentionally not exported from the root API. Use `ZephyrNativeCache.reloadApp()` instead of calling native module methods directly.
 
-Zephyr-owned runtime state is also exposed under:
-
-- `globalThis.__ZEPHYR__.runtime.nativeCache`
-  - `refs.cacheLayer`
-  - `refs.bundleHashes`
-  - `state`
-  - `controls`
-
-It also exposes globals for manual control:
+It also exposes legacy globals for manual control:
 
 - `globalThis.__MFE_CHECK_UPDATES__(options?)`
   - e.g. `globalThis.__MFE_CHECK_UPDATES__({ policy: 'downloadOnly' })`

@@ -88,11 +88,15 @@ describe('inferCiTokenIdentity', () => {
       username: 'builder',
       source: 'api',
     });
-    expect(global.fetch).toHaveBeenCalledWith('https://gitlab.example.com/api/v4/job', {
-      headers: {
-        'JOB-TOKEN': 'legacy-token',
-      },
-    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://gitlab.example.com/api/v4/job',
+      expect.objectContaining({
+        headers: {
+          'JOB-TOKEN': 'legacy-token',
+        },
+        signal: expect.any(AbortSignal),
+      })
+    );
   });
 
   it('ignores GitLab API jobs that do not match the current job environment', async () => {

@@ -32,7 +32,7 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
       return await getTokenFromCiToken(ci_token, ciIdentity);
     }
 
-    ze_log.error(`${StorageKeys.ci_token} was provided, but no supported CI identity was detected`);
+    ze_log.error(`${StorageKeys.ze_ci_token} was provided, but no supported CI identity was detected`);
     return undefined;
   }
 

@@ -6,12 +6,14 @@ import type { ZeDependency } from '../ze-package-json.type';
 import { parseZeDependencies } from '../ze-util-parse-ze-dependencies';
 import { getPackageJson } from '../ze-util-read-package-json';
 import { logFn } from '../../logging/ze-log-event';
+import { getZephyrConfig } from '../zephyr-config';
 
 // Mock dependencies
 jest.mock('node:fs');
 jest.mock('node:fs/promises');
 jest.mock('../find-nearest-package-json');
 jest.mock('../ze-util-parse-ze-dependencies');
+jest.mock('../zephyr-config', () => ({ getZephyrConfig: jest.fn(() => ({})) }));
 jest.mock('../../logging', () => ({
   ze_log: { package: jest.fn(), misc: jest.fn(), error: jest.fn() },
 }));
@@ -55,6 +57,7 @@ describe('getPackageJson', () => {
       json: mockPackageJsonStr,
     });
     (parseZeDependencies as jest.Mock).mockReturnValue(mockParsedZeDeps);
+    (getZephyrConfig as jest.Mock).mockReturnValue({});
   });
 
   it('should find and parse package.json successfully', async () => {
@@ -180,6 +183,33 @@ describe('getPackageJson', () => {
     // Assert
     expect(parseZeDependencies).not.toHaveBeenCalled();
     expect(result).toEqual(packageJsonWithoutZeDeps);
+  });
+
+  it('should merge parsed dependencies from zephyr config', async () => {
+    const packageJsonWithoutZeDeps = {
+      name: 'test-package',
+      version: '1.0.0',
+    };
+    const configDependency = {
+      version: 'latest',
+      registry: 'zephyr',
+      app_uid: 'remote.remote-project.remote-org',
+    };
+    (getZephyrConfig as jest.Mock).mockReturnValue({
+      zephyrDependencies: {
+        remote: configDependency,
+      },
+    });
+    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+      path: path.join(mockStartPath, 'package.json'),
+      json: JSON.stringify(packageJsonWithoutZeDeps),
+    });
+
+    const result = await getPackageJson(mockStartPath);
+
+    expect(result.zephyrDependencies).toEqual({
+      remote: configDependency,
+    });
   });
 
   it('should not warn when version exists', async () => {

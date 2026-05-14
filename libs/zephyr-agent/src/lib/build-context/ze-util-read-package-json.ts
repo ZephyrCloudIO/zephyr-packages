@@ -7,6 +7,7 @@ import { logFn } from '../logging/ze-log-event';
 import { find_nearest_package_json } from './find-nearest-package-json';
 import type { ZePackageJson } from './ze-package-json.type';
 import { parseZeDependencies } from './ze-util-parse-ze-dependencies';
+import { getZephyrConfig } from './zephyr-config';
 
 const DEFAULT_PACKAGE_VERSION = '0.0.0';
 /**
@@ -98,9 +99,16 @@ export async function getPackageJson(
       logFn('warn', `${warning.code}: ${warning.message}`);
     }
 
+    const zephyrConfig = getZephyrConfig(startingPath);
     const zephyr_dependencies = parsed_package_json['zephyr:dependencies'];
-    if (zephyr_dependencies) {
-      parsed_package_json.zephyrDependencies = parseZeDependencies(zephyr_dependencies);
+    if (zephyr_dependencies || zephyrConfig.zephyrDependencies) {
+      parsed_package_json.zephyrDependencies = zephyr_dependencies
+        ? parseZeDependencies(zephyr_dependencies)
+        : {};
+      parsed_package_json.zephyrDependencies = {
+        ...parsed_package_json.zephyrDependencies,
+        ...zephyrConfig.zephyrDependencies,
+      };
     } else {
       logFn(
         'info',

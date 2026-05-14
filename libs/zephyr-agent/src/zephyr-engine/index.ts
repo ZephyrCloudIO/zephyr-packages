@@ -18,6 +18,11 @@ import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
+import {
+  applyZephyrConfigEnv,
+  getZephyrConfig,
+  type ZephyrConfig,
+} from '../lib/build-context/zephyr-config';
 import { getUploadStrategy } from '../lib/deployment/get-upload-strategy';
 import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
@@ -118,6 +123,7 @@ export class ZephyrEngine {
   // npm and git properties initialized in `create` method
   npmProperties!: ZePackageJson;
   gitProperties!: ZeGitInfo;
+  zephyrConfig!: ZephyrConfig;
   // generated in the `create` constructor
   application_uid!: string;
 
@@ -192,6 +198,9 @@ export class ZephyrEngine {
     ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine({ context, builder: options.builder });
 
+    ze.zephyrConfig = getZephyrConfig(context);
+    applyZephyrConfigEnv(ze.zephyrConfig);
+
     ze_log.init('Initializing: npm package info...');
 
     ze.npmProperties = await getPackageJson(context);
@@ -202,7 +211,7 @@ export class ZephyrEngine {
     void maybeShowOutdatedPluginWarning(pluginPackageName);
 
     ze_log.init('Initializing: git info...');
-    ze.gitProperties = await getGitInfo();
+    ze.gitProperties = await getGitInfo(context);
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
     const application_uid = ze.application_uid;
@@ -611,7 +620,7 @@ function mut_zephyr_app_uid(ze: ZephyrEngine): void {
   ze.applicationProperties = {
     org: ze.gitProperties.app.org,
     project: ze.gitProperties.app.project,
-    name: ze.npmProperties.name,
+    name: ze.zephyrConfig.app ?? ze.npmProperties.name,
     version: ze.npmProperties.version,
   };
   ze.application_uid = createApplicationUid(ze.applicationProperties);
@@ -637,5 +646,16 @@ export function readPackageJson(root: string): {
   const packageJsonContent = existsSync(packageJsonPath)
     ? readFileSync(packageJsonPath, 'utf-8')
     : '{}';
-  return JSON.parse(packageJsonContent);
+  const packageJson = JSON.parse(packageJsonContent);
+  const zephyrConfig = getZephyrConfig(root);
+  const zephyrDependencies =
+    packageJson.zephyrDependencies ?? packageJson['zephyr:dependencies'];
+
+  return {
+    ...packageJson,
+    zephyrDependencies: {
+      ...zephyrDependencies,
+      ...zephyrConfig.rawZephyrDependencies,
+    },
+  };
 }

@@ -1,4 +1,5 @@
 import type { ModuleFederationRuntimePlugin } from '@module-federation/runtime';
+import { getZephyrNativeCacheNamespace } from './zephyr-global';
 
 type AfterResolveArgs = Parameters<
   NonNullable<ModuleFederationRuntimePlugin['afterResolve']>
@@ -40,6 +41,31 @@ interface Manifest {
   metaData?: ManifestMetaData;
   exposes?: ManifestAssetItem[];
   shared?: ManifestAssetItem[];
+}
+
+interface RuntimePluginCacheLayer {
+  registerBundleHash: (bundleUrl: string, hash: string) => void;
+  registerManifestSource: (
+    manifestUrl: string,
+    extractHashes: (manifest: Manifest, manifestUrl: string) => Map<string, string>
+  ) => void;
+}
+
+function getGlobalCacheLayer(): RuntimePluginCacheLayer | undefined {
+  const cacheLayer = getZephyrNativeCacheNamespace()?.refs?.cacheLayer;
+  if (!cacheLayer || typeof cacheLayer !== 'object') {
+    return undefined;
+  }
+
+  const candidate = cacheLayer as Partial<RuntimePluginCacheLayer>;
+  if (
+    typeof candidate.registerBundleHash !== 'function' ||
+    typeof candidate.registerManifestSource !== 'function'
+  ) {
+    return undefined;
+  }
+
+  return candidate as RuntimePluginCacheLayer;
 }
 
 // --- Hash extraction helpers (Metro-specific URL builders) ---
@@ -165,7 +191,7 @@ const ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME = 'zephyr-native-cache-plugin';
 export default function (): ModuleFederationRuntimePlugin {
   function resolveHook(args: AfterResolveArgs) {
     try {
-      const cacheLayer = globalThis.__FEDERATION__.__NATIVE__?.__CACHE_LAYER__;
+      const cacheLayer = getGlobalCacheLayer();
       if (!cacheLayer) return args;
 
       const { origin, remoteInfo, remote } = args;

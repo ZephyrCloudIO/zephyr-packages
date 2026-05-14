@@ -21,6 +21,7 @@ import type {
   ZeBuildAsset,
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
+  ZephyrGlobalNamespace,
   FindTemplates,
 } from '../index';
 
@@ -160,6 +161,12 @@ describe('type exports', () => {
   test('should export FindTemplates type', () => {
     type TestFindTemplates = FindTemplates<string>;
     const obj: TestFindTemplates = {} as TestFindTemplates;
+    expect(obj).toBeDefined();
+  });
+
+  test('should export ZephyrGlobalNamespace type', () => {
+    type TestZephyrGlobalNamespace = ZephyrGlobalNamespace;
+    const obj: TestZephyrGlobalNamespace = {} as TestZephyrGlobalNamespace;
     expect(obj).toBeDefined();
   });
 });

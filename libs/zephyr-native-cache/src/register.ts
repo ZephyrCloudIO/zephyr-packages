@@ -1,14 +1,36 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
-import type { MFECacheConfig } from './types';
+import type {
+  CacheStatusListener,
+  CacheStatusSnapshot,
+  CheckForUpdatesOptions,
+  CheckForUpdatesResult,
+  MFECacheConfig,
+} from './types';
+import {
+  ensureZephyrNativeCacheControls,
+  ensureZephyrNativeCacheRefs,
+  ensureZephyrNativeCacheState,
+} from './zephyr-global';
 
 let cacheLayerInstance: BundleCacheLayer | null = null;
+const cacheLayerRegistrationListeners = new Set<(cacheLayer: BundleCacheLayer) => void>();
+
+function notifyCacheLayerRegistered(cacheLayer: BundleCacheLayer): void {
+  for (const listener of cacheLayerRegistrationListeners) {
+    try {
+      listener(cacheLayer);
+    } catch (error) {
+      console.warn('[MFE-Cache] registration listener failed', error);
+    }
+  }
+}
 
 /**
  * Register the MFE cache layer.
  *
  * Call this once at app startup (before any remote bundle loading). Sets up the cache
- * handler on `globalThis.__FEDERATION__.__NATIVE__` for asyncRequire integration and
- * starts background polling.
+ * handler on `globalThis.__FEDERATION__.__NATIVE__` for asyncRequire integration, then
+ * registers Zephyr-owned state and controls under `globalThis.__ZEPHYR__`.
  *
  * The runtime plugin (`zephyr-native-cache/runtime-plugin`) must be added separately to
  * `runtimePlugins` in the metro MF config to enable hash extraction from manifests during
@@ -29,26 +51,45 @@ let cacheLayerInstance: BundleCacheLayer | null = null;
 export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   if (cacheLayerInstance) return cacheLayerInstance;
 
-  // Ensure __FEDERATION__.__NATIVE__ namespace exists (register may run before MF runtime init)
+  // Ensure MF namespace exists (register may run before MF runtime init).
+  // This remains a compatibility bridge for asyncRequire only.
   globalThis.__FEDERATION__ ??= {} as typeof globalThis.__FEDERATION__;
   globalThis.__FEDERATION__.__NATIVE__ ??= {};
-  const ns = globalThis.__FEDERATION__.__NATIVE__;
+  const federationNativeNamespace = globalThis.__FEDERATION__.__NATIVE__;
 
   const cacheLayer = new BundleCacheLayer(config);
   cacheLayerInstance = cacheLayer;
-  ns.__CACHE_LAYER__ = cacheLayer;
+
+  const nativeCacheRefs = ensureZephyrNativeCacheRefs();
+  nativeCacheRefs.cacheLayer = cacheLayer;
 
   // Determine whether cache is active in the current environment.
   // Production: always enabled. Dev: only when forceCacheInDev is true.
   const { forceCacheInDev = false } = config;
   const cacheEnabled = !__DEV__ || forceCacheInDev;
 
+  const nativeCacheState = ensureZephyrNativeCacheState();
+  nativeCacheState.cacheEnabled = cacheEnabled;
+  nativeCacheState.forceCacheInDev = forceCacheInDev;
+  nativeCacheState.pollIntervalMs = cacheLayer.getStatus().pollIntervalMs;
+  nativeCacheState.registeredAt = Date.now();
+
+  cacheLayer.subscribeStatus((status) => {
+    nativeCacheState.pollIntervalMs = status.pollIntervalMs;
+    nativeCacheState.pollingEnabled = status.pollingEnabled;
+    nativeCacheState.isPolling = status.isPolling;
+    nativeCacheState.lastPollAt = status.lastPollAt;
+    nativeCacheState.lastPollChecked = status.lastPollResult?.checked;
+    nativeCacheState.lastPollUpdated = status.lastPollResult?.updated;
+    nativeCacheState.pendingUpdates = [...status.pendingUpdates];
+  });
+
   // Register minimal cache handler for asyncRequire integration.
   // Only register when cache is enabled — asyncRequire uses the presence of
   // __FEDERATION__.__NATIVE__.__CACHE__ to decide split bundle URL conversion,
   // so it must be absent when cache is disabled to preserve original path behavior.
   if (cacheEnabled) {
-    ns.__CACHE__ = async (
+    federationNativeNamespace.__CACHE__ = async (
       fallback: (bundlePath: string) => Promise<void>,
       bundlePath: string
     ): Promise<void> => {
@@ -66,17 +107,90 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
     };
   }
 
-  // Expose manual polling APIs on globalThis
-  globalThis.__MFE_CHECK_UPDATES__ = () => cacheLayer.checkForUpdates();
-  globalThis.__MFE_START_UPDATE_POLLING__ = (intervalMs?: number) =>
+  const nativeCacheControls = ensureZephyrNativeCacheControls();
+  // `unknown` for options matches the loose shape on
+  // ZephyrNativeCacheControls — edge-contract intentionally doesn't depend on
+  // native-cache types. Callers using the typed entry points
+  // (ZephyrNativeCache.checkForUpdates / package-level helpers) get full types.
+  const checkForUpdatesControl = (options?: unknown) =>
+    cacheLayer.checkForUpdates(options as CheckForUpdatesOptions);
+  const startUpdatePollingControl = (intervalMs?: number) =>
     cacheLayer.startPolling(intervalMs);
-  globalThis.__MFE_STOP_UPDATE_POLLING__ = () => cacheLayer.stopPolling();
+  const stopUpdatePollingControl = () => cacheLayer.stopPolling();
+  const clearCacheControl = async () => {
+    await cacheLayer.clearCache();
+  };
 
-  // Auto-start polling unless explicitly disabled
+  nativeCacheControls.checkForUpdates = checkForUpdatesControl;
+  nativeCacheControls.startUpdatePolling = startUpdatePollingControl;
+  nativeCacheControls.stopUpdatePolling = stopUpdatePollingControl;
+  nativeCacheControls.clearCache = clearCacheControl;
+
+  // Expose manual polling APIs on globalThis
+  globalThis.__MFE_CHECK_UPDATES__ = checkForUpdatesControl;
+  globalThis.__MFE_START_UPDATE_POLLING__ = startUpdatePollingControl;
+  globalThis.__MFE_STOP_UPDATE_POLLING__ = stopUpdatePollingControl;
+
+  // Auto-start polling unless explicitly disabled. When cache is disabled
+  // (dev without forceCacheInDev), skip polling — manifest hashes would be
+  // collected but never used because __CACHE__ isn't registered.
   const { enablePolling = true, pollIntervalMs } = config;
-  if (enablePolling) {
+  if (enablePolling && cacheEnabled) {
     cacheLayer.startPolling(pollIntervalMs);
   }
 
+  notifyCacheLayerRegistered(cacheLayer);
+
   return cacheLayer;
+}
+
+export function getRegisteredCacheLayer(): BundleCacheLayer | null {
+  return cacheLayerInstance;
+}
+
+export function getCacheStatus(): CacheStatusSnapshot | null {
+  return cacheLayerInstance?.getStatus() ?? null;
+}
+
+export function subscribeCacheStatus(listener: CacheStatusListener): () => void {
+  if (!cacheLayerInstance) return () => {};
+  return cacheLayerInstance.subscribeStatus(listener);
+}
+
+/**
+ * Internal: subscribe to the one-time cache-layer registration event. Used by the React
+ * hook (`useCacheStatus`) to handle mounts that happen before `register()` is called. Not
+ * part of the public package surface — prefer `ZephyrNativeCache.register()` +
+ * `ZephyrNativeCache.subscribe()` for app code. The listener only fires for the initial
+ * registration; subsequent `register()` calls short-circuit and do not notify.
+ */
+export function subscribeCacheLayerRegistration(
+  listener: (cacheLayer: BundleCacheLayer) => void
+): () => void {
+  cacheLayerRegistrationListeners.add(listener);
+  return () => {
+    cacheLayerRegistrationListeners.delete(listener);
+  };
+}
+
+export async function checkForUpdates(
+  options?: CheckForUpdatesOptions
+): Promise<CheckForUpdatesResult> {
+  if (!cacheLayerInstance) {
+    return { updated: 0, checked: 0, applied: false };
+  }
+  return cacheLayerInstance.checkForUpdates(options);
+}
+
+export function startUpdatePolling(intervalMs?: number): void {
+  cacheLayerInstance?.startPolling(intervalMs);
+}
+
+export function stopUpdatePolling(): void {
+  cacheLayerInstance?.stopPolling();
+}
+
+export async function clearCache(): Promise<void> {
+  if (!cacheLayerInstance) return;
+  await cacheLayerInstance.clearCache();
 }

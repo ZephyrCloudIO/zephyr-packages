@@ -37,9 +37,9 @@ runtimePlugins: [require.resolve('zephyr-native-cache/runtime-plugin')];
 Register the cache once at app startup before loading remotes:
 
 ```ts
-import { register } from 'zephyr-native-cache';
+import { ZephyrNativeCache } from 'zephyr-native-cache';
 
-register({
+ZephyrNativeCache.register({
   maxCacheSizeBytes: 50 * 1024 * 1024,
   maxAgeMs: 3 * 24 * 60 * 60 * 1000,
   enablePolling: true,
@@ -49,7 +49,7 @@ register({
 
 ## Configuration
 
-`register(config)` accepts:
+`ZephyrNativeCache.register(config)` accepts:
 
 - `bundleDir`: custom storage directory for cached bundles
 - `maxCacheSizeBytes`: max cache size before LRU eviction (default `20MB`)
@@ -61,7 +61,19 @@ register({
 
 ## Runtime APIs
 
-`register` returns a `BundleCacheLayer` instance:
+`ZephyrNativeCache` is the recommended app-facing API:
+
+- `register(config?)`
+- `getStatus()`
+- `subscribe(listener)`
+- `checkForUpdates(options?)`
+- `startUpdatePolling(intervalMs?)`
+- `stopUpdatePolling()`
+- `clearCache()`
+- `reloadApp()` — reloads the React Native JS context after an update is ready
+- `restart()` — alias for `reloadApp()` for compatibility with existing app code
+
+`ZephyrNativeCache.register` returns a `BundleCacheLayer` instance:
 
 - `loadBundle(bundleUrl)`
 - `checkForUpdates()`
@@ -70,9 +82,32 @@ register({
 - `clearCache()`
 - `getLoadedBundles()`
 
-It also exposes globals for manual control:
+`checkForUpdates` also supports policy options:
 
-- `globalThis.__MFE_CHECK_UPDATES__()`
+- `checkForUpdates({ policy: 'downloadOnly' })`
+- `checkForUpdates({ policy: 'downloadAndApply' })`
+
+`downloadAndApply` reloads the React Native JS context through the native reload path after a successful download. Avoid using it in flows that cannot tolerate an immediate reload, or persist any critical UI state before calling it.
+
+The package also exposes status helpers as named exports:
+
+- `getCacheStatus()`
+- `subscribeCacheStatus(listener)`
+
+And package-level control helpers for existing integrations:
+
+- `checkForUpdates(options?)`
+- `startUpdatePolling(intervalMs?)`
+- `stopUpdatePolling()`
+- `clearCache()`
+
+The raw React Native native module is intentionally not exported from the root API. Use `ZephyrNativeCache.reloadApp()` instead of calling native module methods directly.
+
+It also exposes legacy globals for manual control:
+
+- `globalThis.__MFE_CHECK_UPDATES__(options?)`
+  - e.g. `globalThis.__MFE_CHECK_UPDATES__({ policy: 'downloadOnly' })`
+  - default when omitted: `{ policy: 'downloadOnly' }`
 - `globalThis.__MFE_START_UPDATE_POLLING__(intervalMs?)`
 - `globalThis.__MFE_STOP_UPDATE_POLLING__()`
 
@@ -89,9 +124,9 @@ Use `CacheEvents` to observe cache lifecycle events:
 Example:
 
 ```ts
-import { register } from 'zephyr-native-cache';
+import { ZephyrNativeCache } from 'zephyr-native-cache';
 
-const cache = register();
+const cache = ZephyrNativeCache.register();
 
 cache.events.on('bundle:load', (event) => {
   console.log('[cache]', event.status, event.remoteName);
@@ -101,6 +136,141 @@ cache.events.on('poll:complete', (event) => {
   console.log('[cache] poll complete', event.updated, '/', event.checked);
 });
 ```
+
+## React Hook
+
+For React Native UIs, use the built-in hook:
+
+```ts
+import { useCacheStatus } from 'zephyr-native-cache/react';
+
+export function CacheStatusPanel() {
+  const { status, latestUpdateEvent } = useCacheStatus();
+  return null;
+}
+```
+
+`useCacheStatus` exposes runtime state and raw update signals only. UI/notification behavior (toasts, banners, restart prompts, silent apply, etc.) is intentionally app-defined.
+
+### Show An Update Prompt
+
+Use `latestUpdateEvent` as a raw signal to display your own update banner, toast, or modal. The hook does not force any restart UX.
+
+```tsx
+import { Button, Text, View } from 'react-native';
+import { ZephyrNativeCache } from 'zephyr-native-cache';
+import { useCacheStatus } from 'zephyr-native-cache/react';
+
+export function UpdateBanner() {
+  const { latestUpdateEvent } = useCacheStatus();
+
+  if (!latestUpdateEvent) return null;
+
+  return (
+    <View>
+      <Text>Update ready for {latestUpdateEvent.remoteName}</Text>
+      <Button title="Reload" onPress={() => ZephyrNativeCache.reloadApp()} />
+    </View>
+  );
+}
+```
+
+### Build Cache Controls
+
+Use the facade for manual update checks and cache invalidation. These calls are safe to wire into dev tools, settings screens, or internal diagnostics.
+
+```tsx
+import { Button, View } from 'react-native';
+import { ZephyrNativeCache } from 'zephyr-native-cache';
+import { useCacheStatus } from 'zephyr-native-cache/react';
+
+export function CacheControls() {
+  const { status } = useCacheStatus();
+
+  return (
+    <View>
+      <Button
+        title={status.isPolling ? 'Checking...' : 'Check for updates'}
+        disabled={status.isPolling}
+        onPress={() => {
+          ZephyrNativeCache.checkForUpdates({ policy: 'downloadOnly' }).catch((error) => console.warn('[cache] Failed to check for updates', error));
+        }}
+      />
+      <Button
+        title="Clear cache"
+        onPress={() => {
+          ZephyrNativeCache.clearCache().catch((error) => {
+            console.warn('[cache] Failed to clear cache', error);
+          });
+        }}
+      />
+    </View>
+  );
+}
+```
+
+### Render Polling Telemetry
+
+The status snapshot contains enough state to show polling progress, last-check results, and pending remotes.
+
+```tsx
+import { Text, View } from 'react-native';
+import { useCacheStatus } from 'zephyr-native-cache/react';
+
+export function CacheDiagnostics() {
+  const { status } = useCacheStatus();
+  const pending = status.pendingUpdates.join(', ') || 'none';
+
+  return (
+    <View>
+      <Text>Polling: {status.pollingEnabled ? 'enabled' : 'disabled'}</Text>
+      <Text>Checking now: {status.isPolling ? 'yes' : 'no'}</Text>
+      <Text>Poll interval: {Math.round(status.pollIntervalMs / 1000)}s</Text>
+      <Text>Pending updates: {pending}</Text>
+      {status.lastPollResult && (
+        <Text>
+          Last check: {status.lastPollResult.checked} checked, {status.lastPollResult.updated} updated
+        </Text>
+      )}
+    </View>
+  );
+}
+```
+
+### Label Remote Bundle Sources
+
+You can map `status.remotes` into source badges so operators can see whether each remote came from disk cache or network. This mirrors the pattern used in the native cache test host app.
+
+```tsx
+import { Text } from 'react-native';
+import type { CacheStatusRemoteEntry } from 'zephyr-native-cache';
+import { useCacheStatus } from 'zephyr-native-cache/react';
+
+const SOURCE_LABELS: Record<string, string> = {
+  'cache-hit': 'from cache',
+  downloaded: 'from network',
+  skipped: 'from network',
+  pending: 'loading...',
+};
+
+function findEntry(remotes: Record<string, CacheStatusRemoteEntry>, name: string): CacheStatusRemoteEntry | undefined {
+  return remotes[name] ?? Object.values(remotes).find((entry) => entry.remoteName.endsWith('/' + name) || entry.remoteName === name);
+}
+
+export function RemoteSourceBadge({ name }: { name: string }) {
+  const { status } = useCacheStatus();
+  const entry = findEntry(status.remotes, name);
+  const label = entry ? (SOURCE_LABELS[entry.status] ?? entry.status) : 'not loaded';
+
+  return (
+    <Text>
+      {name}: {label}
+    </Text>
+  );
+}
+```
+
+For a fuller reference, see the [`zephyr-native-cache-test` host app](https://github.com/ZephyrCloudIO/zephyr-native-cache-test/tree/main/apps/host), which combines these patterns into a dev tools panel and source overlay.
 
 ## Requirements
 

@@ -3,6 +3,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "examples/rspack-nx-mf/apps/host/src",
   "projectType": "application",
+  "implicitDependencies": ["rspack_nx_mf_remote"],
   "tags": [],
   "targets": {
     "serve": {

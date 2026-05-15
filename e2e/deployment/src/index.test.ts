@@ -2,9 +2,9 @@ import { execSync } from 'node:child_process';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
 const output = execSync(
-  'pnpm exec nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test"'
+  'pnpm exec nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test" --json'
 );
-const testTargets = output.toString().split('\n').filter(Boolean);
+const testTargets = JSON.parse(output.toString()) as string[];
 const appUidsPromise: Promise<string[]> = getAllDeployedApps();
 
 for (const appName of testTargets) {

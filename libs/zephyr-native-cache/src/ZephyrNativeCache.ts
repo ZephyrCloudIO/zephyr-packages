@@ -43,3 +43,5 @@ export const ZephyrNativeCache: ZephyrNativeCacheApi = {
   clearCache,
   reloadApp,
 };
+
+export default ZephyrNativeCache;

@@ -23,13 +23,6 @@
       "require": "./lib/commonjs/runtime-plugin.js",
       "default": "./lib/commonjs/runtime-plugin.js"
     },
-    "./react": {
-      "react-native": "./src/react/index.ts",
-      "types": "./lib/typescript/react/index.d.ts",
-      "import": "./lib/module/react/index.js",
-      "require": "./lib/commonjs/react/index.js",
-      "default": "./lib/commonjs/react/index.js"
-    },
     "./package.json": "./package.json"
   },
   "repository": {

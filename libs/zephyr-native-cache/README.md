@@ -142,7 +142,7 @@ cache.events.on('poll:complete', (event) => {
 For React Native UIs, use the built-in hook:
 
 ```ts
-import { useCacheStatus } from 'zephyr-native-cache/react';
+import { useCacheStatus } from 'zephyr-native-cache';
 
 export function CacheStatusPanel() {
   const { status, latestUpdateEvent } = useCacheStatus();
@@ -158,8 +158,7 @@ Use `latestUpdateEvent` as a raw signal to display your own update banner, toast
 
 ```tsx
 import { Button, Text, View } from 'react-native';
-import { ZephyrNativeCache } from 'zephyr-native-cache';
-import { useCacheStatus } from 'zephyr-native-cache/react';
+import ZephyrNativeCache, { useCacheStatus } from 'zephyr-native-cache';
 
 export function UpdateBanner() {
   const { latestUpdateEvent } = useCacheStatus();
@@ -181,8 +180,7 @@ Use the facade for manual update checks and cache invalidation. These calls are 
 
 ```tsx
 import { Button, View } from 'react-native';
-import { ZephyrNativeCache } from 'zephyr-native-cache';
-import { useCacheStatus } from 'zephyr-native-cache/react';
+import ZephyrNativeCache, { useCacheStatus } from 'zephyr-native-cache';
 
 export function CacheControls() {
   const { status } = useCacheStatus();
@@ -215,7 +213,7 @@ The status snapshot contains enough state to show polling progress, last-check r
 
 ```tsx
 import { Text, View } from 'react-native';
-import { useCacheStatus } from 'zephyr-native-cache/react';
+import { useCacheStatus } from 'zephyr-native-cache';
 
 export function CacheDiagnostics() {
   const { status } = useCacheStatus();
@@ -243,8 +241,7 @@ You can map `status.remotes` into source badges so operators can see whether eac
 
 ```tsx
 import { Text } from 'react-native';
-import type { CacheStatusRemoteEntry } from 'zephyr-native-cache';
-import { useCacheStatus } from 'zephyr-native-cache/react';
+import { useCacheStatus, type CacheStatusRemoteEntry } from 'zephyr-native-cache';
 
 const SOURCE_LABELS: Record<string, string> = {
   'cache-hit': 'from cache',

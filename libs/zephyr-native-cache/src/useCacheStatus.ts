@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { UpdateAvailableEvent } from '../events';
+import type { UpdateAvailableEvent } from './events';
 import {
   getCacheStatus,
   getRegisteredCacheLayer,
   subscribeCacheLayerRegistration,
   subscribeCacheStatus,
-} from '../register';
-import type { CacheStatusSnapshot } from '../types';
+} from './register';
+import type { CacheStatusSnapshot } from './types';
 
 const DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000;
 

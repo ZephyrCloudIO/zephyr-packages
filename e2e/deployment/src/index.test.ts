@@ -5,13 +5,21 @@ const output = execSync(
   'pnpm exec nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test" --json'
 );
 const testTargets = JSON.parse(output.toString()) as string[];
-const appUidsPromise: Promise<string[]> = getAllDeployedApps();
+
+if (testTargets.length === 0) {
+  it('has no affected example deployment tests to run', () => {
+    expect(testTargets).toHaveLength(0);
+  });
+}
+
+let appUidsPromise: Promise<string[]> | undefined;
 
 for (const appName of testTargets) {
   describe(`[${appName}]: asset deployment assertion`, () => {
     let deployResult: DeployResult;
 
     beforeAll(async () => {
+      appUidsPromise ??= getAllDeployedApps();
       const appUids = await appUidsPromise;
       const appUid = appUids.find((uid) => uid.startsWith(replacer(appName)));
       if (!appUid) {

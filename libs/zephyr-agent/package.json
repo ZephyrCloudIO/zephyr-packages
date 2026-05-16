@@ -42,7 +42,7 @@
     "open": "^10.1.0",
     "proper-lockfile": "^4.1.2",
     "tslib": "catalog:typescript",
-    "undici": "8.3.0",
+    "undici": "^7.24.0",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {

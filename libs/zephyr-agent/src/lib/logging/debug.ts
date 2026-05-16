@@ -1,5 +1,5 @@
 // light weight functions for decorated console.error + able to toggle different parts of whole module's logging result
-import { debug } from 'debug';
+import type { createDebug as createObugDebug, Debugger } from 'obug';
 import {
   bgCyanBright,
   bgGreenBright,
@@ -25,7 +25,63 @@ export const brightGreenBgName = bold(bgGreenBright(black(name)));
 export const brightRedBgName = bold(bgRedBright(black(name)));
 
 /** Wrap debug logger to support file logging */
-type DebugLogger = debug.Debugger;
+type DebugLogger = Debugger;
+
+type ObugModule = { createDebug: typeof createObugDebug };
+
+const importObug = new Function('return import("obug")') as () => Promise<ObugModule>;
+const loggerPromises = new Map<string, Promise<DebugLogger>>();
+
+function debugPatternToRegExp(pattern: string): RegExp {
+  return new RegExp(
+    `^${pattern.replace(/[|\\{}()[\]^$+?.]/g, '\\$&').replace(/\*/g, '.*?')}$`
+  );
+}
+
+function isNamespaceEnabled(namespace: string): boolean {
+  const debugEnv = process.env['DEBUG'];
+  if (!debugEnv) return false;
+
+  const patterns = debugEnv.split(/[\s,]+/).filter(Boolean);
+  const skips = patterns
+    .filter((pattern) => pattern.startsWith('-'))
+    .map((pattern) => debugPatternToRegExp(pattern.slice(1)));
+
+  if (skips.some((pattern) => pattern.test(namespace))) {
+    return false;
+  }
+
+  return patterns
+    .filter((pattern) => !pattern.startsWith('-'))
+    .map(debugPatternToRegExp)
+    .some((pattern) => pattern.test(namespace));
+}
+
+function getLogger(namespace: string): Promise<DebugLogger> {
+  let loggerPromise = loggerPromises.get(namespace);
+
+  if (!loggerPromise) {
+    loggerPromise = importObug().then(({ createDebug }) => createDebug(namespace));
+    loggerPromises.set(namespace, loggerPromise);
+  }
+
+  return loggerPromise;
+}
+
+function createDebugLogger(namespace: string): DebugLogger {
+  const logger = ((...args: Parameters<DebugLogger>) => {
+    if (!isNamespaceEnabled(namespace)) return;
+
+    void getLogger(namespace).then((debugLogger) => debugLogger(...args));
+  }) as DebugLogger;
+
+  Object.defineProperties(logger, {
+    enabled: { get: () => isNamespaceEnabled(namespace) },
+    namespace: { value: namespace },
+  });
+
+  return logger;
+}
 
 function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
   const wrappedFn = (...args: Parameters<DebugLogger>) => {
@@ -55,22 +111,22 @@ function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
 }
 
 const rawLoggers = {
-  app: debug('zephyr:app'),
-  auth: debug('zephyr:auth'),
-  buildstats: debug('zephyr:buildstats'),
-  config: debug('zephyr:config'),
-  git: debug('zephyr:git'),
-  http: debug('zephyr:http'),
-  init: debug('zephyr:init'),
-  manifest: debug('zephyr:manifest'),
-  mf: debug('zephyr:mf'),
-  misc: debug('zephyr:misc'),
-  package: debug('zephyr:package'),
-  remotes: debug('zephyr:remotes'),
-  snapshot: debug('zephyr:snapshot'),
-  upload: debug('zephyr:upload'),
-  debug: debug('zephyr:debug'),
-  error: debug('zephyr:error'),
+  app: createDebugLogger('zephyr:app'),
+  auth: createDebugLogger('zephyr:auth'),
+  buildstats: createDebugLogger('zephyr:buildstats'),
+  config: createDebugLogger('zephyr:config'),
+  git: createDebugLogger('zephyr:git'),
+  http: createDebugLogger('zephyr:http'),
+  init: createDebugLogger('zephyr:init'),
+  manifest: createDebugLogger('zephyr:manifest'),
+  mf: createDebugLogger('zephyr:mf'),
+  misc: createDebugLogger('zephyr:misc'),
+  package: createDebugLogger('zephyr:package'),
+  remotes: createDebugLogger('zephyr:remotes'),
+  snapshot: createDebugLogger('zephyr:snapshot'),
+  upload: createDebugLogger('zephyr:upload'),
+  debug: createDebugLogger('zephyr:debug'),
+  error: createDebugLogger('zephyr:error'),
 };
 
 export const ze_error = wrapDebugLogger(rawLoggers.error, 'error');

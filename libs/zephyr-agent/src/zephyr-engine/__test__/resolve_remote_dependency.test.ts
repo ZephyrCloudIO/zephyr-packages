@@ -1,11 +1,13 @@
 import { describe, expect, jest, it } from '@jest/globals';
 import { resolve_remote_dependency } from '../resolve_remote_dependency';
 import { ZephyrError } from '../../lib/errors';
-import axios from 'axios';
+import { makeRequest } from '../../lib/http/http-request';
 
-// Mock axios instead of fetch
-jest.mock('axios');
-const axiosMock = axios as jest.Mocked<typeof axios>;
+jest.mock('../../lib/http/http-request', () => ({
+  makeRequest: jest.fn(),
+  parseUrl: jest.requireActual('../../lib/http/http-request').parseUrl,
+}));
+const makeRequestMock = makeRequest as jest.MockedFunction<typeof makeRequest>;
 
 const mockToken = 'test-token';
 const getTokenMock = jest.fn();
@@ -25,25 +27,25 @@ const mock_api_response = {
 describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () => {
   beforeEach(() => {
     getTokenMock.mockReset();
-    axiosMock.get.mockReset();
+    makeRequestMock.mockReset();
   });
 
   it('should resolve a remote dependency successfully', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
+    makeRequestMock.mockResolvedValueOnce([true, null, { value: mock_api_response }]);
 
     const result = await resolve_remote_dependency({ application_uid, version });
 
     expect(getTokenMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ ...mock_api_response, version });
-    expect(axiosMock.get).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`
-      ),
+    expect(makeRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: expect.stringContaining(
+          `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`
+        ),
+      }),
       {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${mockToken}`,
@@ -55,36 +57,28 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
 
   it('should throw ZephyrError on not ok response', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockRejectedValueOnce({
-      response: {
-        status: 404,
-        data: { message: 'Not found' },
-      },
-    });
+    makeRequestMock.mockResolvedValueOnce([false, new Error('Not found')]);
 
     const promise = resolve_remote_dependency({ application_uid, version });
 
     await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalled();
+    expect(makeRequestMock).toHaveBeenCalled();
   });
 
   it('should throw ZephyrError when there is no response.value', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: null },
-    });
+    makeRequestMock.mockResolvedValueOnce([true, null, {}]);
 
     const promise = resolve_remote_dependency({ application_uid, version });
 
     await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalled();
+    expect(makeRequestMock).toHaveBeenCalled();
   });
 
   it('throws an error when request fails', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
     const mockError = new Error('Network Error');
-    axiosMock.get.mockRejectedValueOnce(mockError);
+    makeRequestMock.mockRejectedValueOnce(mockError);
 
     const promise = resolve_remote_dependency({
       application_uid,
@@ -92,6 +86,6 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     });
 
     await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalled();
+    expect(makeRequestMock).toHaveBeenCalled();
   });
 });

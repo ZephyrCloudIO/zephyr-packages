@@ -28,8 +28,6 @@ jest.mock('../lib/node-persist/secret-token', () => {
   };
 });
 
-jest.mock('is-ci', () => false);
-
 // Skip tests if not in preview mode
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 

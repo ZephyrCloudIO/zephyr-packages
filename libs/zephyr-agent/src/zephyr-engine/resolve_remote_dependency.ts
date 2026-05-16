@@ -1,7 +1,6 @@
-import axios from 'axios';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../lib/errors';
-import { parseUrl } from '../lib/http/http-request';
+import { makeRequest, parseUrl } from '../lib/http/http-request';
 import { ze_log } from '../lib/logging';
 import { getToken } from '../lib/node-persist/token';
 export interface ZeResolvedDependency {
@@ -25,7 +24,7 @@ export async function resolve_remote_dependency({
   application_uid: string;
   version: string;
   platform?: string;
-  build_context: string;
+  build_context?: string;
 }): Promise<ZeResolvedDependency> {
   const depUrl =
     ZE_API_ENDPOINT() +
@@ -46,19 +45,22 @@ export async function resolve_remote_dependency({
     ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
-    const res = await axios.get(resolveDependency.toString(), {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-      },
-    });
+    const [ok, cause, response] = await makeRequest<{ value?: ZeResolvedDependency }>(
+      resolveDependency,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
+      }
+    );
 
     // used only for error logging
     const [appName, projectName, orgName] = application_uid.split('.');
 
-    // Check response status
-    if (res.status < 200 || res.status >= 300) {
+    if (!ok) {
       throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
         appUid: application_uid,
         appName,
@@ -67,12 +69,10 @@ export async function resolve_remote_dependency({
         version,
         data: {
           url: resolveDependency.toString(),
-          error: res.data,
+          error: cause,
         },
       });
     }
-
-    const response = res.data;
 
     if (response.value) {
       ze_log.remotes(

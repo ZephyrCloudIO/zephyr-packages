@@ -35,3 +35,8 @@ to be linked in cloud-io as a `GitProviderIdentity`; email candidates are only a
 Cloud-io does not call GitLab for this flow; provider-specific validation stays in the plugin. The plugin calls
 ze-api-gateway's `ci-token-exchange` route, which proxies to cloud-io and does not use worker-auth. Cloud-io validates
 the CI token against its separate CI-token table and mints a short-lived Zephyr CI access token.
+
+When `ZE_CI_TOKEN` is present, token exchange failures are terminal. The plugin does not fall back to interactive browser
+login in CI. A rejected exchange usually means the workflow actor's Git provider identity is not linked to a Zephyr user.
+The error should tell the user to link that Git provider account in Zephyr Cloud and rerun the workflow, while also
+checking that the CI token secret belongs to the right Zephyr workspace.

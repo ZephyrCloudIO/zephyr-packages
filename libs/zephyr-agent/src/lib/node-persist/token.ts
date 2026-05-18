@@ -9,7 +9,8 @@ import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { getUserEmail } from './user-email';
 import { ze_log } from '../logging/debug';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
-import { inferCiTokenIdentity } from './ci-token-identity';
+import { type CiTokenIdentity, inferCiTokenIdentity } from './ci-token-identity';
+import { ZeErrors, ZephyrError } from '../errors';
 
 export async function saveToken(token: string): Promise<void> {
   await storage;
@@ -28,12 +29,16 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
   if (ci_token) {
     const ciIdentity = await inferCiTokenIdentity();
     if (ciIdentity) {
-      ze_log.auth(`Using ${ciIdentity.provider} ${ciIdentity.source} identity for CI token attribution`);
+      ze_log.auth(
+        `Using ${ciIdentity.provider} ${ciIdentity.source} identity for CI token attribution`
+      );
       return await getTokenFromCiToken(ci_token, ciIdentity);
     }
 
-    ze_log.error(`${StorageKeys.ze_ci_token} was provided, but no supported CI identity was detected`);
-    return undefined;
+    throwCiTokenAuthError(
+      undefined,
+      `${StorageKeys.ze_ci_token} was provided, but no supported CI identity was detected.`
+    );
   }
 
   await storage;
@@ -95,15 +100,7 @@ async function getTokenFromServerToken(
 
 async function getTokenFromCiToken(
   ci_token: string,
-  identity: {
-    provider: string;
-    email?: string;
-    emails?: string[];
-    issuer?: string;
-    providerSubject?: string;
-    username?: string;
-    source?: string;
-  }
+  identity: CiTokenIdentity
 ): Promise<string | undefined> {
   const [ok, cause, data] = await makeRequest<{ access_token: string }>(
     {
@@ -122,14 +119,26 @@ async function getTokenFromCiToken(
   );
 
   if (!ok) {
-    if (cause instanceof Error) {
-      ze_log.error('Failed to get token from CI token:', cause.message);
-    } else {
-      ze_log.error('Failed to get token from CI token:', cause);
-    }
-    return undefined;
+    throwCiTokenAuthError(identity, cause);
   }
 
   await saveToken(data?.access_token ?? '');
   return data?.access_token;
+}
+
+function throwCiTokenAuthError(
+  identity: CiTokenIdentity | undefined,
+  cause: unknown
+): never {
+  const details = cause instanceof Error ? cause.message : String(cause);
+  ze_log.error('Failed to get token from CI token:', details);
+
+  throw new ZephyrError(ZeErrors.ERR_CI_TOKEN_AUTH, {
+    cause,
+    provider: identity?.provider ?? 'unknown',
+    username: identity?.username ?? 'unknown',
+    source: identity?.source ?? 'unknown',
+    issuer: identity?.issuer ?? 'unknown',
+    details,
+  });
 }

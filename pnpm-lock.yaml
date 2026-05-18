@@ -14,8 +14,8 @@ catalogs:
       version: 7.28.5
   eslint:
     '@eslint/compat':
-      specifier: ^1.2.7
-      version: 1.4.1
+      specifier: ^2.0.0
+      version: 2.1.0
     '@eslint/eslintrc':
       specifier: ^3.3.0
       version: 3.3.4
@@ -1457,7 +1457,7 @@ importers:
     devDependencies:
       '@eslint/compat':
         specifier: catalog:eslint
-        version: 1.4.1(eslint@9.39.3(jiti@2.6.1))
+        version: 2.1.0(eslint@9.39.3(jiti@2.6.1))
       '@eslint/eslintrc':
         specifier: catalog:eslint
         version: 3.3.4
@@ -1977,8 +1977,6 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
-
-  libs/zephyr-native-cache/lib/commonjs: {}
 
   libs/zephyr-nuxt-module:
     dependencies:
@@ -3577,11 +3575,11 @@ packages:
     resolution: {integrity: sha512-EriSTlt5OC9/7SXkRSCAhfSxxoSUgBm33OH+IkwbdpgoqsSsUg7y3uh+IICI/Qg4BBWr3U2i39RpmycbxMq4ew==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
-  '@eslint/compat@1.4.1':
-    resolution: {integrity: sha512-cfO82V9zxxGBxcQDr1lfaYB7wykTa0b00mGa36FrJl7iTFd0Z2cHfEYuxcBRP/iNijCsWsEkA+jzT8hGYmv33w==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+  '@eslint/compat@2.1.0':
+    resolution: {integrity: sha512-LgaSCymEpw7tF53xvDw9SNsraPb1IBHxpdABIOM0hW8UAlP8znrjYtuxfR58FSJ3L9BhwD+FaPRFQpZq84Nh6g==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=24}
     peerDependencies:
-      eslint: ^8.40 || 9
+      eslint: ^8.40 || 9 || 10
     peerDependenciesMeta:
       eslint:
         optional: true
@@ -19543,9 +19541,9 @@ snapshots:
 
   '@eslint-community/regexpp@4.12.2': {}
 
-  '@eslint/compat@1.4.1(eslint@9.39.3(jiti@2.6.1))':
+  '@eslint/compat@2.1.0(eslint@9.39.3(jiti@2.6.1))':
     dependencies:
-      '@eslint/core': 0.17.0
+      '@eslint/core': 1.2.1
     optionalDependencies:
       eslint: 9.39.3(jiti@2.6.1)
 

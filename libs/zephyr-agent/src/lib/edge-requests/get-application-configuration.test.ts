@@ -41,11 +41,11 @@ describe('getApplicationConfiguration', () => {
     username: 'test-user',
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     mockGetToken.mockResolvedValue(token);
     // Reset cache between tests
-    invalidateApplicationConfigCache();
+    await invalidateApplicationConfigCache();
   });
 
   // Simple test that stored config is returned when available and valid
@@ -139,7 +139,7 @@ describe('getApplicationConfiguration', () => {
     await getApplicationConfiguration({ application_uid });
 
     // Invalidate cache
-    invalidateApplicationConfigCache();
+    await invalidateApplicationConfigCache();
 
     // Reset mock to verify it's called again
     mockGetAppConfig.mockClear();

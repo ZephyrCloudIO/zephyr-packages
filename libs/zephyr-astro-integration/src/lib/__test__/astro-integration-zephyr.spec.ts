@@ -16,6 +16,7 @@ jest.mock('zephyr-agent', () => ({
     format: jest.fn(),
   },
   zeBuildDashData: jest.fn(),
+  rewriteEnvReadsToVirtualModule: jest.fn(),
   handleGlobalError: jest.fn().mockImplementation((error) => {
     const mockLogFn = jest.requireMock('zephyr-agent').logFn;
     const mockZephyrError = jest.requireMock('zephyr-agent').ZephyrError;
@@ -80,6 +81,7 @@ describe('withZephyr', () => {
       expect(integration).toHaveProperty('hooks');
       expect(integration.hooks).toHaveProperty('astro:config:done');
       expect(integration.hooks).toHaveProperty('astro:build:done');
+      expect(integration.hooks).toHaveProperty('astro:config:setup');
     });
 
     it('should accept options parameter', () => {
@@ -93,6 +95,26 @@ describe('withZephyr', () => {
 
       expect(typeof integration.hooks['astro:config:done']).toBe('function');
       expect(typeof integration.hooks['astro:build:done']).toBe('function');
+      expect(typeof integration.hooks['astro:config:setup']).toBe('function');
+    });
+  });
+
+  describe('astro:config:setup hook', () => {
+    it('should inject Vite plugin for ZE_PUBLIC_* rewrite behavior', async () => {
+      const integration = withZephyr();
+      const updateConfig = jest.fn();
+
+      await integration.hooks['astro:config:setup']?.({
+        updateConfig,
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:setup']>>[0]);
+
+      expect(updateConfig).toHaveBeenCalledTimes(1);
+      const callArg = updateConfig.mock.calls[0][0] as {
+        vite?: { plugins?: Array<Record<string, unknown>> };
+      };
+      expect(callArg.vite?.plugins?.length).toBeGreaterThan(0);
+      const plugin = callArg.vite?.plugins?.[0] as { name?: string };
+      expect(plugin.name).toBe('with-zephyr-astro-env');
     });
   });
 

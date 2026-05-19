@@ -1,4 +1,3 @@
-import isCI from 'is-ci';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
@@ -42,6 +41,7 @@ import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+import { isCI } from '../lib/ci/is-ci';
 import type {
   ZephyrEngineBuilderTypes,
   ZephyrEngineOptions,
@@ -132,7 +132,7 @@ export class ZephyrEngine {
     target: Platform;
     env?: string | undefined;
     ssr?: boolean;
-  } = { isCI, target: 'web', env: ZE_ENV(), ssr: false };
+  } = { isCI: isCI(), target: 'web', env: ZE_ENV(), ssr: false };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
 
@@ -262,7 +262,7 @@ export class ZephyrEngine {
     const platform = this.env.target;
     const build_context_json = {
       target: this.env.target,
-      isCI,
+      isCI: this.env.isCI,
       branch: this.gitProperties.git.branch,
       username: app_config.username,
       env: this.env.env,

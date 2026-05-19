@@ -91,10 +91,6 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
-  plugin-shared:
-    is-ci:
-      specifier: ^4.1.0
-      version: 4.1.0
   postcss:
     postcss:
       specifier: ^8.2.1
@@ -181,9 +177,6 @@ catalogs:
       specifier: ^3.4.11
       version: 3.4.19
   typescript:
-    '@types/is-ci':
-      specifier: 3.0.4
-      version: 3.0.4
     '@types/jest':
       specifier: 29.5.14
       version: 29.5.14
@@ -1733,33 +1726,21 @@ importers:
       '@toon-format/toon':
         specifier: ^0.9.0
         version: 0.9.0
-      axios:
-        specifier: ^1.15.0
-        version: 1.15.2(debug@4.4.3)
-      axios-retry:
-        specifier: ^4.5.0
-        version: 4.5.0(axios@1.15.2(debug@4.4.3))
-      debug:
-        specifier: ^4.3.4
-        version: 4.4.3(supports-color@5.5.0)
       eventsource:
         specifier: ^4.0.0
         version: 4.1.0
       git-url-parse:
         specifier: ^15.0.0
         version: 15.0.0
-      https-proxy-agent:
-        specifier: ^7.0.6
-        version: 7.0.6
-      is-ci:
-        specifier: catalog:plugin-shared
-        version: 4.1.0
       jose:
         specifier: ^5.10.0
         version: 5.10.0
       node-persist:
         specifier: ^4.0.1
         version: 4.0.4
+      obug:
+        specifier: ^2.1.1
+        version: 2.1.1
       open:
         specifier: ^10.1.0
         version: 10.2.0
@@ -1769,6 +1750,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      undici:
+        specifier: ^7.24.0
+        version: 7.24.4
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
@@ -1776,18 +1760,12 @@ importers:
       '@jest/globals':
         specifier: catalog:react
         version: 29.7.0
-      '@types/debug':
-        specifier: ^4.1.12
-        version: 4.1.12
       '@types/eventsource':
         specifier: ^3.0.0
         version: 3.0.0
       '@types/git-url-parse':
         specifier: ^9.0.3
         version: 9.0.3
-      '@types/is-ci':
-        specifier: catalog:typescript
-        version: 3.0.4
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -8007,9 +7985,6 @@ packages:
   '@types/http-proxy@1.17.17':
     resolution: {integrity: sha512-ED6LB+Z1AVylNTu7hdzuBqOgMnvG/ld6wGCG8wFnAzKX5uyW2K3WD52v0gnLCTK/VLpXtKckgWuyScYK6cSPaw==}
 
-  '@types/is-ci@3.0.4':
-    resolution: {integrity: sha512-AkCYCmwlXeuH89DagDCzvCAyltI2v9lh3U3DqSg/GrBYoReAaWwxfXCqMx9UV5MajLZ4ZFwZzV4cABGIxk2XRw==}
-
   '@types/istanbul-lib-coverage@2.0.6':
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
 
@@ -9013,13 +8988,8 @@ packages:
     resolution: {integrity: sha512-BASOg+YwO2C+346x3LZOeoovTIoTrRqEsqMa6fmfAV0P+U9mFr9NsyOEpiYvFjbc64NMrSswhV50WdXzdb/Z5A==}
     engines: {node: '>=4'}
 
-  axios-retry@4.5.0:
-    resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
-    peerDependencies:
-      axios: '>=1.15.0'
-
-  axios@1.15.2:
-    resolution: {integrity: sha512-wLrXxPtcrPTsNlJmKjkPnNPK2Ihe0hn0wGSaTEiHRPxwjvJwT3hKmXF4dpqxmPO9SoNb2FsYXj/xEo0gHN+D5A==}
+  axios@1.16.1:
+    resolution: {integrity: sha512-caYkukvroVPO8KrzuJEb50Hm07KwfBZPEC3VeFHTsqWHvKTsy54hjJz9BS/cdaypROE2rH6xvm9mHX4fgWkr3A==}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -11266,6 +11236,15 @@ packages:
       debug:
         optional: true
 
+  follow-redirects@1.16.0:
+    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+
   fontace@0.4.1:
     resolution: {integrity: sha512-lDMvbAzSnHmbYMTEld5qdtvNH2/pWpICOqpean9IgC7vUbUJc3k+k5Dokp85CegamqQpFbXf0rAVkbzpyTA8aw==}
 
@@ -12093,10 +12072,6 @@ packages:
     resolution: {integrity: sha512-1BC0BVFhS/p0qtw6enp8e+8OD0UrK0oFLztSjNzhcKA3WDuJxxAPXzPuPtKkjEY9UUoEWlX/8fgKeu2S8i9JTA==}
     engines: {node: '>= 0.4'}
 
-  is-ci@4.1.0:
-    resolution: {integrity: sha512-Ab9bQDQ11lWootZUI5qxgN2ZXwxNI5hTwnsvOc1wyxQ7zQ8OkEDw79mI0+9jI3x432NfwbVRru+3noJfXF6lSQ==}
-    hasBin: true
-
   is-core-module@2.16.1:
     resolution: {integrity: sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w==}
     engines: {node: '>= 0.4'}
@@ -12272,10 +12247,6 @@ packages:
   is-relative@1.0.0:
     resolution: {integrity: sha512-Kw/ReK0iqwKeu0MITLFuj0jbPAmEiOsIwyIXvvbfa6QfmN9pkD1M+8pdk7Rl/dTKbH34/XBFMbgD4iMJhLQbGA==}
     engines: {node: '>=0.10.0'}
-
-  is-retry-allowed@2.2.0:
-    resolution: {integrity: sha512-XVm7LOeLpTW4jV19QSH38vkswxoLud8sQ57YwJVTPWdiaI9I8keEhGFpBlslyVsgdQy4Opg8QOLb8YRgsyZiQg==}
-    engines: {node: '>=10'}
 
   is-set@2.0.3:
     resolution: {integrity: sha512-iPAjerrse27/ygGLxw+EBR9agv9Y6uLeYVJMu+QNCoouJ1/1ri0mGrcWpfCqFZuzzx3WjtwxG098X+n4OuRkPg==}
@@ -20839,7 +20810,7 @@ snapshots:
       '@modern-js/types': 2.70.8
       '@modern-js/utils': 2.70.8
       '@swc/helpers': 0.5.19
-      axios: 1.15.2(debug@4.4.3)
+      axios: 1.16.1
       connect-history-api-fallback: 2.0.0
       http-compression: 1.0.6
       minimatch: 3.1.5
@@ -21117,7 +21088,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 0.21.6
       adm-zip: 0.5.16
       ansi-colors: 4.1.3
-      axios: 1.15.2(debug@4.4.3)
+      axios: 1.16.1
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.18.0)
@@ -21142,7 +21113,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 2.1.0
       adm-zip: 0.5.16
       ansi-colors: 4.1.3
-      axios: 1.15.2(debug@4.4.3)
+      axios: 1.16.1
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.18.0)
@@ -21166,7 +21137,7 @@ snapshots:
       '@module-federation/third-party-dts-extractor': 2.2.3
       adm-zip: 0.5.16
       ansi-colors: 4.1.3
-      axios: 1.15.2(debug@4.4.3)
+      axios: 1.16.1
       chalk: 3.0.0
       fs-extra: 9.1.0
       isomorphic-ws: 5.0.0(ws@8.18.0)
@@ -22678,6 +22649,7 @@ snapshots:
       - '@swc-node/register'
       - '@swc/core'
       - debug
+      - supports-color
 
   '@oozcitak/dom@2.0.2':
     dependencies:
@@ -26149,10 +26121,6 @@ snapshots:
     dependencies:
       '@types/node': 22.19.13
 
-  '@types/is-ci@3.0.4':
-    dependencies:
-      ci-info: 3.9.0
-
   '@types/istanbul-lib-coverage@2.0.6': {}
 
   '@types/istanbul-lib-report@3.0.3':
@@ -27502,18 +27470,15 @@ snapshots:
 
   axe-core@4.11.1: {}
 
-  axios-retry@4.5.0(axios@1.15.2(debug@4.4.3)):
+  axios@1.16.1:
     dependencies:
-      axios: 1.15.2(debug@4.4.3)
-      is-retry-allowed: 2.2.0
-
-  axios@1.15.2(debug@4.4.3):
-    dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.16.0
       form-data: 4.0.5
+      https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   axobject-query@4.1.0: {}
 
@@ -30171,6 +30136,8 @@ snapshots:
     optionalDependencies:
       debug: 4.4.3(supports-color@5.5.0)
 
+  follow-redirects@1.16.0: {}
+
   fontace@0.4.1:
     dependencies:
       fontkitten: 1.0.2
@@ -31231,10 +31198,6 @@ snapshots:
 
   is-callable@1.2.7: {}
 
-  is-ci@4.1.0:
-    dependencies:
-      ci-info: 4.4.0
-
   is-core-module@2.16.1:
     dependencies:
       hasown: 2.0.2
@@ -31380,8 +31343,6 @@ snapshots:
   is-relative@1.0.0:
     dependencies:
       is-unc-path: 1.0.0
-
-  is-retry-allowed@2.2.0: {}
 
   is-set@2.0.3: {}
 
@@ -34586,7 +34547,7 @@ snapshots:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.2
       '@zkochan/js-yaml': 0.0.7
-      axios: 1.15.2(debug@4.4.3)
+      axios: 1.16.1
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       cliui: 8.0.1
@@ -34633,6 +34594,7 @@ snapshots:
       '@swc/core': 1.15.8(@swc/helpers@0.5.19)
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   nyc@17.1.0:
     dependencies:
@@ -37877,7 +37839,7 @@ snapshots:
       '@swc/core': 1.15.8(@swc/helpers@0.5.19)
       esbuild: 0.27.3
 
-  terser-webpack-plugin@5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.19))(esbuild@0.27.3)(webpack@5.105.4(@swc/core@1.15.8(@swc/helpers@0.5.19))(esbuild@0.27.3)):
+  terser-webpack-plugin@5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.19))(esbuild@0.27.3)(webpack@5.105.4(@swc/core@1.15.18(@swc/helpers@0.5.19))(esbuild@0.27.3)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
@@ -39389,7 +39351,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.19))(esbuild@0.27.3)(webpack@5.105.4(@swc/core@1.15.8(@swc/helpers@0.5.19))(esbuild@0.27.3))
+      terser-webpack-plugin: 5.3.17(@swc/core@1.15.18(@swc/helpers@0.5.19))(esbuild@0.27.3)(webpack@5.105.4(@swc/core@1.15.18(@swc/helpers@0.5.19))(esbuild@0.27.3))
       watchpack: 2.5.1
       webpack-sources: 3.3.4
     transitivePeerDependencies:

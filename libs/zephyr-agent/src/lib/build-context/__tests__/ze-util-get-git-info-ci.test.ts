@@ -19,9 +19,6 @@ jest.mock('../../logging/ze-log-event', () => ({
   logFn: jest.fn(),
 }));
 
-// Mock is-ci to return true for CI environment testing
-jest.mock('is-ci', () => true);
-
 let originalEnv: NodeJS.ProcessEnv;
 
 describe('getGitInfo - CI environments', () => {
@@ -30,6 +27,7 @@ describe('getGitInfo - CI environments', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     originalEnv = { ...process.env };
+    process.env.CI = 'true';
     // Clear CI env vars
     Object.keys(process.env).forEach((key) => {
       if (
@@ -230,7 +228,7 @@ describe('getGitInfo - CI environments', () => {
   });
 
   it('should use git branch when CI env vars are not available', async () => {
-    // No CI env vars set, only is-ci returns true
+    // No CI provider-specific vars set, only CI=true.
     mockExec.mockImplementation((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [

@@ -1,4 +1,3 @@
-import isCI from 'is-ci';
 import { exec as node_exec } from 'node:child_process';
 import { sep } from 'node:path';
 import { promisify } from 'node:util';
@@ -15,6 +14,7 @@ import { detectCIBranch } from './ci-branch-detection';
 import { getGitProviderInfo } from './git-provider-utils';
 import { detectMonorepo, getMonorepoRootPackageJson } from './detect-monorepo';
 import { getPackageJson } from './ze-util-read-package-json';
+import { isCI } from '../ci/is-ci';
 
 const exec = promisify(node_exec);
 
@@ -68,7 +68,7 @@ async function gatherGitInfo(): Promise<ZeGitInfo> {
     return gitInfo;
   } catch (error) {
     // In CI environments, fail immediately if git info is not available
-    if (isCI) {
+    if (isCI()) {
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
         message: 'Git repository information is required in CI environments',
         cause: error,
@@ -125,7 +125,7 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
   tags: string[];
   stdout: string;
 }> {
-  const automated = isCI || hasSecretToken;
+  const automated = isCI() || hasSecretToken;
 
   const command = [
     // Inside CI environments, the last committer should be the actor
@@ -152,7 +152,7 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
     // In CI environments with detached HEAD, git returns "HEAD" as branch name
     // Try to get branch from CI environment variables first
     let branch = gitBranch;
-    if (isCI && (gitBranch === 'HEAD' || !gitBranch)) {
+    if (isCI() && (gitBranch === 'HEAD' || !gitBranch)) {
       const ciInfo = detectCIBranch();
       if (ciInfo.branch) {
         branch = ciInfo.branch;
@@ -173,7 +173,7 @@ async function loadGitInfo(hasSecretToken: boolean): Promise<{
       }
     }
 
-    if (isCI && commit === NO_GIT_COMMIT) {
+    if (isCI() && commit === NO_GIT_COMMIT) {
       throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
         message:
           'Git commit hash is required in CI environments. Ensure this repository has commit history.',
@@ -391,7 +391,7 @@ async function getFallbackGitInfo(): Promise<ZeGitInfo> {
   const gitName = userInfo.name;
   const gitEmail = userInfo.email;
 
-  if (isCI) {
+  if (isCI()) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
       message:
         'Git repository information is required in CI environments. Please ensure your CI workflow includes git repository with proper remote origin.',

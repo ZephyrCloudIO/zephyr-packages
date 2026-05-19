@@ -19,8 +19,6 @@ jest.mock('../../logging/ze-log-event', () => ({
   logFn: jest.fn(),
 }));
 
-jest.mock('is-ci', () => false);
-
 jest.mock('../ze-util-read-package-json', () => ({
   getPackageJson: jest.fn(),
 }));
@@ -50,6 +48,7 @@ describe('getGitInfo - non-git environments', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.CI;
 
     // Set NODE_ENV to production for tests expecting 'main' branch
     process.env.NODE_ENV = 'production';

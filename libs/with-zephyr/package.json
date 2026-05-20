@@ -37,10 +37,10 @@
     "glob": "^13.0.0"
   },
   "devDependencies": {
-    "@rstest/core": "^0.8.0",
-    "@types/node": "^24.5.2",
-    "@rslib/core": "^0.19.0",
-    "typescript": "^5.9.2",
+    "@rstest/core": "0.8.5",
+    "@types/node": "22.19.13",
+    "@rslib/core": "0.19.6",
+    "typescript": "5.9.3",
     "zephyr-rsbuild-plugin": "workspace:*"
   },
   "keywords": [

@@ -3,7 +3,7 @@
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "jest-environment-node": "^29.7.0",
+    "jest-environment-node": "29.7.0",
     "ts-jest": "catalog:typescript",
     "ts-node": "10.9.2",
     "typescript": "catalog:typescript",

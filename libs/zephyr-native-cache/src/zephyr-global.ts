@@ -4,6 +4,8 @@ import type {
   ZephyrNativeCacheNamespace,
   ZephyrNativeCacheRefs,
   ZephyrNativeCacheState,
+  ZephyrRuntimeManifestEntry,
+  ZephyrRuntimeNamespace,
 } from 'zephyr-edge-contract';
 
 // Schema version for the entire `globalThis.__ZEPHYR__` shape.
@@ -49,6 +51,19 @@ export function ensureZephyrNativeCacheNamespace(): ZephyrNativeCacheNamespace {
   }
 
   return zephyrGlobal.runtime.nativeCache;
+}
+
+export function ensureZephyrRuntimeManifests(): Record<
+  string,
+  ZephyrRuntimeManifestEntry
+> {
+  const runtime = ensureZephyrGlobalNamespace().runtime as ZephyrRuntimeNamespace;
+
+  if (!isRecord(runtime.manifests)) {
+    runtime.manifests = {};
+  }
+
+  return runtime.manifests;
 }
 
 export function ensureZephyrNativeCacheRefs(): ZephyrNativeCacheRefs {

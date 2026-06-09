@@ -138,14 +138,19 @@ export class CacheManager {
 
   /**
    * Pre-download a bundle if its hash has changed. Returns true if a new version was
-   * downloaded, false if skipped or failed.
+   * downloaded, false if skipped or failed. `force` is used when a runtime manifest
+   * validator changed and the bundle should be refreshed even if its byte hash matches.
    */
-  async preDownloadBundle(bundleUrl: string, newHash: string): Promise<boolean> {
+  async preDownloadBundle(
+    bundleUrl: string,
+    newHash: string,
+    options: { force?: boolean } = {}
+  ): Promise<boolean> {
     if (!NativeMFECache) return false;
 
     const existing = this.urlIndex.get(cacheKey(bundleUrl));
     // Already cached with same hash — skip
-    if (existing?.bundleHash === newHash) return false;
+    if (!options.force && existing?.bundleHash === newHash) return false;
 
     const remoteName = existing?.remoteName ?? this.inferRemoteName(bundleUrl);
     const destPath = await this.getBundleDestPath(remoteName, bundleUrl);

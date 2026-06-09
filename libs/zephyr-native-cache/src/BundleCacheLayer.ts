@@ -99,7 +99,8 @@ export class BundleCacheLayer {
       zephyrManifestUrl,
       extractHashes,
       initialManifestPromise:
-        existing?.initialManifestPromise ?? this.initializeRuntimeManifest(zephyrManifestUrl),
+        existing?.initialManifestPromise ??
+        this.initializeRuntimeManifest(zephyrManifestUrl),
       lastBundleCount: initialHashes?.size ?? existing?.lastBundleCount,
     });
   }

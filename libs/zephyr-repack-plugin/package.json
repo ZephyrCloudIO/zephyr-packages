@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@rspack/core": "catalog:rspack",
-    "@types/find-package-json": "^1.2.6",
+    "@types/find-package-json": "1.2.7",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"

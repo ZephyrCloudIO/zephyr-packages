@@ -45,14 +45,14 @@
     "directory": "libs/zephyr-metro-plugin"
   },
   "devDependencies": {
-    "@module-federation/metro": "^0.21.6",
-    "@rnef/tools": "^0.7.28",
+    "@module-federation/metro": "0.21.6",
+    "@rnef/tools": "0.7.28",
     "@rspack/core": "catalog:rspack",
-    "@types/find-package-json": "^1.2.6",
+    "@types/find-package-json": "1.2.7",
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "metro-config": "^0.84.0",
-    "metro-transform-worker": "^0.84.0",
+    "metro-config": "0.84.2",
+    "metro-transform-worker": "0.84.2",
     "ts-jest": "catalog:typescript"
   },
   "keywords": [

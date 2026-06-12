@@ -50,13 +50,13 @@
   },
   "devDependencies": {
     "@jest/globals": "catalog:react",
-    "@types/debug": "^4.1.12",
-    "@types/eventsource": "^3.0.0",
-    "@types/git-url-parse": "^9.0.3",
+    "@types/debug": "4.1.12",
+    "@types/eventsource": "3.0.0",
+    "@types/git-url-parse": "9.0.3",
     "@types/is-ci": "catalog:typescript",
     "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
-    "@types/proper-lockfile": "^4.1.4",
+    "@types/proper-lockfile": "4.1.4",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "ts-jest": "catalog:typescript"
   },

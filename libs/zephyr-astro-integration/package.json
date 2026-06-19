@@ -51,11 +51,11 @@
   "devDependencies": {
     "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "astro": "^5.16.1",
+    "astro": "^6.4.6",
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
-    "astro": "^4.0.0 || ^5.15.8"
+    "astro": "^4.0.0 || ^5.15.8 || ^6.4.6"
   },
   "publishConfig": {
     "access": "public",

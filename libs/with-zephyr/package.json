@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@rstest/core": "^0.8.0",
-    "@types/node": "^24.5.2",
+    "@types/node": "^24.0.0",
     "@rslib/core": "^0.19.0",
     "typescript": "^5.9.2",
     "zephyr-rsbuild-plugin": "workspace:*"

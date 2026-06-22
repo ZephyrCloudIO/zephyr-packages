@@ -20,9 +20,9 @@
       "types": "./dist/index.d.ts"
     },
     "./node-persist": {
-      "import": "./dist/node-persist/index.js",
-      "require": "./dist/node-persist/index.js",
-      "types": "./dist/node-persist/index.d.ts"
+      "import": "./dist/lib/node-persist/index.js",
+      "require": "./dist/lib/node-persist/index.js",
+      "types": "./dist/lib/node-persist/index.d.ts"
     }
   },
   "main": "dist/index.js",

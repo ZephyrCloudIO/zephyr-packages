@@ -7,8 +7,9 @@
  * - Zephyr with semver: "zephyr:^1.0.0"
  * - Wildcard version: "*" (resolves to latest available version)
  * - Workspace protocol `workspace:*` (optionally prefixed, e.g. `remote_app@workspace:*`):
- *   monorepo references where `*`, `^`, and `~` resolve to the latest tag; ranges pass
- *   through.
+ *   monorepo references where `*`, `^`, `~`, and the bare protocol keep the branch-aware
+ *   `workspace:*` token (resolved against the build context, i.e. the remote just built
+ *   on the same branch); explicit ranges pass through as semver.
  *
  * @param ze_dependencies - Object with dependency name as key and version/reference as
  *   value
@@ -46,9 +47,12 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
 
   // Handle the workspace protocol (pnpm/yarn), optionally prefixed by a remote app uid:
   //   "workspace:*", "workspace:^1.2.3", "remote_app@workspace:*", "@scope/app@workspace:*"
-  // The "workspace:" specifier is a local monorepo reference; Zephyr resolves the matching
-  // published tag. "*"/"^"/"~" (and the bare protocol) mean "latest", which Zephyr resolves
-  // from the wildcard "*"; an explicit range passes through unchanged.
+  // The "workspace:" specifier is a local monorepo reference. The resolve API has a
+  // dedicated branch-aware path for the literal "workspace:*" token: it matches the remote
+  // that was just built in the same build context (branch/user/CI), instead of the global
+  // latest. So "*"/"^"/"~" (and the bare protocol) are normalized back to "workspace:*";
+  // collapsing them to the "*" wildcard would resolve a stale/env tag instead. An explicit
+  // range passes through as a plain semver selector.
   const workspaceIndex = reference.indexOf('workspace:');
   if (workspaceIndex !== -1) {
     const appUidPrefix = reference.slice(0, workspaceIndex).replace(/@$/, '');
@@ -57,7 +61,9 @@ export function parseZeDependency(key: string, value: string): ZeDependency {
     }
     const range = reference.slice(workspaceIndex + 'workspace:'.length);
     dependency.version =
-      range === '' || range === '*' || range === '^' || range === '~' ? '*' : range;
+      range === '' || range === '*' || range === '^' || range === '~'
+        ? 'workspace:*'
+        : range;
     return dependency;
   }
 

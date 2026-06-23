@@ -11,7 +11,7 @@ type BeforeInitArgs = Parameters<
 
 /**
  * MF runtime plugin that extracts bundle hashes from manifests during remote resolution
- * and feeds them to the cache layer for integrity verification and background polling.
+ * and feeds them to the cache layer for integrity verification and ETag polling.
  *
  * Add to `runtimePlugins` in your metro MF config:
  *
@@ -47,7 +47,8 @@ interface RuntimePluginCacheLayer {
   registerBundleHash: (bundleUrl: string, hash: string) => void;
   registerManifestSource: (
     manifestUrl: string,
-    extractHashes: (manifest: Manifest, manifestUrl: string) => Map<string, string>
+    extractHashes: (manifest: Manifest, manifestUrl: string) => Map<string, string>,
+    initialHashes?: Map<string, string>
   ) => void;
 }
 
@@ -212,7 +213,7 @@ export default function (): ModuleFederationRuntimePlugin {
             cacheLayer.registerBundleHash(url.split('?')[0], hash);
           }
 
-          cacheLayer.registerManifestSource(manifestUrl, extractBundleHashes);
+          cacheLayer.registerManifestSource(manifestUrl, extractBundleHashes, hashes);
         }
       }
     } catch {

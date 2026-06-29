@@ -81,6 +81,7 @@
       "smol-toml@<1.6.1": "1.6.1",
       "srvx@<0.11.13": ">=0.11.13",
       "follow-redirects@<1.16.0": ">=1.16.0",
+      "postcss@<8.5.10": ">=8.5.10",
       "glob": ">=11.1.0",
       "@modern-js/render>react-server-dom-webpack": "19.2.6",
       "react-server-dom-webpack": "19.2.6",

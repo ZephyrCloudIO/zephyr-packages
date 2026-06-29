@@ -38,11 +38,11 @@ describe('rewriteRspressModuleFederationAssets', () => {
     await mkdir(path.join(outDir, 'static/js'), { recursive: true });
     await writeFile(
       path.join(outDir, 'remoteEntry.js'),
-      '(()=>{__webpack_require__.p="http://localhost:4178/"})();'
+      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
     );
     await writeFile(
       path.join(outDir, 'static/js/index.js'),
-      '(()=>{__webpack_require__.p="http://localhost:4178/"})();'
+      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
     );
     await writeFile(
       path.join(outDir, 'zh/vite.html'),
@@ -134,5 +134,65 @@ describe('rewriteRspressModuleFederationAssets', () => {
       },
     });
     expect(ssgManifest.metaData.ssrPublicPath).toBeUndefined();
+  });
+
+  it('preserves custom SSR output paths from the emitted manifest', async () => {
+    await mkdir(path.join(outDir, 'server'), { recursive: true });
+    await writeFile(
+      path.join(outDir, 'mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'http://localhost:4178/',
+          ssrPublicPath: 'http://localhost:4178/server/',
+          ssrRemoteEntry: {
+            name: 'remoteEntry.js',
+            path: '',
+            type: 'module',
+          },
+        },
+      })
+    );
+    await writeFile(
+      path.join(outDir, 'server/mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'http://localhost:4178/server/',
+          remoteEntry: {
+            name: 'remoteEntry.js',
+            path: '',
+            type: 'module',
+          },
+        },
+      })
+    );
+
+    await rewriteRspressModuleFederationAssets(outDir, [
+      'mf-manifest.json',
+      'server/mf-manifest.json',
+    ]);
+
+    const browserManifest = JSON.parse(
+      await readFile(path.join(outDir, 'mf-manifest.json'), 'utf8')
+    );
+    expect(browserManifest.metaData).toMatchObject({
+      publicPath: 'auto',
+      ssrRemoteEntry: {
+        name: 'remoteEntry.js',
+        path: 'server/',
+        type: 'commonjs-module',
+      },
+    });
+
+    const ssgManifest = JSON.parse(
+      await readFile(path.join(outDir, 'server/mf-manifest.json'), 'utf8')
+    );
+    expect(ssgManifest.metaData).toMatchObject({
+      publicPath: 'auto',
+      remoteEntry: {
+        name: 'remoteEntry.js',
+        path: '',
+        type: 'commonjs-module',
+      },
+    });
   });
 });

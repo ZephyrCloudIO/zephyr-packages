@@ -1994,6 +1994,8 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  libs/zephyr-native-cache/lib/commonjs: {}
+
   libs/zephyr-nuxt-module:
     dependencies:
       nuxt:

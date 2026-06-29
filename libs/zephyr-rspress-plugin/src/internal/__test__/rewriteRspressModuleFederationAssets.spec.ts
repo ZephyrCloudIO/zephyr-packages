@@ -119,7 +119,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       ssrRemoteEntry: {
         name: 'remoteEntry.js',
         path: 'mf-ssg/',
-        type: 'commonjs-module',
+        type: 'module',
       },
     });
     expect(browserManifest.metaData.ssrPublicPath).toBeUndefined();
@@ -132,7 +132,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       remoteEntry: {
         name: 'remoteEntry.js',
         path: '',
-        type: 'commonjs-module',
+        type: 'module',
       },
     });
     expect(ssgManifest.metaData.ssrPublicPath).toBeUndefined();
@@ -299,7 +299,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       ssrRemoteEntry: {
         name: 'remoteEntry.js',
         path: 'server/',
-        type: 'commonjs-module',
+        type: 'module',
       },
     });
 
@@ -311,7 +311,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       remoteEntry: {
         name: 'remoteEntry.js',
         path: '',
-        type: 'commonjs-module',
+        type: 'module',
       },
     });
   });

@@ -195,7 +195,6 @@ function normalizeBrowserManifest(
     manifest.metaData.ssrRemoteEntry = {
       ...manifest.metaData.ssrRemoteEntry,
       path: ssrRemoteEntryPath,
-      type: 'commonjs-module',
     };
   }
 
@@ -209,13 +208,6 @@ function normalizeSsgManifest(manifest: ModuleFederationManifest): void {
 
   manifest.metaData.publicPath = 'auto';
   delete manifest.metaData.ssrPublicPath;
-
-  if (manifest.metaData.remoteEntry) {
-    manifest.metaData.remoteEntry = {
-      ...manifest.metaData.remoteEntry,
-      type: 'commonjs-module',
-    };
-  }
 }
 
 function normalizeHttpPrefix(value: string | undefined): string | null {

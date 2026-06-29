@@ -85,6 +85,8 @@ async function rewriteHtmlAssetPrefixes(
   files: string[],
   publicPaths: string[]
 ): Promise<void> {
+  const emittedFiles = new Set(files.map(toPortablePath));
+
   await Promise.all(
     files
       .filter((file) => toPortablePath(file).endsWith('.html'))
@@ -96,7 +98,7 @@ async function rewriteHtmlAssetPrefixes(
         for (const publicPath of publicPaths) {
           source = rewriteHtmlAssetPrefix(source, publicPath);
         }
-        source = rewriteAbsoluteRspressAssetUrls(source);
+        source = rewriteAbsoluteRspressAssetUrls(source, emittedFiles);
 
         if (source !== original) {
           await writeFile(filePath, source);
@@ -181,8 +183,18 @@ function rewriteHtmlAssetPrefix(source: string, publicPath: string): string {
   return source.replace(createHtmlAssetUrl(publicPath), '$1/');
 }
 
-function rewriteAbsoluteRspressAssetUrls(source: string): string {
-  return source.replace(createAbsoluteRspressAssetUrl(), '$1/');
+function rewriteAbsoluteRspressAssetUrls(
+  source: string,
+  emittedFiles: Set<string>
+): string {
+  return source.replace(
+    createAbsoluteRspressAssetUrl(),
+    (match: string, prefix: string, assetPath: string) => {
+      const emittedFile = toPortablePath(assetPath).replace(/[?#].*$/, '');
+
+      return emittedFiles.has(emittedFile) ? `${prefix}/${assetPath}` : match;
+    }
+  );
 }
 
 function createHtmlAssetUrl(publicPath: string): RegExp {
@@ -190,7 +202,7 @@ function createHtmlAssetUrl(publicPath: string): RegExp {
 }
 
 function createAbsoluteRspressAssetUrl(): RegExp {
-  return /(<(?:link|script)\b[^>]*\b(?:href|src)\s*=\s*["'])https?:\/\/[^"']+\/(?=static\/)/g;
+  return /(<(?:link|script)\b[^>]*\b(?:href|src)\s*=\s*["'])https?:\/\/[^"']+\/(static\/[^"']+)/g;
 }
 
 function findSsgManifestFile(

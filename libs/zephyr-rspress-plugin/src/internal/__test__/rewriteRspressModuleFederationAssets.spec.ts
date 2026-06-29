@@ -183,6 +183,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       [
         '<link href="http://localhost:4178/static/css/styles.css" rel="stylesheet">',
         '<script defer src="http://localhost:4178/static/js/index.js"></script>',
+        '<script defer src="https://cdn.vendor.com/static/widget.js"></script>',
         '<a href="http://localhost:4178/static/reference">Reference</a>',
       ].join('')
     );
@@ -198,12 +199,15 @@ describe('rewriteRspressModuleFederationAssets', () => {
     await rewriteRspressModuleFederationAssets(outDir, [
       'index.html',
       'mf-manifest.json',
+      'static/css/styles.css',
+      'static/js/index.js',
     ]);
 
     await expect(readFile(path.join(outDir, 'index.html'), 'utf8')).resolves.toBe(
       [
         '<link href="/static/css/styles.css" rel="stylesheet">',
         '<script defer src="/static/js/index.js"></script>',
+        '<script defer src="https://cdn.vendor.com/static/widget.js"></script>',
         '<a href="http://localhost:4178/static/reference">Reference</a>',
       ].join('')
     );

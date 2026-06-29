@@ -315,4 +315,49 @@ describe('rewriteRspressModuleFederationAssets', () => {
       },
     });
   });
+
+  it('prefers discovered SSG manifest directories over URL public path prefixes', async () => {
+    await mkdir(path.join(outDir, 'mf-ssg'), { recursive: true });
+    await writeFile(
+      path.join(outDir, 'mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'https://cdn.example.com/docs/',
+          ssrPublicPath: 'https://cdn.example.com/docs/mf-ssg/',
+          ssrRemoteEntry: {
+            name: 'remoteEntry.js',
+            path: '',
+            type: 'module',
+          },
+        },
+      })
+    );
+    await writeFile(
+      path.join(outDir, 'mf-ssg/mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'https://cdn.example.com/docs/mf-ssg/',
+          remoteEntry: {
+            name: 'remoteEntry.js',
+            path: '',
+            type: 'module',
+          },
+        },
+      })
+    );
+
+    await rewriteRspressModuleFederationAssets(outDir, [
+      'mf-manifest.json',
+      'mf-ssg/mf-manifest.json',
+    ]);
+
+    const browserManifest = JSON.parse(
+      await readFile(path.join(outDir, 'mf-manifest.json'), 'utf8')
+    );
+    expect(browserManifest.metaData.ssrRemoteEntry).toMatchObject({
+      name: 'remoteEntry.js',
+      path: 'mf-ssg/',
+      type: 'module',
+    });
+  });
 });

@@ -296,9 +296,9 @@ function getSsrRemoteEntryPath(
   ssgManifest: string | null
 ): string {
   return (
+    manifestDir(ssgManifest) ??
     normalizeManifestDir(manifest.metaData?.ssrRemoteEntry?.path) ??
     pathFromPublicPath(manifest.metaData?.ssrPublicPath) ??
-    manifestDir(ssgManifest) ??
     'mf-ssg/'
   );
 }

@@ -170,6 +170,92 @@ describe('rewriteRspressModuleFederationAssets', () => {
     ).resolves.not.toContain('document.currentScript');
   });
 
+  it('uses manifest path and name to find custom browser remote entries', async () => {
+    await mkdir(path.join(outDir, 'assets/mf'), { recursive: true });
+    await writeFile(
+      path.join(outDir, 'assets/mf/customRemote.js'),
+      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
+    );
+    await writeFile(
+      path.join(outDir, 'assets/mf/chunk.js'),
+      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
+    );
+    await writeFile(
+      path.join(outDir, 'mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'http://localhost:4178/',
+          remoteEntry: {
+            name: 'customRemote.js',
+            path: 'assets/mf/',
+            type: 'global',
+          },
+        },
+      })
+    );
+
+    await rewriteRspressModuleFederationAssets(outDir, [
+      'assets/mf/customRemote.js',
+      'assets/mf/chunk.js',
+      'mf-manifest.json',
+    ]);
+
+    await expect(
+      readFile(path.join(outDir, 'assets/mf/customRemote.js'), 'utf8')
+    ).resolves.toContain('document.currentScript');
+    await expect(readFile(path.join(outDir, 'assets/mf/chunk.js'), 'utf8')).resolves.toBe(
+      '(()=>{__webpack_require__.p="/"})();'
+    );
+  });
+
+  it('uses the SSG manifest path and name to find SSR remote entries', async () => {
+    await mkdir(path.join(outDir, 'server/nested'), { recursive: true });
+    await writeFile(
+      path.join(outDir, 'server/nested/ssrRemote.js'),
+      'export default (()=>{__webpack_require__.p = "http://localhost:4178/server/"})();'
+    );
+    await writeFile(
+      path.join(outDir, 'server/nested/chunk.js'),
+      'export default (()=>{__webpack_require__.p = "http://localhost:4178/server/"})();'
+    );
+    await writeFile(
+      path.join(outDir, 'mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'http://localhost:4178/',
+          ssrPublicPath: 'http://localhost:4178/server/',
+        },
+      })
+    );
+    await writeFile(
+      path.join(outDir, 'server/mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'http://localhost:4178/server/',
+          remoteEntry: {
+            name: 'ssrRemote.js',
+            path: 'nested/',
+            type: 'module',
+          },
+        },
+      })
+    );
+
+    await rewriteRspressModuleFederationAssets(outDir, [
+      'server/nested/ssrRemote.js',
+      'server/nested/chunk.js',
+      'mf-manifest.json',
+      'server/mf-manifest.json',
+    ]);
+
+    await expect(
+      readFile(path.join(outDir, 'server/nested/ssrRemote.js'), 'utf8')
+    ).resolves.toContain('import.meta.url');
+    await expect(
+      readFile(path.join(outDir, 'server/nested/chunk.js'), 'utf8')
+    ).resolves.toBe('export default (()=>{__webpack_require__.p="/"})();');
+  });
+
   it('preserves custom SSR output paths from the emitted manifest', async () => {
     await mkdir(path.join(outDir, 'server'), { recursive: true });
     await writeFile(

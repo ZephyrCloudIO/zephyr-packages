@@ -7,6 +7,7 @@ import {
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { setupZeDeploy } from './internal/assets/setupZeDeploy';
+import { rewriteRspressModuleFederationAssets } from './internal/assets/rewriteRspressModuleFederationAssets';
 import { showFiles } from './internal/files/showFiles';
 import { walkFiles } from './internal/files/walkFiles';
 import type { RspressUserConfig, RspressPlugin } from './types';
@@ -34,6 +35,7 @@ export const zephyrRspressSSGPlugin = <
           return;
         }
 
+        await rewriteRspressModuleFederationAssets(outDir, files);
         await showFiles(outDir, files);
 
         await setupZeDeploy({

@@ -33,6 +33,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       [
         '<link rel="stylesheet" href="http://localhost:4178/static/css/styles.css">',
         '<script src="http://localhost:4178/static/js/index.js"></script>',
+        '<pre>http://localhost:4178/static/js/example.js</pre>',
       ].join('')
     );
     await mkdir(path.join(outDir, 'static/js'), { recursive: true });
@@ -57,7 +58,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
           remoteEntry: {
             name: 'remoteEntry.js',
             path: '',
-            type: 'module',
+            type: 'global',
           },
           ssrRemoteEntry: {
             name: 'remoteEntry.js',
@@ -94,6 +95,7 @@ describe('rewriteRspressModuleFederationAssets', () => {
       [
         '<link rel="stylesheet" href="/static/css/styles.css">',
         '<script src="/static/js/index.js"></script>',
+        '<pre>http://localhost:4178/static/js/example.js</pre>',
       ].join('')
     );
     await expect(readFile(path.join(outDir, 'zh/vite.html'), 'utf8')).resolves.toBe(
@@ -134,6 +136,38 @@ describe('rewriteRspressModuleFederationAssets', () => {
       },
     });
     expect(ssgManifest.metaData.ssrPublicPath).toBeUndefined();
+  });
+
+  it('uses import.meta.url for module remote entry public path rewrites', async () => {
+    await writeFile(
+      path.join(outDir, 'remoteEntry.js'),
+      'export default (()=>{__webpack_require__.p = "http://localhost:4178/"})();'
+    );
+    await writeFile(
+      path.join(outDir, 'mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          publicPath: 'http://localhost:4178/',
+          remoteEntry: {
+            name: 'remoteEntry.js',
+            path: '',
+            type: 'module',
+          },
+        },
+      })
+    );
+
+    await rewriteRspressModuleFederationAssets(outDir, [
+      'remoteEntry.js',
+      'mf-manifest.json',
+    ]);
+
+    await expect(
+      readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')
+    ).resolves.toContain('import.meta.url');
+    await expect(
+      readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')
+    ).resolves.not.toContain('document.currentScript');
   });
 
   it('preserves custom SSR output paths from the emitted manifest', async () => {

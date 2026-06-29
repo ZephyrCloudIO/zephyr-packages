@@ -18,8 +18,10 @@ type ModuleFederationManifest = {
 };
 
 const BROWSER_MANIFEST = 'mf-manifest.json';
-const AUTO_PUBLIC_PATH_RUNTIME =
+const GLOBAL_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME =
   '__webpack_require__.p=(()=>{var e;if(typeof document!="undefined"){var t=document.currentScript;if(t&&t.tagName==="SCRIPT")e=t.src;if(!e){var r=document.getElementsByTagName("script");if(r.length)e=r[r.length-1].src}}if(!e&&typeof location!="undefined")e=location.href;if(!e)return "/";return e.replace(/#.*$/,"").replace(/\\?.*$/,"").replace(/\\/[^\\/]*$/,"/")})()';
+const MODULE_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME =
+  '__webpack_require__.p=new URL("./",import.meta.url).href';
 
 export async function rewriteRspressModuleFederationAssets(
   outDir: string,
@@ -39,7 +41,12 @@ export async function rewriteRspressModuleFederationAssets(
     ssgManifest
   );
   await rewriteHtmlAssetPrefixes(outDir, files, publicPaths);
-  await rewriteJsPublicPaths(outDir, files, publicPaths);
+  await rewriteJsPublicPaths(
+    outDir,
+    files,
+    publicPaths,
+    getRemoteEntryPublicPathRuntime(browserManifest)
+  );
   await writeManifest(
     outDir,
     BROWSER_MANIFEST,
@@ -100,7 +107,7 @@ async function rewriteHtmlAssetPrefixes(
         const original = source;
 
         for (const publicPath of publicPaths) {
-          source = source.split(publicPath).join('/');
+          source = rewriteHtmlAssetPrefix(source, publicPath);
         }
 
         if (source !== original) {
@@ -113,7 +120,8 @@ async function rewriteHtmlAssetPrefixes(
 async function rewriteJsPublicPaths(
   outDir: string,
   files: string[],
-  publicPaths: string[]
+  publicPaths: string[],
+  remoteEntryPublicPathRuntime: string
 ): Promise<void> {
   if (publicPaths.length === 0) {
     return;
@@ -129,7 +137,7 @@ async function rewriteJsPublicPaths(
         const original = source;
         const replacement =
           normalizedFile === 'remoteEntry.js'
-            ? AUTO_PUBLIC_PATH_RUNTIME
+            ? remoteEntryPublicPathRuntime
             : '__webpack_require__.p="/"';
 
         for (const publicPath of publicPaths) {
@@ -216,6 +224,20 @@ function normalizeHttpPrefix(value: string | undefined): string | null {
   }
 
   return value.endsWith('/') ? value : `${value}/`;
+}
+
+function getRemoteEntryPublicPathRuntime(manifest: ModuleFederationManifest): string {
+  return manifest.metaData?.remoteEntry?.type === 'module'
+    ? MODULE_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME
+    : GLOBAL_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME;
+}
+
+function rewriteHtmlAssetPrefix(source: string, publicPath: string): string {
+  return source.replace(createHtmlAssetUrl(publicPath), '$1/');
+}
+
+function createHtmlAssetUrl(publicPath: string): RegExp {
+  return new RegExp(`(\\b(?:href|src)\\s*=\\s*["'])${escapeRegExp(publicPath)}`, 'g');
 }
 
 function findSsgManifestFile(

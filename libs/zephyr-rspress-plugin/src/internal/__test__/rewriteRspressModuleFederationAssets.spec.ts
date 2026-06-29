@@ -37,14 +37,11 @@ describe('rewriteRspressModuleFederationAssets', () => {
       ].join('')
     );
     await mkdir(path.join(outDir, 'static/js'), { recursive: true });
-    await writeFile(
-      path.join(outDir, 'remoteEntry.js'),
-      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
-    );
-    await writeFile(
-      path.join(outDir, 'static/js/index.js'),
-      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
-    );
+    const remoteEntrySource =
+      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();';
+    const chunkSource = '(()=>{__webpack_require__.p = "http://localhost:4178/"})();';
+    await writeFile(path.join(outDir, 'remoteEntry.js'), remoteEntrySource);
+    await writeFile(path.join(outDir, 'static/js/index.js'), chunkSource);
     await writeFile(
       path.join(outDir, 'zh/vite.html'),
       '<script src="http://localhost:4178/static/js/zh.js"></script>'
@@ -101,14 +98,11 @@ describe('rewriteRspressModuleFederationAssets', () => {
     await expect(readFile(path.join(outDir, 'zh/vite.html'), 'utf8')).resolves.toBe(
       '<script src="/static/js/zh.js"></script>'
     );
-    await expect(
-      readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')
-    ).resolves.toContain('document.currentScript');
-    await expect(
-      readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')
-    ).resolves.not.toContain('localhost:4178');
+    await expect(readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')).resolves.toBe(
+      remoteEntrySource
+    );
     await expect(readFile(path.join(outDir, 'static/js/index.js'), 'utf8')).resolves.toBe(
-      '(()=>{__webpack_require__.p="/"})();'
+      chunkSource
     );
 
     const browserManifest = JSON.parse(
@@ -138,86 +132,8 @@ describe('rewriteRspressModuleFederationAssets', () => {
     expect(ssgManifest.metaData.ssrPublicPath).toBeUndefined();
   });
 
-  it('uses import.meta.url for module remote entry public path rewrites', async () => {
-    await writeFile(
-      path.join(outDir, 'remoteEntry.js'),
-      'export default (()=>{__webpack_require__.p = "http://localhost:4178/"})();'
-    );
-    await writeFile(
-      path.join(outDir, 'mf-manifest.json'),
-      JSON.stringify({
-        metaData: {
-          publicPath: 'http://localhost:4178/',
-          remoteEntry: {
-            name: 'remoteEntry.js',
-            path: '',
-            type: 'module',
-          },
-        },
-      })
-    );
-
-    await rewriteRspressModuleFederationAssets(outDir, [
-      'remoteEntry.js',
-      'mf-manifest.json',
-    ]);
-
-    await expect(
-      readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')
-    ).resolves.toContain('import.meta.url');
-    await expect(
-      readFile(path.join(outDir, 'remoteEntry.js'), 'utf8')
-    ).resolves.not.toContain('document.currentScript');
-  });
-
-  it('uses manifest path and name to find custom browser remote entries', async () => {
-    await mkdir(path.join(outDir, 'assets/mf'), { recursive: true });
-    await writeFile(
-      path.join(outDir, 'assets/mf/customRemote.js'),
-      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
-    );
-    await writeFile(
-      path.join(outDir, 'assets/mf/chunk.js'),
-      '(()=>{__webpack_require__.p = "http://localhost:4178/"})();'
-    );
-    await writeFile(
-      path.join(outDir, 'mf-manifest.json'),
-      JSON.stringify({
-        metaData: {
-          publicPath: 'http://localhost:4178/',
-          remoteEntry: {
-            name: 'customRemote.js',
-            path: 'assets/mf/',
-            type: 'global',
-          },
-        },
-      })
-    );
-
-    await rewriteRspressModuleFederationAssets(outDir, [
-      'assets/mf/customRemote.js',
-      'assets/mf/chunk.js',
-      'mf-manifest.json',
-    ]);
-
-    await expect(
-      readFile(path.join(outDir, 'assets/mf/customRemote.js'), 'utf8')
-    ).resolves.toContain('document.currentScript');
-    await expect(readFile(path.join(outDir, 'assets/mf/chunk.js'), 'utf8')).resolves.toBe(
-      '(()=>{__webpack_require__.p="/"})();'
-    );
-  });
-
   it('uses the SSG manifest path and name to find SSR remote entries', async () => {
     await mkdir(path.join(outDir, 'server/nested'), { recursive: true });
-    await writeFile(
-      path.join(outDir, 'server/nested/ssrRemote.js'),
-      'export default (()=>{__webpack_require__.p = "http://localhost:4178/server/"})();'
-    );
-    await writeFile(
-      path.join(outDir, 'server/nested/chunk.js'),
-      'export default (()=>{__webpack_require__.p = "http://localhost:4178/server/"})();'
-    );
     await writeFile(
       path.join(outDir, 'mf-manifest.json'),
       JSON.stringify({
@@ -247,18 +163,9 @@ describe('rewriteRspressModuleFederationAssets', () => {
     );
 
     await rewriteRspressModuleFederationAssets(outDir, [
-      'server/nested/ssrRemote.js',
-      'server/nested/chunk.js',
       'mf-manifest.json',
       'server/mf-manifest.json',
     ]);
-
-    await expect(
-      readFile(path.join(outDir, 'server/nested/ssrRemote.js'), 'utf8')
-    ).resolves.toContain('import.meta.url');
-    await expect(
-      readFile(path.join(outDir, 'server/nested/chunk.js'), 'utf8')
-    ).resolves.toBe('export default (()=>{__webpack_require__.p="/"})();');
 
     const browserManifest = JSON.parse(
       await readFile(path.join(outDir, 'mf-manifest.json'), 'utf8')
@@ -268,6 +175,38 @@ describe('rewriteRspressModuleFederationAssets', () => {
       path: 'server/nested/',
       type: 'module',
     });
+  });
+
+  it('rewrites absolute Rspress HTML asset URLs when manifest uses getPublicPath', async () => {
+    await writeFile(
+      path.join(outDir, 'index.html'),
+      [
+        '<link href="http://localhost:4178/static/css/styles.css" rel="stylesheet">',
+        '<script defer src="http://localhost:4178/static/js/index.js"></script>',
+        '<a href="http://localhost:4178/static/reference">Reference</a>',
+      ].join('')
+    );
+    await writeFile(
+      path.join(outDir, 'mf-manifest.json'),
+      JSON.stringify({
+        metaData: {
+          getPublicPath: 'return "http://localhost:4178/"',
+        },
+      })
+    );
+
+    await rewriteRspressModuleFederationAssets(outDir, [
+      'index.html',
+      'mf-manifest.json',
+    ]);
+
+    await expect(readFile(path.join(outDir, 'index.html'), 'utf8')).resolves.toBe(
+      [
+        '<link href="/static/css/styles.css" rel="stylesheet">',
+        '<script defer src="/static/js/index.js"></script>',
+        '<a href="http://localhost:4178/static/reference">Reference</a>',
+      ].join('')
+    );
   });
 
   it('preserves custom SSR output paths from the emitted manifest', async () => {

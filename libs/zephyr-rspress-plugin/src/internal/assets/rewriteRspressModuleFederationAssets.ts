@@ -18,11 +18,6 @@ type ModuleFederationManifest = {
 };
 
 const BROWSER_MANIFEST = 'mf-manifest.json';
-const CHUNK_PUBLIC_PATH_RUNTIME = '__webpack_require__.p="/"';
-const GLOBAL_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME =
-  '__webpack_require__.p=(()=>{var e;if(typeof document!="undefined"){var t=document.currentScript;if(t&&t.tagName==="SCRIPT")e=t.src;if(!e){var r=document.getElementsByTagName("script");if(r.length)e=r[r.length-1].src}}if(!e&&typeof location!="undefined")e=location.href;if(!e)return "/";return e.replace(/#.*$/,"").replace(/\\?.*$/,"").replace(/\\/[^\\/]*$/,"/")})()';
-const MODULE_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME =
-  '__webpack_require__.p=new URL("./",import.meta.url).href';
 
 export async function rewriteRspressModuleFederationAssets(
   outDir: string,
@@ -43,12 +38,6 @@ export async function rewriteRspressModuleFederationAssets(
     ssgManifest
   );
   await rewriteHtmlAssetPrefixes(outDir, files, publicPaths);
-  await rewriteJsPublicPaths(
-    outDir,
-    files,
-    publicPaths,
-    getRemoteEntryPublicPathRuntimes(browserManifest, ssgManifest, ssgManifestData)
-  );
   await writeManifest(
     outDir,
     BROWSER_MANIFEST,
@@ -96,10 +85,6 @@ async function rewriteHtmlAssetPrefixes(
   files: string[],
   publicPaths: string[]
 ): Promise<void> {
-  if (publicPaths.length === 0) {
-    return;
-  }
-
   await Promise.all(
     files
       .filter((file) => toPortablePath(file).endsWith('.html'))
@@ -111,38 +96,7 @@ async function rewriteHtmlAssetPrefixes(
         for (const publicPath of publicPaths) {
           source = rewriteHtmlAssetPrefix(source, publicPath);
         }
-
-        if (source !== original) {
-          await writeFile(filePath, source);
-        }
-      })
-  );
-}
-
-async function rewriteJsPublicPaths(
-  outDir: string,
-  files: string[],
-  publicPaths: string[],
-  remoteEntryPublicPathRuntimes: Map<string, string>
-): Promise<void> {
-  if (publicPaths.length === 0) {
-    return;
-  }
-
-  await Promise.all(
-    files
-      .filter((file) => toPortablePath(file).endsWith('.js'))
-      .map(async (file) => {
-        const normalizedFile = toPortablePath(file);
-        const filePath = resolveOutputPath(outDir, file);
-        let source = await readFile(filePath, 'utf8');
-        const original = source;
-        const replacement =
-          remoteEntryPublicPathRuntimes.get(normalizedFile) ?? CHUNK_PUBLIC_PATH_RUNTIME;
-
-        for (const publicPath of publicPaths) {
-          source = source.replace(createPublicPathAssignment(publicPath), replacement);
-        }
+        source = rewriteAbsoluteRspressAssetUrls(source);
 
         if (source !== original) {
           await writeFile(filePath, source);
@@ -223,62 +177,20 @@ function normalizeHttpPrefix(value: string | undefined): string | null {
   return value.endsWith('/') ? value : `${value}/`;
 }
 
-function getRemoteEntryPublicPathRuntimes(
-  browserManifest: ModuleFederationManifest,
-  ssgManifestFile: string | null,
-  ssgManifest: ModuleFederationManifest | null
-): Map<string, string> {
-  const runtimes = new Map<string, string>();
-  const browserRemoteEntry = remoteEntryFile(browserManifest.metaData?.remoteEntry, null);
-
-  if (browserRemoteEntry) {
-    runtimes.set(
-      browserRemoteEntry,
-      getRemoteEntryPublicPathRuntime(browserManifest.metaData?.remoteEntry)
-    );
-  }
-
-  const ssgRemoteEntry = ssgManifest
-    ? remoteEntryFile(ssgManifest.metaData?.remoteEntry, manifestDir(ssgManifestFile))
-    : remoteEntryFile(browserManifest.metaData?.ssrRemoteEntry, null);
-
-  if (ssgRemoteEntry) {
-    runtimes.set(
-      ssgRemoteEntry,
-      getRemoteEntryPublicPathRuntime(
-        ssgManifest?.metaData?.remoteEntry ?? browserManifest.metaData?.ssrRemoteEntry
-      )
-    );
-  }
-
-  return runtimes;
-}
-
-function getRemoteEntryPublicPathRuntime(entry: ManifestEntry | undefined): string {
-  return entry?.type === 'module'
-    ? MODULE_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME
-    : GLOBAL_REMOTE_ENTRY_PUBLIC_PATH_RUNTIME;
-}
-
-function remoteEntryFile(
-  entry: ManifestEntry | undefined,
-  baseDir: string | null
-): string | null {
-  if (!entry?.name) {
-    return null;
-  }
-
-  return toPortablePath(
-    `${baseDir ?? ''}${normalizeManifestDir(entry.path) ?? ''}${entry.name}`
-  ).replace(/^\/+/, '');
-}
-
 function rewriteHtmlAssetPrefix(source: string, publicPath: string): string {
   return source.replace(createHtmlAssetUrl(publicPath), '$1/');
 }
 
+function rewriteAbsoluteRspressAssetUrls(source: string): string {
+  return source.replace(createAbsoluteRspressAssetUrl(), '$1/');
+}
+
 function createHtmlAssetUrl(publicPath: string): RegExp {
   return new RegExp(`(\\b(?:href|src)\\s*=\\s*["'])${escapeRegExp(publicPath)}`, 'g');
+}
+
+function createAbsoluteRspressAssetUrl(): RegExp {
+  return /(<(?:link|script)\b[^>]*\b(?:href|src)\s*=\s*["'])https?:\/\/[^"']+\/(?=static\/)/g;
 }
 
 function findSsgManifestFile(
@@ -367,13 +279,6 @@ function normalizeManifestDir(value: string | undefined): string | null {
   }
 
   return normalized.endsWith('/') ? normalized : `${normalized}/`;
-}
-
-function createPublicPathAssignment(publicPath: string): RegExp {
-  return new RegExp(
-    `__webpack_require__\\.p\\s*=\\s*${escapeRegExp(JSON.stringify(publicPath))}`,
-    'g'
-  );
 }
 
 function escapeRegExp(value: string): string {

@@ -52,7 +52,7 @@ export async function rewriteRspressModuleFederationAssets(
   await writeManifest(
     outDir,
     BROWSER_MANIFEST,
-    normalizeBrowserManifest(browserManifest, ssgManifest)
+    normalizeBrowserManifest(browserManifest, ssgManifest, ssgManifestData)
   );
 
   if (ssgManifest) {
@@ -181,13 +181,18 @@ async function readManifest(
 
 function normalizeBrowserManifest(
   manifest: ModuleFederationManifest,
-  ssgManifest: string | null
+  ssgManifest: string | null,
+  ssgManifestData: ModuleFederationManifest | null
 ): ModuleFederationManifest {
   if (!manifest.metaData) {
     return manifest;
   }
 
-  const ssrRemoteEntryPath = getSsrRemoteEntryPath(manifest, ssgManifest);
+  const ssrRemoteEntryPath = getSsrRemoteEntryPath(
+    manifest,
+    ssgManifest,
+    ssgManifestData
+  );
   manifest.metaData.publicPath = 'auto';
   delete manifest.metaData.ssrPublicPath;
 
@@ -293,10 +298,14 @@ function findSsgManifestFile(
 
 function getSsrRemoteEntryPath(
   manifest: ModuleFederationManifest,
-  ssgManifest: string | null
+  ssgManifest: string | null,
+  ssgManifestData: ModuleFederationManifest | null
 ): string {
+  const ssgManifestDir = manifestDir(ssgManifest);
+
   return (
-    manifestDir(ssgManifest) ??
+    remoteEntryDir(ssgManifestData?.metaData?.remoteEntry, ssgManifestDir) ??
+    ssgManifestDir ??
     normalizeManifestDir(manifest.metaData?.ssrRemoteEntry?.path) ??
     pathFromPublicPath(manifest.metaData?.ssrPublicPath) ??
     'mf-ssg/'
@@ -311,6 +320,19 @@ function manifestFileFromPublicPath(value: string | undefined): string | null {
 function manifestFileFromEntryPath(value: string | undefined): string | null {
   const dir = normalizeManifestDir(value);
   return dir ? `${dir}mf-manifest.json` : null;
+}
+
+function remoteEntryDir(
+  entry: ManifestEntry | undefined,
+  baseDir: string | null
+): string | null {
+  if (!entry) {
+    return null;
+  }
+
+  return normalizeManifestDir(
+    `${baseDir ?? ''}${normalizeManifestDir(entry.path) ?? ''}`
+  );
 }
 
 function pathFromPublicPath(value: string | undefined): string | null {

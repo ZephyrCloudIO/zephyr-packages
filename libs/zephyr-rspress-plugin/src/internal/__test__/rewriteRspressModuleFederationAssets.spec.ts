@@ -224,6 +224,11 @@ describe('rewriteRspressModuleFederationAssets', () => {
         metaData: {
           publicPath: 'http://localhost:4178/',
           ssrPublicPath: 'http://localhost:4178/server/',
+          ssrRemoteEntry: {
+            name: 'ssrRemote.js',
+            path: '',
+            type: 'module',
+          },
         },
       })
     );
@@ -254,6 +259,15 @@ describe('rewriteRspressModuleFederationAssets', () => {
     await expect(
       readFile(path.join(outDir, 'server/nested/chunk.js'), 'utf8')
     ).resolves.toBe('export default (()=>{__webpack_require__.p="/"})();');
+
+    const browserManifest = JSON.parse(
+      await readFile(path.join(outDir, 'mf-manifest.json'), 'utf8')
+    );
+    expect(browserManifest.metaData.ssrRemoteEntry).toMatchObject({
+      name: 'ssrRemote.js',
+      path: 'server/nested/',
+      type: 'module',
+    });
   });
 
   it('preserves custom SSR output paths from the emitted manifest', async () => {

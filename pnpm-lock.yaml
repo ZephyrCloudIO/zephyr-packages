@@ -312,8 +312,8 @@ importers:
         version: 2.8.1
     devDependencies:
       '@eslint/eslintrc':
-        specifier: ^2.1.1
-        version: 2.1.4
+        specifier: ^3.0.0
+        version: 3.3.5
       '@eslint/js':
         specifier: ~8.57.0
         version: 8.57.1
@@ -1993,8 +1993,6 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
-
-  libs/zephyr-native-cache/lib/commonjs: {}
 
   libs/zephyr-nuxt-module:
     dependencies:
@@ -3726,10 +3724,6 @@ packages:
   '@eslint/core@1.2.1':
     resolution: {integrity: sha512-MwcE1P+AZ4C6DWlpin/OmOA54mmIZ/+xZuJiQd4SyB29oAJjN30UW9wkKNptW2ctp4cEsvhlLY/CsQ1uoHDloQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-
-  '@eslint/eslintrc@2.1.4':
-    resolution: {integrity: sha512-269Z39MS6wVJtsoUl10L60WdkhJVdPG24Q4eZTH3nnF6lpvSShEK3wQjDX9JRWAUPvPh7COouPpU9IrqaZFvtQ==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   '@eslint/eslintrc@3.3.4':
     resolution: {integrity: sha512-4h4MVF8pmBsncB60r0wSJiIeUKTSD4m7FmTFThG8RHlsg9ajqckLm9OraguFGZE4vVdpiI1Q4+hFnisopmG6gQ==}
@@ -20281,20 +20275,6 @@ snapshots:
   '@eslint/core@1.2.1':
     dependencies:
       '@types/json-schema': 7.0.15
-
-  '@eslint/eslintrc@2.1.4':
-    dependencies:
-      ajv: 6.14.0
-      debug: 4.4.3(supports-color@5.5.0)
-      espree: 9.6.1
-      globals: 13.24.0
-      ignore: 5.3.2
-      import-fresh: 3.3.1
-      js-yaml: 4.1.1
-      minimatch: 3.1.5
-      strip-json-comments: 3.1.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@eslint/eslintrc@3.3.4':
     dependencies:

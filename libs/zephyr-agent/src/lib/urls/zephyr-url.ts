@@ -10,7 +10,7 @@ export function stripFederatedRemoteName(remoteUrl: string): string {
 }
 
 function normalizeSiblingPath(path: string): string {
-  return path.replace(/^\/+/, '');
+  return path.replace(/^\.?\/+/, '');
 }
 
 function hasFileLikeLastSegment(url: URL): boolean {
@@ -33,12 +33,23 @@ export function getPathPreservingBaseUrl(referenceUrl: string): string {
   return url.toString().replace(/\/$/, '');
 }
 
+export function appendZephyrUrlPath(baseUrl: string, path: string): string {
+  const relativePath = normalizeSiblingPath(path);
+  if (!relativePath) {
+    return baseUrl;
+  }
+
+  return new URL(
+    relativePath,
+    baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+  ).toString();
+}
+
 export function resolveZephyrSiblingUrl(
   referenceUrl: string,
   siblingPath = ZEPHYR_MANIFEST_FILENAME
 ): string {
-  const path = normalizeSiblingPath(siblingPath);
   const baseUrl = getPathPreservingBaseUrl(referenceUrl);
 
-  return path ? `${baseUrl}/${path}` : baseUrl;
+  return appendZephyrUrlPath(baseUrl, siblingPath);
 }

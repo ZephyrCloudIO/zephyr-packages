@@ -1,4 +1,8 @@
-import { getPathPreservingBaseUrl, resolveZephyrSiblingUrl } from './zephyr-url';
+import {
+  appendZephyrUrlPath,
+  getPathPreservingBaseUrl,
+  resolveZephyrSiblingUrl,
+} from './zephyr-url';
 
 describe('path-preserving Zephyr URL helpers', () => {
   test.each([
@@ -43,6 +47,17 @@ describe('path-preserving Zephyr URL helpers', () => {
     expect(
       resolveZephyrSiblingUrl('https://host/__zephyr/v1/e/route-key', 'chunks/main.js')
     ).toBe('https://host/__zephyr/v1/e/route-key/chunks/main.js');
+  });
+
+  test('accepts leading slash and dot-relative sibling paths without escaping the route base', () => {
+    const baseUrl = 'https://host/__zephyr/v1/e/route-key';
+
+    expect(appendZephyrUrlPath(baseUrl, '/chunks/main.js')).toBe(
+      'https://host/__zephyr/v1/e/route-key/chunks/main.js'
+    );
+    expect(appendZephyrUrlPath(baseUrl, './chunks/main.js')).toBe(
+      'https://host/__zephyr/v1/e/route-key/chunks/main.js'
+    );
   });
 
   test('documents v1 root-relative app asset boundary', () => {

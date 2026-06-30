@@ -68,6 +68,13 @@ export {
   resolveMfManifestPath,
   type MfManifestConfig,
 } from './lib/transformers/resolve-mf-manifest-path';
+export {
+  appendZephyrUrlPath,
+  getPathPreservingBaseUrl,
+  resolveZephyrSiblingUrl,
+  stripFederatedRemoteName,
+  ZEPHYR_MANIFEST_FILENAME,
+} from './lib/urls/zephyr-url';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';

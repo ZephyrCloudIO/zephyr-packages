@@ -45,7 +45,9 @@
     "android/build.gradle",
     "react-native.config.js",
     "zephyr-native-cache.podspec",
-    "!**/__tests__"
+    "!**/__tests__",
+    "!**/*.test.ts",
+    "!**/*.spec.ts"
   ],
   "peerDependencies": {
     "react": ">=19.0.0",

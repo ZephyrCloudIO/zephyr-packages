@@ -140,15 +140,18 @@ function resolveBundlePaths(
   return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
 }
 
-function getManifestBaseUrl(manifestUrl: string): string {
+export function getManifestBaseUrl(manifestUrl: string): string {
   return manifestUrl.replace(/[?#].*$/, '').replace(/\/[^/]*$/, '');
 }
 
-function joinUrlPath(baseUrl: string, path: string): string {
-  return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\.?\//, '')}`;
+export function joinUrlPath(baseUrl: string, path: string): string {
+  return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\.?\/+/, '')}`;
 }
 
-function resolvePublicPathBase(rawPublicPath: string, manifestUrl: string): string {
+export function resolvePublicPathBase(
+  rawPublicPath: string,
+  manifestUrl: string
+): string {
   const manifestBaseUrl = getManifestBaseUrl(manifestUrl);
 
   if (!rawPublicPath || rawPublicPath === 'auto') {
@@ -162,7 +165,7 @@ function resolvePublicPathBase(rawPublicPath: string, manifestUrl: string): stri
   return joinUrlPath(manifestBaseUrl, rawPublicPath);
 }
 
-function extractBundleHashes(
+export function extractBundleHashes(
   manifest: Manifest,
   manifestUrl: string
 ): Map<string, string> {

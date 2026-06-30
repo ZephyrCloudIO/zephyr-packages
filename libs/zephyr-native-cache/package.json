@@ -32,7 +32,7 @@
   },
   "scripts": {
     "build": "nx build zephyr-native-cache",
-    "prepare": "nx build zephyr-native-cache",
+    "prepare": "nx build zephyr-native-cache --skipRemoteCache",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "patch-version": "pnpm version"

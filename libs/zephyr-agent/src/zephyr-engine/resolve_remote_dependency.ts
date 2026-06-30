@@ -16,7 +16,34 @@ export interface ZeResolvedDependency {
   platform?: string;
 }
 
-export async function resolve_remote_dependency({
+export async function resolve_remote_dependency(params: {
+  application_uid: string;
+  version: string;
+  platform?: string;
+  build_context: string;
+}): Promise<ZeResolvedDependency> {
+  try {
+    return await request_remote_dependency(params);
+  } catch (cause) {
+    // Workspace protocol fallback: `workspace:*` resolves against the current build
+    // context (the remote built on the same branch/user/CI). When no matching build
+    // exists - e.g. building the host on its own without first building the remote -
+    // fall back to the latest published version (`*`) instead of failing the remote,
+    // so the host can still federate against a previously published remote. When a
+    // workspace build does exist it wins, so this never weakens branch-aware resolution.
+    if (params.version.startsWith('workspace:')) {
+      ze_log.remotes(
+        `No workspace build found for ${params.application_uid}@${params.version}; ` +
+          'falling back to the latest published version'
+      );
+      return request_remote_dependency({ ...params, version: '*' });
+    }
+
+    throw cause;
+  }
+}
+
+async function request_remote_dependency({
   application_uid,
   version,
   platform,

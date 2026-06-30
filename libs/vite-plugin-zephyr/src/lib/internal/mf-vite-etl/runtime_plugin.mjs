@@ -26,7 +26,19 @@ function getScriptBaseUrl() {
       const src = document.currentScript.src;
       if (src) {
         const url = new URL(src);
-        return `${url.protocol}//${url.host}`;
+        url.search = '';
+        url.hash = '';
+        const segments = url.pathname.split('/').filter(Boolean);
+        const lastSegment = segments[segments.length - 1];
+        if (lastSegment?.includes('.')) {
+          url.pathname = url.pathname.slice(
+            0,
+            url.pathname.lastIndexOf('/') + 1
+          );
+        } else if (!url.pathname.endsWith('/')) {
+          url.pathname = `${url.pathname}/`;
+        }
+        return url.toString().replace(/\/$/, '');
       }
     } catch {
       // Failed to parse URL, fall through to default.

@@ -140,17 +140,39 @@ function resolveBundlePaths(
   return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
 }
 
-function extractBundleHashes(
+export function getManifestBaseUrl(manifestUrl: string): string {
+  return manifestUrl.replace(/[?#].*$/, '').replace(/\/[^/]*$/, '');
+}
+
+export function joinUrlPath(baseUrl: string, path: string): string {
+  return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\.?\/+/, '')}`;
+}
+
+export function resolvePublicPathBase(
+  rawPublicPath: string,
+  manifestUrl: string
+): string {
+  const manifestBaseUrl = getManifestBaseUrl(manifestUrl);
+
+  if (!rawPublicPath || rawPublicPath === 'auto') {
+    return manifestBaseUrl;
+  }
+
+  if (/^https?:\/\//.test(rawPublicPath)) {
+    return rawPublicPath;
+  }
+
+  return joinUrlPath(manifestBaseUrl, rawPublicPath);
+}
+
+export function extractBundleHashes(
   manifest: Manifest,
   manifestUrl: string
 ): Map<string, string> {
   const hashes = new Map<string, string>();
 
   const rawPublicPath = manifest?.metaData?.publicPath ?? '';
-  const resolvedPublicPath =
-    rawPublicPath && rawPublicPath !== 'auto' && /^https?:\/\//.test(rawPublicPath)
-      ? rawPublicPath
-      : manifestUrl.replace(/\/[^/]*$/, '');
+  const resolvedPublicPath = resolvePublicPathBase(rawPublicPath, manifestUrl);
 
   function addHashes(
     items: ManifestAssetItem[] | undefined,
@@ -161,7 +183,7 @@ function extractBundleHashes(
       if (!item.hash) continue;
       for (const bundlePath of resolveBundlePaths(item, section)) {
         const bareUrl = resolvedPublicPath
-          ? `${resolvedPublicPath.replace(/\/+$/, '')}/${bundlePath.replace(/^\.?\//, '')}`
+          ? joinUrlPath(resolvedPublicPath, bundlePath)
           : bundlePath;
         hashes.set(buildUrlForSplitBundle(bareUrl), item.hash);
       }
@@ -177,7 +199,7 @@ function extractBundleHashes(
     const entryPath = remoteEntry.path
       ? `${remoteEntry.path}/${remoteEntry.name}`
       : remoteEntry.name;
-    const bareUrl = `${resolvedPublicPath.replace(/\/+$/, '')}/${entryPath.replace(/^\.?\//, '')}`;
+    const bareUrl = joinUrlPath(resolvedPublicPath, entryPath);
     hashes.set(buildUrlForEntryBundle(bareUrl), containerHash);
   }
 

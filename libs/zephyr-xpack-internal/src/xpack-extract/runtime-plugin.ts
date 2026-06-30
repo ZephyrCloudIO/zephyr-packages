@@ -35,10 +35,8 @@ function getGlobalManifestCache(): Map<string, Promise<ZephyrManifest | undefine
 }
 
 /**
- * Attempts to determine the base URL of the script that loaded this module. Uses
- * document.currentScript to detect the script origin in browser environments.
- *
- * @returns Base URL (protocol + host) or empty string if unable to determine
+ * Attempts to determine the base URL of the script that loaded this module.
+ * Path-addressed remotes need the route directory, not just protocol + host.
  */
 function getScriptBaseUrl(): string {
   // Try document.currentScript (works in browsers with <script> tags)
@@ -47,7 +45,16 @@ function getScriptBaseUrl(): string {
       const src = (document.currentScript as HTMLScriptElement).src;
       if (src) {
         const url = new URL(src);
-        return `${url.protocol}//${url.host}`;
+        url.search = '';
+        url.hash = '';
+        const segments = url.pathname.split('/').filter(Boolean);
+        const lastSegment = segments[segments.length - 1];
+        if (lastSegment?.includes('.')) {
+          url.pathname = url.pathname.slice(0, url.pathname.lastIndexOf('/') + 1);
+        } else if (!url.pathname.endsWith('/')) {
+          url.pathname = `${url.pathname}/`;
+        }
+        return url.toString().replace(/\/$/, '');
       }
     } catch {
       // Failed to parse URL, fall through to default

@@ -3,6 +3,7 @@ import {
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
+import { moduleFederationPublicPathPlugin } from './internal/assets/moduleFederationPublicPathPlugin';
 import type {
   SSGConfig,
   RspressUserConfig,
@@ -59,12 +60,28 @@ function isSsgEnabled(
 export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig>(
   options?: ZephyrRspressOptions
 ): RspressPlugin<TConfig> {
+  const zephyrModuleFederationPublicPathPlugin = moduleFederationPublicPathPlugin();
+
   return {
     name: 'zephyr-rspress-plugin',
     async config(config, { addPlugin }) {
       const { ssg } = config;
 
       if (isSsgEnabled(ssg)) {
+        if (isRspressV1(config)) {
+          config.builderPlugins = [
+            ...config.builderPlugins,
+            zephyrModuleFederationPublicPathPlugin,
+          ];
+        } else {
+          const existingPlugins = config.builderConfig?.plugins ?? [];
+          const newBuilderConfig: BuilderConfigWithPlugins = {
+            ...config.builderConfig,
+            plugins: [...existingPlugins, zephyrModuleFederationPublicPathPlugin],
+          };
+          (config as { builderConfig?: BuilderConfigWithPlugins }).builderConfig =
+            newBuilderConfig;
+        }
         addPlugin(zephyrRspressSSGPlugin(config, options) as RspressPlugin<TConfig>);
       } else {
         // Support both rspress v1 (builderPlugins) and v2 (builderConfig.plugins)

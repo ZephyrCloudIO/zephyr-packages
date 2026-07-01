@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { ZephyrEngine, logFn } from 'zephyr-agent';
+import { rewriteRspressModuleFederationAssets } from '../internal/assets/rewriteRspressModuleFederationAssets';
 import { setupZeDeploy } from '../internal/assets/setupZeDeploy';
 import { showFiles } from '../internal/files/showFiles';
 import { walkFiles } from '../internal/files/walkFiles';
@@ -32,6 +33,10 @@ jest.mock('../internal/assets/setupZeDeploy', () => ({
   setupZeDeploy: jest.fn(),
 }));
 
+jest.mock('../internal/assets/rewriteRspressModuleFederationAssets', () => ({
+  rewriteRspressModuleFederationAssets: jest.fn(),
+}));
+
 describe('zephyrRspressSSGPlugin', () => {
   const mockZephyrDefer = jest.fn();
   const mockEngine = Promise.resolve({ engine: 'mock' });
@@ -62,6 +67,10 @@ describe('zephyrRspressSSGPlugin', () => {
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
     await plugin.afterBuild?.();
 
+    expect(rewriteRspressModuleFederationAssets).toHaveBeenCalledWith(
+      path.resolve('dist'),
+      mockFiles
+    );
     expect(showFiles).toHaveBeenCalledWith(path.resolve('dist'), mockFiles);
     expect(setupZeDeploy).toHaveBeenCalledWith({
       deferEngine: mockEngine,

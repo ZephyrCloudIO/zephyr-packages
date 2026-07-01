@@ -9,6 +9,16 @@ jest.mock('../zephyrRspressSSGPlugin', () => ({
 }));
 
 const rsbuildPluginMock = jest.fn(() => ({ name: 'mock-rsbuild-plugin' }));
+const moduleFederationPublicPathPlugin = {
+  name: 'mock-mf-public-path-plugin',
+};
+const moduleFederationPublicPathPluginMock = jest.fn(
+  () => moduleFederationPublicPathPlugin
+);
+
+jest.mock('../internal/assets/moduleFederationPublicPathPlugin', () => ({
+  moduleFederationPublicPathPlugin: () => moduleFederationPublicPathPluginMock(),
+}));
 
 jest.mock(
   'zephyr-rsbuild-plugin',
@@ -40,7 +50,37 @@ describe('withZephyr', () => {
 
     expect(rspressPluginMock).toHaveBeenCalledWith(config);
     expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
+    expect(result?.builderConfig?.plugins).toContain(moduleFederationPublicPathPlugin);
     expect(result).toEqual(config);
+  });
+
+  it('should preserve existing SSG builder config while adding portable MF assets', async () => {
+    const addPlugin = jest.fn();
+    const plugin = withZephyr();
+    const existingPlugin = { name: 'existing-plugin' };
+    const config = {
+      ssg: true,
+      builderConfig: {
+        plugins: [existingPlugin],
+        output: {
+          assetPrefix: 'http://localhost:4178/',
+          distPath: { root: 'dist' },
+        },
+      },
+    };
+
+    const result = await plugin.config?.(
+      config as any,
+      { addPlugin, removePlugin: jest.fn() },
+      false
+    );
+
+    expect(result?.builderConfig?.plugins).toEqual([
+      existingPlugin,
+      moduleFederationPublicPathPlugin,
+    ]);
+    expect(result?.builderConfig?.output).toEqual(config.builderConfig.output);
+    expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
   });
 
   it('should add the zephyrRsbuildPlugin when ssg is false', async () => {
@@ -214,6 +254,7 @@ describe('withZephyr', () => {
 
       expect(rspressPluginMock).toHaveBeenCalledWith(config);
       expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
+      expect(result?.builderConfig?.plugins).toContain(moduleFederationPublicPathPlugin);
       expect(result).toEqual(config);
     });
 

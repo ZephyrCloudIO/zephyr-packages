@@ -22,6 +22,10 @@
       "dependsOn": ["build"],
       "outputs": ["coverage/**"]
     },
+    "zephyr-agent#test": {
+      "dependsOn": ["^build", "sample-webpack-application#build"],
+      "outputs": ["coverage/**"]
+    },
     "typecheck": {
       "dependsOn": ["^build"]
     },

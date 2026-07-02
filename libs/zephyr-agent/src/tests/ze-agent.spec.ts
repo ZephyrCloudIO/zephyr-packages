@@ -130,7 +130,10 @@ runner('ZeAgent', () => {
       const cmd = [
         'npx cross-env',
         ...envs,
-        `pnpm -w exec turbo run build --filter=sample-webpack-application --force`,
+        // --only: the turbo task graph guarantees dependencies are already built
+        // (zephyr-agent#test depends on sample-webpack-application#build); rebuilding
+        // them here would race the outer turbo run and momentarily wipe lib dists.
+        `pnpm -w exec turbo run build --filter=sample-webpack-application --force --only`,
       ].join(' ');
       await exec(cmd);
       const deployResultUrls = await _getAppTagUrls(application_uid);

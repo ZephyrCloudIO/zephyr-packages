@@ -2,17 +2,19 @@
   "name": "zephyr-edge-contract",
   "version": "1.1.2",
   "description": "Edge contract for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-edge-contract"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-edge-contract"
+  },
   "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -21,24 +23,22 @@
       "default": "./dist/index.js"
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx build zephyr-edge-contract",
+    "build": "rslib build",
     "patch-version": "pnpm version",
-    "test": "nx test zephyr-edge-contract"
+    "test": "rstest run",
+    "dev": "rslib build --watch"
   },
   "dependencies": {
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "catalog:typescript"
   }
 }

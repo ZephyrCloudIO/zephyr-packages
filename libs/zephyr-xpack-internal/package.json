@@ -2,22 +2,28 @@
   "name": "zephyr-xpack-internal",
   "version": "1.1.2",
   "description": "Xpack internals for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-xpack-internal"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-xpack-internal"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-xpack-internal:build",
-    "patch-version": "pnpm version"
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "test": "rstest run"
   },
   "dependencies": {
     "@module-federation/automatic-vendor-federation": "catalog:module-federation",
@@ -26,13 +32,8 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@types/node-persist": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node-persist": "catalog:typescript"
   }
 }

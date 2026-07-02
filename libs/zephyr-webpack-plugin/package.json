@@ -2,22 +2,27 @@
   "name": "zephyr-webpack-plugin",
   "version": "1.1.2",
   "description": "Webpack plugin for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-webpack-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-webpack-plugin"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-webpack-plugin:build",
-    "patch-version": "pnpm version"
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -25,17 +30,11 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
+    "@rslib/core": "catalog:rslib",
     "@types/node-persist": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
     "webpack": "catalog:webpack5"
   },
   "peerDependencies": {
     "webpack": "^5.0.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

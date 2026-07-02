@@ -2,17 +2,33 @@
   "name": "zephyr-astro-integration",
   "version": "1.1.2",
   "description": "Astro integration for Zephyr Cloud deployment and module federation",
+  "keywords": [
+    "analytics",
+    "astro",
+    "astro-component",
+    "astro-integration",
+    "deployment",
+    "module-federation",
+    "performance",
+    "withastro",
+    "zephyr"
+  ],
   "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-astro-integration#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-astro-integration"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-astro-integration"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,41 +40,26 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "keywords": [
-    "astro-component",
-    "withastro",
-    "astro",
-    "astro-integration",
-    "zephyr",
-    "module-federation",
-    "deployment",
-    "analytics",
-    "performance"
-  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-astro-integration:build",
-    "patch-version": "pnpm version"
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "test": "rstest run"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "astro": "^6.4.6",
-    "ts-jest": "catalog:typescript"
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "astro": "^6.4.6"
   },
   "peerDependencies": {
     "astro": "^4.0.0 || ^5.15.8 || ^6.4.6"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

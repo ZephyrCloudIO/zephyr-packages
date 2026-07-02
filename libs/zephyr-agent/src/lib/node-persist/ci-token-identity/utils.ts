@@ -15,13 +15,18 @@ export function decodeJwtPayload(token: string | undefined): JwtPayload | undefi
   }
 
   try {
-    return JSON.parse(Buffer.from(toBase64(payload), 'base64').toString('utf8')) as JwtPayload;
+    return JSON.parse(
+      Buffer.from(toBase64(payload), 'base64').toString('utf8')
+    ) as JwtPayload;
   } catch {
     return undefined;
   }
 }
 
-export function getEmailClaims(payload: JwtPayload | undefined, keys: string[]): string[] {
+export function getEmailClaims(
+  payload: JwtPayload | undefined,
+  keys: string[]
+): string[] {
   if (!payload) {
     return [];
   }
@@ -29,7 +34,10 @@ export function getEmailClaims(payload: JwtPayload | undefined, keys: string[]):
   return getEmails(keys.map((key) => payload[key]));
 }
 
-export function getStringClaim(payload: JwtPayload | undefined, keys: string[]): string | undefined {
+export function getStringClaim(
+  payload: JwtPayload | undefined,
+  keys: string[]
+): string | undefined {
   if (!payload) {
     return undefined;
   }
@@ -40,7 +48,13 @@ export function getStringClaim(payload: JwtPayload | undefined, keys: string[]):
 }
 
 export function getEmails(values: unknown[]): string[] {
-  return Array.from(new Set(values.map((value) => getEmail(value)).filter((email): email is string => Boolean(email))));
+  return Array.from(
+    new Set(
+      values
+        .map((value) => getEmail(value))
+        .filter((email): email is string => Boolean(email))
+    )
+  );
 }
 
 export function getEmail(value: unknown): string | undefined {
@@ -52,7 +66,11 @@ export function getEmail(value: unknown): string | undefined {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? trimmed : undefined;
 }
 
-export function claimMatchesEnv(payload: JwtPayload, claim: string, expected: string | undefined): boolean {
+export function claimMatchesEnv(
+  payload: JwtPayload,
+  claim: string,
+  expected: string | undefined
+): boolean {
   if (!expected || payload[claim] === undefined || payload[claim] === null) {
     return true;
   }

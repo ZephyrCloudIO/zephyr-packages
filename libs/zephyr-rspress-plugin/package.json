@@ -2,24 +2,28 @@
   "name": "zephyr-rspress-plugin",
   "version": "1.1.2",
   "description": "Rspress plugin for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-rspress-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-rspress-plugin"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-rspress-plugin:build",
-    "dev": "nx run zephyr-rspress-plugin:build --watch",
+    "build": "rslib build",
+    "dev": "rslib build --watch",
     "patch-version": "pnpm version",
-    "test": "jest"
+    "test": "rstest run"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -29,17 +33,12 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
+    "@rslib/core": "catalog:rslib",
     "@rspress/core": "catalog:rspress",
-    "@types/jest": "catalog:typescript",
-    "@types/node-persist": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rstest/core": "catalog:rstest",
+    "@types/node-persist": "catalog:typescript"
   },
   "peerDependencies": {
     "@rspress/core": "^2.0.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

@@ -5,7 +5,7 @@
 .node-persist
 dist
 tmp
-/out-tsc
+out-tsc/
 **/*.tsbuildinfo
 .cxx
 **/android/build
@@ -100,3 +100,6 @@ tasks/
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 .serena
+
+# Turborepo
+.turbo

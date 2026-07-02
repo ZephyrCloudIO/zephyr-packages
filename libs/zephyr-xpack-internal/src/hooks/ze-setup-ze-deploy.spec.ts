@@ -1,19 +1,20 @@
+import { rs } from '@rstest/core';
 import { setupZeDeploy } from './ze-setup-ze-deploy';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 
-jest.mock('../xpack-extract/ze-xpack-upload-agent', () => ({
-  xpack_zephyr_agent: jest.fn(),
+rs.mock('../xpack-extract/ze-xpack-upload-agent', () => ({
+  xpack_zephyr_agent: rs.fn(),
 }));
 
 describe('setupZeDeploy', () => {
-  let consoleLogSpy: jest.SpyInstance;
+  let consoleLogSpy: rs.SpyInstance;
   const compilation = {
-    getStats: jest.fn().mockReturnValue({
-      toJson: jest.fn().mockReturnValue({ hash: 'stats-json' }),
+    getStats: rs.fn().mockReturnValue({
+      toJson: rs.fn().mockReturnValue({ hash: 'stats-json' }),
     }),
     hooks: {
       processAssets: {
-        tapPromise: jest.fn(),
+        tapPromise: rs.fn(),
       },
     },
   };
@@ -26,7 +27,7 @@ describe('setupZeDeploy', () => {
     },
     hooks: {
       thisCompilation: {
-        tap: jest.fn((_: string, cb: (compilation: typeof compilation) => void) => {
+        tap: rs.fn((_: string, cb: (compilation: typeof compilation) => void) => {
           cb(compilation);
         }),
       },
@@ -34,8 +35,8 @@ describe('setupZeDeploy', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    rs.clearAllMocks();
+    consoleLogSpy = rs.spyOn(console, 'log').mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -47,22 +48,21 @@ describe('setupZeDeploy', () => {
     const uploadPromise = new Promise<void>((resolve) => {
       resolveUpload = resolve;
     });
-    (xpack_zephyr_agent as jest.Mock).mockReturnValue(uploadPromise);
+    (xpack_zephyr_agent as rs.Mock).mockReturnValue(uploadPromise);
 
     setupZeDeploy(
       {
         pluginName: 'ZePlugin',
         zephyr_engine: {
-          start_new_build: jest.fn().mockResolvedValue(undefined),
+          start_new_build: rs.fn().mockResolvedValue(undefined),
         } as never,
         mfConfig: undefined,
       },
       compiler as never
     );
 
-    const processAssetsCallback = (
-      compilation.hooks.processAssets.tapPromise as jest.Mock
-    ).mock.calls[0][1];
+    const processAssetsCallback = (compilation.hooks.processAssets.tapPromise as rs.Mock)
+      .mock.calls[0][1];
 
     let settled = false;
     const hookPromise = processAssetsCallback({}).then(() => {
@@ -82,13 +82,13 @@ describe('setupZeDeploy', () => {
 
   it('does not await the upload agent when waiting for index.html', async () => {
     const uploadPromise = new Promise<void>(() => undefined);
-    (xpack_zephyr_agent as jest.Mock).mockReturnValue(uploadPromise);
+    (xpack_zephyr_agent as rs.Mock).mockReturnValue(uploadPromise);
 
     setupZeDeploy(
       {
         pluginName: 'ZePlugin',
         zephyr_engine: {
-          start_new_build: jest.fn().mockResolvedValue(undefined),
+          start_new_build: rs.fn().mockResolvedValue(undefined),
         } as never,
         mfConfig: undefined,
         wait_for_index_html: true,
@@ -96,9 +96,8 @@ describe('setupZeDeploy', () => {
       compiler as never
     );
 
-    const processAssetsCallback = (
-      compilation.hooks.processAssets.tapPromise as jest.Mock
-    ).mock.calls[0][1];
+    const processAssetsCallback = (compilation.hooks.processAssets.tapPromise as rs.Mock)
+      .mock.calls[0][1];
 
     await processAssetsCallback({});
     await new Promise(process.nextTick);
@@ -108,22 +107,21 @@ describe('setupZeDeploy', () => {
 
   it('propagates upload agent failures', async () => {
     const error = new Error('deploy failed');
-    (xpack_zephyr_agent as jest.Mock).mockRejectedValue(error);
+    (xpack_zephyr_agent as rs.Mock).mockRejectedValue(error);
 
     setupZeDeploy(
       {
         pluginName: 'ZePlugin',
         zephyr_engine: {
-          start_new_build: jest.fn().mockResolvedValue(undefined),
+          start_new_build: rs.fn().mockResolvedValue(undefined),
         } as never,
         mfConfig: undefined,
       },
       compiler as never
     );
 
-    const processAssetsCallback = (
-      compilation.hooks.processAssets.tapPromise as jest.Mock
-    ).mock.calls[0][1];
+    const processAssetsCallback = (compilation.hooks.processAssets.tapPromise as rs.Mock)
+      .mock.calls[0][1];
 
     await expect(processAssetsCallback({})).rejects.toThrow('deploy failed');
   });

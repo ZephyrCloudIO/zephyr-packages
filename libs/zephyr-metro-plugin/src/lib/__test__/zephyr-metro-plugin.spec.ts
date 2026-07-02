@@ -1,15 +1,16 @@
+import { rs } from '@rstest/core';
 /** Unit tests for ZephyrMetroPlugin class */
 
 // Mock zephyr-agent - must be before imports
-jest.mock('zephyr-agent', () => ({
+rs.mock('zephyr-agent', () => ({
   ze_log: {
-    config: jest.fn(),
-    app: jest.fn(),
-    error: jest.fn(),
-    manifest: jest.fn(),
+    config: rs.fn(),
+    app: rs.fn(),
+    error: rs.fn(),
+    manifest: rs.fn(),
   },
   ZephyrEngine: {
-    create: jest.fn().mockResolvedValue({
+    create: rs.fn().mockResolvedValue({
       env: { target: 'ios' as const },
       applicationProperties: { name: 'TestApp' },
       application_uid: 'test-app-uid',
@@ -19,62 +20,62 @@ jest.mock('zephyr-agent', () => ({
         optionalDependencies: {},
         peerDependencies: {},
       },
-      resolve_remote_dependencies: jest.fn().mockResolvedValue([
+      resolve_remote_dependencies: rs.fn().mockResolvedValue([
         {
           name: 'RemoteApp',
           version: 'latest',
           resolved_url: 'http://cdn.example.com/remote.js',
         },
       ]),
-      start_new_build: jest.fn().mockResolvedValue(undefined),
-      upload_assets: jest.fn().mockResolvedValue(undefined),
-      build_finished: jest.fn().mockResolvedValue(undefined),
+      start_new_build: rs.fn().mockResolvedValue(undefined),
+      upload_assets: rs.fn().mockResolvedValue(undefined),
+      build_finished: rs.fn().mockResolvedValue(undefined),
     }),
   },
-  buildAssetsMap: jest.fn().mockReturnValue({}),
-  resolveMfManifestPath: jest.fn().mockReturnValue('mf-manifest.json'),
+  buildAssetsMap: rs.fn().mockReturnValue({}),
+  resolveMfManifestPath: rs.fn().mockReturnValue('mf-manifest.json'),
 }));
 
 // Mock internal dependencies
-jest.mock('../internal/extract-mf-remotes', () => ({
-  extract_remotes_dependencies: jest
+rs.mock('../internal/extract-mf-remotes', () => ({
+  extract_remotes_dependencies: rs
     .fn()
     .mockReturnValue([{ name: 'RemoteApp', version: 'latest' }]),
 }));
 
-jest.mock('../internal/mutate-mf-config', () => ({
-  mutateMfConfig: jest.fn(),
+rs.mock('../internal/mutate-mf-config', () => ({
+  mutateMfConfig: rs.fn(),
 }));
 
-jest.mock('../internal/metro-build-stats', () => ({
-  createMinimalBuildStats: jest.fn().mockResolvedValue({
+rs.mock('../internal/metro-build-stats', () => ({
+  createMinimalBuildStats: rs.fn().mockResolvedValue({
     id: 'test-build-id',
     timestamp: Date.now(),
   }),
-  resolveCatalogDependencies: jest.fn().mockReturnValue({}),
+  resolveCatalogDependencies: rs.fn().mockReturnValue({}),
 }));
 
-jest.mock('../internal/extract-modules-from-exposes', () => ({
-  extractModulesFromExposes: jest.fn().mockReturnValue([]),
+rs.mock('../internal/extract-modules-from-exposes', () => ({
+  extractModulesFromExposes: rs.fn().mockReturnValue([]),
 }));
 
-jest.mock('../internal/get-package-dependencies', () => ({
-  getPackageDependencies: jest.fn().mockReturnValue([]),
+rs.mock('../internal/get-package-dependencies', () => ({
+  getPackageDependencies: rs.fn().mockReturnValue([]),
 }));
 
-jest.mock('../internal/parse-shared-dependencies', () => ({
-  parseSharedDependencies: jest.fn().mockReturnValue({}),
+rs.mock('../internal/parse-shared-dependencies', () => ({
+  parseSharedDependencies: rs.fn().mockReturnValue({}),
 }));
 
-jest.mock('../internal/load-static-entries', () => ({
-  load_static_entries: jest.fn().mockResolvedValue([]),
+rs.mock('../internal/load-static-entries', () => ({
+  load_static_entries: rs.fn().mockResolvedValue([]),
 }));
 
 import { ZephyrMetroPlugin } from '../zephyr-metro-plugin';
 
 describe('ZephyrMetroPlugin', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   describe('constructor', () => {

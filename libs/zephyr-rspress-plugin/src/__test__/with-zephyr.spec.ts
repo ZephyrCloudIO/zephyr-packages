@@ -1,37 +1,34 @@
+import { rs } from '@rstest/core';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { withZephyr } from '../with-zephyr';
 
-const rspressPluginMock = jest.fn((_: any) => ({ name: 'mock-ssg-plugin' }));
+const rspressPluginMock = rs.fn((_: any) => ({ name: 'mock-ssg-plugin' }));
 
-jest.mock('../zephyrRspressSSGPlugin', () => ({
+rs.mock('../zephyrRspressSSGPlugin', () => ({
   zephyrRspressSSGPlugin: (config: any) => rspressPluginMock(config),
 }));
 
-const rsbuildPluginMock = jest.fn(() => ({ name: 'mock-rsbuild-plugin' }));
+const rsbuildPluginMock = rs.fn(() => ({ name: 'mock-rsbuild-plugin' }));
 
-jest.mock(
-  'zephyr-rsbuild-plugin',
-  () => ({
-    withZephyr: () => rsbuildPluginMock(),
-  }),
-  { virtual: true }
-);
+rs.mock('zephyr-rsbuild-plugin', () => ({
+  withZephyr: () => rsbuildPluginMock(),
+}));
 
 describe('withZephyr', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('should add the zephyrRspressSSGPlugin when ssg is true', async () => {
-    const addPlugin = jest.fn();
+    const addPlugin = rs.fn();
     const plugin = withZephyr();
     const config = {
       ssg: true,
       outDir: 'dist',
     };
 
-    const removePlugin = jest.fn();
+    const removePlugin = rs.fn();
     const result = await plugin.config?.(
       config as any,
       { addPlugin, removePlugin },
@@ -44,8 +41,8 @@ describe('withZephyr', () => {
   });
 
   it('should add the zephyrRsbuildPlugin when ssg is false', async () => {
-    const addPlugin = jest.fn();
-    const removePlugin = jest.fn();
+    const addPlugin = rs.fn();
+    const removePlugin = rs.fn();
     const config = {
       ssg: false,
       builderConfig: {
@@ -68,8 +65,8 @@ describe('withZephyr', () => {
   });
 
   it('should handle missing builderConfig when ssg is false', async () => {
-    const addPlugin = jest.fn();
-    const removePlugin = jest.fn();
+    const addPlugin = rs.fn();
+    const removePlugin = rs.fn();
     const config = {
       ssg: false,
     };
@@ -93,8 +90,8 @@ describe('withZephyr', () => {
       throw new Error('SSG plugin failed');
     });
 
-    const addPlugin = jest.fn();
-    const removePlugin = jest.fn();
+    const addPlugin = rs.fn();
+    const removePlugin = rs.fn();
     const config = { ssg: true, outDir: 'dist' };
 
     const plugin = withZephyr();
@@ -105,8 +102,8 @@ describe('withZephyr', () => {
   });
 
   it('should handle undefined config gracefully', async () => {
-    const addPlugin = jest.fn();
-    const removePlugin = jest.fn();
+    const addPlugin = rs.fn();
+    const removePlugin = rs.fn();
     const config = {};
 
     const plugin = withZephyr();
@@ -133,7 +130,7 @@ describe('withZephyr', () => {
     const plugin = withZephyr();
     const result = await plugin.config?.(
       config as any,
-      { addPlugin: jest.fn(), removePlugin: jest.fn() },
+      { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
 
@@ -147,8 +144,8 @@ describe('withZephyr', () => {
   // rspress v1 compatibility tests
   describe('rspress v1 compatibility', () => {
     it('should use builderPlugins for rspress v1 config', async () => {
-      const addPlugin = jest.fn();
-      const removePlugin = jest.fn();
+      const addPlugin = rs.fn();
+      const removePlugin = rs.fn();
       const config = {
         ssg: false,
         builderPlugins: [],
@@ -179,7 +176,7 @@ describe('withZephyr', () => {
       const plugin = withZephyr();
       const result = await plugin.config?.(
         config as any,
-        { addPlugin: jest.fn(), removePlugin: jest.fn() },
+        { addPlugin: rs.fn(), removePlugin: rs.fn() },
         false
       );
 
@@ -199,7 +196,7 @@ describe('withZephyr', () => {
     });
 
     it('should enable SSG plugin when ssg is an object', async () => {
-      const addPlugin = jest.fn();
+      const addPlugin = rs.fn();
       const config = {
         ssg: { experimentalWorker: true },
         outDir: 'dist',
@@ -208,7 +205,7 @@ describe('withZephyr', () => {
       const plugin = withZephyr();
       const result = await plugin.config?.(
         config as any,
-        { addPlugin, removePlugin: jest.fn() },
+        { addPlugin, removePlugin: rs.fn() },
         false
       );
 
@@ -218,13 +215,13 @@ describe('withZephyr', () => {
     });
 
     it('should not enable SSG plugin when ssg is undefined', async () => {
-      const addPlugin = jest.fn();
+      const addPlugin = rs.fn();
       const config = {
         outDir: 'dist',
       };
 
       const plugin = withZephyr();
-      await plugin.config?.(config as any, { addPlugin, removePlugin: jest.fn() }, false);
+      await plugin.config?.(config as any, { addPlugin, removePlugin: rs.fn() }, false);
 
       expect(rsbuildPluginMock).toHaveBeenCalled();
       expect(addPlugin).not.toHaveBeenCalled();

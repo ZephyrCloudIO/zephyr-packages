@@ -1,8 +1,9 @@
+import { rs } from '@rstest/core';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-jest.mock('zephyr-agent', () => {
+rs.mock('zephyr-agent', () => {
   class MockZephyrError extends Error {}
 
   return {

@@ -8,8 +8,17 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "declaration": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "declarationMap": true,
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./lib/typescript"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "lib", "dist"]
+  "exclude": ["node_modules", "lib", "dist"],
+  "references": [
+    {
+      "path": "../zephyr-edge-contract/tsconfig.json"
+    }
+  ]
 }

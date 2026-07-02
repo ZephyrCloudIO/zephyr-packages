@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
 import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
@@ -20,15 +21,15 @@ import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-op
 
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).
-jest.mock('../lib/node-persist/secret-token', () => {
-  const defaultExport = jest.requireActual('../lib/node-persist/secret-token');
+rs.mock('../lib/node-persist/secret-token', () => {
+  const defaultExport = rs.requireActual('../lib/node-persist/secret-token');
   return {
     ...defaultExport,
-    hasSecretToken: jest.fn().mockReturnValue(false),
+    hasSecretToken: rs.fn().mockReturnValue(false),
   };
 });
 
-jest.mock('is-ci', () => false);
+rs.mock('is-ci', () => ({ default: false }));
 
 // Skip tests if not in preview mode
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;

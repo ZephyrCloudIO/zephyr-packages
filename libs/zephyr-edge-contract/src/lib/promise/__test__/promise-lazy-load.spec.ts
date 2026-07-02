@@ -1,8 +1,9 @@
+import { rs } from '@rstest/core';
 import { PromiseLazyLoad } from '../index';
 
 describe('PromiseLazyLoad', () => {
   test('should call the promise function only once', async () => {
-    const mockPromise = jest.fn(async (params) => {
+    const mockPromise = rs.fn(async (params) => {
       return `resolved with ${params}`;
     });
 
@@ -25,7 +26,7 @@ describe('PromiseLazyLoad', () => {
   });
 
   test('should return the same promise for subsequent calls', async () => {
-    const mockPromise = jest.fn(async (params) => {
+    const mockPromise = rs.fn(async (params) => {
       return `resolved with ${params}`;
     });
 

@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ze_log } from 'zephyr-agent';
 import { xpack_zephyr_agent } from 'zephyr-xpack-internal';
@@ -5,37 +6,37 @@ import { buildAssetMapFromFiles } from '../assets/buildAssets';
 import { setupZeDeploy } from '../assets/setupZeDeploy';
 import { buildStats } from '../stats/buildStats';
 
-jest.mock('zephyr-xpack-internal', () => ({
-  xpack_zephyr_agent: jest.fn(),
+rs.mock('zephyr-xpack-internal', () => ({
+  xpack_zephyr_agent: rs.fn(),
 }));
 
-jest.mock('../assets/buildAssets', () => ({
-  buildAssetMapFromFiles: jest.fn(),
+rs.mock('../assets/buildAssets', () => ({
+  buildAssetMapFromFiles: rs.fn(),
 }));
 
-jest.mock('../stats/buildStats', () => ({
-  buildStats: jest.fn(),
+rs.mock('../stats/buildStats', () => ({
+  buildStats: rs.fn(),
 }));
 
-jest.mock('zephyr-agent', () => ({
+rs.mock('zephyr-agent', () => ({
   ze_log: {
-    package: jest.fn(),
+    package: rs.fn(),
   },
 }));
 
 // @ts-expect-error Get reference to ze_log.package mock
-const mockedZeLog = ze_log.package as jest.Mock;
+const mockedZeLog = ze_log.package as rs.Mock;
 
 describe('setupZeDeploy', () => {
   const mockAssets = { 'file.js': { type: 'asset', size: 123 } };
   const mockStats = {
-    toJson: jest.fn().mockReturnValue({ some: 'json' }),
+    toJson: rs.fn().mockReturnValue({ some: 'json' }),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (buildAssetMapFromFiles as jest.Mock).mockResolvedValue(mockAssets);
-    (buildStats as jest.Mock).mockReturnValue(mockStats);
+    rs.clearAllMocks();
+    (buildAssetMapFromFiles as rs.Mock).mockResolvedValue(mockAssets);
+    (buildStats as rs.Mock).mockReturnValue(mockStats);
   });
 
   it('should log and return early if no files are provided', async () => {
@@ -76,7 +77,7 @@ describe('setupZeDeploy', () => {
   });
 
   it('should propagate upload failures', async () => {
-    (xpack_zephyr_agent as jest.Mock).mockRejectedValueOnce(new Error('deploy failed'));
+    (xpack_zephyr_agent as rs.Mock).mockRejectedValueOnce(new Error('deploy failed'));
 
     await expect(
       setupZeDeploy({

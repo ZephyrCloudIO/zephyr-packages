@@ -332,7 +332,7 @@ pnpm run dev
 pnpm run typecheck
 
 # Run the locally built CLI (no publish needed)
-pnpm nx build with-zephyr
+pnpm --filter with-zephyr build
 node ./libs/with-zephyr/dist/index.js --bundlers rspack /path/to/project
 node ./libs/with-zephyr/dist/index.js --bundlers repack /path/to/react-native-project
 ```

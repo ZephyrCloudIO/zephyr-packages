@@ -9,6 +9,8 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@module-federation/rsbuild-plugin": "^2.6.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

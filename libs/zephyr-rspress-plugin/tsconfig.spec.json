@@ -1,11 +1,35 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "types": ["jest", "node"]
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "lib": ["ES2020", "DOM"],
+    "module": "commonjs",
+    "moduleResolution": "Node",
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "target": "ES2020",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./out-tsc/spec",
+    "types": ["@rstest/core/globals", "node"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "./src"
   },
   "include": [
-    "jest.config.ts",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "src/**/*.d.ts",
@@ -13,5 +37,21 @@
     "src/internal/__test__/walkFiles.spec.ts",
     "src/internal/__test__/buildAsset.spec.ts"
   ],
-  "exclude": ["dist"]
+  "references": [
+    {
+      "path": "./tsconfig.json"
+    },
+    {
+      "path": "../zephyr-agent/tsconfig.json"
+    },
+    {
+      "path": "../zephyr-edge-contract/tsconfig.json"
+    },
+    {
+      "path": "../zephyr-rsbuild-plugin/tsconfig.json"
+    },
+    {
+      "path": "../zephyr-xpack-internal/tsconfig.json"
+    }
+  ]
 }

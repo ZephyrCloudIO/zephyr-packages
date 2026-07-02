@@ -2,7 +2,10 @@ import { gitHubCiIdentityProvider } from './ci-token-identity/github';
 import { gitLabCiIdentityProvider } from './ci-token-identity/gitlab';
 import type { CiIdentityProvider, CiTokenIdentity } from './ci-token-identity/types';
 
-const ciIdentityProviders: CiIdentityProvider[] = [gitLabCiIdentityProvider, gitHubCiIdentityProvider];
+const ciIdentityProviders: CiIdentityProvider[] = [
+  gitLabCiIdentityProvider,
+  gitHubCiIdentityProvider,
+];
 
 export async function inferCiTokenIdentity(
   env: NodeJS.ProcessEnv = process.env

@@ -1,16 +1,17 @@
+import { rs, type Mock, type Mocked } from '@rstest/core';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import { ZephyrError } from '../errors';
 import { fetchWithRetries } from './fetch-with-retries';
 
 // Mock axios, axios-retry, isCI, and proxy agents
-jest.mock('axios');
-jest.mock('axios-retry');
-jest.mock('is-ci', () => false); // Default to non-CI
+rs.mock('axios', { mock: true });
+rs.mock('axios-retry', { mock: true });
+rs.mock('is-ci', () => ({ default: false })); // Default to non-CI
 
 // Mock HTTPS proxy agent class - define mock function inside factory to avoid hoisting issues
-jest.mock('https-proxy-agent', () => ({
-  HttpsProxyAgent: jest
+rs.mock('https-proxy-agent', () => ({
+  HttpsProxyAgent: rs
     .fn()
     .mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
 }));
@@ -18,13 +19,13 @@ jest.mock('https-proxy-agent', () => ({
 // Import mocked module to access mock function
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
-const MockHttpsProxyAgent = HttpsProxyAgent as jest.MockedClass<typeof HttpsProxyAgent>;
+const MockHttpsProxyAgent = HttpsProxyAgent as Mocked<typeof HttpsProxyAgent>;
 
 // Setup mocks
-const mockCreate = jest.fn();
+const mockCreate = rs.fn();
 axios.create = mockCreate;
 
-const mockAxiosInstance = jest.fn();
+const mockAxiosInstance = rs.fn();
 mockCreate.mockReturnValue(mockAxiosInstance);
 
 // Helper to clean proxy environment variables
@@ -42,7 +43,7 @@ describe('fetchWithRetries', () => {
   const options = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     cleanProxyEnv();
   });
 
@@ -103,7 +104,7 @@ describe('fetchWithRetries', () => {
     await fetchWithRetries(url, options);
 
     // Get retry condition function
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (axiosRetry as unknown as Mock).mock.calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Test retry condition with network error (message-based)
@@ -275,7 +276,7 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (axiosRetry as unknown as Mock).mock.calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Error without code should not retry
@@ -295,7 +296,7 @@ describe('fetchWithRetries', () => {
 
     await fetchWithRetries(url, options);
 
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
+    const retryConfigArg = (axiosRetry as unknown as Mock).mock.calls[0][1];
     const retryCondition = retryConfigArg.retryCondition;
 
     // Non-network error should not retry

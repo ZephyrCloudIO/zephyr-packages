@@ -2,22 +2,27 @@
   "name": "parcel-reporter-zephyr",
   "version": "1.1.2",
   "description": "Parcel reporter for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/parcel-reporter-zephyr"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/parcel-reporter-zephyr"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run parcel-reporter-zephyr:build",
-    "patch-version": "pnpm version"
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -26,16 +31,10 @@
   "devDependencies": {
     "@parcel/plugin": "catalog:parcel",
     "@parcel/types": "catalog:parcel",
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "@rslib/core": "catalog:rslib"
   },
   "peerDependencies": {
     "@parcel/plugin": "^2.0.0",
     "@parcel/types": "^2.0.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

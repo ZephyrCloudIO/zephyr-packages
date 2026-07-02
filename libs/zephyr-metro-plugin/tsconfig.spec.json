@@ -1,21 +1,13 @@
 {
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true,
-    "importHelpers": true,
     "isolatedModules": true,
-    "allowJs": true,
-    "lib": ["ES2020", "ES2021"],
-    "module": "commonjs",
-    "moduleResolution": "node10",
-    "skipDefaultLibCheck": true,
+    "lib": ["ES2022"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "skipLibCheck": true,
-    "sourceMap": true,
     "stripInternal": true,
-    "target": "ES2020",
+    "target": "ES2022",
     "declaration": true,
     "strict": true,
     "noImplicitOverride": true,
@@ -27,7 +19,8 @@
     "composite": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"],
   "references": [

@@ -109,7 +109,7 @@ describe('ZephyrMetroPlugin', () => {
 
   describe('beforeBuild', () => {
     it('should initialize ZephyrEngine with metro builder', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
+      const { ZephyrEngine } = await import('zephyr-agent');
 
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
@@ -131,7 +131,7 @@ describe('ZephyrMetroPlugin', () => {
     });
 
     it('should resolve remote dependencies', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
+      const { ZephyrEngine } = await import('zephyr-agent');
 
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
@@ -207,7 +207,7 @@ describe('ZephyrMetroPlugin', () => {
     });
 
     it('should log configuration', async () => {
-      const { ze_log } = require('zephyr-agent');
+      const { ze_log } = await import('zephyr-agent');
 
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
@@ -225,7 +225,7 @@ describe('ZephyrMetroPlugin', () => {
 
   describe('afterBuild', () => {
     it('should complete build lifecycle', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
+      const { ZephyrEngine } = await import('zephyr-agent');
 
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',
@@ -274,7 +274,7 @@ describe('ZephyrMetroPlugin', () => {
 
   describe('context handling', () => {
     it('should use provided context path', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
+      const { ZephyrEngine } = await import('zephyr-agent');
 
       const plugin = new ZephyrMetroPlugin({
         platform: 'ios',

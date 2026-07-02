@@ -211,7 +211,7 @@ describe('withZephyr integration', () => {
 
   describe('error handling', () => {
     it('should return original config on ZephyrEngine.create error', async () => {
-      const { ZephyrEngine, ze_log } = require('zephyr-agent');
+      const { ZephyrEngine, ze_log } = await import('zephyr-agent');
       ZephyrEngine.create.mockRejectedValueOnce(new Error('Engine init failed'));
 
       const enhancer = withZephyr({ name: 'TestApp' });
@@ -230,7 +230,7 @@ describe('withZephyr integration', () => {
 
   describe('ZephyrEngine initialization', () => {
     it('should create engine with metro builder', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
+      const { ZephyrEngine } = await import('zephyr-agent');
 
       const enhancer = withZephyr({ name: 'TestApp' });
       await enhancer(baseMetroConfig);
@@ -242,7 +242,7 @@ describe('withZephyr integration', () => {
     });
 
     it('should use process.cwd when projectRoot not specified', async () => {
-      const { ZephyrEngine } = require('zephyr-agent');
+      const { ZephyrEngine } = await import('zephyr-agent');
 
       const configWithoutRoot = { ...baseMetroConfig, projectRoot: undefined };
       const enhancer = withZephyr({ name: 'TestApp' });

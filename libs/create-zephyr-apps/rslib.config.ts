@@ -4,7 +4,7 @@ export default defineConfig({
   lib: [
     {
       format: 'esm',
-      syntax: 'es2017',
+      syntax: 'es2022',
       bundle: false,
       dts: true,
       source: {

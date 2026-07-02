@@ -1,42 +1,68 @@
 import { defineConfig } from '@rslib/core';
 
+const entry = {
+  index: [
+    './src/**/*.ts',
+    '!./src/**/*.test.ts',
+    '!./src/**/*.spec.ts',
+    '!./src/**/__test__/**',
+    '!./src/**/__tests__/**',
+    '!./src/**/__fixtures__/**',
+    '!./src/**/*.d.ts',
+    '!./src/**/*.mjs',
+  ],
+};
+
+const output = {
+  target: 'node',
+  distPath: {
+    root: './dist',
+  },
+  sourceMap: {
+    js: 'source-map',
+  },
+  copy: [
+    {
+      from: '**/*.mjs',
+      context: './src',
+      to: '.',
+    },
+  ],
+} as const;
+
 export default defineConfig({
   lib: [
     {
-      format: 'cjs',
-      syntax: 'es2017',
+      format: 'esm',
+      syntax: 'es2022',
       bundle: false,
-      dts: true,
-      source: {
-        entry: {
-          index: [
-            './src/**/*.ts',
-            '!./src/**/*.test.ts',
-            '!./src/**/*.spec.ts',
-            '!./src/**/__test__/**',
-            '!./src/**/__tests__/**',
-            '!./src/**/__fixtures__/**',
-            '!./src/**/*.d.ts',
-            '!./src/**/*.mjs',
-          ],
+      dts: {
+        autoExtension: true,
+      },
+      redirect: {
+        dts: {
+          extension: true,
         },
       },
-      output: {
-        target: 'node',
-        distPath: {
-          root: './dist',
+      shims: {
+        esm: {
+          __filename: true,
+          __dirname: true,
+          require: true,
         },
-        sourceMap: {
-          js: 'source-map',
-        },
-        copy: [
-          {
-            from: '**/*.mjs',
-            context: './src',
-            to: '.',
-          },
-        ],
       },
+      source: { entry },
+      output,
+    },
+    {
+      format: 'cjs',
+      syntax: 'es2022',
+      bundle: false,
+      dts: {
+        autoExtension: true,
+      },
+      source: { entry },
+      output,
     },
   ],
 });

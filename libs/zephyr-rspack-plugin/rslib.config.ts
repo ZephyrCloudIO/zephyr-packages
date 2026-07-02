@@ -1,41 +1,67 @@
 import { defineConfig } from '@rslib/core';
 
+const entry = {
+  index: [
+    './src/**/*.ts',
+    '!./src/**/*.test.ts',
+    '!./src/**/*.spec.ts',
+    '!./src/**/__test__/**',
+    '!./src/**/__tests__/**',
+    '!./src/**/__fixtures__/**',
+    '!./src/**/*.d.ts',
+    '!./src/rspack-plugin/env-virtual-loader.js',
+  ],
+};
+
+const output = {
+  target: 'node',
+  distPath: {
+    root: './dist',
+  },
+  sourceMap: {
+    js: 'source-map',
+  },
+  copy: [
+    {
+      from: './src/rspack-plugin/env-virtual-loader.js',
+      to: './rspack-plugin',
+    },
+  ],
+} as const;
+
 export default defineConfig({
   lib: [
     {
-      format: 'cjs',
-      syntax: 'es2017',
+      format: 'esm',
+      syntax: 'es2022',
       bundle: false,
-      dts: true,
-      source: {
-        entry: {
-          index: [
-            './src/**/*.ts',
-            '!./src/**/*.test.ts',
-            '!./src/**/*.spec.ts',
-            '!./src/**/__test__/**',
-            '!./src/**/__tests__/**',
-            '!./src/**/__fixtures__/**',
-            '!./src/**/*.d.ts',
-            '!./src/rspack-plugin/env-virtual-loader.js',
-          ],
+      dts: {
+        autoExtension: true,
+      },
+      redirect: {
+        dts: {
+          extension: true,
         },
       },
-      output: {
-        target: 'node',
-        distPath: {
-          root: './dist',
+      shims: {
+        esm: {
+          __filename: true,
+          __dirname: true,
+          require: true,
         },
-        sourceMap: {
-          js: 'source-map',
-        },
-        copy: [
-          {
-            from: './src/rspack-plugin/env-virtual-loader.js',
-            to: './rspack-plugin',
-          },
-        ],
       },
+      source: { entry },
+      output,
+    },
+    {
+      format: 'cjs',
+      syntax: 'es2022',
+      bundle: false,
+      dts: {
+        autoExtension: true,
+      },
+      source: { entry },
+      output,
     },
   ],
 });

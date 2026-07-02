@@ -1,5 +1,5 @@
 // light weight functions for decorated console.error + able to toggle different parts of whole module's logging result
-import { debug } from 'debug';
+import debug from 'debug';
 import {
   bgCyanBright,
   bgGreenBright,

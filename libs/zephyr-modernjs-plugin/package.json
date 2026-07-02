@@ -46,7 +46,8 @@
   "devDependencies": {
     "@modern-js/app-tools": "catalog:modernjs",
     "@rslib/core": "catalog:rslib",
-    "@types/node-persist": "catalog:typescript"
+    "@types/node-persist": "catalog:typescript",
+    "zephyr-rspack-plugin": "workspace:*"
   },
   "peerDependencies": {
     "@modern-js/app-tools": "^3.0.0",

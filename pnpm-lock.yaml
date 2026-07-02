@@ -1684,9 +1684,6 @@ importers:
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
-      zephyr-rspack-plugin:
-        specifier: workspace:^
-        version: link:../zephyr-rspack-plugin
     devDependencies:
       '@modern-js/app-tools':
         specifier: catalog:modernjs
@@ -1697,6 +1694,9 @@ importers:
       '@types/node-persist':
         specifier: catalog:typescript
         version: 3.1.8
+      zephyr-rspack-plugin:
+        specifier: workspace:*
+        version: link:../zephyr-rspack-plugin
 
   libs/zephyr-native-cache:
     dependencies:

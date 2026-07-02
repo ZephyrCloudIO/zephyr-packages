@@ -44,7 +44,11 @@ runner('ZeAgent', () => {
   const appOrg = 'testzephyrcloudio';
   const appProject = 'test-zephyr-mono';
 
-  const packageJsonPath = path.resolve('examples/sample-webpack-application');
+  // Anchored to this file: rstest runs with cwd=libs/zephyr-agent (jest ran from the repo root).
+  const packageJsonPath = path.resolve(
+    __dirname,
+    '../../../../examples/sample-webpack-application'
+  );
   const appName = 'sample-webpack-application';
   const application_uid = `${appName}.${appProject}.${appOrg}`;
   const user_uuid = crypto.randomBytes(16).toString('hex');

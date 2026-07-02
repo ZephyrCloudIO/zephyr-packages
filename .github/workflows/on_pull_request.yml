@@ -41,13 +41,26 @@ jobs:
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm exec turbo run build --filter='./libs/*' --output-logs=new-only
-      - name: run build affected
+      - name: run build examples
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo run build --affected --output-logs=new-only
+        # The CI example set (deployed to Zephyr and asserted by e2e/deployment).
+        # Keep in sync with CI_DEPLOYED_EXAMPLES in e2e/deployment/src/index.test.ts.
+        run: >-
+          pnpm exec turbo run build --output-logs=new-only
+          --filter=sample-webpack-application
+          --filter=sample-rspack-application
+          --filter=rollup-sample-lib
+          --filter=team-red
+          --filter=team-green
+          --filter=team-blue
+          --filter=rspack_mf_host
+          --filter=rspack_mf_remote
+          --filter=rspack_nx_mf_host
+          --filter=rspack_nx_mf_remote
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |

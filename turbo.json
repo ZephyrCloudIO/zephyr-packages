@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["ZE_*", "ZEPHYR_*"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

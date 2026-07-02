@@ -41,28 +41,17 @@ jobs:
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm exec turbo run build --filter='./libs/*' --output-logs=new-only
-      - name: run build examples
+      - name: run build affected
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        # The CI example set (deployed to Zephyr and asserted by e2e/deployment).
-        # Keep in sync with CI_DEPLOYED_EXAMPLES in e2e/deployment/src/index.test.ts.
-        # --force: deploying is a side effect of these builds — a cache hit would
-        # skip it, leave ~/.zephyr empty, and e2e would have nothing to validate.
-        run: >-
-          pnpm exec turbo run build --force --output-logs=new-only
-          --filter=sample-webpack-application
-          --filter=sample-rspack-application
-          --filter=rollup-sample-lib
-          --filter=team-red
-          --filter=team-green
-          --filter=team-blue
-          --filter=rspack_mf_host
-          --filter=rspack_mf_remote
-          --filter=rspack_nx_mf_host
-          --filter=rspack_nx_mf_remote
+        # Deploying is a side effect of example builds, so remote cache must stay
+        # off — a remote hit would skip the deploy and leave ~/.zephyr empty for
+        # the e2e job (turbo cache does not restore ~/.zephyr). Local cache is
+        # fine: it only reuses the libs built in the previous step on this runner.
+        run: pnpm exec turbo run build --affected --cache=local:rw --output-logs=new-only
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -126,7 +115,7 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo run test --affected --output-logs=new-only
+        run: pnpm exec turbo run test --affected --cache=local:rw --output-logs=new-only
 
   e2e-test:
     runs-on: ${{ matrix.os }}

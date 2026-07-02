@@ -1,27 +1,21 @@
 import { execSync } from 'node:child_process';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
-// The example apps CI builds and deploys to Zephyr on pull requests.
-// Keep in sync with the "run build examples" step in .github/workflows/on_pull_request.yml.
-const CI_DEPLOYED_EXAMPLES = new Set([
-  'sample-webpack-application',
-  'sample-rspack-application',
-  'rollup-sample-lib',
-  'team-red',
-  'team-green',
-  'team-blue',
-  'rspack_mf_host',
-  'rspack_mf_remote',
-  'rspack_nx_mf_host',
-  'rspack_nx_mf_remote',
-]);
-
 const output = execSync('pnpm exec turbo ls --affected --output=json');
 const affected = JSON.parse(output.toString()) as {
   packages: { items: Array<{ name: string; path: string }> };
 };
+// Affected example packages with a build script are built and deployed by the
+// "run build affected" step in .github/workflows/on_pull_request.yml.
 const testTargets = affected.packages.items
-  .filter((pkg) => pkg.path.startsWith('examples/') && CI_DEPLOYED_EXAMPLES.has(pkg.name))
+  .filter((pkg) => {
+    if (!pkg.path.startsWith('examples/') || pkg.name === 'zephyr-cli-test') return false;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkgJson = require(`../../../${pkg.path}/package.json`) as {
+      scripts?: Record<string, string>;
+    };
+    return Boolean(pkgJson.scripts?.build);
+  })
   .map((pkg) => pkg.name);
 
 if (testTargets.length === 0) {

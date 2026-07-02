@@ -130,7 +130,7 @@ runner('ZeAgent', () => {
       const cmd = [
         'npx cross-env',
         ...envs,
-        `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
+        `pnpm -w exec turbo run build --filter=sample-webpack-application --force`,
       ].join(' ');
       await exec(cmd);
       const deployResultUrls = await _getAppTagUrls(application_uid);

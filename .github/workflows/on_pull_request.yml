@@ -49,8 +49,10 @@ jobs:
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         # The CI example set (deployed to Zephyr and asserted by e2e/deployment).
         # Keep in sync with CI_DEPLOYED_EXAMPLES in e2e/deployment/src/index.test.ts.
+        # --force: deploying is a side effect of these builds — a cache hit would
+        # skip it, leave ~/.zephyr empty, and e2e would have nothing to validate.
         run: >-
-          pnpm exec turbo run build --output-logs=new-only
+          pnpm exec turbo run build --force --output-logs=new-only
           --filter=sample-webpack-application
           --filter=sample-rspack-application
           --filter=rollup-sample-lib

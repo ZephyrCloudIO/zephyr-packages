@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import { fileURLToPath } from 'node:url';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { withZephyr } from '../astro-integration-zephyr';
@@ -7,69 +8,72 @@ import {
 } from '../internal/extract-astro-assets-map';
 
 // Mock dependencies
-jest.mock('zephyr-agent', () => ({
-  ZephyrEngine: {
-    defer_create: jest.fn(),
-  },
-  logFn: jest.fn(),
-  ZephyrError: {
-    format: jest.fn(),
-  },
-  zeBuildDashData: jest.fn(),
-  handleGlobalError: jest.fn().mockImplementation((error) => {
-    const mockLogFn = jest.requireMock('zephyr-agent').logFn;
-    const mockZephyrError = jest.requireMock('zephyr-agent').ZephyrError;
-    mockLogFn('error', mockZephyrError.format(error));
-  }),
+rs.mock('zephyr-agent', () => {
+  const mockLogFn = rs.fn();
+  const mockZephyrError = {
+    format: rs.fn(),
+  };
+
+  return {
+    ZephyrEngine: {
+      defer_create: rs.fn(),
+    },
+    logFn: mockLogFn,
+    ZephyrError: mockZephyrError,
+    zeBuildDashData: rs.fn(),
+    handleGlobalError: rs.fn().mockImplementation((error) => {
+      mockLogFn('error', mockZephyrError.format(error));
+    }),
+  };
+});
+
+rs.mock('node:url', () => ({
+  fileURLToPath: rs.fn(),
 }));
 
-jest.mock('node:url', () => ({
-  fileURLToPath: jest.fn(),
-}));
-
-jest.mock('../internal/extract-astro-assets-map', () => ({
-  extractAstroAssetsFromBuildHook: jest.fn(),
-  extractAstroAssetsMap: jest.fn(),
+rs.mock('../internal/extract-astro-assets-map', () => ({
+  extractAstroAssetsFromBuildHook: rs.fn(),
+  extractAstroAssetsMap: rs.fn(),
 }));
 
 interface MockZephyrEngine {
   buildProperties: { output: string };
-  start_new_build: jest.Mock;
-  upload_assets: jest.Mock;
-  build_finished: jest.Mock;
+  start_new_build: rs.Mock;
+  upload_assets: rs.Mock;
+  build_finished: rs.Mock;
 }
 
 describe('withZephyr', () => {
   let mockZephyrEngine: MockZephyrEngine;
   let mockZephyrDefer: Promise<MockZephyrEngine>;
-  let mockZephyrDeferCreate: jest.Mock;
+  let mockZephyrDeferCreate: rs.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
 
     // Mock ZephyrEngine setup
     mockZephyrEngine = {
       buildProperties: { output: '' },
-      start_new_build: jest.fn(),
-      upload_assets: jest.fn(),
-      build_finished: jest.fn(),
+      start_new_build: rs.fn(),
+      upload_assets: rs.fn(),
+      build_finished: rs.fn(),
     };
 
     mockZephyrDefer = Promise.resolve(mockZephyrEngine);
 
-    mockZephyrDeferCreate = jest.fn();
+    mockZephyrDeferCreate = rs.fn();
 
-    const mockDeferCreate = jest.fn().mockReturnValue({
+    const mockDeferCreate = rs.fn().mockReturnValue({
       zephyr_engine_defer: mockZephyrDefer,
       zephyr_defer_create: mockZephyrDeferCreate,
     });
 
-    (ZephyrEngine.defer_create as jest.Mock).mockImplementation(mockDeferCreate);
+    (ZephyrEngine.defer_create as rs.Mock).mockImplementation(mockDeferCreate);
 
-    (fileURLToPath as jest.Mock).mockImplementation((url: URL) => url.pathname);
-    (extractAstroAssetsFromBuildHook as jest.Mock).mockResolvedValue({});
-    (extractAstroAssetsMap as jest.Mock).mockResolvedValue({});
-    (ZephyrError.format as jest.Mock).mockImplementation((error: Error) => error.message);
+    (fileURLToPath as rs.Mock).mockImplementation((url: URL) => url.pathname);
+    (extractAstroAssetsFromBuildHook as rs.Mock).mockResolvedValue({});
+    (extractAstroAssetsMap as rs.Mock).mockResolvedValue({});
+    (ZephyrError.format as rs.Mock).mockImplementation((error: Error) => error.message);
   });
 
   describe('Basic Integration Structure', () => {
@@ -124,8 +128,8 @@ describe('withZephyr', () => {
       const mockAssetsMap = { hash1: { content: 'test', type: 'text/html' } };
       const mockBuildStats = { stats: 'test' };
 
-      (extractAstroAssetsFromBuildHook as jest.Mock).mockResolvedValue(mockAssetsMap);
-      (zeBuildDashData as jest.Mock).mockResolvedValue(mockBuildStats);
+      (extractAstroAssetsFromBuildHook as rs.Mock).mockResolvedValue(mockAssetsMap);
+      (zeBuildDashData as rs.Mock).mockResolvedValue(mockBuildStats);
 
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
@@ -154,8 +158,8 @@ describe('withZephyr', () => {
       const mockAssetsMap = { hash1: { content: 'test', type: 'text/html' } };
       const mockBuildStats = { stats: 'test' };
 
-      (extractAstroAssetsFromBuildHook as jest.Mock).mockResolvedValue(mockAssetsMap);
-      (zeBuildDashData as jest.Mock).mockResolvedValue(mockBuildStats);
+      (extractAstroAssetsFromBuildHook as rs.Mock).mockResolvedValue(mockAssetsMap);
+      (zeBuildDashData as rs.Mock).mockResolvedValue(mockBuildStats);
 
       // Call without assets parameter
       await integration.hooks['astro:build:done']?.({
@@ -175,7 +179,7 @@ describe('withZephyr', () => {
       const mockAssets = { 'index.html': '/test/dist/index.html' };
       const testError = new Error('Build failed');
 
-      (extractAstroAssetsFromBuildHook as jest.Mock).mockRejectedValue(testError);
+      (extractAstroAssetsFromBuildHook as rs.Mock).mockRejectedValue(testError);
 
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
@@ -190,9 +194,9 @@ describe('withZephyr', () => {
 
     it('should handle engine initialization errors', async () => {
       const badEngine = Promise.reject(new Error('Engine failed'));
-      (ZephyrEngine.defer_create as jest.Mock).mockReturnValue({
+      (ZephyrEngine.defer_create as rs.Mock).mockReturnValue({
         zephyr_engine_defer: badEngine,
-        zephyr_defer_create: jest.fn(),
+        zephyr_defer_create: rs.fn(),
       });
 
       const integration = withZephyr();

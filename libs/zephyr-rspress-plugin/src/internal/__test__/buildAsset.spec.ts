@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import type { PathLike } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -5,7 +6,7 @@ import { ZephyrError } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import { buildAssetMapFromFiles } from '../assets/buildAssets';
 
-jest.mock('zephyr-agent', () => {
+rs.mock('zephyr-agent', () => {
   class MockZephyrError extends Error {
     constructor(code: string, options?: { message?: string }) {
       super(options?.message ?? code);
@@ -19,12 +20,12 @@ jest.mock('zephyr-agent', () => {
   };
 });
 
-jest.mock('node:fs/promises');
-const mockedFs = fs as jest.Mocked<typeof fs>;
+rs.mock('node:fs/promises');
+const mockedFs = fs as rs.Mocked<typeof fs>;
 
 describe('buildAssetMapFromFiles', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    rs.resetAllMocks();
   });
 
   it('builds an asset map with Source objects for each file', async () => {

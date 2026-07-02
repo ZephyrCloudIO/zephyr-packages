@@ -1,14 +1,34 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
-    "types": ["jest", "node"]
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["ES2022"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "stripInternal": true,
+    "target": "ES2022",
+    "resolveJsonModule": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./out-tsc/spec",
+    "types": ["@rstest/core/globals", "node"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "./src"
   },
-  "include": [
-    "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.d.ts"
+  "include": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.d.ts"],
+  "references": [
+    {
+      "path": "./tsconfig.json"
+    },
+    {
+      "path": "../zephyr-edge-contract/tsconfig.json"
+    }
   ]
 }

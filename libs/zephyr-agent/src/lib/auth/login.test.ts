@@ -1,16 +1,18 @@
-import { describe, expect, jest, it, beforeEach } from '@jest/globals';
+import { describe, expect, rs, it, beforeEach, type Mock } from '@rstest/core';
 import { isTokenStillValid } from './login';
 import * as jose from 'jose';
 
 // Mock dependencies
-jest.mock('jose');
+rs.mock('jose', () => ({
+  decodeJwt: rs.fn(),
+}));
 
 describe('auth/login', () => {
   // Mock implementation
-  const mockDecodeJwt = jose.decodeJwt as jest.MockedFunction<typeof jose.decodeJwt>;
+  const mockDecodeJwt = jose.decodeJwt as Mock<typeof jose.decodeJwt>;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    rs.resetAllMocks();
   });
 
   describe('isTokenStillValid', () => {

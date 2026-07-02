@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 // Importing for mocks
 import '../errors';
 import * as httpRequest from './http-request';
@@ -5,11 +6,11 @@ import { uploadFile } from './upload-file';
 import type { UploadableAsset } from 'zephyr-edge-contract';
 
 // Mock dependencies
-jest.mock('./http-request');
+rs.mock('./http-request', { mock: true });
 
 // Mock the ZeErrors and ZephyrError
-jest.mock('../errors', () => {
-  const originalModule = jest.requireActual('../errors');
+rs.mock('../errors', () => {
+  const originalModule = rs.requireActual('../errors');
 
   // Create mock error code
   const ZE_ERR_FAILED_UPLOAD = 'ZE40017';
@@ -57,10 +58,10 @@ jest.mock('../errors', () => {
 
 describe('uploadFile', () => {
   // Create mock for makeRequest
-  const mockMakeRequest = jest.spyOn(httpRequest, 'makeRequest');
+  const mockMakeRequest = rs.spyOn(httpRequest, 'makeRequest');
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('should upload a file successfully', async () => {

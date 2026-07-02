@@ -1,3 +1,4 @@
+import { rs, type Mock } from '@rstest/core';
 // Error types are used by mocks
 import '../errors';
 import { cleanTokens } from '../node-persist/token';
@@ -5,14 +6,26 @@ import { fetchWithRetries } from './fetch-with-retries';
 import { makeHttpRequest, makeRequest, parseUrl } from './http-request';
 
 // Mock dependencies
-jest.mock('./fetch-with-retries');
-jest.mock('../node-persist/token');
-jest.mock('../logging/debug', () => ({
+// Note: explicit factories (instead of `{ mock: true }` automocks) are required
+// here because `{ mock: true }` eagerly loads the original module at mock
+// registration time, and `fetch-with-retries` -> `errors` -> `ze-log-event` ->
+// `http-request` forms a require cycle that would cache `http-request` with
+// the unmocked `fetchWithRetries` binding.
+rs.mock('./fetch-with-retries', () => ({
+  fetchWithRetries: rs.fn(),
+}));
+rs.mock('../node-persist/token', () => ({
+  saveToken: rs.fn(),
+  getToken: rs.fn(),
+  removeToken: rs.fn(),
+  cleanTokens: rs.fn(),
+}));
+rs.mock('../logging/debug', () => ({
   ze_log: {
-    http: jest.fn(),
+    http: rs.fn(),
   },
 }));
-jest.mock('zephyr-edge-contract', () => ({
+rs.mock('zephyr-edge-contract', () => ({
   PromiseWithResolvers: () => {
     const resolvable: any = {};
     resolvable.promise = new Promise((resolve, reject) => {
@@ -21,26 +34,24 @@ jest.mock('zephyr-edge-contract', () => ({
     });
     return resolvable;
   },
-  safe_json_parse: jest.fn((str) => {
+  safe_json_parse: rs.fn((str) => {
     try {
       return JSON.parse(str);
     } catch {
       return null;
     }
   }),
-  ZE_API_ENDPOINT_HOST: jest.fn(() => 'api.zephyr.com'),
-  ZE_IS_PREVIEW: jest.fn(() => false),
-  ZEPHYR_API_ENDPOINT: jest.fn(() => 'https://api.zephyr.com'),
+  ZE_API_ENDPOINT_HOST: rs.fn(() => 'api.zephyr.com'),
+  ZE_IS_PREVIEW: rs.fn(() => false),
+  ZEPHYR_API_ENDPOINT: rs.fn(() => 'https://api.zephyr.com'),
 }));
 
 describe('Pure HTTP Request Functions', () => {
-  const mockFetchWithRetries = fetchWithRetries as jest.MockedFunction<
-    typeof fetchWithRetries
-  >;
-  const mockCleanTokens = cleanTokens as jest.MockedFunction<typeof cleanTokens>;
+  const mockFetchWithRetries = fetchWithRetries as Mock<typeof fetchWithRetries>;
+  const mockCleanTokens = cleanTokens as Mock<typeof cleanTokens>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   describe('parseUrl', () => {

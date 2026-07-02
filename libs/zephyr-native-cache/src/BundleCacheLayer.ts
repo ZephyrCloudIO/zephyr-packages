@@ -404,7 +404,11 @@ export class BundleCacheLayer {
     if (this.cacheManager) return;
     if (!this.initPromise) {
       this.initPromise = (async () => {
-        const { enablePolling, pollIntervalMs, ...cacheConfig } = this.config;
+        const {
+          enablePolling: _enablePolling,
+          pollIntervalMs: _pollIntervalMs,
+          ...cacheConfig
+        } = this.config;
         const cm = new CacheManager(cacheConfig);
         await cm.initialize();
         this.cacheManager = cm;

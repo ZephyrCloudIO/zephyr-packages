@@ -1,0 +1,57 @@
+import type { ZephyrManifest } from '../zephyr-manifest';
+export interface PublishTarget {
+  url: string;
+  hostname: string;
+  zephyrManifestFile?: {
+    content: ZephyrManifest;
+    hash: string;
+  };
+}
+export interface PublishTargets {
+  /**
+   * `undefined` for rollback request, otherwise `PublishTarget`
+   *
+   * Already published at this point
+   */
+  version?: PublishTarget;
+  tags: PublishTarget[];
+  envs: PublishTarget[];
+  cnames: PublishTarget[];
+}
+export interface GatewayPublishRequest {
+  EDGE_URL: string;
+  application_uid: string;
+  snapshot_id: string;
+  targets: PublishTargets;
+  /** Previously `can_write_jwt` */
+  jwt: string;
+  /** Per-environment variables - map of hostname to variables for all deploys */
+  envVarSetEnvMap?: Record<string, Record<string, string>>;
+}
+export interface StageZeroPublishRequest {
+  application_uid: string;
+  snapshot_id: string;
+  targets: PublishTarget[];
+  /** Per-environment variables - map of hostname to variables for all deploys */
+  environmentVariables?: Record<string, Record<string, string>>;
+}
+export interface PublishRequest {
+  EDGE_URL: string;
+  application_uid: string;
+  app_version: {
+    snapshot_id?: string;
+  };
+  snapshot_id?: string;
+  user_uuid: string;
+  username: string;
+  can_write: boolean;
+  targets: {
+    version: PublishTarget;
+    tags: PublishTarget[];
+    envs: PublishTarget[];
+    cnames: PublishTarget[];
+  };
+  envVarsHash?: string;
+  environmentVariables?: Record<string, Record<string, string>>;
+  jwt: string;
+}

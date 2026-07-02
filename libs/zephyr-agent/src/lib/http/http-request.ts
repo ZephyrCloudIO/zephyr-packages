@@ -72,7 +72,10 @@ function redactResponse(
     .replace(/Bearer ([^"|']+)/gi, 'Bearer [REDACTED]')
     .replace(/"?jwt"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jwt: [REDACTED]')
     .replace(/"?jobToken"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jobToken: [REDACTED]')
-    .replace(/"?access_token"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'access_token: [REDACTED]');
+    .replace(
+      /"?access_token"?:["|\W']{0,2}([^"|']+)(["|'])/gi,
+      'access_token: [REDACTED]'
+    );
 }
 
 /** Main HTTP request function that handles the request and response */
@@ -86,7 +89,7 @@ export async function makeHttpRequest<T = void>(
   try {
     const response = await fetchWithRetries(url, {
       ...options,
-      body: data as BodyInit | null | undefined,
+      body: data as RequestInit['body'],
     });
 
     const resText = await response.text();

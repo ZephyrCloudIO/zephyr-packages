@@ -1,37 +1,38 @@
+import { rs } from '@rstest/core';
 import { xpack_zephyr_agent } from './ze-xpack-upload-agent';
 import { buildWebpackAssetMap } from './build-webpack-assets-map';
 import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
 import { emitDeploymentDone } from '../lifecycle-events/index';
 import { handleGlobalError, ze_log } from 'zephyr-agent';
 
-jest.mock('./build-webpack-assets-map', () => ({
-  buildWebpackAssetMap: jest.fn(),
+rs.mock('./build-webpack-assets-map', () => ({
+  buildWebpackAssetMap: rs.fn(),
 }));
 
-jest.mock('../federation-dashboard-legacy/get-build-stats', () => ({
-  getBuildStats: jest.fn(),
+rs.mock('../federation-dashboard-legacy/get-build-stats', () => ({
+  getBuildStats: rs.fn(),
 }));
 
-jest.mock('../lifecycle-events/index', () => ({
-  emitDeploymentDone: jest.fn(),
+rs.mock('../lifecycle-events/index', () => ({
+  emitDeploymentDone: rs.fn(),
 }));
 
-jest.mock('zephyr-agent', () => ({
-  handleGlobalError: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  handleGlobalError: rs.fn(),
   ze_log: {
-    init: jest.fn(),
-    upload: jest.fn(),
+    init: rs.fn(),
+    upload: rs.fn(),
   },
 }));
 
 describe('xpack_zephyr_agent', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('delegates failures to handleGlobalError', async () => {
     const error = new Error('upload failed');
-    (buildWebpackAssetMap as jest.Mock).mockRejectedValue(error);
+    (buildWebpackAssetMap as rs.Mock).mockRejectedValue(error);
 
     await xpack_zephyr_agent({
       stats: {},
@@ -50,8 +51,8 @@ describe('xpack_zephyr_agent', () => {
 
   it('rethrows when handleGlobalError throws', async () => {
     const error = new Error('upload failed');
-    (buildWebpackAssetMap as jest.Mock).mockRejectedValue(error);
-    (handleGlobalError as jest.Mock).mockImplementation(() => {
+    (buildWebpackAssetMap as rs.Mock).mockRejectedValue(error);
+    (handleGlobalError as rs.Mock).mockImplementation(() => {
       throw error;
     });
 

@@ -1,3 +1,4 @@
+import { rs, type Mock } from '@rstest/core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ZeErrors, ZephyrError } from '../../errors';
@@ -8,14 +9,14 @@ import { getPackageJson } from '../ze-util-read-package-json';
 import { logFn } from '../../logging/ze-log-event';
 
 // Mock dependencies
-jest.mock('node:fs');
-jest.mock('node:fs/promises');
-jest.mock('../find-nearest-package-json');
-jest.mock('../ze-util-parse-ze-dependencies');
-jest.mock('../../logging', () => ({
-  ze_log: { package: jest.fn(), misc: jest.fn(), error: jest.fn() },
+rs.mock('node:fs', { mock: true });
+rs.mock('node:fs/promises', { mock: true });
+rs.mock('../find-nearest-package-json', { mock: true });
+rs.mock('../ze-util-parse-ze-dependencies', { mock: true });
+rs.mock('../../logging', () => ({
+  ze_log: { package: rs.fn(), misc: rs.fn(), error: rs.fn() },
 }));
-jest.mock('../../logging/ze-log-event', () => ({ logFn: jest.fn() }));
+rs.mock('../../logging/ze-log-event', () => ({ logFn: rs.fn() }));
 
 describe('getPackageJson', () => {
   // Common mock values
@@ -46,15 +47,15 @@ describe('getPackageJson', () => {
 
   beforeEach(() => {
     // Reset all mocks
-    jest.resetAllMocks();
+    rs.resetAllMocks();
 
     // Setup default mocks
-    (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => false });
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    (fs.statSync as Mock).mockReturnValue({ isFile: () => false });
+    (find_nearest_package_json as Mock).mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: mockPackageJsonStr,
     });
-    (parseZeDependencies as jest.Mock).mockReturnValue(mockParsedZeDeps);
+    (parseZeDependencies as Mock).mockReturnValue(mockParsedZeDeps);
   });
 
   it('should find and parse package.json successfully', async () => {
@@ -71,7 +72,7 @@ describe('getPackageJson', () => {
 
   it('should handle file paths by moving up one directory', async () => {
     // Arrange
-    (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+    (fs.statSync as Mock).mockReturnValue({ isFile: () => true });
     const expectedPath = path.resolve(mockStartPath, '..');
 
     // Act
@@ -84,7 +85,7 @@ describe('getPackageJson', () => {
   it('should use cwd if no path is provided', async () => {
     // Arrange
     const cwd = '/current/working/dir';
-    jest.spyOn(process, 'cwd').mockReturnValue(cwd);
+    rs.spyOn(process, 'cwd').mockReturnValue(cwd);
 
     // Act
     await getPackageJson(undefined);
@@ -95,7 +96,7 @@ describe('getPackageJson', () => {
 
   it('should throw if package.json is not found', async () => {
     // Arrange
-    (find_nearest_package_json as jest.Mock).mockResolvedValue(null);
+    (find_nearest_package_json as Mock).mockResolvedValue(null);
 
     // Act & Assert
     await expect(getPackageJson(mockStartPath)).rejects.toThrow(ZephyrError);
@@ -103,7 +104,7 @@ describe('getPackageJson', () => {
 
   it('should throw if package.json cannot be parsed', async () => {
     // Arrange
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    (find_nearest_package_json as Mock).mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: '{ invalid json }',
     });
@@ -118,7 +119,7 @@ describe('getPackageJson', () => {
       version: '1.0.0',
     });
 
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    (find_nearest_package_json as Mock).mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: invalidPackageJson,
     });
@@ -139,7 +140,7 @@ describe('getPackageJson', () => {
       name: 'test-package',
     });
 
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    (find_nearest_package_json as Mock).mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: invalidPackageJson,
     });
@@ -169,7 +170,7 @@ describe('getPackageJson', () => {
       dependencies: { 'dep-a': '^1.0.0' },
     };
 
-    (find_nearest_package_json as jest.Mock).mockResolvedValue({
+    (find_nearest_package_json as Mock).mockResolvedValue({
       path: path.join(mockStartPath, 'package.json'),
       json: JSON.stringify(packageJsonWithoutZeDeps),
     });

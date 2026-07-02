@@ -9,6 +9,7 @@ export async function forEachLimit<T>(
   tasks: Array<() => Promise<T>>,
   batchSize: number
 ): Promise<T[]> {
+  // oxlint-disable-next-line unicorn/no-new-array -- argument is the array length
   const results: T[] = new Array(tasks.length);
   let currentIndex = 0;
 

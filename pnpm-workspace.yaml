@@ -12,29 +12,14 @@ catalogs:
     '@babel/runtime': ^7.26.10
   esbuild:
     esbuild: ^0.27.0
-  eslint:
-    '@eslint/compat': ^1.2.7
-    '@eslint/eslintrc': ^3.3.0
-    '@eslint/js': ^9.22.0
-    '@typescript-eslint/eslint-plugin': ^8.27.0
-    '@typescript-eslint/parser': ^8.27.0
-    '@typescript-eslint/utils': ^8.27.0
-    eslint: ^9.22.0
-    eslint-config-prettier: ^10.1.1
-    eslint-plugin-import: 2.32.0
-    eslint-plugin-jsx-a11y: 6.10.2
-    eslint-plugin-react: ^7.37.4
-    eslint-plugin-react-hooks: ^5.2.0
-    eslint-plugin-react-refresh: ^0.5.0
-    typescript-eslint: ^8.27.0
   modernjs:
-    '@modern-js/app-tools': ^2.70.1
-    '@modern-js/plugin-ssg': ^2.70.1
-    '@modern-js/runtime': ^2.70.1
-    '@modern-js/tsconfig': ^2.70.1
+    '@modern-js/app-tools': ^3.5.0
+    '@modern-js/plugin-ssg': ^3.5.0
+    '@modern-js/runtime': ^3.5.0
+    '@modern-js/tsconfig': ^3.5.0
   module-federation:
     '@module-federation/automatic-vendor-federation': ^1.2.1
-    '@module-federation/enhanced': ^0.21.0
+    '@module-federation/enhanced': ^2.6.0
     '@module-federation/runtime': ^2.2.3
     '@module-federation/vite': ^1.13.2
   parcel:
@@ -69,15 +54,17 @@ catalogs:
     '@svgr/rollup': 8.1.0
     rollup: ^4.36.0
   rspack:
-    '@rsbuild/core': ^1.7.1
-    '@rsbuild/plugin-react': ^1.4.0
-    '@rsbuild/shared': ^0.7.10
-    '@rsdoctor/rspack-plugin': 1.5.2
-    '@rspack/cli': ^1.7.0
-    '@rspack/core': ^1.7.0
-    '@rspack/plugin-react-refresh': ^1.5.1
+    '@rsbuild/core': ^2.1.2
+    '@rsbuild/plugin-react': ^2.1.0
+    '@rspack/cli': ^2.1.2
+    '@rspack/core': ^2.1.2
+    '@rspack/plugin-react-refresh': ^2.0.2
+  rslib:
+    '@rslib/core': ^0.23.1
   rspress:
     '@rspress/core': ^2.0.0-rc.1
+  rstest:
+    '@rstest/core': ^0.10.6
   swc:
     '@swc-node/register': 1.11.1
     '@swc/cli': 0.8.0
@@ -90,7 +77,7 @@ catalogs:
   typescript:
     '@types/is-ci': 3.0.4
     '@types/jest': 29.5.14
-    '@types/node': 22.19.13
+    '@types/node': ^24.13.2
     '@types/node-persist': ^3.1.8
     '@types/yargs': ^17.0.33
     ts-jest: ^29.2.6
@@ -122,44 +109,5 @@ onlyBuiltDependencies:
   - lmdb
   - msgpackr-extract
   - msw
-  - nx
   - sharp
   - workerd
-
-overrides:
-  '@remix-run/router@<=1.23.1': '>=1.23.2'
-  '@tootallnate/once@<3.0.1': '>=3.0.1'
-  ajv@>=7.0.0-alpha.0 <8.18.0: '>=8.18.0'
-  defu@<=6.1.4: 6.1.6
-  flatted: 3.4.2
-  h3@<1.15.6: '>=1.15.6'
-  h3@>=2.0.0-0 <2.0.1-rc.18: '>=2.0.1-rc.18'
-  '@tanstack/start-server-core>h3-v2': npm:h3@2.0.1-rc.18
-  hono@<4.10.3: '>=4.10.3'
-  hono@<4.11.10: '>=4.11.10'
-  hono@<4.11.4: '>=4.11.4'
-  hono@<4.11.7: '>=4.11.7'
-  hono@<4.12.4: '>=4.12.4'
-  hono@<4.2.7: '>=4.2.7'
-  hono@<4.5.8: '>=4.5.8'
-  hono@<4.6.5: '>=4.6.5'
-  hono@<4.9.7: '>=4.9.7'
-  handlebars@<=4.7.8: '>=4.7.9'
-  hono@>=1.1.0 <4.10.2: '>=4.10.2'
-  koa@>=3.0.0 <3.1.2: '>=3.1.2'
-  lodash-es@<=4.17.23: 4.18.1
-  lodash@<=4.17.23: 4.18.1
-  minimatch@<3.1.4: 3.1.5
-  minimatch@>=5.0.0 <5.1.8: 5.1.9
-  minimatch@>=9.0.0 <9.0.7: 9.0.9
-  node-forge@<1.4.0: '>=1.4.0'
-  anymatch>picomatch: 2.3.2
-  jest-util>picomatch: 4.0.4
-  micromatch>picomatch: 4.0.4
-  path-to-regexp@<0.1.13: '>=0.1.13'
-  picomatch@<2.3.2: '>=2.3.2'
-  picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
-  prismjs@<1.30.0: '>=1.30.0'
-  qs@<6.14.1: '>=6.14.1'
-  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
-  serialize-javascript@<=7.0.2: '>=7.0.3'

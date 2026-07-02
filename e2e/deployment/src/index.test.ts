@@ -1,10 +1,22 @@
 import { execSync } from 'node:child_process';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
 
-const output = execSync(
-  'pnpm exec nx show projects --affected -t=build --projects="examples/**" --exclude="zephyr-cli-test" --json'
-);
-const testTargets = JSON.parse(output.toString()) as string[];
+const output = execSync('pnpm exec turbo ls --affected --output=json');
+const affected = JSON.parse(output.toString()) as {
+  packages: { items: Array<{ name: string; path: string }> };
+};
+// Affected example packages with a build script are built and deployed by the
+// "run build affected" step in .github/workflows/on_pull_request.yml.
+const testTargets = affected.packages.items
+  .filter((pkg) => {
+    if (!pkg.path.startsWith('examples/') || pkg.name === 'zephyr-cli-test') return false;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkgJson = require(`../../../${pkg.path}/package.json`) as {
+      scripts?: Record<string, string>;
+    };
+    return Boolean(pkgJson.scripts?.build);
+  })
+  .map((pkg) => pkg.name);
 
 if (testTargets.length === 0) {
   it('has no affected example deployment tests to run', () => {

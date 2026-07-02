@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-npx nx format
-npx nx affected -t test --no-watch
-npx nx affected -t lint --fix
+pnpm exec oxfmt
+pnpm exec turbo run test --affected
+pnpm exec oxlint --fix
 git add -A

@@ -1,55 +1,56 @@
+import { rs, type Mock } from '@rstest/core';
 import { exec as node_exec } from 'node:child_process';
 import { getGitInfo } from '../ze-util-get-git-info';
 
-jest.mock('node:child_process', () => ({
-  exec: jest.fn(),
+rs.mock('node:child_process', () => ({
+  exec: rs.fn(),
 }));
 
-jest.mock('../../node-persist/secret-token', () => ({
-  hasSecretToken: jest.fn().mockReturnValue(false),
+rs.mock('../../node-persist/secret-token', () => ({
+  hasSecretToken: rs.fn().mockReturnValue(false),
 }));
 
-jest.mock('../../logging', () => ({
+rs.mock('../../logging', () => ({
   ze_log: {
-    git: jest.fn(),
+    git: rs.fn(),
   },
 }));
 
-jest.mock('../../logging/ze-log-event', () => ({
-  logFn: jest.fn(),
+rs.mock('../../logging/ze-log-event', () => ({
+  logFn: rs.fn(),
 }));
 
-jest.mock('is-ci', () => false);
+rs.mock('is-ci', () => ({ default: false }));
 
-jest.mock('../ze-util-read-package-json', () => ({
-  getPackageJson: jest.fn(),
+rs.mock('../ze-util-read-package-json', () => ({
+  getPackageJson: rs.fn(),
 }));
 
-jest.mock('../../node-persist/token', () => ({
-  getToken: jest.fn(),
+rs.mock('../../node-persist/token', () => ({
+  getToken: rs.fn(),
 }));
 
-jest.mock('../../http/http-request', () => ({
-  makeRequest: jest.fn(),
+rs.mock('../../http/http-request', () => ({
+  makeRequest: rs.fn(),
 }));
 
-jest.mock('../../auth/login', () => ({
-  isTokenStillValid: jest.fn(),
+rs.mock('../../auth/login', () => ({
+  isTokenStillValid: rs.fn(),
 }));
 
-jest.mock('../detect-monorepo', () => ({
-  detectMonorepo: jest.fn().mockResolvedValue({ type: 'none', root: process.cwd() }),
-  getMonorepoRootPackageJson: jest.fn().mockResolvedValue(null),
+rs.mock('../detect-monorepo', () => ({
+  detectMonorepo: rs.fn().mockResolvedValue({ type: 'none', root: process.cwd() }),
+  getMonorepoRootPackageJson: rs.fn().mockResolvedValue(null),
 }));
 
 describe('getGitInfo - non-git environments', () => {
-  const mockExec = node_exec as unknown as jest.Mock;
-  let mockGitLog: jest.Mock;
-  let mockLogFn: jest.Mock;
-  let mockGetPackageJson: jest.Mock;
+  const mockExec = node_exec as unknown as Mock;
+  let mockGitLog: Mock;
+  let mockLogFn: Mock;
+  let mockGetPackageJson: Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
 
     // Set NODE_ENV to production for tests expecting 'main' branch
     process.env.NODE_ENV = 'production';

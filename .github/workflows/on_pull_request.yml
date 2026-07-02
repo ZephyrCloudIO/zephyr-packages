@@ -14,7 +14,8 @@ concurrency:
 
 env:
   ZE_FAIL_BUILD: true
-  NX_DAEMON: false
+  # Base ref for `turbo --affected` / `turbo ls --affected` comparisons.
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'HEAD^1' }}
 
 jobs:
   build:
@@ -29,12 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need all branches and commits so that turbo --affected has a base to compare against.
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       # Build plugins first to avoid race conditions on Windows
       - name: run build plugins
         env:
@@ -42,14 +40,18 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected --exclude='!libs/**' -t build --skipRemoteCache --outputStyle=stream
+        run: pnpm exec turbo run build --filter='./libs/*' --output-logs=new-only
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t build --skipRemoteCache --outputStyle=stream
+        # Deploying is a side effect of example builds, so remote cache must stay
+        # off — a remote hit would skip the deploy and leave ~/.zephyr empty for
+        # the e2e job (turbo cache does not restore ~/.zephyr). Local cache is
+        # fine: it only reuses the libs built in the previous step on this runner.
+        run: pnpm exec turbo run build --affected --cache=local:rw --output-logs=new-only
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -87,15 +89,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
-        with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
-          fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: run lint
-        run: pnpm nx affected -t lint
+        run: pnpm lint
+      - name: check formatting
+        run: pnpm format:check
 
   test:
     runs-on: ${{ matrix.os }}
@@ -106,21 +104,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          # We need all branches and commits so that turbo --affected has a base to compare against.
           fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: run test
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx affected -t test --outputStyle=stream
+        run: pnpm exec turbo run test --affected --cache=local:rw --output-logs=new-only
 
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -137,9 +132,6 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           os: ${{ matrix.os }}
-      - uses: nrwl/nx-set-shas@v4
-        with:
-          main-branch-name: main
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -169,4 +161,4 @@ jobs:
         run: echo "No Zephyr cache artifact for ${{ matrix.os }}; skipping e2e examples test."
       - name: Run e2e examples test
         if: steps.check-cache.outputs.has-files == 'true'
-        run: pnpm nx run e2e-deployment:e2e-test --passWithNoTests --skipRemoteCache --outputStyle=stream
+        run: pnpm exec turbo run e2e-test --filter=e2e-deployment --force

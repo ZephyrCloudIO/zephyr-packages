@@ -3,11 +3,26 @@
   "version": "1.1.2",
   "description": "Native caching module for Module Federation Metro bundles",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-native-cache"
+  },
+  "source": "src/index.ts",
+  "files": [
+    "src/",
+    "lib/",
+    "ios/",
+    "android/src/",
+    "android/build.gradle",
+    "react-native.config.js",
+    "zephyr-native-cache.podspec",
+    "!**/__tests__"
+  ],
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
-  "react-native": "src/index.ts",
   "types": "lib/typescript/index.d.ts",
-  "source": "src/index.ts",
+  "react-native": "src/index.ts",
   "exports": {
     ".": {
       "react-native": "./src/index.ts",
@@ -25,31 +40,11 @@
     },
     "./package.json": "./package.json"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-native-cache"
-  },
   "scripts": {
-    "build": "nx build zephyr-native-cache",
-    "prepare": "nx build zephyr-native-cache --skipRemoteCache",
-    "test": "jest --passWithNoTests",
-    "typecheck": "tsc --noEmit",
-    "patch-version": "pnpm version"
-  },
-  "files": [
-    "src/",
-    "lib/",
-    "ios/",
-    "android/src/",
-    "android/build.gradle",
-    "react-native.config.js",
-    "zephyr-native-cache.podspec",
-    "!**/__tests__"
-  ],
-  "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-native": ">=0.79.0"
+    "build": "rslib build",
+    "typecheck": "tsc -b",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch"
   },
   "dependencies": {
     "mitt": "^3.0.1",
@@ -57,19 +52,14 @@
   },
   "devDependencies": {
     "@module-federation/runtime": "^2.3.2",
+    "@rslib/core": "catalog:rslib",
     "@types/react": "^19.1.0",
     "react": "19.1.0",
     "react-native": "0.80.0",
-    "react-native-builder-bob": "^0.40.13",
     "typescript": "^5.8.3"
   },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      "typescript"
-    ]
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-native": ">=0.79.0"
   }
 }

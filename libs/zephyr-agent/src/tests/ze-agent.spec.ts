@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import { promisify } from 'node:util';
 import { exec as execCB } from 'node:child_process';
 import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
@@ -20,15 +21,15 @@ import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-op
 
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).
-jest.mock('../lib/node-persist/secret-token', () => {
-  const defaultExport = jest.requireActual('../lib/node-persist/secret-token');
+rs.mock('../lib/node-persist/secret-token', () => {
+  const defaultExport = rs.requireActual('../lib/node-persist/secret-token');
   return {
     ...defaultExport,
-    hasSecretToken: jest.fn().mockReturnValue(false),
+    hasSecretToken: rs.fn().mockReturnValue(false),
   };
 });
 
-jest.mock('is-ci', () => false);
+rs.mock('is-ci', () => ({ default: false }));
 
 // Skip tests if not in preview mode
 const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
@@ -43,7 +44,11 @@ runner('ZeAgent', () => {
   const appOrg = 'testzephyrcloudio';
   const appProject = 'test-zephyr-mono';
 
-  const packageJsonPath = path.resolve('examples/sample-webpack-application');
+  // Anchored to this file: rstest runs with cwd=libs/zephyr-agent (jest ran from the repo root).
+  const packageJsonPath = path.resolve(
+    __dirname,
+    '../../../../examples/sample-webpack-application'
+  );
   const appName = 'sample-webpack-application';
   const application_uid = `${appName}.${appProject}.${appOrg}`;
   const user_uuid = crypto.randomBytes(16).toString('hex');
@@ -129,7 +134,10 @@ runner('ZeAgent', () => {
       const cmd = [
         'npx cross-env',
         ...envs,
-        `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
+        // --only: the turbo task graph guarantees dependencies are already built
+        // (zephyr-agent#test depends on sample-webpack-application#build); rebuilding
+        // them here would race the outer turbo run and momentarily wipe lib dists.
+        `pnpm -w exec turbo run build --filter=sample-webpack-application --force --only`,
       ].join(' ');
       await exec(cmd);
       const deployResultUrls = await _getAppTagUrls(application_uid);

@@ -1,3 +1,4 @@
+import { rs, type Mock } from '@rstest/core';
 import { isTokenStillValid } from '../auth/login';
 import * as httpRequest from '../http/http-request';
 import { getAppConfig, saveAppConfig } from '../node-persist/application-configuration';
@@ -8,13 +9,35 @@ import {
 } from './get-application-configuration';
 
 // Mock dependencies
-jest.mock('../http/http-request');
-jest.mock('../node-persist/token');
-jest.mock('../auth/login');
-jest.mock('../node-persist/application-configuration');
-jest.mock('../logging', () => ({ ze_log: { app: jest.fn() } }));
-jest.mock('zephyr-edge-contract', () => ({
-  ZE_API_ENDPOINT: jest.fn(() => 'https://api.zephyr.com'),
+// Note: explicit factories (instead of `{ mock: true }` automocks) are
+// required here because automocks eagerly load the original module graph,
+// which is circular (token -> errors -> ze-log-event ->
+// get-application-configuration -> token) and would cache the module under
+// test with unmocked bindings.
+rs.mock('../http/http-request', () => ({
+  makeRequest: rs.fn(),
+  makeHttpRequest: rs.fn(),
+  parseUrl: rs.fn(),
+  unwrapResponse: rs.fn(),
+}));
+rs.mock('../node-persist/token', () => ({
+  saveToken: rs.fn(),
+  getToken: rs.fn(),
+  removeToken: rs.fn(),
+  cleanTokens: rs.fn(),
+}));
+rs.mock('../auth/login', () => ({
+  checkAuth: rs.fn(),
+  isTokenStillValid: rs.fn(),
+}));
+rs.mock('../node-persist/application-configuration', () => ({
+  saveAppConfig: rs.fn(),
+  getAppConfig: rs.fn(),
+  removeAppConfig: rs.fn(),
+}));
+rs.mock('../logging', () => ({ ze_log: { app: rs.fn() } }));
+rs.mock('zephyr-edge-contract', () => ({
+  ZE_API_ENDPOINT: rs.fn(() => 'https://api.zephyr.com'),
   ze_api_gateway: {
     application_config: '/api/v1/application-config',
   },
@@ -23,11 +46,11 @@ jest.mock('zephyr-edge-contract', () => ({
 // Simplified test to ensure basic functionality works
 describe('getApplicationConfiguration', () => {
   // Create mocks
-  const mockMakeRequest = jest.spyOn(httpRequest, 'makeRequest');
-  const mockGetToken = getToken as jest.Mock;
-  const mockIsTokenStillValid = isTokenStillValid as jest.Mock;
-  const mockGetAppConfig = getAppConfig as jest.Mock;
-  const mockSaveAppConfig = saveAppConfig as jest.Mock;
+  const mockMakeRequest = httpRequest.makeRequest as Mock<typeof httpRequest.makeRequest>;
+  const mockGetToken = getToken as Mock;
+  const mockIsTokenStillValid = isTokenStillValid as Mock;
+  const mockGetAppConfig = getAppConfig as Mock;
+  const mockSaveAppConfig = saveAppConfig as Mock;
 
   // Test data
   const application_uid = 'test-app-123';
@@ -42,7 +65,7 @@ describe('getApplicationConfiguration', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     mockGetToken.mockResolvedValue(token);
     // Reset cache between tests
     invalidateApplicationConfigCache();

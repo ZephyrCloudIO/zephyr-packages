@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import path from 'node:path';
 import { ZephyrEngine, logFn } from 'zephyr-agent';
 import { setupZeDeploy } from '../internal/assets/setupZeDeploy';
@@ -5,41 +6,41 @@ import { showFiles } from '../internal/files/showFiles';
 import { walkFiles } from '../internal/files/walkFiles';
 import { zephyrRspressSSGPlugin } from '../zephyrRspressSSGPlugin';
 
-jest.mock('zephyr-agent', () => {
+rs.mock('zephyr-agent', () => {
   return {
     ZephyrEngine: {
-      defer_create: jest.fn(),
+      defer_create: rs.fn(),
     },
     ze_log: {
-      upload: jest.fn(),
+      upload: rs.fn(),
     },
-    logFn: jest.fn(),
+    logFn: rs.fn(),
     ZephyrError: {
-      format: jest.fn((err) => `Formatted: ${err.message}`),
+      format: rs.fn((err) => `Formatted: ${err.message}`),
     },
   };
 });
 
-jest.mock('../internal/files/walkFiles', () => ({
-  walkFiles: jest.fn(),
+rs.mock('../internal/files/walkFiles', () => ({
+  walkFiles: rs.fn(),
 }));
 
-jest.mock('../internal/files/showFiles', () => ({
-  showFiles: jest.fn(),
+rs.mock('../internal/files/showFiles', () => ({
+  showFiles: rs.fn(),
 }));
 
-jest.mock('../internal/assets/setupZeDeploy', () => ({
-  setupZeDeploy: jest.fn(),
+rs.mock('../internal/assets/setupZeDeploy', () => ({
+  setupZeDeploy: rs.fn(),
 }));
 
 describe('zephyrRspressSSGPlugin', () => {
-  const mockZephyrDefer = jest.fn();
+  const mockZephyrDefer = rs.fn();
   const mockEngine = Promise.resolve({ engine: 'mock' });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
 
-    (ZephyrEngine.defer_create as jest.Mock).mockReturnValue({
+    (ZephyrEngine.defer_create as rs.Mock).mockReturnValue({
       zephyr_engine_defer: mockEngine,
       zephyr_defer_create: mockZephyrDefer,
     });
@@ -57,7 +58,7 @@ describe('zephyrRspressSSGPlugin', () => {
 
   it('should show files and run setupZeDeploy if files are found', async () => {
     const mockFiles = ['index.html', 'main.js'];
-    (walkFiles as jest.Mock).mockResolvedValue(mockFiles);
+    (walkFiles as rs.Mock).mockResolvedValue(mockFiles);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
     await plugin.afterBuild?.();
@@ -72,7 +73,7 @@ describe('zephyrRspressSSGPlugin', () => {
 
   it('should log error using logFn if afterBuild throws', async () => {
     const err = new Error('walk failed');
-    (walkFiles as jest.Mock).mockRejectedValue(err);
+    (walkFiles as rs.Mock).mockRejectedValue(err);
 
     const plugin = zephyrRspressSSGPlugin({ outDir: 'dist' });
     await plugin.afterBuild?.();

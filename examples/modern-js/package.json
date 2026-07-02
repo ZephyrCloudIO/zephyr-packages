@@ -11,14 +11,6 @@
     "lint": "biome check",
     "upgrade": "modern upgrade"
   },
-  "engines": {
-    "node": ">=16.18.1"
-  },
-  "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --files-ignore-unknown=true"
-    ]
-  },
   "dependencies": {
     "@modern-js/plugin-ssg": "catalog:modernjs",
     "@modern-js/runtime": "catalog:modernjs",
@@ -39,5 +31,13 @@
     "typescript": "catalog:typescript",
     "zephyr-modernjs-plugin": "workspace:*",
     "zephyr-rspack-plugin": "workspace:*"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --files-ignore-unknown=true"
+    ]
+  },
+  "engines": {
+    "node": ">=16.18.1"
   }
 }

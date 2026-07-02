@@ -7,14 +7,14 @@
     "start": "tsx ./src/index.ts",
     "build": "node ../../libs/zephyr-cli/dist/index.js --ssr esbuild src/index.ts --bundle --platform=neutral --main-fields=browser,main --outfile=dist/index.mjs"
   },
+  "dependencies": {
+    "@elysiajs/node": "1",
+    "elysia": "1"
+  },
   "devDependencies": {
     "esbuild": "catalog:esbuild",
     "tsx": "4",
     "typescript": "5",
     "zephyr-cli": "workspace:*"
-  },
-  "dependencies": {
-    "@elysiajs/node": "1",
-    "elysia": "1"
   }
 }

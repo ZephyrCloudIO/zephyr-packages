@@ -1,5 +1,20 @@
 {
   "name": "rspack_nx_mf_remote",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "rspack build --mode production",
+    "serve": "rspack serve --mode development",
+    "test": "rstest run"
+  },
+  "devDependencies": {
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@rsbuild/plugin-react": "catalog:rspack",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
+    "@testing-library/react": "catalog:react",
+    "jsdom": "^27.0.0",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
 }

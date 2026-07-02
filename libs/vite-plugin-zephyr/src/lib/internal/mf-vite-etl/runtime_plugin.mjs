@@ -1,13 +1,12 @@
 /**
- * Zephyr Runtime Plugin for Module Federation. This file MUST stay in ESM
- * format (.mjs) for Vite/Rollup compatibility.
+ * Zephyr Runtime Plugin for Module Federation. This file MUST stay in ESM format (.mjs) for
+ * Vite/Rollup compatibility.
  *
  * Keep this runtime logic aligned with the xpack runtime plugin at
  * `libs/zephyr-xpack-internal/src/xpack-extract/runtime-plugin.ts`.
  *
- * We intentionally duplicate logic in both plugins for now. Once zephyr-agent
- * supports ESM runtime exports, we can move to a shared runtime
- * implementation.
+ * We intentionally duplicate logic in both plugins for now. Once zephyr-agent supports ESM runtime
+ * exports, we can move to a shared runtime implementation.
  */
 
 const globalCacheKey = '__ZEPHYR_MANIFEST_CACHE__';
@@ -93,8 +92,7 @@ export default function createZephyrRuntimePlugin(options = {}) {
         processedRemotes = identifyRemotes(args, zephyrManifest);
       }
 
-      const remoteName =
-        typeof args?.id === 'string' ? args.id.split('/')[0] : undefined;
+      const remoteName = typeof args?.id === 'string' ? args.id.split('/')[0] : undefined;
 
       if (!remoteName || !processedRemotes[remoteName]) {
         return args;
@@ -104,9 +102,7 @@ export default function createZephyrRuntimePlugin(options = {}) {
       const remotes = getRemotes(args);
 
       const targetRemote = remotes.find(
-        (remote) =>
-          hasEntry(remote) &&
-          (remote.name === remoteName || remote.alias === remoteName)
+        (remote) => hasEntry(remote) && (remote.name === remoteName || remote.alias === remoteName)
       );
 
       if (!targetRemote) {
@@ -135,8 +131,7 @@ function identifyRemotes(args, zephyrManifest) {
   const dependencies = zephyrManifest.dependencies ?? {};
 
   remotes.forEach((remote) => {
-    const resolvedRemote =
-      dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
+    const resolvedRemote = dependencies[remote.name] ?? dependencies[remote.alias ?? ''];
     if (resolvedRemote) {
       identifiedRemotes[remote.name] = resolvedRemote;
       if (remote.alias && remote.alias !== remote.name) {
@@ -161,9 +156,7 @@ function hasEntry(remote) {
 function getResolvedRemoteUrl(resolvedRemote) {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
-  const sessionEdgeURL = _window.sessionStorage?.getItem?.(
-    resolvedRemote.application_uid
-  );
+  const sessionEdgeURL = _window.sessionStorage?.getItem?.(resolvedRemote.application_uid);
 
   let edgeUrl = sessionEdgeURL ?? resolvedRemote.remote_entry_url;
 

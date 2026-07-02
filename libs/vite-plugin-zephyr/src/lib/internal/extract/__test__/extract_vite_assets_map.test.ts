@@ -1,3 +1,4 @@
+import { rs } from '@rstest/core';
 import type { OutputAsset, OutputChunk } from 'rollup';
 import {
   buildAssetsMap,
@@ -10,24 +11,24 @@ import type { ZephyrInternalOptions } from '../../types/zephyr-internal-options'
 import { extract_vite_assets_map } from '../extract_vite_assets_map';
 import { loadStaticAssets } from '../load_static_assets';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  getPartialAssetMap: jest.fn(),
-  removePartialAssetMap: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: rs.fn(),
+  getPartialAssetMap: rs.fn(),
+  removePartialAssetMap: rs.fn(),
 }));
 
-jest.mock('../load_static_assets', () => ({
-  loadStaticAssets: jest.fn(),
+rs.mock('../load_static_assets', () => ({
+  loadStaticAssets: rs.fn(),
 }));
 
-const mockBuildAssetsMap = buildAssetsMap as jest.MockedFunction<typeof buildAssetsMap>;
-const mockGetPartialAssetMap = getPartialAssetMap as jest.MockedFunction<
+const mockBuildAssetsMap = buildAssetsMap as rs.MockedFunction<typeof buildAssetsMap>;
+const mockGetPartialAssetMap = getPartialAssetMap as rs.MockedFunction<
   typeof getPartialAssetMap
 >;
-const mockRemovePartialAssetMap = removePartialAssetMap as jest.MockedFunction<
+const mockRemovePartialAssetMap = removePartialAssetMap as rs.MockedFunction<
   typeof removePartialAssetMap
 >;
-const mockLoadStaticAssets = loadStaticAssets as jest.MockedFunction<
+const mockLoadStaticAssets = loadStaticAssets as rs.MockedFunction<
   typeof loadStaticAssets
 >;
 
@@ -52,7 +53,7 @@ const binaryData = new Uint8Array(PNG_HEADER_BYTES);
 
 describe('extract_vite_assets_map', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('should extract vite assets map successfully', async () => {

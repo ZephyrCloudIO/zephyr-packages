@@ -1,37 +1,38 @@
+import { rs, type Mock } from '@rstest/core';
 import { getToken } from './token';
 import { inferCiTokenIdentity } from './ci-token-identity';
 import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 
-jest.mock('node-persist', () => ({
-  clear: jest.fn(),
-  getItem: jest.fn(),
-  removeItem: jest.fn(),
-  setItem: jest.fn(),
+rs.mock('node-persist', () => ({
+  clear: rs.fn(),
+  getItem: rs.fn(),
+  removeItem: rs.fn(),
+  setItem: rs.fn(),
 }));
 
-jest.mock('./storage', () => ({
+rs.mock('./storage', () => ({
   storage: Promise.resolve(),
 }));
 
-jest.mock('./ci-token-identity', () => ({
-  inferCiTokenIdentity: jest.fn(),
+rs.mock('./ci-token-identity', () => ({
+  inferCiTokenIdentity: rs.fn(),
 }));
 
-jest.mock('../http/http-request', () => ({
-  makeRequest: jest.fn(),
+rs.mock('../http/http-request', () => ({
+  makeRequest: rs.fn(),
 }));
 
-const mockInferCiTokenIdentity = inferCiTokenIdentity as jest.MockedFunction<
+const mockInferCiTokenIdentity = inferCiTokenIdentity as Mock<
   typeof inferCiTokenIdentity
 >;
-const mockMakeRequest = makeRequest as jest.MockedFunction<typeof makeRequest>;
+const mockMakeRequest = makeRequest as Mock<typeof makeRequest>;
 
 describe('getToken', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetAllMocks();
+    rs.resetAllMocks();
     process.env = { ...originalEnv, ZE_CI_TOKEN: 'ci-token' };
     delete process.env['ZE_SECRET_TOKEN'];
     delete process.env['ZE_SERVER_TOKEN'];

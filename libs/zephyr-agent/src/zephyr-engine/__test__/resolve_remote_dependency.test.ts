@@ -94,4 +94,46 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     await expect(promise).rejects.toThrow(ZephyrError);
     expect(axiosMock.get).toHaveBeenCalled();
   });
+
+  it('falls back to the latest published version when a workspace build is not found', async () => {
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    // workspace:* has no matching build in the current context (e.g. host built alone)
+    axiosMock.get.mockRejectedValueOnce({
+      response: { status: 404, data: { message: 'Not found' } },
+    });
+    // fallback to "*" resolves against the latest published version
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: mock_api_response },
+    });
+
+    const result = await resolve_remote_dependency({
+      application_uid,
+      version: 'workspace:*',
+    });
+
+    expect(result).toEqual({ ...mock_api_response, version: '*' });
+    expect(axiosMock.get).toHaveBeenCalledTimes(2);
+    expect(axiosMock.get).toHaveBeenLastCalledWith(
+      expect.stringContaining(
+        `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent('*')}`
+      ),
+      expect.anything()
+    );
+  });
+
+  it('throws when both the workspace resolution and the fallback fail', async () => {
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockRejectedValue({
+      response: { status: 404, data: { message: 'Not found' } },
+    });
+
+    const promise = resolve_remote_dependency({
+      application_uid,
+      version: 'workspace:*',
+    });
+
+    await expect(promise).rejects.toThrow(ZephyrError);
+    expect(axiosMock.get).toHaveBeenCalledTimes(2);
+  });
 });

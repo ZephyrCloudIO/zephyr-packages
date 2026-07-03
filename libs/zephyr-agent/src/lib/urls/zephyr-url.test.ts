@@ -2,6 +2,7 @@ import {
   appendZephyrUrlPath,
   getPathPreservingBaseUrl,
   resolveZephyrSiblingUrl,
+  stripFederatedRemoteName,
 } from './zephyr-url';
 
 describe('path-preserving Zephyr URL helpers', () => {
@@ -32,6 +33,29 @@ describe('path-preserving Zephyr URL helpers', () => {
     expect(
       resolveZephyrSiblingUrl('https://route-key-ze.worker.com/remoteEntry.js')
     ).toBe('https://route-key-ze.worker.com/zephyr-manifest.json');
+  });
+
+  test('anchors hostname-mode nested entries to the deployment root', () => {
+    expect(
+      resolveZephyrSiblingUrl('https://route-key-ze.worker.com/static/js/remoteEntry.js')
+    ).toBe('https://route-key-ze.worker.com/zephyr-manifest.json');
+  });
+
+  test('anchors path-mode nested entries to the route base', () => {
+    expect(
+      resolveZephyrSiblingUrl(
+        'https://host/__zephyr/v1/v/route-key/static/js/remoteEntry.js'
+      )
+    ).toBe('https://host/__zephyr/v1/v/route-key/zephyr-manifest.json');
+  });
+
+  test('preserves dotted route keys such as application uids', () => {
+    expect(
+      resolveZephyrSiblingUrl(
+        'https://host/__zephyr/v1/e/app.project.org',
+        'chunks/main.js'
+      )
+    ).toBe('https://host/__zephyr/v1/e/app.project.org/chunks/main.js');
   });
 
   test('derives Module Federation manifest siblings without dropping path mode route base', () => {
@@ -84,5 +108,16 @@ describe('path-preserving Zephyr URL helpers', () => {
     expect(
       getPathPreservingBaseUrl('https://host/__zephyr/v1/t/route-key/remoteEntry.js')
     ).toBe('https://host/__zephyr/v1/t/route-key');
+  });
+
+  test('only strips remote name prefixes, not @ segments inside the URL path', () => {
+    expect(
+      stripFederatedRemoteName(
+        'remote@https://host/__zephyr/v1/v/route-key/remoteEntry.js'
+      )
+    ).toBe('https://host/__zephyr/v1/v/route-key/remoteEntry.js');
+    expect(
+      stripFederatedRemoteName('https://cdn.example.com/@scope/remoteEntry.js')
+    ).toBe('https://cdn.example.com/@scope/remoteEntry.js');
   });
 });

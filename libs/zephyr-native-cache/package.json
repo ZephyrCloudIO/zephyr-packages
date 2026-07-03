@@ -59,10 +59,12 @@
   },
   "devDependencies": {
     "@module-federation/runtime": "^2.3.2",
+    "@types/jest": "catalog:typescript",
     "@types/react": "^19.1.0",
     "react": "19.1.0",
     "react-native": "0.80.0",
     "react-native-builder-bob": "^0.40.13",
+    "ts-jest": "catalog:typescript",
     "typescript": "^5.8.3"
   },
   "react-native-builder-bob": {

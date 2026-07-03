@@ -1,13 +1,5 @@
 import { extractBundleHashes, resolvePublicPathBase } from '../src/runtime-plugin';
 
-declare const beforeEach: (fn: () => void) => void;
-declare const describe: (name: string, fn: () => void) => void;
-declare const expect: (actual: unknown) => {
-  toBe: (expected: unknown) => void;
-  toMatchObject: (expected: unknown) => void;
-};
-declare const test: (name: string, fn: () => void) => void;
-
 describe('zephyr-native-cache runtime plugin URL helpers', () => {
   beforeEach(() => {
     (globalThis as typeof globalThis & { __DEV__: boolean }).__DEV__ = false;

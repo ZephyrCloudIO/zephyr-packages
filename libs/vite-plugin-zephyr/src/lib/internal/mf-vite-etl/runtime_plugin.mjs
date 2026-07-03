@@ -20,25 +20,24 @@ function getGlobalManifestCache() {
   return _global[globalCacheKey];
 }
 
+/**
+ * Attempts to determine the deployment root of the script that loaded this
+ * module. `zephyr-manifest.json` is emitted at the deployment root, so the base
+ * must not depend on where the entry chunk is nested (e.g. `assets/`).
+ *
+ * Path-addressed deployments keep the reserved
+ * `/__zephyr/v1/{v|t|e}/<route-key>` route base; hostname-mode deployments
+ * resolve to the origin. Note: `document.currentScript` is null inside ES
+ * modules, so Vite ESM output falls back to a relative manifest path.
+ */
 function getScriptBaseUrl() {
   if (typeof document !== 'undefined' && document.currentScript) {
     try {
       const src = document.currentScript.src;
       if (src) {
         const url = new URL(src);
-        url.search = '';
-        url.hash = '';
-        const segments = url.pathname.split('/').filter(Boolean);
-        const lastSegment = segments[segments.length - 1];
-        if (lastSegment?.includes('.')) {
-          url.pathname = url.pathname.slice(
-            0,
-            url.pathname.lastIndexOf('/') + 1
-          );
-        } else if (!url.pathname.endsWith('/')) {
-          url.pathname = `${url.pathname}/`;
-        }
-        return url.toString().replace(/\/$/, '');
+        const routeBase = /^\/__zephyr\/v1\/[vte]\/[^/]+/.exec(url.pathname);
+        return routeBase ? `${url.origin}${routeBase[0]}` : url.origin;
       }
     } catch {
       // Failed to parse URL, fall through to default.

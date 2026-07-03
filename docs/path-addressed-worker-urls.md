@@ -17,7 +17,8 @@ https://edge.example.com/__zephyr/v1/t/<route-key>/remoteEntry.js
 https://edge.example.com/__zephyr/v1/e/<route-key>/remoteEntry.js
 ```
 
-Package helpers must derive sibling assets from the route directory, not from the origin:
+Package helpers must derive sibling assets from the deployment root. The deployment root is the reserved
+`/__zephyr/v1/{v|t|e}/<route-key>` route base when the URL carries it, and the origin otherwise (hostname mode):
 
 ```text
 https://edge.example.com/__zephyr/v1/e/<route-key>/zephyr-manifest.json
@@ -25,8 +26,13 @@ https://edge.example.com/__zephyr/v1/e/<route-key>/mf-manifest.json
 https://edge.example.com/__zephyr/v1/e/<route-key>/chunks/main.js
 ```
 
-Do not use `new URL(url).origin`, `protocol + host`, or `new URL(path, base)` with an unnormalized leading slash for
-Zephyr sibling assets. A leading slash makes the path origin-relative and drops `/__zephyr/v1/{v|t|e}/<route-key>`.
+Detect the deployment root by matching the reserved prefix, never by guessing from URL shape. Heuristics such as
+"the last segment contains a dot, so it is a file" break on dotted route keys (application uids like
+`app.project.org`, versions like `1.2.3`), and "use the current script's directory" breaks when bundlers nest entry
+chunks (e.g. rsbuild's `static/js/`) while `zephyr-manifest.json` stays at the deployment root.
+
+Do not use `new URL(path, base)` with an unnormalized leading slash for Zephyr sibling assets. A leading slash makes
+the path origin-relative and drops `/__zephyr/v1/{v|t|e}/<route-key>`.
 
 Allowed path-mode app assets:
 

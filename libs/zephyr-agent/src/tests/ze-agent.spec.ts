@@ -16,7 +16,9 @@ import {
   getAppConfig,
   saveAppConfig,
 } from '../lib/node-persist/application-configuration';
+import node_persist from 'node-persist';
 import { getSecretToken } from '../lib/node-persist/secret-token';
+import { ZE_STORAGE_PATH } from '../lib/node-persist/storage-keys';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 
 // Both mocks are necessary in order to simulate user deployment but through
@@ -67,6 +69,11 @@ runner('ZeAgent', () => {
         fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
+    // node-persist was initialized at import time and may hold an in-memory
+    // index of the files just deleted (populated by the deploys this test
+    // depends on); re-init so reads don't ENOENT on stale index entries.
+    fs.mkdirSync(ZE_STORAGE_PATH, { recursive: true });
+    await node_persist.init({ dir: ZE_STORAGE_PATH, forgiveParseErrors: true });
     await exec(`git config --add user.name "${gitUserName}"`);
     await exec(`git config --add user.email "${gitEmail}"`);
     await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);

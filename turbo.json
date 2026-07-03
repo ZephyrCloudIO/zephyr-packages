@@ -1,5 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "remoteCache": {
+    "teamSlug": "l727rgm5x8",
+    "apiUrl": "https://cache.depot.dev",
+    "enabled": true
+  },
   "globalEnv": ["ZE_*", "ZEPHYR_*"],
   "tasks": {
     "build": {

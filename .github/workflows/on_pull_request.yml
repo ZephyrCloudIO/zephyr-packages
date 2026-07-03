@@ -14,6 +14,7 @@ concurrency:
 
 env:
   ZE_FAIL_BUILD: true
+  TURBO_TELEMETRY_DISABLED: 1
   # Base ref for `turbo --affected` / `turbo ls --affected` comparisons.
   TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'HEAD^1' }}
 
@@ -26,7 +27,10 @@ jobs:
       pull-requests: write
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [depot-ubuntu-latest, windows-latest]
+    env:
+      # Depot runners inject the remote cache token; GitHub Windows runners have none.
+      TURBO_CACHE: ${{ matrix.os == 'depot-ubuntu-latest' && 'remote:rw' || 'local:rw' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -47,11 +51,11 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        # Deploying is a side effect of example builds, so remote cache must stay
-        # off — a remote hit would skip the deploy and leave ~/.zephyr empty for
-        # the e2e job (turbo cache does not restore ~/.zephyr). Local cache is
-        # fine: it only reuses the libs built in the previous step on this runner.
-        run: pnpm exec turbo run build --affected --cache=local:rw --output-logs=new-only
+        # Deploying is a side effect of example builds, so this step must never
+        # be served from cache — a hit would skip the deploy and leave ~/.zephyr
+        # empty for the e2e job (turbo cache does not restore ~/.zephyr).
+        # --force skips cache reads (writes are harmless: the next run forces again).
+        run: pnpm exec turbo run build --affected --force --output-logs=new-only
       - name: Set ZEPHYR_CACHE
         shell: bash
         run: |
@@ -85,7 +89,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -100,7 +104,9 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [depot-ubuntu-latest, windows-latest]
+    env:
+      TURBO_CACHE: ${{ matrix.os == 'depot-ubuntu-latest' && 'remote:rw' || 'local:rw' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -115,14 +121,14 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo run test --affected --cache=local:rw --output-logs=new-only
+        run: pnpm exec turbo run test --affected --output-logs=new-only
 
   e2e-test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [depot-ubuntu-latest, windows-latest]
     name: End-to-end test of examples
     needs: build
     steps:

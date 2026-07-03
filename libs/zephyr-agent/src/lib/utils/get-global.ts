@@ -4,7 +4,7 @@
  */
 declare global {
   // `var` is required here: `let`/`const` cannot augment the global/globalThis type.
-   
+  // eslint-disable-next-line no-var
   var NX_GRAPH_CREATION: boolean | undefined;
 }
 

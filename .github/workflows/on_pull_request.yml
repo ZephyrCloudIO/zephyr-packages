@@ -20,17 +20,19 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    # Linux runs on Depot-managed runners; check names keep the plain OS label
+    # because branch protection requires them by name.
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || matrix.os }}
     timeout-minutes: 45
     permissions:
       contents: read
       pull-requests: write
     strategy:
       matrix:
-        os: [depot-ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     env:
       # Depot runners inject the remote cache token; GitHub Windows runners have none.
-      TURBO_CACHE: ${{ matrix.os == 'depot-ubuntu-latest' && 'remote:rw' || 'local:rw' }}
+      TURBO_CACHE: ${{ matrix.os == 'ubuntu-latest' && 'remote:rw' || 'local:rw' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -100,13 +102,15 @@ jobs:
         run: pnpm format:check
 
   test:
-    runs-on: ${{ matrix.os }}
+    # Linux runs on Depot-managed runners; check names keep the plain OS label
+    # because branch protection requires them by name.
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || matrix.os }}
     timeout-minutes: 30
     strategy:
       matrix:
-        os: [depot-ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     env:
-      TURBO_CACHE: ${{ matrix.os == 'depot-ubuntu-latest' && 'remote:rw' || 'local:rw' }}
+      TURBO_CACHE: ${{ matrix.os == 'ubuntu-latest' && 'remote:rw' || 'local:rw' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -124,11 +128,13 @@ jobs:
         run: pnpm exec turbo run test --affected --output-logs=new-only
 
   e2e-test:
-    runs-on: ${{ matrix.os }}
+    # Linux runs on Depot-managed runners; check names keep the plain OS label
+    # because branch protection requires them by name.
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || matrix.os }}
     timeout-minutes: 45
     strategy:
       matrix:
-        os: [depot-ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
     name: End-to-end test of examples
     needs: build
     steps:

@@ -15,14 +15,16 @@ concurrency:
 env:
   ZE_FAIL_BUILD: true
   TURBO_TELEMETRY_DISABLED: 1
+  # Depot runners inject the remote cache credentials.
+  TURBO_CACHE: remote:rw
   # Base ref for `turbo --affected` / `turbo ls --affected` comparisons.
   TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'HEAD^1' }}
 
 jobs:
   build:
-    # Linux runs on Depot-managed runners; check names keep the plain OS label
+    # All jobs run on Depot-managed runners; check names keep the plain OS label
     # because branch protection requires them by name.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || 'depot-windows-2022' }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -30,9 +32,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    env:
-      # Depot runners inject the remote cache token; GitHub Windows runners have none.
-      TURBO_CACHE: ${{ matrix.os == 'ubuntu-latest' && 'remote:rw' || 'local:rw' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -102,15 +101,13 @@ jobs:
         run: pnpm format:check
 
   test:
-    # Linux runs on Depot-managed runners; check names keep the plain OS label
+    # All jobs run on Depot-managed runners; check names keep the plain OS label
     # because branch protection requires them by name.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || 'depot-windows-2022' }}
     timeout-minutes: 30
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    env:
-      TURBO_CACHE: ${{ matrix.os == 'ubuntu-latest' && 'remote:rw' || 'local:rw' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -128,9 +125,9 @@ jobs:
         run: pnpm exec turbo run test --affected --output-logs=new-only
 
   e2e-test:
-    # Linux runs on Depot-managed runners; check names keep the plain OS label
+    # All jobs run on Depot-managed runners; check names keep the plain OS label
     # because branch protection requires them by name.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && 'depot-ubuntu-latest' || 'depot-windows-2022' }}
     timeout-minutes: 45
     strategy:
       matrix:

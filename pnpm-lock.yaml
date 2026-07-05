@@ -266,7 +266,7 @@ overrides:
   h3@<1.15.6: '>=1.15.6'
   h3@>=2.0.0-0 <2.0.1-rc.18: '>=2.0.1-rc.18'
   '@tanstack/start-server-core>h3-v2': npm:h3@2.0.1-rc.18
-  hono: 4.12.12
+  hono: 4.12.27
   handlebars@<=4.7.8: '>=4.7.9'
   koa@>=3.0.0 <3.1.2: '>=3.1.2'
   lodash-es@<=4.17.23: 4.18.1
@@ -497,8 +497,8 @@ importers:
   examples/hono-app:
     dependencies:
       hono:
-        specifier: 4.12.12
-        version: 4.12.12
+        specifier: 4.12.27
+        version: 4.12.27
     devDependencies:
       '@types/node':
         specifier: 22.19.13
@@ -11785,8 +11785,8 @@ packages:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
 
-  hono@4.12.12:
-    resolution: {integrity: sha512-p1JfQMKaceuCbpJKAPKVqyqviZdS0eUxH9v82oWo1kb9xjQ5wA6iP3FNVAPDFlz5/p7d45lO+BpSk1tuSZMF4Q==}
+  hono@4.12.27:
+    resolution: {integrity: sha512-1yrb/+w6HWQJrUCLkJ2IF5jNIPvvFkblV5RNOYl6bV+OA6p9GLcMpHFFGTosSvHvcAUibuUukRqhlYI4z32C7Q==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -20930,7 +20930,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.4.2
-      hono: 4.12.12
+      hono: 4.12.27
       ts-deepmerge: 7.0.2
     transitivePeerDependencies:
       - react
@@ -30737,7 +30737,7 @@ snapshots:
     dependencies:
       parse-passwd: 1.0.0
 
-  hono@4.12.12: {}
+  hono@4.12.27: {}
 
   hookable@5.5.3: {}
 

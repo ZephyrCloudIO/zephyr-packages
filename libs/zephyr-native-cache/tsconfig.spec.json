@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./out-tsc/spec",
+    "rootDir": ".",
+    "module": "commonjs",
+    "types": ["@rstest/core/globals", "node"]
+  },
+  "include": [
+    "__tests__/**/*.test.ts",
+    "__tests__/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.json"
+    }
+  ]
+}

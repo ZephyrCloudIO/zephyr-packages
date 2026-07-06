@@ -17,7 +17,9 @@
     "android/build.gradle",
     "react-native.config.js",
     "zephyr-native-cache.podspec",
-    "!**/__tests__"
+    "!**/__tests__",
+    "!**/*.test.ts",
+    "!**/*.spec.ts"
   ],
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",
@@ -44,7 +46,8 @@
     "build": "rslib build",
     "typecheck": "tsc -b",
     "patch-version": "pnpm version",
-    "dev": "rslib build --watch"
+    "dev": "rslib build --watch",
+    "test": "rstest run"
   },
   "dependencies": {
     "mitt": "^3.0.1",
@@ -53,6 +56,7 @@
   "devDependencies": {
     "@module-federation/runtime": "^2.3.2",
     "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
     "@types/react": "^19.1.0",
     "react": "19.1.0",
     "react-native": "0.80.0",

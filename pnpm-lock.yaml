@@ -1713,6 +1713,9 @@ importers:
       '@rslib/core':
         specifier: catalog:rslib
         version: 0.23.1(@module-federation/runtime-tools@2.6.0(node-fetch@2.7.0(encoding@0.1.13)))(core-js@3.49.0)(typescript@5.9.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.10.6(@module-federation/runtime-tools@2.6.0(node-fetch@2.7.0(encoding@0.1.13)))(core-js@3.49.0)(jsdom@27.4.0)
       '@types/react':
         specifier: ^19.1.0
         version: 19.2.17

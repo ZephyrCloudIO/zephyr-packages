@@ -1,3 +1,5 @@
+import { resolveZephyrSiblingUrl } from '../urls/zephyr-url';
+
 export interface RemoteEntry {
   name: string;
   application_uid: string;
@@ -33,11 +35,9 @@ export function buildEnvImportMap(
     if (remote.application_uid && remote.remote_entry_url) {
       // Environment variables manifest for the remote
       try {
-        const urlStr = remote.remote_entry_url.includes('@')
-          ? remote.remote_entry_url.split('@')[1]
-          : remote.remote_entry_url;
-        const origin = new URL(urlStr).origin;
-        imports[`env:vars:${remote.application_uid}`] = `${origin}/zephyr-manifest.json`;
+        imports[`env:vars:${remote.application_uid}`] = resolveZephyrSiblingUrl(
+          remote.remote_entry_url
+        );
       } catch {
         // If URL parsing fails, skip the env:vars entry
         console.warn(

@@ -1978,6 +1978,9 @@ importers:
       '@module-federation/runtime':
         specifier: ^2.3.2
         version: 2.3.2
+      '@types/jest':
+        specifier: catalog:typescript
+        version: 29.5.14
       '@types/react':
         specifier: ^19.1.0
         version: 19.2.14
@@ -1990,6 +1993,9 @@ importers:
       react-native-builder-bob:
         specifier: ^0.40.13
         version: 0.40.18
+      ts-jest:
+        specifier: catalog:typescript
+        version: 29.4.6(@babel/core@7.29.0)(@jest/transform@30.2.0)(@jest/types@30.2.0)(babel-jest@30.2.0(@babel/core@7.29.0))(esbuild@0.27.3)(jest-util@30.2.0)(jest@30.2.0(@types/node@22.19.13)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.27.3))(ts-node@10.9.2(@swc/core@1.15.18(@swc/helpers@0.5.19))(@types/node@22.19.13)(typescript@5.9.3)))(typescript@5.9.3)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3

@@ -51,5 +51,6 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalPassThroughEnv": ["TMPDIR", "TMP", "TEMP"]
 }

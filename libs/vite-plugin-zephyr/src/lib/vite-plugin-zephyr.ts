@@ -76,12 +76,30 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
     enforce: 'pre',
 
-    config: (config: UserConfig) => {
+    config: (config: UserConfig, env) => {
       // If MF was configured separately, inject the Zephyr runtime plugin before MF emits.
       const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
       }
+
+      // Vite's default base '/' emits root-absolute asset URLs (/assets/...),
+      // which break path-addressed Zephyr URLs (/__zephyr/v1/{v|t|e}/<route-key>/):
+      // the browser resolves them against the origin and drops the route base.
+      // Default to a relative base so assets resolve against the document URL in
+      // both hostname and path-addressed modes. Users can still set base
+      // explicitly to opt out. See docs/path-addressed-worker-urls.md.
+      if (env.command === 'build' && config.base === undefined) {
+        ze_log.misc('vite-plugin-zephyr: defaulting Vite base to "./"');
+        return { base: './' };
+      }
+
+      if (env.command === 'build' && config.base === '/') {
+        ze_log.misc(
+          'vite-plugin-zephyr: base "/" emits root-absolute asset URLs, which are not supported by path-addressed Zephyr URLs. Consider base "./".'
+        );
+      }
+
       return null;
     },
 

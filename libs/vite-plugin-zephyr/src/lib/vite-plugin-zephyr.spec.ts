@@ -15,6 +15,37 @@ describe('vite-plugin-zephyr', () => {
     rs.resetModules();
   });
 
+  test('defaults Vite base to "./" on build so assets stay under path-addressed URLs', async () => {
+    rs.doMock('vite', () => ({
+      loadEnv: rs.fn(() => ({})),
+    }));
+
+    const { withZephyr } = (await import('./vite-plugin-zephyr')) as unknown as {
+      withZephyr: () => Array<{
+        name?: string;
+        config: (config: object, env: { command: string; mode: string }) => unknown;
+      }>;
+    };
+
+    const plugin = withZephyr().find((p) => p.name === 'with-zephyr');
+    if (!plugin) throw new Error('with-zephyr plugin not found');
+
+    // Unset base on build: default to relative so /__zephyr/v1/{v|t|e}/<key>/
+    // deployments resolve assets against the document URL.
+    expect(plugin.config({}, { command: 'build', mode: 'production' })).toEqual({
+      base: './',
+    });
+    // Explicit base is the user's choice, even '/'.
+    expect(plugin.config({ base: '/' }, { command: 'build', mode: 'production' })).toBe(
+      null
+    );
+    expect(
+      plugin.config({ base: '/my-app/' }, { command: 'build', mode: 'production' })
+    ).toBe(null);
+    // Dev server keeps Vite's default.
+    expect(plugin.config({}, { command: 'serve', mode: 'development' })).toBe(null);
+  });
+
   test('withZephyr without mfConfig does not load module federation', async () => {
     rs.doMock('vite', () => ({
       loadEnv: rs.fn(() => ({})),

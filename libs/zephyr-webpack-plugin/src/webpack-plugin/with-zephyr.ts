@@ -4,6 +4,7 @@ import {
   extractFederatedDependencyPairs,
   extractLibraryType,
   makeCopyOfModuleFederationOptions,
+  mutPathModePublicPath,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 import type { ZephyrWebpackPluginOptions } from '../types';
@@ -40,6 +41,9 @@ async function _zephyr_configuration(
     );
 
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+
+    // Path-addressed apps cannot use an origin-absolute publicPath
+    await mutPathModePublicPath(zephyr_engine, config);
 
     const mfConfig = makeCopyOfModuleFederationOptions(config);
 

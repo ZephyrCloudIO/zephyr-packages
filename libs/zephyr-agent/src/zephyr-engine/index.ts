@@ -35,6 +35,7 @@ import {
   convertResolvedDependencies,
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
+import { warnPathModeAbsoluteUrls } from '../lib/utils/warn-path-mode-absolute-urls';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
@@ -512,6 +513,8 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     };
     const manifestAsset = zeBuildAssets(manifest);
     assetsMap[manifestAsset.hash] = manifestAsset;
+
+    await warnPathModeAbsoluteUrls(zephyr_engine, assetsMap);
 
     if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
       ze_log.upload('Failed to upload assets: missing application_uid or build_id');

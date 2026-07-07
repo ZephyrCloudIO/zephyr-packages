@@ -5,6 +5,7 @@ export {
   extractFederatedDependencyPairs,
   extractLibraryType,
   makeCopyOfModuleFederationOptions,
+  mutPathModePublicPath,
   mutWebpackFederatedRemotesConfig,
   xpack_delegate_module_template,
 } from './xpack-extract';

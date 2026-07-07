@@ -13,6 +13,8 @@ export interface Snapshot {
   snapshot_id: string;
   // default domain url
   domain: string;
+  // how the edge worker should address this deployment; worker defaults to 'hostname'
+  addressMode?: 'hostname' | 'path';
   // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
   type?: 'ssr' | 'csr';
   // server entry file path for SSR applications (relative path)

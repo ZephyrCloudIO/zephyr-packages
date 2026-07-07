@@ -63,4 +63,92 @@ describe('vite-plugin-zephyr', () => {
       ]);
     });
   });
+
+  describe('config hook base handling', () => {
+    interface ZephyrVitePlugin {
+      name?: string;
+      config?: (
+        config: Record<string, unknown>,
+        env: { command: string; mode: string }
+      ) => Promise<unknown>;
+    }
+
+    function loadPluginWithAddressMode(addressMode?: string): {
+      plugin: ZephyrVitePlugin;
+      zephyr_defer_create: jest.Mock;
+    } {
+      let plugin: ZephyrVitePlugin | undefined;
+      const zephyr_defer_create = jest.fn();
+
+      jest.isolateModules(() => {
+        jest.doMock('vite', () => ({
+          loadEnv: jest.fn(() => ({})),
+        }));
+
+        const actual = jest.requireActual('zephyr-agent') as Record<string, unknown>;
+        jest.doMock('zephyr-agent', () => ({
+          ...actual,
+          ZephyrEngine: {
+            defer_create: jest.fn(() => ({
+              zephyr_engine_defer: Promise.resolve({
+                application_configuration: Promise.resolve({
+                  ADDRESS_MODE: addressMode,
+                }),
+              }),
+              zephyr_defer_create,
+            })),
+          },
+        }));
+
+        const { withZephyr } = require('./vite-plugin-zephyr') as {
+          withZephyr: () => ZephyrVitePlugin[];
+        };
+
+        plugin = withZephyr()[0];
+      });
+
+      if (!plugin) {
+        throw new Error('withZephyr did not return a plugin');
+      }
+
+      return { plugin, zephyr_defer_create };
+    }
+
+    test('sets a relative base for path-addressed builds without a user base', async () => {
+      const { plugin, zephyr_defer_create } = loadPluginWithAddressMode('path');
+
+      const result = await plugin.config?.({}, { command: 'build', mode: 'production' });
+
+      expect(result).toEqual({ base: './' });
+      expect(zephyr_defer_create).toHaveBeenCalledTimes(1);
+    });
+
+    test('keeps a user-provided base untouched for path-addressed builds', async () => {
+      const { plugin } = loadPluginWithAddressMode('path');
+
+      const result = await plugin.config?.(
+        { base: '/my-app/' },
+        { command: 'build', mode: 'production' }
+      );
+
+      expect(result).toBeNull();
+    });
+
+    test('does not change base for hostname-addressed builds', async () => {
+      const { plugin } = loadPluginWithAddressMode('hostname');
+
+      const result = await plugin.config?.({}, { command: 'build', mode: 'production' });
+
+      expect(result).toBeNull();
+    });
+
+    test('does not start the engine or change base during dev server', async () => {
+      const { plugin, zephyr_defer_create } = loadPluginWithAddressMode('path');
+
+      const result = await plugin.config?.({}, { command: 'serve', mode: 'development' });
+
+      expect(result).toBeNull();
+      expect(zephyr_defer_create).not.toHaveBeenCalled();
+    });
+  });
 });

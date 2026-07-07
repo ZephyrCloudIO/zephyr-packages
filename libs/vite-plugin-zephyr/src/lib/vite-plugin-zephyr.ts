@@ -1,7 +1,14 @@
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import MagicString from 'magic-string';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
-import { loadEnv, type Plugin, type ResolvedConfig, type UserConfig } from 'vite';
+import {
+  loadEnv,
+  type ConfigEnv,
+  type Plugin,
+  type ResolvedConfig,
+  type UserConfig,
+} from 'vite';
 import {
   createManifestContent,
   handleGlobalError,
@@ -70,18 +77,55 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   let cachedSpecifier: string | undefined;
   let entrypoint: string;
   let mfConfig = options.mfConfig;
+  let engine_create_started = false;
 
   return {
     name: 'with-zephyr',
     // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
     enforce: 'pre',
 
-    config: (config: UserConfig) => {
+    config: async (config: UserConfig, env: ConfigEnv) => {
       // If MF was configured separately, inject the Zephyr runtime plugin before MF emits.
       const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
       if (detectedMfConfig) {
         mfConfig = ensureRuntimePlugin(detectedMfConfig);
       }
+
+      if (env.command !== 'build') {
+        return null;
+      }
+
+      try {
+        // The engine has to start here (not configResolved) because `base` can
+        // only be changed before the config is resolved.
+        zephyr_defer_create({
+          builder: 'vite',
+          context: config.root ? resolve(config.root) : process.cwd(),
+        });
+        engine_create_started = true;
+
+        const zephyr_engine = await zephyr_engine_defer;
+        const { ADDRESS_MODE } = await zephyr_engine.application_configuration;
+
+        // Path-addressed applications are served under a URL prefix that is not
+        // known at build time (version, tag and environment routes share one
+        // build), so asset URLs must resolve relative to the loaded document
+        // instead of the origin root.
+        if (ADDRESS_MODE === 'path') {
+          if (config.base == null) {
+            return { base: './' };
+          }
+
+          if (config.base.startsWith('/')) {
+            ze_log.init(
+              `Vite 'base' is set to '${config.base}', but this application uses path-based addressing. Origin-absolute asset URLs will not resolve under the deployment path prefix; use a relative base (e.g. './') instead.`
+            );
+          }
+        }
+      } catch (error) {
+        handleGlobalError(error);
+      }
+
       return null;
     },
 
@@ -90,11 +134,15 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       // Normalize the entrypoint early so uploads use the same path in serve/build.
       entrypoint = extractEntrypoint(config);
 
-      // Initialize the Zephyr engine in both serve and build flows.
-      zephyr_defer_create({
-        builder: 'vite',
-        context: root,
-      });
+      // Initialize the Zephyr engine in both serve and build flows. Build flows
+      // already started it in the config hook to decide the base option.
+      if (!engine_create_started) {
+        zephyr_defer_create({
+          builder: 'vite',
+          context: root,
+        });
+        engine_create_started = true;
+      }
 
       resolve_vite_internal_options({
         root,

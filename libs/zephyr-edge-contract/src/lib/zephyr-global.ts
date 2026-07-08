@@ -1,5 +1,7 @@
 /* istanbul ignore file */
 
+import type { ZephyrManifest } from './zephyr-manifest';
+
 /**
  * Global Zephyr runtime namespace contract.
  *
@@ -15,9 +17,20 @@ export interface ZephyrGlobalNamespace {
 }
 
 export interface ZephyrRuntimeNamespace {
+  /** Runtime manifests keyed by their absolute URL. */
+  manifests?: Record<string, ZephyrRuntimeManifestEntry>;
+
   /** Namespace reserved for zephyr-native-cache integrations. */
   nativeCache?: ZephyrNativeCacheNamespace;
   [namespace: string]: unknown;
+}
+
+export interface ZephyrRuntimeManifestEntry {
+  /** HTTP validator returned for this manifest response. */
+  etag: string;
+
+  /** Parsed zephyr-manifest.json response body. */
+  manifest: ZephyrManifest;
 }
 
 export interface ZephyrNativeCacheNamespace {

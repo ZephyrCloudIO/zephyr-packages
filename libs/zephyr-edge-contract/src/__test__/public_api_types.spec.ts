@@ -22,6 +22,8 @@ import type {
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
   ZephyrGlobalNamespace,
+  ZephyrRuntimeManifestEntry,
+  ZephyrRuntimeNamespace,
   FindTemplates,
 } from '../index';
 
@@ -167,6 +169,18 @@ describe('type exports', () => {
   test('should export ZephyrGlobalNamespace type', () => {
     type TestZephyrGlobalNamespace = ZephyrGlobalNamespace;
     const obj: TestZephyrGlobalNamespace = {} as TestZephyrGlobalNamespace;
+    expect(obj).toBeDefined();
+  });
+
+  test('should export ZephyrRuntimeNamespace type', () => {
+    type TestZephyrRuntimeNamespace = ZephyrRuntimeNamespace;
+    const obj: TestZephyrRuntimeNamespace = {} as TestZephyrRuntimeNamespace;
+    expect(obj).toBeDefined();
+  });
+
+  test('should export ZephyrRuntimeManifestEntry type', () => {
+    type TestZephyrRuntimeManifestEntry = ZephyrRuntimeManifestEntry;
+    const obj = {} as TestZephyrRuntimeManifestEntry;
     expect(obj).toBeDefined();
   });
 });

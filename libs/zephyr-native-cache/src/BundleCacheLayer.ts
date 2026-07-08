@@ -10,12 +10,20 @@ import type {
   MFECacheConfig,
   UpdatePolicy,
 } from './types';
-import { ensureZephyrNativeCacheRefs } from './zephyr-global';
+import {
+  ensureZephyrNativeCacheRefs,
+  ensureZephyrRuntimeManifests,
+} from './zephyr-global';
+import type { ZephyrManifest, ZephyrRuntimeManifestEntry } from 'zephyr-edge-contract';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
 interface ManifestSource {
+  bundleManifestUrl: string;
+  zephyrManifestUrl: string;
   extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>;
+  initialManifestPromise?: Promise<void>;
+  lastBundleCount?: number;
 }
 
 export class BundleCacheLayer {
@@ -30,6 +38,9 @@ export class BundleCacheLayer {
 
   // Manifest sources for polling: manifestUrl → ManifestSource
   private manifestSources = new Map<string, ManifestSource>();
+
+  // Runtime manifests shared via globalThis.__ZEPHYR__.runtime.manifests.
+  private runtimeManifests: Record<string, ZephyrRuntimeManifestEntry>;
 
   // Inflight dedup: prevents concurrent downloads of the same bundle URL
   private inflightLoads = new Map<
@@ -56,6 +67,7 @@ export class BundleCacheLayer {
     const nativeCacheRefs = ensureZephyrNativeCacheRefs();
     nativeCacheRefs.bundleHashes ??= {};
     this.bundleHashMap = nativeCacheRefs.bundleHashes;
+    this.runtimeManifests = ensureZephyrRuntimeManifests();
 
     this.status = {
       remotes: {},
@@ -77,10 +89,19 @@ export class BundleCacheLayer {
 
   registerManifestSource(
     manifestUrl: string,
-    extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>
+    extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>,
+    initialHashes?: Map<string, string>
   ): void {
+    const existing = this.manifestSources.get(manifestUrl);
+    const zephyrManifestUrl = this.toZephyrManifestUrl(manifestUrl);
     this.manifestSources.set(manifestUrl, {
+      bundleManifestUrl: manifestUrl,
+      zephyrManifestUrl,
       extractHashes,
+      initialManifestPromise:
+        existing?.initialManifestPromise ??
+        this.initializeRuntimeManifest(zephyrManifestUrl),
+      lastBundleCount: initialHashes?.size ?? existing?.lastBundleCount,
     });
   }
 
@@ -177,44 +198,65 @@ export class BundleCacheLayer {
         return { updated: 0, checked: 0, applied: false };
       }
 
-      for (const [manifestUrl, source] of this.manifestSources) {
+      for (const source of this.manifestSources.values()) {
         try {
-          const resp = await fetch(manifestUrl);
+          await source.initialManifestPromise?.catch(() => {});
+
+          const previousManifest = this.runtimeManifests[source.zephyrManifestUrl];
+          const previousEtag = previousManifest?.etag;
+          const headers = previousEtag ? { 'If-None-Match': previousEtag } : undefined;
+          const resp = await fetch(
+            source.zephyrManifestUrl,
+            headers ? { headers } : undefined
+          );
+
+          if (resp.status === 304) {
+            checked += source.lastBundleCount ?? 1;
+            continue;
+          }
+
           if (!resp.ok) {
             console.warn(
-              `${LOG_PREFIX} manifest fetch failed: ${manifestUrl} → HTTP ${resp.status}`
+              `${LOG_PREFIX} runtime manifest fetch failed: ${source.zephyrManifestUrl} → HTTP ${resp.status}`
             );
             continue;
           }
-          const manifest = await resp.json();
 
-          // Extract all bundle URLs (container + exposed + shared) from manifest
-          const newHashes = source.extractHashes(manifest, manifestUrl);
+          const nextEtag = this.getEtag(resp);
+          if (!nextEtag) {
+            continue;
+          }
 
-          for (const [bundleUrl, newHash] of newHashes) {
-            checked++;
-
-            // Update hash map so subsequent loadBundle() calls use the latest hash.
-            // loadBundle() looks up by URL-without-query, so key consistently here too.
-            this.bundleHashMap[bundleUrl.split('?')[0]] = newHash;
-
-            const remoteName = this.inferRemoteName(bundleUrl);
-            const didUpdate = await this.cacheManager!.preDownloadBundle(
-              bundleUrl,
-              newHash
-            );
-            if (didUpdate) {
-              updated++;
-              this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
-              if (!this.status.pendingUpdates.includes(remoteName)) {
-                this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
-                this.notifyStatusChange();
-              }
-              this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
+          if (!previousEtag) {
+            const nextManifest = await this.readRuntimeManifest(resp, nextEtag);
+            if (nextManifest) {
+              this.runtimeManifests[source.zephyrManifestUrl] = nextManifest;
             }
+            checked += source.lastBundleCount ?? 1;
+            continue;
+          }
+
+          if (nextEtag === previousEtag) {
+            checked += source.lastBundleCount ?? 1;
+            continue;
+          }
+
+          const nextManifest = await this.readRuntimeManifest(resp, nextEtag);
+          if (!nextManifest) {
+            continue;
+          }
+
+          const result = await this.preDownloadBundlesForSource(source);
+          checked += result.checked;
+          updated += result.updated;
+          if (result.processed) {
+            this.runtimeManifests[source.zephyrManifestUrl] = nextManifest;
           }
         } catch (manifestError) {
-          console.warn(`${LOG_PREFIX} manifest error for ${manifestUrl}`, manifestError);
+          console.warn(
+            `${LOG_PREFIX} runtime manifest error for ${source.zephyrManifestUrl}`,
+            manifestError
+          );
           // Non-critical: network error for this manifest, continue with others
         }
       }
@@ -238,6 +280,46 @@ export class BundleCacheLayer {
     }
 
     return { updated, checked, applied };
+  }
+
+  private async preDownloadBundlesForSource(
+    source: ManifestSource
+  ): Promise<{ checked: number; updated: number; processed: boolean }> {
+    const resp = await fetch(source.bundleManifestUrl);
+    if (!resp.ok) {
+      console.warn(
+        `${LOG_PREFIX} bundle manifest fetch failed: ${source.bundleManifestUrl} → HTTP ${resp.status}`
+      );
+      return { checked: 0, updated: 0, processed: false };
+    }
+
+    const manifest = await resp.json();
+
+    // Extract all bundle URLs (container + exposed + shared) from manifest
+    const newHashes = source.extractHashes(manifest, source.bundleManifestUrl);
+    source.lastBundleCount = newHashes.size;
+
+    let checked = 0;
+    let updated = 0;
+
+    for (const [bundleUrl, newHash] of newHashes) {
+      checked++;
+
+      // Update hash map so subsequent loadBundle() calls use the latest hash.
+      // loadBundle() looks up by URL-without-query, so key consistently here too.
+      this.bundleHashMap[bundleUrl.split('?')[0]] = newHash;
+
+      const remoteName = this.inferRemoteName(bundleUrl);
+      const didUpdate = await this.cacheManager!.preDownloadBundle(bundleUrl, newHash, {
+        force: true,
+      });
+      if (didUpdate) {
+        updated++;
+        this.recordDownloadedUpdate(bundleUrl, remoteName, newHash);
+      }
+    }
+
+    return { checked, updated, processed: true };
   }
 
   startPolling(intervalMs?: number): void {
@@ -315,6 +397,65 @@ export class BundleCacheLayer {
       } catch (error) {
         console.warn(`${LOG_PREFIX} status listener failed`, error);
       }
+    }
+  }
+
+  private recordDownloadedUpdate(
+    bundleUrl: string,
+    remoteName: string,
+    newHash: string
+  ): void {
+    this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
+    if (!this.status.pendingUpdates.includes(remoteName)) {
+      this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
+      this.notifyStatusChange();
+    }
+    this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
+  }
+
+  private async initializeRuntimeManifest(zephyrManifestUrl: string): Promise<void> {
+    if (this.runtimeManifests[zephyrManifestUrl]) return;
+
+    try {
+      const resp = await fetch(zephyrManifestUrl);
+      if (!resp.ok) return;
+      const etag = this.getEtag(resp);
+      if (etag) {
+        const manifest = await this.readRuntimeManifest(resp, etag);
+        if (manifest) {
+          this.runtimeManifests[zephyrManifestUrl] = manifest;
+        }
+      }
+    } catch {
+      // Best-effort baseline. Polling will retry later without invalidating caches.
+    }
+  }
+
+  private async readRuntimeManifest(
+    resp: Response,
+    etag: string
+  ): Promise<ZephyrRuntimeManifestEntry | undefined> {
+    try {
+      const manifest = (await resp.json()) as ZephyrManifest;
+      return { etag, manifest };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private getEtag(resp: Response): string | undefined {
+    return resp.headers.get('ETag') ?? resp.headers.get('etag') ?? undefined;
+  }
+
+  private toZephyrManifestUrl(manifestUrl: string): string {
+    try {
+      const url = new URL(manifestUrl);
+      url.pathname = url.pathname.replace(/\/[^/]*$/, '/zephyr-manifest.json');
+      url.search = '';
+      url.hash = '';
+      return url.toString();
+    } catch {
+      return manifestUrl.replace(/\/[^/?#]*(?:[?#].*)?$/, '/zephyr-manifest.json');
     }
   }
 

@@ -36,6 +36,7 @@
     },
     "test": {
       "executor": "@nx/jest:jest",
+      "dependsOn": ["^build"],
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "libs/vite-plugin-zephyr/jest.config.ts"

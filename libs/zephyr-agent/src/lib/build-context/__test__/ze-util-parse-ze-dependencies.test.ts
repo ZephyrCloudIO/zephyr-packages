@@ -99,12 +99,57 @@ describe('parseZeDependency', () => {
     });
   });
 
-  it('should handle workspace:* dependency', () => {
+  it('should keep workspace:* for branch-aware resolution', () => {
     const result = parseZeDependency('local-workspace-dep', 'workspace:*');
     expect(result).toEqual({
       version: 'workspace:*',
       registry: 'zephyr',
       app_uid: 'local-workspace-dep',
+    });
+  });
+
+  it('should resolve app-prefixed workspace:* to the remote app_uid and keep workspace:*', () => {
+    const result = parseZeDependency('rspack_mf_remote', 'rspack_mf_remote@workspace:*');
+    expect(result).toEqual({
+      version: 'workspace:*',
+      registry: 'zephyr',
+      app_uid: 'rspack_mf_remote',
+    });
+  });
+
+  it('should resolve a scoped app-prefixed workspace:* dependency', () => {
+    const result = parseZeDependency('host', '@app-zephyr/host@workspace:*');
+    expect(result).toEqual({
+      version: 'workspace:*',
+      registry: 'zephyr',
+      app_uid: '@app-zephyr/host',
+    });
+  });
+
+  it('should pass through an explicit workspace range as semver', () => {
+    const result = parseZeDependency('local-workspace-dep', 'workspace:^1.2.3');
+    expect(result).toEqual({
+      version: '^1.2.3',
+      registry: 'zephyr',
+      app_uid: 'local-workspace-dep',
+    });
+  });
+
+  it('should normalize workspace:^, workspace:~ and bare workspace: to workspace:*', () => {
+    expect(parseZeDependency('dep', 'workspace:^')).toEqual({
+      version: 'workspace:*',
+      registry: 'zephyr',
+      app_uid: 'dep',
+    });
+    expect(parseZeDependency('dep', 'workspace:~')).toEqual({
+      version: 'workspace:*',
+      registry: 'zephyr',
+      app_uid: 'dep',
+    });
+    expect(parseZeDependency('dep', 'workspace:')).toEqual({
+      version: 'workspace:*',
+      registry: 'zephyr',
+      app_uid: 'dep',
     });
   });
 

@@ -1,0 +1,23 @@
+{
+  "name": "zephyr-native-cache",
+  "sourceRoot": "libs/zephyr-native-cache/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/lib"],
+      "options": {
+        "cwd": "libs/zephyr-native-cache",
+        "command": "bob build"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/zephyr-native-cache/jest.config.ts"
+      }
+    }
+  }
+}

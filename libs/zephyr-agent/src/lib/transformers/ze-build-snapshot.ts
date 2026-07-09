@@ -40,6 +40,7 @@ export async function createSnapshot(
     email: (await zephyr_engine.application_configuration).email,
     applicationProperties: zephyr_engine.applicationProperties,
     edge_url: (await zephyr_engine.application_configuration).EDGE_URL,
+    address_mode: (await zephyr_engine.application_configuration).ADDRESS_MODE,
     gitProperties: zephyr_engine.gitProperties,
     mfConfig: mfConfig,
   };
@@ -64,6 +65,7 @@ export async function createSnapshot(
       })
     ),
     domain: options.edge_url,
+    ...(options.address_mode === 'path' && { addressMode: 'path' as const }),
     uid: {
       build: options.buildId,
       app_name: options.applicationProperties.name,

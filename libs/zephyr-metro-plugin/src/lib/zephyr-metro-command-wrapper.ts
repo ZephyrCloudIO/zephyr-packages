@@ -64,8 +64,14 @@ export async function zephyrCommandWrapper(
 
       return res;
     } catch (error) {
+      const detail =
+        error instanceof Error
+          ? `${error.message}\n${error.stack ?? ''}`
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error, Object.getOwnPropertyNames(error as object));
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: JSON.stringify(error),
+        message: detail,
       });
     }
   };

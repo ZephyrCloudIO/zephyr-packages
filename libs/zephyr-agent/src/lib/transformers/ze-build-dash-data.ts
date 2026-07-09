@@ -34,14 +34,19 @@ export async function zeBuildDashData(
   return {
     id: application_uid,
     name,
-    environment: '',
+    environment: zephyr_engine.env.env ?? '',
     edge: { url: edge_url, delimiter },
     app: Object.assign({}, app, {
       buildId,
     }),
     version: snapshotId,
     git,
-    context: { isCI, username },
+    context: {
+      isCI,
+      username,
+      env: zephyr_engine.env.env,
+      target: zephyr_engine.env.target,
+    },
     dependencies: to_raw(zephyr_engine.npmProperties.dependencies),
     devDependencies: to_raw(zephyr_engine.npmProperties.devDependencies),
     optionalDependencies: to_raw(zephyr_engine.npmProperties.optionalDependencies),

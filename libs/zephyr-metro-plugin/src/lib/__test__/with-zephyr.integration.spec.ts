@@ -76,18 +76,8 @@ describe('withZephyr integration', () => {
       const result = await enhancer(baseMetroConfig);
 
       expect(result).toBeDefined();
-      expect(result.transformer).toBeDefined();
       expect(result.resolver).toBeDefined();
       expect(result.server).toBeDefined();
-    });
-
-    it('should set custom transformer path', async () => {
-      const enhancer = withZephyr({ name: 'TestApp' });
-      const result = await enhancer(baseMetroConfig);
-
-      // The transformer path should be set to the zephyr-transformer module
-      expect(result.transformer?.babelTransformerPath).toBeDefined();
-      expect(typeof result.transformer?.babelTransformerPath).toBe('string');
     });
 
     it('should add zephyr to resolver main fields', async () => {
@@ -217,33 +207,6 @@ describe('withZephyr integration', () => {
       await new Promise(setImmediate);
 
       expect(mockRes.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
-    });
-  });
-
-  describe('transformer options', () => {
-    it('should pass manifest path to transformer', async () => {
-      const enhancer = withZephyr({
-        name: 'TestApp',
-        manifestPath: '/custom-path.json',
-      });
-      const result = await enhancer(baseMetroConfig);
-
-      expect((result.transformer as any).zephyrTransformerOptions?.manifestPath).toBe(
-        '/custom-path.json'
-      );
-    });
-
-    it('should pass entry files to transformer', async () => {
-      const enhancer = withZephyr({
-        name: 'TestApp',
-        entryFiles: ['main.tsx', 'App.tsx'],
-      });
-      const result = await enhancer(baseMetroConfig);
-
-      expect((result.transformer as any).zephyrTransformerOptions?.entryFiles).toEqual([
-        'main.tsx',
-        'App.tsx',
-      ]);
     });
   });
 

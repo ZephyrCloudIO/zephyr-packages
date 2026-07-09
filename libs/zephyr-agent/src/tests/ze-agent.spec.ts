@@ -71,13 +71,13 @@ runner('ZeAgent', () => {
     appConfig.username = gitUserName;
     appConfig.user_uuid = user_uuid;
     await saveAppConfig(application_uid, appConfig);
-  });
+  }, integrationTestTimeout);
 
   afterAll(async () => {
     await exec(`git config --unset user.name "${gitUserName}"`);
     await exec(`git config --unset user.email "${gitEmail}"`);
     await exec(`git config --unset remote.origin.url ${gitRemoteOrigin}`);
-  });
+  }, integrationTestTimeout);
 
   it('should test git configuration', async () => {
     const gitInfo = await getGitInfo();

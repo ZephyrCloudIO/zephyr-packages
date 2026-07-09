@@ -32,7 +32,13 @@ describe('getGitInfo - CI environments', () => {
     originalEnv = { ...process.env };
     // Clear CI env vars
     Object.keys(process.env).forEach((key) => {
-      if (key.startsWith('GITHUB_') || key.startsWith('GITLAB_')) {
+      if (
+        key.startsWith('GITHUB_') ||
+        key.startsWith('GITLAB_') ||
+        key.startsWith('BUILD_') ||
+        key.startsWith('SYSTEM_') ||
+        key.startsWith('TF_')
+      ) {
         delete process.env[key];
       }
     });
@@ -169,6 +175,32 @@ describe('getGitInfo - CI environments', () => {
     expect(result.git.commit).toBe('def456abc123');
     expect(result.app.org).toBe('example');
     expect(result.app.project).toBe('project');
+  });
+
+  it('should support Azure Pipelines with Azure DevOps SSH remotes', async () => {
+    process.env.TF_BUILD = 'True';
+    process.env.BUILD_SOURCEBRANCHNAME = 'feature/azure';
+    process.env.BUILD_SOURCEBRANCH = 'refs/heads/feature/azure';
+
+    mockExec.mockImplementation((cmd, callback) => {
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+      const output = [
+        'Azure Runner',
+        'runner@dev.azure.com',
+        'git@ssh.dev.azure.com:v3/BusinessDomain/AddSecure/AddSecure',
+        'HEAD',
+        'azure123abc',
+        '',
+      ].join(`\n${delimiter}\n`);
+      callback(null, { stdout: output, stderr: '' });
+    });
+
+    const result = await getGitInfo();
+
+    expect(result.git.branch).toBe('feature/azure');
+    expect(result.git.commit).toBe('azure123abc');
+    expect(result.app.org).toBe('businessdomain');
+    expect(result.app.project).toBe('addsecure');
   });
 
   it('should detect PR source branch from GitHub Actions env vars', async () => {

@@ -19,8 +19,6 @@ export interface ZephyrMetroOptions {
   target?: 'ios' | 'android';
   /** Custom manifest endpoint path (default: /zephyr-manifest.json) */
   manifestPath?: string;
-  /** Custom entry file patterns for runtime injection (more conservative targeting) */
-  entryFiles?: string[];
   /** Throw an error if manifest generation fails (default: false - logs warning only) */
   failOnManifestError?: boolean;
 }
@@ -68,21 +66,8 @@ async function applyZephyrToMetroConfig(
   const resolved_dependencies =
     await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
-  // Enhanced metro config with Zephyr transformer options
-  const zephyrTransformerOptions = {
-    manifestPath,
-    entryFiles: zephyrOptions.entryFiles,
-  };
-
   const enhancedConfig: ConfigT = {
     ...metroConfig,
-    transformer: {
-      ...metroConfig.transformer,
-      babelTransformerPath: require.resolve('./zephyr-transformer'),
-      // Pass zephyr options to transformer via extra data
-      ...(metroConfig.transformer as any),
-      zephyrTransformerOptions,
-    },
     resolver: {
       ...metroConfig.resolver,
       // Add Zephyr-specific resolution logic

@@ -12,6 +12,7 @@ import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
 import { TOKEN_EXPIRY } from './auth-flags';
+import { getCiToken } from '../node-persist/ci-token';
 import { getServerToken } from '../node-persist/server-token';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 
@@ -24,6 +25,7 @@ import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   const secret_token = getSecretToken();
   const server_token = getServerToken();
+  const ci_token = getCiToken();
 
   if (secret_token) {
     logFn('debug', 'Token found in environment. Using secret token for authentication.');
@@ -34,6 +36,13 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
     logFn(
       'debug',
       'Server token found in environment. Using server token for authentication.'
+    );
+  }
+
+  if (ci_token) {
+    logFn(
+      'debug',
+      'CI token found in environment. Using CI-inferred token attribution.'
     );
   }
 

@@ -35,6 +35,14 @@ export type {
   ZeBuildAssetsMap,
   ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
+export type {
+  ZephyrGlobalNamespace,
+  ZephyrNativeCacheControls,
+  ZephyrNativeCacheNamespace,
+  ZephyrNativeCacheRefs,
+  ZephyrNativeCacheState,
+  ZephyrRuntimeNamespace,
+} from './lib/zephyr-global';
 export {
   ZEPHYR_MANIFEST_FILENAME,
   ZEPHYR_MANIFEST_VERSION,

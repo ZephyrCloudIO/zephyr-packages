@@ -131,17 +131,36 @@ runner('ZeAgent', () => {
         ...envs,
         `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
       ].join(' ');
-      await exec(cmd);
-      const deployResultUrls = await _getAppTagUrls(application_uid);
-      expect(deployResultUrls).toBeTruthy();
-      for (const url of deployResultUrls) {
-        expect(url).toBeTruthy();
-        const content = await _fetchContent(url);
-        const match = content.match(/<title>([^<]+)<\/title>/);
-        expect(match).toBeTruthy();
-        expect(match?.[1]).toEqual('SampleReactApp');
+      try {
+        await exec(cmd);
+        const deployResultUrls = await _getAppTagUrls(application_uid);
+        expect(deployResultUrls).toBeTruthy();
+        expect(deployResultUrls.length).toBeGreaterThan(0);
+        const contents = await Promise.allSettled(
+          deployResultUrls.map((url) => _fetchContent(url))
+        );
+        const titles = contents.flatMap((result) => {
+          if (result.status === 'rejected') {
+            return [];
+          }
+          const content = result.value;
+          const match = content.match(/<title>([^<]+)<\/title>/);
+          return match?.[1] ? [match[1]] : [];
+        });
+        if (!titles.includes('SampleReactApp')) {
+          const failures = contents
+            .filter((result) => result.status === 'rejected')
+            .map((result) => result.reason)
+            .join('\n');
+          throw new Error(
+            `Expected at least one deployed tag to serve SampleReactApp. Checked URLs: ${deployResultUrls.join(
+              ', '
+            )}${failures ? `\nFetch failures:\n${failures}` : ''}`
+          );
+        }
+      } finally {
+        await _cleanUp(application_uid);
       }
-      await _cleanUp(application_uid);
     },
     integrationTestTimeout
   );

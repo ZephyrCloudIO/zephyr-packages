@@ -51,7 +51,7 @@ runner('ZeAgent', () => {
   const dev_api_gate_url =
     process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloudapp.dev';
 
-  const integrationTestTimeout = 5 * 60000; // 5 minute because EDGE cache time;
+  const integrationTestTimeout = 10 * 60000; // Zephyr deploy plus edge propagation can take several minutes.
 
   beforeAll(async () => {
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
@@ -203,10 +203,15 @@ async function _cleanUp(application_uid: string): Promise<void> {
 async function _fetchContent(url: string, counter = 0): Promise<string> {
   const response = await fetch(url);
   const content = await response.text();
-  if (response.status === 404 || !content || counter > 5) {
+  if ((response.status === 404 || !content) && counter < 5) {
     const contentRefetchTimeout = 60000; // 1 minute;
     await new Promise((resolve) => setTimeout(resolve, contentRefetchTimeout));
     return _fetchContent(url, counter + 1);
+  }
+  if (!response.ok || !content) {
+    throw new Error(
+      `Failed to fetch deployed app content from ${url} after ${counter + 1} attempts. Status: ${response.status}`
+    );
   }
   return content;
 }

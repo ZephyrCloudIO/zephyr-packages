@@ -15,8 +15,8 @@
   "devDependencies": {
     "@module-federation/enhanced": "catalog:module-federation",
     "@module-federation/rsbuild-plugin": "catalog:module-federation",
-    "@rsbuild/core": "catalog:rsbuild1",
-    "@rsbuild/plugin-react": "catalog:rsbuild1",
+    "@rsbuild/core": "catalog:rspack",
+    "@rsbuild/plugin-react": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@swc/helpers": "catalog:swc",
     "@types/react": "catalog:react19",

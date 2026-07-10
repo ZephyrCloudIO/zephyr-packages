@@ -1,0 +1,21 @@
+{
+  "name": "rspress-v2-ssg",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "rspress build",
+    "dev": "rspress dev",
+    "preview": "rspress preview"
+  },
+  "dependencies": {
+    "@rsbuild/core": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rspress/core": "catalog:rspress",
+    "globby": "catalog:",
+    "webpack-sources": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:typescript",
+    "zephyr-rspress-plugin": "workspace:*"
+  }
+}

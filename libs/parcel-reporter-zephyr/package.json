@@ -26,9 +26,8 @@
   "devDependencies": {
     "@parcel/plugin": "catalog:parcel",
     "@parcel/types": "catalog:parcel",
-    "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
     "@parcel/plugin": "^2.0.0",

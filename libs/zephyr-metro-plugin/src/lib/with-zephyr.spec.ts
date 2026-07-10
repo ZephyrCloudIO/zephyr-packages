@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 /** Unit tests for Zephyr Metro Plugin configuration */
 
 describe('with-zephyr', () => {

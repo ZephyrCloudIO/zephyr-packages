@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import type { Mock } from '@rstest/core';
+
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { fetchWithRetries } from '../http/fetch-with-retries';
 import {
   maybeShowOutdatedPluginWarning,
@@ -6,23 +8,21 @@ import {
 } from './outdated-plugin-warning';
 import { getZephyrAgentVersion } from './zephyr-agent-version';
 
-jest.mock('../http/fetch-with-retries', () => ({
-  fetchWithRetries: jest.fn(),
+rs.mock('../http/fetch-with-retries', () => ({
+  fetchWithRetries: rs.fn(),
 }));
-jest.mock('./zephyr-agent-version', () => ({
-  getZephyrAgentVersion: jest.fn(() => '1.0.0'),
+rs.mock('./zephyr-agent-version', () => ({
+  getZephyrAgentVersion: rs.fn(() => '1.0.0'),
 }));
 
 describe('outdated-plugin-warning', () => {
-  const fetchWithRetriesMock = fetchWithRetries as jest.MockedFunction<
-    typeof fetchWithRetries
-  >;
-  const getZephyrAgentVersionMock = getZephyrAgentVersion as jest.MockedFunction<
+  const fetchWithRetriesMock = fetchWithRetries as Mock<typeof fetchWithRetries>;
+  const getZephyrAgentVersionMock = getZephyrAgentVersion as Mock<
     typeof getZephyrAgentVersion
   >;
 
   beforeEach(() => {
-    jest.restoreAllMocks();
+    rs.restoreAllMocks();
     resetOutdatedPluginWarningStateForTests();
     fetchWithRetriesMock.mockReset();
     getZephyrAgentVersionMock.mockReset();
@@ -30,7 +30,7 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning when stable version is older than latest', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -49,7 +49,7 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('does not show warning when versions are up to date', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -63,7 +63,7 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning when canary version is older than latest canary', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
     getZephyrAgentVersionMock.mockReturnValue('0.0.0-canary.44');
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
@@ -84,7 +84,7 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning when next version is older than latest next', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
     getZephyrAgentVersionMock.mockReturnValue('0.1.14-next.1');
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
@@ -105,7 +105,7 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('does not show warning for canary when canary dist-tag is missing', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
     getZephyrAgentVersionMock.mockReturnValue('0.0.0-canary.44');
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
@@ -120,7 +120,7 @@ describe('outdated-plugin-warning', () => {
   });
 
   it('shows warning once for the same package and version pair', async () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = rs.spyOn(console, 'error').mockImplementation(() => undefined);
     fetchWithRetriesMock.mockResolvedValue({
       status: 200,
       ok: true,

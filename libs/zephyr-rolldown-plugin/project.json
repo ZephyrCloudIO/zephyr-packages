@@ -27,10 +27,9 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "nx:run-commands",
       "options": {
-        "jestConfig": "libs/zephyr-rolldown-plugin/jest.config.ts"
+        "command": "rstest run --config rstest.config.mts --project zephyr-rolldown-plugin"
       }
     }
   }

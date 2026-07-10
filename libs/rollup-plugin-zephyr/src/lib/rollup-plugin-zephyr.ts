@@ -28,9 +28,24 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
         context: path_to_execution_dir,
       });
     },
-    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
+    buildEnd: async (error?: Error) => {
+      if (!error) return;
       try {
         const zephyr_engine = await zephyr_engine_defer;
+        if (zephyr_engine.hasActiveBuild !== false) {
+          zephyr_engine.build_failed();
+        }
+      } catch (engineError: unknown) {
+        handleGlobalError(engineError);
+      }
+    },
+    writeBundle: async (_options: NormalizedOutputOptions, bundle: OutputBundle) => {
+      let zephyr_engine: ZephyrEngine | undefined;
+      let buildInProgress = false;
+      try {
+        zephyr_engine = await zephyr_engine_defer;
+        // create() has already allocated generation zero.
+        buildInProgress = true;
 
         // Start a new build
         await zephyr_engine.start_new_build();
@@ -42,9 +57,15 @@ export function withZephyr(options?: { hooks?: ZephyrBuildHooks }) {
           hooks,
         });
 
+        // build_finished owns cleanup even when its logger fails.
+        buildInProgress = false;
         await zephyr_engine.build_finished();
       } catch (error) {
         handleGlobalError(error);
+      } finally {
+        if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+          zephyr_engine?.build_failed();
+        }
       }
     },
   };

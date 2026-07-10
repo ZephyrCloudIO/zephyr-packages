@@ -41,6 +41,7 @@
     "git-url-parse": "^15.0.0",
     "https-proxy-agent": "^7.0.6",
     "is-ci": "catalog:plugin-shared",
+    "jiti": "^2.7.0",
     "jose": "^5.10.0",
     "node-persist": "^4.0.1",
     "open": "^10.1.0",
@@ -49,16 +50,14 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@jest/globals": "catalog:react",
     "@types/debug": "^4.1.12",
     "@types/eventsource": "^3.0.0",
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "catalog:typescript",
-    "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@types/proper-lockfile": "^4.1.4",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public",

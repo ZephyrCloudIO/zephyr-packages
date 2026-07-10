@@ -1,3 +1,6 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type { Mock } from '@rstest/core';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { resolve } from 'node:path';
 import {
@@ -9,20 +12,20 @@ import {
 import { createUploadRunner, resolveAssetSources } from './ssr-upload';
 import type { NuxtLike } from './types';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  handleGlobalError: jest.fn(),
-  readDirRecursiveWithContents: jest.fn(),
-  zeBuildDashData: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: rs.fn(),
+  handleGlobalError: rs.fn(),
+  readDirRecursiveWithContents: rs.fn(),
+  zeBuildDashData: rs.fn(),
   ze_log: {
-    upload: jest.fn(),
+    upload: rs.fn(),
   },
 }));
 
-const mockedBuildAssetsMap = buildAssetsMap as jest.Mock;
-const mockedHandleGlobalError = handleGlobalError as jest.Mock;
-const mockedReadDirRecursiveWithContents = readDirRecursiveWithContents as jest.Mock;
-const mockedZeBuildDashData = zeBuildDashData as jest.Mock;
+const mockedBuildAssetsMap = buildAssetsMap as Mock;
+const mockedHandleGlobalError = handleGlobalError as Mock;
+const mockedReadDirRecursiveWithContents = readDirRecursiveWithContents as Mock;
+const mockedZeBuildDashData = zeBuildDashData as Mock;
 
 function makeNuxt(rootDir: string, publicDir?: string): NuxtLike {
   return {
@@ -36,7 +39,7 @@ function makeNuxt(rootDir: string, publicDir?: string): NuxtLike {
         },
       },
     },
-    hook: jest.fn(),
+    hook: rs.fn(),
   };
 }
 
@@ -44,8 +47,11 @@ function makeEngine() {
   return {
     env: {},
     buildProperties: {},
-    upload_assets: jest.fn().mockResolvedValue(undefined),
-    build_finished: jest.fn().mockResolvedValue(undefined),
+    build_id: undefined,
+    start_new_build: rs.fn().mockResolvedValue(undefined),
+    upload_assets: rs.fn().mockResolvedValue(undefined),
+    build_finished: rs.fn().mockResolvedValue(undefined),
+    build_failed: rs.fn(),
   };
 }
 
@@ -74,7 +80,7 @@ describe('resolveAssetSources', () => {
 
 describe('createUploadRunner', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     mockedBuildAssetsMap.mockImplementation((assets: Record<string, Buffer>) => assets);
     mockedZeBuildDashData.mockResolvedValue({});
   });
@@ -85,7 +91,7 @@ describe('createUploadRunner', () => {
       nuxt: makeNuxt('/workspace/app'),
       options: { snapshotType: 'csr' },
       zephyrEngineDefer: Promise.resolve(engine as any),
-      initEngine: jest.fn(),
+      initEngine: rs.fn(),
     });
 
     mockedReadDirRecursiveWithContents
@@ -101,6 +107,8 @@ describe('createUploadRunner', () => {
     await runner();
 
     expect(mockedHandleGlobalError).toHaveBeenCalledTimes(1);
+    expect(engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(engine.start_new_build).toHaveBeenCalledTimes(2);
     expect(engine.upload_assets).toHaveBeenCalledTimes(1);
     expect(engine.build_finished).toHaveBeenCalledTimes(1);
   });
@@ -118,7 +126,7 @@ describe('createUploadRunner', () => {
         entrypoint: 'server/index.mjs',
       },
       zephyrEngineDefer: Promise.resolve(engine as any),
-      initEngine: jest.fn(),
+      initEngine: rs.fn(),
     });
 
     mockedReadDirRecursiveWithContents.mockImplementation(async (dir: string) => {

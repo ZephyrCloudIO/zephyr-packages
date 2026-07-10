@@ -10,6 +10,12 @@
         "port": 4201
       },
       "dependsOn": ["host:serve"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rstest run --config rstest.config.mts --project example-rspack-remote"
+      }
     }
   }
 }

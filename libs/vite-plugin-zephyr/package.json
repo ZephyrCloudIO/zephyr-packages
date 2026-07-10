@@ -27,11 +27,13 @@
     ".": {
       "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
   "files": [
     "dist",
+    "!dist/**/*.tsbuildinfo",
     "README.md",
     "LICENSE"
   ],
@@ -48,14 +50,12 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@module-federation/vite": "catalog:module-federation",
-    "@types/jest": "catalog:typescript",
+    "@module-federation/vite": "catalog:module-federation-vite",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rollup": "catalog:rollup4",
-    "ts-jest": "catalog:typescript",
     "typescript": "catalog:typescript",
-    "vite": "catalog:vite7"
+    "vite": "catalog:vite8"
   },
   "peerDependencies": {
     "@module-federation/vite": "^1.13.2",

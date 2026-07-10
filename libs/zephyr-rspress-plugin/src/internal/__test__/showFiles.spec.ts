@@ -1,23 +1,26 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type { Mocked, Mock } from '@rstest/core';
+
 import type { Stats } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { ze_log } from 'zephyr-agent';
 import { showFiles } from '../files/showFiles';
 
-jest.mock('node:fs/promises');
+rs.mock('node:fs/promises', { spy: true });
 
-jest.mock('zephyr-agent', () => ({
+rs.mock('zephyr-agent', () => ({
   ze_log: {
-    package: jest.fn(),
+    package: rs.fn(),
   },
 }));
 
-const mockedFs = fs as jest.Mocked<typeof fs>;
-const mockedZeLog = ze_log.package as unknown as jest.Mock;
+const mockedFs = fs as Mocked<typeof fs>;
+const mockedZeLog = ze_log.package as unknown as Mock;
 
 describe('showFiles', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('logs size for each file', async () => {

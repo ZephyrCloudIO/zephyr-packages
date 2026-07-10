@@ -49,9 +49,7 @@ export default [
     })),
   ...compat
     .config({
-      env: {
-        jest: true,
-      },
+      env: {},
     })
     .map((config) => ({
       ...config,
@@ -95,7 +93,7 @@ export default [
         tsconfigRootDir: __dirname,
       },
     },
-    ignores: ['**/webpack.config.ts', '**/jest.config.ts', '**/*.spec.tsx'],
+    ignores: ['**/webpack.config.ts', '**/*.spec.tsx'],
   },
   {
     ignores: ['dist', 'tmp', 'legacy'],

@@ -52,12 +52,15 @@ withZephyr({
 
 ## How It Works
 
-1. **Build**: TanStack Start writes its output to `dist/`
-2. **Extract**: Plugin collects server modules and client assets
-3. **Bundle**: Server code is bundled with all dependencies
-4. **Upload**: Both server and client files are uploaded to Zephyr
+1. **Build**: TanStack Start owns and completes its client/server child compilers
+2. **Finalize**: The plugin's post-ordered `buildApp` hook waits for framework post-processing
+3. **Extract**: The plugin collects the finalized shared output tree once
+4. **Upload**: Server, client, public, and prerendered files are uploaded as one snapshot
 5. **Deploy**: Files are stored in content-addressable KV storage
 6. **Run**: Orchestration worker loads and runs your app on the edge
+
+The plugin never starts TanStack's child compilers itself and refuses to publish when an
+environment is incomplete.
 
 ## Build Output
 
@@ -113,9 +116,9 @@ pnpm link --global vite-plugin-tanstack-start-zephyr
 
 ## Requirements
 
-- Node.js version supported by Vite 7 and TanStack Start 1.x
+- Node.js version supported by Vite 7 or 8 and TanStack Start 1.x
 - TanStack Start 1.0+
-- Vite 7+
+- Vite 7 or 8
 
 ## License
 

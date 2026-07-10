@@ -30,10 +30,9 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "rollup": "catalog:rollup4",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
     "rollup": "^4.0.0"

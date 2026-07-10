@@ -114,13 +114,32 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
         with:
           main-branch-name: main
+      - name: verify test inventory
+        run: pnpm test:inventory
       - name: run test
+        if: runner.os != 'Linux'
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm nx affected -t test --outputStyle=stream
+      - name: run complete test suite with coverage
+        if: runner.os == 'Linux'
+        env:
+          ZE_IS_PREVIEW: true
+          ZE_API: ${{ vars.ZE_API_DEV }}
+          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+        run: pnpm test:coverage
+      - name: upload coverage report
+        if: runner.os == 'Linux' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rstest-coverage
+          path: coverage
+          if-no-files-found: error
+          retention-days: 14
 
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -169,4 +188,4 @@ jobs:
         run: echo "No Zephyr cache artifact for ${{ matrix.os }}; skipping e2e examples test."
       - name: Run e2e examples test
         if: steps.check-cache.outputs.has-files == 'true'
-        run: pnpm nx run e2e-deployment:e2e-test --passWithNoTests --skipRemoteCache --outputStyle=stream
+        run: pnpm nx run e2e-deployment:e2e-test --skipRemoteCache --outputStyle=stream

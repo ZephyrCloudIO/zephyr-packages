@@ -14,9 +14,7 @@
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
     "zephyr-webpack-plugin": "workspace:*",
-    "@testing-library/react": "catalog:react",
-    "ts-jest": "catalog:typescript",
-    "@types/jest": "catalog:typescript"
+    "@testing-library/react": "catalog:react"
   },
   "repository": {
     "type": "git",

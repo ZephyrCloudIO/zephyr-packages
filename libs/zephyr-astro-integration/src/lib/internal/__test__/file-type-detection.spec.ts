@@ -1,20 +1,22 @@
+import { beforeEach, describe, expect, it, rs, test } from '@rstest/core';
+import type { Mock } from '@rstest/core';
+
 import { buildAssetsMap, readDirRecursiveWithContents } from 'zephyr-agent';
 import { extractAstroAssetsMap } from '../extract-astro-assets-map';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  readDirRecursiveWithContents: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: rs.fn(),
+  readDirRecursiveWithContents: rs.fn(),
 }));
 
-const mockBuildAssetsMap = buildAssetsMap as jest.MockedFunction<typeof buildAssetsMap>;
-const mockReadDirRecursiveWithContents =
-  readDirRecursiveWithContents as jest.MockedFunction<
-    typeof readDirRecursiveWithContents
-  >;
+const mockBuildAssetsMap = buildAssetsMap as Mock<typeof buildAssetsMap>;
+const mockReadDirRecursiveWithContents = readDirRecursiveWithContents as Mock<
+  typeof readDirRecursiveWithContents
+>;
 
 describe('File Type Detection', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     mockBuildAssetsMap.mockImplementation((assets: Record<string, unknown>) => {
       return Object.fromEntries(
         Object.entries(assets).map(([key, value], index) => [

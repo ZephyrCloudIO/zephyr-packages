@@ -13,8 +13,16 @@ export function resolveIndexHtml(content: string): void {
 export async function onIndexHtmlResolved(): Promise<string> {
   return new Promise((resolve, reject) => {
     ze_log.misc('Waiting for index HTML to be resolved');
-    // wait for 1 minute (just in case)
-    setTimeout(reject, 60000);
-    _index_html_emitted.once(_event_name, resolve);
+
+    const onResolved = (content: string): void => {
+      clearTimeout(timeout);
+      resolve(content);
+    };
+    const timeout = setTimeout(() => {
+      _index_html_emitted.removeListener(_event_name, onResolved);
+      reject(new Error('Timed out waiting for index HTML to be resolved'));
+    }, 60_000);
+
+    _index_html_emitted.once(_event_name, onResolved);
   });
 }

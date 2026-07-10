@@ -19,7 +19,7 @@
     "build": "nx run zephyr-rspress-plugin:build",
     "dev": "nx run zephyr-rspress-plugin:build --watch",
     "patch-version": "pnpm version",
-    "test": "jest"
+    "test": "rstest run --config ../../rstest.config.mts --project zephyr-rspress-plugin"
   },
   "dependencies": {
     "tslib": "catalog:typescript",
@@ -30,10 +30,9 @@
   },
   "devDependencies": {
     "@rspress/core": "catalog:rspress",
-    "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
     "@rspress/core": "^2.0.0"

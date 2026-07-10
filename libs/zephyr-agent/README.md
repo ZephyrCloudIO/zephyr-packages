@@ -84,20 +84,38 @@ The agent has minimal external dependencies:
 
 ## Configuration
 
-The agent is configured through build context and environment variables:
+Bundler plugins can infer application identity from Git and `package.json`, or load a
+strict project config from the bundler context:
 
 ```typescript
-interface ZephyrAgentConfig {
-  buildContext: BuildContext;
-  assets: AssetMap;
-  deploymentOptions?: DeploymentOptions;
-  authentication?: AuthConfig;
-}
+import { defineConfig } from 'zephyr-agent';
+
+export default defineConfig({
+  org: 'my-org',
+  project: 'my-project',
+  appName: 'my-app',
+  remoteDependencies: {
+    remote: 'zephyr:remote.remote-project.remote-org@latest',
+  },
+});
 ```
+
+Name the file `zephyr.config.ts`, `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs`. Only
+`org`, `project`, `appName`, and `remoteDependencies` are valid. Config identity wins
+over Git inference, `appName` wins over the package name, and config remotes win by key
+over `package.json` `zephyr:dependencies`. Environment identity overrides are not
+supported, and config loading never mutates `process.env`.
+
+The config is resolved once when a `ZephyrEngine` is created and is shared by every
+compiler participating in that application build. Restart the bundler after changing
+the file so an active `ApplicationContext` never changes identity between watch
+generations.
 
 ### Git Repository Requirements
 
-**IMPORTANT**: Zephyr requires a properly initialized Git repository with a remote origin for production deployments.
+Git remains the richest source of version metadata. An explicit Zephyr config can
+replace remote-origin identity inference while retaining Git author, branch, commit, and
+tag metadata.
 
 #### Git Information Handling
 

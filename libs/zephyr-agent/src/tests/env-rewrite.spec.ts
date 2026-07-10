@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { rewriteEnvReadsToVirtualModule } from '../index';
 
 const SPEC = 'env:vars:app';

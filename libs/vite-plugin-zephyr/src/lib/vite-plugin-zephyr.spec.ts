@@ -1,66 +1,740 @@
+import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
+import type { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite' with {
+  'resolution-mode': 'import',
+};
+import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
+
+const mocks = rs.hoisted(() => ({
+  federation: rs.fn(),
+  extractAssets: rs.fn(),
+  savePartialAssetMap: rs.fn(),
+  claimPartialAssetMapBatch: rs.fn(),
+  commitPartialAssetMapClaimBatch: rs.fn(),
+  rollbackPartialAssetMapClaimBatch: rs.fn(),
+  zeBuildDashData: rs.fn(async () => ({})),
+  deferCreate: rs.fn(),
+  zeLogInit: rs.fn(),
+  engine: {
+    application_uid: 'org.project.vite',
+    buildProperties: { output: 'dist' },
+    federated_dependencies: [],
+    resolve_remote_dependencies: rs.fn(async () => []),
+    upload_assets: rs.fn(async () => undefined),
+    build_finished: rs.fn(async () => undefined),
+    build_failed: rs.fn(),
+    start_new_build: rs.fn(async () => undefined),
+    hasActiveBuild: true,
+    application_configuration: Promise.resolve<Record<string, unknown>>({
+      ADDRESS_MODE: 'hostname',
+    }),
+  },
+}));
+
+rs.mock('vite', () => ({
+  loadEnv: rs.fn(() => ({})),
+  version: '7.0.0',
+}));
+
+rs.mockRequire('@module-federation/vite', () => {
+  return { federation: mocks.federation };
+});
+
+rs.mock('zephyr-agent', () => {
+  const actual = rs.requireActual('zephyr-agent') as Record<string, unknown>;
+  return {
+    ...actual,
+    claimPartialAssetMapBatch: mocks.claimPartialAssetMapBatch,
+    commitPartialAssetMapClaimBatch: mocks.commitPartialAssetMapClaimBatch,
+    rollbackPartialAssetMapClaimBatch: mocks.rollbackPartialAssetMapClaimBatch,
+    savePartialAssetMap: mocks.savePartialAssetMap,
+    zeBuildDashData: mocks.zeBuildDashData,
+    ze_log: {
+      ...(actual.ze_log as Record<string, unknown>),
+      init: mocks.zeLogInit,
+    },
+    ZephyrEngine: {
+      defer_create: () => ({
+        zephyr_engine_defer: Promise.resolve(mocks.engine),
+        zephyr_defer_create: mocks.deferCreate,
+      }),
+    },
+  };
+});
+
+rs.mock('./internal/extract/extract_vite_assets_map', () => ({
+  extract_vite_assets_map: mocks.extractAssets,
+}));
+
+import { withZephyr } from './vite-plugin-zephyr';
+import { withZephyrPartial } from './vite-plugin-zephyr-partial';
+
+const originalFailBuild = process.env['ZE_FAIL_BUILD'];
+
+function asset(path: string, hash = path): ZeBuildAssetsMap {
+  return {
+    [hash]: {
+      path,
+      hash,
+      extname: path.includes('.') ? `.${path.split('.').pop()}` : '',
+      size: 1,
+      buffer: 'x',
+    },
+  };
+}
+
+function environmentOutput(environmentName: string, identity = 'output'): string {
+  return `vite-environment:${encodeURIComponent(environmentName)}:${identity}`;
+}
+
+function resolvedConfig(
+  environments: Record<string, { consumer: string; build: { outDir: string } }>,
+  watch = false,
+  base = '/'
+): ResolvedConfig {
+  return {
+    root: '/repo',
+    mode: 'production',
+    configFile: '/repo/vite.config.ts',
+    publicDir: '/repo/public',
+    base,
+    plugins: [],
+    environments,
+    build: {
+      outDir: 'dist',
+      watch: watch ? {} : null,
+      rollupOptions: {},
+    },
+  } as unknown as ResolvedConfig;
+}
+
+async function configuredPlugin(
+  environments: Record<string, { consumer: string; build: { outDir: string } }>,
+  watch = false,
+  base = '/'
+): Promise<Plugin> {
+  const plugin = withZephyr()[0] as Plugin;
+  await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+    resolvedConfig(environments, watch, base)
+  );
+  return plugin;
+}
+
+interface TestBuildEnvironment {
+  isBuilt: boolean;
+  config?: { consumer?: string };
+}
+
+interface TestBuilder {
+  environments: Record<string, TestBuildEnvironment>;
+  build: (environment: TestBuildEnvironment) => unknown | Promise<unknown>;
+}
+
+type TestWriteBundle = (
+  options: { dir?: string; file?: string; format?: string },
+  bundle: Record<string, never>
+) => Promise<void>;
+
+function buildAppHandler(plugin: Plugin) {
+  return (plugin.buildApp as { handler: (builder: TestBuilder) => Promise<void> })
+    .handler;
+}
+
+function configHook(plugin: Plugin) {
+  return plugin.config as (
+    config: UserConfig,
+    env: ConfigEnv
+  ) => UserConfig | null | Promise<UserConfig | null>;
+}
+
+function claimed(
+  partialAssetMaps: Record<string, ZeBuildAssetsMap>,
+  claimId = 'claim-id'
+) {
+  return {
+    claimId,
+    scope: { invocationId: 'test', generation: 0 },
+    partialAssetMaps,
+  };
+}
+
+let internalClaims: ReturnType<typeof claimed>[] = [];
+
 describe('vite-plugin-zephyr', () => {
-  afterEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
-    jest.unmock('@module-federation/vite');
+  beforeEach(() => {
+    rs.clearAllMocks();
+    mocks.claimPartialAssetMapBatch.mockReset();
+    internalClaims = [];
+    mocks.claimPartialAssetMapBatch.mockImplementation(
+      async (_applicationUid, scopes: Array<{ invocationId: string }>) => {
+        if (!scopes[0]?.invocationId.startsWith('vite-')) return undefined;
+        const claim = internalClaims.shift();
+        return claim ? { claims: [claim] } : undefined;
+      }
+    );
+    mocks.engine.federated_dependencies = [];
+    mocks.engine.application_configuration = Promise.resolve({
+      ADDRESS_MODE: 'hostname',
+    });
+    mocks.engine.hasActiveBuild = true;
+    mocks.engine.start_new_build.mockImplementation(async () => {
+      mocks.engine.hasActiveBuild = true;
+    });
+    mocks.engine.build_finished.mockImplementation(async () => {
+      mocks.engine.hasActiveBuild = false;
+    });
+    mocks.engine.build_failed.mockImplementation(() => {
+      mocks.engine.hasActiveBuild = false;
+    });
+    mocks.engine.upload_assets.mockResolvedValue(undefined);
+    mocks.extractAssets.mockResolvedValue(asset('app.js'));
+    delete process.env['ZE_FAIL_BUILD'];
   });
 
-  test('withZephyr without mfConfig does not load module federation', () => {
-    jest.isolateModules(() => {
-      jest.doMock('vite', () => ({
-        loadEnv: jest.fn(() => ({})),
-      }));
-      jest.doMock('@module-federation/vite', () => {
-        throw new Error('module federation should not load');
-      });
+  afterEach(() => {
+    if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+    else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+  });
 
-      const { withZephyr } = require('./vite-plugin-zephyr') as {
-        withZephyr: () => Array<{ name?: string }>;
-      };
+  test('withZephyr without mfConfig does not invoke module federation', () => {
+    const plugins = withZephyr();
 
-      const plugins = withZephyr();
-      expect(plugins).toHaveLength(1);
-      expect(plugins[0]?.name).toBe('with-zephyr');
-    });
+    expect(mocks.federation).not.toHaveBeenCalled();
+    expect(plugins).toHaveLength(1);
+    expect(plugins[0]?.name).toBe('with-zephyr');
   });
 
   test('withZephyr with mfConfig injects runtime plugin and delegates to mf plugin', () => {
-    jest.isolateModules(() => {
-      jest.doMock('vite', () => ({
-        loadEnv: jest.fn(() => ({})),
-      }));
-      const federation = jest.fn((config) => [
-        {
-          name: 'module-federation-vite',
-          _options: config,
-        },
-      ]);
+    mocks.federation.mockImplementation((config) => [
+      {
+        name: 'module-federation-vite',
+        _options: config,
+      },
+    ]);
 
-      jest.doMock('@module-federation/vite', () => ({
-        federation,
-      }));
-
-      const { withZephyr } = require('./vite-plugin-zephyr') as {
-        withZephyr: (options?: Record<string, unknown>) => Array<{
-          name?: string;
-          _options?: { runtimePlugins?: string[] };
-        }>;
-      };
-
-      const plugins = withZephyr({
-        mfConfig: {
-          name: 'host',
-        },
-      });
-
-      expect(federation).toHaveBeenCalledTimes(1);
-      expect(federation.mock.calls[0]?.[0]?.runtimePlugins).toEqual(
-        expect.arrayContaining(['virtual:zephyr-mf-runtime-plugin'])
-      );
-      expect(plugins.map((plugin) => plugin.name)).toEqual([
-        'module-federation-vite',
-        'with-zephyr',
-      ]);
+    const plugins = withZephyr({
+      mfConfig: {
+        name: 'host',
+      },
     });
+
+    expect(mocks.federation).toHaveBeenCalledTimes(1);
+    expect(mocks.federation.mock.calls[0]?.[0]?.runtimePlugins).toEqual(
+      expect.arrayContaining(['virtual:zephyr-mf-runtime-plugin'])
+    );
+    expect(plugins.map((plugin) => plugin.name)).toEqual([
+      'module-federation-vite',
+      'with-zephyr',
+    ]);
+  });
+
+  test('defaults unset build base locally without initializing the engine', async () => {
+    const plugin = withZephyr()[0] as Plugin;
+
+    expect(
+      await configHook(plugin)({}, {
+        command: 'build',
+        mode: 'production',
+      } as ConfigEnv)
+    ).toEqual({ base: './' });
+    expect(mocks.deferCreate).not.toHaveBeenCalled();
+  });
+
+  test.each(['/docs/', './docs/', 'https://cdn.example.test/app/', '//cdn/app/'])(
+    'preserves an explicit Vite base: %s',
+    async (base) => {
+      const plugin = withZephyr()[0] as Plugin;
+
+      expect(
+        await configHook(plugin)({ base }, {
+          command: 'build',
+          mode: 'production',
+        } as ConfigEnv)
+      ).toBeNull();
+      expect(mocks.deferCreate).not.toHaveBeenCalled();
+    }
+  );
+
+  test('does not default base or initialize the engine while serving', async () => {
+    const plugin = withZephyr()[0] as Plugin;
+
+    expect(
+      await configHook(plugin)({}, {
+        command: 'serve',
+        mode: 'development',
+      } as ConfigEnv)
+    ).toBeNull();
+    expect(mocks.deferCreate).not.toHaveBeenCalled();
+  });
+
+  test('warns when an explicit origin-absolute base reaches a secondary path target', async () => {
+    mocks.engine.application_configuration = Promise.resolve({
+      ADDRESS_MODE: 'hostname',
+      ENVIRONMENTS: { preview: { addressMode: 'path' } },
+    });
+    const plugin = withZephyr()[0] as Plugin;
+    expect(
+      await configHook(plugin)({ base: '/docs/' }, {
+        command: 'build',
+        mode: 'production',
+      } as ConfigEnv)
+    ).toBeNull();
+
+    await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(
+      resolvedConfig({}, false, '/docs/')
+    );
+
+    expect(mocks.zeLogInit).toHaveBeenCalledWith(
+      expect.stringContaining("resolved Vite base '/docs/'")
+    );
+  });
+
+  test('rejects entrypoints that escape the snapshot root', async () => {
+    const plugin = withZephyr({ entrypoint: '../secret.js' })[0] as Plugin;
+    await expect(
+      (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+        resolvedConfig({})
+      )
+    ).rejects.toThrow('relative path inside the snapshot');
+  });
+
+  test('owns Vite default buildApp orchestration only when no environment was built', async () => {
+    const plugin = await configuredPlugin({
+      browser: { consumer: 'client', build: { outDir: 'dist/client' } },
+      runtime: { consumer: 'server', build: { outDir: 'dist/server' } },
+    });
+    const environments = {
+      browser: { isBuilt: false, config: { consumer: 'client' } },
+      runtime: { isBuilt: false, config: { consumer: 'server' } },
+    };
+    const build = rs.fn(async (environment: { isBuilt: boolean }) => {
+      environment.isBuilt = true;
+    });
+    internalClaims.push(
+      claimed({
+        [environmentOutput('browser')]: asset('client/app.js', 'client'),
+        [environmentOutput('runtime')]: asset('server/index.mjs', 'server'),
+      })
+    );
+
+    await buildAppHandler(plugin)({ environments, build });
+
+    expect(build).toHaveBeenCalledTimes(2);
+    expect(mocks.engine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        snapshotType: 'ssr',
+        entrypoint: 'server/index.mjs',
+      })
+    );
+  });
+
+  test('propagates normalized Vite base to path-addressed snapshot assets', async () => {
+    const plugin = await configuredPlugin(
+      { browser: { consumer: 'client', build: { outDir: 'dist/client' } } },
+      false,
+      '/base-path/'
+    );
+    internalClaims.push(
+      claimed({ [environmentOutput('browser')]: asset('vite.svg', 'svg') })
+    );
+
+    await buildAppHandler(plugin)({
+      environments: { browser: { isBuilt: true, config: { consumer: 'client' } } },
+      build: rs.fn(),
+    });
+
+    expect(mocks.engine.buildProperties.baseHref).toBe('base-path');
+    const addressed = applyBaseHrefToAssets(
+      asset('vite.svg', 'svg'),
+      mocks.engine.buildProperties.baseHref
+    );
+    expect(Object.values(addressed)[0]?.path).toBe('base-path/vite.svg');
+    expect(mocks.commitPartialAssetMapClaimBatch).toHaveBeenCalledWith(
+      mocks.engine.application_uid,
+      ['claim-id']
+    );
+  });
+
+  test('rewrites generated env imports through renderChunk without mutating bundle output', async () => {
+    const plugin = await configuredPlugin({});
+    await (plugin.resolveId as (source: string) => Promise<unknown>)('entry.js');
+    const renderChunk = (
+      plugin.renderChunk as {
+        handler: (code: string) => { code: string; map: null } | null;
+      }
+    ).handler;
+    const code =
+      "import zephyrEnv from 'env:vars:org.project.vite';\nconsole.log(zephyrEnv);";
+
+    const result = renderChunk(code);
+
+    expect(result?.code).toContain(
+      "from 'env:vars:org.project.vite' with { type: 'json' }"
+    );
+    expect(code).not.toContain("with { type: 'json' }");
+  });
+
+  test('does not force a framework-owned subset of incomplete environments', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = await configuredPlugin({
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+      server: { consumer: 'server', build: { outDir: 'dist/server' } },
+    });
+    const build = rs.fn();
+
+    await expect(
+      buildAppHandler(plugin)({
+        environments: {
+          client: { isBuilt: true, config: { consumer: 'client' } },
+          server: { isBuilt: false, config: { consumer: 'server' } },
+        },
+        build,
+      })
+    ).rejects.toThrow('server');
+    expect(build).not.toHaveBeenCalled();
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('requires every current environment map despite isBuilt and rejects stale environment maps', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const config = {
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+      server: { consumer: 'server', build: { outDir: 'dist/server' } },
+    };
+    const environments = {
+      client: { isBuilt: true, config: { consumer: 'client' } },
+      server: { isBuilt: true, config: { consumer: 'server' } },
+    };
+
+    const missingPlugin = await configuredPlugin(config);
+    internalClaims.push(
+      claimed({
+        [environmentOutput('client')]: asset('client/app.js'),
+      })
+    );
+    await expect(
+      buildAppHandler(missingPlugin)({ environments, build: rs.fn() })
+    ).rejects.toThrow('vite-environment:server');
+
+    const stalePlugin = await configuredPlugin(config);
+    internalClaims.push(
+      claimed({
+        [environmentOutput('client')]: asset('client/app.js'),
+        [environmentOutput('server')]: asset('server/index.js'),
+        [environmentOutput('previous-server')]: asset('old/index.js'),
+      })
+    );
+    await expect(
+      buildAppHandler(stalePlugin)({ environments, build: rs.fn() })
+    ).rejects.toThrow('previous-server');
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('persists and merges every output emitted by one Vite environment', async () => {
+    const plugin = await configuredPlugin({
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+    });
+    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const context = { environment: { name: 'client' } };
+    mocks.extractAssets
+      .mockResolvedValueOnce(asset('client/app.mjs', 'esm-output'))
+      .mockResolvedValueOnce(asset('client/app.cjs', 'cjs-output'));
+
+    await writeBundle.call(context, { dir: '/repo/dist/client', format: 'es' }, {});
+    await writeBundle.call(context, { dir: '/repo/dist/client', format: 'cjs' }, {});
+
+    const persistedOutputs = Object.fromEntries(
+      mocks.savePartialAssetMap.mock.calls.map(([, key, assetsMap]) => [key, assetsMap])
+    ) as Record<string, ZeBuildAssetsMap>;
+    expect(Object.keys(persistedOutputs)).toHaveLength(2);
+    expect(Object.keys(persistedOutputs)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^vite-environment:client:[a-f0-9]{64}$/),
+        expect.stringMatching(/^vite-environment:client:[a-f0-9]{64}$/),
+      ])
+    );
+    internalClaims.push(claimed(persistedOutputs));
+
+    await buildAppHandler(plugin)({
+      environments: {
+        client: { isBuilt: true, config: { consumer: 'client' } },
+      },
+      build: rs.fn(),
+    });
+
+    expect(mocks.engine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assetsMap: expect.objectContaining({
+          'esm-output': expect.objectContaining({ path: 'client/app.mjs' }),
+          'cjs-output': expect.objectContaining({ path: 'client/app.cjs' }),
+        }),
+      })
+    );
+  });
+
+  test('rejects path collisions across outputs from one Vite environment', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = await configuredPlugin({
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+    });
+    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const context = { environment: { name: 'client' } };
+    mocks.extractAssets
+      .mockResolvedValueOnce(asset('client/app.js', 'first-output'))
+      .mockResolvedValueOnce(asset('client/app.js', 'second-output'));
+
+    await writeBundle.call(context, { dir: '/repo/dist/client', format: 'es' }, {});
+    await writeBundle.call(context, { dir: '/repo/dist/client', format: 'cjs' }, {});
+    internalClaims.push(
+      claimed(
+        Object.fromEntries(
+          mocks.savePartialAssetMap.mock.calls.map(([, key, assetsMap]) => [
+            key,
+            assetsMap,
+          ])
+        ) as Record<string, ZeBuildAssetsMap>
+      )
+    );
+
+    await expect(
+      buildAppHandler(plugin)({
+        environments: {
+          client: { isBuilt: true, config: { consumer: 'client' } },
+        },
+        build: rs.fn(),
+      })
+    ).rejects.toThrow('Conflicting assets were contributed');
+  });
+
+  test('requires configured external partial output in the same atomic claim batch', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = withZephyr({
+      partialBuild: { invocationId: 'external-build', generation: 2 },
+    })[0] as Plugin;
+    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      resolvedConfig({
+        client: { consumer: 'client', build: { outDir: 'dist/client' } },
+      })
+    );
+
+    await expect(
+      buildAppHandler(plugin)({
+        environments: {
+          client: { isBuilt: true, config: { consumer: 'client' } },
+        },
+        build: rs.fn(),
+      })
+    ).rejects.toThrow('atomically claim');
+
+    expect(mocks.claimPartialAssetMapBatch).toHaveBeenCalledWith(
+      mocks.engine.application_uid,
+      expect.arrayContaining([
+        expect.objectContaining({ invocationId: expect.stringMatching(/^vite-/) }),
+        { invocationId: 'external-build', generation: 2 },
+      ])
+    );
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('allows non-environment partial maps and infers SSR from consumer metadata', async () => {
+    const plugin = await configuredPlugin({
+      web: { consumer: 'client', build: { outDir: 'dist/web' } },
+      oddlyNamed: { consumer: 'server', build: { outDir: 'dist/runtime' } },
+    });
+    internalClaims.push(
+      claimed({
+        [environmentOutput('web')]: asset('web/app.js', 'web'),
+        [environmentOutput('oddlyNamed')]: asset('runtime/index.cjs', 'runtime'),
+        'vite-partial:prerender': asset('prerender/routes.json', 'prerender'),
+      })
+    );
+
+    await buildAppHandler(plugin)({
+      environments: {
+        web: { isBuilt: true, config: { consumer: 'client' } },
+        oddlyNamed: { isBuilt: true, config: { consumer: 'server' } },
+      },
+      build: rs.fn(),
+    });
+
+    expect(mocks.engine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        snapshotType: 'ssr',
+        entrypoint: 'runtime/index.cjs',
+        assetsMap: expect.objectContaining({ prerender: expect.any(Object) }),
+      })
+    );
+  });
+
+  test('starts a fresh direct-upload generation for each single-environment watch rebuild', async () => {
+    const plugin = await configuredPlugin(
+      { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
+      true
+    );
+    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    mocks.extractAssets
+      .mockResolvedValueOnce(asset('app-0.js', 'generation-0'))
+      .mockResolvedValueOnce(asset('app-1.js', 'generation-1'));
+    const context = { environment: { name: 'client' } };
+
+    await writeBundle.call(context, { dir: '/repo/dist/client' }, {});
+    await writeBundle.call(context, { dir: '/repo/dist/client' }, {});
+
+    expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(2);
+    expect(mocks.engine.build_finished).toHaveBeenCalledTimes(2);
+    expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(1);
+  });
+
+  test('starts a fresh direct build after a failed watch upload is retried', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = await configuredPlugin(
+      { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
+      true
+    );
+    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const error = new Error('first upload failed');
+    mocks.engine.upload_assets.mockRejectedValueOnce(error).mockResolvedValue(undefined);
+    const context = { environment: { name: 'client' } };
+
+    await expect(
+      writeBundle.call(context, { dir: '/repo/dist/client' }, {})
+    ).rejects.toBe(error);
+    await expect(
+      writeBundle.call(context, { dir: '/repo/dist/client' }, {})
+    ).resolves.toBeUndefined();
+
+    expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(2);
+    expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
+  });
+
+  test('allocates a new coordinated generation after publication failure', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = await configuredPlugin({
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+    });
+    const environmentAssets = {
+      [environmentOutput('client')]: asset('client/app.js'),
+    };
+    internalClaims.push(
+      claimed(environmentAssets, 'claim-0'),
+      claimed(environmentAssets, 'claim-1')
+    );
+    const error = new Error('first coordinated upload failed');
+    mocks.engine.upload_assets.mockRejectedValueOnce(error).mockResolvedValue(undefined);
+    const builder = {
+      environments: {
+        client: { isBuilt: true, config: { consumer: 'client' } },
+      },
+      build: rs.fn(),
+    };
+
+    await expect(buildAppHandler(plugin)(builder)).rejects.toBe(error);
+    await expect(buildAppHandler(plugin)(builder)).resolves.toBeUndefined();
+
+    const generations = mocks.claimPartialAssetMapBatch.mock.calls.map(
+      (call) => call[1][0].generation
+    );
+    expect(generations).toEqual([0, 1]);
+    expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(2);
+    expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(1);
+    expect(mocks.commitPartialAssetMapClaimBatch).toHaveBeenCalledWith(
+      mocks.engine.application_uid,
+      ['claim-1']
+    );
+  });
+
+  test('rolls back a persisted claim when coordinated publication fails', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = await configuredPlugin({
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+    });
+    internalClaims.push(
+      claimed({ [environmentOutput('client')]: asset('client/app.js') })
+    );
+    mocks.engine.upload_assets.mockRejectedValue(new Error('production upload failed'));
+
+    await expect(
+      buildAppHandler(plugin)({
+        environments: { client: { isBuilt: true, config: { consumer: 'client' } } },
+        build: rs.fn(),
+      })
+    ).rejects.toThrow('production upload failed');
+
+    expect(mocks.rollbackPartialAssetMapClaimBatch).toHaveBeenCalledWith(
+      mocks.engine.application_uid,
+      ['claim-id']
+    );
+    expect(mocks.commitPartialAssetMapClaimBatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('withZephyrPartial', () => {
+  beforeEach(() => {
+    rs.clearAllMocks();
+    delete process.env['ZE_FAIL_BUILD'];
+  });
+
+  afterEach(() => {
+    if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+    else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+  });
+
+  test('isolates concurrent environment extraction and persisted keys by output root', async () => {
+    const seenOptions: Array<{ outDir: string }> = [];
+    mocks.extractAssets.mockImplementation(async (_engine, options) => {
+      seenOptions.push(options);
+      await Promise.resolve();
+      return asset(`${options.outDir}/app.js`);
+    });
+    const plugin = withZephyrPartial({ invocationId: 'test-partial' });
+    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      resolvedConfig({})
+    );
+    const writeBundle = plugin.writeBundle as TestWriteBundle;
+
+    await Promise.all([
+      writeBundle.call(
+        { environment: { name: 'client' } },
+        { dir: '/repo/dist/client' },
+        {}
+      ),
+      writeBundle.call(
+        { environment: { name: 'server' } },
+        { dir: '/repo/dist/server' },
+        {}
+      ),
+    ]);
+
+    expect(seenOptions.map(({ outDir }) => outDir).sort()).toEqual([
+      '/repo/dist/client',
+      '/repo/dist/server',
+    ]);
+    const keys = mocks.savePartialAssetMap.mock.calls.map((call) => call[1]);
+    expect(new Set(keys).size).toBe(2);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('client:/repo/dist/client'),
+        expect.stringContaining('server:/repo/dist/server'),
+      ])
+    );
+  });
+
+  test('propagates extraction failures when ZE_FAIL_BUILD is enabled', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const error = new Error('partial extraction failed');
+    mocks.extractAssets.mockRejectedValue(error);
+    const plugin = withZephyrPartial({ invocationId: 'test-partial' });
+    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      resolvedConfig({})
+    );
+
+    await expect(
+      (plugin.writeBundle as TestWriteBundle).call(
+        { environment: { name: 'client' } },
+        { dir: '/repo/dist/client' },
+        {}
+      )
+    ).rejects.toThrow('partial extraction failed');
+    expect(mocks.savePartialAssetMap).not.toHaveBeenCalled();
   });
 });

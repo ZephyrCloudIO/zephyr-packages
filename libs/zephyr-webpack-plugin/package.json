@@ -25,10 +25,9 @@
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
+    "typescript": "catalog:typescript",
     "webpack": "catalog:webpack5"
   },
   "peerDependencies": {

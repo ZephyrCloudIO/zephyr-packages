@@ -1,14 +1,16 @@
-jest.mock('../with-zephyr', () => ({
-  withZephyr: jest.fn(),
-  withZephyrMetro: jest.fn(),
+import { describe, expect, it, rs } from '@rstest/core';
+
+rs.mock('../with-zephyr', () => ({
+  withZephyr: rs.fn(),
+  withZephyrMetro: rs.fn(),
 }));
 
-jest.mock('../zephyr-metro-command-wrapper', () => ({
-  zephyrCommandWrapper: jest.fn(),
+rs.mock('../zephyr-metro-command-wrapper', () => ({
+  zephyrCommandWrapper: rs.fn(),
 }));
 
-jest.mock('../zephyr-metro-rnef-plugin', () => ({
-  zephyrMetroRNEFPlugin: jest.fn(),
+rs.mock('../zephyr-metro-rnef-plugin', () => ({
+  zephyrMetroRNEFPlugin: rs.fn(),
 }));
 
 import * as zephyrMetroPlugin from '../../index';

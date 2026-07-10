@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { safe_json_parse } from '../safe-json-parse';
 
 describe('safe_json_parse', () => {

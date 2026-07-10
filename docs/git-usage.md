@@ -16,13 +16,14 @@ Define when Zephyr needs:
 
 ## Behavior Matrix
 
-| Environment          | `git init` | `origin` remote | commit history | Result                                           |
-| -------------------- | ---------- | --------------- | -------------- | ------------------------------------------------ |
-| Local build (non-CI) | no         | no              | no             | Build can proceed with fallback metadata         |
-| Local build (non-CI) | yes        | yes             | no             | Build proceeds, org/project parsed from `origin` |
-| Local build (non-CI) | yes        | yes             | yes            | Full Git metadata path                           |
-| CI build             | yes        | yes             | no             | Fails (commit hash required)                     |
-| CI build             | yes        | yes             | yes            | Full Git metadata path                           |
+| Environment          | Git metadata | `origin` remote | Explicit identity | Result                                                |
+| -------------------- | ------------ | --------------- | ----------------- | ----------------------------------------------------- |
+| Local build (non-CI) | no           | no              | no                | Uses authenticated package/directory fallback         |
+| Local build (non-CI) | yes          | no              | yes               | Uses Git history and configured app identity          |
+| Local build (non-CI) | yes          | yes             | no                | Infers org/project from `origin`                      |
+| CI build             | yes          | no              | yes               | Uses Git history and configured app identity          |
+| CI build             | yes          | yes             | no                | Uses full Git metadata                                |
+| CI build             | no           | no              | no                | Fails because stable identity metadata is unavailable |
 
 ## Recommended Setup
 
@@ -34,6 +35,41 @@ git commit -m "Initial commit"
 ```
 
 Use this for production reliability and CI compatibility.
+
+## Explicit Application Identity
+
+Add one Zephyr config file when application identity should not be inferred from the
+Git remote. Supported names are `zephyr.config.ts`, `.mts`, `.cts`, `.js`, `.mjs`, and
+`.cjs`.
+
+```ts
+import { defineConfig } from 'zephyr-agent';
+
+export default defineConfig({
+  org: 'my-org',
+  project: 'my-project',
+  appName: 'my-app',
+  remoteDependencies: {
+    remote: 'zephyr:remote.remote-project.remote-org@latest',
+  },
+});
+```
+
+The loader searches upward from the bundler's project context. The config is strict:
+only `org`, `project`, `appName`, and `remoteDependencies` are accepted, and invalid or
+ambiguous config files fail before a deployment starts.
+
+Precedence is deterministic:
+
+1. Config `org` and `project` override values inferred from `origin`.
+2. Config `appName` overrides the nearest `package.json` name.
+3. Config remote entries override same-named `package.json` `zephyr:dependencies`;
+   package-only entries remain.
+
+Zephyr does not read identity overrides from environment variables and never copies
+project config into `process.env`. The resolved config belongs to the application
+context and remains fixed for all client/server compilers and watch generations. Restart
+the bundler after changing it.
 
 Azure DevOps SSH remotes are also supported:
 
@@ -58,7 +94,8 @@ Local build can still deploy, and Zephyr can infer org/project from `origin`.
 
 ## Notes
 
-- In CI, commit history is required.
+- In CI, stable branch and commit metadata is required; explicit identity replaces
+  remote-origin inference, not deployment history.
 - Without commits in local, Zephyr uses placeholder commit metadata (`no-git-commit`) but keeps local flow working.
 - If no Git metadata is available at all, Zephyr falls back to global Git config, then token/user-based fallback metadata.
 - In CI with `ZE_CI_TOKEN`, Zephyr infers the build actor in the plugin. GitLab reads built-in `CI_JOB_TOKEN` JWT

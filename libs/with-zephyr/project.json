@@ -32,12 +32,9 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "dependsOn": ["build"],
       "options": {
-        "command": "rstest run",
-        "cwd": "libs/with-zephyr",
-        "forwardAllArgs": false
+        "command": "rstest run --config rstest.config.mts --project with-zephyr"
       }
     },
     "lint": {

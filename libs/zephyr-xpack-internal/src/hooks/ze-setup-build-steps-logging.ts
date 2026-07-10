@@ -39,13 +39,20 @@ export function logBuildSteps<T extends BuildSteps, Compiler extends BuildStepsC
   compiler.hooks.failed.tap(pluginName, (err) => {
     ze_log.misc(`build failed in ${Date.now() - buildStartedAt}ms`);
 
-    void pluginOptions.zephyr_engine.logger.then((logger) => {
-      logger({
-        level: 'error',
-        action: 'build:failed',
-        message: ZephyrError.format(err),
+    void pluginOptions.zephyr_engine.logger
+      .then((logger) => {
+        logger({
+          level: 'error',
+          action: 'build:failed',
+          message: ZephyrError.format(err),
+        });
+      })
+      .catch((loggerError: unknown) => {
+        ze_log.misc(
+          'Unable to report the failed build through the Zephyr logger:',
+          ZephyrError.format(loggerError)
+        );
       });
-    });
   });
 
   return { buildStartedAt };

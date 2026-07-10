@@ -26,6 +26,12 @@
         "compiler": "babel",
         "assets": []
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rstest run --config rstest.config.mts --project example-rollup-sample-lib"
+      }
     }
   }
 }

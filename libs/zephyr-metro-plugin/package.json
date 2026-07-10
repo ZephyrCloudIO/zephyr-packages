@@ -49,11 +49,10 @@
     "@rnef/tools": "^0.7.28",
     "@rspack/core": "catalog:rspack",
     "@types/find-package-json": "^1.2.6",
-    "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "metro-config": "^0.84.0",
     "metro-transform-worker": "^0.84.0",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "keywords": [
     "metro",

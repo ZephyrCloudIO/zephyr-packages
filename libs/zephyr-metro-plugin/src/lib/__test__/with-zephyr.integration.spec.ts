@@ -1,11 +1,15 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Integration tests for withZephyr Metro configuration */
 
 // Mock zephyr-agent - must be before imports
-jest.mock('zephyr-agent', () => {
+rs.mock('zephyr-agent', () => {
   const mockEngine = {
     env: { target: 'ios' as const },
-    resolve_remote_dependencies: jest.fn().mockResolvedValue([
+    build_id: Promise.resolve('build-id'),
+    build_failed: rs.fn(),
+    resolve_remote_dependencies: rs.fn().mockResolvedValue([
       {
         name: 'RemoteApp',
         version: 'latest',
@@ -15,39 +19,37 @@ jest.mock('zephyr-agent', () => {
   };
 
   const mockZeLog = {
-    config: jest.fn(),
-    app: jest.fn(),
-    error: jest.fn(),
-    manifest: jest.fn(),
+    config: rs.fn(),
+    app: rs.fn(),
+    error: rs.fn(),
+    manifest: rs.fn(),
   };
 
   return {
     ze_log: mockZeLog,
     ZephyrEngine: {
-      create: jest.fn().mockResolvedValue(mockEngine),
+      create: rs.fn().mockResolvedValue(mockEngine),
     },
     ZephyrError: {
-      format: jest.fn().mockImplementation((err) => String(err)),
+      format: rs.fn().mockImplementation((err) => String(err)),
     },
     ZeErrors: {
       ERR_UNKNOWN: 'ERR_UNKNOWN',
     },
-    createManifestContent: jest
-      .fn()
-      .mockReturnValue(JSON.stringify({ version: '1.0.0' })),
-    handleGlobalError: jest.fn().mockImplementation((error) => {
+    createManifestContent: rs.fn().mockReturnValue(JSON.stringify({ version: '1.0.0' })),
+    handleGlobalError: rs.fn().mockImplementation((error) => {
       mockZeLog.error(String(error));
     }),
-    logFn: jest.fn(),
+    logFn: rs.fn(),
   };
 });
 
 // Mock fs for manifest generation
-jest.mock('fs', () => ({
-  existsSync: jest.fn().mockReturnValue(true),
-  mkdirSync: jest.fn(),
+rs.mock('fs', () => ({
+  existsSync: rs.fn().mockReturnValue(true),
+  mkdirSync: rs.fn(),
   promises: {
-    writeFile: jest.fn().mockResolvedValue(undefined),
+    writeFile: rs.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -67,7 +69,7 @@ describe('withZephyr integration', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   describe('config transformation', () => {
@@ -112,11 +114,11 @@ describe('withZephyr integration', () => {
 
       const mockReq = { url: '/zephyr-manifest.json' };
       const mockRes = {
-        setHeader: jest.fn(),
-        end: jest.fn(),
+        setHeader: rs.fn(),
+        end: rs.fn(),
       };
-      const mockNext = jest.fn();
-      const mockMiddleware = jest.fn();
+      const mockNext = rs.fn();
+      const mockMiddleware = rs.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
@@ -137,11 +139,11 @@ describe('withZephyr integration', () => {
 
       const mockReq = { url: '/custom-manifest.json' };
       const mockRes = {
-        setHeader: jest.fn(),
-        end: jest.fn(),
+        setHeader: rs.fn(),
+        end: rs.fn(),
       };
-      const mockNext = jest.fn();
-      const mockMiddleware = jest.fn();
+      const mockNext = rs.fn();
+      const mockMiddleware = rs.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
@@ -158,11 +160,11 @@ describe('withZephyr integration', () => {
 
       const mockReq = { url: '/some-other-endpoint' };
       const mockRes = {
-        setHeader: jest.fn(),
-        end: jest.fn(),
+        setHeader: rs.fn(),
+        end: rs.fn(),
       };
-      const mockNext = jest.fn();
-      const mockMiddleware = jest.fn();
+      const mockNext = rs.fn();
+      const mockMiddleware = rs.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
@@ -175,11 +177,11 @@ describe('withZephyr integration', () => {
 
       const mockReq = { url: '/zephyr-manifest.json?cacheBust=123' };
       const mockRes = {
-        setHeader: jest.fn(),
-        end: jest.fn(),
+        setHeader: rs.fn(),
+        end: rs.fn(),
       };
-      const mockNext = jest.fn();
-      const mockMiddleware = jest.fn();
+      const mockNext = rs.fn();
+      const mockMiddleware = rs.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
@@ -195,11 +197,11 @@ describe('withZephyr integration', () => {
 
       const mockReq = { url: '/zephyr-manifest.json' };
       const mockRes = {
-        setHeader: jest.fn(),
-        end: jest.fn(),
+        setHeader: rs.fn(),
+        end: rs.fn(),
       };
-      const mockNext = jest.fn();
-      const mockMiddleware = jest.fn();
+      const mockNext = rs.fn();
+      const mockMiddleware = rs.fn();
 
       result.server?.enhanceMiddleware?.(mockMiddleware, {})(mockReq, mockRes, mockNext);
 
@@ -259,7 +261,7 @@ describe('withZephyr integration', () => {
 
   describe('middleware chaining', () => {
     it('should chain with existing enhanceMiddleware', async () => {
-      const existingMiddleware = jest.fn().mockReturnValue(jest.fn());
+      const existingMiddleware = rs.fn().mockReturnValue(rs.fn());
       const configWithMiddleware = {
         ...baseMetroConfig,
         server: {
@@ -272,9 +274,9 @@ describe('withZephyr integration', () => {
 
       const mockReq = { url: '/other-path' };
       const mockRes = {};
-      const mockNext = jest.fn();
+      const mockNext = rs.fn();
 
-      result.server?.enhanceMiddleware?.(jest.fn(), {})(mockReq, mockRes, mockNext);
+      result.server?.enhanceMiddleware?.(rs.fn(), {})(mockReq, mockRes, mockNext);
 
       expect(existingMiddleware).toHaveBeenCalled();
     });

@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { createApplicationUid } from '../create-application-uid';
 
 describe('createApplicationUid', () => {

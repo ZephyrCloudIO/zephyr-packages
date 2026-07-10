@@ -24,10 +24,9 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "nx:run-commands",
       "options": {
-        "jestConfig": "libs/zephyr-cli/jest.config.ts"
+        "command": "rstest run --config rstest.config.mts --project zephyr-cli"
       }
     }
   }

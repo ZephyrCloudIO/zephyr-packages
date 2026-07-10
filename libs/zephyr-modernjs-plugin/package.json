@@ -26,10 +26,9 @@
   },
   "devDependencies": {
     "@modern-js/app-tools": "catalog:modernjs",
-    "@types/jest": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
     "@modern-js/app-tools": "^2.0.0",

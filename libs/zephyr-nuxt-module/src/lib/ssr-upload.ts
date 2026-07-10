@@ -105,9 +105,16 @@ export function createUploadRunner({
     if (uploadCompleted || uploadInProgress) return;
     uploadInProgress = true;
     initEngine();
+    let zephyr_engine: ZephyrEngine | undefined;
+    let buildInProgress = false;
 
     try {
-      const zephyr_engine = await zephyrEngineDefer;
+      zephyr_engine = await zephyrEngineDefer;
+      // ZephyrEngine.create starts generation zero before resolving this deferred.
+      // The call is idempotent for that first attempt and allocates fresh state after a
+      // failed close-hook attempt is retried.
+      buildInProgress = true;
+      await zephyr_engine.start_new_build();
       ze_log.upload('Nuxt build done. Preparing Zephyr upload...');
 
       const nitroOutput = getNitroOutput(nitro, nuxt);
@@ -173,12 +180,16 @@ export function createUploadRunner({
         hooks: options.hooks,
       });
 
+      buildInProgress = false;
       await zephyr_engine.build_finished();
       uploadCompleted = true;
       ze_log.upload('Zephyr upload complete.');
     } catch (error) {
       handleGlobalError(error);
     } finally {
+      if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+        zephyr_engine?.build_failed();
+      }
       uploadInProgress = false;
     }
   };

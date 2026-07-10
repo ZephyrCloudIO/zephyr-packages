@@ -32,10 +32,9 @@
     "tslib": "catalog:typescript"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public",

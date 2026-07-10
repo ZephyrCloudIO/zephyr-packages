@@ -7,6 +7,7 @@ import {
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
+import { redactString, redactUrl, safeStringifyForLogging } from '../security/redaction';
 import { fetchWithRetries } from './fetch-with-retries';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
@@ -61,18 +62,12 @@ function redactResponse(
   response?: unknown,
   startTime = Date.now()
 ): string {
-  const str = [
-    `[${options.method || 'GET'}][${url}]: ${Date.now() - startTime}ms`,
+  return [
+    `[${options.method || 'GET'}][${redactUrl(url)}]: ${Date.now() - startTime}ms`,
     data?.length ? ` - ${((data.length ?? 0) / 1024).toFixed(2)}kb` : '',
-    response ? `Response: ${response}` : '',
-    options ? `Options: ${JSON.stringify(options)}` : '',
+    response !== undefined ? `Response: ${redactString(String(response))}` : '',
+    `Options: ${safeStringifyForLogging(options)}`,
   ].join('\n');
-
-  return str
-    .replace(/Bearer ([^"|']+)/gi, 'Bearer [REDACTED]')
-    .replace(/"?jwt"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jwt: [REDACTED]')
-    .replace(/"?jobToken"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'jobToken: [REDACTED]')
-    .replace(/"?access_token"?:["|\W']{0,2}([^"|']+)(["|'])/gi, 'access_token: [REDACTED]');
 }
 
 /** Main HTTP request function that handles the request and response */
@@ -107,7 +102,7 @@ export async function makeHttpRequest<T = void>(
 
     const message = redactResponse(url, options, data, resText, startTime);
 
-    if (message === 'Not Implemented') {
+    if (resText.trim() === 'Not Implemented') {
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
         message: 'Not implemented yet. Please get in contact with our support.',
       });
@@ -123,8 +118,11 @@ export async function makeHttpRequest<T = void>(
     if (!response.status || response.status >= 300) {
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: response.status,
-        url: url.toString(),
-        content: typeof resData === 'string' ? resData : JSON.stringify(resData),
+        url: redactUrl(url),
+        content:
+          typeof resData === 'string'
+            ? redactString(resData)
+            : safeStringifyForLogging(resData),
         method: options.method?.toUpperCase() ?? 'GET',
       });
     }

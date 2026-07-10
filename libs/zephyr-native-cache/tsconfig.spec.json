@@ -3,10 +3,10 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "module": "commonjs",
-    "types": ["jest", "node"]
+    "types": ["node"]
   },
   "include": [
-    "jest.config.ts",
+    "rstest.config.ts",
     "__tests__/**/*.test.ts",
     "__tests__/**/*.spec.ts",
     "src/**/*.test.ts",

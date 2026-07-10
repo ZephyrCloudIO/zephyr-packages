@@ -1,3 +1,5 @@
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
+
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -51,7 +53,7 @@ describe('inferCiTokenIdentity', () => {
   });
 
   it('falls back to GitLab job API for legacy/non-email job tokens', async () => {
-    global.fetch = jest.fn().mockResolvedValue(
+    global.fetch = rs.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
           id: 123,
@@ -100,7 +102,7 @@ describe('inferCiTokenIdentity', () => {
   });
 
   it('ignores GitLab API jobs that do not match the current job environment', async () => {
-    global.fetch = jest.fn().mockResolvedValue(
+    global.fetch = rs.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
           id: 999,
@@ -123,7 +125,9 @@ describe('inferCiTokenIdentity', () => {
   });
 
   it('falls back to GitLab predefined actor email for unavailable job identity', async () => {
-    global.fetch = jest.fn().mockResolvedValue(new Response('{}', { status: 404 })) as typeof fetch;
+    global.fetch = rs
+      .fn()
+      .mockResolvedValue(new Response('{}', { status: 404 })) as typeof fetch;
 
     const identity = await inferCiTokenIdentity({
       GITLAB_CI: 'true',

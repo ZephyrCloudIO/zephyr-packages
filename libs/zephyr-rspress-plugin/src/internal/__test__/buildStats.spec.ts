@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 import { buildStats } from '../stats/buildStats';
 
 describe('buildStats', () => {

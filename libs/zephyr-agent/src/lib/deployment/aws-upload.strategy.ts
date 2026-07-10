@@ -1,4 +1,8 @@
-import type { ZeBuildAsset, ZeUploadAssetsOptions } from 'zephyr-edge-contract';
+import {
+  forEachLimit,
+  type ZeBuildAsset,
+  type ZeUploadAssetsOptions,
+} from 'zephyr-edge-contract';
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { zeUploadSnapshot } from '../edge-actions';
 import { update_hash_list } from '../edge-hash-list/distributed-hash-control';
@@ -16,6 +20,7 @@ import {
 } from './upload-base';
 
 const AWS_MAX_BODY_SIZE = 20971520;
+const AWS_UPLOAD_CONCURRENCY = 6;
 
 export async function awsUploadStrategy(
   zephyr_engine: ZephyrEngine,
@@ -125,7 +130,10 @@ async function zeUploadAssets(
   const start = Date.now();
   let totalSize = 0;
 
-  await Promise.all(missingAssets.map(upload_missing_asset));
+  await forEachLimit<void>(
+    missingAssets.map((asset) => () => upload_missing_asset(asset)),
+    AWS_UPLOAD_CONCURRENCY
+  );
 
   logger({
     level: 'info',
@@ -205,8 +213,7 @@ async function zeUploadAssets(
         base: EDGE_URL,
         query: { type, hash, filename: asset.path },
       },
-      options,
-      asset.buffer
+      options
     );
 
     if (!ok) {

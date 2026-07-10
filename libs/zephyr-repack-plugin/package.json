@@ -17,8 +17,7 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "nx build zephyr-repack-plugin",
-    "patch-version": "pnpm version",
-    "test": "nx test zephyr-repack-plugin"
+    "patch-version": "pnpm version"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -27,9 +26,8 @@
   "devDependencies": {
     "@rspack/core": "catalog:rspack",
     "@types/find-package-json": "^1.2.6",
-    "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "publishConfig": {
     "access": "public",

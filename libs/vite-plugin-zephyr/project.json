@@ -35,11 +35,17 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "nx:run-commands",
       "dependsOn": ["^build"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "libs/vite-plugin-zephyr/jest.config.ts"
+        "command": "rstest run --config rstest.config.mts --project vite-plugin-zephyr"
+      }
+    },
+    "package-smoke": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "command": "node libs/vite-plugin-zephyr/scripts/verify-package.mjs"
       }
     }
   }

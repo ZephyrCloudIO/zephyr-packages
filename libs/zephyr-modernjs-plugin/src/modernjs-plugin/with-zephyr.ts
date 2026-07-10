@@ -1,35 +1,39 @@
-import type { AppTools, CliPluginFuture } from '@modern-js/app-tools';
-import { ze_log } from 'zephyr-agent';
-import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
+import type { AppTools, CliPluginFuture, webpack } from '@modern-js/app-tools';
+import { ze_log, type ZephyrBuildHooks } from 'zephyr-agent';
 
 const pluginName = 'zephyr-modernjs-plugin';
 const isDev = process.env['NODE_ENV'] === 'development';
 
+export interface ZephyrModernjsPluginOptions {
+  wait_for_index_html?: boolean;
+  hooks?: ZephyrBuildHooks;
+  /** Override automatic CSR/SSR detection for Modern.js compiler arrays. */
+  snapshotType?: 'csr' | 'ssr';
+  /** Server entrypoint relative to the shared compiler output root. */
+  entrypoint?: string;
+}
+
 export const withZephyr = (
-  zephyrOptions?: ZephyrPluginOptions
+  zephyrOptions?: ZephyrModernjsPluginOptions
 ): CliPluginFuture<AppTools<'rspack' | 'webpack'>> => ({
   name: pluginName,
   pre: ['@modern-js/plugin-module-federation-config'],
 
   async setup(api) {
-    api.modifyWebpackConfig(async (config) => {
-      const currentBundler = api.getAppContext().bundlerType;
-      if (currentBundler !== 'webpack') {
+    api.onBeforeCreateCompiler(async ({ bundlerConfigs }) => {
+      if (!bundlerConfigs || bundlerConfigs.length === 0) {
         return;
       }
-
-      const { withZephyr } = await import('zephyr-webpack-plugin');
-      return await withZephyr(zephyrOptions)(config);
-    });
-
-    api.modifyRspackConfig(async (config) => {
       const currentBundler = api.getAppContext().bundlerType;
-      if (currentBundler !== 'rspack') {
-        return;
+      if (currentBundler === 'webpack') {
+        const { withZephyr } = await import('zephyr-webpack-plugin');
+        await withZephyr(zephyrOptions)(
+          bundlerConfigs as unknown as webpack.Configuration[]
+        );
+      } else if (currentBundler === 'rspack') {
+        const { withZephyr } = await import('zephyr-rspack-plugin');
+        await withZephyr(zephyrOptions)(bundlerConfigs);
       }
-
-      const { withZephyr } = await import('zephyr-rspack-plugin');
-      return await withZephyr(zephyrOptions)(config);
     });
   },
 

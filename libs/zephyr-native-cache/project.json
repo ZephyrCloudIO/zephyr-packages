@@ -13,10 +13,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
-        "jestConfig": "libs/zephyr-native-cache/jest.config.ts"
+        "command": "rstest run --config rstest.config.mts --project zephyr-native-cache && node libs/zephyr-native-cache/scripts/verify-packed-package.mjs"
       }
     }
   }

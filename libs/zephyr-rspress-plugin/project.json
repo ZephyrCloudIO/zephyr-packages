@@ -27,10 +27,9 @@
       "outputs": ["{options.outputFile}"]
     },
     "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "executor": "nx:run-commands",
       "options": {
-        "jestConfig": "libs/zephyr-rspress-plugin/jest.config.ts"
+        "command": "rstest run --config rstest.config.mts --project zephyr-rspress-plugin"
       }
     }
   }

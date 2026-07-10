@@ -9,12 +9,10 @@
       "executor": "@nx/eslint:lint"
     },
     "e2e-test": {
-      "executor": "@nx/jest:jest",
+      "executor": "nx:run-commands",
       "dependsOn": ["zephyr-agent:build", "zephyr-edge-contract:build"],
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "passWithNoTests": true,
-        "jestConfig": "e2e/deployment/jest.config.ts"
+        "command": "rstest run --config e2e/deployment/rstest.config.mts"
       }
     }
   }

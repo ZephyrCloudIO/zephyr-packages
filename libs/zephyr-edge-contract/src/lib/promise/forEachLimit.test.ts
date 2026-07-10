@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 import { forEachLimit } from './forEachLimit';
 
 describe('forEachLimit', () => {

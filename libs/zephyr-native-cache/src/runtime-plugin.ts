@@ -1,5 +1,6 @@
 import type { ModuleFederationRuntimePlugin } from '@module-federation/runtime';
 import { getZephyrNativeCacheNamespace } from './zephyr-global';
+import { getBundleCacheKey } from './cache-key';
 
 type AfterResolveArgs = Parameters<
   NonNullable<ModuleFederationRuntimePlugin['afterResolve']>
@@ -231,7 +232,7 @@ export default function (): ModuleFederationRuntimePlugin {
 
           const hashes = extractBundleHashes(manifest, manifestUrl);
           for (const [url, hash] of hashes) {
-            cacheLayer.registerBundleHash(url.split('?')[0], hash);
+            cacheLayer.registerBundleHash(getBundleCacheKey(url), hash);
           }
 
           cacheLayer.registerManifestSource(manifestUrl, extractBundleHashes);

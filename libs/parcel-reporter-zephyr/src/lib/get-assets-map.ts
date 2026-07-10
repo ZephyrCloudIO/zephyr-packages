@@ -10,32 +10,26 @@ export interface ParcelOutputAsset {
 }
 
 export function getAssetsMap(assets: Map<string, ParcelOutputAsset>): ZeBuildAssetsMap {
-  // Convert Map to a plain object (Record<string, ParcelOutputAsset>)
   const assetsRecord: Record<string, ParcelOutputAsset> = {};
 
-  // Read content for all assets
   for (const [key, value] of assets.entries()) {
-    value.content = fs.readFileSync(value.filePath, 'utf8');
-
-    assetsRecord[key] = value;
+    // Keep caller-owned build state immutable. Content is read lazily by extractBuffer.
+    assetsRecord[key] = { ...value };
   }
 
   return buildAssetsMap(assetsRecord, extractBuffer, getAssetType);
 }
 
-const extractBuffer = (asset: ParcelOutputAsset): string | undefined => {
-  if (!asset.content) {
+const extractBuffer = (asset: ParcelOutputAsset): Buffer | string | undefined => {
+  if (asset.content === undefined) {
     try {
-      return fs.readFileSync(asset.filePath, 'utf8');
+      return fs.readFileSync(asset.filePath);
     } catch (err) {
       ze_log.upload(err);
-      return undefined;
+      throw err;
     }
   }
-
-  return typeof asset.content === 'string'
-    ? asset.content
-    : new TextDecoder().decode(asset.content);
+  return asset.content;
 };
 
 const getAssetType = (asset: ParcelOutputAsset): string => {

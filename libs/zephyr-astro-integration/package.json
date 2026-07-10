@@ -26,6 +26,7 @@
   },
   "files": [
     "dist",
+    "!dist/**/*.tsbuildinfo",
     "README.md",
     "LICENSE"
   ],
@@ -49,13 +50,12 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "astro": "^6.4.6",
-    "ts-jest": "catalog:typescript"
+    "astro": "^7.0.7",
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "astro": "^4.0.0 || ^5.15.8 || ^6.4.6"
+    "astro": "^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7"
   },
   "publishConfig": {
     "access": "public",

@@ -1,11 +1,25 @@
-import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
-import type { ResolvedConfig } from 'vite';
-import { logFn, savePartialAssetMap, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import * as path from 'node:path';
+import type { Plugin, ResolvedConfig } from 'vite' with {
+  'resolution-mode': 'import',
+};
+import {
+  handleGlobalError,
+  savePartialAssetMap,
+  ZeErrors,
+  ZephyrEngine,
+  ZephyrError,
+  type PartialAssetMapScope,
+} from 'zephyr-agent';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
+import {
+  requireVitePartialBuildScope,
+  type VitePartialBuildOptions,
+} from './internal/partial-build-scope';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
-export function withZephyrPartial() {
+export function withZephyrPartial(options: VitePartialBuildOptions = {}): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  let partialScope: PartialAssetMapScope | undefined;
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {
@@ -17,6 +31,8 @@ export function withZephyrPartial() {
     apply: 'build',
     enforce: 'post',
     configResolved: async (config: ResolvedConfig) => {
+      // Resolve only for build-mode plugin activation so dev config loading remains safe.
+      partialScope = requireVitePartialBuildScope(options);
       zephyr_defer_create({
         builder: 'vite',
         context: config.root,
@@ -29,13 +45,28 @@ export function withZephyrPartial() {
       });
     },
     // writeBundle is called after files are written to disk - safe to read from filesystem
-    writeBundle: async (options: NormalizedOutputOptions, bundle: OutputBundle) => {
-      const vite_internal_options = await vite_internal_options_defer;
-      vite_internal_options.dir = options.dir;
-      vite_internal_options.assets = bundle;
+    writeBundle: async function (options, bundle) {
+      const baseOptions = await vite_internal_options_defer;
+      const environmentName = (this as unknown as { environment?: { name?: string } })
+        .environment?.name;
+      const outputDir = path.resolve(
+        baseOptions.root,
+        options.dir ?? (options.file ? path.dirname(options.file) : baseOptions.outDir)
+      );
+      const vite_internal_options: ZephyrInternalOptions = {
+        ...baseOptions,
+        dir: options.dir,
+        outDir: outputDir,
+        assets: bundle,
+      };
 
       // Extract and save assets after bundle is written to disk
       try {
+        if (!partialScope) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message: 'Vite partial build scope was not resolved before writeBundle.',
+          });
+        }
         const zephyr_engine = await zephyr_engine_defer;
         const application_uid = zephyr_engine.application_uid;
         const assetsMap = await extract_vite_assets_map(
@@ -44,8 +75,14 @@ export function withZephyrPartial() {
         );
         await savePartialAssetMap(
           application_uid,
-          vite_internal_options.configFile ?? 'partial',
-          assetsMap
+          [
+            'vite-partial',
+            vite_internal_options.configFile ?? 'partial',
+            environmentName ?? 'default',
+            outputDir.replace(/\\/g, '/'),
+          ].join(':'),
+          assetsMap,
+          partialScope
         );
 
         // todo: initially partial build doesn't have deploy, but code below could enable it if needed
@@ -55,7 +92,7 @@ export function withZephyrPartial() {
         //   buildStats: await zeBuildDashData(zephyr_engine),
         // });
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        handleGlobalError(error);
       }
     },
   };

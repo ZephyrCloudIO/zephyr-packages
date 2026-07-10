@@ -39,10 +39,8 @@
     "terminal-link": "^4.0.0"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript",
     "tsx": "^4.19.3",
     "typescript": "catalog:typescript"
   },

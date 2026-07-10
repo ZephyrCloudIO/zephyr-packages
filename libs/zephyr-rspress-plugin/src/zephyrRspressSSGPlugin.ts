@@ -1,12 +1,12 @@
 import { resolve } from 'node:path';
 import {
   ZephyrEngine,
-  ZephyrError,
-  logFn,
+  handleGlobalError,
   ze_log,
   type ZephyrBuildHooks,
 } from 'zephyr-agent';
 import { setupZeDeploy } from './internal/assets/setupZeDeploy';
+import { rewriteRspressModuleFederationAssets } from './internal/assets/rewriteRspressModuleFederationAssets';
 import { showFiles } from './internal/files/showFiles';
 import { walkFiles } from './internal/files/walkFiles';
 import type { RspressUserConfig, RspressPlugin } from './types';
@@ -31,9 +31,14 @@ export const zephyrRspressSSGPlugin = <
 
         if (files.length === 0) {
           ze_log.upload('No files found in output directory.');
+          const zephyr_engine = await zephyr_engine_defer;
+          if (zephyr_engine.hasActiveBuild) {
+            zephyr_engine.build_failed();
+          }
           return;
         }
 
+        await rewriteRspressModuleFederationAssets(outDir, files);
         await showFiles(outDir, files);
 
         await setupZeDeploy({
@@ -43,7 +48,15 @@ export const zephyrRspressSSGPlugin = <
           hooks: options?.hooks,
         });
       } catch (error) {
-        logFn('error', ZephyrError.format(error));
+        try {
+          const zephyr_engine = await zephyr_engine_defer;
+          if (zephyr_engine.hasActiveBuild) {
+            zephyr_engine.build_failed();
+          }
+        } catch {
+          // The original initialization/build failure is the actionable error below.
+        }
+        handleGlobalError(error);
       }
     },
   };

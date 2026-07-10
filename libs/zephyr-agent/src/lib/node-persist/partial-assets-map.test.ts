@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -19,6 +20,7 @@ import {
   commitPartialAssetMapClaimBatch,
   deserializePartialAssetMaps,
   getPartialAssetMap,
+  getPartialAssetLockPath,
   getLegacyPartialAssetStorePath,
   getPartialAssetStorePath,
   removePartialAssetMap,
@@ -27,6 +29,7 @@ import {
   savePartialAssetMap,
   serializePartialAssetMaps,
 } from './partial-assets-map';
+import { ZE_LOCKS_PATH, ZE_STORAGE_PATH } from './storage-keys';
 
 function assetMap(buffer: Buffer | string): ZeBuildAssetsMap {
   const built = zeBuildAssets({ filepath: 'client/app.js', content: buffer });
@@ -49,6 +52,37 @@ function onlyEntry(assetsMap: ZeBuildAssetsMap): [string, ZeBuildAsset] {
 }
 
 describe('partial asset map persistence', () => {
+  it('keeps restart-safe lock targets outside node-persist storage', async () => {
+    const applicationUid = `partial-lock-boundary-${randomUUID()}`;
+    const lockPath = getPartialAssetLockPath(applicationUid);
+    const storageEntry = path.join(ZE_STORAGE_PATH, path.basename(lockPath));
+    try {
+      await savePartialAssetMap(applicationUid, 'client', assetMap('lock-boundary'), {
+        invocationId: 'lock-boundary',
+        generation: 0,
+      });
+
+      expect(path.dirname(lockPath)).toBe(ZE_LOCKS_PATH);
+      expect(existsSync(lockPath)).toBe(true);
+      expect(existsSync(storageEntry)).toBe(false);
+
+      // A second operation reuses the stable target after the first owner releases it.
+      await expect(
+        getPartialAssetMap(applicationUid, {
+          invocationId: 'lock-boundary',
+          generation: 0,
+        })
+      ).resolves.toBeDefined();
+      expect(existsSync(storageEntry)).toBe(false);
+    } finally {
+      try {
+        await removePartialAssetMap(applicationUid);
+      } finally {
+        rmSync(lockPath, { force: true });
+      }
+    }
+  });
+
   it('keeps the last committed file when an atomic replacement is interrupted', async () => {
     const directory = mkdtempSync(path.join(tmpdir(), 'zephyr-partial-atomic-'));
     const destination = path.join(directory, 'store.json');

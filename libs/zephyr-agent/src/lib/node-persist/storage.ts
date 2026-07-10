@@ -4,8 +4,8 @@ import { ensurePrivateFilePermissions, ZE_STORAGE_PATH } from './storage-keys';
 /** @internal */
 export const storage = nodePersist.init({
   dir: ZE_STORAGE_PATH,
-  // node-persist thinks every file in its folder is a JSON valid file,
-  // since we may colocate non-json files, we need to set this to true
+  // Continue reading stores created by older releases even when one record was
+  // interrupted. Non-node-persist coordination files live outside this directory.
   forgiveParseErrors: true,
 });
 

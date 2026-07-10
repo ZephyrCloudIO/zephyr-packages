@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { open, readFile, rm } from 'node:fs/promises';
+import { mkdir, open, readFile, rm } from 'node:fs/promises';
 import * as path from 'node:path';
 import { lock } from 'proper-lockfile';
 import type { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
@@ -8,7 +8,9 @@ import { writeFileAtomically } from './atomic-file';
 import { storage } from './storage';
 import {
   ensurePrivateFilePermissions,
+  PARTIAL_ASSET_LOCK_STALE_MS,
   StorageKeys,
+  ZE_LOCKS_PATH,
   ZE_PATH,
   ZE_STORAGE_PATH,
 } from './storage-keys';
@@ -381,9 +383,10 @@ export function getLegacyPartialAssetStorePath(application_uid: string): string 
   return path.join(ZE_STORAGE_PATH, legacyKeyDigest);
 }
 
-function get_lock_path(application_uid: string): string {
+/** @internal Exposed for persistence-boundary compatibility tests. */
+export function getPartialAssetLockPath(application_uid: string): string {
   return path.join(
-    ZE_STORAGE_PATH,
+    ZE_LOCKS_PATH,
     `partial-assets-${get_application_digest(application_uid)}`
   );
 }
@@ -393,13 +396,17 @@ async function withPartialAssetsLock<T>(
   action: () => Promise<T>
 ): Promise<T> {
   await storage;
-  const lockPath = get_lock_path(application_uid);
+  // Recreate the private boundary if an external cleanup removed it while this process
+  // was alive. Persistent lock targets are intentional: proper-lockfile coordinates
+  // restarts through a stable path and keeps its transient ownership in `.lock`.
+  await mkdir(ZE_LOCKS_PATH, { recursive: true, mode: 0o700 });
+  const lockPath = getPartialAssetLockPath(application_uid);
   await (await open(lockPath, 'a', 0o600)).close();
   ensurePrivateFilePermissions(lockPath);
   const release = await lock(lockPath, {
     realpath: false,
     retries: { retries: 8, factor: 1.5, minTimeout: 25, maxTimeout: 500 },
-    stale: 30_000,
+    stale: PARTIAL_ASSET_LOCK_STALE_MS,
   });
 
   try {

@@ -4,10 +4,16 @@ import type { Plugin, ResolvedConfig } from 'vite';
 
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { logFn, zeBuildDashData, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import { withZephyr } from '../astro-integration-zephyr';
 import { extractAstroAssetsFromBuildHook } from '../internal/extract-astro-assets-map';
+
+const TEST_PROJECT_DIRECTORY = `${join(tmpdir(), 'zephyr-astro-tests', 'project')}${sep}`;
+const TEST_DIST_DIRECTORY = `${join(tmpdir(), 'zephyr-astro-tests', 'dist')}${sep}`;
+const TEST_PROJECT_URL = pathToFileURL(TEST_PROJECT_DIRECTORY);
+const TEST_DIST_URL = pathToFileURL(TEST_DIST_DIRECTORY);
 
 const agentMocks = rs.hoisted(() => ({
   logFn: rs.fn(),
@@ -269,7 +275,7 @@ describe('withZephyr', () => {
       const integration = withZephyr();
 
       const mockConfig = {
-        root: new URL('file:///test/project/'),
+        root: TEST_PROJECT_URL,
       };
 
       await integration.hooks['astro:config:done']?.({
@@ -278,7 +284,7 @@ describe('withZephyr', () => {
 
       expect(mockZephyrDeferCreate).toHaveBeenCalledWith({
         builder: 'astro',
-        context: '/test/project/',
+        context: TEST_PROJECT_DIRECTORY,
       });
     });
   });
@@ -286,8 +292,8 @@ describe('withZephyr', () => {
   describe('astro:build:done hook', () => {
     it('should complete the full build workflow with assets parameter', async () => {
       const integration = withZephyr();
-      const mockDir = new URL('file:///test/dist/');
-      const mockAssets = { 'index.html': '/test/dist/index.html' };
+      const mockDir = TEST_DIST_URL;
+      const mockAssets = { 'index.html': join(TEST_DIST_DIRECTORY, 'index.html') };
       const mockAssetsMap = { hash1: { content: 'test', type: 'text/html' } };
       const mockBuildStats = { stats: 'test' };
 
@@ -301,11 +307,11 @@ describe('withZephyr', () => {
         NonNullable<(typeof integration.hooks)['astro:build:done']>
       >[0]);
 
-      expect(mockZephyrEngine.buildProperties.output).toBe('/test/dist/');
+      expect(mockZephyrEngine.buildProperties.output).toBe(TEST_DIST_DIRECTORY);
       expect(mockZephyrEngine.start_new_build).toHaveBeenCalled();
       expect(extractAstroAssetsFromBuildHook).toHaveBeenCalledWith(
         mockAssets,
-        '/test/dist/'
+        TEST_DIST_DIRECTORY
       );
       expect(mockZephyrEngine.upload_assets).toHaveBeenCalledWith({
         assetsMap: mockAssetsMap,
@@ -316,7 +322,7 @@ describe('withZephyr', () => {
 
     it('should handle missing assets parameter gracefully', async () => {
       const integration = withZephyr();
-      const mockDir = new URL('file:///test/dist/');
+      const mockDir = TEST_DIST_URL;
       const mockAssetsMap = { hash1: { content: 'test', type: 'text/html' } };
       const mockBuildStats = { stats: 'test' };
 
@@ -330,15 +336,15 @@ describe('withZephyr', () => {
 
       expect(extractAstroAssetsFromBuildHook).toHaveBeenCalledWith(
         undefined,
-        '/test/dist/'
+        TEST_DIST_DIRECTORY
       );
       expect(mockZephyrEngine.upload_assets).toHaveBeenCalled();
     });
 
     it('should handle errors during build completion', async () => {
       const integration = withZephyr();
-      const mockDir = new URL('file:///test/dist/');
-      const mockAssets = { 'index.html': '/test/dist/index.html' };
+      const mockDir = TEST_DIST_URL;
+      const mockAssets = { 'index.html': join(TEST_DIST_DIRECTORY, 'index.html') };
       const testError = new Error('Build failed');
 
       (extractAstroAssetsFromBuildHook as Mock).mockRejectedValue(testError);
@@ -363,7 +369,7 @@ describe('withZephyr', () => {
       });
 
       const integration = withZephyr();
-      const mockDir = new URL('file:///test/dist/');
+      const mockDir = TEST_DIST_URL;
 
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
@@ -379,13 +385,13 @@ describe('withZephyr', () => {
       const integration = withZephyr();
 
       // First call config:done
-      const mockConfig = { root: new URL('file:///test/project/') };
+      const mockConfig = { root: TEST_PROJECT_URL };
       await integration.hooks['astro:config:done']?.({
         config: mockConfig,
       } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:done']>>[0]);
 
       // Then call build:done
-      const mockDir = new URL('file:///test/dist/');
+      const mockDir = TEST_DIST_URL;
       await integration.hooks['astro:build:done']?.({
         dir: mockDir,
       } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);

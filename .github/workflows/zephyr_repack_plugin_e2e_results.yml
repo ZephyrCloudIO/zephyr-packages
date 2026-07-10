@@ -1,70 +1,73 @@
-name: Process Zephyr Repack Plugin E2E Test Results
-
-permissions:
-  contents: read
-
-on:
-  workflow_dispatch:
-    inputs:
-      workflow_status:
-        description: 'Status of the overall E2E tests workflow'
-        required: true
-      run_url:
-        description: 'URL to the workflow run'
-        required: true
-      zephyr_deployment_ios_status:
-        description: 'Status of zephyr-deployment-ios'
-        required: true
-      ios_tests_status:
-        description: 'Status of ios-tests'
-        required: true
-      zephyr_deployment_android_status:
-        description: 'Status of zephyr-deployment-android'
-        required: true
-      android_tests_status:
-        description: 'Status of android-tests'
-        required: true
-      ios_deployment_logs_url:
-        description: 'Logs URL for iOS Zephyr Deployment job'
-        required: true
-      android_deployment_logs_url:
-        description: 'Logs URL for Android Zephyr Deployment job'
-        required: true
-      ios_tests_logs_url:
-        description: 'Logs URL for iOS E2E tests job'
-        required: true
-      android_tests_logs_url:
-        description: 'Logs URL for Android E2E tests job'
-        required: true
-
-jobs:
-  process-results:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Display Workflow Summary
-        env:
-          WORKFLOW_STATUS: ${{ github.event.inputs.workflow_status }}
-          RUN_URL: ${{ github.event.inputs.run_url }}
-          IOS_DEPLOYMENT_STATUS: ${{ github.event.inputs.zephyr_deployment_ios_status }}
-          IOS_DEPLOYMENT_LOGS_URL: ${{ github.event.inputs.ios_deployment_logs_url }}
-          IOS_TESTS_STATUS: ${{ github.event.inputs.ios_tests_status }}
-          IOS_TESTS_LOGS_URL: ${{ github.event.inputs.ios_tests_logs_url }}
-          ANDROID_DEPLOYMENT_STATUS: ${{ github.event.inputs.zephyr_deployment_android_status }}
-          ANDROID_DEPLOYMENT_LOGS_URL: ${{ github.event.inputs.android_deployment_logs_url }}
-          ANDROID_TESTS_STATUS: ${{ github.event.inputs.android_tests_status }}
-          ANDROID_TESTS_LOGS_URL: ${{ github.event.inputs.android_tests_logs_url }}
-        run: |
-          printf '%s\n' "🔍 **E2E Test Results Summary**"
-          printf '📌 **Overall Status:** %s\n' "$WORKFLOW_STATUS"
-          printf '🔗 **Full E2E Workflow Logs:** %s\n' "$RUN_URL"
-
-          printf '📱 **iOS Zephyr Deployment Status:** %s\n' "$IOS_DEPLOYMENT_STATUS"
-          printf '🔗 **iOS Zephyr Deployment Logs:** %s\n' "$IOS_DEPLOYMENT_LOGS_URL"
-          printf '🧪 **iOS E2E Tests Status:** %s\n' "$IOS_TESTS_STATUS"
-          printf '🔗 **iOS E2E Tests Logs:** %s\n' "$IOS_TESTS_LOGS_URL"
-
-          printf '🤖 **Android Zephyr Deployment Status:** %s\n' "$ANDROID_DEPLOYMENT_STATUS"
-          printf '🔗 **Android Zephyr Deployment Logs:** %s\n' "$ANDROID_DEPLOYMENT_LOGS_URL"
-          printf '🧪 **Android E2E Tests Status:** %s\n' "$ANDROID_TESTS_STATUS"
-          printf '🔗 **Android E2E Tests Logs:** %s\n' "$ANDROID_TESTS_LOGS_URL"
+# Disabled with the Repack E2E trigger while the downstream suite is failing.
+# Keep its source available for restoration without registering it with GitHub Actions.
+#
+# name: Process Zephyr Repack Plugin E2E Test Results
+#
+# permissions:
+#   contents: read
+#
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       workflow_status:
+#         description: 'Status of the overall E2E tests workflow'
+#         required: true
+#       run_url:
+#         description: 'URL to the workflow run'
+#         required: true
+#       zephyr_deployment_ios_status:
+#         description: 'Status of zephyr-deployment-ios'
+#         required: true
+#       ios_tests_status:
+#         description: 'Status of ios-tests'
+#         required: true
+#       zephyr_deployment_android_status:
+#         description: 'Status of zephyr-deployment-android'
+#         required: true
+#       android_tests_status:
+#         description: 'Status of android-tests'
+#         required: true
+#       ios_deployment_logs_url:
+#         description: 'Logs URL for iOS Zephyr Deployment job'
+#         required: true
+#       android_deployment_logs_url:
+#         description: 'Logs URL for Android Zephyr Deployment job'
+#         required: true
+#       ios_tests_logs_url:
+#         description: 'Logs URL for iOS E2E tests job'
+#         required: true
+#       android_tests_logs_url:
+#         description: 'Logs URL for Android E2E tests job'
+#         required: true
+#
+# jobs:
+#   process-results:
+#     runs-on: depot-ubuntu-latest
+#     timeout-minutes: 10
+#     steps:
+#       - name: Display Workflow Summary
+#         env:
+#           WORKFLOW_STATUS: ${{ github.event.inputs.workflow_status }}
+#           RUN_URL: ${{ github.event.inputs.run_url }}
+#           IOS_DEPLOYMENT_STATUS: ${{ github.event.inputs.zephyr_deployment_ios_status }}
+#           IOS_DEPLOYMENT_LOGS_URL: ${{ github.event.inputs.ios_deployment_logs_url }}
+#           IOS_TESTS_STATUS: ${{ github.event.inputs.ios_tests_status }}
+#           IOS_TESTS_LOGS_URL: ${{ github.event.inputs.ios_tests_logs_url }}
+#           ANDROID_DEPLOYMENT_STATUS: ${{ github.event.inputs.zephyr_deployment_android_status }}
+#           ANDROID_DEPLOYMENT_LOGS_URL: ${{ github.event.inputs.android_deployment_logs_url }}
+#           ANDROID_TESTS_STATUS: ${{ github.event.inputs.android_tests_status }}
+#           ANDROID_TESTS_LOGS_URL: ${{ github.event.inputs.android_tests_logs_url }}
+#         run: |
+#           printf '%s\n' "🔍 **E2E Test Results Summary**"
+#           printf '📌 **Overall Status:** %s\n' "$WORKFLOW_STATUS"
+#           printf '🔗 **Full E2E Workflow Logs:** %s\n' "$RUN_URL"
+#
+#           printf '📱 **iOS Zephyr Deployment Status:** %s\n' "$IOS_DEPLOYMENT_STATUS"
+#           printf '🔗 **iOS Zephyr Deployment Logs:** %s\n' "$IOS_DEPLOYMENT_LOGS_URL"
+#           printf '🧪 **iOS E2E Tests Status:** %s\n' "$IOS_TESTS_STATUS"
+#           printf '🔗 **iOS E2E Tests Logs:** %s\n' "$IOS_TESTS_LOGS_URL"
+#
+#           printf '🤖 **Android Zephyr Deployment Status:** %s\n' "$ANDROID_DEPLOYMENT_STATUS"
+#           printf '🔗 **Android Zephyr Deployment Logs:** %s\n' "$ANDROID_DEPLOYMENT_LOGS_URL"
+#           printf '🧪 **Android E2E Tests Status:** %s\n' "$ANDROID_TESTS_STATUS"
+#           printf '🔗 **Android E2E Tests Logs:** %s\n' "$ANDROID_TESTS_LOGS_URL"

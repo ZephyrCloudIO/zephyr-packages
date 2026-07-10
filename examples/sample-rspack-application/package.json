@@ -10,7 +10,7 @@
     "start": "rspack serve --mode development",
     "serve": "rspack serve --mode development",
     "build": "rspack build --mode production",
-    "test": "rstest run --config ../../rstest.config.mts --project example-sample-rspack-application"
+    "test": "rstest run"
   },
   "dependencies": {
     "react": "catalog:react18",
@@ -24,7 +24,7 @@
     "@testing-library/react": "catalog:react",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "jsdom": "^27.0.0",
+    "jsdom": "catalog:test-dom",
     "zephyr-webpack-plugin": "workspace:*"
   }
 }

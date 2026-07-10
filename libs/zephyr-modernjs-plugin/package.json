@@ -44,7 +44,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-modernjs-plugin"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -59,14 +59,11 @@
     "zephyr-rspack-plugin": "workspace:*"
   },
   "peerDependencies": {
-    "@modern-js/app-tools": "^3.0.0",
+    "@modern-js/app-tools": "catalog:peer-compat",
     "zephyr-rspack-plugin": "workspace:^"
   },
   "peerDependenciesMeta": {
     "zephyr-rspack-plugin": {
-      "optional": true
-    },
-    "zephyr-webpack-plugin": {
       "optional": true
     }
   }

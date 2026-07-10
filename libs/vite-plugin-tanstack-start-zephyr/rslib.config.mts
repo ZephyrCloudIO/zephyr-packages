@@ -23,9 +23,6 @@ const output = {
 } as const;
 
 export default defineConfig({
-  performance: {
-    buildCache: false,
-  },
   lib: [
     {
       format: 'esm',

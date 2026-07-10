@@ -44,7 +44,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project parcel-reporter-zephyr"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
@@ -57,7 +57,7 @@
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "@parcel/plugin": "^2.0.0",
-    "@parcel/types": "^2.0.0"
+    "@parcel/plugin": "catalog:peer-compat",
+    "@parcel/types": "catalog:peer-compat"
   }
 }

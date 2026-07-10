@@ -11,15 +11,14 @@
     "build:team-green": "pnpm --filter team-green run build"
   },
   "dependencies": {
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "tslib": "^2.8.1"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "tslib": "catalog:"
   },
   "devDependencies": {
     "@babel/core": "catalog:babel",
     "@babel/preset-react": "catalog:babel",
     "@module-federation/enhanced": "catalog:module-federation",
-    "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@svgr/webpack": "catalog:webpack5",
@@ -31,10 +30,9 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "react-refresh": "catalog:react18",
-    "ts-node": "10.9.2",
-    "tsutils": "^3.21.0",
+    "tsutils": "catalog:",
     "typescript": "catalog:typescript",
-    "url-loader": "^4.1.1",
+    "url-loader": "catalog:",
     "zephyr-rspack-plugin": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   }

@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.lib.json && rollup -c rollup.config.cjs",
-    "test": "rstest run --config ../../rstest.config.mts --project example-rollup-sample-lib"
+    "test": "rstest run"
   },
   "dependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18",
-    "react-router-dom": "6.30.4"
+    "react-router-dom": "catalog:react-router"
   },
   "devDependencies": {
     "@rsbuild/plugin-react": "catalog:rspack",
@@ -17,8 +17,7 @@
     "@testing-library/react": "catalog:react",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "@types/react-router-dom": "^5.3.3",
-    "jsdom": "^27.0.0",
+    "jsdom": "catalog:test-dom",
     "rollup": "catalog:rollup4",
     "rollup-plugin-zephyr": "workspace:*",
     "typescript": "catalog:typescript"

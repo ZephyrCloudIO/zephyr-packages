@@ -13,7 +13,7 @@
     "start": "cross-env NODE_ENV=development rspack serve"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "catalog:tailwind4",
     "react": "catalog:react18",
     "react-dom": "catalog:react18"
   },
@@ -27,7 +27,7 @@
     "postcss": "catalog:postcss",
     "postcss-loader": "catalog:postcss",
     "react-refresh": "catalog:react18",
-    "tailwindcss": "catalog:tailwind",
+    "tailwindcss": "catalog:tailwind4",
     "zephyr-rspack-plugin": "workspace:*"
   }
 }

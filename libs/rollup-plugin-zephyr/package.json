@@ -50,7 +50,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project rollup-plugin-zephyr"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
@@ -62,6 +62,6 @@
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "rollup": "^4.0.0"
+    "rollup": "catalog:peer-compat"
   }
 }

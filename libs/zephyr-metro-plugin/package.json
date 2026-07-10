@@ -59,28 +59,34 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-metro-plugin"
+    "test": "rstest run"
   },
   "dependencies": {
+    "yaml": "catalog:",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@module-federation/metro": "^2.7.0",
-    "@rnef/tools": "^0.7.28",
+    "@babel/types": "catalog:babel",
+    "@module-federation/metro": "catalog:module-federation",
+    "@rnef/tools": "catalog:metro",
     "@rslib/core": "catalog:rslib",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
-    "@types/find-package-json": "^1.2.6",
-    "metro-config": "^0.84.0",
-    "metro-transform-worker": "^0.84.0",
+    "@types/find-package-json": "catalog:typescript",
+    "metro": "catalog:metro",
+    "metro-config": "catalog:metro",
+    "metro-file-map": "catalog:metro",
+    "metro-resolver": "catalog:metro",
+    "metro-source-map": "catalog:metro",
+    "metro-transform-worker": "catalog:metro",
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "@module-federation/metro": "^2.7.0",
-    "@rnef/tools": "^0.7.28",
-    "metro": ">=0.70.0",
-    "react-native": ">=0.60.0"
+    "@module-federation/metro": "catalog:peer-compat",
+    "@rnef/tools": "catalog:peer-compat",
+    "metro": "catalog:peer-compat",
+    "react-native": "catalog:peer-compat"
   },
   "peerDependenciesMeta": {
     "@module-federation/metro": {

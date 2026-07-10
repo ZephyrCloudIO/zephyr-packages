@@ -3,9 +3,6 @@ import { defineConfig } from '@rslib/core';
 const entry = ['./src/**', '!./src/**/*.test.ts', '!./src/**/*.spec.ts', '!./src/**/*.d.ts'];
 
 export default defineConfig({
-  performance: {
-    buildCache: false,
-  },
   lib: [
     {
       format: 'cjs',

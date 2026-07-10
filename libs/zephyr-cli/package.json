@@ -20,10 +20,9 @@
     "directory": "libs/zephyr-cli"
   },
   "bin": {
-    "ze-cli": "bin/ze-cli.cjs"
+    "ze-cli": "dist/index.js"
   },
   "files": [
-    "bin",
     "dist",
     "README.md",
     "LICENSE",
@@ -55,12 +54,12 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-cli && pnpm test:package",
-    "test:package": "node bin/ze-cli.cjs --help"
+    "test": "rstest run && pnpm test:package",
+    "test:package": "node dist/index.js --help"
   },
   "dependencies": {
-    "cosmiconfig": "^9.0.0",
-    "jsonc-parser": "^3.3.1",
+    "cosmiconfig": "catalog:",
+    "jsonc-parser": "catalog:",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },

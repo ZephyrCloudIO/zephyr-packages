@@ -16,17 +16,17 @@
     "@modern-js/runtime": "catalog:modernjs",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-server-dom-webpack": "19.2.6"
+    "react-server-dom-webpack": "catalog:react19"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
+    "@biomejs/biome": "catalog:biome",
     "@modern-js/app-tools": "catalog:modernjs",
     "@modern-js/tsconfig": "catalog:modernjs",
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "lint-staged": "~16.2.7",
-    "rimraf": "^6.1.2",
+    "lint-staged": "catalog:",
+    "rimraf": "catalog:",
     "typescript": "catalog:typescript",
     "zephyr-modernjs-plugin": "workspace:*",
     "zephyr-rspack-plugin": "workspace:*"

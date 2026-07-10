@@ -9,13 +9,13 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "hono": ">=4.12.27"
+    "hono": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
+    "@types/node": "catalog:typescript",
     "esbuild": "catalog:esbuild",
-    "tsx": "^4.7.1",
-    "typescript": "^5.8.3",
+    "tsx": "catalog:typescript",
+    "typescript": "catalog:typescript",
     "vite": "catalog:vite8",
     "zephyr-cli": "workspace:*"
   }

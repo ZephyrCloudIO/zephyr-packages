@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
 
 pnpm format:check
-pnpm test:inventory
 pnpm test:affected
 pnpm lint

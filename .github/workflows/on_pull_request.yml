@@ -1,6 +1,9 @@
-name: On Pull Request
+name: CI
 on:
   pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -10,15 +13,16 @@ concurrency:
 env:
   ZE_FAIL_BUILD: true
   TURBO_TELEMETRY_DISABLED: 1
-  # Base ref for `turbo --affected` comparisons. The fallback supports manual runs.
-  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'HEAD^1' }}
+  # Compare PRs with their base and main pushes with the previous main revision.
+  # The fallback supports manual runs.
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^1' }}
 
 permissions:
   contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 45
     permissions:
       contents: read
@@ -52,7 +56,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: depot-windows-latest
     timeout-minutes: 45
     permissions:
       contents: read
@@ -72,7 +76,7 @@ jobs:
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -90,15 +94,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [depot-ubuntu-latest, depot-windows-latest]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # Turbo's affected calculation needs the base commit locally.
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - name: verify test inventory
-        run: pnpm test:inventory
       - name: run test
         if: runner.os != 'Linux'
         run: pnpm test:affected

@@ -1,19 +1,27 @@
-const path = require('path');
-const rspack = require('@rspack/core');
-const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
-const { withZephyr } = require('zephyr-rspack-plugin');
-const mfConfig = require('./module-federation.config');
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { CopyRspackPlugin, HtmlRspackPlugin, type Configuration } from '@rspack/core';
+import { withZephyr } from 'zephyr-rspack-plugin';
+import mfConfig from './module-federation.config.ts';
 
-module.exports = (env, argv) => {
+type RspackConfig = (
+  env: Record<string, unknown>,
+  argv: { mode?: Configuration['mode'] }
+) => Promise<Configuration>;
+
+const configDirectory = dirname(fileURLToPath(import.meta.url));
+
+const config: RspackConfig = (_env, argv) => {
   const isDev = argv.mode === 'development';
 
   return withZephyr()({
-    context: __dirname,
+    context: configDirectory,
     entry: {
       main: './src/main.ts',
     },
     output: {
-      path: path.join(__dirname, 'dist'),
+      path: join(configDirectory, 'dist'),
       publicPath: 'auto',
       uniqueName: mfConfig.name,
       filename: isDev ? '[name].js' : '[name].[contenthash].js',
@@ -64,10 +72,10 @@ module.exports = (env, argv) => {
     },
     plugins: [
       new ModuleFederationPlugin(mfConfig),
-      new rspack.HtmlRspackPlugin({
+      new HtmlRspackPlugin({
         template: './src/index.html',
       }),
-      new rspack.CopyRspackPlugin({
+      new CopyRspackPlugin({
         patterns: [
           { from: 'src/favicon.ico', to: '.' },
           { from: 'src/assets', to: 'assets', noErrorOnMissing: true },
@@ -76,3 +84,5 @@ module.exports = (env, argv) => {
     ],
   });
 };
+
+export default config;

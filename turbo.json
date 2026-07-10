@@ -36,47 +36,27 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/rstest.config.mts",
-        "$TURBO_ROOT$/scripts/rstest/**"
-      ],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/rstest/**"],
       "outputs": []
     },
     "with-zephyr#test": {
       "dependsOn": ["build", "^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/rstest.config.mts",
-        "$TURBO_ROOT$/scripts/rstest/**"
-      ],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/rstest/**"],
       "outputs": []
     },
     "vite-plugin-zephyr#test": {
       "dependsOn": ["build", "^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/rstest.config.mts",
-        "$TURBO_ROOT$/scripts/rstest/**"
-      ],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/rstest/**"],
       "outputs": []
     },
     "zephyr-cli#test": {
       "dependsOn": ["build", "^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/rstest.config.mts",
-        "$TURBO_ROOT$/scripts/rstest/**"
-      ],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/rstest/**"],
       "outputs": []
     },
     "zephyr-native-cache#test": {
       "dependsOn": ["build", "^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/rstest.config.mts",
-        "$TURBO_ROOT$/scripts/rstest/**"
-      ],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/rstest/**"],
       "outputs": []
     },
     "typecheck": {

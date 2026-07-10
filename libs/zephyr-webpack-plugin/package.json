@@ -44,7 +44,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-webpack-plugin"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -58,6 +58,6 @@
     "webpack": "catalog:webpack5"
   },
   "peerDependencies": {
-    "webpack": "^5.0.0"
+    "webpack": "catalog:peer-compat"
   }
 }

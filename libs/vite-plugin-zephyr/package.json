@@ -52,13 +52,13 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project vite-plugin-zephyr && pnpm test:package",
+    "test": "rstest run && pnpm test:package",
     "test:package": "node scripts/verify-package.mjs"
   },
   "dependencies": {
-    "acorn": "^8.12.1",
-    "acorn-walk": "^8.3.4",
-    "magic-string": "0.30.21",
+    "acorn": "catalog:",
+    "acorn-walk": "catalog:",
+    "magic-string": "catalog:",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
@@ -71,9 +71,9 @@
     "vite": "catalog:vite8"
   },
   "peerDependencies": {
-    "@module-federation/vite": "^1.13.2",
-    "rollup": "^4.0.0",
-    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+    "@module-federation/vite": "catalog:peer-compat",
+    "rollup": "catalog:peer-compat",
+    "vite": "catalog:peer-compat"
   },
   "peerDependenciesMeta": {
     "@module-federation/vite": {

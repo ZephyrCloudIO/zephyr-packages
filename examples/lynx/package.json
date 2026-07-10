@@ -10,13 +10,13 @@
     "preview": "rspeedy preview"
   },
   "dependencies": {
-    "@lynx-js/react": "^0.122.0"
+    "@lynx-js/react": "catalog:"
   },
   "devDependencies": {
-    "@lynx-js/qrcode-rsbuild-plugin": "^0.5.0",
-    "@lynx-js/react-rsbuild-plugin": "^0.17.1",
-    "@lynx-js/rspeedy": "^0.15.1",
-    "@lynx-js/types": "^4.0.0",
+    "@lynx-js/qrcode-rsbuild-plugin": "catalog:",
+    "@lynx-js/react-rsbuild-plugin": "catalog:",
+    "@lynx-js/rspeedy": "catalog:",
+    "@lynx-js/types": "catalog:",
     "@types/react": "catalog:react18",
     "typescript": "catalog:typescript",
     "zephyr-rspack-plugin": "workspace:*"

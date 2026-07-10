@@ -10,9 +10,9 @@
   "dependencies": {
     "@rsbuild/core": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
-    "globby": "^14.1.0",
-    "rspress": "^1.40.2",
-    "webpack-sources": "^3.2.3"
+    "globby": "catalog:",
+    "rspress": "catalog:rspress1",
+    "webpack-sources": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:typescript",

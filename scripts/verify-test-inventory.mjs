@@ -62,18 +62,57 @@ for (const testFile of testFiles) {
   testsByPackage.set(packageFile, packageTests);
 }
 
-const rootConfig = fs.readFileSync(path.join(workspaceRoot, 'rstest.config.mts'), 'utf8');
-const e2eConfig = fs.readFileSync(
-  path.join(workspaceRoot, 'e2e/deployment/rstest.config.mts'),
-  'utf8'
-);
+const rootPackageFile = path.join(workspaceRoot, 'package.json');
+const rootConfigFile = path.join(workspaceRoot, 'rstest.config.mts');
+const sharedProjectConfigFile = path.join(workspaceRoot, 'scripts/rstest/project-config.mts');
+const e2eConfigFile = path.join(workspaceRoot, 'e2e/deployment/rstest.config.mts');
+const rootConfig = fs.readFileSync(rootConfigFile, 'utf8');
+const sharedProjectConfig = fs.readFileSync(sharedProjectConfigFile, 'utf8');
+const e2eConfig = fs.readFileSync(e2eConfigFile, 'utf8');
 const discoveryPattern = '**/*.{test,spec}.?(c|m)[jt]s?(x)';
-const configuredProjects = new Set(
-  [...rootConfig.matchAll(/project\(\s*['"]([^'"]+)['"]/g)].map(([, projectName]) => projectName)
+const projectGlobs = [
+  'libs/*/rstest.config.mts',
+  'examples/*/rstest.config.mts',
+  'examples/*/apps/*/rstest.config.mts',
+];
+const projectConfigFiles = ['libs', 'examples'].flatMap((directory) =>
+  walk(path.join(workspaceRoot, directory), (file) => path.basename(file) === 'rstest.config.mts')
 );
+const configuredProjects = new Set(['release-tooling']);
 
-if (!rootConfig.includes(discoveryPattern)) {
-  errors.push('rstest.config.mts: root discovery must include test and spec files');
+for (const configFile of projectConfigFiles) {
+  const configSource = fs.readFileSync(configFile, 'utf8');
+  const projectName = configSource.match(/\bname:\s*['"]([^'"]+)['"]/)?.[1];
+  const relativeConfig = path.relative(workspaceRoot, configFile);
+
+  if (!projectName) {
+    errors.push(`${relativeConfig}: package project config must declare a name`);
+  } else if (configuredProjects.has(projectName)) {
+    errors.push(`${relativeConfig}: duplicate Rstest project name ${projectName}`);
+  } else {
+    configuredProjects.add(projectName);
+  }
+
+  if (!configSource.includes('createProjectConfig')) {
+    errors.push(`${relativeConfig}: package project config must use shared Rstest defaults`);
+  }
+}
+
+if (!rootConfig.includes('defineInlineProject')) {
+  errors.push('rstest.config.mts: release tooling must use defineInlineProject');
+}
+if (!/\bname:\s*['"]release-tooling['"]/.test(rootConfig)) {
+  errors.push('rstest.config.mts: release-tooling inline project is missing');
+}
+for (const projectGlob of projectGlobs) {
+  if (!rootConfig.includes(projectGlob)) {
+    errors.push(`rstest.config.mts: missing project config glob ${projectGlob}`);
+  }
+}
+if (!sharedProjectConfig.includes(discoveryPattern)) {
+  errors.push(
+    'scripts/rstest/project-config.mts: shared discovery must include test and spec files'
+  );
 }
 if (!e2eConfig.includes(discoveryPattern)) {
   errors.push('e2e/deployment/rstest.config.mts: E2E discovery must include test and spec files');
@@ -84,7 +123,7 @@ if (!e2eConfig.includes('root: import.meta.dirname')) {
   );
 }
 const packageFiles = [
-  path.join(workspaceRoot, 'package.json'),
+  rootPackageFile,
   ...roots.flatMap((root) => walk(root, (file) => path.basename(file) === 'package.json')),
 ];
 
@@ -92,14 +131,28 @@ for (const packageFile of packageFiles) {
   const packageJson = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
   const packageTests = testsByPackage.get(packageFile) ?? [];
   const testCommand = packageJson.scripts?.test ?? packageJson.scripts?.['e2e-test'];
+  const packageRoot = path.dirname(packageFile);
+  const packageConfigFile =
+    packageFile === rootPackageFile ? rootConfigFile : path.join(packageRoot, 'rstest.config.mts');
   const packageTestScripts = Object.entries(packageJson.scripts ?? {}).filter(([name]) =>
     /(?:^test$|^test:|e2e-test$)/.test(name)
   );
 
   for (const [scriptName, command] of packageTestScripts) {
-    if (/passWithNoTests|@nx\/jest|jest\.config/.test(String(command))) {
+    const scriptCommand = String(command);
+    if (/passWithNoTests|@nx\/jest|jest\.config/.test(scriptCommand)) {
       errors.push(
         `${path.relative(workspaceRoot, packageFile)}:${scriptName}: fail-open/Jest configuration found`
+      );
+    }
+    if (
+      packageFile !== rootPackageFile &&
+      packageConfigFile !== e2eConfigFile &&
+      (/--project\s+/.test(scriptCommand) ||
+        /--config\s+(?:\.\.\/)+rstest\.config\.mts/.test(scriptCommand))
+    ) {
+      errors.push(
+        `${path.relative(workspaceRoot, packageFile)}:${scriptName}: must use its package-local Rstest config`
       );
     }
   }
@@ -107,6 +160,12 @@ for (const packageFile of packageFiles) {
   if (packageTests.length > 0 && typeof testCommand !== 'string') {
     errors.push(
       `${path.relative(workspaceRoot, packageFile)}: ${packageTests.length} test file(s) but no Rstest script`
+    );
+  }
+
+  if (packageTests.length > 0 && !fs.existsSync(packageConfigFile)) {
+    errors.push(
+      `${path.relative(workspaceRoot, packageFile)}: ${packageTests.length} test file(s) but no package-local rstest.config.mts`
     );
   }
 

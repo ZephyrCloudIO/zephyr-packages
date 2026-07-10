@@ -11,9 +11,6 @@ const entry = {
 };
 
 export default defineConfig({
-  performance: {
-    buildCache: false,
-  },
   lib: [
     {
       format: 'esm',

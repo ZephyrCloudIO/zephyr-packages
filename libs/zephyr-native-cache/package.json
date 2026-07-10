@@ -49,50 +49,25 @@
     "typecheck": "tsc -b",
     "build": "rslib build",
     "dev": "rslib build --watch",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-native-cache && node scripts/verify-packed-package.mjs",
-    "test:unit": "rstest run --config ../../rstest.config.mts --project zephyr-native-cache",
+    "test": "rstest run && node scripts/verify-packed-package.mjs",
+    "test:unit": "rstest run",
     "test:package": "node scripts/verify-packed-package.mjs"
   },
   "dependencies": {
-    "mitt": "^3.0.1",
+    "mitt": "catalog:",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@babel/core": "catalog:babel",
-    "@babel/preset-env": "catalog:babel",
-    "@babel/preset-typescript": "catalog:babel",
-    "@module-federation/runtime": "^2.3.2",
+    "@module-federation/runtime": "catalog:module-federation",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/react": "^19.1.0",
-    "react": "19.1.0",
-    "react-native": "0.80.0",
-    "typescript": "^5.8.3"
+    "@types/react": "catalog:react19",
+    "react": "catalog:react19",
+    "react-native": "catalog:metro",
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-native": ">=0.79.0"
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "exclude": "**/{__tests__/**,__fixtures__/**,__mocks__/**,*.test.*,*.spec.*}",
-    "targets": [
-      [
-        "commonjs",
-        {
-          "configFile": "./babel.config.cjs",
-          "esm": true
-        }
-      ],
-      [
-        "module",
-        {
-          "configFile": "./babel.config.cjs",
-          "esm": true
-        }
-      ],
-      "typescript"
-    ]
+    "react": "catalog:peer-compat",
+    "react-native": "catalog:peer-native-cache"
   }
 }

@@ -6,7 +6,6 @@
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
-    "ts-node": "10.9.2",
     "typescript": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"

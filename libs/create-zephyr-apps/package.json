@@ -44,14 +44,14 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@clack/prompts": "0.11.0",
-    "chalk-template": "1.1.2",
-    "terminal-link": "^4.0.0"
+    "@clack/prompts": "catalog:",
+    "chalk-template": "catalog:",
+    "terminal-link": "catalog:"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@types/node": "catalog:typescript",
-    "tsx": "^4.19.3",
+    "tsx": "catalog:typescript",
     "typescript": "catalog:typescript"
   }
 }

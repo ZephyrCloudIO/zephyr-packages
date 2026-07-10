@@ -55,7 +55,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-astro-integration"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
@@ -63,10 +63,10 @@
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "astro": "^7.0.7",
+    "astro": "catalog:",
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "astro": "^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7"
+    "astro": "catalog:peer-compat"
   }
 }

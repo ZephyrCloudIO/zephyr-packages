@@ -42,7 +42,7 @@ let output = await text({
   message: 'Where should we create your project?',
   placeholder: './my-app',
   validate(value) {
-    if (!value.trim().length) {
+    if (!value?.trim().length) {
       return 'Please enter a project name.';
     }
     return undefined;
@@ -170,7 +170,7 @@ try {
   loading.stop(c`Project successfully created at {cyan ${relativeOutput}}!`);
 } catch (error) {
   cancel(c`Error cloning repository to {cyan ${relativeOutput}}: ${error}`);
-  loading.stop('Error!', 1);
+  loading.error('Error!');
   process.exit(1);
 }
 

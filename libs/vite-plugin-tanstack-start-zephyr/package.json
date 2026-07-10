@@ -51,7 +51,7 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project vite-plugin-tanstack-start-zephyr"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
@@ -59,14 +59,14 @@
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@tanstack/react-start": "1.168.27",
+    "@tanstack/react-start": "catalog:tanstack",
     "@types/node": "catalog:typescript",
     "rollup": "catalog:rollup4",
     "vite": "catalog:vite8"
   },
   "peerDependencies": {
-    "@tanstack/react-start": "^1.0.0",
-    "vite": "^7.0.0 || ^8.0.0"
+    "@tanstack/react-start": "catalog:peer-compat",
+    "vite": "catalog:peer-vite-modern"
   },
   "compatiblePackages": {
     "schemaVersion": 1,

@@ -43,21 +43,21 @@
     "dev": "rslib build --watch",
     "start": "node dist/index.js",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project with-zephyr",
-    "test:watch": "rstest --watch --config ../../rstest.config.mts --project with-zephyr",
-    "test:coverage": "rstest run --coverage --config ../../rstest.config.mts --project with-zephyr"
+    "test": "rstest run",
+    "test:watch": "rstest --watch",
+    "test:coverage": "rstest run --coverage"
   },
   "dependencies": {
-    "@ast-grep/napi": "^0.41.0",
-    "chalk": "^5.6.2",
-    "commander": "^14.0.1",
-    "glob": "^13.0.0"
+    "@ast-grep/napi": "catalog:",
+    "chalk": "catalog:",
+    "commander": "catalog:",
+    "glob": "catalog:"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "^24.5.2",
-    "typescript": "^5.9.2",
+    "@types/node": "catalog:typescript",
+    "typescript": "catalog:typescript",
     "zephyr-rsbuild-plugin": "workspace:*"
   }
 }

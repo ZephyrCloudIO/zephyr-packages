@@ -5,7 +5,7 @@
   "dependencies": {
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router-dom": "6.30.4"
+    "react-router-dom": "catalog:react-router"
   },
   "devDependencies": {
     "@rspack/cli": "catalog:rspack",
@@ -13,7 +13,6 @@
     "@testing-library/react": "catalog:react",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "ts-node": "10.9.1",
     "zephyr-rspack-plugin": "workspace:*"
   }
 }

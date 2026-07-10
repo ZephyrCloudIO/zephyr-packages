@@ -1,50 +1,8 @@
-import { defineConfig, defineProject, type ProjectConfig } from '@rstest/core';
+import { defineConfig, defineInlineProject } from '@rstest/core';
 import path from 'node:path';
+import { createProjectConfig } from './scripts/rstest/project-config.mts';
 
 const workspaceRoot = import.meta.dirname;
-
-function project(name: string, root: string, options: Partial<ProjectConfig> = {}): ProjectConfig {
-  const projectRoot = path.resolve(workspaceRoot, root);
-
-  return defineProject({
-    name,
-    root: projectRoot,
-    globals: false,
-    include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
-    exclude: ['**/node_modules/**', '**/dist/**', 'lib/**'],
-    source: {
-      tsconfigPath: path.join(projectRoot, 'tsconfig.json'),
-    },
-    tools: {
-      swc: {
-        jsc: {
-          transform: {
-            react: {
-              runtime: 'automatic',
-            },
-          },
-        },
-      },
-      rspack: {
-        experiments: {
-          typeReexportsPresence: true,
-        },
-        externals: {
-          debug: 'commonjs debug',
-          'node-persist': 'commonjs node-persist',
-        },
-        resolve: {
-          alias: {
-            'react-native': path.resolve(workspaceRoot, 'scripts/rstest/react-native.ts'),
-          },
-        },
-      },
-    },
-    testEnvironment: 'node',
-    testTimeout: 30_000,
-    ...options,
-  });
-}
 
 export default defineConfig({
   coverage: {
@@ -82,54 +40,15 @@ export default defineConfig({
     allowExternal: true,
   },
   projects: [
-    project('release-tooling', '.', {
-      include: ['scripts/*.{test,spec}.?(c|m)[jt]s?(x)'],
-      source: {
-        tsconfigPath: path.resolve(workspaceRoot, 'tsconfig.json'),
-      },
-    }),
-    project('parcel-reporter-zephyr', 'libs/parcel-reporter-zephyr'),
-    project('rollup-plugin-zephyr', 'libs/rollup-plugin-zephyr'),
-    project('vite-plugin-tanstack-start-zephyr', 'libs/vite-plugin-tanstack-start-zephyr'),
-    project('vite-plugin-vinext-zephyr', 'libs/vite-plugin-vinext-zephyr'),
-    project('vite-plugin-zephyr', 'libs/vite-plugin-zephyr'),
-    project('with-zephyr', 'libs/with-zephyr'),
-    project('zephyr-agent', 'libs/zephyr-agent'),
-    project('zephyr-astro-integration', 'libs/zephyr-astro-integration'),
-    project('zephyr-cli', 'libs/zephyr-cli'),
-    project('zephyr-edge-contract', 'libs/zephyr-edge-contract'),
-    project('zephyr-metro-plugin', 'libs/zephyr-metro-plugin'),
-    project('zephyr-native-cache', 'libs/zephyr-native-cache'),
-    project('zephyr-nuxt-module', 'libs/zephyr-nuxt-module'),
-    project('zephyr-rolldown-plugin', 'libs/zephyr-rolldown-plugin'),
-    project('zephyr-modernjs-plugin', 'libs/zephyr-modernjs-plugin'),
-    project('zephyr-rsbuild-plugin', 'libs/zephyr-rsbuild-plugin'),
-    project('zephyr-rspack-plugin', 'libs/zephyr-rspack-plugin'),
-    project('zephyr-rspress-plugin', 'libs/zephyr-rspress-plugin'),
-    project('zephyr-webpack-plugin', 'libs/zephyr-webpack-plugin'),
-    project('zephyr-xpack-internal', 'libs/zephyr-xpack-internal'),
-    project('example-rollup-sample-lib', 'examples/rollup-sample-lib', {
-      testEnvironment: 'jsdom',
-    }),
-    project('example-rspack-host', 'examples/rspack-nx-mf/apps/host', {
-      testEnvironment: 'jsdom',
-      resolve: {
-        alias: {
-          'rspack_nx_mf_remote/Module': path.resolve(
-            workspaceRoot,
-            'examples/rspack-nx-mf/apps/host/test/remote-module-stub.tsx'
-          ),
-        },
-      },
-    }),
-    project('example-rspack-remote', 'examples/rspack-nx-mf/apps/remote', {
-      testEnvironment: 'jsdom',
-    }),
-    project('example-sample-rspack-application', 'examples/sample-rspack-application', {
-      testEnvironment: 'jsdom',
-    }),
-    project('example-sample-webpack-application', 'examples/sample-webpack-application', {
-      testEnvironment: 'jsdom',
-    }),
+    'libs/*/rstest.config.mts',
+    'examples/*/rstest.config.mts',
+    'examples/*/apps/*/rstest.config.mts',
+    defineInlineProject(
+      createProjectConfig({
+        name: 'release-tooling',
+        root: workspaceRoot,
+        include: ['scripts/*.{test,spec}.?(c|m)[jt]s?(x)'],
+      })
+    ),
   ],
 });

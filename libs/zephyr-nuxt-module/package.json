@@ -53,20 +53,21 @@
     "build": "rslib build",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run --config ../../rstest.config.mts --project zephyr-nuxt-module"
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@nuxt/kit": "^4.0.0",
-    "@nuxt/schema": "^4.0.0",
+    "@nuxt/kit": "catalog:nuxt",
+    "@nuxt/schema": "catalog:nuxt",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node": "catalog:typescript"
+    "@types/node": "catalog:typescript",
+    "vite": "catalog:vite7"
   },
   "peerDependencies": {
-    "@nuxt/kit": "^3.0.0 || ^4.0.0",
-    "nuxt": "^3.0.0 || ^4.0.0"
+    "@nuxt/kit": "catalog:peer-compat",
+    "nuxt": "catalog:peer-compat"
   }
 }

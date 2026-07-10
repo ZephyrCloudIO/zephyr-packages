@@ -123,9 +123,6 @@ catalogs:
     cross-env:
       specifier: ^10.1.0
       version: 10.1.0
-    cross-spawn:
-      specifier: 7.0.6
-      version: 7.0.6
     debug:
       specifier: ^4.4.3
       version: 4.4.3
@@ -597,9 +594,6 @@ importers:
       cross-env:
         specifier: 'catalog:'
         version: 10.1.0
-      cross-spawn:
-        specifier: 'catalog:'
-        version: 7.0.6
       debug:
         specifier: 'catalog:'
         version: 4.4.3

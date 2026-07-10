@@ -41,6 +41,7 @@
   "scripts": {
     "dev": "rslib build --watch",
     "build": "rslib build",
+    "patch-version": "pnpm version",
     "typecheck": "tsc -b"
   },
   "dependencies": {

@@ -111,9 +111,6 @@ jobs:
       - name: run complete test suite with coverage
         if: runner.os == 'Linux'
         run: pnpm test:coverage
-      - name: verify publish archives and consumer entrypoints
-        if: runner.os == 'Linux'
-        run: pnpm verify:packages
       - name: upload coverage report
         if: runner.os == 'Linux' && always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

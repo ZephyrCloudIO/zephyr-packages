@@ -59,7 +59,6 @@ pnpm install
 
 - `pnpm build` - Builds every package under `libs`
 - `pnpm build-all` - Builds all packages and examples in dependency order
-- `pnpm benchmark:builds` - Benchmarks representative bundlers with real production uploads
 - `pnpm typecheck` - Type-checks the TypeScript project-reference graph
 
 ### Testing

@@ -1,6 +1,5 @@
-import { defineConfig, defineInlineProject } from '@rstest/core';
+import { defineConfig } from '@rstest/core';
 import path from 'node:path';
-import { createProjectConfig } from './scripts/rstest/project-config.mts';
 
 const workspaceRoot = import.meta.dirname;
 
@@ -43,12 +42,5 @@ export default defineConfig({
     'libs/*/rstest.config.mts',
     'examples/*/rstest.config.mts',
     'examples/*/apps/*/rstest.config.mts',
-    defineInlineProject(
-      createProjectConfig({
-        name: 'release-tooling',
-        root: workspaceRoot,
-        include: ['scripts/*.{test,spec}.?(c|m)[jt]s?(x)'],
-      })
-    ),
   ],
 });

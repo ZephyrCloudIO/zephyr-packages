@@ -1,7 +1,7 @@
 import type { ProjectConfig } from '@rstest/core';
 import path from 'node:path';
 
-const workspaceRoot = path.resolve(import.meta.dirname, '../..');
+const workspaceRoot = import.meta.dirname;
 
 export const testDiscoveryPattern = '**/*.{test,spec}.?(c|m)[jt]s?(x)';
 
@@ -44,7 +44,10 @@ export function createProjectConfig({
         },
         resolve: {
           alias: {
-            'react-native': path.resolve(workspaceRoot, 'scripts/rstest/react-native.ts'),
+            'react-native': path.resolve(
+              workspaceRoot,
+              'libs/zephyr-native-cache/__tests__/react-native.ts'
+            ),
           },
         },
       },

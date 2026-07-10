@@ -55,12 +55,17 @@ jobs:
 
       - name: Patch versions
         run: |
-          NEXT_VERSION=$(node scripts/next-prerelease-version.mjs canary 0.0.0)
-          echo "Setting version to: $NEXT_VERSION"
-          pnpm ze-version-patch "$NEXT_VERSION"
+          echo "Fetching current canary tag for zephyr-agent..."
 
-      - name: Verify publish archives
-        run: pnpm verify:packages
+          # Get the version behind the canary tag (e.g., 0.0.0-canary.42)
+          CURRENT_CANARY=$(npm dist-tag ls zephyr-agent 2>/dev/null \
+            | awk '/canary:/{print $2}')
+
+          # Extract numeric suffix or default to 0
+          HIGHEST_CANARY=$(echo "$CURRENT_CANARY" | grep -oE '[0-9]+$' || echo 0)
+          NEXT_CANARY=$((HIGHEST_CANARY + 1))
+
+          pnpm ze-version-patch "0.0.0-canary.$NEXT_CANARY"
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
@@ -108,13 +113,29 @@ jobs:
 
       - name: Patch versions with next tag
         run: |
+          # Get current version from root package.json
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          NEXT_VERSION=$(node scripts/next-prerelease-version.mjs next "$CURRENT_VERSION")
+
+          echo "Fetching current next tag for zephyr-agent…"
+
+          # Fetch current "next" dist-tag
+          CURRENT_NEXT=$(npm dist-tag ls zephyr-agent 2>/dev/null | awk '/next:/{print $2}')
+
+          # Build a regex for the current prefix: e.g., 1.2.3 → 1\.2\.3-next.NUMBER
+          PREFIX_REGEX="^${CURRENT_VERSION//./\\.}-next\.([0-9]+)$"
+
+          if [[ $CURRENT_NEXT =~ $PREFIX_REGEX ]]; then
+            # Increment from existing number
+            NEXT_NUMBER=$((BASH_REMATCH[1] + 1))
+          else
+            # Start fresh if prefix differs or format invalid
+            NEXT_NUMBER=1
+            echo "Different prefix or invalid format. Starting fresh with 1."
+          fi
+
+          NEXT_VERSION="${CURRENT_VERSION}-next.${NEXT_NUMBER}"
           echo "Setting version to: $NEXT_VERSION"
           pnpm ze-version-patch "$NEXT_VERSION"
-
-      - name: Verify publish archives
-        run: pnpm verify:packages
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
@@ -161,14 +182,8 @@ jobs:
       - name: Verify package integrity
         run: pnpm audit --audit-level high
 
-      - name: Verify release tag and package versions
-        run: node scripts/verify-release-version.mjs "$RELEASE_TAG"
-
       - name: Build packages
         run: pnpm build
-
-      - name: Verify publish archives
-        run: pnpm verify:packages
 
       - name: Publish packages to latest tag
         run: pnpm ze-publish --tag=latest

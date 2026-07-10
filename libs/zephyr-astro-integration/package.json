@@ -53,6 +53,7 @@
   },
   "scripts": {
     "build": "rslib build",
+    "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
     "test": "rstest run"

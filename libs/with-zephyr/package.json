@@ -40,6 +40,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "rslib build",
+    "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "start": "node dist/index.js",
     "typecheck": "tsc -b",

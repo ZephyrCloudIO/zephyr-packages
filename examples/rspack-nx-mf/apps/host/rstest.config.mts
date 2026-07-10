@@ -1,6 +1,6 @@
 import { defineProject } from '@rstest/core';
 import path from 'node:path';
-import { createProjectConfig } from '../../../../scripts/rstest/project-config.mts';
+import { createProjectConfig } from '../../../../rstest.project.mts';
 
 export default defineProject(
   createProjectConfig({

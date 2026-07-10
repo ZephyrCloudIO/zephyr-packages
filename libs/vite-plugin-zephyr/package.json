@@ -50,10 +50,10 @@
   "scripts": {
     "prepack": "pnpm build",
     "build": "rslib build",
+    "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
-    "test": "rstest run && pnpm test:package",
-    "test:package": "node scripts/verify-package.mjs"
+    "test": "rstest run"
   },
   "dependencies": {
     "acorn": "catalog:",

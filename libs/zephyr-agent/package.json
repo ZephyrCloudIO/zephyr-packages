@@ -2,35 +2,59 @@
   "name": "zephyr-agent",
   "version": "1.1.2",
   "description": "Zephyr plugin agent",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-agent"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-agent"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
   "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./node-persist": {
-      "import": "./dist/lib/node-persist/index.js",
-      "require": "./dist/lib/node-persist/index.js",
-      "types": "./dist/lib/node-persist/index.d.ts"
-    }
+      "import": {
+        "types": "./dist/lib/node-persist/index.d.mts",
+        "default": "./dist/lib/node-persist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/lib/node-persist/index.d.ts",
+        "default": "./dist/lib/node-persist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx build zephyr-agent",
-    "patch-version": "pnpm version",
-    "test": "nx test zephyr-agent"
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run --config ../../rstest.config.mts --project zephyr-agent",
+    "test:deployment": "cross-env ZE_RUN_AGENT_DEPLOYMENT_E2E=true rstest run --config ../../rstest.config.mts --project zephyr-agent"
   },
   "dependencies": {
     "@toon-format/toon": "^0.9.0",
@@ -46,21 +70,17 @@
     "node-persist": "^4.0.1",
     "open": "^10.1.0",
     "proper-lockfile": "^4.1.2",
-    "tslib": "catalog:typescript",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
     "@types/debug": "^4.1.12",
-    "@types/eventsource": "^3.0.0",
     "@types/git-url-parse": "^9.0.3",
     "@types/is-ci": "catalog:typescript",
     "@types/node-persist": "catalog:typescript",
     "@types/proper-lockfile": "^4.1.4",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "cross-env": "^7.0.3",
     "typescript": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

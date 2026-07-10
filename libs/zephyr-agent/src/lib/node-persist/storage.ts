@@ -1,8 +1,8 @@
-import { init, setItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import { ensurePrivateFilePermissions, ZE_STORAGE_PATH } from './storage-keys';
 
 /** @internal */
-export const storage = init({
+export const storage = nodePersist.init({
   dir: ZE_STORAGE_PATH,
   // node-persist thinks every file in its folder is a JSON valid file,
   // since we may colocate non-json files, we need to set this to true
@@ -20,7 +20,7 @@ export async function setPrivateItem(
   options?: { ttl?: number }
 ): Promise<void> {
   await storage;
-  const result = (await setItem(key, value, options)) as
+  const result = (await nodePersist.setItem(key, value, options)) as
     | NodePersistWriteResult
     | undefined;
 

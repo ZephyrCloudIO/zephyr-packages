@@ -1,5 +1,7 @@
 {
   "name": "rspack-nx-mf",
+  "private": true,
+  "scripts": {},
   "dependencies": {
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

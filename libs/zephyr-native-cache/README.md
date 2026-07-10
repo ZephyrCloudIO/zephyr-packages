@@ -191,7 +191,9 @@ export function CacheControls() {
         title={status.isPolling ? 'Checking...' : 'Check for updates'}
         disabled={status.isPolling}
         onPress={() => {
-          ZephyrNativeCache.checkForUpdates({ policy: 'downloadOnly' }).catch((error) => console.warn('[cache] Failed to check for updates', error));
+          ZephyrNativeCache.checkForUpdates({ policy: 'downloadOnly' }).catch((error) =>
+            console.warn('[cache] Failed to check for updates', error)
+          );
         }}
       />
       <Button
@@ -227,7 +229,8 @@ export function CacheDiagnostics() {
       <Text>Pending updates: {pending}</Text>
       {status.lastPollResult && (
         <Text>
-          Last check: {status.lastPollResult.checked} checked, {status.lastPollResult.updated} updated
+          Last check: {status.lastPollResult.checked} checked, {status.lastPollResult.updated}{' '}
+          updated
         </Text>
       )}
     </View>
@@ -250,8 +253,16 @@ const SOURCE_LABELS: Record<string, string> = {
   pending: 'loading...',
 };
 
-function findEntry(remotes: Record<string, CacheStatusRemoteEntry>, name: string): CacheStatusRemoteEntry | undefined {
-  return remotes[name] ?? Object.values(remotes).find((entry) => entry.remoteName.endsWith('/' + name) || entry.remoteName === name);
+function findEntry(
+  remotes: Record<string, CacheStatusRemoteEntry>,
+  name: string
+): CacheStatusRemoteEntry | undefined {
+  return (
+    remotes[name] ??
+    Object.values(remotes).find(
+      (entry) => entry.remoteName.endsWith('/' + name) || entry.remoteName === name
+    )
+  );
 }
 
 export function RemoteSourceBadge({ name }: { name: string }) {

@@ -3,11 +3,7 @@ import path from 'node:path';
 
 const workspaceRoot = import.meta.dirname;
 
-function project(
-  name: string,
-  root: string,
-  options: Partial<ProjectConfig> = {}
-): ProjectConfig {
+function project(name: string, root: string, options: Partial<ProjectConfig> = {}): ProjectConfig {
   const projectRoot = path.resolve(workspaceRoot, root);
 
   return defineProject({
@@ -17,7 +13,7 @@ function project(
     include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     exclude: ['**/node_modules/**', '**/dist/**', 'lib/**'],
     source: {
-      tsconfigPath: path.join(projectRoot, 'tsconfig.spec.json'),
+      tsconfigPath: path.join(projectRoot, 'tsconfig.json'),
     },
     tools: {
       swc: {
@@ -30,16 +26,16 @@ function project(
         },
       },
       rspack: {
+        experiments: {
+          typeReexportsPresence: true,
+        },
         externals: {
           debug: 'commonjs debug',
           'node-persist': 'commonjs node-persist',
         },
         resolve: {
           alias: {
-            'react-native': path.resolve(
-              workspaceRoot,
-              'scripts/rstest/react-native.ts'
-            ),
+            'react-native': path.resolve(workspaceRoot, 'scripts/rstest/react-native.ts'),
           },
         },
       },
@@ -73,22 +69,10 @@ export default defineConfig({
       // Rstest 0.10.6 cannot synthesize zero-hit coverage for files that opt out
       // with `istanbul ignore file`; exclude those files before collection.
       path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/index.ts'),
-      path.resolve(
-        workspaceRoot,
-        'libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts'
-      ),
-      path.resolve(
-        workspaceRoot,
-        'libs/zephyr-edge-contract/src/lib/zephyr-edge-contract.ts'
-      ),
-      path.resolve(
-        workspaceRoot,
-        'libs/zephyr-edge-contract/src/lib/snapshot.ts'
-      ),
-      path.resolve(
-        workspaceRoot,
-        'libs/zephyr-edge-contract/src/lib/zephyr-global.ts'
-      ),
+      path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts'),
+      path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/zephyr-edge-contract.ts'),
+      path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/snapshot.ts'),
+      path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/zephyr-global.ts'),
       path.resolve(
         workspaceRoot,
         'libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts'
@@ -98,12 +82,15 @@ export default defineConfig({
     allowExternal: true,
   },
   projects: [
+    project('release-tooling', '.', {
+      include: ['scripts/*.{test,spec}.?(c|m)[jt]s?(x)'],
+      source: {
+        tsconfigPath: path.resolve(workspaceRoot, 'tsconfig.json'),
+      },
+    }),
     project('parcel-reporter-zephyr', 'libs/parcel-reporter-zephyr'),
     project('rollup-plugin-zephyr', 'libs/rollup-plugin-zephyr'),
-    project(
-      'vite-plugin-tanstack-start-zephyr',
-      'libs/vite-plugin-tanstack-start-zephyr'
-    ),
+    project('vite-plugin-tanstack-start-zephyr', 'libs/vite-plugin-tanstack-start-zephyr'),
     project('vite-plugin-vinext-zephyr', 'libs/vite-plugin-vinext-zephyr'),
     project('vite-plugin-zephyr', 'libs/vite-plugin-zephyr'),
     project('with-zephyr', 'libs/with-zephyr'),
@@ -126,23 +113,23 @@ export default defineConfig({
     }),
     project('example-rspack-host', 'examples/rspack-nx-mf/apps/host', {
       testEnvironment: 'jsdom',
+      resolve: {
+        alias: {
+          'rspack_nx_mf_remote/Module': path.resolve(
+            workspaceRoot,
+            'examples/rspack-nx-mf/apps/host/test/remote-module-stub.tsx'
+          ),
+        },
+      },
     }),
     project('example-rspack-remote', 'examples/rspack-nx-mf/apps/remote', {
       testEnvironment: 'jsdom',
     }),
-    project(
-      'example-sample-rspack-application',
-      'examples/sample-rspack-application',
-      {
-        testEnvironment: 'jsdom',
-      }
-    ),
-    project(
-      'example-sample-webpack-application',
-      'examples/sample-webpack-application',
-      {
-        testEnvironment: 'jsdom',
-      }
-    ),
+    project('example-sample-rspack-application', 'examples/sample-rspack-application', {
+      testEnvironment: 'jsdom',
+    }),
+    project('example-sample-webpack-application', 'examples/sample-webpack-application', {
+      testEnvironment: 'jsdom',
+    }),
   ],
 });

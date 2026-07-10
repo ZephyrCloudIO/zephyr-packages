@@ -1,7 +1,6 @@
 import type { Mock } from '@rstest/core';
 
-import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { describe, expect, rs, it, beforeEach } from '@rstest/core';
 import {
@@ -102,21 +101,18 @@ describe('auth/login', () => {
   it('removes a partially written fallback when artifact creation fails', () => {
     const authUrl =
       'https://auth.example.com/authorize?state=private-partial-artifact-state';
-    const existingDirectories = new Set(
-      readdirSync(tmpdir()).filter((entry) => entry.startsWith('zephyr-auth-'))
-    );
     const writeError = new Error('simulated artifact write failure');
+    let attemptedDirectory: string | undefined;
 
     expect(() =>
       createPrivateAuthenticationArtifact(authUrl, (...args) => {
+        attemptedDirectory = dirname(String(args[0]));
         writeFileSync(...args);
         throw writeError;
       })
     ).toThrow(writeError);
 
-    const remainingDirectories = readdirSync(tmpdir()).filter(
-      (entry) => entry.startsWith('zephyr-auth-') && !existingDirectories.has(entry)
-    );
-    expect(remainingDirectories).toEqual([]);
+    expect(attemptedDirectory).toBeDefined();
+    expect(existsSync(attemptedDirectory!)).toBe(false);
   });
 });

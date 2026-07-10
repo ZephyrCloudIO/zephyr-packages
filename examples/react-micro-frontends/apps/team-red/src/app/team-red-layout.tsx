@@ -59,21 +59,14 @@ function RenderVariantOption(variant: VariantOption) {
     );
   };
   return (
-    <button
-      className={active}
-      type="button"
-      key={variant.sku}
-      onClick={handleVariantClick}
-    >
+    <button className={active} type="button" key={variant.sku} onClick={handleVariantClick}>
       <img src={variant.thumb} alt={variant.name} />
     </button>
   );
 }
 
 export function TeamRedLayout({ id }: { id: string }) {
-  const [variant, setVariant] = useState(
-    product.variants.find((v) => state.variant === v.sku)
-  );
+  const [variant, setVariant] = useState(product.variants.find((v) => state.variant === v.sku));
   useEffect(() => {
     const refresh = () => {
       setVariant(product.variants.find((v) => state.variant === v.sku));

@@ -6,10 +6,7 @@ import App from './app/app';
 
 Sentry.init({
   dsn: 'https://dc0d5d0da7a3e71e65bdf4a984a8faf0@o4505862739525632.ingest.sentry.io/4506043285176320',
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
-  ],
+  integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
   // Performance Monitoring
   tracesSampleRate: 1.0, // Capture 100% of the transactions
   // Session Replay
@@ -17,9 +14,7 @@ Sentry.init({
   replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
 });
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <StrictMode>
     <App />

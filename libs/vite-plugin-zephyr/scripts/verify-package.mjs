@@ -1,11 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import {
-  mkdtempSync,
-  mkdirSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -14,9 +8,7 @@ import { fileURLToPath } from 'node:url';
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const workspaceRoot = join(packageRoot, '..', '..');
 const agentRoot = join(workspaceRoot, 'libs', 'zephyr-agent');
-const temporaryRoot = mkdtempSync(
-  join(tmpdir(), 'vite-plugin-zephyr-package-')
-);
+const temporaryRoot = mkdtempSync(join(tmpdir(), 'vite-plugin-zephyr-package-'));
 const nodeModules = join(temporaryRoot, 'node_modules');
 const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
@@ -30,11 +22,7 @@ function run(executable, args, cwd = temporaryRoot) {
 
 try {
   const packed = JSON.parse(
-    run(
-      npmExecutable,
-      ['pack', '--dry-run', '--ignore-scripts', '--json'],
-      packageRoot
-    )
+    run(npmExecutable, ['pack', '--dry-run', '--ignore-scripts', '--json'], packageRoot)
   );
   const packedFiles = new Set(packed[0]?.files?.map(({ path }) => path) ?? []);
   for (const requiredFile of [
@@ -47,18 +35,12 @@ try {
     }
   }
   if ([...packedFiles].some((file) => file.endsWith('.tsbuildinfo'))) {
-    throw new Error(
-      'Packed vite-plugin-zephyr contains TypeScript build metadata'
-    );
+    throw new Error('Packed vite-plugin-zephyr contains TypeScript build metadata');
   }
 
   mkdirSync(nodeModules, { recursive: true });
   const symlinkType = process.platform === 'win32' ? 'junction' : 'dir';
-  symlinkSync(
-    packageRoot,
-    join(nodeModules, 'vite-plugin-zephyr'),
-    symlinkType
-  );
+  symlinkSync(packageRoot, join(nodeModules, 'vite-plugin-zephyr'), symlinkType);
   symlinkSync(agentRoot, join(nodeModules, 'zephyr-agent'), symlinkType);
 
   writeFileSync(
@@ -95,10 +77,7 @@ try {
     ].join('\n')
   );
 
-  run(process.execPath, [
-    '--no-experimental-require-module',
-    'require-smoke.cjs',
-  ]);
+  run(process.execPath, ['--no-experimental-require-module', 'require-smoke.cjs']);
   run(process.execPath, ['import-smoke.mjs']);
 
   const require = createRequire(import.meta.url);
@@ -116,9 +95,7 @@ try {
     'types-smoke.mts',
   ]);
 
-  console.log(
-    'Packed Vite plugin import, require, types, and runtime asset verified.'
-  );
+  console.log('Packed Vite plugin import, require, types, and runtime asset verified.');
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });
 }

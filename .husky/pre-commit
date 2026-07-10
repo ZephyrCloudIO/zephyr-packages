@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-npx nx format
-npx nx affected -t test
-npx nx affected -t lint --fix
-git add -A
+pnpm format:check
+pnpm test:inventory
+pnpm test:affected
+pnpm lint

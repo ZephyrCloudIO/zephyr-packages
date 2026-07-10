@@ -2,42 +2,53 @@
   "name": "zephyr-edge-contract",
   "version": "1.1.2",
   "description": "Edge contract for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-edge-contract"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-edge-contract"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
   "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "nx build zephyr-edge-contract",
-    "patch-version": "pnpm version",
-    "test": "nx test zephyr-edge-contract"
-  },
-  "dependencies": {
-    "tslib": "catalog:typescript"
-  },
-  "devDependencies": {
-    "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "typescript": "catalog:typescript"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run --config ../../rstest.config.mts --project zephyr-edge-contract"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "catalog:typescript",
+    "typescript": "catalog:typescript"
   }
 }

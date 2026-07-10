@@ -3,8 +3,6 @@ import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 const mocks = rs.hoisted(() => ({
   rspackConfigure: rs.fn(),
   rspackWithZephyr: rs.fn(),
-  webpackConfigure: rs.fn(),
-  webpackWithZephyr: rs.fn(),
 }));
 
 rs.mock('zephyr-agent', () => ({
@@ -15,35 +13,28 @@ rs.mock('zephyr-rspack-plugin', () => ({
   withZephyr: mocks.rspackWithZephyr,
 }));
 
-rs.mock('zephyr-webpack-plugin', () => ({
-  withZephyr: mocks.webpackWithZephyr,
-}));
-
 import { withZephyr } from './with-zephyr';
 
 describe('Modern.js withZephyr', () => {
   beforeEach(() => {
     rs.clearAllMocks();
     mocks.rspackWithZephyr.mockReturnValue(mocks.rspackConfigure);
-    mocks.webpackWithZephyr.mockReturnValue(mocks.webpackConfigure);
+    mocks.rspackConfigure.mockImplementation(async (config) => config);
   });
 
-  it('runs after federation config and passes the complete Rspack compiler array once', async () => {
-    let hook:
-      | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
+  it('runs after federation config and forwards Modern.js options', async () => {
+    let modifier:
+      | ((config: Record<string, unknown>) => Promise<Record<string, unknown>>)
       | undefined;
     const plugin = withZephyr({ snapshotType: 'ssr', entrypoint: 'server/index.js' });
     await plugin.setup?.({
-      onBeforeCreateCompiler(nextHook: typeof hook) {
-        hook = nextHook;
-      },
-      getAppContext() {
-        return { bundlerType: 'rspack' };
+      modifyRspackConfig(nextModifier: typeof modifier) {
+        modifier = nextModifier;
       },
     } as never);
-    const bundlerConfigs = [{ name: 'client' }, { name: 'server' }];
+    const config = { name: 'server' };
 
-    await hook?.({ bundlerConfigs });
+    await modifier?.(config);
 
     expect(plugin.pre).toEqual(['@modern-js/plugin-module-federation-config']);
     expect(mocks.rspackWithZephyr).toHaveBeenCalledWith({
@@ -51,29 +42,27 @@ describe('Modern.js withZephyr', () => {
       entrypoint: 'server/index.js',
     });
     expect(mocks.rspackConfigure).toHaveBeenCalledTimes(1);
-    expect(mocks.rspackConfigure).toHaveBeenCalledWith(bundlerConfigs);
-    expect(mocks.webpackWithZephyr).not.toHaveBeenCalled();
+    expect(mocks.rspackConfigure).toHaveBeenCalledWith(config);
   });
 
-  it('passes the complete Webpack compiler array once', async () => {
-    let hook:
-      | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
+  it('handles client and server compiler configs from Modern.js independently', async () => {
+    let modifier:
+      | ((config: Record<string, unknown>) => Promise<Record<string, unknown>>)
       | undefined;
     const plugin = withZephyr();
     await plugin.setup?.({
-      onBeforeCreateCompiler(nextHook: typeof hook) {
-        hook = nextHook;
-      },
-      getAppContext() {
-        return { bundlerType: 'webpack' };
+      modifyRspackConfig(nextModifier: typeof modifier) {
+        modifier = nextModifier;
       },
     } as never);
-    const bundlerConfigs = [{ name: 'client' }, { name: 'server' }];
+    const clientConfig = { name: 'client' };
+    const serverConfig = { name: 'server' };
 
-    await hook?.({ bundlerConfigs });
+    await modifier?.(clientConfig);
+    await modifier?.(serverConfig);
 
-    expect(mocks.webpackConfigure).toHaveBeenCalledTimes(1);
-    expect(mocks.webpackConfigure).toHaveBeenCalledWith(bundlerConfigs);
-    expect(mocks.rspackWithZephyr).not.toHaveBeenCalled();
+    expect(mocks.rspackWithZephyr).toHaveBeenCalledTimes(2);
+    expect(mocks.rspackConfigure).toHaveBeenNthCalledWith(1, clientConfig);
+    expect(mocks.rspackConfigure).toHaveBeenNthCalledWith(2, serverConfig);
   });
 });

@@ -20,6 +20,12 @@ permissions:
   contents: read
   id-token: write
 
+# Publishing is not transactional. Serialize every release channel so concurrent
+# workflow runs cannot calculate or publish the same version.
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
 jobs:
   # Manual canary publishing
   publish-canary:
@@ -28,8 +34,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./.github/actions/setup
+        with:
+          cache-enabled: 'false'
 
       - name: Verify git status
         run: |
@@ -43,26 +51,16 @@ jobs:
         run: pnpm audit --audit-level high
 
       - name: Build packages
-        env:
-          ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API_DEV }}
-          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
-          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm nx run-many -t build --projects="libs/*"
+        run: pnpm build
 
       - name: Patch versions
         run: |
-          echo "Fetching current canary tag for zephyr-agent..."
+          NEXT_VERSION=$(node scripts/next-prerelease-version.mjs canary 0.0.0)
+          echo "Setting version to: $NEXT_VERSION"
+          pnpm ze-version-patch "$NEXT_VERSION"
 
-          # Get the version behind the canary tag (e.g., 0.0.0-canary.42)
-          CURRENT_CANARY=$(npm dist-tag ls zephyr-agent 2>/dev/null \
-            | awk '/canary:/{print $2}')
-
-          # Extract numeric suffix or default to 0
-          HIGHEST_CANARY=$(echo "$CURRENT_CANARY" | grep -oE '[0-9]+$' || echo 0)
-          NEXT_CANARY=$((HIGHEST_CANARY + 1))
-
-          pnpm ze-version-patch "0.0.0-canary.$NEXT_CANARY"
+      - name: Verify publish archives
+        run: pnpm verify:packages
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
@@ -89,8 +87,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./.github/actions/setup
+        with:
+          cache-enabled: 'false'
 
       - name: Verify git status
         run: |
@@ -104,38 +104,17 @@ jobs:
         run: pnpm audit --audit-level high
 
       - name: Build packages
-        env:
-          ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API_DEV }}
-          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
-          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm build
 
       - name: Patch versions with next tag
         run: |
-          # Get current version from root package.json
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-
-          echo "Fetching current next tag for zephyr-agent…"
-
-          # Fetch current "next" dist-tag
-          CURRENT_NEXT=$(npm dist-tag ls zephyr-agent 2>/dev/null | awk '/next:/{print $2}')
-
-          # Build a regex for the current prefix: e.g., 1.2.3 → 1\.2\.3-next.NUMBER
-          PREFIX_REGEX="^${CURRENT_VERSION//./\\.}-next\.([0-9]+)$"
-
-          if [[ $CURRENT_NEXT =~ $PREFIX_REGEX ]]; then
-            # Increment from existing number
-            NEXT_NUMBER=$((BASH_REMATCH[1] + 1))
-          else
-            # Start fresh if prefix differs or format invalid
-            NEXT_NUMBER=1
-            echo "Different prefix or invalid format. Starting fresh with 1."
-          fi
-
-          NEXT_VERSION="${CURRENT_VERSION}-next.${NEXT_NUMBER}"
+          NEXT_VERSION=$(node scripts/next-prerelease-version.mjs next "$CURRENT_VERSION")
           echo "Setting version to: $NEXT_VERSION"
           pnpm ze-version-patch "$NEXT_VERSION"
+
+      - name: Verify publish archives
+        run: pnpm verify:packages
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
@@ -163,9 +142,13 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'released'
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./.github/actions/setup
+        with:
+          cache-enabled: 'false'
 
       - name: Verify git status
         run: |
@@ -178,13 +161,14 @@ jobs:
       - name: Verify package integrity
         run: pnpm audit --audit-level high
 
+      - name: Verify release tag and package versions
+        run: node scripts/verify-release-version.mjs "$RELEASE_TAG"
+
       - name: Build packages
-        env:
-          ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API_DEV }}
-          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
-          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
         run: pnpm build
+
+      - name: Verify publish archives
+        run: pnpm verify:packages
 
       - name: Publish packages to latest tag
         run: pnpm ze-publish --tag=latest
@@ -199,7 +183,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Published packages with \`latest\` tag" >> $GITHUB_STEP_SUMMARY
           echo "Version: \`$CURRENT_VERSION\`" >> $GITHUB_STEP_SUMMARY
-          echo "Git tag: \`${{ github.event.release.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Git tag: \`$RELEASE_TAG\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Package | Version | npm Link |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|---------|----------|" >> $GITHUB_STEP_SUMMARY

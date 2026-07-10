@@ -5,7 +5,7 @@ export default defineConfig({
   root: import.meta.dirname,
   include: ['src/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
   source: {
-    tsconfigPath: './tsconfig.spec.json',
+    tsconfigPath: './tsconfig.json',
   },
   testEnvironment: 'node',
   testTimeout: 360_000,

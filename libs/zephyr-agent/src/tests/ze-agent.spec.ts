@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { homedir } from 'node:os';
 import * as fs from 'node:fs';
-import { init as initializeNodePersist } from 'node-persist';
+import nodePersist from 'node-persist';
 import {
   getAppConfig,
   saveAppConfig,
@@ -36,11 +36,23 @@ rs.mock('../lib/node-persist/secret-token', () => {
 rs.mock('is-ci', () => ({ default: false }));
 
 // This spec performs a real deployment. Preview mode is shared by ordinary unit-test
-// jobs, so require a dedicated opt-in rather than unexpectedly uploading from `pnpm test`.
-const runner =
-  ZE_IS_PREVIEW() && process.env['ZE_RUN_AGENT_DEPLOYMENT_E2E'] === 'true'
-    ? describe
-    : describe.skip;
+// jobs, so require a dedicated opt-in on an ephemeral CI runner rather than unexpectedly
+// uploading from `pnpm test` or deleting a developer's authenticated ~/.zephyr store.
+function shouldRunDeploymentE2E(options: {
+  preview: boolean;
+  optedIn: boolean;
+  ci: boolean;
+}): boolean {
+  return options.preview && options.optedIn && options.ci;
+}
+
+const runner = shouldRunDeploymentE2E({
+  preview: ZE_IS_PREVIEW(),
+  optedIn: process.env['ZE_RUN_AGENT_DEPLOYMENT_E2E'] === 'true',
+  ci: process.env['CI'] === 'true',
+})
+  ? describe
+  : describe.skip;
 
 const exec = promisify(execCB);
 const execFile = promisify(execFileCB);
@@ -74,13 +86,15 @@ function createDeploymentInvocation(options: {
   env: NodeJS.ProcessEnv;
 } {
   return {
-    executable: 'npx',
+    executable: 'pnpm',
     args: [
-      'nx',
+      '-w',
+      'exec',
+      'turbo',
       'run',
-      'sample-webpack-application:build',
-      '--skip-nx-cache',
-      '--verbose',
+      'build',
+      '--filter=sample-webpack-application',
+      '--force',
     ],
     env: {
       ...process.env,
@@ -94,6 +108,19 @@ function createDeploymentInvocation(options: {
 }
 
 describe('ZeAgent deployment child process', () => {
+  it('requires preview mode, explicit opt-in, and CI isolation', () => {
+    expect(shouldRunDeploymentE2E({ preview: true, optedIn: true, ci: true })).toBe(true);
+    expect(shouldRunDeploymentE2E({ preview: true, optedIn: true, ci: false })).toBe(
+      false
+    );
+    expect(shouldRunDeploymentE2E({ preview: false, optedIn: true, ci: true })).toBe(
+      false
+    );
+    expect(shouldRunDeploymentE2E({ preview: true, optedIn: false, ci: true })).toBe(
+      false
+    );
+  });
+
   it('passes the secret token only through the child environment', () => {
     const secretToken = 'test-token-that-must-not-appear-in-argv';
     const invocation = createDeploymentInvocation({
@@ -136,7 +163,10 @@ runner('ZeAgent', () => {
   const appProject = `test-zephyr-mono-${testRunSuffix}`;
   const gitRemoteOrigin = `git@github.com:TestZephyrCloudIO/${appProject}.git`;
 
-  const packageJsonPath = path.resolve('examples/sample-webpack-application');
+  const packageJsonPath = path.resolve(
+    import.meta.dirname,
+    '../../../../examples/sample-webpack-application'
+  );
   const appName = 'sample-webpack-application';
   const application_uid = `${appName}.${appProject}.${appOrg}`;
   const user_uuid = crypto.randomBytes(16).toString('hex');
@@ -158,7 +188,7 @@ runner('ZeAgent', () => {
     // node-persist initializes during module evaluation. Re-initialize after clearing its
     // files so its in-memory index cannot point at entries which no longer exist.
     fs.mkdirSync(ZE_STORAGE_PATH, { recursive: true });
-    await initializeNodePersist({
+    await nodePersist.init({
       dir: ZE_STORAGE_PATH,
       forgiveParseErrors: true,
     });
@@ -234,7 +264,7 @@ runner('ZeAgent', () => {
       });
       // The child process wrote the deploy result. Refresh node-persist's index before
       // reading so this test observes only this build instead of historical tag URLs.
-      await initializeNodePersist({
+      await nodePersist.init({
         dir: ZE_STORAGE_PATH,
         forgiveParseErrors: true,
       });

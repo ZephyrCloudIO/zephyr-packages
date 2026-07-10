@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { getItem, removeItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import {
   ZE_API_ENDPOINT,
   ZE_ENV,
@@ -124,7 +124,7 @@ export async function getAppConfig(
   scope = getApplicationConfigStorageScope()
 ): Promise<ZeApplicationConfig | undefined> {
   await storage;
-  const stored: unknown = await getItem(get_key(application_uid, scope));
+  const stored: unknown = await nodePersist.getItem(get_key(application_uid, scope));
   return isStoredApplicationConfig(stored, application_uid, scope)
     ? stored.config
     : undefined;
@@ -135,5 +135,5 @@ export async function removeAppConfig(
   scope = getApplicationConfigStorageScope()
 ): Promise<void> {
   await storage;
-  await removeItem(get_key(application_uid, scope));
+  await nodePersist.removeItem(get_key(application_uid, scope));
 }

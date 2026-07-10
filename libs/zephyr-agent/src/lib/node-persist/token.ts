@@ -1,4 +1,4 @@
-import { clear, getItem, removeItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import { getSecretToken } from './secret-token';
 import { setPrivateItem, storage } from './storage';
 import { StorageKeys } from './storage-keys';
@@ -48,7 +48,7 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
   }
 
   await storage;
-  const token = await getItem(StorageKeys.ze_auth_token);
+  const token = await nodePersist.getItem(StorageKeys.ze_auth_token);
   if (token) {
     return token;
   }
@@ -63,12 +63,12 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
 
 export async function removeToken(): Promise<void> {
   await storage;
-  await removeItem(StorageKeys.ze_auth_token);
+  await nodePersist.removeItem(StorageKeys.ze_auth_token);
 }
 
 export async function cleanTokens(): Promise<void> {
   await storage;
-  await clear();
+  await nodePersist.clear();
 }
 
 async function getTokenFromServerToken(

@@ -2,63 +2,71 @@
   "name": "zephyr-astro-integration",
   "version": "1.1.2",
   "description": "Astro integration for Zephyr Cloud deployment and module federation",
+  "keywords": [
+    "analytics",
+    "astro",
+    "astro-component",
+    "astro-integration",
+    "deployment",
+    "module-federation",
+    "performance",
+    "withastro",
+    "zephyr"
+  ],
   "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-astro-integration#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-astro-integration"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-astro-integration"
   },
   "files": [
     "dist",
-    "!dist/**/*.tsbuildinfo",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!dist/**/*.map"
   ],
-  "keywords": [
-    "astro-component",
-    "withastro",
-    "astro",
-    "astro-integration",
-    "zephyr",
-    "module-federation",
-    "deployment",
-    "analytics",
-    "performance"
-  ],
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-astro-integration:build",
-    "patch-version": "pnpm version"
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run --config ../../rstest.config.mts --project zephyr-astro-integration"
   },
   "dependencies": {
-    "tslib": "catalog:typescript",
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
     "astro": "^7.0.7",
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
     "astro": "^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

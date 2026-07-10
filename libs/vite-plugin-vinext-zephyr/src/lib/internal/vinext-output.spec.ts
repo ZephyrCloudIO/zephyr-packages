@@ -92,6 +92,32 @@ describe('vinext-output helpers', () => {
     );
   });
 
+  it('sanitizes minified Worker chunks without changing client assets', () => {
+    const assets: Record<string, VinextBuildAsset> = {};
+    const emitted =
+      'import{x}from"./runtime.js";import"node:fs";import"node:path";export{x};';
+
+    collectAssetsFromBundle(assets, '/repo/dist', '/repo/dist/server', {
+      serverChunk: {
+        type: 'chunk',
+        fileName: '_next/static/instrumentation.js',
+        code: emitted,
+      },
+    });
+    collectAssetsFromBundle(assets, '/repo/dist', '/repo/dist/client', {
+      clientChunk: {
+        type: 'chunk',
+        fileName: 'assets/app.js',
+        code: emitted,
+      },
+    });
+
+    expect(
+      assets['server/_next/static/instrumentation.js']?.content.toString('utf8')
+    ).toBe('import{x}from"./runtime.js";export{x};');
+    expect(assets['client/assets/app.js']?.content.toString('utf8')).toBe(emitted);
+  });
+
   it('rejects bundle directories outside the configured output root', () => {
     expect(() =>
       collectAssetsFromBundle({}, '/repo/dist', '/repo/server-output', {

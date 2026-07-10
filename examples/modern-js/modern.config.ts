@@ -13,13 +13,5 @@ export default defineConfig({
   source: {
     mainEntryName: 'index',
   },
-  runtime: {
-    router: true,
-  },
-  plugins: [
-    appTools({
-      bundler: 'rspack', // Set to 'webpack' to enable webpack
-    }),
-    withZephyr(),
-  ],
+  plugins: [appTools(), withZephyr()],
 });

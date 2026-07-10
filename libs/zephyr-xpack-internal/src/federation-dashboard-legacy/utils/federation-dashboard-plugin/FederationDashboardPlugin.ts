@@ -28,9 +28,11 @@ import type { FederationDashboardPluginOptions } from './federation-dashboard-pl
 import type { Exposes } from './federation-dashboard-types';
 import { findPackageJson } from './find-package-json';
 
-// TODO: convert this require to imports
-
-const AutomaticVendorFederation = require('@module-federation/automatic-vendor-federation');
+// The package ships no types and its module.exports is the function itself.
+// In the ESM build the bundler rewrites this require() into a namespace import
+// of the CJS module, which puts the callable on `.default`.
+const avfModule = require('@module-federation/automatic-vendor-federation');
+const AutomaticVendorFederation = avfModule?.default ?? avfModule;
 
 interface ProcessWebpackGraphParams {
   stats: XStats;

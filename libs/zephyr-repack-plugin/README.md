@@ -42,9 +42,7 @@ Using `zephyr-repack-plugin` by wrapping the Rspack configuration:
 ```js
 const { withZephyr } = require('zephyr-repack-plugin');
 
-const config = {
-  /** ...rspack configuration */
-};
+const config = {/** ...rspack configuration */};
 
 module.exports = withZephyr()(config);
 ```

@@ -2,33 +2,50 @@
   "name": "with-zephyr",
   "version": "1.1.2",
   "description": "A codemod to automatically add withZephyr plugin to bundler configurations",
-  "main": "dist/index.js",
+  "keywords": [
+    "astro",
+    "bundler",
+    "codemod",
+    "metro",
+    "modernjs",
+    "react-native",
+    "rolldown",
+    "rollup",
+    "rsbuild",
+    "rslib",
+    "rspack",
+    "rspress",
+    "vite",
+    "webpack",
+    "zephyr"
+  ],
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
     "directory": "libs/with-zephyr"
   },
-  "type": "module",
-  "author": {
-    "name": "ZephyrCloudIO",
-    "url": "https://github.com/ZephyrCloudIO"
-  },
-  "license": "Apache-2.0",
   "bin": {
     "with-zephyr": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.map"
   ],
+  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
     "start": "node dist/index.js",
-    "test": "rstest run",
-    "test:watch": "rstest --watch",
-    "test:coverage": "rstest --coverage",
-    "typecheck": "tsc --noEmit",
-    "patch-version": "pnpm version"
+    "typecheck": "tsc -b",
+    "test": "rstest run --config ../../rstest.config.mts --project with-zephyr",
+    "test:watch": "rstest --watch --config ../../rstest.config.mts --project with-zephyr",
+    "test:coverage": "rstest run --coverage --config ../../rstest.config.mts --project with-zephyr"
   },
   "dependencies": {
     "@ast-grep/napi": "^0.41.0",
@@ -37,27 +54,10 @@
     "glob": "^13.0.0"
   },
   "devDependencies": {
+    "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "^24.5.2",
-    "@rslib/core": "^0.19.0",
     "typescript": "^5.9.2",
     "zephyr-rsbuild-plugin": "workspace:*"
-  },
-  "keywords": [
-    "zephyr",
-    "codemod",
-    "bundler",
-    "webpack",
-    "vite",
-    "rollup",
-    "rspack",
-    "rsbuild",
-    "rslib",
-    "astro",
-    "modernjs",
-    "rolldown",
-    "rspress",
-    "metro",
-    "react-native"
-  ]
+  }
 }

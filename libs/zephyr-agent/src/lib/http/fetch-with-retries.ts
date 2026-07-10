@@ -292,7 +292,7 @@ export async function fetchWithRetries(
       });
       axiosConfig.headers = headersRecord;
     } else {
-      axiosConfig.headers = options.headers;
+      axiosConfig.headers = options.headers as AxiosRequestConfig['headers'];
     }
   }
 

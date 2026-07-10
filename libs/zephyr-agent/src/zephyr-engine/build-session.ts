@@ -62,7 +62,7 @@ export class BuildSessionAbortedError extends Error {
 
 export class BuildParticipantFailedError extends Error {
   readonly participant: string;
-  readonly cause: unknown;
+  override readonly cause: unknown;
 
   constructor(participant: string, cause: unknown) {
     const detail = cause instanceof Error ? cause.message : String(cause);

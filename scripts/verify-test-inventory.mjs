@@ -23,104 +23,78 @@ function walk(directory, predicate) {
   return matches;
 }
 
-function nearestProject(testFile) {
+function nearestPackage(testFile) {
   let directory = path.dirname(testFile);
   while (directory.startsWith(workspaceRoot)) {
-    const projectFile = path.join(directory, 'project.json');
-    if (fs.existsSync(projectFile)) return projectFile;
+    const packageFile = path.join(directory, 'package.json');
+    if (fs.existsSync(packageFile)) return packageFile;
     if (directory === workspaceRoot) break;
     directory = path.dirname(directory);
   }
   return undefined;
 }
 
-const roots = ['libs', 'examples', 'e2e'].map((directory) =>
+const roots = ['libs', 'examples', 'e2e', 'scripts'].map((directory) =>
   path.join(workspaceRoot, directory)
 );
-const testFiles = roots.flatMap((root) =>
-  walk(root, (file) => testPattern.test(file))
-);
-const testsByProject = new Map();
+const testFiles = roots.flatMap((root) => walk(root, (file) => testPattern.test(file)));
+const testsByPackage = new Map();
 
 for (const testFile of testFiles) {
   const source = fs.readFileSync(testFile, 'utf8');
   const relativePath = path.relative(workspaceRoot, testFile);
 
   if (!/from ['"]@rstest\/core['"]/.test(source)) {
-    errors.push(
-      `${relativePath}: test APIs must be imported from @rstest/core`
-    );
+    errors.push(`${relativePath}: test APIs must be imported from @rstest/core`);
   }
-  if (
-    /@jest\/globals|\bjest\.|\b(?:xit|xtest|fdescribe|fit)\s*\(/.test(source)
-  ) {
+  if (/@jest\/globals|\bjest\.|\b(?:xit|xtest|fdescribe|fit)\s*\(/.test(source)) {
     errors.push(`${relativePath}: legacy Jest API found`);
   }
 
-  const projectFile = nearestProject(testFile);
-  if (!projectFile) {
-    errors.push(`${relativePath}: no owning project.json found`);
+  const packageFile = nearestPackage(testFile);
+  if (!packageFile) {
+    errors.push(`${relativePath}: no owning package.json found`);
     continue;
   }
 
-  const projectTests = testsByProject.get(projectFile) ?? [];
-  projectTests.push(testFile);
-  testsByProject.set(projectFile, projectTests);
+  const packageTests = testsByPackage.get(packageFile) ?? [];
+  packageTests.push(testFile);
+  testsByPackage.set(packageFile, packageTests);
 }
 
-const rootConfig = fs.readFileSync(
-  path.join(workspaceRoot, 'rstest.config.mts'),
-  'utf8'
-);
+const rootConfig = fs.readFileSync(path.join(workspaceRoot, 'rstest.config.mts'), 'utf8');
 const e2eConfig = fs.readFileSync(
   path.join(workspaceRoot, 'e2e/deployment/rstest.config.mts'),
   'utf8'
 );
 const discoveryPattern = '**/*.{test,spec}.?(c|m)[jt]s?(x)';
 const configuredProjects = new Set(
-  [...rootConfig.matchAll(/project\(\s*['"]([^'"]+)['"]/g)].map(
-    ([, projectName]) => projectName
-  )
+  [...rootConfig.matchAll(/project\(\s*['"]([^'"]+)['"]/g)].map(([, projectName]) => projectName)
 );
 
 if (!rootConfig.includes(discoveryPattern)) {
-  errors.push(
-    'rstest.config.mts: root discovery must include test and spec files'
-  );
+  errors.push('rstest.config.mts: root discovery must include test and spec files');
 }
 if (!e2eConfig.includes(discoveryPattern)) {
-  errors.push(
-    'e2e/deployment/rstest.config.mts: E2E discovery must include test and spec files'
-  );
+  errors.push('e2e/deployment/rstest.config.mts: E2E discovery must include test and spec files');
 }
 if (!e2eConfig.includes('root: import.meta.dirname')) {
   errors.push(
     'e2e/deployment/rstest.config.mts: E2E root must be anchored to its config directory'
   );
 }
-const projectFiles = roots.flatMap((root) =>
-  walk(root, (file) => path.basename(file) === 'project.json')
-);
+const packageFiles = [
+  path.join(workspaceRoot, 'package.json'),
+  ...roots.flatMap((root) => walk(root, (file) => path.basename(file) === 'package.json')),
+];
 
-for (const projectFile of projectFiles) {
-  const project = JSON.parse(fs.readFileSync(projectFile, 'utf8'));
-  const packageFile = path.join(path.dirname(projectFile), 'package.json');
-  const packageJson = fs.existsSync(packageFile)
-    ? JSON.parse(fs.readFileSync(packageFile, 'utf8'))
-    : {};
-  const testTargets = Object.entries(project.targets ?? {}).filter(([name]) =>
-    /(?:^test$|test$)/.test(name)
+for (const packageFile of packageFiles) {
+  const packageJson = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
+  const packageTests = testsByPackage.get(packageFile) ?? [];
+  const testCommand = packageJson.scripts?.test ?? packageJson.scripts?.['e2e-test'];
+  const packageTestScripts = Object.entries(packageJson.scripts ?? {}).filter(([name]) =>
+    /(?:^test$|^test:|e2e-test$)/.test(name)
   );
-  const projectTests = testsByProject.get(projectFile) ?? [];
-  const packageTestScripts = Object.entries(packageJson.scripts ?? {}).filter(
-    ([name]) => /(?:^test$|^test:)/.test(name)
-  );
-
-  if (packageTestScripts.length > 0 && testTargets.length === 0) {
-    errors.push(
-      `${path.relative(workspaceRoot, packageFile)}: package test script creates an inferred Nx target without an explicit Rstest target`
-    );
-  }
 
   for (const [scriptName, command] of packageTestScripts) {
     if (/passWithNoTests|@nx\/jest|jest\.config/.test(String(command))) {
@@ -130,38 +104,28 @@ for (const projectFile of projectFiles) {
     }
   }
 
-  if (projectTests.length > 0 && testTargets.length === 0) {
+  if (packageTests.length > 0 && typeof testCommand !== 'string') {
     errors.push(
-      `${path.relative(workspaceRoot, projectFile)}: ${projectTests.length} test file(s) but no test target`
+      `${path.relative(workspaceRoot, packageFile)}: ${packageTests.length} test file(s) but no Rstest script`
     );
   }
 
-  for (const [targetName, target] of testTargets) {
-    const serializedTarget = JSON.stringify(target);
-    if (!serializedTarget.includes('rstest')) {
+  if (typeof testCommand === 'string') {
+    if (!testCommand.includes('rstest')) {
       errors.push(
-        `${path.relative(workspaceRoot, projectFile)}:${targetName}: target does not run Rstest`
+        `${path.relative(workspaceRoot, packageFile)}: primary test script does not run Rstest`
       );
     }
-    if (/passWithNoTests|@nx\/jest|jest\.config/.test(serializedTarget)) {
+    if (packageTests.length === 0) {
       errors.push(
-        `${path.relative(workspaceRoot, projectFile)}:${targetName}: fail-open/Jest configuration found`
-      );
-    }
-    if (projectTests.length === 0) {
-      errors.push(
-        `${path.relative(workspaceRoot, projectFile)}:${targetName}: target has no discoverable tests`
+        `${path.relative(workspaceRoot, packageFile)}: primary test script has no discoverable tests`
       );
     }
 
-    const command = target?.options?.command;
-    const selectedProject =
-      typeof command === 'string'
-        ? command.match(/--project\s+([^\s]+)/)?.[1]
-        : undefined;
+    const selectedProject = testCommand.match(/--project\s+([^\s]+)/)?.[1];
     if (selectedProject && !configuredProjects.has(selectedProject)) {
       errors.push(
-        `${path.relative(workspaceRoot, projectFile)}:${targetName}: ${selectedProject} is absent from rstest.config.mts`
+        `${path.relative(workspaceRoot, packageFile)}: ${selectedProject} is absent from rstest.config.mts`
       );
     }
   }
@@ -178,12 +142,10 @@ for (const workflowFile of workflowFiles) {
 }
 
 const legacyConfigs = [workspaceRoot, ...roots].flatMap((root) =>
-  walk(root, (file) => /(^|\/)jest\.(?:config|preset)\.[cm]?[jt]s$/.test(file))
+  walk(root, (file) => /^jest\.(?:config|preset)\.[cm]?[jt]s$/.test(path.basename(file)))
 );
 for (const config of legacyConfigs) {
-  errors.push(
-    `${path.relative(workspaceRoot, config)}: legacy Jest configuration found`
-  );
+  errors.push(`${path.relative(workspaceRoot, config)}: legacy Jest configuration found`);
 }
 
 if (errors.length > 0) {
@@ -192,6 +154,6 @@ if (errors.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Test inventory verified: ${testFiles.length} files across ${testsByProject.size} projects.`
+    `Test inventory verified: ${testFiles.length} files across ${testsByPackage.size} packages.`
   );
 }

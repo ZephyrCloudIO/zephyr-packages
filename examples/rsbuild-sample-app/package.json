@@ -1,7 +1,7 @@
 {
   "name": "rsbuild-sample-app",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "rsbuild dev --open",
     "build": "rsbuild build",

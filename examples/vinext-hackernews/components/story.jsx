@@ -5,15 +5,7 @@ import Link from 'next/link';
 import timeAgo from '../lib/time-ago';
 import styles from './story.module.css';
 
-export default function Story({
-  id,
-  title,
-  date,
-  url,
-  user,
-  score,
-  commentsCount,
-}) {
+export default function Story({ id, title, date, url, user, score, commentsCount }) {
   const { host } = url ? new URL(url) : { host: '#' };
   const [voted, setVoted] = useState(false);
 
@@ -32,11 +24,7 @@ export default function Story({
         {url && (
           <span className={styles.source}>
             {' ('}
-            <a
-              href={`http://${host}`}
-              rel="noopener noreferrer nofollow"
-              target="_blank"
-            >
+            <a href={`http://${host}`} rel="noopener noreferrer nofollow" target="_blank">
               {host.replace(/^www\./, '')}
             </a>
             {')'}

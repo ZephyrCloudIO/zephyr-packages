@@ -1,4 +1,5 @@
 import * as jose from 'jose';
+import type openBrowser from 'open';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -270,10 +271,10 @@ export function createPrivateAuthenticationArtifact(
 /** Opens the given URL in the default browser. */
 async function openUrl(url: string): Promise<void> {
   // Lazy loads `open` module
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  const openModule = (await eval(`import('open')`)) as typeof import('open', {
-    with: { 'resolution-mode': 'import' },
-  });
+  // oxlint-disable-next-line no-eval -- Preserve native import() in CommonJS output for ESM-only `open`.
+  const openModule = (await eval(`import('open')`)) as {
+    default: typeof openBrowser;
+  };
   await openModule.default(url);
 }
 

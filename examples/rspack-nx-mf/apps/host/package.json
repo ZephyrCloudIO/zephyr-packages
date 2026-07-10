@@ -2,6 +2,21 @@
   "name": "rspack_nx_mf_host",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "build": "rspack build --mode production",
+    "serve": "rspack serve --mode development",
+    "test": "rstest run --config ../../../../rstest.config.mts --project example-rspack-host"
+  },
+  "devDependencies": {
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@rsbuild/plugin-react": "catalog:rspack",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
+    "@testing-library/react": "catalog:react",
+    "jsdom": "^27.0.0",
+    "zephyr-rspack-plugin": "workspace:*"
+  },
   "zephyr:dependencies": {
     "rspack_nx_mf_remote": "workspace:*"
   }

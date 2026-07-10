@@ -13,8 +13,8 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@module-federation/enhanced": "^0.21.2",
-    "@module-federation/rsbuild-plugin": "^0.21.2",
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@module-federation/rsbuild-plugin": "catalog:module-federation",
     "@rsbuild/core": "^1.6.0",
     "@rsbuild/plugin-react": "^1.4.1",
     "@rspack/core": "catalog:rspack",

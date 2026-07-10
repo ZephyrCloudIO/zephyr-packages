@@ -1,19 +1,19 @@
-# @nx/rspack + Module Federation Enhanced + Zephyr
+# Rspack + Module Federation Enhanced + Zephyr
 
-## Build:
+## Build
 
-> npx nx run rspack_mf_remote:build --skip-nx-cache  
-> npx nx run rspack_mf_host:build --skip-nx-cache
+Build the remote before the host:
 
-Or to run both:
+```bash
+pnpm --filter rspack_mf_remote build
+pnpm --filter rspack_mf_host build
+```
 
-> npx nx run-many -t build --parallel=1 --skip-nx-cache -p rspack_mf_remote rspack_mf_host
+## Serve
 
-## Serve:
+Start each application in its own terminal:
 
-> npx nx run rspack_mf_remote:serve --skip-nx-cache  
-> npx nx run rspack_mf_host:serve --skip-nx-cache
-
-Or to run both:
-
-> npx nx run-many -t serve --parallel=2 -p rspack_mf_remote rspack_mf_host
+```bash
+pnpm --filter rspack_mf_remote serve
+pnpm --filter rspack_mf_host serve
+```

@@ -1,8 +1,0 @@
-# Add files here to ignore them from prettier formatting
-/dist
-/coverage
-/.nx/cache
-pnpm-lock.yaml
-examples/tanstack-start-basic/src/routeTree.gen.ts
-
-/.nx/workspace-data

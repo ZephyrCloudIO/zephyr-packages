@@ -36,8 +36,12 @@ interface OutputAssetLike {
 
 export type OutputBundleLike = Record<string, OutputChunkLike | OutputAssetLike>;
 
-const REDUNDANT_NODE_SIDE_EFFECT_IMPORT_RE =
-  /^[\t ]*import\s+['"]node:(?:fs|path)['"];?[\t ]*(?:\r?\n|$)/gm;
+const REDUNDANT_NODE_SIDE_EFFECT_LINE_IMPORT_RE =
+  /^[\t ]*import\s*['"]node:(?:fs|path)['"];?[\t ]*(?:\r?\n|$)/gm;
+const REDUNDANT_NODE_SIDE_EFFECT_LEADING_IMPORT_RE =
+  /^import\s*['"]node:(?:fs|path)['"];?/;
+const REDUNDANT_NODE_SIDE_EFFECT_INLINE_IMPORT_RE =
+  /(?<=;)import\s*['"]node:(?:fs|path)['"];?/g;
 
 const CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   '.avif': 'image/avif',
@@ -95,11 +99,16 @@ export function normalizePathForSnapshot(filePath: string): string {
  * the imports have no observable side effects.
  */
 export function stripRedundantNodeSideEffectImports(code: string): string {
-  return code.replace(REDUNDANT_NODE_SIDE_EFFECT_IMPORT_RE, '');
+  return code
+    .replace(REDUNDANT_NODE_SIDE_EFFECT_LINE_IMPORT_RE, '')
+    .replace(REDUNDANT_NODE_SIDE_EFFECT_LEADING_IMPORT_RE, '')
+    .replace(REDUNDANT_NODE_SIDE_EFFECT_INLINE_IMPORT_RE, '');
 }
 
-function workerEntrypointContent(snapshotPath: string, content: Buffer): Buffer {
-  if (snapshotPath !== 'server/index.js') return content;
+function workerAssetContent(snapshotPath: string, content: Buffer): Buffer {
+  if (!snapshotPath.startsWith('server/') || !/\.[cm]?js$/i.test(snapshotPath)) {
+    return content;
+  }
   return Buffer.from(
     stripRedundantNodeSideEffectImports(content.toString('utf8')),
     'utf8'
@@ -142,7 +151,7 @@ export function collectAssetsFromBundle(
       : normalizedFileName;
 
     assets[snapshotPath] = {
-      content: workerEntrypointContent(snapshotPath, toBuffer(item)),
+      content: workerAssetContent(snapshotPath, toBuffer(item)),
       type: getAssetType(snapshotPath),
     };
   }
@@ -238,7 +247,7 @@ export async function collectOutputDirectoryAssets(
     const snapshotPath = normalizePathForSnapshot(path.relative(outputRootDir, filePath));
     const content = await fs.readFile(filePath);
     assets[snapshotPath] = {
-      content: workerEntrypointContent(snapshotPath, content),
+      content: workerAssetContent(snapshotPath, content),
       type: getAssetType(snapshotPath),
     };
   }

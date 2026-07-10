@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "jsdoc": true,
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/lib/**",
+    "**/coverage/**",
+    "**/.turbo/**",
+    "pnpm-lock.yaml",
+    "**/*.gen.ts"
+  ]
+}

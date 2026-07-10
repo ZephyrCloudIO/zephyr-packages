@@ -3,35 +3,45 @@
   "version": "1.1.2",
   "description": "A CLI tool to create web applications using Zephyr.",
   "keywords": [
-    "zephyr",
     "create-zephyr-apps",
+    "example",
+    "template",
+    "zephyr",
     "zephyr-apps",
     "zephyr-cli",
     "zephyr-example",
-    "zephyr-template",
-    "example",
-    "template"
+    "zephyr-template"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/create-zephyr-apps"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/create-zephyr-apps"
+  },
   "bin": {
     "create-zephyr-apps": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run create-zephyr-apps:build",
-    "dev": "tsx src/index.ts",
-    "patch-version": "pnpm version"
+    "dev": "rslib build --watch",
+    "build": "rslib build",
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@clack/prompts": "0.11.0",
@@ -39,13 +49,9 @@
     "terminal-link": "^4.0.0"
   },
   "devDependencies": {
+    "@rslib/core": "catalog:rslib",
     "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
     "tsx": "^4.19.3",
     "typescript": "catalog:typescript"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
   }
 }

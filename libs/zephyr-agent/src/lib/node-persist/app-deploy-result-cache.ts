@@ -1,4 +1,4 @@
-import { forEach, getItem, keys, removeItem, setItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import type { Snapshot } from 'zephyr-edge-contract';
 import { storage } from './storage';
 import { StorageKeys } from './storage-keys';
@@ -13,7 +13,7 @@ export async function setAppDeployResult(
   value: DeployResult
 ): Promise<void> {
   await storage;
-  void (await setItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`, value, {
+  void (await nodePersist.setItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`, value, {
     ttl: 1000 * 60 * 60 * 24,
   }));
 }
@@ -22,34 +22,40 @@ export async function getAppDeployResult(
   application_uid: string
 ): Promise<DeployResult | undefined> {
   await storage;
-  return getItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`);
+  return nodePersist.getItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`);
 }
 
 export async function removeAppDeployResult(application_uid: string): Promise<void> {
   await storage;
-  await removeItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`);
+  await nodePersist.removeItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`);
 }
 
 export async function getAllDeployedApps(): Promise<string[]> {
   await storage;
-  const allKeys = await keys();
-  const resultKeys = allKeys.filter((key) =>
-    key.startsWith(StorageKeys.ze_app_deploy_result)
+  const allKeys: unknown = await nodePersist.keys();
+  if (!Array.isArray(allKeys)) {
+    return [];
+  }
+  const prefix = `${StorageKeys.ze_app_deploy_result}:`;
+  const resultKeys = allKeys.filter(
+    (key): key is string =>
+      typeof key === 'string' && key.startsWith(prefix) && key.length > prefix.length
   );
-  return resultKeys.map((key) =>
-    key.substring(StorageKeys.ze_app_deploy_result.length + 1)
-  );
+  return resultKeys.map((key) => key.substring(prefix.length));
 }
 
 export async function getAllAppDeployResults(): Promise<Record<string, DeployResult>> {
   await storage;
   const results: Record<string, DeployResult> = {};
+  const prefix = `${StorageKeys.ze_app_deploy_result}:`;
 
-  await forEach((entry) => {
-    if (entry.key && entry.key.startsWith(StorageKeys.ze_app_deploy_result)) {
-      const application_uid = entry.key.substring(
-        StorageKeys.ze_app_deploy_result.length + 1
-      );
+  await nodePersist.forEach((entry) => {
+    if (
+      typeof entry.key === 'string' &&
+      entry.key.startsWith(prefix) &&
+      entry.key.length > prefix.length
+    ) {
+      const application_uid = entry.key.substring(prefix.length);
       results[application_uid] = entry.value;
     }
   });

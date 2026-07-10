@@ -42,15 +42,8 @@ function emittedRelativeSpecifier(filename, specifier) {
 
 function rewriteRelativeSpecifiers() {
   const rewrite = (node, state) => {
-    if (
-      node.source?.value &&
-      node.importKind !== 'type' &&
-      node.exportKind !== 'type'
-    ) {
-      node.source.value = emittedRelativeSpecifier(
-        state.filename,
-        node.source.value
-      );
+    if (node.source?.value && node.importKind !== 'type' && node.exportKind !== 'type') {
+      node.source.value = emittedRelativeSpecifier(state.filename, node.source.value);
     }
   };
 
@@ -71,8 +64,7 @@ function rewriteRelativeSpecifiers() {
 }
 
 module.exports = (api) => {
-  const supportsStaticESM =
-    api.caller((caller) => caller?.supportsStaticESM) ?? false;
+  const supportsStaticESM = api.caller((caller) => caller?.supportsStaticESM) ?? false;
 
   return {
     presets: [

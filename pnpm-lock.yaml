@@ -1509,9 +1509,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-      zephyr-cli:
+      zephyr-rsbuild-plugin:
         specifier: workspace:*
-        version: link:../../libs/zephyr-cli
+        version: link:../../libs/zephyr-rsbuild-plugin
 
   libs/create-zephyr-apps:
     dependencies:

@@ -218,7 +218,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     generateBundle: async function (_outputOptions, bundle) {
       if (cachedSpecifier) {
-        for (const [fileName, chunk] of Object.entries(bundle)) {
+        for (const chunk of Object.values(bundle)) {
           if (
             chunk &&
             typeof chunk === 'object' &&
@@ -237,7 +237,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                 importWithoutAssertion,
                 `import $1 from '${cachedSpecifier}' with { type: 'json' }`
               );
-              replaceBundleChunkCode(bundle, fileName, chunk, nextCode);
+              replaceBundleChunkCode(chunk, nextCode);
             }
           }
         }

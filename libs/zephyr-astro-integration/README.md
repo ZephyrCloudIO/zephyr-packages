@@ -59,6 +59,7 @@ withZephyr({
 
 - Astro 4.0 or higher
 - Node.js 16 or higher
+- TypeScript 5.3 or newer when consuming the package's type declarations
 - Zephyr Cloud account
 
 ## License

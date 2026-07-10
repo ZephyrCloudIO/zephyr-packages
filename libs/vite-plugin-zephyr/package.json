@@ -61,6 +61,7 @@
   "peerDependencies": {
     "@module-federation/vite": "^1.13.2",
     "rollup": "^4.0.0",
+    "typescript": ">=5.3",
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "compatiblePackages": {
@@ -76,6 +77,9 @@
   },
   "peerDependenciesMeta": {
     "@module-federation/vite": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },

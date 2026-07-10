@@ -1653,6 +1653,9 @@ importers:
       '@tanstack/react-start':
         specifier: ^1.0.0
         version: 1.166.2(@rsbuild/core@1.7.3)(crossws@0.4.4(srvx@0.11.21))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(vite@8.1.4(@types/node@22.19.13)(esbuild@0.27.3)(jiti@2.7.0)(less@4.5.1)(sass-embedded@1.97.3)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))(webpack@5.105.4(@swc/core@1.15.8(@swc/helpers@0.5.19))(esbuild@0.27.3))
+      typescript:
+        specifier: '>=5.3'
+        version: 5.9.3
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1672,6 +1675,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '>=5.3'
+        version: 5.9.3
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -1847,6 +1853,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      typescript:
+        specifier: '>=5.3'
+        version: 5.9.3
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent

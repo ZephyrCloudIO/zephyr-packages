@@ -55,7 +55,13 @@
     "ts-jest": "catalog:typescript"
   },
   "peerDependencies": {
-    "astro": "^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7"
+    "astro": "^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7",
+    "typescript": ">=5.3"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public",

@@ -159,6 +159,7 @@ Add these scripts to your `package.json`:
 
 - Vite 5.x, 6.x, 7.x, or 8.x
 - Rollup 4.x
+- TypeScript 5.3 or newer when consuming the package's type declarations
 - Node.js version supported by your Vite toolchain
 - Zephyr Cloud account (sign up at [zephyr-cloud.io](https://zephyr-cloud.io))
 

@@ -44,7 +44,13 @@
   },
   "peerDependencies": {
     "@tanstack/react-start": "^1.0.0",
+    "typescript": ">=5.3",
     "vite": "^7.0.0 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "catalog:typescript",

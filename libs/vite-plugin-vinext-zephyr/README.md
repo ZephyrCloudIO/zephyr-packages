@@ -10,6 +10,9 @@
 
 A Vite plugin for deploying Vinext applications with Zephyr Cloud.
 
+Requires Vite 7 or 8. TypeScript consumers need TypeScript 5.3 or newer to read
+the package's type declarations.
+
 ## Installation
 
 ```bash

@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -52,5 +59,23 @@ assert.match(runtime, /Zephyr/);
     );
 
     execFileSync(process.execPath, [smokeTest], { cwd: fixtureRoot });
+  });
+});
+
+describe('published declaration compatibility', () => {
+  const packageRoots = [
+    resolve(__dirname, '..'),
+    resolve(__dirname, '../../vite-plugin-tanstack-start-zephyr'),
+    resolve(__dirname, '../../vite-plugin-vinext-zephyr'),
+    resolve(__dirname, '../../zephyr-astro-integration'),
+  ];
+
+  test.each(packageRoots)('%s declares the TypeScript syntax floor', (packageRoot) => {
+    const packageJson = JSON.parse(
+      readFileSync(join(packageRoot, 'package.json'), 'utf8')
+    );
+
+    expect(packageJson.peerDependencies?.typescript).toBe('>=5.3');
+    expect(packageJson.peerDependenciesMeta?.typescript?.optional).toBe(true);
   });
 });

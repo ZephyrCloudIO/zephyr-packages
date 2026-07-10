@@ -65,9 +65,19 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "astro": "catalog:",
-    "typescript": "catalog:typescript"
+    "typescript": "catalog:typescript",
+    "vite": "catalog:vite8"
   },
   "peerDependencies": {
-    "astro": "catalog:peer-compat"
+    "astro": "catalog:peer-compat",
+    "vite": "catalog:peer-compat"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "vite": {
+      "type": "compatible",
+      "versions": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",
+      "note": "Uses the Vite version provided by Astro."
+    }
   }
 }

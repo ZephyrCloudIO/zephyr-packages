@@ -1,46 +1,50 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 // Error types are used by mocks
 import '../errors';
-import { cleanTokens } from '../node-persist/token';
-import { fetchWithRetries } from './fetch-with-retries';
 import { makeHttpRequest, makeRequest, parseUrl } from './http-request';
 
-// Mock dependencies
-jest.mock('./fetch-with-retries');
-jest.mock('../node-persist/token');
-jest.mock('../logging/debug', () => ({
+const mocks = rs.hoisted(() => ({
+  fetchWithRetries: rs.fn(),
+  cleanTokens: rs.fn(),
+  httpLog: rs.fn(),
+}));
+
+rs.mock('./fetch-with-retries', () => ({
+  fetchWithRetries: mocks.fetchWithRetries,
+}));
+rs.mock('../node-persist/token', () => ({ cleanTokens: mocks.cleanTokens }));
+rs.mock('../logging/debug', () => ({
   ze_log: {
-    http: jest.fn(),
+    http: mocks.httpLog,
   },
 }));
-jest.mock('zephyr-edge-contract', () => ({
-  PromiseWithResolvers: () => {
-    const resolvable: any = {};
-    resolvable.promise = new Promise((resolve, reject) => {
-      resolvable.resolve = resolve;
-      resolvable.reject = reject;
-    });
-    return resolvable;
-  },
-  safe_json_parse: jest.fn((str) => {
+rs.mock('../logging', () => ({ ze_log: { error: rs.fn() } }));
+rs.mock('../logging/ze-log-event', () => ({ logFn: rs.fn() }));
+rs.mock('zephyr-edge-contract', () => ({
+  safe_json_parse: rs.fn((str) => {
     try {
       return JSON.parse(str);
     } catch {
       return null;
     }
   }),
-  ZE_API_ENDPOINT_HOST: jest.fn(() => 'api.zephyr.com'),
-  ZE_IS_PREVIEW: jest.fn(() => false),
-  ZEPHYR_API_ENDPOINT: jest.fn(() => 'https://api.zephyr.com'),
+  formatString: rs.fn((message: string, values: Record<string, unknown>) =>
+    message.replace(/\{\{\s*(\w+)\s*\}\}/g, (_match: string, key: string) =>
+      String(values[key])
+    )
+  ),
+  stripAnsi: rs.fn((value: string) => value),
+  ZE_API_ENDPOINT_HOST: rs.fn(() => 'api.zephyr.com'),
+  ZE_IS_PREVIEW: rs.fn(() => false),
+  ZEPHYR_API_ENDPOINT: rs.fn(() => 'https://api.zephyr.com'),
 }));
 
 describe('Pure HTTP Request Functions', () => {
-  const mockFetchWithRetries = fetchWithRetries as jest.MockedFunction<
-    typeof fetchWithRetries
-  >;
-  const mockCleanTokens = cleanTokens as jest.MockedFunction<typeof cleanTokens>;
+  const mockFetchWithRetries = mocks.fetchWithRetries;
+  const mockCleanTokens = mocks.cleanTokens;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   describe('parseUrl', () => {
@@ -120,6 +124,80 @@ describe('Pure HTTP Request Functions', () => {
       expect(ok).toBe(false);
       expect(error).toBeInstanceOf(Error);
       expect(error?.message).toBe('Network error');
+    });
+
+    it('recognizes the Not Implemented response body', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 200,
+        text: async () => ' Not Implemented\n',
+        ok: true,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://api.example.com/endpoint')
+      );
+
+      expect(ok).toBe(false);
+      expect(error?.message).toContain('Not implemented yet');
+    });
+
+    it('does not fail a successful request when log metadata is circular', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 200,
+        text: async () => JSON.stringify({ success: true }),
+        ok: true,
+      } as Response);
+      const options: RequestInit & { circular?: unknown } = {};
+      options.circular = options;
+
+      const [ok, error, data] = await makeHttpRequest<{ success: boolean }>(
+        new URL('https://api.example.com/endpoint'),
+        options
+      );
+
+      expect(ok).toBe(true);
+      expect(error).toBeNull();
+      expect(data).toEqual({ success: true });
+    });
+
+    it('redacts URL, response, and header secrets in HTTP debug output', async () => {
+      const signature = 'raw-http-signature';
+      const token = 'raw-http-token';
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 200,
+        text: async () => JSON.stringify({ access_token: token }),
+        ok: true,
+      } as Response);
+      const url = new URL(`https://uploads.example/file?X-Amz-Signature=${signature}`);
+
+      await makeHttpRequest(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const message = mocks.httpLog.mock.calls[0]?.[0] as string;
+      expect(message).toContain('uploads.example/file');
+      expect(message).not.toContain(signature);
+      expect(message).not.toContain(token);
+    });
+
+    it('does not retain raw query or response secrets in HTTP errors', async () => {
+      const signature = 'raw-error-signature';
+      const state = 'raw-error-state';
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 500,
+        text: async () => JSON.stringify({ state }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL(`https://api.example/fail?X-Amz-Signature=${signature}`)
+      );
+      const serialized = JSON.stringify(error);
+
+      expect(ok).toBe(false);
+      expect(serialized).toContain('api.example/fail');
+      expect(serialized).not.toContain(signature);
+      expect(serialized).not.toContain(state);
     });
   });
 

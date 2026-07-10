@@ -1,19 +1,21 @@
+import { describe, expect, it, rs } from '@rstest/core';
+
 import { withZephyr } from '../index';
 
-jest.mock('zephyr-agent', () => ({
+rs.mock('zephyr-agent', () => ({
   ZephyrEngine: {
-    defer_create: jest.fn().mockReturnValue({
+    defer_create: rs.fn().mockReturnValue({
       zephyr_engine_defer: Promise.resolve({
         buildProperties: { output: '' },
-        start_new_build: jest.fn(),
-        upload_assets: jest.fn(),
-        build_finished: jest.fn(),
+        start_new_build: rs.fn(),
+        upload_assets: rs.fn(),
+        build_finished: rs.fn(),
       }),
-      zephyr_defer_create: jest.fn(),
+      zephyr_defer_create: rs.fn(),
     }),
   },
-  zeBuildDashData: jest.fn().mockResolvedValue({}),
-  handleGlobalError: jest.fn(),
+  zeBuildDashData: rs.fn().mockResolvedValue({}),
+  handleGlobalError: rs.fn(),
 }));
 
 describe('Integration Export', () => {

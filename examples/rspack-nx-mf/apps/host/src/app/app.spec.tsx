@@ -1,7 +1,11 @@
-import { render } from '@testing-library/react';
+import { afterEach, describe, expect, it } from '@rstest/core';
+
+import { cleanup, render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from './app';
+
+afterEach(cleanup);
 
 describe('App', () => {
   it('should render successfully', () => {
@@ -19,8 +23,6 @@ describe('App', () => {
         <App />
       </BrowserRouter>
     );
-    expect(
-      getAllByText(new RegExp('Welcome host', 'gi')).length > 0
-    ).toBeTruthy();
+    expect(getAllByText(new RegExp('Welcome host', 'gi')).length > 0).toBeTruthy();
   });
 });

@@ -83,6 +83,11 @@ const config = {
 module.exports = withZephyr()(config);
 ```
 
+Webpack configuration arrays are coordinated as one logical application build. Client
+and server compiler assets are merged only after every compiler finishes and are uploaded
+once. For custom SSR layouts, pass `snapshotType: 'ssr'` and an `entrypoint` relative to
+the shared output root.
+
 ### TypeScript Configuration
 
 ```typescript

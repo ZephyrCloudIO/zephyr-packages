@@ -1,72 +1,100 @@
 {
   "name": "zephyr-metro-plugin",
-  "version": "1.0.1",
+  "version": "1.1.2",
   "description": "Metro bundler plugin for deploying React Native applications with Zephyr Cloud - OTA updates, Module Federation, and seamless deployment",
-  "type": "commonjs",
+  "keywords": [
+    "android",
+    "bundler",
+    "cross-platform",
+    "deployment",
+    "ios",
+    "metro",
+    "micro-frontends",
+    "module-federation",
+    "ota",
+    "over-the-air",
+    "plugin",
+    "react-native",
+    "zephyr",
+    "zephyr-cloud"
+  ],
   "license": "Apache-2.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "nx run zephyr-metro-plugin:build",
-    "patch-version": "pnpm version"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
-  },
-  "peerDependencies": {
-    "metro": ">=0.70.0",
-    "react-native": ">=0.60.0",
-    "zephyr-xpack-internal": ">=0.1.0"
-  },
-  "peerDependenciesMeta": {
-    "zephyr-xpack-internal": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
     "directory": "libs/zephyr-metro-plugin"
   },
-  "devDependencies": {
-    "@rspack/core": "catalog:rspack",
-    "@types/find-package-json": "^1.2.6",
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "metro-config": "^0.84.0",
-    "metro-transform-worker": "^0.84.0",
-    "ts-jest": "catalog:typescript"
-  },
-  "keywords": [
-    "metro",
-    "react-native",
-    "zephyr",
-    "zephyr-cloud",
-    "module-federation",
-    "ota",
-    "over-the-air",
-    "deployment",
-    "bundler",
-    "ios",
-    "android",
-    "cross-platform",
-    "micro-frontends",
-    "plugin"
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
   ],
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "yaml": "catalog:",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@babel/types": "catalog:babel",
+    "@module-federation/metro": "catalog:module-federation",
+    "@rnef/tools": "catalog:metro",
+    "@rslib/core": "catalog:rslib",
+    "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
+    "@types/find-package-json": "catalog:typescript",
+    "metro": "catalog:metro",
+    "metro-config": "catalog:metro",
+    "metro-file-map": "catalog:metro",
+    "metro-resolver": "catalog:metro",
+    "metro-source-map": "catalog:metro",
+    "metro-transform-worker": "catalog:metro",
+    "typescript": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@module-federation/metro": "catalog:peer-compat",
+    "@rnef/tools": "catalog:peer-compat",
+    "metro": "catalog:peer-compat",
+    "react-native": "catalog:peer-compat"
+  },
+  "peerDependenciesMeta": {
+    "@module-federation/metro": {
+      "optional": true
+    },
+    "@rnef/tools": {
+      "optional": true
+    }
   }
 }

@@ -1,16 +1,21 @@
 {
   "name": "vite_rspack",
   "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Jack Herrington",
+    "email": "jherr@pobox.com"
+  },
   "scripts": {
     "build": "cross-env NODE_ENV=production rspack build",
     "build:dev": "cross-env NODE_ENV=development rspack build",
     "build:start": "cd dist && rspack serve",
     "start": "cross-env NODE_ENV=development rspack serve"
   },
-  "license": "MIT",
-  "author": {
-    "name": "Jack Herrington",
-    "email": "jherr@pobox.com"
+  "dependencies": {
+    "@tailwindcss/postcss": "catalog:tailwind4",
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
     "@rspack/cli": "catalog:rspack",
@@ -18,16 +23,11 @@
     "@rspack/plugin-react-refresh": "catalog:rspack",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "autoprefixer": "catalog:vite7",
+    "autoprefixer": "catalog:postcss",
     "postcss": "catalog:postcss",
     "postcss-loader": "catalog:postcss",
     "react-refresh": "catalog:react18",
-    "tailwindcss": "catalog:tailwind",
+    "tailwindcss": "catalog:tailwind4",
     "zephyr-rspack-plugin": "workspace:*"
-  },
-  "dependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
   }
 }

@@ -1,3 +1,6 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type { Mock } from '@rstest/core';
+
 import { ZeErrors, ZephyrError } from './errors';
 import { uploadOutputToZephyr } from './upload-output-to-zephyr';
 import { buildAssetsMapMock } from './transformers/ze-build-assets-map';
@@ -5,41 +8,34 @@ import { zeBuildDashData } from './transformers/ze-build-dash-data';
 import { readDirRecursiveWithContents } from './utils/read-dir-recursive';
 import { ZephyrEngine } from '../zephyr-engine';
 
-jest.mock('./utils/read-dir-recursive', () => ({
-  readDirRecursiveWithContents: jest.fn(),
+rs.mock('./utils/read-dir-recursive', () => ({
+  readDirRecursiveWithContents: rs.fn(),
 }));
 
-jest.mock('./transformers/ze-build-assets-map', () => ({
-  buildAssetsMapMock: jest.fn(),
+rs.mock('./transformers/ze-build-assets-map', () => ({
+  buildAssetsMapMock: rs.fn(),
 }));
 
-jest.mock('./transformers/ze-build-dash-data', () => ({
-  zeBuildDashData: jest.fn(),
+rs.mock('./transformers/ze-build-dash-data', () => ({
+  zeBuildDashData: rs.fn(),
 }));
 
-jest.mock('../zephyr-engine', () => ({
+rs.mock('../zephyr-engine', () => ({
   ZephyrEngine: {
-    create: jest.fn(),
+    create: rs.fn(),
   },
 }));
 
 describe('uploadOutputToZephyr', () => {
-  const mockReadDirRecursiveWithContents =
-    readDirRecursiveWithContents as jest.MockedFunction<
-      typeof readDirRecursiveWithContents
-    >;
-  const mockBuildAssetsMap = buildAssetsMapMock as jest.MockedFunction<
-    typeof buildAssetsMapMock
+  const mockReadDirRecursiveWithContents = readDirRecursiveWithContents as Mock<
+    typeof readDirRecursiveWithContents
   >;
-  const mockZeBuildDashData = zeBuildDashData as jest.MockedFunction<
-    typeof zeBuildDashData
-  >;
-  const mockZephyrEngineCreate = ZephyrEngine.create as jest.MockedFunction<
-    typeof ZephyrEngine.create
-  >;
+  const mockBuildAssetsMap = buildAssetsMapMock as Mock<typeof buildAssetsMapMock>;
+  const mockZeBuildDashData = zeBuildDashData as Mock<typeof zeBuildDashData>;
+  const mockZephyrEngineCreate = ZephyrEngine.create as Mock<typeof ZephyrEngine.create>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('uploads output, maps public assets with baseURL, and returns deployment URL', async () => {
@@ -48,9 +44,10 @@ describe('uploadOutputToZephyr', () => {
         target: 'web',
         ssr: false,
       },
-      upload_assets: jest.fn().mockImplementation(async ({ hooks }) => {
+      upload_assets: rs.fn().mockImplementation(async ({ hooks }) => {
         await hooks?.onDeployComplete?.({ url: 'https://example.zephyrcloud.app' });
       }),
+      build_finished: rs.fn().mockResolvedValue(undefined),
     };
 
     mockZephyrEngineCreate.mockResolvedValue(
@@ -93,7 +90,7 @@ describe('uploadOutputToZephyr', () => {
       } as unknown as ReturnType<typeof buildAssetsMapMock>;
     });
 
-    const onDeployComplete = jest.fn();
+    const onDeployComplete = rs.fn();
     const result = await uploadOutputToZephyr({
       rootDir: '/tmp/project',
       outputDir: '/tmp/project/.output',
@@ -130,7 +127,8 @@ describe('uploadOutputToZephyr', () => {
         target: 'web',
         ssr: false,
       },
-      upload_assets: jest.fn().mockResolvedValue(undefined),
+      upload_assets: rs.fn().mockResolvedValue(undefined),
+      build_finished: rs.fn().mockResolvedValue(undefined),
     };
 
     mockZephyrEngineCreate.mockResolvedValue(
@@ -229,7 +227,8 @@ describe('uploadOutputToZephyr', () => {
         target: 'web',
         ssr: false,
       },
-      upload_assets: jest.fn().mockResolvedValue(undefined),
+      upload_assets: rs.fn().mockResolvedValue(undefined),
+      build_finished: rs.fn().mockResolvedValue(undefined),
     };
 
     mockZephyrEngineCreate.mockResolvedValue(
@@ -273,5 +272,46 @@ describe('uploadOutputToZephyr', () => {
       deploymentUrl: null,
       entrypoint: undefined,
     });
+  });
+
+  it('rolls back the created generation when build stats fail before upload', async () => {
+    const buildStatsFailure = new Error('stats failed');
+    const engine = {
+      env: { target: 'web', ssr: false },
+      build_id: Promise.resolve('build-id'),
+      upload_assets: rs.fn(),
+      build_finished: rs.fn(),
+      build_failed: rs.fn(),
+    };
+    mockZephyrEngineCreate.mockResolvedValue(
+      engine as unknown as Awaited<ReturnType<typeof ZephyrEngine.create>>
+    );
+    mockReadDirRecursiveWithContents.mockResolvedValue([
+      {
+        fullPath: '/tmp/project/.output/client/main.js',
+        relativePath: 'client/main.js',
+        content: Buffer.from('client'),
+      },
+    ]);
+    mockBuildAssetsMap.mockReturnValue({
+      hash1: {
+        hash: 'hash1',
+        path: 'client/main.js',
+        buffer: Buffer.from('client'),
+        size: 6,
+      },
+    } as unknown as ReturnType<typeof buildAssetsMapMock>);
+    mockZeBuildDashData.mockRejectedValue(buildStatsFailure);
+
+    await expect(
+      uploadOutputToZephyr({
+        rootDir: '/tmp/project',
+        outputDir: '/tmp/project/.output',
+        ssr: false,
+      })
+    ).rejects.toBe(buildStatsFailure);
+
+    expect(engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(engine.upload_assets).not.toHaveBeenCalled();
   });
 });

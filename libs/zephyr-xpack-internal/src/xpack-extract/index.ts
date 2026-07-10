@@ -11,5 +11,6 @@ export { extractLibraryType } from './extract-library-type';
 export { isModuleFederationPlugin } from './is-module-federation-plugin';
 export { iterateFederationConfig } from './iterate-federation-config';
 export { makeCopyOfModuleFederationOptions } from './make-copy-of-module-federation-options';
+export { mutPathModePublicPath } from './mut-path-mode-public-path';
 export { mutWebpackFederatedRemotesConfig } from './mut-webpack-federated-remotes-config';
 export { createZephyrRuntimePlugin } from './runtime-plugin';

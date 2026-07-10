@@ -1,8 +1,21 @@
-import type { ZephyrBuildHooks } from 'zephyr-agent';
+import type { ZephyrBuildHooks, ZephyrEngine } from 'zephyr-agent';
+import type { XPackBuildCoordinator } from 'zephyr-xpack-internal';
 
 export interface ZephyrRspackPluginOptions {
   // hacks
   // todo: add link to documentation and sample how this should be used and when
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
+  /** Override automatic CSR/SSR detection for coordinated compiler arrays. */
+  snapshotType?: 'csr' | 'ssr';
+  /** Server entrypoint relative to the shared output root. */
+  entrypoint?: string;
+  /** Framework integration only: shared logical-build state for compiler wrappers. */
+  __engine?: ZephyrEngine;
+  /** Framework integration only. */
+  __coordinator?: XPackBuildCoordinator;
+  /** Framework integration only. */
+  __participant?: string;
+  /** Framework integration only. */
+  __assetPrefix?: string;
 }

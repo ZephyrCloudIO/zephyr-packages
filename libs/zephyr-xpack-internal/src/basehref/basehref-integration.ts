@@ -111,6 +111,24 @@ export function detectAndStoreBaseHref(
   compiler: WebpackLikeCompiler,
   pluginOptions?: BaseHrefOptions
 ): void {
+  const baseHref = detectBaseHref(compiler, pluginOptions);
+
+  // Store the baseHref in ZephyrEngine.buildProperties
+  if (baseHref !== undefined) {
+    zephyr_engine.buildProperties.baseHref = baseHref;
+  }
+}
+
+/**
+ * Detect a compiler's application base without mutating shared engine state.
+ *
+ * Coordinated compiler adapters use this pure form so the coordinator can validate every
+ * child before selecting the one application-wide snapshot base.
+ */
+export function detectBaseHref(
+  compiler: WebpackLikeCompiler,
+  pluginOptions?: BaseHrefOptions
+): string | undefined {
   // Check for baseHref in plugin options (highest priority)
   let baseHref = extractBaseHrefFromPluginOptions(pluginOptions);
 
@@ -124,8 +142,5 @@ export function detectAndStoreBaseHref(
     baseHref = extractBaseHrefFromPublicPath(compiler);
   }
 
-  // Store the baseHref in ZephyrEngine.buildProperties
-  if (baseHref !== undefined) {
-    zephyr_engine.buildProperties.baseHref = baseHref;
-  }
+  return baseHref;
 }

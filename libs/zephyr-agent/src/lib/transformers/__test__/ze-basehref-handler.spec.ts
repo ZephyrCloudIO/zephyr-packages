@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 import { normalizeBasePath, applyBaseHrefToAssets } from '../ze-basehref-handler';
 import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
 
@@ -43,6 +45,20 @@ describe('ze-basehref-handler', () => {
     it('should handle combined cases correctly', () => {
       expect(normalizeBasePath('  ./nested/path/  ')).toBe('nested/path');
       expect(normalizeBasePath('/  nested/path  /')).toBe('nested/path');
+    });
+
+    it('uses only the pathname for absolute CDN bases', () => {
+      expect(normalizeBasePath('https://cdn.example.com/nested/path/')).toBe(
+        'nested/path'
+      );
+      expect(normalizeBasePath('//cdn.example.com/assets/')).toBe('assets');
+      expect(normalizeBasePath('https://cdn.example.com/')).toBe('');
+    });
+
+    it('does not turn automatic or traversing bases into snapshot paths', () => {
+      expect(normalizeBasePath('auto')).toBe('');
+      expect(normalizeBasePath('../assets/')).toBe('');
+      expect(normalizeBasePath('/assets/../private/')).toBe('');
     });
   });
 

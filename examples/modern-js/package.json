@@ -11,33 +11,32 @@
     "lint": "biome check",
     "upgrade": "modern upgrade"
   },
-  "engines": {
-    "node": ">=16.18.1"
+  "dependencies": {
+    "@modern-js/plugin-ssg": "catalog:modernjs",
+    "@modern-js/runtime": "catalog:modernjs",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-server-dom-webpack": "catalog:react19"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:biome",
+    "@modern-js/app-tools": "catalog:modernjs",
+    "@modern-js/tsconfig": "catalog:modernjs",
+    "@types/node": "catalog:typescript",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "lint-staged": "catalog:",
+    "rimraf": "catalog:",
+    "typescript": "catalog:typescript",
+    "zephyr-modernjs-plugin": "workspace:*",
+    "zephyr-rspack-plugin": "workspace:*"
   },
   "lint-staged": {
     "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
       "biome check --files-ignore-unknown=true"
     ]
   },
-  "dependencies": {
-    "@modern-js/plugin-ssg": "catalog:modernjs",
-    "@modern-js/runtime": "catalog:modernjs",
-    "react": "catalog:react19",
-    "react-dom": "catalog:react19",
-    "react-server-dom-webpack": "19.2.4"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.3.11",
-    "@modern-js/app-tools": "catalog:modernjs",
-    "@modern-js/tsconfig": "catalog:modernjs",
-    "@types/jest": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "@types/react": "catalog:react19",
-    "@types/react-dom": "catalog:react19",
-    "lint-staged": "~16.2.7",
-    "rimraf": "^6.1.2",
-    "typescript": "catalog:typescript",
-    "zephyr-modernjs-plugin": "workspace:*",
-    "zephyr-rspack-plugin": "workspace:*"
+  "engines": {
+    "node": ">=16.18.1"
   }
 }

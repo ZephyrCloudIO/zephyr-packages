@@ -1,35 +1,21 @@
-import { ModuleFederationConfig } from '@nx/module-federation';
+import type { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 
-const config: ModuleFederationConfig = {
+type ModuleFederationConfig = ConstructorParameters<typeof ModuleFederationPlugin>[0];
+
+const reactShared = { singleton: true, requiredVersion: false } as const;
+
+const config = {
   name: 'rspack_nx_mf_host',
-  /**
-   * To use a remote that does not exist in your current Nx Workspace You can use the
-   * tuple-syntax to define your remote
-   *
-   * Remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
-   *
-   * You _may_ need to add a `remotes.d.ts` file to your `src/` folder declaring the
-   * external remote for tsc, with the following content:
-   *
-   * Declare module 'my-external-remote';
-   */
-  remotes: ['rspack_nx_mf_remote'],
-  shared: (libName) => {
-    const reactShared = [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
-    ];
-    if (reactShared.includes(libName)) {
-      return { singleton: true };
-    }
-    return false;
+  remotes: {
+    rspack_nx_mf_remote: 'rspack_nx_mf_remote@http://localhost:4201/remoteEntry.js',
   },
-};
+  shared: {
+    react: reactShared,
+    'react-dom': reactShared,
+    'react/jsx-runtime': reactShared,
+    'react/jsx-dev-runtime': reactShared,
+  },
+  dts: false,
+} satisfies ModuleFederationConfig;
 
-/**
- * Nx requires a default export of the config to allow correct resolution of the module
- * federation graph.
- */
 export default config;

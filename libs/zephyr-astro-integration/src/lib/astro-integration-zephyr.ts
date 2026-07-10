@@ -1,4 +1,6 @@
-import type { AstroIntegration, HookParameters } from 'astro';
+import type { AstroIntegration, HookParameters } from 'astro' with {
+  'resolution-mode': 'import',
+};
 import { fileURLToPath } from 'node:url';
 import {
   handleGlobalError,
@@ -36,8 +38,12 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
         dir,
         ...params
       }: HookParameters<'astro:build:done'>) => {
+        let zephyr_engine: ZephyrEngine | undefined;
+        let buildInProgress = false;
         try {
-          const zephyr_engine = await zephyr_engine_defer;
+          zephyr_engine = await zephyr_engine_defer;
+          // create() has already allocated generation zero.
+          buildInProgress = true;
 
           // Convert URL to file system path
           const outputPath = fileURLToPath(dir);
@@ -60,9 +66,14 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
           });
 
           // Mark build as finished
+          buildInProgress = false;
           await zephyr_engine.build_finished();
         } catch (error) {
           handleGlobalError(error);
+        } finally {
+          if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+            zephyr_engine?.build_failed();
+          }
         }
       },
     },

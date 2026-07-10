@@ -1,0 +1,90 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["ZE_*", "ZEPHYR_*"],
+  "globalPassThroughEnv": [
+    "CI",
+    "GITHUB_*",
+    "HOME",
+    "USERPROFILE",
+    "XDG_*",
+    "TMPDIR",
+    "TMP",
+    "TEMP"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        "dist/**",
+        ".output/**",
+        "doc_build/**",
+        "wwwroot/**",
+        "lib/commonjs/**",
+        "lib/module/**",
+        "lib/typescript/**"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!**/*.spec.ts",
+        "!**/*.spec.tsx",
+        "!**/__test__/**",
+        "!**/__tests__/**",
+        "!rstest.config.*"
+      ]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
+      "outputs": []
+    },
+    "with-zephyr#test": {
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
+      "outputs": []
+    },
+    "vite-plugin-zephyr#test": {
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
+      "outputs": []
+    },
+    "zephyr-cli#test": {
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
+      "outputs": []
+    },
+    "zephyr-native-cache#test": {
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "^typecheck"],
+      "outputs": ["*.tsbuildinfo", "dist/**/*.tsbuildinfo", "lib/**/*.tsbuildinfo"]
+    },
+    "e2e-test": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "outputs": []
+    },
+    "test:deployment": {
+      "dependsOn": ["sample-webpack-application#build"],
+      "cache": false,
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "serve": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

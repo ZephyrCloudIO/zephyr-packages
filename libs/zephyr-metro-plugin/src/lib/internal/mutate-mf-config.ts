@@ -3,17 +3,10 @@ import { ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
 export function mutateMfConfig(
-  zephyr_engine: ZephyrEngine,
+  _zephyr_engine: ZephyrEngine,
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'],
-  resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template?: () => unknown | undefined
+  resolvedDependencyPairs: ZeResolvedDependency[] | null
 ) {
-  // Lazy load zephyr-xpack-internal to avoid static import
-  const {
-    createMfRuntimeCode,
-    xpack_delegate_module_template,
-  } = require('zephyr-xpack-internal');
-  const template = delegate_module_template || xpack_delegate_module_template;
   if (!resolvedDependencyPairs?.length) {
     ze_log.mf(`No resolved dependency pairs found, skipping...`);
     return;
@@ -59,17 +52,36 @@ export function mutateMfConfig(
       ? remote_version.split('@')
       : [remote_name];
 
+    let baseEntryUrl: string;
+    let usingManifest: boolean;
+    if (resolved_dep.manifest_url) {
+      baseEntryUrl = resolved_dep.manifest_url;
+      usingManifest = true;
+    } else {
+      baseEntryUrl = resolved_dep.remote_entry_url;
+      usingManifest = false;
+      ze_log.mf(
+        `manifest_url missing for '${remote_name}', falling back to container URL`
+      );
+    }
+
     ze_log.mf(`v_app: ${v_app}`);
     if (v_app) {
-      resolved_dep.remote_entry_url = [v_app, resolved_dep.remote_entry_url].join('@');
-      ze_log.mf(`Adding version to remote entry url: ${resolved_dep.remote_entry_url}`);
+      resolved_dep.remote_entry_url = [v_app, baseEntryUrl].join('@');
+      ze_log.mf(
+        `Resolved ${usingManifest ? 'manifest' : 'container'} entry URL for '${remote_name}': ${resolved_dep.remote_entry_url}`
+      );
     }
 
     resolved_dep.name = remote_name;
 
     if (remotes[remote_name]) {
-      remotes[remote_name] = createMfRuntimeCode(zephyr_engine, resolved_dep, template);
-      ze_log.mf(`Setting runtime code for remote: ${remotes}`);
+      // Metro's `init-host.js` generator quotes remote values as strings. The
+      // webpack-style `createMfRuntimeCode` output (a multi-line promise
+      // expression) breaks that serializer with "Unterminated string
+      // constant". Metro accepts the plain `name@url` form directly.
+      remotes[remote_name] = resolved_dep.remote_entry_url;
+      ze_log.mf(`Rewrote remote '${remote_name}' → ${resolved_dep.remote_entry_url}`);
     }
   });
 

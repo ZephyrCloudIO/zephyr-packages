@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { normalize_js_var_name } from '../normalize-js-var-name';
 
 describe('normalize_js_var_name', () => {

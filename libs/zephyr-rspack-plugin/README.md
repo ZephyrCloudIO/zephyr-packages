@@ -91,6 +91,11 @@ const config = {
 module.exports = withZephyr()(config);
 ```
 
+Rspack configuration arrays are treated as one logical application build. Client and
+server compiler assets are merged only after every compiler finishes, then uploaded once.
+For custom output layouts, pass `snapshotType: 'ssr'` and an `entrypoint` relative to the
+shared output root.
+
 ### TypeScript Configuration
 
 ```typescript

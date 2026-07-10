@@ -1,10 +1,12 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+
 import { extractAstroAssetsMap } from '../extract-astro-assets-map';
 
-const buildAssetsMapMock = jest.fn();
-const logFnMock = jest.fn();
-const readDirRecursiveWithContentsMock = jest.fn();
+const buildAssetsMapMock = rs.fn();
+const logFnMock = rs.fn();
+const readDirRecursiveWithContentsMock = rs.fn();
 
-jest.mock('zephyr-agent', () => {
+rs.mock('zephyr-agent', () => {
   return {
     buildAssetsMap: (...args: unknown[]) => buildAssetsMapMock(...args),
     logFn: (...args: unknown[]) => logFnMock(...args),
@@ -15,7 +17,7 @@ jest.mock('zephyr-agent', () => {
 
 describe('extractAstroAssetsMap', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     buildAssetsMapMock.mockImplementation((assets) => {
       const result: Record<string, unknown> = {};
       Object.keys(assets).forEach((key, index) => {

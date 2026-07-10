@@ -1,5 +1,5 @@
 // light weight functions for decorated console.error + able to toggle different parts of whole module's logging result
-import { debug } from 'debug';
+import debug from 'debug';
 import {
   bgCyanBright,
   bgGreenBright,
@@ -10,6 +10,11 @@ import {
   dim,
 } from './picocolor';
 import { writeLogToFile, isFileLoggingEnabled } from './file-logger';
+import {
+  redactString,
+  safeStringifyForLogging,
+  sanitizeForLogging,
+} from '../security/redaction';
 
 //TODO: this should be traced and logged into new relic
 const name = ' ZEPHYR ';
@@ -29,12 +34,16 @@ type DebugLogger = debug.Debugger;
 
 function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
   const wrappedFn = (...args: Parameters<DebugLogger>) => {
-    const message = args
-      .map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
-      .join(' ');
+    const fileLoggingEnabled = isFileLoggingEnabled();
+
+    // Avoid serialization on the hot path when this debug context is disabled.
+    if (!fileLoggingEnabled && !logger.enabled) return;
+
+    const sanitizedArgs = args.map((arg) => sanitizeForLogging(arg));
 
     // Always write to file if file logging is enabled, regardless of DEBUG env var
-    if (isFileLoggingEnabled()) {
+    if (fileLoggingEnabled) {
+      const message = sanitizedArgs.map(formatDebugArgument).join(' ');
       writeLogToFile({
         level: 'debug',
         message,
@@ -45,13 +54,18 @@ function wrapDebugLogger(logger: DebugLogger, context: string): DebugLogger {
 
     // Only output to console if DEBUG env var matches
     if (!logger.enabled) return;
-    logger(...args);
+    logger(...(sanitizedArgs as Parameters<DebugLogger>));
   };
 
   return Object.assign(wrappedFn, {
     enabled: logger.enabled,
     namespace: logger.namespace,
   }) as DebugLogger;
+}
+
+function formatDebugArgument(arg: unknown): string {
+  if (typeof arg === 'string') return redactString(arg);
+  return safeStringifyForLogging(arg);
 }
 
 const rawLoggers = {

@@ -2,27 +2,33 @@ name: Setup Node and PNPM
 description: Sets up Node.js and PNPM with caching
 
 inputs:
-  os:
-    required: true
-    description: 'Operating system'
-    default: ubuntu-latest
   node-version:
     required: true
     description: 'Node.js version'
-    default: '24'
+    default: '24.15.0'
+  cache-enabled:
+    required: false
+    description: 'Enable the pnpm dependency cache'
+    default: 'true'
 
 runs:
   using: 'composite'
   steps:
-    - uses: pnpm/action-setup@v4
+    - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       with:
-        version: 10
+        version: 10.34.0
         run_install: false
-    - uses: actions/setup-node@v6
+    - if: inputs.cache-enabled == 'true'
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'pnpm'
         cache-dependency-path: '**/pnpm-lock.yaml'
         registry-url: 'https://registry.npmjs.org'
-    - run: pnpm install --prefer-offline
+    - if: inputs.cache-enabled != 'true'
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: 'https://registry.npmjs.org'
+    - run: pnpm install --frozen-lockfile --prefer-offline
       shell: bash

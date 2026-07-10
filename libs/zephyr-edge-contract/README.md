@@ -196,7 +196,12 @@ const error = createZephyrError('INVALID_CONFIG', 'Configuration is invalid');
 Internal packages use this contract for consistency:
 
 ```typescript
-import { ZephyrPluginOptions, createApplicationUid, stripAnsi, forEachLimit } from 'zephyr-edge-contract';
+import {
+  ZephyrPluginOptions,
+  createApplicationUid,
+  stripAnsi,
+  forEachLimit,
+} from 'zephyr-edge-contract';
 
 // Type-safe plugin configuration
 function createPlugin(options: ZephyrPluginOptions) {

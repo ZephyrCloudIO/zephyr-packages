@@ -17,10 +17,13 @@ export interface UploadOptions {
  */
 export async function uploadAssets(options: UploadOptions): Promise<void> {
   const { zephyr_engine, assetsMap } = options;
+  // CLI commands pass an engine returned by create(), whose generation zero is active.
+  let buildInProgress = true;
 
   try {
     // Start a new build
     await zephyr_engine.start_new_build();
+    buildInProgress = true;
 
     // Generate build stats
     const buildStats = await getBuildStats(zephyr_engine);
@@ -31,9 +34,14 @@ export async function uploadAssets(options: UploadOptions): Promise<void> {
       buildStats,
     });
 
+    buildInProgress = false;
     await zephyr_engine.build_finished();
   } catch (error) {
     logFn('error', ZephyrError.format(error));
     throw error;
+  } finally {
+    if (buildInProgress && zephyr_engine.hasActiveBuild !== false) {
+      zephyr_engine.build_failed();
+    }
   }
 }

@@ -70,7 +70,11 @@ For CLI-level integration with custom bundling commands:
 const { zephyrCommandWrapper } = require('zephyr-metro-plugin');
 
 // Wrap your Metro bundling function
-const wrappedBundleCommand = zephyrCommandWrapper(originalBundleFunction, loadMetroConfig, updateManifest);
+const wrappedBundleCommand = zephyrCommandWrapper(
+  originalBundleFunction,
+  loadMetroConfig,
+  updateManifest
+);
 ```
 
 ### Module Federation Configuration

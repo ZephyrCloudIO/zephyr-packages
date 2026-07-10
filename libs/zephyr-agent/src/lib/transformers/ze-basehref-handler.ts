@@ -6,7 +6,6 @@ import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
  *
  * @param baseHref - The base path string to normalize
  * @returns A normalized base path string, or empty string for root/empty paths
- *
  *   Normalization rules:
  *
  *   - Removes leading and trailing slashes
@@ -14,35 +13,35 @@ import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
  *   - Returns empty string for root or empty paths
  */
 export function normalizeBasePath(baseHref: string | null | undefined): string {
-  // Return empty string for falsy values
   if (!baseHref) {
     return '';
   }
 
-  // Handle special cases that represent root path
-  if (baseHref === '/' || baseHref === './' || baseHref === '.') {
+  let normalized = baseHref.trim();
+  if (!normalized || ['/', './', '.', 'auto'].includes(normalized)) {
     return '';
   }
 
-  // Remove leading and trailing slashes and whitespace
-  let normalized = baseHref.trim();
-
-  // Remove leading ./ if present
-  if (normalized.startsWith('./')) {
-    normalized = normalized.substring(2);
+  // Vite accepts absolute and protocol-relative CDN bases. Snapshot keys are paths,
+  // never URLs, so retain only the URL pathname before applying the prefix.
+  if (/^(?:https?:)?\/\//i.test(normalized)) {
+    try {
+      normalized = new URL(
+        normalized.startsWith('//') ? `https:${normalized}` : normalized
+      ).pathname;
+    } catch {
+      return '';
+    }
   }
 
-  // Remove leading / if present
-  if (normalized.startsWith('/')) {
-    normalized = normalized.substring(1);
-  }
-
-  // Remove trailing / if present
-  if (normalized.endsWith('/')) {
-    normalized = normalized.substring(0, normalized.length - 1);
-  }
-
-  return normalized.trim();
+  normalized = normalized.split(/[?#]/, 1)[0]?.trim() ?? '';
+  const segments = normalized
+    .replace(/^\.\//, '')
+    .split('/')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment && segment !== '.');
+  // Never let a bundler base escape the snapshot namespace.
+  return segments.includes('..') ? '' : segments.join('/');
 }
 
 /**
@@ -72,7 +71,7 @@ function isIndexHtml(path: string): boolean {
  * @param normalizedBaseHref - The normalized baseHref string
  * @returns The path with baseHref applied
  */
-function applyBaseHrefToPath(path: string, normalizedBaseHref: string): string {
+export function applyBaseHrefToPath(path: string, normalizedBaseHref: string): string {
   // Don't modify absolute paths or index.html
   if (isAbsolutePath(path) || isIndexHtml(path)) {
     return path;

@@ -153,6 +153,7 @@ export interface XStats {
       context?: string;
     };
   };
+  hasErrors?: () => boolean;
   toJson: () => XStatsCompilation;
 }
 

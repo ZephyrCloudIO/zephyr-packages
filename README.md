@@ -40,14 +40,16 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 ## Repository Structure
 
-This is an [Nx](https://nx.dev) monorepo.
+This is a [Turborepo](https://turborepo.com) monorepo. Libraries are built with
+[Rslib](https://lib.rsbuild.dev), tests run with [Rstest](https://rstest.rs), and
+repository linting and formatting use Oxlint and Oxfmt.
 
 - `libs` - Contains all the plugins and utility packages.
 - `examples` - Contains examples to use and test the plugins.
 
 ## Using this repository
 
-```
+```bash
 pnpm install
 ```
 
@@ -55,19 +57,22 @@ pnpm install
 
 ### Development
 
-- `pnpm dev` - Starts the development server
-- `pnpm build` - Builds the application for production
-- `pnpm start` - Runs the production build
+- `pnpm build` - Builds every package under `libs`
+- `pnpm build-all` - Builds all packages and examples in dependency order
+- `pnpm typecheck` - Type-checks the TypeScript project-reference graph
 
 ### Testing
 
 - `pnpm test` - Runs the test suite
-- `pnpm test:watch` - Runs tests in watch mode
+- `pnpm test:affected` - Runs tests affected by the current branch
+- `pnpm test:coverage` - Runs the repository-wide Rstest coverage suite
+- `pnpm test:examples` - Runs example unit tests and the production deployment E2E suite
 
 ### Linting & Formatting
 
 - `pnpm lint` - Checks code for linting errors
-- `pnpm format` - Formats code using Prettier
+- `pnpm format:check` - Checks formatting with Oxfmt
+- `pnpm format` - Formats code with Oxfmt
 
 ### Version Management
 

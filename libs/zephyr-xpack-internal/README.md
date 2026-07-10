@@ -249,7 +249,12 @@ const isValid = validateParams({
 Webpack and Rspack plugins use this package:
 
 ```typescript
-import { extractFederationConfig, buildWebpackAssetsMap, convertToGraph, FederationDashboardPlugin } from 'zephyr-xpack-internal';
+import {
+  extractFederationConfig,
+  buildWebpackAssetsMap,
+  convertToGraph,
+  FederationDashboardPlugin,
+} from 'zephyr-xpack-internal';
 
 // In webpack/rspack plugin
 const federationConfig = extractFederationConfig(compiler.options);

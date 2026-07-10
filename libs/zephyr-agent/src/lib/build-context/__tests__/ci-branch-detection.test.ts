@@ -1,3 +1,5 @@
+import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
+
 import { detectCIBranch, getCIBranchName } from '../ci-branch-detection';
 
 describe('detectCIBranch', () => {

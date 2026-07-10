@@ -11,7 +11,7 @@ interface KnownAgentProps {
   pluginOptions: {
     zephyr_engine: ZephyrEngine;
     // federated module config
-    mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+    mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   };
 }
 

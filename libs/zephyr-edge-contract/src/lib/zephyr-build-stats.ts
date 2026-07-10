@@ -13,6 +13,11 @@ export interface ZephyrBuildStats {
   posted?: Date;
   /** Default to `remoteEntry.js` unless user defines it */
   remote: string | undefined;
+  /**
+   * Relative path to the MF2 manifest (default `mf-manifest.json`). Undefined when
+   * `manifest: false`.
+   */
+  mf_manifest?: string;
   /** @deprecated - Never use meta, metadata and other senseless data aggregator names */
   metadata: unknown;
   /**
@@ -154,6 +159,7 @@ enum DeploymentIntegrationPlatform {
 export interface ZephyrDependency {
   application_uid: string;
   remote_entry_url: string;
+  manifest_url?: string;
   default_url: string;
   name: string;
   library_type: string;

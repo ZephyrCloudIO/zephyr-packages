@@ -3,6 +3,7 @@
  * specific properties
  */
 declare global {
+  // `var` is required here: `let`/`const` cannot augment the global/globalThis type.
   var NX_GRAPH_CREATION: boolean | undefined;
 }
 

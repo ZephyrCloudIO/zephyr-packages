@@ -36,6 +36,13 @@ interface OutputAssetLike {
 
 export type OutputBundleLike = Record<string, OutputChunkLike | OutputAssetLike>;
 
+const REDUNDANT_NODE_SIDE_EFFECT_LINE_IMPORT_RE =
+  /^[\t ]*import\s*['"]node:(?:fs|path)['"];?[\t ]*(?:\r?\n|$)/gm;
+const REDUNDANT_NODE_SIDE_EFFECT_LEADING_IMPORT_RE =
+  /^import\s*['"]node:(?:fs|path)['"];?/;
+const REDUNDANT_NODE_SIDE_EFFECT_INLINE_IMPORT_RE =
+  /(?<=;)import\s*['"]node:(?:fs|path)['"];?/g;
+
 const CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
   '.avif': 'image/avif',
   '.cjs': 'application/javascript',
@@ -83,7 +90,29 @@ function toBuffer(item: OutputChunkLike | OutputAssetLike): Buffer {
 }
 
 export function normalizePathForSnapshot(filePath: string): string {
-  return filePath.split(path.sep).join('/');
+  return filePath.split(path.sep).join('/').replace(/\\/g, '/');
+}
+
+/**
+ * Vinext can leave unused built-in side-effect imports in its Worker entry. Cloudflare
+ * Workers does not provide these Node modules unless compatibility flags are enabled, and
+ * the imports have no observable side effects.
+ */
+export function stripRedundantNodeSideEffectImports(code: string): string {
+  return code
+    .replace(REDUNDANT_NODE_SIDE_EFFECT_LINE_IMPORT_RE, '')
+    .replace(REDUNDANT_NODE_SIDE_EFFECT_LEADING_IMPORT_RE, '')
+    .replace(REDUNDANT_NODE_SIDE_EFFECT_INLINE_IMPORT_RE, '');
+}
+
+function workerAssetContent(snapshotPath: string, content: Buffer): Buffer {
+  if (!snapshotPath.startsWith('server/') || !/\.[cm]?js$/i.test(snapshotPath)) {
+    return content;
+  }
+  return Buffer.from(
+    stripRedundantNodeSideEffectImports(content.toString('utf8')),
+    'utf8'
+  );
 }
 
 export function normalizeEntrypoint(entrypoint: string): string {
@@ -98,8 +127,13 @@ export function normalizeEntrypoint(entrypoint: string): string {
   if (normalized.startsWith('dist/')) {
     normalized = normalized.slice('dist/'.length);
   }
-
-  return normalized;
+  const segments = normalized.split('/').filter((segment) => segment && segment !== '.');
+  if (!normalized || segments.length === 0 || segments.includes('..')) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: `Vinext entrypoint must be inside the output directory: "${entrypoint}".`,
+    });
+  }
+  return segments.join('/');
 }
 
 export function collectAssetsFromBundle(
@@ -117,7 +151,7 @@ export function collectAssetsFromBundle(
       : normalizedFileName;
 
     assets[snapshotPath] = {
-      content: toBuffer(item),
+      content: workerAssetContent(snapshotPath, toBuffer(item)),
       type: getAssetType(snapshotPath),
     };
   }
@@ -198,6 +232,56 @@ export async function collectStaticClientAssets(
   }
 }
 
+/** Collect the complete Vinext output after every Vite environment has finished. */
+export async function collectOutputDirectoryAssets(
+  assets: Record<string, VinextBuildAsset>,
+  outputRootDir: string
+): Promise<void> {
+  if (!(await pathExists(outputRootDir))) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: `Vinext output directory does not exist: ${outputRootDir}`,
+    });
+  }
+
+  for (const filePath of await walkFiles(outputRootDir)) {
+    const snapshotPath = normalizePathForSnapshot(path.relative(outputRootDir, filePath));
+    const content = await fs.readFile(filePath);
+    assets[snapshotPath] = {
+      content: workerAssetContent(snapshotPath, content),
+      type: getAssetType(snapshotPath),
+    };
+  }
+}
+
+export function detectEntrypointFromAssets(
+  assets: Record<string, VinextBuildAsset>
+): string | undefined {
+  const candidates = [
+    'server/index.js',
+    'server/index.mjs',
+    'server/index.cjs',
+    'ssr/index.js',
+    'ssr/index.mjs',
+    'ssr/index.cjs',
+    'rsc/index.js',
+    'rsc/index.mjs',
+    'rsc/index.cjs',
+  ];
+  const preferred = candidates.find((candidate) => assets[candidate]);
+  if (preferred) return preferred;
+
+  const paths = new Set(Object.keys(assets));
+  for (const assetPath of paths) {
+    if (!/(^|\/)wrangler\.jsonc?$/.test(assetPath)) continue;
+    const directory = path.posix.dirname(assetPath);
+    for (const fileName of ['index.js', 'index.mjs', 'index.cjs']) {
+      const candidate = directory === '.' ? fileName : `${directory}/${fileName}`;
+      if (paths.has(candidate)) return candidate;
+    }
+  }
+  return undefined;
+}
+
 function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): string {
   const relativeDir = normalizePathForSnapshot(
     path.relative(path.resolve(outputRootDir), path.resolve(targetDir))
@@ -207,8 +291,15 @@ function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): strin
     return '';
   }
 
-  if (relativeDir.startsWith('../')) {
-    return '';
+  if (
+    relativeDir === '..' ||
+    relativeDir.startsWith('../') ||
+    path.posix.isAbsolute(relativeDir) ||
+    /^[A-Za-z]:\//.test(relativeDir)
+  ) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: `Vinext output path "${targetDir}" is outside output root "${outputRootDir}".`,
+    });
   }
 
   return relativeDir;

@@ -1,15 +1,13 @@
-import { Helmet } from '@modern-js/runtime/head';
 import './index.css';
 
 const Index = () => (
   <div className="container-box">
-    <Helmet>
-      <link
-        rel="icon"
-        type="image/x-icon"
-        href="https://lf3-static.bytednsdoc.com/obj/eden-cn/uhbfnupenuhf/favicon.ico"
-      />
-    </Helmet>
+    {/* React 19 hoists metadata tags to <head> natively */}
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://lf3-static.bytednsdoc.com/obj/eden-cn/uhbfnupenuhf/favicon.ico"
+    />
     <main>
       <div className="title">
         Welcome to

@@ -1,4 +1,5 @@
 import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
+import type { XStats, XStatsCompilation } from 'zephyr-xpack-internal';
 
 export interface ZephyrRspressPluginOptions {
   deferEngine: Promise<ZephyrEngine>;
@@ -54,37 +55,32 @@ export interface RspressPlugin<TConfig extends RspressUserConfig = RspressUserCo
   afterBuild?: () => void | Promise<void>;
 }
 
-export interface Stats {
-  compilation: {
+export interface StatsAsset {
+  name: string;
+  size?: number;
+  emitted?: boolean;
+  chunkNames?: string[];
+  info?: {
+    minimized?: boolean;
+    related?: Record<string, string[]>;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export type StatsCompilation = XStatsCompilation & {
+  assets?: StatsAsset[];
+  errors?: unknown[];
+  warnings?: unknown[];
+  outputPath?: string;
+};
+
+export type Stats = XStats & {
+  compilation: XStats['compilation'] & {
     options: {
       context: string;
-      [key: string]: any;
     };
-    assets?: {
-      name: string;
-      size?: number;
-      info?: {
-        [key: string]: any;
-      };
-    }[];
-    [key: string]: any;
+    assets?: StatsAsset[];
   };
-  toJson: (options?: any) => {
-    assets?: {
-      name: string;
-      size?: number;
-      emitted?: boolean;
-      chunkNames?: string[];
-      info?: {
-        minimized?: boolean;
-        related?: Record<string, string[]>;
-        [key: string]: any;
-      };
-      [key: string]: any;
-    }[];
-    errors?: any[];
-    warnings?: any[];
-    outputPath?: string;
-    [key: string]: any;
-  };
-}
+  toJson: (options?: unknown) => StatsCompilation;
+};

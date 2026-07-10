@@ -1,50 +1,36 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type { Mock } from '@rstest/core';
+
 import type { OutputAsset, OutputChunk } from 'rollup';
-import {
-  buildAssetsMap,
-  getPartialAssetMap,
-  removePartialAssetMap,
-  type ZeBuildAssetsMap,
-  type ZephyrEngine,
-} from 'zephyr-agent';
+import { buildAssetsMap, type ZephyrEngine } from 'zephyr-agent';
 import type { ZephyrInternalOptions } from '../../types/zephyr-internal-options';
 import { extract_vite_assets_map } from '../extract_vite_assets_map';
 import { loadStaticAssets } from '../load_static_assets';
 
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  getPartialAssetMap: jest.fn(),
-  removePartialAssetMap: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: rs.fn(),
 }));
 
-jest.mock('../load_static_assets', () => ({
-  loadStaticAssets: jest.fn(),
+rs.mock('../load_static_assets', () => ({
+  loadStaticAssets: rs.fn(),
 }));
 
-const mockBuildAssetsMap = buildAssetsMap as jest.MockedFunction<typeof buildAssetsMap>;
-const mockGetPartialAssetMap = getPartialAssetMap as jest.MockedFunction<
-  typeof getPartialAssetMap
->;
-const mockRemovePartialAssetMap = removePartialAssetMap as jest.MockedFunction<
-  typeof removePartialAssetMap
->;
-const mockLoadStaticAssets = loadStaticAssets as jest.MockedFunction<
-  typeof loadStaticAssets
->;
+const mockBuildAssetsMap = buildAssetsMap as Mock<typeof buildAssetsMap>;
+const mockLoadStaticAssets = loadStaticAssets as Mock<typeof loadStaticAssets>;
 
 // Mock data shared across all tests
 const mockZephyrEngine: ZephyrEngine = {
   application_uid: 'test-app-uid',
 } as ZephyrEngine;
 
+const runtimeAsset = {
+  type: 'chunk',
+  code: 'console.log("runtime");',
+} as OutputChunk;
 const mockViteInternalOptions: ZephyrInternalOptions = {
   root: '/test/root',
   outDir: '/test/out',
-  assets: {
-    'runtime-asset.js': {
-      type: 'chunk',
-      code: 'console.log("runtime");',
-    } as OutputChunk,
-  },
+  assets: { 'runtime-asset.js': runtimeAsset },
 };
 
 const PNG_HEADER_BYTES = [137, 80, 78, 71]; // PNG file signature magic bytes
@@ -52,7 +38,7 @@ const binaryData = new Uint8Array(PNG_HEADER_BYTES);
 
 describe('extract_vite_assets_map', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   it('should extract vite assets map successfully', async () => {
@@ -63,19 +49,10 @@ describe('extract_vite_assets_map', () => {
       } as OutputAsset,
     };
 
-    const mockPartialAssetMap = {
-      'partial-asset.js': {
-        type: 'chunk',
-        code: 'console.log("partial");',
-      } as unknown as ZeBuildAssetsMap[string],
-    };
-
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockStaticAssets);
-    mockGetPartialAssetMap.mockResolvedValue(mockPartialAssetMap);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     const result = await extract_vite_assets_map(
       mockZephyrEngine,
@@ -83,27 +60,23 @@ describe('extract_vite_assets_map', () => {
     );
 
     expect(mockLoadStaticAssets).toHaveBeenCalledWith(mockViteInternalOptions);
-    expect(mockGetPartialAssetMap).toHaveBeenCalledWith('test-app-uid');
-    expect(mockRemovePartialAssetMap).toHaveBeenCalledWith('test-app-uid');
     expect(mockBuildAssetsMap).toHaveBeenCalledWith(
       expect.objectContaining({
         'static-asset.css': mockStaticAssets['static-asset.css'],
-        'runtime-asset.js': mockViteInternalOptions.assets!['runtime-asset.js'],
+        'runtime-asset.js': runtimeAsset,
       }),
       expect.any(Function), // extractBuffer
       expect.any(Function) // getAssetType
     );
-    expect(result).toBe(mockBuildResult);
+    expect(result).toEqual(mockBuildResult);
   });
 
   it('should handle null partial asset map', async () => {
     const mockStaticAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockStaticAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     const result = await extract_vite_assets_map(
       mockZephyrEngine,
@@ -112,12 +85,12 @@ describe('extract_vite_assets_map', () => {
 
     expect(mockBuildAssetsMap).toHaveBeenCalledWith(
       expect.objectContaining({
-        'runtime-asset.js': mockViteInternalOptions.assets!['runtime-asset.js'],
+        'runtime-asset.js': runtimeAsset,
       }),
       expect.any(Function),
       expect.any(Function)
     );
-    expect(result).toBe(mockBuildResult);
+    expect(result).toEqual(mockBuildResult);
   });
 
   it('should skip vite inspect artifacts from upload map', async () => {
@@ -131,12 +104,10 @@ describe('extract_vite_assets_map', () => {
         code: 'console.log("app");',
       } as OutputChunk,
     };
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockStaticAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
@@ -158,12 +129,10 @@ describe('getAssetType', () => {
   // So we'll test it indirectly through the main function
   it('should return correct asset type for chunk', async () => {
     const mockAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
@@ -175,12 +144,10 @@ describe('getAssetType', () => {
 
   it('should return correct asset type for asset', async () => {
     const mockAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
@@ -194,12 +161,10 @@ describe('getAssetType', () => {
 describe('extractBuffer', () => {
   it('should extract code from chunk assets', async () => {
     const mockAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
@@ -214,12 +179,10 @@ describe('extractBuffer', () => {
 
   it('should extract string source from asset', async () => {
     const mockAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
@@ -234,12 +197,10 @@ describe('extractBuffer', () => {
 
   it('should convert buffer source to Buffer for binary assets', async () => {
     const mockAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 
@@ -257,12 +218,10 @@ describe('extractBuffer', () => {
 
   it('should return undefined for unknown asset types', async () => {
     const mockAssets = {};
-    const mockBuildResult = { assets: 'mock-build-result' };
+    const mockBuildResult: ReturnType<typeof buildAssetsMap> = {};
 
     mockLoadStaticAssets.mockResolvedValue(mockAssets);
-    mockGetPartialAssetMap.mockResolvedValue(undefined);
-    mockRemovePartialAssetMap.mockResolvedValue();
-    mockBuildAssetsMap.mockReturnValue(mockBuildResult as any);
+    mockBuildAssetsMap.mockReturnValue(mockBuildResult);
 
     await extract_vite_assets_map(mockZephyrEngine, mockViteInternalOptions);
 

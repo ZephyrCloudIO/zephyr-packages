@@ -16,6 +16,7 @@ import type {
 } from '../node-persist/upload-provider-options';
 
 const MAX_MATCH_SIZE = 6;
+const MAX_ENVIRONMENT_CONCURRENCY = 3;
 
 export async function zeUploadAssets(
   zephyr_engine: ZephyrEngine,
@@ -27,11 +28,16 @@ export async function zeUploadAssets(
 
   const envs = appConfig.ENVIRONMENTS;
   if (envs != null) {
-    await Promise.all(
+    await forEachLimit<void>(
       Object.entries(envs)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .filter(([_, envCfg]) => envCfg.edgeUrl !== appConfig.EDGE_URL)
-        .map(([env, envCfg]) => zeUploadAssetsForEnv(env, envCfg, appConfig, assetsMap))
+        .map(
+          ([env, envCfg]) =>
+            () =>
+              zeUploadAssetsForEnv(env, envCfg, appConfig, assetsMap)
+        ),
+      MAX_ENVIRONMENT_CONCURRENCY
     );
   }
 
@@ -105,8 +111,8 @@ export async function zeUploadAssets(
       return;
     }
     let totalSize = 0;
-    await Promise.all(
-      missingAssets.map(async (asset) => {
+    await forEachLimit<void>(
+      missingAssets.map((asset) => async () => {
         ze_log.upload(`Uploading file ${asset.path} to env: ${whiteBright(env)}`);
         const start = Date.now();
         const assetWithBuffer = assetsMap[asset.hash];
@@ -127,7 +133,8 @@ export async function zeUploadAssets(
         ze_log.upload(
           `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb) for env: ${whiteBright(env)}`
         );
-      })
+      }),
+      MAX_MATCH_SIZE
     );
     ze_log.upload(
       `Total size uploaded for env: ${whiteBright(env)}: ${totalSize.toFixed(2)}kb`

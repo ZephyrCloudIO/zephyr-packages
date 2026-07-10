@@ -180,7 +180,15 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
   // Extract assets from the output directory
   log('info', 'Extracting assets from output directory...');
-  const assetsMap = await extractAssetsFromDirectory(outputDir);
+  let assetsMap;
+  try {
+    assetsMap = await extractAssetsFromDirectory(outputDir);
+  } catch (error: unknown) {
+    if (zephyr_engine.hasActiveBuild) {
+      zephyr_engine.build_failed();
+    }
+    throw error;
+  }
 
   const assetCount = Object.keys(assetsMap).length;
   log('info', `Found ${assetCount} assets to upload`);

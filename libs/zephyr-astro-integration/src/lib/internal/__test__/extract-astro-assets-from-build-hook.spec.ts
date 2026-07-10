@@ -1,3 +1,6 @@
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type { MockInstance, Mock } from '@rstest/core';
+
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -5,9 +8,9 @@ import { buildAssetsMap } from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from '../extract-astro-assets-map';
 
 // Mock the zephyr-agent buildAssetsMap function
-jest.mock('zephyr-agent', () => ({
-  buildAssetsMap: jest.fn(),
-  logFn: jest.fn(),
+rs.mock('zephyr-agent', () => ({
+  buildAssetsMap: rs.fn(),
+  logFn: rs.fn(),
 }));
 
 // This test focuses on the assets parameter parsing logic
@@ -15,17 +18,17 @@ jest.mock('zephyr-agent', () => ({
 
 describe('extractAstroAssetsFromBuildHook', () => {
   let tempDir: string;
-  let consoleSpy: jest.SpyInstance;
+  let consoleSpy: MockInstance;
 
   beforeEach(async () => {
     tempDir = join(tmpdir(), `astro-assets-hook-test-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
-    consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {
+    consoleSpy = rs.spyOn(console, 'warn').mockImplementation(() => {
       // Mock implementation
     });
 
     // Mock buildAssetsMap to return a simple hash-based result
-    (buildAssetsMap as jest.Mock).mockImplementation((assets) => {
+    (buildAssetsMap as Mock).mockImplementation((assets) => {
       const result: Record<string, unknown> = {};
       Object.keys(assets).forEach((key, index) => {
         const hash = `hash${index + 1}`;
@@ -51,7 +54,7 @@ describe('extractAstroAssetsFromBuildHook', () => {
     if (consoleSpy && typeof consoleSpy.mockRestore === 'function') {
       consoleSpy.mockRestore();
     }
-    jest.clearAllMocks();
+    rs.clearAllMocks();
   });
 
   describe('Assets Parameter Handling', () => {

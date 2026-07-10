@@ -1,11 +1,11 @@
 {
   "name": "e2e-deployment",
+  "private": true,
+  "scripts": {
+    "e2e-test": "rstest run --config rstest.config.mts"
+  },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "jest-environment-node": "^29.7.0",
-    "ts-jest": "catalog:typescript",
-    "ts-node": "10.9.2",
+    "@rstest/core": "catalog:rstest",
     "typescript": "catalog:typescript",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"

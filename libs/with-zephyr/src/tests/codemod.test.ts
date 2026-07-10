@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 import { execSync } from 'child_process';
 import fs from 'fs';
@@ -8,10 +7,14 @@ import path from 'path';
 describe('Zephyr Codemod CLI', () => {
   let tempDir: string;
   let originalCwd: string;
+  let packageRoot: string;
 
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zephyr-codemod-test-'));
     originalCwd = process.cwd();
+    packageRoot = fs.existsSync(path.join(originalCwd, 'libs/with-zephyr/package.json'))
+      ? path.join(originalCwd, 'libs/with-zephyr')
+      : originalCwd;
     process.chdir(tempDir);
   });
 
@@ -21,7 +24,7 @@ describe('Zephyr Codemod CLI', () => {
   });
 
   const runCodemod = (args = '', expectError = false) => {
-    const cliPath = path.join(originalCwd, 'dist', 'index.js');
+    const cliPath = path.join(packageRoot, 'dist', 'index.js');
     try {
       const result = execSync(`node "${cliPath}" ${args} 2>&1`, {
         // Redirect stderr to stdout
@@ -167,7 +170,7 @@ describe('Zephyr Codemod CLI', () => {
             devDependencies: {
               'vite-plugin-vinext-zephyr': '^0.1.11',
               '@cloudflare/vite-plugin': '^1.25.0',
-              vite: '^7.3.1',
+              vite: '^8.1.4',
               wrangler: '^4.68.1',
             },
             scripts: {

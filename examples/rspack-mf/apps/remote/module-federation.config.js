@@ -1,28 +1,26 @@
-const path = require('path');
+const reactShared = {
+  singleton: true,
+  version: '18.3.1',
+  requiredVersion: '18.3.1',
+  eager: true,
+};
 
-const currDir = path.resolve(__dirname);
-
-/** @type {Parameters<import('@nx/module-federation/rspack').withModuleFederation>[0]} */
+/**
+ * @type {ConstructorParameters<
+ *   typeof import('@module-federation/enhanced/rspack').ModuleFederationPlugin
+ * >[0]}
+ */
 module.exports = {
   name: 'rspack_mf_remote',
+  filename: 'remoteEntry.js',
   exposes: {
-    './NxWelcome': currDir + '/src/app/nx-welcome.tsx',
+    './NxWelcome': './src/app/nx-welcome.tsx',
   },
-  shared: (libName) => {
-    const reactShared = [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
-    ];
-    if (reactShared.includes(libName)) {
-      return {
-        singleton: true,
-        version: '18.3.1',
-        requiredVersion: '18.3.1',
-        eager: true,
-      };
-    }
-    return false;
+  shared: {
+    react: reactShared,
+    'react-dom': reactShared,
+    'react/jsx-runtime': reactShared,
+    'react/jsx-dev-runtime': reactShared,
   },
+  dts: false,
 };

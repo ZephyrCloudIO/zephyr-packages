@@ -1,6 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { execCommandSync } from './run-command.mjs';
 
 const workspaceRoot = path.resolve(import.meta.dirname, '..');
 const librariesRoot = path.join(workspaceRoot, 'libs');
@@ -9,7 +9,7 @@ const errors = [];
 const reports = [];
 
 function run(executable, args, cwd) {
-  return execFileSync(executable, args, {
+  return execCommandSync(executable, args, {
     cwd,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,

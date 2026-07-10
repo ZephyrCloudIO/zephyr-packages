@@ -81,14 +81,16 @@ describe('auth/login', () => {
     );
   });
 
-  it('creates a mode-0600 fallback and removes its credential-bearing directory', () => {
+  it('creates a private fallback and removes its credential-bearing directory', () => {
     const authUrl = 'https://auth.example.com/authorize?state=private-artifact-state';
     const artifact = createPrivateAuthenticationArtifact(authUrl);
     const directory = dirname(artifact.filePath);
 
     try {
-      expect(statSync(artifact.filePath).mode & 0o777).toBe(0o600);
-      expect(statSync(directory).mode & 0o777).toBe(0o700);
+      if (process.platform !== 'win32') {
+        expect(statSync(artifact.filePath).mode & 0o777).toBe(0o600);
+        expect(statSync(directory).mode & 0o777).toBe(0o700);
+      }
       expect(readFileSync(artifact.filePath, 'utf8')).toContain('private-artifact-state');
     } finally {
       artifact.cleanup();

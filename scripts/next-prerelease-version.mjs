@@ -1,10 +1,8 @@
-import { execFile } from 'node:child_process';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { promisify } from 'node:util';
+import { execCommand } from './run-command.mjs';
 
-const execFileAsync = promisify(execFile);
 const workspaceRoot = path.resolve(import.meta.dirname, '..');
 const librariesRoot = path.join(workspaceRoot, 'libs');
 const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -27,7 +25,7 @@ async function getPublishablePackageNames() {
 
 async function getDistTags(packageName) {
   try {
-    const { stdout } = await execFileAsync(
+    const { stdout } = await execCommand(
       npmExecutable,
       ['view', packageName, 'dist-tags', '--json'],
       { cwd: workspaceRoot, timeout: 30_000, maxBuffer: 1024 * 1024 }

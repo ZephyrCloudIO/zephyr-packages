@@ -1,9 +1,9 @@
-import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execCommandSync } from '../../../scripts/run-command.mjs';
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const workspaceRoot = join(packageRoot, '..', '..');
@@ -13,7 +13,7 @@ const nodeModules = join(temporaryRoot, 'node_modules');
 const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 function run(executable, args, cwd = temporaryRoot) {
-  return execFileSync(executable, args, {
+  return execCommandSync(executable, args, {
     cwd,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],

@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { basename, dirname } from 'node:path';
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 const mocks = rs.hoisted(() => ({
@@ -95,8 +95,8 @@ describe('interactive authentication cleanup', () => {
     await expect(checkAuth({} as never)).rejects.toThrow('authentication timeout');
 
     const loggedMessages = mocks.logFn.mock.calls.map((call) => String(call[1]));
-    const artifactPath = loggedMessages.find((message) =>
-      message.endsWith('/login.html')
+    const artifactPath = loggedMessages.find(
+      (message) => basename(message) === 'login.html'
     );
     const prompt = String(mocks.question.mock.calls[0]?.[0]);
     const persistedOutput = JSON.stringify([
@@ -130,8 +130,8 @@ describe('interactive authentication cleanup', () => {
     await expect(checkAuth({} as never)).resolves.toBeUndefined();
 
     const loggedMessages = mocks.logFn.mock.calls.map((call) => String(call[1]));
-    const artifactPath = loggedMessages.find((message) =>
-      message.endsWith('/login.html')
+    const artifactPath = loggedMessages.find(
+      (message) => basename(message) === 'login.html'
     );
     const persistedOutput = JSON.stringify([
       mocks.authLog.mock.calls,

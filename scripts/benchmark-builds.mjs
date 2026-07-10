@@ -1,7 +1,7 @@
-import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { spawnCommand as spawn } from './run-command.mjs';
 
 const workspaceRoot = path.resolve(import.meta.dirname, '..');
 const pnpmExecutable = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';

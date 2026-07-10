@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { selectNextPrereleaseVersion } from './next-prerelease-version.mjs';
+import { execCommand, execCommandSync } from './run-command.mjs';
 import { setPackageVersions } from './set-package-version.mjs';
 
 const temporaryRoots = [];
@@ -12,6 +13,26 @@ afterEach(async () => {
 });
 
 describe('release version tooling', () => {
+  it('runs child commands consistently in synchronous and asynchronous tooling', async () => {
+    expect(
+      execCommandSync(process.execPath, ['-e', "process.stdout.write('sync')"], {
+        encoding: 'utf8',
+      })
+    ).toBe('sync');
+    await expect(
+      execCommand(process.execPath, ['-e', "process.stdout.write('async')"])
+    ).resolves.toMatchObject({ stdout: 'async', stderr: '' });
+  });
+
+  it('preserves command output when a child process fails', async () => {
+    await expect(
+      execCommand(process.execPath, [
+        '-e',
+        "process.stderr.write('expected failure'); process.exitCode = 2",
+      ])
+    ).rejects.toMatchObject({ status: 2, stderr: 'expected failure' });
+  });
+
   it('advances only after every package has the current prerelease', () => {
     const packages = ['one', 'two'];
 

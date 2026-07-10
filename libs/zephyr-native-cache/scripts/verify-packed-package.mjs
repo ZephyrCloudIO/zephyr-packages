@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import {
   existsSync,
   mkdtempSync,
@@ -13,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { execCommandSync } from '../../../scripts/run-command.mjs';
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'zephyr-native-cache-package-'));
@@ -22,7 +22,7 @@ const npmExecutable = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const require = createRequire(import.meta.url);
 
 function run(executable, args, cwd = applicationRoot) {
-  return execFileSync(executable, args, {
+  return execCommandSync(executable, args, {
     cwd,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],

@@ -15,6 +15,7 @@ import {
   getAppConfig,
   saveAppConfig,
 } from '../lib/node-persist/application-configuration';
+import { getAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import { getSecretToken } from '../lib/node-persist/secret-token';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 
@@ -35,13 +36,46 @@ const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
 
 const exec = promisify(execCB);
 
+function createTestRunSuffix(
+  env: NodeJS.ProcessEnv = process.env,
+  randomSuffix = () => crypto.randomBytes(8).toString('hex')
+): string {
+  const { GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, RUNNER_OS } = env;
+  if (GITHUB_RUN_ID && GITHUB_RUN_ATTEMPT && RUNNER_OS) {
+    return `${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${RUNNER_OS}`
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-');
+  }
+  return `${process.platform}-${randomSuffix()}`;
+}
+
+describe('createTestRunSuffix', () => {
+  it('identifies a GitHub Actions matrix job deterministically', () => {
+    expect(
+      createTestRunSuffix(
+        {
+          GITHUB_RUN_ID: '1234',
+          GITHUB_RUN_ATTEMPT: '2',
+          RUNNER_OS: 'Windows',
+        },
+        () => 'unused'
+      )
+    ).toBe('1234-2-windows');
+  });
+
+  it('uses a random fallback outside GitHub Actions', () => {
+    expect(createTestRunSuffix({}, () => 'abc123')).toBe(`${process.platform}-abc123`);
+  });
+});
+
 runner('ZeAgent', () => {
+  const testRunSuffix = createTestRunSuffix();
   const gitUserName = 'Test User';
-  const gitEmail = 'test.user@valor-software.com';
-  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
+  const gitEmail = `test.user-${testRunSuffix}@valor-software.com`;
 
   const appOrg = 'testzephyrcloudio';
-  const appProject = 'test-zephyr-mono';
+  const appProject = `test-zephyr-mono-${testRunSuffix}`;
+  const gitRemoteOrigin = `git@github.com:TestZephyrCloudIO/${appProject}.git`;
 
   const packageJsonPath = path.resolve('examples/sample-webpack-application');
   const appName = 'sample-webpack-application';
@@ -131,36 +165,22 @@ runner('ZeAgent', () => {
         ...envs,
         `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
       ].join(' ');
-      try {
-        await exec(cmd);
-        const deployResultUrls = await _getAppTagUrls(application_uid);
-        expect(deployResultUrls).toBeTruthy();
-        expect(deployResultUrls.length).toBeGreaterThan(0);
-        const contents = await Promise.allSettled(
-          deployResultUrls.map((url) => _fetchContent(url))
-        );
-        const titles = contents.flatMap((result) => {
-          if (result.status === 'rejected') {
-            return [];
-          }
-          const content = result.value;
-          const match = content.match(/<title>([^<]+)<\/title>/);
-          return match?.[1] ? [match[1]] : [];
-        });
-        if (!titles.includes('SampleReactApp')) {
-          const failures = contents
-            .filter((result) => result.status === 'rejected')
-            .map((result) => result.reason)
-            .join('\n');
-          throw new Error(
-            `Expected at least one deployed tag to serve SampleReactApp. Checked URLs: ${deployResultUrls.join(
-              ', '
-            )}${failures ? `\nFetch failures:\n${failures}` : ''}`
-          );
-        }
-      } finally {
-        await _cleanUp(application_uid);
+      await exec(cmd);
+      const deployResult = await getAppDeployResult(application_uid);
+      if (!deployResult) {
+        throw new Error(`No deployment result found for ${application_uid}`);
       }
+      expect(deployResult.snapshot.application_uid).toBe(application_uid);
+      expect(deployResult.urls).toHaveLength(1);
+
+      const [deployedUrl] = deployResult.urls;
+      expect(deployedUrl).toBeTruthy();
+      const content = await _fetchContent(deployedUrl);
+      const match = content.match(/<title>([^<]+)<\/title>/);
+      expect(match?.[1]).toBe('SampleReactApp');
+
+      // Preserve failed, job-isolated deployments for debugging and avoid broad cleanup races.
+      await _cleanUp(application_uid);
     },
     integrationTestTimeout
   );
@@ -184,24 +204,6 @@ async function _loadAppConfig(application_uid: string): Promise<ZeApplicationCon
     },
   });
   return response.json().then((data) => data.value);
-}
-
-async function _getAppTagUrls(application_uid: string): Promise<string[]> {
-  const url = new URL(
-    `/v2/builder-packages-api/deployed-tags/${application_uid}`,
-    ZEPHYR_API_ENDPOINT()
-  );
-  const secret_token = getSecretToken();
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${secret_token}`,
-    },
-  });
-  return response.json().then((data) => {
-    return data.entities.map((tag: { remote_host: string }) => tag.remote_host);
-  });
 }
 
 async function _cleanUp(application_uid: string): Promise<void> {

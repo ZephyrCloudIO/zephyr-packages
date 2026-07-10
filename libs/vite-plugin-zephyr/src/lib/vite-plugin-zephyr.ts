@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import MagicString from 'magic-string';
 import type { Plugin, ResolvedConfig, UserConfig } from 'vite' with {
@@ -30,14 +29,9 @@ import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options.js';
 
 const DEFAULT_LIBRARY_TYPE = 'module';
-const requireModule =
-  typeof require === 'function'
-    ? require
-    : createRequire(`${process.cwd().replace(/\\/g, '/')}/package.json`);
-const packageEntrypointPath = requireModule.resolve('vite-plugin-zephyr');
 const runtimePluginPath = path.resolve(
-  path.dirname(packageEntrypointPath),
-  'lib/internal/mf-vite-etl/runtime_plugin.mjs'
+  __dirname,
+  'internal/mf-vite-etl/runtime_plugin.mjs'
 );
 
 export interface WithZephyrOptions {
@@ -51,7 +45,7 @@ function loadModuleFederationPlugin() {
   };
 
   try {
-    moduleFederation = requireModule('@module-federation/vite') as {
+    moduleFederation = require('@module-federation/vite') as {
       federation: (options: ModuleFederationOptions) => Plugin[];
     };
   } catch (error) {

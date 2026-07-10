@@ -1,46 +1,89 @@
-const { withModuleFederation } = require('@nx/module-federation/rspack');
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
+const path = require('path');
+const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
 const { withZephyr } = require('zephyr-rspack-plugin');
 
-const mfConfig = {
-  name: 'team-blue',
-  exposes: {
-    './BlueBasket': './src/app/team-blue-basket.tsx',
-    './BlueBuy': './src/app/team-blue-buy.tsx',
-  },
-  // Workaround necessary until Nx upgrade.
-  // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109
-  additionalShared: [
-    {
-      libraryName: 'react',
-      sharedConfig: { singleton: true },
-    },
-    {
-      libraryName: 'react-dom',
-      sharedConfig: { singleton: true },
-    },
-    {
-      libraryName: 'react/jsx-runtime',
-      sharedConfig: { singleton: true },
-    },
-    {
-      libraryName: 'react/jsx-dev-runtime',
-      sharedConfig: { singleton: true },
-    },
-  ],
-};
+module.exports = (env, argv) => {
+  const isDev = argv.mode === 'development';
 
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(mfConfig, { dts: false }),
-  // Workaround for incomplete resolution of https://github.com/nrwl/nx/issues/31114
-  (config) => {
-    if (config.optimization) {
-      config.optimization.runtimeChunk = false;
-    }
-    return config;
-  },
-  withZephyr()
-);
+  return withZephyr()({
+    context: __dirname,
+    entry: {
+      main: ['./src/main.tsx', './src/styles.css'],
+    },
+    output: {
+      path: path.join(__dirname, 'dist'),
+      publicPath: 'auto',
+      uniqueName: 'team_blue',
+      filename: isDev ? '[name].js' : '[name].[contenthash].js',
+      chunkFilename: isDev ? '[name].js' : '[name].[contenthash].js',
+      clean: true,
+    },
+    devtool: isDev ? 'source-map' : false,
+    devServer: {
+      port: 4300,
+      historyApiFallback: true,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+    },
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    },
+    experiments: {
+      css: true,
+    },
+    module: {
+      rules: [
+        {
+          test: /\.[jt]sx?$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev },
+                },
+                target: 'es2020',
+              },
+            },
+          },
+        },
+        {
+          test: /\.css$/,
+          type: 'css/auto',
+        },
+        {
+          test: /\.(png|jpe?g|gif|webp|svg|ico)$/,
+          type: 'asset',
+        },
+      ],
+    },
+    plugins: [
+      new ModuleFederationPlugin({
+        name: 'team_blue',
+        filename: 'remoteEntry.js',
+        exposes: {
+          './BlueBasket': './src/app/team-blue-basket.tsx',
+          './BlueBuy': './src/app/team-blue-buy.tsx',
+        },
+
+        shared: {
+          react: { singleton: true, requiredVersion: false },
+          'react-dom': { singleton: true, requiredVersion: false },
+          'react/jsx-runtime': { singleton: true, requiredVersion: false },
+          'react/jsx-dev-runtime': { singleton: true, requiredVersion: false },
+        },
+        dts: false,
+      }),
+      new rspack.HtmlRspackPlugin({
+        template: './src/index.html',
+      }),
+      new rspack.CopyRspackPlugin({
+        patterns: [{ from: 'src/assets', to: '.', noErrorOnMissing: true }],
+      }),
+    ],
+  });
+};

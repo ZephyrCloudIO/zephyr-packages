@@ -1,48 +1,72 @@
 {
   "name": "zephyr-cli",
-  "version": "1.0.3",
+  "version": "1.1.2",
   "description": "CLI tool for running build commands and uploading assets to Zephyr",
   "keywords": [
-    "zephyr",
+    "build",
     "cli",
     "deploy",
-    "build",
-    "runner"
+    "runner",
+    "zephyr"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-cli"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-cli"
+  },
   "bin": {
     "ze-cli": "dist/index.js"
   },
-  "scripts": {
-    "build": "nx run zephyr-cli:build",
-    "patch-version": "pnpm version"
-  },
-  "dependencies": {
-    "cosmiconfig": "^9.0.0",
-    "jsonc-parser": "^3.3.1",
-    "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./*": "./*"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "cosmiconfig": "catalog:",
+    "jsonc-parser": "catalog:",
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "catalog:typescript",
+    "typescript": "catalog:typescript"
   }
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from '@rstest/core';
 import type { ZePackageJson } from '../build-context/ze-package-json.type';
 import { resolveZephyrPluginPackageName } from './plugin-package-name';
 

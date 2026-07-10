@@ -1,26 +1,14 @@
 {
   "name": "zephyr-native-cache",
-  "version": "0.0.1",
+  "version": "1.1.2",
   "description": "Native caching module for Module Federation Metro bundles",
   "license": "Apache-2.0",
-  "main": "lib/commonjs/index.js",
-  "module": "lib/module/index.js",
-  "react-native": "src/index.ts",
-  "types": "lib/typescript/index.d.ts",
-  "source": "src/index.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
     "directory": "libs/zephyr-native-cache"
   },
-  "scripts": {
-    "build": "bob build",
-    "prepare": "bob build",
-    "test": "jest --passWithNoTests",
-    "typecheck": "tsc --noEmit",
-    "patch-version": "pnpm version"
-  },
-  "private": true,
+  "source": "src/index.ts",
   "files": [
     "src/",
     "lib/",
@@ -29,26 +17,56 @@
     "android/build.gradle",
     "react-native.config.js",
     "zephyr-native-cache.podspec",
-    "!**/__tests__"
+    "!**/__tests__",
+    "!**/*.test.ts",
+    "!**/*.spec.ts",
+    "!dist/**/*.map",
+    "!lib/**/*.map",
+    "!lib/**/*.tsbuildinfo"
   ],
-  "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-native": ">=0.79.0"
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.ts",
+  "exports": {
+    ".": {
+      "react-native": "./src/index.ts",
+      "types": "./lib/typescript/index.d.ts",
+      "import": "./lib/module/index.js",
+      "require": "./lib/commonjs/index.js",
+      "default": "./lib/commonjs/index.js"
+    },
+    "./runtime-plugin": {
+      "react-native": "./src/runtime-plugin.ts",
+      "types": "./lib/typescript/runtime-plugin.d.ts",
+      "import": "./lib/module/runtime-plugin.js",
+      "require": "./lib/commonjs/runtime-plugin.js",
+      "default": "./lib/commonjs/runtime-plugin.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "typecheck": "tsc -b",
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "mitt": "catalog:",
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@types/react": "^19.1.0",
-    "react": "19.1.0",
-    "react-native": "0.80.0",
-    "react-native-builder-bob": "^0.40.13",
-    "typescript": "^5.8.3"
+    "@module-federation/runtime": "catalog:module-federation",
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/react": "catalog:react19",
+    "react": "catalog:react19",
+    "react-native": "catalog:metro",
+    "typescript": "catalog:typescript"
   },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      "typescript"
-    ]
+  "peerDependencies": {
+    "react": "catalog:peer-compat",
+    "react-native": "catalog:peer-native-cache"
   }
 }

@@ -69,10 +69,17 @@ export default defineConfig({
     pluginReact(),
     withZephyr({
       wait_for_index_html: true, // Wait for HTML processing
+      snapshotType: 'ssr',
+      entrypoint: 'server/index.js',
     }),
   ],
 });
 ```
+
+When Rsbuild creates multiple Rspack configurations (for example client and server), the
+plugin coordinates them as one logical build, validates path collisions, and publishes a
+single snapshot after every compiler finishes. `snapshotType` and `entrypoint` override
+the inferred SSR metadata when necessary.
 
 ### TypeScript Configuration
 

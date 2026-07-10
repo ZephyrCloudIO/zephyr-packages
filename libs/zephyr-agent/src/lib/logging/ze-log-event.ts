@@ -16,9 +16,10 @@ import {
   brightYellowBgName,
 } from './debug';
 import { writeLogToFile, isFileLoggingEnabled } from './file-logger';
+import { redactString, safeStringifyForLogging } from '../security/redaction';
 
 export const logFn = (level: string, msg: unknown, action?: string): void => {
-  const messageStr = String(msg);
+  const messageStr = redactString(String(msg));
 
   // Write to file if enabled
   if (isFileLoggingEnabled()) {
@@ -62,7 +63,7 @@ function toLevelPrefix(level: string) {
 }
 
 export function formatLogMsg(msg: string, level = 'info') {
-  return msg
+  return redactString(msg)
     .split('\n')
     .map((m) => `${toLevelPrefix(level)}  ${m.trimEnd()}`)
     .join('\n');
@@ -120,7 +121,7 @@ export function logger(props: LoggerOptions): ZeLogger {
                 'Content-Type': 'application/json',
               },
             },
-            JSON.stringify(
+            safeStringifyForLogging(
               logs
                 // some logs are empty to give newline effect in terminal
                 .filter((l) => l.message.length && !l.ignore)

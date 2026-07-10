@@ -103,6 +103,11 @@ source: {
 
 The plugin works with both Webpack and Rspack bundlers:
 
+Modern.js can create multiple client/server compiler configurations for one build. The
+plugin coordinates the final configuration array and publishes one snapshot only after
+all compilers finish. Use `withZephyr({ snapshotType: 'ssr', entrypoint:
+'server/index.js' })` when the server role or entrypoint cannot be inferred.
+
 ### With Rspack (Recommended)
 
 ```typescript

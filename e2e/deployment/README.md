@@ -1,7 +1,15 @@
 # e2e-deployment
 
-This library was generated with [Nx](https://nx.dev).
+This Rstest project builds the affected, buildable examples through Turbo and
+verifies the assets returned by their Zephyr production deployment URLs.
 
-## Running unit tests
+## Running deployment tests
 
-Run `nx test e2e-deployment` to execute the unit tests via [Jest](https://jestjs.io).
+From the repository root, run:
+
+```bash
+pnpm test:e2e
+```
+
+The command performs real uploads and therefore requires an authenticated
+Zephyr session.

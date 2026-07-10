@@ -1,27 +1,26 @@
+import { beforeEach, describe, expect, it, rs, type Mock } from '@rstest/core';
+
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { describe, expect, jest } from '@jest/globals';
 import { find_nearest_package_json } from '../find-nearest-package-json';
 import { ZeErrors, ZephyrError } from '../../errors';
 
 // Mocking the functions for testing
-jest.mock('node:fs', () => {
-  const actualFs = jest.requireActual('node:fs');
+rs.mock('node:fs', () => {
+  const actualFs = rs.requireActual('node:fs');
   return {
-    // @ts-expect-error can't destruct this import
     ...actualFs,
-    accessSync: jest.fn().mockImplementation(() => new Error('unexpected call to mock')),
+    accessSync: rs.fn().mockImplementation(() => new Error('unexpected call to mock')),
   };
 });
 
 // Mocking the functions for testing
-jest.mock('node:fs/promises', () => {
-  const actualFs = jest.requireActual('node:fs');
+rs.mock('node:fs/promises', () => {
+  const actualFs = rs.requireActual('node:fs');
   return {
-    // @ts-expect-error can't destruct this import
     ...actualFs,
-    readFile: jest
+    readFile: rs
       .fn()
       .mockImplementation(() => Promise.reject(new Error('unexpected call to mock'))),
   };
@@ -30,8 +29,8 @@ jest.mock('node:fs/promises', () => {
 const setPath = (...paths: string[]) => resolve(join(...paths));
 
 describe('libs/zephyr-agent/src/webpack-plugin/context-lifecycle-events/find-nearest-package-json.ts', () => {
-  const access_mock = fs.accessSync as jest.Mock<typeof fs.accessSync>;
-  const read_file_mock = fsp.readFile as jest.Mock<typeof fsp.readFile>;
+  const access_mock = fs.accessSync as Mock<typeof fs.accessSync>;
+  const read_file_mock = fsp.readFile as Mock<typeof fsp.readFile>;
 
   beforeEach(() => {
     access_mock.mockReset();

@@ -1,10 +1,7 @@
 #import "MFECacheModule.h"
-#import <React/RCTBridge+Private.h>
+#import <React/RCTReloadCommand.h>
 #import <React/RCTUtils.h>
 #import <CommonCrypto/CommonDigest.h>
-#import <jsi/jsi.h>
-
-using namespace facebook;
 
 @implementation MFECacheModule
 
@@ -14,59 +11,16 @@ RCT_EXPORT_MODULE(MFECache)
   return NO;
 }
 
-#pragma mark - JSI Installation (JS-triggered, like react-native-fast-tflite)
+#pragma mark - Restart
 
-/// Called from JS: NativeMFECache.installJSI() — synchronous.
-/// At this point bridge + runtime are guaranteed to be ready (JS is already running).
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installJSI)
+RCT_EXPORT_METHOD(restart)
 {
-  RCTBridge *bridge = [RCTBridge currentBridge];
-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)bridge;
-  if (!cxxBridge || !cxxBridge.runtime) {
-    return @(NO);
-  }
-
-  auto &runtime = *reinterpret_cast<jsi::Runtime *>(cxxBridge.runtime);
-  [self installReadFileSync:runtime];
-  return @(YES);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    RCTTriggerReloadCommandListeners(@"MFECache restart");
+  });
 }
 
-/// Install global.__MFE_readFileSync(filePath) — synchronous JSI function.
-/// Reads file from disk and returns content as a JS string, all on the JS thread.
-- (void)installReadFileSync:(jsi::Runtime &)runtime {
-  auto readFileSync = jsi::Function::createFromHostFunction(
-    runtime,
-    jsi::PropNameID::forAscii(runtime, "__MFE_readFileSync"),
-    1, // 1 argument: filePath
-    [](jsi::Runtime &rt,
-       const jsi::Value &thisVal,
-       const jsi::Value *args,
-       size_t count) -> jsi::Value {
-
-      if (count < 1 || !args[0].isString()) {
-        throw jsi::JSError(rt, "__MFE_readFileSync: expected (filePath: string)");
-      }
-
-      std::string filePath = args[0].asString(rt).utf8(rt);
-
-      // Synchronous file read on JS thread
-      NSString *nsPath = [NSString stringWithUTF8String:filePath.c_str()];
-      NSData *data = [NSData dataWithContentsOfFile:nsPath];
-      if (!data) {
-        throw jsi::JSError(rt, std::string("__MFE_readFileSync: file not found: ") + filePath);
-      }
-
-      // Return file content as JS string
-      auto content = std::string(reinterpret_cast<const char *>(data.bytes), data.length);
-      return jsi::String::createFromUtf8(rt, content);
-    }
-  );
-
-  runtime.global().setProperty(runtime, "__MFE_readFileSync", std::move(readFileSync));
-}
-
-
-#pragma mark - File System Operations (async bridge methods — unchanged)
+#pragma mark - File System Operations
 
 RCT_EXPORT_METHOD(writeFile:(NSString *)path
                   content:(NSString *)content
@@ -261,25 +215,24 @@ RCT_EXPORT_METHOD(downloadFile:(NSString *)urlString
       // Ensure destination directory exists
       NSString *dir = [destPath stringByDeletingLastPathComponent];
       NSFileManager *fm = [NSFileManager defaultManager];
-      if (![fm fileExistsAtPath:dir]) {
-        [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
-      }
+      [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
 
-      // Remove existing file at destPath if any (moveItem fails if dest exists)
-      if ([fm fileExistsAtPath:destPath]) {
-        [fm removeItemAtPath:destPath error:nil];
-      }
+      // Always remove destination first — moveItem/replaceItem fail if dest exists.
+      // No TOCTOU check; just remove unconditionally.
+      [fm removeItemAtPath:destPath error:nil];
 
-      // Move temp file to destination
       NSError *moveError = nil;
       BOOL moved = [fm moveItemAtURL:tempFileURL
                                toURL:[NSURL fileURLWithPath:destPath]
                                error:&moveError];
       if (!moved) {
-        reject(@"DOWNLOAD_ERROR",
-               [NSString stringWithFormat:@"Failed to move file: %@", moveError.localizedDescription],
-               moveError);
-        return;
+        // If the file now exists at dest, a concurrent download placed it — success.
+        if (![fm fileExistsAtPath:destPath]) {
+          reject(@"DOWNLOAD_ERROR",
+                 [NSString stringWithFormat:@"Failed to save bundle: %@", moveError.localizedDescription],
+                 moveError);
+          return;
+        }
       }
 
       resolve(@{

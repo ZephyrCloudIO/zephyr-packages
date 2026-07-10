@@ -1,6 +1,0 @@
-{
-  "name": "zephyr-native-cache",
-  "sourceRoot": "libs/zephyr-native-cache/src",
-  "projectType": "library",
-  "tags": []
-}

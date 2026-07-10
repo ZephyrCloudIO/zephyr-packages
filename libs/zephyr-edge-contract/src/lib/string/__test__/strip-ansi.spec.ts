@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { stripAnsi } from '../strip-ansi';
 
 describe('stripAnsi', () => {

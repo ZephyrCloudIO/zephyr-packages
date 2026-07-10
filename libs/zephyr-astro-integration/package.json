@@ -1,64 +1,83 @@
 {
   "name": "zephyr-astro-integration",
-  "version": "1.0.3",
+  "version": "1.1.2",
   "description": "Astro integration for Zephyr Cloud deployment and module federation",
+  "keywords": [
+    "analytics",
+    "astro",
+    "astro-component",
+    "astro-integration",
+    "deployment",
+    "module-federation",
+    "performance",
+    "withastro",
+    "zephyr"
+  ],
   "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-astro-integration#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-astro-integration"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-astro-integration"
   },
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "!dist/**/*.map"
   ],
-  "keywords": [
-    "astro-component",
-    "withastro",
-    "astro",
-    "astro-integration",
-    "zephyr",
-    "module-federation",
-    "deployment",
-    "analytics",
-    "performance"
-  ],
-  "scripts": {
-    "build": "nx run zephyr-astro-integration:build",
-    "patch-version": "pnpm version"
-  },
-  "dependencies": {
-    "tslib": "catalog:typescript",
-    "zephyr-agent": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "astro": "^5.16.1",
-    "ts-jest": "catalog:typescript"
-  },
-  "peerDependencies": {
-    "astro": "^4.0.0 || ^5.15.8"
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "zephyr-agent": "workspace:*"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "astro": "catalog:",
+    "typescript": "catalog:typescript",
+    "vite": "catalog:vite8"
+  },
+  "peerDependencies": {
+    "astro": "catalog:peer-compat",
+    "vite": "catalog:peer-compat"
+  },
+  "compatiblePackages": {
+    "schemaVersion": 1,
+    "vite": {
+      "type": "compatible",
+      "versions": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0",
+      "note": "Uses the Vite version provided by Astro."
+    }
   }
 }

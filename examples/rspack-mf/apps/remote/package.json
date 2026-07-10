@@ -1,4 +1,15 @@
 {
   "name": "rspack_mf_remote",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "rspack build --mode production",
+    "serve": "rspack serve --mode development"
+  },
+  "devDependencies": {
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*"
+  }
 }

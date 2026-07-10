@@ -9,17 +9,19 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@module-federation/enhanced": "^0.21.2",
-    "@module-federation/rsbuild-plugin": "^0.21.2",
-    "@rsbuild/core": "^1.6.0",
-    "@rsbuild/plugin-react": "^1.4.1",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
-    "typescript": "^5.9.3",
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@module-federation/rsbuild-plugin": "catalog:module-federation",
+    "@rsbuild/core": "catalog:rsbuild1",
+    "@rsbuild/plugin-react": "catalog:rsbuild1",
+    "@rspack/core": "catalog:rspack",
+    "@swc/helpers": "catalog:swc",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "typescript": "catalog:typescript",
     "zephyr-rsbuild-plugin": "workspace:*"
   },
   "zephyr:dependencies": {

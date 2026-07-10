@@ -1,4 +1,6 @@
-import type { Plugin, PluginOption } from 'vite';
+import type { Plugin, PluginOption } from 'vite' with {
+  'resolution-mode': 'import',
+};
 import type { ModuleFederationOptions } from '../mf-vite-etl/ensure_runtime_plugin';
 
 export interface ViteMFPlugin {

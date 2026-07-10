@@ -6,7 +6,11 @@ import {
   createApplicationUid,
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
-import { applyBaseHrefToAssets } from './ze-basehref-handler';
+import {
+  applyBaseHrefToAssets,
+  applyBaseHrefToPath,
+  normalizeBasePath,
+} from './ze-basehref-handler';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getZephyrAgentVersion } from '../version/zephyr-agent-version';
@@ -40,6 +44,7 @@ export async function createSnapshot(
     email: (await zephyr_engine.application_configuration).email,
     applicationProperties: zephyr_engine.applicationProperties,
     edge_url: (await zephyr_engine.application_configuration).EDGE_URL,
+    address_mode: (await zephyr_engine.application_configuration).ADDRESS_MODE,
     gitProperties: zephyr_engine.gitProperties,
     mfConfig: mfConfig,
   };
@@ -51,6 +56,11 @@ export async function createSnapshot(
     assets,
     zephyr_engine.buildProperties.baseHref
   );
+  const normalizedBaseHref = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
+  const basedEntrypoint =
+    entrypoint && (snapshotType === 'ssr' || zephyr_engine.env.ssr)
+      ? applyBaseHrefToPath(entrypoint, normalizedBaseHref)
+      : entrypoint;
 
   const snapshot: Snapshot = {
     // ZeApplicationProperties
@@ -64,6 +74,7 @@ export async function createSnapshot(
       })
     ),
     domain: options.edge_url,
+    ...(options.address_mode === 'path' && { addressMode: 'path' as const }),
     uid: {
       build: options.buildId,
       app_name: options.applicationProperties.name,
@@ -92,7 +103,7 @@ export async function createSnapshot(
     // Add type field for SSR snapshots
     ...(snapshotType && { type: snapshotType }),
     // Add entrypoint field if provided
-    ...(entrypoint && { entrypoint }),
+    ...(basedEntrypoint && { entrypoint: basedEntrypoint }),
   };
 
   // Set snapshot type if SSR flag is enabled

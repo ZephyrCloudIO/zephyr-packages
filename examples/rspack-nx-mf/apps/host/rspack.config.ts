@@ -1,40 +1,88 @@
-import {
-  NxModuleFederationDevServerPlugin,
-  NxModuleFederationPlugin,
-} from '@nx/module-federation/rspack';
-import { NxAppRspackPlugin } from '@nx/rspack/app-plugin';
-import { NxReactRspackPlugin } from '@nx/rspack/react-plugin';
-import { join } from 'path';
-
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { CopyRspackPlugin, HtmlRspackPlugin, type Configuration } from '@rspack/core';
 import { withZephyr } from 'zephyr-rspack-plugin';
-import config from './module-federation.config';
+import mfConfig from './module-federation.config.ts';
 
-export default withZephyr()({
-  output: {
-    path: join(__dirname, '../../../../dist/examples/rspack-nx-mf/apps/host'),
-    publicPath: 'auto',
-  },
-  devServer: {
-    port: 4200,
-    historyApiFallback: true,
-  },
-  plugins: [
-    new NxAppRspackPlugin({
-      tsConfig: './tsconfig.app.json',
+type RspackConfig = (
+  env: Record<string, unknown>,
+  argv: { mode?: Configuration['mode'] }
+) => Promise<Configuration>;
+
+const configDirectory = dirname(fileURLToPath(import.meta.url));
+
+const config: RspackConfig = (_env, argv) => {
+  const isDev = argv.mode === 'development';
+
+  return withZephyr()({
+    context: configDirectory,
+    entry: {
       main: './src/main.ts',
-      index: './src/index.html',
-      baseHref: '/',
-      assets: ['./src/favicon.ico', './src/assets'],
-      styles: ['./src/styles.css'],
-      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
-      optimization: process.env['NODE_ENV'] === 'production',
-    }),
-    new NxReactRspackPlugin({
-      // Uncomment this line if you don't want to use SVGR
-      // See: https://react-svgr.com/
-      // svgr: false
-    }),
-    new NxModuleFederationPlugin({ config }, { dts: false }),
-    new NxModuleFederationDevServerPlugin({ config }),
-  ],
-});
+    },
+    output: {
+      path: join(configDirectory, 'dist'),
+      publicPath: 'auto',
+      uniqueName: mfConfig.name,
+      filename: isDev ? '[name].js' : '[name].[contenthash].js',
+      chunkFilename: isDev ? '[name].js' : '[name].[contenthash].js',
+      clean: true,
+    },
+    devtool: isDev ? 'source-map' : false,
+    devServer: {
+      port: 4200,
+      historyApiFallback: true,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+    },
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    },
+    experiments: {
+      css: true,
+    },
+    module: {
+      rules: [
+        {
+          test: /\.[jt]sx?$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev },
+                },
+                target: 'es2020',
+              },
+            },
+          },
+        },
+        {
+          test: /\.css$/,
+          type: 'css/auto',
+        },
+        {
+          test: /\.(png|jpe?g|gif|webp|svg|ico)$/,
+          type: 'asset',
+        },
+      ],
+    },
+    plugins: [
+      new ModuleFederationPlugin(mfConfig),
+      new HtmlRspackPlugin({
+        template: './src/index.html',
+      }),
+      new CopyRspackPlugin({
+        patterns: [
+          { from: 'src/favicon.ico', to: '.' },
+          { from: 'src/assets', to: 'assets', noErrorOnMissing: true },
+        ],
+      }),
+    ],
+  });
+};
+
+export default config;

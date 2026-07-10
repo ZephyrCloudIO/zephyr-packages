@@ -24,6 +24,14 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
           case 'buildSuccess':
             await onBuildSuccess({ zephyr_engine_defer, event, hooks: options?.hooks });
             break;
+          case 'buildFailure':
+            {
+              const zephyr_engine = await zephyr_engine_defer;
+              if (zephyr_engine.hasActiveBuild) {
+                zephyr_engine.build_failed();
+              }
+            }
+            break;
           default:
             // ignore unknown build hooks
             break;

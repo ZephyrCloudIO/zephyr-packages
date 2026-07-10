@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { objHasKeys } from './object-has-keys';
 

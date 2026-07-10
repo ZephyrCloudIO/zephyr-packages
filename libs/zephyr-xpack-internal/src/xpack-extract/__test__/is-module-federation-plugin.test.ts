@@ -1,8 +1,10 @@
-import { describe, expect } from '@jest/globals';
+import { it } from '@rstest/core';
+
+import { describe, expect } from '@rstest/core';
 import { isModuleFederationPlugin } from '../is-module-federation-plugin';
 import type { XPackConfiguration } from '../../xpack.types';
 
-// Jest unit tests for isModuleFederationPlugin
+// Rstest unit tests for isModuleFederationPlugin
 type __webpack_plugin__ = NonNullable<XPackConfiguration<unknown>['plugins']>[number];
 
 /** @private type Conversion for testing */
@@ -10,7 +12,7 @@ function __to_plugin__(plugin: unknown): __webpack_plugin__ {
   return plugin as unknown as __webpack_plugin__;
 }
 
-// Jest unit tests for isModuleFederationPlugin
+// Rstest unit tests for isModuleFederationPlugin
 
 describe('isModuleFederationPlugin', () => {
   it('should return false for undefined input', () => {

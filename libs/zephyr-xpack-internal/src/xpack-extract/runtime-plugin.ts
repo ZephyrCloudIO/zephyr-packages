@@ -35,10 +35,12 @@ function getGlobalManifestCache(): Map<string, Promise<ZephyrManifest | undefine
 }
 
 /**
- * Attempts to determine the base URL of the script that loaded this module. Uses
- * document.currentScript to detect the script origin in browser environments.
+ * Attempts to determine the deployment root of the script that loaded this module.
+ * `zephyr-manifest.json` is emitted at the deployment root, so the base must not depend
+ * on where the entry chunk is nested (e.g. rsbuild emits it under `static/js/`).
  *
- * @returns Base URL (protocol + host) or empty string if unable to determine
+ * Path-addressed deployments keep the reserved `/__zephyr/v1/{v|t|e}/<route-key>` route
+ * base; hostname-mode deployments resolve to the origin.
  */
 function getScriptBaseUrl(): string {
   // Try document.currentScript (works in browsers with <script> tags)
@@ -47,7 +49,8 @@ function getScriptBaseUrl(): string {
       const src = (document.currentScript as HTMLScriptElement).src;
       if (src) {
         const url = new URL(src);
-        return `${url.protocol}//${url.host}`;
+        const routeBase = /^\/__zephyr\/v1\/[vte]\/[^/]+/.exec(url.pathname);
+        return routeBase ? `${url.origin}${routeBase[0]}` : url.origin;
       }
     } catch {
       // Failed to parse URL, fall through to default

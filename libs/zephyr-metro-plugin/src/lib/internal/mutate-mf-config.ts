@@ -2,22 +2,11 @@ import type { ZephyrEngine, ZeResolvedDependency } from 'zephyr-agent';
 import { ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 
-export interface MutateMfConfigOptions {
-  delegate_module_template?: () => unknown;
-}
-
 export function mutateMfConfig(
-  zephyr_engine: ZephyrEngine,
+  _zephyr_engine: ZephyrEngine,
   config: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'],
-  resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  options?: MutateMfConfigOptions
+  resolvedDependencyPairs: ZeResolvedDependency[] | null
 ) {
-  // Lazy load zephyr-xpack-internal to avoid static import
-  const {
-    createMfRuntimeCode,
-    xpack_delegate_module_template,
-  } = require('zephyr-xpack-internal');
-  const template = options?.delegate_module_template || xpack_delegate_module_template;
   if (!resolvedDependencyPairs?.length) {
     ze_log.mf(`No resolved dependency pairs found, skipping...`);
     return;
@@ -87,8 +76,12 @@ export function mutateMfConfig(
     resolved_dep.name = remote_name;
 
     if (remotes[remote_name]) {
-      remotes[remote_name] = createMfRuntimeCode(zephyr_engine, resolved_dep, template);
-      ze_log.mf(`Setting runtime code for remote: ${remotes}`);
+      // Metro's `init-host.js` generator quotes remote values as strings. The
+      // webpack-style `createMfRuntimeCode` output (a multi-line promise
+      // expression) breaks that serializer with "Unterminated string
+      // constant". Metro accepts the plain `name@url` form directly.
+      remotes[remote_name] = resolved_dep.remote_entry_url;
+      ze_log.mf(`Rewrote remote '${remote_name}' → ${resolved_dep.remote_entry_url}`);
     }
   });
 

@@ -3,6 +3,7 @@ import {
   ze_api_gateway,
   type ZephyrBuildStats,
 } from 'zephyr-edge-contract';
+import { createHash } from 'node:crypto';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
@@ -16,6 +17,9 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
   const token = await getToken();
 
   const url = new URL(ze_api_gateway.build_stats, ZE_API_ENDPOINT());
+  const idempotencyKey = createHash('sha256')
+    .update(`${dashData.id}\0${dashData.app.buildId}`)
+    .digest('hex');
 
   const [ok, cause, res] = await makeRequest<{ status: string; targets?: string[] }>(
     url,
@@ -25,6 +29,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
         Accept: 'application/json',
+        'Idempotency-Key': idempotencyKey,
       },
     },
     JSON.stringify(dashData)

@@ -55,7 +55,15 @@ export async function deployCommand(options: DeployOptions): Promise<void> {
   if (verbose) {
     logFn('info', 'Extracting assets from directory...');
   }
-  const assetsMap = await extractAssetsFromDirectory(directoryPath);
+  let assetsMap;
+  try {
+    assetsMap = await extractAssetsFromDirectory(directoryPath);
+  } catch (error: unknown) {
+    if (zephyr_engine.hasActiveBuild) {
+      zephyr_engine.build_failed();
+    }
+    throw error;
+  }
 
   if (verbose) {
     const assetCount = Object.keys(assetsMap).length;

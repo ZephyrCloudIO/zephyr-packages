@@ -27,11 +27,6 @@
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!**/.vscode/**/*",
-      "!**/node_modules/**/*",
-      "!**/dist/**/*"
-    ]
+    "includes": ["**", "!**/.vscode/**/*", "!**/node_modules/**/*", "!**/dist/**/*"]
   }
 }

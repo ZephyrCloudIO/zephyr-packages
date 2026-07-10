@@ -390,9 +390,9 @@ Please check your network connection and try again.
    *
    * @example
    *   {
-   *     "statusCode": 401,
-   *     "timestamp": "2024-08-23T02:21:48.873Z",
-   *     "path": "/v2/builder-packages-api/application-config?application-uid=home-spa.federated_apps.zmzlois"
+   *   "statusCode": 401,
+   *   "timestamp": "2024-08-23T02:21:48.873Z",
+   *   "path": "/v2/builder-packages-api/application-config?application-uid=home-spa.federated_apps.zmzlois"
    *   }
    */
   ERR_NO_RESPONSE_FOR_APP_CONFIG: {
@@ -434,6 +434,28 @@ Please check your network connection and try again.
     kind: 'build',
   },
 
+  ERR_CI_TOKEN_AUTH: {
+    id: '037',
+    message: `
+ZE_CI_TOKEN could not be exchanged for a Zephyr access token.
+
+Zephyr detected this CI actor:
+- provider: {{ provider }}
+- username: {{ username }}
+- identity source: {{ source }}
+- issuer: {{ issuer }}
+
+Link this CI actor's Git provider account in Zephyr Cloud, then rerun the workflow. Zephyr uses linked Git provider identities to map provider-native CI actor data, such as GitHub actor IDs or GitLab user IDs/emails, to a Zephyr user.
+
+Also check:
+- ZE_CI_TOKEN is the repository or organization secret created for this Zephyr workspace.
+- The workflow checks out the Git repository with origin and commit history.
+
+{{ details }}
+`,
+    kind: 'build',
+  },
+
   ERR_RESOLVE_REMOTES: {
     id: '001',
     message: `
@@ -465,6 +487,14 @@ Expected behavior:
 Application UID format: [app_name].[project_name].[org_name]
 Example: "my-remote.my-project.my-org"
 
+`,
+    kind: 'config',
+  },
+
+  ERR_ZEPHYR_CONFIG_NOT_VALID: {
+    id: '002',
+    message: `
+Invalid Zephyr config: {{ message }}
 `,
     kind: 'config',
   },

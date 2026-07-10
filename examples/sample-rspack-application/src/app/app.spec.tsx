@@ -1,6 +1,10 @@
-import { render } from '@testing-library/react';
+import { afterEach, describe, expect, it } from '@rstest/core';
+
+import { cleanup, render } from '@testing-library/react';
 
 import App from './app';
+
+afterEach(cleanup);
 
 describe('App', () => {
   it('should render successfully', () => {

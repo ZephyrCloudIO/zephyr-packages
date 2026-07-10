@@ -1,14 +1,12 @@
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const Dotenv = require('dotenv-webpack');
-const { withZephyr } = require('../../../libs/zephyr-webpack-plugin/dist');
+const { withZephyr } = require('zephyr-webpack-plugin');
 const { ModuleFederationPlugin } = require('@module-federation/enhanced/webpack');
-
-const deps = require('./package.json').dependencies;
 
 const printCompilationMessage = require('./compilation.config.js');
 
-module.exports = (_, argv) =>
+module.exports = (_, _argv) =>
   withZephyr()({
     output: {
       publicPath: 'auto',

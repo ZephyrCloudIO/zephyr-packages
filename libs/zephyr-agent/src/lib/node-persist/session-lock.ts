@@ -4,7 +4,7 @@ import { setInterval } from 'node:timers/promises';
 import { checkSync, lockSync } from 'proper-lockfile';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS } from '../auth/auth-flags';
 import { ze_log } from '../logging';
-import { ZE_SESSION_LOCK } from './storage-keys';
+import { ensurePrivateFilePermissions, ZE_SESSION_LOCK } from './storage-keys';
 
 // 72 bits of entropy is more than enough (80b to have 50% collisions)
 const SESSION_LENGTH = 9;
@@ -30,6 +30,7 @@ export function getSessionKey(): SessionLock {
   // Another process has the lock = concurrent login is in progress,
   // use that session key instead
   if (!unlock) {
+    ensurePrivateFilePermissions(ZE_SESSION_LOCK);
     ze_log.misc('Lock is already held by another process, using the same session key');
     session = fs.readFileSync(ZE_SESSION_LOCK);
 
@@ -41,7 +42,8 @@ export function getSessionKey(): SessionLock {
   } else {
     ze_log.misc('Lock acquired, writing session key to lockfile');
     // read and write as array buffer
-    fs.writeFileSync(ZE_SESSION_LOCK, session, { flush: true });
+    fs.writeFileSync(ZE_SESSION_LOCK, session, { flush: true, mode: 0o600 });
+    ensurePrivateFilePermissions(ZE_SESSION_LOCK);
   }
 
   return {
@@ -73,7 +75,20 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
 
     // Creates the file if it does not exist
     if (error.code === 'ENOENT' && createIfNotExists) {
-      fs.writeFileSync(ZE_SESSION_LOCK, '', 'utf8');
+      try {
+        fs.writeFileSync(ZE_SESSION_LOCK, '', {
+          encoding: 'utf8',
+          flag: 'wx',
+          mode: 0o600,
+        });
+      } catch (creationError) {
+        // A concurrent process may create the lock target between lockSync and this
+        // exclusive write. Retry against that file instead of truncating it.
+        if ((creationError as NodeJS.ErrnoException).code !== 'EEXIST') {
+          throw creationError;
+        }
+      }
+      ensurePrivateFilePermissions(ZE_SESSION_LOCK);
       return safeLockSync(false);
     }
 

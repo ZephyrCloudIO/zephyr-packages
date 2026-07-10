@@ -86,8 +86,7 @@ const ssrMeta = useState('ssrMeta', () => ({
     sans-serif;
   background:
     radial-gradient(1200px circle at 10% 10%, #101244 0%, transparent 55%),
-    radial-gradient(900px circle at 85% 15%, #0b2a4d 0%, transparent 55%),
-    #050615;
+    radial-gradient(900px circle at 85% 15%, #0b2a4d 0%, transparent 55%), #050615;
   color: #e2e8f0;
 }
 
@@ -207,8 +206,8 @@ dt {
 dd {
   margin: 0;
   font-family:
-    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    'Liberation Mono', 'Courier New', monospace;
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-size: 0.9rem;
   color: #f8fafc;
   word-break: break-all;

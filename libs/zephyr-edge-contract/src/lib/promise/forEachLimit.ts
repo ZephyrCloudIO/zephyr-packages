@@ -9,7 +9,7 @@ export async function forEachLimit<T>(
   tasks: Array<() => Promise<T>>,
   batchSize: number
 ): Promise<T[]> {
-  const results: T[] = new Array(tasks.length);
+  const results = Array.from({ length: tasks.length }) as T[];
   let currentIndex = 0;
 
   // Worker function: runs until there are no more tasks left.

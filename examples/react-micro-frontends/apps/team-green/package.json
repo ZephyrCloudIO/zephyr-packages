@@ -1,11 +1,21 @@
 {
   "name": "team-green",
   "version": "3.1.0",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/ZephyrCloudIO/zephyr-packages.git"
   },
-  "private": true,
+  "scripts": {
+    "build": "rspack build --mode production",
+    "serve": "rspack serve --mode development"
+  },
+  "devDependencies": {
+    "@module-federation/enhanced": "catalog:module-federation",
+    "@rspack/cli": "catalog:rspack",
+    "@rspack/core": "catalog:rspack",
+    "zephyr-rspack-plugin": "workspace:*"
+  },
   "peerDependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18"

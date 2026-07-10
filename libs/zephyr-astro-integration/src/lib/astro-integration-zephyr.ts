@@ -1,4 +1,9 @@
-import type { AstroIntegration, HookParameters } from 'astro';
+import type { AstroIntegration, HookParameters } from 'astro' with {
+  'resolution-mode': 'import',
+};
+import type { Plugin, ResolvedConfig } from 'vite' with {
+  'resolution-mode': 'import',
+};
 import { fileURLToPath } from 'node:url';
 import {
   handleGlobalError,
@@ -17,27 +22,33 @@ export interface ZephyrAstroOptions {
   hooks?: ZephyrBuildHooks;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options?.hooks;
   let cachedSpecifier: string | undefined;
 
-  const viteZePublicPlugin = {
+  const getEnvSpecifier = async (): Promise<string> => {
+    if (!cachedSpecifier) {
+      const zephyrEngine = await zephyr_engine_defer;
+      cachedSpecifier = `env:vars:${zephyrEngine.application_uid}`;
+    }
+    return cachedSpecifier;
+  };
+
+  const viteZePublicPlugin: Plugin = {
     name: 'with-zephyr-astro-env',
+    // Run before Vite replaces import.meta.env so ZE_PUBLIC_* reads stay dynamic.
     enforce: 'pre' as const,
-    configResolved: async (config: { mode?: string; root?: string }) => {
+    configResolved: async (config: ResolvedConfig) => {
+      // Vite 8 is ESM-only. Load its runtime API natively so this integration can
+      // continue publishing both CommonJS and ESM entrypoints.
+      const vite = await import('vite');
       try {
-        const vite = require('vite') as {
-          loadEnv?: (
-            mode: string,
-            envDir: string,
-            prefixes: string
-          ) => Record<string, string>;
-        };
-        const loaded =
-          typeof vite.loadEnv === 'function'
-            ? vite.loadEnv(config.mode || 'production', config.root || process.cwd(), '')
-            : {};
+        const loaded = vite.loadEnv(config.mode || 'production', config.root, '');
 
         for (const [k, v] of Object.entries(loaded)) {
           if (
@@ -48,17 +59,14 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
             process.env[k] = v;
           }
         }
-      } catch {
-        // ignore if vite loadEnv is unavailable
+      } catch (error) {
+        handleGlobalError(error);
       }
     },
     resolveId: async (source: string) => {
       try {
-        const zephyr_engine = await zephyr_engine_defer;
-        if (!cachedSpecifier) {
-          cachedSpecifier = `env:vars:${zephyr_engine.application_uid}`;
-        }
-        if (source === cachedSpecifier) {
+        const specifier = await getEnvSpecifier();
+        if (source === specifier) {
           if (process.env['NODE_ENV'] === 'development') {
             return '/zephyr-manifest.json';
           }
@@ -69,29 +77,48 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
       }
       return null;
     },
-    transform: async (code: string, id: string) => {
-      try {
-        if (id.includes('node_modules')) {
-          return null;
+    transform: {
+      order: 'post',
+      filter: {
+        id: /\.(mjs|cjs|js|ts|jsx|tsx)(?:$|\?)/,
+      },
+      handler: async (code: string, id: string) => {
+        try {
+          if (id.includes('node_modules')) {
+            return null;
+          }
+
+          const specifier = await getEnvSpecifier();
+          const result = rewriteEnvReadsToVirtualModule(String(code), specifier);
+          if (result.code !== code) {
+            return {
+              code: result.code,
+              map: null,
+            };
+          }
+        } catch (error) {
+          handleGlobalError(error);
         }
 
-        const zephyr_engine = await zephyr_engine_defer;
-        if (!cachedSpecifier) {
-          cachedSpecifier = `env:vars:${zephyr_engine.application_uid}`;
-        }
+        return null;
+      },
+    },
+    renderChunk: {
+      order: 'post',
+      handler(code) {
+        if (!cachedSpecifier) return null;
 
-        const res = rewriteEnvReadsToVirtualModule(String(code), cachedSpecifier);
-        if (res && typeof res.code === 'string' && res.code !== code) {
-          return {
-            code: res.code,
-            map: null,
-          };
-        }
-      } catch (error) {
-        handleGlobalError(error);
-      }
-
-      return null;
+        // Vite can omit the JSON attribute when it re-emits an external import.
+        const importWithoutAttribute = new RegExp(
+          `import\\s+([^\\s]+)\\s+from\\s*['"]${escapeRegExp(cachedSpecifier)}['"](?!\\s+with\\s*\\{)`,
+          'g'
+        );
+        const nextCode = code.replace(
+          importWithoutAttribute,
+          `import $1 from '${cachedSpecifier}' with { type: 'json' }`
+        );
+        return nextCode === code ? null : { code: nextCode, map: null };
+      },
     },
   };
 
@@ -118,8 +145,12 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
         dir,
         ...params
       }: HookParameters<'astro:build:done'>) => {
+        let zephyr_engine: ZephyrEngine | undefined;
+        let buildInProgress = false;
         try {
-          const zephyr_engine = await zephyr_engine_defer;
+          zephyr_engine = await zephyr_engine_defer;
+          // create() has already allocated generation zero.
+          buildInProgress = true;
 
           // Convert URL to file system path
           const outputPath = fileURLToPath(dir);
@@ -142,9 +173,14 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
           });
 
           // Mark build as finished
+          buildInProgress = false;
           await zephyr_engine.build_finished();
         } catch (error) {
           handleGlobalError(error);
+        } finally {
+          if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+            zephyr_engine?.build_failed();
+          }
         }
       },
     },

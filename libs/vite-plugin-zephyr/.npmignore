@@ -1,5 +1,5 @@
 src
 tsconfig.*
-jest.config.ts
+rstest.config.*
 project.json
 .eslintrc.json

@@ -21,9 +21,7 @@ export default async function Stories({ storyIds, page = 1 }) {
     <div>
       {storyIds.slice(offset, offset + limit).map((id, i) => (
         <div key={id} className={styles.item}>
-          {null != offset ? (
-            <span className={styles.count}>{i + offset + 1}</span>
-          ) : null}
+          {null != offset ? <span className={styles.count}>{i + offset + 1}</span> : null}
           <StoryWithData id={id} key={id} />
         </div>
       ))}

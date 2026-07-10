@@ -7,6 +7,11 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { stripAnsi } from 'zephyr-edge-contract';
 import { ZE_PATH } from '../node-persist/storage-keys';
+import {
+  redactString,
+  safeStringifyForLogging,
+  sanitizeForLogging,
+} from '../security/redaction';
 
 let currentRunDir: string | null = null;
 let runStartTime: number | null = null;
@@ -48,7 +53,7 @@ export function initializeLogRun(): string {
     try {
       mkdirSync(currentRunDir, { recursive: true });
     } catch (error) {
-      console.error(`Failed to create log directory: ${error}`);
+      console.error(redactString(`Failed to create log directory: ${String(error)}`));
     }
   }
 
@@ -134,7 +139,7 @@ export function writeLogToFile(logData: StructuredLogData): void {
   const logFilePath = join(runDir, filename);
 
   // Clean message (remove ANSI codes)
-  const cleanMsg = stripAnsi(logData.message);
+  const cleanMsg = redactString(stripAnsi(logData.message));
   const { message, payload } = extractStructuredData(cleanMsg);
 
   const logEntry: Record<string, unknown> = {
@@ -147,28 +152,28 @@ export function writeLogToFile(logData: StructuredLogData): void {
     logEntry['action'] = logData.action;
   }
   if (payload) {
-    logEntry['payload'] = payload;
+    logEntry['payload'] = sanitizeForLogging(payload);
   }
   if (logData.data) {
-    logEntry['data'] = logData.data;
-  }
-
-  let logLine: string;
-  if (format === 'toon') {
-    // TOON format - encode the object and add newline
-    // Dynamic import to avoid issues with ESM-only package in tests due to Jest not supporting ESM.
-    const { encode } = require('@toon-format/toon');
-    logLine = encode(logEntry) + '\n';
-  } else {
-    // JSON format - one object per line
-    logLine = JSON.stringify(logEntry) + '\n';
+    logEntry['data'] = sanitizeForLogging(logData.data);
   }
 
   try {
+    let logLine: string;
+    if (format === 'toon') {
+      // TOON format - encode the object and add newline
+      // Dynamic import keeps the ESM-only package out of CommonJS initialization paths.
+      const { encode } = require('@toon-format/toon');
+      logLine = encode(sanitizeForLogging(logEntry)) + '\n';
+    } else {
+      // JSON format - one object per line
+      logLine = safeStringifyForLogging(logEntry) + '\n';
+    }
+
     appendFileSync(logFilePath, logLine, 'utf8');
   } catch (error) {
     // Fail silently to avoid disrupting the build
-    console.error(`Failed to write to log file: ${error}`);
+    console.error(redactString(`Failed to write to log file: ${String(error)}`));
   }
 }
 
@@ -193,9 +198,9 @@ export function writeRunSummary(data: {
   };
 
   try {
-    appendFileSync(summaryPath, JSON.stringify(summary, null, 2), 'utf8');
+    appendFileSync(summaryPath, safeStringifyForLogging(summary, 2), 'utf8');
   } catch (error) {
-    console.error(`Failed to write summary file: ${error}`);
+    console.error(redactString(`Failed to write summary file: ${String(error)}`));
   }
 }
 

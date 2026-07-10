@@ -52,9 +52,10 @@ async function _zephyr_configuration(
 
   _zephyrOptions?: ZephyrRepackPluginOptions
 ): Promise<Configuration> {
+  let zephyr_engine: ZephyrEngine | undefined;
   try {
     // create instance of ZephyrEngine to track the application
-    const zephyr_engine = await ZephyrEngine.create({
+    zephyr_engine = await ZephyrEngine.create({
       builder: 'repack',
       context: config.context,
     });
@@ -96,6 +97,9 @@ async function _zephyr_configuration(
       })
     );
   } catch (error) {
+    if (zephyr_engine?.hasActiveBuild !== false) {
+      zephyr_engine?.build_failed();
+    }
     handleGlobalError(error);
   }
 

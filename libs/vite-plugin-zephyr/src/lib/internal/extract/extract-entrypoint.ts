@@ -1,4 +1,4 @@
-import type { ResolvedConfig } from 'vite';
+import type { ResolvedConfig } from 'vite' with { 'resolution-mode': 'import' };
 import { ze_log } from 'zephyr-agent';
 import { normalizeEntrypoint } from '../utils/normalize-entrypoint';
 

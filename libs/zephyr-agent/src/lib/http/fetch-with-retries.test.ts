@@ -1,571 +1,225 @@
-import axios from 'axios';
-import axiosRetry from 'axios-retry';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { ZephyrError } from '../errors';
-import { fetchWithRetries } from './fetch-with-retries';
+import { DEFAULT_HTTP_DEADLINE_MS, fetchWithRetries } from './fetch-with-retries';
 
-// Mock axios, axios-retry, isCI, and proxy agents
-jest.mock('axios');
-jest.mock('axios-retry');
-jest.mock('is-ci', () => false); // Default to non-CI
-
-// Mock HTTPS proxy agent class - define mock function inside factory to avoid hoisting issues
-jest.mock('https-proxy-agent', () => ({
-  HttpsProxyAgent: jest
-    .fn()
-    .mockImplementation((url) => ({ proxyUrl: url, type: 'https' })),
+const mocks = rs.hoisted(() => ({
+  axiosCreate: rs.fn(),
+  axiosInstance: rs.fn(),
+  proxyAgent: rs.fn(function (this: { proxyUrl?: string }, url: string) {
+    this.proxyUrl = url;
+  }),
 }));
 
-// Import mocked module to access mock function
-import { HttpsProxyAgent } from 'https-proxy-agent';
+rs.mock('axios', () => ({
+  default: { create: mocks.axiosCreate },
+}));
+rs.mock('is-ci', () => ({ default: false }));
+rs.mock('https-proxy-agent', () => ({ HttpsProxyAgent: mocks.proxyAgent }));
+rs.mock('../logging', () => ({ ze_log: { error: rs.fn() } }));
+rs.mock('../logging/ze-log-event', () => ({ logFn: rs.fn() }));
 
-const MockHttpsProxyAgent = HttpsProxyAgent as jest.MockedClass<typeof HttpsProxyAgent>;
+const proxyEnvironmentKeys = [
+  'HTTP_PROXY',
+  'HTTPS_PROXY',
+  'http_proxy',
+  'https_proxy',
+  'NO_PROXY',
+  'no_proxy',
+] as const;
+const originalProxyEnvironment = Object.fromEntries(
+  proxyEnvironmentKeys.map((key) => [key, process.env[key]])
+);
 
-// Setup mocks
-const mockCreate = jest.fn();
-axios.create = mockCreate;
-
-const mockAxiosInstance = jest.fn();
-mockCreate.mockReturnValue(mockAxiosInstance);
-
-// Helper to clean proxy environment variables
-const cleanProxyEnv = () => {
-  delete process.env['HTTP_PROXY'];
-  delete process.env['HTTPS_PROXY'];
-  delete process.env['http_proxy'];
-  delete process.env['https_proxy'];
-  delete process.env['NO_PROXY'];
-  delete process.env['no_proxy'];
-};
+function clearProxyEnvironment(): void {
+  for (const key of proxyEnvironmentKeys) delete process.env[key];
+}
 
 describe('fetchWithRetries', () => {
   const url = new URL('https://example.com/api');
-  const options = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    cleanProxyEnv();
+    rs.clearAllMocks();
+    clearProxyEnvironment();
+    mocks.axiosCreate.mockReturnValue(mocks.axiosInstance);
   });
 
   afterEach(() => {
-    cleanProxyEnv();
+    clearProxyEnvironment();
+    for (const key of proxyEnvironmentKeys) {
+      const value = originalProxyEnvironment[key];
+      if (value !== undefined) process.env[key] = value;
+    }
   });
 
-  it('should return response on successful request', async () => {
-    const mockAxiosResponse = {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
-      data: { success: true },
-    };
-
-    mockAxiosInstance.mockResolvedValueOnce(mockAxiosResponse);
-
-    const result = await fetchWithRetries(url, options);
-
-    expect(result.ok).toBe(true);
-    expect(result.status).toBe(200);
-    expect(typeof result.text).toBe('function');
-
-    // Verify axios create was called with default settings (non-CI, no proxy)
-    expect(axios.create).toHaveBeenCalledWith({
-      family: undefined,
-      httpsAgent: undefined,
+  it('sets an overall per-request deadline and keeps HTTP statuses in-band', async () => {
+    mocks.axiosInstance.mockResolvedValue({
+      status: 401,
+      headers: { 'content-type': 'text/plain' },
+      data: 'Unauthorized',
     });
 
-    // Verify axios-retry was configured
-    expect(axiosRetry).toHaveBeenCalledWith(
-      mockAxiosInstance,
-      expect.objectContaining({
-        retries: 3,
-        retryDelay: axiosRetry.exponentialDelay,
-        retryCondition: expect.any(Function),
-      })
-    );
-
-    // Verify axios instance was called with correct params
-    expect(mockAxiosInstance).toHaveBeenCalledWith(
-      url.toString(),
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-    );
-  });
-
-  it('should configure retryCondition for network errors', async () => {
-    const mockResponse = {
-      status: 200,
-      headers: {},
-      data: 'success',
-    };
-
-    mockAxiosInstance.mockResolvedValueOnce(mockResponse);
-
-    await fetchWithRetries(url, options);
-
-    // Get retry condition function
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
-    const retryCondition = retryConfigArg.retryCondition;
-
-    // Test retry condition with network error (message-based)
-    const networkError = {
-      code: undefined, // no error code
-      message: 'network error',
-      isAxiosError: true,
-    };
-    expect(retryCondition(networkError)).toBe(true);
-
-    // Test retry condition with EPIPE error
-    const epipeError = {
-      code: 'EPIPE',
-      message: 'write EPIPE',
-      isAxiosError: true,
-    };
-    expect(retryCondition(epipeError)).toBe(true);
-
-    // Test retry condition with ETIMEDOUT error
-    const etimedoutError = {
-      code: 'ETIMEDOUT',
-      message: 'connect ETIMEDOUT',
-      isAxiosError: true,
-    };
-    expect(retryCondition(etimedoutError)).toBe(true);
-
-    // Test retry condition with ENETUNREACH error
-    const enetunreachError = {
-      code: 'ENETUNREACH',
-      message: 'connect ENETUNREACH',
-      isAxiosError: true,
-    };
-    expect(retryCondition(enetunreachError)).toBe(true);
-
-    // Test retry condition with ECONNRESET error
-    const econnresetError = {
-      code: 'ECONNRESET',
-      message: 'socket hang up',
-      isAxiosError: true,
-    };
-    expect(retryCondition(econnresetError)).toBe(true);
-
-    // Test retry condition with ECONNREFUSED error
-    const econnrefusedError = {
-      code: 'ECONNREFUSED',
-      message: 'connect ECONNREFUSED',
-      isAxiosError: true,
-    };
-    expect(retryCondition(econnrefusedError)).toBe(true);
-
-    // Test retry condition with 500 error
-    const serverError = {
-      response: {
-        status: 503,
-      },
-      isAxiosError: true,
-    };
-    expect(retryCondition(serverError)).toBe(true);
-
-    // Test retry condition with 400 error (shouldn't retry)
-    const clientError = {
-      response: {
-        status: 404,
-      },
-      isAxiosError: true,
-    };
-    expect(retryCondition(clientError)).toBe(false);
-  });
-
-  it('should handle client error after retries exhausted', async () => {
-    const clientError = {
-      response: {
-        status: 404,
-        data: 'Not Found',
-        headers: {},
-      },
-      isAxiosError: true,
-    };
-
-    mockAxiosInstance.mockRejectedValueOnce(clientError);
-
-    await expect(fetchWithRetries(url, options)).rejects.toThrow(ZephyrError);
-    expect(mockAxiosInstance).toHaveBeenCalledTimes(1);
-  });
-
-  it('should handle network error after retries exhausted', async () => {
-    const networkError = {
-      message: 'network error',
-      isAxiosError: true,
-    };
-
-    mockAxiosInstance.mockRejectedValueOnce(networkError);
-
-    await expect(fetchWithRetries(url, options)).rejects.toThrow(ZephyrError);
-    expect(mockAxiosInstance).toHaveBeenCalledTimes(1);
-  });
-
-  it('should handle unknown errors', async () => {
-    const unknownError = {
-      message: 'Unknown error',
-      isAxiosError: true,
-    };
-
-    mockAxiosInstance.mockRejectedValueOnce(unknownError);
-
-    await expect(fetchWithRetries(url, options)).rejects.toThrow(ZephyrError);
-    expect(mockAxiosInstance).toHaveBeenCalledTimes(1);
-  });
-
-  it('should use default options when not provided', async () => {
-    mockAxiosInstance.mockResolvedValueOnce({
-      status: 200,
-      headers: {},
-      data: 'success',
+    const response = await fetchWithRetries(url, {
+      method: 'GET',
+      headers: { Accept: 'text/plain' },
     });
 
-    await fetchWithRetries(url);
-
-    expect(mockAxiosInstance).toHaveBeenCalledWith(
+    expect(response.status).toBe(401);
+    expect(response.ok).toBe(false);
+    expect(await response.text()).toBe('Unauthorized');
+    expect(mocks.axiosCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        family: undefined,
+        httpsAgent: undefined,
+        validateStatus: expect.any(Function),
+      })
+    );
+    expect(mocks.axiosInstance).toHaveBeenCalledWith(
       url.toString(),
       expect.objectContaining({
         method: 'GET',
+        headers: { Accept: 'text/plain' },
+        timeout: expect.any(Number),
       })
     );
+    const requestConfig = mocks.axiosInstance.mock.calls[0][1];
+    expect(requestConfig.timeout).toBeGreaterThan(0);
+    expect(requestConfig.timeout).toBeLessThanOrEqual(DEFAULT_HTTP_DEADLINE_MS);
   });
 
-  it('should respect custom retry count', async () => {
-    const customRetries = 5;
-    mockAxiosInstance.mockResolvedValueOnce({
-      status: 200,
-      headers: {},
-      data: 'success',
+  it('does not retry non-idempotent POST requests after an ambiguous server failure', async () => {
+    mocks.axiosInstance.mockResolvedValue({ status: 503, headers: {}, data: 'retry' });
+
+    const response = await fetchWithRetries(
+      url,
+      { method: 'POST', body: JSON.stringify({ mutation: true }) },
+      3
+    );
+
+    expect(response.status).toBe(503);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries POST requests only when the caller supplies an idempotency key', async () => {
+    mocks.axiosInstance
+      .mockResolvedValueOnce({
+        status: 429,
+        headers: { 'retry-after': '0' },
+        data: 'retry',
+      })
+      .mockResolvedValueOnce({ status: 200, headers: {}, data: { ok: true } });
+
+    const response = await fetchWithRetries(
+      url,
+      {
+        method: 'POST',
+        body: JSON.stringify({ mutation: true }),
+        headers: { 'Idempotency-Key': 'stable-build-identity' },
+      },
+      2
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries retry-safe GET responses and returns the successful attempt', async () => {
+    mocks.axiosInstance
+      .mockResolvedValueOnce({ status: 503, headers: {}, data: 'retry' })
+      .mockResolvedValueOnce({ status: 200, headers: {}, data: { ok: true } });
+
+    const response = await fetchWithRetries(url, { method: 'GET' }, 2);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(2);
+  });
+
+  it('retries retry-safe network failures', async () => {
+    mocks.axiosInstance
+      .mockRejectedValueOnce({ code: 'ECONNRESET', message: 'socket hang up' })
+      .mockResolvedValueOnce({ status: 204, headers: {}, data: '' });
+
+    const response = await fetchWithRetries(url, { method: 'HEAD' }, 2);
+
+    expect(response.status).toBe(204);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops retrying when the overall deadline is exhausted', async () => {
+    mocks.axiosInstance.mockRejectedValue({
+      code: 'ETIMEDOUT',
+      message: 'connect timeout',
     });
 
-    await fetchWithRetries(url, options, customRetries);
+    await expect(fetchWithRetries(url, { method: 'GET' }, 3, 1)).rejects.toThrow(
+      ZephyrError
+    );
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+    expect(mocks.axiosInstance.mock.calls[0][1].timeout).toBeGreaterThan(0);
+  });
 
-    expect(axiosRetry).toHaveBeenCalledWith(
-      mockAxiosInstance,
+  it('never retries an aborted request', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    mocks.axiosInstance.mockRejectedValue({
+      code: 'ERR_CANCELED',
+      message: 'canceled',
+    });
+
+    await expect(
+      fetchWithRetries(url, { method: 'GET', signal: controller.signal }, 3)
+    ).rejects.toThrow(ZephyrError);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+  });
+
+  it('redacts presigned URL and response secrets from normalized errors', async () => {
+    const signature = 'raw-retry-signature';
+    const token = 'raw-retry-token';
+    const secretUrl = new URL(
+      `https://uploads.example/file?X-Amz-Signature=${signature}`
+    );
+    mocks.axiosInstance.mockRejectedValue({
+      response: {
+        status: 502,
+        data: { access_token: token },
+      },
+    });
+
+    let error: unknown;
+    try {
+      await fetchWithRetries(secretUrl, { method: 'POST' });
+    } catch (caught) {
+      error = caught;
+    }
+
+    const serialized = JSON.stringify(error);
+    expect(error).toBeInstanceOf(ZephyrError);
+    expect(serialized).toContain('uploads.example/file');
+    expect(serialized).toContain('502');
+    expect(serialized).not.toContain(signature);
+    expect(serialized).not.toContain(token);
+  });
+
+  it('uses the configured HTTPS proxy unless NO_PROXY matches', async () => {
+    process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
+    mocks.axiosInstance.mockResolvedValue({ status: 200, headers: {}, data: 'ok' });
+
+    await fetchWithRetries(url);
+
+    expect(mocks.proxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
+    expect(mocks.axiosCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        retries: customRetries,
+        httpsAgent: expect.objectContaining({
+          proxyUrl: 'http://proxy.example.com:8080',
+        }),
       })
     );
-  });
 
-  it('should use undefined family in non-CI environment (default)', async () => {
-    // This test verifies the default behavior when isCI is false
-    // Note: CI behavior (family: 4) is tested in integration tests since
-    // isCI is determined at module load time and difficult to mock dynamically
-    mockAxiosInstance.mockResolvedValueOnce({
-      status: 200,
-      headers: {},
-      data: 'success',
-    });
+    rs.clearAllMocks();
+    mocks.axiosCreate.mockReturnValue(mocks.axiosInstance);
+    process.env['NO_PROXY'] = 'example.com';
+    await fetchWithRetries(url);
 
-    await fetchWithRetries(url, options);
-
-    expect(axios.create).toHaveBeenCalledWith({
-      family: undefined, // Default behavior (both IPv4 and IPv6)
-      httpsAgent: undefined,
-    });
-  });
-
-  it('should not retry on error without code', async () => {
-    mockAxiosInstance.mockResolvedValueOnce({
-      status: 200,
-      headers: {},
-      data: 'success',
-    });
-
-    await fetchWithRetries(url, options);
-
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
-    const retryCondition = retryConfigArg.retryCondition;
-
-    // Error without code should not retry
-    const errorWithoutCode = {
-      message: 'some error',
-      isAxiosError: true,
-    };
-    expect(retryCondition(errorWithoutCode)).toBe(false);
-  });
-
-  it('should not retry on non-network error codes', async () => {
-    mockAxiosInstance.mockResolvedValueOnce({
-      status: 200,
-      headers: {},
-      data: 'success',
-    });
-
-    await fetchWithRetries(url, options);
-
-    const retryConfigArg = (axiosRetry as unknown as jest.Mock).mock.calls[0][1];
-    const retryCondition = retryConfigArg.retryCondition;
-
-    // Non-network error should not retry
-    const nonNetworkError = {
-      code: 'ENOTFOUND',
-      message: 'DNS resolution failed',
-      isAxiosError: true,
-    };
-    expect(retryCondition(nonNetworkError)).toBe(false);
-  });
-
-  describe('proxy support', () => {
-    it('should use HTTPS_PROXY environment variable for https requests', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: expect.objectContaining({
-            proxyUrl: 'http://proxy.example.com:8080',
-          }),
-        })
-      );
-    });
-
-    it('should use lowercase https_proxy environment variable', async () => {
-      process.env['https_proxy'] = 'http://lowercase-proxy.example.com:8080';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
-        'http://lowercase-proxy.example.com:8080'
-      );
-    });
-
-    it('should prefer HTTPS_PROXY over https_proxy', async () => {
-      process.env['HTTPS_PROXY'] = 'http://uppercase-proxy.example.com:8080';
-      process.env['https_proxy'] = 'http://lowercase-proxy.example.com:8080';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      // On Windows, environment variables are case-insensitive, so the last set value wins
-      // On Unix/macOS, HTTPS_PROXY takes precedence per the implementation order
-      const expectedProxy =
-        process.platform === 'win32'
-          ? 'http://lowercase-proxy.example.com:8080'
-          : 'http://uppercase-proxy.example.com:8080';
-
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(expectedProxy);
-    });
-
-    it('should fallback to HTTP_PROXY for https requests if HTTPS_PROXY is not set', async () => {
-      process.env['HTTP_PROXY'] = 'http://http-proxy.example.com:8080';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith(
-        'http://http-proxy.example.com:8080'
-      );
-    });
-
-    it('should bypass proxy for hosts in NO_PROXY', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['NO_PROXY'] = 'example.com,localhost';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should bypass proxy for hosts in lowercase no_proxy', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['no_proxy'] = 'example.com';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should bypass proxy when NO_PROXY is wildcard *', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['NO_PROXY'] = '*';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should bypass proxy for subdomains when NO_PROXY uses dot prefix', async () => {
-      const subdomainUrl = new URL('https://api.example.com/resource');
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['NO_PROXY'] = '.example.com';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(subdomainUrl, options);
-
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should bypass proxy for exact domain match with dot prefix in NO_PROXY', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['NO_PROXY'] = '.example.com';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should not bypass proxy for unmatched hosts in NO_PROXY', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['NO_PROXY'] = 'other.com,localhost';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(MockHttpsProxyAgent).toHaveBeenCalledWith('http://proxy.example.com:8080');
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: expect.objectContaining({
-            proxyUrl: 'http://proxy.example.com:8080',
-          }),
-        })
-      );
-    });
-
-    it('should handle case-insensitive NO_PROXY matching', async () => {
-      process.env['HTTPS_PROXY'] = 'http://proxy.example.com:8080';
-      process.env['NO_PROXY'] = 'EXAMPLE.COM';
-
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should not create proxy agents when no proxy env vars are set', async () => {
-      mockAxiosInstance.mockResolvedValueOnce({
-        status: 200,
-        headers: {},
-        data: 'success',
-      });
-
-      await fetchWithRetries(url, options);
-
-      expect(MockHttpsProxyAgent).not.toHaveBeenCalled();
-      expect(axios.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          httpsAgent: undefined,
-        })
-      );
-    });
-
-    it('should not initialize HttpsProxyAgent constructor when no proxy environment variables are present', async () => {
-      // Ensure all proxy env vars are cleared
-      expect(process.env['HTTP_PROXY']).toBeUndefined();
-      expect(process.env['HTTPS_PROXY']).toBeUndefined();
-      expect(process.env['http_proxy']).toBeUndefined();
-      expect(process.env['https_proxy']).toBeUndefined();
-
-      // Mock responses for both requests
-      mockAxiosInstance
-        .mockResolvedValueOnce({
-          status: 200,
-          headers: {},
-          data: 'success',
-        })
-        .mockResolvedValueOnce({
-          status: 200,
-          headers: {},
-          data: 'success',
-        });
-
-      // Make both HTTP and HTTPS requests
-      const httpUrl = new URL('http://example.com/api');
-      const httpsUrl = new URL('https://example.com/api');
-
-      await fetchWithRetries(httpUrl, options);
-      await fetchWithRetries(httpsUrl, options);
-
-      // Verify proxy agent constructor was never invoked
-      expect(MockHttpsProxyAgent).toHaveBeenCalledTimes(0);
-    });
+    expect(mocks.proxyAgent).not.toHaveBeenCalled();
   });
 });

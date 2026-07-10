@@ -47,7 +47,7 @@ libs/with-zephyr/
 │
 ├── dist/
 ├── package.json
-└── rslib.config.ts
+└── rslib.config.mts
 ```
 
 ## Core Concepts

@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { ensureRuntimePlugin } from '../ensure_runtime_plugin';
 
 describe('ensureRuntimePlugin', () => {

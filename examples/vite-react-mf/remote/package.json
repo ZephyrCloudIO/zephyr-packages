@@ -15,7 +15,7 @@
     "@module-federation/runtime": "catalog:module-federation-vite"
   },
   "devDependencies": {
-    "@module-federation/vite": "catalog:module-federation",
+    "@module-federation/vite": "catalog:module-federation-vite",
     "@eslint/js": "catalog:eslint",
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react18",

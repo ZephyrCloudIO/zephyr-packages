@@ -113,9 +113,9 @@ pnpm link --global vite-plugin-tanstack-start-zephyr
 
 ## Requirements
 
-- Node.js version supported by Vite 7 and TanStack Start 1.x
+- Node.js version supported by Vite 7 or 8 and TanStack Start 1.x
 - TanStack Start 1.0+
-- Vite 7+
+- Vite 7 or 8
 
 ## License
 

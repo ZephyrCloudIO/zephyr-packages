@@ -1,4 +1,6 @@
-import type { AstroIntegration, HookParameters } from 'astro';
+import type { AstroIntegration, HookParameters } from 'astro' with {
+  'resolution-mode': 'import',
+};
 import { fileURLToPath } from 'node:url';
 import {
   handleGlobalError,

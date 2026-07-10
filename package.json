@@ -85,7 +85,8 @@
       "glob": ">=11.1.0",
       "@modern-js/render>react-server-dom-webpack": "19.2.6",
       "react-server-dom-webpack": "19.2.6",
-      "astro": ">=6.4.6 <7.0.0",
+      "astro": ">=7.0.7 <8.0.0",
+      "astro>esbuild": "^0.28.0",
       "tmp": ">=0.2.6",
       "tar": "^7.5.11",
       "minimatch@<3.1.4": "3.1.5",
@@ -97,7 +98,6 @@
       "@babel/runtime": "catalog:babel",
       "@swc/helpers": "catalog:swc",
       "webpack": "catalog:webpack5",
-      "astro>vite": "^6.4.1",
       "vite": "catalog:vite8",
       "@types/node": "catalog:typescript",
       "koa": ">=3.0.1",
@@ -158,6 +158,11 @@
       "react-router-dom@>=7.0.0 <7.15.0": ">=7.15.0 <8.0.0",
       "piscina@<=4.9.2": ">=4.9.3 <5.0.0",
       "nuxt@>=4.0.0 <4.4.7": ">=4.4.7 <5.0.0"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "vite@8.1.4>esbuild": "^0.27.0 || ^0.28.0"
+      }
     }
   }
 }

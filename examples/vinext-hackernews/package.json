@@ -17,7 +17,7 @@
     "server-only": "^0.0.1",
     "vinext": "0.0.39",
     "vite-plugin-vinext-zephyr": "workspace:*",
-    "vite": "^8.0.3",
+    "vite": "catalog:vite8",
     "wrangler": "^4.80.0"
   }
 }

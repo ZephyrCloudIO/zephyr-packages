@@ -49,7 +49,7 @@
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@module-federation/vite": "catalog:module-federation",
+    "@module-federation/vite": "catalog:module-federation-vite",
     "@types/jest": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "@typescript-eslint/eslint-plugin": "catalog:eslint",

@@ -72,6 +72,9 @@ catalogs:
     '@module-federation/enhanced':
       specifier: ^0.21.0
       version: 0.21.6
+    '@module-federation/runtime':
+      specifier: ^2.7.0
+      version: 2.7.0
   module-federation-vite:
     '@module-federation/runtime':
       specifier: 2.7.0
@@ -1978,8 +1981,8 @@ importers:
         version: link:../zephyr-edge-contract
     devDependencies:
       '@module-federation/runtime':
-        specifier: ^2.3.2
-        version: 2.3.2
+        specifier: catalog:module-federation
+        version: 2.7.0
       '@types/jest':
         specifier: catalog:typescript
         version: 29.5.14
@@ -4918,9 +4921,6 @@ packages:
   '@module-federation/error-codes@2.1.0':
     resolution: {integrity: sha512-W+uCmPsFuV+15E1S7JUB1AeUDBFqKjJ2hImXdBNYx7T1CGM6awS/veooXqNoP7iM/kwKjtpTQPIeccWLrq76Mg==}
 
-  '@module-federation/error-codes@2.3.2':
-    resolution: {integrity: sha512-Y8F6EG+shNY5mJ0yKcJh4t6HlMYEtqMvABDDmxWulLz/tSV859SL05I5eDR1EvK0jNhLbq8LFipFEToQLqF0AA==}
-
   '@module-federation/error-codes@2.7.0':
     resolution: {integrity: sha512-syToF3H77IbBhJ7auGMCIb5ZDmJ5tvaqSeEvncJrOCq7JBT96F4UDlQDyNh6kCVznvYqqHsPeEMrfI9b5/Omlg==}
 
@@ -5026,9 +5026,6 @@ packages:
   '@module-federation/runtime-core@2.1.0':
     resolution: {integrity: sha512-9W+wV5s7PTMnSFCmyNvItnOf3VRYSxAPMZQ91bOT4GdwHTO23dfmC57o0SiqXw+ri/XOQVA8gd/p8TDwDDYx6A==}
 
-  '@module-federation/runtime-core@2.3.2':
-    resolution: {integrity: sha512-o4Pfi21uADHtSl3/BHu/3ph5+069pDOXL8Lck12b+rxsHessbeZkNo+MOxwP+gXf8fFsT+f9spOmx+Y5gtyc2A==}
-
   '@module-federation/runtime-core@2.7.0':
     resolution: {integrity: sha512-5ROZLVIeV9YnWO2RwCwSHcy6sh48yclErO/2GZ2Xe8lFubPrFirgU8pbwBjZw+All0ZzN44BGS4ECRMVFzVcpg==}
 
@@ -5050,9 +5047,6 @@ packages:
   '@module-federation/runtime@2.1.0':
     resolution: {integrity: sha512-Cs6H6vAQrLeD7tWW3nI7Z9EdvhcFcbqQdYWJ2SaN1X/eX2YvgHJe8sRxa7K7zlVRV5QZEPKgQCbrUfef+d5xqQ==}
 
-  '@module-federation/runtime@2.3.2':
-    resolution: {integrity: sha512-JFSAbr0zBDmNF+wcqHw22CmZGuUZjTsa4qzm1+RUVi3blrnKeBj9Y2FppEOBwPc/FHUr4/MDijA/6GFE2cv7gQ==}
-
   '@module-federation/runtime@2.7.0':
     resolution: {integrity: sha512-UtLozKKNvhT0D1+F0MEWsAmddJ39ItKW15E22LVMAwXmYZRSnzIvJQ2Y6kQ4LwhWABsw/GRSpUDex5OfhpSQPw==}
 
@@ -5064,14 +5058,6 @@ packages:
 
   '@module-federation/sdk@2.1.0':
     resolution: {integrity: sha512-HhiSo1X+t2+r5lxU+JBVsJdE2IJZOaD1e0linw+4bLlEy8uIgXhGttF9+9rAnRKWlhn6R8E23ionwBCuSLVeXQ==}
-
-  '@module-federation/sdk@2.3.2':
-    resolution: {integrity: sha512-EKiZpLnD2ogy7OcnuU+vkGO5vhh3J25PHwtEzgVGIAsMis3JHYPpY7L1Ue7i0zVrdmI23dVJPBtfGV/Pg7THPA==}
-    peerDependencies:
-      node-fetch: ^3.3.2
-    peerDependenciesMeta:
-      node-fetch:
-        optional: true
 
   '@module-federation/sdk@2.7.0':
     resolution: {integrity: sha512-piiLEjaIdjbNq8E11Di6vsfryhcdN/+sBCH6NjG7gSU2VHHoHEayZQWWL7VVdS6rVjexF9McLhPTSrl0adUU+A==}
@@ -22174,8 +22160,6 @@ snapshots:
 
   '@module-federation/error-codes@2.1.0': {}
 
-  '@module-federation/error-codes@2.3.2': {}
-
   '@module-federation/error-codes@2.7.0': {}
 
   '@module-federation/inject-external-runtime-core-plugin@0.21.6(@module-federation/runtime-tools@0.21.6)':
@@ -22443,13 +22427,6 @@ snapshots:
       '@module-federation/error-codes': 2.1.0
       '@module-federation/sdk': 2.1.0
 
-  '@module-federation/runtime-core@2.3.2':
-    dependencies:
-      '@module-federation/error-codes': 2.3.2
-      '@module-federation/sdk': 2.3.2
-    transitivePeerDependencies:
-      - node-fetch
-
   '@module-federation/runtime-core@2.7.0':
     dependencies:
       '@module-federation/error-codes': 2.7.0
@@ -22488,14 +22465,6 @@ snapshots:
       '@module-federation/runtime-core': 2.1.0
       '@module-federation/sdk': 2.1.0
 
-  '@module-federation/runtime@2.3.2':
-    dependencies:
-      '@module-federation/error-codes': 2.3.2
-      '@module-federation/runtime-core': 2.3.2
-      '@module-federation/sdk': 2.3.2
-    transitivePeerDependencies:
-      - node-fetch
-
   '@module-federation/runtime@2.7.0':
     dependencies:
       '@module-federation/error-codes': 2.7.0
@@ -22507,8 +22476,6 @@ snapshots:
   '@module-federation/sdk@0.22.0': {}
 
   '@module-federation/sdk@2.1.0': {}
-
-  '@module-federation/sdk@2.3.2': {}
 
   '@module-federation/sdk@2.7.0': {}
 

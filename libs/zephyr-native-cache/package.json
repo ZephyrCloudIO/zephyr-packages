@@ -58,7 +58,7 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@module-federation/runtime": "^2.3.2",
+    "@module-federation/runtime": "catalog:module-federation",
     "@types/jest": "catalog:typescript",
     "@types/react": "^19.1.0",
     "react": "19.1.0",

@@ -50,28 +50,6 @@ describe('vinext-output helpers', () => {
     expect(assets['client/assets/app.css']?.type).toBe('text/css');
   });
 
-  it('strips bare node fs and path imports from the worker entrypoint asset', () => {
-    const assets: Record<string, VinextBuildAsset> = {};
-    const bundle: OutputBundleLike = {
-      index: {
-        type: 'chunk',
-        fileName: 'index.js',
-        code: [
-          'import "node:fs";',
-          'import "node:path";',
-          'export default { fetch() {} };',
-          '',
-        ].join('\n'),
-      },
-    };
-
-    collectAssetsFromBundle(assets, '/repo/dist', '/repo/dist/server', bundle);
-
-    expect(assets['server/index.js']?.content.toString('utf-8')).toBe(
-      'export default { fetch() {} };\n'
-    );
-  });
-
   it('detects app-router entrypoint from server bundle', () => {
     const bundle: OutputBundleLike = {
       index: {
@@ -220,26 +198,136 @@ describe('vinext-output helpers', () => {
     }
   });
 
-  it('rewrites the emitted worker entrypoint on disk when vinext leaves bare node imports', async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
-    try {
-      const outputDir = path.join(tempDir, 'dist');
-      const workerEntrypointPath = path.join(outputDir, 'server', 'index.js');
+  it.each([
+    {
+      name: 'app-router',
+      relativeBundleDir: 'server',
+      entryFileName: 'index.js',
+      hasWranglerConfig: false,
+      overrideEntrypoint: undefined,
+      expectedEntrypoint: 'server/index.js',
+      expectedAssetPaths: ['server/index.js'],
+    },
+    {
+      name: 'pages-router',
+      relativeBundleDir: 'worker-build',
+      entryFileName: 'index.js',
+      hasWranglerConfig: true,
+      overrideEntrypoint: undefined,
+      expectedEntrypoint: 'worker-build/index.js',
+      expectedAssetPaths: ['worker-build/index.js', 'worker-build/wrangler.json'],
+    },
+    {
+      name: 'custom override',
+      relativeBundleDir: 'custom',
+      entryFileName: 'entry.js',
+      hasWranglerConfig: false,
+      overrideEntrypoint: '/dist/custom/entry.js',
+      expectedEntrypoint: 'custom/entry.js',
+      expectedAssetPaths: ['custom/entry.js', 'server/index.js'],
+    },
+  ])(
+    'sanitizes the selected $name entrypoint in uploaded assets and on disk',
+    async ({
+      relativeBundleDir,
+      entryFileName,
+      hasWranglerConfig,
+      overrideEntrypoint,
+      expectedEntrypoint,
+      expectedAssetPaths,
+    }) => {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
+      const originalCode = [
+        'import "node:fs";',
+        'import "node:path";',
+        'export default {};',
+        '',
+      ].join('\n');
 
-      await fs.mkdir(path.dirname(workerEntrypointPath), { recursive: true });
-      await fs.writeFile(
-        workerEntrypointPath,
-        ['import "node:fs";', 'import "node:path";', 'export default {};', ''].join('\n'),
-        'utf-8'
-      );
+      try {
+        const outputDir = path.join(tempDir, 'dist');
+        const assets: Record<string, VinextBuildAsset> = {};
+        let detectedEntrypoint: string | undefined;
 
-      await sanitizeVinextWorkerEntrypoint(outputDir);
+        if (overrideEntrypoint) {
+          const serverBundle: OutputBundleLike = {
+            index: { type: 'chunk', fileName: 'index.js', code: originalCode },
+          };
+          const serverBundleDir = path.join(outputDir, 'server');
 
-      await expect(fs.readFile(workerEntrypointPath, 'utf-8')).resolves.toBe(
-        'export default {};\n'
-      );
-    } finally {
-      await fs.rm(tempDir, { recursive: true, force: true });
+          collectAssetsFromBundle(assets, outputDir, serverBundleDir, serverBundle);
+          detectedEntrypoint = detectEntrypointFromBundle(
+            outputDir,
+            serverBundleDir,
+            serverBundle
+          );
+        }
+
+        const bundle: OutputBundleLike = {
+          entry: {
+            type: 'chunk',
+            fileName: entryFileName,
+            code: originalCode,
+          },
+        };
+        if (hasWranglerConfig) {
+          bundle.wrangler = {
+            type: 'asset',
+            fileName: 'wrangler.json',
+            source: '{}',
+          };
+        }
+
+        const bundleDir = path.join(outputDir, relativeBundleDir);
+        collectAssetsFromBundle(assets, outputDir, bundleDir, bundle);
+        detectedEntrypoint = detectEntrypointFromBundle(
+          outputDir,
+          bundleDir,
+          bundle,
+          detectedEntrypoint
+        );
+
+        const selectedEntrypoint = resolveVinextEntrypoint(
+          outputDir,
+          detectedEntrypoint,
+          overrideEntrypoint
+        );
+        expect(selectedEntrypoint).toBe(expectedEntrypoint);
+        expect(Object.keys(assets).sort()).toEqual([...expectedAssetPaths].sort());
+
+        const selectedEntrypointPath = path.join(outputDir, selectedEntrypoint);
+        await fs.mkdir(path.dirname(selectedEntrypointPath), { recursive: true });
+        await fs.writeFile(selectedEntrypointPath, originalCode, 'utf-8');
+
+        const nonSelectedEntrypoint = overrideEntrypoint ? 'server/index.js' : undefined;
+        if (nonSelectedEntrypoint) {
+          const nonSelectedEntrypointPath = path.join(outputDir, nonSelectedEntrypoint);
+          await fs.mkdir(path.dirname(nonSelectedEntrypointPath), {
+            recursive: true,
+          });
+          await fs.writeFile(nonSelectedEntrypointPath, originalCode, 'utf-8');
+        }
+
+        await sanitizeVinextWorkerEntrypoint(assets, outputDir, selectedEntrypoint);
+
+        expect(assets[selectedEntrypoint]?.content.toString('utf-8')).toBe(
+          'export default {};\n'
+        );
+        await expect(fs.readFile(selectedEntrypointPath, 'utf-8')).resolves.toBe(
+          'export default {};\n'
+        );
+
+        if (nonSelectedEntrypoint) {
+          expect(assets[nonSelectedEntrypoint]?.content.toString('utf-8')).toBe(
+            originalCode
+          );
+          await expect(
+            fs.readFile(path.join(outputDir, nonSelectedEntrypoint), 'utf-8')
+          ).resolves.toBe(originalCode);
+        }
+      } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      }
     }
-  });
+  );
 });

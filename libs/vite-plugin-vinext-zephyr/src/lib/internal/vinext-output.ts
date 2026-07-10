@@ -122,13 +122,8 @@ export function collectAssetsFromBundle(
       ? `${relativeDir}/${normalizedFileName}`
       : normalizedFileName;
 
-    const content =
-      item.type === 'chunk' && snapshotPath === 'server/index.js'
-        ? Buffer.from(stripRedundantNodeSideEffectImports(item.code), 'utf-8')
-        : toBuffer(item);
-
     assets[snapshotPath] = {
-      content,
+      content: toBuffer(item),
       type: getAssetType(snapshotPath),
     };
   }
@@ -210,9 +205,26 @@ export async function collectStaticClientAssets(
 }
 
 export async function sanitizeVinextWorkerEntrypoint(
-  outputRootDir: string
+  assets: Record<string, VinextBuildAsset>,
+  outputRootDir: string,
+  entrypoint: string
 ): Promise<void> {
-  const workerEntrypointPath = path.join(outputRootDir, 'server', 'index.js');
+  const normalizedEntrypoint = normalizeEntrypoint(entrypoint);
+  const entrypointAsset = assets[normalizedEntrypoint];
+
+  if (entrypointAsset) {
+    const originalAssetCode = entrypointAsset.content.toString('utf-8');
+    const sanitizedAssetCode = stripRedundantNodeSideEffectImports(originalAssetCode);
+
+    if (sanitizedAssetCode !== originalAssetCode) {
+      entrypointAsset.content = Buffer.from(sanitizedAssetCode, 'utf-8');
+    }
+  }
+
+  const workerEntrypointPath = resolvePathWithinRoot(outputRootDir, normalizedEntrypoint);
+  if (!workerEntrypointPath) {
+    return;
+  }
   if (!(await pathExists(workerEntrypointPath))) {
     return;
   }
@@ -225,6 +237,29 @@ export async function sanitizeVinextWorkerEntrypoint(
   }
 
   await fs.writeFile(workerEntrypointPath, sanitizedCode, 'utf-8');
+}
+
+function resolvePathWithinRoot(
+  rootDir: string,
+  relativePath: string
+): string | undefined {
+  if (!relativePath) {
+    return undefined;
+  }
+
+  const resolvedRootDir = path.resolve(rootDir);
+  const resolvedPath = path.resolve(resolvedRootDir, relativePath);
+  const relativeResolvedPath = path.relative(resolvedRootDir, resolvedPath);
+
+  if (
+    relativeResolvedPath === '..' ||
+    relativeResolvedPath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeResolvedPath)
+  ) {
+    return undefined;
+  }
+
+  return resolvedPath;
 }
 
 function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): string {

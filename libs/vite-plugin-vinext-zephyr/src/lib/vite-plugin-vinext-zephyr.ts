@@ -98,7 +98,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
     return zephyr_engine_defer;
   }
 
-  async function uploadVinextBuild(): Promise<void> {
+  async function uploadVinextBuild(entrypoint: string): Promise<void> {
     if (uploadCompleted) {
       return;
     }
@@ -119,12 +119,6 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
             'Ensure withZephyr() is included in plugins during build.',
         });
       }
-
-      const entrypoint = resolveVinextEntrypoint(
-        outputDir,
-        detectedEntrypoint,
-        options.entrypoint
-      );
 
       ze_log.upload(
         `Uploading Vinext build (${assetCount} assets, entrypoint: ${entrypoint})`
@@ -223,12 +217,18 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           return;
         }
 
-        await sanitizeVinextWorkerEntrypoint(outputDir);
+        const entrypoint = resolveVinextEntrypoint(
+          outputDir,
+          detectedEntrypoint,
+          options.entrypoint
+        );
+
         await collectStaticClientAssets(collectedAssets, outputDir, clientOutDir);
 
         injectRscAssetsManifest(collectedAssets, outputDir, rscPluginManager);
 
-        await uploadVinextBuild();
+        await sanitizeVinextWorkerEntrypoint(collectedAssets, outputDir, entrypoint);
+        await uploadVinextBuild(entrypoint);
       } catch (error) {
         handleGlobalError(error);
       }

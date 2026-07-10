@@ -22,6 +22,7 @@ permissions:
 
 jobs:
   build:
+    name: End-to-end test of examples (ubuntu-latest)
     runs-on: depot-ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -56,6 +57,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
+    name: End-to-end test of examples (windows-latest)
     # Modern.js/Rspack currently aborts with 0xC0000409 on Depot's Windows
     # Server 2025 image (`depot-windows-latest`). Pin the supported 2022 image.
     runs-on: depot-windows-2022

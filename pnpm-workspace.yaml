@@ -98,6 +98,9 @@ catalogs:
     ts-jest: ^29.2.6
     tslib: ^2.8.1
     typescript: ~5.9.0
+  vite7:
+    # Nx 22 and Nuxt 4.4 still require Vite 7.
+    vite: ^7.3.6
   vite8:
     '@vitejs/plugin-react': ^6.0.1
     '@vitejs/plugin-react-swc': ^4.3.0

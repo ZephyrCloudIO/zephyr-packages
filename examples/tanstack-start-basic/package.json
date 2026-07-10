@@ -10,7 +10,7 @@
     "preview": "npm run build && vite preview"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.0.6",
+    "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-devtools": "^0.7.0",
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-router-devtools": "^1.132.0",
@@ -24,7 +24,7 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.21.1",
+    "@cloudflare/vite-plugin": "^1.44.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
     "@types/node": "^22.18.13",

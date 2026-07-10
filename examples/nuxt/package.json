@@ -15,5 +15,8 @@
     "vue-router": "^4.6.4",
     "nitro-cloudflare-dev": "^0.2.2",
     "zephyr-nuxt-module": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "catalog:vite7"
   }
 }

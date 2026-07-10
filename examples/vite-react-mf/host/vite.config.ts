@@ -26,13 +26,11 @@ const mfConfig: ModuleFederationOptions = {
   shared: {
     react: {
       singleton: true,
-      eager: true,
     },
     'react-dom': {
       singleton: true,
-      eager: true,
     },
-  } as unknown as ModuleFederationOptions['shared'],
+  },
   dts: false,
 };
 

@@ -276,7 +276,15 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options.hooks;
   const buildInvocationId = `vite-${randomUUID()}`;
-  const externalPartialScope = resolveVitePartialBuildScope(options.partialBuild);
+  // CI metadata is present for every ordinary Vite build in a workflow. Only use it
+  // as a cross-process scope when the finalizer explicitly opts into partial output,
+  // or when the dedicated Zephyr invocation contract is set.
+  const usesExternalPartialBuild =
+    options.partialBuild !== undefined ||
+    Boolean(process.env['ZE_BUILD_INVOCATION_ID']?.trim());
+  const externalPartialScope = usesExternalPartialBuild
+    ? resolveVitePartialBuildScope(options.partialBuild)
+    : undefined;
 
   let resolve_vite_internal_options: (value: ZephyrInternalOptions) => void;
   const vite_internal_options_defer = new Promise<ZephyrInternalOptions>((resolve) => {

@@ -16,6 +16,19 @@ describe('Vite partial build scope', () => {
     ).toEqual({ invocationId: 'workflow-build', generation: 0 });
   });
 
+  it('derives a scope from supported CI metadata for explicit partial builds', () => {
+    expect(
+      resolveVitePartialBuildScope(
+        {},
+        {
+          GITHUB_RUN_ID: '12345',
+          GITHUB_RUN_ATTEMPT: '2',
+          GITHUB_JOB: 'build',
+        }
+      )
+    ).toEqual({ invocationId: '12345:2:build', generation: 0 });
+  });
+
   it('does not fall back to an application-global bucket', () => {
     expect(resolveVitePartialBuildScope(undefined, {})).toBeUndefined();
   });

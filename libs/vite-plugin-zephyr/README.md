@@ -77,12 +77,13 @@ withZephyr({
 
 For intentionally separate Vite invocations, use `withZephyrPartial()` in producer
 configs and `withZephyr()` in the final config. Give every producer and finalizer the
-same `invocationId` (or set `ZE_BUILD_INVOCATION_ID`); CI run IDs are detected when they
-uniquely identify one job. The plugin fails closed when a producer has no shared build
-identity. Partial maps are isolated by invocation and generation, protected by an
-inter-process lock, and claimed transactionally. Commit removes only unchanged claimed
-revisions, while rollback releases the claim without overwriting a newer concurrent
-write.
+same `invocationId` (or set `ZE_BUILD_INVOCATION_ID`). To derive that identity from a
+supported CI job, explicitly pass `partialBuild: {}` to the finalizer; an ordinary
+`withZephyr()` build ignores ambient CI metadata. The plugin fails closed when a producer
+has no shared build identity. Partial maps are isolated by invocation and generation,
+protected by an inter-process lock, and claimed transactionally. Commit removes only
+unchanged claimed revisions, while rollback releases the claim without overwriting a
+newer concurrent write.
 
 ```typescript
 withZephyrPartial({ invocationId: process.env.BUILD_ID });

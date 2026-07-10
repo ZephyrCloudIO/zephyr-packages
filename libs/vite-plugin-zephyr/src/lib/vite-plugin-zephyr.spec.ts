@@ -69,6 +69,7 @@ import { withZephyr } from './vite-plugin-zephyr';
 import { withZephyrPartial } from './vite-plugin-zephyr-partial';
 
 const originalFailBuild = process.env['ZE_FAIL_BUILD'];
+const originalBuildInvocationId = process.env['ZE_BUILD_INVOCATION_ID'];
 
 function asset(path: string, hash = path): ZeBuildAssetsMap {
   return {
@@ -117,6 +118,27 @@ async function configuredPlugin(
     resolvedConfig(environments, watch, base)
   );
   return plugin;
+}
+
+async function withProcessEnv<T>(
+  overrides: Record<string, string | undefined>,
+  action: () => Promise<T>
+): Promise<T> {
+  const previous = new Map(
+    Object.keys(overrides).map((name) => [name, process.env[name]])
+  );
+  for (const [name, value] of Object.entries(overrides)) {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  }
+  try {
+    return await action();
+  } finally {
+    for (const [name, value] of previous) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
 }
 
 interface TestBuildEnvironment {
@@ -188,11 +210,15 @@ describe('vite-plugin-zephyr', () => {
     mocks.engine.upload_assets.mockResolvedValue(undefined);
     mocks.extractAssets.mockResolvedValue(asset('app.js'));
     delete process.env['ZE_FAIL_BUILD'];
+    delete process.env['ZE_BUILD_INVOCATION_ID'];
   });
 
   afterEach(() => {
     if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
     else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    if (originalBuildInvocationId === undefined)
+      delete process.env['ZE_BUILD_INVOCATION_ID'];
+    else process.env['ZE_BUILD_INVOCATION_ID'] = originalBuildInvocationId;
   });
 
   test('withZephyr without mfConfig does not invoke module federation', () => {
@@ -535,6 +561,106 @@ describe('vite-plugin-zephyr', () => {
     expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
   });
 
+  test('uses the dedicated invocation contract without a partialBuild option', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    process.env['ZE_BUILD_INVOCATION_ID'] = 'external-build';
+    const plugin = withZephyr()[0] as Plugin;
+    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      resolvedConfig({
+        client: { consumer: 'client', build: { outDir: 'dist/client' } },
+      })
+    );
+
+    await expect(
+      buildAppHandler(plugin)({
+        environments: {
+          client: { isBuilt: true, config: { consumer: 'client' } },
+        },
+        build: rs.fn(),
+      })
+    ).rejects.toThrow('atomically claim');
+
+    expect(mocks.claimPartialAssetMapBatch).toHaveBeenCalledWith(
+      mocks.engine.application_uid,
+      expect.arrayContaining([
+        expect.objectContaining({ invocationId: expect.stringMatching(/^vite-/) }),
+        { invocationId: 'external-build', generation: 0 },
+      ])
+    );
+  });
+
+  test('does not treat ambient CI metadata as an external partial build', async () => {
+    await withProcessEnv(
+      {
+        GITHUB_RUN_ID: '12345',
+        GITHUB_RUN_ATTEMPT: '2',
+        GITHUB_JOB: 'build',
+      },
+      async () => {
+        const plugin = await configuredPlugin({
+          client: { consumer: 'client', build: { outDir: 'dist/client' } },
+        });
+        internalClaims.push(
+          claimed({ [environmentOutput('client')]: asset('client/app.js') })
+        );
+
+        await buildAppHandler(plugin)({
+          environments: {
+            client: { isBuilt: true, config: { consumer: 'client' } },
+          },
+          build: rs.fn(),
+        });
+
+        expect(mocks.claimPartialAssetMapBatch).toHaveBeenCalledWith(
+          mocks.engine.application_uid,
+          [
+            {
+              invocationId: expect.stringMatching(/^vite-/),
+              generation: 0,
+            },
+          ]
+        );
+        expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(1);
+      }
+    );
+  });
+
+  test('uses CI metadata after the finalizer explicitly opts into partial output', async () => {
+    await withProcessEnv(
+      {
+        GITHUB_RUN_ID: '12345',
+        GITHUB_RUN_ATTEMPT: '2',
+        GITHUB_JOB: 'build',
+      },
+      async () => {
+        process.env['ZE_FAIL_BUILD'] = 'true';
+        const plugin = withZephyr({ partialBuild: {} })[0] as Plugin;
+        await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+          resolvedConfig({
+            client: { consumer: 'client', build: { outDir: 'dist/client' } },
+          })
+        );
+
+        await expect(
+          buildAppHandler(plugin)({
+            environments: {
+              client: { isBuilt: true, config: { consumer: 'client' } },
+            },
+            build: rs.fn(),
+          })
+        ).rejects.toThrow('atomically claim');
+
+        expect(mocks.claimPartialAssetMapBatch).toHaveBeenCalledWith(
+          mocks.engine.application_uid,
+          expect.arrayContaining([
+            expect.objectContaining({ invocationId: expect.stringMatching(/^vite-/) }),
+            { invocationId: '12345:2:build', generation: 0 },
+          ])
+        );
+      }
+    );
+  });
+
   test('allows non-environment partial maps and infers SSR from consumer metadata', async () => {
     const plugin = await configuredPlugin({
       web: { consumer: 'client', build: { outDir: 'dist/web' } },
@@ -672,11 +798,15 @@ describe('withZephyrPartial', () => {
   beforeEach(() => {
     rs.clearAllMocks();
     delete process.env['ZE_FAIL_BUILD'];
+    delete process.env['ZE_BUILD_INVOCATION_ID'];
   });
 
   afterEach(() => {
     if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
     else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    if (originalBuildInvocationId === undefined)
+      delete process.env['ZE_BUILD_INVOCATION_ID'];
+    else process.env['ZE_BUILD_INVOCATION_ID'] = originalBuildInvocationId;
   });
 
   test('isolates concurrent environment extraction and persisted keys by output root', async () => {

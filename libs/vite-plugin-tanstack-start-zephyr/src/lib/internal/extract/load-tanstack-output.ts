@@ -13,7 +13,9 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
     const files = await readDirRecursiveWithContents(dir);
 
     for (const file of files) {
-      const relativePath = file.relativePath;
+      // Rollup bundle keys and Zephyr snapshot paths are POSIX-style on every host.
+      // `readDirRecursiveWithContents` may return native Windows separators.
+      const relativePath = file.relativePath.replace(/\\/g, '/');
       const content = file.content;
       const ext = path.extname(relativePath);
 

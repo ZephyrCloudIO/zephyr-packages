@@ -85,9 +85,16 @@ function createDeploymentInvocation(options: {
   args: string[];
   env: NodeJS.ProcessEnv;
 } {
+  const pnpmCli = process.env['npm_execpath']?.trim();
+  if (!pnpmCli) {
+    throw new Error('ZeAgent deployment E2E must be started through pnpm.');
+  }
   return {
-    executable: 'pnpm',
+    // Execute pnpm's JavaScript entrypoint through the current Node binary. Directly
+    // spawning pnpm.cmd is unsupported by execFile on Windows.
+    executable: process.execPath,
     args: [
+      pnpmCli,
       '-w',
       'exec',
       'turbo',
@@ -133,6 +140,8 @@ describe('ZeAgent deployment child process', () => {
     expect([invocation.executable, ...invocation.args].join('\0')).not.toContain(
       secretToken
     );
+    expect(invocation.executable).toBe(process.execPath);
+    expect(invocation.args[0]).toBe(process.env['npm_execpath']);
     expect(invocation.env['ZE_SECRET_TOKEN']).toBe(secretToken);
     expect(
       Object.entries(invocation.env).filter(([, value]) => value === secretToken)

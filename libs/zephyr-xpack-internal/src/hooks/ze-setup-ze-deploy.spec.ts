@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { MockInstance, Mock } from '@rstest/core';
+import path from 'node:path';
 
 import { setupZeDeploy } from './ze-setup-ze-deploy';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
@@ -252,7 +253,10 @@ describe('setupZeDeploy', () => {
     expect(beginParticipant).toHaveBeenCalledWith('client', 0);
     const invalidCallback = (compiler.hooks.invalid.tap as Mock).mock.calls[0][1];
     invalidCallback('/repo/src/shared.ts');
-    expect(invalidateParticipant).toHaveBeenCalledWith('client', '/repo/src/shared.ts');
+    expect(invalidateParticipant).toHaveBeenCalledWith(
+      'client',
+      path.resolve('/repo/src/shared.ts')
+    );
     expect(compiler.hooks.failed.tap).toHaveBeenCalled();
   });
 

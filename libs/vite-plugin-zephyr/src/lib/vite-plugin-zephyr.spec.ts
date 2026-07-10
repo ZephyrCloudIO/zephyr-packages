@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
 import type { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite' with {
   'resolution-mode': 'import',
@@ -810,6 +811,8 @@ describe('withZephyrPartial', () => {
   });
 
   test('isolates concurrent environment extraction and persisted keys by output root', async () => {
+    const clientOutput = path.resolve('/repo/dist/client');
+    const serverOutput = path.resolve('/repo/dist/server');
     const seenOptions: Array<{ outDir: string }> = [];
     mocks.extractAssets.mockImplementation(async (_engine, options) => {
       seenOptions.push(options);
@@ -823,28 +826,19 @@ describe('withZephyrPartial', () => {
     const writeBundle = plugin.writeBundle as TestWriteBundle;
 
     await Promise.all([
-      writeBundle.call(
-        { environment: { name: 'client' } },
-        { dir: '/repo/dist/client' },
-        {}
-      ),
-      writeBundle.call(
-        { environment: { name: 'server' } },
-        { dir: '/repo/dist/server' },
-        {}
-      ),
+      writeBundle.call({ environment: { name: 'client' } }, { dir: clientOutput }, {}),
+      writeBundle.call({ environment: { name: 'server' } }, { dir: serverOutput }, {}),
     ]);
 
-    expect(seenOptions.map(({ outDir }) => outDir).sort()).toEqual([
-      '/repo/dist/client',
-      '/repo/dist/server',
-    ]);
+    expect(seenOptions.map(({ outDir }) => outDir).sort()).toEqual(
+      [clientOutput, serverOutput].sort()
+    );
     const keys = mocks.savePartialAssetMap.mock.calls.map((call) => call[1]);
     expect(new Set(keys).size).toBe(2);
     expect(keys).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('client:/repo/dist/client'),
-        expect.stringContaining('server:/repo/dist/server'),
+        expect.stringContaining(`client:${clientOutput.replace(/\\/g, '/')}`),
+        expect.stringContaining(`server:${serverOutput.replace(/\\/g, '/')}`),
       ])
     );
   });

@@ -1,4 +1,5 @@
 import { describe, expect, it, rs } from '@rstest/core';
+import * as path from 'node:path';
 
 import {
   resolveTanStackOutputDir,
@@ -19,20 +20,21 @@ describe('vite-plugin-tanstack-start-zephyr exports', () => {
   });
 
   it('resolves relative output overrides from Vite root', () => {
-    expect(resolveTanStackOutputDir('/repo/apps/site', 'build/output')).toBe(
-      '/repo/apps/site/build/output'
+    const root = path.resolve('repo/apps/site');
+    const absoluteOutput = path.resolve('shared/output');
+
+    expect(resolveTanStackOutputDir(root, 'build/output')).toBe(
+      path.resolve(root, 'build/output')
     );
-    expect(resolveTanStackOutputDir('/repo/apps/site')).toBe('/repo/apps/site/dist');
-    expect(resolveTanStackOutputDir('/repo/apps/site', '/shared/output')).toBe(
-      '/shared/output'
-    );
+    expect(resolveTanStackOutputDir(root)).toBe(path.join(root, 'dist'));
+    expect(resolveTanStackOutputDir(root, absoluteOutput)).toBe(absoluteOutput);
   });
 
   it('rejects entrypoints outside the output directory', () => {
     const plugin = withZephyr({ entrypoint: '../secret.js' });
     expect(() =>
       (plugin.configResolved as (config: unknown) => void)({
-        root: '/repo',
+        root: path.resolve('repo'),
       })
     ).toThrow('inside the output directory');
   });

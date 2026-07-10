@@ -1,4 +1,4 @@
-# Rspress website
+# Rspress SSG website
 
 ## Setup
 

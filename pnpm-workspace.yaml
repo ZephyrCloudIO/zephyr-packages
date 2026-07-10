@@ -188,9 +188,6 @@ catalogs:
     rolldown: ^1.1.5
   rollup4:
     rollup: ^4.62.2
-  rsbuild1:
-    '@rsbuild/core': ^1.7.3
-    '@rsbuild/plugin-react': ^1.4.5
   rspack:
     '@rsbuild/core': ^2.1.5
     '@rsbuild/plugin-react': ^2.1.0
@@ -201,8 +198,6 @@ catalogs:
     '@rslib/core': 0.23.2
   rspress:
     '@rspress/core': ^2.0.17
-  rspress1:
-    rspress: ^1.47.1
   swc:
     '@swc-node/register': 1.11.1
     '@swc/cli': 0.8.1

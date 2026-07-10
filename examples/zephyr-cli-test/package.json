@@ -16,8 +16,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:biome",
-    "@rsbuild/core": "catalog:rsbuild1",
-    "@rsbuild/plugin-react": "catalog:rsbuild1",
+    "@rsbuild/core": "catalog:rspack",
+    "@rsbuild/plugin-react": "catalog:rspack",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "typescript": "catalog:typescript",

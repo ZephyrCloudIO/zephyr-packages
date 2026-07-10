@@ -1,5 +1,7 @@
+import { afterAll, beforeAll, describe, expect, it, rs } from '@rstest/core';
+
 import { promisify } from 'node:util';
-import { exec as execCB } from 'node:child_process';
+import { exec as execCB, execFile as execFileCB } from 'node:child_process';
 import { getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
@@ -11,39 +13,169 @@ import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { homedir } from 'node:os';
 import * as fs from 'node:fs';
+import nodePersist from 'node-persist';
 import {
   getAppConfig,
   saveAppConfig,
 } from '../lib/node-persist/application-configuration';
+import { getAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
 import { getSecretToken } from '../lib/node-persist/secret-token';
+import { ZE_STORAGE_PATH } from '../lib/node-persist/storage-keys';
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 
 // Both mocks are necessary in order to simulate user deployment but through
 // our own CI. Our libs have different rules for CI execution (getGitInfo).
-jest.mock('../lib/node-persist/secret-token', () => {
-  const defaultExport = jest.requireActual('../lib/node-persist/secret-token');
+rs.mock('../lib/node-persist/secret-token', () => {
+  const defaultExport = rs.requireActual('../lib/node-persist/secret-token');
   return {
     ...defaultExport,
-    hasSecretToken: jest.fn().mockReturnValue(false),
+    hasSecretToken: rs.fn().mockReturnValue(false),
   };
 });
 
-jest.mock('is-ci', () => false);
+rs.mock('is-ci', () => ({ default: false }));
 
-// Skip tests if not in preview mode
-const runner = ZE_IS_PREVIEW() ? describe : describe.skip;
+// This spec performs a real deployment. Preview mode is shared by ordinary unit-test
+// jobs, so require a dedicated opt-in on an ephemeral CI runner rather than unexpectedly
+// uploading from `pnpm test` or deleting a developer's authenticated ~/.zephyr store.
+function shouldRunDeploymentE2E(options: {
+  preview: boolean;
+  optedIn: boolean;
+  ci: boolean;
+}): boolean {
+  return options.preview && options.optedIn && options.ci;
+}
+
+const runner = shouldRunDeploymentE2E({
+  preview: ZE_IS_PREVIEW(),
+  optedIn: process.env['ZE_RUN_AGENT_DEPLOYMENT_E2E'] === 'true',
+  ci: process.env['CI'] === 'true',
+})
+  ? describe
+  : describe.skip;
 
 const exec = promisify(execCB);
+const execFile = promisify(execFileCB);
+
+function createTestRunSuffix(
+  env: NodeJS.ProcessEnv = process.env,
+  randomSuffix = () => crypto.randomBytes(4).toString('hex')
+): string {
+  return [
+    env['GITHUB_RUN_ID'],
+    env['GITHUB_RUN_ATTEMPT'],
+    env['GITHUB_JOB'],
+    env['RUNNER_OS'],
+    randomSuffix(),
+  ]
+    .filter(Boolean)
+    .join('-')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function createDeploymentInvocation(options: {
+  preview: boolean;
+  apiEndpoint: string;
+  apiGate: string;
+  secretToken: string;
+}): {
+  executable: string;
+  args: string[];
+  env: NodeJS.ProcessEnv;
+} {
+  const pnpmCli = process.env['npm_execpath']?.trim();
+  if (!pnpmCli) {
+    throw new Error('ZeAgent deployment E2E must be started through pnpm.');
+  }
+  return {
+    // Execute pnpm's JavaScript entrypoint through the current Node binary. Directly
+    // spawning pnpm.cmd is unsupported by execFile on Windows.
+    executable: process.execPath,
+    args: [
+      pnpmCli,
+      '-w',
+      'exec',
+      'turbo',
+      'run',
+      'build',
+      '--filter=sample-webpack-application',
+      '--force',
+    ],
+    env: {
+      ...process.env,
+      ZE_IS_PREVIEW: String(options.preview),
+      ZE_API: options.apiEndpoint,
+      ZE_API_GATE: options.apiGate,
+      ZE_SECRET_TOKEN: options.secretToken,
+      DEBUG: 'zephyr:*',
+    },
+  };
+}
+
+describe('ZeAgent deployment child process', () => {
+  it('requires preview mode, explicit opt-in, and CI isolation', () => {
+    expect(shouldRunDeploymentE2E({ preview: true, optedIn: true, ci: true })).toBe(true);
+    expect(shouldRunDeploymentE2E({ preview: true, optedIn: true, ci: false })).toBe(
+      false
+    );
+    expect(shouldRunDeploymentE2E({ preview: false, optedIn: true, ci: true })).toBe(
+      false
+    );
+    expect(shouldRunDeploymentE2E({ preview: true, optedIn: false, ci: true })).toBe(
+      false
+    );
+  });
+
+  it('passes the secret token only through the child environment', () => {
+    const secretToken = 'test-token-that-must-not-appear-in-argv';
+    const invocation = createDeploymentInvocation({
+      preview: true,
+      apiEndpoint: 'https://api.example.test',
+      apiGate: 'https://gateway.example.test',
+      secretToken,
+    });
+
+    expect([invocation.executable, ...invocation.args].join('\0')).not.toContain(
+      secretToken
+    );
+    expect(invocation.executable).toBe(process.execPath);
+    expect(invocation.args[0]).toBe(process.env['npm_execpath']);
+    expect(invocation.env['ZE_SECRET_TOKEN']).toBe(secretToken);
+    expect(
+      Object.entries(invocation.env).filter(([, value]) => value === secretToken)
+    ).toEqual([['ZE_SECRET_TOKEN', secretToken]]);
+  });
+
+  it('creates collision-resistant deployment identities for parallel jobs', () => {
+    expect(
+      createTestRunSuffix(
+        {
+          GITHUB_RUN_ID: '1234',
+          GITHUB_RUN_ATTEMPT: '2',
+          GITHUB_JOB: 'test (ubuntu-latest)',
+          RUNNER_OS: 'Linux',
+        },
+        () => 'abc123'
+      )
+    ).toBe('1234-2-test-ubuntu-latest-linux-abc123');
+  });
+});
 
 runner('ZeAgent', () => {
+  const testRunSuffix = createTestRunSuffix();
   const gitUserName = 'Test User';
-  const gitEmail = 'test.user@valor-software.com';
-  const gitRemoteOrigin = 'git@github.com:TestZephyrCloudIO/test-zephyr-mono.git';
+  const gitEmail = `test.user-${testRunSuffix}@valor-software.com`;
 
   const appOrg = 'testzephyrcloudio';
-  const appProject = 'test-zephyr-mono';
+  const appProject = `test-zephyr-mono-${testRunSuffix}`;
+  const gitRemoteOrigin = `git@github.com:TestZephyrCloudIO/${appProject}.git`;
 
-  const packageJsonPath = path.resolve('examples/sample-webpack-application');
+  const packageJsonPath = path.resolve(
+    import.meta.dirname,
+    '../../../../examples/sample-webpack-application'
+  );
   const appName = 'sample-webpack-application';
   const application_uid = `${appName}.${appProject}.${appOrg}`;
   const user_uuid = crypto.randomBytes(16).toString('hex');
@@ -51,7 +183,7 @@ runner('ZeAgent', () => {
   const dev_api_gate_url =
     process.env['ZE_API_GATE'] ?? 'https://zeapi.zephyrcloudapp.dev';
 
-  const integrationTestTimeout = 5 * 60000; // 5 minute because EDGE cache time;
+  const integrationTestTimeout = 10 * 60_000;
 
   beforeAll(async () => {
     const zephyrAppFolder = path.join(homedir(), '.zephyr');
@@ -62,6 +194,13 @@ runner('ZeAgent', () => {
         fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
+    // node-persist initializes during module evaluation. Re-initialize after clearing its
+    // files so its in-memory index cannot point at entries which no longer exist.
+    fs.mkdirSync(ZE_STORAGE_PATH, { recursive: true });
+    await nodePersist.init({
+      dir: ZE_STORAGE_PATH,
+      forgiveParseErrors: true,
+    });
     await exec(`git config --add user.name "${gitUserName}"`);
     await exec(`git config --add user.email "${gitEmail}"`);
     await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
@@ -119,29 +258,42 @@ runner('ZeAgent', () => {
   it(
     'should be deployed to Zephyr',
     async () => {
-      const envs = [
-        `ZE_IS_PREVIEW=${ZE_IS_PREVIEW()}`,
-        `ZE_API=${ZEPHYR_API_ENDPOINT()}`,
-        `ZE_API_GATE=${dev_api_gate_url}`,
-        `ZE_SECRET_TOKEN=${getSecretToken()}`,
-        `DEBUG=zephyr:*`,
-      ];
-      const cmd = [
-        'npx cross-env',
-        ...envs,
-        `npx nx run sample-webpack-application:build --skip-nx-cache --verbose`,
-      ].join(' ');
-      await exec(cmd);
-      const deployResultUrls = await _getAppTagUrls(application_uid);
-      expect(deployResultUrls).toBeTruthy();
-      for (const url of deployResultUrls) {
+      const secretToken = getSecretToken();
+      if (!secretToken) {
+        throw new Error('Secret token is required');
+      }
+      const invocation = createDeploymentInvocation({
+        preview: ZE_IS_PREVIEW(),
+        apiEndpoint: ZEPHYR_API_ENDPOINT(),
+        apiGate: dev_api_gate_url,
+        secretToken,
+      });
+      await execFile(invocation.executable, invocation.args, {
+        env: invocation.env,
+      });
+      // The child process wrote the deploy result. Refresh node-persist's index before
+      // reading so this test observes only this build instead of historical tag URLs.
+      await nodePersist.init({
+        dir: ZE_STORAGE_PATH,
+        forgiveParseErrors: true,
+      });
+      const deployResult = await getAppDeployResult(application_uid);
+      if (!deployResult) {
+        throw new Error(`No deployment result found for ${application_uid}`);
+      }
+      expect(deployResult.snapshot.application_uid).toBe(application_uid);
+      expect(deployResult.urls).toHaveLength(1);
+
+      try {
+        const [url] = deployResult.urls;
         expect(url).toBeTruthy();
-        const content = await _fetchContent(url);
+        const content = await _fetchContent(url as string);
         const match = content.match(/<title>([^<]+)<\/title>/);
         expect(match).toBeTruthy();
         expect(match?.[1]).toEqual('SampleReactApp');
+      } finally {
+        await _cleanUp(application_uid);
       }
-      await _cleanUp(application_uid);
     },
     integrationTestTimeout
   );
@@ -167,46 +319,43 @@ async function _loadAppConfig(application_uid: string): Promise<ZeApplicationCon
   return response.json().then((data) => data.value);
 }
 
-async function _getAppTagUrls(application_uid: string): Promise<string[]> {
-  const url = new URL(
-    `/v2/builder-packages-api/deployed-tags/${application_uid}`,
-    ZEPHYR_API_ENDPOINT()
-  );
-  const secret_token = getSecretToken();
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${secret_token}`,
-    },
-  });
-  return response.json().then((data) => {
-    return data.entities.map((tag: { remote_host: string }) => tag.remote_host);
-  });
-}
-
 async function _cleanUp(application_uid: string): Promise<void> {
   const url = new URL(
     `/v2/builder-packages-api/cleanup-tests/${application_uid}`,
     ZEPHYR_API_ENDPOINT()
   );
   const secret_token = getSecretToken();
-  await fetch(url, {
+  if (!secret_token) {
+    throw new Error('Secret token is required');
+  }
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${secret_token}`,
     },
   });
+  if (!response.ok) {
+    throw new Error(`Failed to clean up ${application_uid}: ${response.status}`);
+  }
 }
 
-async function _fetchContent(url: string, counter = 0): Promise<string> {
-  const response = await fetch(url);
+async function _fetchContent(url: string, attempt = 0): Promise<string> {
+  const maxAttempts = 6;
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(30_000),
+  });
   const content = await response.text();
-  if (response.status === 404 || !content || counter > 5) {
-    const contentRefetchTimeout = 60000; // 1 minute;
-    await new Promise((resolve) => setTimeout(resolve, contentRefetchTimeout));
-    return _fetchContent(url, counter + 1);
+  if (response.status !== 404 && content) {
+    return content;
   }
-  return content;
+
+  if (attempt + 1 >= maxAttempts) {
+    throw new Error(
+      `Deployment did not become available after ${maxAttempts} attempts: ${url}`
+    );
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 30_000));
+  return _fetchContent(url, attempt + 1);
 }

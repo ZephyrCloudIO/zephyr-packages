@@ -31,41 +31,6 @@ interface ResolverOptions {
   key: string;
 }
 
-// Reference: https://github.com/callstack/repack/blob/f8af03cd231c3d95a92099719d827e368f707b5c/packages/repack/src/modules/ScriptManager/types.ts#L144
-
-/**
- * Defines a function to resolve a script locator used in {@link ScriptManagerConfig}. It's
- * an async function which should return an object with data on how {@link ScriptManager}
- * should fetch the script. All fields describing the script locator data are listed in
- * {@link ScriptLocator}.
- *
- * Return `undefined` if the script should be resolved by other resolvers instead.
- *
- * @param scriptId Id of the script to resolve.
- * @param caller Name of the calling script - it can be for example: name of the bundle,
- *   chunk or container.
- */
-type ScriptLocatorResolver = (
-  scriptId: string,
-  caller?: string,
-  referenceUrl?: string
-) => Promise<ScriptLocator | undefined>;
-
-/* Options for resolver when adding it to a `ScriptManager`. */
-interface ResolverOptions {
-  /**
-   * Priority of the resolver. Defaults to `2`. Resolvers are called based on the highest
-   * priority, so higher the number, the higher priority the resolver gets.
-   */
-  priority?: number;
-  /**
-   * Unique key to identify the resolver. If not provided, the resolver will be added
-   * unconditionally. If provided, the new resolver will be replace the existing one
-   * configured with the same `uniqueKey`.
-   */
-  key?: string;
-}
-
 /**
  * Interface for storage backend used in {@link ScriptManagerConfig}. The interface is
  * modelled on Async Storage from `react-native-community`.

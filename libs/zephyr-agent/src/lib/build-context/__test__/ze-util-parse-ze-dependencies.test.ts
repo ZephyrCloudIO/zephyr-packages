@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 import { parseZeDependencies, parseZeDependency } from '../ze-util-parse-ze-dependencies';
 
 describe('parseZeDependencies', () => {

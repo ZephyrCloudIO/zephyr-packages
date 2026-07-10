@@ -4,53 +4,166 @@ packages:
   - examples/**
   - e2e/**
   - '!**/dist/**'
+  - '!**/lib/**'
+
+catalog:
+  '@ast-grep/napi': ^0.44.1
+  '@astrojs/markdown-satteri': ^0.3.3
+  '@astrojs/mdx': ^7.0.2
+  '@astrojs/rss': ^4.0.19
+  '@astrojs/sitemap': ^3.7.3
+  '@clack/prompts': ^1.7.0
+  '@elysiajs/node': ^1.4.5
+  '@lynx-js/qrcode-rsbuild-plugin': ^0.5.0
+  '@lynx-js/react': ^0.122.1
+  '@lynx-js/react-rsbuild-plugin': ^0.17.2
+  '@lynx-js/rspeedy': ^0.15.2
+  '@lynx-js/types': ^4.0.0
+  '@sentry/react': ^10.65.0
+  '@toon-format/toon': ^0.9.0
+  '@types/debug': ^4.1.13
+  '@types/proper-lockfile': ^4.1.4
+  '@vitejs/plugin-rsc': ^0.5.27
+  acorn: ^8.17.0
+  acorn-walk: ^8.3.5
+  astro: ^7.0.7
+  axios: ^1.18.1
+  axios-retry: ^4.5.0
+  chalk: ^5.6.2
+  chalk-template: 1.1.2
+  commander: ^15.0.0
+  cosmiconfig: ^9.0.2
+  cross-env: ^10.1.0
+  cross-spawn: 7.0.6
+  debug: ^4.4.3
+  dotenv: ^17.4.2
+  elysia: ^1.4.29
+  eventsource: ^4.1.0
+  git-url-parse: ^16.1.0
+  glob: ^13.0.6
+  globby: ^16.2.1
+  hono: ^4.12.29
+  https-proxy-agent: ^7.0.6
+  husky: ^9.1.7
+  jiti: ^2.7.0
+  jose: ^5.10.0
+  jsonc-parser: ^3.3.1
+  lint-staged: ^17.0.8
+  lucide-react: ^1.24.0
+  magic-string: 0.30.21
+  mitt: ^3.0.1
+  ms: 3.0.0-canary.1
+  nitro-cloudflare-dev: ^0.2.2
+  node-persist: ^4.0.4
+  open: ^10.2.0
+  oxfmt: 0.58.0
+  oxlint: 1.73.0
+  proper-lockfile: ^4.1.2
+  rimraf: ^6.1.3
+  serve: ^14.2.6
+  server-only: ^0.0.1
+  sharp: ^0.35.3
+  terminal-link: ^5.0.0
+  tslib: ^2.8.1
+  tsutils: ^3.21.0
+  turbo: 2.10.4
+  url-loader: ^4.1.1
+  vinext: 1.0.0-beta.1
+  web-vitals: ^5.3.0
+  wrangler: ^4.110.0
+  webpack-sources: ^3.5.1
+  yaml: ^2.9.0
 
 catalogs:
   babel:
-    '@babel/core': ^7.26.10
-    '@babel/preset-react': ^7.26.3
-    '@babel/runtime': ^7.26.10
+    '@babel/core': 7.29.6
+    '@babel/plugin-syntax-dynamic-import': ^7.8.3
+    '@babel/plugin-transform-runtime': ^7.29.0
+    '@babel/preset-env': ^7.29.7
+    '@babel/preset-react': ^7.29.7
+    '@babel/preset-typescript': ^7.29.0
+    '@babel/runtime': ^7.28.6
+    '@babel/types': ^7.29.0
+    babel-loader: ^10.1.1
+  biome:
+    '@biomejs/biome': 2.5.3
+  cloudflare:
+    '@cloudflare/vite-plugin': ^1.44.0
   esbuild:
-    esbuild: ^0.27.0
-  eslint:
-    '@eslint/compat': ^1.2.7
-    '@eslint/eslintrc': ^3.3.0
-    '@eslint/js': ^9.22.0
-    '@typescript-eslint/eslint-plugin': ^8.27.0
-    '@typescript-eslint/parser': ^8.27.0
-    '@typescript-eslint/utils': ^8.27.0
-    eslint: ^9.22.0
-    eslint-config-prettier: ^10.1.1
-    eslint-plugin-import: 2.32.0
-    eslint-plugin-jsx-a11y: 6.10.2
-    eslint-plugin-react: ^7.37.4
-    eslint-plugin-react-hooks: ^5.2.0
-    eslint-plugin-react-refresh: ^0.5.0
-    typescript-eslint: ^8.27.0
+    esbuild: ^0.28.1
   modernjs:
-    '@modern-js/app-tools': ^2.70.1
-    '@modern-js/plugin-ssg': ^2.70.1
-    '@modern-js/runtime': ^2.70.1
-    '@modern-js/tsconfig': ^2.70.1
+    '@modern-js/app-tools': ^3.6.0
+    '@modern-js/plugin-ssg': ^3.6.0
+    '@modern-js/runtime': ^3.6.0
+    '@modern-js/tsconfig': ^3.6.0
   module-federation:
     '@module-federation/automatic-vendor-federation': ^1.2.1
-    '@module-federation/enhanced': ^0.21.0
-    '@module-federation/runtime': ^2.2.3
-    '@module-federation/vite': ^1.13.2
+    '@module-federation/enhanced': ^2.7.0
+    '@module-federation/metro': ^2.7.0
+    '@module-federation/rsbuild-plugin': ^2.7.0
+    '@module-federation/runtime': ^2.7.0
+  module-federation-vite:
+    '@module-federation/runtime': 2.7.0
+    '@module-federation/vite': 1.16.15
+  metro:
+    '@rnef/tools': ^0.8.13
+    metro: ^0.82.5
+    metro-config: ^0.82.5
+    metro-file-map: ^0.82.5
+    metro-resolver: ^0.82.5
+    metro-source-map: ^0.82.5
+    metro-transform-worker: ^0.82.5
+    react-native: 0.86.0
+  nuxt:
+    '@nuxt/kit': ^4.4.8
+    '@nuxt/schema': ^4.4.8
+    nuxt: ^4.4.8
+    vue: ^3.5.39
+    vue-router: ^4.6.4
   parcel:
     '@parcel/config-default': ^2.16.4
-    '@parcel/core': ^2.16.4
     '@parcel/plugin': ^2.16.4
     '@parcel/types': ^2.16.4
     parcel: ^2.16.4
   plugin-shared:
     is-ci: ^4.1.0
+  peer-compat:
+    '@module-federation/metro': ^2.7.0
+    '@module-federation/vite': ^1.13.2
+    '@modern-js/app-tools': ^3.0.0
+    '@nuxt/kit': ^3.0.0 || ^4.0.0
+    '@parcel/plugin': ^2.0.0
+    '@parcel/types': ^2.0.0
+    '@rnef/tools': ^0.7.28 || ^0.8.0
+    '@rsbuild/core': ^1.0.0 || ^2.0.0-0
+    '@rspack/core': ^1.0.0 || ^2.0.0-0
+    '@rspress/core': ^2.0.0
+    '@tanstack/react-start': ^1.0.0
+    astro: ^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7
+    metro: '>=0.70.0'
+    nuxt: ^3.0.0 || ^4.0.0
+    react: '>=19.0.0'
+    react-native: '>=0.60.0'
+    rolldown: '>=1.0.0-beta.0'
+    rollup: ^4.0.0
+    vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+    webpack: ^5.0.0
+  peer-native-cache:
+    react-native: '>=0.79.0'
+  peer-vite-modern:
+    vite: ^7.0.0 || ^8.0.0
   postcss:
-    postcss: ^8.5.10
-    postcss-loader: ^8.0.0
+    autoprefixer: ^10.5.2
+    postcss: ^8.5.16
+    postcss-loader: ^8.2.1
   react:
-    '@jest/globals': ^29.7.0
-    '@testing-library/react': ^16.2.0
+    '@testing-library/dom': ^10.4.1
+    '@testing-library/react': ^16.3.2
+  react-router:
+    react-router-dom: ^7.18.1
+  rstest:
+    '@rstest/core': 0.11.1
+    '@rstest/coverage-istanbul': 0.11.1
   react18:
     '@types/react': 18.3.28
     '@types/react-dom': 18.3.7
@@ -58,59 +171,73 @@ catalogs:
     react-dom: 18.3.1
     react-refresh: ^0.18.0
   react19:
-    '@types/react': ^19.0.12
-    '@types/react-dom': ~19.2.0
-    react: ^19.2.6
-    react-dom: ^19.2.6
+    '@types/react': ^19.2.17
+    '@types/react-dom': ^19.2.3
+    react: ^19.2.7
+    react-dom: ^19.2.7
+    react-server-dom-webpack: 19.2.7
   rolldown:
-    rolldown: 1.0.0-rc.6
+    rolldown: ^1.1.5
   rollup4:
-    '@rollup/plugin-url': 8.0.2
-    '@svgr/rollup': 8.1.0
-    rollup: ^4.36.0
+    rollup: ^4.62.2
+  rsbuild1:
+    '@rsbuild/core': ^1.7.3
+    '@rsbuild/plugin-react': ^1.4.5
   rspack:
-    '@rsbuild/core': ^1.7.1
-    '@rsbuild/plugin-react': ^1.4.0
-    '@rsbuild/shared': ^0.7.10
-    '@rsdoctor/rspack-plugin': 1.5.2
-    '@rspack/cli': ^1.7.0
-    '@rspack/core': ^1.7.0
-    '@rspack/plugin-react-refresh': ^1.5.1
+    '@rsbuild/core': ^2.1.5
+    '@rsbuild/plugin-react': ^2.1.0
+    '@rspack/cli': ^2.1.3
+    '@rspack/core': ^2.1.3
+    '@rspack/plugin-react-refresh': ^2.0.2
+  rslib:
+    '@rslib/core': 0.23.2
   rspress:
-    '@rspress/core': ^2.0.0-rc.1
+    '@rspress/core': ^2.0.17
+  rspress1:
+    rspress: ^1.47.1
   swc:
     '@swc-node/register': 1.11.1
-    '@swc/cli': 0.8.0
-    '@swc/core': 1.15.8
-    '@swc/helpers': 0.5.19
-    '@swc/jest': 0.2.39
-    swc-loader: ^0.2.6
+    '@swc/cli': 0.8.1
+    '@swc/core': 1.15.43
+    '@swc/helpers': 0.5.23
+    swc-loader: ^0.2.7
   tailwind:
     tailwindcss: ^3.4.11
+  tailwind4:
+    '@tailwindcss/postcss': ^4.3.2
+    '@tailwindcss/vite': ^4.3.2
+    tailwindcss: ^4.3.2
+  tanstack:
+    '@tanstack/react-devtools': 0.10.8
+    '@tanstack/react-router': 1.170.17
+    '@tanstack/react-router-devtools': 1.167.0
+    '@tanstack/react-router-ssr-query': 1.167.1
+    '@tanstack/react-start': 1.168.27
+    '@tanstack/router-plugin': 1.168.19
+  test-dom:
+    jsdom: ^29.1.1
   typescript:
+    '@types/find-package-json': ^1.2.7
     '@types/is-ci': 3.0.4
-    '@types/jest': 29.5.14
-    '@types/node': 22.19.13
+    '@types/node': ^24.13.3
     '@types/node-persist': ^3.1.8
-    '@types/yargs': ^17.0.33
-    ts-jest: ^29.2.6
-    tslib: ^2.8.1
-    typescript: ~5.9.0
+    tsx: ^4.23.0
+    typescript: ~5.9.3
   vite7:
-    '@vitejs/plugin-react': ^4.3.4
-    '@vitejs/plugin-react-swc': ^3.8.1
-    autoprefixer: ^10.1.0
-    globals: ^15.9.0
-    postcss: ^8.5.10
-    postcss-loader: ^8.0.0
+    '@vitejs/plugin-react': ^4.7.0
     vite: ^7.3.5
-  vitest:
-    '@vitest/coverage-v8': ^3.0.9
-    '@vitest/ui': ^3.0.9
-    vitest: ^3.0.9
+  vite8:
+    '@vitejs/plugin-react': ^6.0.3
+    vite: ^8.1.4
   webpack5:
     '@svgr/webpack': ^8.1.0
-    webpack: ^5.103.0
+    css-loader: ^7.1.4
+    dotenv-webpack: ^9.0.0
+    html-webpack-plugin: ^5.6.7
+    style-loader: ^4.0.0
+    webpack: ^5.108.4
+    webpack-cli: ^7.2.1
+    webpack-dev-server: ^6.0.0
 
 onlyBuiltDependencies:
   - '@biomejs/biome'
@@ -122,44 +249,5 @@ onlyBuiltDependencies:
   - lmdb
   - msgpackr-extract
   - msw
-  - nx
   - sharp
   - workerd
-
-overrides:
-  '@remix-run/router@<=1.23.1': '>=1.23.2'
-  '@tootallnate/once@<3.0.1': '>=3.0.1'
-  ajv@>=7.0.0-alpha.0 <8.18.0: '>=8.18.0'
-  defu@<=6.1.4: 6.1.6
-  flatted: 3.4.2
-  h3@<1.15.6: '>=1.15.6'
-  h3@>=2.0.0-0 <2.0.1-rc.18: '>=2.0.1-rc.18'
-  '@tanstack/start-server-core>h3-v2': npm:h3@2.0.1-rc.18
-  hono@<4.10.3: '>=4.10.3'
-  hono@<4.11.10: '>=4.11.10'
-  hono@<4.11.4: '>=4.11.4'
-  hono@<4.11.7: '>=4.11.7'
-  hono@<4.12.4: '>=4.12.4'
-  hono@<4.2.7: '>=4.2.7'
-  hono@<4.5.8: '>=4.5.8'
-  hono@<4.6.5: '>=4.6.5'
-  hono@<4.9.7: '>=4.9.7'
-  handlebars@<=4.7.8: '>=4.7.9'
-  hono@>=1.1.0 <4.10.2: '>=4.10.2'
-  koa@>=3.0.0 <3.1.2: '>=3.1.2'
-  lodash-es@<=4.17.23: 4.18.1
-  lodash@<=4.17.23: 4.18.1
-  minimatch@<3.1.4: 3.1.5
-  minimatch@>=5.0.0 <5.1.8: 5.1.9
-  minimatch@>=9.0.0 <9.0.7: 9.0.9
-  node-forge@<1.4.0: '>=1.4.0'
-  anymatch>picomatch: 2.3.2
-  jest-util>picomatch: 4.0.4
-  micromatch>picomatch: 4.0.4
-  path-to-regexp@<0.1.13: '>=0.1.13'
-  picomatch@<2.3.2: '>=2.3.2'
-  picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
-  prismjs@<1.30.0: '>=1.30.0'
-  qs@<6.14.1: '>=6.14.1'
-  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
-  serialize-javascript@<=7.0.2: '>=7.0.3'

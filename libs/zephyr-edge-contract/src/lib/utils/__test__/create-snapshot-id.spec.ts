@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { createSnapshotId, flatCreateSnapshotId } from '../create-snapshot-id';
 
 describe('createSnapshotId', () => {

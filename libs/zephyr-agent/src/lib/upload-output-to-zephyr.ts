@@ -172,25 +172,34 @@ export async function uploadOutputToZephyr(
     builder: opts.builder ?? 'unknown',
     context: opts.rootDir,
   });
+  let buildInProgress = true;
 
-  zephyrEngine.env.target = opts.target ?? DEFAULT_DEPLOY_TARGET;
-  zephyrEngine.env.ssr = ssr;
+  try {
+    zephyrEngine.env.target = opts.target ?? DEFAULT_DEPLOY_TARGET;
+    zephyrEngine.env.ssr = ssr;
 
-  const buildStats = await zeBuildDashData(zephyrEngine);
-  let deploymentUrl: string | null = null;
+    const buildStats = await zeBuildDashData(zephyrEngine);
+    let deploymentUrl: string | null = null;
 
-  await zephyrEngine.upload_assets({
-    assetsMap,
-    buildStats,
-    snapshotType: ssr ? 'ssr' : 'csr',
-    entrypoint: ssr ? entrypoint : undefined,
-    hooks: {
-      onDeployComplete: async (deploymentInfo) => {
-        deploymentUrl = deploymentInfo.url;
-        await opts.hooks?.onDeployComplete?.(deploymentInfo);
+    await zephyrEngine.upload_assets({
+      assetsMap,
+      buildStats,
+      snapshotType: ssr ? 'ssr' : 'csr',
+      entrypoint: ssr ? entrypoint : undefined,
+      hooks: {
+        onDeployComplete: async (deploymentInfo) => {
+          deploymentUrl = deploymentInfo.url;
+          await opts.hooks?.onDeployComplete?.(deploymentInfo);
+        },
       },
-    },
-  });
+    });
+    buildInProgress = false;
+    await zephyrEngine.build_finished();
 
-  return { deploymentUrl, entrypoint };
+    return { deploymentUrl, entrypoint };
+  } finally {
+    if (buildInProgress && zephyrEngine.hasActiveBuild !== false) {
+      zephyrEngine.build_failed();
+    }
+  }
 }

@@ -1,5 +1,16 @@
 export {
+  claimPartialAssetMap,
+  claimPartialAssetMapBatch,
+  commitPartialAssetMapClaim,
+  commitPartialAssetMapClaimBatch,
   savePartialAssetMap,
   removePartialAssetMap,
   getPartialAssetMap,
+  rollbackPartialAssetMapClaim,
+  rollbackPartialAssetMapClaimBatch,
+  takePartialAssetMap,
+  type PartialAssetMapClaim,
+  type PartialAssetMapClaimBatch,
+  type PartialAssetMapScope,
+  type PartialAssetMaps,
 } from './partial-assets-map';

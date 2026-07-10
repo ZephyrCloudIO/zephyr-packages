@@ -7,8 +7,8 @@ import type { PackageManager } from './types.js';
 export function detectPackageManager(directory: string = process.cwd()): PackageManager {
   // Priority 1: Check which CLI is actually running (npm_config_user_agent)
   // This is most accurate when someone runs `pnpm dlx with-zephyr` or `npx with-zephyr`
-  if (process.env.npm_config_user_agent) {
-    const userAgent = process.env.npm_config_user_agent.toLowerCase();
+  if (process.env['npm_config_user_agent']) {
+    const userAgent = process.env['npm_config_user_agent'].toLowerCase();
     if (userAgent.includes('pnpm')) return 'pnpm';
     if (userAgent.includes('yarn')) return 'yarn';
     if (userAgent.includes('bun')) return 'bun';

@@ -1,14 +1,8 @@
 import NativeMFECache from './NativeMFECache';
 import type { BundleMetadata, CachedBundleResult, MFECacheConfig } from './types';
+import { getBundleCacheKey, getBundleCacheVariant } from './cache-key';
 
 const LOG_PREFIX = '[MFE-Cache]';
-
-/**
- * Strip query params so the same physical bundle maps to one cache key regardless of
- * which caller built the URL (MF runtime vs. manifest extractor use different param
- * orderings). Query params are still used for the HTTP request itself.
- */
-const cacheKey = (url: string): string => url.split('?')[0];
 
 // Default configuration values
 const DEFAULT_MAX_CACHE_SIZE_BYTES = 20 * 1024 * 1024; // 20MB
@@ -23,6 +17,7 @@ export class CacheManager {
   private urlIndex = new Map<string, BundleMetadata>();
 
   private initialized = false;
+  private manifestWrite: Promise<boolean> = Promise.resolve(true);
 
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
@@ -55,7 +50,7 @@ export class CacheManager {
   }
 
   async getCachedBundle(bundleUrl: string): Promise<CachedBundleResult | null> {
-    const meta = this.urlIndex.get(cacheKey(bundleUrl));
+    const meta = this.urlIndex.get(getBundleCacheKey(bundleUrl));
     if (!meta || meta.status !== 'active') return null;
 
     // Verify file still exists on disk
@@ -64,6 +59,7 @@ export class CacheManager {
       if (!exists) {
         // File gone, remove from index
         this.removeBundleMetadata(meta);
+        await this.saveDiskManifest();
         return null;
       }
     }
@@ -71,15 +67,32 @@ export class CacheManager {
     return { source: 'disk', filePath: meta.filePath, metadata: meta };
   }
 
-  async getBundleDestPath(remoteName: string, bundleUrl: string): Promise<string> {
+  async getBundleDestPath(
+    remoteName: string,
+    bundleUrl: string,
+    bundleHash?: string
+  ): Promise<string> {
     try {
       const url = new URL(bundleUrl);
-      const hostDir = url.host.replace(/:/g, '_');
+      const hostDir = `${url.protocol.replace(':', '')}_${url.host}`.replace(/:/g, '_');
       // Strip trailing slashes — some URL paths end with "/" which creates a directory instead of a file
-      const pathname = url.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+      let pathname = this.sanitizeRelativePath(url.pathname);
+      pathname ||= `${this.sanitizeRelativePath(remoteName) || 'bundle'}.bundle`;
+      const variant = getBundleCacheVariant(bundleUrl);
+      const contentVariant = bundleHash?.replace(/[^a-z0-9_-]/gi, '').slice(0, 64);
+      const suffix = [variant, contentVariant].filter(Boolean).join('.');
+      if (suffix) {
+        const extensionIndex = pathname.lastIndexOf('.');
+        pathname =
+          extensionIndex > pathname.lastIndexOf('/')
+            ? `${pathname.slice(0, extensionIndex)}.${suffix}${pathname.slice(extensionIndex)}`
+            : `${pathname}.${suffix}`;
+      }
       return `${this.bundleDir}/${hostDir}/${pathname}`;
     } catch {
-      return `${this.bundleDir}/${remoteName}/${remoteName}.bundle`;
+      const safeRemoteName = this.sanitizeRelativePath(remoteName) || 'unknown';
+      const filename = safeRemoteName.split('/').pop() ?? 'unknown';
+      return `${this.bundleDir}/${safeRemoteName}/${filename}.bundle`;
     }
   }
 
@@ -98,7 +111,7 @@ export class CacheManager {
       bundleHash: metadata.bundleHash ?? '',
       buildVersion: metadata.buildVersion ?? '',
       filePath,
-      bundleUrl: cacheKey(metadata.bundleUrl),
+      bundleUrl: getBundleCacheKey(metadata.bundleUrl),
       downloadedAt: now,
       lastUsedAt: now,
       status: 'active',
@@ -106,16 +119,20 @@ export class CacheManager {
       lastRetryAt: null,
     };
 
+    const previous = this.urlIndex.get(meta.bundleUrl);
     this.urlIndex.set(meta.bundleUrl, meta);
 
     // Persist manifest to disk
-    await this.saveDiskManifest();
+    const persisted = await this.saveDiskManifest();
+    if (persisted && previous && previous.filePath !== meta.filePath) {
+      await this.deleteBundleFiles(previous);
+    }
 
     return meta;
   }
 
   async updateLastUsedAt(bundleUrl: string): Promise<void> {
-    const meta = this.urlIndex.get(cacheKey(bundleUrl));
+    const meta = this.urlIndex.get(getBundleCacheKey(bundleUrl));
     if (!meta) {
       return;
     }
@@ -127,12 +144,17 @@ export class CacheManager {
     return Array.from(this.urlIndex.values());
   }
 
-  async removeAll(remoteName: string): Promise<void> {
+  async removeAll(remoteName: string, persist = true): Promise<void> {
+    let removed = false;
     for (const meta of this.urlIndex.values()) {
       if (meta.remoteName === remoteName) {
         await this.deleteBundleFiles(meta);
         this.removeBundleMetadata(meta);
+        removed = true;
       }
+    }
+    if (removed && persist) {
+      await this.saveDiskManifest();
     }
   }
 
@@ -143,12 +165,13 @@ export class CacheManager {
   async preDownloadBundle(bundleUrl: string, newHash: string): Promise<boolean> {
     if (!NativeMFECache) return false;
 
-    const existing = this.urlIndex.get(cacheKey(bundleUrl));
-    // Already cached with same hash — skip
-    if (existing?.bundleHash === newHash) return false;
+    const existing = this.urlIndex.get(getBundleCacheKey(bundleUrl));
+    const cached = await this.getCachedBundle(bundleUrl);
+    // Already cached with the same hash and still present on disk — skip.
+    if (cached?.metadata.bundleHash === newHash) return false;
 
     const remoteName = existing?.remoteName ?? this.inferRemoteName(bundleUrl);
-    const destPath = await this.getBundleDestPath(remoteName, bundleUrl);
+    const destPath = await this.getBundleDestPath(remoteName, bundleUrl, newHash);
 
     try {
       const { sha256 } = await NativeMFECache.downloadFile(bundleUrl, destPath);
@@ -181,11 +204,12 @@ export class CacheManager {
       remoteNames.add(meta.remoteName);
     }
     for (const name of remoteNames) {
-      await this.removeAll(name);
+      await this.removeAll(name, false);
     }
     // Remove disk manifest
     if (NativeMFECache) {
       try {
+        await this.manifestWrite;
         await NativeMFECache.deleteFile(this.manifestPath);
       } catch {
         /* ok */
@@ -201,23 +225,32 @@ export class CacheManager {
   }
 
   /** Persist all metadata to a JSON file on disk */
-  private async saveDiskManifest(): Promise<void> {
-    if (!NativeMFECache) return;
-    try {
-      // Store filePath as relative to bundleDir so it survives app UUID changes
-      const bundles = Array.from(this.urlIndex.values()).map((meta) => ({
-        ...meta,
-        filePath: meta.filePath.startsWith(this.bundleDir)
-          ? meta.filePath.slice(this.bundleDir.length + 1)
-          : meta.filePath,
-      }));
-      const manifest: Record<string, any> = {
-        bundles,
-      };
-      await NativeMFECache.writeFile(this.manifestPath, JSON.stringify(manifest), 'utf8');
-    } catch {
-      // non-critical
-    }
+  private saveDiskManifest(): Promise<boolean> {
+    const nativeCache = NativeMFECache;
+    if (!nativeCache) return Promise.resolve(false);
+    const write = async () => {
+      try {
+        // Build the snapshot inside the serialized writer so concurrent downloads cannot
+        // persist an older view after a newer one.
+        const bundles = Array.from(this.urlIndex.values()).map((meta) => ({
+          ...meta,
+          filePath: meta.filePath.startsWith(this.bundleDir)
+            ? meta.filePath.slice(this.bundleDir.length + 1)
+            : meta.filePath,
+        }));
+        await nativeCache.writeFile(
+          this.manifestPath,
+          JSON.stringify({ bundles }),
+          'utf8'
+        );
+        return true;
+      } catch {
+        // non-critical
+        return false;
+      }
+    };
+    this.manifestWrite = this.manifestWrite.then(write, write);
+    return this.manifestWrite;
   }
 
   /** Recover cache index from disk manifest */
@@ -238,6 +271,7 @@ export class CacheManager {
         // Verify the bundle file still exists
         const fileOk = await NativeMFECache.fileExists(meta.filePath);
         if (!fileOk) continue;
+        meta.bundleUrl = getBundleCacheKey(meta.bundleUrl);
         this.urlIndex.set(meta.bundleUrl, meta);
       }
 
@@ -264,6 +298,15 @@ export class CacheManager {
       const last = url.split('/').pop() ?? 'unknown';
       return last.split('.')[0];
     }
+  }
+
+  private sanitizeRelativePath(value: string): string {
+    return value
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter((segment) => segment && segment !== '.' && segment !== '..')
+      .map((segment) => segment.replace(/[^a-z0-9._@%+-]/gi, '_'))
+      .join('/');
   }
 
   private async deleteBundleFiles(meta: BundleMetadata): Promise<void> {
@@ -322,7 +365,7 @@ export class CacheManager {
 
     for (const { meta, size } of candidates) {
       // Stop if we're under the max size limit
-      if (currentSize < maxSize) {
+      if (currentSize <= maxSize) {
         break;
       }
       // Never go below min cache size

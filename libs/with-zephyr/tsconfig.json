@@ -1,23 +1,32 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["ES2022"],
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "stripInternal": true,
+    "target": "ES2022",
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true
+    "composite": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "types": ["node"],
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "./src",
+    "resolveJsonModule": true
   },
-  "files": [],
-  "include": [],
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
+      "path": "../zephyr-rsbuild-plugin/tsconfig.json"
     }
   ]
 }

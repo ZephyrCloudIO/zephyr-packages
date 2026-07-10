@@ -56,6 +56,50 @@ export default defineConfig({
 });
 ```
 
+### Multi-Environment and SSR Builds
+
+Vite 6, 7, and 8 environment builds are collected across `client`, `server`, RSC, or custom
+child environments and published once after `buildApp` completes. The plugin validates
+that each current environment contributed output; persisted partial-build contributions
+are merged atomically. Vite 5 and watch builds use the direct single-environment upload
+path.
+
+```typescript
+withZephyr({
+  snapshotType: 'ssr',
+  entrypoint: 'server/index.mjs',
+});
+```
+
+- `snapshotType` overrides automatic CSR/SSR detection.
+- `entrypoint` is relative to the shared snapshot root and is required when an SSR entry
+  cannot be inferred.
+
+For intentionally separate Vite invocations, use `withZephyrPartial()` in producer
+configs and `withZephyr()` in the final config. Give every producer and finalizer the
+same `invocationId` (or set `ZE_BUILD_INVOCATION_ID`). To derive that identity from a
+supported CI job, explicitly pass `partialBuild: {}` to the finalizer; an ordinary
+`withZephyr()` build ignores ambient CI metadata. The plugin fails closed when a producer
+has no shared build identity. Partial maps are isolated by invocation and generation,
+protected by an inter-process lock, and claimed transactionally. Commit removes only
+unchanged claimed revisions, while rollback releases the claim without overwriting a
+newer concurrent write.
+
+```typescript
+withZephyrPartial({ invocationId: process.env.BUILD_ID });
+withZephyr({ partialBuild: { invocationId: process.env.BUILD_ID } });
+```
+
+For builds with no user-defined `base`, the plugin defaults Vite to `./`. Relative build
+asset URLs work for hostname deployments and allow Zephyr to add a path prefix later.
+Explicit bases are preserved; an origin-absolute base such as `/docs/` produces a warning
+when the application or one of its environments uses path addressing because that URL
+cannot be relocated under another prefix.
+
+This build-time default does not by itself make deep SSR/RSC routes prefix-aware. Runtime
+HTML generation must still resolve asset URLs against the request/deployment base. The
+specialized TanStack Start and Vinext plugins coordinate that runtime output separately.
+
 ### With Module Federation
 
 For microfrontend applications using Module Federation:
@@ -157,7 +201,7 @@ Add these scripts to your `package.json`:
 
 ## Requirements
 
-- Vite 5.x, 6.x, or 7.x
+- Vite 5.x, 6.x, 7.x, or 8.x
 - Rollup 4.x
 - Node.js version supported by your Vite toolchain
 - Zephyr Cloud account (sign up at [zephyr-cloud.io](https://zephyr-cloud.io))

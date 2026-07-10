@@ -1,0 +1,29 @@
+# Disabled: the downstream Repack E2E suite is currently failing. Keep this workflow
+# source available for restoration without registering it with GitHub Actions.
+#
+# name: Trigger Zephyr Repack Plugin E2E tests
+#
+# permissions:
+#   contents: read
+#
+# on:
+#   push:
+#     branches:
+#       - main
+#
+# jobs:
+#   trigger-zephyr-repack-example:
+#     runs-on: depot-ubuntu-latest
+#     timeout-minutes: 10
+#     steps:
+#       - name: Trigger 'Zephyr Repack Plugin E2E testing' workflow on 'zephyr-repack-example' repo
+#         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+#         with:
+#           github-token: ${{ secrets.GH_TOKEN }}
+#           script: |
+#             await github.rest.actions.createWorkflowDispatch({
+#               owner: 'ZephyrCloudIO',
+#               repo: 'zephyr-repack-example',
+#               workflow_id: 'e2e-zephyr-repack-plugin.yml',
+#               ref: 'bootstrap-example'
+#             })

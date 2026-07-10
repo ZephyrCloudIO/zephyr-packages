@@ -42,7 +42,9 @@ function isGitLabCi(env: NodeJS.ProcessEnv): boolean {
   return env['GITLAB_CI'] === 'true' || env['CI_SERVER_NAME'] === 'GitLab';
 }
 
-async function inferGitLabIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
+async function inferGitLabIdentity(
+  env: NodeJS.ProcessEnv
+): Promise<CiTokenIdentity | undefined> {
   const payload = decodeJwtPayload(env['CI_JOB_TOKEN']);
   const jwtEmails = getEmailClaims(payload, ['user_email', 'email']);
 
@@ -79,7 +81,9 @@ async function inferGitLabIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdent
   return undefined;
 }
 
-async function inferGitLabIdentityFromApi(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
+async function inferGitLabIdentityFromApi(
+  env: NodeJS.ProcessEnv
+): Promise<CiTokenIdentity | undefined> {
   const apiUrl = getGitLabApiUrl(env);
   const jobToken = env['CI_JOB_TOKEN']?.trim();
   if (!apiUrl || !jobToken) {
@@ -92,7 +96,11 @@ async function inferGitLabIdentityFromApi(env: NodeJS.ProcessEnv): Promise<CiTok
       return undefined;
     }
 
-    const emails = getEmails([job.user?.email, job.user?.public_email, job.commit?.author_email]);
+    const emails = getEmails([
+      job.user?.email,
+      job.user?.public_email,
+      job.commit?.author_email,
+    ]);
     if (emails.length === 0) {
       return undefined;
     }
@@ -118,7 +126,12 @@ function getGitLabIssuer(env: NodeJS.ProcessEnv): string | undefined {
   }
 
   const apiUrl = env['CI_API_V4_URL']?.trim();
-  return apiUrl ? apiUrl.replace(/\/api\/v4\/?$/, '').replace(/\/+$/, '').toLowerCase() : undefined;
+  return apiUrl
+    ? apiUrl
+        .replace(/\/api\/v4\/?$/, '')
+        .replace(/\/+$/, '')
+        .toLowerCase()
+    : undefined;
 }
 
 function getGitLabApiUrl(env: NodeJS.ProcessEnv): string | undefined {
@@ -131,7 +144,10 @@ function getGitLabApiUrl(env: NodeJS.ProcessEnv): string | undefined {
   return serverUrl ? `${serverUrl.replace(/\/$/, '')}/api/v4` : undefined;
 }
 
-async function fetchGitLabJob(apiUrl: string, jobToken: string): Promise<GitLabJobResponse> {
+async function fetchGitLabJob(
+  apiUrl: string,
+  jobToken: string
+): Promise<GitLabJobResponse> {
   const url = new URL('job', apiUrl.endsWith('/') ? apiUrl : `${apiUrl}/`);
   const response = await fetch(url.toString(), {
     headers: {
@@ -147,7 +163,10 @@ async function fetchGitLabJob(apiUrl: string, jobToken: string): Promise<GitLabJ
   return (await response.json()) as GitLabJobResponse;
 }
 
-function gitLabClaimsMatchEnvironment(payload: JwtPayload | undefined, env: NodeJS.ProcessEnv): boolean {
+function gitLabClaimsMatchEnvironment(
+  payload: JwtPayload | undefined,
+  env: NodeJS.ProcessEnv
+): boolean {
   if (!payload) {
     return false;
   }
@@ -159,10 +178,21 @@ function gitLabClaimsMatchEnvironment(payload: JwtPayload | undefined, env: Node
   );
 }
 
-function gitLabJobMatchesEnvironment(job: GitLabJobResponse, env: NodeJS.ProcessEnv): boolean {
+function gitLabJobMatchesEnvironment(
+  job: GitLabJobResponse,
+  env: NodeJS.ProcessEnv
+): boolean {
   return (
     claimMatchesEnv({ job_id: job.id }, 'job_id', env['CI_JOB_ID']) &&
-    claimMatchesEnv({ project_id: job.pipeline?.project_id }, 'project_id', env['CI_PROJECT_ID']) &&
-    claimMatchesEnv({ pipeline_id: job.pipeline?.id }, 'pipeline_id', env['CI_PIPELINE_ID'])
+    claimMatchesEnv(
+      { project_id: job.pipeline?.project_id },
+      'project_id',
+      env['CI_PROJECT_ID']
+    ) &&
+    claimMatchesEnv(
+      { pipeline_id: job.pipeline?.id },
+      'pipeline_id',
+      env['CI_PIPELINE_ID']
+    )
   );
 }

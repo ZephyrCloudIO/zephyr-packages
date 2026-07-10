@@ -1,3 +1,5 @@
+import { describe, expect, test } from '@rstest/core';
+
 import { buildEnvImportMap } from './index';
 
 describe('buildEnvImportMap', () => {

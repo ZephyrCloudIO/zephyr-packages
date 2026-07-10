@@ -1,6 +1,6 @@
-import { clear, getItem, removeItem, setItem } from 'node-persist';
+import nodePersist from 'node-persist';
 import { getSecretToken } from './secret-token';
-import { storage } from './storage';
+import { setPrivateItem, storage } from './storage';
 import { StorageKeys } from './storage-keys';
 import { makeRequest } from '../http/http-request';
 import { getCiToken } from './ci-token';
@@ -13,8 +13,7 @@ import { type CiTokenIdentity, inferCiTokenIdentity } from './ci-token-identity'
 import { ZeErrors, ZephyrError } from '../errors';
 
 export async function saveToken(token: string): Promise<void> {
-  await storage;
-  await setItem(StorageKeys.ze_auth_token, token);
+  await setPrivateItem(StorageKeys.ze_auth_token, token);
 }
 
 export async function getToken(git_config?: ZeGitInfo): Promise<string | undefined> {
@@ -41,18 +40,22 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
     );
   }
 
+  // An explicitly configured server principal must win over browser state whenever the
+  // git identity required for exchange is available (notably during checkAuth). Later
+  // config lookups omit git_config and intentionally reuse the exchanged access token.
+  if (server_token && git_config) {
+    return await getTokenFromServerToken(server_token, git_config.git.email);
+  }
+
   await storage;
-  const token = await getItem(StorageKeys.ze_auth_token);
+  const token = await nodePersist.getItem(StorageKeys.ze_auth_token);
   if (token) {
     return token;
   }
 
   if (server_token) {
-    if (!git_config) {
-      ze_log.error('No git config provided, skipping server token check');
-      return undefined;
-    }
-    return await getTokenFromServerToken(server_token, git_config.git.email);
+    ze_log.error('No git config provided, skipping server token check');
+    return undefined;
   }
 
   return undefined;
@@ -60,12 +63,12 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
 
 export async function removeToken(): Promise<void> {
   await storage;
-  await removeItem(StorageKeys.ze_auth_token);
+  await nodePersist.removeItem(StorageKeys.ze_auth_token);
 }
 
 export async function cleanTokens(): Promise<void> {
   await storage;
-  await clear();
+  await nodePersist.clear();
 }
 
 async function getTokenFromServerToken(

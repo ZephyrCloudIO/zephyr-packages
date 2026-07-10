@@ -1,15 +1,18 @@
-import { describe, expect, jest, it } from '@jest/globals';
+import { beforeEach } from '@rstest/core';
+import type { Mocked } from '@rstest/core';
+
+import { describe, expect, rs, it } from '@rstest/core';
 import { resolve_remote_dependency } from '../resolve_remote_dependency';
 import { ZephyrError } from '../../lib/errors';
 import axios from 'axios';
 
 // Mock axios instead of fetch
-jest.mock('axios');
-const axiosMock = axios as jest.Mocked<typeof axios>;
+rs.mock('axios', { spy: true });
+const axiosMock = axios as Mocked<typeof axios>;
 
 const mockToken = 'test-token';
-const getTokenMock = jest.fn();
-jest.mock('../../lib/node-persist/token', () => ({
+const getTokenMock = rs.fn();
+rs.mock('../../lib/node-persist/token', () => ({
   getToken: () => getTokenMock(),
 }));
 

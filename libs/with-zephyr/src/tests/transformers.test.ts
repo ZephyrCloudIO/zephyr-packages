@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import { beforeEach, describe, expect, it } from '@rstest/core';
 import fs from 'fs';
 import os from 'os';

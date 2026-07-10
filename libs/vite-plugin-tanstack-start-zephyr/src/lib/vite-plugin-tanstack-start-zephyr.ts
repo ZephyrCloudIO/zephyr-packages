@@ -1,8 +1,12 @@
 /** Vite plugin for deploying TanStack Start applications to Zephyr */
 
-import type { Plugin, ResolvedConfig } from 'vite';
+import type { Plugin, ResolvedConfig } from 'vite' with {
+  'resolution-mode': 'import',
+};
+import type { OutputAsset, OutputChunk } from 'rollup';
 import * as path from 'path';
 import {
+  ApplicationContext,
   ZephyrEngine,
   type ZephyrEngineOptions,
   zeBuildDashData,
@@ -15,7 +19,7 @@ import {
 import { loadTanStackOutput } from './internal/extract/load-tanstack-output';
 
 /** Extract buffer from Rollup output */
-function extractBuffer(item: any): Buffer {
+function extractBuffer(item: OutputAsset | OutputChunk): Buffer {
   if (item.type === 'chunk') {
     return Buffer.from(item.code, 'utf-8');
   } else if (item.type === 'asset') {
@@ -34,10 +38,10 @@ function extractBuffer(item: any): Buffer {
 function getAssetType(item: { fileName?: string; name?: string }): string {
   const fileName = item.fileName || item.name || '';
   const ext = path.extname(fileName).toLowerCase();
-  // Note: .cjs is intentionally excluded as workers don't support CommonJS
   const typeMap: Record<string, string> = {
     '.js': 'application/javascript',
     '.mjs': 'application/javascript',
+    '.cjs': 'application/javascript',
     '.css': 'text/css',
     '.html': 'text/html',
     '.json': 'application/json',
@@ -66,6 +70,19 @@ export interface TanStackStartZephyrOptions {
   entrypoint?: string;
 }
 
+export function resolveTanStackOutputDir(root: string, outputDir?: string): string {
+  if (!outputDir) return path.join(root, 'dist');
+  return path.isAbsolute(outputDir) ? outputDir : path.resolve(root, outputDir);
+}
+
+function uniqueParticipant(base: string, reserved: readonly string[]): string {
+  let participant = base;
+  let suffix = 1;
+  const used = new Set(reserved);
+  while (used.has(participant)) participant = `${base}-${suffix++}`;
+  return participant;
+}
+
 function normalizeEntrypoint(entrypoint: string): string {
   let normalized = entrypoint.trim();
   // Normalize separators to match snapshot asset keys (posix-style).
@@ -81,8 +98,13 @@ function normalizeEntrypoint(entrypoint: string): string {
   if (normalized.startsWith('dist/')) {
     normalized = normalized.slice('dist/'.length);
   }
-
-  return normalized;
+  const segments = normalized.split('/').filter((segment) => segment && segment !== '.');
+  if (!normalized || segments.length === 0 || segments.includes('..')) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: `TanStack Start entrypoint must be inside the output directory: "${entrypoint}".`,
+    });
+  }
+  return segments.join('/');
 }
 
 /**
@@ -99,7 +121,9 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
   let config: ResolvedConfig;
   let outputDir: string;
   let entrypoint: string;
-  let uploadCompleted = false; // Guard to ensure we only upload once
+  let engineCreated = false;
+  let buildGeneration = 0;
+  let applicationContext: ApplicationContext | undefined;
 
   return {
     name: 'vite-plugin-tanstack-start-zephyr',
@@ -110,97 +134,118 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
 
       // For TanStack Start, always use the root dist directory (contains server/ and client/)
       // Don't use config.build.outDir as it points to dist/server/ during SSR build
-      outputDir = options.outputDir || path.join(config.root, 'dist');
+      outputDir = resolveTanStackOutputDir(config.root, options.outputDir);
       entrypoint = normalizeEntrypoint(options.entrypoint || 'server/index.js');
     },
 
-    async buildApp(builder) {
-      // Guard: Only process upload once, even if buildApp is called multiple times
-      if (uploadCompleted) {
-        return;
-      }
-
-      // Initialize ZephyrEngine in buildApp (runs once) instead of configResolved (runs per environment)
-      // This ensures the engine is only created once, and start_new_build() is only called once
-      // NOTE: ZephyrEngine.create() automatically calls start_new_build()
-      const engineOptions: ZephyrEngineOptions = {
-        builder: 'vite',
-        context: config.root,
-      };
-      zephyr_defer_create(engineOptions);
-      const zephyr_engine = await zephyr_engine_defer;
-      // Log all environments and their build status for debugging
-      const environments = Object.entries(builder.environments);
-      ze_log.init(
-        `buildApp hook called with ${environments.length} environment(s): ${environments.map(([name, env]) => `${name}(isBuilt=${env.isBuilt})`).join(', ')}`
-      );
-
-      // Wait for all environments to be built (not just specific ones)
-      // This ensures we have all build outputs before uploading
-      const notBuilt = Object.entries(builder.environments)
-        .filter(([, env]) => !env.isBuilt)
-        .map(([name]) => name);
-
-      if (notBuilt.length > 0) {
-        ze_log.init(
-          `Building environments that aren't built yet: ${notBuilt.join(', ')}`
-        );
-        for (const envName of notBuilt) {
-          const env = builder.environments[envName];
-          if (env) {
-            await builder.build(env);
-          }
+    buildApp: {
+      // TanStack performs prerendering and other framework post-processing from its own
+      // buildApp hook. A post-ordered hook observes the final client/server output.
+      order: 'post',
+      async handler(builder) {
+        const environments = Object.entries(builder.environments);
+        if (environments.length === 0) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message: 'TanStack Start exposed no build environments for publication.',
+          });
         }
-      }
-
-      // Verify all environments are now built
-      const allBuilt = Object.values(builder.environments).every((env) => env.isBuilt);
-      if (!allBuilt) {
-        const stillNotBuilt = Object.entries(builder.environments)
-          .filter(([, env]) => !env.isBuilt)
+        const notBuilt = environments
+          .filter(([, environment]) => !environment.isBuilt)
           .map(([name]) => name);
-        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-          message: `Some environments are still not built: ${stillNotBuilt.join(', ')}`,
-        });
-      }
 
-      ze_log.upload('All environments built, processing output...');
+        if (notBuilt.length > 0) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message:
+              `TanStack Start completed without these environments: ${notBuilt.join(', ')}. ` +
+              'Zephyr will not force child compilers or publish a partial deployment.',
+          });
+        }
 
-      try {
-        // Engine is already initialized above, and ZephyrEngine.create() automatically calls start_new_build()
-        // So we don't need to call start_new_build() again here
+        ze_log.init(
+          `TanStack Start build complete for ${environments.map(([name]) => name).join(', ')}`
+        );
 
-        // Load ALL build output preserving directory structure
-        // This includes server/, client/, and any root files (favicon.ico, etc.)
-        // Note: We read from disk here (via loadTanStackOutput) rather than using Vite's
-        // generateBundle hook because TanStack Start uses multiple Vite environments
-        // (client, server, etc.) that build separately. The buildApp hook runs after
-        // all environments are complete, making disk reading the simplest approach
-        // that's consistent with vite-plugin-zephyr's loadStaticAssets pattern.
-        const bundle = await loadTanStackOutput(outputDir);
+        try {
+          if (!engineCreated) {
+            const engineOptions: ZephyrEngineOptions = {
+              builder: 'vite',
+              context: config.root,
+            };
+            zephyr_defer_create(engineOptions);
+            engineCreated = true;
+          }
+          const zephyr_engine = await zephyr_engine_defer;
+          const generation = buildGeneration++;
+          const invocationId = `tanstack-start-${generation}`;
 
-        const assetsMap = buildAssetsMap(bundle, extractBuffer, getAssetType);
+          applicationContext ??= new ApplicationContext({
+            applicationUid: zephyr_engine.application_uid,
+            // ZephyrEngine.create starts generation zero; later watch generations need a
+            // fresh build ID and empty hash/snapshot state.
+            prepare: ({ generation: nextGeneration }) =>
+              nextGeneration === 0 ? undefined : zephyr_engine.start_new_build(),
+            publish: async ({ assetsMap }) =>
+              zephyr_engine.upload_assets({
+                assetsMap,
+                buildStats: await zeBuildDashData(zephyr_engine),
+                snapshotType: 'ssr',
+                entrypoint,
+              }),
+            finish: () => zephyr_engine.build_finished(),
+            onFailure: () => zephyr_engine.build_failed(),
+          });
 
-        ze_log.upload(`Uploading ${Object.keys(assetsMap).length} assets...`);
+          const outputParticipant = uniqueParticipant(
+            'tanstack-output',
+            environments.map(([name]) => name)
+          );
+          const session = applicationContext.beginBuild({
+            invocationId,
+            generation,
+            participants: [
+              ...environments.map(([name]) => ({ name, role: name })),
+              { name: outputParticipant, role: 'ssr' },
+            ],
+            postprocessors: ['tanstack-start'],
+          });
 
-        // Upload assets with SSR snapshot type
-        await zephyr_engine.upload_assets({
-          assetsMap,
-          buildStats: await zeBuildDashData(zephyr_engine),
-          snapshotType: 'ssr',
-          entrypoint,
-        });
+          for (const [name] of environments) {
+            session.completeParticipant(name);
+          }
 
-        // Finish build
-        await zephyr_engine.build_finished();
+          // Read from the shared output root only after every child compiler and the
+          // framework's post-build hook have completed. This preserves client/, server/,
+          // prerendered HTML, public files, and generated manifests as one snapshot.
+          const bundle = await loadTanStackOutput(outputDir);
+          const assetsMap = buildAssetsMap(bundle, extractBuffer, getAssetType);
+          if (!Object.values(assetsMap).some((asset) => asset.path === entrypoint)) {
+            throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+              message: `TanStack Start server entrypoint "${entrypoint}" was not emitted under "${outputDir}".`,
+            });
+          }
+          session.contribute({
+            participant: outputParticipant,
+            key: outputDir,
+            assetsMap,
+          });
+          session.completeParticipant(outputParticipant);
+          session.completePostprocess('tanstack-start');
 
-        // Mark upload as completed to prevent multiple calls
-        uploadCompleted = true;
-
-        ze_log.upload('Deployment successful!');
-      } catch (error) {
-        handleGlobalError(error);
-      }
+          ze_log.upload(`Uploading ${Object.keys(assetsMap).length} TanStack assets...`);
+          await session.publish();
+          ze_log.upload('TanStack Start deployment successful!');
+        } catch (error) {
+          if (engineCreated) {
+            try {
+              const zephyr_engine = await zephyr_engine_defer;
+              zephyr_engine.build_failed();
+            } catch {
+              // Engine initialization failed before any reusable build state existed.
+            }
+          }
+          handleGlobalError(error);
+        }
+      },
     },
   };
 }

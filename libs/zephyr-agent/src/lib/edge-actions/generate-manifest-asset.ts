@@ -1,4 +1,5 @@
 import { calculateManifestHash, generateManifestContent } from '../env-variables';
+import { redactString } from '../security/redaction';
 
 export interface ManifestAssetResult {
   content: string;
@@ -55,7 +56,10 @@ export function extractManifestVars(manifestContent: string): Record<string, str
     const manifest = JSON.parse(manifestContent);
     return manifest.zeVars || {};
   } catch (error) {
-    console.error('Failed to parse manifest content:', error);
+    console.error(
+      'Failed to parse manifest content:',
+      redactString(error instanceof Error ? error.message : String(error))
+    );
     return {};
   }
 }

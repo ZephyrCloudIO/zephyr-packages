@@ -390,9 +390,9 @@ Please check your network connection and try again.
    *
    * @example
    *   {
-   *     "statusCode": 401,
-   *     "timestamp": "2024-08-23T02:21:48.873Z",
-   *     "path": "/v2/builder-packages-api/application-config?application-uid=home-spa.federated_apps.zmzlois"
+   *   "statusCode": 401,
+   *   "timestamp": "2024-08-23T02:21:48.873Z",
+   *   "path": "/v2/builder-packages-api/application-config?application-uid=home-spa.federated_apps.zmzlois"
    *   }
    */
   ERR_NO_RESPONSE_FOR_APP_CONFIG: {
@@ -487,6 +487,14 @@ Expected behavior:
 Application UID format: [app_name].[project_name].[org_name]
 Example: "my-remote.my-project.my-org"
 
+`,
+    kind: 'config',
+  },
+
+  ERR_ZEPHYR_CONFIG_NOT_VALID: {
+    id: '002',
+    message: `
+Invalid Zephyr config: {{ message }}
 `,
     kind: 'config',
   },

@@ -57,11 +57,13 @@ withZephyr({
 
 ## Entrypoint Auto-Detection
 
-The plugin infers the entrypoint from Vite bundle hooks (`writeBundle`) without reading
-the filesystem directly. When `entrypoint` is not provided, it resolves:
+The plugin waits for Vinext's post-ordered `buildApp` phase, verifies every Vite child
+environment completed, then scans the finalized output tree. This includes the generated
+RSC manifest and avoids publishing an early or partial server/client build. When
+`entrypoint` is not provided, it resolves JavaScript, ESM, and CommonJS entries from:
 
 1. `dist/server/index.js` for App Router builds.
-2. `dist/<worker-dir>/index.js` when `<worker-dir>` contains `wrangler.json` or
+2. `dist/<worker-dir>/index.*` when `<worker-dir>` contains `wrangler.json` or
    `wrangler.jsonc` (Pages Router builds).
 
 ## License

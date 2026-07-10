@@ -1,9 +1,11 @@
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Unit tests for zephyrCommandWrapper */
 
 // Mock zephyr-agent - must be before imports
-jest.mock('zephyr-agent', () => ({
-  ZephyrError: jest.fn().mockImplementation((error, options) => {
+rs.mock('zephyr-agent', () => ({
+  ZephyrError: rs.fn().mockImplementation((error, options) => {
     const err = new Error(options?.message || error);
     (err as any).code = error;
     return err;
@@ -14,24 +16,27 @@ jest.mock('zephyr-agent', () => ({
   },
 }));
 
-// Mock functions stored at module level for access in tests
-let mockBeforeBuild: jest.Mock;
-let mockAfterBuild: jest.Mock;
+const { mockBeforeBuild, mockAfterBuild, mockBuildFailed } = rs.hoisted(() => ({
+  mockBeforeBuild: rs.fn().mockResolvedValue({ name: 'TestApp' }),
+  mockAfterBuild: rs.fn().mockResolvedValue(undefined),
+  mockBuildFailed: rs.fn(),
+}));
 
 // Mock ZephyrMetroPlugin
-jest.mock('../zephyr-metro-plugin', () => {
-  mockBeforeBuild = jest.fn().mockResolvedValue({ name: 'TestApp' });
-  mockAfterBuild = jest.fn().mockResolvedValue(undefined);
+rs.mock('../zephyr-metro-plugin', () => {
   return {
-    ZephyrMetroPlugin: jest.fn().mockImplementation(() => ({
+    ZephyrMetroPlugin: rs.fn().mockImplementation(() => ({
       beforeBuild: mockBeforeBuild,
       afterBuild: mockAfterBuild,
+      zephyr_engine: {
+        build_failed: mockBuildFailed,
+      },
     })),
   };
 });
 
 // Mock internal errors
-jest.mock('../internal/metro-errors', () => ({
+rs.mock('../internal/metro-errors', () => ({
   ERR_MISSING_METRO_FEDERATION_CONFIG: 'ERR_INVALID_MF_CONFIG',
 }));
 
@@ -39,9 +44,9 @@ import { zephyrCommandWrapper } from '../zephyr-metro-command-wrapper';
 
 describe('zephyrCommandWrapper', () => {
   // Mock functions
-  const mockBundleFederatedRemote = jest.fn().mockResolvedValue({ success: true });
-  const mockLoadMetroConfig = jest.fn().mockResolvedValue({});
-  const mockUpdateManifest = jest.fn();
+  const mockBundleFederatedRemote = rs.fn().mockResolvedValue({ success: true });
+  const mockLoadMetroConfig = rs.fn().mockResolvedValue({});
+  const mockUpdateManifest = rs.fn();
 
   // Sample args
   const createMockArgs = (overrides: any = {}): any => [
@@ -51,7 +56,7 @@ describe('zephyrCommandWrapper', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     // Reset global
     (global as any).__METRO_FEDERATION_CONFIG = {
       name: 'TestApp',
@@ -244,6 +249,7 @@ describe('zephyrCommandWrapper', () => {
       );
 
       await expect(wrapper(...createMockArgs())).rejects.toThrow();
+      expect(mockBuildFailed).not.toHaveBeenCalled();
     });
 
     it('should throw ZephyrError when bundle function fails', async () => {
@@ -256,6 +262,7 @@ describe('zephyrCommandWrapper', () => {
       );
 
       await expect(wrapper(...createMockArgs())).rejects.toThrow();
+      expect(mockBuildFailed).toHaveBeenCalledTimes(1);
     });
 
     it('should throw ZephyrError when beforeBuild fails', async () => {

@@ -29,6 +29,8 @@ export async function zephyrCommandWrapper(
   updateManifest: () => void
 ) {
   return async (...args: MetroCommandArgs) => {
+    let zephyrMetroPlugin: ZephyrMetroPlugin | undefined;
+    let wrapperOwnsRollback = false;
     try {
       // before build
       const isDev = args[0][0].mode;
@@ -46,7 +48,7 @@ export async function zephyrCommandWrapper(
         throw new ZephyrError(ERR_MISSING_METRO_FEDERATION_CONFIG);
       }
 
-      const zephyrMetroPlugin = new ZephyrMetroPlugin({
+      zephyrMetroPlugin = new ZephyrMetroPlugin({
         platform,
         mode: isDev ? 'development' : 'production',
         context,
@@ -55,15 +57,24 @@ export async function zephyrCommandWrapper(
       });
 
       await zephyrMetroPlugin.beforeBuild();
+      wrapperOwnsRollback = true;
 
       updateManifest();
 
       const res = await bundleFederatedRemote(...args);
 
+      // afterBuild owns rollback from this point onward.
+      wrapperOwnsRollback = false;
       await zephyrMetroPlugin.afterBuild();
 
       return res;
     } catch (error) {
+      if (
+        wrapperOwnsRollback &&
+        zephyrMetroPlugin?.zephyr_engine.hasActiveBuild !== false
+      ) {
+        zephyrMetroPlugin?.zephyr_engine.build_failed();
+      }
       const detail =
         error instanceof Error
           ? `${error.message}\n${error.stack ?? ''}`

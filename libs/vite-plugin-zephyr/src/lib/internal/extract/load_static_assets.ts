@@ -1,12 +1,12 @@
-import type { OutputBundle } from 'rollup';
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
+import type { ZephyrOutputBundle } from '../types/zephyr-output';
 import { load_public_dir } from './load_public_dir';
 import { load_static_entries } from './load_static_entries';
 
 export async function loadStaticAssets(
   vite_internal_options: ZephyrInternalOptions
-): Promise<OutputBundle> {
-  const bundle: OutputBundle = {};
+): Promise<ZephyrOutputBundle> {
+  const bundle: ZephyrOutputBundle = {};
 
   for await (const assets of [
     // Only load if specified

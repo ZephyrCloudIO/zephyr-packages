@@ -2,37 +2,60 @@
   "name": "zephyr-rolldown-plugin",
   "version": "1.1.2",
   "description": "Rolldown plugin for Zephyr",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-rolldown-plugin"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-rolldown-plugin"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
   "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./*": "./*"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "nx run zephyr-rolldown-plugin:build",
-    "patch-version": "pnpm version"
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*"
   },
   "devDependencies": {
-    "@types/jest": "catalog:typescript",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
     "rolldown": "catalog:rolldown",
-    "ts-jest": "catalog:typescript"
+    "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "rolldown": ">=1.0.0-beta.0"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "rolldown": "catalog:peer-compat"
   }
 }

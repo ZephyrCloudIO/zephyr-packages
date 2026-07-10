@@ -3,23 +3,23 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "nx build rollup-sample-lib --skip-nx-cache",
-    "build-watch-not-working": "nx run rollup-sample-lib:build --skip-nx-cache --watch --verbose"
+    "build": "tsc -p tsconfig.lib.json && rollup -c rollup.config.cjs",
+    "test": "rstest run"
   },
   "dependencies": {
     "react": "catalog:react18",
     "react-dom": "catalog:react18",
-    "react-router-dom": "^6.30.2"
+    "react-router-dom": "catalog:react-router"
   },
   "devDependencies": {
+    "@rsbuild/plugin-react": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
+    "@testing-library/react": "catalog:react",
     "@types/react": "catalog:react18",
     "@types/react-dom": "catalog:react18",
-    "@types/react-router-dom": "^5.3.3",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "eslint-plugin-react-hooks": "catalog:eslint",
-    "eslint-plugin-jsx-a11y": "catalog:eslint",
-    "eslint-plugin-react": "catalog:eslint",
-    "eslint-plugin-import": "catalog:eslint",
-    "rollup-plugin-zephyr": "workspace:*"
+    "jsdom": "catalog:test-dom",
+    "rollup": "catalog:rollup4",
+    "rollup-plugin-zephyr": "workspace:*",
+    "typescript": "catalog:typescript"
   }
 }

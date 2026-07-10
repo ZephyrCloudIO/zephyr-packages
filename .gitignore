@@ -5,7 +5,9 @@
 .node-persist
 dist
 tmp
-/out-tsc
+out-tsc/
+**/.next
+**/next-env.d.ts
 **/*.tsbuildinfo
 .cxx
 **/android/build
@@ -37,16 +39,13 @@ node_modules
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
+pnpm-publish-summary.json
 testem.log
 /typings
 
 # System Files
 .DS_Store
 Thumbs.db
-
-# nx
-.nx
-migrations.json
 
 # Local Netlify folder
 .netlify
@@ -97,6 +96,10 @@ tasks/
 # Local Claude context files
 **/.claude/**/*.local.*
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
 .serena
+
+# Turborepo
+.turbo
+
+# Legacy Nx tooling can still create a local cache through transitive packages.
+.nx

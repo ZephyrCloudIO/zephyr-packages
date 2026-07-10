@@ -2,66 +2,84 @@
   "name": "zephyr-agent",
   "version": "1.1.2",
   "description": "Zephyr plugin agent",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
-    "directory": "libs/zephyr-agent"
-  },
   "license": "Apache-2.0",
   "author": {
     "name": "ZephyrCloudIO",
     "url": "https://github.com/ZephyrCloudIO"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-agent"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
   "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./node-persist": {
-      "import": "./dist/lib/node-persist/index.js",
-      "require": "./dist/lib/node-persist/index.js",
-      "types": "./dist/lib/node-persist/index.d.ts"
-    }
-  },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "nx build zephyr-agent",
-    "patch-version": "pnpm version",
-    "test": "nx test zephyr-agent"
-  },
-  "dependencies": {
-    "@toon-format/toon": "^0.9.0",
-    "axios": "^1.15.0",
-    "axios-retry": "^4.5.0",
-    "debug": "^4.3.4",
-    "eventsource": "^4.0.0",
-    "git-url-parse": "^15.0.0",
-    "https-proxy-agent": "^7.0.6",
-    "is-ci": "catalog:plugin-shared",
-    "jose": "^5.10.0",
-    "node-persist": "^4.0.1",
-    "open": "^10.1.0",
-    "proper-lockfile": "^4.1.2",
-    "tslib": "catalog:typescript",
-    "zephyr-edge-contract": "workspace:*"
-  },
-  "devDependencies": {
-    "@jest/globals": "catalog:react",
-    "@types/debug": "^4.1.12",
-    "@types/eventsource": "^3.0.0",
-    "@types/git-url-parse": "^9.0.3",
-    "@types/is-ci": "catalog:typescript",
-    "@types/jest": "catalog:typescript",
-    "@types/node-persist": "catalog:typescript",
-    "@types/proper-lockfile": "^4.1.4",
-    "@typescript-eslint/eslint-plugin": "catalog:eslint",
-    "ts-jest": "catalog:typescript"
+      "import": {
+        "types": "./dist/lib/node-persist/index.d.mts",
+        "default": "./dist/lib/node-persist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/lib/node-persist/index.d.ts",
+        "default": "./dist/lib/node-persist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run",
+    "test:deployment": "cross-env ZE_RUN_AGENT_DEPLOYMENT_E2E=true rstest run"
+  },
+  "dependencies": {
+    "@toon-format/toon": "catalog:",
+    "axios": "catalog:",
+    "axios-retry": "catalog:",
+    "debug": "catalog:",
+    "eventsource": "catalog:",
+    "git-url-parse": "catalog:",
+    "https-proxy-agent": "catalog:",
+    "is-ci": "catalog:plugin-shared",
+    "jiti": "catalog:",
+    "jose": "catalog:",
+    "node-persist": "catalog:",
+    "open": "catalog:",
+    "proper-lockfile": "catalog:",
+    "zephyr-edge-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "@types/debug": "catalog:",
+    "@types/is-ci": "catalog:typescript",
+    "@types/node-persist": "catalog:typescript",
+    "@types/proper-lockfile": "catalog:",
+    "cross-env": "catalog:",
+    "typescript": "catalog:typescript"
   }
 }

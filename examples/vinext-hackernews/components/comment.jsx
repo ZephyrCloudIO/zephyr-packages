@@ -23,11 +23,7 @@ export default function Comment({ user, text, date, comments, commentsCount }) {
       {toggled
         ? null
         : [
-            <div
-              key="text"
-              className={styles.text}
-              dangerouslySetInnerHTML={{ __html: text }}
-            />,
+            <div key="text" className={styles.text} dangerouslySetInnerHTML={{ __html: text }} />,
             <div key="children" className={styles.children}>
               {comments.map((comment) => (
                 <Comment key={comment.id} {...comment} />

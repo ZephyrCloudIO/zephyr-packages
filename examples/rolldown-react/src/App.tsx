@@ -12,16 +12,12 @@ function App() {
       </div>
       <h1>Rolldown + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
         <p>
           Edit <code>src/App.tsx</code> and save to test.
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Rolldown and React logos to learn more
-      </p>
+      <p className="read-the-docs">Click on the Rolldown and React logos to learn more</p>
     </>
   );
 }

@@ -40,52 +40,71 @@ export class ZephyrMetroPlugin {
   }
 
   async beforeBuild() {
-    this.zephyr_engine = await ZephyrEngine.create({
-      builder: 'metro',
-      context: this.#config.context,
-    });
-    ze_log.config('Configuring with Zephyr... \n config: ', this.#config);
+    let engineInitialized = false;
+    try {
+      this.zephyr_engine = await ZephyrEngine.create({
+        builder: 'metro',
+        context: this.#config.context,
+      });
+      engineInitialized = true;
+      ze_log.config('Configuring with Zephyr... \n config: ', this.#config);
 
-    this.zephyr_engine.env.target = this.#config.platform;
+      this.zephyr_engine.env.target = this.#config.platform;
 
-    const dependency_pairs = extract_remotes_dependencies(this.#config);
+      const dependency_pairs = extract_remotes_dependencies(this.#config);
 
-    ze_log.config(
-      'Resolving and building towards target by zephyr_engine.env.target: ',
-      this.zephyr_engine.env.target
-    );
-
-    const resolved_dependency_pairs =
-      await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
-
-    if (this.#config.mfConfig) {
-      mutateMfConfig(
-        this.zephyr_engine,
-        this.#config.mfConfig,
-        resolved_dependency_pairs
+      ze_log.config(
+        'Resolving and building towards target by zephyr_engine.env.target: ',
+        this.zephyr_engine.env.target
       );
-    }
 
-    return this.#config.mfConfig;
+      const resolved_dependency_pairs =
+        await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
+
+      if (this.#config.mfConfig) {
+        mutateMfConfig(
+          this.zephyr_engine,
+          this.#config.mfConfig,
+          resolved_dependency_pairs
+        );
+      }
+
+      return this.#config.mfConfig;
+    } catch (error: unknown) {
+      if (engineInitialized && this.zephyr_engine.hasActiveBuild !== false) {
+        this.zephyr_engine.build_failed();
+      }
+      throw error;
+    }
   }
 
   async afterBuild() {
-    await this.zephyr_engine.start_new_build();
+    // create() already owns generation zero; mark it active before the idempotent start
+    // call so every later failure is guaranteed to roll it back.
+    let buildInProgress = true;
+    try {
+      await this.zephyr_engine.start_new_build();
 
-    const assetsMap = await this.makeAssetsMap();
+      const assetsMap = await this.makeAssetsMap();
 
-    const buildStats = await this.getBuildStats(
-      Object.values(assetsMap).filter(
-        (asset) => asset.extname === '.map' && !asset.path.includes('shared/')
-      )
-    );
+      const buildStats = await this.getBuildStats(
+        Object.values(assetsMap).filter(
+          (asset) => asset.extname === '.map' && !asset.path.includes('shared/')
+        )
+      );
 
-    await this.zephyr_engine.upload_assets({
-      assetsMap,
-      buildStats: buildStats as any,
-      mfConfig: this.#config.mfConfig,
-    });
-    await this.zephyr_engine.build_finished();
+      await this.zephyr_engine.upload_assets({
+        assetsMap,
+        buildStats: buildStats as any,
+        mfConfig: this.#config.mfConfig,
+      });
+      buildInProgress = false;
+      await this.zephyr_engine.build_finished();
+    } finally {
+      if (buildInProgress && this.zephyr_engine.hasActiveBuild !== false) {
+        this.zephyr_engine.build_failed();
+      }
+    }
   }
 
   private async getConsumeMap(bundleMaps: ZeBuildAsset[]) {

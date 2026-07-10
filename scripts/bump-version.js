@@ -193,7 +193,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>`;
         silent: true,
       });
       console.log(`✅ Pull request created: ${prUrl}`);
-    } catch (error) {
+    } catch (_error) {
       console.warn(
         '⚠️  Could not create PR automatically. You may need to install gh CLI or authenticate.'
       );

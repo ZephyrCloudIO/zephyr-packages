@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 import { formatString } from '../string';
 
 const data: { str: string; params: any; expected: string }[] = [

@@ -1,3 +1,9 @@
+import { beforeEach, describe, expect, rs, test } from '@rstest/core';
+
+rs.mock('react-native', () => ({
+  Platform: { OS: 'ios' },
+}));
+
 import { extractBundleHashes, resolvePublicPathBase } from '../src/runtime-plugin';
 
 describe('zephyr-native-cache runtime plugin URL helpers', () => {

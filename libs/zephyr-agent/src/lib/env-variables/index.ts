@@ -1,3 +1,4 @@
+import { redactString } from '../security/redaction';
 import { resolveZephyrSiblingUrl } from '../urls/zephyr-url';
 
 export interface RemoteEntry {
@@ -41,7 +42,9 @@ export function buildEnvImportMap(
       } catch {
         // If URL parsing fails, skip the env:vars entry
         console.warn(
-          `Failed to parse remote URL for env vars: ${remote.remote_entry_url}`
+          redactString(
+            `Failed to parse remote URL for env vars: ${remote.remote_entry_url}`
+          )
         );
       }
     }

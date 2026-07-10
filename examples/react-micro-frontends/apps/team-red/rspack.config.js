@@ -1,63 +1,91 @@
-const { withModuleFederation } = require('@nx/module-federation/rspack');
-const { composePlugins, withNx, withReact } = require('@nx/rspack');
+const path = require('path');
+const rspack = require('@rspack/core');
+const { ModuleFederationPlugin } = require('@module-federation/enhanced/rspack');
 const { withZephyr } = require('zephyr-rspack-plugin');
-const { isModuleFederationPlugin } = require('zephyr-xpack-internal');
 
-const mfConfig = {
-  name: 'team-red',
-  exposes: {
-    './TeamRedLayout': './src/app/team-red-layout',
-  },
-  // Workaround necessary until Nx upgrade.
-  // TODO: https://github.com/ZephyrCloudIO/zephyr-mono/issues/109
-  remotes: ['team-green', 'team-blue'],
-  additionalShared: [
-    {
-      libraryName: 'react',
-      sharedConfig: { singleton: true },
+module.exports = (env, argv) => {
+  const isDev = argv.mode === 'development';
+
+  return withZephyr()({
+    context: __dirname,
+    entry: {
+      main: ['./src/main.tsx', './src/styles.css'],
     },
-    {
-      libraryName: 'react-dom',
-      sharedConfig: { singleton: true },
+    output: {
+      path: path.join(__dirname, 'dist'),
+      publicPath: 'auto',
+      uniqueName: 'team_red',
+      filename: isDev ? '[name].js' : '[name].[contenthash].js',
+      chunkFilename: isDev ? '[name].js' : '[name].[contenthash].js',
+      clean: true,
     },
-    {
-      libraryName: 'react/jsx-runtime',
-      sharedConfig: { singleton: true },
+    devtool: isDev ? 'source-map' : false,
+    devServer: {
+      port: 4500,
+      historyApiFallback: true,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
     },
-    {
-      libraryName: 'react/jsx-dev-runtime',
-      sharedConfig: { singleton: true },
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
     },
-  ],
+    experiments: {
+      css: true,
+    },
+    module: {
+      rules: [
+        {
+          test: /\.[jt]sx?$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev },
+                },
+                target: 'es2020',
+              },
+            },
+          },
+        },
+        {
+          test: /\.css$/,
+          type: 'css/auto',
+        },
+        {
+          test: /\.(png|jpe?g|gif|webp|svg|ico)$/,
+          type: 'asset',
+        },
+      ],
+    },
+    plugins: [
+      new ModuleFederationPlugin({
+        name: 'team_red',
+        filename: 'remoteEntry.js',
+        exposes: {
+          './TeamRedLayout': './src/app/team-red-layout',
+        },
+        remotes: {
+          'team-green': 'team_green@http://localhost:4400/remoteEntry.js',
+          'team-blue': 'team_blue@http://localhost:4300/remoteEntry.js',
+        },
+        shared: {
+          react: { singleton: true, requiredVersion: false },
+          'react-dom': { singleton: true, requiredVersion: false },
+          'react/jsx-runtime': { singleton: true, requiredVersion: false },
+          'react/jsx-dev-runtime': { singleton: true, requiredVersion: false },
+        },
+        dts: false,
+      }),
+      new rspack.HtmlRspackPlugin({
+        template: './src/index.html',
+      }),
+      new rspack.CopyRspackPlugin({
+        patterns: [{ from: 'src/assets', to: '.', noErrorOnMissing: true }],
+      }),
+    ],
+  });
 };
-
-// Nx plugins for webpack.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(mfConfig, { dts: false }),
-  (config) => {
-    // Workaround for aliases while this issue
-    // -> https://github.com/nrwl/nx/issues/31346
-    // is not resolved.
-    const plugin = config.plugins
-      ? config.plugins.find(isModuleFederationPlugin)
-      : undefined;
-    if (!plugin || !plugin._options) return config;
-    if ('config' in plugin._options) return config;
-    plugin._options.remotes = Object.fromEntries(
-      Object.entries(plugin._options.remotes || {}).map(([name, remote]) => [
-        mfConfig.remotes.find((nameAlias) => nameAlias === name.replace(/_/g, '-')),
-        remote,
-      ])
-    );
-
-    // Workaround for incomplete resolution of https://github.com/nrwl/nx/issues/31114
-    if (config.optimization) {
-      config.optimization.runtimeChunk = false;
-    }
-
-    return config;
-  },
-  withZephyr()
-);

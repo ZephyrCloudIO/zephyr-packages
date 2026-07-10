@@ -14,9 +14,7 @@ import {
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const [groupedExpanded, setGroupedExpanded] = useState<
-    Record<string, boolean>
-  >({});
+  const [groupedExpanded, setGroupedExpanded] = useState<Record<string, boolean>>({});
 
   return (
     <>
@@ -30,11 +28,7 @@ export default function Header() {
         </button>
         <h1 className="ml-4 text-xl font-semibold">
           <Link to="/">
-            <img
-              src="/tanstack-word-logo-white.svg"
-              alt="TanStack Logo"
-              className="h-10"
-            />
+            <img src="/tanstack-word-logo-white.svg" alt="TanStack Logo" className="h-10" />
           </Link>
         </h1>
       </header>

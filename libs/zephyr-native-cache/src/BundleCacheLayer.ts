@@ -11,6 +11,7 @@ import type {
   UpdatePolicy,
 } from './types';
 import { ensureZephyrNativeCacheRefs } from './zephyr-global';
+import { getBundleCacheKey } from './cache-key';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -23,7 +24,7 @@ export class BundleCacheLayer {
   private initPromise: Promise<void> | null = null;
   private config: MFECacheConfig;
 
-  // Bundle hash map: bundleUrl (without query params) → expected hash
+  // Bundle hash map: canonical content-sensitive bundle URL → expected hash
   // Shared via globalThis.__ZEPHYR__.runtime.nativeCache.refs.bundleHashes
   // for cross-instance access.
   private bundleHashMap: Record<string, string>;
@@ -41,6 +42,7 @@ export class BundleCacheLayer {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
   private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  private static MANIFEST_FETCH_TIMEOUT_MS = 15_000;
 
   // Event emitter for cache lifecycle events
   readonly events = new CacheEvents();
@@ -72,7 +74,7 @@ export class BundleCacheLayer {
   // --- Registration (called by bundler integration layer) ---
 
   registerBundleHash(bundleUrl: string, hash: string): void {
-    this.bundleHashMap[bundleUrl] = hash;
+    this.bundleHashMap[getBundleCacheKey(bundleUrl)] = hash;
   }
 
   registerManifestSource(
@@ -100,7 +102,7 @@ export class BundleCacheLayer {
 
     await this.ensureInitialized();
 
-    const key = bundleUrl.split('?')[0];
+    const key = getBundleCacheKey(bundleUrl);
 
     // Deduplicate concurrent loads of the same bundle
     const inflight = this.inflightLoads.get(key);
@@ -179,7 +181,17 @@ export class BundleCacheLayer {
 
       for (const [manifestUrl, source] of this.manifestSources) {
         try {
-          const resp = await fetch(manifestUrl);
+          const controller = new AbortController();
+          const timeout = setTimeout(
+            () => controller.abort(),
+            BundleCacheLayer.MANIFEST_FETCH_TIMEOUT_MS
+          );
+          let resp: Response;
+          try {
+            resp = await fetch(manifestUrl, { signal: controller.signal });
+          } finally {
+            clearTimeout(timeout);
+          }
           if (!resp.ok) {
             console.warn(
               `${LOG_PREFIX} manifest fetch failed: ${manifestUrl} → HTTP ${resp.status}`
@@ -195,8 +207,8 @@ export class BundleCacheLayer {
             checked++;
 
             // Update hash map so subsequent loadBundle() calls use the latest hash.
-            // loadBundle() looks up by URL-without-query, so key consistently here too.
-            this.bundleHashMap[bundleUrl.split('?')[0]] = newHash;
+            // loadBundle() uses the same canonical content-sensitive key.
+            this.bundleHashMap[getBundleCacheKey(bundleUrl)] = newHash;
 
             const remoteName = this.inferRemoteName(bundleUrl);
             const didUpdate = await this.cacheManager!.preDownloadBundle(
@@ -242,10 +254,14 @@ export class BundleCacheLayer {
 
   startPolling(intervalMs?: number): void {
     this.stopPolling();
-    const interval =
+    const configuredInterval =
       intervalMs ??
       this.config.pollIntervalMs ??
       BundleCacheLayer.DEFAULT_POLL_INTERVAL_MS;
+    const interval =
+      Number.isFinite(configuredInterval) && configuredInterval >= 1_000
+        ? configuredInterval
+        : BundleCacheLayer.DEFAULT_POLL_INTERVAL_MS;
     this.status.pollingEnabled = true;
     this.status.pollIntervalMs = interval;
     this.notifyStatusChange();
@@ -364,7 +380,7 @@ export class BundleCacheLayer {
       cached && cached.metadata.bundleHash && cached.metadata.bundleHash === expectedHash;
 
     if (cacheValid) {
-      console.info(`${LOG_PREFIX} cache hit: ${bundleUrl.split('?')[0]}`);
+      console.info(`${LOG_PREFIX} cache hit: ${getBundleCacheKey(bundleUrl)}`);
       this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
       await this.evalFromFile(cached.filePath);
       this.recordBundleLoad(
@@ -376,9 +392,13 @@ export class BundleCacheLayer {
       return { status: 'cache-hit' };
     }
 
-    console.info(`${LOG_PREFIX} cache miss: ${bundleUrl.split('?')[0]}`);
+    console.info(`${LOG_PREFIX} cache miss: ${getBundleCacheKey(bundleUrl)}`);
     const remoteName = this.inferRemoteName(bundleUrl);
-    const destPath = await this.cacheManager!.getBundleDestPath(remoteName, bundleUrl);
+    const destPath = await this.cacheManager!.getBundleDestPath(
+      remoteName,
+      bundleUrl,
+      expectedHash
+    );
     const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
 
     if (sha256 !== expectedHash) {
@@ -403,14 +423,20 @@ export class BundleCacheLayer {
   private async ensureInitialized(): Promise<void> {
     if (this.cacheManager) return;
     if (!this.initPromise) {
-      this.initPromise = (async () => {
+      const initialization = (async () => {
         const { enablePolling, pollIntervalMs, ...cacheConfig } = this.config;
         const cm = new CacheManager(cacheConfig);
         await cm.initialize();
         this.cacheManager = cm;
       })();
+      this.initPromise = initialization;
     }
-    await this.initPromise;
+    try {
+      await this.initPromise;
+    } catch (error) {
+      this.initPromise = null;
+      throw error;
+    }
   }
 
   /**

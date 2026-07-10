@@ -1,3 +1,5 @@
+import { describe, expect, it } from '@rstest/core';
+
 import { resolveMfManifestPath } from './resolve-mf-manifest-path';
 
 describe('resolve-mf-manifest-path', () => {

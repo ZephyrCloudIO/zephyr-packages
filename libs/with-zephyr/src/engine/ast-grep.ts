@@ -70,11 +70,11 @@ function buildMatcher(options: AstGrepRunOptions): string | NapiConfig {
   };
 
   if (options.selector) {
-    patternObject.selector = options.selector;
+    patternObject['selector'] = options.selector;
   }
 
   if (options.strictness) {
-    patternObject.strictness = options.strictness;
+    patternObject['strictness'] = options.strictness;
   }
 
   return {

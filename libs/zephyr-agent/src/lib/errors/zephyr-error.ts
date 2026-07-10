@@ -13,6 +13,11 @@ import {
   whiteBright,
 } from '../logging/picocolor';
 import {
+  redactString,
+  safeStringifyForLogging,
+  sanitizeForLogging,
+} from '../security/redaction';
+import {
   isZeErrorEqual,
   ZeErrorCategories,
   type ZeErrorCode,
@@ -56,7 +61,7 @@ export class ZephyrError<
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause
    */
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   /**
    * Returns {@linkcode cause} if it's a `ZephyrError`, otherwise creates a new
@@ -174,13 +179,14 @@ export class ZephyrError<
     const tmpFile = write_error_file(zeError);
 
     // Strings don't need to be inspected.
+    const sanitizedData = sanitizeForLogging(zeError.data);
     const inspected =
-      typeof zeError.data === 'object'
-        ? util.inspect(zeError.data, false, 5, true)
-        : zeError.data;
+      typeof sanitizedData === 'object'
+        ? util.inspect(sanitizedData, false, 5, true)
+        : sanitizedData;
 
     const messages = [
-      `${bold(underline(zeError.code))}: ${zeError.message}`,
+      `${bold(underline(zeError.code))}: ${redactString(zeError.message)}`,
 
       `
 
@@ -195,27 +201,25 @@ Or join our ${blue('Discord')} server at ${cyanBright(discordUrl)}
         blackBright(`Complete error details available at ${whiteBright(tmpFile)}`),
     ];
 
-    return messages
-      .filter((x): x is string => !!x)
-      .map((x) => x.trim())
-      .join('\n\n');
+    return redactString(
+      messages
+        .filter((x): x is string => !!x)
+        .map((x) => x.trim())
+        .join('\n\n')
+    );
+  }
+
+  /** Return the same bounded, redacted representation used by persisted error logs. */
+  toJSON(): unknown {
+    return format_error(this);
   }
 }
 
 /** Attempts to write the error to a file in the temp directory. */
 function write_error_file(zeError: ZephyrError<ZeErrorKeys>) {
   try {
-    let errorString: string;
-    let errorExt: string;
-
-    try {
-      errorString = JSON.stringify(format_error(zeError));
-      errorExt = 'json';
-    } catch {
-      // Handles circular references or other issues with JSON.stringify
-      errorString = util.inspect(zeError, false, 5, false);
-      errorExt = 'log';
-    }
+    const errorString = safeStringifyForLogging(format_error(zeError));
+    const errorExt = 'json';
 
     ze_log.misc(errorString);
 
@@ -240,15 +244,16 @@ function format_error(err: unknown): unknown {
 
   const error = err as ZephyrError<ZeErrorKeys>;
 
-  return {
-    ...error,
+  return sanitizeForLogging({
+    name: error.name,
+    code: error.code,
     template: undefined,
     ...error?.template,
     data: error?.data,
     message: error?.message,
     stack: split_stack(error.stack, error.message),
-    cause: format_error(error.cause),
-  };
+    cause: error.cause,
+  });
 }
 
 function split_stack(stack?: string, message?: string) {

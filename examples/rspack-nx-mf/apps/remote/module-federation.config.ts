@@ -1,26 +1,22 @@
-import { ModuleFederationConfig } from '@nx/module-federation';
+import type { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
 
-const config: ModuleFederationConfig = {
+type ModuleFederationConfig = ConstructorParameters<typeof ModuleFederationPlugin>[0];
+
+const reactShared = { singleton: true, requiredVersion: false } as const;
+
+const config = {
   name: 'rspack_nx_mf_remote',
+  filename: 'remoteEntry.js',
   exposes: {
     './Module': './src/remote-entry.ts',
   },
-  shared: (libName) => {
-    const reactShared = [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
-    ];
-    if (reactShared.includes(libName)) {
-      return { singleton: true };
-    }
-    return false;
+  shared: {
+    react: reactShared,
+    'react-dom': reactShared,
+    'react/jsx-runtime': reactShared,
+    'react/jsx-dev-runtime': reactShared,
   },
-};
+  dts: false,
+} satisfies ModuleFederationConfig;
 
-/**
- * Nx requires a default export of the config to allow correct resolution of the module
- * federation graph.
- */
 export default config;

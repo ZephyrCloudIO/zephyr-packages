@@ -1,34 +1,52 @@
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type { Mock } from '@rstest/core';
+
 import { exec as node_exec } from 'node:child_process';
 import { getGitInfo } from '../ze-util-get-git-info';
 
-jest.mock('node:child_process', () => ({
-  exec: jest.fn(),
+rs.mock('node:child_process', () => ({
+  exec: rs.fn(),
 }));
 
-jest.mock('../../node-persist/secret-token', () => ({
-  hasSecretToken: jest.fn().mockReturnValue(false),
+rs.mock('../../node-persist/secret-token', () => ({
+  hasSecretToken: rs.fn().mockReturnValue(false),
 }));
 
-jest.mock('../../logging', () => ({
+rs.mock('../../logging', () => ({
   ze_log: {
-    git: jest.fn(),
+    git: rs.fn(),
   },
 }));
 
-jest.mock('../../logging/ze-log-event', () => ({
-  logFn: jest.fn(),
+rs.mock('../../logging/ze-log-event', () => ({
+  logFn: rs.fn(),
 }));
 
 // Mock is-ci to return true for CI environment testing
-jest.mock('is-ci', () => true);
+rs.mock('is-ci', () => ({ default: true }));
 
 let originalEnv: NodeJS.ProcessEnv;
 
 describe('getGitInfo - CI environments', () => {
-  const mockExec = node_exec as unknown as jest.Mock;
+  const mockExec = node_exec as unknown as Mock;
+  type ExecCallback = (error: Error | null, stdout?: unknown, stderr?: string) => void;
+  const mockExecWithCallback = (
+    implementation: (command: string, callback: ExecCallback) => unknown
+  ) => {
+    mockExec.mockImplementation(
+      (command: string, optionsOrCallback: unknown, callback?: ExecCallback) => {
+        const resolvedCallback =
+          typeof optionsOrCallback === 'function'
+            ? (optionsOrCallback as ExecCallback)
+            : callback;
+        if (!resolvedCallback) throw new Error('expected child_process.exec callback');
+        return implementation(command, resolvedCallback);
+      }
+    );
+  };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    rs.clearAllMocks();
     originalEnv = { ...process.env };
     // Clear CI env vars
     Object.keys(process.env).forEach((key) => {
@@ -49,7 +67,7 @@ describe('getGitInfo - CI environments', () => {
   });
 
   it('should fail immediately in CI when git info is not available', async () => {
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       if (typeof callback === 'function') {
         callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
       } else {
@@ -62,13 +80,31 @@ describe('getGitInfo - CI environments', () => {
       await getGitInfo();
     } catch (error) {
       expect((error as Error).message).toContain(
-        'Git repository information is required in CI environments'
+        'Stable Git branch and commit information is required in CI environments'
       );
     }
   });
 
+  it('does not let configured identity create timestamp metadata in CI', async () => {
+    mockExecWithCallback((_cmd, callback) => {
+      callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
+    });
+
+    await expect(
+      getGitInfo('/workspace/configured-no-git', {
+        org: 'configured-org',
+        project: 'configured-project',
+      })
+    ).rejects.toThrow(
+      'Stable Git branch and commit information is required in CI environments'
+    );
+    expect(
+      mockExec.mock.calls.some(([command]) => String(command).includes('--global'))
+    ).toBe(false);
+  });
+
   it('should work normally in CI when git is available', async () => {
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'CI User',
@@ -92,9 +128,40 @@ describe('getGitInfo - CI environments', () => {
     expect(result.app.project).toBe('repo');
   });
 
+  it('uses configured identity when CI has commit metadata but no origin', async () => {
+    const context = '/workspace/apps/configured-ci';
+    mockExecWithCallback((cmd, callback) => {
+      if (cmd.includes('git tag --points-at HEAD')) {
+        callback(null, { stdout: '', stderr: '' });
+        return;
+      }
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+      callback(null, {
+        stdout: ['CI User', 'ci@example.com', '', 'main', 'abc123def456'].join(
+          `\n${delimiter}\n`
+        ),
+        stderr: '',
+      });
+    });
+
+    const result = await getGitInfo(context, {
+      org: 'configured-org',
+      project: 'configured-project',
+    });
+
+    expect(result.app).toEqual({
+      org: 'configured-org',
+      project: 'configured-project',
+    });
+    expect(result.git.commit).toBe('abc123def456');
+    for (const call of mockExec.mock.calls) {
+      expect(call[1]).toEqual({ cwd: context });
+    }
+  });
+
   it('should use last commit author in CI instead of git config', async () => {
     let capturedCommand = '';
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       if (cmd.includes('git tag --points-at HEAD')) {
         callback(null, { stdout: 'v1.0.0\n', stderr: '' });
         return;
@@ -127,7 +194,7 @@ describe('getGitInfo - CI environments', () => {
     process.env.GITHUB_REF_NAME = 'feature/ci-branch';
     process.env.GITHUB_REF = 'refs/heads/feature/ci-branch';
 
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'CI User',
@@ -156,7 +223,7 @@ describe('getGitInfo - CI environments', () => {
     process.env.CI_COMMIT_BRANCH = 'develop';
     process.env.CI_COMMIT_REF_NAME = 'develop';
 
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'GitLab Runner',
@@ -182,7 +249,7 @@ describe('getGitInfo - CI environments', () => {
     process.env.BUILD_SOURCEBRANCHNAME = 'feature/azure';
     process.env.BUILD_SOURCEBRANCH = 'refs/heads/feature/azure';
 
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'Azure Runner',
@@ -210,7 +277,7 @@ describe('getGitInfo - CI environments', () => {
     process.env.GITHUB_BASE_REF = 'main';
     process.env.GITHUB_REF = 'refs/pull/123/merge';
 
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'PR Author',
@@ -231,7 +298,7 @@ describe('getGitInfo - CI environments', () => {
 
   it('should use git branch when CI env vars are not available', async () => {
     // No CI env vars set, only is-ci returns true
-    mockExec.mockImplementation((cmd, callback) => {
+    mockExecWithCallback((cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'Developer',
@@ -249,8 +316,30 @@ describe('getGitInfo - CI environments', () => {
     expect(result.git.branch).toBe('feature/actual-branch'); // Should use git result
   });
 
+  it('fails closed when detached CI has no provider branch metadata', async () => {
+    mockExecWithCallback((cmd, callback) => {
+      if (cmd.includes('git tag --points-at HEAD')) {
+        callback(null, { stdout: '', stderr: '' });
+        return;
+      }
+      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
+      const output = [
+        'CI User',
+        'ci@example.com',
+        'https://github.com/example/repo.git',
+        'HEAD',
+        'abc123def456',
+      ].join(`\n${delimiter}\n`);
+      callback(null, { stdout: output, stderr: '' });
+    });
+
+    await expect(getGitInfo()).rejects.toThrow(
+      'Stable Git branch and commit information is required in CI environments'
+    );
+  });
+
   it('should fail in CI when repository has no commits yet', async () => {
-    mockExec.mockImplementation((_cmd, callback) => {
+    mockExecWithCallback((_cmd, callback) => {
       const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
       const output = [
         'CI User',
@@ -264,7 +353,7 @@ describe('getGitInfo - CI environments', () => {
     });
 
     await expect(getGitInfo()).rejects.toThrow(
-      'Git repository information is required in CI environments'
+      'Stable Git branch and commit information is required in CI environments'
     );
   });
 });

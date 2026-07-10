@@ -110,6 +110,17 @@ describe('Bundler Configurations', () => {
       expect(rsbuildConfig.operations).toContain('plugins-array-or-create');
     });
 
+    it('should recognize every Rslib configuration module format', () => {
+      expect(rslibConfig.files).toEqual([
+        'rslib.config.js',
+        'rslib.config.ts',
+        'rslib.config.mjs',
+        'rslib.config.cjs',
+        'rslib.config.mts',
+        'rslib.config.cts',
+      ]);
+    });
+
     it('should prioritize rspack defineConfig wrapping before plugins array fallback', () => {
       expect(rspackConfig.operations[0]).toBe('wrap-export-default-define-config');
       expect(rspackConfig.operations).toContain('plugins-array');

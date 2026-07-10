@@ -1,9 +1,22 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "allowJs": false,
-    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": false,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "isolatedModules": true,
+    "allowJs": false,
+    "lib": ["ES2020", "DOM"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "target": "ES2017",
+    "jsx": "react-jsx",
     "strict": true
   },
   "files": [],
@@ -11,10 +24,6 @@
   "references": [
     {
       "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
     }
-  ],
-  "extends": "../../../../tsconfig.base.json"
+  ]
 }

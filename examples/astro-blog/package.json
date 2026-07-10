@@ -1,7 +1,7 @@
 {
   "name": "astro-blog",
-  "type": "module",
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -9,12 +9,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-satteri": "0.3.0",
-    "@astrojs/mdx": "^6.0.3",
-    "@astrojs/rss": "^4.0.18",
-    "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.4.6",
-    "sharp": "^0.34.3"
+    "@astrojs/markdown-satteri": "catalog:",
+    "@astrojs/mdx": "catalog:",
+    "@astrojs/rss": "catalog:",
+    "@astrojs/sitemap": "catalog:",
+    "astro": "catalog:",
+    "sharp": "catalog:"
   },
   "devDependencies": {
     "zephyr-astro-integration": "workspace:*"

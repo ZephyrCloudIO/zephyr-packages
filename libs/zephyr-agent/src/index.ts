@@ -2,13 +2,25 @@
 export { onIndexHtmlResolved, resolveIndexHtml } from './lib/hacks/resolve-index-html';
 // qwik hack - persist
 export {
+  claimPartialAssetMap,
+  claimPartialAssetMapBatch,
+  commitPartialAssetMapClaim,
+  commitPartialAssetMapClaimBatch,
   getPartialAssetMap,
   removePartialAssetMap,
+  rollbackPartialAssetMapClaim,
+  rollbackPartialAssetMapClaimBatch,
   savePartialAssetMap,
+  takePartialAssetMap,
+  type PartialAssetMapClaim,
+  type PartialAssetMapClaimBatch,
+  type PartialAssetMapScope,
+  type PartialAssetMaps,
 } from './lib/node-persist/partial-assets-map';
 
 // global utilities
 export { getGlobal } from './lib/utils/get-global';
+export { usesPathAddressing } from './lib/utils/address-mode';
 export {
   readDirRecursive,
   readDirRecursiveWithContents,
@@ -23,6 +35,14 @@ export {
 // errors
 export { ZeErrors, ZephyrError } from './lib/errors';
 export { handleGlobalError } from './lib/errors';
+
+// Project configuration
+export {
+  defineConfig,
+  getZephyrConfig,
+  type ResolvedZephyrConfig,
+  type ZephyrConfig,
+} from './lib/build-context/zephyr-config';
 
 // deploy result
 export {
@@ -81,9 +101,31 @@ export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/aut
 
 // Zephyr Edge is the main class which should be used
 export {
+  ApplicationContext,
+  ApplicationContextRegistry,
+  BuildParticipantFailedError,
+  BuildSession,
+  BuildSessionAbortedError,
+  BuildSessionAssetCollisionError,
+  BuildSessionNotReadyError,
+  BuildSessionRollbackError,
+  BuildSessionStateError,
   ZephyrEngine,
   is_zephyr_dependency_pair,
   readPackageJson,
+  type ApplicationContextOptions,
+  type ApplicationContextRegistryLocator,
+  type BeginBuildOptions,
+  type BuildContribution,
+  type BuildParticipant,
+  type BuildParticipantRole,
+  type BuildSessionFailureCallback,
+  type BuildSessionIdentity,
+  type BuildSessionLifecycleCallback,
+  type BuildSessionPublication,
+  type BuildSessionReadiness,
+  type BuildSessionStatus,
+  type PublishedBuildContribution,
   type ZeDependencyPair,
   type ZephyrDependencies,
   type ZephyrEngineOptions,

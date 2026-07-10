@@ -6,7 +6,7 @@
   "jsdoc": true,
   "ignorePatterns": [
     "**/dist/**",
-    "**/lib/**",
+    "libs/zephyr-native-cache/lib/**",
     "**/coverage/**",
     "**/.turbo/**",
     "pnpm-lock.yaml",

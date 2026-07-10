@@ -13,9 +13,13 @@ export async function setAppDeployResult(
   value: DeployResult
 ): Promise<void> {
   await storage;
-  void (await nodePersist.setItem(`${StorageKeys.ze_app_deploy_result}:${application_uid}`, value, {
-    ttl: 1000 * 60 * 60 * 24,
-  }));
+  void (await nodePersist.setItem(
+    `${StorageKeys.ze_app_deploy_result}:${application_uid}`,
+    value,
+    {
+      ttl: 1000 * 60 * 60 * 24,
+    }
+  ));
 }
 
 export async function getAppDeployResult(

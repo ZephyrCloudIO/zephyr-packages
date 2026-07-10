@@ -6,7 +6,6 @@ import type { ZeBuildAssetsMap, ZeBuildAsset } from 'zephyr-edge-contract';
  *
  * @param baseHref - The base path string to normalize
  * @returns A normalized base path string, or empty string for root/empty paths
- *
  *   Normalization rules:
  *
  *   - Removes leading and trailing slashes

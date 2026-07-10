@@ -9,19 +9,14 @@ export function SampleRollupLib(_props: SampleRollupLibProps) {
 
       <ul>
         <li>
-          <Link to="/">
-            examples/rollup-sample-lib/src/lib/rollup-sample-lib root
-          </Link>
+          <Link to="/">examples/rollup-sample-lib/src/lib/rollup-sample-lib root</Link>
         </li>
       </ul>
       <Routes>
         <Route
           path="/"
           element={
-            <div>
-              This is the examples/rollup-sample-lib/src/lib/rollup-sample-lib
-              root route.
-            </div>
+            <div>This is the examples/rollup-sample-lib/src/lib/rollup-sample-lib root route.</div>
           }
         />
       </Routes>

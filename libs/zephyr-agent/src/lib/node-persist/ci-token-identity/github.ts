@@ -35,7 +35,9 @@ function isGitHubActions(env: NodeJS.ProcessEnv): boolean {
   return env['GITHUB_ACTIONS'] === 'true';
 }
 
-async function inferGitHubIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdentity | undefined> {
+async function inferGitHubIdentity(
+  env: NodeJS.ProcessEnv
+): Promise<CiTokenIdentity | undefined> {
   const event = await readGitHubEventPayload(env);
   const eventEmails = getGitHubEventEmails(event, env);
   const noreplyEmail = getGitHubNoreplyEmail(env, event);
@@ -70,7 +72,9 @@ async function inferGitHubIdentity(env: NodeJS.ProcessEnv): Promise<CiTokenIdent
   return undefined;
 }
 
-async function readGitHubEventPayload(env: NodeJS.ProcessEnv): Promise<GitHubEventPayload | undefined> {
+async function readGitHubEventPayload(
+  env: NodeJS.ProcessEnv
+): Promise<GitHubEventPayload | undefined> {
   const eventPath = env['GITHUB_EVENT_PATH']?.trim();
   if (!eventPath) {
     return undefined;
@@ -83,7 +87,10 @@ async function readGitHubEventPayload(env: NodeJS.ProcessEnv): Promise<GitHubEve
   }
 }
 
-function getGitHubEventEmails(event: GitHubEventPayload | undefined, env: NodeJS.ProcessEnv): string[] {
+function getGitHubEventEmails(
+  event: GitHubEventPayload | undefined,
+  env: NodeJS.ProcessEnv
+): string[] {
   if (!event) {
     return [];
   }
@@ -125,17 +132,31 @@ function getGitHubNoreplyEmail(
     return undefined;
   }
 
-  return actorId ? `${actorId}+${actor}@users.noreply.github.com` : `${actor}@users.noreply.github.com`;
+  return actorId
+    ? `${actorId}+${actor}@users.noreply.github.com`
+    : `${actor}@users.noreply.github.com`;
 }
 
-function getGitHubActor(env: NodeJS.ProcessEnv, event: GitHubEventPayload | undefined): string | undefined {
-  return env['GITHUB_TRIGGERING_ACTOR']?.trim() || env['GITHUB_ACTOR']?.trim() || event?.sender?.login?.trim();
+function getGitHubActor(
+  env: NodeJS.ProcessEnv,
+  event: GitHubEventPayload | undefined
+): string | undefined {
+  return (
+    env['GITHUB_TRIGGERING_ACTOR']?.trim() ||
+    env['GITHUB_ACTOR']?.trim() ||
+    event?.sender?.login?.trim()
+  );
 }
 
-function getGitHubActorId(env: NodeJS.ProcessEnv, event: GitHubEventPayload | undefined): string | undefined {
+function getGitHubActorId(
+  env: NodeJS.ProcessEnv,
+  event: GitHubEventPayload | undefined
+): string | undefined {
   return env['GITHUB_ACTOR_ID']?.trim() || stringifyId(event?.sender?.id);
 }
 
 function getGitHubIssuer(env: NodeJS.ProcessEnv): string {
-  return (env['GITHUB_SERVER_URL']?.trim() || 'https://github.com').replace(/\/+$/, '').toLowerCase();
+  return (env['GITHUB_SERVER_URL']?.trim() || 'https://github.com')
+    .replace(/\/+$/, '')
+    .toLowerCase();
 }

@@ -610,12 +610,20 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
       await warnPathModeAbsoluteUrls(zephyr_engine, assetsMap);
 
-      const manifest = {
-        filepath: ZEPHYR_MANIFEST_FILENAME,
-        content: createManifestContent(zephyr_engine.federated_dependencies ?? []),
-      };
-      const manifestAsset = zeBuildAssets(manifest);
-      assetsMap[manifestAsset.hash] = manifestAsset;
+      // Bundler adapters emit this before package post-processors (including TAP's
+      // content lock) run. Reuse those exact bytes: regenerating a timestamped manifest
+      // here creates two hashes for one path and invalidates the published package lock.
+      const emittedManifest = Object.values(assetsMap).find(
+        (asset) => asset.path === ZEPHYR_MANIFEST_FILENAME
+      );
+      if (!emittedManifest) {
+        const manifest = {
+          filepath: ZEPHYR_MANIFEST_FILENAME,
+          content: createManifestContent(zephyr_engine.federated_dependencies ?? []),
+        };
+        const manifestAsset = zeBuildAssets(manifest);
+        assetsMap[manifestAsset.hash] = manifestAsset;
+      }
 
       if (!zephyr_engine.application_uid || !zephyr_engine.build_id) {
         throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {

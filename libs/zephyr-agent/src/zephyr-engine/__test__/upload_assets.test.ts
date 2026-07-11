@@ -30,4 +30,33 @@ describe('ZephyrEngine.upload_assets', () => {
       zeVars: {},
     });
   });
+
+  it('preserves the emitted manifest bytes instead of adding a conflicting path', async () => {
+    const engine = Object.create(ZephyrEngine.prototype) as ZephyrEngine;
+    engine.federated_dependencies = null;
+
+    const emittedManifest = {
+      path: ZEPHYR_MANIFEST_FILENAME,
+      extname: '.json',
+      hash: 'emitted-manifest-hash',
+      size: 24,
+      buffer: Buffer.from('{"source":"compilation"}'),
+    };
+    const assetsMap: ZeBuildAssetsMap = {
+      [emittedManifest.hash]: emittedManifest,
+    };
+
+    await expect(
+      engine.upload_assets({
+        assetsMap,
+        buildStats: {} as never,
+      })
+    ).rejects.toThrow(
+      'ZephyrEngine cannot upload before application_uid and build_id are initialized.'
+    );
+
+    expect(
+      Object.values(assetsMap).filter((asset) => asset.path === ZEPHYR_MANIFEST_FILENAME)
+    ).toEqual([emittedManifest]);
+  });
 });

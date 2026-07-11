@@ -59,6 +59,9 @@ ze-cli deploy ./dist
 # Upload with specific target
 ze-cli deploy ./dist --target ios
 
+# Publish a TAP mini-app artifact
+ze-cli deploy ./dist --target tap-app
+
 # Mark as SSR
 ze-cli deploy ./dist --ssr
 ```
@@ -66,7 +69,7 @@ ze-cli deploy ./dist --ssr
 ## Options
 
 - `--ssr` - Mark this snapshot as server-side rendered
-- `--target, -t <target>` - Build target: `web`, `ios`, or `android` (default: `web`)
+- `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
 - `--verbose, -v` - Enable verbose output
 - `--help, -h` - Show help message
 

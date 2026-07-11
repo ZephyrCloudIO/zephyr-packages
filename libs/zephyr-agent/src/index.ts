@@ -132,6 +132,7 @@ export {
 } from './zephyr-engine';
 export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+export type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 
 // Environment variable utilities
 export {

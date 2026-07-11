@@ -1,7 +1,9 @@
-import type { ZephyrBuildHooks, ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrBuildHooks, ZephyrBuildTarget, ZephyrEngine } from 'zephyr-agent';
 import type { XPackBuildCoordinator } from 'zephyr-xpack-internal';
 
 export interface ZephyrRspackPluginOptions {
+  /** Zephyr build target, including the `tap-app` mini-app artifact family. */
+  target?: ZephyrBuildTarget;
   // hacks
   // todo: add link to documentation and sample how this should be used and when
   wait_for_index_html?: boolean;

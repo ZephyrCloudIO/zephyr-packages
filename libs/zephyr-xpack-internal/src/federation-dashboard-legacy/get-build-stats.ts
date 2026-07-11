@@ -1,5 +1,5 @@
 import type { ZephyrEngine } from 'zephyr-agent';
-import { ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
+import { resolveMfManifestPath, ze_log, ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { ZephyrBuildStats } from 'zephyr-edge-contract';
 import { extractFederatedConfig } from '../xpack-extract/extract-federation-config';
 import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
@@ -12,6 +12,49 @@ interface KnownAgentProps {
     zephyr_engine: ZephyrEngine;
     // federated module config
     mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
+  };
+}
+
+export interface ModuleFederationBuildMetadata {
+  name?: string;
+  remote?: string;
+  mf_manifest?: string;
+  library_type?: string;
+  exposes?: ZephyrBuildStats['exposes'];
+  shared?: ZephyrBuildStats['shared'];
+}
+
+/** Extracts the publication metadata needed to load an enhanced federation build. */
+export function getModuleFederationBuildMetadata(
+  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined
+): ModuleFederationBuildMetadata {
+  // todo: add support for publishing multiple federation configs independently
+  const selectedConfig = Array.isArray(mfConfig) ? mfConfig[0] : mfConfig;
+  if (!selectedConfig) {
+    return {};
+  }
+
+  const federationConfig = extractFederatedConfig(selectedConfig);
+
+  if (!federationConfig) {
+    return {};
+  }
+
+  // Enhanced MF plugins have an enumerable plugin name and emit the default manifest
+  // when `manifest` is omitted. Native/legacy MF plugins do not emit an MF manifest.
+  const emitsManifest =
+    federationConfig.manifest !== undefined ||
+    ('name' in selectedConfig && typeof selectedConfig.name === 'string');
+
+  return {
+    name: federationConfig.name,
+    remote: federationConfig.filename,
+    mf_manifest: emitsManifest
+      ? resolveMfManifestPath(federationConfig.manifest)
+      : undefined,
+    library_type: federationConfig.library?.type ?? 'var',
+    exposes: federationConfig.exposes,
+    shared: federationConfig.shared,
   };
 }
 
@@ -58,17 +101,12 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   const buildId = await ze_engine.build_id;
   const build_target = ze_engine.env.target ?? 'web';
 
-  // todo: add support for multiple federation configs
-  const mfConfig = Array.isArray(pluginOptions.mfConfig)
-    ? pluginOptions.mfConfig[0]
-    : pluginOptions.mfConfig;
-
-  const { name, filename } = mfConfig ? (extractFederatedConfig(mfConfig) ?? {}) : {};
+  const federationMetadata = getModuleFederationBuildMetadata(pluginOptions.mfConfig);
   const remotes = ze_engine.federated_dependencies;
 
   const data_overrides = {
     id: application_uid,
-    name: name,
+    ...federationMetadata,
     edge: { url: EDGE_URL, delimiter },
     domain: DOMAIN,
     platform: PLATFORM,
@@ -76,7 +114,6 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
     app: Object.assign({}, app, { buildId }),
     version,
     git,
-    remote: filename,
     remotes: remotes?.map(({ application_uid }) => application_uid) ?? [],
     context,
     build_target,
@@ -86,7 +123,7 @@ export async function getBuildStats<ZephyrAgentProps extends KnownAgentProps>({
   // todo: extend data
 
   const res = Object.assign({}, convertedGraph, data_overrides, {
-    project: name, // Add missing project property
+    project: federationMetadata.name, // Add missing project property
     tags: [], // Add missing tags property with empty array as default
   }) as ZephyrBuildStats;
   ze_log.app('get build stats done.', res);

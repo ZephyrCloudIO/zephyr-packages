@@ -7,7 +7,7 @@ import { processFunctionRemotes } from './process-function-remotes';
 
 // import { StatsChunk, StatsModule } from 'webpack';
 import type { XStatsChunk, XStatsModule } from '../../../xpack.types';
-import type { ConvertedGraph } from 'zephyr-edge-contract';
+import type { ConvertedGraph, ZephyrBuildTarget } from 'zephyr-edge-contract';
 
 export interface ConvertToGraphParams {
   /** Application name in module federation config */
@@ -64,8 +64,8 @@ export interface ConvertToGraphParams {
    * will be empty
    */
   chunkDependencies: unknown;
-  /** Repack specific 'ios' | 'android' | 'web' | undefined */
-  target?: 'ios' | 'android' | 'web' | undefined;
+  /** Target platform or artifact family. */
+  target?: ZephyrBuildTarget | undefined;
 }
 
 export function convertToGraph(

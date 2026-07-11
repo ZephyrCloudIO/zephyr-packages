@@ -29,6 +29,15 @@ function mergeResolvedDependencies(
   return [...merged.values()];
 }
 
+function applyBuildTarget(
+  engine: ZephyrEngine,
+  options: ZephyrRspackPluginOptions | undefined
+): void {
+  if (options?.target) {
+    engine.env.target = options.target;
+  }
+}
+
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRspackPluginOptions
 ): <T extends Configuration | Configuration[]>(config: T) => Promise<T> {
@@ -49,6 +58,7 @@ export function withZephyr(
       builder: 'rspack',
       context: config[0]?.context,
     });
+    applyBuildTarget(engine, zephyrPluginOptions);
     try {
       const { coordinator, compilers } = coordinateXPackCompilers(engine, config, {
         snapshotType: zephyrPluginOptions?.snapshotType,
@@ -84,6 +94,10 @@ async function _zephyr_configuration(
         builder: 'rspack',
         context: config.context,
       }));
+
+    // Remote resolution is target-sensitive, so set this before extracting/resolving
+    // federation dependencies.
+    applyBuildTarget(zephyr_engine, _zephyrOptions);
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);

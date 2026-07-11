@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { parseShellCommand, splitCommands } from '../lib/shell-parser';
@@ -9,7 +10,7 @@ import { uploadAssets } from '../lib/upload';
 
 export interface RunOptions {
   commandLine: string;
-  target?: 'web' | 'ios' | 'android';
+  target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
   cwd: string;

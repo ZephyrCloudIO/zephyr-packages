@@ -1,3 +1,4 @@
+import type { ZephyrBuildTarget } from '../build-target';
 import type { LocalPackageJson } from './local-package-json';
 
 export interface ConvertedGraph {
@@ -19,5 +20,5 @@ export interface ConvertedGraph {
   dependencies?: LocalPackageJson[];
   devDependencies?: LocalPackageJson[];
   optionalDependencies?: LocalPackageJson[];
-  build_target?: 'ios' | 'android' | 'web' | undefined;
+  build_target?: ZephyrBuildTarget | undefined;
 }

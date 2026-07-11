@@ -1,12 +1,13 @@
 import { access, constants } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ZephyrEngine, logFn, ZephyrError, ZeErrors } from 'zephyr-agent';
+import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { uploadAssets } from '../lib/upload';
 
 export interface DeployOptions {
   directory: string;
-  target?: 'web' | 'ios' | 'android';
+  target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
   cwd: string;

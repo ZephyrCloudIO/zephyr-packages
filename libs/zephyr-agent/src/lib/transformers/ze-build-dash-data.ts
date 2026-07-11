@@ -60,6 +60,7 @@ export async function zeBuildDashData(
     metadata: {},
     default: false,
     remote: 'remoteEntry.js',
+    build_target: zephyr_engine.env.target ?? 'web',
     type: 'app',
     builder: zephyr_engine.builder,
     plugin_version: getZephyrAgentVersion(),

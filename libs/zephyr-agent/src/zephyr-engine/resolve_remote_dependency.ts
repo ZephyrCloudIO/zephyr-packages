@@ -1,5 +1,9 @@
 import axios from 'axios';
-import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
+import {
+  ZE_API_ENDPOINT,
+  ze_api_gateway,
+  type ZephyrBuildTarget,
+} from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../lib/errors';
 import { parseUrl } from '../lib/http/http-request';
 import { ze_log } from '../lib/logging';
@@ -13,13 +17,13 @@ export interface ZeResolvedDependency {
   remote_entry_url: string;
   manifest_url?: string;
   library_type: string;
-  platform?: string;
+  platform?: ZephyrBuildTarget;
 }
 
 export async function resolve_remote_dependency(params: {
   application_uid: string;
   version: string;
-  platform?: string;
+  platform?: ZephyrBuildTarget;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
   try {
@@ -51,7 +55,7 @@ async function request_remote_dependency({
 }: {
   application_uid: string;
   version: string;
-  platform?: string;
+  platform?: ZephyrBuildTarget;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
   const depUrl =

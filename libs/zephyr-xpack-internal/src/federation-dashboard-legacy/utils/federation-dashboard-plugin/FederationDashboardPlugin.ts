@@ -2,7 +2,11 @@
 
 import { sep } from 'node:path';
 import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
-import type { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
+import type {
+  ConvertedGraph,
+  ZeUploadBuildStats,
+  ZephyrBuildTarget,
+} from 'zephyr-edge-contract';
 import {
   extractFederatedConfig,
   isModuleFederationPlugin,
@@ -41,7 +45,7 @@ interface ProcessWebpackGraphParams {
     zephyr_engine: ZephyrEngine;
     mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
     // Repack specific options because there are different targets it build towards
-    target?: 'ios' | 'android' | 'web' | undefined;
+    target?: ZephyrBuildTarget | undefined;
   };
 }
 

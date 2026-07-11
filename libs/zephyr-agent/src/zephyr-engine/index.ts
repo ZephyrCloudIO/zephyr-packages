@@ -8,6 +8,7 @@ import {
   ZE_ENV,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
+  type ZephyrBuildTarget,
   ZeUtils,
   type ZephyrBuildStats,
   type ZephyrPluginOptions,
@@ -87,7 +88,8 @@ export interface ZeApplicationProperties {
   version: string;
 }
 
-export type Platform = 'ios' | 'android' | 'web' | undefined;
+/** @deprecated Prefer `ZephyrBuildTarget` from `zephyr-edge-contract`. */
+export type Platform = ZephyrBuildTarget | undefined;
 
 export type DeferredZephyrEngine = {
   zephyr_engine_defer: Promise<ZephyrEngine>;

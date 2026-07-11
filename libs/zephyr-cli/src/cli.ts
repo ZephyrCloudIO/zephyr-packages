@@ -1,8 +1,10 @@
+import { isZephyrBuildTarget, type ZephyrBuildTarget } from 'zephyr-edge-contract';
+
 export interface CliOptions {
   command: 'run' | 'deploy';
   commandLine?: string; // For 'run' command
   directory?: string; // For 'deploy' command
-  target?: 'web' | 'ios' | 'android';
+  target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
 }
@@ -46,8 +48,8 @@ export function parseArgs(args: string[]): CliOptions {
       flags.push(arg);
     } else if (arg === '--target' || arg === '-t') {
       const value = args[++i];
-      if (value && ['web', 'ios', 'android'].includes(value)) {
-        options.target = value as 'web' | 'ios' | 'android';
+      if (isZephyrBuildTarget(value)) {
+        options.target = value;
       }
       flags.push(arg, value);
     } else if (arg === '--verbose') {
@@ -88,8 +90,8 @@ export function parseArgs(args: string[]): CliOptions {
         options.ssr = true;
       } else if (arg === '--target' || arg === '-t') {
         const value = args[++i];
-        if (value && ['web', 'ios', 'android'].includes(value)) {
-          options.target = value as 'web' | 'ios' | 'android';
+        if (isZephyrBuildTarget(value)) {
+          options.target = value;
         }
       } else if (arg === '--verbose') {
         options.verbose = true;
@@ -118,7 +120,7 @@ Commands:
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered
-  --target, -t <target>    Build target: web, ios, or android (default: web)
+  --target, -t <target>    Build target: web, ios, android, or tap-app (default: web)
   --verbose                Enable verbose output
   --help, -h               Show this help message
 

@@ -4,6 +4,7 @@ import type { Configuration } from './with-zephyr';
 
 const mocks = rs.hoisted(() => {
   const engine = {
+    env: { target: 'web' },
     federated_dependencies: null as ZeResolvedDependency[] | null,
     resolve_remote_dependencies: rs.fn(),
     build_id: Promise.resolve('build-1'),
@@ -61,6 +62,7 @@ function dependency(name: string): ZeResolvedDependency {
 describe('Rspack withZephyr compiler arrays', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.engine.env.target = 'web';
     mocks.engine.federated_dependencies = null;
     mocks.extractFederatedDependencyPairs.mockImplementation((config) => {
       if (config.name === 'broken') throw new Error('invalid federation config');
@@ -87,12 +89,20 @@ describe('Rspack withZephyr compiler arrays', () => {
       { name: 'server', context: '/repo', output: { path: '/repo/dist/server' } },
     ] as unknown as Configuration[];
 
-    const result = await withZephyr()(configs);
+    mocks.engine.resolve_remote_dependencies.mockImplementation(async (pairs) => {
+      expect(mocks.engine.env.target).toBe('tap-app');
+      const resolved = [dependency(pairs[0].name)];
+      mocks.engine.federated_dependencies = resolved;
+      return resolved;
+    });
+
+    const result = await withZephyr({ target: 'tap-app' })(configs);
 
     expect(result).toBe(configs);
     expect(configs[0]?.plugins).toHaveLength(1);
     expect(configs[1]?.plugins).toHaveLength(1);
     expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.env.target).toBe('tap-app');
     expect(mocks.mutPathModePublicPath).toHaveBeenCalledTimes(2);
     expect(mocks.engine.federated_dependencies?.map(({ name }) => name)).toEqual([
       'client',

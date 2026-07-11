@@ -1,5 +1,5 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
-import { ZephyrEngine } from 'zephyr-agent';
+import { ZephyrEngine, type ZephyrBuildTarget } from 'zephyr-agent';
 import {
   withZephyr as rspackWithZephyr,
   type ZephyrBuildHooks,
@@ -7,6 +7,8 @@ import {
 import { coordinateXPackCompilers } from 'zephyr-xpack-internal';
 
 export interface ZephyrRsbuildPluginOptions {
+  /** Zephyr build target, including the `tap-app` mini-app artifact family. */
+  target?: ZephyrBuildTarget;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   snapshotType?: 'csr' | 'ssr';
@@ -33,6 +35,9 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             builder: 'rspack',
             context: bundlerConfigs[0]?.context,
           });
+          if (options?.target) {
+            engine.env.target = options.target;
+          }
           try {
             const { coordinator, compilers } = coordinateXPackCompilers(
               engine,

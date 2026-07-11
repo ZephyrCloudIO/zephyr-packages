@@ -1,6 +1,11 @@
 /* istanbul ignore file */
 
 // edge api
+export {
+  isZephyrBuildTarget,
+  ZEPHYR_BUILD_TARGETS,
+  type ZephyrBuildTarget,
+} from './lib/build-target';
 export type {
   GatewayPublishRequest,
   PublishRequest,

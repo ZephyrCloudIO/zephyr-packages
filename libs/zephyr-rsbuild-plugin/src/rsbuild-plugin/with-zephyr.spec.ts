@@ -4,6 +4,7 @@ const mocks = rs.hoisted(() => ({
   engine: {
     application_uid: 'org.project.rsbuild',
     build_id: Promise.resolve('build-1'),
+    env: { target: 'web' },
     hasActiveBuild: true,
     build_failed: rs.fn(),
   },
@@ -30,6 +31,7 @@ import { withZephyr } from './with-zephyr';
 describe('Rsbuild withZephyr compiler coordination', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.engine.env.target = 'web';
     mocks.create.mockResolvedValue(mocks.engine);
     mocks.coordinate.mockReturnValue({
       coordinator: { name: 'shared-coordinator' },
@@ -47,6 +49,7 @@ describe('Rsbuild withZephyr compiler coordination', () => {
       | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
       | undefined;
     const plugin = withZephyr({
+      target: 'tap-app',
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',
     });
@@ -63,6 +66,7 @@ describe('Rsbuild withZephyr compiler coordination', () => {
     await hook?.({ bundlerConfigs });
 
     expect(mocks.create).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.env.target).toBe('tap-app');
     expect(mocks.coordinate).toHaveBeenCalledWith(mocks.engine, bundlerConfigs, {
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',

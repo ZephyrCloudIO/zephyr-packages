@@ -112,8 +112,12 @@ const config: Configuration = {
   // ... other configuration
 };
 
-export default withZephyr()(config);
+export default withZephyr({ target: 'tap-app' })(config);
 ```
+
+The optional `target` accepts `web`, `ios`, `android`, or `tap-app`. Zephyr applies it
+before resolving Module Federation remotes so target-specific deployments resolve
+consistently.
 
 ## Features
 

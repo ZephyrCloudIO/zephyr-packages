@@ -108,7 +108,11 @@ export function logger(props: LoggerOptions): ZeLogger {
       logFn(log.level, log.message, log.action);
     }
 
-    // Then attempt to upload logs,
+    // Then attempt to upload logs. This is fire-and-forget: a short deadline
+    // ensures the request doesn't hold the Node event loop open on Windows CI
+    // where TCP connections to the logging API can stall for several minutes
+    // before the OS-level connection timeout fires.
+    const LOG_UPLOAD_DEADLINE_MS = 5_000;
     loadLogData()
       .then(
         ([config, token]) =>
@@ -136,7 +140,8 @@ export function logger(props: LoggerOptions): ZeLogger {
                   message: stripAnsi(log.message.trim()),
                   createdAt: Date.now(),
                 }))
-            )
+            ),
+            LOG_UPLOAD_DEADLINE_MS
           )
       )
       // This is ok to fail silently

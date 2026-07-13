@@ -70,6 +70,16 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
+      # Exclude hot paths from Windows Defender real-time scanning to reduce I/O
+      # overhead during install and build. Silently skipped on images that restrict
+      # Defender policy changes (continue-on-error keeps the rest of the job alive).
+      - name: exclude workspace from Windows Defender
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $workspace = "${{ github.workspace }}"
+          $pnpmStore = "$HOME\.pnpm-store"
+          Add-MpPreference -ExclusionPath $workspace, $pnpmStore
       - uses: ./.github/actions/setup
         with:
           cache-key-suffix: e2e
@@ -112,6 +122,14 @@ jobs:
         with:
           # Turbo's affected calculation needs the base commit locally.
           fetch-depth: 0
+      - name: exclude workspace from Windows Defender
+        if: runner.os == 'Windows'
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $workspace = "${{ github.workspace }}"
+          $pnpmStore = "$HOME\.pnpm-store"
+          Add-MpPreference -ExclusionPath $workspace, $pnpmStore
       - uses: ./.github/actions/setup
         with:
           cache-key-suffix: test

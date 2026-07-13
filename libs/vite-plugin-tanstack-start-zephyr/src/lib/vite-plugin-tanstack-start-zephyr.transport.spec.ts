@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import * as path from 'node:path';
 
 const mocks = rs.hoisted(() => ({
   deferCreate: rs.fn(),
@@ -96,8 +97,9 @@ describe('TanStack Start TAP output transport', () => {
       },
     });
 
-    expect(mocks.loadTanStackOutput).toHaveBeenCalledWith('/workspace/tap-package/dist', {
-      target: 'tap-app',
-    });
+    expect(mocks.loadTanStackOutput).toHaveBeenCalledWith(
+      path.join('/workspace/tap-package', 'dist'),
+      { target: 'tap-app' }
+    );
   });
 });

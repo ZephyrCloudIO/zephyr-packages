@@ -116,6 +116,7 @@ describe('extract_vite_assets_map', () => {
     await expect(
       extract_vite_assets_map(mockZephyrEngine, {
         ...mockViteInternalOptions,
+        target: 'tap-app',
         assets: {
           'manifest.tap.lock': {
             type: 'asset',
@@ -140,6 +141,7 @@ describe('extract_vite_assets_map', () => {
 
     await extract_vite_assets_map(mockZephyrEngine, {
       ...mockViteInternalOptions,
+      target: 'tap-app',
       assets: {
         'manifest.tap.lock': {
           type: 'asset',
@@ -153,6 +155,30 @@ describe('extract_vite_assets_map', () => {
       unknown
     >;
     expect(submittedAssets).toEqual({ 'manifest.tap.lock': staticAsset });
+  });
+
+  it('prefers emitted runtime output over an on-disk copy for conventional Vite builds', async () => {
+    const staticAsset = {
+      type: 'asset' as const,
+      source: 'written before finalization',
+    } as OutputAsset;
+    const runtimeAsset = {
+      type: 'chunk' as const,
+      code: 'final emitted runtime',
+    } as OutputChunk;
+    mockLoadStaticAssets.mockResolvedValue({ 'remoteEntry.js': staticAsset });
+    mockBuildAssetsMap.mockReturnValue({});
+
+    await extract_vite_assets_map(mockZephyrEngine, {
+      ...mockViteInternalOptions,
+      assets: { 'remoteEntry.js': runtimeAsset },
+    });
+
+    const submittedAssets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
+      string,
+      unknown
+    >;
+    expect(submittedAssets).toEqual({ 'remoteEntry.js': runtimeAsset });
   });
 
   it('rejects byte-identical TAP bundle aliases before normalizing their path', async () => {

@@ -22,9 +22,9 @@ export interface MergeViteOutputAssetsOptions {
 }
 
 /**
- * Merge emitted Vite assets without allowing a later source to hide different bytes at
- * the same snapshot path. Exact duplicates are harmless and retained from the first
- * source.
+ * Merge Vite output using Vite's historical last-writer-wins behavior for conventional
+ * builds. TAP paths are immutable descriptor inputs, so a conflicting later artifact must
+ * instead fail publication.
  */
 export function mergeViteOutputAssets(
   bundle: ZephyrOutputBundle,
@@ -43,14 +43,16 @@ export function mergeViteOutputAssets(
           `${JSON.stringify(assetPath)} (expected ${JSON.stringify(normalizedPath)}).`,
       });
     }
-    const existing = bundle[normalizedPath];
-    if (existing) {
-      if (!hasSameBytes(existing, asset)) {
-        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-          message: `Vite emitted conflicting assets for "${normalizedPath}".`,
-        });
+    if (target === 'tap-app') {
+      const existing = bundle[normalizedPath];
+      if (existing) {
+        if (!hasSameBytes(existing, asset)) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message: `Vite emitted conflicting assets for "${normalizedPath}".`,
+          });
+        }
+        continue;
       }
-      continue;
     }
 
     bundle[normalizedPath] = asset;

@@ -37,7 +37,7 @@ describe('loadStaticAssets', () => {
       },
     ] as never);
 
-    await expect(loadStaticAssets(options)).rejects.toThrow(
+    await expect(loadStaticAssets({ ...options, target: 'tap-app' })).rejects.toThrow(
       'Vite emitted conflicting assets for "manifest.tap.lock".'
     );
   });
@@ -56,8 +56,27 @@ describe('loadStaticAssets', () => {
       },
     ] as never);
 
-    await expect(loadStaticAssets(options)).resolves.toEqual({
+    await expect(loadStaticAssets({ ...options, target: 'tap-app' })).resolves.toEqual({
       'manifest.tap.lock': asset,
+    });
+  });
+
+  it('keeps the output-directory asset for conventional Vite builds', async () => {
+    const publicAsset = {
+      type: 'asset' as const,
+      fileName: 'remoteEntry.js',
+      source: 'public copy',
+    };
+    const outputAsset = {
+      type: 'asset' as const,
+      fileName: 'remoteEntry.js',
+      source: 'emitted copy',
+    };
+    mockLoadPublicDir.mockResolvedValue([publicAsset] as never);
+    mockLoadStaticEntries.mockResolvedValue([outputAsset] as never);
+
+    await expect(loadStaticAssets(options)).resolves.toEqual({
+      'remoteEntry.js': outputAsset,
     });
   });
 

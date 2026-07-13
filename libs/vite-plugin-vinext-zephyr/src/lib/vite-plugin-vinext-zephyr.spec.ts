@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import * as path from 'node:path';
 
 const mocks = rs.hoisted(() => ({
   assertZephyrBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
@@ -170,12 +171,12 @@ describe('withZephyrVinext', () => {
     });
     expect(mocks.collectOutputDirectoryAssets).toHaveBeenCalledWith(
       expect.any(Object),
-      '/workspace/tap-package/dist',
+      path.join('/workspace/tap-package', 'dist'),
       { target: 'tap-app' }
     );
     expect(mocks.injectRscAssetsManifest).toHaveBeenCalledWith(
       expect.any(Object),
-      '/workspace/tap-package/dist',
+      path.join('/workspace/tap-package', 'dist'),
       undefined,
       { target: 'tap-app' }
     );
@@ -293,7 +294,7 @@ describe('withZephyrVinext', () => {
 
     expect(mocks.detectEntrypointFromAssets).toHaveBeenCalled();
     expect(mocks.resolveVinextEntrypoint).toHaveBeenCalledWith(
-      '/workspace/tap-package/dist',
+      path.join('/workspace/tap-package', 'dist'),
       'server/index.js',
       undefined
     );

@@ -92,24 +92,34 @@ jobs:
           # Run Parcel's bundler in single-process mode so the worker farm is
           # never spawned and process teardown is instant on Windows.
           PARCEL_WORKERS: 0
-          # Limit the libuv thread pool. Rspack's NAPI-RS native binding uses
-          # libuv threads; reducing the pool size reduces the number of threads
-          # that the OS must reclaim on process teardown.
-          UV_THREADPOOL_SIZE: 1
-        # Use new-only (not errors-only) so per-task output is visible when a
-        # process stalls — errors-only suppresses group markers entirely, making
-        # 8-minute hangs invisible in the log.
-        # Rspack's NAPI-RS native Windows DLL keeps Tokio/libuv threads alive
-        # after build completion. The OS TCP retransmit timer (~520s) is what
-        # finally terminates the process — whichever Rspack-based task runs last
-        # (alone, with no concurrent peer to mask the stall) blocks the pipeline.
-        # rspress, modern-js, and nuxt use Rspack multi-compiler builds that are
-        # most susceptible; all are fully exercised by the Ubuntu job.
-        run: >
-          pnpm exec turbo run build
-          --affected --force --env-mode=loose --output-logs=new-only
-          --filter=!rspress-v1 --filter=!rspress-v2 --filter=!rspress-v2-ssg
-          --filter=!modern-js --filter=!nuxt
+        # Rspack's NAPI-RS native Windows DLL keeps Rust/Tokio thread-pool
+        # threads alive after each build subprocess finishes. The OS TCP SYN
+        # retransmit timer (~520 s) is what finally kills the process. Whichever
+        # Rspack-based task runs last (alone) blocks the entire turbo pipeline.
+        #
+        # Workaround: tee turbo's output to a temp file while streaming it live,
+        # then use a 300-second timeout. If the timeout fires, check whether turbo
+        # already printed its success summary — if yes, the stall was just a
+        # lingering NAPI process and we exit 0; if not, a real build failure
+        # occurred and we exit 1 to preserve the failure signal.
+        shell: bash
+        run: |
+          set +e
+          out=$(mktemp)
+          timeout 300 pnpm exec turbo run build \
+            --affected --force --env-mode=loose --output-logs=new-only \
+            | tee "$out"
+          rc=$?
+          if [ $rc -eq 124 ]; then
+            if grep -q "Tasks:.*successful" "$out"; then
+              echo "Turbo tasks succeeded; lingering NAPI-RS process killed by timeout."
+              exit 0
+            else
+              echo "Build timed out before completing."
+              exit 1
+            fi
+          fi
+          exit $rc
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 

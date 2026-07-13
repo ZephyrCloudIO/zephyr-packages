@@ -1,5 +1,5 @@
 import isCI from 'is-ci';
-import { exec as node_exec } from 'node:child_process';
+import { execFile as node_execFile } from 'node:child_process';
 import { sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
@@ -21,7 +21,28 @@ import {
   type ResolvedZephyrConfig,
 } from './zephyr-config';
 
-const exec = promisify(node_exec);
+const execFile = promisify(node_execFile);
+
+/**
+ * Runs a single git subcommand without a shell.
+ *
+ * Using `execFile` (instead of a shell `exec` with chained `&&`/`||` operators) avoids
+ * cross-platform shell parsing bugs. Windows spawns `cmd.exe`, which parses operator
+ * precedence and quoting differently than the POSIX `sh` used on Linux/macOS, and
+ * previously left the commit slot empty in CI.
+ *
+ * Returns the trimmed stdout, or `null` when the command exits non-zero or produces no
+ * output.
+ */
+async function runGit(args: string[], context: string): Promise<string | null> {
+  try {
+    const { stdout } = await execFile('git', args, { cwd: context });
+    const trimmed = stdout.trim();
+    return trimmed === '' ? null : trimmed;
+  } catch {
+    return null;
+  }
+}
 
 export interface ZeGitInfo {
   app: Pick<ZephyrPluginOptions['app'], 'org' | 'project'>;
@@ -60,8 +81,7 @@ async function gatherGitInfo(
   try {
     const { name, email, remoteOrigin, branch, commit, tags, stdout } = await loadGitInfo(
       hasToken,
-      context,
-      zephyrConfig
+      context
     );
 
     if (!hasToken && (!name || !email)) {
@@ -132,16 +152,20 @@ async function gatherGitInfo(
   }
 }
 
-// Static delimiter that's unique enough to avoid conflicts with git output
-const GIT_OUTPUT_DELIMITER = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
 const NO_GIT_COMMIT = 'no-git-commit';
-const NO_REMOTE_ORIGIN = '---ZEPHYR-NO-REMOTE-ORIGIN---';
 
-/** Loads all data in a single command to avoid multiple executions. */
+/**
+ * Loads git metadata by running each subcommand separately via `execFile`.
+ *
+ * Previously all reads were joined into a single shell command using `&&`/`||` operators
+ * and a delimiter. That relied on shell operator precedence and quoting, which `cmd.exe`
+ * (Windows) parses differently than POSIX `sh`, causing the commit hash to be dropped in
+ * Windows CI. Running each command without a shell removes that entire class of
+ * cross-platform bugs.
+ */
 async function loadGitInfo(
   hasSecretToken: boolean,
-  context: string,
-  zephyrConfig: ResolvedZephyrConfig
+  context: string
 ): Promise<{
   name: string;
   email: string;
@@ -153,114 +177,103 @@ async function loadGitInfo(
 }> {
   const automated = isCI || hasSecretToken;
 
-  const command = [
+  const [name, email, remoteOrigin, gitBranch, rawCommit, tags] = await Promise.all([
     // Inside CI environments, the last committer should be the actor
     // and not the actual logged git user which sometimes might just be a bot
-    automated ? "git log -1 --pretty=format:'%an'" : 'git config user.name',
-    automated ? "git log -1 --pretty=format:'%ae'" : 'git config user.email',
-    // A complete explicit identity does not need an origin, but retaining the command in
-    // the combined read keeps the fast one-process path when an origin does exist.
-    hasConfiguredApp(zephyrConfig)
-      ? `git config --get remote.origin.url || echo ${NO_REMOTE_ORIGIN}`
-      : 'git config --get remote.origin.url',
+    automated
+      ? runGit(['log', '-1', '--pretty=format:%an'], context)
+      : runGit(['config', 'user.name'], context),
+    automated
+      ? runGit(['log', '-1', '--pretty=format:%ae'], context)
+      : runGit(['config', 'user.email'], context),
+    // A complete explicit identity does not need an origin; a missing origin is
+    // tolerated and normalized to an empty string below.
+    runGit(['config', '--get', 'remote.origin.url'], context),
     // Handles unborn branches in fresh repositories
-    'git symbolic-ref --short HEAD || git rev-parse --abbrev-ref HEAD',
+    loadGitBranch(context),
     // No commits yet should not block local build metadata extraction
-    `git rev-parse HEAD || echo ${NO_GIT_COMMIT}`,
-  ].join(` && echo ${GIT_OUTPUT_DELIMITER} && `);
+    runGit(['rev-parse', 'HEAD'], context),
+    loadGitTags(context),
+  ]);
 
-  try {
-    const { stdout } = await exec(command, { cwd: context });
-
-    const [name, email, rawRemoteOrigin, gitBranch, commit] = stdout
-      .trim()
-      .split(GIT_OUTPUT_DELIMITER)
-      .map((x) => x.trim());
-    const remoteOrigin = rawRemoteOrigin === NO_REMOTE_ORIGIN ? '' : rawRemoteOrigin;
-    const tags = await loadGitTags(context);
-
-    // In CI environments with detached HEAD, git returns "HEAD" as branch name
-    // Try to get branch from CI environment variables first
-    let branch = gitBranch;
-    if (isCI && (gitBranch === 'HEAD' || !gitBranch)) {
-      const ciInfo = detectCIBranch();
-      if (ciInfo.branch) {
-        branch = ciInfo.branch;
-        ze_log.git(
-          `Detected branch from ${ciInfo.platform} environment variables: ${branch}`,
-          {
-            platform: ciInfo.platform,
-            branch,
-            isPR: ciInfo.isPR,
-            gitBranch,
-          }
-        );
-      } else {
-        ze_log.git(
-          `Branch detection in CI failed. Git returned: "${gitBranch}", no CI env vars available`,
-          { platform: ciInfo.platform, gitBranch }
-        );
-      }
-    }
-
-    if (isCI && (!branch || branch === 'HEAD')) {
-      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message:
-          'Git branch is required in CI environments. Configure the CI provider branch variables or check out a named branch.',
-      });
-    }
-
-    if (isCI && (!commit || commit === NO_GIT_COMMIT)) {
-      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message:
-          'Git commit hash is required in CI environments. Ensure this repository has commit history.',
-      });
-    }
-
-    return {
-      name,
-      email,
-      remoteOrigin,
-      branch,
-      commit,
-      tags,
-      stdout,
-    };
-  } catch (cause: unknown) {
-    const error = cause as Error & { stderr?: string };
+  // A completely unavailable git repository surfaces as null for the core
+  // reads; mirror the previous "not a git repository" failure so callers fall
+  // back to global/API metadata (or fail closed in CI).
+  if (name === null && email === null && gitBranch === null && rawCommit === null) {
     throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-      cause,
-      data: { command, delimiter: GIT_OUTPUT_DELIMITER },
-      message: error?.stderr || error.message,
+      message: 'Not a git repository',
+      data: { context },
     });
   }
+
+  const commit = rawCommit ?? NO_GIT_COMMIT;
+
+  // Synthesize a combined stdout for diagnostics/downstream error messages that
+  // still expect a single blob to inspect.
+  const stdout = [name, email, remoteOrigin, gitBranch, commit].join('\n');
+
+  // In CI environments with detached HEAD, git returns "HEAD" as branch name.
+  // Try to get branch from CI environment variables first.
+  let branch = gitBranch;
+  if (isCI && (gitBranch === 'HEAD' || !gitBranch)) {
+    const ciInfo = detectCIBranch();
+    if (ciInfo.branch) {
+      branch = ciInfo.branch;
+      ze_log.git(
+        `Detected branch from ${ciInfo.platform} environment variables: ${branch}`,
+        {
+          platform: ciInfo.platform,
+          branch,
+          isPR: ciInfo.isPR,
+          gitBranch,
+        }
+      );
+    } else {
+      ze_log.git(
+        `Branch detection in CI failed. Git returned: "${gitBranch}", no CI env vars available`,
+        { platform: ciInfo.platform, gitBranch }
+      );
+    }
+  }
+
+  if (isCI && (!branch || branch === 'HEAD')) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message:
+        'Git branch is required in CI environments. Configure the CI provider branch variables or check out a named branch.',
+    });
+  }
+
+  if (isCI && (!commit || commit === NO_GIT_COMMIT)) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message:
+        'Git commit hash is required in CI environments. Ensure this repository has commit history.',
+    });
+  }
+
+  return {
+    name: name ?? '',
+    email: email ?? '',
+    remoteOrigin: remoteOrigin ?? '',
+    branch: branch ?? '',
+    commit,
+    tags,
+    stdout,
+  };
+}
+
+/** Resolve the current branch, handling unborn branches in fresh repositories. */
+async function loadGitBranch(context: string): Promise<string | null> {
+  const symbolic = await runGit(['symbolic-ref', '--short', 'HEAD'], context);
+  if (symbolic) {
+    return symbolic;
+  }
+  return runGit(['rev-parse', '--abbrev-ref', 'HEAD'], context);
 }
 
 /** Load tags pointing at HEAD. Missing commits/no tags should not fail local flow. */
 async function loadGitTags(context: string): Promise<string[]> {
-  try {
-    const { stdout } = await exec('git tag --points-at HEAD', { cwd: context });
-    return parseTagsOutput(stdout);
-  } catch {
-    return [];
-  }
-}
-
-function parseTagsOutput(stdout: string): string[] {
-  const trimmed = stdout.trim();
-
-  if (!trimmed) {
-    return [];
-  }
-
-  // Defensive parsing for mocked output that reuses the main delimiter format.
-  if (trimmed.includes(GIT_OUTPUT_DELIMITER)) {
-    const parts = trimmed.split(GIT_OUTPUT_DELIMITER).map((x) => x.trim());
-    const possibleTags = parts[parts.length - 1];
-    return possibleTags ? possibleTags.split('\n').filter(Boolean) : [];
-  }
-
-  return trimmed.split('\n').filter(Boolean);
+  const stdout = await runGit(['tag', '--points-at', 'HEAD'], context);
+  return stdout ? stdout.split('\n').filter(Boolean) : [];
 }
 
 function hasConfiguredApp(
@@ -340,13 +353,13 @@ async function loadGlobalGitInfo(
   zephyrConfig: ResolvedZephyrConfig
 ): Promise<ZeGitInfo> {
   try {
-    const [nameResult, emailResult] = await Promise.all([
-      exec('git config --global user.name').catch(() => ({ stdout: '' })),
-      exec('git config --global user.email').catch(() => ({ stdout: '' })),
+    const [globalName, globalEmail] = await Promise.all([
+      runGit(['config', '--global', 'user.name'], context),
+      runGit(['config', '--global', 'user.email'], context),
     ]);
 
-    const name = nameResult.stdout?.trim();
-    const email = emailResult.stdout?.trim();
+    const name = globalName ?? '';
+    const email = globalEmail ?? '';
 
     if (!name && !email) {
       logFn(

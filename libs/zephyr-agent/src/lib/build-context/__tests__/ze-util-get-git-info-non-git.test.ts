@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
-import { exec as node_exec } from 'node:child_process';
+import { execFile as node_execFile } from 'node:child_process';
 import { getGitInfo } from '../ze-util-get-git-info';
 
 rs.mock('node:child_process', () => ({
-  exec: rs.fn(),
+  execFile: rs.fn(),
 }));
 
 rs.mock('../../node-persist/secret-token', () => ({
@@ -45,23 +45,52 @@ rs.mock('../detect-monorepo', () => ({
   getMonorepoRootPackageJson: rs.fn().mockResolvedValue(null),
 }));
 
+type GitOutputs = Record<string, string>;
+
 describe('getGitInfo - non-git environments', () => {
-  const mockExec = node_exec as unknown as Mock;
+  const mockExecFile = node_execFile as unknown as Mock;
   type ExecCallback = (error: Error | null, stdout?: unknown, stderr?: string) => void;
-  const mockExecWithCallback = (
-    implementation: (command: string, callback: ExecCallback) => unknown
+
+  /**
+   * ExecFile is called as execFile('git', args, options, callback). Tests reply
+   * per-command using the git args, matching the per-command implementation.
+   */
+  const mockGit = (
+    resolve: (args: string[]) => { stdout?: string; error?: Error } | undefined
   ) => {
-    mockExec.mockImplementation(
-      (command: string, optionsOrCallback: unknown, callback?: ExecCallback) => {
-        const resolvedCallback =
-          typeof optionsOrCallback === 'function'
-            ? (optionsOrCallback as ExecCallback)
-            : callback;
-        if (!resolvedCallback) throw new Error('expected child_process.exec callback');
-        return implementation(command, resolvedCallback);
+    mockExecFile.mockImplementation(
+      (_file: string, args: string[], _options: unknown, callback?: ExecCallback) => {
+        const cb = (typeof _options === 'function' ? _options : callback) as ExecCallback;
+        if (!cb) throw new Error('expected child_process.execFile callback');
+        const result = resolve(args) ?? { error: new Error('command failed') };
+        if (result.error) {
+          cb(result.error, '', 'fatal: command failed');
+        } else {
+          cb(null, { stdout: result.stdout ?? '', stderr: '' });
+        }
+        return undefined;
       }
     );
   };
+
+  /** Every git command fails => no local repository at all. */
+  const noGitRepo = () => mockGit(() => ({ error: new Error('Not a git repository') }));
+
+  /** Local repo unavailable, but global config resolves. */
+  const globalGitOnly = (outputs: GitOutputs) =>
+    mockGit((args) => {
+      const key = args.join(' ');
+      if (key in outputs) return { stdout: outputs[key] };
+      return { error: new Error('Not a git repository') };
+    });
+
+  const gitAvailable = (outputs: GitOutputs) =>
+    mockGit((args) => {
+      const key = args.join(' ');
+      if (key in outputs) return { stdout: outputs[key] };
+      return { stdout: '' };
+    });
+
   let mockGitLog: Mock;
   let mockLogFn: Mock;
   let mockGetPackageJson: Mock;
@@ -112,26 +141,9 @@ describe('getGitInfo - non-git environments', () => {
   });
 
   it('should fall back to global git config when local repo not available', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      if (typeof callback === 'function') {
-        // Mock exec with callback
-        if (cmd.includes('git config --global user.name')) {
-          callback(null, { stdout: 'Global User\n', stderr: '' });
-        } else if (cmd.includes('git config --global user.email')) {
-          callback(null, { stdout: 'global@example.com\n', stderr: '' });
-        } else {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-        }
-      } else {
-        // Mock promisified exec
-        if (cmd.includes('git config --global user.name')) {
-          return Promise.resolve({ stdout: 'Global User\n', stderr: '' });
-        } else if (cmd.includes('git config --global user.email')) {
-          return Promise.resolve({ stdout: 'global@example.com\n', stderr: '' });
-        } else {
-          return Promise.reject(new Error('Not a git repository'));
-        }
-      }
+    globalGitOnly({
+      'config --global user.name': 'Global User',
+      'config --global user.email': 'global@example.com',
     });
 
     const result = await getGitInfo();
@@ -147,14 +159,9 @@ describe('getGitInfo - non-git environments', () => {
   it('threads an explicit context through fallback package and monorepo reads', async () => {
     const context = '/workspace/apps/context-app';
     const config = {};
-    mockExecWithCallback((cmd, callback) => {
-      if (cmd.includes('git config --global user.name')) {
-        callback(null, { stdout: 'Global User\n', stderr: '' });
-      } else if (cmd.includes('git config --global user.email')) {
-        callback(null, { stdout: 'global@example.com\n', stderr: '' });
-      } else {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-      }
+    globalGitOnly({
+      'config --global user.name': 'Global User',
+      'config --global user.email': 'global@example.com',
     });
 
     await getGitInfo(context, config);
@@ -165,13 +172,7 @@ describe('getGitInfo - non-git environments', () => {
   });
 
   it('should fall back to API user info when neither local nor global git available', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-      } else {
-        return Promise.reject(new Error('Not a git repository'));
-      }
-    });
+    noGitRepo();
 
     const result = await getGitInfo();
 
@@ -184,18 +185,13 @@ describe('getGitInfo - non-git environments', () => {
   });
 
   it('should still work normally when git is available', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      // Extract the delimiter from the command - now it's a static string
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'John Doe',
-        'john@example.com',
-        'https://github.com/example/repo.git',
-        'main',
-        'abc123def456',
-        'v1.0.0',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'config user.name': 'John Doe',
+      'config user.email': 'john@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'main',
+      'rev-parse HEAD': 'abc123def456',
+      'tag --points-at HEAD': 'v1.0.0',
     });
 
     const result = await getGitInfo();
@@ -213,18 +209,12 @@ describe('getGitInfo - non-git environments', () => {
 
   it('uses configured identity without origin and runs every local git read in context', async () => {
     const context = '/workspace/apps/configured-app';
-    mockExecWithCallback((cmd, callback) => {
-      if (cmd.includes('git tag --points-at HEAD')) {
-        callback(null, { stdout: '', stderr: '' });
-        return;
-      }
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      callback(null, {
-        stdout: ['John Doe', 'john@example.com', '', 'main', 'abc123def456'].join(
-          `\n${delimiter}\n`
-        ),
-        stderr: '',
-      });
+    gitAvailable({
+      'config user.name': 'John Doe',
+      'config user.email': 'john@example.com',
+      'symbolic-ref --short HEAD': 'main',
+      'rev-parse HEAD': 'abc123def456',
+      // no origin, no tags
     });
 
     const result = await getGitInfo(context, {
@@ -237,29 +227,19 @@ describe('getGitInfo - non-git environments', () => {
       project: 'configured-project',
     });
     expect(result.git.commit).toBe('abc123def456');
-    expect(mockExec.mock.calls).toHaveLength(2);
-    for (const call of mockExec.mock.calls) {
-      expect(call[1]).toEqual({ cwd: context });
+    for (const call of mockExecFile.mock.calls) {
+      expect(call[2]).toEqual({ cwd: context });
     }
   });
 
   it('lets a partial config override one field inferred from origin', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      if (cmd.includes('git tag --points-at HEAD')) {
-        callback(null, { stdout: '', stderr: '' });
-        return;
-      }
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      callback(null, {
-        stdout: [
-          'John Doe',
-          'john@example.com',
-          'https://github.com/inferred-org/inferred-project.git',
-          'main',
-          'abc123def456',
-        ].join(`\n${delimiter}\n`),
-        stderr: '',
-      });
+    gitAvailable({
+      'config user.name': 'John Doe',
+      'config user.email': 'john@example.com',
+      'config --get remote.origin.url':
+        'https://github.com/inferred-org/inferred-project.git',
+      'symbolic-ref --short HEAD': 'main',
+      'rev-parse HEAD': 'abc123def456',
     });
 
     const result = await getGitInfo('/workspace/app', { org: 'configured-org' });
@@ -271,17 +251,12 @@ describe('getGitInfo - non-git environments', () => {
   });
 
   it('should parse remote origin even when repository has no commits yet', async () => {
-    mockExecWithCallback((_cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'John Doe',
-        'john@example.com',
-        'git@github.com:nsttt/git-test.git',
-        'main',
-        'no-git-commit',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'config user.name': 'John Doe',
+      'config user.email': 'john@example.com',
+      'config --get remote.origin.url': 'git@github.com:nsttt/git-test.git',
+      'symbolic-ref --short HEAD': 'main',
+      // no 'rev-parse HEAD' => commit becomes no-git-commit (allowed outside CI)
     });
 
     const result = await getGitInfo();
@@ -297,13 +272,7 @@ describe('getGitInfo - non-git environments', () => {
   });
 
   it('should use API user org and package.json project when git is not available', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-      } else {
-        return Promise.reject(new Error('Not a git repository'));
-      }
-    });
+    noGitRepo();
 
     const result1 = await getGitInfo();
     const result2 = await getGitInfo();
@@ -323,13 +292,7 @@ describe('getGitInfo - non-git environments', () => {
         version: '1.0.0',
       });
 
-      mockExecWithCallback((cmd, callback) => {
-        if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-        } else {
-          return Promise.reject(new Error('Not a git repository'));
-        }
-      });
+      noGitRepo();
 
       const result = await getGitInfo();
 
@@ -352,13 +315,7 @@ describe('getGitInfo - non-git environments', () => {
         },
       ]);
 
-      mockExecWithCallback((cmd, callback) => {
-        if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-        } else {
-          return Promise.reject(new Error('Not a git repository'));
-        }
-      });
+      noGitRepo();
 
       const result = await getGitInfo();
 
@@ -381,13 +338,7 @@ describe('getGitInfo - non-git environments', () => {
         },
       ]);
 
-      mockExecWithCallback((cmd, callback) => {
-        if (typeof callback === 'function') {
-          callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-        } else {
-          return Promise.reject(new Error('Not a git repository'));
-        }
-      });
+      noGitRepo();
 
       const result = await getGitInfo();
 

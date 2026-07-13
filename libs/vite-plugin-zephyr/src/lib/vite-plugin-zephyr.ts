@@ -43,6 +43,7 @@ import {
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
 import {
   createViteModuleFederationPublicationMetadata,
+  getConfigIdentities,
   type ViteModuleFederationPublicationMetadata,
 } from './internal/mf-vite-etl/federation-metadata';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
@@ -354,6 +355,15 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const mfConfigSources = toModuleFederationConfigArray(options.mfConfig).map(
     configureModuleFederationRuntime
   );
+  // When `mfConfig` is provided, `withZephyr()` injects the @module-federation/vite
+  // plugin from that same config. That plugin later surfaces a normalized `_options`
+  // (expanded `exposes`/`shared`, extra MF defaults) that describes the very same
+  // container as the source config above. Auto-registering it too would push two
+  // divergent configs sharing one identity, which the publication merge rejects as a
+  // conflict. Record the owned identities so those already-known plugins are skipped.
+  const ownedConfigIdentities = new Set(
+    mfConfigSources.flatMap((config) => getConfigIdentities(config))
+  );
   let environmentNames: string[] = [];
   let environmentMetadata = new Map<string, ViteEnvironmentMetadata>();
   let sharedOutputRoot: string | undefined;
@@ -368,9 +378,19 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     configs: readonly ModuleFederationOptions[]
   ) => {
     for (const config of configs) {
+      // Skip plugins whose container identity was already provided via
+      // `options.mfConfig`; `withZephyr()` injected them, so their normalized
+      // `_options` is a duplicate of a source config we already hold.
+      const identities = getConfigIdentities(config);
+      if (identities.some((identity) => ownedConfigIdentities.has(identity))) {
+        continue;
+      }
       const runtimeConfigured = configureModuleFederationRuntime(config);
       if (!mfConfigSources.includes(runtimeConfigured)) {
         mfConfigSources.push(runtimeConfigured);
+        for (const identity of getConfigIdentities(runtimeConfigured)) {
+          ownedConfigIdentities.add(identity);
+        }
       }
     }
   };

@@ -458,6 +458,69 @@ describe('vite-plugin-zephyr', () => {
     ]);
   });
 
+  test('does not conflict when withZephyr({ mfConfig }) also surfaces a normalized MF plugin', async () => {
+    // Regression: `withZephyr({ mfConfig })` injects the @module-federation/vite
+    // plugin from the same config. That plugin later reports a normalized `_options`
+    // (expanded `exposes`/`shared`, extra MF defaults) that shares the container
+    // identity of the source config. Registering both must not trip the publication
+    // conflict guard. https://github.com/ZephyrCloudIO/zephyr-packages (mfConfig dedupe)
+    const mfConfig = {
+      name: 'vite_remote',
+      filename: 'remoteEntry.js',
+      exposes: { './Button': './src/Button' },
+      shared: {
+        react: { singleton: true },
+        'react-dom': { singleton: true },
+      },
+    };
+    // Model @module-federation/vite normalizing the config it was handed.
+    mocks.federation.mockImplementation((config) => [
+      {
+        name: 'module-federation-vite',
+        _options: {
+          name: config.name,
+          filename: config.filename,
+          exposes: { './Button': { import: './src/Button' } },
+          shared: {
+            react: {
+              name: 'react',
+              version: '19.2.5',
+              shareConfig: { singleton: true, requiredVersion: '^19.2.5' },
+            },
+            'react-dom': {
+              name: 'react-dom',
+              version: '19.2.5',
+              shareConfig: { singleton: true, requiredVersion: '^19.2.5' },
+            },
+          },
+          runtimePlugins: config.runtimePlugins,
+          shareScope: 'default',
+          manifest: false,
+        },
+      },
+    ]);
+
+    const plugins = withZephyr({ mfConfig }) as Plugin[];
+    const plugin = plugins.find((candidate) => candidate.name === 'with-zephyr')!;
+    const config = resolvedConfig({
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+    });
+    // The federation plugin injected by withZephyr() is present in the resolved config,
+    // reporting the normalized `_options` for the same container.
+    config.plugins = plugins.filter(
+      (candidate) => candidate.name === 'module-federation-vite'
+    );
+
+    // Before the fix this rejected with
+    // "Conflicting Vite Module Federation configuration for name:vite_remote".
+    await expect(
+      (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(config)
+    ).resolves.not.toThrow();
+
+    // withZephyr() injected the federation plugin exactly once from `mfConfig`.
+    expect(mocks.federation).toHaveBeenCalledTimes(1);
+  });
+
   test('rejects noncanonical TAP output paths instead of repairing and rehashing them', async () => {
     process.env['ZE_FAIL_BUILD'] = 'true';
     const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;

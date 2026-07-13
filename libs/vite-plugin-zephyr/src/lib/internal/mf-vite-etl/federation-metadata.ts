@@ -65,7 +65,11 @@ function stableJson(value: unknown): string {
     .join(',')}}`;
 }
 
-function getConfigIdentities(config: ModuleFederationOptions): string[] {
+/**
+ * A Vite MF container is publicly identified by its `name` and emitted entry `filename`.
+ * Two configs that share either identity describe the same container.
+ */
+export function getConfigIdentities(config: ModuleFederationOptions): string[] {
   return [
     nonEmptyString(config.name) ? `name:${config.name}` : undefined,
     nonEmptyString(config.filename) ? `entry:${config.filename}` : undefined,

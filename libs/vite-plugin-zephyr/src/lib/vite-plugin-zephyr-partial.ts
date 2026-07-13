@@ -3,6 +3,7 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
 import {
+  assertZephyrBuildTarget,
   handleGlobalError,
   savePartialAssetMap,
   ZeErrors,
@@ -18,6 +19,9 @@ import {
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 
 export function withZephyrPartial(options: VitePartialBuildOptions = {}): Plugin {
+  if (options.target !== undefined) {
+    assertZephyrBuildTarget(options.target, 'withZephyrPartial({ target })');
+  }
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   let partialScope: PartialAssetMapScope | undefined;
 
@@ -36,12 +40,14 @@ export function withZephyrPartial(options: VitePartialBuildOptions = {}): Plugin
       zephyr_defer_create({
         builder: 'vite',
         context: config.root,
+        target: options.target,
       });
       resolve_vite_internal_options({
         root: config.root,
         configFile: config.configFile,
         outDir: config.build.outDir,
         publicDir: config.publicDir,
+        target: options.target,
       });
     },
     // writeBundle is called after files are written to disk - safe to read from filesystem
@@ -85,12 +91,9 @@ export function withZephyrPartial(options: VitePartialBuildOptions = {}): Plugin
           partialScope
         );
 
-        // todo: initially partial build doesn't have deploy, but code below could enable it if needed
-        // await zephyr_engine.upload_assets({
-        //   assetsMap,
-        //   // todo: this should be updated if we have remotes
-        //   buildStats: await zeBuildDashData(zephyr_engine),
-        // });
+        // A partial compiler is a producer, never an independent deployment. The
+        // coordinating Vite build claims these maps atomically with every other
+        // environment before it creates one snapshot.
       } catch (error) {
         handleGlobalError(error);
       }

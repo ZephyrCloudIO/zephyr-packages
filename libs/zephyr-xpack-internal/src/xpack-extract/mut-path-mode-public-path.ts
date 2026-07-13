@@ -7,6 +7,12 @@ export async function mutPathModePublicPath<Compiler>(
   zephyrEngine: ZephyrEngine,
   config: XPackConfiguration<Compiler>
 ): Promise<void> {
+  // TAP app artifacts have a locked package-relative layout. Rewriting the
+  // bundler public path before it emits those assets would change their bytes.
+  if (zephyrEngine.env?.target === 'tap-app') {
+    return;
+  }
+
   if (!usesPathAddressing(await zephyrEngine.application_configuration)) {
     return;
   }

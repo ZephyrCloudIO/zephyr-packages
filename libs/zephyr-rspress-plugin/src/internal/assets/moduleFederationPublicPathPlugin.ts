@@ -1,3 +1,9 @@
+import {
+  isModuleFederationPlugin,
+  type ModuleFederationPlugin,
+} from 'zephyr-xpack-internal';
+import type { ZephyrBuildTarget } from 'zephyr-agent';
+
 type RsbuildOnBeforeCreateCompilerArgs = {
   bundlerConfigs?: RspackConfig[];
 };
@@ -31,15 +37,39 @@ type ModuleFederationPluginLike = {
   _options?: ModuleFederationOptions | { config?: ModuleFederationOptions };
 };
 
-export function moduleFederationPublicPathPlugin(): RsbuildPlugin {
+export interface ModuleFederationPublicPathPluginOptions {
+  /** TAP artifacts are SDK-locked and must retain their emitted public path verbatim. */
+  target?: ZephyrBuildTarget;
+  /**
+   * Receives every Module Federation plugin materialized across Rspress's compilers. The
+   * SSG upload runs later and uses this reference to publish snapshot and build-stat
+   * federation metadata without selecting an arbitrary first compiler.
+   */
+  onModuleFederationPlugins?: (plugins: ModuleFederationPlugin[]) => void;
+}
+
+export function moduleFederationPublicPathPlugin(
+  options: ModuleFederationPublicPathPluginOptions = {}
+): RsbuildPlugin {
   return {
     name: 'zephyr-rspress-module-federation-public-path',
     setup(api) {
       api.onBeforeCreateCompiler({
         order: 'post',
         handler({ bundlerConfigs }) {
-          for (const config of bundlerConfigs ?? []) {
-            setPortableModuleFederationPublicPath(config);
+          const configs = bundlerConfigs ?? [];
+          options.onModuleFederationPlugins?.(
+            configs.flatMap((config) =>
+              (config.plugins ?? []).filter((plugin): plugin is ModuleFederationPlugin =>
+                isModuleFederationPlugin(plugin as never)
+              )
+            )
+          );
+
+          if (options.target !== 'tap-app') {
+            for (const config of configs) {
+              setPortableModuleFederationPublicPath(config);
+            }
           }
         },
       });

@@ -59,9 +59,12 @@ import { withZephyr } from 'zephyr-rspress-plugin';
 
 export default defineConfig({
   ssg: true,
-  plugins: [withZephyr()],
+  plugins: [withZephyr({ target: 'tap-app' })],
 });
 ```
+
+The optional `target` accepts `web`, `ios`, `android`, or `tap-app`. It is
+forwarded through both the normal Rsbuild and SSG publication paths.
 
 ---
 

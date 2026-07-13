@@ -84,6 +84,32 @@ export default defineConfig({
 });
 ```
 
+### TAP Module Federation metadata
+
+Rollup does not discover independently published TAP containers. For a `tap-app`
+build, pass the SDK-produced config and build-stat records together:
+
+```ts
+import { withZephyr } from 'rollup-plugin-zephyr';
+
+withZephyr({
+  target: 'tap-app',
+  mfConfigs: [
+    { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+    { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+  ],
+  federation: [
+    { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs', library_type: 'module' },
+    { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs', library_type: 'module' },
+  ],
+});
+```
+
+Both arrays must be non-empty, have the same containers, and pair each `name` with
+`filename === remote`. The plugin rejects incomplete or mismatched TAP metadata. A
+single valid container also supplies the legacy `mfConfig`; multi-container builds
+retain only the full arrays rather than choosing an arbitrary container.
+
 ## Features
 
 - 🚀 Automatic deployment during build

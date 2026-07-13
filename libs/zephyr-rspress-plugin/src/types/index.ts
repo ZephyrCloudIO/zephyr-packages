@@ -1,11 +1,24 @@
-import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
-import type { XStats, XStatsCompilation } from 'zephyr-xpack-internal';
+import type { ZephyrEngine, ZephyrBuildHooks, ZephyrBuildTarget } from 'zephyr-agent';
+import type {
+  ModuleFederationPlugin,
+  XStats,
+  XStatsCompilation,
+} from 'zephyr-xpack-internal';
 
 export interface ZephyrRspressPluginOptions {
   deferEngine: Promise<ZephyrEngine>;
   outDir: string;
   files: string[];
   hooks?: ZephyrBuildHooks;
+  /** Every compiler's Module Federation plugin, retained for publication metadata. */
+  mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
+}
+
+/** Internal SSG publication options shared by the Rspress config and build hooks. */
+export interface ZephyrRspressSSGOptions {
+  hooks?: ZephyrBuildHooks;
+  target?: ZephyrBuildTarget;
+  mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
 }
 
 /**

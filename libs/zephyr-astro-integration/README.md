@@ -51,9 +51,39 @@ The integration works out of the box without additional configuration. For advan
 
 ```js
 withZephyr({
-  // Add custom options here when needed
+  // Publish a TAP package rather than the default web artifact.
+  target: 'tap-app',
 });
 ```
+
+`target` accepts the Zephyr artifact families (`web`, `ios`, `android`, and
+`tap-app`). Use `tap-app` when the Astro output is part of a TAP package.
+
+### Module Federation metadata
+
+If the package SDK emits multiple Module Federation containers, pass its
+JSON-serializable metadata through unchanged:
+
+```ts
+withZephyr({
+  target: 'tap-app',
+  mfConfigs: [
+    { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+    { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+  ],
+  federation: [
+    { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+    { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs' },
+  ],
+});
+```
+
+For `tap-app`, both arrays are required and non-empty. Each `mfConfigs` entry
+must pair a unique `name` and `filename` with a `federation` entry having the
+same `name` and `remote`; publication otherwise fails before upload. The
+adapter does not derive or alter SDK metadata. For non-TAP artifacts, both
+fields are optional. A complete singleton config also populates the legacy
+`mfConfig` snapshot field for backward compatibility.
 
 ## Requirements
 

@@ -4,6 +4,7 @@ import type { ZeResolvedDependency } from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => {
   const engine = {
+    env: { target: 'web' },
     federated_dependencies: null as ZeResolvedDependency[] | null,
     resolve_remote_dependencies: rs.fn(),
     build_id: Promise.resolve('build-1'),
@@ -12,6 +13,11 @@ const mocks = rs.hoisted(() => {
   };
   return {
     engine,
+    assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
+      if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
+        throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
+      }
+    }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
     handleGlobalError: rs.fn(),
@@ -25,6 +31,7 @@ const mocks = rs.hoisted(() => {
 });
 
 rs.mock('zephyr-agent', () => ({
+  assertZephyrBuildTarget: mocks.assertBuildTarget,
   getGlobal: mocks.getGlobal,
   handleGlobalError: mocks.handleGlobalError,
   ze_log: { mf: rs.fn() },
@@ -62,6 +69,7 @@ function dependency(name: string): ZeResolvedDependency {
 describe('Webpack withZephyr compiler arrays', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.engine.env.target = 'web';
     mocks.engine.federated_dependencies = null;
     mocks.extractFederatedDependencyPairs.mockImplementation((config) => {
       if (config.name === 'broken') throw new Error('invalid federation config');
@@ -98,6 +106,26 @@ describe('Webpack withZephyr compiler arrays', () => {
       'client',
       'server',
     ]);
+  });
+
+  it('sets tap-app before resolving a direct Webpack build', async () => {
+    const config = { name: 'client', context: '/repo' } as Configuration;
+
+    await withZephyr({ target: 'tap-app' })(config);
+
+    expect(mocks.create).toHaveBeenCalledWith({
+      builder: 'webpack',
+      context: '/repo',
+      target: 'tap-app',
+    });
+    expect(mocks.engine.env.target).toBe('tap-app');
+  });
+
+  it('rejects unsupported targets before creating an engine', () => {
+    expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+      'withZephyr({ target }) must be one of'
+    );
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it('rejects coordinated configuration errors instead of waiting for a missing compiler', async () => {

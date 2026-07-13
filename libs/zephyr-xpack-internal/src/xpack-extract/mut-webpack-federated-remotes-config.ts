@@ -14,6 +14,14 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
   delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
 ): void {
+  // TAP packages are assembled and locked by the SDK. Rewriting a remote to a
+  // control-plane URL or injecting a runtime plugin would change signed output bytes.
+  // Metadata extraction still reads the original MF config later in the upload flow.
+  if (zephyr_engine.env?.target === 'tap-app') {
+    ze_log.remotes('Skipping Module Federation remote rewrites for tap-app output.');
+    return;
+  }
+
   if (!resolvedDependencyPairs?.length) {
     ze_log.remotes(`No resolved dependency pairs found, skipping...`);
     return;
@@ -48,11 +56,9 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     remoteEntries.forEach((remote) => {
       const [remote_name, remote_version] = remote;
-      // TODO(ZE): Investigate global impact of relaxed matching rules below.
-      // Some ecosystems declare remotes as "name@url" or use wildcard '*'.
-      // If this proves too permissive for other bundlers/configs, we should
-      // introduce an explicit normalization step earlier (during extraction)
-      // and keep matching here strict. Track with an issue and tests.
+      // Some ecosystems declare remotes as "name@url" or use a wildcard. Match those
+      // established forms here; extraction retains the original declaration for the
+      // later replacement step.
       const dep_match = resolvedDependencyPairs.find((dep) => {
         const nameMatch = dep.name === remote_name;
         // Allow wildcard and Nx-style "name@url" declarations to match
@@ -80,7 +86,8 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
       const resolved_dep = { ...dep_match };
       const remote_entry_url = resolved_dep.remote_entry_url;
 
-      // todo: this is a version with named export logic, we should take this into account later
+      // Webpack's `container@url` syntax carries the container/global alias before the
+      // resolved URL. Preserve that alias for both plain and Nx-style declarations.
       const [v_app] = remote_version.includes('@')
         ? remote_version.split('@')
         : [remote_name];

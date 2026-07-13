@@ -9,6 +9,10 @@ import {
   ZephyrEngine,
   ZephyrError,
 } from 'zephyr-agent';
+import {
+  assertMetroNativeBuildTarget,
+  type MetroNativeBuildTarget,
+} from './native-target';
 
 export interface ZephyrMetroOptions {
   /** Application name */
@@ -16,7 +20,7 @@ export interface ZephyrMetroOptions {
   /** Remote dependencies configuration */
   remotes?: Record<string, string>;
   /** Target platform */
-  target?: 'ios' | 'android';
+  target?: MetroNativeBuildTarget;
   /** Custom manifest endpoint path (default: /zephyr-manifest.json) */
   manifestPath?: string;
   /** Throw an error if manifest generation fails (default: false - logs warning only) */
@@ -32,7 +36,13 @@ export interface ZephyrModuleFederationConfig {
 
 /** Metro plugin configuration function for Zephyr */
 export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
+  assertConfiguredMetroTarget(zephyrOptions.target);
+
   return async (metroConfig: ConfigT): Promise<ConfigT> => {
+    // Re-check at invocation time in case an untyped caller mutates the options
+    // object after creating the wrapper.
+    assertConfiguredMetroTarget(zephyrOptions.target);
+
     try {
       return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);
     } catch (error) {
@@ -40,6 +50,12 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
       return metroConfig; // Return original config on error
     }
   };
+}
+
+function assertConfiguredMetroTarget(target: unknown): void {
+  if (target !== undefined) {
+    assertMetroNativeBuildTarget(target, 'withZephyr({ target })');
+  }
 }
 
 async function applyZephyrToMetroConfig(

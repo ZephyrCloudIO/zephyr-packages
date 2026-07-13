@@ -2,6 +2,7 @@ import { buildAssetsMap, type ZeBuildAssetsMap, type ZephyrEngine } from 'zephyr
 import type { ZephyrInternalOptions } from '../types/zephyr-internal-options';
 import type { ZephyrOutput } from '../types/zephyr-output';
 import { loadStaticAssets } from './load_static_assets';
+import { mergeViteOutputAssets } from './merge_vite_output_assets';
 
 export async function extract_vite_assets_map(
   _zephyr_engine: ZephyrEngine,
@@ -10,7 +11,10 @@ export async function extract_vite_assets_map(
   const assets = await loadStaticAssets(vite_internal_options);
 
   const runtime_assets = vite_internal_options.assets;
-  const complete_assets = Object.assign({}, assets, runtime_assets);
+  const complete_assets = { ...assets };
+  mergeViteOutputAssets(complete_assets, Object.entries(runtime_assets ?? {}), {
+    target: vite_internal_options.target,
+  });
   const filtered_assets = Object.fromEntries(
     Object.entries(complete_assets)
       .map(toRollupOutputEntry)

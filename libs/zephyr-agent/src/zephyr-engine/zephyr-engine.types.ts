@@ -1,4 +1,4 @@
-import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import type { ZeBuildAssetsMap, ZephyrBuildTarget } from 'zephyr-edge-contract';
 
 export type ZephyrEngineBuilderTypes =
   | 'webpack'
@@ -8,6 +8,7 @@ export type ZephyrEngineBuilderTypes =
   | 'vite'
   | 'nuxt'
   | 'rollup'
+  | 'rolldown'
   | 'parcel'
   | 'astro'
   | 'unknown';
@@ -15,6 +16,8 @@ export type ZephyrEngineBuilderTypes =
 export interface ZephyrEngineOptions {
   context: string | undefined;
   builder: ZephyrEngineBuilderTypes;
+  /** Build target supplied by a public adapter before dependency resolution starts. */
+  target?: ZephyrBuildTarget;
 }
 
 /** Adapter-defined role, commonly client, server, csr, ssr, rsc, or worker. */
@@ -51,6 +54,11 @@ export interface BeginBuildOptions {
   participants: readonly BuildParticipant[];
   /** Named framework/bundler work which must finish after compiler output is collected. */
   postprocessors?: readonly string[];
+  /**
+   * Reject aliases such as backslashes, duplicate separators, and `./` rather than
+   * normalizing/re-hashing them. Use for descriptor-locked artifact packages.
+   */
+  strictAssetPaths?: boolean;
 }
 
 export interface BuildContribution<TData = unknown> {

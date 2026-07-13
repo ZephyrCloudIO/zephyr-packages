@@ -109,6 +109,22 @@ describe('ZephyrMetroPlugin', () => {
 
       expect(plugin).toBeInstanceOf(ZephyrMetroPlugin);
     });
+
+    it('rejects tap-app from untyped callers before creating an engine', async () => {
+      const { ZephyrEngine } = await import('zephyr-agent');
+
+      expect(
+        () =>
+          new ZephyrMetroPlugin({
+            platform: 'tap-app' as never,
+            mode: 'production',
+            context: '/project',
+            outDir: 'dist',
+            mfConfig: undefined,
+          })
+      ).toThrow('Metro cannot publish tap-app artifacts.');
+      expect(ZephyrEngine.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('beforeBuild', () => {
@@ -228,6 +244,24 @@ describe('ZephyrMetroPlugin', () => {
   });
 
   describe('afterBuild', () => {
+    it('rejects a tap-app engine mutation before publishing assets', async () => {
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'production',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig: undefined,
+      });
+      await plugin.beforeBuild();
+      plugin.zephyr_engine.env.target = 'tap-app' as never;
+
+      await expect(plugin.afterBuild()).rejects.toThrow(
+        'Metro cannot publish tap-app artifacts.'
+      );
+      expect(plugin.zephyr_engine.upload_assets).not.toHaveBeenCalled();
+      expect(plugin.zephyr_engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
     it('should complete build lifecycle', async () => {
       const { ZephyrEngine } = await import('zephyr-agent');
 

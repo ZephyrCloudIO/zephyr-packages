@@ -5,6 +5,7 @@ import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import { parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
 import { runCommand } from './commands/run';
+import { watchCommand } from './commands/watch';
 
 async function main(): Promise<void> {
   try {
@@ -16,20 +17,33 @@ async function main(): Promise<void> {
     const workingDir = cwd();
 
     // Dispatch to the appropriate command
-    if (options.command === 'deploy') {
+    if (options.command === 'deploy' || options.command === 'watch') {
       if (!options.directory) {
         throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
           message: 'Directory is required for deploy command',
         });
       }
 
-      await deployCommand({
-        directory: options.directory,
-        target: options.target,
-        verbose: options.verbose,
-        ssr: options.ssr,
-        cwd: workingDir,
-      });
+      if (options.command === 'deploy') {
+        await deployCommand({
+          directory: options.directory,
+          target: options.target,
+          verbose: options.verbose,
+          ssr: options.ssr,
+          metadataPath: options.metadataPath,
+          cwd: workingDir,
+        });
+      } else {
+        await watchCommand({
+          directory: options.directory,
+          target: options.target,
+          verbose: options.verbose,
+          ssr: options.ssr,
+          debounceMs: options.debounceMs,
+          metadataPath: options.metadataPath,
+          cwd: workingDir,
+        });
+      }
     } else if (options.command === 'run') {
       if (!options.commandLine) {
         throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -42,6 +56,7 @@ async function main(): Promise<void> {
         target: options.target,
         verbose: options.verbose,
         ssr: options.ssr,
+        metadataPath: options.metadataPath,
         cwd: workingDir,
       });
     }

@@ -15,6 +15,7 @@ function engine(): ZephyrEngine {
   return {
     application_uid: 'multi-compiler.test',
     buildProperties: { output: './dist' },
+    env: { target: 'web' },
     start_new_build: rs.fn(async () => undefined),
     upload_assets: rs.fn(async () => undefined),
     build_finished: rs.fn(async () => undefined),
@@ -63,6 +64,20 @@ describe('XPackBuildCoordinator', () => {
     expect(zephyrEngine.buildProperties.baseHref).toBe('');
   });
 
+  it('ignores compiler base paths for tap-app packages', () => {
+    const zephyrEngine = engine();
+    zephyrEngine.env.target = 'tap-app';
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'desktop' },
+      { name: 'worker' },
+    ]);
+
+    coordinator.registerParticipantBaseHref('desktop', '/local/desktop/');
+    coordinator.registerParticipantBaseHref('worker', '/local/worker/');
+
+    expect(zephyrEngine.buildProperties.baseHref).toBe('');
+  });
+
   it('rejects conflicting compiler bases before a coordinated build starts', () => {
     const zephyrEngine = engine();
     const coordinator = new XPackBuildCoordinator(zephyrEngine, [
@@ -93,7 +108,7 @@ describe('XPackBuildCoordinator', () => {
       participant: 'client',
       assetsMap: asset('client/app.js', 'client-hash'),
       buildStats: stats,
-      mfConfig: [{ name: 'client' }] as never,
+      mfConfigs: [{ name: 'client' }],
     });
     expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
 
@@ -101,7 +116,7 @@ describe('XPackBuildCoordinator', () => {
       participant: 'server',
       assetsMap: asset('server/index.js', 'server-hash'),
       buildStats: stats,
-      mfConfig: [{ name: 'server' }] as never,
+      mfConfigs: [{ name: 'server' }],
     });
 
     expect(zephyrEngine.upload_assets).toHaveBeenCalledTimes(1);
@@ -113,10 +128,142 @@ describe('XPackBuildCoordinator', () => {
         }),
         snapshotType: 'ssr',
         entrypoint: 'server/index.js',
-        mfConfig: [{ name: 'client' }, { name: 'server' }],
+        mfConfigs: [{ name: 'client' }, { name: 'server' }],
       })
     );
     expect(zephyrEngine.build_finished).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains every federation config from every compiler in the merged snapshot', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'desktop' },
+      { name: 'background' },
+    ]);
+
+    await coordinator.contribute({
+      participant: 'desktop',
+      assetsMap: asset('targets/desktop/remoteEntry.mjs', 'desktop-hash'),
+      buildStats: {
+        ...stats,
+        federation: [
+          { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+          { name: 'mobile', remote: 'targets/mobile/remoteEntry.mjs' },
+        ],
+      },
+      mfConfigs: [
+        { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+        { name: 'mobile', filename: 'targets/mobile/remoteEntry.mjs' },
+      ],
+    });
+
+    await coordinator.contribute({
+      participant: 'background',
+      assetsMap: asset('targets/worker/remoteEntry.mjs', 'worker-hash'),
+      buildStats: {
+        ...stats,
+        federation: [{ name: 'worker', remote: 'targets/worker/remoteEntry.mjs' }],
+      },
+      mfConfigs: [{ name: 'worker', filename: 'targets/worker/remoteEntry.mjs' }],
+    });
+
+    expect(zephyrEngine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mfConfigs: [
+          { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+          { name: 'mobile', filename: 'targets/mobile/remoteEntry.mjs' },
+          { name: 'worker', filename: 'targets/worker/remoteEntry.mjs' },
+        ],
+        buildStats: expect.objectContaining({
+          federation: [
+            { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+            { name: 'mobile', remote: 'targets/mobile/remoteEntry.mjs' },
+            { name: 'worker', remote: 'targets/worker/remoteEntry.mjs' },
+          ],
+        }),
+      })
+    );
+  });
+
+  it('fails closed when a coordinated TAP package has no complete federation metadata', async () => {
+    const zephyrEngine = engine();
+    zephyrEngine.env.target = 'tap-app';
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [{ name: 'desktop' }]);
+
+    await expect(
+      coordinator.contribute({
+        participant: 'desktop',
+        assetsMap: asset('targets/desktop/remoteEntry.mjs', 'desktop-hash'),
+        buildStats: { ...stats, federation: [] },
+        mfConfigs: [],
+      })
+    ).rejects.toThrow('requires a non-empty mfConfigs metadata array');
+
+    expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  it('deduplicates matching federation config copies across compilers', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'client' },
+      { name: 'server' },
+    ]);
+    const mfConfig = {
+      name: 'shared',
+      filename: 'targets/shared/remoteEntry.mjs',
+      library: { type: 'module' },
+    };
+    const federation = {
+      name: 'shared',
+      remote: 'targets/shared/remoteEntry.mjs',
+      library_type: 'module',
+    };
+
+    await coordinator.contribute({
+      participant: 'client',
+      assetsMap: asset('client/app.js', 'client-hash'),
+      buildStats: { ...stats, federation: [federation] },
+      mfConfigs: [mfConfig],
+    });
+    await coordinator.contribute({
+      participant: 'server',
+      assetsMap: asset('server/app.js', 'server-hash'),
+      buildStats: { ...stats, federation: [{ ...federation }] },
+      mfConfigs: [{ ...mfConfig, library: { type: 'module' } }],
+    });
+
+    expect(zephyrEngine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mfConfig,
+        mfConfigs: [mfConfig],
+        buildStats: expect.objectContaining({ federation: [federation] }),
+      })
+    );
+  });
+
+  it('rejects conflicting federation configs that claim the same container name', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'desktop' },
+      { name: 'worker' },
+    ]);
+
+    await coordinator.contribute({
+      participant: 'desktop',
+      assetsMap: asset('desktop/app.js', 'desktop-hash'),
+      buildStats: stats,
+      mfConfigs: [{ name: 'app', filename: 'targets/desktop/remoteEntry.mjs' }],
+    });
+
+    await expect(
+      coordinator.contribute({
+        participant: 'worker',
+        assetsMap: asset('worker/app.js', 'worker-hash'),
+        buildStats: stats,
+        mfConfigs: [{ name: 'app', filename: 'targets/worker/remoteEntry.mjs' }],
+      })
+    ).rejects.toThrow('Conflicting Module Federation configuration for name:app.');
+    expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
   });
 
   it('rejects cross-compiler path collisions before uploading', async () => {
@@ -578,6 +725,79 @@ describe('XPackBuildCoordinator', () => {
       { participant: 'web', role: 'client', assetPrefix: 'client' },
       { participant: 'node', role: 'server', assetPrefix: 'server' },
     ]);
+  });
+
+  it('does not prefix distinct TAP target output directories', () => {
+    const zephyrEngine = engine();
+    zephyrEngine.env.target = 'tap-app';
+    const { compilers } = coordinateXPackCompilers(zephyrEngine, [
+      {
+        name: 'desktop',
+        target: 'web',
+        output: { path: '/repo/dist/targets/desktop' },
+      },
+      {
+        name: 'worker',
+        target: 'node',
+        output: { path: '/repo/dist/targets/worker' },
+      },
+    ]);
+
+    expect(compilers).toEqual([
+      { participant: 'desktop', role: 'client', assetPrefix: undefined },
+      { participant: 'worker', role: 'server', assetPrefix: undefined },
+    ]);
+  });
+
+  it('defaults a desktop plus QuickJS TAP package to CSR without a server entrypoint', async () => {
+    const zephyrEngine = engine();
+    zephyrEngine.env.target = 'tap-app';
+    const { coordinator } = coordinateXPackCompilers(zephyrEngine, [
+      { name: 'desktop', target: 'web' },
+      { name: 'quickjs', target: 'node' },
+    ]);
+
+    await coordinator.contribute({
+      participant: 'desktop',
+      assetsMap: asset('targets/desktop/remoteEntry.mjs', 'desktop-entry'),
+      buildStats: {
+        ...stats,
+        federation: [{ name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' }],
+      },
+      mfConfigs: [{ name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' }],
+    });
+    await coordinator.contribute({
+      participant: 'quickjs',
+      assetsMap: asset('targets/quickjs/remoteEntry.mjs', 'quickjs-entry'),
+      buildStats: {
+        ...stats,
+        federation: [{ name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs' }],
+      },
+      mfConfigs: [{ name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' }],
+    });
+
+    expect(zephyrEngine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        snapshotType: 'csr',
+        entrypoint: undefined,
+      })
+    );
+  });
+
+  it('rejects noncanonical TAP artifact paths before coordinating an upload', async () => {
+    const zephyrEngine = engine();
+    zephyrEngine.env.target = 'tap-app';
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [{ name: 'desktop' }]);
+
+    await expect(
+      coordinator.contribute({
+        participant: 'desktop',
+        assetsMap: asset('targets\\desktop\\remoteEntry.mjs', 'sdk-locked-hash'),
+        buildStats: stats,
+      })
+    ).rejects.toThrow('canonical snapshot spelling');
+
+    expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
   });
 
   it('matches only supported server targets', () => {

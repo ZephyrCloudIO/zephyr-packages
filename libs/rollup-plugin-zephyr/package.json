@@ -54,7 +54,8 @@
     "test": "rstest run"
   },
   "dependencies": {
-    "zephyr-agent": "workspace:*"
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",

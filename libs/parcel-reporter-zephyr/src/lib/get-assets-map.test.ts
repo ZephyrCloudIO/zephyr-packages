@@ -6,6 +6,12 @@ import { getAssetsMap, type ParcelOutputAsset } from './get-assets-map';
 import { collectParcelAssets, getParcelAssetPath } from './on-build-success';
 
 rs.mock('zephyr-agent', () => ({
+  ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
+  ZephyrError: class extends Error {
+    constructor(_type: unknown, options?: { message?: string }) {
+      super(options?.message ?? String(_type));
+    }
+  },
   buildAssetsMap: (
     assets: Record<string, ParcelOutputAsset>,
     extractBuffer: (asset: ParcelOutputAsset) => Buffer | string | undefined
@@ -104,5 +110,64 @@ describe('Parcel asset collection', () => {
     ]);
 
     expect([...assets.keys()]).toEqual(['client/index.js', 'server/index.js']);
+  });
+
+  it('keeps a TAP package root unchanged instead of inferring an output prefix', () => {
+    const distDir = path.join('/project', 'tap-package');
+    const assets = collectParcelAssets(
+      [
+        {
+          filePath: path.join(distDir, 'manifest.tap.json'),
+          target: { distDir },
+          type: 'json',
+        },
+        {
+          filePath: path.join(distDir, 'targets', 'desktop', 'remoteEntry.mjs'),
+          target: { distDir },
+          type: 'js',
+        },
+      ],
+      { preserveArtifactPaths: true }
+    );
+
+    expect([...assets.keys()]).toEqual([
+      'manifest.tap.json',
+      'targets/desktop/remoteEntry.mjs',
+    ]);
+  });
+
+  it('rejects separate Parcel output roots for TAP instead of manufacturing path prefixes', () => {
+    expect(() =>
+      collectParcelAssets(
+        [
+          {
+            filePath: '/project/dist/desktop/remoteEntry.mjs',
+            target: { distDir: '/project/dist/desktop', name: 'desktop' },
+            type: 'js',
+          },
+          {
+            filePath: '/project/dist/worker/remoteEntry.mjs',
+            target: { distDir: '/project/dist/worker', name: 'worker' },
+            type: 'js',
+          },
+        ],
+        { preserveArtifactPaths: true }
+      )
+    ).toThrow('Parcel tap-app publication requires one package-root distDir');
+  });
+
+  it('rejects a TAP artifact emitted outside the configured package root', () => {
+    expect(() =>
+      collectParcelAssets(
+        [
+          {
+            filePath: '/project/outside/manifest.tap.json',
+            target: { distDir: '/project/tap-package' },
+            type: 'json',
+          },
+        ],
+        { preserveArtifactPaths: true }
+      )
+    ).toThrow('Parcel emitted TAP artifact outside its package-root distDir');
   });
 });

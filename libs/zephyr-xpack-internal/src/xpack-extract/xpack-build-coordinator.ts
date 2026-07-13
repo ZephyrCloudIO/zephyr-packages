@@ -1,5 +1,6 @@
 import {
   ApplicationContext,
+  assertTapFederationPublicationMetadata,
   normalizeBasePath,
   ZeErrors,
   ZephyrError,
@@ -9,8 +10,16 @@ import {
   type ZephyrBuildHooks,
   type ZephyrEngine,
 } from 'zephyr-agent';
-import type { ZephyrPluginOptions, ZephyrBuildStats } from 'zephyr-edge-contract';
+import type {
+  ZephyrBuildStats,
+  ZephyrModuleFederationConfig,
+} from 'zephyr-edge-contract';
 import * as path from 'node:path';
+import {
+  getLegacyModuleFederationConfig,
+  mergeModuleFederationBuildMetadata,
+  mergeModuleFederationConfigs,
+} from './federation-config-metadata';
 
 export interface XPackParticipantDependencyPaths {
   fileDependencies: readonly string[];
@@ -25,7 +34,8 @@ export interface XPackBuildContribution {
   generation?: number;
   assetsMap: ZeBuildAssetsMap;
   buildStats: ZephyrBuildStats;
-  mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+  /** Every serializable MF config emitted by this compiler. */
+  mfConfigs?: ZephyrModuleFederationConfig[];
   hooks?: ZephyrBuildHooks;
   dependencyPaths?: XPackParticipantDependencyPaths;
 }
@@ -37,7 +47,7 @@ export interface XPackBuildCoordinatorOptions {
 
 interface ContributionMetadata {
   buildStats: ZephyrBuildStats;
-  mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+  mfConfigs?: ZephyrModuleFederationConfig[];
   hooks?: ZephyrBuildHooks;
   dependencyPaths?: XPackParticipantDependencyPaths;
 }
@@ -47,7 +57,7 @@ export interface XPackBuildParticipant extends BuildParticipant {
   dependencies?: readonly string[];
 }
 
-type MfConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+type MfConfigs = ZephyrModuleFederationConfig[];
 
 function xpackError(message: string): Error {
   return new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, { message });
@@ -118,23 +128,15 @@ function mergeBuildStats(stats: readonly ZephyrBuildStats[]): ZephyrBuildStats {
     consumes: mergeUnique(stats.map((item) => item.consumes)),
     overrides: mergeUnique(stats.map((item) => item.overrides)),
     remotes: [...new Set(stats.flatMap((item) => item.remotes ?? []))],
+    federation: mergeModuleFederationBuildMetadata(stats.map((item) => item.federation)),
   };
 }
 
-function mergeMfConfigs(configs: readonly (MfConfig | undefined)[]): MfConfig {
-  const present = configs.filter((config): config is MfConfig => !!config);
-  const flattened = present.flatMap((config) =>
-    Array.isArray(config) ? (config as unknown[]) : [config]
-  );
-  const unique = mergeUnique([flattened]);
-  if (unique.length === 0) return undefined;
-  if (present.every((config) => !Array.isArray(config)) && unique.length === 1) {
-    return unique[0] as MfConfig;
-  }
-  // XPack's historical extraction API returns an array of MF plugin options, while
-  // the edge contract still types this field as one config object. Preserve every
-  // compiler's runtime value until that public contract is widened.
-  return unique as unknown as MfConfig;
+function mergeMfConfigs(
+  configs: readonly (MfConfigs | undefined)[]
+): MfConfigs | undefined {
+  const merged = mergeModuleFederationConfigs(configs);
+  return merged.length > 0 ? merged : undefined;
 }
 
 function resolveServerEntrypoint(
@@ -242,10 +244,20 @@ export class XPackBuildCoordinator {
             `Coordinated xpack server entrypoint "${entrypoint}" was not emitted`
           );
         }
+        const mfConfigs = mergeMfConfigs(metadata.map((item) => item.mfConfigs));
+        const buildStats = mergeBuildStats(metadata.map((item) => item.buildStats));
+        // Validate the final cross-compiler set, rather than individual participants:
+        // a TAP package may place different containers in separate compilers.
+        assertTapFederationPublicationMetadata({
+          target: engine.env?.target,
+          mfConfigs,
+          federation: buildStats.federation,
+        });
         await engine.upload_assets({
           assetsMap: publication.assetsMap,
-          buildStats: mergeBuildStats(metadata.map((item) => item.buildStats)),
-          mfConfig: mergeMfConfigs(metadata.map((item) => item.mfConfig)),
+          buildStats,
+          mfConfig: getLegacyModuleFederationConfig(mfConfigs),
+          mfConfigs,
           hooks: metadata.find((item) => item.hooks)?.hooks,
           snapshotType: options.snapshotType,
           entrypoint,
@@ -266,6 +278,14 @@ export class XPackBuildCoordinator {
     baseHref: string | null | undefined
   ): void {
     this.assertParticipant(participant);
+    // TAP descriptors lock paths relative to the package root. Compiler public paths
+    // and output directories are local transport details, never package prefixes.
+    if (this.engine.env?.target === 'tap-app') {
+      this.participantBaseHrefs.set(participant, '');
+      this.applicationBaseHref = '';
+      this.engine.buildProperties.baseHref = '';
+      return;
+    }
     const normalizedBaseHref = normalizeBasePath(baseHref);
     const existingParticipantBase = this.participantBaseHrefs.get(participant);
     if (
@@ -399,7 +419,7 @@ export class XPackBuildCoordinator {
         assetsMap: contribution.assetsMap,
         data: {
           buildStats: contribution.buildStats,
-          mfConfig: contribution.mfConfig,
+          mfConfigs: contribution.mfConfigs,
           hooks: contribution.hooks,
           dependencyPaths: contribution.dependencyPaths,
         },
@@ -435,6 +455,10 @@ export class XPackBuildCoordinator {
     const session = this.context.beginBuild({
       invocationId: 'xpack-multi-compiler',
       generation: logicalGeneration,
+      // TAP artifact paths and hashes are descriptor-locked. Reject an adapter alias
+      // here instead of normalizing/re-hashing it while the coordinated snapshot is
+      // being assembled.
+      strictAssetPaths: this.engine.env?.target === 'tap-app',
       participants: this.participants,
     });
     const active = {
@@ -493,7 +517,7 @@ export class XPackBuildCoordinator {
         assetsMap: previous.assetsMap,
         data: {
           buildStats: previous.buildStats,
-          mfConfig: previous.mfConfig,
+          mfConfigs: previous.mfConfigs,
           hooks: previous.hooks,
           dependencyPaths: previous.dependencyPaths,
         },
@@ -510,7 +534,7 @@ export class XPackBuildCoordinator {
         participant: contribution.participant,
         assetsMap: contribution.assetsMap,
         buildStats: contribution.data.buildStats,
-        mfConfig: contribution.data.mfConfig,
+        mfConfigs: contribution.data.mfConfigs,
         hooks: contribution.data.hooks,
         dependencyPaths: contribution.data.dependencyPaths,
       });

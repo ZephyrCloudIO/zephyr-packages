@@ -32,6 +32,13 @@ export interface FileInfo {
   content?: Buffer;
 }
 
+export interface ReadDirRecursiveOptions {
+  /** Include paths normally ignored for conventional web deployments. */
+  includeIgnoredPaths?: boolean;
+  /** Surface filesystem failures instead of silently omitting a package artifact. */
+  failOnError?: boolean;
+}
+
 /**
  * Reads a directory recursively and returns information about all files.
  *
@@ -46,7 +53,8 @@ export interface FileInfo {
  * Returns an empty array if the directory doesn't exist.
  */
 export async function readDirRecursive(
-  dirPath: string
+  dirPath: string,
+  options: ReadDirRecursiveOptions = {}
 ): Promise<Omit<FileInfo, 'content'>[]> {
   const files: Omit<FileInfo, 'content'>[] = [];
 
@@ -55,6 +63,8 @@ export async function readDirRecursive(
     relativePrefix: '',
     readContents: false,
     activeRealDirs: new Set<string>(),
+    includeIgnoredPaths: options.includeIgnoredPaths ?? false,
+    failOnError: options.failOnError ?? false,
   })) {
     files.push({ fullPath: file.fullPath, relativePath: file.relativePath });
   }
@@ -76,7 +86,8 @@ export async function readDirRecursive(
  * Returns an empty array if the directory doesn't exist.
  */
 export async function readDirRecursiveWithContents(
-  dirPath: string
+  dirPath: string,
+  options: ReadDirRecursiveOptions = {}
 ): Promise<Required<FileInfo>[]> {
   const files: Required<FileInfo>[] = [];
 
@@ -85,6 +96,8 @@ export async function readDirRecursiveWithContents(
     relativePrefix: '',
     readContents: true,
     activeRealDirs: new Set<string>(),
+    includeIgnoredPaths: options.includeIgnoredPaths ?? false,
+    failOnError: options.failOnError ?? false,
   })) {
     if (file.content) {
       files.push(file as Required<FileInfo>);
@@ -99,6 +112,8 @@ interface ResolveDirOptions {
   relativePrefix: string;
   readContents: boolean;
   activeRealDirs: Set<string>;
+  includeIgnoredPaths: boolean;
+  failOnError: boolean;
 }
 
 async function* resolveDir({
@@ -106,16 +121,19 @@ async function* resolveDir({
   relativePrefix,
   readContents,
   activeRealDirs,
+  includeIgnoredPaths,
+  failOnError,
 }: ResolveDirOptions): AsyncGenerator<FileInfo> {
   let entries: Dirent[];
 
   try {
     entries = await readdir(currentDir, { withFileTypes: true });
-  } catch {
+  } catch (error) {
+    if (failOnError) throw error;
     return;
   }
 
-  const currentRealDir = await safeRealpath(currentDir);
+  const currentRealDir = await safeRealpath(currentDir, failOnError);
   if (activeRealDirs.has(currentRealDir)) {
     return;
   }
@@ -128,7 +146,7 @@ async function* resolveDir({
       const relativePath = relativePrefix ? join(relativePrefix, entry.name) : entry.name;
       const normalizedRelativePath = normalizePath(relativePath);
 
-      if (shouldSkipRelativePath(normalizedRelativePath, entry)) {
+      if (!includeIgnoredPaths && shouldSkipRelativePath(normalizedRelativePath, entry)) {
         continue;
       }
 
@@ -138,6 +156,8 @@ async function* resolveDir({
         entry,
         readContents,
         activeRealDirs,
+        includeIgnoredPaths,
+        failOnError,
       });
     }
   } finally {
@@ -151,6 +171,8 @@ interface ResolveFileOptions {
   entry: Stats | Dirent;
   readContents: boolean;
   activeRealDirs: Set<string>;
+  includeIgnoredPaths: boolean;
+  failOnError: boolean;
 }
 
 async function* resolveFile({
@@ -159,6 +181,8 @@ async function* resolveFile({
   entry,
   readContents,
   activeRealDirs,
+  includeIgnoredPaths,
+  failOnError,
 }: ResolveFileOptions): AsyncGenerator<FileInfo> {
   if (entry.isSymbolicLink()) {
     yield* resolveSymbolicLink({
@@ -166,6 +190,8 @@ async function* resolveFile({
       relativePath,
       readContents,
       activeRealDirs,
+      includeIgnoredPaths,
+      failOnError,
     });
     return;
   }
@@ -176,12 +202,14 @@ async function* resolveFile({
       relativePrefix: relativePath,
       readContents,
       activeRealDirs,
+      includeIgnoredPaths,
+      failOnError,
     });
     return;
   }
 
   if (entry.isFile()) {
-    const content = readContents ? await safeReadFile(fullPath) : undefined;
+    const content = readContents ? await safeReadFile(fullPath, failOnError) : undefined;
     if (readContents && !content) {
       return;
     }
@@ -199,6 +227,8 @@ interface ResolveSymlinkOptions {
   relativePath: string;
   readContents: boolean;
   activeRealDirs: Set<string>;
+  includeIgnoredPaths: boolean;
+  failOnError: boolean;
 }
 
 async function* resolveSymbolicLink({
@@ -206,13 +236,16 @@ async function* resolveSymbolicLink({
   relativePath,
   readContents,
   activeRealDirs,
+  includeIgnoredPaths,
+  failOnError,
 }: ResolveSymlinkOptions): AsyncGenerator<FileInfo> {
-  const realPath = await safeRealpath(fullPath);
+  const realPath = await safeRealpath(fullPath, failOnError);
 
   let realStat: Stats;
   try {
     realStat = await stat(realPath);
-  } catch {
+  } catch (error) {
+    if (failOnError) throw error;
     return;
   }
 
@@ -226,12 +259,14 @@ async function* resolveSymbolicLink({
       relativePrefix: relativePath,
       readContents,
       activeRealDirs,
+      includeIgnoredPaths,
+      failOnError,
     });
     return;
   }
 
   if (realStat.isFile()) {
-    const content = readContents ? await safeReadFile(realPath) : undefined;
+    const content = readContents ? await safeReadFile(realPath, failOnError) : undefined;
     if (readContents && !content) {
       return;
     }
@@ -244,18 +279,23 @@ async function* resolveSymbolicLink({
   }
 }
 
-async function safeReadFile(path: string): Promise<Buffer | undefined> {
+async function safeReadFile(
+  path: string,
+  failOnError: boolean
+): Promise<Buffer | undefined> {
   try {
     return await readFile(path);
-  } catch {
+  } catch (error) {
+    if (failOnError) throw error;
     return undefined;
   }
 }
 
-async function safeRealpath(path: string): Promise<string> {
+async function safeRealpath(path: string, failOnError: boolean): Promise<string> {
   try {
     return await realpath(path);
-  } catch {
+  } catch (error) {
+    if (failOnError) throw error;
     return path;
   }
 }

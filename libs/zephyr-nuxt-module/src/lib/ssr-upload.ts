@@ -2,10 +2,13 @@ import {
   buildAssetsMap,
   handleGlobalError,
   readDirRecursiveWithContents,
+  ZeErrors,
+  ZephyrError,
   zeBuildDashData,
   ze_log,
   type ZephyrEngine,
 } from 'zephyr-agent';
+import type { ZephyrLegacyModuleFederationConfig } from 'zephyr-edge-contract';
 import { resolve } from 'node:path';
 import { normalizePath, resolveDir, resolveEntrypoint, resolveOutputDir } from './paths';
 import type { NitroLike, NuxtLike, SnapshotType, ZephyrNuxtOptions } from './types';
@@ -25,6 +28,98 @@ interface NitroOutput {
 export interface AssetSource {
   dir: string;
   prefix?: string;
+}
+
+/**
+ * Keep the legacy snapshot field only for its unambiguous, complete shape. The complete
+ * `mfConfigs` array remains the source of truth for multi-container publications.
+ */
+function getLegacyModuleFederationConfig(
+  mfConfigs: ZephyrNuxtOptions['mfConfigs']
+): ZephyrLegacyModuleFederationConfig | undefined {
+  const config = mfConfigs?.length === 1 ? mfConfigs[0] : undefined;
+  if (!config || !nonEmptyString(config.name) || !nonEmptyString(config.filename)) {
+    return undefined;
+  }
+
+  return config as ZephyrLegacyModuleFederationConfig;
+}
+
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && !!value.trim();
+}
+
+/**
+ * TAP descriptors identify every remote by its container name and entry filename. The
+ * adapter does not interpret that SDK data, but must reject an incomplete pairing rather
+ * than upload a package whose snapshot and dashboard disagree.
+ */
+function assertTapModuleFederationMetadata(
+  target: ZephyrNuxtOptions['target'],
+  mfConfigs: ZephyrNuxtOptions['mfConfigs'],
+  federation: ZephyrNuxtOptions['federation']
+): void {
+  if (target !== 'tap-app') {
+    return;
+  }
+
+  if (!mfConfigs?.length || !federation?.length) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message:
+        'Nuxt TAP publication requires non-empty mfConfigs and federation metadata arrays.',
+    });
+  }
+  if (mfConfigs.length !== federation.length) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message:
+        'Nuxt TAP mfConfigs and federation metadata must contain the same number of entries.',
+    });
+  }
+
+  const federationByName = new Map<
+    string,
+    NonNullable<ZephyrNuxtOptions['federation']>[number]
+  >();
+  const remotes = new Set<string>();
+  for (const metadata of federation) {
+    if (!nonEmptyString(metadata.name) || !nonEmptyString(metadata.remote)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          'Nuxt TAP federation metadata requires a non-empty name and remote for every container.',
+      });
+    }
+    if (federationByName.has(metadata.name) || remotes.has(metadata.remote)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          'Nuxt TAP federation metadata entries must not duplicate names or remotes.',
+      });
+    }
+    federationByName.set(metadata.name, metadata);
+    remotes.add(metadata.remote);
+  }
+
+  const names = new Set<string>();
+  const filenames = new Set<string>();
+  for (const config of mfConfigs) {
+    if (!nonEmptyString(config.name) || !nonEmptyString(config.filename)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          'Nuxt TAP mfConfigs requires a non-empty name and filename for every container.',
+      });
+    }
+    if (names.has(config.name) || filenames.has(config.filename)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message: 'Nuxt TAP mfConfigs entries must not duplicate names or filenames.',
+      });
+    }
+    if (federationByName.get(config.name)?.remote !== config.filename) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message: `Nuxt TAP federation metadata has no matching name and remote for mfConfigs entry "${config.name}" at "${config.filename}".`,
+      });
+    }
+    names.add(config.name);
+    filenames.add(config.filename);
+  }
 }
 
 function getNitroOutput(nitro?: NitroLike, nuxt?: NuxtLike): NitroOutput | undefined {
@@ -53,7 +148,8 @@ function toAssetPath(prefix: string | undefined, relativePath: string): string {
 export function resolveAssetSources(
   snapshotType: SnapshotType,
   outputDir: string,
-  publicDir?: string
+  publicDir?: string,
+  target?: ZephyrNuxtOptions['target']
 ): AssetSource[] {
   if (snapshotType === 'csr') {
     return [{ dir: publicDir ?? outputDir }];
@@ -70,21 +166,35 @@ export function resolveAssetSources(
 
   sources.push({
     dir: publicDir,
-    prefix: 'public',
+    // TAP locks package-relative paths. Its SDK may put descriptor, lock, and target
+    // artifacts directly in Nitro's separate public directory, so adding Nuxt's
+    // conventional `public/` namespace would invalidate that lock.
+    ...(target === 'tap-app' ? {} : { prefix: 'public' }),
   });
 
   return sources;
 }
 
 async function loadAssetsFromSources(
-  sources: AssetSource[]
+  sources: AssetSource[],
+  target: ZephyrNuxtOptions['target']
 ): Promise<Record<string, Buffer>> {
   const assets: Record<string, Buffer> = {};
 
   for (const source of sources) {
-    const files = await readDirRecursiveWithContents(source.dir);
+    const files = await readDirRecursiveWithContents(source.dir, {
+      includeIgnoredPaths: target === 'tap-app',
+      failOnError: target === 'tap-app',
+    });
     for (const file of files) {
       const assetPath = toAssetPath(source.prefix, file.relativePath);
+      if (Object.prototype.hasOwnProperty.call(assets, assetPath)) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message:
+            `Nuxt emitted conflicting assets for snapshot path "${assetPath}" from ` +
+            `"${source.dir}". Configure one canonical TAP package output root.`,
+        });
+      }
       assets[assetPath] = file.content;
     }
   }
@@ -141,7 +251,12 @@ export function createUploadRunner({
         entrypoint = undefined;
       }
 
-      const assetSources = resolveAssetSources(snapshotType, outputDir, publicDir);
+      const assetSources = resolveAssetSources(
+        snapshotType,
+        outputDir,
+        publicDir,
+        options.target
+      );
       const assetSourcesLog = assetSources
         .map((source) => (source.prefix ? `${source.dir}=>${source.prefix}` : source.dir))
         .join(', ');
@@ -160,7 +275,7 @@ export function createUploadRunner({
         zephyr_engine.buildProperties.baseHref = baseHref;
       }
 
-      const assets = await loadAssetsFromSources(assetSources);
+      const assets = await loadAssetsFromSources(assetSources, options.target);
       if (!Object.keys(assets).length) {
         ze_log.upload(`No build output found in ${assetSourcesLog}`);
         return;
@@ -172,9 +287,21 @@ export function createUploadRunner({
         () => 'buffer'
       );
 
+      assertTapModuleFederationMetadata(
+        options.target,
+        options.mfConfigs,
+        options.federation
+      );
+      const buildStats = await zeBuildDashData(zephyr_engine);
+      const mfConfig = getLegacyModuleFederationConfig(options.mfConfigs);
       await zephyr_engine.upload_assets({
         assetsMap,
-        buildStats: await zeBuildDashData(zephyr_engine),
+        buildStats:
+          options.federation === undefined
+            ? buildStats
+            : { ...buildStats, federation: options.federation },
+        ...(mfConfig === undefined ? {} : { mfConfig }),
+        ...(options.mfConfigs === undefined ? {} : { mfConfigs: options.mfConfigs }),
         snapshotType,
         entrypoint,
         hooks: options.hooks,

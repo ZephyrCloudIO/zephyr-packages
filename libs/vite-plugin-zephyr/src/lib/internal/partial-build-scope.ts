@@ -1,7 +1,9 @@
-import type { PartialAssetMapScope } from 'zephyr-agent';
+import type { PartialAssetMapScope, ZephyrBuildTarget } from 'zephyr-agent';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
 
 export interface VitePartialBuildOptions {
+  /** Artifact family for this independent producer process. */
+  target?: ZephyrBuildTarget;
   /** Shared by every producer and finalizer process for one logical build. */
   invocationId?: string;
   /** Rebuild generation within the invocation (default: 0). */

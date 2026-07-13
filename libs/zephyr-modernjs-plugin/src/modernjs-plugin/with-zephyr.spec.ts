@@ -3,9 +3,15 @@ import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 const mocks = rs.hoisted(() => ({
   rspackConfigure: rs.fn(),
   rspackWithZephyr: rs.fn(),
+  assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
+    if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
+      throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
+    }
+  }),
 }));
 
 rs.mock('zephyr-agent', () => ({
+  assertZephyrBuildTarget: mocks.assertBuildTarget,
   ze_log: { misc: rs.fn() },
 }));
 
@@ -13,7 +19,7 @@ rs.mock('zephyr-rspack-plugin', () => ({
   withZephyr: mocks.rspackWithZephyr,
 }));
 
-import { withZephyr } from './with-zephyr';
+import { shouldApplyDevPublicPathFix, withZephyr } from './with-zephyr';
 
 describe('Modern.js withZephyr', () => {
   beforeEach(() => {
@@ -26,7 +32,11 @@ describe('Modern.js withZephyr', () => {
     let modifier:
       | ((config: Record<string, unknown>) => Promise<Record<string, unknown>>)
       | undefined;
-    const plugin = withZephyr({ snapshotType: 'ssr', entrypoint: 'server/index.js' });
+    const plugin = withZephyr({
+      target: 'tap-app',
+      snapshotType: 'ssr',
+      entrypoint: 'server/index.js',
+    });
     await plugin.setup?.({
       modifyRspackConfig(nextModifier: typeof modifier) {
         modifier = nextModifier;
@@ -38,6 +48,7 @@ describe('Modern.js withZephyr', () => {
 
     expect(plugin.pre).toEqual(['@modern-js/plugin-module-federation-config']);
     expect(mocks.rspackWithZephyr).toHaveBeenCalledWith({
+      target: 'tap-app',
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',
     });
@@ -64,5 +75,17 @@ describe('Modern.js withZephyr', () => {
     expect(mocks.rspackWithZephyr).toHaveBeenCalledTimes(2);
     expect(mocks.rspackConfigure).toHaveBeenNthCalledWith(1, clientConfig);
     expect(mocks.rspackConfigure).toHaveBeenNthCalledWith(2, serverConfig);
+  });
+
+  it('rejects unsupported targets before registering Modern.js hooks', () => {
+    expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+      'withZephyr({ target }) must be one of'
+    );
+    expect(mocks.rspackWithZephyr).not.toHaveBeenCalled();
+  });
+
+  it('never applies the dev public-path rewrite to TAP artifacts', () => {
+    expect(shouldApplyDevPublicPathFix('tap-app', true)).toBe(false);
+    expect(shouldApplyDevPublicPathFix('web', true)).toBe(true);
   });
 });

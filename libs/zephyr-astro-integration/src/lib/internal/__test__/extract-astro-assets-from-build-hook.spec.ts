@@ -4,13 +4,14 @@ import type { MockInstance, Mock } from '@rstest/core';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { buildAssetsMap } from 'zephyr-agent';
+import { buildAssetsMap, readDirRecursiveWithContents } from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from '../extract-astro-assets-map';
 
 // Mock the zephyr-agent buildAssetsMap function
 rs.mock('zephyr-agent', () => ({
   buildAssetsMap: rs.fn(),
   logFn: rs.fn(),
+  readDirRecursiveWithContents: rs.fn(),
 }));
 
 // This test focuses on the assets parameter parsing logic
@@ -193,6 +194,46 @@ describe('extractAstroAssetsFromBuildHook', () => {
       expect(buildAssetsMap).toHaveBeenCalledWith(
         expect.not.objectContaining({
           'style.css.map': expect.any(Object),
+        }),
+        expect.any(Function),
+        expect.any(Function)
+      );
+    });
+
+    it('uses the strict complete reader for tap-app instead of the partial hook list', async () => {
+      (readDirRecursiveWithContents as Mock).mockResolvedValue([
+        {
+          fullPath: join(tempDir, 'manifest.tap.json'),
+          relativePath: 'manifest.tap.json',
+          content: Buffer.from('{"name":"example"}'),
+        },
+        {
+          fullPath: join(tempDir, 'targets/desktop/remoteEntry.mjs.map'),
+          relativePath: 'targets/desktop/remoteEntry.mjs.map',
+          content: Buffer.from('{"version":3}'),
+        },
+        {
+          fullPath: join(tempDir, 'node_modules/runtime/opaque.bin'),
+          relativePath: 'node_modules/runtime/opaque.bin',
+          content: Buffer.from([0, 255, 2]),
+        },
+      ]);
+
+      await extractAstroAssetsFromBuildHook(
+        { 'manifest.tap.json': join(tempDir, 'manifest.tap.json') },
+        tempDir,
+        'tap-app'
+      );
+
+      expect(readDirRecursiveWithContents).toHaveBeenCalledWith(tempDir, {
+        includeIgnoredPaths: true,
+        failOnError: true,
+      });
+      expect(buildAssetsMap).toHaveBeenCalledWith(
+        expect.objectContaining({
+          'manifest.tap.json': expect.any(Object),
+          'targets/desktop/remoteEntry.mjs.map': expect.any(Object),
+          'node_modules/runtime/opaque.bin': expect.any(Object),
         }),
         expect.any(Function),
         expect.any(Function)

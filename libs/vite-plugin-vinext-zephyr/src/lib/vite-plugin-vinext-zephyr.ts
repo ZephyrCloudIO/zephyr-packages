@@ -4,12 +4,17 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
 };
 import {
   ApplicationContext,
+  assertZephyrBuildTarget,
   buildAssetsMap,
   handleGlobalError,
   zeBuildDashData,
   ZeErrors,
   ZephyrEngine,
   type ZephyrBuildHooks,
+  type ZephyrBuildTarget,
+  type ZephyrLegacyModuleFederationConfig,
+  type ZephyrModuleFederationBuildMetadata,
+  type ZephyrModuleFederationConfig,
   ZephyrError,
   ze_log,
 } from 'zephyr-agent';
@@ -23,9 +28,17 @@ import {
 } from './internal/vinext-output';
 
 export interface VinextZephyrOptions {
+  /** Zephyr artifact family, including `tap-app` for TAP packages. */
+  target?: ZephyrBuildTarget;
+  /** Every independently published Module Federation container. */
+  mfConfigs?: ZephyrModuleFederationConfig[];
+  /** Build-stat metadata paired with `mfConfigs`. */
+  federation?: ZephyrModuleFederationBuildMetadata[];
   /** Build output directory (default: dist relative to Vite root). */
   outputDir?: string;
-  /** Optional server entrypoint override, relative to outputDir. */
+  /** TAP defaults to CSR; set `ssr` to require an SSR entrypoint upload. */
+  snapshotType?: 'csr' | 'ssr';
+  /** Optional server entrypoint override, relative to outputDir for SSR snapshots. */
   entrypoint?: string;
   /** Optional Zephyr upload lifecycle hooks. */
   hooks?: ZephyrBuildHooks;
@@ -47,8 +60,120 @@ function getRscPluginManager(config: ResolvedConfig): RscPluginManagerLike | und
   return plugin?.api?.manager;
 }
 
+function resolveSnapshotType(options: VinextZephyrOptions): 'csr' | 'ssr' {
+  return options.snapshotType ?? (options.target === 'tap-app' ? 'csr' : 'ssr');
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * TAP has no framework-owned Module Federation metadata source. Require callers to
+ * provide the complete, paired snapshot and dashboard records rather than publishing a
+ * package that the control plane cannot address deterministically.
+ */
+function assertTapFederationMetadata(options: VinextZephyrOptions): void {
+  if (options.target !== 'tap-app') {
+    return;
+  }
+
+  const { mfConfigs, federation } = options;
+  if (!Array.isArray(mfConfigs) || mfConfigs.length === 0) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: 'tap-app metadata must include a non-empty mfConfigs array.',
+    });
+  }
+  if (!Array.isArray(federation) || federation.length === 0) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message: 'tap-app metadata must include a non-empty federation array.',
+    });
+  }
+  if (mfConfigs.length !== federation.length) {
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message:
+        'tap-app metadata must include the same number of mfConfigs and federation entries.',
+    });
+  }
+
+  const federationByName = new Map<string, ZephyrModuleFederationBuildMetadata>();
+  const federationRemotes = new Set<string>();
+  for (const entry of federation) {
+    const { name, remote } = entry;
+    if (!isNonEmptyString(name) || !isNonEmptyString(remote)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          'tap-app federation metadata entries must each include a non-empty name and remote.',
+      });
+    }
+    if (federationByName.has(name) || federationRemotes.has(remote)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          'tap-app federation metadata entries must have unique names and remotes.',
+      });
+    }
+    federationByName.set(name, entry);
+    federationRemotes.add(remote);
+  }
+
+  const configNames = new Set<string>();
+  const configFilenames = new Set<string>();
+  for (const config of mfConfigs) {
+    const { name, filename } = config;
+    if (!isNonEmptyString(name) || !isNonEmptyString(filename)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          'tap-app mfConfigs entries must each include a non-empty name and filename.',
+      });
+    }
+    if (configNames.has(name) || configFilenames.has(filename)) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message: 'tap-app mfConfigs entries must have unique names and filenames.',
+      });
+    }
+    configNames.add(name);
+    configFilenames.add(filename);
+
+    const federationEntry = federationByName.get(name);
+    if (!federationEntry || federationEntry.remote !== filename) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          `tap-app metadata must pair mfConfigs entry ${JSON.stringify(name)} with a ` +
+          `federation entry using remote ${JSON.stringify(filename)}.`,
+      });
+    }
+  }
+}
+
+/**
+ * Old consumers only understand one complete container. Keep that compatibility field
+ * unambiguous while always retaining the full typed `mfConfigs` array for TAP.
+ */
+function getLegacyModuleFederationConfig(
+  mfConfigs: readonly ZephyrModuleFederationConfig[] | undefined
+): ZephyrLegacyModuleFederationConfig | undefined {
+  const config = mfConfigs?.length === 1 ? mfConfigs[0] : undefined;
+  if (
+    !config ||
+    typeof config.name !== 'string' ||
+    !config.name.trim() ||
+    typeof config.filename !== 'string' ||
+    !config.filename.trim()
+  ) {
+    return undefined;
+  }
+
+  return config as ZephyrLegacyModuleFederationConfig;
+}
+
 export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
+  if (options.target !== undefined) {
+    assertZephyrBuildTarget(options.target, 'withZephyrVinext({ target })');
+  }
+  assertTapFederationMetadata(options);
+
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  const snapshotType = resolveSnapshotType(options);
   let resolvedConfig: ResolvedConfig | undefined;
   let outputDir = '';
   let rscPluginManager: RscPluginManagerLike | undefined;
@@ -68,6 +193,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
       zephyr_defer_create({
         builder: 'vite',
         context: resolvedConfig.root,
+        ...(options.target === undefined ? {} : { target: options.target }),
       });
       engineCreated = true;
     }
@@ -112,37 +238,60 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           const zephyrEngine = await ensureEngine();
           const generation = buildGeneration++;
           const assets: Record<string, VinextBuildAsset> = {};
-          await collectOutputDirectoryAssets(assets, outputDir);
-          injectRscAssetsManifest(assets, outputDir, rscPluginManager);
-
-          const detectedEntrypoint = detectEntrypointFromAssets(assets);
-          const entrypoint = resolveVinextEntrypoint(
+          const outputCollectionOptions = { target: options.target };
+          await collectOutputDirectoryAssets(assets, outputDir, outputCollectionOptions);
+          injectRscAssetsManifest(
+            assets,
             outputDir,
-            detectedEntrypoint,
-            options.entrypoint
+            rscPluginManager,
+            outputCollectionOptions
           );
-          if (!assets[entrypoint]) {
-            throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-              message: `Vinext server entrypoint "${entrypoint}" was not emitted under "${outputDir}".`,
-            });
+
+          if (snapshotType === 'ssr') {
+            const detectedEntrypoint = detectEntrypointFromAssets(assets);
+            const entrypoint = resolveVinextEntrypoint(
+              outputDir,
+              detectedEntrypoint,
+              options.entrypoint
+            );
+            if (!assets[entrypoint]) {
+              throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+                message: `Vinext server entrypoint "${entrypoint}" was not emitted under "${outputDir}".`,
+              });
+            }
+            uploadEntrypoint = entrypoint;
+          } else {
+            uploadEntrypoint = undefined;
           }
-          uploadEntrypoint = entrypoint;
 
           applicationContext ??= new ApplicationContext({
             applicationUid: zephyrEngine.application_uid,
             prepare: ({ generation: nextGeneration }) =>
               nextGeneration === 0 ? undefined : zephyrEngine.start_new_build(),
             publish: async ({ assetsMap }) => {
-              if (!uploadEntrypoint) {
+              if (snapshotType === 'ssr' && !uploadEntrypoint) {
                 throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
                   message: 'Vinext upload metadata was not prepared.',
                 });
               }
+              // Options can be held by a user-owned config object until the framework
+              // finishes. Revalidate immediately before transport so a later mutation
+              // cannot turn a valid TAP setup into an incomplete publication.
+              assertTapFederationMetadata(options);
+              const buildStats = await zeBuildDashData(zephyrEngine);
+              const mfConfig = getLegacyModuleFederationConfig(options.mfConfigs);
               await zephyrEngine.upload_assets({
                 assetsMap,
-                buildStats: await zeBuildDashData(zephyrEngine),
-                snapshotType: 'ssr',
-                entrypoint: uploadEntrypoint,
+                buildStats:
+                  options.federation === undefined
+                    ? buildStats
+                    : { ...buildStats, federation: options.federation },
+                ...(mfConfig ? { mfConfig } : {}),
+                ...(options.mfConfigs === undefined
+                  ? {}
+                  : { mfConfigs: options.mfConfigs }),
+                snapshotType,
+                ...(snapshotType === 'ssr' ? { entrypoint: uploadEntrypoint } : {}),
                 hooks: options.hooks,
               });
             },
@@ -161,9 +310,10 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
             generation,
             participants: [
               ...environments.map(([name]) => ({ name, role: name })),
-              { name: outputParticipant, role: 'ssr' },
+              { name: outputParticipant, role: snapshotType },
             ],
             postprocessors: ['vinext-rsc-manifest'],
+            strictAssetPaths: options.target === 'tap-app',
           });
           for (const [name] of environments) {
             session.completeParticipant(name);
@@ -181,7 +331,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           session.completePostprocess('vinext-rsc-manifest');
 
           ze_log.upload(
-            `Uploading Vinext build (${Object.keys(assets).length} assets, entrypoint: ${entrypoint})`
+            `Uploading Vinext build (${Object.keys(assets).length} assets, snapshotType: ${snapshotType})`
           );
           await session.publish();
         } catch (error) {

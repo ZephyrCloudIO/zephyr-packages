@@ -12,9 +12,15 @@ const mocks = rs.hoisted(() => ({
   coordinate: rs.fn(),
   configure: rs.fn(),
   rspackWithZephyr: rs.fn(),
+  assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
+    if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
+      throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
+    }
+  }),
 }));
 
 rs.mock('zephyr-agent', () => ({
+  assertZephyrBuildTarget: mocks.assertBuildTarget,
   ZephyrEngine: { create: mocks.create },
 }));
 
@@ -109,5 +115,12 @@ describe('Rsbuild withZephyr compiler coordination', () => {
       hook?.({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
     ).rejects.toBe(error);
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects unsupported targets before registering a compiler hook', () => {
+    expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+      'withZephyr({ target }) must be one of'
+    );
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 });

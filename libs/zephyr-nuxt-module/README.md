@@ -33,6 +33,17 @@ export default defineNuxtConfig({
 export default defineNuxtConfig({
   modules: ['zephyr-nuxt-module'],
   zephyr: {
+    // Publish a TAP package rather than the default web artifact
+    target: 'tap-app',
+    // JSON-serializable metadata from the package SDK
+    mfConfigs: [
+      { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+      { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+    ],
+    federation: [
+      { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+      { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs' },
+    ],
     // Override Nitro output dir (defaults to nitro.options.output.dir)
     outputDir: '.output',
     // Explicit SSR entrypoint (relative to outputDir)
@@ -50,6 +61,12 @@ export default defineNuxtConfig({
 - If no entrypoint is found, the module falls back to a CSR snapshot.
 - Entry points are auto-detected from `server/index.mjs`, `server/index.js`, or `server/index.cjs` when not provided.
 - Upload logic is skipped during `nuxt prepare` (including `postinstall` hooks).
+- For `target: 'tap-app'`, `mfConfigs` and `federation` are required, non-empty
+  arrays. Each unique config `name` and `filename` must match a metadata
+  entry's `name` and `remote`; the module fails before upload when that pairing
+  is incomplete. It forwards this caller-provided SDK metadata unchanged. For
+  non-TAP builds the fields remain optional. A complete singleton config also
+  fills the legacy `mfConfig` snapshot field.
 
 ## License
 

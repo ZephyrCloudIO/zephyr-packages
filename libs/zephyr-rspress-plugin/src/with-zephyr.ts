@@ -2,6 +2,9 @@ import {
   withZephyr as zephyrRsbuildPlugin,
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
+import { assertZephyrBuildTarget } from 'zephyr-edge-contract';
+import type { ZephyrBuildTarget } from 'zephyr-agent';
+import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
 import { moduleFederationPublicPathPlugin } from './internal/assets/moduleFederationPublicPathPlugin';
 import type {
@@ -9,9 +12,12 @@ import type {
   RspressUserConfig,
   RspressPlugin,
   BuilderConfigWithPlugins,
+  ZephyrRspressSSGOptions,
 } from './types';
 
 export interface ZephyrRspressOptions {
+  /** Zephyr artifact family, including `tap-app` for TAP packages. */
+  target?: ZephyrBuildTarget;
   hooks?: ZephyrBuildHooks;
 }
 
@@ -60,7 +66,20 @@ function isSsgEnabled(
 export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig>(
   options?: ZephyrRspressOptions
 ): RspressPlugin<TConfig> {
-  const portableFederationPlugin = moduleFederationPublicPathPlugin();
+  if (options?.target !== undefined) {
+    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+  }
+
+  // Rspress materializes one configuration per compiler. Keep all of their federation
+  // plugins in this mutable collection so the SSG hook can forward the complete set to
+  // xpack after the build, when snapshot and dashboard metadata are produced.
+  const mfConfigs: ModuleFederationPlugin[] = [];
+  const portableFederationPlugin = moduleFederationPublicPathPlugin({
+    target: options?.target,
+    onModuleFederationPlugins(plugins) {
+      mfConfigs.splice(0, mfConfigs.length, ...plugins);
+    },
+  });
 
   return {
     name: 'zephyr-rspress-plugin',
@@ -84,7 +103,11 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
           (config as { builderConfig?: BuilderConfigWithPlugins }).builderConfig =
             newBuilderConfig;
         }
-        addPlugin(zephyrRspressSSGPlugin(config, options) as RspressPlugin<TConfig>);
+        const ssgOptions: ZephyrRspressSSGOptions = {
+          ...options,
+          mfConfig: mfConfigs,
+        };
+        addPlugin(zephyrRspressSSGPlugin(config, ssgOptions) as RspressPlugin<TConfig>);
       } else {
         // Support both rspress v1 (builderPlugins) and v2 (builderConfig.plugins)
         if (isRspressV1(config)) {

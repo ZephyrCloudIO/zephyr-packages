@@ -6,6 +6,7 @@ import {
   logFn,
   readDirRecursiveWithContents,
   type ZeBuildAssetsMap,
+  type ZephyrBuildTarget,
 } from 'zephyr-agent';
 
 interface AstroAsset {
@@ -63,15 +64,22 @@ type AstroAssets =
  */
 export async function extractAstroAssetsFromBuildHook(
   assets: AstroAssets,
-  outputPath: string
+  outputPath: string,
+  target?: ZephyrBuildTarget
 ): Promise<ZeBuildAssetsMap> {
+  // Astro's hook asset list and conventional directory reader both omit files that a
+  // TAP descriptor may explicitly lock. Read the complete emitted output instead.
+  if (target === 'tap-app') {
+    return extractAstroAssetsMap(outputPath, target);
+  }
+
   const astroAssets: Record<string, AstroAsset> = {};
 
   try {
     // Handle different possible structures of the assets parameter
     if (!assets) {
       // Fallback to filesystem walking if assets is not available
-      return await extractAstroAssetsMap(outputPath);
+      return await extractAstroAssetsMap(outputPath, target);
     }
 
     // Assets might be an object, Map, or array depending on Astro version
@@ -117,7 +125,7 @@ export async function extractAstroAssetsFromBuildHook(
 
         // Skip files we don't want to upload
         const relativePath = normalizePath(relative(outputPath, fullPath));
-        if (shouldSkipFile(relativePath)) {
+        if (shouldSkipFile(relativePath, target)) {
           continue;
         }
 
@@ -137,7 +145,7 @@ export async function extractAstroAssetsFromBuildHook(
 
     // If we didn't find any assets from the hook, fallback to filesystem walking
     if (Object.keys(astroAssets).length === 0) {
-      return await extractAstroAssetsMap(outputPath);
+      return await extractAstroAssetsMap(outputPath, target);
     }
 
     return buildAssetsMap(astroAssets, extractBuffer, getAssetType);
@@ -147,7 +155,7 @@ export async function extractAstroAssetsFromBuildHook(
       'Error processing assets from Astro build hook:' + JSON.stringify(error, null, 2)
     );
     // Fallback to filesystem walking on any error
-    return await extractAstroAssetsMap(outputPath);
+    return await extractAstroAssetsMap(outputPath, target);
   }
 }
 
@@ -195,8 +203,32 @@ function extractAssetEntries(assets: AstroAssets): [string, unknown][] {
   return entries;
 }
 
-export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAssetsMap> {
+export async function extractAstroAssetsMap(
+  buildDir: string,
+  target?: ZephyrBuildTarget
+): Promise<ZeBuildAssetsMap> {
   const assets: Record<string, AstroAsset> = {};
+
+  if (target === 'tap-app') {
+    // The generic walker normally filters node_modules, dot files, and platform
+    // metadata while also treating read failures as an empty result. Locked TAP
+    // artifacts are opaque bytes, so retain every emitted file and abort rather than
+    // publishing a partial package.
+    const files = await readDirRecursiveWithContents(buildDir, {
+      includeIgnoredPaths: true,
+      failOnError: true,
+    });
+
+    for (const file of files) {
+      const relativePath = normalizePath(file.relativePath);
+      assets[relativePath] = {
+        content: file.content,
+        type: getFileType(relativePath),
+      };
+    }
+
+    return buildAssetsMap(assets, extractBuffer, getAssetType);
+  }
 
   try {
     const files = await readDirRecursiveWithContents(buildDir);
@@ -204,7 +236,7 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
     for (const file of files) {
       const relativePath = normalizePath(file.relativePath);
 
-      if (shouldSkipFile(relativePath)) {
+      if (shouldSkipFile(relativePath, target)) {
         continue;
       }
 
@@ -221,7 +253,11 @@ export async function extractAstroAssetsMap(buildDir: string): Promise<ZeBuildAs
   return buildAssetsMap(assets, extractBuffer, getAssetType);
 }
 
-function shouldSkipFile(filePath: string): boolean {
+function shouldSkipFile(filePath: string, target?: ZephyrBuildTarget): boolean {
+  if (target === 'tap-app') {
+    return false;
+  }
+
   // Skip common files that shouldn't be uploaded
   const skipPatterns = [
     /\.map$/, // Source maps

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "entries": {
+    "desktop": "targets/desktop/remoteEntry.mjs",
+    "mobile": "targets/mobile/remoteEntry.mjs",
+    "quickjs": "targets/quickjs/remoteEntry.mjs"
+  }
+}

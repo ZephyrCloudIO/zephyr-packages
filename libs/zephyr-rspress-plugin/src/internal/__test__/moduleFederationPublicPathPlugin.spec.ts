@@ -111,4 +111,52 @@ describe('moduleFederationPublicPathPlugin', () => {
     expect(bundlerConfigs[0]?.output.publicPath).toBe('auto');
     expect(bundlerConfigs[1]?.output.publicPath).toBe('http://localhost:4178/');
   });
+
+  it('retains every compiler federation plugin for SSG publication metadata', () => {
+    const onModuleFederationPlugins = rs.fn();
+    const plugin = moduleFederationPublicPathPlugin({ onModuleFederationPlugins });
+    const onBeforeCreateCompiler = rs.fn();
+    plugin.setup({ onBeforeCreateCompiler });
+    const [{ handler }] = onBeforeCreateCompiler.mock.calls[0] as [
+      { handler: (args: { bundlerConfigs: unknown[] }) => void },
+    ];
+    const desktop = remotePlugin({
+      name: 'desktop',
+      filename: 'targets/desktop/remoteEntry.mjs',
+    });
+    const worker = remotePlugin({
+      name: 'worker',
+      filename: 'targets/worker/remoteEntry.mjs',
+    });
+
+    handler({
+      bundlerConfigs: [
+        { name: 'web', plugins: [desktop] },
+        { name: 'worker', plugins: [worker] },
+      ],
+    });
+
+    expect(onModuleFederationPlugins).toHaveBeenCalledWith([desktop, worker]);
+  });
+
+  it('preserves SDK-locked TAP output without rewriting its public path', () => {
+    const plugin = moduleFederationPublicPathPlugin({ target: 'tap-app' });
+    const onBeforeCreateCompiler = rs.fn();
+    plugin.setup({ onBeforeCreateCompiler });
+    const [{ handler }] = onBeforeCreateCompiler.mock.calls[0] as [
+      { handler: (args: { bundlerConfigs: unknown[] }) => void },
+    ];
+    const config = {
+      name: 'web',
+      output: { publicPath: 'https://sdk.example.test/package/', uniqueName: 'docs' },
+      plugins: [remotePlugin()],
+    };
+
+    handler({ bundlerConfigs: [config] });
+
+    expect(config.output).toEqual({
+      publicPath: 'https://sdk.example.test/package/',
+      uniqueName: 'docs',
+    });
+  });
 });

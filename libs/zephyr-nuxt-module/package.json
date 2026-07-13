@@ -57,7 +57,8 @@
     "test": "rstest run"
   },
   "dependencies": {
-    "zephyr-agent": "workspace:*"
+    "zephyr-agent": "workspace:*",
+    "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@nuxt/kit": "catalog:nuxt",

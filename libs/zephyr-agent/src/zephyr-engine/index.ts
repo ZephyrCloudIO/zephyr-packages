@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
 import {
+  assertZephyrBuildTarget,
   type Snapshot,
   ZEPHYR_MANIFEST_FILENAME,
   ZE_ENV,
@@ -37,6 +38,8 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
+import { assertCanonicalSnapshotAssetPath } from '../lib/transformers/ze-snapshot-asset-path';
+import { assertTapFederationPublicationMetadata } from '../lib/validation/assert-tap-federation-metadata';
 import {
   convertResolvedDependencies,
   createManifestContent,
@@ -235,13 +238,19 @@ export class ZephyrEngine {
     };
   }
 
-  // todo: extract to a separate fn
+  /** Create one initialized engine and allocate its first logical build generation. */
   static async create(options: ZephyrEngineOptions): Promise<ZephyrEngine> {
+    if (options.target !== undefined) {
+      assertZephyrBuildTarget(options.target, 'ZephyrEngine.create({ target })');
+    }
     const context = options.context || process.cwd();
     const zephyrConfig = getZephyrConfig(context);
 
     ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine({ context, builder: options.builder });
+    if (options.target !== undefined) {
+      ze.env.target = options.target;
+    }
     ze.zephyrConfig = zephyrConfig;
 
     ze_log.init('Initializing: npm package info...');
@@ -319,9 +328,10 @@ export class ZephyrEngine {
 
     const app_config = await this.application_configuration;
     const ze_dependencies = this.npmProperties.zephyrDependencies;
-    const platform = this.env.target;
+    const platform = this.env.target ?? 'web';
+    assertZephyrBuildTarget(platform, 'ZephyrEngine.env.target');
     const build_context_json = {
-      target: this.env.target,
+      target: platform,
       isCI,
       branch: this.gitProperties.git.branch,
       username: app_config.username,
@@ -586,6 +596,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     assetsMap: ZeBuildAssetsMap;
     buildStats: ZephyrBuildStats;
     mfConfig?: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+    mfConfigs?: Pick<ZephyrPluginOptions, 'mfConfigs'>['mfConfigs'];
     // SSR-specific parameter
     snapshotType?: 'csr' | 'ssr';
     entrypoint?: string;
@@ -599,29 +610,48 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         assetsMap: providedAssetsMap,
         buildStats,
         mfConfig,
+        mfConfigs,
         snapshotType,
         entrypoint,
       } = props;
+      // TAP snapshots are only useful when their snapshot and dashboard metadata name
+      // the same complete set of target containers. This is the final shared transport
+      // boundary, so no public adapter can accidentally publish a partial package.
+      assertTapFederationPublicationMetadata({
+        target: zephyr_engine.env?.target,
+        mfConfigs,
+        federation: buildStats.federation,
+      });
       // BuildSession publications are immutable. Preserve the legacy mutation behavior for
       // direct adapter maps while accepting sealed maps without throwing.
       const assetsMap = Object.isFrozen(providedAssetsMap)
         ? { ...providedAssetsMap }
         : providedAssetsMap;
 
+      // Snapshot asset keys are paths after Windows separators are normalized. Build an
+      // index before looking for the manifest so two inputs can never silently publish
+      // to the same path (or make manifest selection depend on object iteration order).
+      const assetsByPath = indexAssetsByCanonicalPath(assetsMap);
+
       await warnPathModeAbsoluteUrls(zephyr_engine, assetsMap);
 
       // Bundler adapters emit this before package post-processors (including TAP's
       // content lock) run. Reuse those exact bytes: regenerating a timestamped manifest
       // here creates two hashes for one path and invalidates the published package lock.
-      const emittedManifest = Object.values(assetsMap).find(
-        (asset) => asset.path === ZEPHYR_MANIFEST_FILENAME
-      );
+      const emittedManifest = assetsByPath.get(ZEPHYR_MANIFEST_FILENAME);
       if (!emittedManifest) {
         const manifest = {
           filepath: ZEPHYR_MANIFEST_FILENAME,
           content: createManifestContent(zephyr_engine.federated_dependencies ?? []),
         };
         const manifestAsset = zeBuildAssets(manifest);
+        if (assetsMap[manifestAsset.hash]) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message:
+              `Generated ${ZEPHYR_MANIFEST_FILENAME} hash ${manifestAsset.hash} ` +
+              'collides with an existing asset map entry.',
+          });
+        }
         assetsMap[manifestAsset.hash] = manifestAsset;
       }
 
@@ -633,6 +663,10 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       }
 
       await zephyr_engine.build_id;
+      assertZephyrBuildTarget(
+        zephyr_engine.env?.target ?? 'web',
+        'ZephyrEngine.env.target'
+      );
       let hash_set = zephyr_engine.resolved_hash_list;
       if (!hash_set && zephyr_engine.hash_list) {
         try {
@@ -655,6 +689,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       const snapshot = await createSnapshot(zephyr_engine, {
         assets: assetsMap,
         mfConfig,
+        mfConfigs,
         snapshotType,
         entrypoint,
       });
@@ -732,6 +767,39 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       throw error;
     }
   }
+}
+
+/**
+ * Direct uploads must already use the exact portable spelling that `createSnapshot`
+ * serializes. Validate identity without rewriting an asset's path, hash, size, metadata,
+ * or bytes.
+ */
+function indexAssetsByCanonicalPath(
+  assetsMap: ZeBuildAssetsMap
+): Map<string, ZeBuildAsset> {
+  const assetsByPath = new Map<string, ZeBuildAsset>();
+
+  for (const asset of Object.values(assetsMap)) {
+    let canonicalPath: string;
+    try {
+      canonicalPath = assertCanonicalSnapshotAssetPath(asset.path);
+    } catch (error) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+    const existing = assetsByPath.get(canonicalPath);
+    if (existing) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message:
+          `Ambiguous asset path "${canonicalPath}": ` +
+          `${existing.hash} and ${asset.hash} would publish to the same location.`,
+      });
+    }
+    assetsByPath.set(canonicalPath, asset);
+  }
+
+  return assetsByPath;
 }
 
 function resetBuildState(zephyr_engine: ZephyrEngine): void {

@@ -6,14 +6,12 @@ export function getAssetsMap(assets: OutputBundle): ZeBuildAssetsMap {
   return buildAssetsMap(assets, extractBuffer, getAssetType);
 }
 
-const extractBuffer = (asset: OutputChunk | OutputAsset): string | undefined => {
+const extractBuffer = (asset: OutputChunk | OutputAsset): Buffer | string | undefined => {
   switch (asset.type) {
     case 'chunk':
       return asset.code;
     case 'asset':
-      return typeof asset.source === 'string'
-        ? asset.source
-        : new TextDecoder().decode(asset.source);
+      return typeof asset.source === 'string' ? asset.source : Buffer.from(asset.source);
     default:
       return void 0;
   }

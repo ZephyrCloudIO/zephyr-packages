@@ -7,6 +7,8 @@ import type { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite' with {
 };
 import {
   ApplicationContext,
+  assertTapFederationPublicationMetadata,
+  assertZephyrBuildTarget,
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
   createManifestContent,
@@ -26,9 +28,10 @@ import {
   type PartialAssetMaps,
   type ZeBuildAssetsMap,
   type ZephyrBuildHooks,
+  type ZephyrBuildTarget,
 } from 'zephyr-agent';
 import { extractEntrypoint } from './internal/extract/extract-entrypoint';
-import { extract_mf_plugin } from './internal/extract/extract_mf_plugin';
+import { extract_mf_plugins } from './internal/extract/extract_mf_plugin';
 import { extract_vite_assets_map } from './internal/extract/extract_vite_assets_map';
 import {
   ensureRuntimePlugin,
@@ -38,6 +41,10 @@ import {
   type ModuleFederationOptions,
 } from './internal/mf-vite-etl/ensure_runtime_plugin';
 import { extract_remotes_dependencies } from './internal/mf-vite-etl/extract-mf-vite-remotes';
+import {
+  createViteModuleFederationPublicationMetadata,
+  type ViteModuleFederationPublicationMetadata,
+} from './internal/mf-vite-etl/federation-metadata';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
 import {
   resolveVitePartialBuildScope,
@@ -52,8 +59,11 @@ function isOriginAbsoluteBase(base: unknown): base is string {
 }
 
 export interface WithZephyrOptions {
+  /** Zephyr build target, including the `tap-app` mini-app artifact family. */
+  target?: ZephyrBuildTarget;
   hooks?: ZephyrBuildHooks;
-  mfConfig?: ModuleFederationOptions;
+  /** One or more Module Federation containers emitted by this Vite build. */
+  mfConfig?: ModuleFederationOptions | ModuleFederationOptions[];
   /** Override automatic CSR/SSR detection for Vite environment builds. */
   snapshotType?: 'csr' | 'ssr';
   /** Server entrypoint relative to the shared snapshot root. */
@@ -247,6 +257,49 @@ function uniqueParticipant(base: string, reserved: readonly string[]): string {
   return participant;
 }
 
+function toModuleFederationConfigArray(
+  mfConfig: WithZephyrOptions['mfConfig']
+): ModuleFederationOptions[] {
+  if (!mfConfig) return [];
+  return Array.isArray(mfConfig) ? mfConfig : [mfConfig];
+}
+
+function attachViteFederationBuildStats<
+  T extends {
+    remote?: string | undefined;
+    mf_manifest?: string | undefined;
+    library_type?: string | undefined;
+    exposes?: unknown;
+    shared?: unknown;
+  },
+>(buildStats: T, federationMetadata: ViteModuleFederationPublicationMetadata) {
+  const federation = federationMetadata.federation;
+  if (!federation || federation.length === 0) {
+    return buildStats;
+  }
+
+  const legacyFederation = federation.length === 1 ? federation[0] : undefined;
+  return {
+    ...buildStats,
+    federation,
+    ...(legacyFederation
+      ? {
+          remote: legacyFederation.remote,
+          mf_manifest: legacyFederation.mf_manifest,
+          library_type: legacyFederation.library_type,
+          exposes: legacyFederation.exposes,
+          shared: legacyFederation.shared,
+        }
+      : {
+          remote: undefined,
+          mf_manifest: undefined,
+          library_type: undefined,
+          exposes: undefined,
+          shared: undefined,
+        }),
+  };
+}
+
 function loadModuleFederationPlugin() {
   let moduleFederation: {
     federation: (options: ModuleFederationOptions) => Plugin[];
@@ -275,6 +328,9 @@ function loadModuleFederationPlugin() {
 function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options.hooks;
+  // TAP package descriptors lock artifact paths and hashes. Vite environment output
+  // directories are only local build details, so they must not become asset prefixes.
+  const preservesLockedArtifactPaths = options.target === 'tap-app';
   const buildInvocationId = `vite-${randomUUID()}`;
   // CI metadata is present for every ordinary Vite build in a workflow. Only use it
   // as a cross-process scope when the finalizer explicitly opts into partial output,
@@ -293,7 +349,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
   let cachedSpecifier: string | undefined;
   let entrypoint: string;
-  let mfConfig = options.mfConfig;
+  const configureModuleFederationRuntime = (config: ModuleFederationOptions) =>
+    preservesLockedArtifactPaths ? config : ensureRuntimePlugin(config);
+  const mfConfigSources = toModuleFederationConfigArray(options.mfConfig).map(
+    configureModuleFederationRuntime
+  );
   let environmentNames: string[] = [];
   let environmentMetadata = new Map<string, ViteEnvironmentMetadata>();
   let sharedOutputRoot: string | undefined;
@@ -304,6 +364,20 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   let baseHref = '';
   let supportsBuildApp = false;
 
+  const registerModuleFederationConfigs = (
+    configs: readonly ModuleFederationOptions[]
+  ) => {
+    for (const config of configs) {
+      const runtimeConfigured = configureModuleFederationRuntime(config);
+      if (!mfConfigSources.includes(runtimeConfigured)) {
+        mfConfigSources.push(runtimeConfigured);
+      }
+    }
+  };
+
+  const getModuleFederationPublicationMetadata = () =>
+    createViteModuleFederationPublicationMetadata(mfConfigSources);
+
   return {
     name: 'with-zephyr',
     // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
@@ -311,15 +385,18 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
     config: (config: UserConfig, env: ConfigEnv) => {
       // If MF was configured separately, inject the Zephyr runtime plugin before MF emits.
-      const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
-      if (detectedMfConfig) {
-        mfConfig = ensureRuntimePlugin(detectedMfConfig);
-      }
+      registerModuleFederationConfigs(
+        extract_mf_plugins(config.plugins ?? []).map((plugin) => plugin._options)
+      );
 
       // Relative assets are valid for hostname deployments and required when any
       // deployment target later selects path addressing. This hook must remain fully
       // synchronous and local because Vite resolves `base` before configResolved.
-      return env.command === 'build' && config.base == null ? { base: './' } : null;
+      return !preservesLockedArtifactPaths &&
+        env.command === 'build' &&
+        config.base == null
+        ? { base: './' }
+        : null;
     },
 
     configResolved: async (config: ResolvedConfig) => {
@@ -357,6 +434,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         .map(({ outputDir }) => outputDir)
         .filter((value): value is string => !!value);
       sharedOutputRoot =
+        !preservesLockedArtifactPaths &&
         outputDirectories.length === environmentNames.length
           ? commonDirectory(outputDirectories)
           : undefined;
@@ -365,6 +443,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       zephyr_defer_create({
         builder: 'vite',
         context: root,
+        target: options.target,
       });
 
       try {
@@ -385,19 +464,29 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         root,
         outDir: config.build?.outDir,
         publicDir: config.publicDir,
+        target: options.target,
       });
 
-      const detectedMfConfig = extract_mf_plugin(config.plugins ?? [])?._options;
-      if (detectedMfConfig) {
-        mfConfig = ensureRuntimePlugin(detectedMfConfig);
-      }
-      mfConfig ??= detectedMfConfig;
+      registerModuleFederationConfigs(
+        extract_mf_plugins(config.plugins ?? []).map((plugin) => plugin._options)
+      );
+      const federationMetadata = getModuleFederationPublicationMetadata();
+      const mfConfigs = federationMetadata.mfConfigs ?? [];
 
-      if (mfConfig) {
+      if (mfConfigs.length > 0 && !preservesLockedArtifactPaths) {
         try {
           // Resolve remotes early so zephyr-manifest.json includes runtime dependencies.
-          const dependencyPairs = extract_remotes_dependencies(root, mfConfig);
-          if (dependencyPairs) {
+          const dependencyPairs = [
+            ...new Map(
+              mfConfigs
+                .flatMap((mfConfig) => extract_remotes_dependencies(root, mfConfig) ?? [])
+                .map((dependency) => [
+                  `${dependency.name}:${dependency.version}`,
+                  dependency,
+                ])
+            ).values(),
+          ];
+          if (dependencyPairs.length > 0) {
             const zephyr_engine = await zephyr_engine_defer;
             await zephyr_engine.resolve_remote_dependencies(
               dependencyPairs,
@@ -467,6 +556,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         id: /\.(mjs|cjs|js|ts|jsx|tsx)/,
       },
       handler: async (code, id) => {
+        // TAP package descriptors lock finalized module bytes. ZE_PUBLIC rewrites are a
+        // web-runtime convenience and must not alter SDK-emitted source files.
+        if (preservesLockedArtifactPaths) {
+          return null;
+        }
         try {
           // Rewrite ZE_PUBLIC_* reads in app code; node_modules stay untouched.
           if (!id.includes('node_modules')) {
@@ -497,7 +591,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     renderChunk: {
       order: 'post',
       handler(code) {
-        if (!cachedSpecifier) return null;
+        if (preservesLockedArtifactPaths || !cachedSpecifier) return null;
 
         // Rolldown exposes generated chunks as read-only objects. Use the transform
         // hook intended for chunk rewrites instead of mutating generateBundle output.
@@ -514,6 +608,12 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     },
 
     generateBundle: async function () {
+      // TAP's SDK may have already emitted and locked this manifest from either the
+      // Rollup bundle or Vite's public/static assets. Let extraction carry those exact
+      // bytes through; upload_assets still supplies the ordinary fallback when absent.
+      if (preservesLockedArtifactPaths) {
+        return;
+      }
       try {
         const zephyr_engine = await zephyr_engine_defer;
         const dependencies = zephyr_engine.federated_dependencies || [];
@@ -619,7 +719,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           });
         }
         let assetPrefix: string | undefined;
-        if (coordinateWithBuildApp && isMultiEnvironment) {
+        if (
+          coordinateWithBuildApp &&
+          isMultiEnvironment &&
+          !preservesLockedArtifactPaths
+        ) {
           if (!sharedOutputRoot) {
             throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
               message: 'Could not determine a shared output root for Vite environments.',
@@ -662,7 +766,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
               message: `Could not associate Vite output directory "${outputDirectory}" with an environment.`,
             });
           }
-          const prefixedAssetsMap = prefixAssetsMap(assetsMap, assetPrefix);
+          const persistedAssetsMap = preservesLockedArtifactPaths
+            ? assetsMap
+            : prefixAssetsMap(assetsMap, assetPrefix);
           await savePartialAssetMap(
             zephyr_engine.application_uid,
             viteEnvironmentOutputKey(
@@ -670,9 +776,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
               outputDirectory,
               outputOptions.file,
               outputOptions.format,
-              prefixedAssetsMap
+              persistedAssetsMap
             ),
-            prefixedAssetsMap,
+            persistedAssetsMap,
             {
               invocationId: buildInvocationId,
               generation: buildGeneration,
@@ -699,9 +805,20 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         if (!zephyr_engine.hasActiveBuild) {
           await zephyr_engine.start_new_build();
         }
+        const federationMetadata = getModuleFederationPublicationMetadata();
+        assertTapFederationPublicationMetadata({
+          target: options.target,
+          mfConfigs: federationMetadata.mfConfigs,
+          federation: federationMetadata.federation,
+        });
         await zephyr_engine.upload_assets({
           assetsMap,
-          buildStats: await zeBuildDashData(zephyr_engine),
+          buildStats: attachViteFederationBuildStats(
+            await zeBuildDashData(zephyr_engine),
+            federationMetadata
+          ),
+          mfConfig: federationMetadata.mfConfig,
+          mfConfigs: federationMetadata.mfConfigs,
           hooks,
           entrypoint,
           snapshotType: options.snapshotType ?? 'csr',
@@ -850,7 +967,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             )
             .map(([name]) => name);
           const inferredSsr = serverEnvironmentNames.length > 0;
-          const snapshotType = options.snapshotType ?? (inferredSsr ? 'ssr' : 'csr');
+          // A TAP package can emit a desktop entry beside a QuickJS/worker target.
+          // Those are SDK-owned package artifacts, not an inferred Zephyr server entry.
+          const snapshotType =
+            options.snapshotType ??
+            (!preservesLockedArtifactPaths && inferredSsr ? 'ssr' : 'csr');
           const finalEntrypoint =
             snapshotType === 'ssr'
               ? inferServerEntrypoint(
@@ -858,7 +979,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                   options.entrypoint,
                   serverEnvironmentNames
                 )
-              : (options.entrypoint ?? entrypoint);
+              : preservesLockedArtifactPaths
+                ? undefined
+                : (options.entrypoint ?? entrypoint);
           if (snapshotType === 'ssr' && !finalEntrypoint) {
             throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
               message:
@@ -888,9 +1011,20 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                   message: 'Vite upload metadata was not prepared.',
                 });
               }
+              const federationMetadata = getModuleFederationPublicationMetadata();
+              assertTapFederationPublicationMetadata({
+                target: options.target,
+                mfConfigs: federationMetadata.mfConfigs,
+                federation: federationMetadata.federation,
+              });
               await zephyrEngine.upload_assets({
                 assetsMap,
-                buildStats: await zeBuildDashData(zephyrEngine),
+                buildStats: attachViteFederationBuildStats(
+                  await zeBuildDashData(zephyrEngine),
+                  federationMetadata
+                ),
+                mfConfig: federationMetadata.mfConfig,
+                mfConfigs: federationMetadata.mfConfigs,
                 hooks,
                 snapshotType: uploadMetadata.snapshotType,
                 entrypoint: uploadMetadata.entrypoint,
@@ -907,6 +1041,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           const session = applicationContext.beginBuild({
             invocationId: `${buildInvocationId}:${generation}`,
             generation,
+            // TAP descriptors bind the exact asset path into their hash. Do not let the
+            // shared session repair aliases, because repairing them would require a
+            // different asset hash than the SDK supplied.
+            strictAssetPaths: preservesLockedArtifactPaths,
             participants: [
               ...environments.map(([name, environment]) => ({
                 name,
@@ -956,11 +1094,22 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 }
 
 export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
+  if (options.target !== undefined) {
+    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+  }
   const plugins: Plugin[] = [];
 
-  if (options.mfConfig) {
+  const mfConfigs = toModuleFederationConfigArray(options.mfConfig);
+  if (mfConfigs.length > 0) {
     const federation = loadModuleFederationPlugin();
-    plugins.push(...federation(ensureRuntimePlugin(options.mfConfig)));
+    const preservesLockedArtifactPaths = options.target === 'tap-app';
+    for (const mfConfig of mfConfigs) {
+      plugins.push(
+        ...federation(
+          preservesLockedArtifactPaths ? mfConfig : ensureRuntimePlugin(mfConfig)
+        )
+      );
+    }
   }
 
   plugins.push(withZephyrCore(options));

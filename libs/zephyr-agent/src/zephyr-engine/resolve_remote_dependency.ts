@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {
+  assertZephyrBuildTarget,
   ZE_API_ENDPOINT,
   ze_api_gateway,
   type ZephyrBuildTarget,
@@ -26,6 +27,9 @@ export async function resolve_remote_dependency(params: {
   platform?: ZephyrBuildTarget;
   build_context: string;
 }): Promise<ZeResolvedDependency> {
+  if (params.platform !== undefined) {
+    assertZephyrBuildTarget(params.platform, 'resolve_remote_dependency({ platform })');
+  }
   try {
     return await request_remote_dependency(params);
   } catch (cause) {

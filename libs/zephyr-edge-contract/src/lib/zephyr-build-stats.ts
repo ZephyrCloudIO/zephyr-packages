@@ -1,8 +1,9 @@
 /* istanbul ignore file */
 
 import type { ZephyrBuildTarget } from './build-target';
+import type { ZephyrModuleFederationBuildMetadata } from './module-federation';
 
-/** Todo: this worst and most outdated model so far, had to be refactored */
+/** Legacy dashboard/build-statistics envelope shared by every Zephyr adapter. */
 export interface ZephyrBuildStats {
   /** @deprecated */
   project: string;
@@ -135,6 +136,11 @@ export interface ZephyrBuildStats {
   exposes?: Record<string, unknown> | Array<string | Record<string, unknown>>;
   /** Serialized Module Federation shared configuration used to publish this build. */
   shared?: Record<string, unknown> | Array<string | Record<string, unknown>>;
+  /**
+   * Every independently published Module Federation container. The singular fields above
+   * are retained only for legacy single-container consumers.
+   */
+  federation?: ZephyrModuleFederationBuildMetadata[];
   /** @deprecated */
   type: unknown;
   /** Public environment variables captured at build time (ZE_PUBLIC_* only) */

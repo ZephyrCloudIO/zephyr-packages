@@ -7,9 +7,19 @@ import type { ZephyrInternalOptions } from '../../types/zephyr-internal-options'
 import { extract_vite_assets_map } from '../extract_vite_assets_map';
 import { loadStaticAssets } from '../load_static_assets';
 
-rs.mock('zephyr-agent', () => ({
-  buildAssetsMap: rs.fn(),
-}));
+rs.mock('zephyr-agent', () => {
+  class MockZephyrError extends Error {
+    constructor(_code: string, options?: { message?: string }) {
+      super(options?.message ?? _code);
+    }
+  }
+
+  return {
+    buildAssetsMap: rs.fn(),
+    ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
+    ZephyrError: MockZephyrError,
+  };
+});
 
 rs.mock('../load_static_assets', () => ({
   loadStaticAssets: rs.fn(),
@@ -91,6 +101,82 @@ describe('extract_vite_assets_map', () => {
       expect.any(Function)
     );
     expect(result).toEqual(mockBuildResult);
+  });
+
+  it('rejects runtime bytes that conflict with a static asset at the same path', async () => {
+    const staticBytes = Uint8Array.from([0x01, 0x02, 0x03]);
+    const runtimeBytes = Uint8Array.from([0x01, 0x02, 0x04]);
+    mockLoadStaticAssets.mockResolvedValue({
+      'manifest.tap.lock': {
+        type: 'asset',
+        source: staticBytes,
+      } as OutputAsset,
+    });
+
+    await expect(
+      extract_vite_assets_map(mockZephyrEngine, {
+        ...mockViteInternalOptions,
+        assets: {
+          'manifest.tap.lock': {
+            type: 'asset',
+            source: runtimeBytes,
+          } as OutputAsset,
+        },
+      })
+    ).rejects.toThrow('Vite emitted conflicting assets for "manifest.tap.lock".');
+    expect(mockBuildAssetsMap).not.toHaveBeenCalled();
+  });
+
+  it('allows byte-identical runtime and static assets at the same path', async () => {
+    const bytes = Uint8Array.from([0xff, 0x00, 0x80]);
+    const staticAsset = {
+      type: 'asset',
+      source: bytes,
+    } as OutputAsset;
+    mockLoadStaticAssets.mockResolvedValue({
+      'manifest.tap.lock': staticAsset,
+    });
+    mockBuildAssetsMap.mockReturnValue({});
+
+    await extract_vite_assets_map(mockZephyrEngine, {
+      ...mockViteInternalOptions,
+      assets: {
+        'manifest.tap.lock': {
+          type: 'asset',
+          source: Uint8Array.from(bytes),
+        } as OutputAsset,
+      },
+    });
+
+    const submittedAssets = mockBuildAssetsMap.mock.calls[0]?.[0] as Record<
+      string,
+      unknown
+    >;
+    expect(submittedAssets).toEqual({ 'manifest.tap.lock': staticAsset });
+  });
+
+  it('rejects byte-identical TAP bundle aliases before normalizing their path', async () => {
+    const bytes = Uint8Array.from([0xff, 0x00, 0x80]);
+    mockLoadStaticAssets.mockResolvedValue({});
+
+    await expect(
+      extract_vite_assets_map(mockZephyrEngine, {
+        ...mockViteInternalOptions,
+        target: 'tap-app',
+        assets: {
+          'tap/asset-lock.json': {
+            type: 'asset',
+            source: bytes,
+          } as OutputAsset,
+          'tap\\asset-lock.json': {
+            type: 'asset',
+            source: Uint8Array.from(bytes),
+          } as OutputAsset,
+        },
+      })
+    ).rejects.toThrow('canonical snapshot spelling');
+
+    expect(mockBuildAssetsMap).not.toHaveBeenCalled();
   });
 
   it('should skip vite inspect artifacts from upload map', async () => {

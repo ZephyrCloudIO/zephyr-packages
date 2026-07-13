@@ -20,8 +20,17 @@ function flattenPlugins(plugins: readonly PluginOption[]): Plugin[] {
   return flatPlugins.filter(isPlugin);
 }
 
+export function extract_mf_plugins(
+  plugins: readonly PluginOption[]
+): Array<Plugin & ViteMFPlugin> {
+  return flattenPlugins(plugins).filter(
+    (plugin): plugin is Plugin & ViteMFPlugin =>
+      plugin.name === 'module-federation-vite' &&
+      '_options' in plugin &&
+      !!(plugin as Partial<ViteMFPlugin>)._options
+  );
+}
+
 export function extract_mf_plugin(plugins: readonly PluginOption[]) {
-  return flattenPlugins(plugins).find(
-    (plugin) => plugin.name === 'module-federation-vite'
-  ) as (Plugin & ViteMFPlugin) | undefined;
+  return extract_mf_plugins(plugins)[0];
 }

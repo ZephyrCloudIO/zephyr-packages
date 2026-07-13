@@ -16,11 +16,7 @@ export interface ConvertToGraphParams {
   filename?: string;
   /** Key of remotes as a string of arrays */
   remotes?: unknown;
-  /**
-   * Chunk of the remote entry,
-   *
-   * // TODO: in MF2 should it be js.bundle or mf-manifest.json?
-   */
+  /** Optional compiler chunk associated with a legacy remote entry. */
   federationRemoteEntry: XStatsChunk | undefined;
   /**
    * Module compilation results return from getStats(), typically includes all chunks and

@@ -1,4 +1,8 @@
 import type { ZephyrBuildTarget } from '../build-target';
+import type {
+  ZephyrLegacyModuleFederationConfig,
+  ZephyrModuleFederationConfig,
+} from '../module-federation';
 
 export interface ZephyrPluginOptions {
   pluginName: string;
@@ -25,15 +29,10 @@ export interface ZephyrPluginOptions {
     commit: string;
     tags?: string[];
   };
-  mfConfig?: {
-    name: string;
-    filename: string;
-    exposes?: Record<string, string>;
-    remotes?: Record<string, string>;
-    shared?: Record<string, unknown>;
-    runtimePlugins?: string[] | undefined;
-    manifest?: boolean | { fileName?: string; filePath?: string };
-  };
+  /** Legacy single-container federation config. */
+  mfConfig?: ZephyrLegacyModuleFederationConfig;
+  /** Every independently published config in a multi-container build. */
+  mfConfigs?: ZephyrModuleFederationConfig[];
   // for react native and dynamic platforms
   target?: ZephyrBuildTarget | undefined;
   // For react native host app which doesn't want to be "always uploaded and deployed"

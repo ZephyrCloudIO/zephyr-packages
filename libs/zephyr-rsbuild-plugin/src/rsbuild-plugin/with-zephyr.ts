@@ -1,5 +1,9 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
-import { ZephyrEngine, type ZephyrBuildTarget } from 'zephyr-agent';
+import {
+  assertZephyrBuildTarget,
+  ZephyrEngine,
+  type ZephyrBuildTarget,
+} from 'zephyr-agent';
 import {
   withZephyr as rspackWithZephyr,
   type ZephyrBuildHooks,
@@ -18,6 +22,10 @@ export interface ZephyrRsbuildPluginOptions {
 type RspackWithZephyrConfig = Parameters<ReturnType<typeof rspackWithZephyr>>[0];
 
 export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin {
+  const target = options?.target;
+  if (target !== undefined) {
+    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+  }
   return {
     name: 'zephyr-rsbuild-plugin',
     setup(api) {
@@ -34,9 +42,10 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
           const engine = await ZephyrEngine.create({
             builder: 'rspack',
             context: bundlerConfigs[0]?.context,
+            target,
           });
-          if (options?.target) {
-            engine.env.target = options.target;
+          if (target !== undefined) {
+            engine.env.target = target;
           }
           try {
             const { coordinator, compilers } = coordinateXPackCompilers(
@@ -59,6 +68,7 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
               // The real MF plugin is already present in the config and rspackWithZephyr will extract from it
               const result = await rspackWithZephyr({
                 ...options,
+                target,
                 __engine: engine,
                 __coordinator: coordinator,
                 __participant: compilers[index]?.participant,

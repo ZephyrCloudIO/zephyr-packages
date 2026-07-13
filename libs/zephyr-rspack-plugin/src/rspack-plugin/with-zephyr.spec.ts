@@ -13,6 +13,11 @@ const mocks = rs.hoisted(() => {
   };
   return {
     engine,
+    assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
+      if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
+        throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
+      }
+    }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
     handleGlobalError: rs.fn(),
@@ -26,6 +31,7 @@ const mocks = rs.hoisted(() => {
 });
 
 rs.mock('zephyr-agent', () => ({
+  assertZephyrBuildTarget: mocks.assertBuildTarget,
   getGlobal: mocks.getGlobal,
   handleGlobalError: mocks.handleGlobalError,
   ZephyrEngine: { create: mocks.create },
@@ -108,6 +114,13 @@ describe('Rspack withZephyr compiler arrays', () => {
       'client',
       'server',
     ]);
+  });
+
+  it('rejects unsupported targets before creating an engine', () => {
+    expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+      'withZephyr({ target }) must be one of'
+    );
+    expect(mocks.create).not.toHaveBeenCalled();
   });
 
   it('rejects coordinated configuration errors instead of waiting for a missing compiler', async () => {

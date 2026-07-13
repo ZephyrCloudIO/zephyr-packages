@@ -2,12 +2,13 @@
 
 ![Vite compatibility](https://registry.vite.dev/api/badges?package=vite-plugin-tanstack-start-zephyr&tool=vite)
 
-Vite plugin for deploying TanStack Start applications to Zephyr with SSR support.
+Vite plugin for deploying TanStack Start applications to Zephyr with SSR and TAP CSR
+support.
 
 ## Overview
 
 This plugin runs after TanStack Start finishes building, packages the `dist/`
-output, and uploads the server and client assets to Zephyr for SSR deployment.
+output, and uploads it as an SSR deployment or a TAP CSR package.
 
 ## Installation
 
@@ -36,19 +37,57 @@ projects, `withZephyr()` is enough.
 
 ### Plugin options
 
-| Option       | Type     | Required | Description                                                          |
-| ------------ | -------- | -------- | -------------------------------------------------------------------- |
-| `outputDir`  | `string` | No       | Build output root. Defaults to `dist/`.                              |
-| `entrypoint` | `string` | No       | Server entry relative to `outputDir`. Defaults to `server/index.js`. |
+| Option         | Type             | Required | Description                                                              |
+| -------------- | ---------------- | -------- | ------------------------------------------------------------------------ |
+| `target`       | `string`         | No       | Zephyr artifact family; use `tap-app` for TAP packages.                  |
+| `mfConfigs`    | `array`          | TAP      | Every Module Federation container included in the snapshot.              |
+| `federation`   | `array`          | TAP      | Matching build-stat metadata for each `mfConfigs` entry.                 |
+| `outputDir`    | `string`         | No       | Build output root. Defaults to `dist/`.                                  |
+| `snapshotType` | `'csr' \| 'ssr'` | No       | TAP defaults to CSR; ordinary TanStack Start deployments default to SSR. |
+| `entrypoint`   | `string`         | No       | Server entry relative to `outputDir`, used only for an SSR snapshot.     |
 
 Example with overrides:
 
 ```typescript
+const tapFederationMetadata = {
+  mfConfigs: [
+    { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs', library: { type: 'module' } },
+    { name: 'mobile', filename: 'targets/mobile/remoteEntry.mjs', library: { type: 'module' } },
+    { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs', library: { type: 'module' } },
+  ],
+  federation: [
+    { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs', library_type: 'module' },
+    { name: 'mobile', remote: 'targets/mobile/remoteEntry.mjs', library_type: 'module' },
+    { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs', library_type: 'module' },
+  ],
+};
+
 withZephyr({
+  target: 'tap-app',
   outputDir: 'dist',
-  entrypoint: 'server/index.js',
+  ...tapFederationMetadata,
 });
 ```
+
+TAP output is uploaded as a CSR package by default, so a desktop/mobile/QuickJS ESM
+package does not need a `server/index.js`. To publish an actual SSR package, opt in
+explicitly:
+
+```typescript
+withZephyr({
+  target: 'tap-app',
+  snapshotType: 'ssr',
+  entrypoint: 'server/index.js',
+  ...tapFederationMetadata,
+});
+```
+
+TAP publication requires both non-empty metadata arrays. Every `mfConfigs` item must
+have exactly one `federation` item with the same `name` and with
+`filename === remote`; mismatched metadata fails before the build starts. TanStack
+Start does not infer this information from framework plugins. A valid singleton is
+also exposed through the legacy `mfConfig` field for older consumers; multi-container
+packages use only the complete `mfConfigs` array.
 
 ## How It Works
 

@@ -1,3 +1,9 @@
+import type { ZephyrBuildHooks, ZephyrBuildTarget } from 'zephyr-agent';
+import type {
+  ZephyrModuleFederationBuildMetadata,
+  ZephyrModuleFederationConfig,
+} from 'zephyr-edge-contract';
+
 export type SnapshotType = 'csr' | 'ssr';
 
 export interface NitroOutputOptions {
@@ -27,9 +33,13 @@ export interface NuxtLike {
   hook: (name: 'close', fn: () => void | Promise<void>) => void;
 }
 
-import type { ZephyrBuildHooks } from 'zephyr-agent';
-
 export interface ZephyrNuxtOptions {
+  /** Zephyr artifact family, including `tap-app` for TAP packages. */
+  target?: ZephyrBuildTarget;
+  /** Every JSON-serializable Module Federation config emitted by the package SDK. */
+  mfConfigs?: ZephyrModuleFederationConfig[];
+  /** Dashboard metadata paired with each entry in `mfConfigs`. */
+  federation?: ZephyrModuleFederationBuildMetadata[];
   /** Override Nitro output directory (defaults to nitro.options.output.dir). */
   outputDir?: string;
   /** Explicit SSR entrypoint (relative to outputDir). */

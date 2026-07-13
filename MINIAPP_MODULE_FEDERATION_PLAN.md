@@ -6,32 +6,40 @@ plan follows unchanged.
 
 ## Repository checklist
 
-- [ ] Make `tap-app` a first-class Zephyr build/publication target alongside
-      `web` and `mobile`.
-- [ ] Validate and publish the canonical TAP package descriptor and immutable
-      graph lock, including package, publisher, namespace, release, target,
-      contribution, permission, event, lifecycle, presentation, and collection
-      identities.
-- [ ] Support target-specific ESM Module Federation remote entries and exposed
-      modules for desktop, mobile, QuickJS, worker, Node, and workflow-host.
-- [ ] Publish parent collections that reference exact child package/release
-      identities without merging child authority or lifecycle.
-- [ ] Generate and verify per-asset SHA-256/SRI metadata for remote entries,
-      chunks, descriptors, PNG/SVG role assets, and transitive runtime assets.
-- [ ] Emit immutable version/snapshot and movable-tag metadata required by
-      pinned, next-launch, OTA, and follow-tag policies.
-- [ ] Support watch builds that publish only the mini-app and advance an
-      authorized Zephyr development tag.
-- [ ] Add fixture, schema, integrity, multi-target, collection, and publication
-      tests plus documentation and release metadata.
+- [x] Make `tap-app` a first-class Zephyr build/publication target alongside
+      `web`, `ios`, and `android`, with eager runtime validation at every public
+      adapter boundary.
+- [x] Transport a TAP SDK-validated descriptor and immutable graph/asset lock
+      without changing its bytes, canonical package-relative paths, Zephyr
+      hashes, or sizes. The TAP SDK remains responsible for semantic descriptor,
+      SHA-256/SRI, image, and active-content validation.
+- [x] Carry target-specific ESM Module Federation entries and exposed modules as
+      typed snapshot `mfConfigs` and build-stat `federation` arrays, with no
+      first-container fallback for multi-entry builds.
+- [x] Carry independently addressable collection/child-remote metadata without
+      synthesizing parent graph, authority, or lifecycle semantics.
+- [x] Preserve descriptor, manifest, lock, PNG/SVG, chunk, and arbitrary binary
+      asset bytes through every supported generic adapter; reject path aliases,
+      traversal, duplicate canonical paths, and unsafe split output layouts.
+- [x] Publish immutable snapshots with typed target metadata. Tag authorization,
+      advancement, resolution, and follow-tag notification remain Zephyr
+      control-plane responsibilities.
+- [x] Provide a mini-app-only CLI watch that coalesces settled output changes and
+      never fabricates a mutable tag locally.
+- [x] Add package-side contract, integrity, multi-target, binary, and negative
+      tests plus the publication documentation. Releasing the changed packages
+      remains the downstream release step.
+
+The checklist above is intentionally limited to `zephyr-packages`. It does not
+claim TAP SDK package semantics or control-plane tag/Marketplace implementation.
 
 ---
 
 # TAP Mini-App Package, Module Federation, Marketplace, and Runtime Plan
 
-Status: implementation in progress; verified foundation and acceptance evidence recorded in Section 19  
-Primary product work: [ZephyrCloudIO/ze-agency-tauri#5881](https://github.com/ZephyrCloudIO/ze-agency-tauri/pull/5881)  
-Marketplace approval design/migration dependency: [ZephyrCloudIO/ze-agency-tauri#3891](https://github.com/ZephyrCloudIO/ze-agency-tauri/pull/3891); the audited PR cannot merge unchanged into the descriptor-backed package path  
+Status: `zephyr-packages` implementation complete; cross-repository release gates remain in Section 19.
+Primary product work: [ZephyrCloudIO/ze-agency-tauri#5881](https://github.com/ZephyrCloudIO/ze-agency-tauri/pull/5881)
+Marketplace approval design/migration dependency: [ZephyrCloudIO/ze-agency-tauri#3891](https://github.com/ZephyrCloudIO/ze-agency-tauri/pull/3891); the audited PR cannot merge unchanged into the descriptor-backed package path
 Last research/coverage review: 2026-07-12
 
 ## 1. Purpose
@@ -1437,13 +1445,18 @@ Changes:
   `ze-agency-tauri/packages/sdk`, not the generic Zephyr plugin.
 - Transport multi-entry collections and independently versioned child remotes;
   parent graph semantics remain the TAP package contract.
-- Publish immutable snapshots and update tag selectors for pinned, next-launch, OTA, and development follow-tag policies.
+- Publish immutable snapshots suitable for pinned, next-launch, OTA, and development follow-tag policies. Tag selection, authorization, and advancement remain Zephyr control-plane responsibilities.
 - Add a watch command and diagnostics suitable for SDK-only mini-app development.
 - Add conformance fixtures for desktop/mobile/background exposes and descriptor drift.
 
 Likely packages include `zephyr-edge-contract`, `zephyr-agent`, `zephyr-cli`, `zephyr-rsbuild-plugin`, `zephyr-rspack-plugin`, `zephyr-webpack-plugin`, and shared internals.
 
 Known target-type touchpoints include `libs/zephyr-agent/src/zephyr-engine/index.ts`, `libs/zephyr-edge-contract/src/lib/ze-api/converted-graph.ts`, `libs/zephyr-edge-contract/src/lib/plugin-options/zephyr-webpack-plugin-options.ts`, and the federation dashboard plugin options under `libs/zephyr-xpack-internal`.
+
+Package-side completion means target propagation, byte-preserving transport,
+multi-entry metadata, diagnostics, and tests are implemented here. It does not
+mean that this generic repository creates a TAP descriptor, computes or approves
+its SRI graph, authorizes a tag, or activates a package in a TAP host.
 
 ### 13.4 `zephyr-cloud-io` — Zephyr control plane
 
@@ -1944,7 +1957,7 @@ superseded and must not be used to infer current support.
 | `ze-agency-tauri`                                       | Canonical validated, digest/SRI-locked descriptor/graph; all six manual source resolvers; recursive pinned parent collections; typed trust/review/listing/price/entitlement validation; ESM multi-target assembly; desktop/mobile target projection; portable loopback asset broker; exact WebView and QuickJS authority; target-scoped readiness; durable UI/QuickJS checkpoints; lifecycle and event brokers; Apps rail/pins; PNG/passive-SVG presentation; converted Design Viewer and Kent course packages | Cryptographic publisher/listing-release signing and namespace ownership; authoritative Marketplace catalog/install/purchase APIs; production consumers for most contribution kinds; mobile frontend Apps/frame host and device acceptance; host `tap.*` event adapters; full role/delegation/consent propagation; production fresh-realm OTA and cross-release checkpoint migration |
 | `core`                                                  | Local runtime application hooks for `prePause`, `pause`, `preResume`, `resume`, and lifecycle errors; ESM remote-entry type preservation                                                                                                                                                                                                                                                                                                                                                                       | Publish these local commits and replace the product compatibility seam with a released dependency; broader TAP phases remain TAP-owned                                                                                                                                                                                                                                              |
 | `tap-miniapps`                                          | Federated Games/Playground packages, collection fixtures, plural PNG/SVG roles, lifecycle ABI verification, and a physical local-Zephyr publish/follow-tag proof                                                                                                                                                                                                                                                                                                                                               | Add fixtures as each currently schema-only contribution gets a real host consumer                                                                                                                                                                                                                                                                                                   |
-| `zephyr-packages`                                       | Propagates the `tap-app` target and ESM/manifest integrity through local Rsbuild/Rspack publication                                                                                                                                                                                                                                                                                                                                                                                                            | Release the changed packages; descriptor and asset-lock assembly correctly remain in the TAP SDK rather than this generic plugin                                                                                                                                                                                                                                                    |
+| `zephyr-packages`                                       | Propagates and eagerly validates `tap-app` through the edge contract, agent, CLI, Rsbuild/Rspack/Webpack/Vite and supported framework adapters; preserves descriptor/lock/binary bytes and canonical paths; publishes typed multi-container Federation metadata; rejects unsupported native adapters; and provides mini-app-only watch publication.                                                                                                                                                            | Release the changed packages. Descriptor/asset-lock assembly and semantic validation remain in the TAP SDK; tag authority and Marketplace/control-plane metadata remain in their owning services.                                                                                                                                                                                   |
 | `zephyr-cloud-io`                                       | Accepts `tap-app` publications, resolves a followed tag to an immutable snapshot, and issues five-minute application-scoped live-reload credentials through authenticated Cerbos policy; Socket.IO verifies the exact app and rejects literal `*` browser CORS while retaining explicitly configured origin patterns                                                                                                                                                                                           | Production deployment/client release, TAP client ticket renewal/rejoin integration, Zephyr publication-namespace proof, and Zephyr organization-profile/logo binding. Marketplace publisher/listing services remain product-owned                                                                                                                                                   |
 | `tap-e2e`                                               | Source preflight, SRI, icons, pins, retained lifecycle, converted apps, and atomic QuickJS fixture coverage on the feature branch                                                                                                                                                                                                                                                                                                                                                                              | Live CEF/web execution in a credentialed environment, full six-source acceptance, Marketplace/payment, native mobile, and future contribution consumers                                                                                                                                                                                                                             |
 | `ze-workflows`                                          | Remains the canonical workflow/node/sidecar authority; no duplicate product-side engine was introduced                                                                                                                                                                                                                                                                                                                                                                                                         | Implement and release the Federation workflow-host adapter here first, then update the product-side pin/host adapter                                                                                                                                                                                                                                                                |

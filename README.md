@@ -53,6 +53,9 @@ repository linting and formatting use Oxlint and Oxfmt.
 pnpm install
 ```
 
+For descriptor-backed TAP mini-app publication, see
+[the `tap-app` publication contract](docs/tap-app-publication.md).
+
 ## Available Scripts
 
 ### Development

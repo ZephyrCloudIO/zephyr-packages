@@ -7,23 +7,38 @@ import { withZephyr } from '../with-zephyr';
 const rspressPluginMock = rs.fn((_: any) => ({ name: 'mock-ssg-plugin' }));
 
 rs.mock('../zephyrRspressSSGPlugin', () => ({
-  zephyrRspressSSGPlugin: (config: any) => rspressPluginMock(config),
+  zephyrRspressSSGPlugin: (...args: any[]) => rspressPluginMock(...args),
 }));
 
 const rsbuildPluginMock = rs.fn(() => ({ name: 'mock-rsbuild-plugin' }));
 const portableFederationPlugin = { name: 'mock-mf-public-path-plugin' };
+let onModuleFederationPlugins: ((plugins: any[]) => void) | undefined;
+const moduleFederationPublicPathPluginMock = rs.fn((options?: any) => {
+  onModuleFederationPlugins = options?.onModuleFederationPlugins;
+  return portableFederationPlugin;
+});
 
 rs.mock('../internal/assets/moduleFederationPublicPathPlugin', () => ({
-  moduleFederationPublicPathPlugin: () => portableFederationPlugin,
+  moduleFederationPublicPathPlugin: (...args: any[]) =>
+    moduleFederationPublicPathPluginMock(...args),
 }));
 
 rs.mock('zephyr-rsbuild-plugin', () => ({
-  withZephyr: () => rsbuildPluginMock(),
+  withZephyr: (...args: any[]) => rsbuildPluginMock(...args),
 }));
 
 describe('withZephyr', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    onModuleFederationPlugins = undefined;
+  });
+
+  it('rejects an unsupported untyped target before configuring Rspress', () => {
+    expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+      'withZephyr({ target }) must be one of'
+    );
+    expect(rspressPluginMock).not.toHaveBeenCalled();
+    expect(rsbuildPluginMock).not.toHaveBeenCalled();
   });
 
   it('should add the zephyrRspressSSGPlugin when ssg is true', async () => {
@@ -41,7 +56,7 @@ describe('withZephyr', () => {
       false
     );
 
-    expect(rspressPluginMock).toHaveBeenCalledWith(config);
+    expect(rspressPluginMock).toHaveBeenCalledWith(config, { mfConfig: [] });
     expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
     expect(result?.builderConfig?.plugins).toContain(portableFederationPlugin);
     expect(result).toEqual(config);
@@ -69,6 +84,57 @@ describe('withZephyr', () => {
       name: 'mock-rsbuild-plugin',
     });
     expect(addPlugin).not.toHaveBeenCalled();
+  });
+
+  it('forwards tap-app to both the SSG and Rsbuild publication paths', async () => {
+    const ssgConfig = { ssg: true, outDir: 'dist' };
+    await withZephyr({ target: 'tap-app' }).config?.(
+      ssgConfig as any,
+      { addPlugin: rs.fn(), removePlugin: rs.fn() },
+      false
+    );
+    expect(rspressPluginMock).toHaveBeenCalledWith(ssgConfig, {
+      target: 'tap-app',
+      mfConfig: [],
+    });
+    expect(moduleFederationPublicPathPluginMock).toHaveBeenCalledWith(
+      expect.objectContaining({ target: 'tap-app' })
+    );
+
+    const builderConfig = { ssg: false, builderConfig: { plugins: [] } };
+    await withZephyr({ target: 'tap-app' }).config?.(
+      builderConfig as any,
+      { addPlugin: rs.fn(), removePlugin: rs.fn() },
+      false
+    );
+    expect(rsbuildPluginMock).toHaveBeenCalledWith({ target: 'tap-app' });
+  });
+
+  it('retains every SSG compiler federation plugin for publication', async () => {
+    const config = { ssg: true, outDir: 'dist' };
+    await withZephyr({ target: 'tap-app' }).config?.(
+      config as any,
+      { addPlugin: rs.fn(), removePlugin: rs.fn() },
+      false
+    );
+    const desktop = {
+      name: 'RspackModuleFederationPlugin',
+      apply() {},
+      _options: { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+    };
+    const worker = {
+      name: 'RspackModuleFederationPlugin',
+      apply() {},
+      _options: { name: 'worker', filename: 'targets/worker/remoteEntry.mjs' },
+    };
+
+    expect(onModuleFederationPlugins).toEqual(expect.any(Function));
+    onModuleFederationPlugins?.([desktop, worker]);
+
+    expect(rspressPluginMock).toHaveBeenCalledWith(
+      config,
+      expect.objectContaining({ mfConfig: [desktop, worker] })
+    );
   });
 
   it('should handle missing builderConfig when ssg is false', async () => {
@@ -216,7 +282,7 @@ describe('withZephyr', () => {
         false
       );
 
-      expect(rspressPluginMock).toHaveBeenCalledWith(config);
+      expect(rspressPluginMock).toHaveBeenCalledWith(config, { mfConfig: [] });
       expect(addPlugin).toHaveBeenCalledWith({ name: 'mock-ssg-plugin' });
       expect(result?.builderConfig?.plugins).toContain(portableFederationPlugin);
       expect(result).toEqual(config);

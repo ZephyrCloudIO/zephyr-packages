@@ -1,10 +1,15 @@
 import * as path from 'node:path';
 import { promises as fs } from 'node:fs';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { ZeErrors, ZephyrError, type ZephyrBuildTarget } from 'zephyr-agent';
 
 export interface VinextBuildAsset {
   content: Buffer;
   type: string;
+}
+
+/** Controls target-specific transport transformations for finalized Vinext output. */
+export interface VinextOutputCollectionOptions {
+  target?: ZephyrBuildTarget;
 }
 
 export interface RscEnvironmentBuildConfigLike {
@@ -105,7 +110,15 @@ export function stripRedundantNodeSideEffectImports(code: string): string {
     .replace(REDUNDANT_NODE_SIDE_EFFECT_INLINE_IMPORT_RE, '');
 }
 
-function workerAssetContent(snapshotPath: string, content: Buffer): Buffer {
+function workerAssetContent(
+  snapshotPath: string,
+  content: Buffer,
+  options: VinextOutputCollectionOptions
+): Buffer {
+  if (options.target === 'tap-app') {
+    return content;
+  }
+
   if (!snapshotPath.startsWith('server/') || !/\.[cm]?js$/i.test(snapshotPath)) {
     return content;
   }
@@ -140,7 +153,8 @@ export function collectAssetsFromBundle(
   assets: Record<string, VinextBuildAsset>,
   outputRootDir: string,
   bundleDir: string,
-  bundle: OutputBundleLike
+  bundle: OutputBundleLike,
+  options: VinextOutputCollectionOptions = {}
 ): void {
   const relativeDir = getRelativeBundleDir(outputRootDir, bundleDir);
 
@@ -151,7 +165,7 @@ export function collectAssetsFromBundle(
       : normalizedFileName;
 
     assets[snapshotPath] = {
-      content: workerAssetContent(snapshotPath, toBuffer(item)),
+      content: workerAssetContent(snapshotPath, toBuffer(item), options),
       type: getAssetType(snapshotPath),
     };
   }
@@ -235,7 +249,8 @@ export async function collectStaticClientAssets(
 /** Collect the complete Vinext output after every Vite environment has finished. */
 export async function collectOutputDirectoryAssets(
   assets: Record<string, VinextBuildAsset>,
-  outputRootDir: string
+  outputRootDir: string,
+  options: VinextOutputCollectionOptions = {}
 ): Promise<void> {
   if (!(await pathExists(outputRootDir))) {
     throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
@@ -247,7 +262,7 @@ export async function collectOutputDirectoryAssets(
     const snapshotPath = normalizePathForSnapshot(path.relative(outputRootDir, filePath));
     const content = await fs.readFile(filePath);
     assets[snapshotPath] = {
-      content: workerAssetContent(snapshotPath, content),
+      content: workerAssetContent(snapshotPath, content, options),
       type: getAssetType(snapshotPath),
     };
   }
@@ -312,8 +327,13 @@ function serializeBuildAssetsManifest(manifest: unknown): Buffer {
 export function injectRscAssetsManifest(
   assets: Record<string, VinextBuildAsset>,
   outputRootDir: string,
-  manager: RscPluginManagerLike | undefined
+  manager: RscPluginManagerLike | undefined,
+  options: VinextOutputCollectionOptions = {}
 ): void {
+  if (options.target === 'tap-app') {
+    return;
+  }
+
   const manifest = manager?.buildAssetsManifest;
   const environments = manager?.config?.environments;
   if (!manifest || !environments) {

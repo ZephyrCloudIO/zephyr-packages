@@ -1,9 +1,11 @@
 import type { Configuration } from 'webpack';
 import {
+  assertZephyrBuildTarget,
   getGlobal,
   handleGlobalError,
   ze_log,
   ZephyrEngine,
+  type ZephyrBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
@@ -29,7 +31,27 @@ function mergeResolvedDependencies(
   return [...merged.values()];
 }
 
+function resolveBuildTarget(
+  options: ZephyrWebpackPluginOptions | undefined
+): ZephyrBuildTarget | undefined {
+  const target = options?.target;
+  if (target !== undefined) {
+    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+  }
+  return target;
+}
+
+function applyBuildTarget(
+  engine: ZephyrEngine,
+  target: ZephyrBuildTarget | undefined
+): void {
+  if (target !== undefined) {
+    engine.env.target = target;
+  }
+}
+
 export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
+  const target = resolveBuildTarget(zephyrPluginOptions);
   return async <T extends Configuration | Configuration[]>(config: T): Promise<T> => {
     // Skip Zephyr execution during Nx graph calculation
     // Nx sets global.NX_GRAPH_CREATION = true during graph creation
@@ -46,7 +68,9 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
     const engine = await ZephyrEngine.create({
       builder: 'webpack',
       context: config[0]?.context,
+      target,
     });
+    applyBuildTarget(engine, target);
     try {
       const { coordinator, compilers } = coordinateXPackCompilers(engine, config, {
         snapshotType: zephyrPluginOptions?.snapshotType,
@@ -55,6 +79,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
       for (const [index, item] of config.entries()) {
         await _zephyr_configuration(item as WebpackConfiguration, {
           ...zephyrPluginOptions,
+          target,
           __engine: engine,
           __coordinator: coordinator,
           __participant: compilers[index]?.participant,
@@ -75,13 +100,19 @@ async function _zephyr_configuration(
 ): Promise<Configuration> {
   let zephyr_engine: ZephyrEngine | undefined;
   try {
+    const target = resolveBuildTarget(_zephyrOptions);
     // create instance of ZephyrEngine to track the application
     zephyr_engine =
       _zephyrOptions?.__engine ??
       (await ZephyrEngine.create({
         builder: 'webpack',
         context: config.context,
+        target,
       }));
+
+    // Remote resolution is target-sensitive, so the engine must be configured before
+    // extracting and resolving Module Federation dependencies.
+    applyBuildTarget(zephyr_engine, target);
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);

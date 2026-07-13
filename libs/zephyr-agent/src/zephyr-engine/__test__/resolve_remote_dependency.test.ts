@@ -75,6 +75,19 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     expect(requestedUrl.searchParams.get('build_context')).toBe('local');
   });
 
+  it('rejects an unsupported target before making a dependency request', async () => {
+    await expect(
+      resolve_remote_dependency({
+        application_uid,
+        version,
+        platform: 'desktop' as never,
+        build_context: 'local',
+      })
+    ).rejects.toThrow('resolve_remote_dependency({ platform }) must be one of');
+
+    expect(axiosMock.get).not.toHaveBeenCalled();
+  });
+
   it('should throw ZephyrError on not ok response', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
     axiosMock.get.mockRejectedValueOnce({

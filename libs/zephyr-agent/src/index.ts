@@ -25,6 +25,7 @@ export {
   readDirRecursive,
   readDirRecursiveWithContents,
   type FileInfo,
+  type ReadDirRecursiveOptions,
 } from './lib/utils/read-dir-recursive';
 export {
   uploadOutputToZephyr,
@@ -79,6 +80,10 @@ export {
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export {
+  assertTapFederationPublicationMetadata,
+  type TapFederationPublicationMetadata,
+} from './lib/validation/assert-tap-federation-metadata';
+export {
   convertResolvedDependencies,
   createManifestAsset,
   createManifestContent,
@@ -132,7 +137,13 @@ export {
 } from './zephyr-engine';
 export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
-export type { ZephyrBuildTarget } from 'zephyr-edge-contract';
+export { assertZephyrBuildTarget } from 'zephyr-edge-contract';
+export type {
+  ZephyrBuildTarget,
+  ZephyrLegacyModuleFederationConfig,
+  ZephyrModuleFederationBuildMetadata,
+  ZephyrModuleFederationConfig,
+} from 'zephyr-edge-contract';
 
 // Environment variable utilities
 export {

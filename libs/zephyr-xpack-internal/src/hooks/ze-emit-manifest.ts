@@ -1,4 +1,9 @@
-import { createManifestContent, ze_log, type ZephyrEngine } from 'zephyr-agent';
+import {
+  createManifestContent,
+  ze_log,
+  ZEPHYR_MANIFEST_FILENAME,
+  type ZephyrEngine,
+} from 'zephyr-agent';
 
 interface EmitManifestOptions {
   pluginName: string;
@@ -21,6 +26,7 @@ interface EmitManifestCompiler {
 }
 
 interface EmitManifestCompilation {
+  getAsset?: (filename: string) => unknown;
   hooks: {
     processAssets: {
       tapPromise: (
@@ -51,6 +57,16 @@ export function setupManifestEmission<
         stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
       },
       async () => {
+        // TAP SDK post-processors may have already emitted a content-locked manifest.
+        // Do not replace its bytes with Zephyr's environment-only fallback: the asset
+        // map and package lock must continue to identify one immutable file.
+        if (compilation.getAsset?.(ZEPHYR_MANIFEST_FILENAME)) {
+          ze_log.manifest(
+            `[Zephyr Manifest] Preserving pre-emitted ${ZEPHYR_MANIFEST_FILENAME}.`
+          );
+          return;
+        }
+
         // Always emit manifest, even without federated dependencies
         // This ensures environment variables are always available
         const dependencies = zephyr_engine.federated_dependencies || [];
@@ -59,7 +75,7 @@ export function setupManifestEmission<
         const manifestContent = createManifestContent(dependencies, true);
 
         // Emit the asset
-        compilation.emitAsset('zephyr-manifest.json', new RawSource(manifestContent));
+        compilation.emitAsset(ZEPHYR_MANIFEST_FILENAME, new RawSource(manifestContent));
 
         ze_log.manifest('[Zephyr Manifest] Emitted with:', {
           dependencies: dependencies.length,

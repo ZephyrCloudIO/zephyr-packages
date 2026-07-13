@@ -1,8 +1,10 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
 import {
+  assertZephyrBuildTarget,
   getGlobal,
   handleGlobalError,
   ZephyrEngine,
+  type ZephyrBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
@@ -29,18 +31,29 @@ function mergeResolvedDependencies(
   return [...merged.values()];
 }
 
+function resolveBuildTarget(
+  options: ZephyrRspackPluginOptions | undefined
+): ZephyrBuildTarget | undefined {
+  const target = options?.target;
+  if (target !== undefined) {
+    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+  }
+  return target;
+}
+
 function applyBuildTarget(
   engine: ZephyrEngine,
-  options: ZephyrRspackPluginOptions | undefined
+  target: ZephyrBuildTarget | undefined
 ): void {
-  if (options?.target) {
-    engine.env.target = options.target;
+  if (target !== undefined) {
+    engine.env.target = target;
   }
 }
 
 export function withZephyr(
   zephyrPluginOptions?: ZephyrRspackPluginOptions
 ): <T extends Configuration | Configuration[]>(config: T) => Promise<T> {
+  const target = resolveBuildTarget(zephyrPluginOptions);
   return async <T extends Configuration | Configuration[]>(config: T): Promise<T> => {
     // Skip Zephyr execution during Nx graph calculation
     // Nx sets global.NX_GRAPH_CREATION = true during graph creation
@@ -48,7 +61,10 @@ export function withZephyr(
       return config;
     }
     if (!Array.isArray(config)) {
-      return (await _zephyr_configuration(config, zephyrPluginOptions)) as T;
+      return (await _zephyr_configuration(config, {
+        ...zephyrPluginOptions,
+        target,
+      })) as T;
     }
     if (config.length === 0) {
       return config;
@@ -57,8 +73,9 @@ export function withZephyr(
     const engine = await ZephyrEngine.create({
       builder: 'rspack',
       context: config[0]?.context,
+      target,
     });
-    applyBuildTarget(engine, zephyrPluginOptions);
+    applyBuildTarget(engine, target);
     try {
       const { coordinator, compilers } = coordinateXPackCompilers(engine, config, {
         snapshotType: zephyrPluginOptions?.snapshotType,
@@ -67,6 +84,7 @@ export function withZephyr(
       for (const [index, item] of config.entries()) {
         await _zephyr_configuration(item, {
           ...zephyrPluginOptions,
+          target,
           __engine: engine,
           __coordinator: coordinator,
           __participant: compilers[index]?.participant,
@@ -87,17 +105,19 @@ async function _zephyr_configuration(
 ): Promise<Configuration> {
   let zephyr_engine: ZephyrEngine | undefined;
   try {
+    const target = resolveBuildTarget(_zephyrOptions);
     // create instance of ZephyrEngine to track the application
     zephyr_engine =
       _zephyrOptions?.__engine ??
       (await ZephyrEngine.create({
         builder: 'rspack',
         context: config.context,
+        target,
       }));
 
     // Remote resolution is target-sensitive, so set this before extracting/resolving
     // federation dependencies.
-    applyBuildTarget(zephyr_engine, _zephyrOptions);
+    applyBuildTarget(zephyr_engine, target);
 
     // Resolve dependencies and update the config
     const dependencyPairs = extractFederatedDependencyPairs(config);

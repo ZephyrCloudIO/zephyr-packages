@@ -16,6 +16,12 @@ rs.mock('zephyr-agent', () => ({
   buildAssetsMap: rs.fn(),
   handleGlobalError: rs.fn(),
   readDirRecursiveWithContents: rs.fn(),
+  ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
+  ZephyrError: class extends Error {
+    constructor(_: unknown, props?: { message?: string }) {
+      super(props?.message);
+    }
+  },
   zeBuildDashData: rs.fn(),
   ze_log: {
     upload: rs.fn(),
@@ -69,6 +75,12 @@ describe('resolveAssetSources', () => {
       { dir: '/workspace/.output' },
       { dir: '/workspace/.public', prefix: 'public' },
     ]);
+  });
+
+  it('keeps external publicDir paths unprefixed for locked tap-app artifacts', () => {
+    expect(
+      resolveAssetSources('ssr', '/workspace/.output', '/workspace/.public', 'tap-app')
+    ).toEqual([{ dir: '/workspace/.output' }, { dir: '/workspace/.public' }]);
   });
 
   it('uses publicDir directly for csr snapshots', () => {
@@ -151,8 +163,14 @@ describe('createUploadRunner', () => {
 
     await runner();
 
-    expect(mockedReadDirRecursiveWithContents).toHaveBeenCalledWith(outputDir);
-    expect(mockedReadDirRecursiveWithContents).toHaveBeenCalledWith(publicDir);
+    expect(mockedReadDirRecursiveWithContents).toHaveBeenCalledWith(outputDir, {
+      includeIgnoredPaths: false,
+      failOnError: false,
+    });
+    expect(mockedReadDirRecursiveWithContents).toHaveBeenCalledWith(publicDir, {
+      includeIgnoredPaths: false,
+      failOnError: false,
+    });
     expect(engine.buildProperties.output).toBe(outputDir);
 
     const uploadCall = engine.upload_assets.mock.calls[0][0] as {
@@ -162,5 +180,224 @@ describe('createUploadRunner', () => {
       'public/app.js',
       'server/index.mjs',
     ]);
+  });
+
+  it('preserves SDK-locked tap-app public paths and bytes', async () => {
+    const rootDir = '/workspace/tap-package';
+    const outputDir = resolve(rootDir, '.output');
+    const publicDir = resolve(rootDir, '.public');
+    const engine = makeEngine();
+    const descriptor = Buffer.from('{"locked":true}');
+    const remoteEntry = Buffer.from('export const target = "desktop";');
+
+    const runner = createUploadRunner({
+      nuxt: makeNuxt(rootDir, '.public'),
+      options: {
+        target: 'tap-app',
+        snapshotType: 'ssr',
+        entrypoint: 'server/index.mjs',
+        mfConfigs: [{ name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' }],
+        federation: [{ name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' }],
+      },
+      zephyrEngineDefer: Promise.resolve(engine as any),
+      initEngine: rs.fn(),
+    });
+
+    mockedReadDirRecursiveWithContents.mockImplementation(async (dir: string) => {
+      if (dir === outputDir) {
+        return [{ relativePath: 'server/index.mjs', content: Buffer.from('server') }];
+      }
+      if (dir === publicDir) {
+        return [
+          { relativePath: 'manifest.tap.json', content: descriptor },
+          { relativePath: 'targets/desktop/remoteEntry.mjs', content: remoteEntry },
+        ];
+      }
+      return [];
+    });
+
+    await runner();
+
+    const uploadCall = engine.upload_assets.mock.calls[0][0] as {
+      assetsMap: Record<string, Buffer>;
+    };
+    expect(uploadCall.assetsMap).toEqual({
+      'server/index.mjs': Buffer.from('server'),
+      'manifest.tap.json': descriptor,
+      'targets/desktop/remoteEntry.mjs': remoteEntry,
+    });
+    expect(uploadCall.assetsMap['manifest.tap.json']).toBe(descriptor);
+    expect(uploadCall.assetsMap['targets/desktop/remoteEntry.mjs']).toBe(remoteEntry);
+    expect(uploadCall.assetsMap['public/manifest.tap.json']).toBeUndefined();
+    expect(mockedReadDirRecursiveWithContents).toHaveBeenCalledWith(outputDir, {
+      includeIgnoredPaths: true,
+      failOnError: true,
+    });
+    expect(mockedReadDirRecursiveWithContents).toHaveBeenCalledWith(publicDir, {
+      includeIgnoredPaths: true,
+      failOnError: true,
+    });
+  });
+
+  it('forwards every aligned TAP Federation container without a legacy fallback', async () => {
+    const rootDir = '/workspace/tap-package';
+    const engine = makeEngine();
+    const mfConfigs = [
+      { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+      { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+    ];
+    const federation = [
+      { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+      { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs' },
+    ];
+    const runner = createUploadRunner({
+      nuxt: makeNuxt(rootDir),
+      options: {
+        target: 'tap-app',
+        snapshotType: 'csr',
+        mfConfigs,
+        federation,
+      },
+      zephyrEngineDefer: Promise.resolve(engine as any),
+      initEngine: rs.fn(),
+    });
+    mockedReadDirRecursiveWithContents.mockResolvedValue([
+      { relativePath: 'manifest.tap.json', content: Buffer.from('descriptor') },
+    ]);
+    mockedZeBuildDashData.mockResolvedValue({ stats: 'test' });
+
+    await runner();
+
+    const upload = engine.upload_assets.mock.calls[0]?.[0] as {
+      mfConfig?: unknown;
+      mfConfigs?: unknown;
+      buildStats: { federation?: unknown };
+    };
+    expect(upload.mfConfigs).toBe(mfConfigs);
+    expect(upload).not.toHaveProperty('mfConfig');
+    expect(upload.buildStats.federation).toBe(federation);
+  });
+
+  it('derives legacy mfConfig only for one complete Federation config', async () => {
+    const rootDir = '/workspace/app';
+    const engine = makeEngine();
+    const config = { name: 'desktop', filename: 'remoteEntry.mjs' };
+    const runner = createUploadRunner({
+      nuxt: makeNuxt(rootDir),
+      options: { snapshotType: 'csr', mfConfigs: [config] },
+      zephyrEngineDefer: Promise.resolve(engine as any),
+      initEngine: rs.fn(),
+    });
+    mockedReadDirRecursiveWithContents.mockResolvedValue([
+      { relativePath: 'index.html', content: Buffer.from('ok') },
+    ]);
+
+    await runner();
+
+    const upload = engine.upload_assets.mock.calls[0]?.[0] as {
+      mfConfig?: unknown;
+      mfConfigs?: unknown;
+    };
+    expect(upload.mfConfigs).toEqual([config]);
+    expect(upload.mfConfig).toBe(config);
+  });
+
+  it('fails closed when TAP metadata does not pair config filename with remote', async () => {
+    const rootDir = '/workspace/tap-package';
+    const engine = makeEngine();
+    const runner = createUploadRunner({
+      nuxt: makeNuxt(rootDir),
+      options: {
+        target: 'tap-app',
+        snapshotType: 'csr',
+        mfConfigs: [{ name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' }],
+        federation: [{ name: 'desktop', remote: 'targets/quickjs/remoteEntry.mjs' }],
+      },
+      zephyrEngineDefer: Promise.resolve(engine as any),
+      initEngine: rs.fn(),
+    });
+    mockedReadDirRecursiveWithContents.mockResolvedValue([
+      { relativePath: 'manifest.tap.json', content: Buffer.from('descriptor') },
+    ]);
+
+    await runner();
+
+    expect(engine.upload_assets).not.toHaveBeenCalled();
+    expect(engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(mockedHandleGlobalError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('no matching') })
+    );
+  });
+
+  it('fails closed for duplicate TAP Federation metadata identities', async () => {
+    const rootDir = '/workspace/tap-package';
+    const engine = makeEngine();
+    const runner = createUploadRunner({
+      nuxt: makeNuxt(rootDir),
+      options: {
+        target: 'tap-app',
+        snapshotType: 'csr',
+        mfConfigs: [
+          { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+          { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+        ],
+        federation: [
+          { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+          { name: 'quickjs', remote: 'targets/desktop/remoteEntry.mjs' },
+        ],
+      },
+      zephyrEngineDefer: Promise.resolve(engine as any),
+      initEngine: rs.fn(),
+    });
+    mockedReadDirRecursiveWithContents.mockResolvedValue([
+      { relativePath: 'manifest.tap.json', content: Buffer.from('descriptor') },
+    ]);
+
+    await runner();
+
+    expect(engine.upload_assets).not.toHaveBeenCalled();
+    expect(mockedHandleGlobalError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('duplicate names or remotes'),
+      })
+    );
+  });
+
+  it('fails closed when unprefixed tap-app sources collide', async () => {
+    const rootDir = '/workspace/tap-package';
+    const outputDir = resolve(rootDir, '.output');
+    const publicDir = resolve(rootDir, '.public');
+    const engine = makeEngine();
+    const runner = createUploadRunner({
+      nuxt: makeNuxt(rootDir, '.public'),
+      options: {
+        target: 'tap-app',
+        snapshotType: 'ssr',
+        entrypoint: 'server/index.mjs',
+      },
+      zephyrEngineDefer: Promise.resolve(engine as any),
+      initEngine: rs.fn(),
+    });
+
+    mockedReadDirRecursiveWithContents.mockImplementation(async (dir: string) => {
+      if (dir === outputDir) {
+        return [
+          { relativePath: 'server/index.mjs', content: Buffer.from('server') },
+          { relativePath: 'manifest.tap.json', content: Buffer.from('first') },
+        ];
+      }
+      if (dir === publicDir) {
+        return [{ relativePath: 'manifest.tap.json', content: Buffer.from('second') }];
+      }
+      return [];
+    });
+
+    await runner();
+
+    expect(mockedHandleGlobalError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('manifest.tap.json') })
+    );
+    expect(engine.upload_assets).not.toHaveBeenCalled();
+    expect(engine.build_failed).toHaveBeenCalledTimes(1);
   });
 });

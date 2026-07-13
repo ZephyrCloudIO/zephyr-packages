@@ -198,6 +198,23 @@ describe('zephyrCommandWrapper', () => {
         })
       );
     });
+
+    it('rejects tap-app before loading Metro config or bundling', async () => {
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
+      const wrapper = await zephyrCommandWrapper(
+        mockBundleFederatedRemote,
+        mockLoadMetroConfig,
+        mockUpdateManifest
+      );
+
+      await expect(wrapper(...createMockArgs({ platform: 'tap-app' }))).rejects.toThrow(
+        'Metro cannot publish tap-app artifacts.'
+      );
+
+      expect(mockLoadMetroConfig).not.toHaveBeenCalled();
+      expect(ZephyrMetroPlugin).not.toHaveBeenCalled();
+      expect(mockBundleFederatedRemote).not.toHaveBeenCalled();
+    });
   });
 
   describe('mode handling', () => {

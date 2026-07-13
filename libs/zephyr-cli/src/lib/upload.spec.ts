@@ -38,4 +38,33 @@ describe('CLI upload lifecycle', () => {
     expect(engine.start_new_build).toHaveBeenCalledTimes(2);
     expect(engine.build_finished).toHaveBeenCalledTimes(1);
   });
+
+  it('passes every sidecar config and build-stat entry without selecting a first config', async () => {
+    const mfConfigs = [
+      { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+      { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+    ];
+    const federation = [
+      { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+      { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs' },
+    ];
+    const assetsMap = {};
+
+    await uploadAssets({
+      zephyr_engine: engine as never,
+      assetsMap,
+      publicationMetadata: { mfConfigs, federation },
+    });
+
+    const uploadProps = engine.upload_assets.mock.calls[0]?.[0] as Record<
+      string,
+      unknown
+    >;
+    expect(uploadProps).toMatchObject({
+      assetsMap,
+      buildStats: { federation },
+      mfConfigs,
+    });
+    expect(uploadProps).not.toHaveProperty('mfConfig');
+  });
 });

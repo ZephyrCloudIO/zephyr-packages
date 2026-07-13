@@ -5,7 +5,10 @@ export interface ConvertedGraph {
   id?: string;
   version?: string;
   name?: string;
-  /** //TODO: what is this? */
+  /**
+   * Legacy graph consumers retain the selected remote-entry value without interpreting
+   * it.
+   */
   remote: unknown;
   metadata: unknown;
   versionData: unknown;

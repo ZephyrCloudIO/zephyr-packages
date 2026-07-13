@@ -31,6 +31,20 @@ describe('plugin-package-name', () => {
     expect(pluginPackageName).toBe('rollup-plugin-zephyr');
   });
 
+  it('keeps Rolldown diagnostics attached to the Rolldown adapter', () => {
+    const packageJson = {
+      name: 'app',
+      version: '1.0.0',
+      devDependencies: {
+        rolldown: '^1.0.0',
+      },
+    } satisfies ZePackageJson;
+
+    expect(resolveZephyrPluginPackageName(packageJson, 'rolldown')).toBe(
+      'zephyr-rolldown-plugin'
+    );
+  });
+
   it('does not throw for unknown runtime builder values', () => {
     const packageJson = {
       name: 'app',

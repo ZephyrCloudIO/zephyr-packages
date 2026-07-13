@@ -2239,6 +2239,27 @@ importers:
         specifier: catalog:typescript
         version: 5.9.3
 
+  libs/zephyr-tap-runtime:
+    devDependencies:
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 2.7.0
+      '@module-federation/runtime-core':
+        specifier: ^2.7.0
+        version: 2.7.0
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 0.23.2(@module-federation/runtime-tools@2.7.0)(core-js@3.49.0)(typescript@5.9.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.1(@module-federation/runtime-tools@2.7.0)(core-js@3.49.0)(jsdom@29.1.1)
+      '@types/node':
+        specifier: catalog:typescript
+        version: 24.13.3
+      typescript:
+        specifier: catalog:typescript
+        version: 5.9.3
+
   libs/zephyr-nuxt-module:
     dependencies:
       nuxt:

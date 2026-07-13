@@ -92,6 +92,28 @@ describe('vinext-output helpers', () => {
     );
   });
 
+  it('preserves raw server bundle bytes for tap-app transport', () => {
+    const assets: Record<string, VinextBuildAsset> = {};
+    const emitted = Buffer.from('import "node:fs";\nexport default {};\n', 'utf8');
+
+    collectAssetsFromBundle(
+      assets,
+      '/repo/dist',
+      '/repo/dist/server',
+      {
+        index: {
+          type: 'chunk',
+          fileName: 'index.js',
+          code: emitted.toString('utf8'),
+        },
+      },
+      { target: 'tap-app' }
+    );
+
+    expect(Object.keys(assets)).toEqual(['server/index.js']);
+    expect(assets['server/index.js']?.content).toEqual(emitted);
+  });
+
   it('sanitizes minified Worker chunks without changing client assets', () => {
     const assets: Record<string, VinextBuildAsset> = {};
     const emitted =
@@ -223,6 +245,26 @@ describe('vinext-output helpers', () => {
     );
   });
 
+  it('does not synthesize an rsc assets manifest for tap-app transport', () => {
+    const assets: Record<string, VinextBuildAsset> = {};
+
+    injectRscAssetsManifest(
+      assets,
+      '/repo/dist',
+      {
+        buildAssetsManifest: { bootstrapScriptContent: 'import("/assets/index.js")' },
+        config: {
+          environments: {
+            rsc: { build: { outDir: '/repo/dist/server' } },
+          },
+        },
+      },
+      { target: 'tap-app' }
+    );
+
+    expect(assets).toEqual({});
+  });
+
   it('collects static client output files for upload', async () => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
     try {
@@ -322,6 +364,28 @@ describe('vinext-output helpers', () => {
         'export default {};\n'
       );
       await expect(fs.readFile(workerPath, 'utf8')).resolves.toBe(emitted);
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('preserves finalized output bytes and paths for tap-app transport', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
+    try {
+      const outputDir = path.join(tempDir, 'dist');
+      const workerPath = path.join(outputDir, 'server', 'index.js');
+      const emitted = Buffer.from(
+        'import "node:fs";\nimport "node:path";\nexport default {};\n',
+        'utf8'
+      );
+      await fs.mkdir(path.dirname(workerPath), { recursive: true });
+      await fs.writeFile(workerPath, emitted);
+
+      const assets: Record<string, VinextBuildAsset> = {};
+      await collectOutputDirectoryAssets(assets, outputDir, { target: 'tap-app' });
+
+      expect(Object.keys(assets)).toEqual(['server/index.js']);
+      expect(assets['server/index.js']?.content).toEqual(emitted);
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true });
     }

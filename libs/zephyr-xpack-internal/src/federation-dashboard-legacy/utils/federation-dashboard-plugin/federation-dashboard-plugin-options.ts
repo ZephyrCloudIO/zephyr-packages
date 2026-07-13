@@ -1,3 +1,5 @@
+import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
+
 export interface FederationDashboardPluginOptions {
   app?: {
     // git org
@@ -34,5 +36,5 @@ export interface FederationDashboardPluginOptions {
   nextjs?: string;
   packageJsonPath?: string;
   /** Target of the build, be it ios, android, web or others. */
-  target?: 'ios' | 'android' | 'web' | undefined;
+  target?: ZephyrBuildTarget | undefined;
 }

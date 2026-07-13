@@ -5,10 +5,16 @@ import {
   readDirRecursiveWithContents,
   type ZeBuildAssetsMap,
 } from 'zephyr-agent';
+import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 
 interface DirectoryAsset {
   content: Buffer | string;
   type: string;
+}
+
+export interface ExtractAssetsFromDirectoryOptions {
+  /** TAP packages publish their complete SDK-locked output without web-app filters. */
+  target?: ZephyrBuildTarget;
 }
 
 function extractBuffer(asset: DirectoryAsset): Buffer | string | undefined {
@@ -29,17 +35,22 @@ function normalizePath(filePath: string): string {
  * extractAstroAssetsMap but for any directory.
  */
 export async function extractAssetsFromDirectory(
-  buildDir: string
+  buildDir: string,
+  options: ExtractAssetsFromDirectoryOptions = {}
 ): Promise<ZeBuildAssetsMap> {
   const assets: Record<string, DirectoryAsset> = {};
 
   try {
-    const files = await readDirRecursiveWithContents(buildDir);
+    const preservesLockedArtifacts = options.target === 'tap-app';
+    const files = await readDirRecursiveWithContents(buildDir, {
+      includeIgnoredPaths: preservesLockedArtifacts,
+      failOnError: preservesLockedArtifacts,
+    });
 
     for (const file of files) {
       const relativePath = normalizePath(file.relativePath);
 
-      if (shouldSkipFile(relativePath)) {
+      if (shouldSkipFile(relativePath, options.target)) {
         continue;
       }
 
@@ -50,13 +61,25 @@ export async function extractAssetsFromDirectory(
       };
     }
   } catch (error) {
+    if (options.target === 'tap-app') {
+      throw error;
+    }
     logFn('warn', `Failed to read build directory ${buildDir}: ${error}`);
   }
 
   return buildAssetsMap(assets, extractBuffer, getAssetType);
 }
 
-function shouldSkipFile(filePath: string): boolean {
+function shouldSkipFile(
+  filePath: string,
+  target: ZephyrBuildTarget | undefined
+): boolean {
+  // A TAP descriptor/lock can reference opaque files with conventional web-app names.
+  // Do not silently omit any of them during package publication.
+  if (target === 'tap-app') {
+    return false;
+  }
+
   // Skip common files that shouldn't be uploaded
   const skipPatterns = [
     /\.map$/, // Source maps

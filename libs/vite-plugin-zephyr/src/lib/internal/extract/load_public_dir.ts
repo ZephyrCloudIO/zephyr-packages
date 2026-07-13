@@ -1,18 +1,29 @@
 import { basename, resolve } from 'node:path';
-import { readDirRecursiveWithContents } from 'zephyr-agent';
+import { readDirRecursiveWithContents, type ZephyrBuildTarget } from 'zephyr-agent';
 import type { ZephyrOutputAsset } from '../types/zephyr-output';
-import { normalizeVitePath } from '../utils/normalize-vite-path';
+import {
+  normalizeFilesystemVitePath,
+  normalizeVitePath,
+} from '../utils/normalize-vite-path';
 
 interface LoadPublicDirOptions {
   outDir: string;
   publicDir: string;
+  target?: ZephyrBuildTarget;
 }
 
 export async function load_public_dir({
   publicDir,
   outDir,
+  target,
 }: LoadPublicDirOptions): Promise<ZephyrOutputAsset[]> {
-  const files = await readDirRecursiveWithContents(publicDir);
+  const files =
+    target === 'tap-app'
+      ? await readDirRecursiveWithContents(publicDir, {
+          includeIgnoredPaths: true,
+          failOnError: true,
+        })
+      : await readDirRecursiveWithContents(publicDir);
   const normalizedOutDir = resolve(outDir);
 
   return files
@@ -32,7 +43,10 @@ export async function load_public_dir({
         needsCodeReference: false,
         source: file.content,
         type: 'asset' as const,
-        fileName: normalizeVitePath(file.relativePath),
+        fileName:
+          target === 'tap-app'
+            ? normalizeFilesystemVitePath(file.relativePath)
+            : normalizeVitePath(file.relativePath),
         originalFileName: fileName,
         originalFileNames: [fileName],
       };

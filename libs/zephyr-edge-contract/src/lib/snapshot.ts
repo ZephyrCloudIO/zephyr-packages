@@ -1,5 +1,11 @@
 /* istanbul ignore file */
 
+import type {
+  ZephyrLegacyModuleFederationConfig,
+  ZephyrModuleFederationConfig,
+} from './module-federation';
+import type { ZephyrBuildTarget } from './build-target';
+
 export interface Snapshot {
   // app.repo.org
   application_uid: string;
@@ -17,6 +23,8 @@ export interface Snapshot {
   addressMode?: 'hostname' | 'path';
   // snapshot type (e.g., 'ssr' for server-side rendering, 'csr' for client-side rendering)
   type?: 'ssr' | 'csr';
+  /** Typed artifact family carried with the immutable snapshot upload. */
+  target: ZephyrBuildTarget;
   // server entry file path for SSR applications (relative path)
   entrypoint?: string;
   uid: {
@@ -38,13 +46,10 @@ export interface Snapshot {
     email: string;
   };
   createdAt: number;
-  mfConfig?: {
-    name: string;
-    filename: string;
-    exposes?: Record<string, string>;
-    remotes?: Record<string, string>;
-    shared?: Record<string, unknown>;
-  };
+  /** Legacy single-container federation config. */
+  mfConfig?: ZephyrLegacyModuleFederationConfig;
+  /** Every independently published config in a multi-container build. */
+  mfConfigs?: ZephyrModuleFederationConfig[];
   // list of files, where key is file path
   assets: Record<string, SnapshotAsset>;
   // Public environment variables captured at build time (ZE_PUBLIC_* only)

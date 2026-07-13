@@ -5,9 +5,11 @@ import { mutPathModePublicPath } from './mut-path-mode-public-path';
 
 function engine(
   addressMode: 'hostname' | 'path' | undefined,
-  environmentAddressMode?: 'hostname' | 'path'
+  environmentAddressMode?: 'hostname' | 'path',
+  target: 'web' | 'tap-app' = 'web'
 ): ZephyrEngine {
   return {
+    env: { target },
     application_configuration: Promise.resolve({
       ADDRESS_MODE: addressMode,
       ENVIRONMENTS: environmentAddressMode
@@ -62,5 +64,15 @@ describe('mutPathModePublicPath', () => {
     await mutPathModePublicPath(engine('hostname'), config);
 
     expect(config.output?.publicPath).toBe('/');
+  });
+
+  it('preserves the locked TAP app public path', async () => {
+    const config: XPackConfiguration<unknown> = {
+      output: { publicPath: '/locked/', library: 'app' },
+    };
+
+    await mutPathModePublicPath(engine('path', undefined, 'tap-app'), config);
+
+    expect(config.output).toEqual({ publicPath: '/locked/', library: 'app' });
   });
 });

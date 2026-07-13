@@ -27,6 +27,9 @@
   "references": [
     {
       "path": "../zephyr-agent/tsconfig.json"
+    },
+    {
+      "path": "../zephyr-edge-contract/tsconfig.json"
     }
   ]
 }

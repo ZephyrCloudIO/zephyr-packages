@@ -7,13 +7,25 @@ export interface ModuleFederationRemoteConfig {
   [key: string]: unknown;
 }
 
+export interface ModuleFederationManifestOptions {
+  fileName?: string;
+  filePath?: string;
+}
+
+export interface ModuleFederationLibraryOptions {
+  type?: string;
+  [key: string]: unknown;
+}
+
 export interface ModuleFederationOptions {
   name?: string;
   filename?: string;
+  library?: string | string[] | ModuleFederationLibraryOptions;
   remotes?: Record<string, string | ModuleFederationRemoteConfig>;
   exposes?: Record<string, string>;
   runtimePlugins?: string[];
   shared?: Record<string, unknown>;
+  manifest?: boolean | ModuleFederationManifestOptions;
   dts?: boolean | Record<string, unknown>;
   [key: string]: unknown;
 }

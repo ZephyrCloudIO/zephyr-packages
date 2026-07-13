@@ -1,33 +1,37 @@
 import { resolve } from 'node:path';
-import {
-  ZephyrEngine,
-  handleGlobalError,
-  ze_log,
-  type ZephyrBuildHooks,
-} from 'zephyr-agent';
+import { assertZephyrBuildTarget } from 'zephyr-edge-contract';
+import { ZephyrEngine, handleGlobalError, ze_log } from 'zephyr-agent';
 import { setupZeDeploy } from './internal/assets/setupZeDeploy';
 import { rewriteRspressModuleFederationAssets } from './internal/assets/rewriteRspressModuleFederationAssets';
 import { showFiles } from './internal/files/showFiles';
 import { walkFiles } from './internal/files/walkFiles';
-import type { RspressUserConfig, RspressPlugin } from './types';
+import type { RspressUserConfig, RspressPlugin, ZephyrRspressSSGOptions } from './types';
 
 export const zephyrRspressSSGPlugin = <
   TConfig extends RspressUserConfig = RspressUserConfig,
 >(
   config: TConfig,
-  options?: { hooks?: ZephyrBuildHooks }
+  options?: ZephyrRspressSSGOptions
 ): RspressPlugin<TConfig> => {
+  if (options?.target !== undefined) {
+    assertZephyrBuildTarget(options.target, 'zephyrRspressSSGPlugin({ target })');
+  }
+
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const root = resolve(config.root ?? '');
   const outDir = resolve(config.outDir ?? './doc_build');
 
-  zephyr_defer_create({ builder: 'rspack', context: root });
+  zephyr_defer_create({
+    builder: 'rspack',
+    context: root,
+    ...(options?.target === undefined ? {} : { target: options.target }),
+  });
 
   return {
     name: 'zephyr-rspress-plugin-ssg',
     async afterBuild() {
       try {
-        const files = await walkFiles(outDir);
+        const files = await walkFiles(outDir, '', options?.target);
 
         if (files.length === 0) {
           ze_log.upload('No files found in output directory.');
@@ -38,7 +42,12 @@ export const zephyrRspressSSGPlugin = <
           return;
         }
 
-        await rewriteRspressModuleFederationAssets(outDir, files);
+        // TAP's SDK locks the exact emitted descriptor, manifests, and assets. The
+        // legacy Rspress rewrite changes those on-disk bytes to make a conventional
+        // Rspress deployment portable, so it must never run for a TAP package.
+        if (options?.target !== 'tap-app') {
+          await rewriteRspressModuleFederationAssets(outDir, files);
+        }
         await showFiles(outDir, files);
 
         await setupZeDeploy({
@@ -46,6 +55,7 @@ export const zephyrRspressSSGPlugin = <
           outDir,
           files,
           hooks: options?.hooks,
+          ...(options?.mfConfig === undefined ? {} : { mfConfig: options.mfConfig }),
         });
       } catch (error) {
         try {

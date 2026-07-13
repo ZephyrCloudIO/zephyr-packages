@@ -1,5 +1,9 @@
 import type { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
+import {
+  assertCanonicalSnapshotAssetPath,
+  normalizeSnapshotAssetPath,
+} from '../lib/transformers/ze-snapshot-asset-path';
 import type {
   BuildContribution,
   BuildParticipant,
@@ -130,31 +134,31 @@ function sameAsset(existing: ZeBuildAsset, incoming: ZeBuildAsset): boolean {
 }
 
 function normalizeAssetPath(assetPath: string): string {
-  const normalized = assetPath.replace(/\\/g, '/');
-  if (
-    !normalized ||
-    normalized.includes('\0') ||
-    normalized.startsWith('/') ||
-    /^[A-Za-z]:/.test(normalized)
-  ) {
+  try {
+    return normalizeSnapshotAssetPath(assetPath);
+  } catch (error) {
     throw new BuildSessionStateError(
-      `Asset path must be a relative snapshot path: "${assetPath}"`
+      error instanceof Error ? error.message : String(error)
     );
   }
-
-  const segments = normalized.split('/').filter((segment) => segment && segment !== '.');
-  if (segments.length === 0 || segments.includes('..')) {
-    throw new BuildSessionStateError(
-      `Asset path must not escape the snapshot root: "${assetPath}"`
-    );
-  }
-  return segments.join('/');
 }
 
-function cloneAssetsMap(assetsMap: ZeBuildAssetsMap): ZeBuildAssetsMap {
+function cloneAssetsMap(
+  assetsMap: ZeBuildAssetsMap,
+  strictAssetPaths: boolean
+): ZeBuildAssetsMap {
   return Object.fromEntries(
     Object.values(assetsMap).map((value) => {
-      const normalizedPath = normalizeAssetPath(value.path);
+      let normalizedPath: string;
+      try {
+        normalizedPath = strictAssetPaths
+          ? assertCanonicalSnapshotAssetPath(value.path)
+          : normalizeAssetPath(value.path);
+      } catch (error) {
+        throw new BuildSessionStateError(
+          error instanceof Error ? error.message : String(error)
+        );
+      }
       const normalizedAsset =
         normalizedPath === value.path
           ? { ...value }
@@ -181,6 +185,7 @@ export class BuildSession<TData = unknown, TResult = void> {
     Map<string, BuildContribution<TData>>
   >();
   private readonly callbacks: BuildSessionCallbacks<TData, TResult>;
+  private readonly strictAssetPaths: boolean;
   private readonly barrier = createBarrier();
   private state: BuildSessionStatus = 'collecting';
   private terminalError: Error | null = null;
@@ -192,10 +197,12 @@ export class BuildSession<TData = unknown, TResult = void> {
     identity: BuildSessionIdentity,
     participants: readonly BuildParticipant[],
     postprocessors: readonly string[],
-    callbacks: BuildSessionCallbacks<TData, TResult>
+    callbacks: BuildSessionCallbacks<TData, TResult>,
+    strictAssetPaths = false
   ) {
     this.identity = Object.freeze({ ...identity });
     this.callbacks = callbacks;
+    this.strictAssetPaths = strictAssetPaths;
 
     for (const participant of participants) {
       assertNonEmpty(participant.name, 'Participant name');
@@ -279,7 +286,7 @@ export class BuildSession<TData = unknown, TResult = void> {
     }
     participantContributions.set(contribution.key, {
       ...contribution,
-      assetsMap: cloneAssetsMap(contribution.assetsMap),
+      assetsMap: cloneAssetsMap(contribution.assetsMap, this.strictAssetPaths),
     });
   }
 

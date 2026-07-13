@@ -57,6 +57,13 @@ export class ZeRspackPlugin {
     setupManifestEmission(this._options, compiler);
     setupZeDeploy(this._options, compiler);
 
+    // TAP package descriptors lock the finalized module and HTML bytes. Import maps
+    // and virtual-env rewrites are web-runtime conveniences, so keep publication hooks
+    // but never install transformations that would alter SDK-emitted output.
+    if (this._options.zephyr_engine.env?.target === 'tap-app') {
+      return;
+    }
+
     // Inject import map into HTML at build time for consistent structure
     this.#injectImportMapAtBuildTime(compiler);
 

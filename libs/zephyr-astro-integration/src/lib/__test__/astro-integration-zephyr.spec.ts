@@ -29,8 +29,13 @@ rs.mock('zephyr-agent', () => {
       defer_create: rs.fn(),
     },
     logFn: agentMocks.logFn,
-    ZephyrError: {
-      format: agentMocks.formatError,
+    ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
+    ZephyrError: class extends Error {
+      static format = agentMocks.formatError;
+
+      constructor(_: unknown, props?: { message?: string }) {
+        super(props?.message);
+      }
     },
     zeBuildDashData: rs.fn(),
     handleGlobalError: rs.fn().mockImplementation((error) => {
@@ -125,6 +130,13 @@ describe('withZephyr', () => {
   });
 
   describe('Basic Integration Structure', () => {
+    it('rejects an unsupported untyped target before creating an engine', () => {
+      expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+        'withZephyr({ target }) must be one of'
+      );
+      expect(ZephyrEngine.defer_create).not.toHaveBeenCalled();
+    });
+
     it('should return an Astro integration object', () => {
       const integration = withZephyr();
 
@@ -156,6 +168,17 @@ describe('withZephyr', () => {
 
       expect(plugin.name).toBe('with-zephyr-astro-env');
       expect(plugin.enforce).toBe('pre');
+    });
+
+    it('does not inject the source or chunk rewriting Vite plugin for tap-app', async () => {
+      const integration = withZephyr({ target: 'tap-app' });
+      const updateConfig = rs.fn();
+
+      await integration.hooks['astro:config:setup']?.({
+        updateConfig,
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:setup']>>[0]);
+
+      expect(updateConfig).not.toHaveBeenCalled();
     });
 
     it('loads ZE_PUBLIC_* values from the active Vite env without replacing process values', async () => {
@@ -287,6 +310,20 @@ describe('withZephyr', () => {
         context: TEST_PROJECT_DIRECTORY,
       });
     });
+
+    it('forwards tap-app to ZephyrEngine creation', async () => {
+      const integration = withZephyr({ target: 'tap-app' });
+
+      await integration.hooks['astro:config:done']?.({
+        config: { root: TEST_PROJECT_URL },
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:config:done']>>[0]);
+
+      expect(mockZephyrDeferCreate).toHaveBeenCalledWith({
+        builder: 'astro',
+        context: TEST_PROJECT_DIRECTORY,
+        target: 'tap-app',
+      });
+    });
   });
 
   describe('astro:build:done hook', () => {
@@ -311,13 +348,111 @@ describe('withZephyr', () => {
       expect(mockZephyrEngine.start_new_build).toHaveBeenCalled();
       expect(extractAstroAssetsFromBuildHook).toHaveBeenCalledWith(
         mockAssets,
-        TEST_DIST_DIRECTORY
+        TEST_DIST_DIRECTORY,
+        undefined
       );
       expect(mockZephyrEngine.upload_assets).toHaveBeenCalledWith({
         assetsMap: mockAssetsMap,
         buildStats: mockBuildStats,
       });
       expect(mockZephyrEngine.build_finished).toHaveBeenCalled();
+    });
+
+    it('forwards every aligned TAP Federation container without a legacy fallback', async () => {
+      const mfConfigs = [
+        { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+        { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs' },
+      ];
+      const federation = [
+        { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+        { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs' },
+      ];
+      const mockAssetsMap = { hash1: { content: 'test', type: 'text/html' } };
+      const mockBuildStats = { stats: 'test' };
+      const integration = withZephyr({
+        target: 'tap-app',
+        mfConfigs,
+        federation,
+      });
+      (extractAstroAssetsFromBuildHook as Mock).mockResolvedValue(mockAssetsMap);
+      (zeBuildDashData as Mock).mockResolvedValue(mockBuildStats);
+
+      await integration.hooks['astro:build:done']?.({
+        dir: TEST_DIST_URL,
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+
+      const upload = mockZephyrEngine.upload_assets.mock.calls[0]?.[0] as {
+        mfConfig?: unknown;
+        mfConfigs?: unknown;
+        buildStats: { federation?: unknown };
+      };
+      expect(upload.mfConfigs).toBe(mfConfigs);
+      expect(upload).not.toHaveProperty('mfConfig');
+      expect(upload.buildStats.federation).toBe(federation);
+    });
+
+    it('derives legacy mfConfig only for one complete Federation config', async () => {
+      const config = {
+        name: 'desktop',
+        filename: 'targets/desktop/remoteEntry.mjs',
+      };
+      const integration = withZephyr({ mfConfigs: [config] });
+      (extractAstroAssetsFromBuildHook as Mock).mockResolvedValue({ hash1: {} });
+      (zeBuildDashData as Mock).mockResolvedValue({});
+
+      await integration.hooks['astro:build:done']?.({
+        dir: TEST_DIST_URL,
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+
+      const upload = mockZephyrEngine.upload_assets.mock.calls[0]?.[0] as {
+        mfConfig?: unknown;
+        mfConfigs?: unknown;
+      };
+      expect(upload.mfConfigs).toEqual([config]);
+      expect(upload.mfConfig).toBe(config);
+    });
+
+    it('fails closed for TAP metadata that is missing or mismatched', async () => {
+      const integration = withZephyr({
+        target: 'tap-app',
+        mfConfigs: [{ name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' }],
+        federation: [{ name: 'desktop', remote: 'targets/quickjs/remoteEntry.mjs' }],
+      });
+      (extractAstroAssetsFromBuildHook as Mock).mockResolvedValue({ hash1: {} });
+
+      await integration.hooks['astro:build:done']?.({
+        dir: TEST_DIST_URL,
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+
+      expect(mockZephyrEngine.upload_assets).not.toHaveBeenCalled();
+      expect(mockZephyrEngine.build_failed).toHaveBeenCalledTimes(1);
+      expect(ZephyrError.format).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('no matching') })
+      );
+    });
+
+    it('fails closed for duplicate TAP Module Federation config identities', async () => {
+      const integration = withZephyr({
+        target: 'tap-app',
+        mfConfigs: [
+          { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+          { name: 'desktop', filename: 'targets/tablet/remoteEntry.mjs' },
+        ],
+        federation: [
+          { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
+          { name: 'tablet', remote: 'targets/tablet/remoteEntry.mjs' },
+        ],
+      });
+      (extractAstroAssetsFromBuildHook as Mock).mockResolvedValue({ hash1: {} });
+
+      await integration.hooks['astro:build:done']?.({
+        dir: TEST_DIST_URL,
+      } as Parameters<NonNullable<(typeof integration.hooks)['astro:build:done']>>[0]);
+
+      expect(mockZephyrEngine.upload_assets).not.toHaveBeenCalled();
+      expect(ZephyrError.format).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('duplicate names') })
+      );
     });
 
     it('should handle missing assets parameter gracefully', async () => {
@@ -336,9 +471,34 @@ describe('withZephyr', () => {
 
       expect(extractAstroAssetsFromBuildHook).toHaveBeenCalledWith(
         undefined,
-        TEST_DIST_DIRECTORY
+        TEST_DIST_DIRECTORY,
+        undefined
       );
       expect(mockZephyrEngine.upload_assets).toHaveBeenCalled();
+    });
+
+    it('threads tap-app to strict asset extraction and does not publish on read failure', async () => {
+      const integration = withZephyr({ target: 'tap-app' });
+      const mockAssets = {
+        'manifest.tap.json': join(TEST_DIST_DIRECTORY, 'manifest.tap.json'),
+      };
+      const readError = new Error('locked artifact could not be read');
+      (extractAstroAssetsFromBuildHook as Mock).mockRejectedValue(readError);
+
+      await integration.hooks['astro:build:done']?.({
+        dir: TEST_DIST_URL,
+        assets: mockAssets,
+      } as unknown as Parameters<
+        NonNullable<(typeof integration.hooks)['astro:build:done']>
+      >[0]);
+
+      expect(extractAstroAssetsFromBuildHook).toHaveBeenCalledWith(
+        mockAssets,
+        TEST_DIST_DIRECTORY,
+        'tap-app'
+      );
+      expect(mockZephyrEngine.upload_assets).not.toHaveBeenCalled();
+      expect(mockZephyrEngine.build_failed).toHaveBeenCalledTimes(1);
     });
 
     it('should handle errors during build completion', async () => {

@@ -1,0 +1,5 @@
+{
+  "package": "example.tap-fixture",
+  "version": "1.0.0",
+  "targets": ["desktop", "mobile", "quickjs"]
+}

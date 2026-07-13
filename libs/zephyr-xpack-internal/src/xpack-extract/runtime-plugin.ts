@@ -131,8 +131,8 @@ export function createZephyrRuntimePlugin(
         return args; // No matching remote found
       }
 
-      // Get the resolved URL, checking session storage first
-      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
+      // Get the resolved entry, checking session storage first
+      const resolvedEntry = getResolvedRemoteEntry(processedRemotes[remoteName]);
 
       const targetRemote = args.options.remotes.find(
         (remote) =>
@@ -143,8 +143,17 @@ export function createZephyrRuntimePlugin(
         return args;
       }
 
-      // Update the remote entry URL
-      targetRemote.entry = resolvedUrl;
+      targetRemote.entry = resolvedEntry.url;
+
+      if (resolvedEntry.isManifest) {
+        // The snapshot plugin derives the concrete entry type/global name from the MF
+        // manifest. Keeping a stale direct-entry type here bypasses that contract.
+        delete targetRemote.type;
+      } else if (resolvedEntry.libraryType) {
+        // Direct ESM remotes must reach the runtime with `type: module`; otherwise the
+        // runtime attempts to load them as a classic global script.
+        targetRemote.type = resolvedEntry.libraryType;
+      }
 
       return args;
     },
@@ -198,23 +207,53 @@ function hasEntry(remote: any): remote is RemoteWithEntry {
   );
 }
 
-/** Resolves the actual remote URL, checking session storage for overrides */
-function getResolvedRemoteUrl(resolvedRemote: ZephyrDependency): string {
+interface ResolvedRemoteEntry {
+  url: string;
+  isManifest: boolean;
+  libraryType?: string;
+}
+
+/** Resolves the actual remote entry, checking session storage for overrides. */
+function getResolvedRemoteEntry(resolvedRemote: ZephyrDependency): ResolvedRemoteEntry {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
   // Check for session storage override (for development/testing)
   const sessionEdgeURL = _window.sessionStorage?.getItem(resolvedRemote.application_uid);
 
-  // Use session URL if available, otherwise use resolved URL
-  let edgeUrl = sessionEdgeURL ?? resolvedRemote.remote_entry_url;
+  // A session override is intentionally highest priority. Otherwise preserve the MF
+  // manifest URL so the runtime can discover exposes, chunks, and remote entry type.
+  let edgeUrl =
+    sessionEdgeURL ?? resolvedRemote.manifest_url ?? resolvedRemote.remote_entry_url;
 
   // Handle versioned remotes (name@url format)
-  if (edgeUrl.indexOf('@') !== -1) {
-    const [, url] = edgeUrl.split('@') as [string, string];
-    edgeUrl = url;
+  edgeUrl = stripRemoteNamePrefix(edgeUrl);
+
+  const pathname = edgeUrl.split(/[?#]/, 1)[0];
+  const isManifest = pathname.endsWith('.json');
+
+  return {
+    url: edgeUrl,
+    isManifest,
+    libraryType: isManifest ? undefined : resolvedRemote.library_type,
+  };
+}
+
+function stripRemoteNamePrefix(entry: string): string {
+  if (/^(?:https?:)?\/\//.test(entry)) {
+    return entry;
   }
 
-  return edgeUrl;
+  const absoluteUrlIndex = entry.search(/https?:\/\//);
+  if (absoluteUrlIndex > 0) {
+    return entry.slice(absoluteUrlIndex);
+  }
+
+  const separatorIndex = entry.lastIndexOf('@');
+  if (separatorIndex !== -1) {
+    return entry.slice(separatorIndex + 1);
+  }
+
+  return entry;
 }
 
 /** Default export for use with Module Federation runtime plugins array */

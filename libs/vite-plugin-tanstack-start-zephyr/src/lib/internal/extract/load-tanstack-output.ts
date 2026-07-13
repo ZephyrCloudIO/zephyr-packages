@@ -3,14 +3,27 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import type { OutputAsset, OutputBundle, OutputChunk } from 'rollup';
-import { readDirRecursiveWithContents } from 'zephyr-agent';
+import { readDirRecursiveWithContents, type ZephyrBuildTarget } from 'zephyr-agent';
+
+export interface TanStackOutputLoadOptions {
+  target?: ZephyrBuildTarget;
+}
 
 /** Load files from directory into Rollup OutputBundle format */
-export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle> {
+export async function loadFilesFromDirectory(
+  dir: string,
+  options: TanStackOutputLoadOptions = {}
+): Promise<OutputBundle> {
   const bundle: OutputBundle = {};
 
   try {
-    const files = await readDirRecursiveWithContents(dir);
+    const files =
+      options.target === 'tap-app'
+        ? await readDirRecursiveWithContents(dir, {
+            includeIgnoredPaths: true,
+            failOnError: true,
+          })
+        : await readDirRecursiveWithContents(dir);
 
     for (const file of files) {
       // Rollup bundle keys and Zephyr snapshot paths are POSIX-style on every host.
@@ -22,7 +35,7 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
       // Determine if this is a code chunk or asset
       const isCode = ext === '.js' || ext === '.mjs' || ext === '.cjs';
 
-      if (isCode) {
+      if (isCode && options.target !== 'tap-app') {
         // Create OutputChunk for code files
         const chunk: OutputChunk = {
           type: 'chunk',
@@ -47,7 +60,9 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
         };
         bundle[relativePath] = chunk;
       } else {
-        // Create OutputAsset for non-code files
+        // TAP packages own byte-level hashes for every emitted file, including
+        // JavaScript. Keep code extensions as Buffer-backed assets so they are
+        // not decoded and re-encoded through OutputChunk.code.
         const asset: OutputAsset = {
           type: 'asset',
           fileName: relativePath,
@@ -74,21 +89,30 @@ export async function loadFilesFromDirectory(dir: string): Promise<OutputBundle>
  * files from the output directory root, maintaining their natural paths (e.g.,
  * server/index.js, client/assets/main.js, favicon.ico)
  */
-export async function loadTanStackOutput(outputDir: string): Promise<OutputBundle> {
+export async function loadTanStackOutput(
+  outputDir: string,
+  options: TanStackOutputLoadOptions = {}
+): Promise<OutputBundle> {
   // Load from the root output directory to preserve natural structure
-  return loadFilesFromDirectory(outputDir);
+  return loadFilesFromDirectory(outputDir, options);
 }
 
 /** @deprecated Use loadTanStackOutput instead - this preserves the full structure */
-export async function loadServerOutput(outputDir: string): Promise<OutputBundle> {
+export async function loadServerOutput(
+  outputDir: string,
+  options: TanStackOutputLoadOptions = {}
+): Promise<OutputBundle> {
   const serverDir = path.join(outputDir, 'server');
-  return loadFilesFromDirectory(serverDir);
+  return loadFilesFromDirectory(serverDir, options);
 }
 
 /** @deprecated Use loadTanStackOutput instead - this preserves the full structure */
-export async function loadClientOutput(outputDir: string): Promise<OutputBundle> {
+export async function loadClientOutput(
+  outputDir: string,
+  options: TanStackOutputLoadOptions = {}
+): Promise<OutputBundle> {
   const clientDir = path.join(outputDir, 'client');
-  return loadFilesFromDirectory(clientDir);
+  return loadFilesFromDirectory(clientDir, options);
 }
 
 /** Check if TanStack Start output directory exists and is valid */

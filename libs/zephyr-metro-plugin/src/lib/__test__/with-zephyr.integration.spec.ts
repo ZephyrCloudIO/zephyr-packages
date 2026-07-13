@@ -73,6 +73,15 @@ describe('withZephyr integration', () => {
   });
 
   describe('config transformation', () => {
+    it('rejects tap-app before initializing the Metro engine', async () => {
+      const { ZephyrEngine } = await import('zephyr-agent');
+
+      expect(() => withZephyr({ target: 'tap-app' as never })).toThrow(
+        'Metro cannot publish tap-app artifacts.'
+      );
+      expect(ZephyrEngine.create).not.toHaveBeenCalled();
+    });
+
     it('should return enhanced Metro config', async () => {
       const enhancer = withZephyr({ name: 'TestApp' });
       const result = await enhancer(baseMetroConfig);

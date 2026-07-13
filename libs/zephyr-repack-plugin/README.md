@@ -37,6 +37,13 @@ bun add --dev zephyr-repack-plugin
 
 ## Usage
 
+### Native target compatibility
+
+This adapter publishes React Native bundles for `ios` and `android` only.
+`tap-app` is rejected before Re.Pack resolves remotes or creates a Zephyr build,
+because Re.Pack does not produce the generic ESM artifact required by TAP apps.
+Use an ESM-capable Zephyr adapter for TAP apps instead.
+
 Using `zephyr-repack-plugin` by wrapping the Rspack configuration:
 
 ```js

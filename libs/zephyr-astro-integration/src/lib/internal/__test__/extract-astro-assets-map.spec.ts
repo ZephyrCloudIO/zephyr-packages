@@ -102,6 +102,57 @@ describe('extractAstroAssetsMap', () => {
     );
   });
 
+  it('retains every otherwise ignored artifact for tap-app', async () => {
+    readDirRecursiveWithContentsMock.mockResolvedValue([
+      {
+        fullPath: '/dist/index.html',
+        relativePath: 'index.html',
+        content: Buffer.from('<html></html>'),
+      },
+      {
+        fullPath: '/dist/script.js.map',
+        relativePath: 'script.js.map',
+        content: Buffer.from('{"version":3}'),
+      },
+      {
+        fullPath: '/dist/.DS_Store',
+        relativePath: '.DS_Store',
+        content: Buffer.from('meta'),
+      },
+      {
+        fullPath: '/dist/node_modules/pkg/index.js',
+        relativePath: 'node_modules/pkg/index.js',
+        content: Buffer.from('module'),
+      },
+      {
+        fullPath: '/dist/.git/HEAD',
+        relativePath: '.git/HEAD',
+        content: Buffer.from('ref: refs/heads/main'),
+      },
+      {
+        fullPath: '/dist/thumbs.db',
+        relativePath: 'thumbs.db',
+        content: Buffer.from('thumbnail cache'),
+      },
+    ]);
+
+    await extractAstroAssetsMap('/dist', 'tap-app');
+
+    expect(readDirRecursiveWithContentsMock).toHaveBeenCalledWith('/dist', {
+      includeIgnoredPaths: true,
+      failOnError: true,
+    });
+    const assets = buildAssetsMapMock.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(Object.keys(assets).sort()).toEqual([
+      '.DS_Store',
+      '.git/HEAD',
+      'index.html',
+      'node_modules/pkg/index.js',
+      'script.js.map',
+      'thumbs.db',
+    ]);
+  });
+
   it('logs and returns empty assets when recursive read fails', async () => {
     readDirRecursiveWithContentsMock.mockRejectedValue(new Error('Access denied'));
 
@@ -117,6 +168,16 @@ describe('extractAstroAssetsMap', () => {
       'warn',
       expect.stringMatching(/Failed to read build directory \/dist/)
     );
+  });
+
+  it('fails closed instead of publishing a partial tap-app output', async () => {
+    const readError = new Error('Access denied');
+    readDirRecursiveWithContentsMock.mockRejectedValue(readError);
+
+    await expect(extractAstroAssetsMap('/dist', 'tap-app')).rejects.toBe(readError);
+
+    expect(buildAssetsMapMock).not.toHaveBeenCalled();
+    expect(logFnMock).not.toHaveBeenCalled();
   });
 
   it('exposes extractBuffer and getAssetType callbacks through buildAssetsMap', async () => {

@@ -1,9 +1,10 @@
-import type { ZephyrBuildHooks, ZephyrEngine } from 'zephyr-agent';
+import type { ZephyrBuildHooks, ZephyrBuildTarget, ZephyrEngine } from 'zephyr-agent';
 import type { XPackBuildCoordinator } from 'zephyr-xpack-internal';
 
 export interface ZephyrRspackPluginOptions {
-  // hacks
-  // todo: add link to documentation and sample how this should be used and when
+  /** Zephyr build target, including the `tap-app` mini-app artifact family. */
+  target?: ZephyrBuildTarget;
+  /** Wait for HTML processing before deployment when the framework emits HTML late. */
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   /** Override automatic CSR/SSR detection for coordinated compiler arrays. */

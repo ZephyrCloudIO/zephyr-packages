@@ -56,6 +56,38 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     );
   });
 
+  it('sends tap-app as the dependency build target', async () => {
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: mock_api_response },
+    });
+
+    await resolve_remote_dependency({
+      application_uid,
+      version,
+      platform: 'tap-app',
+      build_context: 'local',
+    });
+
+    const requestedUrl = new URL(axiosMock.get.mock.calls[0][0] as string);
+    expect(requestedUrl.searchParams.get('build_target')).toBe('tap-app');
+    expect(requestedUrl.searchParams.get('build_context')).toBe('local');
+  });
+
+  it('rejects an unsupported target before making a dependency request', async () => {
+    await expect(
+      resolve_remote_dependency({
+        application_uid,
+        version,
+        platform: 'desktop' as never,
+        build_context: 'local',
+      })
+    ).rejects.toThrow('resolve_remote_dependency({ platform }) must be one of');
+
+    expect(axiosMock.get).not.toHaveBeenCalled();
+  });
+
   it('should throw ZephyrError on not ok response', async () => {
     getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
     axiosMock.get.mockRejectedValueOnce({

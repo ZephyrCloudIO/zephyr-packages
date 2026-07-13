@@ -1,6 +1,9 @@
 /* istanbul ignore file */
 
-/** Todo: this worst and most outdated model so far, had to be refactored */
+import type { ZephyrBuildTarget } from './build-target';
+import type { ZephyrModuleFederationBuildMetadata } from './module-federation';
+
+/** Legacy dashboard/build-statistics envelope shared by every Zephyr adapter. */
 export interface ZephyrBuildStats {
   /** @deprecated */
   project: string;
@@ -111,7 +114,7 @@ export interface ZephyrBuildStats {
     username?: string;
     isCI: boolean;
     env?: string;
-    target?: string;
+    target?: ZephyrBuildTarget;
   };
   /**
    * Become the first part of `remote_host` and `remote_entry_url` in database in
@@ -125,11 +128,19 @@ export interface ZephyrBuildStats {
   domain?: string | undefined;
   /** @deprecated */
   platform?: DeploymentIntegrationPlatform | undefined;
+  /** The target platform or artifact family of the build. */
+  build_target?: ZephyrBuildTarget;
+  /** Module Federation library type exposed by this build (for example `var` or `module`). */
+  library_type?: string;
+  /** Serialized Module Federation exposes used to publish this build. */
+  exposes?: Record<string, unknown> | Array<string | Record<string, unknown>>;
+  /** Serialized Module Federation shared configuration used to publish this build. */
+  shared?: Record<string, unknown> | Array<string | Record<string, unknown>>;
   /**
-   * The target platform of the build , should be `ios`, `android`, `web` or undefined at
-   * the moment
+   * Every independently published Module Federation container. The singular fields above
+   * are retained only for legacy single-container consumers.
    */
-  build_target?: string;
+  federation?: ZephyrModuleFederationBuildMetadata[];
   /** @deprecated */
   type: unknown;
   /** Public environment variables captured at build time (ZE_PUBLIC_* only) */

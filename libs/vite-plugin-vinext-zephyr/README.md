@@ -43,24 +43,66 @@ export default defineConfig({
 ## Options
 
 ```ts
+const tapFederationMetadata = {
+  mfConfigs: [
+    { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs', library: { type: 'module' } },
+    { name: 'mobile', filename: 'targets/mobile/remoteEntry.mjs', library: { type: 'module' } },
+    { name: 'quickjs', filename: 'targets/quickjs/remoteEntry.mjs', library: { type: 'module' } },
+  ],
+  federation: [
+    { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs', library_type: 'module' },
+    { name: 'mobile', remote: 'targets/mobile/remoteEntry.mjs', library_type: 'module' },
+    { name: 'quickjs', remote: 'targets/quickjs/remoteEntry.mjs', library_type: 'module' },
+  ],
+};
+
 withZephyr({
+  target: 'tap-app',
   outputDir: 'dist',
-  entrypoint: 'server/index.js',
+  ...tapFederationMetadata,
   hooks: {},
 });
 ```
 
 - `outputDir` - Build output directory. Defaults to `dist`.
-- `entrypoint` - Optional server entrypoint relative to output directory.
-  Auto-detected by default.
+- `target` - Zephyr artifact family. Use `tap-app` for TAP packages.
+- `mfConfigs` - Every Module Federation container included in the snapshot.
+- `federation` - Matching build-stat metadata for each `mfConfigs` entry.
+- `snapshotType` - `'csr'` or `'ssr'`. TAP packages default to CSR; ordinary Vinext
+  deployments default to SSR.
+- `entrypoint` - Optional server entrypoint relative to output directory for an SSR
+  snapshot. Auto-detected when SSR is selected.
 - `hooks` - Optional Zephyr deployment lifecycle hooks.
+
+`target: 'tap-app'` publishes a desktop/mobile/QuickJS ESM package as CSR by default,
+without requiring a server entrypoint. To publish a TAP SSR package instead, opt in
+explicitly:
+
+```ts
+withZephyr({
+  target: 'tap-app',
+  snapshotType: 'ssr',
+  entrypoint: 'server/index.js',
+  ...tapFederationMetadata,
+});
+```
+
+TAP publication requires both non-empty metadata arrays. Every `mfConfigs` item must
+have exactly one `federation` item with the same `name` and with
+`filename === remote`; mismatched metadata fails before the build starts. Vinext does
+not infer this information from framework plugins. A valid singleton is also exposed
+through the legacy `mfConfig` field for older consumers; multi-container packages use
+only the complete `mfConfigs` array.
 
 ## Entrypoint Auto-Detection
 
 The plugin waits for Vinext's post-ordered `buildApp` phase, verifies every Vite child
-environment completed, then scans the finalized output tree. This includes the generated
-RSC manifest and avoids publishing an early or partial server/client build. When
-`entrypoint` is not provided, it resolves JavaScript, ESM, and CommonJS entries from:
+environment completed, then scans the finalized output tree. Ordinary Vinext deployments
+include the generated RSC manifest and Worker-compatible import cleanup. With
+`target: 'tap-app'`, the finalized tree is transported verbatim instead: no Node-import
+rewriting and no synthesized RSC manifest. CSR transport does not inspect a server entry.
+When `snapshotType: 'ssr'` is selected and `entrypoint` is not provided, it resolves
+JavaScript, ESM, and CommonJS entries from:
 
 1. `dist/server/index.js` for App Router builds.
 2. `dist/<worker-dir>/index.*` when `<worker-dir>` contains `wrangler.json` or

@@ -1,4 +1,4 @@
-import type { Platform, ZeBuildAssetsMap } from 'zephyr-agent';
+import type { ZeBuildAssetsMap } from 'zephyr-agent';
 import {
   buildAssetsMap,
   resolveMfManifestPath,
@@ -22,9 +22,13 @@ import {
 import { mutateMfConfig } from './internal/mutate-mf-config';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
 import type { OutputAsset } from './internal/types';
+import {
+  assertMetroNativeBuildTarget,
+  type MetroNativeBuildTarget,
+} from './native-target';
 
 export interface ZephyrCommandWrapperConfig {
-  platform: Platform;
+  platform: MetroNativeBuildTarget;
   mode: string;
   context: string;
   outDir: string;
@@ -36,6 +40,7 @@ export class ZephyrMetroPlugin {
   zephyr_engine!: ZephyrEngine;
 
   constructor(props: ZephyrCommandWrapperConfig) {
+    assertMetroNativeBuildTarget(props.platform, 'ZephyrMetroPlugin platform');
     this.#config = props;
   }
 
@@ -83,6 +88,7 @@ export class ZephyrMetroPlugin {
     // call so every later failure is guaranteed to roll it back.
     let buildInProgress = true;
     try {
+      this.assertEngineTargetMatchesPlatform();
       await this.zephyr_engine.start_new_build();
 
       const assetsMap = await this.makeAssetsMap();
@@ -93,6 +99,9 @@ export class ZephyrMetroPlugin {
         )
       );
 
+      // Asset discovery and stat creation are asynchronous. Check again at the
+      // publication boundary in case an untyped consumer changed engine state.
+      this.assertEngineTargetMatchesPlatform();
       await this.zephyr_engine.upload_assets({
         assetsMap,
         buildStats: buildStats as any,
@@ -173,6 +182,19 @@ export class ZephyrMetroPlugin {
     });
 
     return consumeMap;
+  }
+
+  private assertEngineTargetMatchesPlatform(): void {
+    const engineTarget = this.zephyr_engine.env.target;
+    assertMetroNativeBuildTarget(engineTarget, 'ZephyrMetroPlugin engine target');
+
+    if (engineTarget !== this.#config.platform) {
+      throw new TypeError(
+        `ZephyrMetroPlugin engine target must match platform ${JSON.stringify(
+          this.#config.platform
+        )}; received ${JSON.stringify(engineTarget)}.`
+      );
+    }
   }
 
   private async getBuildStats(bundleMaps: ZeBuildAsset[]) {

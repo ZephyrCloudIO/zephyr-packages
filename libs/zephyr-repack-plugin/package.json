@@ -45,7 +45,8 @@
     "build": "rslib build",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "test": "rstest run"
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
@@ -54,6 +55,7 @@
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rspack/core": "catalog:rspack",
+    "@rstest/core": "catalog:rstest",
     "@types/find-package-json": "catalog:typescript",
     "typescript": "catalog:typescript"
   }

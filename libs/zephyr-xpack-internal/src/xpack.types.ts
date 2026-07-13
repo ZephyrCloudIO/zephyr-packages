@@ -1,3 +1,5 @@
+import type { MfManifestConfig } from 'zephyr-agent';
+
 export interface XPackConfiguration<Compiler> {
   context?: string;
   plugins?: (
@@ -25,6 +27,31 @@ export type Library =
       amd?: string;
     };
 
+export type XFederationExposes =
+  | Array<string | XFederationExposesObject>
+  | XFederationExposesObject;
+
+interface XFederationExposesObject {
+  [key: string]: string | string[] | XFederationExposesConfig;
+}
+
+interface XFederationExposesConfig {
+  import: string | string[];
+  name?: string;
+}
+
+export type XFederationShared =
+  | Array<string | XFederationSharedObject>
+  | XFederationSharedObject;
+
+interface XFederationSharedObject {
+  [key: string]: string | XFederationSharedConfig;
+}
+
+interface XFederationSharedConfig {
+  [key: string]: unknown;
+}
+
 interface WebpackPluginInstance<Compiler> {
   [index: string]: any;
 
@@ -38,6 +65,10 @@ export interface XFederatedRemotesConfig {
     type?: string;
   };
   remotes?: (string | RemotesObject)[] | RemotesObject;
+  exposes?: XFederationExposes;
+  shared?: XFederationShared;
+  /** Enhanced Module Federation manifest emission options. */
+  manifest?: MfManifestConfig;
   /** Repack: bundle file name */
   filename?: string;
   /**
@@ -46,10 +77,12 @@ export interface XFederatedRemotesConfig {
    */
   bundle_name?: string;
   /** Runtime plugins for Module Federation */
-  runtimePlugins?: string[];
+  runtimePlugins?: Array<string | [string, Record<string, unknown>]>;
 }
 
 export interface ModuleFederationPlugin {
+  /** Enhanced MF plugin identifier (absent on native/legacy MF plugins). */
+  name?: string;
   apply: (compiler: unknown) => void;
   /** For Webpack/Rspack */
   _options?: XFederatedRemotesConfig | { config: XFederatedRemotesConfig };

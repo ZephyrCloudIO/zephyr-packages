@@ -37,4 +37,6 @@ export interface RemoteWithEntry {
   name: string;
   alias?: string;
   entry: string;
+  type?: string;
+  entryGlobalName?: string;
 }

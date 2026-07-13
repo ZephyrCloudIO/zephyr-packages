@@ -68,6 +68,7 @@ export default defineConfig({
   plugins: [
     pluginReact(),
     withZephyr({
+      target: 'tap-app',
       wait_for_index_html: true, // Wait for HTML processing
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',
@@ -185,7 +186,10 @@ Creates an Rsbuild plugin for Zephyr integration.
 #### Parameters
 
 - `options` (optional): Configuration options
+  - `target?: 'web' | 'ios' | 'android' | 'tap-app'` - Zephyr build target
   - `wait_for_index_html?: boolean` - Wait for HTML processing before deployment
+  - `snapshotType?: 'csr' | 'ssr'` - Override automatic snapshot type detection
+  - `entrypoint?: string` - Server entrypoint relative to the output root
 
 #### Returns
 

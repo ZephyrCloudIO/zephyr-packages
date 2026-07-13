@@ -1,14 +1,18 @@
 import type { ZeBuildAssetsMap, ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 import {
+  assertTapFederationPublicationMetadata,
   handleGlobalError,
   zeBuildAssets,
   ZeErrors,
   ZephyrError,
   ze_log,
 } from 'zephyr-agent';
-import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { type Source, type ZephyrBuildStats } from 'zephyr-edge-contract';
-import { getBuildStats } from '../federation-dashboard-legacy/get-build-stats';
+import {
+  getBuildStats,
+  getModuleFederationConfigs,
+} from '../federation-dashboard-legacy/get-build-stats';
+import { getLegacyModuleFederationConfig } from './federation-config-metadata';
 import { emitDeploymentDone } from '../lifecycle-events/index';
 import { buildWebpackAssetMap } from '../xpack-extract/build-webpack-assets-map';
 import type { ModuleFederationPlugin, XStats, XStatsCompilation } from '../xpack.types';
@@ -47,13 +51,23 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
+  const preserveTapArtifactPaths = zephyr_engine.env?.target === 'tap-app';
   let logicalDeploymentCompleted = !pluginOptions.coordinator;
 
   try {
+    if (preserveTapArtifactPaths) {
+      // The TAP SDK signs package-relative paths. A bundler base/public path must not
+      // turn those immutable artifact keys into local-output-prefixed paths later in
+      // createSnapshot.
+      zephyr_engine.buildProperties.baseHref = '';
+    }
     let assetsMap = await buildWebpackAssetMap(assets, {
-      wait_for_index_html,
+      // The waiter synthesizes a replacement index.html after compilation. TAP owns
+      // descriptor-locked HTML itself, so only upload assets that the SDK emitted.
+      wait_for_index_html: preserveTapArtifactPaths ? false : wait_for_index_html,
+      failOnUnsupportedSource: preserveTapArtifactPaths,
     });
-    if (pluginOptions.assetPrefix) {
+    if (pluginOptions.assetPrefix && !preserveTapArtifactPaths) {
       assetsMap = prefixAssetPaths(assetsMap, pluginOptions.assetPrefix);
     }
 
@@ -71,10 +85,18 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
       DELIMITER,
     });
 
-    const mfConfig = pluginOptions.mfConfig as unknown as Pick<
-      ZephyrPluginOptions,
-      'mfConfig'
-    >['mfConfig'];
+    const mfConfigs = getModuleFederationConfigs(pluginOptions.mfConfig);
+    const mfConfig = getLegacyModuleFederationConfig(mfConfigs);
+
+    // Direct (non-coordinated) Webpack/Rspack builds pass through this path. A
+    // coordinator validates after merging its compiler contributions below.
+    if (!pluginOptions.coordinator) {
+      assertTapFederationPublicationMetadata({
+        target: zephyr_engine.env?.target,
+        mfConfigs,
+        federation: (dashData as ZephyrBuildStats).federation,
+      });
+    }
 
     if (pluginOptions.coordinator) {
       if (!pluginOptions.participant) {
@@ -86,7 +108,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
         participant: pluginOptions.participant,
         generation: pluginOptions.generation,
         assetsMap,
-        mfConfig,
+        mfConfigs: mfConfigs.length > 0 ? mfConfigs : undefined,
         buildStats: dashData as unknown as ZephyrBuildStats,
         hooks: pluginOptions.hooks,
         dependencyPaths: pluginOptions.dependencyPaths,
@@ -96,6 +118,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
 
     await zephyr_engine.upload_assets({
       assetsMap,
+      mfConfigs: mfConfigs.length > 0 ? mfConfigs : undefined,
       mfConfig,
       buildStats: dashData as unknown as ZephyrBuildStats,
       hooks: pluginOptions.hooks,

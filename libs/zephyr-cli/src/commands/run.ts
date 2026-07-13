@@ -1,23 +1,27 @@
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
+import { loadPublicationMetadata } from '../lib/publication-metadata';
 import { parseShellCommand, splitCommands } from '../lib/shell-parser';
 import { executeCommand } from '../lib/spawn-helper';
 import { uploadAssets } from '../lib/upload';
 
 export interface RunOptions {
   commandLine: string;
-  target?: 'web' | 'ios' | 'android';
+  target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
+  /** JSON sidecar emitted by a TAP SDK or compatible bundler. */
+  metadataPath?: string;
   cwd: string;
 }
 
 /** Run command: Execute a build command and automatically upload the resulting assets. */
 export async function runCommand(options: RunOptions): Promise<void> {
-  const { commandLine, target, verbose, ssr, cwd } = options;
+  const { commandLine, target, verbose, ssr, metadataPath, cwd } = options;
 
   // Log to stderr so it doesn't interfere with command output
   const log = (level: 'info' | 'warn' | 'error', message: string) => {
@@ -157,6 +161,14 @@ export async function runCommand(options: RunOptions): Promise<void> {
     });
   }
 
+  // The SDK writes this during the build command, so load it only after output exists
+  // but before opening a Zephyr build session.
+  const publicationMetadata = await loadPublicationMetadata({
+    metadataPath,
+    cwd,
+    target,
+  });
+
   // Determine the primary build tool for ZephyrEngine
   const primaryTool = detectedCommands[0]?.tool || 'unknown';
 
@@ -166,12 +178,8 @@ export async function runCommand(options: RunOptions): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     builder: primaryTool as any,
     context: cwd,
+    ...(target === undefined ? {} : { target }),
   });
-
-  // Set build target if specified
-  if (target) {
-    zephyr_engine.env.target = target;
-  }
 
   // Set SSR flag if specified
   if (ssr) {
@@ -182,7 +190,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
   log('info', 'Extracting assets from output directory...');
   let assetsMap;
   try {
-    assetsMap = await extractAssetsFromDirectory(outputDir);
+    assetsMap = await extractAssetsFromDirectory(outputDir, { target });
   } catch (error: unknown) {
     if (zephyr_engine.hasActiveBuild) {
       zephyr_engine.build_failed();
@@ -198,6 +206,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
   await uploadAssets({
     zephyr_engine,
     assetsMap,
+    publicationMetadata,
   });
 
   log('info', 'Upload completed successfully');

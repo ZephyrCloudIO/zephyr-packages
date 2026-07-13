@@ -19,7 +19,11 @@ export type {
   XStatsCompilation,
 } from './xpack.types';
 
-export { getBuildStats } from './federation-dashboard-legacy/get-build-stats';
+export {
+  getBuildStats,
+  getModuleFederationBuildMetadata,
+  type ModuleFederationBuildMetadata,
+} from './federation-dashboard-legacy/get-build-stats';
 
 export { setupManifestEmission } from './hooks/ze-emit-manifest';
 export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';

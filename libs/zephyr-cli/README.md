@@ -40,6 +40,9 @@ ze-cli NODE_ENV=production webpack
 
 # Mark as SSR build
 ze-cli --ssr pnpm build
+
+# Build and publish a TAP package. CLI options for run appear before the build command.
+ze-cli --target tap-app --metadata ./dist/zephyr-publication.json pnpm build
 ```
 
 ### Deploy Command
@@ -59,16 +62,78 @@ ze-cli deploy ./dist
 # Upload with specific target
 ze-cli deploy ./dist --target ios
 
+# Publish a TAP mini-app artifact
+ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
+
 # Mark as SSR
 ze-cli deploy ./dist --ssr
+```
+
+### Watch Command
+
+Publish the initial output and then publish each settled output change without
+rebuilding the TAP host. This command deliberately requires `--target tap-app`:
+
+```bash
+# The Zephyr control plane authorizes the development tag; the CLI never creates one locally.
+ze-cli watch ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 ```
 
 ## Options
 
 - `--ssr` - Mark this snapshot as server-side rendered
-- `--target, -t <target>` - Build target: `web`, `ios`, or `android` (default: `web`)
+- `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
+- `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
+- `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
 - `--verbose, -v` - Enable verbose output
 - `--help, -h` - Show help message
+
+### TAP metadata sidecar
+
+TAP SDK builds must pass `--metadata <path>` for `run`, `deploy`, and `watch`.
+The file is JSON emitted by the SDK; it keeps each independently addressable
+container in both the snapshot (`mfConfigs`) and build statistics (`federation`).
+The CLI rejects a TAP upload if the sidecar is missing, malformed, empty, or if
+an entry's `federation.remote` does not match its `mfConfigs.filename`.
+
+```json
+{
+  "mfConfigs": [
+    {
+      "name": "desktop",
+      "filename": "targets/desktop/remoteEntry.mjs",
+      "library": { "type": "module" },
+      "exposes": { "./ui": "./src/desktop.ts" }
+    },
+    {
+      "name": "quickjs",
+      "filename": "targets/quickjs/remoteEntry.mjs",
+      "library": { "type": "module" },
+      "exposes": { "./background": "./src/quickjs.ts" }
+    }
+  ],
+  "federation": [
+    {
+      "name": "desktop",
+      "remote": "targets/desktop/remoteEntry.mjs",
+      "mf_manifest": "targets/desktop/mf-manifest.json",
+      "library_type": "module"
+    },
+    {
+      "name": "quickjs",
+      "remote": "targets/quickjs/remoteEntry.mjs",
+      "library_type": "module"
+    }
+  ]
+}
+```
+
+Both arrays must be non-empty and represent the same containers. A single
+container also gets the legacy `mfConfig` snapshot field; multi-container
+sidecars intentionally do not choose an arbitrary first entry. The CLI accepts
+an explicit `mfConfig` only for a TAP sidecar containing that same one container.
+For `run`, place the options before the build command because the SDK creates the
+sidecar during the build. For `watch`, the sidecar is reread for every snapshot.
 
 ## How It Works
 

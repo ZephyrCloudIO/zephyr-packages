@@ -58,6 +58,7 @@ export function coordinateXPackCompilers(
     outputPaths.length === configs.length ? commonDirectory(outputPaths) : undefined;
   const hasDistinctOutputPaths =
     new Set(outputPaths.map((item) => path.resolve(item))).size > 1;
+  const preserveTapArtifactPaths = engine.env?.target === 'tap-app';
 
   const compilers = configs.map((config, index): CoordinatedCompiler => {
     const role = isServerTarget(config.target) ? 'server' : 'client';
@@ -70,7 +71,12 @@ export function coordinateXPackCompilers(
     usedNames.add(participant);
 
     let assetPrefix: string | undefined;
-    if (hasDistinctOutputPaths && outputRoot && config.output?.path) {
+    if (
+      !preserveTapArtifactPaths &&
+      hasDistinctOutputPaths &&
+      outputRoot &&
+      config.output?.path
+    ) {
       const relative = path.relative(outputRoot, path.resolve(config.output.path));
       if (relative && relative !== '.' && !relative.startsWith('..')) {
         assetPrefix = relative.split(path.sep).join('/');
@@ -79,9 +85,14 @@ export function coordinateXPackCompilers(
     return { participant, role, assetPrefix };
   });
 
-  const inferredSnapshotType = compilers.some(({ role }) => role === 'server')
-    ? 'ssr'
-    : 'csr';
+  // Node/worker compiler targets are often SDK-owned background artifacts in a TAP
+  // package, not Zephyr SSR entrypoints. Preserve an explicit caller choice, but do
+  // not infer SSR or require server/index from a desktop + QuickJS package.
+  const inferredSnapshotType = preserveTapArtifactPaths
+    ? 'csr'
+    : compilers.some(({ role }) => role === 'server')
+      ? 'ssr'
+      : 'csr';
   const participantByConfigName = new Map<string, string>();
   configs.forEach((config, index) => {
     if (config.name?.trim() && compilers[index]) {

@@ -1,6 +1,10 @@
-import { ZephyrError, ZeErrors, type Platform } from 'zephyr-agent';
+import { ZephyrError, ZeErrors } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
+import {
+  assertMetroNativeBuildTarget,
+  type MetroNativeBuildTarget,
+} from './native-target';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export type MetroConfig = Record<string, unknown>;
@@ -8,7 +12,7 @@ export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfCon
 
 interface MetroBundleOptions {
   mode: string;
-  platform: Platform;
+  platform: MetroNativeBuildTarget;
 }
 
 interface MetroConfigOptions extends MetroConfig {
@@ -29,12 +33,17 @@ export async function zephyrCommandWrapper(
   updateManifest: () => void
 ) {
   return async (...args: MetroCommandArgs) => {
+    const platform = args[0][0].platform;
+
+    // Keep this outside the error wrapper: an unsupported platform must stop
+    // before Metro config loading, dependency resolution, or asset publication.
+    assertMetroNativeBuildTarget(platform, 'Metro bundle platform');
+
     let zephyrMetroPlugin: ZephyrMetroPlugin | undefined;
     let wrapperOwnsRollback = false;
     try {
       // before build
       const isDev = args[0][0].mode;
-      const platform = args[0][0].platform;
 
       const context = args[1].root;
 

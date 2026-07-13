@@ -9,7 +9,7 @@ export interface PublishTarget {
   };
 }
 
-// TODO: all tags, envs, cname publish targets should be logged in deployment history
+/** The control plane records every version, tag, environment, and CNAME target. */
 export interface PublishTargets {
   /**
    * `undefined` for rollback request, otherwise `PublishTarget`
@@ -53,7 +53,7 @@ export interface PublishRequest {
   username: string;
   can_write: boolean;
 
-  // TODO: all tags, envs, cname publish targets should be logged in deployment history
+  /** Target categories are intentionally transmitted together for one publication. */
   targets: {
     // already published at this point
     version: PublishTarget;

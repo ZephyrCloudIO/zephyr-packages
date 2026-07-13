@@ -7,7 +7,7 @@ import { processFunctionRemotes } from './process-function-remotes';
 
 // import { StatsChunk, StatsModule } from 'webpack';
 import type { XStatsChunk, XStatsModule } from '../../../xpack.types';
-import type { ConvertedGraph } from 'zephyr-edge-contract';
+import type { ConvertedGraph, ZephyrBuildTarget } from 'zephyr-edge-contract';
 
 export interface ConvertToGraphParams {
   /** Application name in module federation config */
@@ -16,11 +16,7 @@ export interface ConvertToGraphParams {
   filename?: string;
   /** Key of remotes as a string of arrays */
   remotes?: unknown;
-  /**
-   * Chunk of the remote entry,
-   *
-   * // TODO: in MF2 should it be js.bundle or mf-manifest.json?
-   */
+  /** Optional compiler chunk associated with a legacy remote entry. */
   federationRemoteEntry: XStatsChunk | undefined;
   /**
    * Module compilation results return from getStats(), typically includes all chunks and
@@ -64,8 +60,8 @@ export interface ConvertToGraphParams {
    * will be empty
    */
   chunkDependencies: unknown;
-  /** Repack specific 'ios' | 'android' | 'web' | undefined */
-  target?: 'ios' | 'android' | 'web' | undefined;
+  /** Target platform or artifact family. */
+  target?: ZephyrBuildTarget | undefined;
 }
 
 export function convertToGraph(

@@ -127,7 +127,12 @@ module.exports = (async () => {
 
 ### Platform-Specific Configuration
 
-The plugin supports both iOS and Android platforms:
+The plugin supports only native iOS and Android bundles. `target: 'tap-app'` is
+rejected before Metro resolves remotes or uploads assets, because Metro does not
+produce the generic ESM artifact that TAP apps require. Use an ESM-capable Zephyr
+adapter for TAP apps instead.
+
+Configure an iOS or Android target explicitly:
 
 ```javascript
 // metro.config.js

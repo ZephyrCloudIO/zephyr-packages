@@ -1,6 +1,12 @@
 /* istanbul ignore file */
 
 // edge api
+export {
+  assertZephyrBuildTarget,
+  isZephyrBuildTarget,
+  ZEPHYR_BUILD_TARGETS,
+  type ZephyrBuildTarget,
+} from './lib/build-target';
 export type {
   GatewayPublishRequest,
   PublishRequest,
@@ -11,6 +17,11 @@ export type {
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 
 export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-plugin-options';
+export type {
+  ZephyrModuleFederationBuildMetadata,
+  ZephyrModuleFederationConfig,
+  ZephyrLegacyModuleFederationConfig,
+} from './lib/module-federation';
 export * as ZeUtils from './lib/promise';
 export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';

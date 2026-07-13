@@ -11,7 +11,7 @@ describe('zeBuildDashData', () => {
       application_uid: 'app.repo.org',
       env: {
         isCI: false,
-        target: 'web',
+        target: 'tap-app',
         env: 'staging',
       },
       gitProperties: {
@@ -50,7 +50,8 @@ describe('zeBuildDashData', () => {
     expect(stats.environment).toBe('staging');
     expect(stats.context).toMatchObject({
       env: 'staging',
-      target: 'web',
+      target: 'tap-app',
     });
+    expect(stats.build_target).toBe('tap-app');
   });
 });

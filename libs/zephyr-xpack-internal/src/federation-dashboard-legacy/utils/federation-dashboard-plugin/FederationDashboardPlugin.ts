@@ -2,7 +2,11 @@
 
 import { sep } from 'node:path';
 import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
-import type { ConvertedGraph, ZeUploadBuildStats } from 'zephyr-edge-contract';
+import type {
+  ConvertedGraph,
+  ZeUploadBuildStats,
+  ZephyrBuildTarget,
+} from 'zephyr-edge-contract';
 import {
   extractFederatedConfig,
   isModuleFederationPlugin,
@@ -41,7 +45,65 @@ interface ProcessWebpackGraphParams {
     zephyr_engine: ZephyrEngine;
     mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
     // Repack specific options because there are different targets it build towards
-    target?: 'ios' | 'android' | 'web' | undefined;
+    target?: ZephyrBuildTarget | undefined;
+  };
+}
+
+interface FederationPluginOptions {
+  name?: string;
+  remotes?: XFederatedRemotesConfig['remotes'];
+  /** See the Repack compatibility note on the class field. */
+  bundle_name?: string;
+  filename?: string;
+  exposes?: Exposes;
+}
+
+export interface ResolvedFederationGraphConfiguration {
+  /** Every independently emitted container represented by this compilation. */
+  configurations: FederationPluginOptions[];
+  /** The legacy graph has one owner, so multi-container builds use the application name. */
+  graphConfiguration: FederationPluginOptions;
+  /** Union of all remotes, without dropping containers after the first plugin. */
+  remoteNames: string[];
+}
+
+/**
+ * Converts bundler plugin wrappers into the serializable configuration needed by the
+ * legacy graph. A multi-container compilation deliberately has no selected container: the
+ * graph is attributed to the application and the per-container details are carried by the
+ * build-stat `federation` array.
+ */
+export function resolveFederationGraphConfiguration(
+  mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined,
+  fallback: FederationPluginOptions,
+  applicationName: string | undefined
+): ResolvedFederationGraphConfiguration {
+  const plugins = mfConfig ? (Array.isArray(mfConfig) ? mfConfig : [mfConfig]) : [];
+  const configurations = plugins.flatMap((plugin) => {
+    const config = extractFederatedConfig(plugin);
+    return config ? [config] : [];
+  });
+  const resolvedConfigurations =
+    configurations.length > 0
+      ? configurations
+      : Object.keys(fallback).length > 0
+        ? [fallback]
+        : [];
+  const remoteNames = [
+    ...new Set(
+      resolvedConfigurations.flatMap((config) =>
+        parseRemotesAsEntries(config.remotes).map(([remoteName]) => remoteName)
+      )
+    ),
+  ];
+
+  return {
+    configurations: resolvedConfigurations,
+    graphConfiguration:
+      resolvedConfigurations.length === 1
+        ? resolvedConfigurations[0]
+        : { name: applicationName },
+    remoteNames,
   };
 }
 
@@ -50,20 +112,7 @@ export class FederationDashboardPlugin {
   _dashData: string | undefined;
   allArgumentsUsed: [file: string, applicationID: string, name: string][] = [];
 
-  FederationPluginOptions: {
-    name?: string;
-    remotes?: XFederatedRemotesConfig['remotes'];
-    /**
-     * **bundle_name**: This is a placeholder option since Repack is fast iterating on
-     * Module Federation, right now they are consuming JS bundle and ignore
-     * mf-manifest.json, but if it comes back this field will be needed to understand what
-     * bundle name to look for in mf-manifest.json, Available in
-     * ApplicationVersion.metadata.
-     */
-    bundle_name?: string;
-    filename?: string;
-    exposes?: Exposes;
-  } = {};
+  FederationPluginOptions: FederationPluginOptions = {};
 
   // { filename: string; reportFunction: () => void }
   constructor(options: Partial<FederationDashboardPluginOptions>) {
@@ -245,47 +294,49 @@ export class FederationDashboardPlugin {
     //   }
 
     // fs.writeFileSync('stats.json', JSON.stringify(stats, null, 2))
-    this.FederationPluginOptions = Object.assign(
-      {},
-      this.FederationPluginOptions,
-      pluginOptions.mfConfig
-    );
+    const { configurations, graphConfiguration, remoteNames } =
+      resolveFederationGraphConfiguration(
+        pluginOptions.mfConfig,
+        this.FederationPluginOptions,
+        this._options.app?.name
+      );
+    // Preserve the singular field for existing callers only when it represents the
+    // graph owner. Never assign an array into this object (which turns containers into
+    // numeric keys and silently loses their configuration).
+    this.FederationPluginOptions = graphConfiguration;
 
-    // get RemoteEntryChunk
-    const RemoteEntryChunk = this.getRemoteEntryChunk(
-      stats_json,
-      this.FederationPluginOptions
-    );
-    const validChunkArray = this.buildValidChunkArray(
-      stats,
-      this.FederationPluginOptions
+    // A single remote-entry chunk is a legacy graph field. Multi-container builds keep
+    // their exact entries in buildStats.federation rather than pretending one was chosen.
+    const remoteEntryChunk =
+      configurations.length === 1
+        ? this.getRemoteEntryChunk(stats_json, graphConfiguration)
+        : undefined;
+    const validChunkArray = Array.from(
+      new Set(
+        configurations.flatMap((configuration) =>
+          this.buildValidChunkArray(stats, configuration)
+        )
+      )
     );
     const chunkDependencies = this.getChunkDependencies(validChunkArray);
     const vendorFederation = this.buildVendorFederationMap(stats);
 
-    // TODO: this type casting might not be every compilation result from rspack, but it's fine for now
     const getPlatformFromStats = stats.compilation
       .name as FederationDashboardPluginOptions['target'];
 
-    const remotes = this.FederationPluginOptions?.remotes
-      ? parseRemotesAsEntries(this.FederationPluginOptions?.remotes).map(
-          ([remote_name]) => remote_name
-        )
-      : {};
-
     const rawData: ConvertToGraphParams = {
-      name: this.FederationPluginOptions?.name,
-      filename: this.FederationPluginOptions?.filename || '',
-      remotes: remotes,
+      name: graphConfiguration.name,
+      filename: graphConfiguration.filename || '',
+      remotes: remoteNames,
       metadata:
         Object.assign(
           {},
           this._options.metadata,
-          this.attach_remote_bundle_name_to_metadata()
+          this.attach_remote_bundle_name_to_metadata(configurations)
         ) || {},
       topLevelPackage: vendorFederation || {},
       publicPath: stats_json.publicPath,
-      federationRemoteEntry: RemoteEntryChunk,
+      federationRemoteEntry: remoteEntryChunk,
       buildHash: stats_json.hash,
       environment: this._options.environment || 'development', // 'development' if not specified
       version: computeVersionStrategy(stats_json, this._options.versionStrategy),
@@ -295,7 +346,10 @@ export class FederationDashboardPlugin {
       modules: stats_json.modules,
       chunkDependencies,
       functionRemotes: this.allArgumentsUsed,
-      target: pluginOptions.target || getPlatformFromStats,
+      target:
+        pluginOptions.target ??
+        pluginOptions.zephyr_engine.env.target ??
+        getPlatformFromStats,
     };
 
     let graphData: ConvertedGraph | undefined;
@@ -402,36 +456,19 @@ export class FederationDashboardPlugin {
     });*/
   }
 
-  // TODO: add notes on why we need these and what does these do
+  /** Finds the compiler chunk named after a single Module Federation container. */
   getRemoteEntryChunk(
     stats: XStatsCompilation,
     FederationPluginOptions: typeof this.FederationPluginOptions
   ): XStatsChunk | undefined {
     if (!stats.chunks) return;
 
-    // TODO: print all chunk name and see if it has the bundle name or actual remote name. in Rspack this field would return in remote application but won't return in host application due to Rspack's data structure - need external PR to fix
     return stats.chunks.find((chunk) =>
       chunk.names?.find((name) => name === FederationPluginOptions.name)
     );
   }
 
-  /**
-   * TODO: needs a full rewrite because `_group` no longer exists in both Rspack and
-   * Webpack
-   *
-   * Return { "main": [{...dep1Details}, {...dep2Details}], "vendor": [{...dep3Details}],
-   *
-   * 1. Useful for dynamic imports - object generated could inform the bundler or runtime
-   *    loader about which chunks are needed for specific part of the app, enabling better
-   *    performance optimization 1.1 if a chunk representing a React component dynamically
-   *    loads, this dependency graph can help the runtime understand what other chunks
-   *    need to be loaded alongside it.
-   * 2. Optimized loading and caching: By mapping chunk dependencies, this function supports
-   *    advanced optimizations like caching. Chunks that haven’t changed between builds
-   *    can be cached separately, reducing the need for users to download unchanged code.
-   *
-   * }
-   */
+  /** Serializes referenced chunks for the dashboard without bundler-private `_groups`. */
   getChunkDependencies(validChunkArray: XChunk[]): Record<string, never> {
     return validChunkArray.reduce(
       (acc, chunk) => {
@@ -464,8 +501,13 @@ export class FederationDashboardPlugin {
     const vendorFederation: TopLevelPackage = {};
     let packageJson;
     if (this._options.packageJsonPath) {
-      // todo: wrap this is in try/catch
-      packageJson = require(this._options.packageJsonPath);
+      try {
+        packageJson = require(this._options.packageJsonPath);
+      } catch (error) {
+        console.warn(
+          `Unable to read package JSON at ${this._options.packageJsonPath}: ${String(error)}`
+        );
+      }
     } else {
       const initialPath = liveStats.compilation.options.context?.split(sep);
       packageJson = findPackageJson(initialPath);
@@ -579,17 +621,24 @@ export class FederationDashboardPlugin {
    * to metadata, we will have no track record of the actual bundle when we need it later
    * -- this is RePack specific.
    */
-  attach_remote_bundle_name_to_metadata(): Record<string, string> | undefined {
-    if (!this.FederationPluginOptions.exposes) {
+  attach_remote_bundle_name_to_metadata(
+    configurations: readonly FederationPluginOptions[] = [this.FederationPluginOptions]
+  ): Record<string, string> | undefined {
+    // The legacy metadata field is singular. The complete multi-container representation
+    // lives in buildStats.federation, so do not manufacture a bundle name here.
+    if (configurations.length !== 1) {
       return;
     }
-    // TODO: not sure if this error would break the build. Silently log it for now
-    if (!this.FederationPluginOptions.bundle_name) {
+    const [configuration] = configurations;
+    if (!configuration?.exposes) {
+      return;
+    }
+    if (!configuration.bundle_name) {
       console.warn(ZeErrors.ERR_MF_CONFIG_MISSING_FILENAME);
       return;
     }
 
-    return { remote_bundle_name: this.FederationPluginOptions.bundle_name };
+    return { remote_bundle_name: configuration.bundle_name };
   }
 
   async postDashboardData(): Promise<
@@ -598,6 +647,8 @@ export class FederationDashboardPlugin {
       }
     | undefined
   > {
-    throw new Error('not implemented, override it');
+    // Publication is owned by the xpack upload agent. Keep this legacy extension point
+    // safe for callers that still invoke it directly.
+    return undefined;
   }
 }

@@ -208,6 +208,51 @@ describe('BuildSession', () => {
     }
   });
 
+  it('preserves canonical locked artifacts and rejects aliases in strict path mode', () => {
+    const context = new ApplicationContext({
+      applicationUid: 'org.project.tap',
+      publish: rs.fn(),
+    });
+    const locked = asset(
+      'targets/desktop/remoteEntry.mjs',
+      'sdk-locked-hash',
+      'signed desktop entry'
+    );
+    const session = context.beginBuild({
+      invocationId: 'tap-canonical',
+      participants: [{ name: 'desktop' }],
+      strictAssetPaths: true,
+    });
+    session.contribute({
+      participant: 'desktop',
+      key: 'output',
+      assetsMap: assets(locked),
+    });
+    session.completeParticipant('desktop');
+
+    const published = session.seal().assetsMap['sdk-locked-hash'];
+    expect(published).toEqual(
+      expect.objectContaining({
+        path: 'targets/desktop/remoteEntry.mjs',
+        hash: 'sdk-locked-hash',
+      })
+    );
+    expect(published?.buffer).toBe(locked.buffer);
+
+    const alias = context.beginBuild({
+      invocationId: 'tap-alias',
+      participants: [{ name: 'desktop' }],
+      strictAssetPaths: true,
+    });
+    expect(() =>
+      alias.contribute({
+        participant: 'desktop',
+        key: 'output',
+        assetsMap: assets(asset('targets\\desktop\\remoteEntry.mjs', 'alias-hash')),
+      })
+    ).toThrow('canonical snapshot spelling');
+  });
+
   it('reports typed readiness instead of sealing an incomplete build', () => {
     const context = new ApplicationContext({
       applicationUid: 'org.project.app',

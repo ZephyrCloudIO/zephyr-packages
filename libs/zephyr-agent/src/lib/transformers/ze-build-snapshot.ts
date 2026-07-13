@@ -18,6 +18,7 @@ import { posix, win32 } from 'node:path';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+  mfConfigs?: Pick<ZephyrPluginOptions, 'mfConfigs'>['mfConfigs'];
   assets: ZeBuildAssetsMap;
   // SSR-specific parameter
   snapshotType?: 'csr' | 'ssr';
@@ -26,7 +27,7 @@ interface CreateSnapshotProps {
 
 export async function createSnapshot(
   zephyr_engine: ZephyrEngine,
-  { mfConfig, assets, snapshotType, entrypoint }: CreateSnapshotProps
+  { mfConfig, mfConfigs, assets, snapshotType, entrypoint }: CreateSnapshotProps
 ): Promise<Snapshot> {
   const buildId = await zephyr_engine.build_id;
 
@@ -47,16 +48,22 @@ export async function createSnapshot(
     address_mode: (await zephyr_engine.application_configuration).ADDRESS_MODE,
     gitProperties: zephyr_engine.gitProperties,
     mfConfig: mfConfig,
+    mfConfigs: mfConfigs,
   };
   const version_postfix = zephyr_engine.env.isCI
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
-  const basedAssets = applyBaseHrefToAssets(
-    assets,
-    zephyr_engine.buildProperties.baseHref
-  );
-  const normalizedBaseHref = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
+  // TAP package descriptors and locks address emitted artifacts by their exact paths and
+  // hashes. A deployment base is a web-routing concern, so applying it here would turn a
+  // valid locked package into a different snapshot without rebuilding the lock.
+  const preservesLockedArtifactPaths = zephyr_engine.env.target === 'tap-app';
+  const basedAssets = preservesLockedArtifactPaths
+    ? assets
+    : applyBaseHrefToAssets(assets, zephyr_engine.buildProperties.baseHref);
+  const normalizedBaseHref = preservesLockedArtifactPaths
+    ? ''
+    : normalizeBasePath(zephyr_engine.buildProperties.baseHref);
   const basedEntrypoint =
     entrypoint && (snapshotType === 'ssr' || zephyr_engine.env.ssr)
       ? applyBaseHrefToPath(entrypoint, normalizedBaseHref)
@@ -75,6 +82,7 @@ export async function createSnapshot(
     ),
     domain: options.edge_url,
     ...(options.address_mode === 'path' && { addressMode: 'path' as const }),
+    target: zephyr_engine.env.target ?? 'web',
     uid: {
       build: options.buildId,
       app_name: options.applicationProperties.name,
@@ -88,6 +96,7 @@ export async function createSnapshot(
     },
     createdAt: Date.now(),
     mfConfig: options.mfConfig,
+    mfConfigs: options.mfConfigs,
     builder: zephyr_engine.builder,
     plugin_version: getZephyrAgentVersion(),
     assets: Object.keys(basedAssets).reduce(

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
 
-import { cp, mkdtemp, realpath, rm, symlink } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { readDirRecursive, readDirRecursiveWithContents } from './read-dir-recursive';
@@ -114,6 +114,35 @@ describe('read-dir-recursive', () => {
     expect(relativePaths.some((path) => path.includes('.git'))).toBe(false);
     expect(relativePaths).not.toContain('.DS_Store');
     expect(relativePaths).not.toContain('Thumbs.db');
+  });
+
+  it('can retain every opaque artifact and fail closed for locked package output', async () => {
+    await Promise.all([
+      mkdir(join(tempRoot, 'a', 'node_modules', 'locked'), { recursive: true }),
+      mkdir(join(tempRoot, 'a', '.git'), { recursive: true }),
+    ]);
+    await Promise.all([
+      writeFile(join(tempRoot, 'a', 'node_modules', 'locked', 'asset.bin'), 'locked'),
+      writeFile(join(tempRoot, 'a', '.git', 'metadata'), 'locked'),
+      writeFile(join(tempRoot, 'a', '.DS_Store'), 'locked'),
+      writeFile(join(tempRoot, 'a', 'Thumbs.db'), 'locked'),
+    ]);
+    const files = await readDirRecursiveWithContents(join(tempRoot, 'a'), {
+      includeIgnoredPaths: true,
+      failOnError: true,
+    });
+    const relativePaths = files.map((file) => normalizePath(file.relativePath));
+
+    expect(relativePaths.some((path) => path.includes('node_modules'))).toBe(true);
+    expect(relativePaths.some((path) => path.includes('.git'))).toBe(true);
+    expect(relativePaths).toContain('.DS_Store');
+    expect(relativePaths).toContain('Thumbs.db');
+  });
+
+  it('surfaces a missing locked-package output root', async () => {
+    await expect(
+      readDirRecursiveWithContents(join(tempRoot, 'missing'), { failOnError: true })
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('guards against recursive symlink loops', async () => {

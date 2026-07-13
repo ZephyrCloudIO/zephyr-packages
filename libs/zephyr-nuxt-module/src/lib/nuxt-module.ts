@@ -1,6 +1,6 @@
 import { defineNuxtModule } from '@nuxt/kit';
 import type { NuxtModule } from '@nuxt/schema';
-import { ZephyrEngine } from 'zephyr-agent';
+import { assertZephyrBuildTarget, ZephyrEngine } from 'zephyr-agent';
 import { shouldSkipZephyrUpload } from './runtime-guards';
 import { createUploadRunner } from './ssr-upload';
 import type { NuxtLike, ZephyrNuxtOptions } from './types';
@@ -13,6 +13,10 @@ const zephyrNuxtModule: NuxtModule<ZephyrNuxtOptions> =
     },
     defaults: {},
     setup(options, nuxt) {
+      if (options.target !== undefined) {
+        assertZephyrBuildTarget(options.target, 'zephyr({ target })');
+      }
+
       const nuxtLike = nuxt as unknown as NuxtLike;
       if (nuxtLike.options.dev || shouldSkipZephyrUpload()) return;
 
@@ -25,6 +29,7 @@ const zephyrNuxtModule: NuxtModule<ZephyrNuxtOptions> =
         zephyr_defer_create({
           builder: 'nuxt',
           context: nuxtLike.options.rootDir,
+          ...(options.target === undefined ? {} : { target: options.target }),
         });
       };
 

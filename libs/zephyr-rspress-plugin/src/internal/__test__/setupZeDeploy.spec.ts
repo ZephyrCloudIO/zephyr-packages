@@ -83,6 +83,34 @@ describe('setupZeDeploy', () => {
     });
   });
 
+  it('forwards every federation plugin to xpack without selecting a first entry', async () => {
+    const mfConfig = [
+      {
+        name: 'RspackModuleFederationPlugin',
+        apply() {},
+        _options: { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
+      },
+      {
+        name: 'RspackModuleFederationPlugin',
+        apply() {},
+        _options: { name: 'worker', filename: 'targets/worker/remoteEntry.mjs' },
+      },
+    ];
+
+    await setupZeDeploy({
+      deferEngine: Promise.resolve(mockEngine as any),
+      outDir: '/doc_build',
+      files: ['index.html', 'main.js'],
+      mfConfig,
+    });
+
+    expect(xpack_zephyr_agent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pluginOptions: expect.objectContaining({ mfConfig }),
+      })
+    );
+  });
+
   it('should propagate upload failures', async () => {
     (xpack_zephyr_agent as Mock).mockRejectedValueOnce(new Error('deploy failed'));
 

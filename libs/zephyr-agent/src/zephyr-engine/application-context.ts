@@ -18,7 +18,11 @@ function buildDefinitionKey(options: BeginBuildOptions): string {
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
   const postprocessors = [...(options.postprocessors ?? [])].sort();
-  return JSON.stringify({ participants, postprocessors });
+  return JSON.stringify({
+    participants,
+    postprocessors,
+    strictAssetPaths: options.strictAssetPaths ?? false,
+  });
 }
 
 /** Load-once application state which owns successive logical build generations. */
@@ -95,7 +99,8 @@ export class ApplicationContext<TData = unknown, TResult = void> {
         publish: this.options.publish,
         finish: this.options.finish,
         onFailure: this.options.onFailure,
-      }
+      },
+      options.strictAssetPaths ?? false
     );
     this.latestGeneration = generation;
     this.activeSession = session;

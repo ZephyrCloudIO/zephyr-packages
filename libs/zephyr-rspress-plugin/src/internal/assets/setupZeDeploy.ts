@@ -9,6 +9,7 @@ export async function setupZeDeploy({
   outDir,
   files,
   hooks,
+  mfConfig,
 }: ZephyrRspressPluginOptions): Promise<void> {
   if (!files.length) {
     ze_log.package('ZeRspressPlugin: No files to process.');
@@ -39,6 +40,7 @@ export async function setupZeDeploy({
       zephyr_engine,
       options: {},
       hooks,
+      ...(mfConfig === undefined ? {} : { mfConfig }),
     },
   });
 }

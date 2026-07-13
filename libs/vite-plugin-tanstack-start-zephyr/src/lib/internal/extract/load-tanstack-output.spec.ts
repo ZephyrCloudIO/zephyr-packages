@@ -37,4 +37,59 @@ describe('loadFilesFromDirectory', () => {
       })
     );
   });
+
+  it('keeps non-UTF-8 mjs bytes as a raw asset for tap-app', async () => {
+    const emitted = Buffer.from([0x80, 0xff, 0x00, 0xfe, 0x7f]);
+    mockReadDirRecursiveWithContents.mockResolvedValue([
+      {
+        fullPath: '/repo/app/dist/server/entry.mjs',
+        relativePath: 'server/entry.mjs',
+        content: emitted,
+      },
+    ]);
+
+    const bundle = await loadFilesFromDirectory('/repo/app/dist', {
+      target: 'tap-app',
+    });
+    const output = bundle['server/entry.mjs'];
+
+    expect(output).toEqual(
+      expect.objectContaining({
+        type: 'asset',
+        fileName: 'server/entry.mjs',
+        source: emitted,
+      })
+    );
+    expect((output as { source: Buffer }).source).toBe(emitted);
+    expect(mockReadDirRecursiveWithContents).toHaveBeenCalledWith('/repo/app/dist', {
+      includeIgnoredPaths: true,
+      failOnError: true,
+    });
+  });
+
+  it('retains otherwise ignored TAP package files as byte-backed assets', async () => {
+    const sourceMap = Buffer.from('{"version":3}');
+    const opaqueRuntime = Buffer.from([0, 255, 3]);
+    mockReadDirRecursiveWithContents.mockResolvedValue([
+      {
+        fullPath: '/repo/app/dist/targets/desktop/remoteEntry.mjs.map',
+        relativePath: 'targets/desktop/remoteEntry.mjs.map',
+        content: sourceMap,
+      },
+      {
+        fullPath: '/repo/app/dist/node_modules/runtime/opaque.bin',
+        relativePath: 'node_modules/runtime/opaque.bin',
+        content: opaqueRuntime,
+      },
+    ]);
+
+    const bundle = await loadFilesFromDirectory('/repo/app/dist', { target: 'tap-app' });
+
+    expect(bundle['targets/desktop/remoteEntry.mjs.map']).toEqual(
+      expect.objectContaining({ type: 'asset', source: sourceMap })
+    );
+    expect(bundle['node_modules/runtime/opaque.bin']).toEqual(
+      expect.objectContaining({ type: 'asset', source: opaqueRuntime })
+    );
+  });
 });

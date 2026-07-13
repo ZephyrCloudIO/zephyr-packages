@@ -1,10 +1,28 @@
 import type { AppTools, CliPlugin } from '@modern-js/app-tools';
-import { ze_log, type ZephyrBuildHooks } from 'zephyr-agent';
+import {
+  assertZephyrBuildTarget,
+  ze_log,
+  type ZephyrBuildHooks,
+  type ZephyrBuildTarget,
+} from 'zephyr-agent';
 
 const pluginName = 'zephyr-modernjs-plugin';
 const isDev = process.env['NODE_ENV'] === 'development';
 
+/**
+ * The development-server workaround rewrites emitted runtime behavior. A TAP package
+ * carries SDK-locked output, so it must never opt into that rewrite.
+ */
+export function shouldApplyDevPublicPathFix(
+  target: ZephyrBuildTarget | undefined,
+  development = isDev
+): boolean {
+  return development && target !== 'tap-app';
+}
+
 export interface ZephyrModernjsPluginOptions {
+  /** Zephyr build target, including the `tap-app` mini-app artifact family. */
+  target?: ZephyrBuildTarget;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   /** Override automatic CSR/SSR detection for Modern.js compiler arrays. */
@@ -15,27 +33,35 @@ export interface ZephyrModernjsPluginOptions {
 
 export const withZephyr = (
   zephyrOptions?: ZephyrModernjsPluginOptions
-): CliPlugin<AppTools> => ({
-  name: pluginName,
-  pre: ['@modern-js/plugin-module-federation-config'],
+): CliPlugin<AppTools> => {
+  if (zephyrOptions?.target !== undefined) {
+    assertZephyrBuildTarget(zephyrOptions.target, 'withZephyr({ target })');
+  }
 
-  async setup(api) {
-    api['modifyRspackConfig'](async (config) => {
-      const { withZephyr } = await import('zephyr-rspack-plugin');
-      return await withZephyr(zephyrOptions)(config);
-    });
-  },
+  return {
+    name: pluginName,
+    pre: ['@modern-js/plugin-module-federation-config'],
 
-  usePlugins: isDev ? [zephyrFixPublicPath()] : [],
-});
+    async setup(api) {
+      api['modifyRspackConfig'](async (config) => {
+        const { withZephyr } = await import('zephyr-rspack-plugin');
+        return await withZephyr(zephyrOptions)(config);
+      });
+    },
 
-function zephyrFixPublicPath(): CliPlugin<AppTools> {
+    usePlugins: shouldApplyDevPublicPathFix(zephyrOptions?.target)
+      ? [zephyrFixPublicPath(zephyrOptions?.target)]
+      : [],
+  };
+};
+
+function zephyrFixPublicPath(target: ZephyrBuildTarget | undefined): CliPlugin<AppTools> {
   return {
     name: 'zephyr-publicpath-fix',
     pre: [pluginName],
     setup(api) {
       api['modifyRspackConfig'](async (config, { isServer }) => {
-        if (!isServer) {
+        if (!isServer && target !== 'tap-app') {
           ze_log.misc('Modifying publicPath for Dev Server');
           config.output = { ...config.output, publicPath: 'auto' };
         }

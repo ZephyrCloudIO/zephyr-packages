@@ -108,12 +108,19 @@ export function logger(props: LoggerOptions): ZeLogger {
       logFn(log.level, log.message, log.action);
     }
 
-    // Then attempt to upload logs. This is fire-and-forget: a short deadline
-    // ensures the request doesn't hold the Node event loop open on Windows CI
-    // where TCP connections to the logging API can stall for several minutes
-    // before the OS-level connection timeout fires.
+    // Fire-and-forget log upload. The entire chain — including the lazy-loaded
+    // getApplicationConfiguration() call — is raced against a short deadline
+    // so that a stalled TCP connection to the Zephyr API (common on Windows CI
+    // where firewall policies can prevent the SYN-ACK from arriving for several
+    // minutes) cannot hold the Node event loop open after a successful build.
     const LOG_UPLOAD_DEADLINE_MS = 5_000;
-    loadLogData()
+    const logDataTimeout = new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error('log data timeout')),
+        LOG_UPLOAD_DEADLINE_MS
+      ).unref()
+    );
+    Promise.race([loadLogData(), logDataTimeout])
       .then(
         ([config, token]) =>
           void makeRequest<unknown>(

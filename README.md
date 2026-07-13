@@ -30,6 +30,7 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 - [`zephyr-repack-plugin`](libs/zephyr-repack-plugin/README.md) - A Rspack plugin for deploying with Zephyr building with React Native and Re.Pack
 - [`zephyr-rolldown-plugin`](libs/zephyr-rolldown-plugin/README.md) - A Rolldown plugin for deploying with Zephyr
 - [`zephyr-rspack-plugin`](libs/zephyr-rspack-plugin/README.md) - A Rspack plugin for deploying with Zephyr
+- [`zephyr-tap-runtime`](libs/zephyr-tap-runtime/README.md) - A host-owned TAP lifecycle runtime plugin for Module Federation
 - [`zephyr-webpack-plugin`](libs/zephyr-webpack-plugin/README.md) - A Webpack plugin for deploying with Zephyr
 
 ### Utility Packages

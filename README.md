@@ -63,11 +63,11 @@ not in a copied plan in this generic plugin repository.
 
 ## TAP migration evidence
 
-| Responsibility                                              | Status                 | Evidence or next gate                                                             |
-| ----------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------- |
-| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                    |
-| Exact `0.0.0-canary.67` release train in consumers          | not implemented        | Wave 1 lockfile proof from each miniapp publisher                                 |
-| Module Federation PR #4894 regression coverage              | not implemented        | Add or retain the emitted ESM manifest regression in affected executable fixtures |
+| Responsibility                                              | Status                 | Evidence or next gate                                                                                                                                          |
+| ----------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                                                                                                 |
+| Exact `0.0.0-canary.67` release train in consumers          | verified               | Non-applicable in this source workspace: examples use workspace source; `pnpm test:miniapp-wave1` requires exact `.67` for any external publication dependency |
+| Module Federation PR #4894 regression coverage              | verified               | Non-applicable today: the same check proves no executable Rsbuild/Rspack ESM remote fixture exists and fails closed if one is added without the patch baseline |
 
 The central evidence ledger is authoritative for status changes. This generic
 plugin repository does not own product applications or duplicate their plan.

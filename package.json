@@ -18,6 +18,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "test": "turbo run test --filter='./libs/*'",
+    "test:miniapp-wave1": "node scripts/verify-miniapp-wave1.mjs",
     "test:affected": "turbo run test --affected --output-logs=new-only",
     "test:examples": "pnpm test:examples:unit && pnpm test:e2e",
     "test:examples:unit": "turbo run test --filter=rollup-sample-lib --filter=rspack_nx_mf_host --filter=rspack_nx_mf_remote --filter=sample-rspack-application --filter=sample-webpack-application",

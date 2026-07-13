@@ -614,11 +614,13 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         snapshotType,
         entrypoint,
       } = props;
+      const target = zephyr_engine.env?.target ?? 'web';
+      assertZephyrBuildTarget(target, 'ZephyrEngine.env.target');
       // TAP snapshots are only useful when their snapshot and dashboard metadata name
       // the same complete set of target containers. This is the final shared transport
       // boundary, so no public adapter can accidentally publish a partial package.
       assertTapFederationPublicationMetadata({
-        target: zephyr_engine.env?.target,
+        target,
         mfConfigs,
         federation: buildStats.federation,
       });
@@ -628,10 +630,11 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         ? { ...providedAssetsMap }
         : providedAssetsMap;
 
-      // Snapshot asset keys are paths after Windows separators are normalized. Build an
-      // index before looking for the manifest so two inputs can never silently publish
-      // to the same path (or make manifest selection depend on object iteration order).
-      const assetsByPath = indexAssetsByCanonicalPath(assetsMap);
+      // Snapshot asset keys normalize native Windows separators. TAP descriptors lock each
+      // artifact's exact path and hash, so only TAP requires the source spelling to
+      // already be canonical. Build an index before looking for the manifest so two
+      // inputs can never silently publish to the same snapshot path.
+      const assetsByPath = indexAssetsByCanonicalPath(assetsMap, target);
 
       await warnPathModeAbsoluteUrls(zephyr_engine, assetsMap);
 
@@ -663,10 +666,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       }
 
       await zephyr_engine.build_id;
-      assertZephyrBuildTarget(
-        zephyr_engine.env?.target ?? 'web',
-        'ZephyrEngine.env.target'
-      );
       let hash_set = zephyr_engine.resolved_hash_list;
       if (!hash_set && zephyr_engine.hash_list) {
         try {
@@ -770,19 +769,23 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 }
 
 /**
- * Direct uploads must already use the exact portable spelling that `createSnapshot`
- * serializes. Validate identity without rewriting an asset's path, hash, size, metadata,
- * or bytes.
+ * Index output by its portable snapshot path without rewriting an asset's path, hash,
+ * size, metadata, or bytes. Conventional adapters retain the historic normalization of
+ * native Windows separators; TAP artifacts must already use the SDK-locked spelling.
  */
 function indexAssetsByCanonicalPath(
-  assetsMap: ZeBuildAssetsMap
+  assetsMap: ZeBuildAssetsMap,
+  target: ZephyrBuildTarget
 ): Map<string, ZeBuildAsset> {
   const assetsByPath = new Map<string, ZeBuildAsset>();
 
   for (const asset of Object.values(assetsMap)) {
     let canonicalPath: string;
     try {
-      canonicalPath = assertCanonicalSnapshotAssetPath(asset.path);
+      canonicalPath =
+        target === 'tap-app'
+          ? assertCanonicalSnapshotAssetPath(asset.path)
+          : asset.path.replaceAll('\\', '/');
     } catch (error) {
       throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
         message: error instanceof Error ? error.message : String(error),

@@ -275,7 +275,8 @@ describe('ZephyrEngine.upload_assets', () => {
   });
 
   it('rejects a noncanonical path before it can alias a locked TAP asset', async () => {
-    const engine = readyEngine();
+    const engine = readyEngine('tap-app');
+    const metadata = tapMetadata();
     const posixLock = asset('tap/asset-lock.json', '{"platform":"posix"}');
     const windowsLock = asset('tap\\asset-lock.json', '{"platform":"windows"}');
     const assetsMap: ZeBuildAssetsMap = {
@@ -286,7 +287,8 @@ describe('ZephyrEngine.upload_assets', () => {
     await expect(
       engine.upload_assets({
         assetsMap,
-        buildStats: {} as never,
+        buildStats: { federation: metadata.federation } as ZephyrBuildStats,
+        mfConfigs: metadata.mfConfigs,
       })
     ).rejects.toThrow('Asset path must use its canonical snapshot spelling');
 
@@ -296,6 +298,7 @@ describe('ZephyrEngine.upload_assets', () => {
   });
 
   it('rejects manifest aliases and escaping paths instead of generating a second manifest', async () => {
+    const metadata = tapMetadata();
     const invalidPaths = [
       './zephyr-manifest.json',
       'tap//asset-lock.json',
@@ -307,14 +310,15 @@ describe('ZephyrEngine.upload_assets', () => {
     ];
 
     for (const path of invalidPaths) {
-      const engine = readyEngine();
+      const engine = readyEngine('tap-app');
       const invalidAsset = asset(path, 'locked');
       const assetsMap: ZeBuildAssetsMap = { [invalidAsset.hash]: invalidAsset };
 
       await expect(
         engine.upload_assets({
           assetsMap,
-          buildStats: {} as never,
+          buildStats: { federation: metadata.federation } as ZephyrBuildStats,
+          mfConfigs: metadata.mfConfigs,
         })
       ).rejects.toThrow(
         /Asset path must (use its canonical snapshot spelling|be a relative snapshot path|not escape the snapshot root)/
@@ -327,5 +331,28 @@ describe('ZephyrEngine.upload_assets', () => {
       mocks.uploadStrategy.mockResolvedValue('https://deploy.example.test/app');
       mocks.setAppDeployResult.mockResolvedValue(undefined);
     }
+  });
+
+  it('normalizes native asset separators for conventional adapter uploads', async () => {
+    const engine = readyEngine();
+    const nativePathAsset = asset('assets\\.gitkeep', '');
+    const assetsMap: ZeBuildAssetsMap = {
+      [nativePathAsset.hash]: nativePathAsset,
+    };
+
+    await engine.upload_assets({
+      assetsMap,
+      buildStats: {} as never,
+    });
+
+    const options = uploadedOptions();
+    expect(options.assets.assetsMap[nativePathAsset.hash]).toBe(nativePathAsset);
+    expect(options.assets.assetsMap[nativePathAsset.hash]?.path).toBe('assets\\.gitkeep');
+    expect(options.snapshot.assets['assets/.gitkeep']).toEqual({
+      path: 'assets/.gitkeep',
+      extname: nativePathAsset.extname,
+      hash: nativePathAsset.hash,
+      size: nativePathAsset.size,
+    });
   });
 });

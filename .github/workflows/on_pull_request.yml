@@ -34,6 +34,8 @@ jobs:
           # Turbo's affected calculation needs the base commit locally.
           fetch-depth: 0
       - uses: ./.github/actions/setup
+        with:
+          cache-key-suffix: e2e
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
@@ -44,7 +46,7 @@ jobs:
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
         # Loose mode preserves GitHub's detached-HEAD metadata and the OS home
         # directory used by the authenticated Zephyr deployment store.
-        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only
+        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=errors-only
       - name: run deployment e2e tests
         # Keep deployment records in-process. Persisted Zephyr state can include
         # credentials and must never be uploaded as a workflow artifact.
@@ -69,13 +71,15 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
+        with:
+          cache-key-suffix: e2e
       - name: run build affected
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only
+        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=errors-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 
@@ -85,6 +89,8 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./.github/actions/setup
+        with:
+          cache-key-suffix: lint
       - name: verify miniapp Wave 1 dependency policy
         run: pnpm test:miniapp-wave1
       - name: run lint
@@ -107,6 +113,8 @@ jobs:
           # Turbo's affected calculation needs the base commit locally.
           fetch-depth: 0
       - uses: ./.github/actions/setup
+        with:
+          cache-key-suffix: test
       - name: run test
         if: runner.os != 'Linux'
         run: pnpm test:affected

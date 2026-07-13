@@ -103,7 +103,7 @@ jobs:
         run: |
           set +e
           out=$(mktemp)
-          timeout 180 pnpm exec turbo run build \
+          timeout 240 pnpm exec turbo run build \
             --affected --force --env-mode=loose --output-logs=new-only \
             | tee "$out"
           rc=$?

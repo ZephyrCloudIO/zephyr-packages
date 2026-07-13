@@ -244,6 +244,9 @@ catalogs:
     webpack-cli: ^7.2.1
     webpack-dev-server: ^6.0.0
 
+overrides:
+  serialize-javascript@<=7.0.2: '>=7.0.3'
+
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - '@parcel/watcher'

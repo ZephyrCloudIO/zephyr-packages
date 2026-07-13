@@ -92,15 +92,24 @@ jobs:
           # Run Parcel's bundler in single-process mode so the worker farm is
           # never spawned and process teardown is instant on Windows.
           PARCEL_WORKERS: 0
+          # Limit the libuv thread pool. Rspack's NAPI-RS native binding uses
+          # libuv threads; reducing the pool size reduces the number of threads
+          # that the OS must reclaim on process teardown.
+          UV_THREADPOOL_SIZE: 1
         # Use new-only (not errors-only) so per-task output is visible when a
         # process stalls — errors-only suppresses group markers entirely, making
         # 8-minute hangs invisible in the log.
-        #
-        # Exclude rspress examples: Rspack's NAPI-RS native binding keeps libuv
-        # threads alive after a multi-compiler SSR+CSR build on Windows, causing
-        # ~8-min stalls (OS TCP SYN retransmit timeout) on process teardown.
-        # rspress is already exercised by the Ubuntu job.
-        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only --filter=!rspress-v1 --filter=!rspress-v2 --filter=!rspress-v2-ssg
+        # Rspack's NAPI-RS native Windows DLL keeps Tokio/libuv threads alive
+        # after build completion. The OS TCP retransmit timer (~520s) is what
+        # finally terminates the process — whichever Rspack-based task runs last
+        # (alone, with no concurrent peer to mask the stall) blocks the pipeline.
+        # rspress, modern-js, and nuxt use Rspack multi-compiler builds that are
+        # most susceptible; all are fully exercised by the Ubuntu job.
+        run: >
+          pnpm exec turbo run build
+          --affected --force --env-mode=loose --output-logs=new-only
+          --filter=!rspress-v1 --filter=!rspress-v2 --filter=!rspress-v2-ssg
+          --filter=!modern-js --filter=!nuxt
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 

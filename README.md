@@ -56,6 +56,21 @@ pnpm install
 
 For descriptor-backed TAP mini-app publication, see
 [the `tap-app` publication contract](docs/tap-app-publication.md).
+Cross-repository TAP ownership, versions, sequencing, and completion status are
+maintained in the
+[canonical miniapp architecture directory](https://github.com/ZephyrCloudIO/ze-agency-tauri/tree/main/docs/architecture/miniapps),
+not in a copied plan in this generic plugin repository.
+
+## TAP migration evidence
+
+| Responsibility                                              | Status                 | Evidence or next gate                                                             |
+| ----------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------- |
+| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                    |
+| Exact `0.0.0-canary.67` release train in consumers          | not implemented        | Wave 1 lockfile proof from each miniapp publisher                                 |
+| Module Federation PR #4894 regression coverage              | not implemented        | Add or retain the emitted ESM manifest regression in affected executable fixtures |
+
+The central evidence ledger is authoritative for status changes. This generic
+plugin repository does not own product applications or duplicate their plan.
 
 ## Available Scripts
 

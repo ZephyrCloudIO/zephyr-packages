@@ -62,6 +62,9 @@
       "path": "./libs/zephyr-rspress-plugin/tsconfig.json"
     },
     {
+      "path": "./libs/zephyr-tap-runtime/tsconfig.json"
+    },
+    {
       "path": "./libs/zephyr-webpack-plugin/tsconfig.json"
     },
     {

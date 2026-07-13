@@ -108,25 +108,26 @@ export function logger(props: LoggerOptions): ZeLogger {
       logFn(log.level, log.message, log.action);
     }
 
-    // Fire-and-forget log upload. The entire chain — including the lazy-loaded
-    // getApplicationConfiguration() call — is raced against a short deadline
-    // so that a stalled TCP connection to the Zephyr API (common on Windows CI
-    // where firewall policies can prevent the SYN-ACK from arriving for several
-    // minutes) cannot hold the Node event loop open after a successful build.
-    const LOG_UPLOAD_DEADLINE_MS = 5_000;
-    const logDataTimeout = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error('log data timeout')),
-        LOG_UPLOAD_DEADLINE_MS
-      ).unref()
-    );
-    Promise.race([loadLogData(), logDataTimeout])
+    // Fire-and-forget log upload. We use an AbortController so the underlying
+    // TCP connection (getApplicationConfiguration) is actively cancelled after
+    // the deadline, not just raced. On Windows CI, stalled TCP connections
+    // (SYN sent, no SYN-ACK) are held open for ~8 minutes by the OS before the
+    // stack gives up, keeping the Node event loop alive and preventing bundler
+    // processes from exiting. PromiseLazyLoad caches the pending promise, so a
+    // Promise.race alone is not sufficient — the original promise and its socket
+    // stay alive until the abort signal cancels the underlying axios request.
+    const LOG_TOTAL_DEADLINE_MS = 5_000;
+    const abortController = new AbortController();
+    const killTimer = setTimeout(() => abortController.abort(), LOG_TOTAL_DEADLINE_MS);
+    killTimer.unref();
+    loadLogData()
       .then(
         ([config, token]) =>
           void makeRequest<unknown>(
             url,
             {
               method: 'POST',
+              signal: abortController.signal,
               headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -148,10 +149,11 @@ export function logger(props: LoggerOptions): ZeLogger {
                   createdAt: Date.now(),
                 }))
             ),
-            LOG_UPLOAD_DEADLINE_MS
+            LOG_TOTAL_DEADLINE_MS
           )
       )
       // This is ok to fail silently
-      .catch(() => void 0);
+      .catch(() => void 0)
+      .finally(() => clearTimeout(killTimer));
   };
 }

@@ -95,7 +95,12 @@ jobs:
         # Use new-only (not errors-only) so per-task output is visible when a
         # process stalls — errors-only suppresses group markers entirely, making
         # 8-minute hangs invisible in the log.
-        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only
+        #
+        # Exclude rspress examples: Rspack's NAPI-RS native binding keeps libuv
+        # threads alive after a multi-compiler SSR+CSR build on Windows, causing
+        # ~8-min stalls (OS TCP SYN retransmit timeout) on process teardown.
+        # rspress is already exercised by the Ubuntu job.
+        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only --filter=!rspress-v1 --filter=!rspress-v2 --filter=!rspress-v2-ssg
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 

@@ -15,6 +15,7 @@
   "files": [
     "dist",
     "README.md",
+    "LICENSE",
     "!dist/**/*.map"
   ],
   "type": "commonjs",

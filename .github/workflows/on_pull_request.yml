@@ -89,9 +89,6 @@ jobs:
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
-          # Run Parcel's bundler in single-process mode so the worker farm is
-          # never spawned and process teardown is instant on Windows.
-          PARCEL_WORKERS: 0
         # Rspack's NAPI-RS native Windows DLL keeps Rust/Tokio thread-pool
         # threads alive after each build subprocess finishes. The OS TCP SYN
         # retransmit timer (~520 s) is what finally kills the process. Whichever

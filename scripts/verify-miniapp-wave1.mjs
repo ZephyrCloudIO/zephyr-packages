@@ -7,12 +7,10 @@ const rootPath = fileURLToPath(root);
 const workspacePath = join(rootPath, 'pnpm-workspace.yaml');
 const workspace = readFileSync(workspacePath, 'utf8');
 
-// Temporary workaround policy from module-federation/core#4894 at this audited
-// head. The consumer workspaces own the emitted-manifest regression today.
-const MF_PATCH_VERSION = '2.7.0';
-const MF_PATCH_KEY = `@module-federation/manifest@${MF_PATCH_VERSION}`;
-const MF_PATCH_FILE = `patches/@module-federation__manifest@${MF_PATCH_VERSION}.patch`;
-const MF_UPSTREAM_HEAD = '28b4db7497097f46f4523b2911fd2f5b511514e9';
+// The upstream canary contains module-federation/core#4894. Consumer
+// workspaces own the emitted-manifest regression and must not restore the
+// temporary local manifest patch.
+const MF_CANARY = '0.0.0-main-20260714111532';
 const MF_AFFECTED_CATALOG_PACKAGES = new Set([
   '@module-federation/enhanced',
   '@module-federation/rsbuild-plugin',
@@ -43,10 +41,6 @@ function walk(directory, visit) {
   }
 }
 
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function isExecutableFederationConfig(path) {
   return /^(?:rsbuild|rspack|module-federation)\.config\.[cm]?[jt]s$/.test(basename(path));
 }
@@ -64,7 +58,7 @@ function isEsmRemoteConfig(path) {
   return usesFederation && (declaresModuleLibrary || emitsMjsRemote);
 }
 
-function moduleFederationCatalogUsesExactVersions() {
+function moduleFederationCatalogUsesExactCanary() {
   const lines = workspace.split(/\r?\n/);
   const sectionStart = lines.findIndex((line) => /^  module-federation:\s*$/.test(line));
   if (sectionStart === -1) return false;
@@ -78,8 +72,7 @@ function moduleFederationCatalogUsesExactVersions() {
 
   const affectedEntries = [...entries].filter(([name]) => MF_AFFECTED_CATALOG_PACKAGES.has(name));
   return (
-    affectedEntries.length > 0 &&
-    affectedEntries.every(([, version]) => version === MF_PATCH_VERSION)
+    affectedEntries.length > 0 && affectedEntries.every(([, version]) => version === MF_CANARY)
   );
 }
 
@@ -92,36 +85,35 @@ for (const directory of ['examples', 'e2e']) {
   });
 }
 
-const patchRegistered = new RegExp(
-  `['"]?${escapeRegExp(MF_PATCH_KEY)}['"]?\\s*:\\s*${escapeRegExp(MF_PATCH_FILE)}`
-).test(workspace);
-const unusedPatchesFailClosed = /(?:^|\n)allowUnusedPatches:\s*false(?:\n|$)/.test(workspace);
-const patchExists = existsSync(join(rootPath, MF_PATCH_FILE));
+const manifestPatchRegistered = /@module-federation\/manifest@[^'"\s:]+['"]?\s*:\s*patches\//.test(
+  workspace
+);
+const patchesPath = join(rootPath, 'patches');
+const manifestPatchFiles = existsSync(patchesPath)
+  ? readdirSync(patchesPath)
+      .filter((name) => name.startsWith('@module-federation__manifest@') && name.endsWith('.patch'))
+      .map((name) => relative(rootPath, join(patchesPath, name)))
+  : [];
+
+if (manifestPatchRegistered || manifestPatchFiles.length > 0) {
+  throw new Error(
+    [
+      `Module Federation ${MF_CANARY} contains the ESM manifest fix; remove the obsolete local manifest patch.`,
+      ...manifestPatchFiles.map((path) => `- ${path}`),
+    ].join('\n')
+  );
+}
 
 if (executableConfigs.length > 0) {
-  const missing = [];
-  if (!patchRegistered) missing.push(`register ${MF_PATCH_KEY}`);
-  if (!patchExists) missing.push(`commit ${MF_PATCH_FILE}`);
-  if (!unusedPatchesFailClosed) missing.push('set allowUnusedPatches: false');
-  if (!moduleFederationCatalogUsesExactVersions()) {
-    missing.push(`exact-pin the module-federation catalog to ${MF_PATCH_VERSION}`);
-  }
-
-  if (missing.length > 0) {
+  if (!moduleFederationCatalogUsesExactCanary()) {
     throw new Error(
       [
-        'Executable Rsbuild/Rspack ESM remote fixtures now make module-federation/core#4894 applicable:',
+        'Executable Rsbuild/Rspack ESM remote fixtures require the upstream Module Federation canary:',
         ...executableConfigs.map((path) => `- ${path}`),
-        `Required for upstream head ${MF_UPSTREAM_HEAD}:`,
-        ...missing.map((item) => `- ${item}`),
+        `- exact-pin the affected module-federation catalog packages to ${MF_CANARY}`,
       ].join('\n')
     );
   }
-} else if (patchRegistered || patchExists) {
-  throw new Error(
-    `The ${MF_PATCH_KEY} workaround is registered without an executable Rsbuild/Rspack ESM remote fixture. ` +
-      'Keep the generic package workspace unpatched; consumer workspaces own this workaround.'
-  );
 }
 
 const zephyrDependencies = [];
@@ -175,7 +167,8 @@ console.log(
   [
     'Miniapp Wave 1 dependency policy verified.',
     `- Executable Rsbuild/Rspack ESM remote fixtures: ${executableConfigs.length}`,
-    `- PR #4894 patch: ${executableConfigs.length === 0 ? 'intentionally not applicable' : 'registered'}`,
+    `- Module Federation ESM manifest fix: ${executableConfigs.length === 0 ? `consumer-owned (${MF_CANARY})` : `exact ${MF_CANARY}`}`,
+    '- Local Module Federation manifest patch: absent',
     `- Zephyr publication dependencies: ${workspaceZephyrDependencies} workspace source, ${registryZephyrDependencies} registry`,
     `- External registry policy: exact ${ZEPHYR_CANARY}`,
   ].join('\n')

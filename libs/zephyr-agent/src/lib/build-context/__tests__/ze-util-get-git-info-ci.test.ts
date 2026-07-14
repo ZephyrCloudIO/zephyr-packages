@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
-import { exec as node_exec } from 'node:child_process';
+import { execFile as node_execFile } from 'node:child_process';
 import { getGitInfo } from '../ze-util-get-git-info';
 
 rs.mock('node:child_process', () => ({
-  exec: rs.fn(),
+  execFile: rs.fn(),
 }));
 
 rs.mock('../../node-persist/secret-token', () => ({
@@ -27,23 +27,48 @@ rs.mock('is-ci', () => ({ default: true }));
 
 let originalEnv: NodeJS.ProcessEnv;
 
+/**
+ * Maps a git subcommand (arg list) to the stdout it should produce.
+ *
+ * Any command not present in the map resolves to empty output, which mirrors a git
+ * command that exited non-zero (the source treats that as "unavailable").
+ */
+type GitOutputs = Record<string, string>;
+
 describe('getGitInfo - CI environments', () => {
-  const mockExec = node_exec as unknown as Mock;
+  const mockExecFile = node_execFile as unknown as Mock;
   type ExecCallback = (error: Error | null, stdout?: unknown, stderr?: string) => void;
-  const mockExecWithCallback = (
-    implementation: (command: string, callback: ExecCallback) => unknown
+
+  /**
+   * ExecFile is called as execFile('git', args, options, callback). This helper lets each
+   * test respond based on the git args instead of a single chained shell string, matching
+   * the per-command implementation.
+   */
+  const mockGit = (
+    resolve: (args: string[]) => { stdout?: string; error?: Error } | undefined
   ) => {
-    mockExec.mockImplementation(
-      (command: string, optionsOrCallback: unknown, callback?: ExecCallback) => {
-        const resolvedCallback =
-          typeof optionsOrCallback === 'function'
-            ? (optionsOrCallback as ExecCallback)
-            : callback;
-        if (!resolvedCallback) throw new Error('expected child_process.exec callback');
-        return implementation(command, resolvedCallback);
+    mockExecFile.mockImplementation(
+      (_file: string, args: string[], _options: unknown, callback?: ExecCallback) => {
+        const cb = (typeof _options === 'function' ? _options : callback) as ExecCallback;
+        if (!cb) throw new Error('expected child_process.execFile callback');
+        const result = resolve(args) ?? { error: new Error('command failed') };
+        if (result.error) {
+          cb(result.error, '', 'fatal: command failed');
+        } else {
+          cb(null, { stdout: result.stdout ?? '', stderr: '' });
+        }
+        return undefined;
       }
     );
   };
+
+  /** Convenience builder for the common "git is available" scenario. */
+  const gitAvailable = (outputs: GitOutputs) =>
+    mockGit((args) => {
+      const key = args.join(' ');
+      if (key in outputs) return { stdout: outputs[key] };
+      return { stdout: '' };
+    });
 
   beforeEach(() => {
     rs.clearAllMocks();
@@ -67,28 +92,16 @@ describe('getGitInfo - CI environments', () => {
   });
 
   it('should fail immediately in CI when git info is not available', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      if (typeof callback === 'function') {
-        callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-      } else {
-        return Promise.reject(new Error('Not a git repository'));
-      }
-    });
+    // Every git command fails => not a git repository.
+    mockGit(() => ({ error: new Error('Not a git repository') }));
 
-    await expect(getGitInfo()).rejects.toThrow();
-    try {
-      await getGitInfo();
-    } catch (error) {
-      expect((error as Error).message).toContain(
-        'Stable Git branch and commit information is required in CI environments'
-      );
-    }
+    await expect(getGitInfo()).rejects.toThrow(
+      'Stable Git branch and commit information is required in CI environments'
+    );
   });
 
   it('does not let configured identity create timestamp metadata in CI', async () => {
-    mockExecWithCallback((_cmd, callback) => {
-      callback(new Error('Not a git repository'), '', 'fatal: not a git repository');
-    });
+    mockGit(() => ({ error: new Error('Not a git repository') }));
 
     await expect(
       getGitInfo('/workspace/configured-no-git', {
@@ -99,22 +112,18 @@ describe('getGitInfo - CI environments', () => {
       'Stable Git branch and commit information is required in CI environments'
     );
     expect(
-      mockExec.mock.calls.some(([command]) => String(command).includes('--global'))
+      mockExecFile.mock.calls.some(([, args]) => (args as string[]).includes('--global'))
     ).toBe(false);
   });
 
   it('should work normally in CI when git is available', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'CI User',
-        'ci@example.com',
-        'https://github.com/example/repo.git',
-        'main',
-        'abc123def456',
-        'v1.0.0',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'CI User',
+      'log -1 --pretty=format:%ae': 'ci@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'main',
+      'rev-parse HEAD': 'abc123def456',
+      'tag --points-at HEAD': 'v1.0.0',
     });
 
     const result = await getGitInfo();
@@ -130,18 +139,12 @@ describe('getGitInfo - CI environments', () => {
 
   it('uses configured identity when CI has commit metadata but no origin', async () => {
     const context = '/workspace/apps/configured-ci';
-    mockExecWithCallback((cmd, callback) => {
-      if (cmd.includes('git tag --points-at HEAD')) {
-        callback(null, { stdout: '', stderr: '' });
-        return;
-      }
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      callback(null, {
-        stdout: ['CI User', 'ci@example.com', '', 'main', 'abc123def456'].join(
-          `\n${delimiter}\n`
-        ),
-        stderr: '',
-      });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'CI User',
+      'log -1 --pretty=format:%ae': 'ci@example.com',
+      'symbolic-ref --short HEAD': 'main',
+      'rev-parse HEAD': 'abc123def456',
+      // no origin, no tags
     });
 
     const result = await getGitInfo(context, {
@@ -154,38 +157,35 @@ describe('getGitInfo - CI environments', () => {
       project: 'configured-project',
     });
     expect(result.git.commit).toBe('abc123def456');
-    for (const call of mockExec.mock.calls) {
-      expect(call[1]).toEqual({ cwd: context });
+    for (const call of mockExecFile.mock.calls) {
+      expect(call[2]).toEqual({ cwd: context });
     }
   });
 
   it('should use last commit author in CI instead of git config', async () => {
-    let capturedCommand = '';
-    mockExecWithCallback((cmd, callback) => {
-      if (cmd.includes('git tag --points-at HEAD')) {
-        callback(null, { stdout: 'v1.0.0\n', stderr: '' });
-        return;
-      }
-      capturedCommand = cmd;
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'Last Committer',
-        'committer@example.com',
-        'https://github.com/example/repo.git',
-        'main',
-        'abc123def456',
-        'v1.0.0',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    const capturedArgs: string[][] = [];
+    mockGit((args) => {
+      capturedArgs.push(args);
+      const outputs: GitOutputs = {
+        'log -1 --pretty=format:%an': 'Last Committer',
+        'log -1 --pretty=format:%ae': 'committer@example.com',
+        'config --get remote.origin.url': 'https://github.com/example/repo.git',
+        'symbolic-ref --short HEAD': 'main',
+        'rev-parse HEAD': 'abc123def456',
+        'tag --points-at HEAD': 'v1.0.0',
+      };
+      const key = args.join(' ');
+      return { stdout: key in outputs ? outputs[key] : '' };
     });
 
     await getGitInfo();
 
+    const joined = capturedArgs.map((args) => args.join(' '));
     // In CI, should use git log instead of git config for user info
-    expect(capturedCommand).toContain("git log -1 --pretty=format:'%an'");
-    expect(capturedCommand).toContain("git log -1 --pretty=format:'%ae'");
-    expect(capturedCommand).not.toContain('git config user.name');
-    expect(capturedCommand).not.toContain('git config user.email');
+    expect(joined).toContain('log -1 --pretty=format:%an');
+    expect(joined).toContain('log -1 --pretty=format:%ae');
+    expect(joined).not.toContain('config user.name');
+    expect(joined).not.toContain('config user.email');
   });
 
   it('should detect branch from GitHub Actions env vars when git returns HEAD', async () => {
@@ -194,17 +194,12 @@ describe('getGitInfo - CI environments', () => {
     process.env.GITHUB_REF_NAME = 'feature/ci-branch';
     process.env.GITHUB_REF = 'refs/heads/feature/ci-branch';
 
-    mockExecWithCallback((cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'CI User',
-        'ci@example.com',
-        'https://github.com/example/repo.git',
-        'HEAD', // Detached HEAD state in CI
-        'abc123def456',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'CI User',
+      'log -1 --pretty=format:%ae': 'ci@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'HEAD', // Detached HEAD state in CI
+      'rev-parse HEAD': 'abc123def456',
     });
 
     const result = await getGitInfo();
@@ -223,17 +218,12 @@ describe('getGitInfo - CI environments', () => {
     process.env.CI_COMMIT_BRANCH = 'develop';
     process.env.CI_COMMIT_REF_NAME = 'develop';
 
-    mockExecWithCallback((cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'GitLab Runner',
-        'runner@gitlab.com',
-        'https://gitlab.com/example/project.git',
-        'HEAD', // Detached HEAD state
-        'def456abc123',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'GitLab Runner',
+      'log -1 --pretty=format:%ae': 'runner@gitlab.com',
+      'config --get remote.origin.url': 'https://gitlab.com/example/project.git',
+      'symbolic-ref --short HEAD': 'HEAD', // Detached HEAD state
+      'rev-parse HEAD': 'def456abc123',
     });
 
     const result = await getGitInfo();
@@ -249,17 +239,13 @@ describe('getGitInfo - CI environments', () => {
     process.env.BUILD_SOURCEBRANCHNAME = 'feature/azure';
     process.env.BUILD_SOURCEBRANCH = 'refs/heads/feature/azure';
 
-    mockExecWithCallback((cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'Azure Runner',
-        'runner@dev.azure.com',
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'Azure Runner',
+      'log -1 --pretty=format:%ae': 'runner@dev.azure.com',
+      'config --get remote.origin.url':
         'git@ssh.dev.azure.com:v3/BusinessDomain/AddSecure/AddSecure',
-        'HEAD',
-        'azure123abc',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+      'symbolic-ref --short HEAD': 'HEAD',
+      'rev-parse HEAD': 'azure123abc',
     });
 
     const result = await getGitInfo();
@@ -277,17 +263,12 @@ describe('getGitInfo - CI environments', () => {
     process.env.GITHUB_BASE_REF = 'main';
     process.env.GITHUB_REF = 'refs/pull/123/merge';
 
-    mockExecWithCallback((cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'PR Author',
-        'author@example.com',
-        'https://github.com/example/repo.git',
-        'HEAD', // PR merge refs are detached
-        'merge123abc',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'PR Author',
+      'log -1 --pretty=format:%ae': 'author@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'HEAD', // PR merge refs are detached
+      'rev-parse HEAD': 'merge123abc',
     });
 
     const result = await getGitInfo();
@@ -298,17 +279,12 @@ describe('getGitInfo - CI environments', () => {
 
   it('should use git branch when CI env vars are not available', async () => {
     // No CI env vars set, only is-ci returns true
-    mockExecWithCallback((cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'Developer',
-        'dev@example.com',
-        'https://github.com/example/repo.git',
-        'feature/actual-branch', // Git can still resolve branch sometimes
-        'abc123',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'Developer',
+      'log -1 --pretty=format:%ae': 'dev@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'feature/actual-branch',
+      'rev-parse HEAD': 'abc123',
     });
 
     const result = await getGitInfo();
@@ -317,20 +293,12 @@ describe('getGitInfo - CI environments', () => {
   });
 
   it('fails closed when detached CI has no provider branch metadata', async () => {
-    mockExecWithCallback((cmd, callback) => {
-      if (cmd.includes('git tag --points-at HEAD')) {
-        callback(null, { stdout: '', stderr: '' });
-        return;
-      }
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'CI User',
-        'ci@example.com',
-        'https://github.com/example/repo.git',
-        'HEAD',
-        'abc123def456',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'CI User',
+      'log -1 --pretty=format:%ae': 'ci@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'HEAD',
+      'rev-parse HEAD': 'abc123def456',
     });
 
     await expect(getGitInfo()).rejects.toThrow(
@@ -339,21 +307,40 @@ describe('getGitInfo - CI environments', () => {
   });
 
   it('should fail in CI when repository has no commits yet', async () => {
-    mockExecWithCallback((_cmd, callback) => {
-      const delimiter = '---ZEPHYR-GIT-DELIMITER-8f3a2b1c---';
-      const output = [
-        'CI User',
-        'ci@example.com',
-        'https://github.com/example/repo.git',
-        'main',
-        'no-git-commit',
-        '',
-      ].join(`\n${delimiter}\n`);
-      callback(null, { stdout: output, stderr: '' });
+    // rev-parse HEAD fails on an unborn branch (no commits).
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'CI User',
+      'log -1 --pretty=format:%ae': 'ci@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'main',
+      // no 'rev-parse HEAD' entry => empty => no-git-commit
     });
 
     await expect(getGitInfo()).rejects.toThrow(
       'Stable Git branch and commit information is required in CI environments'
     );
+  });
+
+  it('reads the commit hash even when other subcommands emit unusual output (windows regression)', async () => {
+    // Regression for a shell-precedence bug where chaining git reads with
+    // `&&`/`||` in a single cmd.exe command dropped the commit hash on Windows.
+    // Running each command independently keeps the commit populated.
+    gitAvailable({
+      'log -1 --pretty=format:%an': 'CI User',
+      'log -1 --pretty=format:%ae': 'ci@example.com',
+      'config --get remote.origin.url': 'https://github.com/example/repo.git',
+      'symbolic-ref --short HEAD': 'main',
+      'rev-parse HEAD': 'deadbeefcafe1234',
+    });
+
+    const result = await getGitInfo();
+
+    expect(result.git.commit).toBe('deadbeefcafe1234');
+    expect(result.git.branch).toBe('main');
+    // Each read is a discrete execFile call - never a single chained shell string.
+    for (const call of mockExecFile.mock.calls) {
+      expect(call[0]).toBe('git');
+      expect(Array.isArray(call[1])).toBe(true);
+    }
   });
 });

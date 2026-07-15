@@ -77,6 +77,22 @@ catalog:
 trustPolicy: no-downgrade
 # Ignores trust policies for packages older than a week
 trustPolicyIgnoreAfter: 10080
+# @modern-js 3.6.0 dropped provenance attestations upstream; excluded until fixed
+trustPolicyExclude:
+  - '@modern-js/app-tools@3.6.0'
+  - '@modern-js/builder@3.6.0'
+  - '@modern-js/plugin-data-loader@3.6.0'
+  - '@modern-js/plugin-ssg@3.6.0'
+  - '@modern-js/plugin@3.6.0'
+  - '@modern-js/prod-server@3.6.0'
+  - '@modern-js/runtime-utils@3.6.0'
+  - '@modern-js/runtime@3.6.0'
+  - '@modern-js/server-core@3.6.0'
+  - '@modern-js/server-utils@3.6.0'
+  - '@modern-js/server@3.6.0'
+  - '@modern-js/tsconfig@3.6.0'
+  - '@modern-js/types@3.6.0'
+  - '@modern-js/utils@3.6.0'
 # Minimum of 1 day before released packages can be installed
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
@@ -266,15 +282,15 @@ catalogs:
 overrides:
   serialize-javascript@<=7.0.2: '>=7.0.3'
 
-onlyBuiltDependencies:
-  - '@biomejs/biome'
-  - '@parcel/watcher'
-  - '@swc/core'
-  - core-js
-  - core-js-pure
-  - esbuild
-  - lmdb
-  - msgpackr-extract
-  - msw
-  - sharp
-  - workerd
+allowBuilds:
+  '@biomejs/biome': true
+  '@parcel/watcher': true
+  '@swc/core': true
+  core-js: true
+  core-js-pure: true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
+  msw: true
+  sharp: true
+  workerd: true

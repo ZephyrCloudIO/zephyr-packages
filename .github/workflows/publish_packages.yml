@@ -70,7 +70,7 @@ jobs:
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
         env:
-          NPM_CONFIG_PROVENANCE: true
+          PNPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true
@@ -140,7 +140,7 @@ jobs:
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
         env:
-          NPM_CONFIG_PROVENANCE: true
+          PNPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true
@@ -188,7 +188,7 @@ jobs:
       - name: Publish packages to latest tag
         run: pnpm ze-publish --tag=latest
         env:
-          NPM_CONFIG_PROVENANCE: true
+          PNPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true

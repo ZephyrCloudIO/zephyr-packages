@@ -56,6 +56,21 @@ pnpm install
 
 For descriptor-backed TAP mini-app publication, see
 [the `tap-app` publication contract](docs/tap-app-publication.md).
+Cross-repository TAP ownership, versions, sequencing, and completion status are
+maintained in the
+[canonical miniapp architecture directory](https://github.com/ZephyrCloudIO/ze-agency-tauri/tree/main/docs/architecture/miniapps),
+not in a copied plan in this generic plugin repository.
+
+## TAP migration evidence
+
+| Responsibility                                              | Status                 | Evidence or next gate                                                                                                                                                                               |
+| ----------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                                                                                                                                      |
+| Exact `0.0.0-canary.67` release train in consumers          | verified               | Non-applicable in this source workspace: examples use workspace source; `pnpm test:miniapp-wave1` requires exact `.67` for any external publication dependency                                      |
+| Module Federation ESM manifest regression coverage          | verified               | Non-applicable today: the same check proves no executable Rsbuild/Rspack ESM remote fixture exists, forbids the retired local patch, and requires exact `0.0.0-main-20260714111532` if one is added |
+
+The central evidence ledger is authoritative for status changes. This generic
+plugin repository does not own product applications or duplicate their plan.
 
 ## Available Scripts
 

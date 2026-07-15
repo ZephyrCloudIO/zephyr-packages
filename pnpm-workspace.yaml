@@ -79,6 +79,25 @@ trustPolicy: no-downgrade
 trustPolicyIgnoreAfter: 10080
 # Minimum of 1 day before released packages can be installed
 minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@module-federation/bridge-react-webpack-plugin@2.8.0'
+  - '@module-federation/cli@2.8.0'
+  - '@module-federation/dts-plugin@2.8.0'
+  - '@module-federation/enhanced@2.8.0'
+  - '@module-federation/error-codes@2.8.0'
+  - '@module-federation/inject-external-runtime-core-plugin@2.8.0'
+  - '@module-federation/managers@2.8.0'
+  - '@module-federation/manifest@2.8.0'
+  - '@module-federation/metro@2.8.0'
+  - '@module-federation/node@2.7.47'
+  - '@module-federation/rsbuild-plugin@2.8.0'
+  - '@module-federation/rspack@2.8.0'
+  - '@module-federation/runtime-core@2.8.0'
+  - '@module-federation/runtime-tools@2.8.0'
+  - '@module-federation/runtime@2.8.0'
+  - '@module-federation/sdk@2.8.0'
+  - '@module-federation/third-party-dts-extractor@2.8.0'
+  - '@module-federation/webpack-bundler-runtime@2.8.0'
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -106,12 +125,12 @@ catalogs:
     '@modern-js/tsconfig': ^3.6.0
   module-federation:
     '@module-federation/automatic-vendor-federation': ^1.2.1
-    '@module-federation/enhanced': ^2.7.0
-    '@module-federation/metro': ^2.7.0
-    '@module-federation/rsbuild-plugin': ^2.7.0
-    '@module-federation/runtime': ^2.7.0
+    '@module-federation/enhanced': ^2.8.0
+    '@module-federation/metro': ^2.8.0
+    '@module-federation/rsbuild-plugin': ^2.8.0
+    '@module-federation/runtime': ^2.8.0
   module-federation-vite:
-    '@module-federation/runtime': 2.7.0
+    '@module-federation/runtime': 2.8.0
     '@module-federation/vite': 1.16.15
   metro:
     '@rnef/tools': ^0.8.13
@@ -136,7 +155,7 @@ catalogs:
   plugin-shared:
     is-ci: ^4.1.0
   peer-compat:
-    '@module-federation/metro': ^2.7.0
+    '@module-federation/metro': ^2.8.0
     '@module-federation/vite': ^1.13.2
     '@modern-js/app-tools': ^3.0.0
     '@nuxt/kit': ^3.0.0 || ^4.0.0

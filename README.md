@@ -63,11 +63,11 @@ not in a copied plan in this generic plugin repository.
 
 ## TAP migration evidence
 
-| Responsibility                                              | Status                 | Evidence or next gate                                                                                                                                                                               |
-| ----------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                                                                                                                                      |
-| Exact `0.0.0-canary.67` release train in consumers          | verified               | Non-applicable in this source workspace: examples use workspace source; `pnpm test:miniapp-wave1` requires exact `.67` for any external publication dependency                                      |
-| Module Federation ESM manifest regression coverage          | verified               | Non-applicable today: the same check proves no executable Rsbuild/Rspack ESM remote fixture exists, forbids the retired local patch, and requires exact `0.0.0-main-20260714111532` if one is added |
+| Responsibility                                              | Status                 | Evidence or next gate                                                                                                                                                                             |
+| ----------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                                                                                                                                    |
+| Exact `0.0.0-canary.67` release train in consumers          | verified               | Non-applicable in this source workspace: examples use workspace source; `pnpm test:miniapp-wave1` requires exact `.67` for any external publication dependency                                    |
+| Module Federation `2.8.0` catalogs and ESM regression       | verified               | Catalogs and TAP runtime peers use stable `2.8.0`; the policy proves no executable Rsbuild/Rspack ESM remote fixture exists, forbids the retired patch, and requires an exact pin if one is added |
 
 The central evidence ledger is authoritative for status changes. This generic
 plugin repository does not own product applications or duplicate their plan.

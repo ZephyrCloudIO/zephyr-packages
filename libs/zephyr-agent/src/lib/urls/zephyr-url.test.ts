@@ -35,17 +35,6 @@ describe('path-preserving Zephyr URL helpers', () => {
     );
   });
 
-  test('keeps an explicit self manifest URL ahead of the selected environment', async () => {
-    await expect(
-      resolveSelfZephyrManifestUrl(
-        engine('stable', {
-          stable: { remote_host: 'https://deployment.example.test/mount/' },
-        }),
-        'https://manifests.example.test/custom.json'
-      )
-    ).resolves.toBe('https://manifests.example.test/custom.json');
-  });
-
   test.each([
     [
       'hostname deployment',

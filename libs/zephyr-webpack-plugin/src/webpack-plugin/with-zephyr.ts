@@ -127,16 +127,13 @@ async function _zephyr_configuration(
       resolved_dependency_pairs ?? []
     );
 
-    const zephyrManifestUrl = await resolveSelfZephyrManifestUrl(
-      zephyr_engine,
-      _zephyrOptions?.zephyrManifestUrl
-    );
+    const resolvedManifestUrl = await resolveSelfZephyrManifestUrl(zephyr_engine);
     mutWebpackFederatedRemotesConfig(
       zephyr_engine,
       config,
       resolved_dependency_pairs,
       undefined,
-      zephyrManifestUrl
+      resolvedManifestUrl
     );
     await mutPathModePublicPath(zephyr_engine, config);
 

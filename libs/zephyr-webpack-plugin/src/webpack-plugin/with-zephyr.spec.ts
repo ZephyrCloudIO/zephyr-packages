@@ -130,14 +130,9 @@ describe('Webpack withZephyr compiler arrays', () => {
       'https://cdn.example.test/customer/app/zephyr-manifest.json'
     );
 
-    await withZephyr({
-      zephyrManifestUrl: 'https://override.example.test/manifest.json',
-    })(config);
+    await withZephyr()(config);
 
-    expect(mocks.resolveSelfZephyrManifestUrl).toHaveBeenCalledWith(
-      mocks.engine,
-      'https://override.example.test/manifest.json'
-    );
+    expect(mocks.resolveSelfZephyrManifestUrl).toHaveBeenCalledWith(mocks.engine);
     expect(mocks.mutWebpackFederatedRemotesConfig).toHaveBeenCalledWith(
       mocks.engine,
       config,

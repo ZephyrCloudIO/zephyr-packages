@@ -64,8 +64,6 @@ function isOriginAbsoluteBase(base: unknown): base is string {
 export interface WithZephyrOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
   target?: ZephyrBuildTarget;
-  /** Explicit URL for this application's `zephyr-manifest.json`. */
-  zephyrManifestUrl?: string;
   hooks?: ZephyrBuildHooks;
   /** One or more Module Federation containers emitted by this Vite build. */
   mfConfig?: ModuleFederationOptions | ModuleFederationOptions[];
@@ -354,11 +352,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
   let cachedSpecifier: string | undefined;
   let entrypoint: string;
-  let zephyrManifestUrl = options.zephyrManifestUrl;
+  let resolvedManifestUrl: string | undefined;
   const configureModuleFederationRuntime = (config: ModuleFederationOptions) =>
     preservesLockedArtifactPaths
       ? config
-      : ensureRuntimePlugin(config, zephyrManifestUrl);
+      : ensureRuntimePlugin(config, resolvedManifestUrl);
   const mfConfigSources = toModuleFederationConfigArray(options.mfConfig).map(
     configureModuleFederationRuntime
   );
@@ -475,10 +473,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
       try {
         const zephyrEngine = await zephyr_engine_defer;
-        zephyrManifestUrl = await resolveSelfZephyrManifestUrl(
-          zephyrEngine,
-          options.zephyrManifestUrl
-        );
+        resolvedManifestUrl = await resolveSelfZephyrManifestUrl(zephyrEngine);
         for (const mfConfig of mfConfigSources) {
           configureModuleFederationRuntime(mfConfig);
         }
@@ -568,7 +563,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         if (source === cachedSpecifier) {
           if (process.env['NODE_ENV'] === 'development') {
             // Keep dev env imports aligned with the manifest JSON route used by other Zephyr plugins.
-            return zephyrManifestUrl ?? SAME_ORIGIN_ZEPHYR_MANIFEST_URL;
+            return resolvedManifestUrl ?? SAME_ORIGIN_ZEPHYR_MANIFEST_URL;
           }
           return { id: source, external: true };
         }
@@ -1143,9 +1138,7 @@ export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
     for (const mfConfig of mfConfigs) {
       plugins.push(
         ...federation(
-          preservesLockedArtifactPaths
-            ? mfConfig
-            : ensureRuntimePlugin(mfConfig, options.zephyrManifestUrl)
+          preservesLockedArtifactPaths ? mfConfig : ensureRuntimePlugin(mfConfig)
         )
       );
     }

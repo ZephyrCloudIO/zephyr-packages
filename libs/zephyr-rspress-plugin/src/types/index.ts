@@ -18,7 +18,6 @@ export interface ZephyrRspressPluginOptions {
 export interface ZephyrRspressSSGOptions {
   hooks?: ZephyrBuildHooks;
   target?: ZephyrBuildTarget;
-  zephyrManifestUrl?: string;
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
 }
 

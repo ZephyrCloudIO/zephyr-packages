@@ -277,27 +277,6 @@ describe('vite-plugin-zephyr', () => {
     ]);
   });
 
-  test('passes an explicit self manifest URL to every injected MF runtime plugin', () => {
-    mocks.federation.mockImplementation((config) => [
-      {
-        name: 'module-federation-vite',
-        _options: config,
-      },
-    ]);
-
-    withZephyr({
-      mfConfig: { name: 'host' },
-      zephyrManifestUrl: 'https://manifests.example.test/custom.json',
-    });
-
-    expect(mocks.federation.mock.calls[0]?.[0].runtimePlugins).toEqual([
-      [
-        'virtual:zephyr-mf-runtime-plugin',
-        { manifestUrl: 'https://manifests.example.test/custom.json' },
-      ],
-    ]);
-  });
-
   test('upgrades the captured MF runtime tuple from the selected environment remote_host', async () => {
     mocks.engine.env.env = 'stable';
     mocks.engine.application_configuration = Promise.resolve({
@@ -336,30 +315,6 @@ describe('vite-plugin-zephyr', () => {
         },
       ],
     ]);
-  });
-
-  test('uses the explicit manifest URL for development env imports', async () => {
-    mocks.engine.env.env = 'stable';
-    mocks.engine.application_configuration = Promise.resolve({
-      ADDRESS_MODE: 'hostname',
-      ENVIRONMENTS: {
-        stable: { remote_host: 'https://selected.example.test/app/' },
-      },
-    });
-    const explicitUrl = 'https://manifests.example.test/custom.json';
-    const plugin = withZephyr({ zephyrManifestUrl: explicitUrl })[0] as Plugin;
-
-    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
-      resolvedConfig({})
-    );
-
-    await withProcessEnv({ NODE_ENV: 'development' }, async () => {
-      await expect(
-        (plugin.resolveId as (source: string) => Promise<unknown>)(
-          'env:vars:org.project.vite'
-        )
-      ).resolves.toBe(explicitUrl);
-    });
   });
 
   test('uses the selected environment manifest URL for development env imports', async () => {

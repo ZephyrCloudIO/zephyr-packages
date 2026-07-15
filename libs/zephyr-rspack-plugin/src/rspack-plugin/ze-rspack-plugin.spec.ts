@@ -53,7 +53,7 @@ function compiler() {
   };
 }
 
-function plugin(target: 'web' | 'tap-app', zephyrManifestUrl?: string) {
+function plugin(target: 'web' | 'tap-app', resolvedManifestUrl?: string) {
   return new ZeRspackPlugin({
     zephyr_engine: {
       application_uid: 'org.project.rspack',
@@ -62,7 +62,7 @@ function plugin(target: 'web' | 'tap-app', zephyrManifestUrl?: string) {
       federated_dependencies: [],
     } as never,
     mfConfig: undefined,
-    zephyrManifestUrl,
+    resolvedManifestUrl,
   });
 }
 

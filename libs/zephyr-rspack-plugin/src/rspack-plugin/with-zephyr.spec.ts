@@ -135,14 +135,9 @@ describe('Rspack withZephyr compiler arrays', () => {
       'https://cdn.example.test/customer/app/zephyr-manifest.json'
     );
 
-    await withZephyr({
-      zephyrManifestUrl: 'https://override.example.test/manifest.json',
-    })(config);
+    await withZephyr()(config);
 
-    expect(mocks.resolveSelfZephyrManifestUrl).toHaveBeenCalledWith(
-      mocks.engine,
-      'https://override.example.test/manifest.json'
-    );
+    expect(mocks.resolveSelfZephyrManifestUrl).toHaveBeenCalledWith(mocks.engine);
     expect(mocks.mutWebpackFederatedRemotesConfig).toHaveBeenCalledWith(
       mocks.engine,
       config,
@@ -153,7 +148,8 @@ describe('Rspack withZephyr compiler arrays', () => {
     expect(config.plugins?.[0]).toEqual(
       expect.objectContaining({
         options: expect.objectContaining({
-          zephyrManifestUrl: 'https://cdn.example.test/customer/app/zephyr-manifest.json',
+          resolvedManifestUrl:
+            'https://cdn.example.test/customer/app/zephyr-manifest.json',
         }),
       })
     );

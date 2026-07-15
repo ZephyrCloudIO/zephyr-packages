@@ -13,12 +13,11 @@ runtime assets.
 
 Web plugins resolve the application's own `zephyr-manifest.json` in this order:
 
-1. The explicit `withZephyr({ zephyrManifestUrl })` option.
-2. The selected Zephyr environment's concrete `remote_host`, with `zephyr-manifest.json` appended to that complete
+1. The selected Zephyr environment's concrete `remote_host`, with `zephyr-manifest.json` appended to that complete
    base. This preserves customer gateway mounts such as `https://cdn.example.com/customer/app/`.
-3. Browser runtime inference: `document.currentScript.src` for classic scripts, then reserved
+2. Browser runtime inference: `document.currentScript.src` for classic scripts, then reserved
    `__zephyr/v1/{v|t|e}/...` routes exposed by `import.meta.url` for Vite ESM.
-4. `/zephyr-manifest.json`, resolved against the page origin, when no canonical deployment URL is visible.
+3. `/zephyr-manifest.json`, resolved against the page origin, when no canonical deployment URL is visible.
 
 The selected environment is the engine's configured environment. Do not substitute `EDGE_URL`: it is the worker base,
 not necessarily the public deployment route. Do not use Cloud's `manifest_url` either; that field identifies an
@@ -27,8 +26,7 @@ not necessarily the public deployment route. Do not use Cloud's `manifest_url` e
 Runtime inference cannot discover a hidden upstream deployment when every browser-visible URL has already been
 rewritten to the page origin. It also cannot reliably distinguish an arbitrary gateway mount from a nested chunk
 directory. Non-reserved ESM chunk URLs therefore keep the same-origin fallback instead of treating their directory as
-the deployment root. In those cases Cloud must provide the concrete environment `remote_host`, or the application
-must set `zephyrManifestUrl` explicitly.
+the deployment root. In those cases the selected environment must provide the concrete `remote_host`.
 
 Path mode route shape:
 

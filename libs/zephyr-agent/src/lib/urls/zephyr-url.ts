@@ -62,13 +62,8 @@ export function appendZephyrUrlPath(baseUrl: string, path: string): string {
  * gateway mount path, so it must not pass through sibling-root inference.
  */
 export async function resolveSelfZephyrManifestUrl(
-  engine: ZephyrManifestUrlEngine,
-  explicitUrl?: string
+  engine: ZephyrManifestUrlEngine
 ): Promise<string | undefined> {
-  if (explicitUrl !== undefined) {
-    return explicitUrl;
-  }
-
   const selectedEnvironment = engine.env.env;
   if (!selectedEnvironment) {
     return undefined;

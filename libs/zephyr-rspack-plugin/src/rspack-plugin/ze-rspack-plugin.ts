@@ -29,7 +29,7 @@ export interface ZephyrRspackInternalPluginOptions {
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   // hacks
   wait_for_index_html?: boolean;
-  zephyrManifestUrl?: string;
+  resolvedManifestUrl?: string;
   // outputPath?: string;
   hooks?: ZephyrBuildHooks;
   coordinator?: XPackBuildCoordinator;
@@ -140,7 +140,7 @@ export class ZeRspackPlugin {
                   imports: buildEnvImportMap(
                     appUid,
                     remotes,
-                    this._options.zephyrManifestUrl
+                    this._options.resolvedManifestUrl
                   ),
                 }),
                 voidTag: false,

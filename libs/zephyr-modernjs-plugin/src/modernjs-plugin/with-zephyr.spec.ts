@@ -34,7 +34,6 @@ describe('Modern.js withZephyr', () => {
       | undefined;
     const plugin = withZephyr({
       target: 'tap-app',
-      zephyrManifestUrl: 'https://cdn.example.test/app/zephyr-manifest.json',
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',
     });
@@ -50,7 +49,6 @@ describe('Modern.js withZephyr', () => {
     expect(plugin.pre).toEqual(['@modern-js/plugin-module-federation-config']);
     expect(mocks.rspackWithZephyr).toHaveBeenCalledWith({
       target: 'tap-app',
-      zephyrManifestUrl: 'https://cdn.example.test/app/zephyr-manifest.json',
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',
     });

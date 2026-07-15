@@ -4,6 +4,8 @@ import type { XPackBuildCoordinator } from 'zephyr-xpack-internal';
 export interface ZephyrWebpackPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
   target?: ZephyrBuildTarget;
+  /** Explicit URL for this application's `zephyr-manifest.json`. */
+  zephyrManifestUrl?: string;
   /** Wait for HTML processing before deployment when the framework emits HTML late. */
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;

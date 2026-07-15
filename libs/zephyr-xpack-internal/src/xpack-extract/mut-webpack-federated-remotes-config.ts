@@ -12,7 +12,8 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
   zephyr_engine: ZephyrEngine,
   config: XPackConfiguration<Compiler>,
   resolvedDependencyPairs: ZeResolvedDependency[] | null,
-  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template
+  delegate_module_template: () => unknown | undefined = xpack_delegate_module_template,
+  zephyrManifestUrl?: string
 ): void {
   // TAP packages are assembled and locked by the SDK. Rewriting a remote to a
   // control-plane URL or injecting a runtime plugin would change signed output bytes.
@@ -44,7 +45,7 @@ export function mutWebpackFederatedRemotesConfig<Compiler>(
 
     // Try runtime plugin insertion first if not legacy plugin and not Repack
     if (!isLegacyMFPlugin(plugin) && !isRepack) {
-      runtimePluginInserted = runtimePluginInsert(plugin);
+      runtimePluginInserted = runtimePluginInsert(plugin, zephyrManifestUrl);
     }
 
     // Legacy processing - only if runtime plugin wasn't inserted or isEnhanced is false

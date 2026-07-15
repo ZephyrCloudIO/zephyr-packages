@@ -93,4 +93,29 @@ describe('mutWebpackFederatedRemotesConfig', () => {
 
     expect(remotes.shell).toBe('shell@https://edge.example.test/shell/remoteEntry.mjs');
   });
+
+  it('passes the resolved self manifest URL into enhanced runtime plugin insertion', () => {
+    const remotes = { shell: 'shell@https://sdk.example.test/remoteEntry.mjs' };
+    mocks.iterate.mockImplementation((_config, callback) => {
+      callback({ remotes, library: { type: 'module' } }, {});
+    });
+    mocks.parseRemotes.mockReturnValue([
+      ['shell', 'shell@https://sdk.example.test/remoteEntry.mjs'],
+    ]);
+    mocks.isLegacy.mockReturnValue(false);
+    mocks.insertRuntimePlugin.mockReturnValue(true);
+
+    mutWebpackFederatedRemotesConfig(
+      engine('web'),
+      { plugins: [] } as never,
+      [resolvedDependency] as never,
+      undefined,
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
+    );
+
+    expect(mocks.insertRuntimePlugin).toHaveBeenCalledWith(
+      expect.anything(),
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
+    );
+  });
 });

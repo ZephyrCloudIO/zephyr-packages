@@ -27,6 +27,7 @@ const mocks = rs.hoisted(() => {
     mutPathModePublicPath: rs.fn(),
     makeCopyOfModuleFederationOptions: rs.fn(),
     coordinateXPackCompilers: rs.fn(),
+    resolveSelfZephyrManifestUrl: rs.fn(),
   };
 });
 
@@ -34,6 +35,7 @@ rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertBuildTarget,
   getGlobal: mocks.getGlobal,
   handleGlobalError: mocks.handleGlobalError,
+  resolveSelfZephyrManifestUrl: mocks.resolveSelfZephyrManifestUrl,
   ze_log: { mf: rs.fn() },
   ZephyrEngine: { create: mocks.create },
 }));
@@ -71,6 +73,7 @@ describe('Webpack withZephyr compiler arrays', () => {
     rs.clearAllMocks();
     mocks.engine.env.target = 'web';
     mocks.engine.federated_dependencies = null;
+    mocks.resolveSelfZephyrManifestUrl.mockResolvedValue(undefined);
     mocks.extractFederatedDependencyPairs.mockImplementation((config) => {
       if (config.name === 'broken') throw new Error('invalid federation config');
       return [{ name: config.name }];
@@ -119,6 +122,29 @@ describe('Webpack withZephyr compiler arrays', () => {
       target: 'tap-app',
     });
     expect(mocks.engine.env.target).toBe('tap-app');
+  });
+
+  it('forwards the resolved self manifest URL to xpack runtime injection', async () => {
+    const config = { name: 'client', context: '/repo' } as Configuration;
+    mocks.resolveSelfZephyrManifestUrl.mockResolvedValue(
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
+    );
+
+    await withZephyr({
+      zephyrManifestUrl: 'https://override.example.test/manifest.json',
+    })(config);
+
+    expect(mocks.resolveSelfZephyrManifestUrl).toHaveBeenCalledWith(
+      mocks.engine,
+      'https://override.example.test/manifest.json'
+    );
+    expect(mocks.mutWebpackFederatedRemotesConfig).toHaveBeenCalledWith(
+      mocks.engine,
+      config,
+      expect.any(Array),
+      undefined,
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
+    );
   });
 
   it('rejects unsupported targets before creating an engine', () => {

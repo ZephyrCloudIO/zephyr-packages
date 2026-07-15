@@ -1,40 +1,78 @@
 import { ze_log } from 'zephyr-agent';
 import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
-import { extractFederatedConfig } from './extract-federation-config';
 
-export function runtimePluginInsert(plugin: ModuleFederationPlugin): boolean {
+function pluginFederationConfig(
+  plugin: ModuleFederationPlugin
+): XFederatedRemotesConfig | undefined {
+  const options = plugin._options ?? plugin.options ?? plugin.config;
+  if (!options) return undefined;
+  return 'config' in options ? options.config : options;
+}
+
+function mutableFederationConfig(
+  plugin: ModuleFederationPlugin
+): Partial<XFederatedRemotesConfig> | undefined {
+  // Nx applies configOverride after its base config, so runtime plugins belong there.
+  if ('configOverride' in plugin) {
+    plugin.configOverride ??= {};
+    return plugin.configOverride;
+  }
+
+  return pluginFederationConfig(plugin);
+}
+
+function runtimePluginPath(
+  entry: NonNullable<XFederatedRemotesConfig['runtimePlugins']>[number]
+): string {
+  return Array.isArray(entry) ? entry[0] : entry;
+}
+
+export function runtimePluginInsert(
+  plugin: ModuleFederationPlugin,
+  manifestUrl?: string
+): boolean {
   try {
-    const runtimePluginPath = require.resolve('./runtime-plugin');
-    ze_log.remotes(`Adding Zephyr runtime plugin: ${runtimePluginPath}`);
+    const zephyrRuntimePluginPath = require.resolve('./runtime-plugin');
+    ze_log.remotes(`Adding Zephyr runtime plugin: ${zephyrRuntimePluginPath}`);
 
-    let configRef: Partial<XFederatedRemotesConfig> | undefined =
-      extractFederatedConfig(plugin);
-
-    if (!configRef) {
-      ze_log.remotes('No MF config found.');
-      return false;
-    }
-
-    // handle NxModuleFederationPlugin wrapper
-    if ('configOverride' in plugin) {
-      plugin.configOverride ??= {};
-      configRef = plugin.configOverride;
-    }
-
-    // Initialize runtimePlugins array if it doesn't exist
-    if (!configRef.runtimePlugins) {
-      configRef.runtimePlugins = [];
-    }
-
-    // Add the runtime plugin only if it's not already present
-    if (!configRef.runtimePlugins.includes(runtimePluginPath)) {
-      configRef.runtimePlugins.push(runtimePluginPath);
-    }
-    ze_log.remotes(`Runtime plugin added to Module Federation config`);
-
-    return true; // Successfully inserted runtime plugin
+    return configureZephyrRuntimePlugin(plugin, zephyrRuntimePluginPath, manifestUrl);
   } catch (error) {
     ze_log.remotes(`Failed to resolve runtime plugin path: ${error}`);
     return false; // Failed to insert runtime plugin
   }
+}
+
+export function configureZephyrRuntimePlugin(
+  plugin: ModuleFederationPlugin,
+  zephyrRuntimePluginPath: string,
+  manifestUrl?: string
+): boolean {
+  const configRef = mutableFederationConfig(plugin);
+  if (!configRef) {
+    ze_log.remotes('No MF config found.');
+    return false;
+  }
+
+  const runtimePlugins = (configRef.runtimePlugins ??= []);
+  const existingIndex = runtimePlugins.findIndex(
+    (entry) => runtimePluginPath(entry) === zephyrRuntimePluginPath
+  );
+
+  if (existingIndex === -1) {
+    runtimePlugins.push(
+      manifestUrl === undefined
+        ? zephyrRuntimePluginPath
+        : [zephyrRuntimePluginPath, { manifestUrl }]
+    );
+  } else if (manifestUrl !== undefined) {
+    const existingEntry = runtimePlugins[existingIndex];
+    const existingOptions = Array.isArray(existingEntry) ? existingEntry[1] : {};
+    runtimePlugins[existingIndex] = [
+      zephyrRuntimePluginPath,
+      { ...existingOptions, manifestUrl },
+    ];
+  }
+  ze_log.remotes(`Runtime plugin added to Module Federation config`);
+
+  return true;
 }

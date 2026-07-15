@@ -87,14 +87,16 @@ describe('withZephyr', () => {
   });
 
   it('forwards tap-app to both the SSG and Rsbuild publication paths', async () => {
+    const zephyrManifestUrl = 'https://cdn.example.test/app/zephyr-manifest.json';
     const ssgConfig = { ssg: true, outDir: 'dist' };
-    await withZephyr({ target: 'tap-app' }).config?.(
+    await withZephyr({ target: 'tap-app', zephyrManifestUrl }).config?.(
       ssgConfig as any,
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
     expect(rspressPluginMock).toHaveBeenCalledWith(ssgConfig, {
       target: 'tap-app',
+      zephyrManifestUrl,
       mfConfig: [],
     });
     expect(moduleFederationPublicPathPluginMock).toHaveBeenCalledWith(
@@ -102,12 +104,15 @@ describe('withZephyr', () => {
     );
 
     const builderConfig = { ssg: false, builderConfig: { plugins: [] } };
-    await withZephyr({ target: 'tap-app' }).config?.(
+    await withZephyr({ target: 'tap-app', zephyrManifestUrl }).config?.(
       builderConfig as any,
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
-    expect(rsbuildPluginMock).toHaveBeenCalledWith({ target: 'tap-app' });
+    expect(rsbuildPluginMock).toHaveBeenCalledWith({
+      target: 'tap-app',
+      zephyrManifestUrl,
+    });
   });
 
   it('retains every SSG compiler federation plugin for publication', async () => {

@@ -24,11 +24,13 @@ function getGlobalManifestCache() {
  * `zephyr-manifest.json` is emitted at the deployment root, so the base must not depend on where
  * the entry chunk is nested (e.g. `assets/`).
  *
- * Path-addressed deployments keep the reserved `/__zephyr/v1/{v|t|e}/<route-key>` route base;
- * hostname-mode deployments resolve to the origin. Note: `document.currentScript` is null inside ES
- * modules, so Vite ESM output falls back to a relative manifest path.
+ * Classic scripts retain hostname-origin behavior and preserve reserved
+ * `/__zephyr/v1/{v|t|e}/<route-key>` route bases. ES modules use `import.meta.url` only when it
+ * exposes a reserved route base. Other ESM paths cannot distinguish a deployment root from a nested
+ * runtime chunk directory, so they retain the same-origin fallback. A build-time `manifestUrl`
+ * remains preferred for arbitrary CDN mounts.
  */
-function getScriptBaseUrl() {
+export function getScriptBaseUrl(moduleUrl = import.meta.url) {
   if (typeof document !== 'undefined' && document.currentScript) {
     try {
       const src = document.currentScript.src;
@@ -42,7 +44,24 @@ function getScriptBaseUrl() {
     }
   }
 
+  try {
+    const url = new URL(moduleUrl);
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      const routeBase = /^\/__zephyr\/v1\/[vte]\/[^/]+/.exec(url.pathname);
+      if (routeBase) {
+        return `${url.origin}${routeBase[0]}`;
+      }
+    }
+  } catch {
+    // Failed to parse URL, fall through to same-origin default.
+  }
+
   return '';
+}
+
+export function inferZephyrManifestUrl(moduleUrl = import.meta.url) {
+  const baseUrl = getScriptBaseUrl(moduleUrl);
+  return baseUrl ? `${baseUrl}/zephyr-manifest.json` : '/zephyr-manifest.json';
 }
 
 function getRemotes(args) {
@@ -58,7 +77,7 @@ function getRemotes(args) {
 }
 
 export default function createZephyrRuntimePlugin(options = {}) {
-  const defaultManifestUrl = `${getScriptBaseUrl()}/zephyr-manifest.json`;
+  const defaultManifestUrl = inferZephyrManifestUrl();
   const { manifestUrl = defaultManifestUrl } = options;
 
   let processedRemotes;

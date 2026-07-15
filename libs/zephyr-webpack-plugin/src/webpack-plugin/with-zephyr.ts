@@ -3,6 +3,7 @@ import {
   assertZephyrBuildTarget,
   getGlobal,
   handleGlobalError,
+  resolveSelfZephyrManifestUrl,
   ze_log,
   ZephyrEngine,
   type ZephyrBuildTarget,
@@ -126,7 +127,17 @@ async function _zephyr_configuration(
       resolved_dependency_pairs ?? []
     );
 
-    mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    const zephyrManifestUrl = await resolveSelfZephyrManifestUrl(
+      zephyr_engine,
+      _zephyrOptions?.zephyrManifestUrl
+    );
+    mutWebpackFederatedRemotesConfig(
+      zephyr_engine,
+      config,
+      resolved_dependency_pairs,
+      undefined,
+      zephyrManifestUrl
+    );
     await mutPathModePublicPath(zephyr_engine, config);
 
     const mfConfig = makeCopyOfModuleFederationOptions(config);

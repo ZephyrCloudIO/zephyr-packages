@@ -58,6 +58,7 @@ describe('Rsbuild withZephyr compiler coordination', () => {
       target: 'tap-app',
       snapshotType: 'ssr',
       entrypoint: 'server/index.js',
+      zephyrManifestUrl: 'https://cdn.example.test/app/zephyr-manifest.json',
     });
     await plugin.setup({
       onBeforeCreateCompiler(options: { handler: typeof hook }) {
@@ -84,6 +85,7 @@ describe('Rsbuild withZephyr compiler coordination', () => {
         __coordinator: { name: 'shared-coordinator' },
         __participant: 'web',
         __assetPrefix: 'client',
+        zephyrManifestUrl: 'https://cdn.example.test/app/zephyr-manifest.json',
       })
     );
     expect(mocks.rspackWithZephyr).toHaveBeenNthCalledWith(
@@ -93,6 +95,7 @@ describe('Rsbuild withZephyr compiler coordination', () => {
         __coordinator: { name: 'shared-coordinator' },
         __participant: 'node',
         __assetPrefix: 'server',
+        zephyrManifestUrl: 'https://cdn.example.test/app/zephyr-manifest.json',
       })
     );
     expect(mocks.configure).toHaveBeenCalledTimes(2);

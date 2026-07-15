@@ -135,6 +135,16 @@ function assertRecordOrArray(value: unknown, path: string): void {
   }
 }
 
+function isRuntimePluginEntry(value: unknown): boolean {
+  return (
+    typeof value === 'string' ||
+    (Array.isArray(value) &&
+      value.length === 2 &&
+      typeof value[0] === 'string' &&
+      isJsonRecord(value[1]))
+  );
+}
+
 function assertLegacyConfigShape(
   value: unknown,
   path: string
@@ -155,12 +165,9 @@ function assertLegacyConfigShape(
 
   if (hasOwn(record, 'runtimePlugins')) {
     const runtimePlugins = record['runtimePlugins'];
-    if (
-      !Array.isArray(runtimePlugins) ||
-      !runtimePlugins.every((entry) => typeof entry === 'string')
-    ) {
+    if (!Array.isArray(runtimePlugins) || !runtimePlugins.every(isRuntimePluginEntry)) {
       throw metadataError(
-        `${path}.runtimePlugins must be an array of strings when provided.`
+        `${path}.runtimePlugins must contain plugin paths or [plugin path, options] tuples.`
       );
     }
   }

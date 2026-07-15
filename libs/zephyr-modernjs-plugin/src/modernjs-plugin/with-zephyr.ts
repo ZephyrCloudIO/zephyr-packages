@@ -23,6 +23,8 @@ export function shouldApplyDevPublicPathFix(
 export interface ZephyrModernjsPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
   target?: ZephyrBuildTarget;
+  /** Explicit URL for this application's `zephyr-manifest.json`. */
+  zephyrManifestUrl?: string;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   /** Override automatic CSR/SSR detection for Modern.js compiler arrays. */

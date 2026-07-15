@@ -18,6 +18,8 @@ import type {
 export interface ZephyrRspressOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
   target?: ZephyrBuildTarget;
+  /** Explicit URL for this application's `zephyr-manifest.json`. */
+  zephyrManifestUrl?: string;
   hooks?: ZephyrBuildHooks;
 }
 

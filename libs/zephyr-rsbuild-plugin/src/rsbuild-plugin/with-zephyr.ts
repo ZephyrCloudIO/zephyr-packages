@@ -13,6 +13,8 @@ import { coordinateXPackCompilers } from 'zephyr-xpack-internal';
 export interface ZephyrRsbuildPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
   target?: ZephyrBuildTarget;
+  /** Explicit URL for this application's `zephyr-manifest.json`. */
+  zephyrManifestUrl?: string;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   snapshotType?: 'csr' | 'ssr';

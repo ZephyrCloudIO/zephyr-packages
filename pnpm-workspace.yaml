@@ -77,7 +77,10 @@ catalog:
 trustPolicy: no-downgrade
 # Ignores trust policies for packages older than a week
 trustPolicyIgnoreAfter: 10080
-# @modern-js 3.6.0 dropped provenance attestations upstream; excluded until fixed
+# TODO: remove after 2026-07-16 — @modern-js@3.6.0 lacks provenance but is only 6 days old at
+# time of this commit (published 2026-07-09); trustPolicyIgnoreAfter (10080 min = 7 days) will
+# clear these automatically once they age past the threshold. This block is only needed to
+# unblock CI during the ~23h window before that happens.
 trustPolicyExclude:
   - '@modern-js/app-tools@3.6.0'
   - '@modern-js/builder@3.6.0'

@@ -7,7 +7,7 @@
     "bump-patch": "node scripts/bump-version.js patch",
     "bump-minor": "node scripts/bump-version.js minor",
     "bump-major": "node scripts/bump-version.js major",
-    "ze-version-patch": "pnpm --filter './libs/**' exec pnpm version --no-git-tag-version --ignore-scripts",
+    "ze-version-patch": "pnpm --filter './libs/**' exec pnpm version --no-git-tag-version",
     "ze-publish": "pnpm --config.workspace-concurrency=1 -r --filter './libs/**' publish --provenance --access public --no-git-checks --report-summary",
     "build": "turbo run build --filter='./libs/*'",
     "build-all": "turbo run build",

@@ -37,7 +37,7 @@ const MF_RELEASE_AGE_EXCLUSIONS = new Map([
   ['third-party-dts-extractor', MF_STABLE_VERSION],
   ['webpack-bundler-runtime', MF_STABLE_VERSION],
 ]);
-const ZEPHYR_CANARY = '0.0.0-canary.67';
+const ZEPHYR_CANARY = '0.0.0-canary.68';
 
 const dependencySections = [
   'dependencies',

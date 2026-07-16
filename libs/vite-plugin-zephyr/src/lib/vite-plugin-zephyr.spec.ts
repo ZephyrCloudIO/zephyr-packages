@@ -4,6 +4,7 @@ import type { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
 import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
+import type { ModuleFederationOptions } from './internal/mf-vite-etl/ensure_runtime_plugin';
 
 const mocks = rs.hoisted(() => ({
   federation: rs.fn(),
@@ -16,6 +17,7 @@ const mocks = rs.hoisted(() => ({
   deferCreate: rs.fn(),
   zeLogInit: rs.fn(),
   engine: {
+    env: { target: 'web', env: undefined as string | undefined },
     application_uid: 'org.project.vite',
     buildProperties: { output: 'dist' },
     federated_dependencies: [],
@@ -215,6 +217,7 @@ describe('vite-plugin-zephyr', () => {
       }
     );
     mocks.engine.federated_dependencies = [];
+    mocks.engine.env.env = undefined;
     mocks.engine.application_configuration = Promise.resolve({
       ADDRESS_MODE: 'hostname',
     });
@@ -272,6 +275,90 @@ describe('vite-plugin-zephyr', () => {
       'module-federation-vite',
       'with-zephyr',
     ]);
+  });
+
+  test('upgrades the captured MF runtime tuple from the selected environment remote_host', async () => {
+    mocks.engine.env.env = 'stable';
+    mocks.engine.application_configuration = Promise.resolve({
+      ADDRESS_MODE: 'hostname',
+      ENVIRONMENTS: {
+        stable: {
+          remote_host:
+            'https://cdnedge.agoda.net/t-stable-supply-layout-supply-layout-agodadev-io/',
+        },
+      },
+    });
+    mocks.federation.mockImplementation((config) => [
+      {
+        name: 'module-federation-vite',
+        _options: config,
+      },
+    ]);
+    const mfConfig: ModuleFederationOptions = { name: 'host' };
+    const plugins = withZephyr({ mfConfig });
+    const capturedRuntimePlugins = mfConfig.runtimePlugins;
+    const corePlugin = plugins.find((plugin) => plugin.name === 'with-zephyr')!;
+    const config = resolvedConfig({});
+    config.plugins = plugins.filter((plugin) => plugin.name === 'module-federation-vite');
+
+    await (corePlugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      config
+    );
+
+    expect(mfConfig.runtimePlugins).toBe(capturedRuntimePlugins);
+    expect(capturedRuntimePlugins).toEqual([
+      [
+        'virtual:zephyr-mf-runtime-plugin',
+        {
+          manifestUrl:
+            'https://cdnedge.agoda.net/t-stable-supply-layout-supply-layout-agodadev-io/zephyr-manifest.json',
+        },
+      ],
+    ]);
+  });
+
+  test('uses the selected environment manifest URL for development env imports', async () => {
+    mocks.engine.env.env = 'stable';
+    mocks.engine.application_configuration = Promise.resolve({
+      ADDRESS_MODE: 'hostname',
+      ENVIRONMENTS: {
+        stable: {
+          remote_host:
+            'https://cdnedge.agoda.net/t-stable-supply-layout-supply-layout-agodadev-io/',
+        },
+      },
+    });
+    const plugin = withZephyr()[0] as Plugin;
+
+    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      resolvedConfig({})
+    );
+
+    await withProcessEnv({ NODE_ENV: 'development' }, async () => {
+      await expect(
+        (plugin.resolveId as (source: string) => Promise<unknown>)(
+          'env:vars:org.project.vite'
+        )
+      ).resolves.toBe(
+        'https://cdnedge.agoda.net/t-stable-supply-layout-supply-layout-agodadev-io/zephyr-manifest.json'
+      );
+    });
+  });
+
+  test('keeps the same-origin development env import fallback without an environment', async () => {
+    const plugin = withZephyr()[0] as Plugin;
+
+    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
+      resolvedConfig({})
+    );
+
+    await withProcessEnv({ NODE_ENV: 'development' }, async () => {
+      await expect(
+        (plugin.resolveId as (source: string) => Promise<unknown>)(
+          'env:vars:org.project.vite'
+        )
+      ).resolves.toBe('/zephyr-manifest.json');
+    });
   });
 
   test('publishes serializable single-container MF metadata on direct uploads', async () => {

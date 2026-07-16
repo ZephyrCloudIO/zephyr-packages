@@ -8,6 +8,7 @@ const originalSessionStorage = Object.getOwnPropertyDescriptor(
   globalThis,
   'sessionStorage'
 );
+const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
 let manifestSequence = 0;
 
 afterEach(() => {
@@ -16,6 +17,11 @@ afterEach(() => {
     Object.defineProperty(globalThis, 'sessionStorage', originalSessionStorage);
   } else {
     Reflect.deleteProperty(globalThis, 'sessionStorage');
+  }
+  if (originalDocument) {
+    Object.defineProperty(globalThis, 'document', originalDocument);
+  } else {
+    Reflect.deleteProperty(globalThis, 'document');
   }
 });
 
@@ -68,6 +74,32 @@ async function resolveRemote(
 }
 
 describe('createZephyrRuntimePlugin remote resolution', () => {
+  it('uses the final same-origin manifest fallback without a canonical script URL', () => {
+    globalThis.fetch = rs.fn(async () => ({ ok: false })) as unknown as typeof fetch;
+
+    createZephyrRuntimePlugin();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/zephyr-manifest.json');
+  });
+
+  it('retains classic currentScript hostname inference', () => {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        currentScript: {
+          src: 'https://classic.example.test/static/js/remoteEntry.js',
+        },
+      },
+    });
+    globalThis.fetch = rs.fn(async () => ({ ok: false })) as unknown as typeof fetch;
+
+    createZephyrRuntimePlugin();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'https://classic.example.test/zephyr-manifest.json'
+    );
+  });
+
   it('preserves the MF manifest URL and lets its snapshot define the entry type', async () => {
     const args = request('https://old.example.test/remoteEntry.js', 'var');
     const result = await resolveRemote(

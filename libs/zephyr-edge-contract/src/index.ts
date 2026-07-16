@@ -21,6 +21,7 @@ export type {
   ZephyrModuleFederationBuildMetadata,
   ZephyrModuleFederationConfig,
   ZephyrLegacyModuleFederationConfig,
+  ZephyrModuleFederationRuntimePlugin,
 } from './lib/module-federation';
 export * as ZeUtils from './lib/promise';
 export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';

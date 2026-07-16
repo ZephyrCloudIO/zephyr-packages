@@ -18,17 +18,20 @@ export function extractFederatedConfig(
   plugin: ModuleFederationPlugin
 ): XFederatedRemotesConfig | undefined {
   if (!plugin) return undefined;
+  let config: XFederatedRemotesConfig | undefined;
   if (plugin._options) {
     // Webpack, Enhanced MF, and Nx plugins expose serializable options here.
-    return normalizeFederationConfig(plugin._options);
-  }
-  if (plugin.options) {
+    config = normalizeFederationConfig(plugin._options);
+  } else if (plugin.options) {
     // Some Nx/plugin wrappers use `options` instead of `_options`.
-    return normalizeFederationConfig(plugin.options);
-  }
-  if (plugin.config) {
+    config = normalizeFederationConfig(plugin.options);
+  } else if (plugin.config) {
     // Repack support
-    return normalizeFederationConfig(plugin.config);
+    config = normalizeFederationConfig(plugin.config);
   }
-  return undefined;
+  if (!config) return undefined;
+
+  return plugin.configOverride
+    ? normalizeFederationConfig({ ...config, ...plugin.configOverride })
+    : config;
 }

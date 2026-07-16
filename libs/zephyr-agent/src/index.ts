@@ -96,8 +96,11 @@ export {
 export {
   appendZephyrUrlPath,
   getPathPreservingBaseUrl,
+  resolveSelfZephyrManifestUrl,
   resolveZephyrSiblingUrl,
+  SAME_ORIGIN_ZEPHYR_MANIFEST_URL,
   stripFederatedRemoteName,
+  type ZephyrManifestUrlEngine,
   ZEPHYR_MANIFEST_FILENAME,
 } from './lib/urls/zephyr-url';
 

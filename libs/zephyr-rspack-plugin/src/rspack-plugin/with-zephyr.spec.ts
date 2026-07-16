@@ -27,6 +27,7 @@ const mocks = rs.hoisted(() => {
     mutPathModePublicPath: rs.fn(),
     makeCopyOfModuleFederationOptions: rs.fn(),
     coordinateXPackCompilers: rs.fn(),
+    resolveSelfZephyrManifestUrl: rs.fn(),
   };
 });
 
@@ -34,6 +35,7 @@ rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertBuildTarget,
   getGlobal: mocks.getGlobal,
   handleGlobalError: mocks.handleGlobalError,
+  resolveSelfZephyrManifestUrl: mocks.resolveSelfZephyrManifestUrl,
   ZephyrEngine: { create: mocks.create },
 }));
 
@@ -70,6 +72,7 @@ describe('Rspack withZephyr compiler arrays', () => {
     rs.clearAllMocks();
     mocks.engine.env.target = 'web';
     mocks.engine.federated_dependencies = null;
+    mocks.resolveSelfZephyrManifestUrl.mockResolvedValue(undefined);
     mocks.extractFederatedDependencyPairs.mockImplementation((config) => {
       if (config.name === 'broken') throw new Error('invalid federation config');
       return [{ name: config.name }];
@@ -121,6 +124,35 @@ describe('Rspack withZephyr compiler arrays', () => {
       'withZephyr({ target }) must be one of'
     );
     expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it('forwards the resolved self manifest URL to xpack and the Rspack plugin', async () => {
+    const config = {
+      name: 'client',
+      context: '/repo',
+    } as unknown as Configuration;
+    mocks.resolveSelfZephyrManifestUrl.mockResolvedValue(
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
+    );
+
+    await withZephyr()(config);
+
+    expect(mocks.resolveSelfZephyrManifestUrl).toHaveBeenCalledWith(mocks.engine);
+    expect(mocks.mutWebpackFederatedRemotesConfig).toHaveBeenCalledWith(
+      mocks.engine,
+      config,
+      expect.any(Array),
+      undefined,
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
+    );
+    expect(config.plugins?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          resolvedManifestUrl:
+            'https://cdn.example.test/customer/app/zephyr-manifest.json',
+        }),
+      })
+    );
   });
 
   it('rejects coordinated configuration errors instead of waiting for a missing compiler', async () => {

@@ -53,7 +53,7 @@ function compiler() {
   };
 }
 
-function plugin(target: 'web' | 'tap-app') {
+function plugin(target: 'web' | 'tap-app', resolvedManifestUrl?: string) {
   return new ZeRspackPlugin({
     zephyr_engine: {
       application_uid: 'org.project.rspack',
@@ -62,6 +62,7 @@ function plugin(target: 'web' | 'tap-app') {
       federated_dependencies: [],
     } as never,
     mfConfig: undefined,
+    resolvedManifestUrl,
   });
 }
 
@@ -108,6 +109,32 @@ describe('ZeRspackPlugin locked TAP output', () => {
         react: 'commonjs react',
         'env:vars:org.project.rspack': 'module env:vars:org.project.rspack',
       })
+    );
+  });
+
+  it('maps the application env module to the resolved self manifest URL', async () => {
+    const subject = compiler();
+    const tapPromise = rs.fn();
+    mocks.compilationHooks.mockReturnValue({
+      afterTemplateExecution: { tapPromise },
+    });
+    mocks.buildEnvImportMap.mockReturnValue({
+      'env:vars:org.project.rspack':
+        'https://cdn.example.test/customer/app/zephyr-manifest.json',
+    });
+
+    plugin('web', 'https://cdn.example.test/customer/app/zephyr-manifest.json').apply(
+      subject.compiler as never
+    );
+    const compilationHandler = subject.compilationTap.mock.calls[0]?.[1];
+    compilationHandler({});
+    const htmlHandler = tapPromise.mock.calls[0]?.[1];
+    await htmlHandler({ headTags: [] });
+
+    expect(mocks.buildEnvImportMap).toHaveBeenCalledWith(
+      'org.project.rspack',
+      [],
+      'https://cdn.example.test/customer/app/zephyr-manifest.json'
     );
   });
 });

@@ -20,6 +20,10 @@ permissions:
   contents: read
   id-token: write
 
+# Enable npm provenance attestations for every publish job below.
+env:
+  PNPM_CONFIG_PROVENANCE: true
+
 # Publishing is not transactional. Serialize every release channel so concurrent
 # workflow runs cannot calculate or publish the same version.
 concurrency:
@@ -69,8 +73,6 @@ jobs:
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=canary
-        env:
-          PNPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true
@@ -139,8 +141,6 @@ jobs:
 
       - name: Publish package on NPM 📦
         run: pnpm ze-publish --tag=next
-        env:
-          PNPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true
@@ -187,8 +187,6 @@ jobs:
 
       - name: Publish packages to latest tag
         run: pnpm ze-publish --tag=latest
-        env:
-          PNPM_CONFIG_PROVENANCE: true
 
       - name: Post Summary
         continue-on-error: true

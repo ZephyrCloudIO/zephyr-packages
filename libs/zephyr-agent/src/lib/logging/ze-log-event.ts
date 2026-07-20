@@ -108,18 +108,7 @@ export function logger(props: LoggerOptions): ZeLogger {
       logFn(log.level, log.message, log.action);
     }
 
-    // Fire-and-forget log upload. We use an AbortController so the underlying
-    // TCP connection (getApplicationConfiguration) is actively cancelled after
-    // the deadline, not just raced. On Windows CI, stalled TCP connections
-    // (SYN sent, no SYN-ACK) are held open for ~8 minutes by the OS before the
-    // stack gives up, keeping the Node event loop alive and preventing bundler
-    // processes from exiting. PromiseLazyLoad caches the pending promise, so a
-    // Promise.race alone is not sufficient — the original promise and its socket
-    // stay alive until the abort signal cancels the underlying axios request.
-    const LOG_TOTAL_DEADLINE_MS = 5_000;
-    const abortController = new AbortController();
-    const killTimer = setTimeout(() => abortController.abort(), LOG_TOTAL_DEADLINE_MS);
-    killTimer.unref();
+    // Then attempt to upload logs,
     loadLogData()
       .then(
         ([config, token]) =>
@@ -127,7 +116,6 @@ export function logger(props: LoggerOptions): ZeLogger {
             url,
             {
               method: 'POST',
-              signal: abortController.signal,
               headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
@@ -148,12 +136,10 @@ export function logger(props: LoggerOptions): ZeLogger {
                   message: stripAnsi(log.message.trim()),
                   createdAt: Date.now(),
                 }))
-            ),
-            LOG_TOTAL_DEADLINE_MS
+            )
           )
       )
       // This is ok to fail silently
-      .catch(() => void 0)
-      .finally(() => clearTimeout(killTimer));
+      .catch(() => void 0);
   };
 }

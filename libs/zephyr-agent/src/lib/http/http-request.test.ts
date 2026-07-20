@@ -221,9 +221,7 @@ describe('Pure HTTP Request Functions', () => {
           href: 'https://api.example.com/endpoint',
           host: 'api.example.com',
         }),
-        expect.any(Object),
-        3,
-        undefined
+        expect.any(Object)
       );
     });
   });

@@ -74,18 +74,15 @@ function redactResponse(
 export async function makeHttpRequest<T = void>(
   url: URL,
   options: RequestInit = {},
-  data?: string | Buffer,
-  deadlineMs?: number
+  data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const startTime = Date.now();
 
   try {
-    const response = await fetchWithRetries(
-      url,
-      { ...options, body: data as BodyInit | null | undefined },
-      3,
-      deadlineMs
-    );
+    const response = await fetchWithRetries(url, {
+      ...options,
+      body: data as BodyInit | null | undefined,
+    });
 
     const resText = await response.text();
 
@@ -140,11 +137,10 @@ export async function makeHttpRequest<T = void>(
 export function makeRequest<T = void>(
   urlStr: UrlString,
   options: RequestInit = {},
-  data?: string | Buffer,
-  deadlineMs?: number
+  data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const url = parseUrl(urlStr);
-  return makeHttpRequest<T>(url, options, data, deadlineMs);
+  return makeHttpRequest<T>(url, options, data);
 }
 
 /** Transforms `Promise<HttpResponse<T>>` into `Promise<T>` */

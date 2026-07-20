@@ -105,7 +105,7 @@ jobs:
           out=$(mktemp)
           timeout 240 pnpm exec turbo run build \
             --affected --force --env-mode=loose --output-logs=new-only \
-            | tee "$out"
+            2>&1 | tee "$out"
           rc=$?
           if [ $rc -eq 124 ]; then
             if grep -q "Tasks:.*successful" "$out"; then

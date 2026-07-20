@@ -249,13 +249,13 @@ describe('zephyr-tap-runtime', () => {
       }),
     });
     lifecycle.on('prePause', async () => {
-      await wait(30);
+      await wait(200);
       return { kind: 'continue' };
     });
 
-    const first = lifecycle.pause(request({ deadline: Date.now() + 200 }));
-    await wait(2);
-    const queued = lifecycle.pause(request({ deadline: Date.now() + 10 }));
+    const first = lifecycle.pause(request({ deadline: Date.now() + 1000 }));
+    await wait(10);
+    const queued = lifecycle.pause(request({ deadline: Date.now() + 50 }));
     const [, expired] = await Promise.all([first, queued]);
 
     expect(expired.status).toBe('timed_out');

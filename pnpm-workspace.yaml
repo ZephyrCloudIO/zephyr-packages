@@ -36,6 +36,7 @@ catalog:
   cross-env: ^10.1.0
   debug: ^4.4.3
   dotenv: ^17.4.2
+  dotenv-cli: ^11.0.0
   elysia: ^1.4.29
   eventsource: ^4.1.0
   git-url-parse: ^16.1.0
@@ -77,25 +78,6 @@ catalog:
 trustPolicy: no-downgrade
 # Ignores trust policies for packages older than a week
 trustPolicyIgnoreAfter: 10080
-# TODO: remove after 2026-07-16 — @modern-js@3.6.0 lacks provenance but is only 6 days old at
-# time of this commit (published 2026-07-09); trustPolicyIgnoreAfter (10080 min = 7 days) will
-# clear these automatically once they age past the threshold. This block is only needed to
-# unblock CI during the ~23h window before that happens.
-trustPolicyExclude:
-  - '@modern-js/app-tools@3.6.0'
-  - '@modern-js/builder@3.6.0'
-  - '@modern-js/plugin-data-loader@3.6.0'
-  - '@modern-js/plugin-ssg@3.6.0'
-  - '@modern-js/plugin@3.6.0'
-  - '@modern-js/prod-server@3.6.0'
-  - '@modern-js/runtime-utils@3.6.0'
-  - '@modern-js/runtime@3.6.0'
-  - '@modern-js/server-core@3.6.0'
-  - '@modern-js/server-utils@3.6.0'
-  - '@modern-js/server@3.6.0'
-  - '@modern-js/tsconfig@3.6.0'
-  - '@modern-js/types@3.6.0'
-  - '@modern-js/utils@3.6.0'
 # Minimum of 1 day before released packages can be installed
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:

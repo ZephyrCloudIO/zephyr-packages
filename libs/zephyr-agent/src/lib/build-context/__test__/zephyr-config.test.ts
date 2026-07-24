@@ -50,6 +50,7 @@ describe('zephyr config', () => {
         remoteDependencies: {
           remote: ' zephyr:remote.remote-project.remote-org@latest ',
         },
+        dependencyUrlMode: 'version',
       } satisfies Record<string, unknown>;`
     );
 
@@ -62,6 +63,7 @@ describe('zephyr config', () => {
       remoteDependencies: {
         remote: 'zephyr:remote.remote-project.remote-org@latest',
       },
+      dependencyUrlMode: 'version',
     });
     expect(Object.isFrozen(config)).toBe(true);
     expect(Object.isFrozen(config.remoteDependencies)).toBe(true);
@@ -146,6 +148,10 @@ describe('zephyr config', () => {
       [
         "export default { remoteDependencies: { remote: '   ' } }",
         /remoteDependencies\.remote must not be empty/,
+      ],
+      [
+        "export default { dependencyUrlMode: 'tag' }",
+        /dependencyUrlMode must be either "selector" or "version"/,
       ],
     ] as const;
 

@@ -6,6 +6,8 @@ import { ZeErrors, ZephyrError } from '../errors';
 import { redactString } from '../security/redaction';
 
 /** User-authored Zephyr project configuration. */
+export type ZephyrDependencyUrlMode = 'selector' | 'version';
+
 export interface ZephyrConfig {
   /** Overrides the organization inferred from the Git remote. */
   org?: string;
@@ -15,6 +17,8 @@ export interface ZephyrConfig {
   appName?: string;
   /** Adds to package.json zephyr:dependencies; config entries win by key. */
   remoteDependencies?: Record<string, string>;
+  /** Chooses mutable selector URLs or immutable version URLs for resolved remotes. */
+  dependencyUrlMode?: ZephyrDependencyUrlMode;
 }
 
 export type ResolvedZephyrConfig = Readonly<
@@ -37,6 +41,7 @@ const CONFIG_FIELDS = new Set<keyof ZephyrConfig>([
   'project',
   'appName',
   'remoteDependencies',
+  'dependencyUrlMode',
 ]);
 
 const CONFIG_ERROR_MAX_LENGTH = 1_000;
@@ -209,13 +214,31 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     value['remoteDependencies'],
     configPath
   );
+  const dependencyUrlMode = readDependencyUrlMode(value['dependencyUrlMode'], configPath);
 
   return Object.freeze({
     ...(org ? { org } : {}),
     ...(project ? { project } : {}),
     ...(appName ? { appName } : {}),
     ...(remoteDependencies ? { remoteDependencies } : {}),
+    ...(dependencyUrlMode ? { dependencyUrlMode } : {}),
   });
+}
+
+function readDependencyUrlMode(
+  value: unknown,
+  configPath: string
+): ZephyrDependencyUrlMode | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value !== 'selector' && value !== 'version') {
+    throwConfigError(
+      configPath,
+      'dependencyUrlMode must be either "selector" or "version"'
+    );
+  }
+  return value;
 }
 
 function readOptionalString(

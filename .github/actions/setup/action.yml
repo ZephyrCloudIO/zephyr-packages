@@ -23,7 +23,7 @@ runs:
   steps:
     - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       with:
-        version: 10.34.0
+        version: 11.13.0
         run_install: false
     # Set up Node without built-in pnpm caching; we manage the cache explicitly
     # below so parallel jobs on the same OS can use distinct keys and never race

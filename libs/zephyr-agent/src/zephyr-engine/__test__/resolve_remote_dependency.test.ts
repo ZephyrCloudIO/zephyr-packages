@@ -75,6 +75,37 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
     expect(requestedUrl.searchParams.get('build_context')).toBe('local');
   });
 
+  it('requests immutable version URLs when configured', async () => {
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: mock_api_response },
+    });
+
+    await resolve_remote_dependency({
+      application_uid,
+      version,
+      build_context: 'local',
+      dependencyUrlMode: 'version',
+    });
+
+    const requestedUrl = new URL(axiosMock.get.mock.calls[0][0] as string);
+    expect(requestedUrl.searchParams.get('url_mode')).toBe('version');
+  });
+
+  it('omits the URL mode when the default selector behavior is used', async () => {
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    axiosMock.get.mockResolvedValueOnce({
+      status: 200,
+      data: { value: mock_api_response },
+    });
+
+    await resolve_remote_dependency({ application_uid, version });
+
+    const requestedUrl = new URL(axiosMock.get.mock.calls[0][0] as string);
+    expect(requestedUrl.searchParams.has('url_mode')).toBe(false);
+  });
+
   it('rejects an unsupported target before making a dependency request', async () => {
     await expect(
       resolve_remote_dependency({

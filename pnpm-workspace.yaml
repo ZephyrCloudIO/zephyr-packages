@@ -36,6 +36,7 @@ catalog:
   cross-env: ^10.1.0
   debug: ^4.4.3
   dotenv: ^17.4.2
+  dotenv-cli: ^11.0.0
   elysia: ^1.4.29
   eventsource: ^4.1.0
   git-url-parse: ^16.1.0
@@ -278,15 +279,15 @@ overrides:
   svgo@>=3.0.0 <3.3.4: 3.3.4
   svgo@>=4.0.0 <4.0.2: 4.0.2
 
-onlyBuiltDependencies:
-  - '@biomejs/biome'
-  - '@parcel/watcher'
-  - '@swc/core'
-  - core-js
-  - core-js-pure
-  - esbuild
-  - lmdb
-  - msgpackr-extract
-  - msw
-  - sharp
-  - workerd
+allowBuilds:
+  '@biomejs/biome': true
+  '@parcel/watcher': true
+  '@swc/core': true
+  core-js: true
+  core-js-pure: true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
+  msw: true
+  sharp: true
+  workerd: true

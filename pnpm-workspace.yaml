@@ -99,6 +99,8 @@ minimumReleaseAgeExclude:
   - '@module-federation/sdk@2.8.0'
   - '@module-federation/third-party-dts-extractor@2.8.0'
   - '@module-federation/webpack-bundler-runtime@2.8.0'
+  # Renovate security update: astro@7.1.0
+  - astro@7.1.0
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

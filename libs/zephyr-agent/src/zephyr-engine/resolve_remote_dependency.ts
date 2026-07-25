@@ -6,6 +6,7 @@ import {
   type ZephyrBuildTarget,
 } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../lib/errors';
+import type { ZephyrDependencyUrlMode } from '../lib/build-context/zephyr-config';
 import { parseUrl } from '../lib/http/http-request';
 import { ze_log } from '../lib/logging';
 import { getToken } from '../lib/node-persist/token';
@@ -26,6 +27,7 @@ export async function resolve_remote_dependency(params: {
   version: string;
   platform?: ZephyrBuildTarget;
   build_context: string;
+  dependencyUrlMode?: ZephyrDependencyUrlMode;
 }): Promise<ZeResolvedDependency> {
   if (params.platform !== undefined) {
     assertZephyrBuildTarget(params.platform, 'resolve_remote_dependency({ platform })');
@@ -56,11 +58,13 @@ async function request_remote_dependency({
   version,
   platform,
   build_context,
+  dependencyUrlMode,
 }: {
   application_uid: string;
   version: string;
   platform?: ZephyrBuildTarget;
   build_context: string;
+  dependencyUrlMode?: ZephyrDependencyUrlMode;
 }): Promise<ZeResolvedDependency> {
   const depUrl =
     ZE_API_ENDPOINT() +
@@ -75,6 +79,10 @@ async function request_remote_dependency({
 
   if (build_context) {
     resolveDependency.searchParams.append('build_context', build_context);
+  }
+
+  if (dependencyUrlMode) {
+    resolveDependency.searchParams.append('url_mode', dependencyUrlMode);
   }
 
   try {

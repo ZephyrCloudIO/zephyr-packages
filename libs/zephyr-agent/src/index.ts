@@ -43,6 +43,7 @@ export {
   getZephyrConfig,
   type ResolvedZephyrConfig,
   type ZephyrConfig,
+  type ZephyrDependencyUrlMode,
 } from './lib/build-context/zephyr-config';
 
 // deploy result

@@ -97,14 +97,18 @@ export default defineConfig({
   remoteDependencies: {
     remote: 'zephyr:remote.remote-project.remote-org@latest',
   },
+  dependencyUrlMode: 'version',
 });
 ```
 
 Name the file `zephyr.config.ts`, `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs`. Only
-`org`, `project`, `appName`, and `remoteDependencies` are valid. Config identity wins
-over Git inference, `appName` wins over the package name, and config remotes win by key
-over `package.json` `zephyr:dependencies`. Environment identity overrides are not
-supported, and config loading never mutates `process.env`.
+`org`, `project`, `appName`, `remoteDependencies`, and `dependencyUrlMode` are valid.
+Config identity wins over Git inference, `appName` wins over the package name, and
+config remotes win by key over `package.json` `zephyr:dependencies`.
+`dependencyUrlMode: 'version'` keeps tag, environment, and workspace selection while
+embedding the resolved immutable version URLs in Module Federation configuration. The
+default `selector` mode preserves mutable tag and environment URLs. Environment identity
+overrides are not supported, and config loading never mutates `process.env`.
 
 The config is resolved once when a `ZephyrEngine` is created and is shared by every
 compiler participating in that application build. Restart the bundler after changing

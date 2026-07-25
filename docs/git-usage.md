@@ -52,12 +52,13 @@ export default defineConfig({
   remoteDependencies: {
     remote: 'zephyr:remote.remote-project.remote-org@latest',
   },
+  dependencyUrlMode: 'version',
 });
 ```
 
 The loader searches upward from the bundler's project context. The config is strict:
-only `org`, `project`, `appName`, and `remoteDependencies` are accepted, and invalid or
-ambiguous config files fail before a deployment starts.
+only `org`, `project`, `appName`, `remoteDependencies`, and `dependencyUrlMode` are
+accepted, and invalid or ambiguous config files fail before a deployment starts.
 
 Precedence is deterministic:
 
@@ -65,6 +66,10 @@ Precedence is deterministic:
 2. Config `appName` overrides the nearest `package.json` name.
 3. Config remote entries override same-named `package.json` `zephyr:dependencies`;
    package-only entries remain.
+
+`dependencyUrlMode` defaults to `selector`. Set it to `version` to resolve the same
+tag, environment, workspace, or semver selector but embed immutable version URLs in the
+final Module Federation configuration.
 
 Zephyr does not read identity overrides from environment variables and never copies
 project config into `process.env`. The resolved config belongs to the application

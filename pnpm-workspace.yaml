@@ -99,6 +99,8 @@ minimumReleaseAgeExclude:
   - '@module-federation/sdk@2.8.0'
   - '@module-federation/third-party-dts-extractor@2.8.0'
   - '@module-federation/webpack-bundler-runtime@2.8.0'
+  # Renovate security update: react-server-dom-webpack@19.2.8
+  - react-server-dom-webpack@19.2.8
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -203,7 +205,7 @@ catalogs:
     '@types/react-dom': ^19.2.3
     react: ^19.2.7
     react-dom: ^19.2.7
-    react-server-dom-webpack: 19.2.7
+    react-server-dom-webpack: 19.2.8
   rolldown:
     rolldown: ^1.1.5
   rollup4:

@@ -102,6 +102,13 @@ minimumReleaseAgeExclude:
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
+# No compatible upgrades exist yet: React Router requires a framework-breaking
+# v8 jump, while brace-expansion v5 changes the API expected by older minimatch.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-qwww-vcr4-c8h2
+    - GHSA-mh99-v99m-4gvg
+
 catalogs:
   babel:
     '@babel/core': 7.29.6
@@ -182,7 +189,7 @@ catalogs:
     vite: ^7.0.0 || ^8.0.0
   postcss:
     autoprefixer: ^10.5.2
-    postcss: ^8.5.16
+    postcss: ^8.5.23
     postcss-loader: ^8.2.1
   react:
     '@testing-library/dom': ^10.4.1
@@ -201,9 +208,9 @@ catalogs:
   react19:
     '@types/react': ^19.2.17
     '@types/react-dom': ^19.2.3
-    react: ^19.2.7
-    react-dom: ^19.2.7
-    react-server-dom-webpack: 19.2.7
+    react: ^19.2.8
+    react-dom: ^19.2.8
+    react-server-dom-webpack: 19.2.8
   rolldown:
     rolldown: ^1.1.5
   rollup4:
@@ -273,6 +280,8 @@ overrides:
   fast-xml-parser@>=5.9.3 <5.10.1: 5.10.1
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.8
   js-yaml@>=4.0.0 <4.3.0: 4.3.0
+  postcss: 8.5.23
+  react-router@>=7.0.0 <7.18.0: 7.18.1
   serialize-javascript@<=7.0.2: '>=7.0.3'
   sharp@<0.35.0: 0.35.3
   shell-quote@<=1.8.4: 1.9.0

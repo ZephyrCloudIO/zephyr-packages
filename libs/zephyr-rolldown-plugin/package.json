@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rolldown-plugin",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Rolldown plugin for Zephyr",
   "license": "Apache-2.0",
   "author": {

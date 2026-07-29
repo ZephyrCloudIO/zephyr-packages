@@ -1,0 +1,12 @@
+{
+  "name": "host",
+  "private": true,
+  "devDependencies": {
+    "@module-federation/rsbuild-plugin": "2.8.0",
+    "@rsbuild/core": "2.1.5",
+    "zephyr-rsbuild-plugin": "1.2.0"
+  },
+  "zephyr:dependencies": {
+    "catalogHeader": "zephyr:header.example.example@production"
+  }
+}

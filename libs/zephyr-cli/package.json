@@ -43,6 +43,16 @@
         "default": "./dist/index.js"
       }
     },
+    "./doctor/schema": {
+      "import": {
+        "types": "./dist/doctor/schema.d.mts",
+        "default": "./dist/doctor/schema.mjs"
+      },
+      "require": {
+        "types": "./dist/doctor/schema.d.ts",
+        "default": "./dist/doctor/schema.js"
+      }
+    },
     "./package.json": "./package.json",
     "./*": "./*"
   },

@@ -18,10 +18,12 @@ import terminalLink from 'terminal-link';
 import {
   HELP_TEXT,
   listTemplatesJson,
+  OperationCancelled,
   parseCliArgs,
   resolveCliOptions,
   type PromptAdapter,
 } from './cli.js';
+import { createNextSteps, formatScaffoldFailure } from './presentation.js';
 import { ScaffoldFailure, scaffoldProject } from './scaffold.js';
 import {
   DEFAULT_WEB_TEMPLATE,
@@ -32,6 +34,8 @@ import {
 
 export async function main(args = process.argv.slice(2)): Promise<number> {
   const jsonRequested = args.includes('--json');
+  let loading: ReturnType<typeof spinner> | undefined;
+  let loadingStarted = false;
 
   try {
     const parsed = parseCliArgs(args);
@@ -77,8 +81,7 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
       interactive,
       prompts: interactive ? createPromptAdapter() : undefined,
     });
-    const loading = interactive ? spinner() : undefined;
-    let loadingStarted = false;
+    loading = interactive ? spinner() : undefined;
 
     const receipt = await scaffoldProject(options, {
       onProgress(_stage, message) {
@@ -99,20 +102,35 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
           path.relative(process.cwd(), receipt.directory) || './'
         }}!`
       );
+      loadingStarted = false;
     }
 
     if (options.json) {
       console.log(JSON.stringify(receipt, null, 2));
     } else {
-      printNextSteps(receipt.directory, receipt.packageManager.name, options.build);
+      printNextSteps(
+        receipt.directory,
+        receipt.packageManager.name,
+        options.projectType,
+        options.build
+      );
     }
     return 0;
   } catch (error) {
+    if (loadingStarted) {
+      loading?.error('Project creation failed.');
+    }
+
+    if (error instanceof OperationCancelled) {
+      cancel(error.message);
+      return 0;
+    }
+
     if (error instanceof ScaffoldFailure) {
       if (jsonRequested) {
         console.log(JSON.stringify(error.receipt, null, 2));
       } else {
-        cancel(error.message);
+        cancel(formatScaffoldFailure(error));
       }
       return error.exitCode;
     }
@@ -188,19 +206,25 @@ function createPromptAdapter(): PromptAdapter {
 function printNextSteps(
   outputDirectory: string,
   packageManager: string,
+  projectType: ProjectType,
   alreadyBuilt: boolean
 ): void {
-  const relativeDirectory =
-    path.relative(process.cwd(), outputDirectory) || path.basename(outputDirectory);
-  const commands = alreadyBuilt
-    ? `cd ./${relativeDirectory}`
-    : `cd ./${relativeDirectory}\n${packageManager} install\n${packageManager} run build`;
+  const nextSteps = createNextSteps({
+    outputDirectory,
+    invocationDirectory: process.cwd(),
+    packageManager,
+    projectType,
+    alreadyBuilt,
+  });
 
-  note(commands, alreadyBuilt ? 'Project built successfully!' : 'Run the application!');
+  note(nextSteps.commands, nextSteps.commandsTitle);
+  if (nextSteps.guidance) {
+    note(nextSteps.guidance.body, nextSteps.guidance.title);
+  }
   note(
     c`
 - {cyan ${terminalLink('Discord', 'https://zephyr-cloud.io/discord')}}
-- {cyan ${terminalLink('Documentation', 'https://docs.zephyr-cloud.io/bundlers/rsbuild')}}
+- {cyan ${terminalLink('Documentation', nextSteps.documentationUrl)}}
 - {cyan ${terminalLink(
       'Open an issue',
       'https://github.com/ZephyrCloudIO/zephyr-packages/issues'

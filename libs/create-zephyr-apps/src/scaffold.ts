@@ -26,6 +26,7 @@ export interface CommandResult {
 
 export interface CommandRunnerOptions {
   cwd: string;
+  timeoutMs?: number;
 }
 
 export type CommandRunner = (
@@ -77,6 +78,7 @@ export interface ScaffoldDependencies {
   runCommand?: CommandRunner;
   repositories?: Partial<Record<ResolvedCliOptions['projectType'], TemplateRepository>>;
   onProgress?: (stage: ScaffoldStage, message: string) => void;
+  removeTemporaryDirectory?: (directory: string) => Promise<void>;
 }
 
 export class ScaffoldFailure extends Error {
@@ -108,6 +110,9 @@ export function normalizeReceiptPath(value: string): string {
   return value.replaceAll(path.win32.sep, path.posix.sep);
 }
 
+export const TEMPLATE_FETCH_TIMEOUT_MS = 5 * 60 * 1_000;
+const COMMAND_TERMINATION_GRACE_MS = 5_000;
+
 export async function defaultCommandRunner(
   command: string,
   args: string[],
@@ -123,6 +128,22 @@ export async function defaultCommandRunner(
     let stdout = '';
     let stderr = '';
     let settled = false;
+    let timedOut = false;
+    let timeout: NodeJS.Timeout | undefined;
+    let forceKillTimeout: NodeJS.Timeout | undefined;
+
+    const settle = (result: CommandResult): void => {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      if (forceKillTimeout) clearTimeout(forceKillTimeout);
+      resolve(result);
+    };
+
+    const timeoutStderr = (): string => {
+      const timeoutMessage = `Command timed out after ${options.timeoutMs}ms.`;
+      return `${stderr}${stderr ? '\n' : ''}${timeoutMessage}`;
+    };
 
     child.stdout?.setEncoding('utf8');
     child.stderr?.setEncoding('utf8');
@@ -133,20 +154,39 @@ export async function defaultCommandRunner(
       stderr += chunk;
     });
 
+    if (options.timeoutMs !== undefined) {
+      timeout = setTimeout(() => {
+        timedOut = true;
+        if (!child.kill('SIGTERM')) {
+          settle({ exitCode: 124, stdout, stderr: timeoutStderr() });
+          return;
+        }
+        forceKillTimeout = setTimeout(() => {
+          child.kill('SIGKILL');
+        }, COMMAND_TERMINATION_GRACE_MS);
+      }, options.timeoutMs);
+    }
+
     child.on('error', (error) => {
-      if (settled) return;
-      settled = true;
-      resolve({
-        exitCode: (error as NodeJS.ErrnoException).code === 'ENOENT' ? 127 : 1,
+      settle({
+        exitCode: timedOut
+          ? 124
+          : (error as NodeJS.ErrnoException).code === 'ENOENT'
+            ? 127
+            : 1,
         stdout,
-        stderr: `${stderr}${stderr ? '\n' : ''}${error.message}`,
+        stderr: timedOut
+          ? timeoutStderr()
+          : `${stderr}${stderr ? '\n' : ''}${error.message}`,
       });
     });
 
     child.on('close', (code) => {
-      if (settled) return;
-      settled = true;
-      resolve({ exitCode: code ?? 1, stdout, stderr });
+      settle({
+        exitCode: timedOut ? 124 : (code ?? 1),
+        stdout,
+        stderr: timedOut ? timeoutStderr() : stderr,
+      });
     });
   });
 }
@@ -178,6 +218,7 @@ export async function scaffoldProject(
   const runCommand = dependencies.runCommand ?? defaultCommandRunner;
   const progress = dependencies.onProgress ?? (() => undefined);
   let temporaryDirectory: string | undefined;
+  let outputMutationStarted = false;
   let currentStage: ScaffoldStage = 'prepare';
   const reportProgress = (stage: ScaffoldStage, message: string): void => {
     currentStage = stage;
@@ -188,9 +229,10 @@ export async function scaffoldProject(
     stage: ScaffoldStage,
     command: string,
     args: string[],
-    cwd: string
+    cwd: string,
+    commandOptions: Omit<CommandRunnerOptions, 'cwd'> = {}
   ): Promise<CommandResult> => {
-    const result = await runCommand(command, args, { cwd });
+    const result = await runCommand(command, args, { cwd, ...commandOptions });
     receipt.commands.push({
       stage,
       command,
@@ -229,7 +271,8 @@ export async function scaffoldProject(
       'fetch-template',
       'git',
       ['fetch', '--quiet', '--depth', '1', 'origin', options.templateRevision],
-      checkoutDirectory
+      checkoutDirectory,
+      { timeoutMs: TEMPLATE_FETCH_TIMEOUT_MS }
     );
     await execute(
       'fetch-template',
@@ -256,6 +299,7 @@ export async function scaffoldProject(
 
     reportProgress('copy-template', `Copying the template to ${outputDirectory}`);
     await fs.promises.mkdir(outputDirectory, { recursive: true });
+    outputMutationStarted = true;
     await fs.promises.cp(sourceDirectory, outputDirectory, {
       recursive: true,
       force: false,
@@ -264,6 +308,7 @@ export async function scaffoldProject(
         return path.basename(source) !== '.git';
       },
     });
+    await refreshReceiptFiles(outputDirectory, receipt);
     if (!options.packageManager) {
       packageManager = await detectPackageManager(
         outputDirectory,
@@ -274,24 +319,8 @@ export async function scaffoldProject(
     }
 
     if (options.initializeGit) {
-      reportProgress('git', 'Creating the initial Git commit');
+      reportProgress('git', 'Initializing the Git repository');
       await execute('git', 'git', ['init'], outputDirectory);
-      await execute('git', 'git', ['add', '.'], outputDirectory);
-      await execute(
-        'git',
-        'git',
-        [
-          '-c',
-          'user.email=zephyrbot@zephyr-cloud.io',
-          '-c',
-          'user.name=Zephyr Bot',
-          'commit',
-          '--no-gpg-sign',
-          '-m',
-          'Initial commit from Zephyr',
-        ],
-        outputDirectory
-      );
     }
 
     let beforeBuild = new Set(await listProjectFiles(outputDirectory));
@@ -311,7 +340,28 @@ export async function scaffoldProject(
         installCommand.args,
         outputDirectory
       );
+      await refreshReceiptFiles(outputDirectory, receipt);
       beforeBuild = new Set(await listProjectFiles(outputDirectory));
+    }
+
+    if (options.initializeGit) {
+      reportProgress('git', 'Creating the initial Git commit');
+      await execute('git', 'git', ['add', '.'], outputDirectory);
+      await execute(
+        'git',
+        'git',
+        [
+          '-c',
+          'user.email=zephyrbot@zephyr-cloud.io',
+          '-c',
+          'user.name=Zephyr Bot',
+          'commit',
+          '--no-gpg-sign',
+          '-m',
+          'Initial commit from Zephyr',
+        ],
+        outputDirectory
+      );
     }
 
     if (options.build) {
@@ -324,9 +374,7 @@ export async function scaffoldProject(
     }
 
     reportProgress('inspect', 'Collecting scaffold results');
-    const allFiles = await listProjectFiles(outputDirectory);
-    const artifacts = new Set(receipt.artifacts);
-    receipt.createdFiles = allFiles.filter((file) => !artifacts.has(file));
+    await refreshReceiptFiles(outputDirectory, receipt);
     receipt.resolvedPackageVersions =
       await collectResolvedPackageVersions(outputDirectory);
     receipt.success = true;
@@ -335,6 +383,9 @@ export async function scaffoldProject(
     const commandFailure = error instanceof CommandFailure ? error : undefined;
     const exitCode = commandFailure?.result.exitCode ?? 1;
     const message = error instanceof Error ? error.message : String(error);
+    if (outputMutationStarted) {
+      await refreshReceiptFiles(outputDirectory, receipt).catch(() => undefined);
+    }
     receipt.failures.push({
       stage: commandFailure?.stage ?? currentStage,
       message,
@@ -346,10 +397,18 @@ export async function scaffoldProject(
     throw new ScaffoldFailure(message, exitCode, receipt);
   } finally {
     if (temporaryDirectory) {
-      await fs.promises.rm(temporaryDirectory, {
-        recursive: true,
-        force: true,
-      });
+      const removeTemporaryDirectory =
+        dependencies.removeTemporaryDirectory ??
+        ((directory: string) =>
+          fs.promises.rm(directory, {
+            recursive: true,
+            force: true,
+          }));
+      try {
+        await removeTemporaryDirectory(temporaryDirectory);
+      } catch {
+        // Temporary cleanup must never replace a successful receipt or primary failure.
+      }
     }
   }
 }
@@ -365,7 +424,10 @@ export async function detectPackageManager(
   const outputLockfile = await detectLockfile(outputDirectory);
   if (outputLockfile) return outputLockfile;
 
-  const userAgent = environment['npm_config_user_agent']?.split(' ')[0]?.split('@')[0];
+  const userAgent = environment['npm_config_user_agent']
+    ?.trim()
+    .split(/\s+/u)[0]
+    ?.split(/[/@]/u)[0];
   if (isPackageManager(userAgent)) return userAgent;
 
   const packageManagerFromInvocation = await readPackageManagerField(invocationDirectory);
@@ -481,7 +543,17 @@ async function listProjectFiles(root: string): Promise<string[]> {
   return files.sort();
 }
 
-async function collectResolvedPackageVersions(
+async function refreshReceiptFiles(
+  outputDirectory: string,
+  receipt: ScaffoldReceipt
+): Promise<void> {
+  const allFiles = await listProjectFiles(outputDirectory);
+  const artifacts = new Set(receipt.artifacts);
+  receipt.createdFiles = allFiles.filter((file) => !artifacts.has(file));
+}
+
+/** @internal */
+export async function collectResolvedPackageVersions(
   root: string
 ): Promise<ResolvedPackageVersion[]> {
   const manifests = await findWorkspaceManifests(root);
@@ -502,7 +574,7 @@ async function collectResolvedPackageVersions(
     }
 
     if (manifest.name && manifest.version) {
-      versions.set(`workspace:${manifest.name}`, {
+      versions.set(`workspace:${manifest.name}@${manifest.version}`, {
         name: manifest.name,
         version: manifest.version,
         source: 'workspace',
@@ -526,11 +598,14 @@ async function collectResolvedPackageVersions(
           await fs.promises.readFile(installedManifest, 'utf8')
         ) as { name?: string; version?: string };
         if (dependencyManifest.name && dependencyManifest.version) {
-          versions.set(`installed:${dependencyManifest.name}`, {
-            name: dependencyManifest.name,
-            version: dependencyManifest.version,
-            source: 'installed',
-          });
+          versions.set(
+            `installed:${dependencyManifest.name}@${dependencyManifest.version}`,
+            {
+              name: dependencyManifest.name,
+              version: dependencyManifest.version,
+              source: 'installed',
+            }
+          );
         }
       } catch {
         // A malformed installed package is reported by the package manager/build.
@@ -540,7 +615,9 @@ async function collectResolvedPackageVersions(
 
   return [...versions.values()].sort(
     (left, right) =>
-      left.name.localeCompare(right.name) || left.source.localeCompare(right.source)
+      left.name.localeCompare(right.name) ||
+      left.source.localeCompare(right.source) ||
+      left.version.localeCompare(right.version)
   );
 }
 

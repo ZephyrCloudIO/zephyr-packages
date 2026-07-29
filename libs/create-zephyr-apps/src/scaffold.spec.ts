@@ -6,11 +6,13 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { parseCliArgs, resolveCliOptions, type ResolvedCliOptions } from './cli.js';
 import {
+  collectResolvedPackageVersions,
   defaultCommandRunner,
   detectPackageManager,
   normalizeReceiptPath,
   ScaffoldFailure,
   scaffoldProject,
+  TEMPLATE_FETCH_TIMEOUT_MS,
   type CommandRunner,
 } from './scaffold.js';
 
@@ -119,6 +121,7 @@ describe('scaffoldProject', () => {
     ).rejects.toMatchObject({
       exitCode: 1,
       receipt: {
+        createdFiles: [],
         failures: [
           {
             stage: 'prepare',
@@ -171,6 +174,8 @@ describe('scaffoldProject', () => {
         stderr: 'install failed',
       }),
     ]);
+    expect(failure?.receipt.createdFiles).toContain('package.json');
+    expect(failure?.receipt.createdFiles).toContain('src/index.ts');
   });
 
   it('propagates the package-manager build exit code', async () => {
@@ -238,6 +243,134 @@ describe('scaffoldProject', () => {
     expect(stdout.trim()).toBe('Initial commit from Zephyr');
   });
 
+  it('includes install-generated lockfiles in the requested initial commit', async () => {
+    const fixture = await createTemplateRepository();
+    const output = path.join(fixture.root, 'output');
+    const runner = packageManagerRunner({
+      install: async () => {
+        await fs.promises.writeFile(
+          path.join(output, 'pnpm-lock.yaml'),
+          'lockfileVersion: 9\n'
+        );
+        return { exitCode: 0, stdout: '', stderr: '' };
+      },
+    });
+
+    await scaffoldProject(
+      {
+        ...defaultOptions(output, fixture.revision),
+        initializeGit: true,
+        install: true,
+      },
+      {
+        runCommand: runner,
+        repositories: {
+          web: {
+            name: 'fixture',
+            url: fixture.repository,
+            revision: fixture.revision,
+          },
+        },
+      }
+    );
+
+    const { stdout: trackedFiles } = await execFileAsync(
+      'git',
+      ['ls-tree', '--name-only', 'HEAD'],
+      { cwd: output }
+    );
+    const { stdout: status } = await execFileAsync('git', ['status', '--porcelain'], {
+      cwd: output,
+    });
+    expect(trackedFiles).toContain('pnpm-lock.yaml');
+    expect(status).toBe('');
+  });
+
+  it('does not let temporary cleanup replace a successful scaffold result', async () => {
+    const fixture = await createTemplateRepository();
+    const output = path.join(fixture.root, 'output');
+
+    const receipt = await scaffoldProject(defaultOptions(output, fixture.revision), {
+      repositories: {
+        web: {
+          name: 'fixture',
+          url: fixture.repository,
+          revision: fixture.revision,
+        },
+      },
+      async removeTemporaryDirectory(directory) {
+        temporaryDirectories.push(directory);
+        throw new Error('temporary directory is locked');
+      },
+    });
+
+    expect(receipt.success).toBe(true);
+  });
+
+  it('does not let temporary cleanup replace a command failure', async () => {
+    const fixture = await createTemplateRepository();
+    const output = path.join(fixture.root, 'output');
+
+    await expect(
+      scaffoldProject(
+        {
+          ...defaultOptions(output, fixture.revision),
+          install: true,
+        },
+        {
+          runCommand: packageManagerRunner({
+            install: { exitCode: 23, stdout: '', stderr: 'install failed' },
+          }),
+          repositories: {
+            web: {
+              name: 'fixture',
+              url: fixture.repository,
+              revision: fixture.revision,
+            },
+          },
+          async removeTemporaryDirectory(directory) {
+            temporaryDirectories.push(directory);
+            throw new Error('temporary directory is locked');
+          },
+        }
+      )
+    ).rejects.toMatchObject({
+      exitCode: 23,
+      receipt: {
+        failures: [
+          expect.objectContaining({
+            stage: 'install',
+            stderr: 'install failed',
+          }),
+        ],
+      },
+    });
+  });
+
+  it('applies the bounded timeout to the template fetch command', async () => {
+    const fixture = await createTemplateRepository();
+    const output = path.join(fixture.root, 'output');
+    let fetchTimeout: number | undefined;
+
+    await scaffoldProject(defaultOptions(output, fixture.revision), {
+      runCommand: async (command, args, options) => {
+        if (command === 'git' && args[0] === 'fetch') {
+          fetchTimeout = options.timeoutMs;
+        }
+        return defaultCommandRunner(command, args, options);
+      },
+      repositories: {
+        web: {
+          name: 'fixture',
+          url: fixture.repository,
+          revision: fixture.revision,
+        },
+      },
+    });
+
+    expect(fetchTimeout).toBe(TEMPLATE_FETCH_TIMEOUT_MS);
+  });
+
   it('records build artifacts and resolved workspace versions', async () => {
     const fixture = await createTemplateRepository();
     const output = path.join(fixture.root, 'output');
@@ -299,6 +432,67 @@ describe('detectPackageManager', () => {
         npm_config_user_agent: 'npm@11.0.0 node@24.0.0',
       })
     ).resolves.toBe('npm');
+
+    await expect(
+      detectPackageManager(output, root, {
+        npm_config_user_agent: 'yarn/1.22.22 npm/? node/v24.0.0',
+      })
+    ).resolves.toBe('yarn');
+  });
+});
+
+describe('defaultCommandRunner', () => {
+  it('terminates a command that exceeds its timeout', async () => {
+    const result = await defaultCommandRunner(
+      process.execPath,
+      ['-e', 'setInterval(() => undefined, 1_000)'],
+      { cwd: process.cwd(), timeoutMs: 100 }
+    );
+
+    expect(result.exitCode).toBe(124);
+    expect(result.stderr).toContain('Command timed out after 100ms.');
+  });
+});
+
+describe('collectResolvedPackageVersions', () => {
+  it('preserves distinct installed versions of one dependency', async () => {
+    const root = await makeTemporaryDirectory();
+    const packageA = path.join(root, 'packages/a');
+    const packageB = path.join(root, 'packages/b');
+
+    await Promise.all(
+      [
+        [packageA, 'workspace-a', '1.0.0', '2.0.0'],
+        [packageB, 'workspace-b', '1.0.0', '3.0.0'],
+      ].map(async ([directory, name, version, dependencyVersion]) => {
+        await fs.promises.mkdir(path.join(directory, 'node_modules/shared'), {
+          recursive: true,
+        });
+        await fs.promises.writeFile(
+          path.join(directory, 'package.json'),
+          JSON.stringify({
+            name,
+            version,
+            dependencies: { shared: '*' },
+          })
+        );
+        await fs.promises.writeFile(
+          path.join(directory, 'node_modules/shared/package.json'),
+          JSON.stringify({
+            name: 'shared',
+            version: dependencyVersion,
+          })
+        );
+      })
+    );
+
+    const versions = await collectResolvedPackageVersions(root);
+    expect(
+      versions.filter(({ name, source }) => name === 'shared' && source === 'installed')
+    ).toEqual([
+      { name: 'shared', version: '2.0.0', source: 'installed' },
+      { name: 'shared', version: '3.0.0', source: 'installed' },
+    ]);
   });
 });
 

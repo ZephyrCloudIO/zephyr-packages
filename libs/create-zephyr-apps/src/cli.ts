@@ -51,6 +51,13 @@ export interface ResolveCliOptionsContext {
   prompts?: PromptAdapter;
 }
 
+export class OperationCancelled extends Error {
+  constructor() {
+    super('Operation cancelled.');
+    this.name = 'OperationCancelled';
+  }
+}
+
 export const NON_INTERACTIVE_EXAMPLE_ARGS = [
   './apps/example',
   '--template',
@@ -193,9 +200,13 @@ export async function resolveCliOptions(
   context: ResolveCliOptionsContext
 ): Promise<ResolvedCliOptions> {
   const prompts = context.prompts;
-  const directory =
-    options.directory ??
-    (context.interactive && prompts ? await prompts.directory() : undefined);
+  let directory = options.directory;
+  if (directory === undefined && context.interactive && prompts) {
+    directory = await prompts.directory();
+    if (directory === undefined) {
+      throw new OperationCancelled();
+    }
+  }
 
   if (!directory?.trim()) {
     throw new Error(
@@ -203,37 +214,32 @@ export async function resolveCliOptions(
     );
   }
 
-  const projectType =
-    options.projectType ??
-    (options.template
-      ? 'web'
-      : context.interactive && prompts
-        ? await prompts.projectType()
-        : 'web');
-
-  if (!projectType) {
-    throw new Error('Operation cancelled.');
+  let projectType = options.projectType ?? (options.template ? 'web' : undefined);
+  if (projectType === undefined && context.interactive && prompts) {
+    projectType = await prompts.projectType();
+    if (projectType === undefined) {
+      throw new OperationCancelled();
+    }
   }
+  projectType ??= 'web';
 
-  const template =
-    projectType === 'web'
-      ? (options.template ??
-        (context.interactive && prompts
-          ? await prompts.template()
-          : DEFAULT_WEB_TEMPLATE))
-      : undefined;
-
-  if (projectType === 'web' && !template) {
-    throw new Error('Operation cancelled.');
+  let template = projectType === 'web' ? options.template : undefined;
+  if (projectType === 'web' && template === undefined && context.interactive && prompts) {
+    template = await prompts.template();
+    if (template === undefined) {
+      throw new OperationCancelled();
+    }
   }
+  template ??= projectType === 'web' ? DEFAULT_WEB_TEMPLATE : undefined;
 
-  const initializeGit =
-    options.initializeGit ??
-    (context.interactive && prompts ? await prompts.initializeGit() : false);
-
-  if (initializeGit === undefined) {
-    throw new Error('Operation cancelled.');
+  let initializeGit = options.initializeGit;
+  if (initializeGit === undefined && context.interactive && prompts) {
+    initializeGit = await prompts.initializeGit();
+    if (initializeGit === undefined) {
+      throw new OperationCancelled();
+    }
   }
+  initializeGit ??= false;
 
   const repository = TemplateRepositories[projectType];
 

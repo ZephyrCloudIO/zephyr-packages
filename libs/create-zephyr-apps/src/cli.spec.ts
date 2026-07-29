@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import {
   NON_INTERACTIVE_EXAMPLE,
   NON_INTERACTIVE_EXAMPLE_ARGS,
+  OperationCancelled,
   parseCliArgs,
   resolveCliOptions,
 } from './cli.js';
@@ -95,6 +96,28 @@ describe('create-zephyr-apps CLI', () => {
       template: 'react-rsbuild',
       initializeGit: true,
     });
+  });
+
+  it('keeps an interactive directory cancellation distinct from a missing argument', async () => {
+    await expect(
+      resolveCliOptions(parseCliArgs([]), {
+        interactive: true,
+        prompts: {
+          async directory() {
+            return undefined;
+          },
+          async projectType() {
+            return 'web';
+          },
+          async template() {
+            return 'react-rsbuild';
+          },
+          async initializeGit() {
+            return false;
+          },
+        },
+      })
+    ).rejects.toBeInstanceOf(OperationCancelled);
   });
 
   it('validates templates, project types, revisions, and Git flags', () => {

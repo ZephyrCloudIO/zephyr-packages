@@ -8,6 +8,7 @@ import { parseCliArgs, resolveCliOptions, type ResolvedCliOptions } from './cli.
 import {
   defaultCommandRunner,
   detectPackageManager,
+  normalizeReceiptPath,
   ScaffoldFailure,
   scaffoldProject,
   type CommandRunner,
@@ -25,6 +26,15 @@ afterEach(async () => {
 });
 
 describe('scaffoldProject', () => {
+  it('normalizes machine-readable receipt paths to portable separators', () => {
+    expect(normalizeReceiptPath('src\\components\\Header.tsx')).toBe(
+      'src/components/Header.tsx'
+    );
+    expect(normalizeReceiptPath('C:\\work\\app\\dist\\index.js')).toBe(
+      'C:/work/app/dist/index.js'
+    );
+  });
+
   it('scaffolds the React/Rsbuild template from an exact revision without a TTY', async () => {
     const fixture = await createTemplateRepository();
     const output = path.join(fixture.root, 'output');
@@ -40,9 +50,11 @@ describe('scaffoldProject', () => {
     });
 
     expect(receipt.success).toBe(true);
+    expect(receipt.directory).toBe(normalizeReceiptPath(output));
     expect(receipt.templateRevision).toBe(fixture.revision);
     expect(receipt.createdFiles).toContain('package.json');
     expect(receipt.createdFiles).toContain('src/index.ts');
+    expect(receipt.commands.every(({ cwd }) => !cwd.includes('\\'))).toBe(true);
     expect(await fs.promises.readFile(path.join(output, 'src/index.ts'), 'utf8')).toBe(
       'export const fixture = true;\n'
     );

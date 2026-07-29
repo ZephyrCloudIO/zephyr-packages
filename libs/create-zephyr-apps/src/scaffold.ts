@@ -103,6 +103,11 @@ class CommandFailure extends Error {
   }
 }
 
+/** @internal */
+export function normalizeReceiptPath(value: string): string {
+  return value.replaceAll(path.win32.sep, path.posix.sep);
+}
+
 export async function defaultCommandRunner(
   command: string,
   args: string[],
@@ -158,7 +163,7 @@ export async function scaffoldProject(
   let packageManager = options.packageManager ?? 'pnpm';
   const receipt: ScaffoldReceipt = {
     success: false,
-    directory: outputDirectory,
+    directory: normalizeReceiptPath(outputDirectory),
     projectType: options.projectType,
     template: options.template ?? null,
     templateRepository: repository.url,
@@ -190,7 +195,7 @@ export async function scaffoldProject(
       stage,
       command,
       args,
-      cwd,
+      cwd: normalizeReceiptPath(cwd),
       exitCode: result.exitCode,
     });
     if (result.exitCode !== 0) {
@@ -467,7 +472,7 @@ async function listProjectFiles(root: string): Promise<string[]> {
       if (entry.isDirectory()) {
         await visit(absolutePath);
       } else {
-        files.push(path.relative(root, absolutePath));
+        files.push(normalizeReceiptPath(path.relative(root, absolutePath)));
       }
     }
   };

@@ -326,6 +326,10 @@ async function createTemplateRepository(): Promise<{
   const template = path.join(repository, 'module-federation', 'react-rsbuild');
   await fs.promises.mkdir(path.join(template, 'src'), { recursive: true });
   await fs.promises.writeFile(
+    path.join(repository, '.gitattributes'),
+    '*.ts text eol=lf\n'
+  );
+  await fs.promises.writeFile(
     path.join(template, 'package.json'),
     JSON.stringify(
       {

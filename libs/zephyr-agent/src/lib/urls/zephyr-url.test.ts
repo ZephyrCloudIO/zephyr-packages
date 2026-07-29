@@ -3,11 +3,67 @@ import { describe, expect, test } from '@rstest/core';
 import {
   appendZephyrUrlPath,
   getPathPreservingBaseUrl,
+  resolveSelfZephyrManifestUrl,
   resolveZephyrSiblingUrl,
   stripFederatedRemoteName,
 } from './zephyr-url';
 
 describe('path-preserving Zephyr URL helpers', () => {
+  function engine(
+    selectedEnvironment: string | undefined,
+    environments: Record<string, { remote_host: string }>
+  ) {
+    return {
+      env: { env: selectedEnvironment },
+      application_configuration: Promise.resolve({ ENVIRONMENTS: environments }),
+    } as never;
+  }
+
+  test('uses the selected environment concrete remote_host for an Agoda-style CDN mount', async () => {
+    const manifestUrl = await resolveSelfZephyrManifestUrl(
+      engine('stable', {
+        preview: { remote_host: 'https://preview.example.test/' },
+        stable: {
+          remote_host:
+            'https://cdnedge.agoda.net/t-stable-supply-layout-supply-layout-agodadev-io/',
+        },
+      })
+    );
+
+    expect(manifestUrl).toBe(
+      'https://cdnedge.agoda.net/t-stable-supply-layout-supply-layout-agodadev-io/zephyr-manifest.json'
+    );
+  });
+
+  test.each([
+    [
+      'hostname deployment',
+      'https://app-ze.worker.example',
+      'https://app-ze.worker.example/zephyr-manifest.json',
+    ],
+    [
+      'reserved path-addressed deployment',
+      'https://edge.example.test/__zephyr/v1/e/org.project.app',
+      'https://edge.example.test/__zephyr/v1/e/org.project.app/zephyr-manifest.json',
+    ],
+  ])('appends the self manifest to the selected %s base', async (_, base, expected) => {
+    await expect(
+      resolveSelfZephyrManifestUrl(
+        engine('production', { production: { remote_host: base } })
+      )
+    ).resolves.toBe(expected);
+  });
+
+  test('leaves manifest selection to same-origin runtime fallback without an environment', async () => {
+    await expect(
+      resolveSelfZephyrManifestUrl(
+        engine(undefined, {
+          stable: { remote_host: 'https://deployment.example.test/mount/' },
+        })
+      )
+    ).resolves.toBeUndefined();
+  });
+
   test.each([
     [
       'version',

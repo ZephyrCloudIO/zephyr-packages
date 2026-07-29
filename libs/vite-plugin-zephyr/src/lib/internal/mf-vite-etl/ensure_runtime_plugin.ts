@@ -17,13 +17,15 @@ export interface ModuleFederationLibraryOptions {
   [key: string]: unknown;
 }
 
+export type ModuleFederationRuntimePlugin = string | [string, Record<string, unknown>];
+
 export interface ModuleFederationOptions {
   name?: string;
   filename?: string;
   library?: string | string[] | ModuleFederationLibraryOptions;
   remotes?: Record<string, string | ModuleFederationRemoteConfig>;
   exposes?: Record<string, string>;
-  runtimePlugins?: string[];
+  runtimePlugins?: ModuleFederationRuntimePlugin[];
   shared?: Record<string, unknown>;
   manifest?: boolean | ModuleFederationManifestOptions;
   dts?: boolean | Record<string, unknown>;
@@ -38,15 +40,32 @@ export function getRuntimePluginPath() {
 }
 
 export function ensureRuntimePlugin(
-  mfConfig: ModuleFederationOptions
+  mfConfig: ModuleFederationOptions,
+  manifestUrl?: string
 ): ModuleFederationOptions {
-  const runtimePlugins = [...(mfConfig.runtimePlugins ?? [])];
+  // @module-federation/vite captures this array by reference during eager option
+  // normalization. Mutate it in place so an asynchronously resolved deployment URL can
+  // upgrade the entry before runtime code generation.
+  const runtimePlugins = (mfConfig.runtimePlugins ??= []);
+  const existingIndex = runtimePlugins.findIndex(
+    (entry) => (Array.isArray(entry) ? entry[0] : entry) === ZEPHYR_MF_RUNTIME_PLUGIN_ID
+  );
 
-  if (!runtimePlugins.includes(ZEPHYR_MF_RUNTIME_PLUGIN_ID)) {
+  if (existingIndex === -1) {
     // MF serializes runtime plugins into remoteEntry.js, so inject ours before build.
-    runtimePlugins.push(ZEPHYR_MF_RUNTIME_PLUGIN_ID);
+    runtimePlugins.push(
+      manifestUrl === undefined
+        ? ZEPHYR_MF_RUNTIME_PLUGIN_ID
+        : [ZEPHYR_MF_RUNTIME_PLUGIN_ID, { manifestUrl }]
+    );
+  } else if (manifestUrl !== undefined) {
+    const existingEntry = runtimePlugins[existingIndex];
+    const existingOptions = Array.isArray(existingEntry) ? existingEntry[1] : {};
+    runtimePlugins[existingIndex] = [
+      ZEPHYR_MF_RUNTIME_PLUGIN_ID,
+      { ...existingOptions, manifestUrl },
+    ];
   }
 
-  mfConfig.runtimePlugins = runtimePlugins;
   return mfConfig;
 }

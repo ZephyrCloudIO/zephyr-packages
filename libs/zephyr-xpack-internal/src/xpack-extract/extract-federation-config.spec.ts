@@ -29,4 +29,30 @@ describe('extractFederatedConfig', () => {
     expect(config).toEqual({ name: 'desktop', filename: 'remoteEntry.js' });
     expect(options).toEqual({ name: 'desktop' });
   });
+
+  it('applies Nx config overrides to published federation metadata', () => {
+    const runtimePlugins: [string, Record<string, unknown>][] = [
+      [
+        '/plugins/zephyr-runtime.js',
+        { manifestUrl: 'https://cdn.example.test/app/zephyr-manifest.json' },
+      ],
+    ];
+    const config = extractFederatedConfig({
+      apply() {},
+      _options: {
+        config: {
+          name: 'host',
+          filename: 'remoteEntry.mjs',
+          runtimePlugins: ['/plugins/base-runtime-ignored-by-nx.js'],
+        },
+      },
+      configOverride: { runtimePlugins },
+    });
+
+    expect(config).toEqual({
+      name: 'host',
+      filename: 'remoteEntry.mjs',
+      runtimePlugins,
+    });
+  });
 });

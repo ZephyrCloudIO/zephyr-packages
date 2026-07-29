@@ -1,5 +1,13 @@
 export { ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
 import { ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
+import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
+
+export const SAME_ORIGIN_ZEPHYR_MANIFEST_URL = `/${ZEPHYR_MANIFEST_FILENAME}`;
+
+export interface ZephyrManifestUrlEngine {
+  env: { env?: string };
+  application_configuration: Promise<Pick<ZeApplicationConfig, 'ENVIRONMENTS'>>;
+}
 
 /** Reserved route base for path-addressed deployments: `/__zephyr/v1/{v|t|e}/<route-key>`. */
 const ZEPHYR_ROUTE_BASE_REGEX = /^\/__zephyr\/v1\/[vte]\/[^/]+/;
@@ -46,6 +54,33 @@ export function appendZephyrUrlPath(baseUrl: string, path: string): string {
     relativePath,
     baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
   ).toString();
+}
+
+/**
+ * Resolves this application's manifest from the selected deployment environment.
+ * `remote_host` is already the concrete public deployment base, including any customer
+ * gateway mount path, so it must not pass through sibling-root inference.
+ */
+export async function resolveSelfZephyrManifestUrl(
+  engine: ZephyrManifestUrlEngine
+): Promise<string | undefined> {
+  const selectedEnvironment = engine.env.env;
+  if (!selectedEnvironment) {
+    return undefined;
+  }
+
+  const applicationConfig = await engine.application_configuration;
+  const deploymentBase =
+    applicationConfig.ENVIRONMENTS?.[selectedEnvironment]?.remote_host;
+  if (!deploymentBase) {
+    return undefined;
+  }
+
+  try {
+    return appendZephyrUrlPath(deploymentBase, ZEPHYR_MANIFEST_FILENAME);
+  } catch {
+    return undefined;
+  }
 }
 
 export function resolveZephyrSiblingUrl(

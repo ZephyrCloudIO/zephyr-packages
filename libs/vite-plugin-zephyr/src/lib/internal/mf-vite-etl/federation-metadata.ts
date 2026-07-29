@@ -2,6 +2,7 @@ import { resolveMfManifestPath, ZeErrors, ZephyrError } from 'zephyr-agent';
 import type {
   ModuleFederationManifestOptions,
   ModuleFederationOptions,
+  ModuleFederationRuntimePlugin,
 } from './ensure_runtime_plugin';
 
 /** The established single-container snapshot shape. */
@@ -11,7 +12,7 @@ export interface ViteLegacyModuleFederationConfig {
   exposes?: Record<string, string>;
   remotes?: Record<string, string>;
   shared?: Record<string, unknown>;
-  runtimePlugins?: string[];
+  runtimePlugins?: ModuleFederationRuntimePlugin[];
   manifest?: boolean | ModuleFederationManifestOptions;
 }
 

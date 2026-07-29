@@ -1,5 +1,8 @@
 import { redactString } from '../security/redaction';
-import { resolveZephyrSiblingUrl } from '../urls/zephyr-url';
+import {
+  resolveZephyrSiblingUrl,
+  SAME_ORIGIN_ZEPHYR_MANIFEST_URL,
+} from '../urls/zephyr-url';
 
 export interface RemoteEntry {
   name: string;
@@ -23,12 +26,13 @@ export {
 
 export function buildEnvImportMap(
   appUid: string,
-  remotes: RemoteEntry[]
+  remotes: RemoteEntry[],
+  selfManifestUrl = SAME_ORIGIN_ZEPHYR_MANIFEST_URL
 ): Record<string, string> {
   const imports: Record<string, string> = {};
 
   // Add the main env module mapping - now points to zephyr-manifest.json
-  imports[`env:vars:${appUid}`] = '/zephyr-manifest.json';
+  imports[`env:vars:${appUid}`] = selfManifestUrl;
 
   // Add environment variable manifest entries for remotes
   // Note: Module Federation remotes are loaded by MF runtime, not through import maps
@@ -84,9 +88,13 @@ ${defaultExport}
 `;
 }
 
-export function buildEnvImportMapScript(appUid: string, remotes: RemoteEntry[]): string {
+export function buildEnvImportMapScript(
+  appUid: string,
+  remotes: RemoteEntry[],
+  selfManifestUrl = SAME_ORIGIN_ZEPHYR_MANIFEST_URL
+): string {
   const importMap = {
-    imports: buildEnvImportMap(appUid, remotes),
+    imports: buildEnvImportMap(appUid, remotes, selfManifestUrl),
   };
 
   return `<script type="importmap">${JSON.stringify(importMap, null, 2)}</script>`;

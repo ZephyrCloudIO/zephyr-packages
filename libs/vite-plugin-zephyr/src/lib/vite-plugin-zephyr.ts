@@ -16,6 +16,8 @@ import {
   normalizeBasePath,
   rewriteEnvReadsToVirtualModule,
   rollbackPartialAssetMapClaimBatch,
+  resolveSelfZephyrManifestUrl,
+  SAME_ORIGIN_ZEPHYR_MANIFEST_URL,
   usesPathAddressing,
   zeBuildAssets,
   ze_log,
@@ -350,8 +352,11 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
   let cachedSpecifier: string | undefined;
   let entrypoint: string;
+  let resolvedManifestUrl: string | undefined;
   const configureModuleFederationRuntime = (config: ModuleFederationOptions) =>
-    preservesLockedArtifactPaths ? config : ensureRuntimePlugin(config);
+    preservesLockedArtifactPaths
+      ? config
+      : ensureRuntimePlugin(config, resolvedManifestUrl);
   const mfConfigSources = toModuleFederationConfigArray(options.mfConfig).map(
     configureModuleFederationRuntime
   );
@@ -468,6 +473,13 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
       try {
         const zephyrEngine = await zephyr_engine_defer;
+        resolvedManifestUrl = await resolveSelfZephyrManifestUrl(zephyrEngine);
+        for (const mfConfig of mfConfigSources) {
+          configureModuleFederationRuntime(mfConfig);
+        }
+        for (const plugin of extract_mf_plugins(config.plugins ?? [])) {
+          configureModuleFederationRuntime(plugin._options);
+        }
         if (
           usesPathAddressing(await zephyrEngine.application_configuration) &&
           isOriginAbsoluteBase(config.base)
@@ -551,7 +563,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         if (source === cachedSpecifier) {
           if (process.env['NODE_ENV'] === 'development') {
             // Keep dev env imports aligned with the manifest JSON route used by other Zephyr plugins.
-            return '/zephyr-manifest.json';
+            return resolvedManifestUrl ?? SAME_ORIGIN_ZEPHYR_MANIFEST_URL;
           }
           return { id: source, external: true };
         }

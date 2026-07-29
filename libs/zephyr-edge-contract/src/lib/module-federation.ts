@@ -1,3 +1,7 @@
+export type ZephyrModuleFederationRuntimePlugin =
+  | string
+  | [string, Record<string, unknown>];
+
 /**
  * Backward-compatible single-container options used by established Zephyr adapters. New
  * multi-container publication uses `ZephyrModuleFederationConfig[]` instead.
@@ -8,7 +12,7 @@ export interface ZephyrLegacyModuleFederationConfig {
   exposes?: Record<string, string>;
   remotes?: Record<string, string>;
   shared?: Record<string, unknown>;
-  runtimePlugins?: string[];
+  runtimePlugins?: ZephyrModuleFederationRuntimePlugin[];
   manifest?: boolean | { fileName?: string; filePath?: string };
 }
 
@@ -26,7 +30,7 @@ export interface ZephyrModuleFederationConfig {
   exposes?: Record<string, unknown> | Array<string | Record<string, unknown>>;
   remotes?: Record<string, unknown> | Array<string | Record<string, unknown>>;
   shared?: Record<string, unknown> | Array<string | Record<string, unknown>>;
-  runtimePlugins?: Array<string | [string, Record<string, unknown>]>;
+  runtimePlugins?: ZephyrModuleFederationRuntimePlugin[];
   manifest?: boolean | { fileName?: string; filePath?: string };
   [key: string]: unknown;
 }

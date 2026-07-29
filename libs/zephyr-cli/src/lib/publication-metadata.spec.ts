@@ -71,6 +71,25 @@ describe('TAP publication metadata sidecars', () => {
     });
   });
 
+  it('accepts runtime plugin tuples in legacy metadata', () => {
+    const runtimePlugins = [
+      [
+        '/plugins/zephyr-runtime.js',
+        { manifestUrl: 'https://cdn.example.com/app/zephyr-manifest.json' },
+      ],
+    ];
+
+    const metadata = parsePublicationMetadata({
+      mfConfig: {
+        name: 'shell',
+        filename: 'remoteEntry.js',
+        runtimePlugins,
+      },
+    });
+
+    expect(metadata.mfConfig?.runtimePlugins).toEqual(runtimePlugins);
+  });
+
   it('fails closed when TAP metadata omits one of the typed arrays', () => {
     expect(() =>
       parsePublicationMetadata(

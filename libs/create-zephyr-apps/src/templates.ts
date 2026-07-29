@@ -9,17 +9,44 @@ export const ProjectTypes = [
     label: 'React Native',
     hint: 'This is a comprehensive example project provided by us. You will be building React Native powered by Re.Pack.',
   },
-];
+] as const;
 
 export type Template = {
   name: string;
   label: string;
   hint: string;
   directory: string;
+  sourceName?: string;
 };
 
-// TODO: Programmatically load templates from the examples repo after cloning it
-export const Templates: Template[] = [
+export type ProjectType = (typeof ProjectTypes)[number]['value'];
+
+export type TemplateRepository = {
+  name: string;
+  url: string;
+  revision: string;
+};
+
+/**
+ * Template revisions are intentionally pinned. Update them together with the catalog when
+ * publishing a create-zephyr-apps release.
+ */
+export const TemplateRepositories: Record<ProjectType, TemplateRepository> = {
+  web: {
+    name: 'zephyr-examples',
+    url: 'https://github.com/ZephyrCloudIO/zephyr-examples.git',
+    revision: '881c3a83d2f1888720c3da72e9b7a055aae1e3c7',
+  },
+  'react-native': {
+    name: 'zephyr-repack-example',
+    url: 'https://github.com/ZephyrCloudIO/zephyr-repack-example.git',
+    revision: 'ef50ebb43b43d2f1aa07ab1679fafa8b372662de',
+  },
+};
+
+export const DEFAULT_WEB_TEMPLATE = 'react-rsbuild';
+
+export const Templates: readonly Template[] = [
   // Bundlers
   {
     name: 'react-vite',
@@ -62,6 +89,19 @@ export const Templates: Template[] = [
     name: 'airbnb-clone',
     label: 'Airbnb clone',
     hint: 'You will be building an Airbnb clone with React, TypeScript, and Module Federation.',
+    directory: 'module-federation',
+  },
+  {
+    name: 'angular-rsbuild',
+    label: 'Angular + Rsbuild + Module Federation',
+    hint: 'An Angular application with Module Federation using Rsbuild.',
+    directory: 'module-federation',
+  },
+  {
+    name: 'angular-vite-mf',
+    sourceName: 'angular-vite',
+    label: 'Angular + Vite + Module Federation',
+    hint: 'An Angular application with Module Federation using Vite.',
     directory: 'module-federation',
   },
   {
@@ -170,3 +210,33 @@ export const Templates: Template[] = [
     directory: 'build-systems',
   },
 ].sort((a, b) => a.name.localeCompare(b.name));
+
+export function getTemplate(templateName: string): Template | undefined {
+  return Templates.find((template) => template.name === templateName);
+}
+
+export function validateTemplateCatalog(): void {
+  const names = new Set<string>();
+  const sourcePaths = new Set<string>();
+
+  for (const template of Templates) {
+    if (names.has(template.name)) {
+      throw new Error(`Duplicate template ID: ${template.name}`);
+    }
+    names.add(template.name);
+
+    const sourcePath = `${template.directory}/${template.sourceName ?? template.name}`;
+    if (sourcePaths.has(sourcePath)) {
+      throw new Error(`Duplicate template source path: ${sourcePath}`);
+    }
+    sourcePaths.add(sourcePath);
+  }
+
+  if (!names.has(DEFAULT_WEB_TEMPLATE)) {
+    throw new Error(
+      `Default template "${DEFAULT_WEB_TEMPLATE}" is missing from the template catalog.`
+    );
+  }
+}
+
+validateTemplateCatalog();

@@ -42,6 +42,7 @@
     "dev": "rslib build --watch",
     "build": "rslib build",
     "patch-version": "pnpm version",
+    "test": "rstest run",
     "typecheck": "tsc -b"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
     "@types/node": "catalog:typescript",
     "tsx": "catalog:typescript",
     "typescript": "catalog:typescript"

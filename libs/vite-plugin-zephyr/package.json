@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "vite-plugin-zephyr",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Vite plugin for Zephyr",
   "keywords": [
     "deploy",

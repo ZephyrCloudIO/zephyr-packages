@@ -349,6 +349,39 @@ describe('XPackBuildCoordinator', () => {
     );
   });
 
+  it('prepares one watch build identity before coordinated metadata is derived', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'client' },
+      { name: 'server' },
+    ]);
+
+    coordinator.beginParticipant('client', 0);
+    coordinator.beginParticipant('server', 0);
+    await coordinator.contribute({
+      participant: 'client',
+      generation: 0,
+      assetsMap: asset('client/old.js', 'client-old'),
+      buildStats: stats,
+    });
+    await coordinator.contribute({
+      participant: 'server',
+      generation: 0,
+      assetsMap: asset('server/old.js', 'server-old'),
+      buildStats: stats,
+    });
+
+    coordinator.beginParticipant('client', 1);
+    coordinator.beginParticipant('server', 1);
+    await Promise.all([
+      coordinator.prepareParticipant('client', 1),
+      coordinator.prepareParticipant('server', 1),
+    ]);
+
+    expect(zephyrEngine.start_new_build).toHaveBeenCalledTimes(1);
+    expect(zephyrEngine.upload_assets).toHaveBeenCalledTimes(1);
+  });
+
   it('carries forward an unchanged server when only the client rebuilds', async () => {
     const zephyrEngine = engine();
     const coordinator = new XPackBuildCoordinator(zephyrEngine, [

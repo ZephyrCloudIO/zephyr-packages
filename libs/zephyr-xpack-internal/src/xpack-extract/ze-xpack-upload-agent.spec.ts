@@ -83,6 +83,7 @@ describe('xpack_zephyr_agent', () => {
 
   it('preserves SDK-locked TAP paths, hashes, and bytes despite a compiler asset prefix', async () => {
     const contribute = rs.fn().mockResolvedValue(false);
+    const prepareParticipant = rs.fn().mockResolvedValue(undefined);
     const lockedAssets = {
       'sdk-descriptor-hash': {
         path: 'manifest.tap.json',
@@ -117,13 +118,14 @@ describe('xpack_zephyr_agent', () => {
             DELIMITER: '.',
           }),
         },
-        coordinator: { contribute },
+        coordinator: { contribute, prepareParticipant },
         participant: 'desktop',
         assetPrefix: 'local-output/desktop',
       },
     } as never);
 
     expect(buildProperties.baseHref).toBe('');
+    expect(prepareParticipant).toHaveBeenCalledWith('desktop', undefined);
     expect(contribute).toHaveBeenCalledWith(
       expect.objectContaining({ assetsMap: lockedAssets })
     );
@@ -234,6 +236,7 @@ describe('xpack_zephyr_agent', () => {
   it('rehashes prefixed assets and propagates coordinated publication failures', async () => {
     const error = new Error('coordinated upload failed');
     const contribute = rs.fn().mockRejectedValue(error);
+    const prepareParticipant = rs.fn().mockResolvedValue(undefined);
     (buildWebpackAssetMap as Mock).mockResolvedValue({
       original: {
         path: 'app.js',
@@ -258,7 +261,7 @@ describe('xpack_zephyr_agent', () => {
               DELIMITER: '.',
             }),
           },
-          coordinator: { contribute },
+          coordinator: { contribute, prepareParticipant },
           participant: 'client',
           generation: 3,
           assetPrefix: 'client',
@@ -277,7 +280,47 @@ describe('xpack_zephyr_agent', () => {
         },
       })
     );
+    expect(prepareParticipant).toHaveBeenCalledWith('client', 3);
     expect(handleGlobalError).not.toHaveBeenCalled();
     expect(emitDeploymentDone).not.toHaveBeenCalled();
+  });
+
+  it('prepares a watch generation before deriving versioned build stats', async () => {
+    const zephyrEngine = {
+      build_id: null as Promise<string> | null,
+      snapshotId: null as Promise<string> | null,
+      application_configuration: Promise.resolve({
+        EDGE_URL: 'edge',
+        PLATFORM: 'web',
+        DELIMITER: '.',
+      }),
+    };
+    const prepareParticipant = rs.fn(async () => {
+      zephyrEngine.build_id = Promise.resolve('build-2');
+      zephyrEngine.snapshotId = Promise.resolve('snapshot-2');
+    });
+    const contribute = rs.fn().mockResolvedValue(true);
+    (buildWebpackAssetMap as Mock).mockResolvedValue({});
+    (getBuildStats as Mock).mockImplementation(async ({ pluginOptions }) => {
+      expect(await pluginOptions.zephyr_engine.build_id).toBe('build-2');
+      expect(await pluginOptions.zephyr_engine.snapshotId).toBe('snapshot-2');
+      return {};
+    });
+
+    await xpack_zephyr_agent({
+      stats: {},
+      stats_json: {},
+      assets: {},
+      pluginOptions: {
+        zephyr_engine: zephyrEngine,
+        coordinator: { contribute, prepareParticipant },
+        participant: 'client',
+        generation: 1,
+      },
+    } as never);
+
+    expect(prepareParticipant).toHaveBeenCalledWith('client', 1);
+    expect(getBuildStats).toHaveBeenCalledTimes(1);
+    expect(contribute).toHaveBeenCalledTimes(1);
   });
 });

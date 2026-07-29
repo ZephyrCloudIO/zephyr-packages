@@ -199,6 +199,7 @@ export class XPackBuildCoordinator {
   private readonly rejectedLocalGenerations = new Map<string, Set<number>>();
   private readonly pendingRecoveryParticipants = new Set<string>();
   private readonly participantBaseHrefs = new Map<string, string>();
+  private readonly preparationPromises = new Map<number, Promise<void>>();
   private applicationBaseHref: string | undefined;
   private activeBuild: ActiveXPackBuild | undefined;
   private nextLogicalGeneration = 0;
@@ -220,8 +221,7 @@ export class XPackBuildCoordinator {
     }
     this.context = new ApplicationContext<ContributionMetadata>({
       applicationUid: engine.application_uid,
-      prepare: ({ generation }) =>
-        generation === 0 ? undefined : engine.start_new_build(),
+      prepare: ({ generation }) => this.prepareLogicalGeneration(generation),
       publish: async (publication) => {
         const metadata = publication.contributions
           .map((contribution) => contribution.data)
@@ -263,8 +263,17 @@ export class XPackBuildCoordinator {
           entrypoint,
         });
       },
-      finish: () => engine.build_finished(),
-      onFailure: () => engine.build_failed(),
+      finish: async ({ identity }) => {
+        try {
+          await engine.build_finished();
+        } finally {
+          this.preparationPromises.delete(identity.generation);
+        }
+      },
+      onFailure: (identity) => {
+        this.preparationPromises.delete(identity.generation);
+        engine.build_failed();
+      },
     });
   }
 
@@ -409,6 +418,20 @@ export class XPackBuildCoordinator {
     });
   }
 
+  /**
+   * Allocate the Zephyr build identity before a participant derives versioned build
+   * metadata. Publication also awaits this same single-flight promise.
+   */
+  async prepareParticipant(participant: string, localGeneration?: number): Promise<void> {
+    const active = this.resolveParticipantBuild(participant, localGeneration);
+    await this.prepareLogicalGeneration(active.logicalGeneration);
+    if (active !== this.activeBuild || active.session.isTerminal) {
+      throw xpackError(
+        `Stale xpack generation ${localGeneration ?? 'unknown'} for "${participant}"`
+      );
+    }
+  }
+
   async contribute(contribution: XPackBuildContribution): Promise<boolean> {
     const active = this.resolveBuild(contribution);
     const { session } = active;
@@ -474,32 +497,50 @@ export class XPackBuildCoordinator {
   }
 
   private resolveBuild(contribution: XPackBuildContribution): ActiveXPackBuild {
-    this.assertParticipant(contribution.participant);
-    if (contribution.generation !== undefined) {
-      let localState = this.localGenerations.get(contribution.participant);
-      if (!localState || localState.localGeneration !== contribution.generation) {
-        this.beginParticipant(contribution.participant, contribution.generation);
-        localState = this.localGenerations.get(contribution.participant);
+    return this.resolveParticipantBuild(
+      contribution.participant,
+      contribution.generation
+    );
+  }
+
+  private resolveParticipantBuild(
+    participant: string,
+    localGeneration?: number
+  ): ActiveXPackBuild {
+    this.assertParticipant(participant);
+    if (localGeneration !== undefined) {
+      let localState = this.localGenerations.get(participant);
+      if (!localState || localState.localGeneration !== localGeneration) {
+        this.beginParticipant(participant, localGeneration);
+        localState = this.localGenerations.get(participant);
       }
       const active = this.activeBuild;
       if (!active || localState?.logicalGeneration !== active.logicalGeneration) {
         throw xpackError(
-          `Stale xpack generation ${contribution.generation} for "${contribution.participant}"`
+          `Stale xpack generation ${localGeneration} for "${participant}"`
         );
       }
       return active;
     }
 
     let active = this.activeBuild;
-    if (
-      !active ||
-      active.session.isTerminal ||
-      active.contributions.has(contribution.participant)
-    ) {
+    if (!active || active.session.isTerminal || active.contributions.has(participant)) {
       active = this.createBuild();
     }
-    active.dirtyParticipants.add(contribution.participant);
+    active.dirtyParticipants.add(participant);
     return active;
+  }
+
+  private prepareLogicalGeneration(logicalGeneration: number): Promise<void> {
+    if (logicalGeneration === 0) {
+      return Promise.resolve();
+    }
+    let preparation = this.preparationPromises.get(logicalGeneration);
+    if (!preparation) {
+      preparation = this.engine.start_new_build();
+      this.preparationPromises.set(logicalGeneration, preparation);
+    }
+    return preparation;
   }
 
   private async publishIfReady(active: ActiveXPackBuild): Promise<boolean> {

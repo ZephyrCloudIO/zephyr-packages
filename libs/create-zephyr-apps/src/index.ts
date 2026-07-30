@@ -21,6 +21,7 @@ import {
   OperationCancelled,
   parseCliArgs,
   resolveCliOptions,
+  shouldUseInteractiveMode,
   type PromptAdapter,
 } from './cli.js';
 import { createNextSteps, formatScaffoldFailure } from './presentation.js';
@@ -64,8 +65,10 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
       return 0;
     }
 
-    const interactive =
-      !parsed.yes && !parsed.json && Boolean(process.stdin.isTTY && process.stdout.isTTY);
+    const interactive = shouldUseInteractiveMode(parsed, {
+      inputIsTTY: process.stdin.isTTY,
+      outputIsTTY: process.stdout.isTTY,
+    });
 
     if (interactive) {
       console.clear();
@@ -112,6 +115,8 @@ export async function main(args = process.argv.slice(2)): Promise<number> {
         receipt.directory,
         receipt.packageManager.name,
         options.projectType,
+        options.template,
+        options.install,
         options.build
       );
     }
@@ -207,6 +212,8 @@ function printNextSteps(
   outputDirectory: string,
   packageManager: string,
   projectType: ProjectType,
+  template: string | undefined,
+  alreadyInstalled: boolean,
   alreadyBuilt: boolean
 ): void {
   const nextSteps = createNextSteps({
@@ -214,6 +221,8 @@ function printNextSteps(
     invocationDirectory: process.cwd(),
     packageManager,
     projectType,
+    template,
+    alreadyInstalled,
     alreadyBuilt,
   });
 

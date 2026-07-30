@@ -17,6 +17,14 @@ export type Template = {
   hint: string;
   directory: string;
   sourceName?: string;
+  bundlerDocumentation?:
+    | 'parcel'
+    | 'rolldown'
+    | 'rollup'
+    | 'rsbuild'
+    | 'rspack'
+    | 'vite'
+    | 'webpack';
 };
 
 export type ProjectType = (typeof ProjectTypes)[number]['value'];
@@ -46,37 +54,42 @@ export const TemplateRepositories: Record<ProjectType, TemplateRepository> = {
 
 export const DEFAULT_WEB_TEMPLATE = 'react-rsbuild';
 
-export const Templates: readonly Template[] = [
+const TemplateCatalog: Template[] = [
   // Bundlers
   {
     name: 'react-vite',
     label: 'React + Vite',
     hint: 'You will be building React app powered by Vite.',
     directory: 'bundlers',
+    bundlerDocumentation: 'vite',
   },
   {
     name: 'react-rspack',
     label: 'React + Rspack',
     hint: 'A simple React application built by Rspack.',
     directory: 'bundlers',
+    bundlerDocumentation: 'rspack',
   },
   {
     name: 'parcel-react',
     label: 'React + Parcel',
     hint: 'A React application using Parcel as the bundler.',
     directory: 'bundlers',
+    bundlerDocumentation: 'parcel',
   },
   {
     name: 'rolldown-react',
     label: 'React + Rolldown',
     hint: 'A React example using Rolldown.',
     directory: 'bundlers',
+    bundlerDocumentation: 'rolldown',
   },
   {
     name: 'rollup-react',
     label: 'React + Rollup',
     hint: 'A React application using Rollup as the bundler.',
     directory: 'bundlers',
+    bundlerDocumentation: 'rollup',
   },
   {
     name: 'tsdown',
@@ -96,6 +109,7 @@ export const Templates: readonly Template[] = [
     label: 'Angular + Rsbuild + Module Federation',
     hint: 'An Angular application with Module Federation using Rsbuild.',
     directory: 'module-federation',
+    bundlerDocumentation: 'rsbuild',
   },
   {
     name: 'angular-vite-mf',
@@ -103,12 +117,14 @@ export const Templates: readonly Template[] = [
     label: 'Angular + Vite + Module Federation',
     hint: 'An Angular application with Module Federation using Vite.',
     directory: 'module-federation',
+    bundlerDocumentation: 'vite',
   },
   {
     name: 'react-rsbuild',
     label: 'React + Rsbuild + Module Federation',
     hint: 'A React application with Module Federation using Rsbuild.',
     directory: 'module-federation',
+    bundlerDocumentation: 'rsbuild',
   },
   {
     name: 'react-vite-rspack-webpack',
@@ -121,12 +137,14 @@ export const Templates: readonly Template[] = [
     label: 'React + Webpack + Module Federation',
     hint: 'A React application with Module Federation using Webpack.',
     directory: 'module-federation',
+    bundlerDocumentation: 'webpack',
   },
   {
     name: 'tractor-sample',
     label: 'Tractor Store (Module Federation)',
     hint: 'A micro-frontend sample with Rspack and Module Federation.',
     directory: 'module-federation',
+    bundlerDocumentation: 'rspack',
   },
   // Frameworks
   {
@@ -134,6 +152,7 @@ export const Templates: readonly Template[] = [
     label: 'Angular + Vite',
     hint: 'You will be building an Angular app powered by Vite.',
     directory: 'frameworks',
+    bundlerDocumentation: 'vite',
   },
   {
     name: 'astro',
@@ -146,6 +165,7 @@ export const Templates: readonly Template[] = [
     label: 'Ember + Vite',
     hint: 'An Ember application using Vite as the bundler.',
     directory: 'frameworks',
+    bundlerDocumentation: 'vite',
   },
   {
     name: 'modernjs',
@@ -164,18 +184,21 @@ export const Templates: readonly Template[] = [
     label: 'Solid + Vite',
     hint: 'A Solid app using Vite as the bundler.',
     directory: 'frameworks',
+    bundlerDocumentation: 'vite',
   },
   {
     name: 'svelte-vite',
     label: 'Svelte + Vite',
     hint: 'A Svelte app using Vite as the bundler.',
     directory: 'frameworks',
+    bundlerDocumentation: 'vite',
   },
   {
     name: 'tanstack-start',
     label: 'TanStack Start',
     hint: 'A TanStack Start application with Vite.',
     directory: 'frameworks',
+    bundlerDocumentation: 'vite',
   },
   // Server
   {
@@ -202,14 +225,20 @@ export const Templates: readonly Template[] = [
     label: 'NX + React + Rspack + Module Federation',
     hint: 'A monorepo using NX, React, and Rspack with Module Federation.',
     directory: 'build-systems',
+    bundlerDocumentation: 'rspack',
   },
   {
     name: 'turborepo-rspack-mf',
     label: 'Turbo + Rspack + Module Federation',
     hint: 'A monorepo using Turborepo, React, and Rspack with Module Federation.',
     directory: 'build-systems',
+    bundlerDocumentation: 'rspack',
   },
-].sort((a, b) => a.name.localeCompare(b.name));
+];
+
+export const Templates: readonly Template[] = TemplateCatalog.sort((a, b) =>
+  a.name.localeCompare(b.name)
+);
 
 export function getTemplate(templateName: string): Template | undefined {
   return Templates.find((template) => template.name === templateName);

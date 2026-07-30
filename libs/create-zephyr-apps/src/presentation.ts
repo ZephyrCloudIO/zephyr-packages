@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { ProjectType } from './templates.js';
+import { getTemplate, type ProjectType } from './templates.js';
 
 export interface ScaffoldFailurePresentation {
   message: string;
@@ -15,6 +15,8 @@ export interface CreateNextStepsOptions {
   invocationDirectory: string;
   packageManager: string;
   projectType: ProjectType;
+  template?: string;
+  alreadyInstalled: boolean;
   alreadyBuilt: boolean;
 }
 
@@ -33,12 +35,13 @@ export function createNextSteps(options: CreateNextStepsOptions): NextSteps {
     path.relative(options.invocationDirectory, options.outputDirectory) ||
     path.basename(options.outputDirectory);
   const changeDirectory = `cd ./${relativeDirectory}`;
+  const alreadyInstalled = options.alreadyInstalled || options.alreadyBuilt;
 
   if (options.projectType === 'react-native') {
     const repositoryName = path.basename(options.outputDirectory);
     const commands = [
       changeDirectory,
-      ...(options.alreadyBuilt ? [] : [`${options.packageManager} install`]),
+      ...(alreadyInstalled ? [] : [`${options.packageManager} install`]),
       `git remote add origin https://github.com/<name>/${repositoryName}.git`,
       `ZC=1 ${options.packageManager} start`,
     ];
@@ -58,18 +61,25 @@ export function createNextSteps(options: CreateNextStepsOptions): NextSteps {
     };
   }
 
+  const commands = [changeDirectory];
+  if (!alreadyInstalled) {
+    commands.push(`${options.packageManager} install`);
+  }
+  if (!options.alreadyBuilt) {
+    commands.push(`${options.packageManager} run build`);
+  }
+  const bundlerDocumentation = options.template
+    ? getTemplate(options.template)?.bundlerDocumentation
+    : undefined;
+
   return {
-    commands: options.alreadyBuilt
-      ? changeDirectory
-      : [
-          changeDirectory,
-          `${options.packageManager} install`,
-          `${options.packageManager} run build`,
-        ].join('\n'),
+    commands: commands.join('\n'),
     commandsTitle: options.alreadyBuilt
       ? 'Project built successfully!'
       : 'Run the application!',
-    documentationUrl: 'https://docs.zephyr-cloud.io/bundlers/rsbuild',
+    documentationUrl: bundlerDocumentation
+      ? `https://docs.zephyr-cloud.io/bundlers/${bundlerDocumentation}`
+      : 'https://docs.zephyr-cloud.io/getting-started/quick-start',
   };
 }
 

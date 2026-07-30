@@ -8,6 +8,7 @@ describe('CLI presentation', () => {
       invocationDirectory: '/workspace',
       packageManager: 'pnpm',
       projectType: 'react-native',
+      alreadyInstalled: false,
       alreadyBuilt: false,
     });
 
@@ -21,6 +22,43 @@ describe('CLI presentation', () => {
       'https://docs.zephyr-cloud.io/bundlers/repack'
     );
     expect(nextSteps.guidance?.body).toContain('Make sure to commit and add a remote');
+  });
+
+  it('does not recommend reinstalling dependencies after --install', () => {
+    const nextSteps = createNextSteps({
+      outputDirectory: '/workspace/web-app',
+      invocationDirectory: '/workspace',
+      packageManager: 'pnpm',
+      projectType: 'web',
+      template: 'react-rsbuild',
+      alreadyInstalled: true,
+      alreadyBuilt: false,
+    });
+
+    expect(nextSteps.commands).toBe('cd ./web-app\npnpm run build');
+  });
+
+  it('routes web templates to their bundler documentation', () => {
+    const documentationUrl = (template: string): string =>
+      createNextSteps({
+        outputDirectory: '/workspace/web-app',
+        invocationDirectory: '/workspace',
+        packageManager: 'pnpm',
+        projectType: 'web',
+        template,
+        alreadyInstalled: false,
+        alreadyBuilt: false,
+      }).documentationUrl;
+
+    expect(documentationUrl('react-rsbuild')).toBe(
+      'https://docs.zephyr-cloud.io/bundlers/rsbuild'
+    );
+    expect(documentationUrl('react-webpack')).toBe(
+      'https://docs.zephyr-cloud.io/bundlers/webpack'
+    );
+    expect(documentationUrl('react-vite')).toBe(
+      'https://docs.zephyr-cloud.io/bundlers/vite'
+    );
   });
 
   it('includes captured command diagnostics in plain-text failures', () => {

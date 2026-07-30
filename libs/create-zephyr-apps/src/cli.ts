@@ -51,6 +51,11 @@ export interface ResolveCliOptionsContext {
   prompts?: PromptAdapter;
 }
 
+export interface TerminalContext {
+  inputIsTTY: boolean | undefined;
+  outputIsTTY: boolean | undefined;
+}
+
 export class OperationCancelled extends Error {
   constructor() {
     super('Operation cancelled.');
@@ -193,6 +198,18 @@ export function parseCliArgs(args: string[]): CliOptions {
     help: parsed.values.help ?? false,
     version: parsed.values.version ?? false,
   };
+}
+
+export function shouldUseInteractiveMode(
+  options: CliOptions,
+  terminal: TerminalContext
+): boolean {
+  return (
+    options.directory === undefined &&
+    !options.yes &&
+    !options.json &&
+    Boolean(terminal.inputIsTTY && terminal.outputIsTTY)
+  );
 }
 
 export async function resolveCliOptions(

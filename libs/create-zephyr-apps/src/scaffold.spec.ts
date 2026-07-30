@@ -217,6 +217,48 @@ describe('scaffoldProject', () => {
     });
   });
 
+  it('reconciles conflicting package-manager metadata before an explicit install', async () => {
+    const fixture = await createTemplateRepository();
+    const output = path.join(fixture.root, 'output');
+    const observedPackageManagerFields: Array<string | undefined> = [];
+
+    const receipt = await scaffoldProject(
+      {
+        ...defaultOptions(output, fixture.revision),
+        packageManager: 'yarn',
+        install: true,
+      },
+      {
+        runCommand: async (command, args, options) => {
+          if (command !== 'yarn') {
+            return defaultCommandRunner(command, args, options);
+          }
+
+          const manifest = JSON.parse(
+            await fs.promises.readFile(path.join(output, 'package.json'), 'utf8')
+          ) as { packageManager?: string };
+          observedPackageManagerFields.push(manifest.packageManager);
+          return args[0] === '--version'
+            ? { exitCode: 0, stdout: '4.9.1\n', stderr: '' }
+            : { exitCode: 0, stdout: '', stderr: '' };
+        },
+        repositories: {
+          web: {
+            name: 'fixture',
+            url: fixture.repository,
+            revision: fixture.revision,
+          },
+        },
+      }
+    );
+
+    expect(observedPackageManagerFields).toEqual([undefined, 'yarn@4.9.1']);
+    expect(receipt.packageManager).toEqual({ name: 'yarn', version: '4.9.1' });
+    await expect(
+      fs.promises.readFile(path.join(output, 'package.json'), 'utf8')
+    ).resolves.toContain('"packageManager": "yarn@4.9.1"');
+  });
+
   it('initializes and commits Git only when requested', async () => {
     const fixture = await createTemplateRepository();
     const output = path.join(fixture.root, 'output');

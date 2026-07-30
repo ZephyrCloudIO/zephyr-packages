@@ -6,6 +6,7 @@ import {
   OperationCancelled,
   parseCliArgs,
   resolveCliOptions,
+  shouldUseInteractiveMode,
 } from './cli.js';
 import {
   DEFAULT_WEB_TEMPLATE,
@@ -53,6 +54,18 @@ describe('create-zephyr-apps CLI', () => {
       build: false,
       templateRevision: TemplateRepositories.web.revision,
     });
+  });
+
+  it('treats explicit project directories as non-interactive in a TTY', () => {
+    const terminal = { inputIsTTY: true, outputIsTTY: true };
+
+    expect(shouldUseInteractiveMode(parseCliArgs([]), terminal)).toBe(true);
+    expect(shouldUseInteractiveMode(parseCliArgs(['./positional']), terminal)).toBe(
+      false
+    );
+    expect(
+      shouldUseInteractiveMode(parseCliArgs(['--directory', './flagged']), terminal)
+    ).toBe(false);
   });
 
   it('installs dependencies when --build is requested', async () => {

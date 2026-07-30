@@ -326,6 +326,9 @@ export async function scaffoldProject(
     let beforeBuild = new Set(await listProjectFiles(outputDirectory));
     if (options.install) {
       reportProgress('install', `Installing dependencies with ${packageManager}`);
+      const packageManagerMetadataWasReconciled = options.packageManager
+        ? await removeConflictingPackageManagerMetadata(outputDirectory, packageManager)
+        : false;
       const versionResult = await execute(
         'install',
         packageManager,
@@ -333,6 +336,16 @@ export async function scaffoldProject(
         outputDirectory
       );
       receipt.packageManager.version = versionResult.stdout.trim() || null;
+      if (
+        packageManagerMetadataWasReconciled &&
+        receipt.packageManager.version !== null
+      ) {
+        await writePackageManagerMetadata(
+          outputDirectory,
+          packageManager,
+          receipt.packageManager.version
+        );
+      }
       const installCommand = packageManagerCommands(packageManager).install;
       await execute(
         'install',
@@ -483,6 +496,83 @@ function packageManagerCommands(packageManager: PackageManager): {
     install: { command: packageManager, args: ['install'] },
     build: { command: packageManager, args: ['run', 'build'] },
   };
+}
+
+interface MutablePackageManifest {
+  packageManager?: unknown;
+  [key: string]: unknown;
+}
+
+async function removeConflictingPackageManagerMetadata(
+  directory: string,
+  selectedPackageManager: PackageManager
+): Promise<boolean> {
+  const packageManifest = await readMutablePackageManifest(directory);
+  if (!packageManifest) return false;
+
+  const declaredPackageManager =
+    typeof packageManifest.manifest.packageManager === 'string'
+      ? packageManifest.manifest.packageManager.split('@')[0]
+      : undefined;
+  if (
+    !Object.hasOwn(packageManifest.manifest, 'packageManager') ||
+    declaredPackageManager === selectedPackageManager
+  ) {
+    return false;
+  }
+
+  delete packageManifest.manifest.packageManager;
+  await writeMutablePackageManifest(packageManifest);
+  return true;
+}
+
+async function writePackageManagerMetadata(
+  directory: string,
+  packageManager: PackageManager,
+  version: string
+): Promise<void> {
+  const packageManifest = await readMutablePackageManifest(directory);
+  if (!packageManifest) return;
+
+  packageManifest.manifest.packageManager = `${packageManager}@${version}`;
+  await writeMutablePackageManifest(packageManifest);
+}
+
+async function readMutablePackageManifest(directory: string): Promise<
+  | {
+      path: string;
+      source: string;
+      manifest: MutablePackageManifest;
+    }
+  | undefined
+> {
+  const manifestPath = path.join(directory, 'package.json');
+  try {
+    const source = await fs.promises.readFile(manifestPath, 'utf8');
+    return {
+      path: manifestPath,
+      source,
+      manifest: JSON.parse(source) as MutablePackageManifest,
+    };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+async function writeMutablePackageManifest(packageManifest: {
+  path: string;
+  source: string;
+  manifest: MutablePackageManifest;
+}): Promise<void> {
+  const indentation = packageManifest.source.match(/\n([ \t]+)"/u)?.[1] ?? '  ';
+  const trailingNewline = packageManifest.source.endsWith('\n') ? '\n' : '';
+  await fs.promises.writeFile(
+    packageManifest.path,
+    `${JSON.stringify(packageManifest.manifest, null, indentation)}${trailingNewline}`
+  );
 }
 
 async function readPackageManagerField(

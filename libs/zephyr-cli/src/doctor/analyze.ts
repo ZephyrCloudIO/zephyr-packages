@@ -15,6 +15,7 @@ import {
 } from './schema';
 
 const MAX_TEXT_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_LOCKFILE_BYTES = 64 * 1024 * 1024;
 const MAX_SCAN_DIRECTORIES = 10_000;
 const CONFIG_FILE_PATTERN =
   /^(rsbuild|rspack|webpack|vite|rollup|rslib)\.config\.(?:js|mjs|cjs|ts|mts|cts)$/u;
@@ -42,6 +43,7 @@ interface PackageJson {
   name?: string;
   version?: string;
   packageManager?: string;
+  workspaces?: string[] | { packages?: string[] };
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
@@ -68,6 +70,11 @@ interface LockState {
 
 interface PropertyContainer {
   kind: 'object' | 'array';
+  body: string;
+  start: number;
+}
+
+interface ArrayEntry {
   body: string;
   start: number;
 }
@@ -271,6 +278,15 @@ async function discoverPackageManifests(
   findings: DoctorFinding[]
 ): Promise<PackageManifest[]> {
   const manifests = [rootManifest];
+  const workspacePatterns = await readWorkspacePatterns(root, rootManifest.data);
+  if (workspacePatterns.length === 0) return manifests;
+
+  const includedPatterns = workspacePatterns.filter(
+    (pattern) => !pattern.startsWith('!')
+  );
+  const excludedPatterns = workspacePatterns
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => pattern.slice(1));
   let visitedDirectories = 0;
 
   const visit = async (directory: string): Promise<void> => {
@@ -283,8 +299,19 @@ async function discoverPackageManifests(
     for (const entry of entries) {
       if (!entry.isDirectory() || EXCLUDED_DIRECTORIES.has(entry.name)) continue;
       const childDirectory = path.join(directory, entry.name);
+      const childRelativePath = relativePath(root, childDirectory);
+      if (!shouldVisitWorkspaceDirectory(childRelativePath, includedPatterns)) {
+        continue;
+      }
       const childPackagePath = path.join(childDirectory, 'package.json');
-      if (await pathExists(childPackagePath)) {
+      const isWorkspace =
+        includedPatterns.some((pattern) =>
+          path.matchesGlob(childRelativePath, normalizeWorkspacePattern(pattern))
+        ) &&
+        !excludedPatterns.some((pattern) =>
+          path.matchesGlob(childRelativePath, normalizeWorkspacePattern(pattern))
+        );
+      if (isWorkspace && (await pathExists(childPackagePath))) {
         const result = await readPackageManifest(childPackagePath, root);
         if (result.manifest) {
           manifests.push(result.manifest);
@@ -312,22 +339,105 @@ async function discoverPackageManifests(
   return uniqueBy(manifests, ({ relativePath: manifestPath }) => manifestPath);
 }
 
+async function readWorkspacePatterns(
+  root: string,
+  rootPackage: PackageJson
+): Promise<string[]> {
+  const manifestWorkspaces = Array.isArray(rootPackage.workspaces)
+    ? rootPackage.workspaces
+    : (rootPackage.workspaces?.packages ?? []);
+  const pnpmWorkspacePath = path.join(root, 'pnpm-workspace.yaml');
+  const pnpmWorkspaces = (await pathExists(pnpmWorkspacePath))
+    ? parsePnpmWorkspacePatterns(await readBoundedTextFile(pnpmWorkspacePath))
+    : [];
+  return [
+    ...new Set(
+      [...manifestWorkspaces, ...pnpmWorkspaces]
+        .map(normalizeWorkspacePattern)
+        .filter(Boolean)
+    ),
+  ];
+}
+
+function parsePnpmWorkspacePatterns(source: string): string[] {
+  const patterns: string[] = [];
+  let inPackages = false;
+  for (const line of source.split(/\r?\n/u)) {
+    if (/^packages\s*:\s*(?:#.*)?$/u.test(line)) {
+      inPackages = true;
+      continue;
+    }
+    if (/^\S/u.test(line) && !line.startsWith('#')) {
+      inPackages = false;
+    }
+    if (!inPackages) continue;
+    const match = /^\s+-\s+(.+?)\s*$/u.exec(line);
+    if (!match?.[1]) continue;
+    const value = stripYamlComment(match[1]).trim();
+    if (!value) continue;
+    patterns.push(unquoteYamlKey(value));
+  }
+  return patterns;
+}
+
+function stripYamlComment(value: string): string {
+  let quote: string | undefined;
+  for (let index = 0; index < value.length; index++) {
+    const character = value[index];
+    if (quote) {
+      if (character === quote && value[index - 1] !== '\\') quote = undefined;
+    } else if (character === "'" || character === '"') {
+      quote = character;
+    } else if (character === '#') {
+      return value.slice(0, index);
+    }
+  }
+  return value;
+}
+
+function normalizeWorkspacePattern(pattern: string): string {
+  return pattern
+    .trim()
+    .replace(/\\/gu, '/')
+    .replace(/^\.\/+/u, '')
+    .replace(/\/+$/u, '');
+}
+
+function shouldVisitWorkspaceDirectory(
+  relativeDirectory: string,
+  patterns: string[]
+): boolean {
+  return patterns.some((pattern) => {
+    const normalized = normalizeWorkspacePattern(pattern);
+    const wildcardIndex = normalized.search(/[*?[\]{}()]/u);
+    const literalPrefix =
+      wildcardIndex === -1 ? normalized : normalized.slice(0, wildcardIndex);
+    const directoryPrefix = literalPrefix.replace(/\/+$/u, '');
+    return (
+      !directoryPrefix ||
+      relativeDirectory === directoryPrefix ||
+      directoryPrefix.startsWith(`${relativeDirectory}/`) ||
+      relativeDirectory.startsWith(`${directoryPrefix}/`)
+    );
+  });
+}
+
 async function readPackageManifest(
   absolutePath: string,
   root: string
 ): Promise<{ manifest?: PackageManifest; detail?: string }> {
   const content = await readBoundedTextFile(absolutePath);
   try {
-    const data = JSON.parse(content) as PackageJson | undefined;
-    if (!data) {
-      return { detail: 'empty JSON document' };
+    const data = JSON.parse(content) as unknown;
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      return { detail: 'JSON root must be an object' };
     }
     return {
       manifest: {
         absolutePath,
         relativePath: relativePath(root, absolutePath),
         directory: path.dirname(absolutePath),
-        data,
+        data: data as PackageJson,
       },
     };
   } catch {
@@ -404,13 +514,17 @@ async function inspectConfigs(
 
   for (const config of configFiles) {
     const source = await readBoundedTextFile(config.absolutePath);
-    const zephyrCall = /\bwithZephyr\s*\(/u.exec(source);
-    const moduleFederationCall = /\bpluginModuleFederation\s*\(/u.exec(source);
-    const assetPrefixMatch = /\bassetPrefix\s*:\s*(['"`])auto\1/u.exec(source);
-    const hasAssetPrefix = /\bassetPrefix\s*:/u.test(source);
-    const sourceEntry = /\bsource\s*:\s*\{[\s\S]*?\bentry\s*:/u.test(source);
-    const exposes = extractPropertyContainer(source, 'exposes');
-    const remotes = extractPropertyContainer(source, 'remotes');
+    const analyzableSource = stripComments(source);
+    const zephyrCall = /\bwithZephyr\s*\(/u.exec(analyzableSource);
+    const moduleFederationCall = /\bpluginModuleFederation\s*\(/u.exec(analyzableSource);
+    const assetPrefixMatch = /\bassetPrefix\s*:\s*(['"`])auto\1/u.exec(analyzableSource);
+    const hasAssetPrefix = /\bassetPrefix\s*:/u.test(analyzableSource);
+    const sourceEntry = /\bsource\s*:\s*\{[\s\S]*?\bentry\s*:/u.test(analyzableSource);
+    const exposes = extractPropertyContainer(analyzableSource, 'exposes');
+    const remotes = extractPropertyContainer(analyzableSource, 'remotes');
+    const plugins = extractPropertyContainer(analyzableSource, 'plugins');
+    const pluginOrder =
+      plugins?.kind === 'array' ? findPluginOrder(analyzableSource, plugins) : undefined;
     const exposeKeys =
       exposes?.kind === 'object' ? extractTopLevelObjectKeys(exposes.body) : [];
     const remoteKeys =
@@ -453,18 +567,19 @@ async function inspectConfigs(
         });
       }
       if (
-        zephyrCall &&
-        moduleFederationCall &&
-        zephyrCall.index < moduleFederationCall.index
+        pluginOrder?.zephyr !== undefined &&
+        pluginOrder.moduleFederation !== undefined &&
+        pluginOrder.zephyr < pluginOrder.moduleFederation
       ) {
         findings.push({
           code: DoctorFindingCode.ZephyrPluginOrder,
           severity: 'error',
-          message: 'withZephyr() appears before pluginModuleFederation().',
+          message:
+            'withZephyr() appears before pluginModuleFederation() in the plugins array.',
           evidence: [
             {
               path: config.relativePath,
-              line: lineNumber(source, zephyrCall.index),
+              line: lineNumber(source, (plugins?.start ?? 0) + 1 + pluginOrder.zephyr),
             },
           ],
           remediation:
@@ -530,7 +645,7 @@ async function inspectConfigs(
     const remoteDependencyKeys = Object.keys(
       config.manifest.data['zephyr:dependencies'] ?? {}
     );
-    if (remoteDependencyKeys.length > 0) {
+    if (remoteDependencyKeys.length > 0 || remoteKeys.length > 0) {
       const missingRemotes = remoteDependencyKeys.filter(
         (key) => !remoteKeys.includes(key)
       );
@@ -706,17 +821,26 @@ async function inspectPackages(
     left.localeCompare(right)
   )) {
     const installed = new Map<string, string>();
+    const missingDeclarations: Array<{
+      manifest: PackageManifest;
+      range: string;
+    }> = [];
     for (const declaration of declarations) {
       const installedManifest = await findInstalledPackageManifest(
         declaration.manifest.directory,
         root,
         name
       );
-      if (!installedManifest) continue;
+      if (!installedManifest) {
+        missingDeclarations.push(declaration);
+        continue;
+      }
       const installedResult = await readPackageManifest(installedManifest, root);
       const version = installedResult.manifest?.data.version;
       if (version) {
         installed.set(relativePath(root, installedManifest), version);
+      } else {
+        missingDeclarations.push(declaration);
       }
     }
 
@@ -737,15 +861,15 @@ async function inspectPackages(
       installed: installedEntries,
     });
 
-    if (installedEntries.length === 0) {
+    if (missingDeclarations.length > 0) {
       findings.push({
         code:
           name === 'zephyr-rsbuild-plugin'
             ? DoctorFindingCode.ZephyrPluginNotInstalled
             : DoctorFindingCode.PackageNotInstalled,
         severity: 'warning',
-        message: `${name} is declared but no installed package.json was found.`,
-        evidence: declarations.map(({ manifest, range }) => ({
+        message: `${name} is declared but no installed package.json was found for one or more workspaces.`,
+        evidence: missingDeclarations.map(({ manifest, range }) => ({
           path: manifest.relativePath,
           detail: `declared: ${boundedDetail(range)}`,
         })),
@@ -789,7 +913,7 @@ async function readLockVersions(
   packageNames: string[]
 ): Promise<Map<string, Set<string>>> {
   const versions = new Map<string, Set<string>>();
-  const content = await readBoundedTextFile(lockfilePath);
+  const content = await readBoundedTextFile(lockfilePath, MAX_LOCKFILE_BYTES);
 
   if (packageManager === 'npm') {
     const parsed = JSON.parse(content) as {
@@ -815,7 +939,10 @@ async function readLockVersions(
           const candidate = lines[next] ?? '';
           if (candidate.trim() && leadingWhitespace(candidate) <= indent) break;
           const versionMatch = /^\s*version:\s*(['"]?)([^'"\s]+)\1\s*$/u.exec(candidate);
-          if (versionMatch?.[2]) found.add(normalizeLockVersion(versionMatch[2]));
+          const version = versionMatch?.[2]
+            ? normalizeLockVersion(versionMatch[2])
+            : undefined;
+          if (version) found.add(version);
         }
       } else if (
         packageManager === 'yarn' &&
@@ -826,8 +953,13 @@ async function readLockVersions(
         for (let next = index + 1; next < lines.length; next++) {
           const candidate = lines[next] ?? '';
           if (candidate.trim() && leadingWhitespace(candidate) === 0) break;
-          const versionMatch = /^\s*version\s+(['"]?)([^'"\s]+)\1\s*$/u.exec(candidate);
-          if (versionMatch?.[2]) found.add(normalizeLockVersion(versionMatch[2]));
+          const versionMatch = /^\s*version(?::\s*|\s+)(['"]?)([^'"\s]+)\1\s*$/u.exec(
+            candidate
+          );
+          const version = versionMatch?.[2]
+            ? normalizeLockVersion(versionMatch[2])
+            : undefined;
+          if (version) found.add(version);
         }
       }
     }
@@ -896,6 +1028,22 @@ function inspectWatchMode(
         ? 'rsbuild build --watch'
         : null,
     };
+  }
+
+  if (zeCliWatchScripts.length === 0) {
+    findings.push({
+      code: DoctorFindingCode.TapWatchTargetMissing,
+      severity: 'error',
+      message: 'The TAP project does not define a ze-cli watch command.',
+      evidence: [
+        {
+          path: manifests[0]?.relativePath ?? 'package.json',
+          detail: 'missing: ze-cli watch --target tap-app',
+        },
+      ],
+      remediation:
+        'Add a watch script using ze-cli watch with --target tap-app and --metadata <sidecar.json>.',
+    });
   }
 
   for (const script of zeCliWatchScripts) {
@@ -1092,6 +1240,65 @@ function extractPropertyContainer(
   };
 }
 
+function findPluginOrder(
+  source: string,
+  plugins: PropertyContainer
+): { zephyr?: number; moduleFederation?: number } {
+  const pluginVariables = new Map<string, 'zephyr' | 'moduleFederation'>();
+  const declarationPattern =
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:await\s+)?(withZephyr|pluginModuleFederation)\s*\(/gu;
+  for (const match of source.matchAll(declarationPattern)) {
+    const variableName = match[1];
+    const factoryName = match[2];
+    if (variableName && factoryName) {
+      pluginVariables.set(
+        variableName,
+        factoryName === 'withZephyr' ? 'zephyr' : 'moduleFederation'
+      );
+    }
+  }
+
+  const order: { zephyr?: number; moduleFederation?: number } = {};
+  for (const entry of extractTopLevelArrayEntries(plugins.body)) {
+    const directFactory = /\b(withZephyr|pluginModuleFederation)\s*\(/u.exec(
+      entry.body
+    )?.[1];
+    let kind: 'zephyr' | 'moduleFederation' | undefined =
+      directFactory === 'withZephyr'
+        ? 'zephyr'
+        : directFactory === 'pluginModuleFederation'
+          ? 'moduleFederation'
+          : undefined;
+    if (!kind) {
+      const identifier = /^\s*([A-Za-z_$][\w$]*)\s*$/u.exec(entry.body)?.[1];
+      if (identifier) kind = pluginVariables.get(identifier);
+    }
+    if (kind && order[kind] === undefined) order[kind] = entry.start;
+  }
+  return order;
+}
+
+function extractTopLevelArrayEntries(body: string): ArrayEntry[] {
+  const entries: ArrayEntry[] = [];
+  const depths = nestingDepths(body);
+  let start = 0;
+  for (let index = 0; index <= body.length; index++) {
+    if (index < body.length && (body[index] !== ',' || depths[index] !== 0)) {
+      continue;
+    }
+    const entryBody = body.slice(start, index);
+    const leading = leadingWhitespace(entryBody);
+    if (entryBody.trim()) {
+      entries.push({
+        body: entryBody,
+        start: start + leading,
+      });
+    }
+    start = index + 1;
+  }
+  return entries;
+}
+
 function findMatchingDelimiter(
   source: string,
   start: number,
@@ -1194,10 +1401,69 @@ function lineNumber(source: string, index: number): number {
   return source.slice(0, index).split('\n').length;
 }
 
-async function readBoundedTextFile(absolutePath: string): Promise<string> {
+function stripComments(source: string): string {
+  const characters = source.split('');
+  let quote: string | undefined;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+
+  for (let index = 0; index < source.length; index++) {
+    const character = source[index] ?? '';
+    const next = source[index + 1] ?? '';
+    if (lineComment) {
+      if (character === '\n') {
+        lineComment = false;
+      } else {
+        characters[index] = ' ';
+      }
+      continue;
+    }
+    if (blockComment) {
+      if (character === '*' && next === '/') {
+        characters[index] = ' ';
+        characters[index + 1] = ' ';
+        blockComment = false;
+        index += 1;
+      } else if (character !== '\n') {
+        characters[index] = ' ';
+      }
+      continue;
+    }
+    if (quote) {
+      if (escaped) {
+        escaped = false;
+      } else if (character === '\\') {
+        escaped = true;
+      } else if (character === quote) {
+        quote = undefined;
+      }
+      continue;
+    }
+    if (character === "'" || character === '"' || character === '`') {
+      quote = character;
+    } else if (character === '/' && next === '/') {
+      characters[index] = ' ';
+      characters[index + 1] = ' ';
+      lineComment = true;
+      index += 1;
+    } else if (character === '/' && next === '*') {
+      characters[index] = ' ';
+      characters[index + 1] = ' ';
+      blockComment = true;
+      index += 1;
+    }
+  }
+  return characters.join('');
+}
+
+async function readBoundedTextFile(
+  absolutePath: string,
+  maximumBytes = MAX_TEXT_FILE_BYTES
+): Promise<string> {
   const stats = await fs.promises.stat(absolutePath);
-  if (stats.size > MAX_TEXT_FILE_BYTES) {
-    throw new Error(`Refusing to inspect a file larger than ${MAX_TEXT_FILE_BYTES}.`);
+  if (stats.size > maximumBytes) {
+    throw new Error(`Refusing to inspect a file larger than ${maximumBytes}.`);
   }
   return fs.promises.readFile(absolutePath, 'utf8');
 }
@@ -1231,7 +1497,8 @@ function unquoteYamlKey(value: string): string {
   return value;
 }
 
-function normalizeLockVersion(value: string): string {
+function normalizeLockVersion(value: string): string | undefined {
+  if (/^(?:file|link|portal|workspace):/u.test(value)) return undefined;
   return value.replace(/^npm:/u, '').split('(')[0] ?? value;
 }
 

@@ -4,6 +4,7 @@ import { cwd } from 'node:process';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
 import { parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
+import { doctorCommand } from './commands/doctor';
 import { runCommand } from './commands/run';
 import { watchCommand } from './commands/watch';
 
@@ -17,7 +18,14 @@ async function main(): Promise<void> {
     const workingDir = cwd();
 
     // Dispatch to the appropriate command
-    if (options.command === 'deploy' || options.command === 'watch') {
+    if (options.command === 'doctor') {
+      const exitCode = await doctorCommand({
+        directory: options.directory ?? '.',
+        format: options.format ?? 'text',
+        cwd: workingDir,
+      });
+      process.exitCode = exitCode;
+    } else if (options.command === 'deploy' || options.command === 'watch') {
       if (!options.directory) {
         throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
           message: 'Directory is required for deploy command',

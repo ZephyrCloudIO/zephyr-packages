@@ -1,0 +1,12 @@
+{
+  "name": "healthy-rsbuild-workspace",
+  "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "scripts": {
+    "build": "pnpm --filter remote build && pnpm --filter host build",
+    "watch": "rsbuild build --watch"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

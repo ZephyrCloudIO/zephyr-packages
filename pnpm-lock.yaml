@@ -1826,6 +1826,9 @@ importers:
       '@rslib/core':
         specifier: catalog:rslib
         version: 0.23.2(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(typescript@5.9.3)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3

@@ -33,7 +33,8 @@ bunx create-zephyr-apps
 
 ### Interactive Mode
 
-Run the command without arguments to start the interactive mode:
+Run the command without arguments in a TTY to choose the directory, project
+type, template, and whether to initialize Git:
 
 ```bash
 npx create-zephyr-apps@latest
@@ -72,6 +73,100 @@ npx create-zephyr-apps@latest
 └
 ```
 
+### Non-interactive Mode
+
+Pass a project directory to scaffold without prompts. Non-interactive runs use
+the pinned `react-rsbuild` template by default and do not initialize Git,
+install dependencies, or build unless those actions are explicitly requested.
+
+The directory can be positional:
+
+```bash
+npx create-zephyr-apps@latest ./my-app --no-git
+```
+
+Or supplied with `--directory`:
+
+```bash
+npx create-zephyr-apps@latest --directory ./my-app --no-git
+```
+
+This complete example is also tested against the CLI parser:
+
+```bash
+create-zephyr-apps ./apps/example --template react-rsbuild --package-manager pnpm --no-git --install --build --json
+```
+
+`--build` implies `--install`. Install and build failures preserve the command's
+non-zero exit code.
+
+### Deterministic templates
+
+Each published CLI version pins both template repositories to exact commits.
+Use the release-compatible revision by default. To reproduce a different known
+revision, pass its full 40-character commit SHA:
+
+```bash
+npx create-zephyr-apps@latest ./my-app \
+  --template react-rsbuild \
+  --template-revision 881c3a83d2f1888720c3da72e9b7a055aae1e3c7 \
+  --no-git
+```
+
+List the template IDs and the pinned web-template revision with:
+
+```bash
+npx create-zephyr-apps@latest --list-templates
+npx create-zephyr-apps@latest --list-templates --json
+```
+
+The CLI rejects unknown template IDs and refuses to write into a non-empty
+directory.
+
+### Package manager and Git behavior
+
+Choose a package manager explicitly with `--package-manager pnpm`, `npm`,
+`yarn`, or `bun`. Otherwise, the CLI checks the copied template's
+`packageManager` field and lockfile, the invoking package-manager user agent,
+the current project, and finally falls back to pnpm.
+
+Git initialization and the initial commit only happen after an interactive
+confirmation or when `--git` is passed. Use `--no-git` to record that choice
+explicitly in scripts.
+
+### JSON output
+
+`--json` disables prompts and emits one JSON document. It includes:
+
+- The resolved output directory, project type, template repository, and exact
+  template commit.
+- The selected package manager and its version when installation is requested.
+- Created files, build artifacts, and resolved workspace/installed package
+  versions.
+- Every executed command with its stage, working directory, and exit code.
+- Structured failures. Failed install and build runs still emit JSON before
+  returning the underlying exit code.
+
+### CLI options
+
+```text
+Usage: create-zephyr-apps [directory] [options]
+
+--directory, -d <path>           Project directory (alternative to positional)
+--template, -t <id>              Web template ID (default: react-rsbuild)
+--project-type <type>            web or react-native (default: web)
+--package-manager <manager>      pnpm, npm, yarn, or bun
+--template-revision <commit>     Override the pinned template with a full SHA
+--git / --no-git                 Enable or disable Git initialization
+--install                        Install dependencies
+--build                          Install dependencies and run the build script
+--json                           Emit one machine-readable JSON result
+--yes, -y                        Use deterministic defaults without prompting
+--list-templates                 List available web template IDs
+--version, -v                    Print the CLI version
+--help, -h                       Show help
+```
+
 ## Available Templates
 
 ### Bundlers
@@ -86,6 +181,8 @@ npx create-zephyr-apps@latest
 ### Module Federation
 
 - **airbnb-clone** - Airbnb clone with React, TypeScript, and Module Federation
+- **angular-rsbuild** - Angular application with Module Federation using Rsbuild
+- **angular-vite-mf** - Angular application with Module Federation using Vite
 - **react-rsbuild** - React application with Module Federation using Rsbuild
 - **react-vite-rspack-webpack** - Federated React apps powered by Vite, Webpack, and Rspack
 - **react-webpack** - React application with Module Federation using Webpack

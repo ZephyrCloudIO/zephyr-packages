@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
-import type { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite' with {
+import type { Plugin, ResolvedConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
 import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
@@ -25,9 +25,7 @@ const mocks = rs.hoisted(() => ({
     build_failed: rs.fn(),
     start_new_build: rs.fn(async () => undefined),
     hasActiveBuild: true,
-    application_configuration: Promise.resolve<Record<string, unknown>>({
-      ADDRESS_MODE: 'hostname',
-    }),
+    application_configuration: Promise.resolve<Record<string, unknown>>({}),
   },
 }));
 
@@ -182,13 +180,6 @@ function buildAppHandler(plugin: Plugin) {
     .handler;
 }
 
-function configHook(plugin: Plugin) {
-  return plugin.config as (
-    config: UserConfig,
-    env: ConfigEnv
-  ) => UserConfig | null | Promise<UserConfig | null>;
-}
-
 function claimed(
   partialAssetMaps: Record<string, ZeBuildAssetsMap>,
   claimId = 'claim-id'
@@ -215,9 +206,7 @@ describe('vite-plugin-zephyr', () => {
       }
     );
     mocks.engine.federated_dependencies = [];
-    mocks.engine.application_configuration = Promise.resolve({
-      ADDRESS_MODE: 'hostname',
-    });
+    mocks.engine.application_configuration = Promise.resolve({});
     mocks.engine.hasActiveBuild = true;
     mocks.engine.start_new_build.mockImplementation(async () => {
       mocks.engine.hasActiveBuild = true;
@@ -607,79 +596,6 @@ describe('vite-plugin-zephyr', () => {
     );
   });
 
-  test('defaults unset build base locally without initializing the engine', async () => {
-    const plugin = withZephyr()[0] as Plugin;
-
-    expect(
-      await configHook(plugin)({}, {
-        command: 'build',
-        mode: 'production',
-      } as ConfigEnv)
-    ).toEqual({ base: './' });
-    expect(mocks.deferCreate).not.toHaveBeenCalled();
-  });
-
-  test('does not set a Vite base for locked tap-app output', async () => {
-    const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
-
-    expect(
-      await configHook(plugin)({}, {
-        command: 'build',
-        mode: 'production',
-      } as ConfigEnv)
-    ).toBeNull();
-    expect(mocks.deferCreate).not.toHaveBeenCalled();
-  });
-
-  test.each(['/docs/', './docs/', 'https://cdn.example.test/app/', '//cdn/app/'])(
-    'preserves an explicit Vite base: %s',
-    async (base) => {
-      const plugin = withZephyr()[0] as Plugin;
-
-      expect(
-        await configHook(plugin)({ base }, {
-          command: 'build',
-          mode: 'production',
-        } as ConfigEnv)
-      ).toBeNull();
-      expect(mocks.deferCreate).not.toHaveBeenCalled();
-    }
-  );
-
-  test('does not default base or initialize the engine while serving', async () => {
-    const plugin = withZephyr()[0] as Plugin;
-
-    expect(
-      await configHook(plugin)({}, {
-        command: 'serve',
-        mode: 'development',
-      } as ConfigEnv)
-    ).toBeNull();
-    expect(mocks.deferCreate).not.toHaveBeenCalled();
-  });
-
-  test('warns when an explicit origin-absolute base reaches a secondary path target', async () => {
-    mocks.engine.application_configuration = Promise.resolve({
-      ADDRESS_MODE: 'hostname',
-      ENVIRONMENTS: { preview: { addressMode: 'path' } },
-    });
-    const plugin = withZephyr()[0] as Plugin;
-    expect(
-      await configHook(plugin)({ base: '/docs/' }, {
-        command: 'build',
-        mode: 'production',
-      } as ConfigEnv)
-    ).toBeNull();
-
-    await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(
-      resolvedConfig({}, false, '/docs/')
-    );
-
-    expect(mocks.zeLogInit).toHaveBeenCalledWith(
-      expect.stringContaining("resolved Vite base '/docs/'")
-    );
-  });
-
   test('rejects entrypoints that escape the snapshot root', async () => {
     const plugin = withZephyr({ entrypoint: '../secret.js' })[0] as Plugin;
     await expect(
@@ -719,7 +635,7 @@ describe('vite-plugin-zephyr', () => {
     );
   });
 
-  test('propagates normalized Vite base to path-addressed snapshot assets', async () => {
+  test('propagates normalized Vite base to snapshot assets', async () => {
     const plugin = await configuredPlugin(
       { browser: { consumer: 'client', build: { outDir: 'dist/client' } } },
       false,

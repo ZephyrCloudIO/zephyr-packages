@@ -6,17 +6,13 @@ import {
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging';
-import type {
-  AddressMode,
-  EnvironmentConfig,
-} from '../node-persist/upload-provider-options';
+import type { EnvironmentConfig } from '../node-persist/upload-provider-options';
 import { makeRequest } from './http-request';
 
 const MAX_SNAPSHOT_TARGET_CONCURRENCY = 3;
 
 interface SnapshotTargetConfiguration {
   EDGE_URL: string;
-  ADDRESS_MODE?: AddressMode;
   ENVIRONMENTS?: Record<string, EnvironmentConfig>;
 }
 
@@ -29,17 +25,10 @@ function canonicalEdgeUrl(edgeUrl: string): string {
   return new URL(edgeUrl).toString();
 }
 
-function snapshotForTarget(
-  snapshot: Snapshot,
-  edgeUrl: string,
-  addressMode: AddressMode | undefined
-): Snapshot {
-  const sharedSnapshot = { ...snapshot };
-  delete sharedSnapshot.addressMode;
+function snapshotForTarget(snapshot: Snapshot, edgeUrl: string): Snapshot {
   return {
-    ...sharedSnapshot,
+    ...snapshot,
     domain: edgeUrl,
-    ...(addressMode === 'path' ? { addressMode: 'path' as const } : {}),
   };
 }
 
@@ -48,45 +37,27 @@ export function createSnapshotUploadTargets(
   snapshot: Snapshot,
   config: SnapshotTargetConfiguration
 ): SnapshotUploadTarget[] {
-  const targets = new Map<
-    string,
-    SnapshotUploadTarget & { effectiveAddressMode: AddressMode }
-  >();
+  const targets = new Map<string, SnapshotUploadTarget>();
 
-  const addTarget = (
-    edgeUrl: string,
-    addressMode: AddressMode | undefined,
-    label: string
-  ) => {
+  const addTarget = (edgeUrl: string) => {
     const canonicalUrl = canonicalEdgeUrl(edgeUrl);
-    const effectiveAddressMode = addressMode ?? 'hostname';
-    const existing = targets.get(canonicalUrl);
-    if (existing) {
-      if (existing.effectiveAddressMode !== effectiveAddressMode) {
-        throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
-          type: 'snapshot',
-          cause: new Error(
-            `Conflicting address modes configured for snapshot edge ${canonicalUrl} (${existing.effectiveAddressMode} and ${effectiveAddressMode}, including ${label}).`
-          ),
-        });
-      }
+    if (targets.has(canonicalUrl)) {
       return;
     }
 
     targets.set(canonicalUrl, {
       edgeUrl,
-      effectiveAddressMode,
-      snapshot: snapshotForTarget(snapshot, edgeUrl, addressMode),
+      snapshot: snapshotForTarget(snapshot, edgeUrl),
     });
   };
 
   // Keep the primary edge first; sort named environments so request order and duplicate
   // resolution do not depend on object insertion order from the API response.
-  addTarget(config.EDGE_URL, config.ADDRESS_MODE, 'the primary target');
-  for (const [environment, target] of Object.entries(config.ENVIRONMENTS ?? {}).sort(
+  addTarget(config.EDGE_URL);
+  for (const [, target] of Object.entries(config.ENVIRONMENTS ?? {}).sort(
     ([left], [right]) => left.localeCompare(right)
   )) {
-    addTarget(target.edgeUrl, target.addressMode, `environment "${environment}"`);
+    addTarget(target.edgeUrl);
   }
 
   return [...targets.values()].map(({ edgeUrl, snapshot: targetSnapshot }) => ({

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import * as path from 'node:path';
 import MagicString from 'magic-string';
-import type { ConfigEnv, Plugin, ResolvedConfig, UserConfig } from 'vite' with {
+import type { Plugin, ResolvedConfig, UserConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
 import {
@@ -16,7 +16,6 @@ import {
   normalizeBasePath,
   rewriteEnvReadsToVirtualModule,
   rollbackPartialAssetMapClaimBatch,
-  usesPathAddressing,
   zeBuildAssets,
   ze_log,
   zeBuildDashData,
@@ -54,10 +53,6 @@ import {
 
 const DEFAULT_LIBRARY_TYPE = 'module';
 const VITE_ENVIRONMENT_OUTPUT_PREFIX = 'vite-environment:';
-
-function isOriginAbsoluteBase(base: unknown): base is string {
-  return typeof base === 'string' && base.startsWith('/') && !base.startsWith('//');
-}
 
 export interface WithZephyrOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
@@ -403,20 +398,13 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
     enforce: 'pre',
 
-    config: (config: UserConfig, env: ConfigEnv) => {
+    config: (config: UserConfig) => {
       // If MF was configured separately, inject the Zephyr runtime plugin before MF emits.
       registerModuleFederationConfigs(
         extract_mf_plugins(config.plugins ?? []).map((plugin) => plugin._options)
       );
 
-      // Relative assets are valid for hostname deployments and required when any
-      // deployment target later selects path addressing. This hook must remain fully
-      // synchronous and local because Vite resolves `base` before configResolved.
-      return !preservesLockedArtifactPaths &&
-        env.command === 'build' &&
-        config.base == null
-        ? { base: './' }
-        : null;
+      return null;
     },
 
     configResolved: async (config: ResolvedConfig) => {
@@ -465,20 +453,6 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         context: root,
         target: options.target,
       });
-
-      try {
-        const zephyrEngine = await zephyr_engine_defer;
-        if (
-          usesPathAddressing(await zephyrEngine.application_configuration) &&
-          isOriginAbsoluteBase(config.base)
-        ) {
-          ze_log.init(
-            `The resolved Vite base '${config.base}' is still origin-absolute for a path-addressed target. A later config hook may have overridden Zephyr's relative base.`
-          );
-        }
-      } catch (error) {
-        handleGlobalError(error);
-      }
 
       resolve_vite_internal_options({
         root,

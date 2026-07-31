@@ -20,7 +20,6 @@ export {
 
 // global utilities
 export { getGlobal } from './lib/utils/get-global';
-export { usesPathAddressing } from './lib/utils/address-mode';
 export {
   readDirRecursive,
   readDirRecursiveWithContents,
@@ -94,13 +93,6 @@ export {
   resolveMfManifestPath,
   type MfManifestConfig,
 } from './lib/transformers/resolve-mf-manifest-path';
-export {
-  appendZephyrUrlPath,
-  getPathPreservingBaseUrl,
-  resolveZephyrSiblingUrl,
-  stripFederatedRemoteName,
-  ZEPHYR_MANIFEST_FILENAME,
-} from './lib/urls/zephyr-url';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
@@ -138,7 +130,7 @@ export {
 } from './zephyr-engine';
 export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
-export { assertZephyrBuildTarget } from 'zephyr-edge-contract';
+export { assertZephyrBuildTarget, ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
 export type {
   ZephyrBuildTarget,
   ZephyrLegacyModuleFederationConfig,

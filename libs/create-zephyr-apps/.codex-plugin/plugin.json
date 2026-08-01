@@ -8,7 +8,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Create Zephyr Apps",
-    "shortDescription": "Scaffold reproducible Zephyr app projects.",
+    "shortDescription": "Scaffold current Zephyr app projects.",
     "longDescription": "Package-owned Agent Skill for create-zephyr-apps.",
     "developerName": "ZephyrCloudIO",
     "category": "Developer Tools",

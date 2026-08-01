@@ -68,6 +68,13 @@ describe('published Agent Skill envelope', () => {
     expect(frontmatter).toContain('name: create-zephyr-apps');
     expect(frontmatter).toContain('description:');
     expect(frontmatter).not.toMatch(/^version:/mu);
+    expect(skill).toContain('create-zephyr-apps@latest');
+    expect(skill).not.toContain('@<exact-version>');
+    expect(skill).toContain('For web projects, pass `--template <id>`');
+    expect(skill).toContain(
+      'For React Native projects, pass `--project-type react-native`'
+    );
+    expect(skill).not.toContain('--template-revision');
     expect(packageManifest.intent).toEqual({
       version: 1,
       repo: 'ZephyrCloudIO/zephyr-packages',

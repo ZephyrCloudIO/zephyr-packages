@@ -24,7 +24,6 @@ const mocks = rs.hoisted(() => {
     extractFederatedDependencyPairs: rs.fn(),
     extractLibraryType: rs.fn(() => 'module'),
     mutWebpackFederatedRemotesConfig: rs.fn(),
-    mutPathModePublicPath: rs.fn(),
     makeCopyOfModuleFederationOptions: rs.fn(),
     coordinateXPackCompilers: rs.fn(),
   };
@@ -42,7 +41,6 @@ rs.mock('zephyr-xpack-internal', () => ({
   extractFederatedDependencyPairs: mocks.extractFederatedDependencyPairs,
   extractLibraryType: mocks.extractLibraryType,
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
-  mutPathModePublicPath: mocks.mutPathModePublicPath,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
   coordinateXPackCompilers: mocks.coordinateXPackCompilers,
 }));
@@ -101,7 +99,6 @@ describe('Webpack withZephyr compiler arrays', () => {
     expect(configs[0]?.plugins).toHaveLength(1);
     expect(configs[1]?.plugins).toHaveLength(1);
     expect(mocks.create).toHaveBeenCalledTimes(1);
-    expect(mocks.mutPathModePublicPath).toHaveBeenCalledTimes(2);
     expect(mocks.engine.federated_dependencies?.map(({ name }) => name)).toEqual([
       'client',
       'server',

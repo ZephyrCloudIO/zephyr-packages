@@ -10,7 +10,6 @@ function engine(baseHref: string, target: 'web' | 'tap-app' = 'web'): ZephyrEngi
       username: 'builder',
       email: 'builder@example.com',
       EDGE_URL: 'https://edge.example.com',
-      ADDRESS_MODE: 'path',
     }),
     applicationProperties: {
       org: 'org',

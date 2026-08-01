@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Create Zephyr Apps'
+  short_description: 'Scaffold reproducible Zephyr app projects'
+  default_prompt: 'Use $create-zephyr-apps to scaffold a Zephyr project non-interactively and verify its JSON receipt.'

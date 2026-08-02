@@ -13,7 +13,6 @@ import {
   extractLibraryType,
   coordinateXPackCompilers,
   makeCopyOfModuleFederationOptions,
-  mutPathModePublicPath,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 import type { ZephyrWebpackPluginOptions } from '../types';
@@ -127,8 +126,6 @@ async function _zephyr_configuration(
     );
 
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-    await mutPathModePublicPath(zephyr_engine, config);
-
     const mfConfig = makeCopyOfModuleFederationOptions(config);
 
     ze_log.mf(`with-zephyr.mfConfig: ${JSON.stringify(mfConfig, null, 2)}`);

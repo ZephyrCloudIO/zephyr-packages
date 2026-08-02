@@ -1,12 +1,8 @@
-// libs/api/builder-packages-api/src/lib/builder-packages-api.service.ts
-export type AddressMode = 'hostname' | 'path';
-
 export interface ZeApplicationConfig {
   application_uid: string;
   BUILD_ID_ENDPOINT: string;
   EDGE_URL: string;
   DELIMITER: string;
-  ADDRESS_MODE?: AddressMode;
   PLATFORM: UploadProviderType;
   ENVIRONMENTS?: Record<string, EnvironmentConfig>;
   fetched_at?: number;
@@ -37,6 +33,5 @@ export interface EnvironmentConfig {
   type: UploadProviderType;
   edgeUrl: string;
   delimiter: string;
-  addressMode?: AddressMode;
   remote_host: string;
 }

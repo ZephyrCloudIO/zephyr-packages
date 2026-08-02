@@ -12,7 +12,6 @@ import {
   extractLibraryType,
   coordinateXPackCompilers,
   makeCopyOfModuleFederationOptions,
-  mutPathModePublicPath,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
 import type { ZephyrRspackPluginOptions } from '../types';
@@ -132,8 +131,6 @@ async function _zephyr_configuration(
     );
 
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-    await mutPathModePublicPath(zephyr_engine, config);
-
     // inject the ZephyrRspackPlugin
     (config.plugins ??= []).push(
       new ZeRspackPlugin({

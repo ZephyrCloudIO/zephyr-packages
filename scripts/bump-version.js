@@ -78,8 +78,27 @@ function updatePackageVersion(packagePath, newVersion) {
   const oldVersion = packageJson.version;
   packageJson.version = newVersion;
   fs.writeFileSync(packagePath, JSON.stringify(packageJson, null, 2) + '\n');
+  updatePluginManifestVersions(path.dirname(packagePath), newVersion);
   console.log(`Updated ${packagePath}: ${oldVersion} → ${newVersion}`);
   return oldVersion;
+}
+
+/** Keeps package-owned host manifests aligned with the package release. */
+function updatePluginManifestVersions(packageDir, newVersion) {
+  const manifestPaths = [
+    '.codex-plugin/plugin.json',
+    '.claude-plugin/plugin.json',
+    '.cursor-plugin/plugin.json',
+  ];
+
+  manifestPaths.forEach((relativePath) => {
+    const manifestPath = path.join(packageDir, relativePath);
+    if (!fs.existsSync(manifestPath)) return;
+
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.version = newVersion;
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+  });
 }
 
 /** Gets all lib package.json paths */
@@ -210,4 +229,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { main, incrementVersion };
+module.exports = { main, incrementVersion, updatePackageVersion };

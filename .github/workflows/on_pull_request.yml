@@ -41,7 +41,7 @@ jobs:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
-          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+          ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         # Deployments are side effects, so affected application builds must never be
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
         # Loose mode preserves GitHub's detached-HEAD metadata and the OS home
@@ -88,7 +88,7 @@ jobs:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
-          ZE_SECRET_TOKEN: ${{ secrets.ZE_SECRET_TOKEN }}
+          ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only

@@ -47,7 +47,6 @@ import {
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
-import { warnPathModeAbsoluteUrls } from '../lib/utils/warn-path-mode-absolute-urls';
 import {
   type ZeResolvedDependency,
   resolve_remote_dependency,
@@ -636,8 +635,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       // already be canonical. Build an index before looking for the manifest so two
       // inputs can never silently publish to the same snapshot path.
       const assetsByPath = indexAssetsByCanonicalPath(assetsMap, target);
-
-      await warnPathModeAbsoluteUrls(zephyr_engine, assetsMap);
 
       // Bundler adapters emit this before package post-processors (including TAP's
       // content lock) run. Reuse those exact bytes: regenerating a timestamped manifest

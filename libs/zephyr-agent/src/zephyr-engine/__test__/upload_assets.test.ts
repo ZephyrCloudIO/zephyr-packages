@@ -34,7 +34,6 @@ function appConfig(): ZeApplicationConfig {
     BUILD_ID_ENDPOINT: '/build-id',
     EDGE_URL: 'https://edge.example.test',
     DELIMITER: '-',
-    ADDRESS_MODE: 'hostname',
     PLATFORM: UploadProviderType.CLOUDFLARE,
     email: 'developer@example.test',
     jwt: 'test-jwt',

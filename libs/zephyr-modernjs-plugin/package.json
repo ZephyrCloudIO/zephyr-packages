@@ -1,6 +1,6 @@
 {
   "name": "zephyr-modernjs-plugin",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Modernjs plugin for Zephyr",
   "license": "Apache-2.0",
   "author": {

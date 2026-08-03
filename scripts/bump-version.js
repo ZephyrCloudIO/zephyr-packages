@@ -95,9 +95,15 @@ function updatePluginManifestVersions(packageDir, newVersion) {
     const manifestPath = path.join(packageDir, relativePath);
     if (!fs.existsSync(manifestPath)) return;
 
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    manifest.version = newVersion;
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+    const contents = fs.readFileSync(manifestPath, 'utf8');
+    const manifest = JSON.parse(contents);
+    const versionPattern = /^(  "version"\s*:\s*)"[^"]*"/m;
+
+    if (typeof manifest.version !== 'string' || !versionPattern.test(contents)) {
+      throw new Error(`Missing version in plugin manifest: ${manifestPath}`);
+    }
+
+    fs.writeFileSync(manifestPath, contents.replace(versionPattern, `$1"${newVersion}"`));
   });
 }
 

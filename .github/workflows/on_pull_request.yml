@@ -53,8 +53,8 @@ jobs:
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
       - name: Zephyr Preview Environments
         if: github.event_name == 'pull_request'
-        # Pinned to the verified 2026-07-08 release commit.
-        uses: ZephyrCloudIO/zephyr-preview-environment-action@a1b8399f877374d0cfc7f9badff1374c55cf070a
+        # Pinned to the v1.0.0 release commit.
+        uses: ZephyrCloudIO/zephyr-preview-environment-action@05822254ff8661c4e68f9dd12b83db7815ca2cf8 # v1.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 

@@ -1,17 +1,21 @@
 name: CI
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches:
       - main
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Label-triggered runs must not cancel or replace the required checks for the
+  # same commit. Their jobs use separate check names below for the same reason.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'labeled' && format('label-{0}', github.event.label.name) || 'ci' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   ZE_FAIL_BUILD: true
+  ZE_FORCE_ALL_EXAMPLES: ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') }}
   TURBO_TELEMETRY_DISABLED: 1
   # Compare PRs with their base and main pushes with the previous main revision.
   # The fallback supports manual runs.
@@ -22,7 +26,8 @@ permissions:
 
 jobs:
   build:
-    name: End-to-end test of examples (ubuntu-latest)
+    name: ${{ github.event.action == 'labeled' && 'Force example previews (ubuntu-latest)' || 'End-to-end test of examples (ubuntu-latest)' }}
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds'
     runs-on: depot-ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -36,7 +41,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-key-suffix: e2e
-      - name: run build affected
+      - name: run example builds
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
@@ -46,7 +51,10 @@ jobs:
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
         # Loose mode preserves GitHub's detached-HEAD metadata and the OS home
         # directory used by the authenticated Zephyr deployment store.
-        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=errors-only
+        run: >-
+          pnpm exec turbo run build
+          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/*' || '--affected' }}
+          --force --env-mode=loose --output-logs=errors-only
       - name: run deployment e2e tests
         # Keep deployment records in-process. Persisted Zephyr state can include
         # credentials and must never be uploaded as a workflow artifact.
@@ -59,7 +67,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
-    name: End-to-end test of examples (windows-latest)
+    name: ${{ github.event.action == 'labeled' && 'Force example previews (windows-latest)' || 'End-to-end test of examples (windows-latest)' }}
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds'
     # Modern.js/Rspack currently aborts with 0xC0000409 on Depot's Windows
     # Server 2025 image (`depot-windows-latest`). Pin the supported 2022 image.
     runs-on: depot-windows-2022
@@ -83,17 +92,22 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-key-suffix: e2e
-      - name: run build affected
+      - name: run example builds
         env:
           ZE_IS_PREVIEW: true
           ZE_API: ${{ vars.ZE_API_DEV }}
           ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
-        run: pnpm exec turbo run build --affected --force --env-mode=loose --output-logs=new-only
+        run: >-
+          pnpm exec turbo run build
+          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/*' || '--affected' }}
+          --force --env-mode=loose --output-logs=new-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 
   lint:
+    name: ${{ github.event.action == 'labeled' && 'Force example previews (lint skipped)' || 'lint' }}
+    if: github.event.action != 'labeled'
     runs-on: depot-ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -111,6 +125,8 @@ jobs:
         run: pnpm typecheck
 
   test:
+    name: ${{ github.event.action == 'labeled' && format('Force example previews (test skipped, {0})', matrix.os) || format('test ({0})', matrix.os) }}
+    if: github.event.action != 'labeled'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:

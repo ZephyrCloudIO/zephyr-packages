@@ -44,8 +44,7 @@ jobs:
       - name: run example builds
         env:
           ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API_DEV }}
-          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          # ZE_API and ZE_API_GATE intentionally use the production defaults.
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         # Deployments are side effects, so affected application builds must never be
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
@@ -53,7 +52,7 @@ jobs:
         # directory used by the authenticated Zephyr deployment store.
         run: >-
           pnpm exec turbo run build
-          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/*' || '--affected' }}
+          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/**' || '--affected' }}
           --force --env-mode=loose --output-logs=errors-only
       - name: run deployment e2e tests
         # Keep deployment records in-process. Persisted Zephyr state can include
@@ -95,12 +94,11 @@ jobs:
       - name: run example builds
         env:
           ZE_IS_PREVIEW: true
-          ZE_API: ${{ vars.ZE_API_DEV }}
-          ZE_API_GATE: ${{ vars.ZE_API_GATE_DEV }}
+          # ZE_API and ZE_API_GATE intentionally use the production defaults.
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         run: >-
           pnpm exec turbo run build
-          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/*' || '--affected' }}
+          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/**' || '--affected' }}
           --force --env-mode=loose --output-logs=new-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only

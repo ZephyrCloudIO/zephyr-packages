@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 export function getTurboPackageSelector(forceAllExamples: boolean): string[] {
-  return forceAllExamples ? ['--filter=./examples/*'] : ['--affected'];
+  return forceAllExamples ? ['--filter=./examples/**'] : ['--affected'];
 }
 
 export function getRepositoryRoot(testSourceDirectory: string): string {

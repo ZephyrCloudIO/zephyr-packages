@@ -8,7 +8,7 @@ import {
 
 describe('getTurboPackageSelector', () => {
   it('selects all examples when explicitly forced', () => {
-    expect(getTurboPackageSelector(true)).toEqual(['--filter=./examples/*']);
+    expect(getTurboPackageSelector(true)).toEqual(['--filter=./examples/**']);
   });
 
   it('selects only affected packages by default', () => {

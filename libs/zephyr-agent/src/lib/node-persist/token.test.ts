@@ -75,6 +75,24 @@ describe('getToken', () => {
     });
   });
 
+  it('does not persist CI-derived access tokens in shared storage', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue({
+      provider: 'github',
+      email: '12345+octocat@users.noreply.github.com',
+      emails: ['12345+octocat@users.noreply.github.com'],
+      issuer: 'https://github.com',
+      providerSubject: '12345',
+      username: 'octocat',
+      source: 'noreply',
+    });
+    mockMakeRequest.mockResolvedValue([true, null, { access_token: 'ci-access-token' }]);
+    const { setPrivateItem } = await import('./storage');
+
+    await expect(getToken()).resolves.toBe('ci-access-token');
+
+    expect(setPrivateItem).not.toHaveBeenCalled();
+  });
+
   it('persists browser access tokens through the private storage writer', async () => {
     const { setPrivateItem } = await import('./storage');
 

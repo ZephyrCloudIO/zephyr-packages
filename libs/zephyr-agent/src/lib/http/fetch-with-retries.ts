@@ -220,6 +220,15 @@ function normalizeRequestError(error: unknown, url: URL, method: string): Error 
     });
   }
 
+  if (candidate.code === 'ENOTFOUND') {
+    return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+      status: -1,
+      url: redactUrl(url),
+      content: `DNS lookup failed for hostname "${redactString(url.hostname)}" (ENOTFOUND). Verify the hostname's DNS record.`,
+      method,
+    });
+  }
+
   if (isRetryableNetworkError(error) || candidate.code === 'ERR_CANCELED') {
     return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
       status: -1,

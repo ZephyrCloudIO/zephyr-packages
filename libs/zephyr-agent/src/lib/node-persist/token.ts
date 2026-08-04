@@ -125,7 +125,8 @@ async function getTokenFromCiToken(
     throwCiTokenAuthError(identity, cause);
   }
 
-  await saveToken(data?.access_token ?? '');
+  // Concurrent CI builds share ~/.zephyr; persisting this derived token races them all
+  // on one node-persist key, while ZE_CI_TOKEN takes precedence on every subsequent read.
   return data?.access_token;
 }
 

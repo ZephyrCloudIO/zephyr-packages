@@ -1,0 +1,61 @@
+import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+
+const mocks = rs.hoisted(() => ({
+  close: rs.fn(),
+  ensurePrivateFilePermissions: rs.fn(),
+  lock: rs.fn(),
+  mkdir: rs.fn(),
+  open: rs.fn(),
+  release: rs.fn(),
+}));
+
+rs.mock('node:fs/promises', () => ({
+  mkdir: mocks.mkdir,
+  open: mocks.open,
+}));
+rs.mock('proper-lockfile', () => ({ lock: mocks.lock }));
+rs.mock('./storage', () => ({ storage: Promise.resolve() }));
+rs.mock('./storage-keys', () => ({
+  ensurePrivateFilePermissions: mocks.ensurePrivateFilePermissions,
+  ZE_LOCKS_PATH: '/private/locks',
+}));
+
+import { withStorageLock } from './storage-lock';
+
+describe('withStorageLock', () => {
+  beforeEach(() => {
+    rs.resetAllMocks();
+    mocks.open.mockResolvedValue({ close: mocks.close });
+    mocks.lock.mockResolvedValue(mocks.release);
+  });
+
+  it('uses a private retrying inter-process lock and releases it', async () => {
+    await expect(withStorageLock('auth-token', async () => 'value')).resolves.toBe(
+      'value'
+    );
+
+    expect(mocks.mkdir).toHaveBeenCalledWith('/private/locks', {
+      recursive: true,
+      mode: 0o700,
+    });
+    expect(mocks.open).toHaveBeenCalledWith('/private/locks/auth-token', 'a', 0o600);
+    expect(mocks.ensurePrivateFilePermissions).toHaveBeenCalledWith(
+      '/private/locks/auth-token'
+    );
+    expect(mocks.lock).toHaveBeenCalledWith(
+      '/private/locks/auth-token',
+      expect.objectContaining({ realpath: false, retries: expect.any(Object) })
+    );
+    expect(mocks.release).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases the lock when the protected operation fails', async () => {
+    await expect(
+      withStorageLock('auth-token', async () => {
+        throw new Error('write failed');
+      })
+    ).rejects.toThrow('write failed');
+
+    expect(mocks.release).toHaveBeenCalledTimes(1);
+  });
+});

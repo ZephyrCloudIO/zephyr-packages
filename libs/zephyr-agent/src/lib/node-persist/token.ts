@@ -1,7 +1,10 @@
+import { createHash } from 'node:crypto';
+import * as jose from 'jose';
 import nodePersist from 'node-persist';
 import { getSecretToken } from './secret-token';
 import { setPrivateItem, storage } from './storage';
 import { StorageKeys } from './storage-keys';
+import { withStorageLock } from './storage-lock';
 import { makeRequest } from '../http/http-request';
 import { getCiToken } from './ci-token';
 import { getServerToken } from './server-token';
@@ -11,9 +14,22 @@ import { ze_log } from '../logging/debug';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
 import { type CiTokenIdentity, inferCiTokenIdentity } from './ci-token-identity';
 import { ZeErrors, ZephyrError } from '../errors';
+import { TOKEN_EXPIRY } from '../auth/auth-flags';
+
+const CI_TOKEN_CACHE_VERSION = 1;
+const CI_TOKEN_SCOPE_CONTEXT = 'zephyr-ci-token-cache\0';
+const activeCiTokenCacheKeys = new Set<string>();
+
+interface StoredCiAccessToken {
+  version: typeof CI_TOKEN_CACHE_VERSION;
+  scope: string;
+  accessToken: string;
+}
 
 export async function saveToken(token: string): Promise<void> {
-  await setPrivateItem(StorageKeys.ze_auth_token, token);
+  await withStorageLock('auth-token', () =>
+    setPrivateItem(StorageKeys.ze_auth_token, token)
+  );
 }
 
 export async function getToken(git_config?: ZeGitInfo): Promise<string | undefined> {
@@ -47,8 +63,10 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
     return await getTokenFromServerToken(server_token, git_config.git.email);
   }
 
-  await storage;
-  const token = await nodePersist.getItem(StorageKeys.ze_auth_token);
+  const token = await withStorageLock('auth-token', async () => {
+    await storage;
+    return nodePersist.getItem(StorageKeys.ze_auth_token);
+  });
   if (token) {
     return token;
   }
@@ -61,14 +79,36 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
   return undefined;
 }
 
-export async function removeToken(): Promise<void> {
-  await storage;
-  await nodePersist.removeItem(StorageKeys.ze_auth_token);
+export async function removeToken(expectedToken?: string): Promise<void> {
+  await withStorageLock('auth-token', async () => {
+    await storage;
+    const storedToken: unknown = await nodePersist.getItem(StorageKeys.ze_auth_token);
+    if (expectedToken === undefined || storedToken === expectedToken) {
+      await nodePersist.removeItem(StorageKeys.ze_auth_token);
+    }
+  });
 }
 
-export async function cleanTokens(): Promise<void> {
-  await storage;
-  await nodePersist.clear();
+export async function cleanTokens(rejectedToken?: string): Promise<void> {
+  await removeToken(rejectedToken);
+  const cacheKeys = Array.from(activeCiTokenCacheKeys);
+  await Promise.all(
+    cacheKeys.map((cacheKey) =>
+      withStorageLock(getCiTokenLockName(cacheKey), async () => {
+        await storage;
+        const cached: unknown = await nodePersist.getItem(cacheKey);
+        if (
+          rejectedToken === undefined ||
+          (isStoredCiAccessToken(cached) && cached.accessToken === rejectedToken)
+        ) {
+          await nodePersist.removeItem(cacheKey);
+        }
+      })
+    )
+  );
+  for (const cacheKey of cacheKeys) {
+    activeCiTokenCacheKeys.delete(cacheKey);
+  }
 }
 
 async function getTokenFromServerToken(
@@ -105,29 +145,109 @@ async function getTokenFromCiToken(
   ci_token: string,
   identity: CiTokenIdentity
 ): Promise<string | undefined> {
-  const [ok, cause, data] = await makeRequest<{ access_token: string }>(
-    {
-      path: ze_api_gateway.ci_token_exchange,
-      base: ZE_API_ENDPOINT(),
-      query: {},
-    },
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${ci_token}`,
-        'Content-Type': 'application/json',
+  const scope = getCiTokenScope(ci_token, identity);
+  const cacheKey = `${StorageKeys.ze_ci_auth_token}:${scope}`;
+  activeCiTokenCacheKeys.add(cacheKey);
+
+  return withStorageLock(getCiTokenLockName(cacheKey), async () => {
+    await storage;
+    const cached: unknown = await nodePersist.getItem(cacheKey);
+    if (isReusableCiAccessToken(cached, scope)) {
+      return cached.accessToken;
+    }
+
+    const [ok, cause, data] = await makeRequest<{ access_token: string }>(
+      {
+        path: ze_api_gateway.ci_token_exchange,
+        base: ZE_API_ENDPOINT(),
+        query: {},
       },
-    },
-    JSON.stringify(identity)
-  );
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${ci_token}`,
+          'Content-Type': 'application/json',
+        },
+        skipTokenCleanup: true,
+      },
+      JSON.stringify(identity)
+    );
 
-  if (!ok) {
-    throwCiTokenAuthError(identity, cause);
+    if (!ok) {
+      await nodePersist.removeItem(cacheKey);
+      throwCiTokenAuthError(identity, cause);
+    }
+
+    const accessToken = data?.access_token;
+    const expiresIn = accessToken ? getTokenExpirationMs(accessToken) - Date.now() : 0;
+    if (!accessToken || expiresIn <= TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC * 1000) {
+      await nodePersist.removeItem(cacheKey);
+      throwCiTokenAuthError(
+        identity,
+        new Error('CI token exchange returned an invalid or expiring access token')
+      );
+    }
+
+    await setPrivateItem(
+      cacheKey,
+      { version: CI_TOKEN_CACHE_VERSION, scope, accessToken },
+      { ttl: expiresIn }
+    );
+    return accessToken;
+  });
+}
+
+function getCiTokenScope(ciToken: string, identity: CiTokenIdentity): string {
+  const identityScope = [
+    identity.provider,
+    identity.source,
+    identity.issuer ?? '',
+    identity.providerSubject ?? '',
+    identity.username ?? '',
+    identity.email ?? '',
+    [...(identity.emails ?? [])].sort(),
+  ];
+  return createHash('sha256')
+    .update(CI_TOKEN_SCOPE_CONTEXT)
+    .update(ciToken)
+    .update('\0')
+    .update(JSON.stringify(identityScope))
+    .digest('hex');
+}
+
+function getCiTokenLockName(cacheKey: string): string {
+  return `ci-auth-${cacheKey.substring(cacheKey.lastIndexOf(':') + 1)}`;
+}
+
+function getTokenExpirationMs(token: string): number {
+  try {
+    const expiration = jose.decodeJwt(token).exp;
+    return typeof expiration === 'number' ? expiration * 1000 : 0;
+  } catch {
+    return 0;
   }
+}
 
-  // Concurrent CI builds share ~/.zephyr; persisting this derived token races them all
-  // on one node-persist key, while ZE_CI_TOKEN takes precedence on every subsequent read.
-  return data?.access_token;
+function isReusableCiAccessToken(
+  value: unknown,
+  scope: string
+): value is StoredCiAccessToken {
+  return Boolean(
+    isStoredCiAccessToken(value) &&
+    (value as Partial<StoredCiAccessToken>).scope === scope &&
+    getTokenExpirationMs((value as StoredCiAccessToken).accessToken) >
+      Date.now() + TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC * 1000
+  );
+}
+
+function isStoredCiAccessToken(value: unknown): value is StoredCiAccessToken {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    (value as Partial<StoredCiAccessToken>).version === CI_TOKEN_CACHE_VERSION &&
+    typeof (value as Partial<StoredCiAccessToken>).scope === 'string' &&
+    typeof (value as Partial<StoredCiAccessToken>).accessToken === 'string'
+  );
 }
 
 function throwCiTokenAuthError(

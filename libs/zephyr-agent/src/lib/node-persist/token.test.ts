@@ -124,6 +124,32 @@ describe('getToken', () => {
     expect(mockMakeRequest).not.toHaveBeenCalled();
   });
 
+  it('exchanges a new CI access token when the API gateway changes', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(githubIdentity);
+    mockMakeRequest
+      .mockResolvedValueOnce([true, null, { access_token: 'dev-token' }])
+      .mockResolvedValueOnce([true, null, { access_token: 'prod-token' }]);
+    const { getItem } = await import('node-persist');
+    const { setPrivateItem } = await import('./storage');
+    const persisted = new Map<string, unknown>();
+    (getItem as Mock<typeof getItem>).mockImplementation(async (key) =>
+      persisted.get(String(key))
+    );
+    (setPrivateItem as Mock<typeof setPrivateItem>).mockImplementation(
+      async (key, value) => {
+        persisted.set(key, value);
+      }
+    );
+
+    process.env['ZE_API_GATE'] = 'https://dev-api.example';
+    await expect(getToken()).resolves.toBe('dev-token');
+    process.env['ZE_API_GATE'] = 'https://prod-api.example';
+    await expect(getToken()).resolves.toBe('prod-token');
+
+    expect(mockMakeRequest).toHaveBeenCalledTimes(2);
+    expect([...persisted.keys()]).toHaveLength(2);
+  });
+
   it('serializes concurrent callers so only one exchanges the CI token', async () => {
     mockInferCiTokenIdentity.mockResolvedValue(githubIdentity);
     let persisted: unknown;
@@ -273,5 +299,25 @@ describe('getToken', () => {
     await cleanTokens('old-token');
 
     expect(removeItem).not.toHaveBeenCalled();
+  });
+
+  it('retains CI cache tracking when a delayed 401 preserves a newer token', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(githubIdentity);
+    mockMakeRequest.mockResolvedValue([true, null, { access_token: 'new-token' }]);
+    const { getItem, removeItem } = await import('node-persist');
+    const { setPrivateItem } = await import('./storage');
+
+    await getToken();
+    const [cacheKey, cachedValue] = (setPrivateItem as Mock<typeof setPrivateItem>).mock
+      .calls[0];
+    (getItem as Mock<typeof getItem>).mockImplementation(async (key) =>
+      key === cacheKey ? cachedValue : undefined
+    );
+    (removeItem as Mock<typeof removeItem>).mockClear();
+
+    await cleanTokens('old-token');
+    await cleanTokens('new-token');
+
+    expect(removeItem).toHaveBeenCalledWith(cacheKey);
   });
 });

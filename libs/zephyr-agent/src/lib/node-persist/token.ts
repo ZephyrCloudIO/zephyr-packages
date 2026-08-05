@@ -106,9 +106,6 @@ export async function cleanTokens(rejectedToken?: string): Promise<void> {
       })
     )
   );
-  for (const cacheKey of cacheKeys) {
-    activeCiTokenCacheKeys.delete(cacheKey);
-  }
 }
 
 async function getTokenFromServerToken(
@@ -199,6 +196,7 @@ async function getTokenFromCiToken(
 
 function getCiTokenScope(ciToken: string, identity: CiTokenIdentity): string {
   const identityScope = [
+    ZE_API_ENDPOINT(),
     identity.provider,
     identity.source,
     identity.issuer ?? '',

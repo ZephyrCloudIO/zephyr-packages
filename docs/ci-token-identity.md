@@ -51,7 +51,8 @@ must infer the CI actor and exchange the credential for a short-lived access tok
 Large monorepo builds run many plugin processes against the same `~/.zephyr` directory. CI access-token resolution uses
 an identity-scoped, cross-process single-flight cache so those processes do not all exchange and write the same token:
 
-1. Hash the CI token together with the normalized provider identity. The raw CI token is never written to disk.
+1. Hash the CI token together with the API gateway and normalized provider identity. The raw CI token is never written to
+   disk.
 2. Acquire the matching lock under `~/.zephyr/locks` using `proper-lockfile` with retries and stale-lock recovery.
 3. Re-read `ze-ci-auth-token:<scope>` from `~/.zephyr/storage` after acquiring the lock.
 4. Reuse the access token only when the record has the expected version and scope and its JWT remains valid beyond the
@@ -59,13 +60,13 @@ an identity-scoped, cross-process single-flight cache so those processes do not 
 5. On a miss, perform the exchange while holding the lock, persist the derived access token with its JWT lifetime as the
    storage TTL, and release the lock. Waiting processes then observe the persisted token instead of exchanging again.
 
-Different CI credentials or actors use different cache keys and locks. Browser/server access tokens continue to use the
-`ze-auth-token` record and a separate `auth-token` lock. All credential-bearing storage and lock targets are owner-only on
-POSIX systems.
+Different API gateways, CI credentials, or actors use different cache keys and locks. Browser/server access tokens
+continue to use the `ze-auth-token` record and a separate `auth-token` lock. All credential-bearing storage and lock
+targets are owner-only on POSIX systems.
 
 Authentication cleanup is scoped to authentication records. It must not call `nodePersist.clear()`, because the shared
 store also contains application configuration and deployment results produced by concurrent builds. CI exchange requests
 also skip generic 401 cleanup while holding the cache lock to avoid recursively acquiring the same lock; a rejected
 exchange removes its scoped cache record before surfacing the terminal CI-token error. Other 401 responses use
 compare-and-delete semantics so a delayed response for an older credential cannot remove a newer token written by another
-process.
+process. A process retains the scoped keys it has used so a later 401 for that newer token can still invalidate it.

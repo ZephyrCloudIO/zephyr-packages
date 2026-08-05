@@ -42,7 +42,7 @@ for (const appName of testTargets) {
     beforeAll(async () => {
       appUidsPromise ??= getAllDeployedApps();
       const appUids = await appUidsPromise;
-      const appUid = appUids.find((uid) => uid.startsWith(replacer(appName)));
+      const appUid = appUids.find((uid) => uid.startsWith(`${replacer(appName)}.`));
       if (!appUid) {
         throw new Error(`Application ${appName} was not found on deployed apps.`);
       }

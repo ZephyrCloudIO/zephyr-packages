@@ -1,4 +1,3 @@
-import * as jose from 'jose';
 import type openBrowser from 'open';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,6 +15,7 @@ import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
 import { TOKEN_EXPIRY } from './auth-flags';
+import { isTokenStillValid } from './token-expiry';
 import { getCiToken } from '../node-persist/ci-token';
 import { getServerToken } from '../node-persist/server-token';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
@@ -131,29 +131,9 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
 }
 
-/**
- * Decides whether the token is still valid based on its expiration time.
- *
- * @param token The token to check.
- * @param gap In seconds
- * @returns Boolean indicating if the token is still valid.
- */
-export function isTokenStillValid(token: string, gap = 0): boolean {
-  // Attempts to decode the token
-  try {
-    const decodedToken = jose.decodeJwt(token);
-
-    if (decodedToken.exp) {
-      return new Date(decodedToken.exp * 1000) > new Date(Date.now() + gap * 1000);
-    }
-
-    // No expiration date found, invalid token.
-    return false;
-  } catch {
-    // If the token is invalid, return false.
-    return false;
-  }
-}
+// Re-exported from its own module so credential storage can share one JWT-expiry
+// implementation without importing this interactive flow.
+export { isTokenStillValid } from './token-expiry';
 
 /** Prompts the user to choose an authentication action */
 async function promptForAuthAction(

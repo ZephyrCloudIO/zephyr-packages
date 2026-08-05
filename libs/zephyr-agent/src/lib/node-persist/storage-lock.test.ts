@@ -59,4 +59,52 @@ describe('withStorageLock', () => {
 
     expect(mocks.release).toHaveBeenCalledTimes(1);
   });
+
+  it('applies caller-supplied stale and retry budgets', async () => {
+    const retries = { retries: 8, factor: 1.5, minTimeout: 25, maxTimeout: 500 };
+
+    await withStorageLock('partial-assets-abc', async () => undefined, {
+      retries,
+      staleMs: 30_000,
+    });
+
+    expect(mocks.lock).toHaveBeenCalledWith(
+      join('/private/locks', 'partial-assets-abc'),
+      {
+        realpath: false,
+        retries,
+        stale: 30_000,
+      }
+    );
+  });
+
+  it('surfaces acquisition failures by default', async () => {
+    mocks.lock.mockRejectedValue(new Error('Lock file is already being held'));
+    const action = rs.fn(async () => 'value');
+
+    await expect(withStorageLock('auth-token', action)).rejects.toThrow(
+      'Lock file is already being held'
+    );
+    expect(action).not.toHaveBeenCalled();
+  });
+
+  it('runs the action unlocked when the caller opts out of failing on contention', async () => {
+    mocks.lock.mockRejectedValue(new Error('Lock file is already being held'));
+
+    await expect(
+      withStorageLock('auth-token', async () => 'value', { whenUnavailable: 'proceed' })
+    ).resolves.toBe('value');
+    expect(mocks.release).not.toHaveBeenCalled();
+  });
+
+  it('runs the action unlocked when the locks directory is unusable', async () => {
+    mocks.mkdir.mockRejectedValue(
+      Object.assign(new Error('permission denied'), { code: 'EACCES' })
+    );
+
+    await expect(
+      withStorageLock('auth-token', async () => 'value', { whenUnavailable: 'proceed' })
+    ).resolves.toBe('value');
+    expect(mocks.lock).not.toHaveBeenCalled();
+  });
 });

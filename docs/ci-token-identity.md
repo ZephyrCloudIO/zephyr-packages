@@ -64,9 +64,22 @@ Different API gateways, CI credentials, or actors use different cache keys and l
 continue to use the `ze-auth-token` record and a separate `auth-token` lock. All credential-bearing storage and lock
 targets are owner-only on POSIX systems.
 
+Token coordination is an optimization, not an invariant. Without a lock, processes repeat an exchange or race a
+single-key write, which is the behavior that predates the lock. Every token lock therefore runs with
+`whenUnavailable: 'proceed'`: an exhausted retry budget or an unusable `~/.zephyr/locks` directory logs under
+`ze_log.misc` and continues unlocked instead of failing the build. Callers guarding multi-step state, such as the atomic
+partial-asset store, keep the default `whenUnavailable: 'throw'` and pass a shorter retry budget. Both share
+`withStorageLock` so there is one implementation of the private lock anchor, stale-lock recovery, and release path.
+
 Authentication cleanup is scoped to authentication records. It must not call `nodePersist.clear()`, because the shared
-store also contains application configuration and deployment results produced by concurrent builds. CI exchange requests
-also skip generic 401 cleanup while holding the cache lock to avoid recursively acquiring the same lock; a rejected
-exchange removes its scoped cache record before surfacing the terminal CI-token error. Other 401 responses use
+store also contains application configuration and deployment results produced by concurrent builds. Authenticated
+requests declare the credential they used through `HttpRequestOptions.credentialToken`, so a 401 invalidates only that
+credential rather than whatever the `Authorization` header happened to contain. CI exchange requests additionally skip
+generic 401 cleanup while holding the cache lock to avoid recursively acquiring the same lock; a rejected exchange
+removes its scoped cache record before surfacing the terminal CI-token error. Other 401 responses use
 compare-and-delete semantics so a delayed response for an older credential cannot remove a newer token written by another
 process. A process retains the scoped keys it has used so a later 401 for that newer token can still invalidate it.
+
+A single JWT-expiry implementation lives in `lib/auth/token-expiry.ts` and is shared by the login flow, application
+configuration reuse, and the CI access-token cache. `login.ts` re-exports `isTokenStillValid` so credential storage can
+use it without importing the interactive login flow, which itself depends on token storage.

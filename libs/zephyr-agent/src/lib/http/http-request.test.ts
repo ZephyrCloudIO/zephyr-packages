@@ -110,11 +110,27 @@ describe('Pure HTTP Request Functions', () => {
       const url = new URL('https://api.example.com/endpoint');
       const [ok, error] = await makeHttpRequest(url, {
         headers: { Authorization: 'Bearer rejected-token' },
+        credentialToken: 'rejected-token',
       });
 
       expect(ok).toBe(false);
       expect(error).toBeInstanceOf(Error);
       expect(mockCleanTokens).toHaveBeenCalledWith('rejected-token');
+    });
+
+    it('does not forward the declared credential as a fetch option', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 200,
+        text: async () => '{}',
+        ok: true,
+      } as Response);
+
+      const url = new URL('https://api.example.com/endpoint');
+      await makeHttpRequest(url, { credentialToken: 'secret-token' });
+
+      const [, requestInit] = mockFetchWithRetries.mock.calls[0];
+      expect(requestInit).not.toHaveProperty('credentialToken');
+      expect(requestInit).not.toHaveProperty('skipTokenCleanup');
     });
 
     it('does not recursively clean tokens when a credential refresh gets a 401', async () => {

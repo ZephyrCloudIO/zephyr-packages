@@ -16,6 +16,13 @@ export type HttpResponse<T> =
   | [ok: false, error: Error];
 
 export interface HttpRequestOptions extends RequestInit {
+  /**
+   * The credential this request authenticates with. A 401 invalidates only this
+   * credential, so a delayed response cannot remove a newer token persisted by another
+   * process. Authenticated callers should always set it alongside the `Authorization`
+   * header; omitting it falls back to invalidating all stored authentication.
+   */
+  credentialToken?: string;
   /** Internal requests which are themselves refreshing credentials must not recurse. */
   skipTokenCleanup?: boolean;
 }
@@ -40,13 +47,6 @@ function applyApiHost(url: URL): URL {
   }
 
   return url;
-}
-
-function getBearerToken(headers: HeadersInit | undefined): string | undefined {
-  if (!headers) return undefined;
-  const value = new Headers(headers).get('authorization');
-  const match = value?.match(/^Bearer\s+(.+)$/i);
-  return match?.[1];
 }
 
 /** Parses the URL string into a URL object */
@@ -89,7 +89,7 @@ export async function makeHttpRequest<T = void>(
   data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const startTime = Date.now();
-  const { skipTokenCleanup = false, ...requestOptions } = options;
+  const { credentialToken, skipTokenCleanup = false, ...requestOptions } = options;
 
   try {
     const response = await fetchWithRetries(url, {
@@ -101,7 +101,7 @@ export async function makeHttpRequest<T = void>(
 
     if (response.status === 401 && !skipTokenCleanup) {
       // Clean the tokens and throw an error
-      await cleanTokens(getBearerToken(requestOptions.headers));
+      await cleanTokens(credentialToken);
       throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
         message: 'Unauthenticated request',
       });

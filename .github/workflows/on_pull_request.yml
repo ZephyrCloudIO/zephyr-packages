@@ -48,10 +48,8 @@ jobs:
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         # Deployments are side effects, so affected application builds must never be
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
-        # Builds run concurrently in both modes. Each deployment record is a separate
-        # per-application key in the local store, so concurrent builds do not contend;
-        # cross-build record loss came from unscoped 401 token cleanup, now fixed in
-        # the agent.
+        # Linux runs every example concurrently; only the Windows job needs a
+        # concurrency cap (see build-windows).
         # Loose mode preserves GitHub's detached-HEAD metadata and the OS home
         # directory used by the authenticated Zephyr deployment store.
         run: >-
@@ -100,9 +98,15 @@ jobs:
           ZE_IS_PREVIEW: true
           # ZE_API and ZE_API_GATE intentionally use the production defaults.
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
+        # Forced runs serialize because building every example concurrently exhausts
+        # Windows session resources: bundler tasks abort with 0xC0000142
+        # (STATUS_DLL_INIT_FAILED) and concurrent `git` spawns fail, which the agent
+        # reports as "Not a git repository". Serializing costs ~45s here (3m00s versus
+        # Linux's 2m16s at full concurrency), so the cap is close to free. A cap above 1
+        # is untested; do not raise it without a green forced Windows run.
         run: >-
           pnpm exec turbo run build
-          ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/**' || '--affected' }}
+          ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/** --concurrency=1' || '--affected' }}
           --force --env-mode=loose --output-logs=new-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only

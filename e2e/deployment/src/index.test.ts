@@ -1,11 +1,15 @@
 import { beforeAll, describe, expect, it } from '@rstest/core';
 
-import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { getAllDeployedApps, getAppDeployResult, type DeployResult } from 'zephyr-agent';
+import { getRepositoryRoot, listTurboPackages } from './turbo-selector';
 
-const output = execSync('pnpm exec turbo ls --affected --output=json');
+const repositoryRoot = getRepositoryRoot(import.meta.dirname);
+const output = listTurboPackages(
+  process.env['ZE_FORCE_ALL_EXAMPLES'] === 'true',
+  repositoryRoot
+);
 const affected = JSON.parse(output.toString()) as {
   packages: { items: Array<{ name: string; path: string }> };
 };
@@ -15,12 +19,7 @@ const testTargets = affected.packages.items
     if (!packagePath.startsWith('examples/') || pkg.name === 'zephyr-cli-test') {
       return false;
     }
-    const packageFile = path.resolve(
-      import.meta.dirname,
-      '../../..',
-      packagePath,
-      'package.json'
-    );
+    const packageFile = path.resolve(repositoryRoot, packagePath, 'package.json');
     const packageJson = JSON.parse(readFileSync(packageFile, 'utf8')) as {
       scripts?: Record<string, string>;
     };
@@ -43,7 +42,7 @@ for (const appName of testTargets) {
     beforeAll(async () => {
       appUidsPromise ??= getAllDeployedApps();
       const appUids = await appUidsPromise;
-      const appUid = appUids.find((uid) => uid.startsWith(replacer(appName)));
+      const appUid = appUids.find((uid) => uid.startsWith(`${replacer(appName)}.`));
       if (!appUid) {
         throw new Error(`Application ${appName} was not found on deployed apps.`);
       }

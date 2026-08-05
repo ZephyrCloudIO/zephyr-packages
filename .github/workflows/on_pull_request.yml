@@ -48,14 +48,15 @@ jobs:
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         # Deployments are side effects, so affected application builds must never be
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
-        # Force-all runs serialize deployments because each build writes to the same
-        # local deployment-record store consumed by the following E2E step.
+        # Builds run concurrently in both modes. Each deployment record is a separate
+        # per-application key in the local store, so concurrent builds do not contend;
+        # cross-build record loss came from unscoped 401 token cleanup, now fixed in
+        # the agent.
         # Loose mode preserves GitHub's detached-HEAD metadata and the OS home
         # directory used by the authenticated Zephyr deployment store.
         run: >-
           pnpm exec turbo run build
-          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/**' || '--affected' }}
-          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--concurrency=1' || '' }}
+          ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/**' || '--affected' }}
           --force --env-mode=loose --output-logs=errors-only
       - name: run deployment e2e tests
         # Keep deployment records in-process. Persisted Zephyr state can include
@@ -101,8 +102,7 @@ jobs:
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         run: >-
           pnpm exec turbo run build
-          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--filter=./examples/**' || '--affected' }}
-          ${{ contains(github.event.pull_request.labels.*.name, 'ci:force-example-builds') && '--concurrency=1' || '' }}
+          ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/**' || '--affected' }}
           --force --env-mode=loose --output-logs=new-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only

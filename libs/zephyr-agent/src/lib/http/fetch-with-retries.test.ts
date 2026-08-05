@@ -127,6 +127,35 @@ describe('fetchWithRetries', () => {
     expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
   });
 
+  it('reports the proxy hostname when proxy DNS lookup fails', async () => {
+    const proxyHostname = 'missing-proxy.internal';
+    const proxyUrl = `http://${proxyHostname}:8080`;
+    process.env['HTTPS_PROXY'] = proxyUrl;
+    mocks.axiosInstance.mockRejectedValue({
+      code: 'ENOTFOUND',
+      message: `getaddrinfo ENOTFOUND ${proxyHostname}`,
+      cause: {
+        code: 'ENOTFOUND',
+        hostname: proxyHostname,
+        syscall: 'getaddrinfo',
+      },
+    });
+
+    let error: unknown;
+    try {
+      await fetchWithRetries(url, { method: 'POST' });
+    } catch (caught) {
+      error = caught;
+    }
+
+    const serialized = JSON.stringify(error);
+    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(serialized).toContain('DNS lookup failed');
+    expect(serialized).toContain(proxyHostname);
+    expect(mocks.proxyAgent).toHaveBeenCalledWith(proxyUrl);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+  });
+
   it('retries POST requests only when the caller supplies an idempotency key', async () => {
     mocks.axiosInstance
       .mockResolvedValueOnce({

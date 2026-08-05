@@ -91,6 +91,10 @@ function getHttpsProxyAgent(url: URL): HttpsProxyAgent<string> | undefined {
 interface HttpLikeError {
   code?: string;
   message?: string;
+  hostname?: unknown;
+  cause?: {
+    hostname?: unknown;
+  };
   response?: {
     status: number;
     data?: unknown;
@@ -221,10 +225,17 @@ function normalizeRequestError(error: unknown, url: URL, method: string): Error 
   }
 
   if (candidate.code === 'ENOTFOUND') {
+    let failedHostname = url.hostname;
+    if (typeof candidate.hostname === 'string') {
+      failedHostname = candidate.hostname;
+    } else if (typeof candidate.cause?.hostname === 'string') {
+      failedHostname = candidate.cause.hostname;
+    }
+
     return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
       status: -1,
       url: redactUrl(url),
-      content: `DNS lookup failed for hostname "${redactString(url.hostname)}" (ENOTFOUND). Verify the hostname's DNS record.`,
+      content: `DNS lookup failed for hostname "${redactString(failedHostname)}" (ENOTFOUND). Verify the hostname's DNS record.`,
       method,
     });
   }

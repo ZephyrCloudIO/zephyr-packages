@@ -28,7 +28,8 @@ available from JWT claims or the `/job` response, they must match `CI_JOB_ID`, `
 
 GitHub Actions reads the local webhook payload from `GITHUB_EVENT_PATH`. It prefers the matching commit author email,
 then commit committer email, then `head_commit`, then `pusher.email`. It always sends the stable GitHub actor ID from
-`GITHUB_ACTOR_ID` when available and includes GitHub's noreply email shape as an email candidate. This requires no
+`GITHUB_ACTOR_ID` when available, keeps it paired with `GITHUB_ACTOR` on reruns, and includes GitHub's noreply email
+shape as an email candidate. This requires no
 workflow YAML changes beyond setting `ZE_CI_TOKEN`. Reliable multi-email attribution requires the user's GitHub account
 to be linked in cloud-io as a `GitProviderIdentity`; email candidates are only a fallback.
 

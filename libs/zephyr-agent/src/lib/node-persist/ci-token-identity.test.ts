@@ -17,11 +17,11 @@ describe('inferCiTokenIdentity', () => {
   const originalFetch = global.fetch;
   let tempDirs: string[] = [];
 
-  afterEach(() => {
+  afterEach(async () => {
     global.fetch = originalFetch;
     const dirs = tempDirs;
     tempDirs = [];
-    return Promise.all(dirs.map((dir) => rm(dir, { force: true, recursive: true })));
+    await Promise.all(dirs.map((dir) => rm(dir, { force: true, recursive: true })));
   });
 
   it('infers GitLab actor email from CI_JOB_TOKEN JWT claims', async () => {
@@ -237,6 +237,28 @@ describe('inferCiTokenIdentity', () => {
       issuer: 'https://github.com',
       providerSubject: '12345',
       username: 'octocat',
+      source: 'noreply',
+    });
+  });
+
+  it('keeps the GitHub actor login aligned with the stable actor ID on reruns', async () => {
+    const eventPath = await writeGitHubEvent({});
+
+    const identity = await inferCiTokenIdentity({
+      GITHUB_ACTIONS: 'true',
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_ACTOR: 'original-actor',
+      GITHUB_ACTOR_ID: '12345',
+      GITHUB_TRIGGERING_ACTOR: 'rerun-actor',
+    });
+
+    expect(identity).toEqual({
+      provider: 'github',
+      email: '12345+original-actor@users.noreply.github.com',
+      emails: ['12345+original-actor@users.noreply.github.com'],
+      issuer: 'https://github.com',
+      providerSubject: '12345',
+      username: 'original-actor',
       source: 'noreply',
     });
   });

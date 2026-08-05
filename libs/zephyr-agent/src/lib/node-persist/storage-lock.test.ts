@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { join } from 'node:path';
 
 const mocks = rs.hoisted(() => ({
   close: rs.fn(),
@@ -30,6 +31,8 @@ describe('withStorageLock', () => {
   });
 
   it('uses a private retrying inter-process lock and releases it', async () => {
+    const lockPath = join('/private/locks', 'auth-token');
+
     await expect(withStorageLock('auth-token', async () => 'value')).resolves.toBe(
       'value'
     );
@@ -38,12 +41,10 @@ describe('withStorageLock', () => {
       recursive: true,
       mode: 0o700,
     });
-    expect(mocks.open).toHaveBeenCalledWith('/private/locks/auth-token', 'a', 0o600);
-    expect(mocks.ensurePrivateFilePermissions).toHaveBeenCalledWith(
-      '/private/locks/auth-token'
-    );
+    expect(mocks.open).toHaveBeenCalledWith(lockPath, 'a', 0o600);
+    expect(mocks.ensurePrivateFilePermissions).toHaveBeenCalledWith(lockPath);
     expect(mocks.lock).toHaveBeenCalledWith(
-      '/private/locks/auth-token',
+      lockPath,
       expect.objectContaining({ realpath: false, retries: expect.any(Object) })
     );
     expect(mocks.release).toHaveBeenCalledTimes(1);

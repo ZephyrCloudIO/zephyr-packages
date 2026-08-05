@@ -141,11 +141,7 @@ function getGitHubActor(
   env: NodeJS.ProcessEnv,
   event: GitHubEventPayload | undefined
 ): string | undefined {
-  return (
-    env['GITHUB_TRIGGERING_ACTOR']?.trim() ||
-    env['GITHUB_ACTOR']?.trim() ||
-    event?.sender?.login?.trim()
-  );
+  return env['GITHUB_ACTOR']?.trim() || event?.sender?.login?.trim();
 }
 
 function getGitHubActorId(

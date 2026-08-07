@@ -132,6 +132,20 @@ function mergeBuildStats(stats: readonly ZephyrBuildStats[]): ZephyrBuildStats {
   };
 }
 
+function refreshBuildStatsIdentity(
+  stats: ZephyrBuildStats,
+  current: ZephyrBuildStats
+): ZephyrBuildStats {
+  return {
+    ...stats,
+    version: current.version,
+    app: {
+      ...stats.app,
+      buildId: current.app.buildId,
+    },
+  };
+}
+
 function mergeMfConfigs(
   configs: readonly (MfConfigs | undefined)[]
 ): MfConfigs | undefined {
@@ -548,23 +562,30 @@ export class XPackBuildCoordinator {
       return false;
     }
 
+    const currentBuildStats = active.contributions.values().next().value?.buildStats;
+    if (!currentBuildStats) return false;
+
     for (const { name } of this.participants) {
       if (active.contributions.has(name)) continue;
       const previous = this.lastSuccessful.get(name);
       if (!previous) return false;
+      const carried = {
+        ...previous,
+        buildStats: refreshBuildStatsIdentity(previous.buildStats, currentBuildStats),
+      };
       active.session.contribute({
         participant: name,
         key: name,
-        assetsMap: previous.assetsMap,
+        assetsMap: carried.assetsMap,
         data: {
-          buildStats: previous.buildStats,
-          mfConfigs: previous.mfConfigs,
-          hooks: previous.hooks,
-          dependencyPaths: previous.dependencyPaths,
+          buildStats: carried.buildStats,
+          mfConfigs: carried.mfConfigs,
+          hooks: carried.hooks,
+          dependencyPaths: carried.dependencyPaths,
         },
       });
       active.session.completeParticipant(name);
-      active.contributions.set(name, previous);
+      active.contributions.set(name, carried);
     }
 
     if (!active.session.readiness.ready) return false;

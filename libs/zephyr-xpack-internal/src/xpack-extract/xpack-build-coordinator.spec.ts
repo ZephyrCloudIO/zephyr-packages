@@ -23,7 +23,10 @@ function engine(): ZephyrEngine {
   } as unknown as ZephyrEngine;
 }
 
-const stats = {} as ZephyrBuildStats;
+const stats = {
+  version: 'snapshot-1',
+  app: { buildId: 'build-1' },
+} as ZephyrBuildStats;
 
 function dependencyPaths(
   files: readonly string[],
@@ -425,6 +428,55 @@ describe('XPackBuildCoordinator', () => {
       })
     );
     expect(zephyrEngine.start_new_build).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes carried stats when only a non-first compiler rebuilds', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'client' },
+      { name: 'server' },
+    ]);
+    const previousStats = {
+      version: 'snapshot-1',
+      app: { buildId: 'build-1' },
+    } as ZephyrBuildStats;
+    const currentStats = {
+      version: 'snapshot-2',
+      app: { buildId: 'build-2' },
+    } as ZephyrBuildStats;
+
+    coordinator.beginParticipant('client', 0);
+    coordinator.beginParticipant('server', 0);
+    await coordinator.contribute({
+      participant: 'client',
+      generation: 0,
+      assetsMap: asset('client/unchanged.js', 'client-unchanged'),
+      buildStats: previousStats,
+    });
+    await coordinator.contribute({
+      participant: 'server',
+      generation: 0,
+      assetsMap: asset('server/old.js', 'server-old'),
+      buildStats: previousStats,
+    });
+
+    coordinator.beginParticipant('server', 1);
+    await coordinator.contribute({
+      participant: 'server',
+      generation: 1,
+      assetsMap: asset('server/new.js', 'server-new'),
+      buildStats: currentStats,
+    });
+
+    expect(zephyrEngine.upload_assets).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        buildStats: expect.objectContaining({
+          version: 'snapshot-2',
+          app: expect.objectContaining({ buildId: 'build-2' }),
+        }),
+      })
+    );
   });
 
   it('holds a sequential watch batch until every invalidated compiler contributes', async () => {

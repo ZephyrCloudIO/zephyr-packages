@@ -560,7 +560,7 @@ overrides:
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.8
   js-yaml@>=4.0.0 <4.3.0: 4.3.0
   postcss: 8.5.23
-  react-router@>=7.0.0 <7.18.0: 7.18.1
+  react-router@>=7.0.0 <7.18.0: 8.3.0
   serialize-javascript@<=7.0.2: '>=7.0.3'
   sharp@<0.35.0: 0.35.3
   shell-quote@<=1.8.4: 1.9.0
@@ -10232,6 +10232,7 @@ packages:
   cron-parser@4.9.0:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
+    deprecated: v4 is no longer maintained, upgrade to v5
 
   croner@10.0.1:
     resolution: {integrity: sha512-ixNtAJndqh173VQ4KodSdJEI6nuioBWI0V1ITNKhZZsO0pEMoDxz539T4FTTbSZ/xIOSuDnzxLVRqBVSvPNE2g==}
@@ -14766,6 +14767,16 @@ packages:
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
+  react-router@8.3.0:
+    resolution: {integrity: sha512-qyPMvW83jGIct3yiieisxdk9M745anqhpIMKN5m1t6yBMfgVPpt77aHOqs5fUlEJRMCGffg9BaQLH9oPVOL7xQ==}
+    engines: {node: '>=22.22.0'}
+    peerDependencies:
+      react: '>=19.2.7'
+      react-dom: '>=19.2.7'
     peerDependenciesMeta:
       react-dom:
         optional: true
@@ -19853,7 +19864,7 @@ snapshots:
       '@modern-js/utils': 3.6.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@swc/helpers': 0.5.23
       lru-cache: 10.4.3
-      react-router: 7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-router: 8.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       serialize-javascript: 7.0.5
     optionalDependencies:
       react: 19.2.8
@@ -31891,6 +31902,13 @@ snapshots:
       cookie: 1.1.1
       react: 19.2.8
       set-cookie-parser: 2.7.2
+    optionalDependencies:
+      react-dom: 19.2.8(react@19.2.8)
+
+  react-router@8.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
+      cookie-es: 3.1.1
+      react: 19.2.8
     optionalDependencies:
       react-dom: 19.2.8(react@19.2.8)
 

@@ -107,7 +107,8 @@ Local build can still deploy, and Zephyr can infer org/project from `origin`.
   claims locally, then falls back to GitLab's `/job` API from the runner and GitLab's predefined `GITLAB_USER_EMAIL` for
   legacy/non-JWT job tokens. GitHub Actions reads `GITHUB_EVENT_PATH` commit/pusher emails, then falls back to GitHub
   noreply email from `GITHUB_ACTOR_ID` and `GITHUB_ACTOR`. No GitLab/GitHub CI YAML changes are required beyond setting
-  `ZE_CI_TOKEN`. Legacy `ZE_SERVER_TOKEN` behavior is unchanged.
+  `ZE_CI_TOKEN`. Legacy `ZE_SERVER_TOKEN` behavior is unchanged. See [CI Token Identity](./ci-token-identity.md) for
+  access-token caching and cross-process locking details.
 
 ## Troubleshooting
 

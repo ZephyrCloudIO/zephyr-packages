@@ -15,6 +15,18 @@ export type HttpResponse<T> =
   | [ok: true, error: null, data: T]
   | [ok: false, error: Error];
 
+export interface HttpRequestOptions extends RequestInit {
+  /**
+   * The credential this request authenticates with. A 401 invalidates only this
+   * credential, so a delayed response cannot remove a newer token persisted by another
+   * process. Authenticated callers should always set it alongside the `Authorization`
+   * header; omitting it falls back to invalidating all stored authentication.
+   */
+  credentialToken?: string;
+  /** Internal requests which are themselves refreshing credentials must not recurse. */
+  skipTokenCleanup?: boolean;
+}
+
 export type UrlString =
   | string
   | URL
@@ -73,22 +85,23 @@ function redactResponse(
 /** Main HTTP request function that handles the request and response */
 export async function makeHttpRequest<T = void>(
   url: URL,
-  options: RequestInit = {},
+  options: HttpRequestOptions = {},
   data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const startTime = Date.now();
+  const { credentialToken, skipTokenCleanup = false, ...requestOptions } = options;
 
   try {
     const response = await fetchWithRetries(url, {
-      ...options,
+      ...requestOptions,
       body: data as BodyInit | null | undefined,
     });
 
     const resText = await response.text();
 
-    if (response.status === 401) {
+    if (response.status === 401 && !skipTokenCleanup) {
       // Clean the tokens and throw an error
-      await cleanTokens();
+      await cleanTokens(credentialToken);
       throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
         message: 'Unauthenticated request',
       });
@@ -100,7 +113,7 @@ export async function makeHttpRequest<T = void>(
       });
     }
 
-    const message = redactResponse(url, options, data, resText, startTime);
+    const message = redactResponse(url, requestOptions, data, resText, startTime);
 
     if (resText.trim() === 'Not Implemented') {
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -123,7 +136,7 @@ export async function makeHttpRequest<T = void>(
           typeof resData === 'string'
             ? redactString(resData)
             : safeStringifyForLogging(resData),
-        method: options.method?.toUpperCase() ?? 'GET',
+        method: requestOptions.method?.toUpperCase() ?? 'GET',
       });
     }
 
@@ -136,7 +149,7 @@ export async function makeHttpRequest<T = void>(
 /** Creates a request that returns a promise for the HTTP response */
 export function makeRequest<T = void>(
   urlStr: UrlString,
-  options: RequestInit = {},
+  options: HttpRequestOptions = {},
   data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const url = parseUrl(urlStr);

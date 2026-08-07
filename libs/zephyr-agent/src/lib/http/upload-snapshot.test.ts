@@ -46,15 +46,11 @@ function snapshot(): Snapshot {
   };
 }
 
-function environment(
-  edgeUrl: string,
-  addressMode: 'hostname' | 'path'
-): EnvironmentConfig {
+function environment(edgeUrl: string): EnvironmentConfig {
   return {
     type: UploadProviderType.CLOUDFLARE,
     edgeUrl,
     delimiter: '.',
-    addressMode,
     remote_host: new URL(edgeUrl).hostname,
   };
 }
@@ -67,7 +63,6 @@ function applicationConfig(
     BUILD_ID_ENDPOINT: '/build-id',
     EDGE_URL: 'https://primary.example.test',
     DELIMITER: '.',
-    ADDRESS_MODE: 'hostname',
     PLATFORM: UploadProviderType.CLOUDFLARE,
     email: 'test@example.test',
     jwt: 'jwt',
@@ -82,14 +77,14 @@ describe('snapshot upload targets', () => {
     rs.clearAllMocks();
   });
 
-  it('clones domain and address mode per mixed hostname/path target', () => {
+  it('clones the snapshot domain for each target', () => {
     const original = snapshot();
     const targets = createSnapshotUploadTargets(
       original,
       applicationConfig({
         ENVIRONMENTS: {
-          path: environment('https://path.example.test', 'path'),
-          hostname: environment('https://host.example.test', 'hostname'),
+          path: environment('https://path.example.test'),
+          hostname: environment('https://host.example.test'),
         },
       })
     );
@@ -104,11 +99,8 @@ describe('snapshot upload targets', () => {
       snapshot_id: original.snapshot_id,
       assets: original.assets,
     });
-    expect(targets[0]?.snapshot.addressMode).toBeUndefined();
-    expect(targets[1]?.snapshot.addressMode).toBeUndefined();
     expect(targets[2]?.snapshot).toMatchObject({
       domain: 'https://path.example.test',
-      addressMode: 'path',
       snapshot_id: original.snapshot_id,
       assets: original.assets,
     });
@@ -119,8 +111,8 @@ describe('snapshot upload targets', () => {
       snapshot(),
       applicationConfig({
         ENVIRONMENTS: {
-          zebra: environment('https://duplicate.example.test/', 'path'),
-          alpha: environment('https://duplicate.example.test', 'path'),
+          zebra: environment('https://duplicate.example.test/'),
+          alpha: environment('https://duplicate.example.test'),
         },
       })
     );
@@ -128,28 +120,15 @@ describe('snapshot upload targets', () => {
     expect(targets).toHaveLength(2);
     expect(targets[1]).toMatchObject({
       edgeUrl: 'https://duplicate.example.test',
-      snapshot: { addressMode: 'path' },
+      snapshot: { domain: 'https://duplicate.example.test' },
     });
-  });
-
-  it('rejects conflicting address modes for the same edge URL', () => {
-    expect(() =>
-      createSnapshotUploadTargets(
-        snapshot(),
-        applicationConfig({
-          ENVIRONMENTS: {
-            path: environment('https://primary.example.test/', 'path'),
-          },
-        })
-      )
-    ).toThrow('Could not upload snapshot');
   });
 
   it('uploads target-specific snapshot JSON while preserving primary response', async () => {
     mocks.getApplicationConfiguration.mockResolvedValue(
       applicationConfig({
         ENVIRONMENTS: {
-          path: environment('https://path.example.test', 'path'),
+          path: environment('https://path.example.test'),
         },
       })
     );
@@ -169,10 +148,8 @@ describe('snapshot upload targets', () => {
       domain: 'https://primary.example.test',
       snapshot_id: 'snapshot-1',
     });
-    expect(primaryBody.addressMode).toBeUndefined();
     expect(pathBody).toMatchObject({
       domain: 'https://path.example.test',
-      addressMode: 'path',
       snapshot_id: 'snapshot-1',
     });
     expect(pathBody.assets).toEqual(primaryBody.assets);

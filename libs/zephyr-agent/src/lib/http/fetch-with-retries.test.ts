@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
-import { ZephyrError } from '../errors';
+import { ZeErrors, ZephyrError } from '../errors';
 import { DEFAULT_HTTP_DEADLINE_MS, fetchWithRetries } from './fetch-with-retries';
 
 const mocks = rs.hoisted(() => ({
@@ -96,6 +96,63 @@ describe('fetchWithRetries', () => {
     );
 
     expect(response.status).toBe(503);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+  });
+
+  it('explains DNS lookup failures without claiming a POST was retried', async () => {
+    const signature = 'raw-dns-signature';
+    const missingUrl = new URL(
+      `https://missing.example.com/api?X-Amz-Signature=${signature}`
+    );
+    mocks.axiosInstance.mockRejectedValue({
+      code: 'ENOTFOUND',
+      message: `getaddrinfo ENOTFOUND missing.example.com?token=${signature}`,
+    });
+
+    let error: unknown;
+    try {
+      await fetchWithRetries(missingUrl, { method: 'POST' }, 3);
+    } catch (caught) {
+      error = caught;
+    }
+
+    const serialized = JSON.stringify(error);
+    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(serialized).toContain('DNS lookup failed');
+    expect(serialized).toContain('missing.example.com');
+    expect(serialized).toContain('ENOTFOUND');
+    expect(serialized).toContain("Verify the hostname's DNS record");
+    expect(serialized).not.toContain('after retries');
+    expect(serialized).not.toContain(signature);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports the proxy hostname when proxy DNS lookup fails', async () => {
+    const proxyHostname = 'missing-proxy.internal';
+    const proxyUrl = `http://${proxyHostname}:8080`;
+    process.env['HTTPS_PROXY'] = proxyUrl;
+    mocks.axiosInstance.mockRejectedValue({
+      code: 'ENOTFOUND',
+      message: `getaddrinfo ENOTFOUND ${proxyHostname}`,
+      cause: {
+        code: 'ENOTFOUND',
+        hostname: proxyHostname,
+        syscall: 'getaddrinfo',
+      },
+    });
+
+    let error: unknown;
+    try {
+      await fetchWithRetries(url, { method: 'POST' });
+    } catch (caught) {
+      error = caught;
+    }
+
+    const serialized = JSON.stringify(error);
+    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(serialized).toContain('DNS lookup failed');
+    expect(serialized).toContain(proxyHostname);
+    expect(mocks.proxyAgent).toHaveBeenCalledWith(proxyUrl);
     expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
   });
 

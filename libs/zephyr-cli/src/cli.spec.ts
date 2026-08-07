@@ -77,3 +77,30 @@ describe('parseArgs build target', () => {
     );
   });
 });
+
+describe('parseArgs doctor', () => {
+  it('defaults to the current directory and text output', () => {
+    expect(parseArgs(['doctor'])).toMatchObject({
+      command: 'doctor',
+      directory: '.',
+      format: 'text',
+    });
+  });
+
+  it('accepts an optional directory and JSON output', () => {
+    expect(parseArgs(['doctor', './apps/host', '--format', 'json'])).toMatchObject({
+      command: 'doctor',
+      directory: './apps/host',
+      format: 'json',
+    });
+  });
+
+  it('rejects unsupported doctor formats and flags', () => {
+    expect(() => parseArgs(['doctor', '--format', 'yaml'])).toThrow(
+      '--format must be either json or text'
+    );
+    expect(() => parseArgs(['doctor', '--write'])).toThrow(
+      'Unknown doctor option: --write'
+    );
+  });
+});

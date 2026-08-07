@@ -17,6 +17,7 @@ export async function getBuildId(application_uid: string): Promise<string> {
       can_write_jwt: jwt,
       Authorization: 'Bearer ' + token,
     },
+    credentialToken: token,
   };
 
   const [ok, cause, data] = await makeRequest<Record<string, string>>(

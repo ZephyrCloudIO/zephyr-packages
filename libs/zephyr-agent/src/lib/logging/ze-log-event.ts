@@ -120,6 +120,7 @@ export function logger(props: LoggerOptions): ZeLogger {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
               },
+              credentialToken: token,
             },
             safeStringifyForLogging(
               logs

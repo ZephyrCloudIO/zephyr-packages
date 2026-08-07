@@ -31,6 +31,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
         Accept: 'application/json',
         'Idempotency-Key': idempotencyKey,
       },
+      credentialToken: token,
     },
     JSON.stringify(dashData)
   );

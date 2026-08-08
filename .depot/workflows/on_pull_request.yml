@@ -3,6 +3,7 @@
 #
 # Changes made:
 # - Rewrote .github/ path references to .depot/
+# - Kept Windows jobs in GitHub Actions because Depot CI has no Windows sandboxes.
 
 name: CI
 on:
@@ -50,8 +51,8 @@ jobs:
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
         # Deployments are side effects, so affected application builds must never be
         # satisfied from cache. A cache hit would skip upload and leave no e2e state.
-        # Linux runs every example concurrently; only the Windows job needs a
-        # concurrency cap (see build-windows).
+        # Linux runs every example concurrently; the GitHub Actions Windows job
+        # keeps its own concurrency cap.
         # Loose mode preserves GitHub's detached-HEAD metadata and the OS home
         # directory used by the authenticated Zephyr deployment store.
         run: >-
@@ -66,47 +67,6 @@ jobs:
         uses: ZephyrCloudIO/zephyr-preview-environment-action@05822254ff8661c4e68f9dd12b83db7815ca2cf8 # v1.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-  build-windows:
-    name: ${{ github.event.action == 'labeled' && 'Force example previews (windows-latest)' || 'End-to-end test of examples (windows-latest)' }}
-    if: github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds'
-    # Modern.js/Rspack currently aborts with 0xC0000409 on Depot's Windows
-    # Server 2025 image (`depot-windows-latest`). Pin the supported 2022 image.
-    runs-on: depot-windows-2022
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-        with:
-          fetch-depth: 0
-      # Exclude hot paths from Windows Defender real-time scanning to reduce I/O
-      # overhead during install and build. Silently skipped on images that restrict
-      # Defender policy changes (continue-on-error keeps the rest of the job alive).
-      - name: exclude workspace from Windows Defender
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $workspace = "${{ github.workspace }}"
-          $pnpmStore = "$HOME\.pnpm-store"
-          Add-MpPreference -ExclusionPath $workspace, $pnpmStore
-      - uses: ./.depot/actions/setup
-        with:
-          cache-key-suffix: e2e
-      - name: run example builds
-        env:
-          ZE_IS_PREVIEW: true
-          # ZE_API and ZE_API_GATE intentionally use the production defaults.
-          ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
-        # Forced runs serialize because building every example concurrently exhausts
-        # Windows session resources: bundler tasks abort with 0xC0000142
-        # (STATUS_DLL_INIT_FAILED) and concurrent `git` spawns fail, which the agent
-        # reports as "Not a git repository". Serializing costs ~45s here (3m00s versus
-        # Linux's 2m16s at full concurrency), so the cap is close to free. A cap above 1
-        # is untested; do not raise it without a green forced Windows run.
-        run: >-
-          pnpm exec turbo run build ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/** --concurrency=1' || '--affected' }} --force --env-mode=loose --output-logs=new-only
-      - name: run deployment e2e tests
-        run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
   lint:
     name: ${{ github.event.action == 'labeled' && 'Force example previews (lint skipped)' || 'lint' }}
     if: github.event.action != 'labeled'
@@ -126,38 +86,22 @@ jobs:
       - name: run project-reference typecheck
         run: pnpm typecheck
   test:
-    name: ${{ github.event.action == 'labeled' && format('Force example previews (test skipped, {0})', matrix.os) || format('test ({0})', matrix.os) }}
+    name: ${{ github.event.action == 'labeled' && 'Force example previews (test skipped, depot-ubuntu-latest)' || 'test (depot-ubuntu-latest)' }}
     if: github.event.action != 'labeled'
-    runs-on: ${{ matrix.os }}
+    runs-on: depot-ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [depot-ubuntu-latest, depot-windows-2022]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           # Turbo's affected calculation needs the base commit locally.
           fetch-depth: 0
-      - name: exclude workspace from Windows Defender
-        if: runner.os == 'Windows'
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $workspace = "${{ github.workspace }}"
-          $pnpmStore = "$HOME\.pnpm-store"
-          Add-MpPreference -ExclusionPath $workspace, $pnpmStore
       - uses: ./.depot/actions/setup
         with:
           cache-key-suffix: test
-      - name: run test
-        if: runner.os != 'Linux'
-        run: pnpm test:affected
       - name: run complete test suite with coverage
-        if: runner.os == 'Linux'
         run: pnpm test:coverage
       - name: upload coverage report
-        if: runner.os == 'Linux' && always()
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: rstest-coverage

@@ -1,10 +1,14 @@
+# Depot CI Migration
+# Source: .github/workflows/on_canary_release.yml
+#
+# No changes were necessary.
+
 # This workflow has been replaced by publish_packages.yml
 # Redirect users to use the unified workflow
 
 name: On Canary Release (Deprecated)
 on:
   workflow_dispatch:
-
 jobs:
   redirect:
     runs-on: depot-ubuntu-latest

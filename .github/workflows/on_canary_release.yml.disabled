@@ -1,3 +1,4 @@
+# Disabled after migration to Depot CI.
 # This workflow has been replaced by publish_packages.yml
 # Redirect users to use the unified workflow
 

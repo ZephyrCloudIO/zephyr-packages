@@ -10,7 +10,7 @@ export interface ZephyrRspressPluginOptions {
   outDir: string;
   files: string[];
   hooks?: ZephyrBuildHooks;
-  /** Every compiler's Module Federation plugin, retained for publication metadata. */
+  /** Deployable browser compilers' Module Federation plugins for publication metadata. */
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
 }
 

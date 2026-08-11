@@ -70,9 +70,10 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
     assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
   }
 
-  // Rspress materializes one configuration per compiler. Keep all of their federation
-  // plugins in this mutable collection so the SSG hook can forward the complete set to
-  // xpack after the build, when snapshot and dashboard metadata are produced.
+  // Rspress materializes one configuration per compiler. Keep deployable browser
+  // federation plugins in this mutable collection so the SSG hook can forward them to
+  // xpack after the build, when snapshot and dashboard metadata are produced. The
+  // build-time node compiler still contributes files through the shared output directory.
   const mfConfigs: ModuleFederationPlugin[] = [];
   const portableFederationPlugin = moduleFederationPublicPathPlugin({
     target: options?.target,

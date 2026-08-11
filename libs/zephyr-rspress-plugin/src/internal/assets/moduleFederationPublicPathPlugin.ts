@@ -10,6 +10,7 @@ type RsbuildOnBeforeCreateCompilerArgs = {
 
 type RspackConfig = {
   name?: string;
+  target?: unknown;
   output?: { publicPath?: unknown };
   plugins?: unknown[];
 };
@@ -41,9 +42,9 @@ export interface ModuleFederationPublicPathPluginOptions {
   /** TAP artifacts are SDK-locked and must retain their emitted public path verbatim. */
   target?: ZephyrBuildTarget;
   /**
-   * Receives every Module Federation plugin materialized across Rspress's compilers. The
-   * SSG upload runs later and uses this reference to publish snapshot and build-stat
-   * federation metadata without selecting an arbitrary first compiler.
+   * Receives Module Federation plugins from Rspress's deployable browser compilers. The
+   * build-time node compiler emits SSG artifacts under the same container identity, so it
+   * must not publish a second, conflicting metadata record for that identity.
    */
   onModuleFederationPlugins?: (plugins: ModuleFederationPlugin[]) => void;
 }
@@ -59,11 +60,14 @@ export function moduleFederationPublicPathPlugin(
         handler({ bundlerConfigs }) {
           const configs = bundlerConfigs ?? [];
           options.onModuleFederationPlugins?.(
-            configs.flatMap((config) =>
-              (config.plugins ?? []).filter((plugin): plugin is ModuleFederationPlugin =>
-                isModuleFederationPlugin(plugin as never)
+            configs
+              .filter((config) => !isNodeCompiler(config))
+              .flatMap((config) =>
+                (config.plugins ?? []).filter(
+                  (plugin): plugin is ModuleFederationPlugin =>
+                    isModuleFederationPlugin(plugin as never)
+                )
               )
-            )
           );
 
           if (options.target !== 'tap-app') {
@@ -85,13 +89,24 @@ export function moduleFederationPublicPathPlugin(
  * `auto` for that compiler.
  */
 export function setPortableModuleFederationPublicPath(config: RspackConfig): void {
-  if (config.name === 'node' || !hasExposedModuleFederationRemote(config.plugins)) {
+  if (isNodeCompiler(config) || !hasExposedModuleFederationRemote(config.plugins)) {
     return;
   }
 
   if (isHttpPublicPath(config.output?.publicPath)) {
     config.output = { ...config.output, publicPath: 'auto' };
   }
+}
+
+function isNodeCompiler(config: RspackConfig): boolean {
+  return config.name === 'node' || hasNodeTarget(config.target);
+}
+
+function hasNodeTarget(target: unknown): boolean {
+  const targets = Array.isArray(target) ? target : [target];
+  return targets.some(
+    (value) => typeof value === 'string' && value.toLowerCase().includes('node')
+  );
 }
 
 function hasExposedModuleFederationRemote(plugins: unknown[] = []): boolean {

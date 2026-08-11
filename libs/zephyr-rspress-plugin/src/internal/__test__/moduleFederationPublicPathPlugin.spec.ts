@@ -30,15 +30,24 @@ describe('moduleFederationPublicPathPlugin', () => {
   });
 
   it('does not bypass Rspress node compiler absolute-public-path requirements', () => {
-    const config = {
-      name: 'node',
-      output: { publicPath: 'http://localhost:4178/' },
-      plugins: [remotePlugin()],
-    };
+    const configs = [
+      {
+        name: 'node',
+        output: { publicPath: 'http://localhost:4178/' },
+        plugins: [remotePlugin()],
+      },
+      {
+        name: 'ssg',
+        target: ['node20', 'es2022'],
+        output: { publicPath: 'http://localhost:4178/' },
+        plugins: [remotePlugin()],
+      },
+    ];
 
-    setPortableModuleFederationPublicPath(config);
-
-    expect(config.output.publicPath).toBe('http://localhost:4178/');
+    for (const config of configs) {
+      setPortableModuleFederationPublicPath(config);
+      expect(config.output.publicPath).toBe('http://localhost:4178/');
+    }
   });
 
   it('preserves consumer, non-MF, and already portable browser configs', () => {
@@ -112,7 +121,34 @@ describe('moduleFederationPublicPathPlugin', () => {
     expect(bundlerConfigs[1]?.output.publicPath).toBe('http://localhost:4178/');
   });
 
-  it('retains every compiler federation plugin for SSG publication metadata', () => {
+  it('publishes browser federation metadata without duplicating the SSG node target', () => {
+    const onModuleFederationPlugins = rs.fn();
+    const plugin = moduleFederationPublicPathPlugin({ onModuleFederationPlugins });
+    const onBeforeCreateCompiler = rs.fn();
+    plugin.setup({ onBeforeCreateCompiler });
+    const [{ handler }] = onBeforeCreateCompiler.mock.calls[0] as [
+      { handler: (args: { bundlerConfigs: unknown[] }) => void },
+    ];
+    const desktop = remotePlugin({
+      name: 'desktop',
+      filename: 'targets/desktop/remoteEntry.mjs',
+    });
+    const ssg = remotePlugin({
+      name: 'desktop',
+      filename: 'targets/ssg/remoteEntry.mjs',
+    });
+
+    handler({
+      bundlerConfigs: [
+        { name: 'web', target: 'web', plugins: [desktop] },
+        { name: 'ssg', target: ['node20', 'es2022'], plugins: [ssg] },
+      ],
+    });
+
+    expect(onModuleFederationPlugins).toHaveBeenCalledWith([desktop]);
+  });
+
+  it('retains distinct browser compiler federation metadata', () => {
     const onModuleFederationPlugins = rs.fn();
     const plugin = moduleFederationPublicPathPlugin({ onModuleFederationPlugins });
     const onBeforeCreateCompiler = rs.fn();
@@ -131,8 +167,8 @@ describe('moduleFederationPublicPathPlugin', () => {
 
     handler({
       bundlerConfigs: [
-        { name: 'web', plugins: [desktop] },
-        { name: 'worker', plugins: [worker] },
+        { name: 'web', target: 'web', plugins: [desktop] },
+        { name: 'worker', target: 'webworker', plugins: [worker] },
       ],
     });
 

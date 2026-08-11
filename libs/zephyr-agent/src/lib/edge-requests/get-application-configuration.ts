@@ -75,6 +75,7 @@ async function loadApplicationConfiguration(
     value: ZeApplicationConfig;
   }>(application_config_url, {
     headers: { Authorization: `Bearer ${token}` },
+    credentialToken: token,
   });
 
   if (!ok || !data?.value || data.value.application_uid !== application_uid) {

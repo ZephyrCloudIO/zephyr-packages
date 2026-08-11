@@ -79,12 +79,86 @@ rebuilding the TAP host. This command deliberately requires `--target tap-app`:
 ze-cli watch ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 ```
 
+### Doctor Command
+
+Inspect a project or monorepo without installing dependencies, evaluating config
+files, editing files, building, authenticating, or deploying:
+
+```bash
+ze-cli doctor [directory] --format text
+ze-cli doctor [directory] --format json
+```
+
+The directory defaults to the current directory and must contain `package.json`.
+Doctor statically checks:
+
+- Supported bundler packages and config files.
+- Zephyr and Module Federation plugin declaration, installation, config use, and
+  plugin order.
+- Declared, locked, and installed Zephyr, Module Federation, TypeScript,
+  Rsbuild/Rspack, and other supported bundler versions.
+- Rsbuild `output.assetPrefix`, explicit `source.entry`, exposes, object-form
+  remotes, and `zephyr:dependencies` alias correspondence.
+- Web watch scripts versus TAP-only `ze-cli watch --target tap-app --metadata`.
+- `.mf/typesGenerate.log`, `node_modules/.federation` temporary artifacts,
+  `@mf-types.zip`, and safe DTS diagnostic commands.
+
+JSON uses schema version `1.0.0`. Consumers should branch on `status`,
+`exitCode`, and finding `code`; they must not match human-readable messages.
+Evidence paths are project-relative. Doctor never reads `.env` or emits config
+source, authentication state, environment values, or file contents.
+TypeScript report types, schema version, finding codes, and exit-code constants
+are exported from `zephyr-cli/doctor/schema`.
+
+#### Doctor exit codes
+
+| Code | Meaning                                      |
+| ---- | -------------------------------------------- |
+| `0`  | Healthy; no warning or error findings        |
+| `1`  | Valid project with warning or error findings |
+| `2`  | Invalid project path or root `package.json`  |
+| `3`  | Doctor could not complete the read-only scan |
+
+#### Stable finding codes
+
+Every finding contains `code`, `severity`, `message`, structured `evidence`, and
+`remediation`.
+
+| Code     | Check                                                 |
+| -------- | ----------------------------------------------------- |
+| `ZD0001` | Project directory not found                           |
+| `ZD0002` | Root `package.json` missing                           |
+| `ZD0003` | Package manifest cannot be parsed                     |
+| `ZD0004` | Read-only doctor scan failed                          |
+| `ZD0101` | Supported bundler not detected                        |
+| `ZD0102` | Rsbuild declared without an Rsbuild config            |
+| `ZD0201` | Zephyr Rsbuild plugin not declared                    |
+| `ZD0202` | Zephyr Rsbuild plugin not installed                   |
+| `ZD0203` | `withZephyr()` missing from Rsbuild config            |
+| `ZD0204` | Zephyr plugin appears before Module Federation        |
+| `ZD0210` | Declared Module Federation plugin missing from config |
+| `ZD0301` | Lockfile missing                                      |
+| `ZD0302` | Relevant package not installed                        |
+| `ZD0303` | Locked and installed package versions differ          |
+| `ZD0304` | Lockfile version extraction unsupported               |
+| `ZD0401` | Rsbuild `assetPrefix` missing                         |
+| `ZD0402` | Rsbuild `assetPrefix` is not `"auto"`                 |
+| `ZD0403` | Explicit Rsbuild `source.entry` missing               |
+| `ZD0410` | Module Federation expose key invalid                  |
+| `ZD0411` | Module Federation remotes are not object-form         |
+| `ZD0412` | Remote aliases and `zephyr:dependencies` keys differ  |
+| `ZD0501` | Web project uses TAP-only `ze-cli watch`              |
+| `ZD0502` | TAP watch target missing                              |
+| `ZD0503` | TAP watch metadata sidecar missing                    |
+| `ZD0601` | Module Federation DTS diagnostic failure found        |
+
 ## Options
 
 - `--ssr` - Mark this snapshot as server-side rendered
 - `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
+- `--format <json|text>` - Doctor output format (default: `text`)
 - `--verbose, -v` - Enable verbose output
 - `--help, -h` - Show help message
 

@@ -1,6 +1,6 @@
 {
   "name": "zephyr-cli",
-  "version": "1.1.2",
+  "version": "1.2.1",
   "description": "CLI tool for running build commands and uploading assets to Zephyr",
   "keywords": [
     "build",
@@ -41,6 +41,16 @@
       "require": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./doctor/schema": {
+      "import": {
+        "types": "./dist/doctor/schema.d.mts",
+        "default": "./dist/doctor/schema.mjs"
+      },
+      "require": {
+        "types": "./dist/doctor/schema.d.ts",
+        "default": "./dist/doctor/schema.js"
       }
     },
     "./package.json": "./package.json",

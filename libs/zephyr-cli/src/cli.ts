@@ -1,9 +1,10 @@
 import { isZephyrBuildTarget, type ZephyrBuildTarget } from 'zephyr-edge-contract';
 
 export interface CliOptions {
-  command: 'run' | 'deploy' | 'watch';
+  command: 'run' | 'deploy' | 'watch' | 'doctor';
   commandLine?: string; // For 'run' command
-  directory?: string; // For 'deploy' and 'watch' commands
+  directory?: string; // For 'deploy', 'watch', and 'doctor' commands
+  format?: 'json' | 'text'; // For 'doctor'
   target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
@@ -20,6 +21,7 @@ export interface CliOptions {
  * - Ze-cli [options] <command> [args...] - run command (default)
  * - Ze-cli deploy <directory> [options] - deploy command
  * - Ze-cli watch <directory> [options] - watch and publish command
+ * - Ze-cli doctor [directory] [--format json|text] - inspect without mutation
  *
  * Examples:
  *
@@ -29,6 +31,7 @@ export interface CliOptions {
  * - Ze-cli deploy ./dist
  * - Ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
  * - Ze-cli watch ./dist --target tap-app
+ * - Ze-cli doctor . --format json
  * - Ze-cli deploy ./dist --ssr
  */
 export function parseArgs(args: string[]): CliOptions {
@@ -94,7 +97,26 @@ export function parseArgs(args: string[]): CliOptions {
   const firstArg = args[commandStartIndex];
 
   // Check if it's a directory-based subcommand.
-  if (firstArg === 'deploy' || firstArg === 'watch') {
+  if (firstArg === 'doctor') {
+    options.command = 'doctor';
+    const possibleDirectory = args[commandStartIndex + 1];
+    const hasDirectory = Boolean(possibleDirectory && !possibleDirectory.startsWith('-'));
+    options.directory = hasDirectory ? possibleDirectory : '.';
+    options.format = 'text';
+
+    for (let i = commandStartIndex + (hasDirectory ? 2 : 1); i < args.length; i++) {
+      const arg = args[i];
+      if (arg === '--format') {
+        const value = args[++i];
+        if (value !== 'json' && value !== 'text') {
+          throw new Error('--format must be either json or text.');
+        }
+        options.format = value;
+      } else {
+        throw new Error(`Unknown doctor option: ${String(arg)}`);
+      }
+    }
+  } else if (firstArg === 'deploy' || firstArg === 'watch') {
     options.command = firstArg;
     const directory = args[commandStartIndex + 1];
 
@@ -150,6 +172,7 @@ function printHelp(): void {
   console.log(`
 Usage: ze-cli [options] <command> [args...]
        ze-cli deploy <directory> [options]
+       ze-cli doctor [directory] [--format json|text]
 
 Run a build command and automatically upload assets to Zephyr, or deploy
 pre-built assets from a directory.
@@ -158,6 +181,7 @@ Commands:
   <command> [args...]      Run a build command and upload (default)
   deploy <directory>       Upload pre-built assets from a directory
   watch <directory>        Watch pre-built output and publish each settled change
+  doctor [directory]       Inspect project readiness without installing or building
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered
@@ -165,6 +189,7 @@ Options:
   --metadata <path>        JSON sidecar for Module Federation publication metadata
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output
+  --format <json|text>     Doctor output format (default: text)
   --help, -h               Show this help message
 
 Examples:
@@ -183,12 +208,18 @@ Examples:
   ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
   ze-cli watch ./dist --target tap-app
 
+  # Inspect without mutation
+  ze-cli doctor .
+  ze-cli doctor ./apps/host --format json
+
 How it works:
   - For run commands, ze-cli executes your build command and automatically
     detects the output directory to upload assets.
   - For deploy commands, ze-cli uploads assets from the specified directory.
   - For watch commands, ze-cli publishes each settled output change as a new immutable
     snapshot. The Zephyr control plane authorizes and advances any development tag.
+  - The doctor command only reads project, package, config, lockfile, and diagnostic
+    artifact metadata. It never installs, edits, builds, authenticates, or deploys.
   - All stdout/stderr from build commands are passed through.
   - ze-cli logs are written to stderr only.
 

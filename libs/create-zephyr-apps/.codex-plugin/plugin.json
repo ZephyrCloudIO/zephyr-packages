@@ -1,0 +1,18 @@
+{
+  "name": "create-zephyr-apps",
+  "version": "1.2.1",
+  "description": "Agent Skill for the create-zephyr-apps package.",
+  "author": {
+    "name": "ZephyrCloudIO"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Create Zephyr Apps",
+    "shortDescription": "Scaffold current Zephyr app projects.",
+    "longDescription": "Package-owned Agent Skill for create-zephyr-apps.",
+    "developerName": "ZephyrCloudIO",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": ["Scaffold a Zephyr app with $create-zephyr-apps."]
+  }
+}

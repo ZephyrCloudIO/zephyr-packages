@@ -31,6 +31,12 @@ The agent is structured into several key modules:
 - Handles user authentication and authorization
 - Manages API tokens and session management
 - Provides WebSocket connections for real-time updates
+- Reads `ZE_SECRET_TOKEN` directly without persisting the environment secret
+- Exchanges `ZE_CI_TOKEN` once per CI identity using a persistent, inter-process locked access-token cache
+- Keeps credential cleanup scoped so concurrent deployment and application records remain intact
+
+See [CI Token Identity](../../docs/ci-token-identity.md) for token precedence,
+identity attribution, persistence, and concurrency invariants.
 
 ### Build Context (`lib/build-context/`)
 

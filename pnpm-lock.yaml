@@ -560,7 +560,7 @@ overrides:
   nanoid@>=3.0.0 <3.3.17: 3.3.17
   nuxt@>=4.0.0 <4.5.1: 4.5.1
   postcss: 8.5.23
-  react-router@>=7.0.0 <7.18.0: 7.18.1
+  react-router@>=7.0.0 <7.18.0: 7.18.2
   serialize-javascript@<=7.0.2: '>=7.0.3'
   sharp@<0.35.0: 0.35.3
   shell-quote@<=1.8.4: 1.9.0
@@ -14669,6 +14669,16 @@ packages:
       react-dom:
         optional: true
 
+  react-router@7.18.2:
+    resolution: {integrity: sha512-aUVMjFm3GAPTTZL7oYr5E7ETiqfQCHRLH+B+5afnICvf0r7kkK4eR6SMuwbSTJw/7t+12khT/Kahij49fqOCIg==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
   react-server-dom-rspack@0.0.2:
     resolution: {integrity: sha512-PowIm+Z65LkvC3yk4t3YrH2nMejwL361jiBT0BMW2bQCDUaNQknDHMPH0aTgMtJ9ZZ1Gc7KFgBvwB0itSzzELQ==}
     engines: {node: '>=0.10.0'}
@@ -19978,7 +19988,7 @@ snapshots:
       '@modern-js/utils': 3.6.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@swc/helpers': 0.5.23
       lru-cache: 10.4.3
-      react-router: 7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-router: 7.18.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       serialize-javascript: 7.0.5
     optionalDependencies:
       react: 19.2.8
@@ -32125,6 +32135,14 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
 
   react-router@7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
+      cookie: 1.1.1
+      react: 19.2.8
+      set-cookie-parser: 2.7.2
+    optionalDependencies:
+      react-dom: 19.2.8(react@19.2.8)
+
+  react-router@7.18.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       cookie: 1.1.1
       react: 19.2.8

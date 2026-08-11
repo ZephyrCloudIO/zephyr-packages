@@ -1,6 +1,6 @@
 {
   "name": "zephyr-tap-runtime",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Host-owned TAP lifecycle runtime plugin for Module Federation",
   "license": "Apache-2.0",
   "author": {

@@ -1,6 +1,6 @@
 {
   "name": "zephyr-nuxt-module",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Nuxt module for deploying Nuxt applications with Zephyr Cloud",
   "keywords": [
     "deployment",
@@ -66,6 +66,7 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "catalog:typescript",
+    "nuxt": "catalog:nuxt",
     "vite": "catalog:vite7"
   },
   "peerDependencies": {

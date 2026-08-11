@@ -96,6 +96,13 @@ Add these scripts to your \`package.json\`:
 
 After running \`build\`, your site will automatically be uploaded to Zephyr Cloud if the plugin is enabled and configured.
 
+### SSG with Module Federation
+
+No target-specific Zephyr configuration is required. Rspress builds browser and Node
+compilers during SSG; Zephyr publishes Module Federation metadata from the deployable
+browser compiler only, while uploading every emitted file from the shared output directory,
+including Node/SSG artifacts.
+
 ---
 
 ## Requirements

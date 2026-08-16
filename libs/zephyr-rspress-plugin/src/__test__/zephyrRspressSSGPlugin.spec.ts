@@ -114,7 +114,11 @@ describe('zephyrRspressSSGPlugin', () => {
   });
 
   it('forwards every federation configuration to the SSG deployment', async () => {
-    const mockFiles = ['manifest.tap.json', 'targets/desktop/remoteEntry.mjs'];
+    const mockFiles = [
+      'manifest.tap.json',
+      'targets/desktop/remoteEntry.mjs',
+      'static/ssg-node.js',
+    ];
     const mfConfig = [
       {
         name: 'RspackModuleFederationPlugin',

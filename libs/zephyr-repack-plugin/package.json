@@ -1,6 +1,6 @@
 {
   "name": "zephyr-repack-plugin",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Repack plugin for Zephyr",
   "license": "Apache-2.0",
   "author": {

@@ -51,8 +51,10 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
 
   const zeStart = Date.now();
   const { wait_for_index_html, zephyr_engine } = pluginOptions;
+  const coordinator = pluginOptions.coordinator;
+  let coordinatedParticipant: string | undefined;
   const preserveTapArtifactPaths = zephyr_engine.env?.target === 'tap-app';
-  let logicalDeploymentCompleted = !pluginOptions.coordinator;
+  let logicalDeploymentCompleted = !coordinator;
 
   try {
     if (preserveTapArtifactPaths) {
@@ -69,6 +71,19 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     });
     if (pluginOptions.assetPrefix && !preserveTapArtifactPaths) {
       assetsMap = prefixAssetPaths(assetsMap, pluginOptions.assetPrefix);
+    }
+
+    if (coordinator) {
+      coordinatedParticipant = pluginOptions.participant;
+      if (!coordinatedParticipant) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message: 'A coordinated xpack build requires a participant name',
+        });
+      }
+      await coordinator.prepareParticipant(
+        coordinatedParticipant,
+        pluginOptions.generation
+      );
     }
 
     // webpack dash data
@@ -98,14 +113,9 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
       });
     }
 
-    if (pluginOptions.coordinator) {
-      if (!pluginOptions.participant) {
-        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-          message: 'A coordinated xpack build requires a participant name',
-        });
-      }
-      logicalDeploymentCompleted = await pluginOptions.coordinator.contribute({
-        participant: pluginOptions.participant,
+    if (coordinator && coordinatedParticipant) {
+      logicalDeploymentCompleted = await coordinator.contribute({
+        participant: coordinatedParticipant,
         generation: pluginOptions.generation,
         assetsMap,
         mfConfigs: mfConfigs.length > 0 ? mfConfigs : undefined,
@@ -125,7 +135,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     });
     await zephyr_engine.build_finished();
   } catch (err) {
-    if (pluginOptions.coordinator) {
+    if (coordinator) {
       throw err;
     }
     // setupZeDeploy starts direct builds. Any failure before build_finished must release

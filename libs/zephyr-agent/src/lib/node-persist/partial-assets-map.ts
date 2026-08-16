@@ -1,19 +1,16 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, open, readFile, rm } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 import * as path from 'node:path';
-import { lock } from 'proper-lockfile';
 import type { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import { zeBuildAssets } from '../transformers/ze-build-assets';
 import { writeFileAtomically } from './atomic-file';
-import { storage } from './storage';
 import {
-  ensurePrivateFilePermissions,
   PARTIAL_ASSET_LOCK_STALE_MS,
   StorageKeys,
-  ZE_LOCKS_PATH,
   ZE_PATH,
   ZE_STORAGE_PATH,
 } from './storage-keys';
+import { getStorageLockPath, withStorageLock } from './storage-lock';
 
 export interface PartialAssetMaps {
   [partialKey: string]: ZeBuildAssetsMap;
@@ -383,37 +380,27 @@ export function getLegacyPartialAssetStorePath(application_uid: string): string 
   return path.join(ZE_STORAGE_PATH, legacyKeyDigest);
 }
 
-/** @internal Exposed for persistence-boundary compatibility tests. */
-export function getPartialAssetLockPath(application_uid: string): string {
-  return path.join(
-    ZE_LOCKS_PATH,
-    `partial-assets-${get_application_digest(application_uid)}`
-  );
+function getPartialAssetLockName(application_uid: string): string {
+  return `partial-assets-${get_application_digest(application_uid)}`;
 }
 
-async function withPartialAssetsLock<T>(
+/** @internal Exposed for persistence-boundary compatibility tests. */
+export function getPartialAssetLockPath(application_uid: string): string {
+  return getStorageLockPath(getPartialAssetLockName(application_uid));
+}
+
+function withPartialAssetsLock<T>(
   application_uid: string,
   action: () => Promise<T>
 ): Promise<T> {
-  await storage;
-  // Recreate the private boundary if an external cleanup removed it while this process
-  // was alive. Persistent lock targets are intentional: proper-lockfile coordinates
-  // restarts through a stable path and keeps its transient ownership in `.lock`.
-  await mkdir(ZE_LOCKS_PATH, { recursive: true, mode: 0o700 });
-  const lockPath = getPartialAssetLockPath(application_uid);
-  await (await open(lockPath, 'a', 0o600)).close();
-  ensurePrivateFilePermissions(lockPath);
-  const release = await lock(lockPath, {
-    realpath: false,
+  // Each claim/commit sequence is a multi-step read-modify-write over the atomic store,
+  // so an unavailable lock must fail instead of proceeding unlocked. Contention is
+  // bounded by the finalizers of a single application, hence the short retry budget.
+  return withStorageLock(getPartialAssetLockName(application_uid), action, {
     retries: { retries: 8, factor: 1.5, minTimeout: 25, maxTimeout: 500 },
-    stale: PARTIAL_ASSET_LOCK_STALE_MS,
+    staleMs: PARTIAL_ASSET_LOCK_STALE_MS,
+    whenUnavailable: 'throw',
   });
-
-  try {
-    return await action();
-  } finally {
-    await release();
-  }
 }
 
 async function readJsonFileStrict(filePath: string): Promise<unknown | undefined> {

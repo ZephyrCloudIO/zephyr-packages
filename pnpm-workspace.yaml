@@ -295,6 +295,7 @@ overrides:
   socket.io-parser@>=4.0.0 <4.2.7: 4.2.7
   svgo@>=3.0.0 <3.3.4: 3.3.4
   svgo@>=4.0.0 <4.0.2: 4.0.2
+  ts-deepmerge: 8.0.0
   undici@>=7.0.0 <7.29.0: 7.29.0
 
 allowBuilds:

@@ -23,8 +23,8 @@ creates `vX.Y.Z` and the matching GitHub Release. The release event then starts
 
 The retired `pnpm bump-patch`, `pnpm bump-minor`, and `pnpm bump-major` flow
 must not be recreated. Do not hand-create a stable tag or GitHub Release.
-Manual canary and prerelease publication remain in `publish_packages.yml` as
-legacy channels.
+Manual canary and prerelease publication remain unchanged in
+`publish_packages.yml`.
 
 Release Please uses `GH_TOKEN`, not `GITHUB_TOKEN`, because GitHub suppresses
 follow-on workflow events created by the default Actions token. The credential

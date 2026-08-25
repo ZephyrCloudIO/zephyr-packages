@@ -100,21 +100,13 @@ PR updates to affected-only builds.
 
 ### Version Management
 
-- `pnpm bump-patch` - Automated patch version bump across all packages
-- `pnpm bump-minor` - Automated minor version bump across all packages
-- `pnpm bump-major` - Automated major version bump across all packages
+- Stable releases are prepared by Release Please from Conventional Commits on
+  `main`.
+- Merge the generated release PR to update every package and plugin manifest,
+  create the `vX.Y.Z` tag and GitHub Release, and publish packages to npm.
+- Manual `pnpm bump-*` scripts and hand-created stable tags are retired.
 
-  These scripts automate the version release process:
-  - Runs `pnpm audit --audit-level high` before making any version changes
-  - Increments the selected version in root and all lib package.json files
-  - Creates a commit with conventional commit message
-  - Creates a git tag (vX.X.X)
-  - If on main/master branch, creates a new feature branch and opens a PR
-  - Pushes changes and tags to origin
-
-  **Requirements:**
-  - Clean working directory (no uncommitted changes)
-  - gh CLI installed and authenticated (for automatic PR creation)
-  - Git configured with push access to origin
+See [Release automation](docs/releasing.md) for the complete release and
+Renovate automation policy.
 
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

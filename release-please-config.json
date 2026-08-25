@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "build", "section": "Build system" },
+    { "type": "ci", "section": "CI" },
+    { "type": "refactor", "section": "Refactors" },
+    { "type": "test", "section": "Tests" },
+    { "type": "chore", "section": "Maintenance" }
+  ],
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "component": "zephyr-packages",
+      "package-name": "zephyr-packages",
+      "extra-files": [
+        "libs/create-zephyr-apps/package.json",
+        "libs/parcel-reporter-zephyr/package.json",
+        "libs/rollup-plugin-zephyr/package.json",
+        "libs/vite-plugin-tanstack-start-zephyr/package.json",
+        "libs/vite-plugin-vinext-zephyr/package.json",
+        "libs/vite-plugin-zephyr/package.json",
+        "libs/with-zephyr/package.json",
+        "libs/zephyr-agent/package.json",
+        "libs/zephyr-astro-integration/package.json",
+        "libs/zephyr-cli/package.json",
+        "libs/zephyr-edge-contract/package.json",
+        "libs/zephyr-metro-plugin/package.json",
+        "libs/zephyr-modernjs-plugin/package.json",
+        "libs/zephyr-native-cache/package.json",
+        "libs/zephyr-nuxt-module/package.json",
+        "libs/zephyr-repack-plugin/package.json",
+        "libs/zephyr-rolldown-plugin/package.json",
+        "libs/zephyr-rsbuild-plugin/package.json",
+        "libs/zephyr-rspack-plugin/package.json",
+        "libs/zephyr-rspress-plugin/package.json",
+        "libs/zephyr-tap-runtime/package.json",
+        "libs/zephyr-webpack-plugin/package.json",
+        "libs/zephyr-xpack-internal/package.json",
+        "libs/create-zephyr-apps/.codex-plugin/plugin.json",
+        "libs/create-zephyr-apps/.claude-plugin/plugin.json",
+        "libs/create-zephyr-apps/.cursor-plugin/plugin.json"
+      ]
+    }
+  }
+}

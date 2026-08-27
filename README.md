@@ -106,7 +106,6 @@ PR updates to affected-only builds.
   create the `vX.Y.Z` tag and GitHub Release, and publish packages to npm.
 - Manual `pnpm bump-*` scripts and hand-created stable tags are retired.
 
-See [Release automation](docs/releasing.md) for the complete release and
-Renovate automation policy.
+See [Release automation](docs/releasing.md) for the complete release policy.
 
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

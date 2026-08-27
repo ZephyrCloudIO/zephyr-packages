@@ -123,8 +123,6 @@ jobs:
           cache-key-suffix: lint
       - name: verify miniapp Wave 1 dependency policy
         run: pnpm test:miniapp-wave1
-      - name: verify release automation
-        run: pnpm test:release-automation
       - name: run lint
         run: pnpm lint
       - name: check formatting

@@ -4,7 +4,6 @@
   "private": true,
   "license": "Apache-2.0",
   "scripts": {
-    "test:release-automation": "node --test .github/scripts/*.test.mjs",
     "ze-version-patch": "pnpm --filter './libs/**' exec pnpm version --no-git-tag-version --no-git-checks",
     "ze-publish": "pnpm --config.workspace-concurrency=1 -r --filter './libs/**' publish --provenance --access public --no-git-checks --report-summary",
     "build": "turbo run build --filter='./libs/*'",

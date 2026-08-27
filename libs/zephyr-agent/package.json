@@ -1,6 +1,6 @@
 {
   "name": "zephyr-agent",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Zephyr plugin agent",
   "license": "Apache-2.0",
   "author": {

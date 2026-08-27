@@ -1,6 +1,6 @@
 {
   "name": "zephyr-astro-integration",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Astro integration for Zephyr Cloud deployment and module federation",
   "keywords": [
     "analytics",

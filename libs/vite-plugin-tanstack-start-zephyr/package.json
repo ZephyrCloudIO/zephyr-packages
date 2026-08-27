@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "vite-plugin-tanstack-start-zephyr",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Vite plugin for Zephyr with TanStack Start support",
   "keywords": [
     "deploy",

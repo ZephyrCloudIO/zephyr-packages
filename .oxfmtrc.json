@@ -10,6 +10,10 @@
     "**/coverage/**",
     "**/.turbo/**",
     "pnpm-lock.yaml",
-    "**/*.gen.ts"
+    "**/*.gen.ts",
+    "CHANGELOG.md",
+    "libs/create-zephyr-apps/.claude-plugin/plugin.json",
+    "libs/create-zephyr-apps/.codex-plugin/plugin.json",
+    "libs/create-zephyr-apps/.cursor-plugin/plugin.json"
   ]
 }

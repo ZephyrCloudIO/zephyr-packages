@@ -1,6 +1,6 @@
 {
   "name": "create-zephyr-apps",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Agent Skill for the create-zephyr-apps package.",
   "author": {
     "name": "ZephyrCloudIO"
@@ -13,6 +13,8 @@
     "developerName": "ZephyrCloudIO",
     "category": "Developer Tools",
     "capabilities": [],
-    "defaultPrompt": ["Scaffold a Zephyr app with $create-zephyr-apps."]
+    "defaultPrompt": [
+      "Scaffold a Zephyr app with $create-zephyr-apps."
+    ]
   }
 }

@@ -53,16 +53,11 @@ export async function createSnapshot(
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
-  // TAP package descriptors and locks address emitted artifacts by their exact paths and
-  // hashes. A deployment base is a web-routing concern, so applying it here would turn a
-  // valid locked package into a different snapshot without rebuilding the lock.
-  const preservesLockedArtifactPaths = zephyr_engine.env.target === 'tap-app';
-  const basedAssets = preservesLockedArtifactPaths
-    ? assets
-    : applyBaseHrefToAssets(assets, zephyr_engine.buildProperties.baseHref);
-  const normalizedBaseHref = preservesLockedArtifactPaths
-    ? ''
-    : normalizeBasePath(zephyr_engine.buildProperties.baseHref);
+  const basedAssets = applyBaseHrefToAssets(
+    assets,
+    zephyr_engine.buildProperties.baseHref
+  );
+  const normalizedBaseHref = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
   const basedEntrypoint =
     entrypoint && (snapshotType === 'ssr' || zephyr_engine.env.ssr)
       ? applyBaseHrefToPath(entrypoint, normalizedBaseHref)

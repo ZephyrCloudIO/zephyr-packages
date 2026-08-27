@@ -7,7 +7,6 @@ import type { Plugin, ResolvedConfig, UserConfig } from 'vite' with {
 };
 import {
   ApplicationContext,
-  assertTapFederationPublicationMetadata,
   assertZephyrBuildTarget,
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
@@ -800,11 +799,6 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           await zephyr_engine.start_new_build();
         }
         const federationMetadata = getModuleFederationPublicationMetadata();
-        assertTapFederationPublicationMetadata({
-          target: options.target,
-          mfConfigs: federationMetadata.mfConfigs,
-          federation: federationMetadata.federation,
-        });
         await zephyr_engine.upload_assets({
           assetsMap,
           buildStats: attachViteFederationBuildStats(
@@ -1006,11 +1000,6 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                 });
               }
               const federationMetadata = getModuleFederationPublicationMetadata();
-              assertTapFederationPublicationMetadata({
-                target: options.target,
-                mfConfigs: federationMetadata.mfConfigs,
-                federation: federationMetadata.federation,
-              });
               await zephyrEngine.upload_assets({
                 assetsMap,
                 buildStats: attachViteFederationBuildStats(
@@ -1035,10 +1024,6 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           const session = applicationContext.beginBuild({
             invocationId: `${buildInvocationId}:${generation}`,
             generation,
-            // TAP descriptors bind the exact asset path into their hash. Do not let the
-            // shared session repair aliases, because repairing them would require a
-            // different asset hash than the SDK supplied.
-            strictAssetPaths: preservesLockedArtifactPaths,
             participants: [
               ...environments.map(([name, environment]) => ({
                 name,

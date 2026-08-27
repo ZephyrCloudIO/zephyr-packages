@@ -89,28 +89,26 @@ describe('createSnapshot baseHref entrypoint handling', () => {
     expect(snapshot.entrypoint).toBe('releases/current/server/index.js');
   });
 
-  it('preserves locked tap-app paths and an SSR entrypoint even when a web base is configured', async () => {
+  it('forwards tap-app while applying ordinary snapshot path handling', async () => {
     const entry = zeBuildAssets({
-      filepath: 'targets/desktop/server/index.mjs',
-      content: 'tap server',
+      filepath: 'server/index.mjs',
+      content: 'server',
     });
-    const descriptor = zeBuildAssets({
-      filepath: 'tap-package.json',
-      content: '{"locked":true}',
+    const asset = zeBuildAssets({
+      filepath: 'assets/app.js',
+      content: 'app',
     });
 
     const snapshot = await createSnapshot(engine('/web-routing-base/', 'tap-app'), {
       mfConfig: undefined,
-      assets: { [entry.hash]: entry, [descriptor.hash]: descriptor },
+      assets: { [entry.hash]: entry, [asset.hash]: asset },
       snapshotType: 'ssr',
       entrypoint: entry.path,
     });
 
-    expect(snapshot.assets).toHaveProperty(entry.path);
-    expect(snapshot.assets).toHaveProperty(descriptor.path);
-    expect(snapshot.assets[entry.path]?.hash).toBe(entry.hash);
-    expect(snapshot.assets[descriptor.path]?.hash).toBe(descriptor.hash);
-    expect(snapshot.entrypoint).toBe(entry.path);
+    expect(snapshot.assets).toHaveProperty('web-routing-base/server/index.mjs');
+    expect(snapshot.assets).toHaveProperty('web-routing-base/assets/app.js');
+    expect(snapshot.entrypoint).toBe('web-routing-base/server/index.mjs');
     expect(snapshot.target).toBe('tap-app');
   });
 });

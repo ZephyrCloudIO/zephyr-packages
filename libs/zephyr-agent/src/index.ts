@@ -80,10 +80,6 @@ export {
 } from './lib/transformers/ze-build-assets-map';
 export { zeBuildDashData } from './lib/transformers/ze-build-dash-data';
 export {
-  assertTapFederationPublicationMetadata,
-  type TapFederationPublicationMetadata,
-} from './lib/validation/assert-tap-federation-metadata';
-export {
   convertResolvedDependencies,
   createManifestAsset,
   createManifestContent,

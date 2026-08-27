@@ -21,7 +21,6 @@ function buildDefinitionKey(options: BeginBuildOptions): string {
   return JSON.stringify({
     participants,
     postprocessors,
-    strictAssetPaths: options.strictAssetPaths ?? false,
   });
 }
 
@@ -99,8 +98,7 @@ export class ApplicationContext<TData = unknown, TResult = void> {
         publish: this.options.publish,
         finish: this.options.finish,
         onFailure: this.options.onFailure,
-      },
-      options.strictAssetPaths ?? false
+      }
     );
     this.latestGeneration = generation;
     this.activeSession = session;

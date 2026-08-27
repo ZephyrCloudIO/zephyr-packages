@@ -353,7 +353,6 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
               { name: outputParticipant, role: snapshotType },
             ],
             postprocessors: ['tanstack-start'],
-            strictAssetPaths: options.target === 'tap-app',
           });
 
           for (const [name] of environments) {

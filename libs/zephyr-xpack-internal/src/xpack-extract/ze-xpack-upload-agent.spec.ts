@@ -24,7 +24,6 @@ rs.mock('../lifecycle-events/index', () => ({
 }));
 
 rs.mock('zephyr-agent', () => ({
-  assertTapFederationPublicationMetadata: rs.fn(),
   handleGlobalError: rs.fn(),
   zeBuildAssets: rs.fn(({ filepath, content }) => ({
     path: filepath,

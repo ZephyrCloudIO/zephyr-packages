@@ -54,11 +54,6 @@ export interface BeginBuildOptions {
   participants: readonly BuildParticipant[];
   /** Named framework/bundler work which must finish after compiler output is collected. */
   postprocessors?: readonly string[];
-  /**
-   * Reject aliases such as backslashes, duplicate separators, and `./` rather than
-   * normalizing/re-hashing them. Use for descriptor-locked artifact packages.
-   */
-  strictAssetPaths?: boolean;
 }
 
 export interface BuildContribution<TData = unknown> {

@@ -26,13 +26,6 @@ rs.mock('../zephyr-engine', () => ({
   },
 }));
 
-function tapMetadata() {
-  return {
-    mfConfigs: [{ name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' }],
-    federation: [{ name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' }],
-  };
-}
-
 describe('uploadOutputToZephyr', () => {
   const mockReadDirRecursiveWithContents = readDirRecursiveWithContents as Mock<
     typeof readDirRecursiveWithContents
@@ -49,19 +42,6 @@ describe('uploadOutputToZephyr', () => {
         target: 'desktop' as never,
       })
     ).rejects.toThrow('uploadOutputToZephyr({ target }) must be one of');
-
-    expect(mockReadDirRecursiveWithContents).not.toHaveBeenCalled();
-    expect(mockZephyrEngineCreate).not.toHaveBeenCalled();
-  });
-
-  it('rejects a TAP output without paired Federation metadata before reading files', async () => {
-    await expect(
-      uploadOutputToZephyr({
-        rootDir: '/tmp/project',
-        outputDir: '/tmp/project/.output',
-        target: 'tap-app',
-      })
-    ).rejects.toThrow('requires non-empty mfConfigs and federation metadata');
 
     expect(mockReadDirRecursiveWithContents).not.toHaveBeenCalled();
     expect(mockZephyrEngineCreate).not.toHaveBeenCalled();
@@ -208,205 +188,7 @@ describe('uploadOutputToZephyr', () => {
     });
   });
 
-  it('preserves package-relative TAP descriptor and target artifacts from a split publicDir', async () => {
-    const engine = {
-      env: {
-        target: 'web',
-        ssr: false,
-      },
-      upload_assets: rs.fn().mockResolvedValue(undefined),
-      build_finished: rs.fn().mockResolvedValue(undefined),
-    };
-    const descriptor = Buffer.from('{"package":"tap-example"}');
-    const remoteEntry = Buffer.from('export const target = "desktop";');
-    const server = Buffer.from('server');
-    let capturedAssets: Record<string, { content: Buffer }> | undefined;
-
-    mockZephyrEngineCreate.mockResolvedValue(
-      engine as unknown as Awaited<ReturnType<typeof ZephyrEngine.create>>
-    );
-    mockZeBuildDashData.mockResolvedValue({ build: 'stats' } as unknown as Awaited<
-      ReturnType<typeof zeBuildDashData>
-    >);
-    mockReadDirRecursiveWithContents.mockResolvedValue([
-      {
-        fullPath: '/tmp/project/.output/server/index.mjs',
-        relativePath: 'server/index.mjs',
-        content: server,
-      },
-      {
-        fullPath: '/tmp/project/.output/tap-package/manifest.tap.json',
-        relativePath: 'tap-package/manifest.tap.json',
-        content: descriptor,
-      },
-      {
-        fullPath: '/tmp/project/.output/tap-package/targets/desktop/remoteEntry.mjs',
-        relativePath: 'tap-package/targets/desktop/remoteEntry.mjs',
-        content: remoteEntry,
-      },
-    ]);
-    mockBuildAssetsMap.mockImplementation((assets) => {
-      capturedAssets = assets as Record<string, { content: Buffer }>;
-      return {
-        hash1: {
-          hash: 'hash1',
-          path: 'server/index.mjs',
-          buffer: server,
-          size: server.length,
-        },
-      } as unknown as ReturnType<typeof buildAssetsMapMock>;
-    });
-
-    await uploadOutputToZephyr({
-      rootDir: '/tmp/project',
-      outputDir: '/tmp/project/.output',
-      publicDir: '/tmp/project/.output/tap-package',
-      baseURL: '/docs/',
-      target: 'tap-app',
-      ssr: true,
-      ...tapMetadata(),
-    });
-
-    expect(mockZephyrEngineCreate).toHaveBeenCalledWith({
-      builder: 'unknown',
-      context: '/tmp/project',
-      target: 'tap-app',
-    });
-    expect(Object.keys(capturedAssets ?? {}).sort()).toEqual([
-      'server/index.mjs',
-      'tap-package/manifest.tap.json',
-      'tap-package/targets/desktop/remoteEntry.mjs',
-    ]);
-    expect(capturedAssets?.['tap-package/manifest.tap.json']?.content).toBe(descriptor);
-    expect(capturedAssets?.['tap-package/targets/desktop/remoteEntry.mjs']?.content).toBe(
-      remoteEntry
-    );
-    expect(capturedAssets).not.toHaveProperty('client/docs/manifest.tap.json');
-    expect(engine.upload_assets).toHaveBeenCalledWith(
-      expect.objectContaining({
-        snapshotType: 'ssr',
-        entrypoint: 'server/index.mjs',
-      })
-    );
-  });
-
-  it('defaults a standard TAP artifact set to CSR without requiring a server entrypoint', async () => {
-    const engine = {
-      env: { target: 'web', ssr: true },
-      upload_assets: rs.fn().mockResolvedValue(undefined),
-      build_finished: rs.fn().mockResolvedValue(undefined),
-    };
-    const descriptor = Buffer.from('{"package":"tap-example"}');
-    const remoteEntry = Buffer.from('export const target = "desktop";');
-
-    mockZephyrEngineCreate.mockResolvedValue(
-      engine as unknown as Awaited<ReturnType<typeof ZephyrEngine.create>>
-    );
-    mockZeBuildDashData.mockResolvedValue({ build: 'stats' } as never);
-    mockReadDirRecursiveWithContents.mockResolvedValue([
-      {
-        fullPath: '/tmp/project/dist/manifest.tap.json',
-        relativePath: 'manifest.tap.json',
-        content: descriptor,
-      },
-      {
-        fullPath: '/tmp/project/dist/targets/desktop/remoteEntry.mjs',
-        relativePath: 'targets/desktop/remoteEntry.mjs',
-        content: remoteEntry,
-      },
-    ]);
-    mockBuildAssetsMap.mockReturnValue({
-      descriptor: {
-        hash: 'descriptor',
-        path: 'manifest.tap.json',
-        buffer: descriptor,
-        size: descriptor.length,
-      },
-      remoteEntry: {
-        hash: 'remote-entry',
-        path: 'targets/desktop/remoteEntry.mjs',
-        buffer: remoteEntry,
-        size: remoteEntry.length,
-      },
-    } as never);
-
-    await expect(
-      uploadOutputToZephyr({
-        rootDir: '/tmp/project',
-        outputDir: '/tmp/project/dist',
-        target: 'tap-app',
-        ...tapMetadata(),
-      })
-    ).resolves.toEqual({ deploymentUrl: null, entrypoint: undefined });
-
-    expect(engine.env.ssr).toBe(false);
-    expect(engine.upload_assets).toHaveBeenCalledWith(
-      expect.objectContaining({ snapshotType: 'csr', entrypoint: undefined })
-    );
-  });
-
-  it('retains every SDK-locked TAP file that generic web deployment filters omit', async () => {
-    const engine = {
-      env: { target: 'web', ssr: false },
-      upload_assets: rs.fn().mockResolvedValue(undefined),
-      build_finished: rs.fn().mockResolvedValue(undefined),
-    };
-    let capturedAssets: Record<string, { content: Buffer }> | undefined;
-    mockZephyrEngineCreate.mockResolvedValue(
-      engine as unknown as Awaited<ReturnType<typeof ZephyrEngine.create>>
-    );
-    mockZeBuildDashData.mockResolvedValue({ build: 'stats' } as never);
-    mockReadDirRecursiveWithContents.mockResolvedValue([
-      {
-        fullPath: '/tmp/project/dist/manifest.tap.json',
-        relativePath: 'manifest.tap.json',
-        content: Buffer.from('descriptor'),
-      },
-      {
-        fullPath: '/tmp/project/dist/targets/desktop/remoteEntry.mjs.map',
-        relativePath: 'targets/desktop/remoteEntry.mjs.map',
-        content: Buffer.from('map'),
-      },
-      {
-        fullPath: '/tmp/project/dist/node_modules/locked/asset.bin',
-        relativePath: 'node_modules/locked/asset.bin',
-        content: Buffer.from([0, 255, 1]),
-      },
-      {
-        fullPath: '/tmp/project/dist/.git/locked-metadata',
-        relativePath: '.git/locked-metadata',
-        content: Buffer.from('opaque'),
-      },
-    ]);
-    mockBuildAssetsMap.mockImplementation((assets) => {
-      capturedAssets = assets as Record<string, { content: Buffer }>;
-      return {
-        hash: {
-          hash: 'hash',
-          path: 'manifest.tap.json',
-          buffer: Buffer.from('descriptor'),
-          size: 10,
-        },
-      } as unknown as ReturnType<typeof buildAssetsMapMock>;
-    });
-
-    await uploadOutputToZephyr({
-      rootDir: '/tmp/project',
-      outputDir: '/tmp/project/dist',
-      target: 'tap-app',
-      ssr: false,
-      ...tapMetadata(),
-    });
-
-    expect(Object.keys(capturedAssets ?? {}).sort()).toEqual([
-      '.git/locked-metadata',
-      'manifest.tap.json',
-      'node_modules/locked/asset.bin',
-      'targets/desktop/remoteEntry.mjs.map',
-    ]);
-  });
-
-  it('carries every TAP Federation container without selecting a legacy first entry', async () => {
+  it('carries every Federation container without selecting a legacy first entry', async () => {
     const engine = {
       env: { target: 'web', ssr: false },
       upload_assets: rs.fn().mockResolvedValue(undefined),
@@ -418,17 +200,17 @@ describe('uploadOutputToZephyr', () => {
     mockZeBuildDashData.mockResolvedValue({ build: 'stats' } as never);
     mockReadDirRecursiveWithContents.mockResolvedValue([
       {
-        fullPath: '/tmp/project/dist/manifest.tap.json',
-        relativePath: 'manifest.tap.json',
-        content: Buffer.from('descriptor'),
+        fullPath: '/tmp/project/dist/index.html',
+        relativePath: 'index.html',
+        content: Buffer.from('app'),
       },
     ]);
     mockBuildAssetsMap.mockReturnValue({
       hash: {
         hash: 'hash',
-        path: 'manifest.tap.json',
-        buffer: Buffer.from('descriptor'),
-        size: 10,
+        path: 'index.html',
+        buffer: Buffer.from('app'),
+        size: 3,
       },
     } as never);
     const mfConfigs = [
@@ -443,7 +225,6 @@ describe('uploadOutputToZephyr', () => {
     await uploadOutputToZephyr({
       rootDir: '/tmp/project',
       outputDir: '/tmp/project/dist',
-      target: 'tap-app',
       ssr: false,
       mfConfigs,
       federation,
@@ -459,17 +240,17 @@ describe('uploadOutputToZephyr', () => {
     expect(upload.buildStats.federation).toBe(federation);
   });
 
-  it('fails closed when normalized TAP package artifact paths collide', async () => {
+  it('fails closed when normalized output paths collide', async () => {
     mockReadDirRecursiveWithContents.mockResolvedValue([
       {
-        fullPath: '/tmp/project/.output/tap-package/manifest.tap.json',
-        relativePath: 'tap-package/manifest.tap.json',
-        content: Buffer.from('first descriptor'),
+        fullPath: '/tmp/project/.output/assets/app.js',
+        relativePath: 'assets/app.js',
+        content: Buffer.from('first asset'),
       },
       {
-        fullPath: '/tmp/project/.output/tap-package/manifest-alias.tap.json',
-        relativePath: 'tap-package\\manifest.tap.json',
-        content: Buffer.from('second descriptor'),
+        fullPath: '/tmp/project/.output/assets/app-alias.js',
+        relativePath: 'assets\\app.js',
+        content: Buffer.from('second asset'),
       },
     ]);
 
@@ -477,13 +258,11 @@ describe('uploadOutputToZephyr', () => {
       uploadOutputToZephyr({
         rootDir: '/tmp/project',
         outputDir: '/tmp/project/.output',
-        publicDir: '/tmp/project/.output/tap-package',
-        target: 'tap-app',
-        ...tapMetadata(),
+        ssr: false,
       })
     ).rejects.toMatchObject({
       code: ZephyrError.toZeCode(ZeErrors.ERR_DEPLOY_LOCAL_BUILD),
-      message: expect.stringContaining('tap-package/manifest.tap.json'),
+      message: expect.stringContaining('assets/app.js'),
     });
 
     expect(mockBuildAssetsMap).not.toHaveBeenCalled();

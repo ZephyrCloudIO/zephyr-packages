@@ -20,32 +20,136 @@
       "component": "zephyr-packages",
       "package-name": "zephyr-packages",
       "extra-files": [
-        "libs/create-zephyr-apps/package.json",
-        "libs/parcel-reporter-zephyr/package.json",
-        "libs/rollup-plugin-zephyr/package.json",
-        "libs/vite-plugin-tanstack-start-zephyr/package.json",
-        "libs/vite-plugin-vinext-zephyr/package.json",
-        "libs/vite-plugin-zephyr/package.json",
-        "libs/with-zephyr/package.json",
-        "libs/zephyr-agent/package.json",
-        "libs/zephyr-astro-integration/package.json",
-        "libs/zephyr-cli/package.json",
-        "libs/zephyr-edge-contract/package.json",
-        "libs/zephyr-metro-plugin/package.json",
-        "libs/zephyr-modernjs-plugin/package.json",
-        "libs/zephyr-native-cache/package.json",
-        "libs/zephyr-nuxt-module/package.json",
-        "libs/zephyr-repack-plugin/package.json",
-        "libs/zephyr-rolldown-plugin/package.json",
-        "libs/zephyr-rsbuild-plugin/package.json",
-        "libs/zephyr-rspack-plugin/package.json",
-        "libs/zephyr-rspress-plugin/package.json",
-        "libs/zephyr-tap-runtime/package.json",
-        "libs/zephyr-webpack-plugin/package.json",
-        "libs/zephyr-xpack-internal/package.json",
-        "libs/create-zephyr-apps/.codex-plugin/plugin.json",
-        "libs/create-zephyr-apps/.claude-plugin/plugin.json",
-        "libs/create-zephyr-apps/.cursor-plugin/plugin.json"
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/parcel-reporter-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/rollup-plugin-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/vite-plugin-tanstack-start-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/vite-plugin-vinext-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/vite-plugin-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/with-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-astro-integration/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-cli/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-edge-contract/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-metro-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-modernjs-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-native-cache/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-nuxt-module/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-repack-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rolldown-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rsbuild-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rspack-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rspress-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-tap-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-webpack-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-xpack-internal/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/.codex-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/.cursor-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
       ]
     }
   }

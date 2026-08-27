@@ -37,10 +37,17 @@ issue write access. The default `GITHUB_TOKEN` is not used because GitHub
 suppresses follow-on workflow events created by it. Stable release PRs always
 require human review.
 
-Trusted same-repository release PRs authored by the Zephyr Workflow Automation
-App run the lint, formatting, and typecheck lane. Package tests and preview
-deployments are skipped because Release Please changes only generated release
-metadata, and the App is not a Zephyr preview-deployment identity. Any changed
-file, triggering actor, author, repository, branch, or base mismatch restores
-normal CI. Apply the `ci:force-example-builds` label to run preview builds
-explicitly.
+Every CI job skips App-triggered, same-repository release PR events authored by
+the Zephyr Workflow Automation App, targeting `main`, and using Release
+Please's generated branch prefix. GitHub records the workflow run with skipped
+jobs, but no runner starts: release PRs run no lint, formatting, typecheck,
+package test, or preview deployment jobs. Human review remains required.
+
+The skip is intentionally job-level. Commit-message skip directives would also
+suppress the `push` workflow after merge and prevent Release Please from
+creating the stable tag and GitHub Release. A PR that misses any trusted
+identity or branch condition runs the normal CI workflow. Human-triggered
+events also run normal CI so maintainers cannot push arbitrary changes to a bot
+PR and retain the exemption. Release Please force-rebuilds its branch from
+current `main` on every App-triggered update, discarding any prior branch
+changes. Bot-triggered reopen events still run normal CI.

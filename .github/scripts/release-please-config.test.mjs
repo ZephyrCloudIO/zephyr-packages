@@ -26,9 +26,13 @@ test('tracks every versioned package and plugin manifest', () => {
   assert.deepEqual(configuredFiles, versionedLibraryFiles());
 });
 
+test('uses the native GitHub changelog renderer', () => {
+  const config = readJson('release-please-config.json');
+  assert.equal(config['changelog-type'], 'github');
+});
+
 test('uses explicit JSON version updaters for every manifest', () => {
   const config = readJson('release-please-config.json');
-
   for (const extraFile of config.packages['.']['extra-files']) {
     assert.equal(extraFile.type, 'json', extraFile.path);
     assert.equal(extraFile.jsonpath, '$.version', extraFile.path);

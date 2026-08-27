@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.4 (2026-08-27)
+
+## What's Changed
+* fix(agent): treat tap-app as an opaque build target by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/544
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.2.3...v1.2.4
+
 ## 1.2.3 (2026-08-27)
 
 ## What's Changed

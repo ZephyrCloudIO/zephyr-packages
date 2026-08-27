@@ -1,6 +1,6 @@
 {
   "name": "zephyr-edge-contract",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Edge contract for Zephyr",
   "license": "Apache-2.0",
   "author": {

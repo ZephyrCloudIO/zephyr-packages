@@ -9,7 +9,8 @@ concurrency:
   group: release-please-main
   cancel-in-progress: false
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   verify-package-integrity:
@@ -31,16 +32,22 @@ jobs:
     needs: verify-package-integrity
     runs-on: depot-ubuntu-latest
     timeout-minutes: 10
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
     steps:
+      - name: Mint Zephyr release App token
+        id: release-app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.ZE_WORKFLOW_AUTOMATION_CLIENT_ID }}
+          private-key: ${{ secrets.ZE_WORKFLOW_AUTOMATION_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
+
       - name: Create or update release PR
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
-          # A non-GITHUB_TOKEN credential is required so the release event can
-          # trigger the downstream npm publishing workflow.
-          token: ${{ secrets.GH_TOKEN }}
+          token: ${{ steps.release-app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json

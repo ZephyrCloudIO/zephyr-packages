@@ -233,7 +233,6 @@ describe('withZephyrVinext', () => {
     expect(mocks.resolveVinextEntrypoint).not.toHaveBeenCalled();
     expect(mocks.beginBuildOptions).toEqual(
       expect.objectContaining({
-        strictAssetPaths: true,
         participants: expect.arrayContaining([
           expect.objectContaining({ name: 'vinext-output', role: 'csr' }),
         ]),

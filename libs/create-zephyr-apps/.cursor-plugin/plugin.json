@@ -1,7 +1,7 @@
 {
   "name": "create-zephyr-apps",
   "displayName": "Create Zephyr Apps",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "description": "Agent Skill for the create-zephyr-apps package.",
   "author": {
     "name": "ZephyrCloudIO"
@@ -9,7 +9,11 @@
   "homepage": "https://docs.zephyr-cloud.io/tools/create-zephyr-apps",
   "repository": "https://github.com/ZephyrCloudIO/zephyr-packages",
   "license": "Apache-2.0",
-  "keywords": ["zephyr", "scaffolding", "agent-skill"],
+  "keywords": [
+    "zephyr",
+    "scaffolding",
+    "agent-skill"
+  ],
   "category": "developer-tools",
   "skills": "./skills/"
 }

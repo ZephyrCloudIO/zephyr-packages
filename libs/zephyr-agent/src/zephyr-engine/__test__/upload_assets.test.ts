@@ -4,10 +4,7 @@ import {
   ZEPHYR_MANIFEST_FILENAME,
   type ZeBuildAsset,
   type ZeBuildAssetsMap,
-  type ZephyrBuildStats,
   type ZephyrBuildTarget,
-  type ZephyrModuleFederationBuildMetadata,
-  type ZephyrModuleFederationConfig,
 } from 'zephyr-edge-contract';
 import type { ZeApplicationConfig } from '../../lib/node-persist/upload-provider-options';
 import { UploadProviderType } from '../../lib/node-persist/upload-provider-options';
@@ -78,19 +75,6 @@ function uploadedOptions(): UploadOptions {
   return mocks.uploadStrategy.mock.calls[0]?.[1] as UploadOptions;
 }
 
-function tapMetadata(
-  name = 'desktop',
-  remote = 'targets/desktop/remoteEntry.mjs'
-): {
-  mfConfigs: ZephyrModuleFederationConfig[];
-  federation: ZephyrModuleFederationBuildMetadata[];
-} {
-  return {
-    mfConfigs: [{ name, filename: remote }],
-    federation: [{ name, remote }],
-  };
-}
-
 describe('ZephyrEngine.upload_assets', () => {
   beforeEach(() => {
     rs.clearAllMocks();
@@ -122,29 +106,45 @@ describe('ZephyrEngine.upload_assets', () => {
     expect(uploadedOptions().snapshot.assets).toHaveProperty(ZEPHYR_MANIFEST_FILENAME);
   });
 
-  it('uploads emitted manifests and arbitrary TAP artifacts without rewriting bytes', async () => {
+  it('uploads the tap-app target without target-specific Federation metadata', async () => {
     const engine = readyEngine('tap-app');
-    const metadata = tapMetadata();
-    const manifestBytes = Buffer.from('{"source":"compilation","locked":true}');
-    const descriptorBytes = Buffer.from('{"package":"tap-app","version":1}');
-    const lockBytes = Buffer.from('{"assets":["icon.png"]}');
+    const app = asset('index.html', '<main>app</main>');
+    const assetsMap: ZeBuildAssetsMap = { [app.hash]: app };
+
+    await engine.upload_assets({
+      assetsMap,
+      buildStats: {} as never,
+      mfConfigs: [],
+    });
+
+    expect(uploadedOptions().snapshot).toMatchObject({
+      target: 'tap-app',
+      mfConfigs: [],
+    });
+    expect(mocks.uploadStrategy).toHaveBeenCalledOnce();
+  });
+
+  it('uploads emitted manifests and arbitrary assets without rewriting bytes', async () => {
+    const engine = readyEngine();
+    const manifestBytes = Buffer.from('{"source":"compilation"}');
+    const metadataBytes = Buffer.from('{"application":"example","version":1}');
+    const indexBytes = Buffer.from('{"assets":["icon.png"]}');
     const iconBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff, 0x01]);
     const emittedManifest = asset(ZEPHYR_MANIFEST_FILENAME, manifestBytes);
-    const descriptor = asset('tap-package.json', descriptorBytes);
-    const lock = asset('tap/asset-lock.json', lockBytes);
-    const icon = asset('tap/assets/icon.png', iconBytes);
+    const metadata = asset('application.json', metadataBytes);
+    const index = asset('assets/index.json', indexBytes);
+    const icon = asset('assets/icon.png', iconBytes);
     const assetsMap = Object.freeze({
       [emittedManifest.hash]: emittedManifest,
-      [descriptor.hash]: descriptor,
-      [lock.hash]: lock,
+      [metadata.hash]: metadata,
+      [index.hash]: index,
       [icon.hash]: icon,
     }) as ZeBuildAssetsMap;
     const assetKeys = Object.keys(assetsMap);
 
     await engine.upload_assets({
       assetsMap,
-      buildStats: { federation: metadata.federation } as ZephyrBuildStats,
-      mfConfigs: metadata.mfConfigs,
+      buildStats: {} as never,
     });
 
     const options = uploadedOptions();
@@ -158,11 +158,11 @@ describe('ZephyrEngine.upload_assets', () => {
       })
     );
 
-    // Frozen BuildSession maps are shallow-cloned, but every validated artifact keeps
+    // Frozen BuildSession maps are shallow-cloned, but every asset keeps
     // its original object, hash, path, size, and Buffer all the way to the strategy.
     expect(options.assets.assetsMap).not.toBe(assetsMap);
     expect(Object.keys(options.assets.assetsMap)).toEqual(assetKeys);
-    for (const entry of [emittedManifest, descriptor, lock, icon]) {
+    for (const entry of [emittedManifest, metadata, index, icon]) {
       const uploaded = options.assets.assetsMap[entry.hash];
       expect(uploaded).toBe(entry);
       expect(uploaded?.buffer).toBe(entry.buffer);
@@ -179,76 +179,6 @@ describe('ZephyrEngine.upload_assets', () => {
         (entry) => entry.path === ZEPHYR_MANIFEST_FILENAME
       )
     ).toEqual([emittedManifest]);
-  });
-
-  it('fails closed on incomplete, ambiguous, or mismatched TAP federation metadata', async () => {
-    const desktop = tapMetadata('desktop', 'targets/desktop/remoteEntry.mjs');
-    const mobile = tapMetadata('mobile', 'targets/mobile/remoteEntry.mjs');
-    const cases: Array<{
-      label: string;
-      mfConfigs?: ZephyrModuleFederationConfig[];
-      federation?: ZephyrModuleFederationBuildMetadata[];
-      message: string;
-    }> = [
-      {
-        label: 'missing arrays',
-        message: 'requires a non-empty mfConfigs metadata array',
-      },
-      {
-        label: 'empty arrays',
-        mfConfigs: [],
-        federation: [],
-        message: 'requires a non-empty mfConfigs metadata array',
-      },
-      {
-        label: 'different container counts',
-        mfConfigs: [...desktop.mfConfigs, ...mobile.mfConfigs],
-        federation: desktop.federation,
-        message: 'must contain the same number of containers',
-      },
-      {
-        label: 'duplicate federation remote',
-        mfConfigs: [
-          { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
-          { name: 'mobile', filename: 'targets/mobile/remoteEntry.mjs' },
-        ],
-        federation: [
-          { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
-          { name: 'mobile', remote: 'targets/desktop/remoteEntry.mjs' },
-        ],
-        message: 'federation metadata entries must not duplicate names or remotes',
-      },
-      {
-        label: 'duplicate snapshot config name',
-        mfConfigs: [
-          { name: 'desktop', filename: 'targets/desktop/remoteEntry.mjs' },
-          { name: 'desktop', filename: 'targets/mobile/remoteEntry.mjs' },
-        ],
-        federation: [
-          { name: 'desktop', remote: 'targets/desktop/remoteEntry.mjs' },
-          { name: 'mobile', remote: 'targets/mobile/remoteEntry.mjs' },
-        ],
-        message: 'mfConfigs entries must not duplicate names or filenames',
-      },
-      {
-        label: 'nonmatching name and remote pair',
-        mfConfigs: desktop.mfConfigs,
-        federation: [{ name: 'desktop', remote: 'targets/mobile/remoteEntry.mjs' }],
-        message: 'has no matching name and remote',
-      },
-    ];
-
-    for (const invalid of cases) {
-      const engine = readyEngine('tap-app');
-      await expect(
-        engine.upload_assets({
-          assetsMap: {},
-          buildStats: { federation: invalid.federation } as ZephyrBuildStats,
-          mfConfigs: invalid.mfConfigs,
-        })
-      ).rejects.toThrow(invalid.message);
-      expect(mocks.uploadStrategy).not.toHaveBeenCalled();
-    }
   });
 
   it('fails closed on duplicate emitted manifests instead of selecting the first one', async () => {
@@ -271,65 +201,6 @@ describe('ZephyrEngine.upload_assets', () => {
     expect(mocks.uploadStrategy).not.toHaveBeenCalled();
     expect(mocks.setAppDeployResult).not.toHaveBeenCalled();
     expect(engine.build_id).toBeNull();
-  });
-
-  it('rejects a noncanonical path before it can alias a locked TAP asset', async () => {
-    const engine = readyEngine('tap-app');
-    const metadata = tapMetadata();
-    const posixLock = asset('tap/asset-lock.json', '{"platform":"posix"}');
-    const windowsLock = asset('tap\\asset-lock.json', '{"platform":"windows"}');
-    const assetsMap: ZeBuildAssetsMap = {
-      [posixLock.hash]: posixLock,
-      [windowsLock.hash]: windowsLock,
-    };
-
-    await expect(
-      engine.upload_assets({
-        assetsMap,
-        buildStats: { federation: metadata.federation } as ZephyrBuildStats,
-        mfConfigs: metadata.mfConfigs,
-      })
-    ).rejects.toThrow('Asset path must use its canonical snapshot spelling');
-
-    expect(mocks.getUploadStrategy).not.toHaveBeenCalled();
-    expect(mocks.uploadStrategy).not.toHaveBeenCalled();
-    expect(Object.values(assetsMap)).toEqual([posixLock, windowsLock]);
-  });
-
-  it('rejects manifest aliases and escaping paths instead of generating a second manifest', async () => {
-    const metadata = tapMetadata();
-    const invalidPaths = [
-      './zephyr-manifest.json',
-      'tap//asset-lock.json',
-      'tap/../asset-lock.json',
-      '/tap/asset-lock.json',
-      'C:\\tap\\asset-lock.json',
-      'https://example.test/tap/asset-lock.json',
-      `tap/asset\0-lock.json`,
-    ];
-
-    for (const path of invalidPaths) {
-      const engine = readyEngine('tap-app');
-      const invalidAsset = asset(path, 'locked');
-      const assetsMap: ZeBuildAssetsMap = { [invalidAsset.hash]: invalidAsset };
-
-      await expect(
-        engine.upload_assets({
-          assetsMap,
-          buildStats: { federation: metadata.federation } as ZephyrBuildStats,
-          mfConfigs: metadata.mfConfigs,
-        })
-      ).rejects.toThrow(
-        /Asset path must (use its canonical snapshot spelling|be a relative snapshot path|not escape the snapshot root)/
-      );
-
-      expect(mocks.uploadStrategy).not.toHaveBeenCalled();
-      expect(Object.values(assetsMap)).toEqual([invalidAsset]);
-      rs.clearAllMocks();
-      mocks.getUploadStrategy.mockReturnValue(mocks.uploadStrategy);
-      mocks.uploadStrategy.mockResolvedValue('https://deploy.example.test/app');
-      mocks.setAppDeployResult.mockResolvedValue(undefined);
-    }
   });
 
   it('normalizes native asset separators for conventional adapter uploads', async () => {

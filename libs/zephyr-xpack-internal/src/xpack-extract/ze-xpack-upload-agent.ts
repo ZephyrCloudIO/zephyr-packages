@@ -1,6 +1,5 @@
 import type { ZeBuildAssetsMap, ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 import {
-  assertTapFederationPublicationMetadata,
   handleGlobalError,
   zeBuildAssets,
   ZeErrors,
@@ -102,16 +101,6 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
 
     const mfConfigs = getModuleFederationConfigs(pluginOptions.mfConfig);
     const mfConfig = getLegacyModuleFederationConfig(mfConfigs);
-
-    // Direct (non-coordinated) Webpack/Rspack builds pass through this path. A
-    // coordinator validates after merging its compiler contributions below.
-    if (!pluginOptions.coordinator) {
-      assertTapFederationPublicationMetadata({
-        target: zephyr_engine.env?.target,
-        mfConfigs,
-        federation: (dashData as ZephyrBuildStats).federation,
-      });
-    }
 
     if (coordinator && coordinatedParticipant) {
       logicalDeploymentCompleted = await coordinator.contribute({

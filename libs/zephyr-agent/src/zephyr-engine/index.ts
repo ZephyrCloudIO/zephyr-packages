@@ -38,8 +38,6 @@ import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache'
 import type { ZeApplicationConfig } from '../lib/node-persist/upload-provider-options';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
 import { createSnapshot } from '../lib/transformers/ze-build-snapshot';
-import { assertCanonicalSnapshotAssetPath } from '../lib/transformers/ze-snapshot-asset-path';
-import { assertTapFederationPublicationMetadata } from '../lib/validation/assert-tap-federation-metadata';
 import {
   convertResolvedDependencies,
   createManifestContent,
@@ -616,29 +614,18 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       } = props;
       const target = zephyr_engine.env?.target ?? 'web';
       assertZephyrBuildTarget(target, 'ZephyrEngine.env.target');
-      // TAP snapshots are only useful when their snapshot and dashboard metadata name
-      // the same complete set of target containers. This is the final shared transport
-      // boundary, so no public adapter can accidentally publish a partial package.
-      assertTapFederationPublicationMetadata({
-        target,
-        mfConfigs,
-        federation: buildStats.federation,
-      });
       // BuildSession publications are immutable. Preserve the legacy mutation behavior for
       // direct adapter maps while accepting sealed maps without throwing.
       const assetsMap = Object.isFrozen(providedAssetsMap)
         ? { ...providedAssetsMap }
         : providedAssetsMap;
 
-      // Snapshot asset keys normalize native Windows separators. TAP descriptors lock each
-      // artifact's exact path and hash, so only TAP requires the source spelling to
-      // already be canonical. Build an index before looking for the manifest so two
-      // inputs can never silently publish to the same snapshot path.
-      const assetsByPath = indexAssetsByCanonicalPath(assetsMap, target);
+      // Build an index before looking for the manifest so two inputs can never silently
+      // publish to the same normalized snapshot path.
+      const assetsByPath = indexAssetsBySnapshotPath(assetsMap);
 
-      // Bundler adapters emit this before package post-processors (including TAP's
-      // content lock) run. Reuse those exact bytes: regenerating a timestamped manifest
-      // here creates two hashes for one path and invalidates the published package lock.
+      // Reuse a manifest emitted by a bundler rather than generating a second asset at
+      // the same snapshot path.
       const emittedManifest = assetsByPath.get(ZEPHYR_MANIFEST_FILENAME);
       if (!emittedManifest) {
         const manifest = {
@@ -768,27 +755,15 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
 /**
  * Index output by its portable snapshot path without rewriting an asset's path, hash,
- * size, metadata, or bytes. Conventional adapters retain the historic normalization of
- * native Windows separators; TAP artifacts must already use the SDK-locked spelling.
+ * size, metadata, or bytes.
  */
-function indexAssetsByCanonicalPath(
-  assetsMap: ZeBuildAssetsMap,
-  target: ZephyrBuildTarget
+function indexAssetsBySnapshotPath(
+  assetsMap: ZeBuildAssetsMap
 ): Map<string, ZeBuildAsset> {
   const assetsByPath = new Map<string, ZeBuildAsset>();
 
   for (const asset of Object.values(assetsMap)) {
-    let canonicalPath: string;
-    try {
-      canonicalPath =
-        target === 'tap-app'
-          ? assertCanonicalSnapshotAssetPath(asset.path)
-          : asset.path.replaceAll('\\', '/');
-    } catch (error) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
+    const canonicalPath = asset.path.replaceAll('\\', '/');
     const existing = assetsByPath.get(canonicalPath);
     if (existing) {
       throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {

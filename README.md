@@ -54,23 +54,8 @@ repository linting and formatting use Oxlint and Oxfmt.
 pnpm install
 ```
 
-For descriptor-backed TAP mini-app publication, see
-[the `tap-app` publication contract](docs/tap-app-publication.md).
-Cross-repository TAP ownership, versions, sequencing, and completion status are
-maintained in the
-[canonical miniapp architecture directory](https://github.com/ZephyrCloudIO/ze-agency-tauri/tree/main/docs/architecture/miniapps),
-not in a copied plan in this generic plugin repository.
-
-## TAP migration evidence
-
-| Responsibility                                              | Status                 | Evidence or next gate                                                                                                                                                                             |
-| ----------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                                                                                                                                    |
-| Exact `0.0.0-canary.68` release train in consumers          | verified               | Non-applicable in this source workspace: examples use workspace source; `pnpm test:miniapp-wave1` requires exact `.68` for any external publication dependency                                    |
-| Module Federation `2.8.0` catalogs and ESM regression       | verified               | Catalogs and TAP runtime peers use stable `2.8.0`; the policy proves no executable Rsbuild/Rspack ESM remote fixture exists, forbids the retired patch, and requires an exact pin if one is added |
-
-The central evidence ledger is authoritative for status changes. This generic
-plugin repository does not own product applications or duplicate their plan.
+For the opaque `tap-app` build-target contract, see
+[the target documentation](docs/tap-app-publication.md).
 
 ## Available Scripts
 
@@ -100,21 +85,12 @@ PR updates to affected-only builds.
 
 ### Version Management
 
-- `pnpm bump-patch` - Automated patch version bump across all packages
-- `pnpm bump-minor` - Automated minor version bump across all packages
-- `pnpm bump-major` - Automated major version bump across all packages
+- Stable releases are prepared by Release Please from Conventional Commits on
+  `main`.
+- Merge the generated release PR to update every package and plugin manifest,
+  create the `vX.Y.Z` tag and GitHub Release, and publish packages to npm.
+- Manual `pnpm bump-*` scripts and hand-created stable tags are retired.
 
-  These scripts automate the version release process:
-  - Runs `pnpm audit --audit-level high` before making any version changes
-  - Increments the selected version in root and all lib package.json files
-  - Creates a commit with conventional commit message
-  - Creates a git tag (vX.X.X)
-  - If on main/master branch, creates a new feature branch and opens a PR
-  - Pushes changes and tags to origin
-
-  **Requirements:**
-  - Clean working directory (no uncommitted changes)
-  - gh CLI installed and authenticated (for automatic PR creation)
-  - Git configured with push access to origin
+See [Release automation](docs/releasing.md) for the complete release policy.
 
 Note: Please ensure you have run `pnpm install` before executing any of these commands.

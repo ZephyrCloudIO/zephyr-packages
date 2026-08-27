@@ -313,7 +313,6 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
               { name: outputParticipant, role: snapshotType },
             ],
             postprocessors: ['vinext-rsc-manifest'],
-            strictAssetPaths: options.target === 'tap-app',
           });
           for (const [name] of environments) {
             session.completeParticipant(name);

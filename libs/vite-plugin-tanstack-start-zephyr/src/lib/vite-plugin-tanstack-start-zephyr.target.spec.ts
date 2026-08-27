@@ -201,7 +201,6 @@ describe('withZephyr TanStack Start target propagation', () => {
     expect(mocks.contribute).toHaveBeenCalled();
     expect(mocks.beginBuildOptions).toEqual(
       expect.objectContaining({
-        strictAssetPaths: true,
         participants: expect.arrayContaining([
           expect.objectContaining({ name: 'tanstack-output', role: 'csr' }),
         ]),

@@ -1,6 +1,5 @@
 import {
   ApplicationContext,
-  assertTapFederationPublicationMetadata,
   normalizeBasePath,
   ZeErrors,
   ZephyrError,
@@ -260,13 +259,6 @@ export class XPackBuildCoordinator {
         }
         const mfConfigs = mergeMfConfigs(metadata.map((item) => item.mfConfigs));
         const buildStats = mergeBuildStats(metadata.map((item) => item.buildStats));
-        // Validate the final cross-compiler set, rather than individual participants:
-        // a TAP package may place different containers in separate compilers.
-        assertTapFederationPublicationMetadata({
-          target: engine.env?.target,
-          mfConfigs,
-          federation: buildStats.federation,
-        });
         await engine.upload_assets({
           assetsMap: publication.assetsMap,
           buildStats,
@@ -492,10 +484,6 @@ export class XPackBuildCoordinator {
     const session = this.context.beginBuild({
       invocationId: 'xpack-multi-compiler',
       generation: logicalGeneration,
-      // TAP artifact paths and hashes are descriptor-locked. Reject an adapter alias
-      // here instead of normalizing/re-hashing it while the coordinated snapshot is
-      // being assembled.
-      strictAssetPaths: this.engine.env?.target === 'tap-app',
       participants: this.participants,
     });
     const active = {

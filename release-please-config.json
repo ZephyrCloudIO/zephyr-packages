@@ -1,0 +1,157 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "changelog-type": "github",
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "build", "section": "Build system" },
+    { "type": "ci", "section": "CI" },
+    { "type": "refactor", "section": "Refactors" },
+    { "type": "test", "section": "Tests" },
+    { "type": "chore", "section": "Maintenance" }
+  ],
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "component": "zephyr-packages",
+      "package-name": "zephyr-packages",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/parcel-reporter-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/rollup-plugin-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/vite-plugin-tanstack-start-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/vite-plugin-vinext-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/vite-plugin-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/with-zephyr/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-agent/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-astro-integration/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-cli/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-edge-contract/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-metro-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-modernjs-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-native-cache/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-nuxt-module/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-repack-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rolldown-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rsbuild-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rspack-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-rspress-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-tap-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-webpack-plugin/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/zephyr-xpack-internal/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/.codex-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "libs/create-zephyr-apps/.cursor-plugin/plugin.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}

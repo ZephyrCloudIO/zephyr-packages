@@ -92,13 +92,10 @@ function resolveAssetPath(
   file: { fullPath: string; relativePath: string },
   outputDir: string,
   publicDir?: string,
-  baseURL = '/',
-  preserveArtifactPaths = false
+  baseURL = '/'
 ): string {
   const relativePath = normalizePath(file.relativePath);
-  // TAP descriptors and locks own the package namespace. A framework's public-dir
-  // alias or routing base is transport metadata, not an artifact-path prefix.
-  if (preserveArtifactPaths || !publicDir) {
+  if (!publicDir) {
     return relativePath;
   }
 
@@ -128,17 +125,8 @@ function resolveAssetPath(
   return relativePath;
 }
 
-function shouldSkipDeployAsset(
-  filePath: string,
-  preserveArtifactPaths: boolean
-): boolean {
-  // A TAP lock may deliberately include a source map, a file beneath a conventional
-  // ignored directory, or another opaque binary. Generic deployment filters are a
-  // convenience for web apps, never a reason to drop a locked package artifact.
-  return (
-    !preserveArtifactPaths &&
-    SKIP_DEPLOY_PATTERNS.some((pattern) => pattern.test(filePath))
-  );
+function shouldSkipDeployAsset(filePath: string): boolean {
+  return SKIP_DEPLOY_PATTERNS.some((pattern) => pattern.test(filePath));
 }
 
 function resolveDeployEntrypoint(
@@ -162,102 +150,20 @@ function getLegacyModuleFederationConfig(
     : undefined;
 }
 
-function assertTapFederationMetadata(
-  mfConfigs: readonly ZephyrModuleFederationConfig[] | undefined,
-  federation: readonly ZephyrModuleFederationBuildMetadata[] | undefined
-): void {
-  if (!mfConfigs?.length || !federation?.length) {
-    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-      message:
-        'tap-app output publication requires non-empty mfConfigs and federation metadata arrays.',
-    });
-  }
-  if (mfConfigs.length !== federation.length) {
-    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-      message:
-        'tap-app mfConfigs and federation metadata must contain the same containers.',
-    });
-  }
-
-  const federationByName = new Map<string, ZephyrModuleFederationBuildMetadata>();
-  const federationRemotes = new Set<string>();
-  for (const entry of federation) {
-    if (typeof entry.name !== 'string' || !entry.name.trim()) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message: 'tap-app federation entries require non-empty name and remote values.',
-      });
-    }
-    if (typeof entry.remote !== 'string' || !entry.remote.trim()) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message: 'tap-app federation entries require non-empty name and remote values.',
-      });
-    }
-    if (federationByName.has(entry.name) || federationRemotes.has(entry.remote)) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message: 'tap-app federation entries must not duplicate names or remotes.',
-      });
-    }
-    federationByName.set(entry.name, entry);
-    federationRemotes.add(entry.remote);
-  }
-  const configNames = new Set<string>();
-  const configFilenames = new Set<string>();
-  for (const config of mfConfigs) {
-    if (
-      typeof config.name !== 'string' ||
-      !config.name.trim() ||
-      typeof config.filename !== 'string' ||
-      !config.filename.trim()
-    ) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message: 'tap-app mfConfigs entries require non-empty name and filename values.',
-      });
-    }
-    if (configNames.has(config.name) || configFilenames.has(config.filename)) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message: 'tap-app mfConfigs entries must not duplicate names or filenames.',
-      });
-    }
-    const entry = federationByName.get(config.name);
-    if (!entry || entry.remote !== config.filename) {
-      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-        message:
-          `tap-app Federation metadata for ${JSON.stringify(config.name)} must use ` +
-          `remote ${JSON.stringify(config.filename)}.`,
-      });
-    }
-    configNames.add(config.name);
-    configFilenames.add(config.filename);
-  }
-}
-
 export async function uploadOutputToZephyr(
   opts: UploadOutputToZephyrOptions
 ): Promise<UploadOutputToZephyrResult> {
   const target = opts.target ?? DEFAULT_DEPLOY_TARGET;
   assertZephyrBuildTarget(target, 'uploadOutputToZephyr({ target })');
-  if (target === 'tap-app') {
-    assertTapFederationMetadata(opts.mfConfigs, opts.federation);
-  }
-  const preserveArtifactPaths = target === 'tap-app';
   const outputDir = resolvePath(opts.outputDir);
   const publicDir = opts.publicDir ? resolvePath(opts.publicDir) : undefined;
-  const files = await readDirRecursiveWithContents(outputDir, {
-    includeIgnoredPaths: preserveArtifactPaths,
-    failOnError: preserveArtifactPaths,
-  });
+  const files = await readDirRecursiveWithContents(outputDir);
 
   const assets: Record<string, DirectoryAsset> = {};
   const assetSources = new Map<string, string>();
   for (const file of files) {
-    const relativePath = resolveAssetPath(
-      file,
-      outputDir,
-      publicDir,
-      opts.baseURL,
-      preserveArtifactPaths
-    );
-    if (shouldSkipDeployAsset(relativePath, preserveArtifactPaths)) {
+    const relativePath = resolveAssetPath(file, outputDir, publicDir, opts.baseURL);
+    if (shouldSkipDeployAsset(relativePath)) {
       continue;
     }
 
@@ -279,11 +185,7 @@ export async function uploadOutputToZephyr(
     throw new ZephyrError(ZeErrors.ERR_ASSETS_NOT_FOUND);
   }
 
-  // TAP package output is a collection of SDK-built target entries, not a
-  // conventional framework server bundle. Keep the established SSR default for
-  // generic web output, but make TAP publication CSR unless its caller
-  // explicitly supplies an SSR entrypoint contract.
-  const ssr = opts.ssr ?? (target === 'tap-app' ? false : DEFAULT_DEPLOY_SSR);
+  const ssr = opts.ssr ?? DEFAULT_DEPLOY_SSR;
   const entrypoint = resolveDeployEntrypoint(assets);
   if (ssr && !entrypoint) {
     throw new ZephyrError(ZeErrors.ERR_SSR_ENTRYPOINT_NOT_FOUND, {

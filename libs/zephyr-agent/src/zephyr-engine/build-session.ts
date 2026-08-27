@@ -1,9 +1,6 @@
 import type { ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import { zeBuildAssets } from '../lib/transformers/ze-build-assets';
-import {
-  assertCanonicalSnapshotAssetPath,
-  normalizeSnapshotAssetPath,
-} from '../lib/transformers/ze-snapshot-asset-path';
+import { normalizeSnapshotAssetPath } from '../lib/transformers/ze-snapshot-asset-path';
 import type {
   BuildContribution,
   BuildParticipant,
@@ -143,22 +140,10 @@ function normalizeAssetPath(assetPath: string): string {
   }
 }
 
-function cloneAssetsMap(
-  assetsMap: ZeBuildAssetsMap,
-  strictAssetPaths: boolean
-): ZeBuildAssetsMap {
+function cloneAssetsMap(assetsMap: ZeBuildAssetsMap): ZeBuildAssetsMap {
   return Object.fromEntries(
     Object.values(assetsMap).map((value) => {
-      let normalizedPath: string;
-      try {
-        normalizedPath = strictAssetPaths
-          ? assertCanonicalSnapshotAssetPath(value.path)
-          : normalizeAssetPath(value.path);
-      } catch (error) {
-        throw new BuildSessionStateError(
-          error instanceof Error ? error.message : String(error)
-        );
-      }
+      const normalizedPath = normalizeAssetPath(value.path);
       const normalizedAsset =
         normalizedPath === value.path
           ? { ...value }
@@ -185,7 +170,6 @@ export class BuildSession<TData = unknown, TResult = void> {
     Map<string, BuildContribution<TData>>
   >();
   private readonly callbacks: BuildSessionCallbacks<TData, TResult>;
-  private readonly strictAssetPaths: boolean;
   private readonly barrier = createBarrier();
   private state: BuildSessionStatus = 'collecting';
   private terminalError: Error | null = null;
@@ -197,12 +181,10 @@ export class BuildSession<TData = unknown, TResult = void> {
     identity: BuildSessionIdentity,
     participants: readonly BuildParticipant[],
     postprocessors: readonly string[],
-    callbacks: BuildSessionCallbacks<TData, TResult>,
-    strictAssetPaths = false
+    callbacks: BuildSessionCallbacks<TData, TResult>
   ) {
     this.identity = Object.freeze({ ...identity });
     this.callbacks = callbacks;
-    this.strictAssetPaths = strictAssetPaths;
 
     for (const participant of participants) {
       assertNonEmpty(participant.name, 'Participant name');
@@ -286,7 +268,7 @@ export class BuildSession<TData = unknown, TResult = void> {
     }
     participantContributions.set(contribution.key, {
       ...contribution,
-      assetsMap: cloneAssetsMap(contribution.assetsMap, this.strictAssetPaths),
+      assetsMap: cloneAssetsMap(contribution.assetsMap),
     });
   }
 

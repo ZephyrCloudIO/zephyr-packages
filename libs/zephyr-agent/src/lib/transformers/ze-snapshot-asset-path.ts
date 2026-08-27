@@ -21,17 +21,3 @@ export function normalizeSnapshotAssetPath(assetPath: string): string {
   }
   return segments.join('/');
 }
-
-/**
- * Direct uploads cannot rewrite a path without changing its Zephyr content hash. Require
- * callers to supply the canonical spelling that will be published in the snapshot.
- */
-export function assertCanonicalSnapshotAssetPath(assetPath: string): string {
-  const normalized = normalizeSnapshotAssetPath(assetPath);
-  if (normalized !== assetPath) {
-    throw new Error(
-      `Asset path must use its canonical snapshot spelling: "${assetPath}" (expected "${normalized}")`
-    );
-  }
-  return normalized;
-}

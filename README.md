@@ -54,23 +54,8 @@ repository linting and formatting use Oxlint and Oxfmt.
 pnpm install
 ```
 
-For descriptor-backed TAP mini-app publication, see
-[the `tap-app` publication contract](docs/tap-app-publication.md).
-Cross-repository TAP ownership, versions, sequencing, and completion status are
-maintained in the
-[canonical miniapp architecture directory](https://github.com/ZephyrCloudIO/ze-agency-tauri/tree/main/docs/architecture/miniapps),
-not in a copied plan in this generic plugin repository.
-
-## TAP migration evidence
-
-| Responsibility                                              | Status                 | Evidence or next gate                                                                                                                                                                             |
-| ----------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generic `tap-app` publication adapter and lifecycle runtime | implemented-unverified | Current-main coordinated build and real-cloud consumer receipt                                                                                                                                    |
-| Exact `0.0.0-canary.68` release train in consumers          | verified               | Non-applicable in this source workspace: examples use workspace source; `pnpm test:miniapp-wave1` requires exact `.68` for any external publication dependency                                    |
-| Module Federation `2.8.0` catalogs and ESM regression       | verified               | Catalogs and TAP runtime peers use stable `2.8.0`; the policy proves no executable Rsbuild/Rspack ESM remote fixture exists, forbids the retired patch, and requires an exact pin if one is added |
-
-The central evidence ledger is authoritative for status changes. This generic
-plugin repository does not own product applications or duplicate their plan.
+For the opaque `tap-app` build-target contract, see
+[the target documentation](docs/tap-app-publication.md).
 
 ## Available Scripts
 

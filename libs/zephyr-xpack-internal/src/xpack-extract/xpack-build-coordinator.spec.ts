@@ -188,23 +188,6 @@ describe('XPackBuildCoordinator', () => {
     );
   });
 
-  it('fails closed when a coordinated TAP package has no complete federation metadata', async () => {
-    const zephyrEngine = engine();
-    zephyrEngine.env.target = 'tap-app';
-    const coordinator = new XPackBuildCoordinator(zephyrEngine, [{ name: 'desktop' }]);
-
-    await expect(
-      coordinator.contribute({
-        participant: 'desktop',
-        assetsMap: asset('targets/desktop/remoteEntry.mjs', 'desktop-hash'),
-        buildStats: { ...stats, federation: [] },
-        mfConfigs: [],
-      })
-    ).rejects.toThrow('requires a non-empty mfConfigs metadata array');
-
-    expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
-  });
-
   it('deduplicates matching federation config copies across compilers', async () => {
     const zephyrEngine = engine();
     const coordinator = new XPackBuildCoordinator(zephyrEngine, [
@@ -867,22 +850,6 @@ describe('XPackBuildCoordinator', () => {
         entrypoint: undefined,
       })
     );
-  });
-
-  it('rejects noncanonical TAP artifact paths before coordinating an upload', async () => {
-    const zephyrEngine = engine();
-    zephyrEngine.env.target = 'tap-app';
-    const coordinator = new XPackBuildCoordinator(zephyrEngine, [{ name: 'desktop' }]);
-
-    await expect(
-      coordinator.contribute({
-        participant: 'desktop',
-        assetsMap: asset('targets\\desktop\\remoteEntry.mjs', 'sdk-locked-hash'),
-        buildStats: stats,
-      })
-    ).rejects.toThrow('canonical snapshot spelling');
-
-    expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
   });
 
   it('matches only supported server targets', () => {

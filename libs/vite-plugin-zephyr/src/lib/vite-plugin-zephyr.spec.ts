@@ -330,37 +330,6 @@ describe('vite-plugin-zephyr', () => {
     );
   });
 
-  test('fails closed when auto-discovered TAP Federation metadata is incomplete', async () => {
-    process.env['ZE_FAIL_BUILD'] = 'true';
-    const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
-    const config = resolvedConfig(
-      { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
-      true
-    );
-    config.plugins = [
-      {
-        name: 'module-federation-vite',
-        // This models a real separately-registered MF plugin with no emitted remote
-        // filename. The adapter derives both publication arrays from it, then the
-        // shared transport invariant must reject the incomplete pair.
-        _options: { name: 'desktop' },
-      },
-    ] as unknown as Plugin[];
-    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
-      config
-    );
-
-    await expect(
-      (plugin.writeBundle as TestWriteBundle).call(
-        { environment: { name: 'client' } },
-        { dir: '/repo/dist/client' },
-        {}
-      )
-    ).rejects.toThrow('requires a non-empty name and remote');
-
-    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
-  });
-
   test('publishes every detected Vite MF container as a CSR TAP package', async () => {
     const desktop = {
       name: 'desktop',
@@ -508,35 +477,6 @@ describe('vite-plugin-zephyr', () => {
 
     // withZephyr() injected the federation plugin exactly once from `mfConfig`.
     expect(mocks.federation).toHaveBeenCalledTimes(1);
-  });
-
-  test('rejects noncanonical TAP output paths instead of repairing and rehashing them', async () => {
-    process.env['ZE_FAIL_BUILD'] = 'true';
-    const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
-    await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
-      resolvedConfig({
-        desktop: { consumer: 'client', build: { outDir: 'dist/desktop' } },
-      })
-    );
-    internalClaims.push(
-      claimed({
-        [environmentOutput('desktop')]: asset(
-          'targets\\desktop\\remoteEntry.mjs',
-          'sdk-locked-hash'
-        ),
-      })
-    );
-
-    await expect(
-      buildAppHandler(plugin)({
-        environments: {
-          desktop: { isBuilt: true, config: { consumer: 'client' } },
-        },
-        build: rs.fn(),
-      })
-    ).rejects.toThrow('canonical snapshot spelling');
-
-    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
   });
 
   test('emits the generated manifest for conventional Vite builds', async () => {

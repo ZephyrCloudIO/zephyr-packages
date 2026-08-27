@@ -36,3 +36,11 @@ Release Please mints a Zephyr Workflow Automation GitHub App token from
 issue write access. The default `GITHUB_TOKEN` is not used because GitHub
 suppresses follow-on workflow events created by it. Stable release PRs always
 require human review.
+
+Trusted same-repository release PRs authored by the Zephyr Workflow Automation
+App run the lint, formatting, and typecheck lane. Package tests and preview
+deployments are skipped because Release Please changes only generated release
+metadata, and the App is not a Zephyr preview-deployment identity. Any changed
+file, triggering actor, author, repository, branch, or base mismatch restores
+normal CI. Apply the `ci:force-example-builds` label to run preview builds
+explicitly.

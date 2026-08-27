@@ -1,5 +1,8 @@
 name: Publish Packages
 
+# Release Please owns stable version bumps, tags, and GitHub Releases. This
+# workflow publishes those releases to npm and retains the manual canary/next
+# channels.
 on:
   # Release workflows (automatic)
   release:

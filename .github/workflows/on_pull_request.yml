@@ -23,63 +23,26 @@ env:
 
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
-  changes:
-    name: changes
-    runs-on: depot-ubuntu-latest
-    outputs:
-      release_pr: ${{ steps.scope.outputs.release_pr }}
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - name: Classify changed files
-        id: filter
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        with:
-          filters: |
-            all:
-              - '**'
-            release:
-              - '.release-please-manifest.json'
-              - 'CHANGELOG.md'
-              - 'package.json'
-              - 'libs/*/package.json'
-              - 'libs/create-zephyr-apps/.claude-plugin/plugin.json'
-              - 'libs/create-zephyr-apps/.codex-plugin/plugin.json'
-              - 'libs/create-zephyr-apps/.cursor-plugin/plugin.json'
-      - name: Resolve generated release scope
-        id: scope
-        env:
-          ACTOR: ${{ github.actor }}
-          ALL_COUNT: ${{ steps.filter.outputs.all_count }}
-          BASE_REF: ${{ github.base_ref }}
-          EVENT_NAME: ${{ github.event_name }}
-          HEAD_REF: ${{ github.head_ref }}
-          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          RELEASE_COUNT: ${{ steps.filter.outputs.release_count }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          release_pr=false
-          if [ "$EVENT_NAME" = 'pull_request' ] \
-            && [ "$ACTOR" = 'zephyr-workflows-automation[bot]' ] \
-            && [ "$BASE_REF" = 'main' ] \
-            && [ "$HEAD_REPOSITORY" = "$REPOSITORY" ] \
-            && [ "$PR_AUTHOR" = 'zephyr-workflows-automation[bot]' ] \
-            && [[ "$HEAD_REF" = release-please--branches--* ]] \
-            && [ "$RELEASE_COUNT" -gt 0 ] \
-            && [ "$RELEASE_COUNT" -eq "$ALL_COUNT" ]; then
-            release_pr=true
-          fi
-          echo "release_pr=$release_pr" >> "$GITHUB_OUTPUT"
-
+  # Release Please force-rebuilds its branch from main on every update, so a
+  # bot-triggered event cannot retain human commits. Keep this predicate on
+  # every job so no runner starts; human events and bot reopens run normal CI.
+  # App output plus required human review intentionally replace a runner-based
+  # changed-file check for this zero-runner path.
   build:
-    needs: changes
     name: ${{ github.event.action == 'labeled' && 'Force example previews (ubuntu-latest)' || 'End-to-end test of examples (ubuntu-latest)' }}
     if: >-
-      (github.event.action == 'labeled' && github.event.label.name == 'ci:force-example-builds') ||
-      (github.event.action != 'labeled' && needs.changes.outputs.release_pr != 'true')
+      !(
+        github.event_name == 'pull_request' &&
+        github.actor == 'zephyr-workflows-automation[bot]' &&
+        github.event.action != 'reopened' &&
+        github.event.pull_request.user.login == 'zephyr-workflows-automation[bot]' &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
+      ) &&
+      (github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds')
     runs-on: depot-ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -120,11 +83,18 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
-    needs: changes
     name: ${{ github.event.action == 'labeled' && 'Force example previews (windows-latest)' || 'End-to-end test of examples (windows-latest)' }}
     if: >-
-      (github.event.action == 'labeled' && github.event.label.name == 'ci:force-example-builds') ||
-      (github.event.action != 'labeled' && needs.changes.outputs.release_pr != 'true')
+      !(
+        github.event_name == 'pull_request' &&
+        github.actor == 'zephyr-workflows-automation[bot]' &&
+        github.event.action != 'reopened' &&
+        github.event.pull_request.user.login == 'zephyr-workflows-automation[bot]' &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
+      ) &&
+      (github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds')
     # Modern.js/Rspack currently aborts with 0xC0000409 on Depot's Windows
     # Server 2025 image (`depot-windows-latest`). Pin the supported 2022 image.
     runs-on: depot-windows-2022
@@ -168,7 +138,17 @@ jobs:
 
   lint:
     name: ${{ github.event.action == 'labeled' && 'Force example previews (lint skipped)' || 'lint' }}
-    if: github.event.action != 'labeled'
+    if: >-
+      !(
+        github.event_name == 'pull_request' &&
+        github.actor == 'zephyr-workflows-automation[bot]' &&
+        github.event.action != 'reopened' &&
+        github.event.pull_request.user.login == 'zephyr-workflows-automation[bot]' &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
+      ) &&
+      github.event.action != 'labeled'
     runs-on: depot-ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -186,9 +166,18 @@ jobs:
         run: pnpm typecheck
 
   test:
-    needs: changes
     name: ${{ github.event.action == 'labeled' && format('Force example previews (test skipped, {0})', matrix.os) || format('test ({0})', matrix.os) }}
-    if: github.event.action != 'labeled' && needs.changes.outputs.release_pr != 'true'
+    if: >-
+      !(
+        github.event_name == 'pull_request' &&
+        github.actor == 'zephyr-workflows-automation[bot]' &&
+        github.event.action != 'reopened' &&
+        github.event.pull_request.user.login == 'zephyr-workflows-automation[bot]' &&
+        github.event.pull_request.base.ref == 'main' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
+      ) &&
+      github.event.action != 'labeled'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:

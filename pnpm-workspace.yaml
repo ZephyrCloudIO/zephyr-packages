@@ -103,6 +103,8 @@ minimumReleaseAgeExclude:
   - '@module-federation/webpack-bundler-runtime@2.8.0'
   # Renovate security update: fast-uri@3.1.6
   - fast-uri@3.1.6
+  # Renovate security update: hono@4.12.34
+  - hono@4.12.34
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

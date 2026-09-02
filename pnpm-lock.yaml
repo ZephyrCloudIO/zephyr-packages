@@ -144,9 +144,6 @@ catalogs:
     globby:
       specifier: ^16.2.1
       version: 16.2.1
-    hono:
-      specifier: ^4.12.29
-      version: 4.12.29
     https-proxy-agent:
       specifier: ^7.0.6
       version: 7.0.6
@@ -704,7 +701,7 @@ importers:
     dependencies:
       hono:
         specifier: 'catalog:'
-        version: 4.12.29
+        version: 4.12.34
     devDependencies:
       '@types/node':
         specifier: catalog:typescript
@@ -11526,12 +11523,12 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.12.27:
-    resolution: {integrity: sha512-1yrb/+w6HWQJrUCLkJ2IF5jNIPvvFkblV5RNOYl6bV+OA6p9GLcMpHFFGTosSvHvcAUibuUukRqhlYI4z32C7Q==}
-    engines: {node: '>=16.9.0'}
-
   hono@4.12.29:
     resolution: {integrity: sha512-1hNiRjawYrLq/4m3DQQjPGFg0VZkk4RjQJDff/excI6Dm9BiL75qxGrd7/c6YOxPdq6AscP3LiXhQ6fKFC1Waw==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.12.34:
+    resolution: {integrity: sha512-GqXJqY/xJkJmuloTrnV1ZEXG3fqte+VjkUqoRNZXcrUidiUOP4fMSIHHY4tsqZBK++kVyWmt/AAfSUuy57/eSA==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -20353,7 +20350,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.4.2
-      hono: 4.12.27
+      hono: 4.12.29
       ts-deepmerge: 8.0.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
@@ -20801,7 +20798,7 @@ snapshots:
   '@napi-rs/wasm-runtime@1.0.7':
     dependencies:
       '@emnapi/core': 1.11.1
-      '@emnapi/runtime': 1.11.1
+      '@emnapi/runtime': 1.11.3
       '@tybys/wasm-util': 0.10.3
     optional: true
 
@@ -28187,9 +28184,9 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.12.27: {}
-
   hono@4.12.29: {}
+
+  hono@4.12.34: {}
 
   hookable@5.5.3: {}
 

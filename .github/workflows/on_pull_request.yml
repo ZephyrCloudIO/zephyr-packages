@@ -120,15 +120,14 @@ jobs:
           ZE_IS_PREVIEW: true
           # ZE_API and ZE_API_GATE intentionally use the production defaults.
           ZE_CI_TOKEN: ${{ secrets.ZE_CI_TOKEN }}
-        # Forced runs serialize because building every example concurrently exhausts
-        # Windows session resources: bundler tasks abort with 0xC0000142
-        # (STATUS_DLL_INIT_FAILED) and concurrent `git` spawns fail, which the agent
-        # reports as "Not a git repository". Serializing costs ~45s here (3m00s versus
-        # Linux's 2m16s at full concurrency), so the cap is close to free. A cap above 1
-        # is untested; do not raise it without a green forced Windows run.
+        # Windows builds serialize because forced runs and shared-package changes can
+        # make every example affected. Parallel bundlers exhaust session resources and
+        # abort with 0xC0000142 or 0xC0000409; concurrent git spawns can also fail.
+        # A cap above 1 is untested; do not raise it without a green full Windows run.
         run: >-
           pnpm exec turbo run build
-          ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/** --concurrency=1' || '--affected' }}
+          ${{ env.ZE_FORCE_ALL_EXAMPLES == 'true' && '--filter=./examples/**' || '--affected' }}
+          --concurrency=1
           --force --env-mode=loose --output-logs=new-only
       - name: run deployment e2e tests
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only

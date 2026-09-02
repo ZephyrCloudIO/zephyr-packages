@@ -235,6 +235,7 @@ function getCiTokenScope(ciToken: string, identity: CiTokenIdentity): string {
     identity.issuer ?? '',
     identity.providerSubject ?? '',
     identity.username ?? '',
+    identity.providerActorType ?? '',
     identity.email ?? '',
     [...(identity.emails ?? [])].sort(),
   ];
@@ -284,6 +285,11 @@ function throwCiTokenAuthError(
     username: identity?.username ?? 'unknown',
     source: identity?.source ?? 'unknown',
     issuer: identity?.issuer ?? 'unknown',
+    actorType: identity?.providerActorType ?? 'unknown',
+    resolution:
+      identity?.providerActorType === 'bot'
+        ? 'This bot is authorized by the CI token creator. Check that the token creator is still an active member of the Zephyr organization.'
+        : "Link this CI actor's Git provider account in Zephyr Cloud, then rerun the workflow. Zephyr uses linked Git provider identities to map provider-native CI actor data, such as GitHub actor IDs or GitLab user IDs/emails, to a Zephyr user.",
     details,
   });
 }

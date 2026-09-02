@@ -53,6 +53,13 @@ const githubIdentity = {
   source: 'noreply' as const,
 };
 
+const githubBotIdentity = {
+  ...githubIdentity,
+  providerSubject: '29139614',
+  username: 'renovate[bot]',
+  providerActorType: 'bot' as const,
+};
+
 describe('getToken', () => {
   const originalEnv = process.env;
 
@@ -88,6 +95,19 @@ describe('getToken', () => {
     await expect(getToken()).rejects.toMatchObject({
       code: ZephyrError.toZeCode(ZeErrors.ERR_CI_TOKEN_AUTH),
       message: expect.stringContaining('no supported CI identity was detected'),
+    });
+  });
+
+  it('gives bot-specific authorization guidance when exchange is rejected', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(githubBotIdentity);
+    mockMakeRequest.mockResolvedValue([
+      false,
+      new Error('CI token creator is not an active organization member'),
+    ]);
+
+    await expect(getToken()).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_CI_TOKEN_AUTH),
+      message: expect.stringContaining('This bot is authorized by the CI token creator'),
     });
   });
 

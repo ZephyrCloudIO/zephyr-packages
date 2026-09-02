@@ -8,7 +8,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Label runs must not wait for custom runners to cancel the required PR run.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'labeled' && format('label-{0}', github.event.label.name) || 'ci' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:

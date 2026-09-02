@@ -7,7 +7,7 @@ packages:
   - '!**/lib/**'
 
 catalog:
-  '@ast-grep/napi': ^0.44.1
+  '@ast-grep/napi': ^0.45.0
   '@astrojs/markdown-satteri': ^0.3.3
   '@astrojs/mdx': ^7.0.2
   '@astrojs/rss': ^4.0.19

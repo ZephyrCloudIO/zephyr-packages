@@ -53,7 +53,7 @@ catalog:
   lucide-react: ^1.24.0
   magic-string: 0.30.21
   mitt: ^3.0.1
-  ms: 3.0.0-canary.1
+  ms: 3.0.0-canary.202508261828
   nitro-cloudflare-dev: ^0.2.2
   node-persist: ^4.0.4
   open: ^10.2.0

@@ -20,7 +20,7 @@ catalog:
   '@lynx-js/rspeedy': ^0.15.2
   '@lynx-js/types': ^4.0.0
   '@sentry/react': ^10.65.0
-  '@tanstack/intent': 0.3.6
+  '@tanstack/intent': 0.3.8
   '@toon-format/toon': ^0.9.0
   '@types/debug': ^4.1.13
   '@types/proper-lockfile': ^4.1.4

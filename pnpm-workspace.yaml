@@ -204,7 +204,7 @@ catalogs:
     '@rstest/core': 0.11.1
     '@rstest/coverage-istanbul': 0.11.1
   react18:
-    '@types/react': 18.3.28
+    '@types/react': 18.3.31
     '@types/react-dom': 18.3.7
     react: 18.3.1
     react-dom: 18.3.1

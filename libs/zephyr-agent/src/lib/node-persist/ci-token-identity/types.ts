@@ -7,6 +7,7 @@ export interface CiTokenIdentity {
   issuer?: string;
   providerSubject?: string;
   username?: string;
+  providerActorType?: 'user' | 'bot';
   source: 'jwt' | 'api' | 'env' | 'event' | 'noreply';
 }
 

@@ -18,7 +18,7 @@ Each provider adapter:
 1. Detects its CI environment from predefined variables.
 2. Infers a Git provider actor identity from provider-native job identity data, using provider APIs from the runner when
    needed.
-3. Sends `{ provider, issuer, providerSubject, username, emails, email, source }` to `POST /v2/ci-token/exchange` on
+3. Sends `{ provider, issuer, providerSubject, username, providerActorType, emails, email, source }` to `POST /v2/ci-token/exchange` on
    cloud-io.
 
 GitLab reads `CI_JOB_TOKEN` as a JWT when possible and extracts `user_id`, `user_login`, `user_email`, or `email`. If the token is legacy/non-JWT
@@ -29,7 +29,8 @@ available from JWT claims or the `/job` response, they must match `CI_JOB_ID`, `
 GitHub Actions reads the local webhook payload from `GITHUB_EVENT_PATH`. It prefers the matching commit author email,
 then commit committer email, then `head_commit`, then `pusher.email`. It always sends the stable GitHub actor ID from
 `GITHUB_ACTOR_ID` when available, keeps it paired with `GITHUB_ACTOR` on reruns, and includes GitHub's noreply email
-shape as an email candidate. This requires no
+shape as an email candidate. When the event sender matches that actor, the adapter forwards GitHub's `User` or `Bot`
+classification as `providerActorType`. This requires no
 workflow YAML changes beyond setting `ZE_CI_TOKEN`. Reliable multi-email attribution requires the user's GitHub account
 to be linked in cloud-io as a `GitProviderIdentity`; email candidates are only a fallback.
 
@@ -40,7 +41,8 @@ the CI token against its separate CI-token table and mints a short-lived Zephyr 
 When `ZE_CI_TOKEN` is present, token exchange failures are terminal. The plugin does not fall back to interactive browser
 login in CI. A rejected exchange usually means the workflow actor's Git provider identity is not linked to a Zephyr user.
 The error should tell the user to link that Git provider account in Zephyr Cloud and rerun the workflow, while also
-checking that the CI token secret belongs to the right Zephyr workspace.
+checking that the CI token secret belongs to the right Zephyr workspace. Cloud authorizes reported bots through the CI
+token creator's active organization membership and keeps the bot identity as separate deployment attribution.
 
 ## Access-token caching and concurrency
 

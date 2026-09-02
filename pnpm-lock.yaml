@@ -334,10 +334,6 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
-  peer-compat:
-    react-native:
-      specifier: '>=0.60.0'
-      version: 0.86.0
   plugin-shared:
     is-ci:
       specifier: ^4.1.0
@@ -361,12 +357,6 @@ catalogs:
       specifier: ^7.18.1
       version: 7.18.1
   react18:
-    '@types/react':
-      specifier: 18.3.28
-      version: 18.3.28
-    '@types/react-dom':
-      specifier: 18.3.7
-      version: 18.3.7
     react:
       specifier: 18.3.1
       version: 18.3.1
@@ -377,12 +367,6 @@ catalogs:
       specifier: ^0.18.0
       version: 0.18.0
   react19:
-    '@types/react':
-      specifier: ^19.2.17
-      version: 19.2.17
-    '@types/react-dom':
-      specifier: ^19.2.3
-      version: 19.2.3
     react:
       specifier: ^19.2.8
       version: 19.2.8
@@ -730,14 +714,14 @@ importers:
     dependencies:
       '@lynx-js/react':
         specifier: 'catalog:'
-        version: 0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28)
+        version: 0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18)
     devDependencies:
       '@lynx-js/qrcode-rsbuild-plugin':
         specifier: 'catalog:'
         version: 0.5.0(@lynx-js/rspeedy@0.15.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(clean-css@5.3.3)(core-js@3.49.0)(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(supports-color@10.2.2)(typescript@5.9.3)(webpack@5.108.4))
       '@lynx-js/react-rsbuild-plugin':
         specifier: 'catalog:'
-        version: 0.17.2(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(tslib@2.8.1)
+        version: 0.17.2(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(tslib@2.8.1)
       '@lynx-js/rspeedy':
         specifier: 'catalog:'
         version: 0.15.2(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(clean-css@5.3.3)(core-js@3.49.0)(csso@5.0.5)(esbuild@0.28.1)(lightningcss@1.33.0)(supports-color@10.2.2)(typescript@5.9.3)(webpack@5.108.4)
@@ -746,7 +730,7 @@ importers:
         version: 4.0.0
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -785,10 +769,10 @@ importers:
         version: 0.5.23
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -819,10 +803,10 @@ importers:
         version: 2.1.0(@rsbuild/core@2.1.5(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0))(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -862,10 +846,10 @@ importers:
         version: 24.13.3
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       lint-staged:
         specifier: 'catalog:'
         version: 17.0.8
@@ -918,10 +902,10 @@ importers:
         version: 2.16.4(@parcel/core@2.16.4(@swc/helpers@0.5.23))(@swc/helpers@0.5.23)
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       parcel:
         specifier: catalog:parcel
         version: 2.16.4(@swc/helpers@0.5.23)
@@ -973,16 +957,16 @@ importers:
         version: 1.15.43(@swc/helpers@0.5.23)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       react-refresh:
         specifier: catalog:react18
         version: 0.18.0
@@ -1065,10 +1049,10 @@ importers:
     devDependencies:
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       rolldown:
         specifier: catalog:rolldown
         version: 1.1.5
@@ -1096,13 +1080,13 @@ importers:
         version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       jsdom:
         specifier: catalog:test-dom
         version: 29.1.1
@@ -1133,10 +1117,10 @@ importers:
         version: 2.1.0(@rsbuild/core@2.1.5(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0))(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -1155,10 +1139,10 @@ importers:
     devDependencies:
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       zephyr-rspack-plugin:
         specifier: workspace:*
         version: link:../../libs/zephyr-rspack-plugin
@@ -1213,13 +1197,13 @@ importers:
         version: 2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       zephyr-rspack-plugin:
         specifier: workspace:*
         version: link:../../libs/zephyr-rspack-plugin
@@ -1243,7 +1227,7 @@ importers:
         version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       jsdom:
         specifier: catalog:test-dom
         version: 29.1.1
@@ -1270,7 +1254,7 @@ importers:
         version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       jsdom:
         specifier: catalog:test-dom
         version: 29.1.1
@@ -1313,7 +1297,7 @@ importers:
         version: 2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23)
       '@rspress/core':
         specifier: catalog:rspress
-        version: 2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+        version: 2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.18)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       globby:
         specifier: 'catalog:'
         version: 16.2.1
@@ -1338,7 +1322,7 @@ importers:
         version: 2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23)
       '@rspress/core':
         specifier: catalog:rspress
-        version: 2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+        version: 2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.18)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       globby:
         specifier: 'catalog:'
         version: 16.2.1
@@ -1376,13 +1360,13 @@ importers:
         version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       jsdom:
         specifier: catalog:test-dom
         version: 29.1.1
@@ -1410,13 +1394,13 @@ importers:
         version: 1.15.43(@swc/helpers@0.5.23)
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       css-loader:
         specifier: catalog:webpack5
         version: 7.1.4(@rspack/core@1.7.7(@swc/helpers@0.5.23))(webpack@5.108.4)
@@ -1455,7 +1439,7 @@ importers:
         version: 4.3.2(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(less@4.6.7)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(tsx@4.23.0)(yaml@2.9.0))
       '@tanstack/react-devtools':
         specifier: catalog:tanstack
-        version: 0.10.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(csstype@3.2.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.11)
+        version: 0.10.8(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(csstype@3.2.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.11)
       '@tanstack/react-router':
         specifier: catalog:tanstack
         version: 1.170.17(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1492,16 +1476,16 @@ importers:
         version: 10.4.1
       '@testing-library/react':
         specifier: catalog:react
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: catalog:vite8
         version: 6.0.3(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(less@4.6.7)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -1574,10 +1558,10 @@ importers:
         version: 1.16.15(typescript@5.9.3)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.6.7)(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(tsx@4.23.0)(yaml@2.9.0))
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: catalog:vite7
         version: 4.7.0(supports-color@10.2.2)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.6.7)(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -1611,10 +1595,10 @@ importers:
         version: 24.13.3
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: catalog:vite7
         version: 4.7.0(supports-color@10.2.2)(vite@7.3.6(@types/node@24.13.3)(jiti@2.7.0)(less@4.6.7)(lightningcss@1.33.0)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -1651,10 +1635,10 @@ importers:
         version: 2.0.2(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(react-refresh@0.18.0)
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       autoprefixer:
         specifier: catalog:postcss
         version: 10.5.2(postcss@8.5.23)
@@ -1709,10 +1693,10 @@ importers:
         version: 2.8.0(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(typescript@5.9.3)(webpack@5.108.4)
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       autoprefixer:
         specifier: catalog:postcss
         version: 10.5.2(postcss@8.5.23)
@@ -1770,10 +1754,10 @@ importers:
     devDependencies:
       '@types/react':
         specifier: catalog:react18
-        version: 18.3.28
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react18
-        version: 18.3.7(@types/react@18.3.28)
+        version: 19.2.5(@types/react@19.2.18)
       '@vitejs/plugin-react':
         specifier: catalog:vite8
         version: 6.0.3(vite@8.1.4(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(less@4.6.7)(sass-embedded@1.100.0)(sass@1.100.0)(terser@5.49.0)(tsx@4.23.0)(yaml@2.9.0))
@@ -1807,10 +1791,10 @@ importers:
         version: 2.1.0(@rsbuild/core@2.1.5(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0))(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       '@types/react-dom':
         specifier: catalog:react19
-        version: 19.2.3(@types/react@19.2.17)
+        version: 19.2.5(@types/react@19.2.18)
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -2153,7 +2137,7 @@ importers:
     dependencies:
       react-native:
         specifier: catalog:peer-compat
-        version: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+        version: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
       yaml:
         specifier: 'catalog:'
         version: 2.9.0
@@ -2169,7 +2153,7 @@ importers:
         version: 7.29.7
       '@module-federation/metro':
         specifier: catalog:module-federation
-        version: 2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)
+        version: 2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)
       '@rnef/tools':
         specifier: catalog:metro
         version: 0.8.13(supports-color@10.2.2)
@@ -2255,13 +2239,13 @@ importers:
         version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@types/react':
         specifier: catalog:react19
-        version: 19.2.17
+        version: 19.2.18
       react:
         specifier: catalog:react19
         version: 19.2.8
       react-native:
         specifier: catalog:metro
-        version: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+        version: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -2414,7 +2398,7 @@ importers:
         version: 0.23.2(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(typescript@5.9.3)
       '@rspress/core':
         specifier: catalog:rspress
-        version: 2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
+        version: 2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.18)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.1(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
@@ -8642,9 +8626,6 @@ packages:
     resolution: {integrity: sha512-EULJ8LApcVEPbrfND0cRQqutIOdiIgJ1Mgrhpy755r14xMohPTEpkV/k28SJvuOs9bHRFW8x+KeDAEPiGQPB9Q==}
     deprecated: This is a stub types definition. parse-path provides its own type definitions, so you do not need this installed.
 
-  '@types/prop-types@15.7.15':
-    resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
-
   '@types/proper-lockfile@4.1.4':
     resolution: {integrity: sha512-uo2ABllncSqg9F1D4nugVl9v93RmjxF6LJzQLMLDdPaXCUIDPeOJ21Gbqi43xNKzBi/WQ0Q0dICqufzQbMjipQ==}
 
@@ -8654,24 +8635,19 @@ packages:
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
 
-  '@types/react-dom@18.3.7':
-    resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
-    peerDependencies:
-      '@types/react': ^18.0.0
-
-  '@types/react-dom@19.2.3':
-    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
+  '@types/react-dom@19.2.5':
+    resolution: {integrity: sha512-fMPwH9v7r/pp43yUd2/Mbiex5KouJwwR3dzHkhLREUC6764VyDsqxhAxv6OFEYR1RhjOyD1naqba8ECDBe7ZQg==}
     peerDependencies:
       '@types/react': ^19.2.0
 
   '@types/react-helmet@6.1.11':
     resolution: {integrity: sha512-0QcdGLddTERotCXo3VFlUSWO3ztraw8nZ6e3zJSgG7apwV5xt+pJUS8ewPBqT4NYB1optGLprNQzFleIY84u/g==}
 
-  '@types/react@18.3.28':
-    resolution: {integrity: sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==}
-
   '@types/react@19.2.17':
     resolution: {integrity: sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==}
+
+  '@types/react@19.2.18':
+    resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
 
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
@@ -19172,9 +19148,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@expo/metro-runtime@5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))':
+  '@expo/metro-runtime@5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))':
     dependencies:
-      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
 
   '@expo/spawn-async@1.7.2':
     dependencies:
@@ -19586,39 +19562,39 @@ snapshots:
 
   '@lynx-js/react-alias-rsbuild-plugin@0.17.2': {}
 
-  '@lynx-js/react-refresh-webpack-plugin@0.4.0(@lynx-js/react-webpack-plugin@0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1)))':
+  '@lynx-js/react-refresh-webpack-plugin@0.4.0(@lynx-js/react-webpack-plugin@0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1)))':
     dependencies:
-      '@lynx-js/react-webpack-plugin': 0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))
+      '@lynx-js/react-webpack-plugin': 0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))
 
-  '@lynx-js/react-rsbuild-plugin@0.17.2(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(tslib@2.8.1)':
+  '@lynx-js/react-rsbuild-plugin@0.17.2(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(tslib@2.8.1)':
     dependencies:
       '@lynx-js/css-extract-webpack-plugin': 0.8.0(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))
       '@lynx-js/react-alias-rsbuild-plugin': 0.17.2
-      '@lynx-js/react-refresh-webpack-plugin': 0.4.0(@lynx-js/react-webpack-plugin@0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1)))
-      '@lynx-js/react-webpack-plugin': 0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))
+      '@lynx-js/react-refresh-webpack-plugin': 0.4.0(@lynx-js/react-webpack-plugin@0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1)))
+      '@lynx-js/react-webpack-plugin': 0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))
       '@lynx-js/runtime-wrapper-webpack-plugin': 0.2.1
       '@lynx-js/template-webpack-plugin': 0.12.2(tslib@2.8.1)
-      '@lynx-js/use-sync-external-store': 1.5.0(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))
+      '@lynx-js/use-sync-external-store': 1.5.0(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))
       background-only: 0.0.1
       tiny-invariant: 1.3.3
     optionalDependencies:
-      '@lynx-js/react': 0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28)
+      '@lynx-js/react': 0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18)
     transitivePeerDependencies:
       - '@lynx-js/lynx-core'
       - tslib
 
-  '@lynx-js/react-webpack-plugin@0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))':
+  '@lynx-js/react-webpack-plugin@0.9.5(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))(@lynx-js/template-webpack-plugin@0.12.2(tslib@2.8.1))':
     dependencies:
       '@lynx-js/debug-metadata': 0.1.0
       '@lynx-js/template-webpack-plugin': 0.12.2(tslib@2.8.1)
       '@lynx-js/webpack-runtime-globals': 0.0.6
       tiny-invariant: 1.3.3
     optionalDependencies:
-      '@lynx-js/react': 0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28)
+      '@lynx-js/react': 0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18)
 
-  '@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28)':
+  '@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18)':
     dependencies:
-      '@types/react': 18.3.28
+      '@types/react': 19.2.18
       preact: '@lynx-js/internal-preact@10.29.1-20260519060144-e6da44c'
     optionalDependencies:
       '@lynx-js/types': 4.0.0
@@ -19678,9 +19654,9 @@ snapshots:
     dependencies:
       csstype: 3.1.3
 
-  '@lynx-js/use-sync-external-store@1.5.0(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28))':
+  '@lynx-js/use-sync-external-store@1.5.0(@lynx-js/react@0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18))':
     dependencies:
-      '@lynx-js/react': 0.122.1(@lynx-js/types@4.0.0)(@types/react@18.3.28)
+      '@lynx-js/react': 0.122.1(@lynx-js/types@4.0.0)(@types/react@19.2.18)
 
   '@lynx-js/web-core@0.22.1(@lynx-js/css-serializer@0.1.6)(tslib@2.8.1)':
     dependencies:
@@ -19788,10 +19764,10 @@ snapshots:
       '@types/react': 19.2.17
       react: 18.3.1
 
-  '@mdx-js/react@3.1.1(@types/react@19.2.17)(react@19.2.7)':
+  '@mdx-js/react@3.1.1(@types/react@19.2.18)(react@19.2.7)':
     dependencies:
       '@types/mdx': 2.0.13
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
       react: 19.2.7
 
   '@mischnic/json-sourcemap@0.1.1':
@@ -20194,10 +20170,10 @@ snapshots:
       - utf-8-validate
       - vue-tsc
 
-  '@module-federation/metro@2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)':
+  '@module-federation/metro@2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)':
     dependencies:
       '@babel/types': 7.29.7
-      '@expo/metro-runtime': 5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))
+      '@expo/metro-runtime': 5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))
       '@module-federation/dts-plugin': 2.8.0(typescript@5.9.3)
       '@module-federation/runtime': 2.8.0
       '@module-federation/sdk': 2.8.0
@@ -20208,7 +20184,7 @@ snapshots:
       metro-source-map: 0.82.5(supports-color@10.2.2)
     optionalDependencies:
       react: 19.2.8
-      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -22118,14 +22094,14 @@ snapshots:
 
   '@react-native/normalize-colors@0.86.0': {}
 
-  '@react-native/virtualized-lists@0.86.0(@types/react@19.2.17)(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)':
+  '@react-native/virtualized-lists@0.86.0(@types/react@19.2.18)(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)':
     dependencies:
       invariant: 2.2.4
       nullthrows: 1.1.1
       react: 19.2.8
-      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
     optionalDependencies:
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
 
   '@remix-run/router@1.23.3': {}
 
@@ -23145,10 +23121,10 @@ snapshots:
       - webpack
       - webpack-hot-middleware
 
-  '@rspress/core@2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.17)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)':
+  '@rspress/core@2.0.17(@module-federation/runtime-tools@2.8.0)(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(@types/mdast@4.0.4)(@types/react@19.2.18)(core-js@3.49.0)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@10.2.2))(supports-color@10.2.2)':
     dependencies:
       '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
-      '@mdx-js/react': 3.1.1(@types/react@19.2.17)(react@19.2.7)
+      '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.7)
       '@rsbuild/core': 2.1.5(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)
       '@rsbuild/plugin-react': 2.1.0(@rsbuild/core@2.1.5(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0))(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))
       '@rspress/shared': 2.0.17(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)
@@ -23890,11 +23866,11 @@ snapshots:
 
   '@tanstack/query-core@5.90.20': {}
 
-  '@tanstack/react-devtools@0.10.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(csstype@3.2.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.11)':
+  '@tanstack/react-devtools@0.10.8(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(csstype@3.2.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.11)':
     dependencies:
       '@tanstack/devtools': 0.12.5(csstype@3.2.3)(solid-js@1.9.11)
-      '@types/react': 19.2.17
-      '@types/react-dom': 19.2.3(@types/react@19.2.17)
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.5(@types/react@19.2.18)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
     transitivePeerDependencies:
@@ -24151,25 +24127,25 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@babel/runtime': 7.28.6
       '@testing-library/dom': 10.4.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     optionalDependencies:
-      '@types/react': 18.3.28
-      '@types/react-dom': 18.3.7(@types/react@18.3.28)
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.5(@types/react@19.2.18)
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@babel/runtime': 7.28.6
       '@testing-library/dom': 10.4.1
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
     optionalDependencies:
-      '@types/react': 19.2.17
-      '@types/react-dom': 19.2.3(@types/react@19.2.17)
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.5(@types/react@19.2.18)
 
   '@tokenizer/inflate@0.4.1(supports-color@10.2.2)':
     dependencies:
@@ -24345,7 +24321,7 @@ snapshots:
 
   '@types/loadable__component@5.13.10':
     dependencies:
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
 
   '@types/mdast@3.0.15':
     dependencies:
@@ -24375,8 +24351,6 @@ snapshots:
     dependencies:
       parse-path: 7.1.0
 
-  '@types/prop-types@15.7.15': {}
-
   '@types/proper-lockfile@4.1.4':
     dependencies:
       '@types/retry': 0.12.5
@@ -24385,24 +24359,19 @@ snapshots:
 
   '@types/range-parser@1.2.7': {}
 
-  '@types/react-dom@18.3.7(@types/react@18.3.28)':
+  '@types/react-dom@19.2.5(@types/react@19.2.18)':
     dependencies:
-      '@types/react': 18.3.28
-
-  '@types/react-dom@19.2.3(@types/react@19.2.17)':
-    dependencies:
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
 
   '@types/react-helmet@6.1.11':
     dependencies:
-      '@types/react': 19.2.17
-
-  '@types/react@18.3.28':
-    dependencies:
-      '@types/prop-types': 15.7.15
-      csstype: 3.2.3
+      '@types/react': 19.2.18
 
   '@types/react@19.2.17':
+    dependencies:
+      csstype: 3.2.3
+
+  '@types/react@19.2.18':
     dependencies:
       csstype: 3.2.3
 
@@ -32018,7 +31987,7 @@ snapshots:
 
   react-lazy-with-preload@2.2.1: {}
 
-  react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2):
+  react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2):
     dependencies:
       '@react-native/assets-registry': 0.86.0
       '@react-native/codegen': 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))
@@ -32026,7 +31995,7 @@ snapshots:
       '@react-native/gradle-plugin': 0.86.0
       '@react-native/js-polyfills': 0.86.0
       '@react-native/normalize-colors': 0.86.0
-      '@react-native/virtualized-lists': 0.86.0(@types/react@19.2.17)(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)
+      '@react-native/virtualized-lists': 0.86.0(@types/react@19.2.18)(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)
       abort-controller: 3.0.0
       anser: 1.4.10
       ansi-regex: 5.0.1
@@ -32054,7 +32023,7 @@ snapshots:
       ws: 7.5.11
       yargs: 17.7.2
     optionalDependencies:
-      '@types/react': 19.2.17
+      '@types/react': 19.2.18
     transitivePeerDependencies:
       - '@babel/core'
       - '@react-native-community/cli'

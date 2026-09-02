@@ -135,9 +135,6 @@ catalogs:
     elysia:
       specifier: ^1.4.29
       version: 1.4.29
-    eventsource:
-      specifier: ^4.1.0
-      version: 4.1.0
     git-url-parse:
       specifier: ^16.1.0
       version: 16.1.0
@@ -334,10 +331,6 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
-  peer-compat:
-    react-native:
-      specifier: '>=0.60.0'
-      version: 0.86.0
   plugin-shared:
     is-ci:
       specifier: ^4.1.0
@@ -2027,7 +2020,7 @@ importers:
         version: 4.4.3(supports-color@10.2.2)
       eventsource:
         specifier: 'catalog:'
-        version: 4.1.0
+        version: 4.1.1
       git-url-parse:
         specifier: 'catalog:'
         version: 16.1.0
@@ -10792,12 +10785,12 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
-  eventsource-parser@3.0.6:
-    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+  eventsource-parser@3.1.1:
+    resolution: {integrity: sha512-EKN1vKAMcZ8MlYMpaNuxN6R9yakzH6uajHcHVTqWJzvu5pWw9DyhbP35HH8MVBQ+dZjAfDxk+A8NiR9KWaXiyQ==}
     engines: {node: '>=18.0.0'}
 
-  eventsource@4.1.0:
-    resolution: {integrity: sha512-2GuF51iuHX6A9xdTccMTsNb7VO0lHZihApxhvQzJB5A03DvHDd2FQepodbMaztPBmBcE/ox7o2gqaxGhYB9LhQ==}
+  eventsource@4.1.1:
+    resolution: {integrity: sha512-D6bTRWh6KahHTK/m4WnjPQyEinNPf9eFLEZSEoj7d6fTibspnAVYfzHvirL7u/aoX5d9YYfIkBVAhmigUELk9w==}
     engines: {node: '>=20.0.0'}
 
   exact-mirror@0.2.7:
@@ -26962,11 +26955,11 @@ snapshots:
 
   events@3.3.0: {}
 
-  eventsource-parser@3.0.6: {}
+  eventsource-parser@3.1.1: {}
 
-  eventsource@4.1.0:
+  eventsource@4.1.1:
     dependencies:
-      eventsource-parser: 3.0.6
+      eventsource-parser: 3.1.1
 
   exact-mirror@0.2.7(@sinclair/typebox@0.34.48):
     optionalDependencies:

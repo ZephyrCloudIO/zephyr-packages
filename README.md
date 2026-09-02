@@ -73,9 +73,9 @@ For the opaque `tap-app` build-target contract, see
 - `pnpm test:examples` - Runs example unit tests and the production deployment E2E suite
 
 PR CI builds and deploys affected examples by default. Apply the
-`ci:force-example-builds` label to build and deploy every example with a build
-script and refresh the Zephyr preview links. Remove the label to return future
-PR updates to affected-only builds.
+`ci:force-example-builds` label to rerun required PR CI, build and deploy every
+example with a build script, and refresh the Zephyr preview links. Remove the
+label to return future PR updates to affected-only builds.
 
 ### Linting & Formatting
 

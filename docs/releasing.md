@@ -41,7 +41,9 @@ Every CI job skips App-triggered, same-repository release PR events authored by
 the Zephyr Workflow Automation App, targeting `main`, and using Release
 Please's generated branch prefix. GitHub records the workflow run with skipped
 jobs, but no runner starts: release PRs run no lint, formatting, typecheck,
-package test, or preview deployment jobs. Human review remains required.
+package test, or preview deployment jobs. Required preview jobs keep their
+normal check names so GitHub records the trusted skip instead of leaving those
+contexts pending. Human review remains required.
 
 The skip is intentionally job-level. Commit-message skip directives would also
 suppress the `push` workflow after merge and prevent Release Please from

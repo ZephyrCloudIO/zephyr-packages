@@ -8,9 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Label-triggered runs must not cancel or replace the required checks for the
-  # same commit. Their jobs use separate check names below for the same reason.
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'labeled' && format('label-{0}', github.event.label.name) || 'ci' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
@@ -31,7 +29,7 @@ jobs:
   # App output plus required human review intentionally replace a runner-based
   # changed-file check for this zero-runner path.
   build:
-    name: ${{ github.event.action == 'labeled' && 'Force example previews (ubuntu-latest)' || 'End-to-end test of examples (ubuntu-latest)' }}
+    name: End-to-end test of examples (ubuntu-latest)
     if: >-
       !(
         github.event_name == 'pull_request' &&
@@ -41,8 +39,7 @@ jobs:
         github.event.pull_request.base.ref == 'main' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
         startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
-      ) &&
-      (github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds')
+      )
     runs-on: depot-ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -83,7 +80,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
-    name: ${{ github.event.action == 'labeled' && 'Force example previews (windows-latest)' || 'End-to-end test of examples (windows-latest)' }}
+    name: End-to-end test of examples (windows-latest)
     if: >-
       !(
         github.event_name == 'pull_request' &&
@@ -93,8 +90,7 @@ jobs:
         github.event.pull_request.base.ref == 'main' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
         startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
-      ) &&
-      (github.event.action != 'labeled' || github.event.label.name == 'ci:force-example-builds')
+      )
     # Modern.js/Rspack currently aborts with 0xC0000409 on Depot's Windows
     # Server 2025 image (`depot-windows-latest`). Pin the supported 2022 image.
     runs-on: depot-windows-2022
@@ -137,7 +133,7 @@ jobs:
         run: pnpm exec turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only
 
   lint:
-    name: ${{ github.event.action == 'labeled' && 'Force example previews (lint skipped)' || 'lint' }}
+    name: lint
     if: >-
       !(
         github.event_name == 'pull_request' &&
@@ -147,8 +143,7 @@ jobs:
         github.event.pull_request.base.ref == 'main' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
         startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
-      ) &&
-      github.event.action != 'labeled'
+      )
     runs-on: depot-ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -166,7 +161,6 @@ jobs:
         run: pnpm typecheck
 
   test:
-    name: ${{ github.event.action == 'labeled' && format('Force example previews (test skipped, {0})', matrix.os) || format('test ({0})', matrix.os) }}
     if: >-
       !(
         github.event_name == 'pull_request' &&
@@ -176,8 +170,7 @@ jobs:
         github.event.pull_request.base.ref == 'main' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
         startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
-      ) &&
-      github.event.action != 'labeled'
+      )
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:

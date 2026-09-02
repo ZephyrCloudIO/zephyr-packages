@@ -334,10 +334,6 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
-  peer-compat:
-    react-native:
-      specifier: '>=0.60.0'
-      version: 0.86.0
   plugin-shared:
     is-ci:
       specifier: ^4.1.0
@@ -525,9 +521,6 @@ catalogs:
     '@svgr/webpack':
       specifier: ^8.1.0
       version: 8.1.0
-    css-loader:
-      specifier: ^7.1.4
-      version: 7.1.4
     dotenv-webpack:
       specifier: ^9.0.0
       version: 9.0.0
@@ -1419,7 +1412,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       css-loader:
         specifier: catalog:webpack5
-        version: 7.1.4(@rspack/core@1.7.7(@swc/helpers@0.5.23))(webpack@5.108.4)
+        version: 7.1.5(@rspack/core@1.7.7(@swc/helpers@0.5.23))(webpack@5.108.4)
       html-webpack-plugin:
         specifier: catalog:webpack5
         version: 5.6.7(@rspack/core@1.7.7(@swc/helpers@0.5.23))(webpack@5.108.4)
@@ -1721,7 +1714,7 @@ importers:
         version: 10.1.1(@babel/core@7.29.6(supports-color@10.2.2))(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(webpack@5.108.4)
       css-loader:
         specifier: catalog:webpack5
-        version: 7.1.4(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(webpack@5.108.4)
+        version: 7.1.5(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(webpack@5.108.4)
       dotenv-webpack:
         specifier: catalog:webpack5
         version: 9.0.0(webpack@5.108.4)
@@ -10077,8 +10070,8 @@ packages:
     resolution: {integrity: sha512-3O5QdqgFRUbXvK1x5INf1YkBz1UKSWqrd63vWsum8MNHDBYD5urm3QtxZbKU259OrEXNM26lP/MPY3d1IGkBgA==}
     engines: {node: '>=16'}
 
-  css-loader@7.1.4:
-    resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
+  css-loader@7.1.5:
+    resolution: {integrity: sha512-Q7iAfQkU2twNBryKX/vGAlE+GAmkF7quhSzAGNK8fBimxk3+tqg245rH52UPb9dioBolBc8rP0ihmHBaDTJQBA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || ^1.0.0 || ^2.0.0-0
@@ -14375,6 +14368,10 @@ packages:
 
   postcss-selector-parser@7.1.4:
     resolution: {integrity: sha512-HeP7D2wyhkR+XaK6v4W8oRF62Dsz4flyuczALJp61GckGm42u1saSSJ/0auvcBqxs3jMRFEcPK34At/0JBKdOg==}
+    engines: {node: '>=4'}
+
+  postcss-selector-parser@7.1.5:
+    resolution: {integrity: sha512-KvvtD7SrlBP7dlgkBghEE3r84CABm5SmV2aNcG4oCA+qDnJ/tvKonFVvwWAyyWUEwxuNawdfEAZKP9zM3oZ2Uw==}
     engines: {node: '>=4'}
 
   postcss-svgo@6.0.3:
@@ -26104,7 +26101,7 @@ snapshots:
 
   css-gradient-parser@0.0.16: {}
 
-  css-loader@7.1.4(@rspack/core@1.7.7(@swc/helpers@0.5.23))(webpack@5.108.4):
+  css-loader@7.1.5(@rspack/core@1.7.7(@swc/helpers@0.5.23))(webpack@5.108.4):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.23)
       postcss: 8.5.23
@@ -26113,12 +26110,12 @@ snapshots:
       postcss-modules-scope: 3.2.1(postcss@8.5.23)
       postcss-modules-values: 4.0.0(postcss@8.5.23)
       postcss-value-parser: 4.2.0
-      semver: 7.8.4
+      semver: 7.8.5
     optionalDependencies:
       '@rspack/core': 1.7.7(@swc/helpers@0.5.23)
       webpack: 5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@8.0.2(postcss@8.5.23))(csso@5.0.5)(esbuild@0.28.1)(html-minifier-terser@7.2.0)(lightningcss@1.33.0)(postcss@8.5.23)(webpack-cli@7.2.1)
 
-  css-loader@7.1.4(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(webpack@5.108.4):
+  css-loader@7.1.5(@rspack/core@2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23))(webpack@5.108.4):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.23)
       postcss: 8.5.23
@@ -26127,7 +26124,7 @@ snapshots:
       postcss-modules-scope: 3.2.1(postcss@8.5.23)
       postcss-modules-values: 4.0.0(postcss@8.5.23)
       postcss-value-parser: 4.2.0
-      semver: 7.8.4
+      semver: 7.8.5
     optionalDependencies:
       '@rspack/core': 2.1.3(@module-federation/runtime-tools@2.8.0)(@swc/helpers@0.5.23)
       webpack: 5.108.4(@swc/core@1.15.43(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@8.0.2(postcss@8.5.23))(csso@5.0.5)(esbuild@0.28.1)(html-minifier-terser@7.2.0)(lightningcss@1.33.0)(postcss@8.5.23)(webpack-cli@7.2.1)
@@ -31575,13 +31572,13 @@ snapshots:
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.23)
       postcss: 8.5.23
-      postcss-selector-parser: 7.1.4
+      postcss-selector-parser: 7.1.5
       postcss-value-parser: 4.2.0
 
   postcss-modules-scope@3.2.1(postcss@8.5.23):
     dependencies:
       postcss: 8.5.23
-      postcss-selector-parser: 7.1.4
+      postcss-selector-parser: 7.1.5
 
   postcss-modules-values@4.0.0(postcss@8.5.23):
     dependencies:
@@ -31796,6 +31793,11 @@ snapshots:
       util-deprecate: 1.0.2
 
   postcss-selector-parser@7.1.4:
+    dependencies:
+      cssesc: 3.0.0
+      util-deprecate: 1.0.2
+
+  postcss-selector-parser@7.1.5:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
@@ -32047,7 +32049,7 @@ snapshots:
       react-refresh: 0.14.2
       regenerator-runtime: 0.13.11
       scheduler: 0.27.0
-      semver: 7.8.4
+      semver: 7.8.5
       stacktrace-parser: 0.1.11
       tinyglobby: 0.2.17
       whatwg-fetch: 3.6.20

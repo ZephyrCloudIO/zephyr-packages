@@ -21,7 +21,7 @@ catalog:
   '@lynx-js/types': ^4.0.0
   '@sentry/react': ^10.65.0
   '@tanstack/intent': 0.3.8
-  '@toon-format/toon': ^0.9.0
+  '@toon-format/toon': ^2.0.0
   '@types/debug': ^4.1.13
   '@types/proper-lockfile': ^4.1.4
   '@vitejs/plugin-rsc': ^0.5.27
@@ -105,6 +105,8 @@ minimumReleaseAgeExclude:
   - fast-uri@3.1.6
   # Renovate security update: hono@4.12.34
   - hono@4.12.34
+  # Renovate security update: @toon-format/toon@2.3.1
+  - "@toon-format/toon@2.3.1"
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

@@ -273,7 +273,7 @@ catalogs:
     vite: ^7.3.5
   vite8:
     '@vitejs/plugin-react': ^6.0.3
-    vite: ^8.1.4
+    vite: ^8.2.2
   webpack5:
     '@svgr/webpack': ^8.1.0
     css-loader: ^7.1.4

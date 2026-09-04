@@ -1,6 +1,7 @@
 import type { ModuleFederationRuntimePlugin } from '@module-federation/runtime';
 import { getZephyrNativeCacheNamespace } from './zephyr-global';
 import { getBundleCacheKey } from './cache-key';
+import type { ManifestArtifact, ManifestRelease } from './types';
 
 type AfterResolveArgs = Parameters<
   NonNullable<ModuleFederationRuntimePlugin['afterResolve']>
@@ -26,29 +27,30 @@ type BeforeInitArgs = Parameters<
 
 // --- Manifest types (subset used for hash extraction) ---
 
-interface ManifestAssetItem {
+export interface ManifestAssetItem {
   name?: string;
   hash?: string;
   assets?: { js?: { sync?: string[] } };
 }
 
-interface ManifestMetaData {
+export interface ManifestMetaData {
   publicPath?: string;
   buildInfo?: { hash?: string };
   remoteEntry?: { name?: string; path?: string };
 }
 
-interface Manifest {
+export interface Manifest {
   metaData?: ManifestMetaData;
   exposes?: ManifestAssetItem[];
   shared?: ManifestAssetItem[];
 }
 
 interface RuntimePluginCacheLayer {
-  registerBundleHash: (bundleUrl: string, hash: string) => void;
+  registerManifestRelease: (release: ManifestRelease) => void;
   registerManifestSource: (
     manifestUrl: string,
-    extractHashes: (manifest: Manifest, manifestUrl: string) => Map<string, string>
+    extractRelease: (manifest: Manifest, manifestUrl: string) => ManifestRelease,
+    release?: ManifestRelease
   ) => void;
 }
 
@@ -60,7 +62,7 @@ function getGlobalCacheLayer(): RuntimePluginCacheLayer | undefined {
 
   const candidate = cacheLayer as Partial<RuntimePluginCacheLayer>;
   if (
-    typeof candidate.registerBundleHash !== 'function' ||
+    typeof candidate.registerManifestRelease !== 'function' ||
     typeof candidate.registerManifestSource !== 'function'
   ) {
     return undefined;
@@ -141,11 +143,13 @@ function resolveBundlePaths(
   return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
 }
 
-function extractBundleHashes(
+export function extractManifestRelease(
   manifest: Manifest,
-  manifestUrl: string
-): Map<string, string> {
-  const hashes = new Map<string, string>();
+  manifestUrl: string,
+  remoteName?: string,
+  resolvedContainerUrl?: string
+): ManifestRelease {
+  const artifacts = new Map<string, ManifestArtifact>();
 
   const rawPublicPath = manifest?.metaData?.publicPath ?? '';
   const resolvedPublicPath =
@@ -153,36 +157,57 @@ function extractBundleHashes(
       ? rawPublicPath
       : manifestUrl.replace(/\/[^/]*$/, '');
 
-  function addHashes(
+  function addArtifacts(
     items: ManifestAssetItem[] | undefined,
     section: 'exposes' | 'shared'
   ) {
     if (!Array.isArray(items)) return;
     for (const item of items) {
-      if (!item.hash) continue;
       for (const bundlePath of resolveBundlePaths(item, section)) {
         const bareUrl = resolvedPublicPath
           ? `${resolvedPublicPath.replace(/\/+$/, '')}/${bundlePath.replace(/^\.?\//, '')}`
           : bundlePath;
-        hashes.set(buildUrlForSplitBundle(bareUrl), item.hash);
+        const bundleUrl = buildUrlForSplitBundle(bareUrl);
+        artifacts.set(getBundleCacheKey(bundleUrl), {
+          bundleUrl,
+          expectedHash: item.hash,
+          kind: section === 'exposes' ? 'exposed' : 'shared',
+        });
       }
     }
   }
 
-  addHashes(manifest?.exposes, 'exposes');
-  addHashes(manifest?.shared, 'shared');
+  addArtifacts(manifest?.exposes, 'exposes');
+  addArtifacts(manifest?.shared, 'shared');
 
   const remoteEntry = manifest?.metaData?.remoteEntry;
   const containerHash = manifest?.metaData?.buildInfo?.hash;
-  if (remoteEntry?.name && containerHash && resolvedPublicPath) {
+  if (resolvedContainerUrl) {
+    artifacts.set(getBundleCacheKey(resolvedContainerUrl), {
+      bundleUrl: resolvedContainerUrl,
+      expectedHash: containerHash,
+      kind: 'container',
+    });
+  } else if (remoteEntry?.name && resolvedPublicPath) {
     const entryPath = remoteEntry.path
       ? `${remoteEntry.path}/${remoteEntry.name}`
       : remoteEntry.name;
     const bareUrl = `${resolvedPublicPath.replace(/\/+$/, '')}/${entryPath.replace(/^\.?\//, '')}`;
-    hashes.set(buildUrlForEntryBundle(bareUrl), containerHash);
+    const bundleUrl = buildUrlForEntryBundle(bareUrl);
+    artifacts.set(getBundleCacheKey(bundleUrl), {
+      bundleUrl,
+      expectedHash: containerHash,
+      kind: 'container',
+    });
   }
 
-  return hashes;
+  const inferredRemoteName =
+    remoteName ?? remoteEntry?.name?.replace(/\.[^.]+$/, '') ?? 'unknown';
+  return {
+    manifestId: inferredRemoteName,
+    remoteName: inferredRemoteName,
+    artifacts: Array.from(artifacts.values()),
+  };
 }
 
 // --- Runtime plugin ---
@@ -203,21 +228,27 @@ export default function (): ModuleFederationRuntimePlugin {
           | Manifest
           | undefined;
         if (manifest) {
-          const containerHash = manifest.metaData?.buildInfo?.hash;
-          if (containerHash && remoteInfo.entry) {
-            cacheLayer.registerBundleHash(remoteInfo.entry, containerHash);
-          }
-
-          const hashes = extractBundleHashes(manifest, manifestUrl);
-          for (const [url, hash] of hashes) {
-            cacheLayer.registerBundleHash(getBundleCacheKey(url), hash);
-          }
-
-          cacheLayer.registerManifestSource(manifestUrl, extractBundleHashes);
+          const remoteName =
+            remoteInfo.name ??
+            manifest.metaData?.remoteEntry?.name?.replace(/\.[^.]+$/, '') ??
+            'unknown';
+          const release = extractManifestRelease(
+            manifest,
+            manifestUrl,
+            remoteName,
+            remoteInfo.entry
+          );
+          cacheLayer.registerManifestRelease(release);
+          cacheLayer.registerManifestSource(
+            manifestUrl,
+            (nextManifest, nextManifestUrl) =>
+              extractManifestRelease(nextManifest, nextManifestUrl, remoteName),
+            release
+          );
         }
       }
     } catch {
-      // non-critical — hash validation is best-effort
+      // The remote load will fail closed if release metadata could not be registered.
     }
     return args;
   }

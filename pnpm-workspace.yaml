@@ -107,6 +107,8 @@ minimumReleaseAgeExclude:
   - hono@4.12.34
   # Renovate security update: react-router@7.18.3
   - react-router@7.18.3
+  # Renovate security update: astro@7.1.0
+  - astro@7.1.0
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

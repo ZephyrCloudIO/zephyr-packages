@@ -105,6 +105,8 @@ minimumReleaseAgeExclude:
   - fast-uri@3.1.6
   # Renovate security update: hono@4.12.34
   - hono@4.12.34
+  # Renovate security update: react-router@7.18.2
+  - react-router@7.18.2
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -294,7 +296,7 @@ overrides:
   nanoid@>=3.0.0 <3.3.18: 3.3.18
   nuxt@>=4.0.0 <4.5.1: 4.5.2
   postcss: 8.5.23
-  react-router@>=7.0.0 <7.18.0: 7.18.1
+  react-router@>=7.0.0 <7.18.0: 7.18.2
   serialize-javascript@<=7.0.2: '>=7.0.3'
   sharp@<0.35.0: 0.35.4
   shell-quote@<=1.8.4: 1.9.0

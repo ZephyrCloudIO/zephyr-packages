@@ -21,6 +21,10 @@ creates `vX.Y.Z` and the matching GitHub Release. The release event then starts
 `publish_packages.yml`, which builds and publishes all packages with the npm
 `latest` tag.
 
+Normal PR CI builds every package under `libs` and runs Publint in strict mode.
+Each publish job repeats the Publint check after its build and before changing
+versions or publishing to npm.
+
 The retired `pnpm bump-patch`, `pnpm bump-minor`, and `pnpm bump-major` flow
 must not be recreated. Do not hand-create a stable tag or GitHub Release.
 Manual canary and prerelease publication remain unchanged in

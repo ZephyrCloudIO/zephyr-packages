@@ -159,6 +159,8 @@ jobs:
         run: pnpm format:check
       - name: run project-reference typecheck
         run: pnpm typecheck
+      - name: validate package contents
+        run: pnpm build && pnpm publint
 
   test:
     if: >-

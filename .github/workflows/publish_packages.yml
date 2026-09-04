@@ -57,6 +57,9 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Validate packages
+        run: pnpm publint
+
       - name: Patch versions
         run: |
           echo "Fetching current canary tag for zephyr-agent..."
@@ -109,6 +112,9 @@ jobs:
 
       - name: Build packages
         run: pnpm build
+
+      - name: Validate packages
+        run: pnpm publint
 
       - name: Patch versions with next tag
         run: |
@@ -178,6 +184,9 @@ jobs:
 
       - name: Build packages
         run: pnpm build
+
+      - name: Validate packages
+        run: pnpm publint
 
       - name: Publish packages to latest tag
         run: pnpm ze-publish --tag=latest

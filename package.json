@@ -12,6 +12,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "lint:examples": "oxlint examples",
+    "publint": "pnpm --filter './libs/**' exec publint --strict --level warning",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "test": "turbo run test --filter='./libs/*'",
@@ -46,6 +47,7 @@
     "node-persist": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "publint": "catalog:",
     "serve": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:typescript"

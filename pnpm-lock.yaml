@@ -85,8 +85,8 @@ catalogs:
       specifier: 0.3.8
       version: 0.3.8
     '@toon-format/toon':
-      specifier: ^0.9.0
-      version: 0.9.0
+      specifier: ^2.3.1
+      version: 2.3.1
     '@types/debug':
       specifier: ^4.1.13
       version: 4.1.13
@@ -334,6 +334,10 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
+  peer-compat:
+    react-native:
+      specifier: '>=0.60.0'
+      version: 0.86.0
   plugin-shared:
     is-ci:
       specifier: ^4.1.0
@@ -354,8 +358,8 @@ catalogs:
       version: 16.3.3
   react-router:
     react-router-dom:
-      specifier: ^7.18.1
-      version: 7.18.1
+      specifier: 7.18.3
+      version: 7.18.3
   react18:
     '@types/react':
       specifier: 18.3.31
@@ -554,7 +558,7 @@ overrides:
   nanoid@>=3.0.0 <3.3.18: 3.3.18
   nuxt@>=4.0.0 <4.5.1: 4.5.2
   postcss: 8.5.23
-  react-router@>=7.0.0 <7.18.0: 7.18.1
+  react-router@>=7.0.0 <7.18.3: 7.18.3
   serialize-javascript@<=7.0.2: '>=7.0.3'
   sharp@<0.35.0: 0.35.4
   shell-quote@<=1.8.4: 1.9.0
@@ -1083,7 +1087,7 @@ importers:
         version: 18.3.1(react@18.3.1)
       react-router-dom:
         specifier: catalog:react-router
-        version: 7.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@rsbuild/plugin-react':
         specifier: catalog:rspack
@@ -1200,7 +1204,7 @@ importers:
         version: 19.2.8(react@19.2.8)
       react-router-dom:
         specifier: catalog:react-router
-        version: 7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 7.18.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
     devDependencies:
       '@rspack/cli':
         specifier: catalog:rspack
@@ -2012,7 +2016,7 @@ importers:
     dependencies:
       '@toon-format/toon':
         specifier: 'catalog:'
-        version: 0.9.0
+        version: 2.3.1
       axios:
         specifier: 'catalog:'
         version: 1.18.1(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
@@ -2150,7 +2154,7 @@ importers:
     dependencies:
       react-native:
         specifier: catalog:peer-compat
-        version: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+        version: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
       yaml:
         specifier: 'catalog:'
         version: 2.9.0
@@ -2166,7 +2170,7 @@ importers:
         version: 7.29.7
       '@module-federation/metro':
         specifier: catalog:module-federation
-        version: 2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)
+        version: 2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)
       '@rnef/tools':
         specifier: catalog:metro
         version: 0.8.13(supports-color@10.2.2)
@@ -8998,8 +9002,8 @@ packages:
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
-  '@toon-format/toon@0.9.0':
-    resolution: {integrity: sha512-BaMhGh1+/z8ceDrF2xL9Drd42hijbUJlivm/1goPR26RgCYsqlMkHbg48hx9a5UjZC7oZqxWPJ6ju5qvALi6Ag==}
+  '@toon-format/toon@2.3.1':
+    resolution: {integrity: sha512-sWqEMeAJGMda9qRrfPKrX3C4c33CO9SJuvJzzrcBEn5sbDB+k6pSLkDsfN0rVnLQwR97MV3sDgVbcxQNsq8xVw==}
 
   '@tsconfig/node10@1.0.12':
     resolution: {integrity: sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ==}
@@ -15198,13 +15202,6 @@ packages:
       react: '>=16.8'
       react-dom: '>=16.8'
 
-  react-router-dom@7.18.1:
-    resolution: {integrity: sha512-KaZh+X/6UtEp28x51AUYZDMg9NGoz2ja3dNHa+ta/tk40vCzKhQ/RypCWBMLbmDr6//E24Vv5uPsrqXFozdkAg==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      react: '>=18'
-      react-dom: '>=18'
-
   react-router-dom@7.18.3:
     resolution: {integrity: sha512-ytVbyBBM7vMfRCam25r0WMhSVSom909A8p+8m0/f1w853dz/xfFu6etAT2SEbVoSnI+ZoPRDqIsQXVT89gp7kg==}
     engines: {node: '>=20.0.0'}
@@ -15217,16 +15214,6 @@ packages:
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
-
-  react-router@7.18.1:
-    resolution: {integrity: sha512-GDLgg3i3uM0aeJO3Fm+TCS+sDQ7gu12T6x0qdTEzcwqEfleci7JwugVNIF3U//0FWKnJT7ptG+20B2jfDqnZAg==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      react: '>=18'
-      react-dom: '>=18'
-    peerDependenciesMeta:
-      react-dom:
-        optional: true
 
   react-router@7.18.3:
     resolution: {integrity: sha512-gyXgtdr5uACJ5b1Q4udzjVV+tb/rlHIMJKuJ0e89R4Kzgz47z/rgP0dIKxktqIEUhDHluGTPJJH/wRha7CyqsA==}
@@ -19898,9 +19885,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@expo/metro-runtime@5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))':
+  '@expo/metro-runtime@5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))':
     dependencies:
-      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
 
   '@expo/spawn-async@1.7.2':
     dependencies:
@@ -21020,7 +21007,7 @@ snapshots:
       '@modern-js/utils': 3.6.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@swc/helpers': 0.5.23
       lru-cache: 10.4.3
-      react-router: 7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-router: 7.18.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       serialize-javascript: 7.0.5
     optionalDependencies:
       react: 19.2.8
@@ -21253,10 +21240,10 @@ snapshots:
       - utf-8-validate
       - vue-tsc
 
-  '@module-federation/metro@2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)':
+  '@module-federation/metro@2.8.0(@babel/types@7.29.7)(metro-config@0.82.5(supports-color@10.2.2))(metro-file-map@0.82.5(supports-color@10.2.2))(metro-resolver@0.82.5)(metro-source-map@0.82.5(supports-color@10.2.2))(metro@0.82.5(supports-color@10.2.2))(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@5.9.3)':
     dependencies:
       '@babel/types': 7.29.7
-      '@expo/metro-runtime': 5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2))
+      '@expo/metro-runtime': 5.0.5(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))
       '@module-federation/dts-plugin': 2.8.0(typescript@5.9.3)
       '@module-federation/runtime': 2.8.0
       '@module-federation/sdk': 2.8.0
@@ -21267,7 +21254,7 @@ snapshots:
       metro-source-map: 0.82.5(supports-color@10.2.2)
     optionalDependencies:
       react: 19.2.8
-      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.17)(react@19.2.8)(supports-color@10.2.2)
+      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -23332,6 +23319,15 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.17
 
+  '@react-native/virtualized-lists@0.86.0(@types/react@19.2.18)(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)':
+    dependencies:
+      invariant: 2.2.4
+      nullthrows: 1.1.1
+      react: 19.2.8
+      react-native: 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
+    optionalDependencies:
+      '@types/react': 19.2.18
+
   '@remix-run/router@1.23.3': {}
 
   '@resvg/resvg-wasm@2.4.0': {}
@@ -23511,7 +23507,7 @@ snapshots:
     dependencies:
       serialize-javascript: 7.0.5
       smob: 1.6.1
-      terser: 5.49.0
+      terser: 5.51.2
     optionalDependencies:
       rollup: 4.62.2
 
@@ -23869,7 +23865,7 @@ snapshots:
   '@rsbuild/plugin-rem@1.0.6(@rsbuild/core@2.1.0(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0))':
     dependencies:
       deepmerge: 4.3.1
-      terser: 5.49.0
+      terser: 5.51.2
     optionalDependencies:
       '@rsbuild/core': 2.1.0(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)
 
@@ -25510,7 +25506,7 @@ snapshots:
 
   '@tokenizer/token@0.3.0': {}
 
-  '@toon-format/toon@0.9.0': {}
+  '@toon-format/toon@2.3.1': {}
 
   '@tsconfig/node10@1.0.12':
     optional: true
@@ -33571,7 +33567,7 @@ snapshots:
 
   react-helmet-async@1.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.7
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 18.3.1
@@ -33640,6 +33636,51 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2):
+    dependencies:
+      '@react-native/assets-registry': 0.86.0
+      '@react-native/codegen': 0.86.0(@babel/core@7.29.6(supports-color@10.2.2))
+      '@react-native/community-cli-plugin': 0.86.0(supports-color@10.2.2)
+      '@react-native/gradle-plugin': 0.86.0
+      '@react-native/js-polyfills': 0.86.0
+      '@react-native/normalize-colors': 0.86.0
+      '@react-native/virtualized-lists': 0.86.0(@types/react@19.2.18)(react-native@0.86.0(@babel/core@7.29.6(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)
+      abort-controller: 3.0.0
+      anser: 1.4.10
+      ansi-regex: 5.0.1
+      babel-plugin-syntax-hermes-parser: 0.36.0
+      base64-js: 1.5.1
+      commander: 12.1.0
+      flow-enums-runtime: 0.0.6
+      hermes-compiler: 250829098.0.14
+      invariant: 2.2.4
+      memoize-one: 5.2.1
+      metro-runtime: 0.84.4
+      metro-source-map: 0.84.4(supports-color@10.2.2)
+      nullthrows: 1.1.1
+      pretty-format: 29.7.0
+      promise: 8.3.0
+      react: 19.2.8
+      react-devtools-core: 6.1.5
+      react-refresh: 0.14.2
+      regenerator-runtime: 0.13.11
+      scheduler: 0.27.0
+      semver: 7.8.5
+      stacktrace-parser: 0.1.11
+      tinyglobby: 0.2.17
+      whatwg-fetch: 3.6.20
+      ws: 7.5.11
+      yargs: 17.7.2
+    optionalDependencies:
+      '@types/react': 19.2.18
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@react-native-community/cli'
+      - '@react-native/metro-config'
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
   react-reconciler@0.33.0(react@19.2.8):
     dependencies:
       react: 19.2.8
@@ -33665,17 +33706,11 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       react-router: 6.30.4(react@18.3.1)
 
-  react-router-dom@7.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-router-dom@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-router: 7.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-
-  react-router-dom@7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
-    dependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      react-router: 7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-router: 7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   react-router-dom@7.18.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -33688,21 +33723,13 @@ snapshots:
       '@remix-run/router': 1.23.3
       react: 18.3.1
 
-  react-router@7.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-router@7.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       cookie: 1.1.1
       react: 18.3.1
       set-cookie-parser: 2.7.2
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
-
-  react-router@7.18.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
-    dependencies:
-      cookie: 1.1.1
-      react: 19.2.8
-      set-cookie-parser: 2.7.2
-    optionalDependencies:
-      react-dom: 19.2.8(react@19.2.8)
 
   react-router@7.18.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -33733,7 +33760,7 @@ snapshots:
 
   react-syntax-highlighter@15.6.6(react@18.3.1):
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.7
       highlight.js: 10.7.3
       highlightjs-vue: 1.0.0
       lowlight: 1.20.0

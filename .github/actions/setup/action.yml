@@ -5,7 +5,7 @@ inputs:
   node-version:
     required: true
     description: 'Node.js version'
-    default: '24.15.0'
+    default: '24.20.0'
   cache-enabled:
     required: false
     description: 'Enable the pnpm dependency cache'

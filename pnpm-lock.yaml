@@ -536,6 +536,9 @@ catalogs:
     webpack:
       specifier: ^5.108.4
       version: 5.108.4
+    webpack-cli:
+      specifier: ^7.2.1
+      version: 7.2.3
     webpack-dev-server:
       specifier: ^6.0.0
       version: 6.0.0

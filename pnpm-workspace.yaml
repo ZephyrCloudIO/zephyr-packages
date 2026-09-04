@@ -8,7 +8,7 @@ packages:
 
 catalog:
   '@ast-grep/napi': ^0.45.0
-  '@astrojs/markdown-satteri': ^0.3.3
+  '@astrojs/markdown-satteri': ^0.3.8
   '@astrojs/mdx': ^7.0.2
   '@astrojs/rss': ^4.0.19
   '@astrojs/sitemap': ^3.7.3

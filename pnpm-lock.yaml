@@ -240,6 +240,10 @@ catalogs:
     yaml:
       specifier: ^2.9.0
       version: 2.9.0
+  esbuild:
+    esbuild:
+      specifier: ^0.28.1
+      version: 0.28.2
   metro:
     '@rnef/tools':
       specifier: ^0.8.13

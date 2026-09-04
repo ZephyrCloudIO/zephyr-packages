@@ -12,6 +12,9 @@ catalogs:
     '@babel/plugin-syntax-dynamic-import':
       specifier: ^7.8.3
       version: 7.8.3
+    '@babel/plugin-transform-runtime':
+      specifier: ^7.29.0
+      version: 7.29.7
     '@babel/preset-env':
       specifier: ^7.29.7
       version: 7.29.7
@@ -21,6 +24,12 @@ catalogs:
     '@babel/preset-typescript':
       specifier: ^7.29.0
       version: 7.29.7
+    '@babel/runtime':
+      specifier: ^7.28.6
+      version: 7.29.7
+    '@babel/types':
+      specifier: ^7.29.0
+      version: 7.29.8
     babel-loader:
       specifier: ^10.1.1
       version: 10.1.1

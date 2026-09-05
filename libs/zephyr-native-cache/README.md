@@ -66,6 +66,8 @@ Production remote bundles fail closed. Every container, exposed module, and shar
 
 Updates are downloaded into an isolated generation. The cache verifies and smoke-validates every artifact before atomically changing the active generation, and retains the prior verified generation for rollback. Cached source is read and hashed as one native operation before every execution. A rejected generation is quarantined until its manifest changes or the cache is cleared, preventing repeated activation loops.
 
+The active generation also retains its verified Module Federation manifest. If a later manifest request fails offline, the runtime plugin re-extracts its executable graph and serves the cached manifest only when it still identifies that complete active generation.
+
 The default native storage is Android no-backup storage or iOS Application Support with iCloud backup exclusion. Package logs do not include bundle URLs, manifest URLs, or cache paths.
 
 ## Runtime APIs

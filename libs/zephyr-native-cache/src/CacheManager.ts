@@ -28,6 +28,8 @@ interface Generation {
   rootPath: string;
   createdAt: number;
   artifacts: GenerationArtifact[];
+  manifestUrl?: string;
+  manifestJson?: string;
 }
 
 interface CacheState {
@@ -105,27 +107,36 @@ export class CacheManager {
     if (release.artifacts.length === 0) {
       return this.failedManifest(release, 'missing-hash', []);
     }
-    const invalid = this.findInvalidArtifact(release);
-    if (invalid) {
-      return this.failedManifest(release, invalid.reason!, [invalid]);
+    const invalid = this.findInvalidArtifacts(release);
+    if (invalid.length > 0) {
+      const invalidByUrl = new Map(
+        invalid.map((outcome) => [outcome.bundleUrl, outcome])
+      );
+      return this.failedManifest(
+        release,
+        invalid[0].reason!,
+        release.artifacts.map(
+          (artifact) =>
+            invalidByUrl.get(getBundleCacheKey(artifact.bundleUrl)) ??
+            this.artifactOutcome(release, artifact.bundleUrl, 'not-attempted')
+        )
+      );
     }
 
     const artifacts = release.artifacts.map((artifact) => ({
       ...artifact,
+      requestUrl: artifact.bundleUrl,
       bundleUrl: getBundleCacheKey(artifact.bundleUrl),
       expectedHash: normalizeSha256(artifact.expectedHash)!,
     }));
-    const generationId = await NativeMFECache!.sha256String(
-      JSON.stringify(
-        artifacts
-          .map(({ bundleUrl, expectedHash, kind }) => ({
-            bundleUrl,
-            expectedHash,
-            kind,
-          }))
-          .sort((a, b) => a.bundleUrl.localeCompare(b.bundleUrl))
-      )
-    );
+    const generationId = await this.calculateGenerationId(artifacts);
+    const manifestJson =
+      release.manifestJson === undefined
+        ? undefined
+        : JSON.stringify(release.manifestJson);
+    if (release.manifestJson !== undefined && manifestJson === undefined) {
+      return this.failedManifest(release, 'invalid-manifest', []);
+    }
 
     const active = this.state.active[release.manifestId];
     if (active?.generationId === generationId) {
@@ -166,7 +177,7 @@ export class CacheManager {
         const artifactId = await NativeMFECache!.sha256String(artifact.bundleUrl);
         const filePath = `${stageRoot}/${artifactId}.bundle`;
         const downloaded = await NativeMFECache!.downloadFile(
-          artifact.bundleUrl,
+          artifact.requestUrl,
           filePath
         );
         if (downloaded.sha256.toLowerCase() !== artifact.expectedHash) {
@@ -200,6 +211,10 @@ export class CacheManager {
         rootPath: stageRoot,
         createdAt: Date.now(),
         artifacts: stagedArtifacts,
+        manifestUrl: release.manifestUrl
+          ? getBundleCacheKey(release.manifestUrl)
+          : undefined,
+        manifestJson,
       };
       const next = this.copyState();
       const replacedStage = next.staged[release.manifestId];
@@ -223,14 +238,23 @@ export class CacheManager {
       return this.failedManifest(
         release,
         reason,
-        artifacts.map((artifact) =>
-          this.artifactOutcome(
-            release,
-            artifact.bundleUrl,
-            'failed',
-            generationId,
-            reason
-          )
+        artifacts.map((artifact, index) =>
+          index < stagedArtifacts.length
+            ? this.artifactOutcome(release, artifact.bundleUrl, 'cleaned', generationId)
+            : index === stagedArtifacts.length
+              ? this.artifactOutcome(
+                  release,
+                  artifact.bundleUrl,
+                  'failed',
+                  generationId,
+                  reason
+                )
+              : this.artifactOutcome(
+                  release,
+                  artifact.bundleUrl,
+                  'not-attempted',
+                  generationId
+                )
         )
       );
     }
@@ -263,13 +287,89 @@ export class CacheManager {
     if (!generation) return [];
     const verified: VerifiedArtifact[] = [];
     for (const artifact of generation.artifacts) {
-      const { source } = await NativeMFECache!.readVerifiedFile(
-        artifact.filePath,
-        artifact.bundleHash
-      );
-      verified.push({ generation, artifact, source });
+      try {
+        const { source } = await NativeMFECache!.readVerifiedFile(
+          artifact.filePath,
+          artifact.bundleHash
+        );
+        verified.push({ generation, artifact, source });
+      } catch (error) {
+        const failure =
+          error instanceof Error ? error : new Error('Generation verification failed');
+        throw Object.assign(failure, { bundleUrl: artifact.bundleUrl });
+      }
     }
     return verified;
+  }
+
+  async getVerifiedPreviousGeneration(manifestId: string): Promise<VerifiedArtifact[]> {
+    const generation = this.state.previous[manifestId];
+    if (!generation) return [];
+    const verified: VerifiedArtifact[] = [];
+    for (const artifact of generation.artifacts) {
+      try {
+        const { source } = await NativeMFECache!.readVerifiedFile(
+          artifact.filePath,
+          artifact.bundleHash
+        );
+        verified.push({ generation, artifact, source });
+      } catch (error) {
+        const failure =
+          error instanceof Error ? error : new Error('Generation verification failed');
+        throw Object.assign(failure, { bundleUrl: artifact.bundleUrl });
+      }
+    }
+    return verified;
+  }
+
+  getActiveGenerationIdentity(
+    bundleUrl: string
+  ): { manifestId: string; remoteName: string } | null {
+    const key = getBundleCacheKey(bundleUrl);
+    const matches = Object.values(this.state.active).filter((generation) =>
+      generation.artifacts.some((artifact) => artifact.bundleUrl === key)
+    );
+    if (matches.length !== 1) return null;
+    return {
+      manifestId: matches[0].manifestId,
+      remoteName: matches[0].remoteName,
+    };
+  }
+
+  getPreviousGenerationIdentity(
+    remoteNameOrManifestId: string
+  ): { manifestId: string; remoteName: string } | null {
+    const manifestId =
+      this.findManifestId(this.state.previous, remoteNameOrManifestId) ??
+      remoteNameOrManifestId;
+    const generation = this.state.previous[manifestId];
+    return generation
+      ? { manifestId: generation.manifestId, remoteName: generation.remoteName }
+      : null;
+  }
+
+  async getActiveManifest(manifestUrl: string): Promise<unknown | null> {
+    const key = getBundleCacheKey(manifestUrl);
+    const matches = Object.values(this.state.active).filter(
+      (generation) => generation.manifestUrl === key && generation.manifestJson
+    );
+    if (matches.length !== 1) return null;
+    try {
+      return JSON.parse(matches[0].manifestJson!);
+    } catch {
+      return null;
+    }
+  }
+
+  async activeMatchesRelease(release: ManifestRelease): Promise<boolean> {
+    if (release.artifacts.length === 0 || this.findInvalidArtifact(release)) return false;
+    const artifacts = release.artifacts.map((artifact) => ({
+      bundleUrl: getBundleCacheKey(artifact.bundleUrl),
+      expectedHash: normalizeSha256(artifact.expectedHash)!,
+      kind: artifact.kind,
+    }));
+    const generationId = await this.calculateGenerationId(artifacts);
+    return this.state.active[release.manifestId]?.generationId === generationId;
   }
 
   async activateStagedGeneration(manifestId: string): Promise<ManifestOutcome> {
@@ -298,24 +398,33 @@ export class CacheManager {
         await this.deleteGeneration(supersededPrevious);
       }
       return this.manifestOutcome('activated', candidate, 'activated');
-    } catch {
+    } catch (error) {
+      const failedUrl = this.failureBundleUrl(error);
+      const reason = failedUrl ? failureReason(error) : 'activation-failure';
       try {
-        await this.rejectStagedGeneration(manifestId, 'activation-failure');
+        await this.rejectStagedGeneration(manifestId, reason);
       } catch {
         // The candidate remains inert because the active pointer was not changed.
       }
       const release = this.releaseFromGeneration(candidate);
       return this.failedManifest(
         release,
-        'activation-failure',
+        reason,
         release.artifacts.map((artifact) =>
-          this.artifactOutcome(
-            release,
-            artifact.bundleUrl,
-            'failed',
-            candidate.generationId,
-            'activation-failure'
-          )
+          failedUrl && getBundleCacheKey(artifact.bundleUrl) === failedUrl
+            ? this.artifactOutcome(
+                release,
+                artifact.bundleUrl,
+                'failed',
+                candidate.generationId,
+                reason
+              )
+            : this.artifactOutcome(
+                release,
+                artifact.bundleUrl,
+                'cleaned',
+                candidate.generationId
+              )
         )
       );
     }
@@ -377,11 +486,28 @@ export class CacheManager {
       await this.persistState(next);
       this.state = next;
       return this.manifestOutcome('rolled-back', previous, 'rolled-back');
-    } catch {
+    } catch (error) {
+      const release = this.releaseFromGeneration(previous);
+      const failedUrl = this.failureBundleUrl(error);
       return this.failedManifest(
-        this.releaseFromGeneration(previous),
+        release,
         'rollback-failure',
-        []
+        release.artifacts.map((artifact) =>
+          failedUrl && getBundleCacheKey(artifact.bundleUrl) === failedUrl
+            ? this.artifactOutcome(
+                release,
+                artifact.bundleUrl,
+                'failed',
+                previous.generationId,
+                failureReason(error)
+              )
+            : this.artifactOutcome(
+                release,
+                artifact.bundleUrl,
+                'not-attempted',
+                previous.generationId
+              )
+        )
       );
     }
   }
@@ -588,28 +714,56 @@ export class CacheManager {
     };
   }
 
+  private calculateGenerationId(
+    artifacts: Array<{
+      bundleUrl: string;
+      expectedHash: string;
+      kind: ManifestArtifact['kind'];
+    }>
+  ): Promise<string> {
+    return NativeMFECache!.sha256String(
+      JSON.stringify(
+        artifacts
+          .map(({ bundleUrl, expectedHash, kind }) => ({
+            bundleUrl,
+            expectedHash,
+            kind,
+          }))
+          .sort((a, b) => a.bundleUrl.localeCompare(b.bundleUrl))
+      )
+    );
+  }
+
   private findInvalidArtifact(release: ManifestRelease): ArtifactOutcome | null {
+    return this.findInvalidArtifacts(release)[0] ?? null;
+  }
+
+  private findInvalidArtifacts(release: ManifestRelease): ArtifactOutcome[] {
+    const outcomes: ArtifactOutcome[] = [];
     for (const artifact of release.artifacts) {
       if (artifact.expectedHash == null || artifact.expectedHash === '') {
-        return this.artifactOutcome(
-          release,
-          artifact.bundleUrl,
-          'failed',
-          undefined,
-          'missing-hash'
+        outcomes.push(
+          this.artifactOutcome(
+            release,
+            artifact.bundleUrl,
+            'failed',
+            undefined,
+            'missing-hash'
+          )
         );
-      }
-      if (!normalizeSha256(artifact.expectedHash)) {
-        return this.artifactOutcome(
-          release,
-          artifact.bundleUrl,
-          'failed',
-          undefined,
-          'malformed-hash'
+      } else if (!normalizeSha256(artifact.expectedHash)) {
+        outcomes.push(
+          this.artifactOutcome(
+            release,
+            artifact.bundleUrl,
+            'failed',
+            undefined,
+            'malformed-hash'
+          )
         );
       }
     }
-    return null;
+    return outcomes;
   }
 
   private async getVerifiedBundle(
@@ -639,8 +793,20 @@ export class CacheManager {
 
   private async verifyGeneration(generation: Generation): Promise<void> {
     for (const artifact of generation.artifacts) {
-      await NativeMFECache!.readVerifiedFile(artifact.filePath, artifact.bundleHash);
+      try {
+        await NativeMFECache!.readVerifiedFile(artifact.filePath, artifact.bundleHash);
+      } catch (error) {
+        const failure =
+          error instanceof Error ? error : new Error('Generation verification failed');
+        throw Object.assign(failure, { bundleUrl: artifact.bundleUrl });
+      }
     }
+  }
+
+  private failureBundleUrl(error: unknown): string | undefined {
+    return error && typeof error === 'object' && 'bundleUrl' in error
+      ? String((error as { bundleUrl?: unknown }).bundleUrl)
+      : undefined;
   }
 
   private async persistState(state: CacheState): Promise<void> {
@@ -762,7 +928,11 @@ export class CacheManager {
           ['container', 'exposed', 'shared'].includes(artifact.kind) &&
           typeof artifact.downloadedAt === 'number' &&
           typeof artifact.lastUsedAt === 'number'
-      )
+      ) &&
+      ((generation.manifestUrl === undefined && generation.manifestJson === undefined) ||
+        (typeof generation.manifestUrl === 'string' &&
+          typeof generation.manifestJson === 'string' &&
+          this.isManifestJson(generation.manifestJson)))
     );
   }
 
@@ -774,6 +944,15 @@ export class CacheManager {
       !value.startsWith('/') &&
       !value.split('/').includes('..')
     );
+  }
+
+  private isManifestJson(value: string): boolean {
+    try {
+      const parsed = JSON.parse(value);
+      return !!parsed && typeof parsed === 'object';
+    } catch {
+      return false;
+    }
   }
 
   private validRejectedGenerations(
@@ -883,6 +1062,10 @@ export class CacheManager {
         expectedHash: artifact.bundleHash,
         kind: artifact.kind,
       })),
+      manifestUrl: generation.manifestUrl,
+      manifestJson: generation.manifestJson
+        ? JSON.parse(generation.manifestJson)
+        : undefined,
     };
   }
 

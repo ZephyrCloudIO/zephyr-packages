@@ -62,6 +62,7 @@ rs.mock('../src/NativeMFECache', () => ({ default: nativeCache }));
 import { CacheManager } from '../src/CacheManager';
 import { BundleCacheLayer } from '../src/BundleCacheLayer';
 import { NativeCacheLoadError } from '../src/NativeCacheError';
+import { extractManifestRelease } from '../src/runtime-plugin';
 import type { ManifestRelease } from '../src/types';
 
 const HASH_A = 'a'.repeat(64);
@@ -69,6 +70,7 @@ const HASH_B = 'b'.repeat(64);
 const HASH_C = 'c'.repeat(64);
 const BUNDLE_URL = 'https://edge.example/app.bundle?platform=ios';
 const EXPOSED_URL = 'https://edge.example/exposed/card.bundle';
+const OFFLINE_BUNDLE_URL = 'https://edge.example/app.bundle';
 
 function release(hash: string): ManifestRelease {
   return {
@@ -81,6 +83,7 @@ function release(hash: string): ManifestRelease {
 describe('CacheManager generation transactions', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    (globalThis as typeof globalThis & { __DEV__: boolean }).__DEV__ = false;
     testState.files.clear();
     testState.hashes.clear();
     testState.downloads.clear();
@@ -118,14 +121,36 @@ describe('CacheManager generation transactions', () => {
 
     expect(outcome.status).toBe('failed');
     expect(outcome.reason).toBe('hash-mismatch');
+    expect(outcome.artifacts.map((artifact) => artifact.status)).toEqual([
+      'cleaned',
+      'failed',
+    ]);
     expect(manager.getAllMetadata()).toEqual([]);
     expect(nativeCache.deleteFile).toHaveBeenCalledWith(
       expect.stringContaining('/staging/')
     );
   });
 
+  it('downloads the original request URL while using a canonical cache identity', async () => {
+    const signedUrl = 'https://edge.example/app.bundle?token=signed&t=123';
+    testState.downloads.set(signedUrl, { source: 'container', hash: HASH_A });
+    const manager = new CacheManager();
+    await manager.initialize();
+
+    await manager.stageGeneration({
+      manifestId: 'remote',
+      remoteName: 'remote',
+      artifacts: [{ bundleUrl: signedUrl, expectedHash: HASH_A, kind: 'container' }],
+    });
+
+    expect(nativeCache.downloadFile).toHaveBeenCalledWith(
+      signedUrl,
+      expect.stringContaining('/staging/')
+    );
+  });
+
   it('retains one complete previous generation after promotion', async () => {
-    testState.downloads.set(BUNDLE_URL, { source: 'version one', hash: HASH_A });
+    testState.downloads.set(BUNDLE_URL, { source: '/* version one */', hash: HASH_A });
     const manager = new CacheManager();
     await manager.initialize();
     const firstStage = await manager.stageGeneration(release(HASH_A));
@@ -143,7 +168,7 @@ describe('CacheManager generation transactions', () => {
   });
 
   it('keeps the old active generation when atomic activation persistence fails', async () => {
-    testState.downloads.set(BUNDLE_URL, { source: 'version one', hash: HASH_A });
+    testState.downloads.set(BUNDLE_URL, { source: '/* version one */', hash: HASH_A });
     const manager = new CacheManager();
     await manager.initialize();
     await manager.stageGeneration(release(HASH_A));
@@ -170,7 +195,7 @@ describe('CacheManager generation transactions', () => {
     const activation = await manager.activateStagedGeneration('remote');
 
     expect(activation.status).toBe('failed');
-    expect(activation.reason).toBe('activation-failure');
+    expect(activation.reason).toBe('corrupt-cache');
     expect(manager.getAllMetadata()).toEqual([]);
     expect(testState.files.has(stagedPath)).toBe(false);
   });
@@ -191,7 +216,7 @@ describe('CacheManager generation transactions', () => {
     expect(manager.getAllMetadata()[0].bundleHash).toBe(HASH_A);
   });
 
-  it('recovers the old active generation when a staged promotion is interrupted', async () => {
+  it('recovers the old active generation when the process stops before promotion', async () => {
     testState.downloads.set(BUNDLE_URL, { source: 'version one', hash: HASH_A });
     const manager = new CacheManager();
     await manager.initialize();
@@ -205,11 +230,31 @@ describe('CacheManager generation transactions', () => {
 
     expect(recovered.getAllMetadata()[0].bundleHash).toBe(HASH_A);
   });
+
+  it('recovers the complete new generation after atomic promotion', async () => {
+    testState.downloads.set(BUNDLE_URL, { source: 'version one', hash: HASH_A });
+    const manager = new CacheManager();
+    await manager.initialize();
+    await manager.stageGeneration(release(HASH_A));
+    await manager.activateStagedGeneration('remote');
+    testState.downloads.set(BUNDLE_URL, { source: 'version two', hash: HASH_B });
+    await manager.stageGeneration(release(HASH_B));
+    await manager.activateStagedGeneration('remote');
+
+    const recovered = new CacheManager();
+    await recovered.initialize();
+
+    expect(recovered.getAllMetadata()[0].bundleHash).toBe(HASH_B);
+    expect(
+      (await recovered.getVerifiedPreviousBundle(BUNDLE_URL))?.artifact.bundleHash
+    ).toBe(HASH_A);
+  });
 });
 
 describe('BundleCacheLayer fail-closed loading', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    (globalThis as typeof globalThis & { __DEV__: boolean }).__DEV__ = false;
     testState.files.clear();
     testState.hashes.clear();
     testState.downloads.clear();
@@ -398,6 +443,127 @@ describe('BundleCacheLayer fail-closed loading', () => {
     ).toBe('sentinel');
   });
 
+  it('returns a typed rollback outcome when previous bytes are corrupt', async () => {
+    testState.downloads.set(BUNDLE_URL, {
+      source: 'globalThis.__mfeTestValue = "v1";',
+      hash: HASH_A,
+    });
+    const layer = new BundleCacheLayer({ enablePolling: false });
+    layer.registerManifestRelease(release(HASH_A));
+    await layer.loadBundle(BUNDLE_URL);
+    testState.downloads.set(BUNDLE_URL, {
+      source: 'globalThis.__mfeTestValue = "v2";',
+      hash: HASH_B,
+    });
+    layer.registerManifestRelease(release(HASH_B));
+    await layer.loadBundle(BUNDLE_URL);
+    const diskState = JSON.parse(
+      testState.files.get('/application-support/mfe-bundles/state-v2.json')!
+    );
+    const previousPath = `/application-support/mfe-bundles/${diskState.previous.remote.artifacts[0].filePath}`;
+    testState.hashes.set(previousPath, HASH_C);
+
+    const outcome = await layer.rollback('remote');
+
+    expect(outcome).toMatchObject({
+      status: 'failed',
+      reason: 'rollback-failure',
+      artifacts: [
+        {
+          bundleUrl: BUNDLE_URL,
+          status: 'failed',
+          reason: 'corrupt-cache',
+        },
+      ],
+    });
+    expect(layer.getLoadedBundles()[0].bundleHash).toBe(HASH_B);
+    expect(nativeCache.restart).not.toHaveBeenCalled();
+  });
+
+  it('returns a typed rollback outcome when previous validation fails', async () => {
+    let rejectVersionOne = false;
+    testState.downloads.set(BUNDLE_URL, { source: '/* version one */', hash: HASH_A });
+    const layer = new BundleCacheLayer({
+      enablePolling: false,
+      validateBundle: (_url, source) => {
+        if (rejectVersionOne && source === '/* version one */') {
+          throw new Error('smoke validation failed');
+        }
+      },
+    });
+    layer.registerManifestRelease(release(HASH_A));
+    await layer.loadBundle(BUNDLE_URL);
+    testState.downloads.set(BUNDLE_URL, { source: '/* version two */', hash: HASH_B });
+    layer.registerManifestRelease(release(HASH_B));
+    await layer.loadBundle(BUNDLE_URL);
+    rejectVersionOne = true;
+
+    const outcome = await layer.rollback('remote');
+
+    expect(outcome).toMatchObject({
+      status: 'failed',
+      reason: 'rollback-failure',
+      artifacts: [
+        {
+          bundleUrl: BUNDLE_URL,
+          status: 'failed',
+          reason: 'evaluation-failure',
+        },
+      ],
+    });
+    expect(layer.getLoadedBundles()[0].bundleHash).toBe(HASH_B);
+  });
+
+  it('poisons the old runtime after a successful manual rollback', async () => {
+    testState.downloads.set(BUNDLE_URL, { source: '/* version one */', hash: HASH_A });
+    const layer = new BundleCacheLayer({ enablePolling: false });
+    layer.registerManifestRelease(release(HASH_A));
+    await layer.loadBundle(BUNDLE_URL);
+    testState.downloads.set(BUNDLE_URL, { source: '/* version two */', hash: HASH_B });
+    layer.registerManifestRelease(release(HASH_B));
+    await layer.loadBundle(BUNDLE_URL);
+
+    const outcome = await layer.rollback('remote');
+
+    expect(outcome.status).toBe('rolled-back');
+    expect(nativeCache.restart).toHaveBeenCalled();
+    await expect(layer.loadBundle(BUNDLE_URL)).rejects.toMatchObject({
+      reason: 'runtime-poisoned',
+    });
+  });
+
+  it('rejects an invalid current hash before inspecting or rolling back corrupt cache', async () => {
+    testState.downloads.set(BUNDLE_URL, {
+      source: 'globalThis.__mfeTestValue = "v1";',
+      hash: HASH_A,
+    });
+    const layer = new BundleCacheLayer({ enablePolling: false });
+    layer.registerManifestRelease(release(HASH_A));
+    await layer.loadBundle(BUNDLE_URL);
+    testState.downloads.set(BUNDLE_URL, {
+      source: 'globalThis.__mfeTestValue = "v2";',
+      hash: HASH_B,
+    });
+    layer.registerManifestRelease(release(HASH_B));
+    await layer.loadBundle(BUNDLE_URL);
+    testState.hashes.set(layer.getLoadedBundles()[0].filePath, HASH_C);
+    (globalThis as typeof globalThis & { __mfeTestValue?: string }).__mfeTestValue =
+      'sentinel';
+    layer.registerManifestRelease({
+      ...release(HASH_B),
+      artifacts: [{ bundleUrl: BUNDLE_URL, expectedHash: undefined, kind: 'container' }],
+    });
+
+    await expect(layer.loadBundle(BUNDLE_URL)).rejects.toMatchObject({
+      reason: 'missing-hash',
+    });
+    expect(nativeCache.restart).not.toHaveBeenCalled();
+    expect(layer.getLoadedBundles()[0].bundleHash).toBe(HASH_B);
+    expect(
+      (globalThis as typeof globalThis & { __mfeTestValue?: string }).__mfeTestValue
+    ).toBe('sentinel');
+  });
+
   it('smoke-validates every artifact before evaluating or activating a generation', async () => {
     testState.downloads.set(BUNDLE_URL, {
       source: 'globalThis.__mfeTestValue = "candidate";',
@@ -419,6 +585,7 @@ describe('BundleCacheLayer fail-closed loading', () => {
 
     await expect(layer.loadBundle(BUNDLE_URL)).rejects.toMatchObject({
       reason: 'evaluation-failure',
+      outcome: { bundleUrl: EXPOSED_URL },
     });
     expect(layer.getLoadedBundles()).toEqual([]);
     expect(
@@ -444,11 +611,18 @@ describe('BundleCacheLayer fail-closed loading', () => {
     const activePath = layer.getLoadedBundles()[0].filePath;
     testState.hashes.set(activePath, HASH_C);
 
-    const result = await layer.loadBundle(BUNDLE_URL);
-
-    expect(result.outcome.status).toBe('rolled-back');
-    expect(result.candidateOutcome?.reason).toBe('corrupt-cache');
+    await expect(layer.loadBundle(BUNDLE_URL)).rejects.toMatchObject({
+      reason: 'corrupt-cache',
+    });
     expect(layer.getLoadedBundles()[0].bundleHash).toBe(HASH_A);
+    expect(nativeCache.restart).toHaveBeenCalled();
+    expect(
+      (globalThis as typeof globalThis & { __mfeTestValue?: string }).__mfeTestValue
+    ).toBe('v2');
+
+    const restartedLayer = new BundleCacheLayer({ enablePolling: false });
+    const result = await restartedLayer.loadBundle(BUNDLE_URL);
+    expect(result.status).toBe('cache-hit');
     expect(
       (globalThis as typeof globalThis & { __mfeTestValue?: string }).__mfeTestValue
     ).toBe('v1');
@@ -471,6 +645,50 @@ describe('BundleCacheLayer fail-closed loading', () => {
     expect(
       (globalThis as typeof globalThis & { __mfeTestValue?: string }).__mfeTestValue
     ).toBe('offline');
+  });
+
+  it('serves a persisted manifest only when it describes the active generation', async () => {
+    const manifestUrl = 'https://edge.example/mf-manifest.json';
+    const manifest = {
+      metaData: {
+        publicPath: 'https://edge.example',
+        buildInfo: { hash: HASH_A },
+        remoteEntry: { name: 'app.bundle' },
+      },
+      exposes: [],
+      shared: [],
+    };
+    const activeRelease = extractManifestRelease(
+      manifest,
+      manifestUrl,
+      'remote',
+      OFFLINE_BUNDLE_URL
+    );
+    testState.downloads.set(OFFLINE_BUNDLE_URL, {
+      source: 'globalThis.__mfeTestValue = "offline-manifest";',
+      hash: HASH_A,
+    });
+    const firstLayer = new BundleCacheLayer({ enablePolling: false });
+    firstLayer.registerManifestRelease(activeRelease);
+    await firstLayer.loadBundle(OFFLINE_BUNDLE_URL);
+
+    const restartedLayer = new BundleCacheLayer({ enablePolling: false });
+    const cached = await restartedLayer.getCachedManifest(manifestUrl, (value, url) =>
+      extractManifestRelease(value as typeof manifest, url, 'remote')
+    );
+    const mismatched = await restartedLayer.getCachedManifest(manifestUrl, () => ({
+      ...activeRelease,
+      artifacts: [
+        {
+          bundleUrl: OFFLINE_BUNDLE_URL,
+          expectedHash: HASH_B,
+          kind: 'container',
+        },
+      ],
+    }));
+
+    expect(cached).toEqual(manifest);
+    expect(mismatched).toBeNull();
   });
 
   it('serializes polling and cache clearing', async () => {

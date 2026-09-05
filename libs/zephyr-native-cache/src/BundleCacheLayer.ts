@@ -98,6 +98,24 @@ export class BundleCacheLayer {
     this.manifestSources.set(manifestUrl, { release: registeredRelease, extractRelease });
   }
 
+  async getCachedManifest(
+    manifestUrl: string,
+    extractRelease: (manifest: unknown, manifestUrl: string) => ManifestRelease
+  ): Promise<unknown | null> {
+    return this.runExclusive(async () => {
+      if (this.runtimePoisoned || !NativeMFECache) return null;
+      await this.ensureInitialized();
+      const manifest = await this.cacheManager!.getActiveManifest(manifestUrl);
+      if (!manifest) return null;
+      try {
+        const release = extractRelease(manifest, manifestUrl);
+        return (await this.cacheManager!.activeMatchesRelease(release)) ? manifest : null;
+      } catch {
+        return null;
+      }
+    });
+  }
+
   async loadBundle(bundleUrl: string): Promise<BundleLoadResult> {
     const key = getBundleCacheKey(bundleUrl);
     const inflight = this.inflightLoads.get(key);
@@ -196,10 +214,15 @@ export class BundleCacheLayer {
             const reason =
               error &&
               typeof error === 'object' &&
-              'name' in error &&
-              (error as { name?: unknown }).name === 'AbortError'
-                ? 'timeout'
-                : 'network-failure';
+              'code' in error &&
+              (error as { code?: unknown }).code === 'INVALID_MANIFEST'
+                ? 'invalid-manifest'
+                : error &&
+                    typeof error === 'object' &&
+                    'name' in error &&
+                    (error as { name?: unknown }).name === 'AbortError'
+                  ? 'timeout'
+                  : 'network-failure';
             outcomes.push(this.failedPollOutcome(source.release, reason));
           }
         }
@@ -259,12 +282,48 @@ export class BundleCacheLayer {
   async rollback(remoteNameOrManifestId: string): Promise<ManifestOutcome> {
     return this.runExclusive(async () => {
       await this.ensureInitialized();
+      const identity =
+        this.cacheManager!.getPreviousGenerationIdentity(remoteNameOrManifestId);
+      try {
+        if (identity) {
+          const previous = await this.cacheManager!.getVerifiedPreviousGeneration(
+            identity.manifestId
+          );
+          for (const artifact of previous) {
+            try {
+              await this.validateSource(artifact.artifact.bundleUrl, artifact.source);
+            } catch (error) {
+              throw this.withBundleUrl(error, artifact.artifact.bundleUrl);
+            }
+          }
+        }
+      } catch (error) {
+        const failedUrl = this.failureBundleUrl(error);
+        return {
+          manifestId: identity?.manifestId ?? remoteNameOrManifestId,
+          remoteName: identity?.remoteName ?? remoteNameOrManifestId,
+          status: 'failed',
+          reason: 'rollback-failure',
+          artifacts: failedUrl
+            ? [
+                {
+                  manifestId: identity?.manifestId ?? remoteNameOrManifestId,
+                  remoteName: identity?.remoteName ?? remoteNameOrManifestId,
+                  bundleUrl: failedUrl,
+                  status: 'failed',
+                  reason: this.failureReason(error),
+                },
+              ]
+            : [],
+        };
+      }
       const outcome = await this.cacheManager!.rollbackGeneration(remoteNameOrManifestId);
       if (outcome.status === 'rolled-back') {
         this.status.pendingUpdates = this.status.pendingUpdates.filter(
           (name) => name !== outcome.remoteName
         );
         this.notifyStatusChange();
+        this.restartAfterRejectedExecution();
       }
       return outcome;
     });
@@ -303,6 +362,22 @@ export class BundleCacheLayer {
       (candidate) => getBundleCacheKey(candidate.bundleUrl) === key
     );
     const expectedHash = normalizeSha256(artifact?.expectedHash);
+    const activeIdentity = this.cacheManager!.getActiveGenerationIdentity(bundleUrl);
+
+    if (release && !expectedHash) {
+      const reason: NativeCacheFailureReason =
+        artifact?.expectedHash == null || artifact.expectedHash === ''
+          ? 'missing-hash'
+          : 'malformed-hash';
+      throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, reason, release));
+    }
+
+    if (
+      !release &&
+      (!activeIdentity || this.releasesByManifest.has(activeIdentity.manifestId))
+    ) {
+      throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, 'missing-hash'));
+    }
 
     let active: VerifiedArtifact | null = null;
     try {
@@ -311,7 +386,12 @@ export class BundleCacheLayer {
         release?.manifestId
       );
     } catch {
-      const recovered = await this.recoverPrevious(bundleUrl, release, 'corrupt-cache');
+      const recovered = await this.recoverPrevious(
+        bundleUrl,
+        release,
+        'corrupt-cache',
+        activeIdentity?.manifestId
+      );
       if (recovered) return recovered;
       try {
         await this.cacheManager!.discardActiveGenerationForBundle(bundleUrl);
@@ -323,7 +403,7 @@ export class BundleCacheLayer {
     }
 
     if (!release || !artifact) {
-      if (active && !this.releasesByManifest.has(active.generation.manifestId)) {
+      if (active) {
         try {
           return await this.evaluateKnownGood(bundleUrl, active);
         } catch {
@@ -334,14 +414,6 @@ export class BundleCacheLayer {
         }
       }
       throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, 'missing-hash'));
-    }
-
-    if (!expectedHash) {
-      const reason: NativeCacheFailureReason =
-        artifact.expectedHash == null || artifact.expectedHash === ''
-          ? 'missing-hash'
-          : 'malformed-hash';
-      throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, reason, release));
     }
 
     if (active?.artifact.bundleHash === expectedHash) {
@@ -386,16 +458,22 @@ export class BundleCacheLayer {
         throw new Error('Staged generation is incomplete');
       }
       for (const stagedArtifact of stagedArtifacts) {
-        await this.validateSource(
-          stagedArtifact.artifact.bundleUrl,
-          stagedArtifact.source
-        );
+        try {
+          await this.validateSource(
+            stagedArtifact.artifact.bundleUrl,
+            stagedArtifact.source
+          );
+        } catch (error) {
+          throw this.withBundleUrl(error, stagedArtifact.artifact.bundleUrl);
+        }
       }
-    } catch {
+    } catch (error) {
+      const failedUrl = this.failureBundleUrl(error) ?? bundleUrl;
+      const validationReason = this.failureReason(error);
       try {
         await this.cacheManager!.rejectStagedGeneration(
           release.manifestId,
-          'evaluation-failure'
+          validationReason
         );
       } catch {
         // The candidate remains inert when cleanup persistence fails.
@@ -404,8 +482,8 @@ export class BundleCacheLayer {
         try {
           const result = await this.evaluateKnownGood(bundleUrl, active);
           result.candidateOutcome = this.failureOutcome(
-            bundleUrl,
-            'evaluation-failure',
+            failedUrl,
+            validationReason,
             release
           );
           return result;
@@ -414,7 +492,7 @@ export class BundleCacheLayer {
         }
       }
       throw new NativeCacheLoadError(
-        this.failureOutcome(bundleUrl, 'evaluation-failure', release)
+        this.failureOutcome(failedUrl, validationReason, release)
       );
     }
 
@@ -451,14 +529,24 @@ export class BundleCacheLayer {
     if (activation.status !== 'activated') {
       this.restartAfterRejectedExecution();
       throw new NativeCacheLoadError(
-        this.failureOutcome(bundleUrl, 'activation-failure', release)
+        activation.artifacts.find((artifact) => artifact.status === 'failed') ??
+          this.failureOutcome(
+            bundleUrl,
+            activation.reason ?? 'activation-failure',
+            release
+          )
       );
     }
 
     const outcome =
       activation.artifacts.find((item) => item.bundleUrl === key) ??
       this.failureOutcome(bundleUrl, 'activation-failure', release);
-    this.recordBundleLoad(bundleUrl, release.remoteName, 'downloaded', expectedHash);
+    this.recordBundleLoad(
+      bundleUrl,
+      this.inferRemoteName(bundleUrl),
+      'downloaded',
+      expectedHash!
+    );
     return { status: 'downloaded', outcome };
   }
 
@@ -477,7 +565,7 @@ export class BundleCacheLayer {
     };
     this.recordBundleLoad(
       bundleUrl,
-      verified.generation.remoteName,
+      this.inferRemoteName(bundleUrl),
       'cache-hit',
       verified.artifact.bundleHash
     );
@@ -487,48 +575,26 @@ export class BundleCacheLayer {
   private async recoverPrevious(
     bundleUrl: string,
     release: ManifestRelease | undefined,
-    reason: NativeCacheFailureReason
+    reason: NativeCacheFailureReason,
+    manifestId?: string
   ): Promise<BundleLoadResult | null> {
-    let previous: VerifiedArtifact | null;
-    let rollback: ManifestOutcome;
+    const targetManifestId = release?.manifestId ?? manifestId;
+    if (!targetManifestId) return null;
+    let previous: VerifiedArtifact[];
     try {
-      previous = await this.cacheManager!.getVerifiedPreviousBundle(
-        bundleUrl,
-        release?.manifestId
-      );
-      if (!previous) return null;
-      await this.validateSource(bundleUrl, previous.source);
-      rollback = await this.cacheManager!.rollbackGeneration(
-        previous.generation.manifestId
-      );
-      if (rollback.status !== 'rolled-back') return null;
+      previous = await this.cacheManager!.getVerifiedPreviousGeneration(targetManifestId);
+      if (!previous.length) return null;
+      for (const artifact of previous) {
+        await this.validateSource(artifact.artifact.bundleUrl, artifact.source);
+      }
     } catch {
       return null;
     }
 
-    try {
-      await this.evalSource(previous.source);
-      const outcome =
-        rollback.artifacts.find(
-          (item) => item.bundleUrl === getBundleCacheKey(bundleUrl)
-        ) ?? rollback.artifacts[0];
-      this.recordBundleLoad(
-        bundleUrl,
-        previous.generation.remoteName,
-        'cache-hit',
-        previous.artifact.bundleHash
-      );
-      return {
-        status: 'cache-hit',
-        outcome,
-        candidateOutcome: this.failureOutcome(bundleUrl, reason, release),
-      };
-    } catch {
-      this.restartAfterRejectedExecution();
-      throw new NativeCacheLoadError(
-        this.failureOutcome(bundleUrl, 'rollback-failure', release)
-      );
-    }
+    const rollback = await this.cacheManager!.rollbackGeneration(targetManifestId);
+    if (rollback.status !== 'rolled-back') return null;
+    this.restartAfterRejectedExecution();
+    throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, reason, release));
   }
 
   private async rollbackAfterEvaluationFailure(manifestId: string): Promise<void> {
@@ -657,6 +723,28 @@ export class BundleCacheLayer {
       status: 'failed',
       reason,
     };
+  }
+
+  private failureBundleUrl(error: unknown): string | undefined {
+    return error && typeof error === 'object' && 'bundleUrl' in error
+      ? String((error as { bundleUrl?: unknown }).bundleUrl)
+      : undefined;
+  }
+
+  private failureReason(error: unknown): NativeCacheFailureReason {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String((error as { code?: unknown }).code)
+        : '';
+    if (code === 'HASH_MISMATCH') return 'corrupt-cache';
+    if (code === 'READ_ERROR' || code === 'SHA256_ERROR') return 'storage-failure';
+    return 'evaluation-failure';
+  }
+
+  private withBundleUrl(error: unknown, bundleUrl: string): Error {
+    const failure =
+      error instanceof Error ? error : new Error('Bundle validation failed');
+    return Object.assign(failure, { bundleUrl });
   }
 
   private failedPollOutcome(

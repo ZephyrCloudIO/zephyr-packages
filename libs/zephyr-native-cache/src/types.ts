@@ -10,6 +10,7 @@ export type NativeCacheFailureReason =
   | 'native-unavailable'
   | 'missing-hash'
   | 'malformed-hash'
+  | 'invalid-manifest'
   | 'timeout'
   | 'network-failure'
   | 'http-failure'
@@ -31,13 +32,22 @@ export interface ManifestRelease {
   manifestId: string;
   remoteName: string;
   artifacts: ManifestArtifact[];
+  manifestUrl?: string;
+  manifestJson?: unknown;
 }
 
 export interface ArtifactOutcome {
   manifestId: string;
   remoteName: string;
   bundleUrl: string;
-  status: 'cache-hit' | 'staged' | 'activated' | 'rolled-back' | 'failed';
+  status:
+    | 'cache-hit'
+    | 'staged'
+    | 'cleaned'
+    | 'not-attempted'
+    | 'activated'
+    | 'rolled-back'
+    | 'failed';
   generationId?: string;
   reason?: NativeCacheFailureReason;
 }

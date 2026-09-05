@@ -30,7 +30,7 @@ type BeforeInitArgs = Parameters<
 export interface ManifestAssetItem {
   name?: string;
   hash?: string;
-  assets?: { js?: { sync?: string[] } };
+  assets?: { js?: { sync?: string[]; async?: string[] } };
 }
 
 export interface ManifestMetaData {
@@ -52,6 +52,10 @@ interface RuntimePluginCacheLayer {
     extractRelease: (manifest: Manifest, manifestUrl: string) => ManifestRelease,
     release?: ManifestRelease
   ) => void;
+  getCachedManifest: (
+    manifestUrl: string,
+    extractRelease: (manifest: unknown, manifestUrl: string) => ManifestRelease
+  ) => Promise<unknown | null>;
 }
 
 function getGlobalCacheLayer(): RuntimePluginCacheLayer | undefined {
@@ -63,7 +67,8 @@ function getGlobalCacheLayer(): RuntimePluginCacheLayer | undefined {
   const candidate = cacheLayer as Partial<RuntimePluginCacheLayer>;
   if (
     typeof candidate.registerManifestRelease !== 'function' ||
-    typeof candidate.registerManifestSource !== 'function'
+    typeof candidate.registerManifestSource !== 'function' ||
+    typeof candidate.getCachedManifest !== 'function'
   ) {
     return undefined;
   }
@@ -128,17 +133,33 @@ function resolveBundlePaths(
   item: ManifestAssetItem,
   section: 'exposes' | 'shared'
 ): string[] {
+  if ((item.assets?.js?.async?.length ?? 0) > 0) {
+    throw Object.assign(new Error('Manifest contains unverifiable async JavaScript'), {
+      code: 'INVALID_MANIFEST',
+    });
+  }
+
+  const syncJs = item.assets?.js?.sync;
+  if (section === 'shared' && (syncJs?.length ?? 0) > 1) {
+    throw Object.assign(new Error('Shared module is not one verifiable artifact'), {
+      code: 'INVALID_MANIFEST',
+    });
+  }
+
   if (__DEV__) {
-    const syncJs = item.assets?.js?.sync;
     if (!syncJs?.length) return [];
     return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
   }
 
-  if (section === 'exposes' && item.name) {
+  if (section === 'exposes') {
+    if (!item.name) {
+      throw Object.assign(new Error('Exposed module name is missing'), {
+        code: 'INVALID_MANIFEST',
+      });
+    }
     return [`exposed/${item.name}.bundle`];
   }
 
-  const syncJs = item.assets?.js?.sync;
   if (!syncJs?.length) return [];
   return syncJs.map((p) => p.replace(/\.\w+$/, '.bundle'));
 }
@@ -150,6 +171,12 @@ export function extractManifestRelease(
   resolvedContainerUrl?: string
 ): ManifestRelease {
   const artifacts = new Map<string, ManifestArtifact>();
+
+  if (!Array.isArray(manifest?.exposes) || !Array.isArray(manifest?.shared)) {
+    throw Object.assign(new Error('Manifest executable sections are missing'), {
+      code: 'INVALID_MANIFEST',
+    });
+  }
 
   const rawPublicPath = manifest?.metaData?.publicPath ?? '';
   const resolvedPublicPath =
@@ -182,13 +209,18 @@ export function extractManifestRelease(
 
   const remoteEntry = manifest?.metaData?.remoteEntry;
   const containerHash = manifest?.metaData?.buildInfo?.hash;
+  if (!remoteEntry?.name) {
+    throw Object.assign(new Error('Manifest remote entry is missing'), {
+      code: 'INVALID_MANIFEST',
+    });
+  }
   if (resolvedContainerUrl) {
     artifacts.set(getBundleCacheKey(resolvedContainerUrl), {
       bundleUrl: resolvedContainerUrl,
       expectedHash: containerHash,
       kind: 'container',
     });
-  } else if (remoteEntry?.name && resolvedPublicPath) {
+  } else if (resolvedPublicPath) {
     const entryPath = remoteEntry.path
       ? `${remoteEntry.path}/${remoteEntry.name}`
       : remoteEntry.name;
@@ -207,6 +239,8 @@ export function extractManifestRelease(
     manifestId: inferredRemoteName,
     remoteName: inferredRemoteName,
     artifacts: Array.from(artifacts.values()),
+    manifestUrl,
+    manifestJson: manifest,
   };
 }
 
@@ -215,46 +249,78 @@ export function extractManifestRelease(
 const ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME = 'zephyr-native-cache-plugin';
 
 export default function (): ModuleFederationRuntimePlugin {
-  function resolveHook(args: AfterResolveArgs) {
-    try {
-      const cacheLayer = getGlobalCacheLayer();
-      if (!cacheLayer) return args;
+  async function fetchHook(
+    url: string,
+    init: RequestInit,
+    remoteInfo?: { name?: string },
+    resourceContext?: { resourceType?: string }
+  ): Promise<Response> {
+    if (resourceContext?.resourceType !== 'manifest') return fetch(url, init);
 
-      const { origin, remoteInfo, remote } = args;
-      const manifestUrl =
-        'entry' in remote ? (remote as { entry: string }).entry : undefined;
-      if (manifestUrl && origin.snapshotHandler?.manifestCache) {
-        const manifest = origin.snapshotHandler.manifestCache.get(manifestUrl) as
-          | Manifest
-          | undefined;
-        if (manifest) {
-          const remoteName =
-            remoteInfo.name ??
-            manifest.metaData?.remoteEntry?.name?.replace(/\.[^.]+$/, '') ??
-            'unknown';
-          const release = extractManifestRelease(
-            manifest,
-            manifestUrl,
-            remoteName,
-            remoteInfo.entry
-          );
-          cacheLayer.registerManifestRelease(release);
-          cacheLayer.registerManifestSource(
-            manifestUrl,
-            (nextManifest, nextManifestUrl) =>
-              extractManifestRelease(nextManifest, nextManifestUrl, remoteName),
-            release
-          );
-        }
-      }
+    let failedResponse: Response | undefined;
+    try {
+      const response = await fetch(url, init);
+      if (response.ok || response.status < 500) return response;
+      failedResponse = response;
     } catch {
-      // The remote load will fail closed if release metadata could not be registered.
+      // Fall through to the last complete active manifest.
+    }
+
+    const cacheLayer = getGlobalCacheLayer();
+    const cached = cacheLayer
+      ? await cacheLayer.getCachedManifest(url, (manifest, manifestUrl) =>
+          extractManifestRelease(manifest as Manifest, manifestUrl, remoteInfo?.name)
+        )
+      : null;
+    if (!cached) {
+      if (failedResponse) return failedResponse;
+      throw new Error(
+        'Manifest network request failed and no verified cache is available'
+      );
+    }
+    return new Response(JSON.stringify(cached), {
+      headers: { 'content-type': 'application/json' },
+      status: 200,
+    });
+  }
+
+  function resolveHook(args: AfterResolveArgs) {
+    const cacheLayer = getGlobalCacheLayer();
+    if (!cacheLayer) return args;
+
+    const { origin, remoteInfo, remote } = args;
+    const manifestUrl =
+      'entry' in remote ? (remote as { entry: string }).entry : undefined;
+    if (manifestUrl && origin.snapshotHandler?.manifestCache) {
+      const manifest = origin.snapshotHandler.manifestCache.get(manifestUrl) as
+        | Manifest
+        | undefined;
+      if (manifest) {
+        const remoteName =
+          remoteInfo.name ??
+          manifest.metaData?.remoteEntry?.name?.replace(/\.[^.]+$/, '') ??
+          'unknown';
+        const release = extractManifestRelease(
+          manifest,
+          manifestUrl,
+          remoteName,
+          remoteInfo.entry
+        );
+        cacheLayer.registerManifestRelease(release);
+        cacheLayer.registerManifestSource(
+          manifestUrl,
+          (nextManifest, nextManifestUrl) =>
+            extractManifestRelease(nextManifest, nextManifestUrl, remoteName),
+          release
+        );
+      }
     }
     return args;
   }
 
   return {
     name: ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME,
+    fetch: fetchHook,
     afterResolve: resolveHook,
     beforeInit: (args: BeforeInitArgs) => {
       const globalPlugins = globalThis.__FEDERATION__.__GLOBAL_PLUGIN__ ?? [];
@@ -262,6 +328,7 @@ export default function (): ModuleFederationRuntimePlugin {
         globalPlugins.push({
           name: ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME,
           afterResolve: resolveHook,
+          fetch: fetchHook,
         });
       }
       return args;

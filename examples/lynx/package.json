@@ -17,8 +17,7 @@
     "@lynx-js/react-rsbuild-plugin": "catalog:",
     "@lynx-js/rspeedy": "catalog:",
     "@lynx-js/types": "catalog:",
-    "@types/react": "catalog:react18",
-    "typescript": "catalog:typescript",
+    "@types/react": "catalog:react19",
     "zephyr-rspack-plugin": "workspace:*"
   },
   "engines": {

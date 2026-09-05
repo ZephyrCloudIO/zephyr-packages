@@ -16,9 +16,9 @@ const mocks = rs.hoisted(() => ({
   getItem: rs.fn(),
 }));
 
-rs.mock('node-persist', () => ({
-  init: rs.fn().mockResolvedValue(undefined),
-  setItem: mocks.setItem,
+rs.mock('./storage', () => ({
+  storage: Promise.resolve(),
+  setPrivateItem: mocks.setItem,
   getItem: mocks.getItem,
   removeItem: rs.fn(async (key: string) => {
     mocks.values.delete(key);

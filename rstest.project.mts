@@ -40,7 +40,6 @@ export function createProjectConfig({
         },
         externals: {
           debug: 'commonjs debug',
-          'node-persist': 'commonjs node-persist',
         },
         resolve: {
           alias: {

@@ -41,7 +41,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
@@ -55,7 +55,6 @@
     "@rslib/core": "catalog:rslib",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
-    "@types/node-persist": "catalog:typescript",
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {

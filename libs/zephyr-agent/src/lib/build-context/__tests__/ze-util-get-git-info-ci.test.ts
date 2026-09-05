@@ -23,7 +23,7 @@ rs.mock('../../logging/ze-log-event', () => ({
 }));
 
 // Mock is-ci to return true for CI environment testing
-rs.mock('is-ci', () => ({ default: true }));
+rs.mock('ci-info', () => ({ isCI: true }));
 
 let originalEnv: NodeJS.ProcessEnv;
 

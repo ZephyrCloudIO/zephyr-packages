@@ -22,7 +22,7 @@ rs.mock('../../logging/ze-log-event', () => ({
   logFn: rs.fn(),
 }));
 
-rs.mock('is-ci', () => ({ default: false }));
+rs.mock('ci-info', () => ({ isCI: false }));
 
 rs.mock('../ze-util-read-package-json', () => ({
   getPackageJson: rs.fn(),

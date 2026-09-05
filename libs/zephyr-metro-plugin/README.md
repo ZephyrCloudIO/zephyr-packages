@@ -77,6 +77,16 @@ const wrappedBundleCommand = zephyrCommandWrapper(
 );
 ```
 
+### RNEF command integration
+
+`zephyrMetroRNEFPlugin` loads `@module-federation/metro` from the consuming
+project. Install the matching release in that project before registering the
+RNEF plugin:
+
+```bash
+pnpm add --save-dev @module-federation/metro@2.9.0
+```
+
 ### Module Federation Configuration
 
 The plugin works with Metro's Module Federation setup. Configure your federated modules.

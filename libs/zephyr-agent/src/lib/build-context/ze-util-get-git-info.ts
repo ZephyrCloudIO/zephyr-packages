@@ -1,4 +1,4 @@
-import isCI from 'is-ci';
+import { isCI } from 'ci-info';
 import { execFile as node_execFile } from 'node:child_process';
 import { sep } from 'node:path';
 import { promisify } from 'node:util';
@@ -309,7 +309,7 @@ function applyConfiguredApp(
 }
 
 /**
- * Parses the git url using the `git-url-parse` package.
+ * Parses the Git URL and falls back to configured application metadata when needed.
  *
  * This package differentiates CI providers and handles git info from various platforms
  * like GitHub, GitLab, Bitbucket, and custom git deployments.

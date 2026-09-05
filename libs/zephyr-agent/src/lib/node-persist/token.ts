@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
-import nodePersist from 'node-persist';
 import { getSecretToken } from './secret-token';
-import { setPrivateItem, storage } from './storage';
+import { getItem, removeItem, setPrivateItem, storage } from './storage';
 import { StorageKeys } from './storage-keys';
 import { withStorageLock, type StorageLockOptions } from './storage-lock';
 import { makeRequest } from '../http/http-request';
@@ -76,7 +75,7 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
     'auth-token',
     async () => {
       await storage;
-      return nodePersist.getItem(StorageKeys.ze_auth_token);
+      return getItem<string>(StorageKeys.ze_auth_token);
     },
     TOKEN_LOCK
   );
@@ -97,9 +96,9 @@ export async function removeToken(expectedToken?: string): Promise<void> {
     'auth-token',
     async () => {
       await storage;
-      const storedToken: unknown = await nodePersist.getItem(StorageKeys.ze_auth_token);
+      const storedToken: unknown = await getItem(StorageKeys.ze_auth_token);
       if (expectedToken === undefined || storedToken === expectedToken) {
-        await nodePersist.removeItem(StorageKeys.ze_auth_token);
+        await removeItem(StorageKeys.ze_auth_token);
       }
     },
     TOKEN_LOCK
@@ -115,12 +114,12 @@ export async function cleanTokens(rejectedToken?: string): Promise<void> {
         getCiTokenLockName(cacheKey),
         async () => {
           await storage;
-          const cached: unknown = await nodePersist.getItem(cacheKey);
+          const cached: unknown = await getItem(cacheKey);
           if (
             rejectedToken === undefined ||
             (isStoredCiAccessToken(cached) && cached.accessToken === rejectedToken)
           ) {
-            await nodePersist.removeItem(cacheKey);
+            await removeItem(cacheKey);
           }
         },
         TOKEN_LOCK
@@ -174,7 +173,7 @@ async function getTokenFromCiToken(
     getCiTokenLockName(cacheKey),
     async () => {
       await storage;
-      const cached: unknown = await nodePersist.getItem(cacheKey);
+      const cached: unknown = await getItem(cacheKey);
       if (isReusableCiAccessToken(cached, scope)) {
         return cached.accessToken;
       }
@@ -198,7 +197,7 @@ async function getTokenFromCiToken(
       );
 
       if (!ok) {
-        await nodePersist.removeItem(cacheKey);
+        await removeItem(cacheKey);
         throwCiTokenAuthError(identity, cause);
       }
 
@@ -207,7 +206,7 @@ async function getTokenFromCiToken(
         !accessToken ||
         !isTokenStillValid(accessToken, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)
       ) {
-        await nodePersist.removeItem(cacheKey);
+        await removeItem(cacheKey);
         throwCiTokenAuthError(
           identity,
           new Error('CI token exchange returned an invalid or expiring access token')

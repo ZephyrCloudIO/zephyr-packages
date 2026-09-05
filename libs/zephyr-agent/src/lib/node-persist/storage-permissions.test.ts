@@ -12,11 +12,11 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from '@rstest/core';
-import nodePersist from 'node-persist';
 import {
   ensurePrivateFilePermissions,
   ensurePrivateStoragePermissions,
 } from './storage-keys';
+import { createPersistentStore } from './storage';
 
 const posixIt = process.platform === 'win32' ? it.skip : it;
 
@@ -64,7 +64,7 @@ describe('Zephyr storage permissions', () => {
     }
   );
 
-  it('removes only inactive legacy lock targets from node-persist storage', async () => {
+  it('removes only inactive legacy lock targets from persistence storage', async () => {
     const root = mkdtempSync(join(tmpdir(), 'zephyr-lock-migration-'));
     temporaryDirectories.push(root);
     const zephyrPath = join(root, '.zephyr');
@@ -93,11 +93,11 @@ describe('Zephyr storage permissions', () => {
     expect(existsSync(activeTarget)).toBe(false);
     expect(existsSync(`${activeTarget}.lock`)).toBe(false);
 
-    // Once legacy targets are gone, a valid node-persist record is the only key the
+    // Once legacy targets are gone, a valid persistence record is the only key the
     // isolated store can expose; no empty lock sidecar becomes an undefined key.
     rmSync(unrelatedEmptyFile);
-    const isolatedStorage = nodePersist.create({ dir: storagePath });
-    await isolatedStorage.init();
+    const isolatedStorage = createPersistentStore(storagePath);
+    await isolatedStorage.ready;
     await isolatedStorage.setItem('deployment', { urls: ['https://example.test'] });
     expect(await isolatedStorage.keys()).toEqual(['deployment']);
     expect(readdirSync(storagePath)).toHaveLength(1);

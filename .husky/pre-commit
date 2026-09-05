@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-
-pnpm format:check
-pnpm test:affected
-pnpm lint

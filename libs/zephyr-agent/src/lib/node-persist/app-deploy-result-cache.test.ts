@@ -4,14 +4,9 @@ const mocks = rs.hoisted(() => ({
   keys: rs.fn(),
 }));
 
-rs.mock('node-persist', () => ({
-  default: {
-    keys: mocks.keys,
-  },
-}));
-
 rs.mock('./storage', () => ({
   storage: Promise.resolve(),
+  keys: mocks.keys,
 }));
 
 import { getAllDeployedApps } from './app-deploy-result-cache';
@@ -22,13 +17,13 @@ describe('getAllDeployedApps', () => {
     rs.clearAllMocks();
   });
 
-  it('returns an empty list when node-persist has no initialized key index', async () => {
+  it('returns an empty list when persistence has no initialized key index', async () => {
     mocks.keys.mockResolvedValue(undefined);
 
     await expect(getAllDeployedApps()).resolves.toEqual([]);
   });
 
-  it('ignores malformed node-persist keys and requires a delimited application id', async () => {
+  it('ignores malformed persistence keys and requires a delimited application id', async () => {
     const prefix = `${StorageKeys.ze_app_deploy_result}:`;
     mocks.keys.mockResolvedValue([
       undefined,

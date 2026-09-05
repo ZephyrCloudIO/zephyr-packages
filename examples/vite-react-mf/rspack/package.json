@@ -14,19 +14,19 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "catalog:tailwind4",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
     "@rspack/plugin-react-refresh": "catalog:rspack",
-    "@types/react": "catalog:react18",
-    "@types/react-dom": "catalog:react18",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
     "autoprefixer": "catalog:postcss",
     "postcss": "catalog:postcss",
     "postcss-loader": "catalog:postcss",
-    "react-refresh": "catalog:react18",
+    "react-refresh": "catalog:react19",
     "tailwindcss": "catalog:tailwind4",
     "zephyr-rspack-plugin": "workspace:*"
   }

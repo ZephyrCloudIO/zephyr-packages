@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "catalog:cloudflare",
-    "@testing-library/dom": "catalog:react",
     "@testing-library/react": "catalog:react",
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",

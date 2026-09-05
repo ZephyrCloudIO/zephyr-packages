@@ -16,6 +16,6 @@
     "zephyr-nuxt-module": "workspace:*"
   },
   "devDependencies": {
-    "vite": "catalog:vite7"
+    "vite": "catalog:vite8"
   }
 }

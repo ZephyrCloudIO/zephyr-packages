@@ -1,5 +1,11 @@
-import gitUrlParse from 'git-url-parse';
 import { ZeErrors, ZephyrError } from '../errors';
+
+interface ParsedGitUrl {
+  resource: string;
+  owner: string;
+  name: string;
+  pathname: string;
+}
 
 // Standard Git provider domains mapping
 const STANDARD_DOMAINS: Record<string, string> = {
@@ -26,7 +32,7 @@ export function getGitProviderInfo(gitUrl: string): {
     throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN);
   }
 
-  const parsed = gitUrlParse(gitUrl);
+  const parsed = parseGitUrl(gitUrl);
   const resource = parsed.resource.toLowerCase();
 
   // Determine provider type and enterprise status from resource domain
@@ -44,7 +50,42 @@ export function getGitProviderInfo(gitUrl: string): {
   return { provider, owner, project, isEnterprise };
 }
 
-function detectProvider(parsed: gitUrlParse.GitUrl, resource: string): string {
+function parseGitUrl(gitUrl: string): ParsedGitUrl {
+  let resource: string;
+  let pathname: string;
+
+  if (/^[a-z][a-z\d+.-]*:\/\//i.test(gitUrl)) {
+    try {
+      const url = new URL(gitUrl);
+      resource = url.hostname;
+      pathname = url.pathname;
+    } catch {
+      throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN);
+    }
+  } else {
+    const scpRemote = /^(?:[^@/:]+@)?([^/:]+):(.+)$/.exec(gitUrl);
+    if (!scpRemote) {
+      throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN);
+    }
+    resource = scpRemote[1];
+    pathname = scpRemote[2];
+  }
+
+  const pathParts = pathname.split('/').filter(Boolean);
+  const name = pathParts.at(-1)?.replace(/\.git$/, '') ?? '';
+  if (!resource || !name) {
+    throw new ZephyrError(ZeErrors.ERR_GIT_REMOTE_ORIGIN);
+  }
+
+  return {
+    resource,
+    owner: pathParts.slice(0, -1).join('/'),
+    name,
+    pathname,
+  };
+}
+
+function detectProvider(parsed: ParsedGitUrl, resource: string): string {
   const standardProvider = STANDARD_DOMAINS[resource];
   if (standardProvider) {
     return standardProvider;
@@ -63,7 +104,7 @@ function detectProvider(parsed: gitUrlParse.GitUrl, resource: string): string {
 }
 
 /** Extracts organization name from enterprise domain */
-function extractEnterpriseOwner(parsed: gitUrlParse.GitUrl): string {
+function extractEnterpriseOwner(parsed: ParsedGitUrl): string {
   const domainParts = parsed.resource.split('.');
 
   // For domains like gitlab.company.com, use company.com as the base
@@ -75,7 +116,7 @@ function extractEnterpriseOwner(parsed: gitUrlParse.GitUrl): string {
 }
 
 /** Extracts owner from standard domain providers with special handling */
-function extractStandardOwner(parsed: gitUrlParse.GitUrl, provider: string): string {
+function extractStandardOwner(parsed: ParsedGitUrl, provider: string): string {
   if (provider === 'azure') {
     return extractAzureOrganization(parsed);
   }
@@ -92,7 +133,7 @@ function extractStandardOwner(parsed: gitUrlParse.GitUrl, provider: string): str
 
 /** Extracts project name based on provider and URL structure */
 function extractProjectName(
-  parsed: gitUrlParse.GitUrl,
+  parsed: ParsedGitUrl,
   provider: string,
   isEnterprise: boolean
 ): string {
@@ -114,7 +155,7 @@ function extractProjectName(
   return parsed.name.toLowerCase();
 }
 
-function extractAzureOrganization(parsed: gitUrlParse.GitUrl): string {
+function extractAzureOrganization(parsed: ParsedGitUrl): string {
   const pathParts = getPathParts(parsed);
   if (pathParts[0] === 'v3' && pathParts[1]) {
     return pathParts[1].toLowerCase();
@@ -130,7 +171,7 @@ function extractAzureOrganization(parsed: gitUrlParse.GitUrl): string {
   return (organization || parsed.owner).toLowerCase();
 }
 
-function extractAzureRepoName(parsed: gitUrlParse.GitUrl): string {
+function extractAzureRepoName(parsed: ParsedGitUrl): string {
   const pathParts = getPathParts(parsed);
   const gitSegmentIndex = pathParts.findIndex((part) => part.toLowerCase() === '_git');
   const repoName =
@@ -141,7 +182,7 @@ function extractAzureRepoName(parsed: gitUrlParse.GitUrl): string {
   return sanitizeGitName(repoName || parsed.name);
 }
 
-function getPathParts(parsed: gitUrlParse.GitUrl): string[] {
+function getPathParts(parsed: ParsedGitUrl): string[] {
   return parsed.pathname.split('/').filter(Boolean);
 }
 

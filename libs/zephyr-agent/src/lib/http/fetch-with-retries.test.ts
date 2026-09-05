@@ -13,7 +13,7 @@ const mocks = rs.hoisted(() => ({
 rs.mock('axios', () => ({
   default: { create: mocks.axiosCreate },
 }));
-rs.mock('is-ci', () => ({ default: false }));
+rs.mock('ci-info', () => ({ isCI: false }));
 rs.mock('https-proxy-agent', () => ({ HttpsProxyAgent: mocks.proxyAgent }));
 rs.mock('../logging', () => ({ ze_log: { error: rs.fn() } }));
 rs.mock('../logging/ze-log-event', () => ({ logFn: rs.fn() }));

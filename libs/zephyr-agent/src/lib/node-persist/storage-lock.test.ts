@@ -14,7 +14,7 @@ rs.mock('node:fs/promises', () => ({
   mkdir: mocks.mkdir,
   open: mocks.open,
 }));
-rs.mock('proper-lockfile', () => ({ lock: mocks.lock }));
+rs.mock('@bybrave/proper-lockfile2', () => ({ lock: mocks.lock }));
 rs.mock('./storage', () => ({ storage: Promise.resolve() }));
 rs.mock('./storage-keys', () => ({
   ensurePrivateFilePermissions: mocks.ensurePrivateFilePermissions,

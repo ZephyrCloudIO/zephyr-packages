@@ -48,7 +48,7 @@
   },
   "scripts": {
     "prepack": "pnpm build",
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",

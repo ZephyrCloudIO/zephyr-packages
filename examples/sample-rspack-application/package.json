@@ -13,8 +13,8 @@
     "test": "rstest run"
   },
   "dependencies": {
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@rsbuild/plugin-react": "catalog:rspack",
@@ -22,8 +22,8 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "@testing-library/react": "catalog:react",
-    "@types/react": "catalog:react18",
-    "@types/react-dom": "catalog:react18",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
     "jsdom": "catalog:test-dom",
     "zephyr-webpack-plugin": "workspace:*"
   }

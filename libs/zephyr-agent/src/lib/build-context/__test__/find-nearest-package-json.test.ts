@@ -17,7 +17,7 @@ rs.mock('node:fs', () => {
 
 // Mocking the functions for testing
 rs.mock('node:fs/promises', () => {
-  const actualFs = rs.requireActual('node:fs');
+  const actualFs = rs.requireActual('node:fs/promises');
   return {
     ...actualFs,
     readFile: rs

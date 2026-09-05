@@ -40,7 +40,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "dev": "rslib build --watch",
     "patch-version": "pnpm version",
     "test": "rstest run",
@@ -48,14 +48,14 @@
   },
   "devDependencies": {
     "@module-federation/runtime": "catalog:module-federation",
-    "@module-federation/runtime-core": "2.8.0",
+    "@module-federation/runtime-core": "2.9.0",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "catalog:typescript",
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "@module-federation/runtime": "^2.8.0",
-    "@module-federation/runtime-core": "^2.8.0"
+    "@module-federation/runtime": "^2.9.0",
+    "@module-federation/runtime-core": "^2.9.0"
   }
 }

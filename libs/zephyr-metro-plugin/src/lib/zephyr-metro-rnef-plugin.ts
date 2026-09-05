@@ -1,4 +1,5 @@
-import { createRequire } from 'module';
+import { createRequire } from 'node:module';
+import { join } from 'node:path';
 import { ZephyrError, ZeErrors } from 'zephyr-agent';
 import { zephyrCommandWrapper } from './zephyr-metro-command-wrapper';
 
@@ -38,7 +39,7 @@ export const zephyrMetroRNEFPlugin =
   (pluginConfig: ZephyrMetroRNEFPluginConfig = {}) =>
   (api: RNEFPluginApi) => {
     const loadRuntimeDeps = () => {
-      const runtimeRequire = createRequire(__filename);
+      const runtimeRequire = createRequire(join(api.getProjectRoot(), 'package.json'));
       try {
         const { updateManifest } = runtimeRequire('@module-federation/metro') as {
           updateManifest: (manifestPath: string, mfConfig: unknown) => void;
@@ -48,18 +49,16 @@ export const zephyrMetroRNEFPlugin =
         ) as {
           default: Record<string, any>;
         };
-        const { color, logger, outro } = runtimeRequire('@rnef/tools') as {
-          color: { cyan: (value: string) => string };
-          logger: { info: (message: string) => void };
-          outro: (message: string) => void;
-        };
+        const logger = { info: (message: string) => console.info(message) };
+        const color = { cyan: (value: string) => value };
+        const outro = (message: string) => console.info(message);
         return { updateManifest, commands, color, logger, outro };
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
           message:
-            'zephyrMetroRNEFPlugin requires @module-federation/metro and @rnef/tools. ' +
-            'Install them in your app devDependencies to use this integration. ' +
+            'zephyrMetroRNEFPlugin requires @module-federation/metro. ' +
+            'Install it in your app devDependencies to use this integration. ' +
             `Original error: ${detail}`,
         });
       }

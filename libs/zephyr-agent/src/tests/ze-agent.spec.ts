@@ -13,7 +13,6 @@ import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { homedir } from 'node:os';
 import * as fs from 'node:fs';
-import nodePersist from 'node-persist';
 import {
   getAppConfig,
   saveAppConfig,
@@ -33,7 +32,7 @@ rs.mock('../lib/node-persist/secret-token', () => {
   };
 });
 
-rs.mock('is-ci', () => ({ default: false }));
+rs.mock('ci-info', () => ({ isCI: false }));
 
 // This spec performs a real deployment. Preview mode is shared by ordinary unit-test
 // jobs, so require a dedicated opt-in on an ephemeral CI runner rather than unexpectedly
@@ -194,13 +193,7 @@ runner('ZeAgent', () => {
         fs.rmSync(path.join(zephyrAppFolder, file), { recursive: true });
       });
     }
-    // node-persist initializes during module evaluation. Re-initialize after clearing its
-    // files so its in-memory index cannot point at entries which no longer exist.
     fs.mkdirSync(ZE_STORAGE_PATH, { recursive: true });
-    await nodePersist.init({
-      dir: ZE_STORAGE_PATH,
-      forgiveParseErrors: true,
-    });
     await exec(`git config --add user.name "${gitUserName}"`);
     await exec(`git config --add user.email "${gitEmail}"`);
     await exec(`git config --add remote.origin.url ${gitRemoteOrigin}`);
@@ -270,12 +263,6 @@ runner('ZeAgent', () => {
       });
       await execFile(invocation.executable, invocation.args, {
         env: invocation.env,
-      });
-      // The child process wrote the deploy result. Refresh node-persist's index before
-      // reading so this test observes only this build instead of historical tag URLs.
-      await nodePersist.init({
-        dir: ZE_STORAGE_PATH,
-        forgiveParseErrors: true,
       });
       const deployResult = await getAppDeployResult(application_uid);
       if (!deployResult) {

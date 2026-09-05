@@ -19,20 +19,88 @@ function getGlobalManifestCache() {
   return _global[globalCacheKey];
 }
 
-function getScriptBaseUrl() {
-  if (typeof document !== 'undefined' && document.currentScript) {
-    try {
-      const src = document.currentScript.src;
-      if (src) {
-        const url = new URL(src);
-        return `${url.protocol}//${url.host}`;
-      }
-    } catch {
-      // Failed to parse URL, fall through to default.
-    }
+const manifestFileName = 'zephyr-manifest.json';
+
+/**
+ * Parses a fetchable http(s) URL. `blob:`, `data:` and `file:` modules have no usable origin (`new
+ * URL('file:///a.js').origin === 'null'`), so they are rejected here rather than producing a
+ * `null/zephyr-manifest.json` request.
+ */
+function toHttpUrl(value) {
+  if (!value) {
+    return undefined;
   }
 
-  return '';
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * `document.currentScript` is always null inside an ES module, so the module's own URL is the ESM
+ * equivalent of the classic script src the xpack plugin reads.
+ */
+function getModuleUrl() {
+  try {
+    return import.meta.url;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Reads an explicit `<base href>` as a directory URL.
+ *
+ * The element has to be present: `document.baseURI` falls back to the page URL, so on a deep
+ * client-side route (`/products/42`) it would place the manifest in the wrong directory.
+ */
+function getDocumentBaseUrl() {
+  if (typeof document === 'undefined' || typeof document.querySelector !== 'function') {
+    return undefined;
+  }
+
+  if (!document.querySelector('base[href]')) {
+    return undefined;
+  }
+
+  try {
+    // `new URL('.', ...)` keeps the directory and drops any file name, query or hash.
+    return toHttpUrl(new URL('.', document.baseURI).href);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Resolves the URL of the deployment's `zephyr-manifest.json`.
+ *
+ * The manifest is emitted at the deployment root, which is not necessarily the origin root: the
+ * same artifact can be re-served under a subpath (a CDN mounting it on `/activate/`, say), and the
+ * entry chunk itself may be nested, so the module's own directory is not a usable base either.
+ */
+export function resolveManifestUrl(moduleUrl) {
+  const script = toHttpUrl(moduleUrl);
+  const documentBase = getDocumentBaseUrl();
+
+  // A `<base href>` describes where the document's routes live, so it only tells us about
+  // the deployment root while the document and the module share an origin. Assets served
+  // from a separate CDN keep their own root and are handled below.
+  if (documentBase && (!script || script.origin === documentBase.origin)) {
+    // `href` of a directory URL always ends with `/`.
+    return `${documentBase.href}${manifestFileName}`;
+  }
+
+  // Hostname-mode deployments live at the origin root.
+  if (script) {
+    return `${script.origin}/${manifestFileName}`;
+  }
+
+  // Document-relative on purpose: a leading `/` ignores `<base href>` entirely and breaks
+  // subpath deployments where the module URL is not inspectable.
+  return `./${manifestFileName}`;
 }
 
 function getRemotes(args) {
@@ -48,7 +116,7 @@ function getRemotes(args) {
 }
 
 export default function createZephyrRuntimePlugin(options = {}) {
-  const defaultManifestUrl = `${getScriptBaseUrl()}/zephyr-manifest.json`;
+  const defaultManifestUrl = resolveManifestUrl(getModuleUrl());
   const { manifestUrl = defaultManifestUrl } = options;
 
   let processedRemotes;

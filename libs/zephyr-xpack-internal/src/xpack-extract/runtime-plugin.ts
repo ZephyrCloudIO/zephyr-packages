@@ -15,7 +15,7 @@ import type {
 
 /** Options for basic runtime plugin */
 export interface ZephyrRuntimePluginOptions {
-  /** Custom manifest URL (defaults to /zephyr-manifest.json) */
+  /** Custom manifest URL (defaults to the deployment's `zephyr-manifest.json`) */
   manifestUrl?: string;
 }
 
@@ -34,28 +34,87 @@ function getGlobalManifestCache(): Map<string, Promise<ZephyrManifest | undefine
   return _global[globalCacheKey];
 }
 
+const manifestFileName = 'zephyr-manifest.json';
+
 /**
- * Attempts to determine the base URL of the script that loaded this module. Uses
- * document.currentScript to detect the script origin in browser environments.
- *
- * @returns Base URL (protocol + host) or empty string if unable to determine
+ * Parses a fetchable http(s) URL. `blob:`, `data:` and `file:` scripts have no usable
+ * origin (`new URL('file:///a.js').origin === 'null'`), so they are rejected here rather
+ * than producing a `null/zephyr-manifest.json` request.
  */
-function getScriptBaseUrl(): string {
-  // Try document.currentScript (works in browsers with <script> tags)
-  if (typeof document !== 'undefined' && document.currentScript) {
-    try {
-      const src = (document.currentScript as HTMLScriptElement).src;
-      if (src) {
-        const url = new URL(src);
-        return `${url.protocol}//${url.host}`;
-      }
-    } catch {
-      // Failed to parse URL, fall through to default
-    }
+function toHttpUrl(value: string | undefined): URL | undefined {
+  if (!value) {
+    return;
   }
 
-  // Fall back to empty string (will use relative path)
-  return '';
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url : undefined;
+  } catch {
+    return;
+  }
+}
+
+/** Reads the src of the classic script currently executing, when there is one. */
+function getCurrentScriptSrc(): string | undefined {
+  if (typeof document === 'undefined' || !document.currentScript) {
+    return;
+  }
+
+  return (document.currentScript as HTMLScriptElement).src || undefined;
+}
+
+/**
+ * Reads an explicit `<base href>` as a directory URL.
+ *
+ * The element has to be present: `document.baseURI` falls back to the page URL, so on a
+ * deep client-side route (`/products/42`) it would place the manifest in the wrong
+ * directory.
+ */
+function getDocumentBaseUrl(): URL | undefined {
+  if (typeof document === 'undefined' || typeof document.querySelector !== 'function') {
+    return;
+  }
+
+  if (!document.querySelector('base[href]')) {
+    return;
+  }
+
+  try {
+    // `new URL('.', ...)` keeps the directory and drops any file name, query or hash.
+    return toHttpUrl(new URL('.', document.baseURI).href);
+  } catch {
+    return;
+  }
+}
+
+/**
+ * Resolves the URL of the deployment's `zephyr-manifest.json`.
+ *
+ * The manifest is emitted at the deployment root, which is not necessarily the origin
+ * root: the same artifact can be re-served under a subpath (a CDN mounting it on
+ * `/activate/`, say), and the entry chunk itself may be nested (rsbuild emits under
+ * `static/js/`), so the script's own directory is not a usable base either.
+ */
+export function resolveManifestUrl(scriptUrl?: string): string {
+  const script = toHttpUrl(scriptUrl);
+  const documentBase = getDocumentBaseUrl();
+
+  // A `<base href>` describes where the document's routes live, so it only tells us about
+  // the deployment root while the document and the script share an origin. Assets served
+  // from a separate CDN keep their own root and are handled below.
+  if (documentBase && (!script || script.origin === documentBase.origin)) {
+    // `href` of a directory URL always ends with `/`.
+    return `${documentBase.href}${manifestFileName}`;
+  }
+
+  // Hostname-mode deployments live at the origin root.
+  if (script) {
+    return `${script.origin}/${manifestFileName}`;
+  }
+
+  // Document-relative on purpose: a leading `/` ignores `<base href>` entirely and breaks
+  // subpath deployments that expose no classic script to inspect.
+  return `./${manifestFileName}`;
 }
 
 /**
@@ -73,7 +132,7 @@ function getScriptBaseUrl(): string {
 export function createZephyrRuntimePlugin(
   options: ZephyrRuntimePluginOptions = {}
 ): FederationRuntimePlugin {
-  const defaultManifestUrl = `${getScriptBaseUrl()}/zephyr-manifest.json`;
+  const defaultManifestUrl = resolveManifestUrl(getCurrentScriptSrc());
 
   const { manifestUrl = defaultManifestUrl } = options;
 

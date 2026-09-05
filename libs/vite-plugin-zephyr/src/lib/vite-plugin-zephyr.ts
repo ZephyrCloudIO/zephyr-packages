@@ -65,6 +65,11 @@ export interface WithZephyrOptions {
   entrypoint?: string;
   /** Correlates intentionally separate withZephyrPartial producer processes. */
   partialBuild?: VitePartialBuildOptions;
+  /**
+   * Disables the automatic injection of the Zephyr Module Federation runtime plugin.
+   * Useful when remotes or manifests are resolved server-side or via custom plugins.
+   */
+  disableRuntimePlugin?: boolean;
 }
 
 function mergeClaimedPartialMaps(
@@ -344,8 +349,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
 
   let cachedSpecifier: string | undefined;
   let entrypoint: string;
+  const skipRuntimePlugin =
+    preservesLockedArtifactPaths || Boolean(options.disableRuntimePlugin);
   const configureModuleFederationRuntime = (config: ModuleFederationOptions) =>
-    preservesLockedArtifactPaths ? config : ensureRuntimePlugin(config);
+    skipRuntimePlugin ? config : ensureRuntimePlugin(config);
   const mfConfigSources = toModuleFederationConfigArray(options.mfConfig).map(
     configureModuleFederationRuntime
   );
@@ -1082,11 +1089,11 @@ export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
   if (mfConfigs.length > 0) {
     const federation = loadModuleFederationPlugin();
     const preservesLockedArtifactPaths = options.target === 'tap-app';
+    const skipRuntimePlugin =
+      preservesLockedArtifactPaths || Boolean(options.disableRuntimePlugin);
     for (const mfConfig of mfConfigs) {
       plugins.push(
-        ...federation(
-          preservesLockedArtifactPaths ? mfConfig : ensureRuntimePlugin(mfConfig)
-        )
+        ...federation(skipRuntimePlugin ? mfConfig : ensureRuntimePlugin(mfConfig))
       );
     }
   }

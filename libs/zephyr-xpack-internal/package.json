@@ -34,7 +34,27 @@
       }
     },
     "./package.json": "./package.json",
-    "./*": "./*"
+    "./dist/*.mjs": "./dist/*.mjs",
+    "./dist/*.js": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    },
+    "./dist/*": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    }
   },
   "publishConfig": {
     "access": "public",

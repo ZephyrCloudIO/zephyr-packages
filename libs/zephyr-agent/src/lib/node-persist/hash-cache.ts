@@ -1,5 +1,4 @@
-import nodePersist from 'node-persist';
-import { storage } from './storage';
+import { getItem, removeItem, setItem, storage } from './storage';
 import { StorageKeys } from './storage-keys';
 
 export async function setAppHashCache(
@@ -7,7 +6,7 @@ export async function setAppHashCache(
   value: { hashes: string[] }
 ): Promise<void> {
   await storage;
-  await nodePersist.setItem(`${StorageKeys.ze_hash_cache}:${application_uid}`, value, {
+  await setItem(`${StorageKeys.ze_hash_cache}:${application_uid}`, value, {
     ttl: 1000 * 60 * 60 * 24,
   });
 }
@@ -16,10 +15,10 @@ export async function getAppHashCache(
   application_uid: string
 ): Promise<{ hashes: string[] } | undefined> {
   await storage;
-  return nodePersist.getItem(`${StorageKeys.ze_hash_cache}:${application_uid}`);
+  return getItem(`${StorageKeys.ze_hash_cache}:${application_uid}`);
 }
 
 export async function removeAppHashCache(application_uid: string): Promise<void> {
   await storage;
-  await nodePersist.removeItem(`${StorageKeys.ze_hash_cache}:${application_uid}`);
+  await removeItem(`${StorageKeys.ze_hash_cache}:${application_uid}`);
 }

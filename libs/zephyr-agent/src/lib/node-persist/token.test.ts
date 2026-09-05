@@ -8,12 +8,17 @@ import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 import { withStorageLock } from './storage-lock';
 
-rs.mock('node-persist', () => ({
+const storageMocks = rs.hoisted(() => ({
   clear: rs.fn(),
   getItem: rs.fn(),
   removeItem: rs.fn(),
   setItem: rs.fn(),
+  setPrivateItem: rs.fn(),
 }));
+
+// Existing assertions import this virtual module to access the same spies used by the
+// local storage mock. Production code no longer resolves this package.
+rs.mock('node-persist', () => storageMocks);
 
 rs.mock('jose', () => ({
   decodeJwt: rs.fn(),
@@ -21,7 +26,9 @@ rs.mock('jose', () => ({
 
 rs.mock('./storage', () => ({
   storage: Promise.resolve(),
-  setPrivateItem: rs.fn(),
+  getItem: storageMocks.getItem,
+  removeItem: storageMocks.removeItem,
+  setPrivateItem: storageMocks.setPrivateItem,
 }));
 
 rs.mock('./ci-token-identity', () => ({

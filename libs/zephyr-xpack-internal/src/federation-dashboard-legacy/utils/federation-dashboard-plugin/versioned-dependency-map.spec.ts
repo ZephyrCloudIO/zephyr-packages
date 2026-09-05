@@ -44,10 +44,7 @@ describe('buildVersionedDependencyMap', () => {
 
   it('reads versions from installed type-only packages', () => {
     expect(
-      resolveInstalledPackageVersion(
-        '@types/node-persist',
-        createRequire(import.meta.url)
-      )
-    ).toMatch(/^3\./);
+      resolveInstalledPackageVersion('@types/node', createRequire(import.meta.url))
+    ).toMatch(/^24\./);
   });
 });

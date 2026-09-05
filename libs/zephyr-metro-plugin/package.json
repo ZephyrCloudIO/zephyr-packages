@@ -56,7 +56,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
@@ -68,9 +68,6 @@
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
-    "@babel/types": "catalog:babel",
-    "@module-federation/metro": "catalog:module-federation",
-    "@rnef/tools": "catalog:metro",
     "@rslib/core": "catalog:rslib",
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
@@ -84,17 +81,7 @@
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "@module-federation/metro": "catalog:peer-compat",
-    "@rnef/tools": "catalog:peer-compat",
     "metro": "catalog:peer-compat",
     "react-native": "catalog:peer-compat"
-  },
-  "peerDependenciesMeta": {
-    "@module-federation/metro": {
-      "optional": true
-    },
-    "@rnef/tools": {
-      "optional": true
-    }
   }
 }

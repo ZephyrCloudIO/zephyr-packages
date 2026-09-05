@@ -15,15 +15,15 @@
   },
   "dependencies": {
     "@sentry/react": "catalog:",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@rstest/core": "catalog:rstest",
     "@swc/core": "catalog:swc",
     "@testing-library/react": "catalog:react",
-    "@types/react": "catalog:react18",
-    "@types/react-dom": "catalog:react18",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
     "html-webpack-plugin": "catalog:webpack5",
     "jsdom": "catalog:test-dom",
     "swc-loader": "catalog:swc",

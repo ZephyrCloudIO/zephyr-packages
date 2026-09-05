@@ -21,7 +21,7 @@
     "test:examples": "pnpm test:examples:unit && pnpm test:e2e",
     "test:examples:unit": "turbo run test --filter=rollup-sample-lib --filter=rspack_nx_mf_host --filter=rspack_nx_mf_remote --filter=sample-rspack-application --filter=sample-webpack-application",
     "test:e2e": "cross-env ZE_FAIL_BUILD=true turbo run build --affected --force --env-mode=loose --output-logs=new-only && turbo run e2e-test --filter=e2e-deployment --env-mode=loose --output-logs=new-only",
-    "prepare": "husky",
+    "prepare": "simple-git-hooks",
     "test:coverage": "turbo run build --filter='./libs/*' && rstest run --coverage",
     "coverage:serve": "serve coverage",
     "typecheck": "turbo run typecheck --filter='./libs/*'",
@@ -34,7 +34,6 @@
     "@rspack/core": "catalog:rspack",
     "@rstest/core": "catalog:rstest",
     "@rstest/coverage-istanbul": "catalog:rstest",
-    "@swc-node/register": "catalog:swc",
     "@swc/cli": "catalog:swc",
     "@swc/core": "catalog:swc",
     "@swc/helpers": "catalog:swc",
@@ -42,18 +41,20 @@
     "cross-env": "catalog:",
     "debug": "catalog:",
     "dotenv": "catalog:",
-    "husky": "catalog:",
     "jiti": "catalog:",
-    "node-persist": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "publint": "catalog:",
     "serve": "catalog:",
+    "simple-git-hooks": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:typescript"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm format:check && pnpm test:affected && pnpm lint"
   },
   "engines": {
     "node": "24.20.0"
   },
-  "packageManager": "pnpm@11.17.0"
+  "packageManager": "pnpm@11.25.0"
 }

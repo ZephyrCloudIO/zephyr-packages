@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import { setInterval } from 'node:timers/promises';
-import { checkSync, lockSync } from 'proper-lockfile';
+import { checkSync, lockSync } from '@bybrave/proper-lockfile2';
 import { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS } from '../auth/auth-flags';
 import { ze_log } from '../logging';
 import { ensurePrivateFilePermissions, ZE_SESSION_LOCK } from './storage-keys';
@@ -65,7 +65,6 @@ export interface SessionLock extends Disposable {
 /** @returns Either a function to unlock the lock or null if the lock could not be acquired */
 function safeLockSync(createIfNotExists = true): (() => void) | null {
   try {
-    // The timeout to the whole login process makes sense to keep the lock for the same amount of time
     return lockSync(ZE_SESSION_LOCK, { stale: DEFAULT_AUTH_COMPLETION_TIMEOUT_MS });
   } catch (ex: unknown) {
     const error = ex as { code: string };
@@ -73,7 +72,6 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
       return null;
     }
 
-    // Creates the file if it does not exist
     if (error.code === 'ENOENT' && createIfNotExists) {
       try {
         fs.writeFileSync(ZE_SESSION_LOCK, '', {
@@ -82,8 +80,6 @@ function safeLockSync(createIfNotExists = true): (() => void) | null {
           mode: 0o600,
         });
       } catch (creationError) {
-        // A concurrent process may create the lock target between lockSync and this
-        // exclusive write. Retry against that file instead of truncating it.
         if ((creationError as NodeJS.ErrnoException).code !== 'EEXIST') {
           throw creationError;
         }

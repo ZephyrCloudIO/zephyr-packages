@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { lockSync } from 'proper-lockfile';
+import { lockSync } from '@bybrave/proper-lockfile2';
 import { redactString } from '../security/redaction';
 
 export const ZE_PATH = path.resolve(os.homedir(), '.zephyr');
@@ -47,11 +47,11 @@ export function ensurePrivateStoragePermissions(
   fs.mkdirSync(storagePath, { recursive: true, mode: 0o700 });
   fs.mkdirSync(locksPath, { recursive: true, mode: 0o700 });
 
-  // Atomic partial-build stores briefly used empty proper-lockfile targets inside the
-  // node-persist data directory. node-persist exposes each empty file as an undefined
+  // Atomic partial-build stores briefly used empty lock targets inside the persistence
+  // directory. Older readers expose each empty file as an undefined
   // key, which breaks older readers before they can inspect deployment records. Remove
   // only inactive targets with the exact generated name. Acquiring the legacy lock
-  // preserves live older processes while allowing proper-lockfile to recover a stale
+  // preserves live older processes while allowing the lock to recover a stale
   // crash artifact using the same threshold as the original implementation.
   for (const entry of fs.readdirSync(storagePath, { withFileTypes: true })) {
     if (!entry.isFile() || !LEGACY_PARTIAL_ASSET_LOCK_TARGET.test(entry.name)) {
@@ -98,8 +98,8 @@ export function ensurePrivateStoragePermissions(
 }
 
 try {
-  // Dedicated node-persist directory to avoid clashes with other .zephyr assets (logs,
-  // etc). Existing credential-bearing artifacts are made private during initialization.
+  // Dedicated storage directory avoids clashes with other .zephyr assets. Existing
+  // credential-bearing artifacts are made private during initialization.
   ensurePrivateStoragePermissions();
 } catch (error) {
   console.error(

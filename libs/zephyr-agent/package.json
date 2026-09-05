@@ -50,7 +50,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
@@ -58,27 +58,22 @@
     "test:deployment": "cross-env ZE_RUN_AGENT_DEPLOYMENT_E2E=true rstest run"
   },
   "dependencies": {
+    "@bybrave/proper-lockfile2": "catalog:",
     "@toon-format/toon": "catalog:",
     "axios": "catalog:",
+    "ci-info": "catalog:",
     "debug": "catalog:",
     "eventsource": "catalog:",
-    "git-url-parse": "catalog:",
     "https-proxy-agent": "catalog:",
-    "is-ci": "catalog:plugin-shared",
     "jiti": "catalog:",
     "jose": "catalog:",
-    "node-persist": "catalog:",
     "open": "catalog:",
-    "proper-lockfile": "catalog:",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/debug": "catalog:",
-    "@types/is-ci": "catalog:typescript",
-    "@types/node-persist": "catalog:typescript",
-    "@types/proper-lockfile": "catalog:",
     "cross-env": "catalog:",
     "typescript": "catalog:typescript"
   }

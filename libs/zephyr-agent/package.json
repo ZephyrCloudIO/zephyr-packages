@@ -60,7 +60,6 @@
   "dependencies": {
     "@toon-format/toon": "catalog:",
     "axios": "catalog:",
-    "axios-retry": "catalog:",
     "debug": "catalog:",
     "eventsource": "catalog:",
     "git-url-parse": "catalog:",

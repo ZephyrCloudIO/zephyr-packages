@@ -37,6 +37,10 @@ module.exports = (_, _argv) =>
       },
     },
 
+    experiments: {
+      css: true,
+    },
+
     module: {
       rules: [
         {
@@ -52,7 +56,8 @@ module.exports = (_, _argv) =>
         },
         {
           test: /\.(css|s[ac]ss)$/i,
-          use: ['style-loader', 'css-loader', 'postcss-loader'],
+          type: 'css/auto',
+          use: ['postcss-loader'],
         },
         {
           test: /\.(ts|tsx|js|jsx)$/,

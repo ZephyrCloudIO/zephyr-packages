@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
-import { sep } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 import { ZeErrors, type ZephyrEngine } from 'zephyr-agent';
 import type {
   ConvertedGraph,
@@ -30,13 +30,15 @@ import { AddRuntimeRequirementToPromiseExternal } from './add-runtime-requiremen
 import { computeVersionStrategy, gitSha } from './compute-version-strategy';
 import type { FederationDashboardPluginOptions } from './federation-dashboard-plugin-options';
 import type { Exposes } from './federation-dashboard-types';
-import { findPackageJson } from './find-package-json';
+import {
+  buildVersionedDependencyMap,
+  findPackageJson,
+  resolveInstalledPackageVersion,
+} from './find-package-json';
 
-// The package ships no types and its module.exports is the function itself.
-// In the ESM build the bundler rewrites this require() into a namespace import
-// of the CJS module, which puts the callable on `.default`.
-const avfModule = require('@module-federation/automatic-vendor-federation');
-const AutomaticVendorFederation = avfModule?.default ?? avfModule;
+const { createRequire: createProjectRequire } = require('node:module') as {
+  createRequire: (filename: string | URL) => NodeJS.Require;
+};
 
 interface ProcessWebpackGraphParams {
   stats: XStats;
@@ -514,30 +516,28 @@ export class FederationDashboardPlugin {
     }
 
     if (packageJson) {
-      vendorFederation.dependencies = AutomaticVendorFederation({
-        exclude: [],
-        ignoreVersion: false,
+      const resolveFrom = this._options.packageJsonPath
+        ? dirname(this._options.packageJsonPath)
+        : (liveStats.compilation.options.context ?? process.cwd());
+      const projectRequire = createProjectRequire(resolve(resolveFrom, 'package.json'));
+      const resolveVersion = (packageName: string) =>
+        resolveInstalledPackageVersion(packageName, projectRequire);
+
+      vendorFederation.dependencies = buildVersionedDependencyMap(
         packageJson,
-        // subPackages: this.directReasons(modules),
-        shareFrom: ['dependencies'],
-        ignorePatchversion: false,
-      });
-      vendorFederation.devDependencies = AutomaticVendorFederation({
-        exclude: [],
-        ignoreVersion: false,
+        'dependencies',
+        resolveVersion
+      );
+      vendorFederation.devDependencies = buildVersionedDependencyMap(
         packageJson,
-        // subPackages: this.directReasons(modules),
-        shareFrom: ['devDependencies'],
-        ignorePatchversion: false,
-      });
-      vendorFederation.optionalDependencies = AutomaticVendorFederation({
-        exclude: [],
-        ignoreVersion: false,
+        'devDependencies',
+        resolveVersion
+      );
+      vendorFederation.optionalDependencies = buildVersionedDependencyMap(
         packageJson,
-        // subPackages: this.directReasons(modules),
-        shareFrom: ['optionalDependencies'],
-        ignorePatchversion: false,
-      });
+        'optionalDependencies',
+        resolveVersion
+      );
     }
 
     return vendorFederation;

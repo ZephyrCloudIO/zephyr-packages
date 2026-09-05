@@ -1,20 +1,34 @@
-import mitt, { type Handler } from 'mitt';
 import type { BundleLoadEvent, CacheEventMap } from './types';
 
+type EventHandler<K extends keyof CacheEventMap> = (event: CacheEventMap[K]) => void;
+type EventHandlers = {
+  [K in keyof CacheEventMap]?: EventHandler<K>[];
+};
+
 export class CacheEvents {
-  private emitter = mitt<CacheEventMap>();
+  private handlers: EventHandlers = {};
 
   // bundle:load events fire during MF remote resolution, which happens before
   // React mounts. UI hooks that subscribe later would miss the initial load
   // statuses. This buffer lets late subscribers replay what already happened.
   private loadEventBuffer: BundleLoadEvent[] = [];
 
-  on<K extends keyof CacheEventMap>(event: K, handler: Handler<CacheEventMap[K]>): void {
-    this.emitter.on(event, handler);
+  on<K extends keyof CacheEventMap>(event: K, handler: EventHandler<K>): void {
+    const handlers = this.handlers[event] as EventHandler<K>[] | undefined;
+    if (handlers) {
+      handlers.push(handler);
+      return;
+    }
+
+    this.handlers[event] = [handler] as EventHandlers[K];
   }
 
-  off<K extends keyof CacheEventMap>(event: K, handler: Handler<CacheEventMap[K]>): void {
-    this.emitter.off(event, handler);
+  off<K extends keyof CacheEventMap>(event: K, handler: EventHandler<K>): void {
+    const handlers = this.handlers[event] as EventHandler<K>[] | undefined;
+    if (!handlers) return;
+
+    const index = handlers.indexOf(handler);
+    if (index >= 0) handlers.splice(index, 1);
   }
 
   /**
@@ -41,11 +55,11 @@ export class CacheEvents {
       timestamp: Date.now(),
     };
     this.loadEventBuffer.push(event);
-    this.emitter.emit('bundle:load', event);
+    this.emit('bundle:load', event);
   }
 
   emitPollStart(): void {
-    this.emitter.emit('poll:start');
+    this.emit('poll:start', undefined);
   }
 
   emitUpdateAvailable(
@@ -54,7 +68,7 @@ export class CacheEvents {
     oldHash: string | undefined,
     newHash: string
   ): void {
-    this.emitter.emit('update:available', {
+    this.emit('update:available', {
       bundleUrl,
       remoteName,
       oldHash,
@@ -64,7 +78,7 @@ export class CacheEvents {
   }
 
   emitUpdateDownloaded(bundleUrl: string, remoteName: string, newHash: string): void {
-    this.emitter.emit('update:downloaded', {
+    this.emit('update:downloaded', {
       bundleUrl,
       remoteName,
       newHash,
@@ -73,10 +87,15 @@ export class CacheEvents {
   }
 
   emitPollComplete(checked: number, updated: number): void {
-    this.emitter.emit('poll:complete', {
+    this.emit('poll:complete', {
       checked,
       updated,
       timestamp: Date.now(),
     });
+  }
+
+  private emit<K extends keyof CacheEventMap>(event: K, value: CacheEventMap[K]): void {
+    const handlers = this.handlers[event] as EventHandler<K>[] | undefined;
+    handlers?.slice().forEach((handler) => handler(value));
   }
 }

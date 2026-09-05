@@ -1,4 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["local>ZephyrCloudIO/renovate-config"]
+  "extends": ["local>ZephyrCloudIO/renovate-config"],
+  "packageRules": [
+    {
+      "description": "Keep mature dependencies whose release cadence is not a maintenance signal",
+      "matchPackageNames": ["@testing-library/dom", "husky", "is-ci", "server-only"],
+      "abandonmentThreshold": null
+    },
+    {
+      "description": "Keep compatibility and storage dependencies with no equivalent replacement",
+      "matchPackageNames": ["@rnef/tools", "git-url-parse", "node-persist", "proper-lockfile"],
+      "abandonmentThreshold": null
+    }
+  ]
 }

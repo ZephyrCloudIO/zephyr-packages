@@ -29,7 +29,6 @@ catalog:
   acorn-walk: ^8.3.5
   astro: ^7.0.7
   axios: ^1.18.1
-  axios-retry: ^4.5.0
   chalk: ^5.6.2
   chalk-template: 1.1.2
   commander: ^15.0.0
@@ -52,9 +51,6 @@ catalog:
   lint-staged: ^17.0.8
   lucide-react: ^1.24.0
   magic-string: 0.30.21
-  mitt: ^3.0.1
-  ms: 3.0.0-canary.202508261828
-  nitro-cloudflare-dev: ^0.2.2
   node-persist: ^4.0.4
   open: ^10.2.0
   oxfmt: 0.58.0
@@ -66,10 +62,7 @@ catalog:
   server-only: ^0.0.1
   sharp: ^0.35.3
   terminal-link: ^5.0.0
-  tslib: ^2.8.1
-  tsutils: ^3.21.0
   turbo: 2.10.12
-  url-loader: ^4.1.1
   vinext: 1.0.0-beta.8
   web-vitals: ^5.3.0
   wrangler: ^4.127.1
@@ -125,7 +118,6 @@ auditConfig:
 catalogs:
   babel:
     '@babel/core': 7.29.7
-    '@babel/plugin-syntax-dynamic-import': ^7.8.3
     '@babel/plugin-transform-runtime': ^7.29.0
     '@babel/preset-env': ^7.29.7
     '@babel/preset-react': ^7.29.7
@@ -145,7 +137,6 @@ catalogs:
     '@modern-js/runtime': ^3.6.0
     '@modern-js/tsconfig': ^3.6.0
   module-federation:
-    '@module-federation/automatic-vendor-federation': ^1.2.1
     '@module-federation/enhanced': ^2.8.0
     '@module-federation/metro': ^2.8.0
     '@module-federation/rsbuild-plugin': ^2.8.0
@@ -275,11 +266,8 @@ catalogs:
     '@vitejs/plugin-react': ^6.0.3
     vite: ^8.2.2
   webpack5:
-    '@svgr/webpack': ^8.1.0
-    css-loader: ^7.1.4
     dotenv-webpack: ^9.0.0
     html-webpack-plugin: ^5.6.7
-    style-loader: ^4.0.0
     webpack: ^5.108.4
     webpack-cli: ^7.2.1
     webpack-dev-server: ^6.0.0

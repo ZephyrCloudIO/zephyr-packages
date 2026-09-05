@@ -10,7 +10,6 @@
     "preview": "nuxt preview"
   },
   "dependencies": {
-    "nitro-cloudflare-dev": "catalog:",
     "nuxt": "catalog:nuxt",
     "vue": "catalog:nuxt",
     "vue-router": "catalog:nuxt",

@@ -9,5 +9,5 @@ export default defineNuxtConfig({
       nodeCompat: true,
     },
   },
-  modules: ['nitro-cloudflare-dev', 'zephyr-nuxt-module'],
+  modules: ['zephyr-nuxt-module'],
 });

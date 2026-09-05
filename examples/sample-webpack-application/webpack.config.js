@@ -26,6 +26,9 @@ module.exports = (env, argv) => {
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
     },
+    experiments: {
+      css: true,
+    },
     module: {
       rules: [
         {
@@ -46,12 +49,12 @@ module.exports = (env, argv) => {
         },
         {
           test: /\.module\.css$/,
-          use: ['style-loader', { loader: 'css-loader', options: { modules: true } }],
+          type: 'css/module',
         },
         {
           test: /\.css$/,
           exclude: /\.module\.css$/,
-          use: ['style-loader', 'css-loader'],
+          type: 'css',
         },
         {
           test: /\.(png|jpe?g|gif|webp|svg|ico)$/,

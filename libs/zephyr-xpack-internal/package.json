@@ -68,7 +68,6 @@
     "test": "rstest run"
   },
   "dependencies": {
-    "@module-federation/automatic-vendor-federation": "catalog:module-federation",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },

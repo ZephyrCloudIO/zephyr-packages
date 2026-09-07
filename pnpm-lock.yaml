@@ -433,8 +433,8 @@ catalogs:
       specifier: 0.11.12
       version: 0.11.12
     '@rstest/coverage-istanbul':
-      specifier: 0.11.11
-      version: 0.11.11
+      specifier: 0.11.12
+      version: 0.11.12
   swc:
     '@swc-node/register':
       specifier: 1.11.1
@@ -590,7 +590,7 @@ importers:
         version: 0.11.12(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       '@rstest/coverage-istanbul':
         specifier: catalog:rstest
-        version: 0.11.11(@rstest/core@0.11.12(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1))(supports-color@10.2.2)
+        version: 0.11.12(@rstest/core@0.11.12(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1))(supports-color@10.2.2)
       '@swc-node/register':
         specifier: catalog:swc
         version: 1.11.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/core@1.15.43(@swc/helpers@0.5.23))(@swc/types@0.1.27)(supports-color@10.2.2)(typescript@5.9.3)
@@ -8321,8 +8321,8 @@ packages:
       jsdom:
         optional: true
 
-  '@rstest/coverage-istanbul@0.11.11':
-    resolution: {integrity: sha512-zB6moN7zyIZdIksxPqLNETD+Sx3gWanzm1qYeJrqsq6q6lV0hw8WxRjRAlnAHGA2NqF5QR+smk2GBwG8BvI4eQ==}
+  '@rstest/coverage-istanbul@0.11.12':
+    resolution: {integrity: sha512-sIkrvsJa3o7m4tUyQH6FRHelboD7qQ+ZXHC5mAus8AO8kiEw4LKWbmnxsBEJZlVs2YCwS+r6z9rHIc3NtPE9kA==}
     peerDependencies:
       '@rstest/core': ^0.11.0
 
@@ -24520,7 +24520,7 @@ snapshots:
       - '@module-federation/runtime-tools'
       - core-js
 
-  '@rstest/coverage-istanbul@0.11.11(@rstest/core@0.11.12(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1))(supports-color@10.2.2)':
+  '@rstest/coverage-istanbul@0.11.12(@rstest/core@0.11.12(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1))(supports-color@10.2.2)':
     dependencies:
       '@rstest/core': 0.11.12(@module-federation/runtime-tools@2.8.0)(core-js@3.49.0)(jsdom@29.1.1)
       istanbul-lib-coverage: 3.2.2

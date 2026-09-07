@@ -1,6 +1,6 @@
 {
   "name": "zephyr-nuxt-module",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "description": "Nuxt module for deploying Nuxt applications with Zephyr Cloud",
   "keywords": [
     "deployment",

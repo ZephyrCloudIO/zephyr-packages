@@ -41,4 +41,68 @@ describe('persistent storage', () => {
     await expect(store.getItem(expiredKey)).resolves.toBeUndefined();
     await expect(store.keys()).resolves.toEqual([]);
   });
+
+  it('preserves a replacement written while getItem cleans up an expired value', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'zephyr-storage-expiry-race-'));
+    directories.push(directory);
+    const key = 'expiring';
+    writeFileSync(
+      join(directory, createHash('sha256').update(key).digest('hex')),
+      JSON.stringify({ key, value: 'old', ttl: Date.now() - 1 })
+    );
+    let continueCleanup = () => undefined;
+    let expiredRead = () => undefined;
+    const cleanupPaused = new Promise<void>((resolve) => {
+      expiredRead = resolve;
+    });
+    const cleanupResumed = new Promise<void>((resolve) => {
+      continueCleanup = resolve;
+    });
+    const store = createPersistentStore(directory, {
+      beforeExpiredCleanup: async () => {
+        expiredRead();
+        await cleanupResumed;
+      },
+    });
+
+    const pendingRead = store.getItem(key);
+    await cleanupPaused;
+    await store.setItem(key, 'replacement');
+    continueCleanup();
+
+    await expect(pendingRead).resolves.toBe('replacement');
+    await expect(store.getItem(key)).resolves.toBe('replacement');
+  });
+
+  it('preserves a replacement written while keys cleans up an expired value', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'zephyr-storage-keys-race-'));
+    directories.push(directory);
+    const key = 'expiring';
+    writeFileSync(
+      join(directory, createHash('sha256').update(key).digest('hex')),
+      JSON.stringify({ key, value: 'old', ttl: Date.now() - 1 })
+    );
+    let continueCleanup = () => undefined;
+    let expiredRead = () => undefined;
+    const cleanupPaused = new Promise<void>((resolve) => {
+      expiredRead = resolve;
+    });
+    const cleanupResumed = new Promise<void>((resolve) => {
+      continueCleanup = resolve;
+    });
+    const store = createPersistentStore(directory, {
+      beforeExpiredCleanup: async () => {
+        expiredRead();
+        await cleanupResumed;
+      },
+    });
+
+    const pendingKeys = store.keys();
+    await cleanupPaused;
+    await store.setItem(key, 'replacement');
+    continueCleanup();
+
+    await expect(pendingKeys).resolves.toEqual([key]);
+    await expect(store.getItem(key)).resolves.toBe('replacement');
+  });
 });

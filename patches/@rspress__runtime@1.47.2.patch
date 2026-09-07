@@ -1,0 +1,7 @@
+diff --git a/server.js b/server.js
+index c76320894ef43e4edbd2c36ed8a8bfd85b26adf0..ca2c7e566fb9ae146f02f3ddae2c616d6c183a44 100644
+--- a/server.js
++++ b/server.js
+@@ -1 +1 @@
+-export { StaticRouter } from 'react-router-dom/server';
++export { StaticRouter } from 'react-router-dom';

@@ -50,8 +50,8 @@ describe('persistent storage', () => {
       join(directory, createHash('sha256').update(key).digest('hex')),
       JSON.stringify({ key, value: 'old', ttl: Date.now() - 1 })
     );
-    let continueCleanup = () => undefined;
-    let expiredRead = () => undefined;
+    let continueCleanup: () => void = () => undefined;
+    let expiredRead: () => void = () => undefined;
     const cleanupPaused = new Promise<void>((resolve) => {
       expiredRead = resolve;
     });
@@ -82,8 +82,8 @@ describe('persistent storage', () => {
       join(directory, createHash('sha256').update(key).digest('hex')),
       JSON.stringify({ key, value: 'old', ttl: Date.now() - 1 })
     );
-    let continueCleanup = () => undefined;
-    let expiredRead = () => undefined;
+    let continueCleanup: () => void = () => undefined;
+    let expiredRead: () => void = () => undefined;
     const cleanupPaused = new Promise<void>((resolve) => {
       expiredRead = resolve;
     });

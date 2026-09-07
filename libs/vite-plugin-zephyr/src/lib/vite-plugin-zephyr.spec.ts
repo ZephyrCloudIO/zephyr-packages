@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
+import type * as NodeModule from 'node:module';
 import type { Plugin, ResolvedConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
@@ -34,8 +35,16 @@ rs.mock('vite', () => ({
   version: '7.0.0',
 }));
 
-rs.mockRequire('@module-federation/vite', () => {
-  return { federation: mocks.federation };
+rs.mock('node:module', () => {
+  const actual = rs.requireActual('node:module') as typeof NodeModule;
+  const actualRequire = actual.createRequire(__filename);
+  return {
+    ...actual,
+    createRequire: () => (specifier: string) =>
+      specifier === '@module-federation/vite'
+        ? { federation: mocks.federation }
+        : actualRequire(specifier),
+  };
 });
 
 rs.mock('zephyr-agent', () => {

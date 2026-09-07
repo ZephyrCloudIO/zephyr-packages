@@ -2,7 +2,6 @@
 
 # compiled output
 .env
-.node-persist
 dist
 tmp
 out-tsc/

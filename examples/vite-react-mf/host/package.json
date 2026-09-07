@@ -10,16 +10,16 @@
   },
   "dependencies": {
     "@module-federation/runtime": "catalog:module-federation-vite",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@module-federation/vite": "catalog:module-federation-vite",
-    "@types/react": "catalog:react18",
-    "@types/react-dom": "catalog:react18",
-    "@vitejs/plugin-react": "catalog:vite7",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:vite8",
     "typescript": "catalog:typescript",
-    "vite": "catalog:vite7",
+    "vite": "catalog:vite8",
     "vite-plugin-zephyr": "workspace:*"
   },
   "zephyr:dependencies": {

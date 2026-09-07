@@ -61,21 +61,19 @@
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
     "test": "rstest run"
   },
   "dependencies": {
-    "@module-federation/automatic-vendor-federation": "catalog:module-federation",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node-persist": "catalog:typescript",
     "typescript": "catalog:typescript"
   }
 }

@@ -57,13 +57,12 @@
   },
   "scripts": {
     "typecheck": "tsc -b",
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "test": "rstest run"
   },
   "dependencies": {
-    "mitt": "catalog:",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {

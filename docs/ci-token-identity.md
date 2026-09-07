@@ -55,7 +55,7 @@ an identity-scoped, cross-process single-flight cache so those processes do not 
 
 1. Hash the CI token together with the API gateway and normalized provider identity. The raw CI token is never written to
    disk.
-2. Acquire the matching lock under `~/.zephyr/locks` using `proper-lockfile` with retries and stale-lock recovery.
+2. Acquire the matching inter-process lock under `~/.zephyr/locks` with retries and stale-lock recovery.
 3. Re-read `ze-ci-auth-token:<scope>` from `~/.zephyr/storage` after acquiring the lock.
 4. Reuse the access token only when the record has the expected version and scope and its JWT remains valid beyond the
    short-expiry safety window.

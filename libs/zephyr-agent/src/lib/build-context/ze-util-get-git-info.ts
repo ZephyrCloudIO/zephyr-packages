@@ -3,7 +3,7 @@ import { execFile as node_execFile } from 'node:child_process';
 import { sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
-import { ZEPHYR_API_ENDPOINT } from 'zephyr-edge-contract';
+import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { checkAuth, isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
@@ -443,8 +443,8 @@ async function getUserInfoFromAPI(): Promise<UserInfo> {
 
     const [ok, cause, response] = await makeRequest<{ value: UserInfo }>(
       {
-        path: '/v2/user/me',
-        base: ZEPHYR_API_ENDPOINT(),
+        path: ze_api_gateway.user_info,
+        base: ZE_API_ENDPOINT(),
         query: {},
       },
       {

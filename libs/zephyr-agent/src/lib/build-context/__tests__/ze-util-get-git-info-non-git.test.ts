@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
 import { execFile as node_execFile } from 'node:child_process';
+import { ZE_API_ENDPOINT } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../../errors';
 import { getGitInfo } from '../ze-util-get-git-info';
 
@@ -205,7 +206,11 @@ describe('getGitInfo - non-git environments', () => {
     expect(mockCheckAuth).toHaveBeenCalledWith();
     expect(result.git.email).toBe('api@example.com');
     expect(makeRequest).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/v2/user/me' }),
+      {
+        path: '/user-info',
+        base: ZE_API_ENDPOINT(),
+        query: {},
+      },
       {
         headers: { Authorization: 'Bearer new-token' },
         credentialToken: 'new-token',
@@ -329,7 +334,7 @@ describe('getGitInfo - non-git environments', () => {
     noGitRepo();
     const cause = new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
       method: 'GET',
-      url: 'https://api.zephyr-cloud.io/v2/user/me',
+      url: 'https://zeapi.zephyrcloud.app/user-info',
       status: 503,
       content: 'Service unavailable',
     });

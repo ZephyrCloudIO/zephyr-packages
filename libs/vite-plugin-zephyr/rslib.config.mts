@@ -48,7 +48,6 @@ export default defineConfig({
         esm: {
           __filename: true,
           __dirname: true,
-          require: true,
         },
       },
       source: { entry },

@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import MagicString from 'magic-string';
 import type { Plugin, ResolvedConfig, UserConfig } from 'vite' with {
@@ -52,6 +53,7 @@ import {
 
 const DEFAULT_LIBRARY_TYPE = 'module';
 const VITE_ENVIRONMENT_OUTPUT_PREFIX = 'vite-environment:';
+const runtimeRequire = createRequire(__filename);
 
 export interface WithZephyrOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
@@ -301,7 +303,7 @@ function loadModuleFederationPlugin() {
   };
 
   try {
-    moduleFederation = require('@module-federation/vite') as {
+    moduleFederation = runtimeRequire('@module-federation/vite') as {
       federation: (options: ModuleFederationOptions) => Plugin[];
     };
   } catch (error) {

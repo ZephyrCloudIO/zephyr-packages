@@ -15,7 +15,14 @@ export {
   type MetroFederationConfig,
 } from './lib/zephyr-metro-command-wrapper';
 
-// RNEF plugin export for Module Federation host/remote bundling commands
+// Rock plugin export for Module Federation host/remote bundling commands
+export {
+  zephyrMetroRockPlugin,
+  type ZephyrMetroRockPluginConfig,
+  type RockPluginApi,
+} from './lib/zephyr-metro-rock-plugin';
+
+// Deprecated RNEF plugin export retained for backwards compatibility
 export {
   zephyrMetroRNEFPlugin,
   type ZephyrMetroRNEFPluginConfig,

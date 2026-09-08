@@ -13,6 +13,10 @@ rs.mock('../zephyr-metro-rnef-plugin', () => ({
   zephyrMetroRNEFPlugin: rs.fn(),
 }));
 
+rs.mock('../zephyr-metro-rock-plugin', () => ({
+  zephyrMetroRockPlugin: rs.fn(),
+}));
+
 import * as zephyrMetroPlugin from '../../index';
 
 describe('package root exports', () => {
@@ -24,5 +28,10 @@ describe('package root exports', () => {
   it('exports zephyrMetroRNEFPlugin for RNEF integrations', () => {
     expect(zephyrMetroPlugin).toHaveProperty('zephyrMetroRNEFPlugin');
     expect(typeof zephyrMetroPlugin.zephyrMetroRNEFPlugin).toBe('function');
+  });
+
+  it('exports zephyrMetroRockPlugin for Rock integrations', () => {
+    expect(zephyrMetroPlugin).toHaveProperty('zephyrMetroRockPlugin');
+    expect(typeof zephyrMetroPlugin.zephyrMetroRockPlugin).toBe('function');
   });
 });

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
 import { execFile as node_execFile } from 'node:child_process';
+import { ZeErrors, ZephyrError } from '../../errors';
 import { getGitInfo } from '../ze-util-get-git-info';
 
 rs.mock('node:child_process', () => ({
@@ -37,6 +38,7 @@ rs.mock('../../http/http-request', () => ({
 }));
 
 rs.mock('../../auth/login', () => ({
+  checkAuth: rs.fn(),
   isTokenStillValid: rs.fn(),
 }));
 
@@ -94,6 +96,7 @@ describe('getGitInfo - non-git environments', () => {
   let mockGitLog: Mock;
   let mockLogFn: Mock;
   let mockGetPackageJson: Mock;
+  let mockCheckAuth: Mock;
 
   beforeEach(() => {
     rs.clearAllMocks();
@@ -121,8 +124,13 @@ describe('getGitInfo - non-git environments', () => {
 
     // Mock authentication and API calls for fallback scenarios
     const { getToken } = require('../../node-persist/token');
-    const { isTokenStillValid } = require('../../auth/login');
+    const { hasSecretToken } = require('../../node-persist/secret-token');
+    const { checkAuth, isTokenStillValid } = require('../../auth/login');
     const { makeRequest } = require('../../http/http-request');
+
+    mockCheckAuth = checkAuth;
+    mockCheckAuth.mockResolvedValue(undefined);
+    hasSecretToken.mockReturnValue(false);
 
     // Default token setup
     getToken.mockResolvedValue('valid-token');
@@ -184,6 +192,158 @@ describe('getGitInfo - non-git environments', () => {
     expect(result.app.project).toBe('test-project'); // from package.json
   });
 
+  it('authenticates interactively once before retrying the user fallback', async () => {
+    noGitRepo();
+    const { getToken } = require('../../node-persist/token');
+    const { makeRequest } = require('../../http/http-request');
+    getToken.mockReset();
+    getToken.mockResolvedValueOnce(undefined).mockResolvedValue('new-token');
+
+    const result = await getGitInfo();
+
+    expect(mockCheckAuth).toHaveBeenCalledTimes(1);
+    expect(mockCheckAuth).toHaveBeenCalledWith();
+    expect(result.git.email).toBe('api@example.com');
+    expect(makeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '/v2/user/me' }),
+      {
+        headers: { Authorization: 'Bearer new-token' },
+        credentialToken: 'new-token',
+      }
+    );
+  });
+
+  it('reports authentication when browser login cannot complete', async () => {
+    noGitRepo();
+    const { getToken } = require('../../node-persist/token');
+    getToken.mockReset();
+    getToken.mockResolvedValue(undefined);
+    mockCheckAuth.mockRejectedValue(
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'Browser authentication timed out',
+      })
+    );
+
+    await expect(getGitInfo()).rejects.toMatchObject({
+      code: 'ZE10018',
+      operation: 'get-user-info',
+      reason: 'ZE10018',
+    });
+    const warnings = mockLogFn.mock.calls.map((call) => String(call[1])).join('\n');
+    expect(warnings).not.toContain('git init');
+    expect(warnings).not.toContain('git remote add origin');
+  });
+
+  it('replaces an expired token through browser login before user lookup', async () => {
+    noGitRepo();
+    const { getToken } = require('../../node-persist/token');
+    const { isTokenStillValid } = require('../../auth/login');
+    getToken.mockReset();
+    getToken.mockResolvedValueOnce('expired-token').mockResolvedValue('new-token');
+    isTokenStillValid.mockReturnValueOnce(false).mockReturnValue(true);
+
+    await expect(getGitInfo()).resolves.toMatchObject({
+      git: { email: 'api@example.com' },
+    });
+
+    expect(mockCheckAuth).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries one user request after an authentication response', async () => {
+    noGitRepo();
+    const { getToken } = require('../../node-persist/token');
+    const { makeRequest } = require('../../http/http-request');
+    getToken.mockReset();
+    getToken.mockResolvedValueOnce('rejected-token').mockResolvedValue('refreshed-token');
+    makeRequest.mockReset();
+    makeRequest
+      .mockResolvedValueOnce([
+        false,
+        new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Token expired' }),
+      ])
+      .mockResolvedValueOnce([
+        true,
+        null,
+        {
+          value: {
+            name: 'API User',
+            email: 'api@example.com',
+            id: 'user-123',
+          },
+        },
+      ]);
+
+    await expect(getGitInfo()).resolves.toMatchObject({
+      git: { email: 'api@example.com' },
+    });
+
+    expect(mockCheckAuth).toHaveBeenCalledTimes(1);
+    expect(makeRequest).toHaveBeenCalledTimes(2);
+    expect(makeRequest.mock.calls[1]?.[1]).toEqual({
+      headers: { Authorization: 'Bearer refreshed-token' },
+      credentialToken: 'refreshed-token',
+    });
+  });
+
+  it('does not start browser login for a rejected environment credential', async () => {
+    noGitRepo();
+    const { hasSecretToken } = require('../../node-persist/secret-token');
+    const { makeRequest } = require('../../http/http-request');
+    hasSecretToken.mockReturnValue(true);
+    makeRequest.mockResolvedValue([
+      false,
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Token expired' }),
+    ]);
+
+    await expect(getGitInfo()).rejects.toMatchObject({
+      code: 'ZE10018',
+      operation: 'get-user-info',
+      reason: 'ZE10018',
+    });
+    expect(mockCheckAuth).not.toHaveBeenCalled();
+    expect(makeRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves a forbidden user lookup without another Git or login attempt', async () => {
+    noGitRepo();
+    const token = 'forbidden-user-token';
+    const cause = new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+      message: 'Target access denied',
+      data: { Authorization: `Bearer ${token}` },
+    });
+    const { makeRequest } = require('../../http/http-request');
+    makeRequest.mockResolvedValue([false, cause]);
+
+    const error = await getGitInfo().catch((value) => value);
+
+    expect(error).toMatchObject({
+      code: 'ZE10022',
+      operation: 'get-user-info',
+      reason: 'ZE10022',
+    });
+    expect(mockCheckAuth).not.toHaveBeenCalled();
+    expect(JSON.stringify(error)).not.toContain(token);
+  });
+
+  it('preserves user API unavailability separately from denied access', async () => {
+    noGitRepo();
+    const cause = new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+      method: 'GET',
+      url: 'https://api.zephyr-cloud.io/v2/user/me',
+      status: 503,
+      content: 'Service unavailable',
+    });
+    const { makeRequest } = require('../../http/http-request');
+    makeRequest.mockResolvedValue([false, cause]);
+
+    await expect(getGitInfo()).rejects.toMatchObject({
+      code: 'ZE40035',
+      operation: 'get-user-info',
+      reason: 'ZE40035',
+    });
+    expect(mockCheckAuth).not.toHaveBeenCalled();
+  });
+
   it('should still work normally when git is available', async () => {
     gitAvailable({
       'config user.name': 'John Doe',
@@ -230,6 +390,28 @@ describe('getGitInfo - non-git environments', () => {
     for (const call of mockExecFile.mock.calls) {
       expect(call[2]).toEqual({ cwd: context });
     }
+  });
+
+  it('uses authenticated fallback metadata with a configured application target', async () => {
+    noGitRepo();
+
+    const result = await getGitInfo('/workspace/apps/configured-no-git', {
+      org: 'configured-org',
+      project: 'configured-project',
+    });
+
+    expect(result.app).toEqual({
+      org: 'configured-org',
+      project: 'configured-project',
+    });
+    expect(result.git).toMatchObject({
+      name: 'API User',
+      email: 'api@example.com',
+    });
+    expect(mockLogFn).not.toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining('Using organization')
+    );
   });
 
   it('lets a partial config override one field inferred from origin', async () => {

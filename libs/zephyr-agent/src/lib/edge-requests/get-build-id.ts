@@ -29,8 +29,9 @@ export async function getBuildId(application_uid: string): Promise<string> {
     throw new ZephyrError(ZeErrors.ERR_GET_BUILD_ID, {
       application_uid,
       username,
+      operation: 'create-build-id',
       cause,
-      data,
+      data: { responseKeys: Object.keys(data ?? {}) },
     });
   }
 

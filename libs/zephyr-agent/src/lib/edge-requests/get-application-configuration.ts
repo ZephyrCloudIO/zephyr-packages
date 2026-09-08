@@ -81,6 +81,7 @@ async function loadApplicationConfiguration(
   if (!ok || !data?.value || data.value.application_uid !== application_uid) {
     throw new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {
       application_uid,
+      operation: 'get-application-config',
       cause,
       data: {
         url: application_config_url.toString(),

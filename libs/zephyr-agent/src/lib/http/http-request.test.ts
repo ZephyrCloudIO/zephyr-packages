@@ -144,7 +144,23 @@ describe('Pure HTTP Request Functions', () => {
       const [ok, error] = await makeHttpRequest(url, { skipTokenCleanup: true });
 
       expect(ok).toBe(false);
-      expect(error).toBeInstanceOf(Error);
+      expect(error).toMatchObject({ code: 'ZE10018', reason: 'ZE10018' });
+      expect(mockCleanTokens).not.toHaveBeenCalled();
+    });
+
+    it('classifies a 403 response as forbidden access', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 403,
+        text: async () => 'Forbidden',
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://api.example.com/application-config')
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10022', reason: 'ZE10022' });
       expect(mockCleanTokens).not.toHaveBeenCalled();
     });
 

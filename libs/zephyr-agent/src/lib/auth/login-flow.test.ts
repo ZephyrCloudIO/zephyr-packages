@@ -7,6 +7,7 @@ const mocks = rs.hoisted(() => ({
   debugLog: rs.fn(),
   disposeSession: rs.fn(),
   getToken: rs.fn().mockResolvedValue(undefined),
+  interactive: true,
   logFn: rs.fn(),
   makeRequest: rs
     .fn()
@@ -49,7 +50,9 @@ rs.mock('../logging/picocolor', () => ({
   bold: (value: string) => value,
   gray: (value: string) => value,
   green: (value: string) => value,
-  isTTY: true,
+  get isTTY() {
+    return mocks.interactive;
+  },
   white: (value: string) => value,
   yellow: (value: string) => value,
 }));
@@ -82,6 +85,20 @@ import { checkAuth } from './login';
 describe('interactive authentication cleanup', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.interactive = true;
+  });
+
+  it('fails with authentication guidance instead of waiting outside a terminal', async () => {
+    mocks.interactive = false;
+
+    await expect(checkAuth()).rejects.toMatchObject({
+      code: 'ZE10018',
+      template: {
+        message: expect.stringContaining('Interactive login is unavailable'),
+      },
+    });
+    expect(mocks.makeRequest).not.toHaveBeenCalled();
+    expect(mocks.waitForToken).not.toHaveBeenCalled();
   });
 
   it('removes the private fallback artifact when authentication fails or times out', async () => {

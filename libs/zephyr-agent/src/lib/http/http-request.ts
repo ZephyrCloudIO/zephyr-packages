@@ -99,17 +99,18 @@ export async function makeHttpRequest<T = void>(
 
     const resText = await response.text();
 
-    if (response.status === 401 && !skipTokenCleanup) {
-      // Clean the tokens and throw an error
-      await cleanTokens(credentialToken);
+    if (response.status === 401) {
+      if (!skipTokenCleanup) {
+        await cleanTokens(credentialToken);
+      }
       throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-        message: 'Unauthenticated request',
+        message: 'The request authentication is invalid or expired.',
       });
     }
 
     if (response.status === 403) {
       throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
-        message: 'Unauthorized request',
+        message: 'The authenticated account does not have access to this target.',
       });
     }
 

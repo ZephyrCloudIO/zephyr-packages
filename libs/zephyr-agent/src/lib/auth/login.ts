@@ -32,7 +32,7 @@ interface PrivateAuthenticationArtifact {
  *
  * @returns The token as a string.
  */
-export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
+export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
   const secret_token = getSecretToken();
   const server_token = getServerToken();
   const ci_token = getCiToken();
@@ -69,6 +69,10 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
   // since user cannot interact with it.
   if (!isTTY) {
     logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
+    throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+      message:
+        'Interactive login is unavailable. Run the deployment in a terminal or provide a valid authentication token.',
+    });
   }
 
   // No valid token found; initiate authentication.

@@ -188,6 +188,16 @@ type TestWriteBundle = (
   bundle: Record<string, never>
 ) => Promise<void>;
 
+function writeBundleHandler(plugin: Plugin): TestWriteBundle {
+  const hook = plugin.writeBundle!;
+  return (typeof hook === 'function' ? hook : hook.handler) as TestWriteBundle;
+}
+
+function closeBundleHandler(plugin: Plugin): () => Promise<void> {
+  const hook = plugin.closeBundle!;
+  return (typeof hook === 'function' ? hook : hook.handler) as () => Promise<void>;
+}
+
 function buildAppHandler(plugin: Plugin) {
   return (plugin.buildApp as { handler: (builder: TestBuilder) => Promise<void> })
     .handler;
@@ -264,11 +274,14 @@ describe('vite-plugin-zephyr', () => {
         })
       );
 
-      await (plugin.writeBundle as TestWriteBundle).call(
+      await writeBundleHandler(plugin).call(
         { environment: { name: 'client' } },
         { dir: '/repo/dist' },
         {}
       );
+
+      expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+      await closeBundleHandler(plugin)();
 
       expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(1);
       expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
@@ -294,7 +307,7 @@ describe('vite-plugin-zephyr', () => {
       await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
 
       await expect(
-        (plugin.writeBundle as TestWriteBundle).call(
+        writeBundleHandler(plugin).call(
           { environment: { name: 'client' } },
           { dir: '/repo/dist/client' },
           {}
@@ -304,6 +317,23 @@ describe('vite-plugin-zephyr', () => {
       expect(mocks.savePartialAssetMap).not.toHaveBeenCalled();
     }
   );
+
+  test('rejects late or unresolved output writers while allowing normal hooks', () => {
+    const plugin = withZephyr()[0] as Plugin;
+    const outputOptions = plugin.outputOptions as (options: {
+      plugins: unknown;
+    }) => unknown;
+    expect(() =>
+      outputOptions({
+        plugins: [{ writeBundle: { order: 'post', handler: rs.fn() } }],
+      })
+    ).toThrow('output-plugin writers');
+    expect(() => outputOptions({ plugins: [Promise.resolve({})] })).toThrow(
+      'output-plugin writers'
+    );
+    expect(outputOptions({ plugins: [{ writeBundle: rs.fn() }] })).toBeNull();
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
 
   test('withZephyr injects every mfConfig runtime plugin and delegates to MF', () => {
     mocks.federation.mockImplementation((config) => [
@@ -352,7 +382,7 @@ describe('vite-plugin-zephyr', () => {
     expect(mfConfig.runtimePlugins).toBeUndefined();
     expect(mocks.engine.resolve_remote_dependencies).not.toHaveBeenCalled();
 
-    await (plugin.writeBundle as TestWriteBundle).call(
+    await writeBundleHandler(plugin).call(
       { environment: { name: 'client' } },
       { dir: '/repo/dist/client' },
       {}
@@ -584,7 +614,7 @@ describe('vite-plugin-zephyr', () => {
     const emitFile = rs.fn();
 
     await (plugin.generateBundle as unknown as () => Promise<void>).call({ emitFile });
-    await (plugin.writeBundle as TestWriteBundle).call(
+    await writeBundleHandler(plugin).call(
       { environment: { name: 'client' } },
       { dir: '/repo/dist/client' },
       {}
@@ -775,7 +805,7 @@ describe('vite-plugin-zephyr', () => {
     const plugin = await configuredPlugin({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const context = { environment: { name: 'client' } };
     mocks.extractAssets
       .mockResolvedValueOnce(asset('client/app.mjs', 'esm-output'))
@@ -823,7 +853,7 @@ describe('vite-plugin-zephyr', () => {
       resolvedConfig(environments)
     );
     await buildAppHandler(buildAppStart)({ environments: {}, build: rs.fn() });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const desktopAssets = asset('sdk/desktop/runtime.js', 'desktop-sdk-lock');
     const workerAssets = asset('sdk/worker/runtime.js', 'worker-sdk-lock');
     desktopAssets['desktop-sdk-lock']!.buffer = 'desktop SDK bytes';
@@ -868,7 +898,7 @@ describe('vite-plugin-zephyr', () => {
       desktop: { consumer: 'client', build: { outDir: 'dist/tap/desktop' } },
       worker: { consumer: 'client', build: { outDir: 'dist/tap/worker' } },
     });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     mocks.extractAssets
       .mockResolvedValueOnce(asset('sdk/runtime.js', 'desktop-sdk'))
       .mockResolvedValueOnce(asset('sdk/runtime.js', 'worker-sdk'));
@@ -900,7 +930,7 @@ describe('vite-plugin-zephyr', () => {
     const plugin = await configuredPlugin({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const context = { environment: { name: 'client' } };
     mocks.extractAssets
       .mockResolvedValueOnce(asset('client/app.js', 'first-output'))
@@ -1094,7 +1124,7 @@ describe('vite-plugin-zephyr', () => {
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
       true
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     mocks.extractAssets
       .mockResolvedValueOnce(asset('app-0.js', 'generation-0'))
       .mockResolvedValueOnce(asset('app-1.js', 'generation-1'));
@@ -1114,7 +1144,7 @@ describe('vite-plugin-zephyr', () => {
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
       true
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const error = new Error('first upload failed');
     mocks.engine.upload_assets.mockRejectedValueOnce(error).mockResolvedValue(undefined);
     const context = { environment: { name: 'client' } };
@@ -1220,7 +1250,7 @@ describe('withZephyrPartial', () => {
     await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
       resolvedConfig({})
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
 
     await Promise.all([
       writeBundle.call({ environment: { name: 'client' } }, { dir: clientOutput }, {}),
@@ -1254,7 +1284,7 @@ describe('withZephyrPartial', () => {
       resolvedConfig({})
     );
 
-    await (plugin.writeBundle as TestWriteBundle).call(
+    await writeBundleHandler(plugin).call(
       { environment: { name: 'desktop' } },
       { dir: '/repo/dist/desktop' },
       {}
@@ -1278,7 +1308,7 @@ describe('withZephyrPartial', () => {
     );
 
     await expect(
-      (plugin.writeBundle as TestWriteBundle).call(
+      writeBundleHandler(plugin).call(
         { environment: { name: 'client' } },
         { dir: '/repo/dist/client' },
         {}

@@ -65,6 +65,23 @@ partial-build contributions are merged atomically. Programmatic `vite.build()` c
 including Slidev builds, use the direct single-environment upload path, as do Vite 5
 and single-environment watch builds.
 
+Non-watch programmatic builds collect every output format and publish one combined
+snapshot when the bundler closes, after all expected writes succeed. External partial
+output is claimed and committed once for that snapshot. Library `formats` and explicit
+output arrays are both supported. Separate output directories are preserved relative
+to their common root; TAP artifact paths remain unchanged.
+
+Direct SSR builds infer `snapshotType: 'ssr'` from the selected server build and use its
+emitted entry chunk, including renamed or hashed filenames. Explicit `snapshotType` and
+`entrypoint` options take precedence. Multiple server entry chunks require an explicit
+emitted `entrypoint`. TAP builds do not infer SSR unless explicitly requested.
+
+For direct non-watch publication, Zephyr must observe the final `writeBundle` and
+`closeBundle` hooks. Other writers and closers must use normal hook ordering; later
+post-ordered hooks and unresolved asynchronous output plugins are rejected because they
+could fail after Zephyr records success. Application-builder and watch publication keep
+their own lifecycles.
+
 Vite 6 does not dispatch plugin `buildApp` hooks. Its non-watch publication supports only
 a single environment without an explicit `builder` configuration; other configurations
 are rejected to avoid publishing incomplete output. Use Vite 7 or newer for coordinated

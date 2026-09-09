@@ -7,6 +7,7 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
 import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
+  viteVersion: '7.0.0',
   federation: rs.fn(),
   extractAssets: rs.fn(),
   savePartialAssetMap: rs.fn(),
@@ -32,7 +33,9 @@ const mocks = rs.hoisted(() => ({
 
 rs.mock('vite', () => ({
   loadEnv: rs.fn(() => ({})),
-  version: '7.0.0',
+  get version() {
+    return mocks.viteVersion;
+  },
 }));
 
 rs.mock('node:module', () => {
@@ -121,10 +124,11 @@ async function configuredPlugin(
   watch = false,
   base = '/'
 ): Promise<Plugin> {
-  const plugin = withZephyr()[0] as Plugin;
+  const [plugin, buildAppStart] = withZephyr() as Plugin[];
   await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
     resolvedConfig(environments, watch, base)
   );
+  await buildAppHandler(buildAppStart)({ environments: {}, build: rs.fn() });
   return plugin;
 }
 
@@ -205,6 +209,7 @@ let internalClaims: ReturnType<typeof claimed>[] = [];
 describe('vite-plugin-zephyr', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.viteVersion = '7.0.0';
     mocks.claimPartialAssetMapBatch.mockReset();
     internalClaims = [];
     mocks.claimPartialAssetMapBatch.mockImplementation(
@@ -244,9 +249,61 @@ describe('vite-plugin-zephyr', () => {
     const plugins = withZephyr();
 
     expect(mocks.federation).not.toHaveBeenCalled();
-    expect(plugins).toHaveLength(1);
+    expect(plugins).toHaveLength(2);
     expect(plugins[0]?.name).toBe('with-zephyr');
   });
+
+  test.each(['5.4.21', '6.4.1', '7.0.0', '8.2.2'])(
+    'publishes a legacy Vite %s build without waiting for buildApp',
+    async (version) => {
+      mocks.viteVersion = version;
+      const plugin = withZephyr()[0] as Plugin;
+      await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(
+        resolvedConfig({
+          client: { consumer: 'client', build: { outDir: 'dist' } },
+        })
+      );
+
+      await (plugin.writeBundle as TestWriteBundle).call(
+        { environment: { name: 'client' } },
+        { dir: '/repo/dist' },
+        {}
+      );
+
+      expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(1);
+      expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
+      expect(mocks.savePartialAssetMap).not.toHaveBeenCalled();
+    }
+  );
+
+  test.each(['multiple environments', 'builder configuration'])(
+    'rejects Vite 6 %s before publishing partial output',
+    async (scenario) => {
+      mocks.viteVersion = '6.4.1';
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const config = resolvedConfig({
+        client: { consumer: 'client', build: { outDir: 'dist/client' } },
+        ...(scenario === 'multiple environments'
+          ? { server: { consumer: 'server', build: { outDir: 'dist/server' } } }
+          : {}),
+      });
+      if (scenario === 'builder configuration') {
+        config.builder = {} as NonNullable<ResolvedConfig['builder']>;
+      }
+      const plugin = withZephyr()[0] as Plugin;
+      await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
+
+      await expect(
+        (plugin.writeBundle as TestWriteBundle).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist/client' },
+          {}
+        )
+      ).rejects.toThrow('Vite 7 or newer');
+      expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+      expect(mocks.savePartialAssetMap).not.toHaveBeenCalled();
+    }
+  );
 
   test('withZephyr injects every mfConfig runtime plugin and delegates to MF', () => {
     mocks.federation.mockImplementation((config) => [
@@ -269,6 +326,7 @@ describe('vite-plugin-zephyr', () => {
       'module-federation-vite',
       'module-federation-vite',
       'with-zephyr',
+      'with-zephyr:build-app-start',
     ]);
   });
 
@@ -760,10 +818,11 @@ describe('vite-plugin-zephyr', () => {
       desktop: { consumer: 'client', build: { outDir: 'dist/tap/desktop' } },
       worker: { consumer: 'client', build: { outDir: 'dist/tap/worker' } },
     };
-    const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
+    const [plugin, buildAppStart] = withZephyr({ target: 'tap-app' }) as Plugin[];
     await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
       resolvedConfig(environments)
     );
+    await buildAppHandler(buildAppStart)({ environments: {}, build: rs.fn() });
     const writeBundle = plugin.writeBundle as TestWriteBundle;
     const desktopAssets = asset('sdk/desktop/runtime.js', 'desktop-sdk-lock');
     const workerAssets = asset('sdk/worker/runtime.js', 'worker-sdk-lock');

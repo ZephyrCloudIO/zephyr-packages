@@ -322,7 +322,7 @@ function loadModuleFederationPlugin() {
   return moduleFederation.federation;
 }
 
-function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
+function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options.hooks;
   // TAP package descriptors lock artifact paths and hashes. Vite environment output
@@ -368,7 +368,20 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   let applicationContext: ApplicationContext | undefined;
   let uploadMetadata: { snapshotType: 'csr' | 'ssr'; entrypoint?: string } | undefined;
   let baseHref = '';
-  let supportsBuildApp = false;
+  let isApplicationBuild = false;
+  let unsupportedVite6Builder = false;
+
+  const buildAppStart: Plugin = {
+    name: 'with-zephyr:build-app-start',
+    enforce: 'pre',
+    sharedDuringBuild: true,
+    buildApp: {
+      order: 'pre',
+      async handler() {
+        isApplicationBuild = true;
+      },
+    },
+  };
 
   const registerModuleFederationConfigs = (
     configs: readonly ModuleFederationOptions[]
@@ -394,8 +407,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const getModuleFederationPublicationMetadata = () =>
     createViteModuleFederationPublicationMetadata(mfConfigSources);
 
-  return {
+  const plugin: Plugin = {
     name: 'with-zephyr',
+    sharedDuringBuild: true,
     // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
     enforce: 'pre',
 
@@ -412,7 +426,19 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       // Vite 8 is ESM-only. Keep the published plugin CommonJS-compatible by loading
       // runtime values natively only after Vite invokes the plugin.
       const vite = await import('vite');
-      supportsBuildApp = Number.parseInt(vite.version.split('.')[0] ?? '0', 10) >= 6;
+      const viteMajor = Number.parseInt(vite.version.split('.')[0] ?? '0', 10);
+      isApplicationBuild = false;
+      const firstBuildAppPlugin = config.getSortedPlugins?.('buildApp')[0];
+      if (
+        viteMajor >= 7 &&
+        firstBuildAppPlugin &&
+        firstBuildAppPlugin !== buildAppStart
+      ) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message:
+            'Place withZephyr() before other pre-ordered buildApp plugins so Zephyr can collect application output atomically.',
+        });
+      }
       const root = config.root;
       baseHref = normalizeBasePath(config.base);
       // Normalize the entrypoint early so uploads use the same path in serve/build.
@@ -428,6 +454,8 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           }
         ).environments ?? {};
       environmentNames = Object.keys(configuredEnvironments);
+      unsupportedVite6Builder =
+        viteMajor === 6 && (Boolean(config.builder) || environmentNames.length > 1);
       environmentMetadata = new Map(
         Object.entries(configuredEnvironments).map(([name, environment]) => [
           name,
@@ -687,6 +715,12 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
         const environmentName = (this as unknown as { environment?: { name?: string } })
           .environment?.name;
         const isMultiEnvironment = environmentNames.length > 1;
+        if (!isWatchMode && unsupportedVite6Builder) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message:
+              'Vite 6 application-builder publication requires Vite 7 or newer. Vite 6 supports only single-environment builds without a builder configuration.',
+          });
+        }
         if (isWatchMode && isMultiEnvironment) {
           throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
             message:
@@ -707,7 +741,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
             ([, metadata]) => metadata.outputDir === outputDirectory
           )?.[0] ??
           (environmentNames.length === 1 ? environmentNames[0] : undefined);
-        const coordinateWithBuildApp = supportsBuildApp && !isWatchMode;
+        const coordinateWithBuildApp = isApplicationBuild && !isWatchMode;
         if (coordinateWithBuildApp && !resolvedEnvironmentName) {
           throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
             message: `Could not associate Vite output directory "${outputDirectory}" with an environment.`,
@@ -844,9 +878,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
     buildApp: {
       order: 'post',
       async handler(builder) {
-        if (!supportsBuildApp) {
-          return;
-        }
+        isApplicationBuild = true;
 
         const environments = Object.entries(builder.environments);
         if (isWatchMode) {
@@ -1072,6 +1104,8 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       },
     },
   };
+
+  return [plugin, buildAppStart];
 }
 
 export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
@@ -1093,6 +1127,6 @@ export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
     }
   }
 
-  plugins.push(withZephyrCore(options));
+  plugins.push(...withZephyrCore(options));
   return plugins;
 }

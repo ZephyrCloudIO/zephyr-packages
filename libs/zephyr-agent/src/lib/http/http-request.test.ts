@@ -15,6 +15,7 @@ rs.mock('./fetch-with-retries', () => ({
 rs.mock('../node-persist/token', () => ({ cleanTokens: mocks.cleanTokens }));
 rs.mock('../logging/debug', () => ({
   ze_log: {
+    error: rs.fn(),
     http: mocks.httpLog,
   },
 }));
@@ -115,6 +116,27 @@ describe('Pure HTTP Request Functions', () => {
 
       expect(ok).toBe(false);
       expect(error).toBeInstanceOf(Error);
+      expect(mockCleanTokens).toHaveBeenCalledWith('rejected-token');
+    });
+
+    it('preserves 401 classification when credential cleanup fails', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 401,
+        text: async () => 'Unauthorized',
+        ok: false,
+      } as Response);
+      mockCleanTokens.mockRejectedValueOnce(new Error('credential storage unavailable'));
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://api.example.com/endpoint'),
+        {
+          headers: { Authorization: 'Bearer rejected-token' },
+          credentialToken: 'rejected-token',
+        }
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10018', reason: 'ZE10018' });
       expect(mockCleanTokens).toHaveBeenCalledWith('rejected-token');
     });
 

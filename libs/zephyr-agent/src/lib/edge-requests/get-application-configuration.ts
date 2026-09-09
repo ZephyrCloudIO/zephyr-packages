@@ -104,61 +104,65 @@ async function loadApplicationConfiguration(
 export async function getApplicationConfiguration({
   application_uid,
 }: GetApplicationConfigurationProps): Promise<ZeApplicationConfig> {
-  if (!application_uid) {
-    throw new ZephyrError(ZeErrors.ERR_MISSING_APPLICATION_UID);
-  }
-
-  // Token resolution must happen before every fast-cache lookup. The scope stores only
-  // its one-way fingerprint, so a rotated principal cannot hit a previous principal's
-  // memory cache, single-flight request, or persisted record.
-  const token = await getToken();
-  const scope = getApplicationConfigStorageScope(token);
-  const identity = getApplicationIdentity(scope, application_uid);
-  const cachedConfig = cachedConfigByIdentity.get(identity);
-
-  // Fast path: we already have a valid cached config
-  if (isValidConfig(cachedConfig, application_uid)) {
-    ze_log.app('Using cached application configuration');
-    return cachedConfig;
-  }
-  cachedConfigByIdentity.delete(identity);
-
-  // Another request for this identity is already in flight → piggy-back on it
-  const existingRequest = inFlightByIdentity.get(identity);
-  if (existingRequest) return existingRequest;
-
-  // We're the first caller → actually start the fetch
-  ze_log.app('Getting application configuration from node-persist');
-
-  const request = (async () => {
-    const storedAppConfig = await getAppConfig(application_uid, scope);
-
-    if (!isValidConfig(storedAppConfig, application_uid)) {
-      ze_log.app('Loading Application Configuration from API...');
-      const loadedAppConfig = await loadApplicationConfiguration(
-        { application_uid },
-        scope,
-        token
-      );
-      ze_log.app('Saving Application Configuration to node-persist...');
-      await saveAppConfig(application_uid, loadedAppConfig, scope);
-      return loadedAppConfig;
-    } else {
-      return storedAppConfig;
+  try {
+    if (!application_uid) {
+      throw new ZephyrError(ZeErrors.ERR_MISSING_APPLICATION_UID);
     }
-  })()
-    .then((config) => {
-      cachedConfigByIdentity.set(identity, config);
-      return config;
-    })
-    .finally(() => {
-      if (inFlightByIdentity.get(identity) === request) {
-        inFlightByIdentity.delete(identity);
-      }
-    });
 
-  inFlightByIdentity.set(identity, request);
-  return request;
+    // Token resolution must happen before every fast-cache lookup. The scope stores only
+    // its one-way fingerprint, so a rotated principal cannot hit a previous principal's
+    // memory cache, single-flight request, or persisted record.
+    const token = await getToken();
+    const scope = getApplicationConfigStorageScope(token);
+    const identity = getApplicationIdentity(scope, application_uid);
+    const cachedConfig = cachedConfigByIdentity.get(identity);
+
+    // Fast path: we already have a valid cached config
+    if (isValidConfig(cachedConfig, application_uid)) {
+      ze_log.app('Using cached application configuration');
+      return cachedConfig;
+    }
+    cachedConfigByIdentity.delete(identity);
+
+    // Another request for this identity is already in flight → piggy-back on it
+    const existingRequest = inFlightByIdentity.get(identity);
+    if (existingRequest) return existingRequest;
+
+    // We're the first caller → actually start the fetch
+    ze_log.app('Getting application configuration from node-persist');
+
+    const request = (async () => {
+      const storedAppConfig = await getAppConfig(application_uid, scope);
+
+      if (!isValidConfig(storedAppConfig, application_uid)) {
+        ze_log.app('Loading Application Configuration from API...');
+        const loadedAppConfig = await loadApplicationConfiguration(
+          { application_uid },
+          scope,
+          token
+        );
+        ze_log.app('Saving Application Configuration to node-persist...');
+        await saveAppConfig(application_uid, loadedAppConfig, scope);
+        return loadedAppConfig;
+      } else {
+        return storedAppConfig;
+      }
+    })()
+      .then((config) => {
+        cachedConfigByIdentity.set(identity, config);
+        return config;
+      })
+      .finally(() => {
+        if (inFlightByIdentity.get(identity) === request) {
+          inFlightByIdentity.delete(identity);
+        }
+      });
+
+    inFlightByIdentity.set(identity, request);
+    return await request;
+  } catch (error) {
+    throw ZephyrError.withContext(error, 'get-application-config');
+  }
 }
 
 /** Invalidate the cached application configuration */

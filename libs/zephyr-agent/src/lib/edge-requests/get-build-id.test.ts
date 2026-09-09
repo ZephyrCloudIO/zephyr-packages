@@ -76,6 +76,35 @@ describe('getBuildId', () => {
     });
   });
 
+  it('attributes token resolution failures to the Build-ID operation', async () => {
+    mocks.getToken.mockRejectedValue(
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'Authentication token unavailable',
+      })
+    );
+
+    await expect(getBuildId('app.project.org')).rejects.toMatchObject({
+      code: 'ZE10018',
+      operation: 'create-build-id',
+      reason: 'ZE10018',
+    });
+  });
+
+  it('preserves application configuration context during Build-ID setup', async () => {
+    mocks.getApplicationConfiguration.mockRejectedValue(
+      new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {
+        application_uid: 'app.project.org',
+        operation: 'get-application-config',
+      })
+    );
+
+    await expect(getBuildId('app.project.org')).rejects.toMatchObject({
+      code: 'ZE20014',
+      operation: 'get-application-config',
+      reason: 'ZE20014',
+    });
+  });
+
   it('returns a Build ID using scoped authentication credentials', async () => {
     mocks.makeRequest.mockResolvedValue([true, null, { 'user-123': 'build-456' }]);
 

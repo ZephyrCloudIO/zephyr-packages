@@ -239,6 +239,22 @@ describe('getGitInfo - non-git environments', () => {
     expect(warnings).not.toContain('git remote add origin');
   });
 
+  it('attributes token resolution failures to the user lookup operation', async () => {
+    noGitRepo();
+    const { getToken } = require('../../node-persist/token');
+    getToken.mockRejectedValue(
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'CI token exchange failed',
+      })
+    );
+
+    await expect(getGitInfo()).rejects.toMatchObject({
+      code: 'ZE10018',
+      operation: 'get-user-info',
+      reason: 'ZE10018',
+    });
+  });
+
   it('replaces an expired token through browser login before user lookup', async () => {
     noGitRepo();
     const { getToken } = require('../../node-persist/token');

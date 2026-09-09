@@ -138,6 +138,20 @@ describe('getApplicationConfiguration', () => {
     });
   });
 
+  it('attributes token resolution failures to the configuration operation', async () => {
+    mockGetToken.mockRejectedValue(
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'Authentication token unavailable',
+      })
+    );
+
+    await expect(getApplicationConfiguration({ application_uid })).rejects.toMatchObject({
+      code: 'ZE10018',
+      operation: 'get-application-config',
+      reason: 'ZE10018',
+    });
+  });
+
   // Test in-memory caching
   it('should use cached config and not call getAppConfig again', async () => {
     // First call - sets up the cache

@@ -24,9 +24,11 @@ const mocks = rs.hoisted(() => ({
 }));
 
 rs.mock('jose', () => ({ decodeJwt: rs.fn() }));
+rs.mock('ci-info', () => ({ isCI: false }));
 rs.mock('node:readline', () => ({
   createInterface: rs.fn(() => ({ question: mocks.question })),
 }));
+rs.mock('node:tty', () => ({ isatty: rs.fn(() => mocks.interactive) }));
 rs.mock('zephyr-edge-contract', () => ({
   ZE_API_ENDPOINT: rs.fn(() => 'https://api.example/'),
   formatString: rs.fn((message: string) => message),
@@ -50,9 +52,7 @@ rs.mock('../logging/picocolor', () => ({
   bold: (value: string) => value,
   gray: (value: string) => value,
   green: (value: string) => value,
-  get isTTY() {
-    return mocks.interactive;
-  },
+  isTTY: true,
   white: (value: string) => value,
   yellow: (value: string) => value,
 }));

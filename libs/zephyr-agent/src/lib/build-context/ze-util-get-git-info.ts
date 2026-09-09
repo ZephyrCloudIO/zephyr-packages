@@ -4,6 +4,7 @@ import { sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
+import { TOKEN_EXPIRY } from '../auth/auth-flags';
 import { checkAuth, isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
@@ -417,63 +418,62 @@ async function loadGlobalGitInfo(
 
 /** Get user info from API endpoint instead of JWT decoding */
 async function getUserInfoFromAPI(): Promise<UserInfo> {
-  let authenticationAttempted = false;
-  const authenticate = async () => {
-    authenticationAttempted = true;
-    try {
+  try {
+    let authenticationAttempted = false;
+    const authenticate = async () => {
+      authenticationAttempted = true;
       await checkAuth();
-    } catch (error) {
-      throw ZephyrError.withContext(error, 'get-user-info');
-    }
-  };
+    };
 
-  while (true) {
-    const token = await getToken();
-    if (!token || !isTokenStillValid(token, 60)) {
-      if (authenticationAttempted) {
-        throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-          message: 'No valid authentication token was available after login.',
-          operation: 'get-user-info',
-        });
-      }
+    while (true) {
+      const token = await getToken();
+      if (!token || !isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+        if (authenticationAttempted) {
+          throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+            message: 'No valid authentication token was available after login.',
+          });
+        }
 
-      await authenticate();
-      continue;
-    }
-
-    const [ok, cause, response] = await makeRequest<{ value: UserInfo }>(
-      {
-        path: ze_api_gateway.user_info,
-        base: ZE_API_ENDPOINT(),
-        query: {},
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        credentialToken: token,
-      }
-    );
-
-    if (!ok) {
-      if (
-        !authenticationAttempted &&
-        !hasSecretToken() &&
-        ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR)
-      ) {
         await authenticate();
         continue;
       }
 
-      throw ZephyrError.withContext(cause, 'get-user-info');
+      const [ok, cause, response] = await makeRequest<{ value: UserInfo }>(
+        {
+          path: ze_api_gateway.user_info,
+          base: ZE_API_ENDPOINT(),
+          query: {},
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentialToken: token,
+        }
+      );
+
+      if (!ok) {
+        if (
+          !authenticationAttempted &&
+          !hasSecretToken() &&
+          ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR)
+        ) {
+          await authenticate();
+          continue;
+        }
+
+        throw cause;
+      }
+
+      const userData = response.value;
+
+      ze_log.git('Retrieved user info from API:', {
+        name: userData.name,
+        email: userData.email,
+      });
+
+      return userData;
     }
-
-    const userData = response.value;
-
-    ze_log.git('Retrieved user info from API:', {
-      name: userData.name,
-      email: userData.email,
-    });
-
-    return userData;
+  } catch (error) {
+    throw ZephyrError.withContext(error, 'get-user-info');
   }
 }
 

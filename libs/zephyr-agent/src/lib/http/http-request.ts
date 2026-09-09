@@ -100,12 +100,19 @@ export async function makeHttpRequest<T = void>(
     const resText = await response.text();
 
     if (response.status === 401) {
-      if (!skipTokenCleanup) {
-        await cleanTokens(credentialToken);
-      }
-      throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+      const authenticationError = new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
         message: 'The request authentication is invalid or expired.',
       });
+
+      if (!skipTokenCleanup) {
+        try {
+          await cleanTokens(credentialToken);
+        } catch (error) {
+          ze_log.error('Failed to remove rejected authentication credentials:', error);
+        }
+      }
+
+      throw authenticationError;
     }
 
     if (response.status === 403) {

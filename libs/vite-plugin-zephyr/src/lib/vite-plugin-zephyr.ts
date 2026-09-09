@@ -13,6 +13,7 @@ import {
   commitPartialAssetMapClaimBatch,
   createManifestContent,
   handleGlobalError,
+  logFn,
   normalizeBasePath,
   rewriteEnvReadsToVirtualModule,
   rollbackPartialAssetMapClaimBatch,
@@ -214,6 +215,25 @@ interface ViteEnvironmentMetadata {
   outputDir?: string;
 }
 
+interface DirectBuildOutput {
+  assetsMap: ZeBuildAssetsMap;
+  directory: string;
+  entrypoints: string[];
+  ssr: boolean;
+}
+
+function hasLateOutputHook(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasLateOutputHook);
+  if (!value || typeof value !== 'object') return false;
+  if ('then' in value) return true;
+  return ['outputOptions', 'writeBundle'].some((name) => {
+    const hook = (value as Record<string, unknown>)[name];
+    return Boolean(
+      hook && typeof hook === 'object' && 'order' in hook && hook.order === 'post'
+    );
+  });
+}
+
 function commonDirectory(paths: readonly string[]): string | undefined {
   if (paths.length === 0) return undefined;
   const resolvedPaths = paths.map((item) => path.resolve(item));
@@ -322,7 +342,7 @@ function loadModuleFederationPlugin() {
   return moduleFederation.federation;
 }
 
-function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
+function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options.hooks;
   // TAP package descriptors lock artifact paths and hashes. Vite environment output
@@ -368,7 +388,30 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   let applicationContext: ApplicationContext | undefined;
   let uploadMetadata: { snapshotType: 'csr' | 'ssr'; entrypoint?: string } | undefined;
   let baseHref = '';
-  let supportsBuildApp = false;
+  let isApplicationBuild = false;
+  let unsupportedVite6Builder = false;
+  let directOutputs: DirectBuildOutput[] = [];
+  let directBuildFailed = false;
+  let directSsr = false;
+  let expectedDirectOutputs = 1;
+  let buildManifest: string | undefined;
+  let hasLaterWriteHook = false;
+  let hasLaterCloseHook = false;
+  let hasLaterOutputOptionsHook = false;
+  const instantiatedEnvironments = new Set<string>();
+  let environmentBuildStarted = false;
+
+  const buildAppStart: Plugin = {
+    name: 'with-zephyr:build-app-start',
+    enforce: 'pre',
+    sharedDuringBuild: true,
+    buildApp: {
+      order: 'pre',
+      async handler() {
+        isApplicationBuild = true;
+      },
+    },
+  };
 
   const registerModuleFederationConfigs = (
     configs: readonly ModuleFederationOptions[]
@@ -394,8 +437,106 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
   const getModuleFederationPublicationMetadata = () =>
     createViteModuleFederationPublicationMetadata(mfConfigSources);
 
-  return {
+  const publishDirectOutputs = async (outputs: readonly DirectBuildOutput[]) => {
+    const partialClaims: PartialAssetMapClaim[] = [];
+    const zephyrEngine = await zephyr_engine_defer;
+    try {
+      const outputRoot = commonDirectory(outputs.map((output) => output.directory));
+      if (!outputRoot) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message: 'Could not determine a shared output root for the Vite build.',
+        });
+      }
+      const serverEntries = new Set<string>();
+      const maps = outputs.map((output) => {
+        const prefix = preservesLockedArtifactPaths
+          ? undefined
+          : path.relative(outputRoot, output.directory).split(path.sep).join('/');
+        for (const entry of output.entrypoints) {
+          serverEntries.add(prefix ? `${prefix}/${entry}` : entry);
+        }
+        return prefixAssetsMap(output.assetsMap, prefix);
+      });
+      let assetsMap = maps.length === 1 ? maps[0] : mergeAssetMaps(maps);
+      if (!isWatchMode && externalPartialScope) {
+        const batch = await claimPartialAssetMapBatch(zephyrEngine.application_uid, [
+          externalPartialScope,
+        ]);
+        if (!batch) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message:
+              'Vite partialBuild was configured, but its external partial output was unavailable or already claimed.',
+          });
+        }
+        partialClaims.push(...batch.claims);
+        assetsMap = mergeAssetMaps([
+          ...Object.values(mergeClaimedPartialMaps(partialClaims)),
+          assetsMap,
+        ]);
+      }
+      const snapshotType =
+        options.snapshotType ??
+        (!preservesLockedArtifactPaths && outputs.some((output) => output.ssr)
+          ? 'ssr'
+          : 'csr');
+      const finalEntrypoint =
+        snapshotType === 'ssr'
+          ? options.entrypoint
+            ? normalizeEntrypoint(options.entrypoint)
+            : serverEntries.size === 1
+              ? [...serverEntries][0]
+              : undefined
+          : preservesLockedArtifactPaths
+            ? undefined
+            : entrypoint;
+      if (
+        snapshotType === 'ssr' &&
+        (!finalEntrypoint ||
+          !Object.values(assetsMap).some((asset) => asset.path === finalEntrypoint))
+      ) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message:
+            'Could not identify an emitted Vite server entrypoint. Set withZephyr({ entrypoint }) to an emitted server chunk.',
+        });
+      }
+      if (!zephyrEngine.hasActiveBuild) await zephyrEngine.start_new_build();
+      const federationMetadata = getModuleFederationPublicationMetadata();
+      await zephyrEngine.upload_assets({
+        assetsMap,
+        buildStats: attachViteFederationBuildStats(
+          await zeBuildDashData(zephyrEngine),
+          federationMetadata
+        ),
+        mfConfig: federationMetadata.mfConfig,
+        mfConfigs: federationMetadata.mfConfigs,
+        hooks,
+        entrypoint: finalEntrypoint,
+        snapshotType,
+      });
+      await zephyrEngine.build_finished();
+      await commitPartialAssetMapClaimBatch(
+        zephyrEngine.application_uid,
+        partialClaims.map(({ claimId }) => claimId)
+      );
+    } catch (error) {
+      zephyrEngine.build_failed();
+      if (partialClaims.length > 0) {
+        try {
+          await rollbackPartialAssetMapClaimBatch(
+            zephyrEngine.application_uid,
+            partialClaims.map(({ claimId }) => claimId)
+          );
+        } catch (rollbackError) {
+          logFn('error', ZephyrError.format(rollbackError));
+        }
+      }
+      throw error;
+    }
+  };
+
+  const plugin: Plugin = {
     name: 'with-zephyr',
+    sharedDuringBuild: true,
     // Run before Vite's env replacement so ZE_PUBLIC_* reads can be rewritten first.
     enforce: 'pre',
 
@@ -412,7 +553,51 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       // Vite 8 is ESM-only. Keep the published plugin CommonJS-compatible by loading
       // runtime values natively only after Vite invokes the plugin.
       const vite = await import('vite');
-      supportsBuildApp = Number.parseInt(vite.version.split('.')[0] ?? '0', 10) >= 6;
+      const viteMajor = Number.parseInt(vite.version.split('.')[0] ?? '0', 10);
+      // Vite 7 can instantiate an environment between configResolved calls.
+      if (environmentBuildStarted) {
+        instantiatedEnvironments.clear();
+        environmentBuildStarted = false;
+      }
+      const createEnvironment = config.build?.createEnvironment;
+      if (createEnvironment) {
+        config.build.createEnvironment = function (name, environmentConfig) {
+          const environment = createEnvironment.call(this, name, environmentConfig);
+          instantiatedEnvironments.add(name);
+          return environment;
+        };
+      }
+      isApplicationBuild = false;
+      directOutputs = [];
+      directBuildFailed = false;
+      buildManifest = undefined;
+      directSsr = Boolean(config.build?.ssr);
+      const configuredOutput =
+        config.build?.rolldownOptions?.output ?? config.build?.rollupOptions?.output;
+      expectedDirectOutputs = Array.isArray(configuredOutput)
+        ? configuredOutput.length
+        : config.build?.lib
+          ? (config.build.lib.formats?.length ?? 2)
+          : 1;
+      const firstBuildAppPlugin = config.getSortedPlugins?.('buildApp')[0];
+      if (
+        viteMajor >= 7 &&
+        firstBuildAppPlugin &&
+        firstBuildAppPlugin !== buildAppStart
+      ) {
+        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+          message:
+            'Place withZephyr() before other pre-ordered buildApp plugins so Zephyr can collect application output atomically.',
+        });
+      }
+      const writePlugins = config.getSortedPlugins?.('writeBundle');
+      hasLaterWriteHook = Boolean(writePlugins?.length && writePlugins.at(-1) !== plugin);
+      const closePlugins = config.getSortedPlugins?.('closeBundle');
+      hasLaterCloseHook = Boolean(closePlugins?.length && closePlugins.at(-1) !== plugin);
+      const outputOptionPlugins = config.getSortedPlugins?.('outputOptions');
+      hasLaterOutputOptionsHook = Boolean(
+        outputOptionPlugins?.length && outputOptionPlugins.at(-1) !== plugin
+      );
       const root = config.root;
       baseHref = normalizeBasePath(config.base);
       // Normalize the entrypoint early so uploads use the same path in serve/build.
@@ -428,6 +613,8 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
           }
         ).environments ?? {};
       environmentNames = Object.keys(configuredEnvironments);
+      unsupportedVite6Builder =
+        viteMajor === 6 && (Boolean(config.builder) || environmentNames.length > 1);
       environmentMetadata = new Map(
         Object.entries(configuredEnvironments).map(([name, environment]) => [
           name,
@@ -612,7 +799,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       try {
         const zephyr_engine = await zephyr_engine_defer;
         const dependencies = zephyr_engine.federated_dependencies || [];
-        const manifestContent = createManifestContent(dependencies, true);
+        const manifestContent =
+          !isApplicationBuild && !isWatchMode
+            ? (buildManifest ??= createManifestContent(dependencies, true))
+            : createManifestContent(dependencies, true);
 
         this.emitFile({
           type: 'asset',
@@ -675,178 +865,218 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       }
     },
 
-    writeBundle: async function (outputOptions, bundle) {
-      const partialClaims: PartialAssetMapClaim[] = [];
-      try {
-        const [vite_internal_options, zephyr_engine] = await Promise.all([
-          vite_internal_options_defer,
-          zephyr_engine_defer,
-        ]);
-        zephyr_engine.buildProperties.baseHref = baseHref;
-
-        const environmentName = (this as unknown as { environment?: { name?: string } })
-          .environment?.name;
-        const isMultiEnvironment = environmentNames.length > 1;
-        if (isWatchMode && isMultiEnvironment) {
+    outputOptions: {
+      order: 'post',
+      handler(output) {
+        if (
+          !isApplicationBuild &&
+          !isWatchMode &&
+          (hasLaterOutputOptionsHook ||
+            hasLateOutputHook((output as { plugins?: unknown }).plugins))
+        ) {
           throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
             message:
-              'Vite multi-environment watch publication is not supported because ' +
-              'environment rebuilds do not expose an atomic application generation.',
+              'Zephyr cannot verify post-ordered or asynchronous output-plugin writers. Use normal outputOptions and writeBundle ordering in synchronous output plugins.',
           });
         }
-        const outputDirectory = path.resolve(
-          vite_internal_options.root,
-          outputOptions.dir ??
-            (outputOptions.file
-              ? path.dirname(outputOptions.file)
-              : vite_internal_options.outDir)
-        );
-        const resolvedEnvironmentName =
-          environmentName ??
-          [...environmentMetadata.entries()].find(
-            ([, metadata]) => metadata.outputDir === outputDirectory
-          )?.[0] ??
-          (environmentNames.length === 1 ? environmentNames[0] : undefined);
-        const coordinateWithBuildApp = supportsBuildApp && !isWatchMode;
-        if (coordinateWithBuildApp && !resolvedEnvironmentName) {
-          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-            message: `Could not associate Vite output directory "${outputDirectory}" with an environment.`,
-          });
+        return null;
+      },
+    },
+
+    buildStart() {
+      environmentBuildStarted = true;
+    },
+
+    buildEnd(error) {
+      if (error) directBuildFailed = true;
+    },
+
+    renderError() {
+      directBuildFailed = true;
+    },
+
+    closeBundle: {
+      order: 'post',
+      sequential: true,
+      async handler() {
+        if (isApplicationBuild || isWatchMode || directOutputs.length === 0) return;
+        const outputs = directOutputs;
+        directOutputs = [];
+        // Vite closes the bundler after output failures too; only witnessed writes count.
+        if (directBuildFailed || outputs.length !== expectedDirectOutputs) return;
+        try {
+          await publishDirectOutputs(outputs);
+        } catch (error) {
+          handleGlobalError(error);
         }
-        let assetPrefix: string | undefined;
-        if (
-          coordinateWithBuildApp &&
-          isMultiEnvironment &&
-          !preservesLockedArtifactPaths
-        ) {
-          if (!sharedOutputRoot) {
+      },
+    },
+
+    writeBundle: {
+      order: 'post',
+      sequential: true,
+      async handler(outputOptions, bundle) {
+        try {
+          const [vite_internal_options, zephyr_engine] = await Promise.all([
+            vite_internal_options_defer,
+            zephyr_engine_defer,
+          ]);
+          zephyr_engine.buildProperties.baseHref = baseHref;
+
+          const environmentName = (this as unknown as { environment?: { name?: string } })
+            .environment?.name;
+          const isMultiEnvironment = environmentNames.length > 1;
+          if (!isWatchMode && unsupportedVite6Builder) {
             throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-              message: 'Could not determine a shared output root for Vite environments.',
+              message:
+                'Vite 6 application-builder publication requires Vite 7 or newer. Vite 6 supports only single-environment builds without a builder configuration.',
             });
           }
-          const relativeOutput = path.relative(sharedOutputRoot, outputDirectory);
+          if (isWatchMode && isMultiEnvironment) {
+            throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+              message:
+                'Vite multi-environment watch publication is not supported because ' +
+                'environment rebuilds do not expose an atomic application generation.',
+            });
+          }
+          const outputDirectory = path.resolve(
+            vite_internal_options.root,
+            outputOptions.dir ??
+              (outputOptions.file
+                ? path.dirname(outputOptions.file)
+                : vite_internal_options.outDir)
+          );
+          const resolvedEnvironmentName =
+            environmentName ??
+            [...environmentMetadata.entries()].find(
+              ([, metadata]) => metadata.outputDir === outputDirectory
+            )?.[0] ??
+            (environmentNames.length === 1 ? environmentNames[0] : undefined);
+          const coordinateWithBuildApp = isApplicationBuild && !isWatchMode;
+          if (!coordinateWithBuildApp && instantiatedEnvironments.size > 1) {
+            throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+              message:
+                'Use builder.buildApp() to publish multiple Vite environments atomically; individual builder.build(environment) calls cannot finalize the application.',
+            });
+          }
           if (
-            relativeOutput === '..' ||
-            relativeOutput.startsWith(`..${path.sep}`) ||
-            path.isAbsolute(relativeOutput)
+            !coordinateWithBuildApp &&
+            !isWatchMode &&
+            (hasLaterWriteHook || hasLaterCloseHook)
           ) {
             throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-              message: `Vite environment output "${outputDirectory}" is outside shared output root "${sharedOutputRoot}".`,
+              message:
+                'Zephyr must be the last writeBundle and closeBundle hook. Use normal hook ordering for other plugins so publication cannot precede a failed build.',
             });
           }
-          assetPrefix = relativeOutput
-            ? relativeOutput.split(path.sep).join('/')
-            : undefined;
-        }
-        const extractionOptions: ZephyrInternalOptions = {
-          ...vite_internal_options,
-          dir: outputOptions.dir,
-          outDir: outputDirectory,
-          assets: bundle,
-          // Public files belong to the browser output in an SSR build. Loading them for
-          // every server/RSC compiler creates duplicate paths and needless hashing.
-          publicDir:
-            isMultiEnvironment &&
-            resolvedEnvironmentName &&
-            environmentMetadata.get(resolvedEnvironmentName)?.consumer === 'server'
-              ? undefined
-              : vite_internal_options.publicDir,
-        };
-
-        let assetsMap = await extract_vite_assets_map(zephyr_engine, extractionOptions);
-
-        if (coordinateWithBuildApp) {
-          if (!resolvedEnvironmentName) {
+          if (coordinateWithBuildApp && !resolvedEnvironmentName) {
             throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
               message: `Could not associate Vite output directory "${outputDirectory}" with an environment.`,
             });
           }
-          const persistedAssetsMap = preservesLockedArtifactPaths
-            ? assetsMap
-            : prefixAssetsMap(assetsMap, assetPrefix);
-          await savePartialAssetMap(
-            zephyr_engine.application_uid,
-            viteEnvironmentOutputKey(
-              resolvedEnvironmentName,
-              outputDirectory,
-              outputOptions.file,
-              outputOptions.format,
-              persistedAssetsMap
-            ),
-            persistedAssetsMap,
-            {
-              invocationId: buildInvocationId,
-              generation: buildGeneration,
+          let assetPrefix: string | undefined;
+          if (
+            coordinateWithBuildApp &&
+            isMultiEnvironment &&
+            !preservesLockedArtifactPaths
+          ) {
+            if (!sharedOutputRoot) {
+              throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+                message:
+                  'Could not determine a shared output root for Vite environments.',
+              });
             }
-          );
-          return;
-        }
-
-        if (!isWatchMode && externalPartialScope) {
-          const batch = await claimPartialAssetMapBatch(zephyr_engine.application_uid, [
-            externalPartialScope,
-          ]);
-          if (!batch) {
-            throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-              message:
-                'Vite partialBuild was configured, but its external partial output was unavailable or already claimed.',
-            });
+            const relativeOutput = path.relative(sharedOutputRoot, outputDirectory);
+            if (
+              relativeOutput === '..' ||
+              relativeOutput.startsWith(`..${path.sep}`) ||
+              path.isAbsolute(relativeOutput)
+            ) {
+              throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+                message: `Vite environment output "${outputDirectory}" is outside shared output root "${sharedOutputRoot}".`,
+              });
+            }
+            assetPrefix = relativeOutput
+              ? relativeOutput.split(path.sep).join('/')
+              : undefined;
           }
-          partialClaims.push(...batch.claims);
-          const partials = mergeClaimedPartialMaps(partialClaims);
-          assetsMap = mergeAssetMaps([...Object.values(partials), assetsMap]);
-        }
+          const extractionOptions: ZephyrInternalOptions = {
+            ...vite_internal_options,
+            dir: outputOptions.dir,
+            outDir: outputDirectory,
+            assets: bundle,
+            // Public files belong to the browser output in an SSR build. Loading them for
+            // every server/RSC compiler creates duplicate paths and needless hashing.
+            publicDir:
+              isMultiEnvironment &&
+              resolvedEnvironmentName &&
+              environmentMetadata.get(resolvedEnvironmentName)?.consumer === 'server'
+                ? undefined
+                : vite_internal_options.publicDir,
+          };
 
-        if (!zephyr_engine.hasActiveBuild) {
-          await zephyr_engine.start_new_build();
-        }
-        const federationMetadata = getModuleFederationPublicationMetadata();
-        await zephyr_engine.upload_assets({
-          assetsMap,
-          buildStats: attachViteFederationBuildStats(
-            await zeBuildDashData(zephyr_engine),
-            federationMetadata
-          ),
-          mfConfig: federationMetadata.mfConfig,
-          mfConfigs: federationMetadata.mfConfigs,
-          hooks,
-          entrypoint,
-          snapshotType: options.snapshotType ?? 'csr',
-        });
+          const assetsMap = await extract_vite_assets_map(
+            zephyr_engine,
+            extractionOptions
+          );
 
-        await zephyr_engine.build_finished();
-        await commitPartialAssetMapClaimBatch(
-          zephyr_engine.application_uid,
-          partialClaims.map(({ claimId }) => claimId)
-        );
-      } catch (error) {
-        try {
-          const zephyr_engine = await zephyr_engine_defer;
-          zephyr_engine.build_failed();
-        } catch {
-          // Engine initialization failed before any reusable build state existed.
-        }
-        if (partialClaims.length > 0) {
+          if (coordinateWithBuildApp) {
+            if (!resolvedEnvironmentName) {
+              throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+                message: `Could not associate Vite output directory "${outputDirectory}" with an environment.`,
+              });
+            }
+            const persistedAssetsMap = preservesLockedArtifactPaths
+              ? assetsMap
+              : prefixAssetsMap(assetsMap, assetPrefix);
+            await savePartialAssetMap(
+              zephyr_engine.application_uid,
+              viteEnvironmentOutputKey(
+                resolvedEnvironmentName,
+                outputDirectory,
+                outputOptions.file,
+                outputOptions.format,
+                persistedAssetsMap
+              ),
+              persistedAssetsMap,
+              {
+                invocationId: buildInvocationId,
+                generation: buildGeneration,
+              }
+            );
+            return;
+          }
+
+          const output: DirectBuildOutput = {
+            assetsMap,
+            directory: outputDirectory,
+            entrypoints: Object.values(bundle).flatMap((asset) =>
+              asset.type === 'chunk' && asset.isEntry ? [asset.fileName] : []
+            ),
+            ssr:
+              directSsr ||
+              (resolvedEnvironmentName !== undefined &&
+                environmentMetadata.get(resolvedEnvironmentName)?.consumer === 'server'),
+          };
+          if (isWatchMode) await publishDirectOutputs([output]);
+          else directOutputs.push(output);
+        } catch (error) {
+          directBuildFailed = true;
           try {
             const zephyr_engine = await zephyr_engine_defer;
-            await rollbackPartialAssetMapClaimBatch(
-              zephyr_engine.application_uid,
-              partialClaims.map(({ claimId }) => claimId)
-            );
-          } catch (restoreError) {
-            handleGlobalError(restoreError);
+            zephyr_engine.build_failed();
+          } catch {
+            // Engine initialization failed before any reusable build state existed.
           }
+          handleGlobalError(error);
         }
-        handleGlobalError(error);
-      }
+      },
     },
 
     buildApp: {
       order: 'post',
       async handler(builder) {
-        if (!supportsBuildApp) {
-          return;
-        }
+        isApplicationBuild = true;
 
         const environments = Object.entries(builder.environments);
         if (isWatchMode) {
@@ -1064,7 +1294,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
                 partialClaims.map(({ claimId }) => claimId)
               );
             } catch (restoreError) {
-              handleGlobalError(restoreError);
+              logFn('error', ZephyrError.format(restoreError));
             }
           }
           handleGlobalError(error);
@@ -1072,6 +1302,8 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin {
       },
     },
   };
+
+  return [plugin, buildAppStart];
 }
 
 export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
@@ -1093,6 +1325,6 @@ export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
     }
   }
 
-  plugins.push(withZephyrCore(options));
+  plugins.push(...withZephyrCore(options));
   return plugins;
 }

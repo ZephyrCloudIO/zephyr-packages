@@ -17,6 +17,7 @@ interface GitHubEventPayload {
   sender?: {
     id?: number | string | null;
     login?: string | null;
+    type?: string | null;
   } | null;
   pusher?: {
     email?: string | null;
@@ -44,6 +45,7 @@ async function inferGitHubIdentity(
   const emails = getEmails([...eventEmails, noreplyEmail]);
   const providerSubject = getGitHubActorId(env, event);
   const username = getGitHubActor(env, event);
+  const providerActorType = getGitHubActorType(env, event);
 
   if (eventEmails.length > 0 || providerSubject) {
     return {
@@ -53,6 +55,7 @@ async function inferGitHubIdentity(
       issuer: getGitHubIssuer(env),
       providerSubject,
       username,
+      ...(providerActorType && { providerActorType }),
       source: eventEmails.length > 0 ? 'event' : 'noreply',
     };
   }
@@ -65,6 +68,7 @@ async function inferGitHubIdentity(
       issuer: getGitHubIssuer(env),
       providerSubject,
       username,
+      ...(providerActorType && { providerActorType }),
       source: 'noreply',
     };
   }
@@ -149,6 +153,30 @@ function getGitHubActorId(
   event: GitHubEventPayload | undefined
 ): string | undefined {
   return env['GITHUB_ACTOR_ID']?.trim() || stringifyId(event?.sender?.id);
+}
+
+function getGitHubActorType(
+  env: NodeJS.ProcessEnv,
+  event: GitHubEventPayload | undefined
+): CiTokenIdentity['providerActorType'] {
+  const senderType = event?.sender?.type?.trim().toLowerCase();
+  if (senderType !== 'bot' && senderType !== 'user') {
+    return undefined;
+  }
+
+  const envActorId = env['GITHUB_ACTOR_ID']?.trim();
+  const senderId = stringifyId(event?.sender?.id);
+  if (envActorId && senderId) {
+    return envActorId === senderId ? senderType : undefined;
+  }
+
+  const envActor = env['GITHUB_ACTOR']?.trim().toLowerCase();
+  const senderLogin = event?.sender?.login?.trim().toLowerCase();
+  if (envActor && senderLogin && envActor !== senderLogin) {
+    return undefined;
+  }
+
+  return senderType;
 }
 
 function getGitHubIssuer(env: NodeJS.ProcessEnv): string {

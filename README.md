@@ -43,7 +43,7 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 This is a [Turborepo](https://turborepo.com) monorepo. Libraries are built with
 [Rslib](https://lib.rsbuild.dev), tests run with [Rstest](https://rstest.rs), and
-repository linting and formatting use Oxlint and Oxfmt.
+repository checks use Oxlint, Oxfmt, and [Publint](https://publint.dev/).
 
 - `libs` - Contains all the plugins and utility packages.
 - `examples` - Contains examples to use and test the plugins.
@@ -73,13 +73,14 @@ For the opaque `tap-app` build-target contract, see
 - `pnpm test:examples` - Runs example unit tests and the production deployment E2E suite
 
 PR CI builds and deploys affected examples by default. Apply the
-`ci:force-example-builds` label to build and deploy every example with a build
-script and refresh the Zephyr preview links. Remove the label to return future
-PR updates to affected-only builds.
+`ci:force-example-builds` label to rerun required PR CI, build and deploy every
+example with a build script, and refresh the Zephyr preview links. Remove the
+label to return future PR updates to affected-only builds.
 
 ### Linting & Formatting
 
 - `pnpm lint` - Checks code for linting errors
+- `pnpm publint` - Checks built npm packages for packaging errors and warnings
 - `pnpm format:check` - Checks formatting with Oxfmt
 - `pnpm format` - Formats code with Oxfmt
 

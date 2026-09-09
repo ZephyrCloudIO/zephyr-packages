@@ -1,7 +1,7 @@
 import type { AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import isCI from 'is-ci';
+import { isCI } from 'ci-info';
 import { ZeErrors, ZephyrError } from '../errors';
 import {
   redactString,

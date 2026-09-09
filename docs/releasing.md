@@ -21,9 +21,9 @@ creates `vX.Y.Z` and the matching GitHub Release. The release event then starts
 `publish_packages.yml`, which builds and publishes all packages with the npm
 `latest` tag.
 
-Every push to `main` must pass the high-severity package audit before Release
-Please can update its PR or create a stable tag and GitHub Release. The publish
-workflow repeats the audit before npm publication.
+Normal PR CI builds every package under `libs` and runs Publint in strict mode.
+Each publish job repeats the Publint check after its build and before changing
+versions or publishing to npm.
 
 The retired `pnpm bump-patch`, `pnpm bump-minor`, and `pnpm bump-major` flow
 must not be recreated. Do not hand-create a stable tag or GitHub Release.
@@ -41,7 +41,9 @@ Every CI job skips App-triggered, same-repository release PR events authored by
 the Zephyr Workflow Automation App, targeting `main`, and using Release
 Please's generated branch prefix. GitHub records the workflow run with skipped
 jobs, but no runner starts: release PRs run no lint, formatting, typecheck,
-package test, or preview deployment jobs. Human review remains required.
+package test, or preview deployment jobs. Required preview jobs keep their
+normal check names so GitHub records the trusted skip instead of leaving those
+contexts pending. Human review remains required.
 
 The skip is intentionally job-level. Commit-message skip directives would also
 suppress the `push` workflow after merge and prevent Release Please from

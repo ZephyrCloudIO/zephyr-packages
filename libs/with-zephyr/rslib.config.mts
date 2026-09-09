@@ -9,10 +9,10 @@ export default defineConfig({
   },
   lib: [
     {
-      autoExternal: false,
       format: 'esm',
       syntax: 'es2022',
       output: {
+        autoExternal: false,
         distPath: {
           root: 'dist',
         },

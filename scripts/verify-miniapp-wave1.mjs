@@ -10,7 +10,7 @@ const workspace = readFileSync(workspacePath, 'utf8');
 // The upstream stable release contains module-federation/core#4894. Consumer
 // workspaces own the emitted-manifest regression and must not restore the
 // temporary local manifest patch.
-const MF_STABLE_VERSION = '2.8.0';
+const MF_STABLE_VERSION = '2.9.0';
 const MF_AFFECTED_CATALOG_PACKAGES = new Set([
   '@module-federation/enhanced',
   '@module-federation/rsbuild-plugin',
@@ -27,7 +27,7 @@ const MF_RELEASE_AGE_EXCLUSIONS = new Map([
   ['managers', MF_STABLE_VERSION],
   ['manifest', MF_STABLE_VERSION],
   ['metro', MF_STABLE_VERSION],
-  ['node', '2.7.47'],
+  ['node', '2.7.50'],
   ['rsbuild-plugin', MF_STABLE_VERSION],
   ['rspack', MF_STABLE_VERSION],
   ['runtime-core', MF_STABLE_VERSION],

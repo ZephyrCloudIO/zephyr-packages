@@ -241,6 +241,55 @@ describe('inferCiTokenIdentity', () => {
     });
   });
 
+  it('reports a GitHub bot when the event sender matches the workflow actor', async () => {
+    const eventPath = await writeGitHubEvent({
+      sender: {
+        id: 29139614,
+        login: 'renovate[bot]',
+        type: 'Bot',
+      },
+    });
+
+    const identity = await inferCiTokenIdentity({
+      GITHUB_ACTIONS: 'true',
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_ACTOR: 'renovate[bot]',
+      GITHUB_ACTOR_ID: '29139614',
+    });
+
+    expect(identity).toEqual({
+      provider: 'github',
+      email: '29139614+renovate[bot]@users.noreply.github.com',
+      emails: ['29139614+renovate[bot]@users.noreply.github.com'],
+      issuer: 'https://github.com',
+      providerSubject: '29139614',
+      username: 'renovate[bot]',
+      providerActorType: 'bot',
+      source: 'noreply',
+    });
+  });
+
+  it('ignores sender type when the sender does not match the workflow actor', async () => {
+    const eventPath = await writeGitHubEvent({
+      sender: {
+        id: 29139614,
+        login: 'renovate[bot]',
+        type: 'Bot',
+      },
+    });
+
+    const identity = await inferCiTokenIdentity({
+      GITHUB_ACTIONS: 'true',
+      GITHUB_EVENT_PATH: eventPath,
+      GITHUB_ACTOR: 'octocat',
+      GITHUB_ACTOR_ID: '12345',
+    });
+
+    expect(identity?.providerActorType).toBeUndefined();
+    expect(identity?.providerSubject).toBe('12345');
+    expect(identity?.username).toBe('octocat');
+  });
+
   it('keeps the GitHub actor login aligned with the stable actor ID on reruns', async () => {
     const eventPath = await writeGitHubEvent({});
 

@@ -1,6 +1,6 @@
 {
   "name": "parcel-reporter-zephyr",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "description": "Parcel reporter for Zephyr",
   "license": "Apache-2.0",
   "author": {
@@ -34,14 +34,34 @@
       }
     },
     "./package.json": "./package.json",
-    "./*": "./*"
+    "./dist/*.mjs": "./dist/*.mjs",
+    "./dist/*.js": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    },
+    "./dist/*": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    }
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",

@@ -1,6 +1,6 @@
 import { mkdir, open } from 'node:fs/promises';
 import path from 'node:path';
-import { lock, type LockOptions } from 'proper-lockfile';
+import { lock, type LockOptions } from '@bybrave/proper-lockfile2';
 import { ze_log } from '../logging/debug';
 import { ensurePrivateFilePermissions, ZE_LOCKS_PATH } from './storage-keys';
 import { storage } from './storage';
@@ -83,9 +83,8 @@ async function acquireStorageLock(
   // was alive.
   await mkdir(ZE_LOCKS_PATH, { recursive: true, mode: 0o700 });
   const lockPath = getStorageLockPath(name);
-  // `realpath: false` means proper-lockfile never opens this path; it is only a stable
-  // anchor for the sibling `.lock` directory holding transient ownership. Pre-create it
-  // privately so no reader can inherit a umask-widened mode.
+  // The target is a stable anchor for the sibling `.lock` directory holding transient
+  // ownership. Pre-create it privately so no reader can inherit a widened mode.
   await (await open(lockPath, 'a', 0o600)).close();
   ensurePrivateFilePermissions(lockPath);
 

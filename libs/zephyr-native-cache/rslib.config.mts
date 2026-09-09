@@ -8,7 +8,10 @@ export default defineConfig({
       format: 'cjs',
       syntax: 'es2020',
       bundle: false,
-      dts: false,
+      dts: {
+        autoExtension: true,
+        distPath: './lib/typescript',
+      },
       source: {
         entry: { index: entry },
       },
@@ -25,9 +28,14 @@ export default defineConfig({
       format: 'esm',
       syntax: 'es2020',
       bundle: false,
-      autoExtension: false,
       dts: {
+        autoExtension: true,
         distPath: './lib/typescript',
+      },
+      redirect: {
+        dts: {
+          extension: true,
+        },
       },
       source: {
         entry: { index: entry },

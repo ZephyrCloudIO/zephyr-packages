@@ -8,12 +8,17 @@ import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 import { withStorageLock } from './storage-lock';
 
-rs.mock('node-persist', () => ({
+const storageMocks = rs.hoisted(() => ({
   clear: rs.fn(),
   getItem: rs.fn(),
   removeItem: rs.fn(),
   setItem: rs.fn(),
+  setPrivateItem: rs.fn(),
 }));
+
+// Existing assertions import this virtual module to access the same spies used by the
+// local storage mock. Production code no longer resolves this package.
+rs.mock('node-persist', () => storageMocks);
 
 rs.mock('jose', () => ({
   decodeJwt: rs.fn(),
@@ -21,7 +26,9 @@ rs.mock('jose', () => ({
 
 rs.mock('./storage', () => ({
   storage: Promise.resolve(),
-  setPrivateItem: rs.fn(),
+  getItem: storageMocks.getItem,
+  removeItem: storageMocks.removeItem,
+  setPrivateItem: storageMocks.setPrivateItem,
 }));
 
 rs.mock('./ci-token-identity', () => ({
@@ -51,6 +58,13 @@ const githubIdentity = {
   providerSubject: '12345',
   username: 'octocat',
   source: 'noreply' as const,
+};
+
+const githubBotIdentity = {
+  ...githubIdentity,
+  providerSubject: '29139614',
+  username: 'renovate[bot]',
+  providerActorType: 'bot' as const,
 };
 
 describe('getToken', () => {
@@ -88,6 +102,19 @@ describe('getToken', () => {
     await expect(getToken()).rejects.toMatchObject({
       code: ZephyrError.toZeCode(ZeErrors.ERR_CI_TOKEN_AUTH),
       message: expect.stringContaining('no supported CI identity was detected'),
+    });
+  });
+
+  it('gives bot-specific authorization guidance when exchange is rejected', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(githubBotIdentity);
+    mockMakeRequest.mockResolvedValue([
+      false,
+      new Error('CI token creator is not an active organization member'),
+    ]);
+
+    await expect(getToken()).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_CI_TOKEN_AUTH),
+      message: expect.stringContaining('This bot is authorized by the CI token creator'),
     });
   });
 

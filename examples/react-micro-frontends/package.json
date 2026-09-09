@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "react": "catalog:react19",
-    "react-dom": "catalog:react19",
-    "tslib": "catalog:"
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@babel/core": "catalog:babel",
@@ -21,18 +20,14 @@
     "@module-federation/enhanced": "catalog:module-federation",
     "@rspack/cli": "catalog:rspack",
     "@rspack/core": "catalog:rspack",
-    "@svgr/webpack": "catalog:webpack5",
-    "@swc-node/register": "catalog:swc",
     "@swc/cli": "catalog:swc",
     "@swc/core": "catalog:swc",
     "@testing-library/react": "catalog:react",
     "@types/node": "catalog:typescript",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "react-refresh": "catalog:react18",
-    "tsutils": "catalog:",
+    "react-refresh": "catalog:react19",
     "typescript": "catalog:typescript",
-    "url-loader": "catalog:",
     "zephyr-rspack-plugin": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   }

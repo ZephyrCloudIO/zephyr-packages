@@ -1,6 +1,6 @@
 {
   "name": "zephyr-xpack-internal",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "description": "Xpack internals for Zephyr",
   "license": "Apache-2.0",
   "author": {
@@ -34,28 +34,46 @@
       }
     },
     "./package.json": "./package.json",
-    "./*": "./*"
+    "./dist/*.mjs": "./dist/*.mjs",
+    "./dist/*.js": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    },
+    "./dist/*": {
+      "import": {
+        "types": "./dist/*.d.mts",
+        "default": "./dist/*.mjs"
+      },
+      "require": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      }
+    }
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
     "typecheck": "tsc -b",
     "test": "rstest run"
   },
   "dependencies": {
-    "@module-federation/automatic-vendor-federation": "catalog:module-federation",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@types/node-persist": "catalog:typescript",
     "typescript": "catalog:typescript"
   }
 }

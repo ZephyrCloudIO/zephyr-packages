@@ -13,6 +13,7 @@ import {
   commitPartialAssetMapClaimBatch,
   createManifestContent,
   handleGlobalError,
+  logFn,
   normalizeBasePath,
   rewriteEnvReadsToVirtualModule,
   rollbackPartialAssetMapClaimBatch,
@@ -221,14 +222,16 @@ interface DirectBuildOutput {
   ssr: boolean;
 }
 
-function hasLateOutputWriter(value: unknown): boolean {
-  if (Array.isArray(value)) return value.some(hasLateOutputWriter);
+function hasLateOutputHook(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasLateOutputHook);
   if (!value || typeof value !== 'object') return false;
   if ('then' in value) return true;
-  const hook = (value as { writeBundle?: unknown }).writeBundle;
-  return Boolean(
-    hook && typeof hook === 'object' && 'order' in hook && hook.order === 'post'
-  );
+  return ['outputOptions', 'writeBundle'].some((name) => {
+    const hook = (value as Record<string, unknown>)[name];
+    return Boolean(
+      hook && typeof hook === 'object' && 'order' in hook && hook.order === 'post'
+    );
+  });
 }
 
 function commonDirectory(paths: readonly string[]): string | undefined {
@@ -394,6 +397,9 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
   let buildManifest: string | undefined;
   let hasLaterWriteHook = false;
   let hasLaterCloseHook = false;
+  let hasLaterOutputOptionsHook = false;
+  const instantiatedEnvironments = new Set<string>();
+  let environmentBuildStarted = false;
 
   const buildAppStart: Plugin = {
     name: 'with-zephyr:build-app-start',
@@ -515,10 +521,14 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
     } catch (error) {
       zephyrEngine.build_failed();
       if (partialClaims.length > 0) {
-        await rollbackPartialAssetMapClaimBatch(
-          zephyrEngine.application_uid,
-          partialClaims.map(({ claimId }) => claimId)
-        );
+        try {
+          await rollbackPartialAssetMapClaimBatch(
+            zephyrEngine.application_uid,
+            partialClaims.map(({ claimId }) => claimId)
+          );
+        } catch (rollbackError) {
+          logFn('error', ZephyrError.format(rollbackError));
+        }
       }
       throw error;
     }
@@ -544,6 +554,19 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
       // runtime values natively only after Vite invokes the plugin.
       const vite = await import('vite');
       const viteMajor = Number.parseInt(vite.version.split('.')[0] ?? '0', 10);
+      // Vite 7 can instantiate an environment between configResolved calls.
+      if (environmentBuildStarted) {
+        instantiatedEnvironments.clear();
+        environmentBuildStarted = false;
+      }
+      const createEnvironment = config.build?.createEnvironment;
+      if (createEnvironment) {
+        config.build.createEnvironment = function (name, environmentConfig) {
+          const environment = createEnvironment.call(this, name, environmentConfig);
+          instantiatedEnvironments.add(name);
+          return environment;
+        };
+      }
       isApplicationBuild = false;
       directOutputs = [];
       directBuildFailed = false;
@@ -571,6 +594,10 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
       hasLaterWriteHook = Boolean(writePlugins?.length && writePlugins.at(-1) !== plugin);
       const closePlugins = config.getSortedPlugins?.('closeBundle');
       hasLaterCloseHook = Boolean(closePlugins?.length && closePlugins.at(-1) !== plugin);
+      const outputOptionPlugins = config.getSortedPlugins?.('outputOptions');
+      hasLaterOutputOptionsHook = Boolean(
+        outputOptionPlugins?.length && outputOptionPlugins.at(-1) !== plugin
+      );
       const root = config.root;
       baseHref = normalizeBasePath(config.base);
       // Normalize the entrypoint early so uploads use the same path in serve/build.
@@ -838,18 +865,26 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
       }
     },
 
-    outputOptions(output) {
-      if (
-        !isApplicationBuild &&
-        !isWatchMode &&
-        hasLateOutputWriter((output as { plugins?: unknown }).plugins)
-      ) {
-        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-          message:
-            'Zephyr cannot verify post-ordered or asynchronous output-plugin writers. Use normal writeBundle ordering in synchronous output plugins.',
-        });
-      }
-      return null;
+    outputOptions: {
+      order: 'post',
+      handler(output) {
+        if (
+          !isApplicationBuild &&
+          !isWatchMode &&
+          (hasLaterOutputOptionsHook ||
+            hasLateOutputHook((output as { plugins?: unknown }).plugins))
+        ) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message:
+              'Zephyr cannot verify post-ordered or asynchronous output-plugin writers. Use normal outputOptions and writeBundle ordering in synchronous output plugins.',
+          });
+        }
+        return null;
+      },
+    },
+
+    buildStart() {
+      environmentBuildStarted = true;
     },
 
     buildEnd(error) {
@@ -918,6 +953,12 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
             )?.[0] ??
             (environmentNames.length === 1 ? environmentNames[0] : undefined);
           const coordinateWithBuildApp = isApplicationBuild && !isWatchMode;
+          if (!coordinateWithBuildApp && instantiatedEnvironments.size > 1) {
+            throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+              message:
+                'Use builder.buildApp() to publish multiple Vite environments atomically; individual builder.build(environment) calls cannot finalize the application.',
+            });
+          }
           if (
             !coordinateWithBuildApp &&
             !isWatchMode &&
@@ -1253,7 +1294,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
                 partialClaims.map(({ claimId }) => claimId)
               );
             } catch (restoreError) {
-              handleGlobalError(restoreError);
+              logFn('error', ZephyrError.format(restoreError));
             }
           }
           handleGlobalError(error);

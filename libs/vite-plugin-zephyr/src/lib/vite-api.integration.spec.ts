@@ -481,3 +481,40 @@ test('real buildApp does not publish when the second environment fails', async (
   expect(mocks.engine.build_finished).not.toHaveBeenCalled();
   expect(mocks.events).toEqual([]);
 });
+
+test('manual multi-environment builds require buildApp before publication', async () => {
+  const builder = await createBuilder(applicationConfig());
+  for (const environment of Object.values(builder.environments)) {
+    await expect(builder.build(environment)).rejects.toThrow(
+      /buildApp|multi.environment/
+    );
+  }
+  expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  expect(mocks.engine.build_finished).not.toHaveBeenCalled();
+});
+
+test('outputOptions cannot add a failing writer after publication validation', async () => {
+  const lateWriter = {
+    name: 'fixture-injected-late-writer',
+    writeBundle: {
+      order: 'post' as const,
+      handler() {
+        throw new Error('late writer failed');
+      },
+    },
+  };
+  await expect(
+    build(
+      config([
+        {
+          name: 'fixture-late-output-options',
+          outputOptions(options) {
+            return { ...options, plugins: [lateWriter] };
+          },
+        },
+      ])
+    )
+  ).rejects.toThrow();
+  expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  expect(mocks.engine.build_finished).not.toHaveBeenCalled();
+});

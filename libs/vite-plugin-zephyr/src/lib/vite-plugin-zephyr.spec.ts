@@ -17,6 +17,7 @@ const mocks = rs.hoisted(() => ({
   zeBuildDashData: rs.fn(async () => ({})),
   deferCreate: rs.fn(),
   zeLogInit: rs.fn(),
+  logFn: rs.fn(),
   engine: {
     application_uid: 'org.project.vite',
     buildProperties: { output: 'dist' },
@@ -59,6 +60,7 @@ rs.mock('zephyr-agent', () => {
     rollbackPartialAssetMapClaimBatch: mocks.rollbackPartialAssetMapClaimBatch,
     savePartialAssetMap: mocks.savePartialAssetMap,
     zeBuildDashData: mocks.zeBuildDashData,
+    logFn: mocks.logFn,
     ze_log: {
       ...(actual.ze_log as Record<string, unknown>),
       init: mocks.zeLogInit,
@@ -248,6 +250,7 @@ describe('vite-plugin-zephyr', () => {
   });
 
   afterEach(() => {
+    rs.restoreAllMocks();
     if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
     else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
     if (originalBuildInvocationId === undefined)
@@ -320,9 +323,11 @@ describe('vite-plugin-zephyr', () => {
 
   test('rejects late or unresolved output writers while allowing normal hooks', () => {
     const plugin = withZephyr()[0] as Plugin;
-    const outputOptions = plugin.outputOptions as (options: {
-      plugins: unknown;
-    }) => unknown;
+    const outputOptions = (
+      plugin.outputOptions as {
+        handler: (options: { plugins: unknown }) => unknown;
+      }
+    ).handler;
     expect(() =>
       outputOptions({
         plugins: [{ writeBundle: { order: 'post', handler: rs.fn() } }],
@@ -331,8 +336,74 @@ describe('vite-plugin-zephyr', () => {
     expect(() => outputOptions({ plugins: [Promise.resolve({})] })).toThrow(
       'output-plugin writers'
     );
+    expect(() =>
+      outputOptions({
+        plugins: [{ outputOptions: { order: 'post', handler: rs.fn() } }],
+      })
+    ).toThrow('output-plugin writers');
     expect(outputOptions({ plugins: [{ writeBundle: rs.fn() }] })).toBeNull();
     expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('rejects option hooks that can append writers after validation', async () => {
+    const plugin = withZephyr()[0] as Plugin;
+    const config = resolvedConfig({});
+    config.getSortedPlugins = rs.fn((hook) =>
+      hook === 'outputOptions'
+        ? [
+            plugin,
+            { name: 'late-options', outputOptions: { order: 'post', handler: rs.fn() } },
+          ]
+        : []
+    ) as ResolvedConfig['getSortedPlugins'];
+    await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
+    const outputOptions = plugin.outputOptions as {
+      handler: (options: object) => unknown;
+    };
+    expect(() => outputOptions.handler({})).toThrow('output-plugin writers');
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('tracks interleaved environment factories and resets for a later build', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = withZephyr()[0] as Plugin;
+    const environments = {
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+      server: { consumer: 'server', build: { outDir: 'dist/server' } },
+    };
+    const receivers: unknown[] = [];
+    const factory = rs.fn(function (this: unknown, name: string) {
+      receivers.push(this);
+      return { name } as never;
+    });
+    const configure = async (name: string) => {
+      const config = resolvedConfig(environments);
+      config.build.createEnvironment = factory;
+      await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
+      expect(config.build.createEnvironment(name, config)).toEqual({ name });
+      expect(factory).toHaveBeenLastCalledWith(name, config);
+      expect(receivers.at(-1)).toBe(config.build);
+    };
+    await configure('client');
+    await configure('server');
+    (plugin.buildStart as () => void)();
+    await expect(
+      writeBundleHandler(plugin).call(
+        { environment: { name: 'client' } },
+        { dir: '/repo/dist/client' },
+        {}
+      )
+    ).rejects.toThrow('builder.buildApp()');
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+
+    await configure('client');
+    await writeBundleHandler(plugin).call(
+      { environment: { name: 'client' } },
+      { dir: '/repo/dist/client' },
+      {}
+    );
+    await closeBundleHandler(plugin)();
+    expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(1);
   });
 
   test('withZephyr injects every mfConfig runtime plugin and delegates to MF', () => {
@@ -1220,6 +1291,62 @@ describe('vite-plugin-zephyr', () => {
     );
     expect(mocks.commitPartialAssetMapClaimBatch).not.toHaveBeenCalled();
   });
+
+  test.each([
+    ['direct', 'true'],
+    ['direct', undefined],
+    ['coordinated', 'true'],
+    ['coordinated', undefined],
+  ] as const)(
+    'preserves the %s publication error when rollback fails, ZE_FAIL_BUILD=%s',
+    async (mode, failBuild) => {
+      if (failBuild) process.env['ZE_FAIL_BUILD'] = failBuild;
+      const errorLog = rs.spyOn(console, 'error').mockImplementation(() => {});
+      const publicationError = new Error('original publication failure');
+      const rollbackError = new Error('secondary rollback failure');
+      mocks.engine.upload_assets.mockRejectedValue(publicationError);
+      mocks.rollbackPartialAssetMapClaimBatch.mockRejectedValueOnce(rollbackError);
+      mocks.claimPartialAssetMapBatch.mockResolvedValue({
+        claims: [claimed({ [environmentOutput('client')]: asset('app.js') })],
+      });
+      const environments = {
+        client: { consumer: 'client', build: { outDir: 'dist' } },
+      };
+      const plugin =
+        mode === 'direct'
+          ? (withZephyr({ partialBuild: { invocationId: 'external' } })[0] as Plugin)
+          : await configuredPlugin(environments);
+      if (mode === 'direct') {
+        await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(
+          resolvedConfig(environments)
+        );
+        await writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist' },
+          {}
+        );
+      }
+      const publication =
+        mode === 'direct'
+          ? closeBundleHandler(plugin)()
+          : buildAppHandler(plugin)({
+              environments: { client: { isBuilt: true, config: { consumer: 'client' } } },
+              build: rs.fn(),
+            });
+      if (failBuild) await expect(publication).rejects.toBe(publicationError);
+      else {
+        await expect(publication).resolves.toBeUndefined();
+        expect(errorLog).toHaveBeenCalledWith(
+          expect.stringContaining(publicationError.message)
+        );
+      }
+      expect(mocks.logFn).toHaveBeenCalledWith(
+        'error',
+        expect.stringContaining(rollbackError.message)
+      );
+      expect(mocks.commitPartialAssetMapClaimBatch).not.toHaveBeenCalled();
+    }
+  );
 });
 
 describe('withZephyrPartial', () => {

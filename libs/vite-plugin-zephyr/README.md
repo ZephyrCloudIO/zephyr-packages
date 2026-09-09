@@ -65,6 +65,11 @@ partial-build contributions are merged atomically. Programmatic `vite.build()` c
 including Slidev builds, use the direct single-environment upload path, as do Vite 5
 and single-environment watch builds.
 
+When `createBuilder()` instantiates multiple environments, publish through
+`builder.buildApp()`. Calling `builder.build(environment)` individually is rejected to
+prevent separate, incomplete deployments. This check tracks actual environment
+creation, so ordinary legacy SSR builds can still select one server environment.
+
 Non-watch programmatic builds collect every output format and publish one combined
 snapshot when the bundler closes, after all expected writes succeed. External partial
 output is claimed and committed once for that snapshot. Library `formats` and explicit
@@ -76,11 +81,14 @@ emitted entry chunk, including renamed or hashed filenames. Explicit `snapshotTy
 `entrypoint` options take precedence. Multiple server entry chunks require an explicit
 emitted `entrypoint`. TAP builds do not infer SSR unless explicitly requested.
 
-For direct non-watch publication, Zephyr must observe the final `writeBundle` and
-`closeBundle` hooks. Other writers and closers must use normal hook ordering; later
-post-ordered hooks and unresolved asynchronous output plugins are rejected because they
-could fail after Zephyr records success. Application-builder and watch publication keep
-their own lifecycles.
+For direct non-watch publication, Zephyr must observe the final `outputOptions`,
+`writeBundle` and `closeBundle` hooks. Output plugins are checked after normal option
+hooks have returned their changes. Later post-ordered hooks and unresolved asynchronous
+output plugins are rejected because they could change the writers or fail after Zephyr
+records success. Application-builder and watch publication keep their own lifecycles.
+
+If publication and partial-claim rollback both fail, the rollback error is logged
+separately and the original publication error keeps the configured throw-or-log behavior.
 
 Vite 6 does not dispatch plugin `buildApp` hooks. Its non-watch publication supports only
 a single environment without an explicit `builder` configuration; other configurations

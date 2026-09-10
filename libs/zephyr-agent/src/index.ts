@@ -33,7 +33,7 @@ export {
 } from './lib/upload-output-to-zephyr';
 
 // errors
-export { ZeErrors, ZephyrError } from './lib/errors';
+export { ZeErrors, ZephyrError, type ZephyrErrorOperation } from './lib/errors';
 export { handleGlobalError } from './lib/errors';
 
 // Project configuration

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { ZeApplicationConfig } from '../../lib/node-persist/upload-provider-options';
-import { ApplicationContext, ZephyrEngine } from '../index';
+import { ZeErrors, ZephyrError } from '../../lib/errors';
+import { ApplicationContext, ZephyrEngine } from '../../index';
 
 const mocks = rs.hoisted(() => ({
   getBuildId: rs.fn(),
@@ -111,7 +112,12 @@ describe('ZephyrEngine build lifecycle', () => {
     mocks.getPackageJson.mockResolvedValue({ name: 'package-app', version: '1.0.0' });
     mocks.getGitInfo.mockResolvedValue({
       app: { org: config.org, project: config.project },
-      git: { name: 'Developer', email: 'developer@example.com', branch: 'main' },
+      git: {
+        name: 'Developer',
+        email: 'developer@example.com',
+        branch: 'no-git-user-id-20260908',
+        commit: 'fallback-deployment-1788912000000',
+      },
     });
     mocks.getApplicationConfiguration.mockResolvedValue(appConfig());
     mocks.getBuildId.mockResolvedValue('configured-build-id');
@@ -137,6 +143,91 @@ describe('ZephyrEngine build lifecycle', () => {
       'configured-app.configured-project.configured-org'
     );
     value.build_failed();
+  });
+
+  it('preserves each stable reason through the public engine entry', async () => {
+    const failures = [
+      new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+        message: 'Stable Git metadata is required',
+        operation: 'resolve-git-metadata',
+      }),
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'Browser authentication timed out',
+        operation: 'get-user-info',
+      }),
+      new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+        message: 'Target access denied',
+        operation: 'get-user-info',
+      }),
+      new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+        method: 'GET',
+        url: 'https://api.zephyr-cloud.io/v2/user/me',
+        status: 503,
+        content: 'Service unavailable',
+        operation: 'get-user-info',
+      }),
+    ];
+    mocks.getZephyrConfig.mockReturnValue({});
+    mocks.getPackageJson.mockResolvedValue({ name: 'package-app', version: '1.0.0' });
+
+    for (const failure of failures) {
+      mocks.getGitInfo.mockRejectedValueOnce(failure);
+      await expect(
+        ZephyrEngine.create({ builder: 'vite', context: '/workspace/no-git-app' })
+      ).rejects.toBe(failure);
+      expect(failure.reason).toBe(failure.code);
+    }
+  });
+
+  it('preserves configuration and Build-ID reasons through the public engine entry', async () => {
+    const forbidden = new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+      message: 'Target access denied',
+    });
+    const configFailure = new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {
+      application_uid: 'app.project.org',
+      operation: 'get-application-config',
+      cause: forbidden,
+    });
+    const unavailable = new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+      method: 'GET',
+      url: 'https://build-id.example/',
+      status: 503,
+      content: 'Service unavailable',
+    });
+    const buildIdFailure = new ZephyrError(ZeErrors.ERR_GET_BUILD_ID, {
+      application_uid: 'app.project.org',
+      username: 'developer',
+      operation: 'create-build-id',
+      cause: unavailable,
+    });
+    mocks.getZephyrConfig.mockReturnValue({});
+    mocks.getPackageJson.mockResolvedValue({ name: 'app', version: '1.0.0' });
+    mocks.getGitInfo.mockResolvedValue({
+      app: { org: 'org', project: 'project' },
+      git: { name: 'Developer', email: 'developer@example.com', branch: 'main' },
+    });
+
+    mocks.getApplicationConfiguration.mockRejectedValueOnce(configFailure);
+    mocks.getBuildId.mockResolvedValueOnce('unused-build-id');
+    await expect(
+      ZephyrEngine.create({ builder: 'vite', context: '/workspace/app' })
+    ).rejects.toBe(configFailure);
+    expect(configFailure).toMatchObject({
+      code: 'ZE20014',
+      operation: 'get-application-config',
+      reason: 'ZE10022',
+    });
+
+    mocks.getApplicationConfiguration.mockResolvedValueOnce(appConfig());
+    mocks.getBuildId.mockRejectedValueOnce(buildIdFailure);
+    await expect(
+      ZephyrEngine.create({ builder: 'vite', context: '/workspace/app' })
+    ).rejects.toBe(buildIdFailure);
+    expect(buildIdFailure).toMatchObject({
+      code: 'ZE10019',
+      operation: 'create-build-id',
+      reason: 'ZE40035',
+    });
   });
 
   it('reports active ownership until the generation is rolled back', () => {

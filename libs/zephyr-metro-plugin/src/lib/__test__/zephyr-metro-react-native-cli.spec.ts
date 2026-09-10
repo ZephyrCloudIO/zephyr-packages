@@ -90,6 +90,23 @@ describe('zephyrMetroReactNativeCli', () => {
     });
   });
 
+  for (const dev of [true, false]) {
+    it(`passes dev=${dev} to the wrapper without synthesizing mode`, async () => {
+      const command = zephyrMetroReactNativeCli().commands[1]!;
+      const config = {
+        root: '/app',
+        platforms: {},
+        reactNativePath: '/app/node_modules/react-native',
+      };
+      const args = { dev, platform: 'android' };
+
+      await command.func([], config, args);
+
+      expect(wrappedCommand).toHaveBeenCalledWith([args], config, args);
+      expect(args).not.toHaveProperty('mode');
+    });
+  }
+
   it('prints success only after publication completes', async () => {
     let completePublication!: () => void;
     wrappedCommand.mockImplementation(

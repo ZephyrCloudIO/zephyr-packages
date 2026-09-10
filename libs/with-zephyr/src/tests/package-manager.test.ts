@@ -8,8 +8,9 @@ import {
   buildInstallCommand,
   detectPackageManager,
   getResolvedPackageVersion,
-  isPackageRequirementSatisfied,
   isPackageInstalled,
+  isPackageRequirementSatisfied,
+  isResolvedPackageRequirementSatisfied,
   isSafelyConstrainedVersion,
 } from '../package-manager.js';
 
@@ -55,6 +56,11 @@ describe('Package Manager Utils', () => {
       expect(detectPackageManager(tempDir)).toBe('bun');
     });
 
+    it('should detect bun from bun.lock', () => {
+      fs.writeFileSync('bun.lock', 'lockfileVersion = 1');
+      expect(detectPackageManager(tempDir)).toBe('bun');
+    });
+
     it('should detect npm from package-lock.json', () => {
       fs.writeFileSync('package-lock.json', '{"lockfileVersion": 2}');
       expect(detectPackageManager(tempDir)).toBe('npm');
@@ -70,6 +76,13 @@ describe('Package Manager Utils', () => {
       fs.writeFileSync('package-lock.json', '{"lockfileVersion": 2}');
 
       expect(detectPackageManager(tempDir)).toBe('pnpm');
+    });
+
+    it('should detect a nested project manager without the invoking user agent', () => {
+      process.env.npm_config_user_agent = 'pnpm/11.0.0';
+      fs.writeFileSync('yarn.lock', '# Yarn lockfile');
+
+      expect(detectPackageManager(tempDir, { ignoreUserAgent: true })).toBe('yarn');
     });
 
     it('should prioritize yarn over npm when both exist', () => {
@@ -353,12 +366,20 @@ describe('Package Manager Utils', () => {
       expect(isSafelyConstrainedVersion('>=2.9.0', '2.9.0', '3.0.0')).toBe(false);
       expect(isSafelyConstrainedVersion('>=2.9.0 <3.0.0', '2.9.0', '3.0.0')).toBe(true);
       expect(isSafelyConstrainedVersion('^3.0.0', '2.9.0', '3.0.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('^0.82.1', '0.82.1', '0.83.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('^0.83.0', '0.82.1', '0.83.0')).toBe(false);
     });
 
     it('should require the declared adapter-capable plugin range', () => {
       fs.writeFileSync(
         'package.json',
         JSON.stringify({ devDependencies: { 'zephyr-metro-plugin': '^1.3.0' } })
+      );
+      const packageDirectory = path.join(tempDir, 'node_modules', 'zephyr-metro-plugin');
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: 'zephyr-metro-plugin', version: '1.4.2' })
       );
 
       expect(isPackageRequirementSatisfied('zephyr-metro-plugin', tempDir, '1.4.0')).toBe(
@@ -393,6 +414,35 @@ describe('Package Manager Utils', () => {
 
       expect(getResolvedPackageVersion('react-native', tempDir)).toBeUndefined();
       expect(getResolvedPackageVersion('metro', tempDir)).toBeUndefined();
+    });
+
+    it('should detect requirements resolved from a workspace root', () => {
+      fs.writeFileSync('package.json', '{}');
+      const projectDirectory = path.join(tempDir, 'apps', 'native');
+      fs.mkdirSync(projectDirectory, { recursive: true });
+      fs.writeFileSync(path.join(projectDirectory, 'package.json'), '{}');
+      const packageDirectory = path.join(tempDir, 'node_modules', 'zephyr-metro-plugin');
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: 'zephyr-metro-plugin', version: '1.4.2' })
+      );
+
+      expect(
+        isResolvedPackageRequirementSatisfied(
+          'zephyr-metro-plugin',
+          projectDirectory,
+          '1.4.0'
+        )
+      ).toBe(true);
+      expect(
+        isResolvedPackageRequirementSatisfied(
+          '@module-federation/metro',
+          projectDirectory,
+          '2.9.0',
+          '3.0.0'
+        )
+      ).toBe(false);
     });
   });
 });

@@ -4,6 +4,7 @@ import { ZephyrError, ZeErrors } from 'zephyr-agent';
 import { zephyrCommandWrapper } from './zephyr-metro-command-wrapper';
 
 interface ReactNativeCliCommandOptions {
+  dev?: boolean;
   mode?: string;
   platform: string;
   maxWorkers?: number;
@@ -83,11 +84,7 @@ export function zephyrMetroReactNativeCli(
           }
         );
 
-        await bundleWithZephyr(
-          [{ mode: args.mode ?? 'production', ...args } as any],
-          config as any,
-          args as any
-        );
+        await bundleWithZephyr([args as any], config as any, args as any);
         console.info('Bundle artifacts uploaded to Zephyr.');
         console.info('Success.');
       },

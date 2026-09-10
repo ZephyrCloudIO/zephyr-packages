@@ -1,6 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { rewriteWithAstGrep, searchWithAstGrep } from './engine/ast-grep.js';
+import {
+  hasExportedConfigCall,
+  rewriteWithAstGrep,
+  searchWithAstGrep,
+} from './engine/ast-grep.js';
 import type { PackageRequirement } from './nextjs-vinext.js';
 import {
   getDeclaredPackageVersion,
@@ -41,6 +45,13 @@ const METRO_CONFIG_FILES = [
 ];
 const MODULE_FEDERATION_METRO_VERSION = '^2.9.0';
 const ZEPHYR_METRO_PLUGIN_VERSION = '^1.4.0';
+const METRO_PEER_PACKAGES = [
+  'metro',
+  'metro-config',
+  'metro-file-map',
+  'metro-resolver',
+  'metro-source-map',
+];
 
 type ConfigUpdateResult = 'updated' | 'already-configured' | 'unsupported';
 
@@ -163,18 +174,23 @@ function findImportedHelperName(content: string, importName: string): string | u
   return undefined;
 }
 
-function hasHelperCall(filePath: string, content: string, importName: string): boolean {
+function hasExportedHelperCall(
+  filePath: string,
+  content: string,
+  importName: string,
+  propertyName: 'commands' | 'plugins'
+): boolean {
   const localName = findImportedHelperName(content, importName);
   return [importName, localName]
     .filter((name): name is string => Boolean(name))
     .some((name) => {
-      if (name.startsWith('$')) {
-        const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return new RegExp(`(?:^|[^$\\w])${escapedName}\\s*\\(`, 'm').test(content);
-      }
-      return (
-        searchWithAstGrep({ filePath, pattern: `${name}($$$ARGS)` }).status === 'match'
-      );
+      if (name.startsWith('$')) return false;
+      return hasExportedConfigCall({
+        filePath,
+        pattern: `${name}($$$ARGS)`,
+        propertyName,
+        allowDirectExport: propertyName === 'commands',
+      });
     });
 }
 
@@ -198,7 +214,7 @@ function updateCommonJsConfig(
   dryRun: boolean
 ): ConfigUpdateResult {
   const content = fs.readFileSync(filePath, 'utf8');
-  if (hasHelperCall(filePath, content, importName)) {
+  if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
     return 'already-configured';
   }
   const localName = findImportedHelperName(content, importName) ?? importName;
@@ -238,7 +254,7 @@ function updateEsmConfig(
   dryRun: boolean
 ): ConfigUpdateResult {
   const content = fs.readFileSync(filePath, 'utf8');
-  if (hasHelperCall(filePath, content, importName)) {
+  if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
     return 'already-configured';
   }
   const localName = findImportedHelperName(content, importName) ?? importName;
@@ -345,8 +361,16 @@ export function bootstrapMetroCommands(
       allowMissing: true,
       maximumVersionExclusive: '3.0.0',
     }),
+    getVersionProblem(directory, '@babel/types', '7.25.0', {
+      maximumVersionExclusive: '8.0.0',
+    }),
+    getVersionProblem(directory, 'react', '19.0.0'),
     getVersionProblem(directory, 'react-native', '0.79.0'),
-    getVersionProblem(directory, 'metro', '0.82.0'),
+    ...METRO_PEER_PACKAGES.map((packageName) =>
+      getVersionProblem(directory, packageName, '0.82.1', {
+        maximumVersionExclusive: '0.83.0',
+      })
+    ),
   ].filter((problem): problem is string => Boolean(problem));
   if (versionProblems.length > 0) {
     result.integration = 'ambiguous';

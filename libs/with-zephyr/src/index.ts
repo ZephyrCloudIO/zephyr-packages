@@ -31,6 +31,7 @@ import {
   installPackages as installPackagesDirect,
   isPackageInstalled,
   isPackageRequirementSatisfied,
+  isResolvedPackageRequirementSatisfied,
 } from './package-manager.js';
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
 import { bootstrapMetroCommands } from './metro-bootstrap.js';
@@ -566,6 +567,70 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       const installSuccess = installDependencies(directory, packageManager);
       if (installSuccess) {
         console.log(chalk.green('✓ Installed dependencies from package.json'));
+
+        const nestedProjects = new Map<string, PackageRequirement[]>();
+        for (const packageRequirement of stagedPackages) {
+          const projectDirectory = path.resolve(
+            packageRequirement.projectDirectory ?? directory
+          );
+          if (projectDirectory === path.resolve(directory)) continue;
+          nestedProjects.set(projectDirectory, [
+            ...(nestedProjects.get(projectDirectory) ?? []),
+            packageRequirement,
+          ]);
+        }
+        for (const [projectDirectory, requirements] of nestedProjects) {
+          const isUnresolved = (packageRequirement: PackageRequirement) => {
+            const minimumVersion =
+              packageRequirement.version?.match(/^\^(\d+\.\d+\.\d+)$/)?.[1];
+            const maximumVersionExclusive =
+              packageRequirement.name === '@module-federation/metro'
+                ? '3.0.0'
+                : undefined;
+            return !isResolvedPackageRequirementSatisfied(
+              packageRequirement.name,
+              projectDirectory,
+              minimumVersion,
+              maximumVersionExclusive
+            );
+          };
+          const unresolved = requirements.filter(isUnresolved);
+          if (unresolved.length === 0) continue;
+
+          const nestedPackageManager = detectPackageManager(projectDirectory, {
+            ignoreUserAgent: true,
+          });
+          const nestedInstallSuccess = installDependencies(
+            projectDirectory,
+            nestedPackageManager
+          );
+          const stillUnresolved = nestedInstallSuccess
+            ? unresolved.filter(isUnresolved)
+            : unresolved;
+          if (nestedInstallSuccess && stillUnresolved.length === 0) {
+            console.log(
+              chalk.green(
+                `✓ Installed dependencies in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}`
+              )
+            );
+          } else if (!nestedInstallSuccess) {
+            console.log(
+              chalk.red(
+                `✗ Failed to install dependencies in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}`
+              )
+            );
+            errors += stillUnresolved.length;
+            dependencyInstallFailed = true;
+          } else {
+            console.log(
+              chalk.red(
+                `✗ Installed dependencies in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}, but ${stillUnresolved.map(({ name }) => name).join(', ')} still cannot be resolved at compatible versions`
+              )
+            );
+            errors += stillUnresolved.length;
+            dependencyInstallFailed = true;
+          }
+        }
       } else {
         console.log(chalk.red('✗ Failed to install dependencies from package.json'));
         errors += stagedPackages.length;

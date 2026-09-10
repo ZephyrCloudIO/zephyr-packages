@@ -275,7 +275,10 @@ The codemod recognizes and handles various configuration patterns:
 - Each Metro project's own `package.json` receives `zephyr-metro-plugin@^1.4.0`
   and `@module-federation/metro@^2.9.0`; a workspace install can still run once
   at the invocation root
-- Command registration requires verifiable React Native 0.79+ and Metro 0.82+
+- Command registration follows `@module-federation/metro@2.9.0`'s peer contract:
+  React 19+, React Native 0.79+, `@babel/types` at `>=7.25.0 <8.0.0`, plus
+  `metro`, `metro-config`, `metro-file-map`, `metro-resolver`, and
+  `metro-source-map` all at `>=0.82.1 <0.83.0`
 
 The Metro `withZephyr` wrapper is configuration-only; publication happens only
 when a registered bundle command completes its upload.

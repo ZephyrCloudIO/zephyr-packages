@@ -25,11 +25,17 @@ describe('bootstrapMetroCommands', () => {
       JSON.stringify({
         ...value,
         dependencies: {
+          react: '^19.0.0',
           'react-native': '^0.79.0',
           ...(value['dependencies'] as Record<string, string> | undefined),
         },
         devDependencies: {
-          metro: '^0.82.0',
+          '@babel/types': '^7.25.0',
+          metro: '^0.82.1',
+          'metro-config': '^0.82.1',
+          'metro-file-map': '^0.82.1',
+          'metro-resolver': '^0.82.1',
+          'metro-source-map': '^0.82.1',
           ...(value['devDependencies'] as Record<string, string> | undefined),
         },
       })
@@ -326,6 +332,155 @@ describe('bootstrapMetroCommands', () => {
     );
   });
 
+  it('does not treat an unused local adapter call as command registration', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    fs.writeFileSync(
+      configPath,
+      `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nconst unused = zephyrMetroReactNativeCli({ projectRoot: __dirname });\nmodule.exports = { commands: [] };\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual(['react-native.config.js']);
+    expect(fs.readFileSync(configPath, 'utf8')).toContain(
+      '...zephyrMetroReactNativeCli().commands'
+    );
+  });
+
+  it('recognizes adapter commands merged into the exported config', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    const content = `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nconst base = { commands: [] };\nmodule.exports = { ...base, commands: [...base.commands, ...zephyrMetroReactNativeCli({ projectRoot: __dirname }).commands] };\n`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual([]);
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('does not treat an unused local RNEF plugin call as registration', () => {
+    writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
+    const configPath = path.join(tempDir, 'rnef.config.js');
+    fs.writeFileSync(
+      configPath,
+      `const { zephyrMetroRNEFPlugin } = require("zephyr-metro-plugin");\nconst unused = zephyrMetroRNEFPlugin({ platforms: {} });\nmodule.exports = { plugins: [] };\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual(['rnef.config.js']);
+    expect(fs.readFileSync(configPath, 'utf8')).toContain('zephyrMetroRNEFPlugin()');
+  });
+
+  it('recognizes RNEF plugins merged into the exported config', () => {
+    writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
+    const configPath = path.join(tempDir, 'rnef.config.mjs');
+    const content = `import { zephyrMetroRNEFPlugin } from "zephyr-metro-plugin";\nconst base = { plugins: [] };\nexport default { ...base, plugins: [...base.plugins, zephyrMetroRNEFPlugin({ platforms: {} })] };\n`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual([]);
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('recognizes quoted and computed React Native command keys', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const cjsPath = path.join(tempDir, 'react-native.config.cjs');
+    const cjsContent = `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nmodule.exports = { "commands": zephyrMetroReactNativeCli().commands };\n`;
+    fs.writeFileSync(cjsPath, cjsContent);
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([]);
+    expect(fs.readFileSync(cjsPath, 'utf8')).toBe(cjsContent);
+
+    fs.rmSync(cjsPath);
+    const esmPath = path.join(tempDir, 'react-native.config.mjs');
+    const esmContent = `import { zephyrMetroReactNativeCli } from "zephyr-metro-plugin";\nexport default { ["commands"]: [...zephyrMetroReactNativeCli().commands] };\n`;
+    fs.writeFileSync(esmPath, esmContent);
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([]);
+    expect(fs.readFileSync(esmPath, 'utf8')).toBe(esmContent);
+  });
+
+  it('recognizes quoted and computed RNEF plugin keys', () => {
+    writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
+    const cjsPath = path.join(tempDir, 'rnef.config.js');
+    const cjsContent = `const { zephyrMetroRNEFPlugin } = require("zephyr-metro-plugin");\nmodule.exports = { ["plugins"]: [zephyrMetroRNEFPlugin()] };\n`;
+    fs.writeFileSync(cjsPath, cjsContent);
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([]);
+    expect(fs.readFileSync(cjsPath, 'utf8')).toBe(cjsContent);
+
+    fs.rmSync(cjsPath);
+    const esmPath = path.join(tempDir, 'rnef.config.mjs');
+    const esmContent = `import { zephyrMetroRNEFPlugin } from "zephyr-metro-plugin";\nexport default { "plugins": [zephyrMetroRNEFPlugin()] };\n`;
+    fs.writeFileSync(esmPath, esmContent);
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([]);
+    expect(fs.readFileSync(esmPath, 'utf8')).toBe(esmContent);
+  });
+
+  it('does not treat helpers nested in callbacks as registration', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    fs.writeFileSync(
+      configPath,
+      `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nmodule.exports = { commands: [() => zephyrMetroReactNativeCli().commands] };\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual(['react-native.config.js']);
+    expect(fs.readFileSync(configPath, 'utf8')).toContain(
+      '...zephyrMetroReactNativeCli().commands'
+    );
+
+    fs.rmSync(configPath);
+    writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
+    const rnefPath = path.join(tempDir, 'rnef.config.js');
+    fs.writeFileSync(
+      rnefPath,
+      `const { zephyrMetroRNEFPlugin } = require("zephyr-metro-plugin");\nmodule.exports = { plugins: [() => zephyrMetroRNEFPlugin()] };\n`
+    );
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual(['rnef.config.js']);
+    expect(fs.readFileSync(rnefPath, 'utf8')).toContain('zephyrMetroRNEFPlugin(),');
+  });
+
+  it('recognizes configured identifier exports in CommonJS and ESM', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const cjsPath = path.join(tempDir, 'react-native.config.js');
+    const cjsContent = `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nconst config = { commands: [...zephyrMetroReactNativeCli().commands] };\nmodule.exports = config;\n`;
+    fs.writeFileSync(cjsPath, cjsContent);
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([]);
+    expect(fs.readFileSync(cjsPath, 'utf8')).toBe(cjsContent);
+
+    fs.rmSync(cjsPath);
+    writePackageJson({
+      type: 'module',
+      devDependencies: { '@rnef/cli': '^0.8.0' },
+    });
+    const esmPath = path.join(tempDir, 'rnef.config.mjs');
+    const esmContent = `import { zephyrMetroRNEFPlugin } from "zephyr-metro-plugin";\nconst config = { plugins: [zephyrMetroRNEFPlugin()] };\nexport default config;\n`;
+    fs.writeFileSync(esmPath, esmContent);
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([]);
+    expect(fs.readFileSync(esmPath, 'utf8')).toBe(esmContent);
+  });
+
   for (const [name, exportedValue] of [
     ['function', '() => ({ commands: [] })'],
     ['promise', 'Promise.resolve({ commands: [] })'],
@@ -406,6 +561,7 @@ describe('bootstrapMetroCommands', () => {
       devDependencies: {
         '@react-native-community/cli': '^19.0.0',
         metro: '*',
+        'metro-config': '*',
       },
     });
 
@@ -416,6 +572,7 @@ describe('bootstrapMetroCommands', () => {
       expect.arrayContaining([
         expect.stringContaining('react-native declaration "workspace:*"'),
         expect.stringContaining('metro declaration "*"'),
+        expect.stringContaining('metro-config declaration "*"'),
       ])
     );
   });
@@ -470,7 +627,7 @@ describe('bootstrapMetroCommands', () => {
     });
     for (const [packageName, version] of [
       ['react-native', '0.79.2'],
-      ['metro', '0.82.1'],
+      ['metro', '0.82.2'],
     ]) {
       const packageDirectory = path.join(tempDir, 'node_modules', packageName);
       fs.mkdirSync(packageDirectory, { recursive: true });
@@ -504,6 +661,34 @@ describe('bootstrapMetroCommands', () => {
         expect.stringContaining('metro declaration "^0.81.0"'),
       ])
     );
+  });
+
+  it('rejects missing or incompatible Metro peer packages', () => {
+    writePackageJson({
+      dependencies: { react: '^18.0.0' },
+      devDependencies: {
+        '@react-native-community/cli': '^19.0.0',
+        'metro-file-map': '^0.83.0',
+      },
+    });
+    const packageJsonPath = path.join(tempDir, 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    delete packageJson.devDependencies['metro-resolver'];
+    delete packageJson.devDependencies['@babel/types'];
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.manualGuidance).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('@babel/types could not be resolved'),
+        expect.stringContaining('react declaration "^18.0.0"'),
+        expect.stringContaining('metro-file-map declaration "^0.83.0"'),
+        expect.stringContaining('metro-resolver could not be resolved'),
+      ])
+    );
+    expect(fs.existsSync(path.join(tempDir, 'react-native.config.js'))).toBe(false);
   });
 
   it('uses Android when it is the only direct CLI platform package', () => {

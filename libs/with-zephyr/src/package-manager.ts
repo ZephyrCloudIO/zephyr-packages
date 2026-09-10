@@ -5,10 +5,13 @@ import path from 'path';
 import type { PackageManager } from './types.js';
 
 /** Detect the package manager being used in the project */
-export function detectPackageManager(directory: string = process.cwd()): PackageManager {
+export function detectPackageManager(
+  directory: string = process.cwd(),
+  options: { ignoreUserAgent?: boolean } = {}
+): PackageManager {
   // Priority 1: Check which CLI is actually running (npm_config_user_agent)
   // This is most accurate when someone runs `pnpm dlx with-zephyr` or `npx with-zephyr`
-  if (process.env['npm_config_user_agent']) {
+  if (!options.ignoreUserAgent && process.env['npm_config_user_agent']) {
     const userAgent = process.env['npm_config_user_agent'].toLowerCase();
     if (userAgent.includes('pnpm')) return 'pnpm';
     if (userAgent.includes('yarn')) return 'yarn';
@@ -20,6 +23,7 @@ export function detectPackageManager(directory: string = process.cwd()): Package
   const lockFiles: Record<string, PackageManager> = {
     'pnpm-lock.yaml': 'pnpm',
     'yarn.lock': 'yarn',
+    'bun.lock': 'bun',
     'bun.lockb': 'bun',
     'package-lock.json': 'npm',
   };
@@ -162,7 +166,13 @@ export function isSafelyConstrainedVersion(
     if (!maximumVersionExclusive || prefix !== '^') return true;
     const parsedVersion = parseVersion(version)!;
     const parsedMaximum = parseVersion(maximumVersionExclusive)!;
-    return parsedVersion.major + 1 <= parsedMaximum.major;
+    const caretUpperBound =
+      parsedVersion.major > 0
+        ? { major: parsedVersion.major + 1, minor: 0, patch: 0 }
+        : parsedVersion.minor > 0
+          ? { major: 0, minor: parsedVersion.minor + 1, patch: 0 }
+          : { major: 0, minor: 0, patch: parsedVersion.patch + 1 };
+    return compareVersions(caretUpperBound, parsedMaximum) <= 0;
   }
 
   const comparatorRange = /^>=(\d+\.\d+\.\d+)(?:\s+(<|<=)(\d+\.\d+\.\d+))?$/.exec(value);
@@ -249,11 +259,25 @@ export function isPackageRequirementSatisfied(
   if (!minimumVersion) {
     return declaration !== undefined;
   }
+  if (!declaration) return false;
+  if (isSafelyConstrainedVersion(declaration, minimumVersion)) return true;
+  if (isSafelyConstrainedVersion(declaration, '0.0.0')) return false;
   const resolvedVersion = getResolvedPackageVersion(packageName, directory);
-  if (resolvedVersion) {
-    return isVersionAtLeast(resolvedVersion, minimumVersion);
-  }
-  return Boolean(declaration && isSafelyConstrainedVersion(declaration, minimumVersion));
+  return Boolean(resolvedVersion && isVersionAtLeast(resolvedVersion, minimumVersion));
+}
+
+export function isResolvedPackageRequirementSatisfied(
+  packageName: string,
+  directory: string,
+  minimumVersion?: string,
+  maximumVersionExclusive?: string
+): boolean {
+  const resolvedVersion = getResolvedPackageVersion(packageName, directory);
+  return Boolean(
+    resolvedVersion &&
+    (!minimumVersion ||
+      isVersionCompatible(resolvedVersion, minimumVersion, maximumVersionExclusive))
+  );
 }
 
 /** Build an add command for one or more packages */

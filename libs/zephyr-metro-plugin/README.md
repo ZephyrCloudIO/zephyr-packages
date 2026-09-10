@@ -34,6 +34,11 @@ bun add --dev zephyr-metro-plugin @module-federation/metro
 
 ## Usage
 
+Publication commands using `@module-federation/metro@2.9.0` require React 19,
+React Native 0.79 or newer, `@babel/types` at `>=7.25.0 <8.0.0`, and `metro`,
+`metro-config`, `metro-file-map`, `metro-resolver`, and `metro-source-map`
+versions `>=0.82.1 <0.83.0`.
+
 ### Basic Configuration
 
 The Metro plugin provides two main integration points depending on your setup:

@@ -6,6 +6,7 @@ export interface PackageRequirement {
   isDev: boolean;
   version?: string;
   projectDirectory?: string;
+  requireResolved?: boolean;
 }
 
 export interface NextJsVinextBootstrapResult {

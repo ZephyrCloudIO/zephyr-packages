@@ -52,22 +52,22 @@ artifacts by itself. Register one of the command integrations below to publish.
 
 ```javascript
 // metro.config.js
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { getDefaultConfig } = require('@react-native/metro-config');
+const { withModuleFederation } = require('@module-federation/metro');
 const { withZephyr } = require('zephyr-metro-plugin');
 
 const baseConfig = getDefaultConfig(__dirname);
 
-module.exports = (async () => {
-  const zephyrConfig = await withZephyr({
+module.exports = withZephyr({
+  target: 'ios', // or 'android'
+  remotes: {
+    SharedComponents: 'SharedComponents@http://localhost:9000/remoteEntry.js',
+  },
+})(
+  withModuleFederation({
     name: 'MyApp',
-    target: 'ios', // or 'android'
-    remotes: {
-      SharedComponents: 'SharedComponents@http://localhost:9000/remoteEntry.js',
-    },
-  })(baseConfig);
-
-  return mergeConfig(baseConfig, zephyrConfig);
-})();
+  })(baseConfig)
+);
 ```
 
 #### 2. React Native CLI commands
@@ -262,7 +262,7 @@ my-react-native-app/
 - **Zephyr Cloud account**: Sign up at [zephyr-cloud.io](https://zephyr-cloud.io)
 
 The `bundle-mf-host` and `bundle-mf-remote` publication commands additionally
-require React Native 0.79 or higher, Metro 0.82.1 or higher, and
+require React Native 0.79 or higher, Metro `>=0.82.1 <0.83.0`, and
 `@module-federation/metro@^2.9.0`. The configuration-only `withZephyr` wrapper
 does not require those command-integration minimums.
 

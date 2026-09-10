@@ -56,6 +56,24 @@ describe('Zephyr Codemod CLI', () => {
     'metro-source-map': '^0.82.1',
   };
 
+  const writeResolvedMetroCompanions = (directory = tempDir) => {
+    for (const [packageName, version] of [
+      ['zephyr-metro-plugin', '1.4.2'],
+      ['@module-federation/metro', '2.9.1'],
+    ]) {
+      const packageDirectory = path.join(
+        directory,
+        'node_modules',
+        ...packageName.split('/')
+      );
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: packageName, version })
+      );
+    }
+  };
+
   describe('CLI Options', () => {
     it('should show help when --help is provided', () => {
       const output = runCodemod('--help');
@@ -448,6 +466,7 @@ describe('Zephyr Codemod CLI', () => {
     });
 
     it('should bootstrap React Native CLI publication commands', () => {
+      writeResolvedMetroCompanions();
       fs.writeFileSync(
         'package.json',
         JSON.stringify({
@@ -708,8 +727,90 @@ describe('Zephyr Codemod CLI', () => {
       });
 
       expect(output).toContain('Failed to install dependencies from package.json');
-      expect(output).toContain('✗ Errors: 1');
+      expect(output).toContain('✗ Errors: 2');
       expect(output).not.toContain('Publish the first bundle with:');
+    });
+
+    it('should not advertise publication when declared companions remain unresolved', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          packageManager: 'pnpm@11.0.0',
+          dependencies: { 'react-native': '^0.79.0' },
+          devDependencies: {
+            '@module-federation/metro': '^2.9.0',
+            '@react-native-community/cli': '^19.0.0',
+            ...compatibleMetroPeers,
+            'zephyr-metro-plugin': '^1.4.0',
+          },
+        })
+      );
+      fs.writeFileSync(
+        'metro.config.js',
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+      );
+      const fakeBin = path.join(tempDir, 'fake-bin');
+      fs.mkdirSync(fakeBin);
+      const fakePnpm = path.join(fakeBin, 'pnpm');
+      fs.writeFileSync(fakePnpm, '#!/bin/sh\nexit 0\n');
+      fs.chmodSync(fakePnpm, 0o755);
+      fs.writeFileSync(path.join(fakeBin, 'pnpm.cmd'), '@exit /b 0\r\n');
+
+      const output = runCodemod('', true, {
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        npm_config_user_agent: 'pnpm/11.0.0',
+      });
+
+      expect(output).toContain(
+        'zephyr-metro-plugin, @module-federation/metro cannot be resolved at compatible versions'
+      );
+      expect(output).toContain('✗ Errors: 2');
+      expect(output).not.toContain('Publish the first bundle with:');
+    });
+
+    it('should preserve a production Metro plugin requirement when merging', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          packageManager: 'pnpm@11.0.0',
+          dependencies: {
+            'react-native': '^0.79.0',
+            'zephyr-metro-plugin': '^1.3.0',
+          },
+          devDependencies: {
+            '@module-federation/metro': '^2.9.0',
+            '@react-native-community/cli': '^19.0.0',
+            ...compatibleMetroPeers,
+          },
+        })
+      );
+      fs.writeFileSync(
+        'metro.config.js',
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+      );
+      const fakeBin = path.join(tempDir, 'fake-bin');
+      fs.mkdirSync(fakeBin);
+      const fakeScript = path.join(fakeBin, 'fake-pnpm.js');
+      fs.writeFileSync(
+        fakeScript,
+        `const fs = require("node:fs"); const path = require("node:path"); for (const [name, version] of [["zephyr-metro-plugin", "1.4.2"], ["@module-federation/metro", "2.9.1"]]) { const dir = path.join(process.cwd(), "node_modules", ...name.split("/")); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name, version })); }\n`
+      );
+      const fakePnpm = path.join(fakeBin, 'pnpm');
+      fs.writeFileSync(fakePnpm, `#!/bin/sh\n"${process.execPath}" "${fakeScript}"\n`);
+      fs.chmodSync(fakePnpm, 0o755);
+      fs.writeFileSync(
+        path.join(fakeBin, 'pnpm.cmd'),
+        `@"${process.execPath}" "${fakeScript}"\r\n`
+      );
+
+      runCodemod('', false, {
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        npm_config_user_agent: 'pnpm/11.0.0',
+      });
+      const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(packageJson.dependencies['zephyr-metro-plugin']).toBe('^1.4.0');
+      expect(packageJson.devDependencies['zephyr-metro-plugin']).toBeUndefined();
     });
 
     it('should fail when a successful nested install leaves requirements unresolved', () => {
@@ -818,6 +919,7 @@ describe('Zephyr Codemod CLI', () => {
     });
 
     it('should print Android for Android-only CLI projects', () => {
+      writeResolvedMetroCompanions();
       fs.writeFileSync(
         'package.json',
         JSON.stringify({

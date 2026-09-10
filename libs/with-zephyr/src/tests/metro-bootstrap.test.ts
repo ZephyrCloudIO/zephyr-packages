@@ -78,6 +78,7 @@ describe('bootstrapMetroCommands', () => {
       isDev: true,
       version: '^1.4.0',
       projectDirectory: tempDir,
+      requireResolved: true,
     });
   });
 
@@ -97,6 +98,7 @@ describe('bootstrapMetroCommands', () => {
       isDev: false,
       version: '^1.4.0',
       projectDirectory: tempDir,
+      requireResolved: true,
     });
   });
 

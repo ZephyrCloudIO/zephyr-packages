@@ -62,6 +62,19 @@ function normalizePathForOutput(filePath: string): string {
   return filePath.replace(/\\/g, '/');
 }
 
+function isRequirementResolved(packageRequirement: PackageRequirement): boolean {
+  const projectDirectory = packageRequirement.projectDirectory ?? process.cwd();
+  const minimumVersion = packageRequirement.version?.match(/^\^(\d+\.\d+\.\d+)$/)?.[1];
+  const maximumVersionExclusive =
+    packageRequirement.name === '@module-federation/metro' ? '3.0.0' : undefined;
+  return isResolvedPackageRequirementSatisfied(
+    packageRequirement.name,
+    projectDirectory,
+    minimumVersion,
+    maximumVersionExclusive
+  );
+}
+
 /** Find all bundler configuration files in the given directory */
 function findConfigFiles(directory: string): ConfigFile[] {
   const configFiles: ConfigFile[] = [];
@@ -394,9 +407,16 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     const projectDirectory = path.resolve(
       packageRequirement.projectDirectory ?? directory
     );
-    requiredPackages.set(`${projectDirectory}\0${packageRequirement.name}`, {
+    const key = `${projectDirectory}\0${packageRequirement.name}`;
+    const existing = requiredPackages.get(key);
+    requiredPackages.set(key, {
+      ...existing,
       ...packageRequirement,
       projectDirectory,
+      isDev: existing
+        ? existing.isDev && packageRequirement.isDev
+        : packageRequirement.isDev,
+      requireResolved: existing?.requireResolved || packageRequirement.requireResolved,
     });
   };
 
@@ -460,13 +480,19 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       const projectDirectory = packageRequirement.projectDirectory ?? directory;
       const minimumVersion =
         packageRequirement.version?.match(/^\^(\d+\.\d+\.\d+)$/)?.[1];
-      const satisfied = packageRequirement.version
+      const satisfied = packageRequirement.requireResolved
         ? isPackageRequirementSatisfied(
             packageRequirement.name,
             projectDirectory,
             minimumVersion
-          )
-        : isPackageInstalled(packageRequirement.name, projectDirectory);
+          ) && isRequirementResolved(packageRequirement)
+        : packageRequirement.version
+          ? isPackageRequirementSatisfied(
+              packageRequirement.name,
+              projectDirectory,
+              minimumVersion
+            )
+          : isPackageInstalled(packageRequirement.name, projectDirectory);
       if (!satisfied) {
         missingPackages.push(packageRequirement);
       }
@@ -580,20 +606,8 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
           ]);
         }
         for (const [projectDirectory, requirements] of nestedProjects) {
-          const isUnresolved = (packageRequirement: PackageRequirement) => {
-            const minimumVersion =
-              packageRequirement.version?.match(/^\^(\d+\.\d+\.\d+)$/)?.[1];
-            const maximumVersionExclusive =
-              packageRequirement.name === '@module-federation/metro'
-                ? '3.0.0'
-                : undefined;
-            return !isResolvedPackageRequirementSatisfied(
-              packageRequirement.name,
-              projectDirectory,
-              minimumVersion,
-              maximumVersionExclusive
-            );
-          };
+          const isUnresolved = (packageRequirement: PackageRequirement) =>
+            !isRequirementResolved(packageRequirement);
           const unresolved = requirements.filter(isUnresolved);
           if (unresolved.length === 0) continue;
 
@@ -688,6 +702,23 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     }
 
     console.log();
+  }
+
+  if (!dryRun && !dependencyInstallFailed) {
+    for (const { projectDirectory, result } of metroBootstraps) {
+      if (result.manualGuidance.length > 0 || result.integration === 'none') continue;
+      const unresolved = result.packageRequirements.filter(
+        (packageRequirement) => !isRequirementResolved(packageRequirement)
+      );
+      if (unresolved.length === 0) continue;
+      console.log(
+        chalk.red(
+          `✗ Cannot publish from ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory) || '.')}: ${unresolved.map(({ name }) => name).join(', ')} cannot be resolved at compatible versions`
+        )
+      );
+      errors += unresolved.length;
+      dependencyInstallFailed = true;
+    }
   }
 
   if (!dryRun && !dependencyInstallFailed) {

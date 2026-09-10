@@ -441,12 +441,14 @@ export function bootstrapMetroCommands(
         isDev: isDevRequirement('zephyr-metro-plugin'),
         version: ZEPHYR_METRO_PLUGIN_VERSION,
         projectDirectory: directory,
+        requireResolved: true,
       },
       {
         name: '@module-federation/metro',
         isDev: isDevRequirement('@module-federation/metro'),
         version: MODULE_FEDERATION_METRO_VERSION,
         projectDirectory: directory,
+        requireResolved: true,
       },
     ];
   };

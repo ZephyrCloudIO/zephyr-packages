@@ -385,6 +385,20 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
   });
 
+  it('recognizes adapter results referenced by the exported commands', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    const content = `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nconst adapter = zephyrMetroReactNativeCli();\nmodule.exports = { commands: adapter.commands };\n`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual([]);
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
   it('does not treat an unused local RNEF plugin call as registration', () => {
     writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
     const configPath = path.join(tempDir, 'rnef.config.js');
@@ -403,6 +417,18 @@ describe('bootstrapMetroCommands', () => {
     writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
     const configPath = path.join(tempDir, 'rnef.config.mjs');
     const content = `import { zephyrMetroRNEFPlugin } from "zephyr-metro-plugin";\nconst base = { plugins: [] };\nexport default { ...base, plugins: [...base.plugins, zephyrMetroRNEFPlugin({ platforms: {} })] };\n`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual([]);
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('recognizes RNEF plugin results referenced by the exported plugins', () => {
+    writePackageJson({ devDependencies: { '@rnef/cli': '^0.8.0' } });
+    const configPath = path.join(tempDir, 'rnef.config.js');
+    const content = `const { zephyrMetroRNEFPlugin } = require("zephyr-metro-plugin");\nconst plugin = zephyrMetroRNEFPlugin();\nmodule.exports = { plugins: [plugin] };\n`;
     fs.writeFileSync(configPath, content);
 
     const result = bootstrapMetroCommands(tempDir);
@@ -536,6 +562,25 @@ describe('bootstrapMetroCommands', () => {
 
     expect(result.manualGuidance[0]).toContain('does not directly export an object');
     expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('preserves CommonJS shebangs and directive prologues when adding imports', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    fs.writeFileSync(
+      configPath,
+      '#!/usr/bin/env node\n// Keep this config strict.\n"use strict";\nmodule.exports = { commands: [] };\n'
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+    const content = fs.readFileSync(configPath, 'utf8');
+
+    expect(result.updatedFiles).toEqual(['react-native.config.js']);
+    expect(content).toMatch(
+      /^#!\/usr\/bin\/env node\n\/\/ Keep this config strict\.\n"use strict";\nconst \{ zephyrMetroReactNativeCli \}/
+    );
   });
 
   it('leaves multiple active RNEF loader candidates untouched', () => {

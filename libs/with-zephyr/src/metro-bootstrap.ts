@@ -211,7 +211,16 @@ function addImport(content: string, importName: string, esm: boolean): string {
   const declaration = esm
     ? `import { ${importName} } from "zephyr-metro-plugin";\n`
     : `const { ${importName} } = require("zephyr-metro-plugin");\n`;
-  return `${declaration}${content}`;
+  let insertionIndex = content.startsWith('#!') ? content.indexOf('\n') + 1 : 0;
+  if (insertionIndex === 0 && content.startsWith('#!')) {
+    return `${content}\n${declaration}`;
+  }
+  const directivePrologue =
+    /^(?:(?:[ \t]*(?:"[^"\r\n]*"|'[^'\r\n]*')[ \t]*;?[ \t]*(?:\r?\n|$))|(?:[ \t]*\/\/[^\r\n]*(?:\r?\n|$))|(?:[ \t]*\/\*[\s\S]*?\*\/[ \t]*(?:\r?\n|$))|(?:[ \t]*\r?\n))+/.exec(
+      content.slice(insertionIndex)
+    );
+  insertionIndex += directivePrologue?.[0].length ?? 0;
+  return `${content.slice(0, insertionIndex)}${declaration}${content.slice(insertionIndex)}`;
 }
 
 function updateCommonJsConfig(

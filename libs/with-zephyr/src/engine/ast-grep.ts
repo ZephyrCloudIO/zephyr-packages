@@ -216,14 +216,8 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
       return false;
     };
 
-    return calls.some((call) => {
-      if (options.allowDirectExport && isDirectlyExportedExpression(call)) {
-        return true;
-      }
-
-      if (!options.propertyName) return false;
-
-      const property = call
+    const isRegisteredInExportedProperty = (value: SgNode): boolean => {
+      const property = value
         .ancestors()
         .find(
           (ancestor) =>
@@ -235,27 +229,56 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
       if (!property || !isExportedObject(property.parent())) return false;
 
       if (options.propertyName === 'plugins') {
-        const array = call.parent();
+        const array = value.parent();
         return Boolean(
           array?.kind() === 'array' && array.parent()?.id() === property.id()
         );
       }
 
-      const member = call.parent();
-      if (
-        member?.kind() !== 'member_expression' ||
-        !/\.\s*commands\s*$/.test(member.text())
-      ) {
-        return false;
-      }
-      if (member.parent()?.id() === property.id()) return true;
-      const spread = member.parent();
+      if (value.parent()?.id() === property.id()) return true;
+      const spread = value.parent();
       const array = spread?.parent();
       return Boolean(
         spread?.kind() === 'spread_element' &&
         array?.kind() === 'array' &&
         array.parent()?.id() === property.id()
       );
+    };
+
+    return calls.some((call) => {
+      if (options.allowDirectExport && isDirectlyExportedExpression(call)) {
+        return true;
+      }
+
+      if (!options.propertyName) return false;
+
+      if (options.propertyName === 'plugins') {
+        if (isRegisteredInExportedProperty(call)) return true;
+      } else {
+        const member = call.parent();
+        if (
+          member?.kind() === 'member_expression' &&
+          /\.\s*commands\s*$/.test(member.text()) &&
+          isRegisteredInExportedProperty(member)
+        ) {
+          return true;
+        }
+      }
+
+      const declaration = call.parent();
+      if (declaration?.kind() !== 'variable_declarator') return false;
+      const bindingName = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(declaration.text())?.[1];
+      if (!bindingName) return false;
+
+      if (options.propertyName === 'commands') {
+        return root
+          .findAll(`${bindingName}.commands`)
+          .some(isRegisteredInExportedProperty);
+      }
+      return root
+        .findAll(bindingName)
+        .filter((identifier) => identifier.kind() === 'identifier')
+        .some(isRegisteredInExportedProperty);
     });
   } catch {
     return false;

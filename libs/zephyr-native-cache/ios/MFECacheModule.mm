@@ -37,13 +37,26 @@ RCT_EXPORT_METHOD(writeFile:(NSString *)path
         data = [content dataUsingEncoding:NSUTF8StringEncoding];
       }
 
+      if (!data) {
+        reject(@"WRITE_ERROR", @"Invalid file content", nil);
+        return;
+      }
+
       NSString *dir = [path stringByDeletingLastPathComponent];
       NSFileManager *fm = [NSFileManager defaultManager];
       if (![fm fileExistsAtPath:dir]) {
-        [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+        NSError *directoryError = nil;
+        if (![fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:&directoryError]) {
+          reject(@"WRITE_ERROR", @"Failed to create cache directory", directoryError);
+          return;
+        }
       }
 
-      [data writeToFile:path atomically:YES];
+      NSError *writeError = nil;
+      if (![data writeToFile:path options:NSDataWritingAtomic error:&writeError]) {
+        reject(@"WRITE_ERROR", @"Failed to atomically write cache state", writeError);
+        return;
+      }
       resolve(nil);
     } @catch (NSException *exception) {
       reject(@"WRITE_ERROR", exception.reason, nil);
@@ -67,6 +80,33 @@ RCT_EXPORT_METHOD(readFile:(NSString *)path
     } else {
       resolve([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
     }
+  });
+}
+
+RCT_EXPORT_METHOD(readVerifiedFile:(NSString *)path
+                  expectedSha256:(NSString *)expectedSha256
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *data = [NSData dataWithContentsOfFile:path];
+    if (!data) {
+      reject(@"READ_ERROR", @"Cached bundle is unavailable", nil);
+      return;
+    }
+
+    NSString *sha256 = [self sha256FromData:data];
+    if (![sha256 isEqualToString:[expectedSha256 lowercaseString]]) {
+      reject(@"HASH_MISMATCH", @"Cached bundle integrity check failed", nil);
+      return;
+    }
+
+    NSString *source = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    if (!source) {
+      reject(@"READ_ERROR", @"Cached bundle is not valid UTF-8", nil);
+      return;
+    }
+    resolve(@{ @"source": source, @"sha256": sha256 });
   });
 }
 
@@ -98,6 +138,35 @@ RCT_EXPORT_METHOD(getDocumentDirectory:(RCTPromiseResolveBlock)resolve
 {
   NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
   resolve(paths.firstObject);
+}
+
+RCT_EXPORT_METHOD(getCacheDirectory:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+  NSError *error = nil;
+  NSURL *applicationSupport = [[NSFileManager defaultManager]
+    URLForDirectory:NSApplicationSupportDirectory
+    inDomain:NSUserDomainMask
+    appropriateForURL:nil
+    create:YES
+    error:&error];
+  if (!applicationSupport) {
+    reject(@"CACHE_DIRECTORY_ERROR", @"Application Support is unavailable", error);
+    return;
+  }
+
+  NSURL *cacheRoot = [applicationSupport URLByAppendingPathComponent:@"ZephyrNativeCache" isDirectory:YES];
+  NSFileManager *fm = [NSFileManager defaultManager];
+  if (![fm createDirectoryAtURL:cacheRoot withIntermediateDirectories:YES attributes:nil error:&error]) {
+    reject(@"CACHE_DIRECTORY_ERROR", @"Failed to create cache directory", error);
+    return;
+  }
+
+  if (![cacheRoot setResourceValue:@YES forKey:NSURLIsExcludedFromBackupKey error:&error]) {
+    reject(@"CACHE_DIRECTORY_ERROR", @"Failed to exclude cache from backup", error);
+    return;
+  }
+  resolve(cacheRoot.path);
 }
 
 RCT_EXPORT_METHOD(getFileSize:(NSString *)path
@@ -172,13 +241,14 @@ RCT_EXPORT_METHOD(downloadFile:(NSString *)urlString
     downloadTaskWithRequest:request
     completionHandler:^(NSURL *tempFileURL, NSURLResponse *response, NSError *error) {
       if (error) {
-        reject(@"DOWNLOAD_ERROR", error.localizedDescription, error);
+        NSString *code = error.code == NSURLErrorTimedOut ? @"DOWNLOAD_TIMEOUT" : @"NETWORK_ERROR";
+        reject(code, @"Failed to download staged bundle", nil);
         return;
       }
 
       NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
       if (httpResponse.statusCode != 200) {
-        reject(@"DOWNLOAD_ERROR",
+        reject(@"HTTP_ERROR",
                [NSString stringWithFormat:@"HTTP %ld", (long)httpResponse.statusCode],
                nil);
         return;
@@ -203,6 +273,10 @@ RCT_EXPORT_METHOD(downloadFile:(NSString *)urlString
         totalBytes += (NSUInteger)bytesRead;
       }
       [stream close];
+      if (bytesRead < 0) {
+        reject(@"DOWNLOAD_ERROR", @"Failed to read downloaded bundle", nil);
+        return;
+      }
 
       unsigned char hash[CC_SHA256_DIGEST_LENGTH];
       CC_SHA256_Final(hash, &ctx);
@@ -215,24 +289,24 @@ RCT_EXPORT_METHOD(downloadFile:(NSString *)urlString
       // Ensure destination directory exists
       NSString *dir = [destPath stringByDeletingLastPathComponent];
       NSFileManager *fm = [NSFileManager defaultManager];
-      [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+      NSError *directoryError = nil;
+      if (![fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:&directoryError]) {
+        reject(@"STORAGE_ERROR", @"Failed to create staging directory", directoryError);
+        return;
+      }
 
-      // Always remove destination first — moveItem/replaceItem fail if dest exists.
-      // No TOCTOU check; just remove unconditionally.
-      [fm removeItemAtPath:destPath error:nil];
+      if ([fm fileExistsAtPath:destPath]) {
+        reject(@"STORAGE_ERROR", @"Staging destination already exists", nil);
+        return;
+      }
 
       NSError *moveError = nil;
       BOOL moved = [fm moveItemAtURL:tempFileURL
                                toURL:[NSURL fileURLWithPath:destPath]
                                error:&moveError];
       if (!moved) {
-        // If the file now exists at dest, a concurrent download placed it — success.
-        if (![fm fileExistsAtPath:destPath]) {
-          reject(@"DOWNLOAD_ERROR",
-                 [NSString stringWithFormat:@"Failed to save bundle: %@", moveError.localizedDescription],
-                 moveError);
-          return;
-        }
+        reject(@"STORAGE_ERROR", @"Failed to save staged bundle", moveError);
+        return;
       }
 
       resolve(@{

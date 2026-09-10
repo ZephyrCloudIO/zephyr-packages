@@ -4,6 +4,69 @@ export type BundleLoadStatus = 'cache-hit' | 'downloaded' | 'skipped' | 'pending
 
 export type UpdatePolicy = 'downloadOnly' | 'downloadAndApply';
 
+export type ManifestArtifactKind = 'container' | 'exposed' | 'shared';
+
+export type NativeCacheFailureReason =
+  | 'native-unavailable'
+  | 'missing-hash'
+  | 'malformed-hash'
+  | 'invalid-manifest'
+  | 'timeout'
+  | 'network-failure'
+  | 'http-failure'
+  | 'hash-mismatch'
+  | 'corrupt-cache'
+  | 'storage-failure'
+  | 'evaluation-failure'
+  | 'activation-failure'
+  | 'rollback-failure'
+  | 'runtime-poisoned';
+
+export interface ManifestArtifact {
+  bundleUrl: string;
+  expectedHash: string | undefined;
+  kind: ManifestArtifactKind;
+}
+
+export interface ManifestRelease {
+  manifestId: string;
+  remoteName: string;
+  artifacts: ManifestArtifact[];
+  manifestUrl?: string;
+  manifestJson?: unknown;
+}
+
+export interface ArtifactOutcome {
+  manifestId: string;
+  remoteName: string;
+  bundleUrl: string;
+  status:
+    | 'cache-hit'
+    | 'staged'
+    | 'cleaned'
+    | 'not-attempted'
+    | 'activated'
+    | 'rolled-back'
+    | 'failed';
+  generationId?: string;
+  reason?: NativeCacheFailureReason;
+}
+
+export interface ManifestOutcome {
+  manifestId: string;
+  remoteName: string;
+  status: 'unchanged' | 'staged' | 'activated' | 'rolled-back' | 'failed';
+  generationId?: string;
+  reason?: NativeCacheFailureReason;
+  artifacts: ArtifactOutcome[];
+}
+
+export interface BundleLoadResult {
+  status: 'cache-hit' | 'downloaded';
+  outcome: ArtifactOutcome;
+  candidateOutcome?: ArtifactOutcome;
+}
+
 export interface BundleMetadata {
   remoteName: string;
   bundleHash: string;
@@ -39,6 +102,11 @@ export interface MFECacheConfig {
   pollIntervalMs?: number;
   /** Force enable cache in dev mode (default: false). Production always enables cache. */
   forceCacheInDev?: boolean;
+  /**
+   * Optional side-effect-free validation performed before a staged generation is
+   * activated.
+   */
+  validateBundle?: (bundleUrl: string, source: string) => void | Promise<void>;
 }
 
 export interface CacheStatusRemoteEntry {
@@ -72,6 +140,7 @@ export interface CheckForUpdatesResult {
   updated: number;
   checked: number;
   applied: boolean;
+  outcomes: ManifestOutcome[];
 }
 
 export type CacheStatusListener = (status: CacheStatusSnapshot) => void;

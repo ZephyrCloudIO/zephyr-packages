@@ -7,9 +7,14 @@ export interface NativeMFECacheSpec {
   // File system operations
   writeFile(path: string, content: string, encoding: 'utf8' | 'base64'): Promise<void>;
   readFile(path: string, encoding: 'utf8' | 'base64'): Promise<string>;
+  readVerifiedFile(
+    path: string,
+    expectedSha256: string
+  ): Promise<{ source: string; sha256: string }>;
   deleteFile(path: string): Promise<void>;
   fileExists(path: string): Promise<boolean>;
   getDocumentDirectory(): Promise<string>;
+  getCacheDirectory(): Promise<string>;
   /** Get file size in bytes */
   getFileSize(path: string): Promise<number>;
 

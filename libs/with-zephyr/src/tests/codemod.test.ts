@@ -394,6 +394,10 @@ describe('Zephyr Codemod CLI', () => {
     });
 
     it('should transform metro config with async wrapper', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { 'zephyr-metro-plugin': '^1.4.0' } })
+      );
       const originalContent = `
         const { getDefaultConfig } = require('@react-native/metro-config');
         module.exports = getDefaultConfig(__dirname);
@@ -413,6 +417,10 @@ describe('Zephyr Codemod CLI', () => {
     });
 
     it('should transform metro ESM config with async wrapper', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { 'zephyr-metro-plugin': '^1.4.0' } })
+      );
       const originalContent = `
         export default {
           resolver: { sourceExts: ['js', 'ts'] }
@@ -434,16 +442,18 @@ describe('Zephyr Codemod CLI', () => {
       fs.writeFileSync(
         'package.json',
         JSON.stringify({
+          dependencies: { 'react-native': '^0.79.0' },
           devDependencies: {
             '@react-native-community/cli': '^19.0.0',
             '@module-federation/metro': '^2.9.0',
-            'zephyr-metro-plugin': '^1.3.0',
+            metro: '^0.82.0',
+            'zephyr-metro-plugin': '^1.4.0',
           },
         })
       );
       fs.writeFileSync(
         'metro.config.js',
-        "module.exports = require('@react-native/metro-config').getDefaultConfig(__dirname);"
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
       );
 
       const output = runCodemod();
@@ -451,44 +461,62 @@ describe('Zephyr Codemod CLI', () => {
 
       expect(output).toContain('Created react-native.config.js');
       expect(output).toContain(
-        'Publish the first bundle with: npx react-native bundle-mf-remote --platform ios --dev false'
+        'Publish the first bundle with: npx react-native bundle-mf-remote --platform <platform> --dev false'
       );
       expect(cliConfig).toContain('module.exports = zephyrMetroReactNativeCli()');
     });
 
     it('should bootstrap every unique nested Metro project', () => {
-      fs.writeFileSync(
-        'package.json',
-        JSON.stringify({
-          devDependencies: {
-            '@module-federation/metro': '^2.9.0',
-            'zephyr-metro-plugin': '^1.3.0',
-          },
-        })
-      );
+      fs.writeFileSync('package.json', JSON.stringify({ private: true }));
+      const fakeBin = path.join(tempDir, 'fake-bin');
+      fs.mkdirSync(fakeBin);
+      const fakePnpm = path.join(fakeBin, 'pnpm');
+      fs.writeFileSync(fakePnpm, '#!/bin/sh\nexit 0\n');
+      fs.chmodSync(fakePnpm, 0o755);
+      fs.writeFileSync(path.join(fakeBin, 'pnpm.cmd'), '@exit /b 0\r\n');
       for (const project of ['apps/host', 'apps/remote']) {
         fs.mkdirSync(project, { recursive: true });
         fs.writeFileSync(
           path.join(project, 'package.json'),
           JSON.stringify({
-            devDependencies: { '@react-native-community/cli': '^19.0.0' },
+            dependencies: { 'react-native': '^0.79.0' },
+            devDependencies: {
+              '@react-native-community/cli': '^19.0.0',
+              metro: '^0.82.0',
+            },
           })
         );
         fs.writeFileSync(
           path.join(project, 'metro.config.js'),
-          'module.exports = { resolver: {} };\n'
+          `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
         );
       }
 
-      const output = runCodemod();
+      const output = runCodemod('', false, {
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        npm_config_user_agent: 'pnpm/11.0.0',
+      });
 
       expect(output).toContain('Created apps/host/react-native.config.js');
       expect(output).toContain('Created apps/remote/react-native.config.js');
       expect(fs.existsSync('apps/host/react-native.config.js')).toBe(true);
       expect(fs.existsSync('apps/remote/react-native.config.js')).toBe(true);
+      for (const project of ['apps/host', 'apps/remote']) {
+        const packageJson = JSON.parse(
+          fs.readFileSync(path.join(project, 'package.json'), 'utf8')
+        );
+        expect(packageJson.devDependencies['zephyr-metro-plugin']).toBe('^1.4.0');
+        expect(packageJson.devDependencies['@module-federation/metro']).toBe('^2.9.0');
+      }
+      const rootPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      expect(rootPackageJson.devDependencies).toBeUndefined();
     });
 
     it('should transform nuxt config by appending zephyr-nuxt-module', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { 'zephyr-nuxt-module': '^1.3.0' } })
+      );
       const originalContent = `
         export default defineNuxtConfig({
           modules: ['nitro-cloudflare-dev']
@@ -607,32 +635,40 @@ describe('Zephyr Codemod CLI', () => {
       fs.writeFileSync(
         'package.json',
         JSON.stringify({
+          dependencies: { 'react-native': '^0.79.0' },
           devDependencies: {
             '@react-native-community/cli': '^19.0.0',
             'zephyr-metro-plugin': '^1.3.0',
+            metro: '^0.82.0',
           },
         })
       );
-      fs.writeFileSync('metro.config.js', 'module.exports = { resolver: {} };\n');
+      fs.writeFileSync(
+        'metro.config.js',
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+      );
 
       const output = runCodemod('--dry-run');
 
       expect(output).toContain('@module-federation/metro@^2.9.0');
+      expect(output).toContain('zephyr-metro-plugin@^1.4.0');
     });
 
     it('should count dependency installation failures in the summary', () => {
       fs.writeFileSync(
         'package.json',
         JSON.stringify({
+          dependencies: { 'react-native': '^0.79.0' },
           devDependencies: {
             '@react-native-community/cli': '^19.0.0',
-            'zephyr-metro-plugin': '^1.3.0',
+            metro: '^0.82.0',
+            'zephyr-metro-plugin': '^1.4.0',
           },
         })
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withZephyr } = require("zephyr-metro-plugin");\nmodule.exports = withZephyr()({ resolver: {} });\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nconst { withZephyr } = require("zephyr-metro-plugin");\nmodule.exports = withZephyr()(withModuleFederation({ name: "app" })({}));\n`
       );
       const fakeBin = path.join(tempDir, 'fake-bin');
       fs.mkdirSync(fakeBin);
@@ -649,6 +685,32 @@ describe('Zephyr Codemod CLI', () => {
       expect(output).toContain('Failed to install dependencies from package.json');
       expect(output).toContain('✗ Errors: 1');
       expect(output).not.toContain('Publish the first bundle with:');
+    });
+
+    it('should print Android for Android-only CLI projects', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          dependencies: { 'react-native': '^0.79.0' },
+          devDependencies: {
+            '@module-federation/metro': '^2.9.0',
+            '@react-native-community/cli': '^19.0.0',
+            '@react-native-community/cli-platform-android': '^19.0.0',
+            metro: '^0.82.0',
+            'zephyr-metro-plugin': '^1.4.0',
+          },
+        })
+      );
+      fs.writeFileSync(
+        'metro.config.js',
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+      );
+
+      const output = runCodemod();
+
+      expect(output).toContain(
+        'npx react-native bundle-mf-remote --platform android --dev false'
+      );
     });
   });
 

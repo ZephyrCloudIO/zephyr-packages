@@ -7,7 +7,10 @@ import {
   buildAddCommand,
   buildInstallCommand,
   detectPackageManager,
+  getResolvedPackageVersion,
+  isPackageRequirementSatisfied,
   isPackageInstalled,
+  isSafelyConstrainedVersion,
 } from '../package-manager.js';
 
 describe('Package Manager Utils', () => {
@@ -336,6 +339,60 @@ describe('Package Manager Utils', () => {
       const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 
       expect(packageJson.devDependencies['@module-federation/metro']).toBe('^2.9.0');
+    });
+
+    it('should conservatively validate complete version declarations', () => {
+      expect(isSafelyConstrainedVersion('^0.82.0', '0.82.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('>=0.82.0 <1.0.0', '0.82.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('^0.81.0', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('workspace:^0.82.0', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('*', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('latest', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('0.82.0 || >=1.0.0', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('^2.9.0', '2.9.0', '3.0.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('>=2.9.0', '2.9.0', '3.0.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('>=2.9.0 <3.0.0', '2.9.0', '3.0.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('^3.0.0', '2.9.0', '3.0.0')).toBe(false);
+    });
+
+    it('should require the declared adapter-capable plugin range', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { 'zephyr-metro-plugin': '^1.3.0' } })
+      );
+
+      expect(isPackageRequirementSatisfied('zephyr-metro-plugin', tempDir, '1.4.0')).toBe(
+        false
+      );
+    });
+
+    it('should accept a compatible resolved package behind a workspace declaration', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { '@module-federation/metro': 'workspace:*' } })
+      );
+      const packageDirectory = path.join(
+        tempDir,
+        'node_modules',
+        '@module-federation',
+        'metro'
+      );
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: '@module-federation/metro', version: '2.9.1' })
+      );
+
+      expect(
+        isPackageRequirementSatisfied('@module-federation/metro', tempDir, '2.9.0')
+      ).toBe(true);
+    });
+
+    it('should not resolve packages outside the target project', () => {
+      fs.writeFileSync('package.json', '{}');
+
+      expect(getResolvedPackageVersion('react-native', tempDir)).toBeUndefined();
+      expect(getResolvedPackageVersion('metro', tempDir)).toBeUndefined();
     });
   });
 });

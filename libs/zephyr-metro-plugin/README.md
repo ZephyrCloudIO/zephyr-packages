@@ -82,7 +82,7 @@ module.exports = {
 Run a publication command with the target platform, for example:
 
 ```bash
-npx react-native bundle-mf-remote --platform ios
+npx react-native bundle-mf-remote --platform <platform>
 ```
 
 #### 3. Using Command Wrapper

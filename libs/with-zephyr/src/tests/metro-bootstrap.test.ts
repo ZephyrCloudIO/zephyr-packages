@@ -9,6 +9,10 @@ describe('bootstrapMetroCommands', () => {
 
   beforeEach(() => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zephyr-metro-bootstrap-'));
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+    );
   });
 
   afterEach(() => {
@@ -16,7 +20,20 @@ describe('bootstrapMetroCommands', () => {
   });
 
   function writePackageJson(value: Record<string, unknown>): void {
-    fs.writeFileSync(path.join(tempDir, 'package.json'), JSON.stringify(value));
+    fs.writeFileSync(
+      path.join(tempDir, 'package.json'),
+      JSON.stringify({
+        ...value,
+        dependencies: {
+          'react-native': '^0.79.0',
+          ...(value['dependencies'] as Record<string, string> | undefined),
+        },
+        devDependencies: {
+          metro: '^0.82.0',
+          ...(value['devDependencies'] as Record<string, string> | undefined),
+        },
+      })
+    );
   }
 
   it('creates a CommonJS React Native CLI config and companion requirements', () => {
@@ -34,22 +51,28 @@ describe('bootstrapMetroCommands', () => {
       '@module-federation/metro',
     ]);
     expect(result.packageRequirements[1]?.version).toBe('^2.9.0');
+    expect(result.packageRequirements[0]?.version).toBe('^1.4.0');
+    expect(result.packageRequirements[0]?.projectDirectory).toBe(tempDir);
     expect(content).toContain('module.exports = zephyrMetroReactNativeCli()');
   });
 
-  it('leaves an incompatible installed Metro command package untouched', () => {
+  it('requires an adapter-capable plugin upgrade', () => {
     writePackageJson({
       devDependencies: {
         '@react-native-community/cli': '^19.0.0',
-        '@module-federation/metro': '^2.8.0',
+        'zephyr-metro-plugin': '^1.3.0',
       },
     });
 
     const result = bootstrapMetroCommands(tempDir);
 
-    expect(result.integration).toBe('ambiguous');
-    expect(result.createdFiles).toEqual([]);
-    expect(result.manualGuidance[0]).toContain('Use ^2.9.0');
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.packageRequirements[0]).toEqual({
+      name: 'zephyr-metro-plugin',
+      isDev: true,
+      version: '^1.4.0',
+      projectDirectory: tempDir,
+    });
   });
 
   it('preserves existing React Native CLI config and commands', () => {
@@ -132,8 +155,9 @@ describe('bootstrapMetroCommands', () => {
     expect(result.packageRequirements).toEqual([]);
     expect(result.manualGuidance).toEqual([
       'No React Native command config was changed because the integration could not be updated safely.',
-      'React Native CLI: export commands: [...(config.commands ?? []), ...zephyrMetroReactNativeCli().commands] from react-native.config.js and import zephyrMetroReactNativeCli from zephyr-metro-plugin.',
-      'RNEF: add zephyrMetroRNEFPlugin() to the exported plugins array in rnef.config.* and import zephyrMetroRNEFPlugin from zephyr-metro-plugin.',
+      'React Native CLI: export commands: [...(config.commands ?? []), ...zephyrMetroReactNativeCli().commands] from the active react-native.config.* file and import zephyrMetroReactNativeCli from zephyr-metro-plugin.',
+      'RNEF: add zephyrMetroRNEFPlugin() to the exported plugins array in the active rnef.config.* file and import zephyrMetroRNEFPlugin from zephyr-metro-plugin.',
+      'Publish with --platform <platform> after registration.',
     ]);
   });
 
@@ -351,6 +375,154 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.readFileSync(path.join(tempDir, 'rnef.config.js'), 'utf8')).toBe(jsContent);
     expect(fs.readFileSync(path.join(tempDir, 'rnef.config.mjs'), 'utf8')).toBe(
       mjsContent
+    );
+  });
+
+  it('leaves plain non-federated Metro projects untouched', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      'module.exports = { resolver: {} };\n'
+    );
+    const companionPath = path.join(tempDir, 'react-native.config.js');
+    const companion = 'module.exports = { commands: [] };\n';
+    fs.writeFileSync(companionPath, companion);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.packageRequirements).toEqual([]);
+    expect(result.manualGuidance[0]).toContain(
+      'is not verifiably configured with @module-federation/metro'
+    );
+    expect(fs.readFileSync(companionPath, 'utf8')).toBe(companion);
+  });
+
+  it('rejects broad and protocol dependency declarations when unresolved', () => {
+    writePackageJson({
+      dependencies: { 'react-native': 'workspace:*' },
+      devDependencies: {
+        '@react-native-community/cli': '^19.0.0',
+        metro: '*',
+      },
+    });
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.manualGuidance).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('react-native declaration "workspace:*"'),
+        expect.stringContaining('metro declaration "*"'),
+      ])
+    );
+  });
+
+  it('rejects an unresolved broad Module Federation declaration', () => {
+    writePackageJson({
+      devDependencies: {
+        '@module-federation/metro': 'workspace:*',
+        '@react-native-community/cli': '^19.0.0',
+      },
+    });
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.manualGuidance[0]).toContain(
+      '@module-federation/metro declaration "workspace:*"'
+    );
+  });
+
+  it('prefers a compatible resolved Module Federation version', () => {
+    writePackageJson({
+      devDependencies: {
+        '@module-federation/metro': 'workspace:*',
+        '@react-native-community/cli': '^19.0.0',
+      },
+    });
+    const packageDirectory = path.join(
+      tempDir,
+      'node_modules',
+      '@module-federation',
+      'metro'
+    );
+    fs.mkdirSync(packageDirectory, { recursive: true });
+    fs.writeFileSync(
+      path.join(packageDirectory, 'package.json'),
+      JSON.stringify({ name: '@module-federation/metro', version: '2.9.1' })
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('react-native-cli');
+  });
+
+  it('prefers compatible resolved versions over broad declarations', () => {
+    writePackageJson({
+      dependencies: { 'react-native': 'workspace:*' },
+      devDependencies: {
+        '@react-native-community/cli': '^19.0.0',
+        metro: '*',
+      },
+    });
+    for (const [packageName, version] of [
+      ['react-native', '0.79.2'],
+      ['metro', '0.82.1'],
+    ]) {
+      const packageDirectory = path.join(tempDir, 'node_modules', packageName);
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: packageName, version })
+      );
+    }
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.createdFiles).toEqual(['react-native.config.js']);
+  });
+
+  it('rejects incompatible React Native and Metro versions', () => {
+    writePackageJson({
+      dependencies: { 'react-native': '^0.78.0' },
+      devDependencies: {
+        '@react-native-community/cli': '^19.0.0',
+        metro: '^0.81.0',
+      },
+    });
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.manualGuidance).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('react-native declaration "^0.78.0"'),
+        expect.stringContaining('metro declaration "^0.81.0"'),
+      ])
+    );
+  });
+
+  it('uses Android when it is the only direct CLI platform package', () => {
+    writePackageJson({
+      devDependencies: {
+        '@react-native-community/cli': '^19.0.0',
+        '@react-native-community/cli-platform-android': '^19.0.0',
+      },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      'module.exports = { resolver: {} };\n'
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.platformArgument).toBe('android');
+    expect(result.manualGuidance).toContain(
+      'Publish with --platform android after registration.'
     );
   });
 });

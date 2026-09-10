@@ -2,11 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import { rewriteWithAstGrep, searchWithAstGrep } from './engine/ast-grep.js';
 import type { PackageRequirement } from './nextjs-vinext.js';
+import {
+  getDeclaredPackageVersion,
+  getResolvedPackageVersion,
+  isSafelyConstrainedVersion,
+  isVersionCompatible,
+} from './package-manager.js';
 
 type MetroIntegration = 'react-native-cli' | 'rnef' | 'ambiguous' | 'none';
 
 export interface MetroBootstrapResult {
   integration: MetroIntegration;
+  platformArgument: string;
   createdFiles: string[];
   updatedFiles: string[];
   packageRequirements: PackageRequirement[];
@@ -26,13 +33,14 @@ const REACT_NATIVE_CONFIG_FILES = [
   'react-native.config.mjs',
 ];
 const RNEF_CONFIG_FILES = ['rnef.config.js', 'rnef.config.ts', 'rnef.config.mjs'];
-const MODULE_FEDERATION_METRO_VERSION = '^2.9.0';
-
-const MANUAL_GUIDANCE = [
-  'No React Native command config was changed because the integration could not be updated safely.',
-  'React Native CLI: export commands: [...(config.commands ?? []), ...zephyrMetroReactNativeCli().commands] from react-native.config.js and import zephyrMetroReactNativeCli from zephyr-metro-plugin.',
-  'RNEF: add zephyrMetroRNEFPlugin() to the exported plugins array in rnef.config.* and import zephyrMetroRNEFPlugin from zephyr-metro-plugin.',
+const METRO_CONFIG_FILES = [
+  'metro.config.js',
+  'metro.config.ts',
+  'metro.config.mjs',
+  'metro.config.cjs',
 ];
+const MODULE_FEDERATION_METRO_VERSION = '^2.9.0';
+const ZEPHYR_METRO_PLUGIN_VERSION = '^1.4.0';
 
 type ConfigUpdateResult = 'updated' | 'already-configured' | 'unsupported';
 
@@ -52,19 +60,71 @@ function hasAnyPackage(packageJson: Record<string, any>, names: string[]): boole
   return names.some((name) => Boolean(packages[name]));
 }
 
-function getPackageVersion(
-  packageJson: Record<string, any>,
-  packageName: string
-): string | undefined {
-  return (
-    packageJson['dependencies']?.[packageName] ??
-    packageJson['devDependencies']?.[packageName]
-  );
+function getPlatformArgument(packageJson: Record<string, any>): string {
+  const hasAndroid = hasAnyPackage(packageJson, [
+    '@react-native-community/cli-platform-android',
+  ]);
+  const hasIos = hasAnyPackage(packageJson, ['@react-native-community/cli-platform-ios']);
+  return hasAndroid !== hasIos ? (hasAndroid ? 'android' : 'ios') : '<platform>';
 }
 
-function supportsMetroCommands(version: string): boolean {
-  const match = version.match(/(\d+)\.(\d+)/);
-  return Boolean(match && Number(match[1]) === 2 && Number(match[2]) >= 9);
+function getManualGuidance(packageJson: Record<string, any>): string[] {
+  return [
+    'No React Native command config was changed because the integration could not be updated safely.',
+    'React Native CLI: export commands: [...(config.commands ?? []), ...zephyrMetroReactNativeCli().commands] from the active react-native.config.* file and import zephyrMetroReactNativeCli from zephyr-metro-plugin.',
+    'RNEF: add zephyrMetroRNEFPlugin() to the exported plugins array in the active rnef.config.* file and import zephyrMetroRNEFPlugin from zephyr-metro-plugin.',
+    `Publish with --platform ${getPlatformArgument(packageJson)} after registration.`,
+  ];
+}
+
+function getVersionProblem(
+  directory: string,
+  packageName: string,
+  minimumVersion: string,
+  options: { allowMissing?: boolean; maximumVersionExclusive?: string } = {}
+): string | undefined {
+  const expectedVersion = options.maximumVersionExclusive
+    ? `${minimumVersion} or newer but below ${options.maximumVersionExclusive}`
+    : `${minimumVersion} or newer`;
+  const resolvedVersion = getResolvedPackageVersion(packageName, directory);
+  if (resolvedVersion) {
+    return isVersionCompatible(
+      resolvedVersion,
+      minimumVersion,
+      options.maximumVersionExclusive
+    )
+      ? undefined
+      : `${packageName} ${resolvedVersion} is installed, but ${expectedVersion} is required.`;
+  }
+
+  const declaration = getDeclaredPackageVersion(packageName, directory);
+  if (!declaration) {
+    if (options.allowMissing) return undefined;
+    return `${packageName} could not be resolved and has no direct version declaration.`;
+  }
+  return isSafelyConstrainedVersion(
+    declaration,
+    minimumVersion,
+    options.maximumVersionExclusive
+  )
+    ? undefined
+    : `${packageName} declaration "${declaration}" could not be verified as ${expectedVersion}.`;
+}
+
+function hasModuleFederationSetup(filePath: string): boolean {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const importsWithModuleFederation =
+    /^\s*import\s*\{[^}]*\bwithModuleFederation\b[^}]*\}\s*from\s*["']@module-federation\/metro["']/m.test(
+      content
+    ) ||
+    /^\s*(?:const|let|var)\s*\{[^}]*\bwithModuleFederation\b[^}]*\}\s*=\s*require\(\s*["']@module-federation\/metro["']\s*\)/m.test(
+      content
+    );
+  return (
+    importsWithModuleFederation &&
+    searchWithAstGrep({ filePath, pattern: 'withModuleFederation($$$ARGS)' }).status ===
+      'match'
+  );
 }
 
 function discoverConfigFiles(
@@ -238,11 +298,12 @@ function updateConfig(
 
 export function bootstrapMetroCommands(
   directory: string,
-  options: { dryRun?: boolean } = {}
+  options: { dryRun?: boolean; metroConfigFilePaths?: string[] } = {}
 ): MetroBootstrapResult {
   const dryRun = options.dryRun ?? false;
   const result: MetroBootstrapResult = {
     integration: 'none',
+    platformArgument: '<platform>',
     createdFiles: [],
     updatedFiles: [],
     packageRequirements: [],
@@ -251,20 +312,45 @@ export function bootstrapMetroCommands(
   const packageJson = readPackageJson(directory);
   if (!packageJson) {
     result.integration = 'ambiguous';
-    result.manualGuidance = MANUAL_GUIDANCE;
+    result.manualGuidance = [
+      'No package.json was found for this Metro project, so publication commands were not registered.',
+    ];
+    return result;
+  }
+  result.platformArgument = getPlatformArgument(packageJson);
+
+  const metroConfigFilePaths =
+    options.metroConfigFilePaths ??
+    METRO_CONFIG_FILES.map((fileName) => path.join(directory, fileName)).filter(
+      (filePath) => fs.existsSync(filePath)
+    );
+  if (
+    metroConfigFilePaths.length !== 1 ||
+    !hasModuleFederationSetup(metroConfigFilePaths[0]!)
+  ) {
+    const configDescription =
+      metroConfigFilePaths.length === 1
+        ? path.basename(metroConfigFilePaths[0]!)
+        : 'The active Metro config';
+    result.integration = 'ambiguous';
+    result.manualGuidance = [
+      `${configDescription} is not verifiably configured with @module-federation/metro using withModuleFederation(). Companion command config was left unchanged; configure Module Federation first, then rerun with-zephyr.`,
+      ...getManualGuidance(packageJson),
+    ];
     return result;
   }
 
-  const installedMetroVersion = getPackageVersion(
-    packageJson,
-    '@module-federation/metro'
-  );
-  if (installedMetroVersion && !supportsMetroCommands(installedMetroVersion)) {
+  const versionProblems = [
+    getVersionProblem(directory, '@module-federation/metro', '2.9.0', {
+      allowMissing: true,
+      maximumVersionExclusive: '3.0.0',
+    }),
+    getVersionProblem(directory, 'react-native', '0.79.0'),
+    getVersionProblem(directory, 'metro', '0.82.0'),
+  ].filter((problem): problem is string => Boolean(problem));
+  if (versionProblems.length > 0) {
     result.integration = 'ambiguous';
-    result.manualGuidance = [
-      `Installed @module-federation/metro version ${installedMetroVersion} is not supported by the publication adapter. Use ${MODULE_FEDERATION_METRO_VERSION}.`,
-      ...MANUAL_GUIDANCE,
-    ];
+    result.manualGuidance = [...versionProblems, ...getManualGuidance(packageJson)];
     return result;
   }
 
@@ -294,7 +380,7 @@ export function bootstrapMetroCommands(
     hasReactNativeConfigWithRnefPackage
   ) {
     result.integration = 'ambiguous';
-    result.manualGuidance = MANUAL_GUIDANCE;
+    result.manualGuidance = getManualGuidance(packageJson);
     return result;
   }
 
@@ -306,18 +392,24 @@ export function bootstrapMetroCommands(
         : 'ambiguous';
   if (integration === 'ambiguous') {
     result.integration = integration;
-    result.manualGuidance = MANUAL_GUIDANCE;
+    result.manualGuidance = getManualGuidance(packageJson);
     return result;
   }
 
   result.integration = integration;
   const setPackageRequirements = () => {
     result.packageRequirements = [
-      { name: 'zephyr-metro-plugin', isDev: true },
+      {
+        name: 'zephyr-metro-plugin',
+        isDev: true,
+        version: ZEPHYR_METRO_PLUGIN_VERSION,
+        projectDirectory: directory,
+      },
       {
         name: '@module-federation/metro',
         isDev: true,
         version: MODULE_FEDERATION_METRO_VERSION,
+        projectDirectory: directory,
       },
     ];
   };
@@ -356,7 +448,7 @@ export function bootstrapMetroCommands(
     if (updateResult === 'unsupported') {
       result.manualGuidance = [
         `${reactNativeConfigName} does not directly export an object and was left unchanged.`,
-        ...MANUAL_GUIDANCE,
+        ...getManualGuidance(packageJson),
       ];
     } else {
       setPackageRequirements();
@@ -395,7 +487,7 @@ export function bootstrapMetroCommands(
   if (updateResult === 'unsupported') {
     result.manualGuidance = [
       `${rnefConfigName} does not directly export an object and was left unchanged.`,
-      ...MANUAL_GUIDANCE,
+      ...getManualGuidance(packageJson),
     ];
   } else {
     setPackageRequirements();

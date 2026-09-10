@@ -263,6 +263,17 @@ The codemod recognizes and handles various configuration patterns:
 ### Metro (React Native)
 
 - `module.exports = ...` config exports (wrapped with async `withZephyr` call)
+- React Native CLI projects get `bundle-mf-host` and `bundle-mf-remote` through
+  the existing `react-native.config.js`, `.cjs`, `.ts`, or `.mjs` file
+- RNEF projects register `zephyrMetroRNEFPlugin` in the active
+  `rnef.config.js`, `.ts`, or `.mjs` file
+- Ambiguous React Native CLI/RNEF projects are left unchanged and receive manual
+  registration instructions
+- `zephyr-metro-plugin` and `@module-federation/metro` are installed for command
+  registration; the Metro companion is pinned to the compatible `^2.9.0` range
+
+The Metro `withZephyr` wrapper is configuration-only; publication happens only
+when a registered bundle command completes its upload.
 
 ### Vite/Rolldown
 

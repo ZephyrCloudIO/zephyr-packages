@@ -3,6 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {
+  addToPackageJson,
   buildAddCommand,
   buildInstallCommand,
   detectPackageManager,
@@ -324,6 +325,17 @@ describe('Package Manager Utils', () => {
 
     it('should build install command for pnpm', () => {
       expect(buildInstallCommand('pnpm')).toBe('pnpm install');
+    });
+
+    it('should preserve an explicit package version range', () => {
+      fs.writeFileSync('package.json', '{}');
+
+      expect(addToPackageJson(tempDir, '@module-federation/metro', '^2.9.0', true)).toBe(
+        true
+      );
+      const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(packageJson.devDependencies['@module-federation/metro']).toBe('^2.9.0');
     });
   });
 });

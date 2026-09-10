@@ -243,7 +243,9 @@ export function addToPackageJson(
       packageJson[depType] = {};
     }
 
-    packageJson[depType][packageName] = `^${version}`;
+    packageJson[depType][packageName] = /^[~^<>=*]|\s|\|\|/.test(version)
+      ? version
+      : `^${version}`;
 
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
     return true;

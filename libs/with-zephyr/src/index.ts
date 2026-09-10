@@ -691,7 +691,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   }
 
   if (!dryRun && !dependencyInstallFailed) {
-    for (const { result } of metroBootstraps) {
+    for (const { projectDirectory, result } of metroBootstraps) {
       if (result.manualGuidance.length > 0 || result.integration === 'none') {
         continue;
       }
@@ -699,7 +699,15 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         result.integration === 'rnef'
           ? `rnef bundle-mf-remote --platform ${result.platformArgument} --dev false`
           : `npx react-native bundle-mf-remote --platform ${result.platformArgument} --dev false`;
-      console.log(chalk.blue(`Publish the first bundle with: ${command}`));
+      const relativeProjectDirectory = normalizePathForOutput(
+        path.relative(path.resolve(directory), projectDirectory)
+      );
+      const projectPrefix = relativeProjectDirectory
+        ? `cd "${relativeProjectDirectory}" && `
+        : '';
+      console.log(
+        chalk.blue(`Publish the first bundle with: ${projectPrefix}${command}`)
+      );
     }
   }
 

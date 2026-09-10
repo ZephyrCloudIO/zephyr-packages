@@ -124,17 +124,18 @@ function getVersionProblem(
 
 function hasModuleFederationSetup(filePath: string): boolean {
   const content = fs.readFileSync(filePath, 'utf8');
-  const importsWithModuleFederation =
-    /^\s*import\s*\{[^}]*\bwithModuleFederation\b[^}]*\}\s*from\s*["']@module-federation\/metro["']/m.test(
-      content
-    ) ||
-    /^\s*(?:const|let|var)\s*\{[^}]*\bwithModuleFederation\b[^}]*\}\s*=\s*require\(\s*["']@module-federation\/metro["']\s*\)/m.test(
-      content
-    );
-  return (
-    importsWithModuleFederation &&
-    searchWithAstGrep({ filePath, pattern: 'withModuleFederation($$$ARGS)' }).status ===
-      'match'
+  const localName = findImportedHelperName(
+    content,
+    '@module-federation/metro',
+    'withModuleFederation'
+  );
+  return Boolean(
+    localName &&
+    hasExportedConfigCall({
+      filePath,
+      pattern: `${localName}($$$ARGS)`,
+      allowDirectExport: true,
+    })
   );
 }
 
@@ -153,10 +154,18 @@ function discoverConfigFiles(
   };
 }
 
-function findImportedHelperName(content: string, importName: string): string | undefined {
+function findImportedHelperName(
+  content: string,
+  packageName: string,
+  importName: string
+): string | undefined {
+  const escapedPackageName = packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const importPatterns = [
-    /import\s*\{([^}]*)\}\s*from\s*["']zephyr-metro-plugin["']/g,
-    /(?:const|let|var)\s*\{([^}]*)\}\s*=\s*require\(["']zephyr-metro-plugin["']\)/g,
+    new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*["']${escapedPackageName}["']`, 'g'),
+    new RegExp(
+      `(?:const|let|var)\\s*\\{([^}]*)\\}\\s*=\\s*require\\(\\s*["']${escapedPackageName}["']\\s*\\)`,
+      'g'
+    ),
   ];
 
   for (const pattern of importPatterns) {
@@ -180,7 +189,7 @@ function hasExportedHelperCall(
   importName: string,
   propertyName: 'commands' | 'plugins'
 ): boolean {
-  const localName = findImportedHelperName(content, importName);
+  const localName = findImportedHelperName(content, 'zephyr-metro-plugin', importName);
   return [importName, localName]
     .filter((name): name is string => Boolean(name))
     .some((name) => {
@@ -195,7 +204,7 @@ function hasExportedHelperCall(
 }
 
 function addImport(content: string, importName: string, esm: boolean): string {
-  if (findImportedHelperName(content, importName)) {
+  if (findImportedHelperName(content, 'zephyr-metro-plugin', importName)) {
     return content;
   }
 
@@ -217,7 +226,8 @@ function updateCommonJsConfig(
   if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
     return 'already-configured';
   }
-  const localName = findImportedHelperName(content, importName) ?? importName;
+  const localName =
+    findImportedHelperName(content, 'zephyr-metro-plugin', importName) ?? importName;
   if (
     (content.match(/module\.exports\s*=/g)?.length ?? 0) !== 1 ||
     searchWithAstGrep({
@@ -257,7 +267,8 @@ function updateEsmConfig(
   if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
     return 'already-configured';
   }
-  const localName = findImportedHelperName(content, importName) ?? importName;
+  const localName =
+    findImportedHelperName(content, 'zephyr-metro-plugin', importName) ?? importName;
 
   const result = rewriteWithAstGrep({
     filePath,
@@ -421,17 +432,19 @@ export function bootstrapMetroCommands(
   }
 
   result.integration = integration;
+  const isDevRequirement = (packageName: string) =>
+    !Object.prototype.hasOwnProperty.call(packageJson['dependencies'] ?? {}, packageName);
   const setPackageRequirements = () => {
     result.packageRequirements = [
       {
         name: 'zephyr-metro-plugin',
-        isDev: true,
+        isDev: isDevRequirement('zephyr-metro-plugin'),
         version: ZEPHYR_METRO_PLUGIN_VERSION,
         projectDirectory: directory,
       },
       {
         name: '@module-federation/metro',
-        isDev: true,
+        isDev: isDevRequirement('@module-federation/metro'),
         version: MODULE_FEDERATION_METRO_VERSION,
         projectDirectory: directory,
       },

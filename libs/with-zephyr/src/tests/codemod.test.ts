@@ -517,6 +517,12 @@ describe('Zephyr Codemod CLI', () => {
 
       expect(output).toContain('Created apps/host/react-native.config.js');
       expect(output).toContain('Created apps/remote/react-native.config.js');
+      expect(output).toContain(
+        'Publish the first bundle with: cd "apps/host" && npx react-native bundle-mf-remote --platform <platform> --dev false'
+      );
+      expect(output).toContain(
+        'Publish the first bundle with: cd "apps/remote" && npx react-native bundle-mf-remote --platform <platform> --dev false'
+      );
       expect(fs.existsSync('apps/host/react-native.config.js')).toBe(true);
       expect(fs.existsSync('apps/remote/react-native.config.js')).toBe(true);
       for (const project of ['apps/host', 'apps/remote']) {

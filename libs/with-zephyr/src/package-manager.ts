@@ -416,10 +416,12 @@ export function addToPackageJson(
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
     const depType = isDev ? 'devDependencies' : 'dependencies';
+    const oppositeDepType = isDev ? 'dependencies' : 'devDependencies';
     if (!packageJson[depType]) {
       packageJson[depType] = {};
     }
 
+    delete packageJson[oppositeDepType]?.[packageName];
     packageJson[depType][packageName] = /^[~^<>=*]|\s|\|\|/.test(version)
       ? version
       : `^${version}`;

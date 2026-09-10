@@ -81,6 +81,25 @@ describe('bootstrapMetroCommands', () => {
     });
   });
 
+  it('preserves production dependency placement when upgrading the adapter', () => {
+    writePackageJson({
+      dependencies: {
+        'react-native': '^0.79.0',
+        'zephyr-metro-plugin': '^1.3.0',
+      },
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.packageRequirements[0]).toEqual({
+      name: 'zephyr-metro-plugin',
+      isDev: false,
+      version: '^1.4.0',
+      projectDirectory: tempDir,
+    });
+  });
+
   it('preserves existing React Native CLI config and commands', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },
@@ -553,6 +572,37 @@ describe('bootstrapMetroCommands', () => {
       'is not verifiably configured with @module-federation/metro'
     );
     expect(fs.readFileSync(companionPath, 'utf8')).toBe(companion);
+  });
+
+  it('rejects a federation call that does not produce the exported Metro config', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `const { withModuleFederation } = require("@module-federation/metro");\nconst unused = withModuleFederation({ name: "app" })({});\nmodule.exports = { resolver: {} };\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.packageRequirements).toEqual([]);
+    expect(fs.existsSync(path.join(tempDir, 'react-native.config.js'))).toBe(false);
+  });
+
+  it('recognizes an aliased federation wrapper through an exported identifier', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `const { withModuleFederation: withMF } = require("@module-federation/metro");\nconst config = withMF({ name: "app" })({});\nmodule.exports = config;\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.createdFiles).toEqual(['react-native.config.js']);
   });
 
   it('rejects broad and protocol dependency declarations when unresolved', () => {

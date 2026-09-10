@@ -354,6 +354,24 @@ describe('Package Manager Utils', () => {
       expect(packageJson.devDependencies['@module-federation/metro']).toBe('^2.9.0');
     });
 
+    it('should preserve production placement and remove a conflicting dev entry', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          dependencies: { 'zephyr-metro-plugin': '^1.3.0' },
+          devDependencies: { 'zephyr-metro-plugin': '^1.2.0' },
+        })
+      );
+
+      expect(addToPackageJson(tempDir, 'zephyr-metro-plugin', '^1.4.0', false)).toBe(
+        true
+      );
+      const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(packageJson.dependencies['zephyr-metro-plugin']).toBe('^1.4.0');
+      expect(packageJson.devDependencies['zephyr-metro-plugin']).toBeUndefined();
+    });
+
     it('should conservatively validate complete version declarations', () => {
       expect(isSafelyConstrainedVersion('^0.82.0', '0.82.0')).toBe(true);
       expect(isSafelyConstrainedVersion('>=0.82.0 <1.0.0', '0.82.0')).toBe(true);

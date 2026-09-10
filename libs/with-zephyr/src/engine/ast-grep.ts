@@ -25,7 +25,7 @@ export interface AstGrepResult {
 }
 
 export interface ExportedConfigCallOptions extends AstGrepRunOptions {
-  propertyName: 'commands' | 'plugins';
+  propertyName?: 'commands' | 'plugins';
   allowDirectExport?: boolean;
 }
 
@@ -186,16 +186,42 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
       return Boolean(identifier && exportedIdentifiers.has(identifier));
     };
 
-    return calls.some((call) => {
-      if (options.allowDirectExport) {
-        for (const ancestor of call.ancestors()) {
-          for (const pattern of ['module.exports = $VALUE', 'export default $VALUE']) {
-            if (ancestor.matches(pattern) && call.parent()?.id() === ancestor.id()) {
-              return true;
-            }
+    const isDirectlyExportedExpression = (call: SgNode): boolean => {
+      let expression = call;
+      let parent = expression.parent();
+      while (parent) {
+        for (const pattern of ['module.exports = $VALUE', 'export default $VALUE']) {
+          if (parent.matches(pattern) && expression.parent()?.id() === parent.id()) {
+            return true;
           }
         }
+
+        if (parent.kind() === 'variable_declarator') {
+          const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
+          return Boolean(identifier && exportedIdentifiers.has(identifier));
+        }
+
+        const parentKind = parent.kind();
+        if (
+          parentKind !== 'call_expression' &&
+          parentKind !== 'arguments' &&
+          parentKind !== 'parenthesized_expression' &&
+          parentKind !== 'await_expression'
+        ) {
+          return false;
+        }
+        expression = parent;
+        parent = parent.parent();
       }
+      return false;
+    };
+
+    return calls.some((call) => {
+      if (options.allowDirectExport && isDirectlyExportedExpression(call)) {
+        return true;
+      }
+
+      if (!options.propertyName) return false;
 
       const property = call
         .ancestors()

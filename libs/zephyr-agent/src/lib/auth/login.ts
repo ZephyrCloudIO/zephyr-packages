@@ -1,8 +1,10 @@
 import type openBrowser from 'open';
+import { isCI } from 'ci-info';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as readline from 'node:readline';
+import { isatty } from 'node:tty';
 import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
@@ -32,7 +34,7 @@ interface PrivateAuthenticationArtifact {
  *
  * @returns The token as a string.
  */
-export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
+export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
   const secret_token = getSecretToken();
   const server_token = getServerToken();
   const ci_token = getCiToken();
@@ -67,8 +69,12 @@ export async function checkAuth(git_config: ZeGitInfo): Promise<void> {
 
   // In non-TTY environments it's expected that a ZE_SECRET_TOKEN is present
   // since user cannot interact with it.
-  if (!isTTY) {
+  if (isCI || !isatty(process.stdin.fd) || !isatty(process.stdout.fd)) {
     logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
+    throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+      message:
+        'Interactive login is unavailable. Run the deployment in a terminal or provide a valid authentication token.',
+    });
   }
 
   // No valid token found; initiate authentication.

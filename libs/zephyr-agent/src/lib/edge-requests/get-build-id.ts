@@ -5,35 +5,39 @@ import { getToken } from '../node-persist/token';
 import { getApplicationConfiguration } from './get-application-configuration';
 
 export async function getBuildId(application_uid: string): Promise<string> {
-  const { BUILD_ID_ENDPOINT, user_uuid, jwt, username } =
-    await getApplicationConfiguration({
-      application_uid,
-    });
+  try {
+    const { BUILD_ID_ENDPOINT, user_uuid, jwt, username } =
+      await getApplicationConfiguration({
+        application_uid,
+      });
 
-  const token = await getToken();
+    const token = await getToken();
 
-  const options = {
-    headers: {
-      can_write_jwt: jwt,
-      Authorization: 'Bearer ' + token,
-    },
-    credentialToken: token,
-  };
+    const options = {
+      headers: {
+        can_write_jwt: jwt,
+        Authorization: 'Bearer ' + token,
+      },
+      credentialToken: token,
+    };
 
-  const [ok, cause, data] = await makeRequest<Record<string, string>>(
-    BUILD_ID_ENDPOINT,
-    options
-  );
+    const [ok, cause, data] = await makeRequest<Record<string, string>>(
+      BUILD_ID_ENDPOINT,
+      options
+    );
 
-  if (!ok || !data[user_uuid]) {
-    throw new ZephyrError(ZeErrors.ERR_GET_BUILD_ID, {
-      application_uid,
-      username,
-      cause,
-      data,
-    });
+    if (!ok || !data[user_uuid]) {
+      throw new ZephyrError(ZeErrors.ERR_GET_BUILD_ID, {
+        application_uid,
+        username,
+        cause,
+        data: { responseKeys: Object.keys(data ?? {}) },
+      });
+    }
+
+    ze_log.app('Build ID retrieved...', data);
+    return data[user_uuid];
+  } catch (error) {
+    throw ZephyrError.withContext(error, 'create-build-id');
   }
-
-  ze_log.app('Build ID retrieved...', data);
-  return data[user_uuid];
 }

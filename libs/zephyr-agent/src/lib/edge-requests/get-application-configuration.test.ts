@@ -3,6 +3,7 @@ import {
   getApplicationConfiguration,
   invalidateApplicationConfigCache,
 } from './get-application-configuration';
+import { ZeErrors, ZephyrError } from '../errors';
 
 const mocks = rs.hoisted(() => ({
   makeRequest: rs.fn(),
@@ -41,6 +42,7 @@ rs.mock('../node-persist/application-configuration', () => ({
 rs.mock('../logging', () => ({ ze_log: { app: rs.fn() } }));
 rs.mock('../logging/ze-log-event', () => ({ logFn: rs.fn() }));
 rs.mock('zephyr-edge-contract', () => ({
+  formatString: (message: string) => message,
   ze_api_gateway: {
     application_config: '/api/v1/application-config',
   },
@@ -119,6 +121,35 @@ describe('getApplicationConfiguration', () => {
     expect(mockMakeRequest).toHaveBeenCalled();
     expect(mockSaveAppConfig).toHaveBeenCalled();
     expect(result).toMatchObject(newConfig);
+  });
+
+  it('preserves a forbidden reason while naming the configuration operation', async () => {
+    const cause = new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
+      message: 'Target access denied',
+    });
+    mockGetAppConfig.mockResolvedValue(null);
+    mockMakeRequest.mockResolvedValue([false, cause]);
+
+    await expect(getApplicationConfiguration({ application_uid })).rejects.toMatchObject({
+      code: 'ZE20014',
+      operation: 'get-application-config',
+      reason: 'ZE10022',
+      cause,
+    });
+  });
+
+  it('attributes token resolution failures to the configuration operation', async () => {
+    mockGetToken.mockRejectedValue(
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+        message: 'Authentication token unavailable',
+      })
+    );
+
+    await expect(getApplicationConfiguration({ application_uid })).rejects.toMatchObject({
+      code: 'ZE10018',
+      operation: 'get-application-config',
+      reason: 'ZE10018',
+    });
   });
 
   // Test in-memory caching

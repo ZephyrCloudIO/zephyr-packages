@@ -3,8 +3,9 @@ import { execFile as node_execFile } from 'node:child_process';
 import { sep } from 'node:path';
 import { promisify } from 'node:util';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
-import { ZE_API_ENDPOINT } from 'zephyr-edge-contract';
-import { isTokenStillValid } from '../auth/login';
+import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
+import { TOKEN_EXPIRY } from '../auth/auth-flags';
+import { checkAuth, isTokenStillValid } from '../auth/login';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
@@ -67,8 +68,12 @@ export async function getGitInfo(
   context?: string,
   zephyrConfig: ResolvedZephyrConfig = getZephyrConfig(context)
 ): Promise<ZeGitInfo> {
-  // Always gather fresh git info for build accuracy
-  return await gatherGitInfo(resolveZephyrContextDirectory(context), zephyrConfig);
+  try {
+    // Always gather fresh git info for build accuracy
+    return await gatherGitInfo(resolveZephyrContextDirectory(context), zephyrConfig);
+  } catch (error) {
+    throw ZephyrError.withContext(error, 'resolve-git-metadata');
+  }
 }
 
 /** Internal function that actually gathers git information. */
@@ -111,40 +116,15 @@ async function gatherGitInfo(
       });
     }
 
-    if (!hasConfiguredApp(zephyrConfig)) {
-      // If git repo info is not available, try global git config
-      logFn(
-        'warn',
-        'Git repository not found. Zephyr REQUIRES a git repository with remote origin.'
-      );
-      logFn(
-        'warn',
-        'Manual configuration is NOT recommended and WILL cause errors in production.'
-      );
-      logFn('warn', '');
-      logFn('warn', 'To properly use Zephyr, you MUST:');
-      logFn('warn', '1. Initialize git: git init');
-      logFn('warn', '2. Add remote: git remote add origin git@github.com:ORG/REPO.git');
-      logFn(
-        'warn',
-        '3. For CI/production reliability, add at least one commit: git add . && git commit -m "Initial commit"'
-      );
-      logFn('warn', '');
-      logFn(
-        'warn',
-        'Alternative: Use our CLI for automatic setup: npx create-zephyr-apps'
-      );
-      logFn('warn', '📝 Documentation: https://docs.zephyr-cloud.io');
-    }
     ze_log.git('Git repository not found, falling back to global git config');
 
     try {
       const globalGitInfo = await loadGlobalGitInfo(context, zephyrConfig);
       return globalGitInfo;
     } catch {
-      // If global git config also fails, use defaults
-      logFn('warn', 'Global git config not found, using auto-generated defaults');
-      ze_log.git('Global git config not found, using auto-generated defaults');
+      // If global git config also fails, use authenticated user metadata.
+      logFn('warn', 'Global git config not found, checking authenticated user metadata');
+      ze_log.git('Global git config not found, checking authenticated user metadata');
 
       const fallbackInfo = await getFallbackGitInfo(context, zephyrConfig);
       return fallbackInfo;
@@ -438,35 +418,63 @@ async function loadGlobalGitInfo(
 
 /** Get user info from API endpoint instead of JWT decoding */
 async function getUserInfoFromAPI(): Promise<UserInfo> {
-  const token = await getToken();
-  if (!token || !isTokenStillValid(token, 60)) {
-    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-      message: 'No valid authentication token found. Please login first.',
-    });
+  try {
+    let authenticationAttempted = false;
+    const authenticate = async () => {
+      authenticationAttempted = true;
+      await checkAuth();
+    };
+
+    while (true) {
+      const token = await getToken();
+      if (!token || !isTokenStillValid(token, TOKEN_EXPIRY.SHORT_VALIDITY_CHECK_SEC)) {
+        if (authenticationAttempted) {
+          throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
+            message: 'No valid authentication token was available after login.',
+          });
+        }
+
+        await authenticate();
+        continue;
+      }
+
+      const [ok, cause, response] = await makeRequest<{ value: UserInfo }>(
+        {
+          path: ze_api_gateway.user_info,
+          base: ZE_API_ENDPOINT(),
+          query: {},
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentialToken: token,
+        }
+      );
+
+      if (!ok) {
+        if (
+          !authenticationAttempted &&
+          !hasSecretToken() &&
+          ZephyrError.is(cause, ZeErrors.ERR_AUTH_ERROR)
+        ) {
+          await authenticate();
+          continue;
+        }
+
+        throw cause;
+      }
+
+      const userData = response.value;
+
+      ze_log.git('Retrieved user info from API:', {
+        name: userData.name,
+        email: userData.email,
+      });
+
+      return userData;
+    }
+  } catch (error) {
+    throw ZephyrError.withContext(error, 'get-user-info');
   }
-
-  const [ok, cause, response] = await makeRequest<{ value: UserInfo }>({
-    path: '/v2/user/me',
-    base: ZE_API_ENDPOINT(),
-    query: {},
-  });
-
-  if (!ok) {
-    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-      message:
-        'Failed to get user information from API. Please ensure you are logged in with a valid token.',
-      cause,
-    });
-  }
-
-  const userData = response.value;
-
-  ze_log.git('Retrieved user info from API:', {
-    name: userData.name,
-    email: userData.email,
-  });
-
-  return userData;
 }
 
 /** Generate fallback git info when git is completely unavailable */

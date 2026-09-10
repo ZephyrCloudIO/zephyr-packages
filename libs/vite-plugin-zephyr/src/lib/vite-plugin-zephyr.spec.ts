@@ -7,6 +7,7 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
 import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
+  viteVersion: '7.0.0',
   federation: rs.fn(),
   extractAssets: rs.fn(),
   savePartialAssetMap: rs.fn(),
@@ -16,6 +17,7 @@ const mocks = rs.hoisted(() => ({
   zeBuildDashData: rs.fn(async () => ({})),
   deferCreate: rs.fn(),
   zeLogInit: rs.fn(),
+  logFn: rs.fn(),
   engine: {
     application_uid: 'org.project.vite',
     buildProperties: { output: 'dist' },
@@ -32,7 +34,9 @@ const mocks = rs.hoisted(() => ({
 
 rs.mock('vite', () => ({
   loadEnv: rs.fn(() => ({})),
-  version: '7.0.0',
+  get version() {
+    return mocks.viteVersion;
+  },
 }));
 
 rs.mock('node:module', () => {
@@ -56,6 +60,7 @@ rs.mock('zephyr-agent', () => {
     rollbackPartialAssetMapClaimBatch: mocks.rollbackPartialAssetMapClaimBatch,
     savePartialAssetMap: mocks.savePartialAssetMap,
     zeBuildDashData: mocks.zeBuildDashData,
+    logFn: mocks.logFn,
     ze_log: {
       ...(actual.ze_log as Record<string, unknown>),
       init: mocks.zeLogInit,
@@ -121,10 +126,11 @@ async function configuredPlugin(
   watch = false,
   base = '/'
 ): Promise<Plugin> {
-  const plugin = withZephyr()[0] as Plugin;
+  const [plugin, buildAppStart] = withZephyr() as Plugin[];
   await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
     resolvedConfig(environments, watch, base)
   );
+  await buildAppHandler(buildAppStart)({ environments: {}, build: rs.fn() });
   return plugin;
 }
 
@@ -184,6 +190,16 @@ type TestWriteBundle = (
   bundle: Record<string, never>
 ) => Promise<void>;
 
+function writeBundleHandler(plugin: Plugin): TestWriteBundle {
+  const hook = plugin.writeBundle!;
+  return (typeof hook === 'function' ? hook : hook.handler) as TestWriteBundle;
+}
+
+function closeBundleHandler(plugin: Plugin): () => Promise<void> {
+  const hook = plugin.closeBundle!;
+  return (typeof hook === 'function' ? hook : hook.handler) as () => Promise<void>;
+}
+
 function buildAppHandler(plugin: Plugin) {
   return (plugin.buildApp as { handler: (builder: TestBuilder) => Promise<void> })
     .handler;
@@ -205,6 +221,7 @@ let internalClaims: ReturnType<typeof claimed>[] = [];
 describe('vite-plugin-zephyr', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.viteVersion = '7.0.0';
     mocks.claimPartialAssetMapBatch.mockReset();
     internalClaims = [];
     mocks.claimPartialAssetMapBatch.mockImplementation(
@@ -233,6 +250,7 @@ describe('vite-plugin-zephyr', () => {
   });
 
   afterEach(() => {
+    rs.restoreAllMocks();
     if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
     else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
     if (originalBuildInvocationId === undefined)
@@ -244,8 +262,148 @@ describe('vite-plugin-zephyr', () => {
     const plugins = withZephyr();
 
     expect(mocks.federation).not.toHaveBeenCalled();
-    expect(plugins).toHaveLength(1);
+    expect(plugins).toHaveLength(2);
     expect(plugins[0]?.name).toBe('with-zephyr');
+  });
+
+  test.each(['5.4.21', '6.4.1', '7.0.0', '8.2.2'])(
+    'publishes a legacy Vite %s build without waiting for buildApp',
+    async (version) => {
+      mocks.viteVersion = version;
+      const plugin = withZephyr()[0] as Plugin;
+      await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(
+        resolvedConfig({
+          client: { consumer: 'client', build: { outDir: 'dist' } },
+        })
+      );
+
+      await writeBundleHandler(plugin).call(
+        { environment: { name: 'client' } },
+        { dir: '/repo/dist' },
+        {}
+      );
+
+      expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+      await closeBundleHandler(plugin)();
+
+      expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(1);
+      expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
+      expect(mocks.savePartialAssetMap).not.toHaveBeenCalled();
+    }
+  );
+
+  test.each(['multiple environments', 'builder configuration'])(
+    'rejects Vite 6 %s before publishing partial output',
+    async (scenario) => {
+      mocks.viteVersion = '6.4.1';
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const config = resolvedConfig({
+        client: { consumer: 'client', build: { outDir: 'dist/client' } },
+        ...(scenario === 'multiple environments'
+          ? { server: { consumer: 'server', build: { outDir: 'dist/server' } } }
+          : {}),
+      });
+      if (scenario === 'builder configuration') {
+        config.builder = {} as NonNullable<ResolvedConfig['builder']>;
+      }
+      const plugin = withZephyr()[0] as Plugin;
+      await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
+
+      await expect(
+        writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist/client' },
+          {}
+        )
+      ).rejects.toThrow('Vite 7 or newer');
+      expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+      expect(mocks.savePartialAssetMap).not.toHaveBeenCalled();
+    }
+  );
+
+  test('rejects late or unresolved output writers while allowing normal hooks', () => {
+    const plugin = withZephyr()[0] as Plugin;
+    const outputOptions = (
+      plugin.outputOptions as {
+        handler: (options: { plugins: unknown }) => unknown;
+      }
+    ).handler;
+    expect(() =>
+      outputOptions({
+        plugins: [{ writeBundle: { order: 'post', handler: rs.fn() } }],
+      })
+    ).toThrow('output-plugin writers');
+    expect(() => outputOptions({ plugins: [Promise.resolve({})] })).toThrow(
+      'output-plugin writers'
+    );
+    expect(() =>
+      outputOptions({
+        plugins: [{ outputOptions: { order: 'post', handler: rs.fn() } }],
+      })
+    ).toThrow('output-plugin writers');
+    expect(outputOptions({ plugins: [{ writeBundle: rs.fn() }] })).toBeNull();
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('rejects option hooks that can append writers after validation', async () => {
+    const plugin = withZephyr()[0] as Plugin;
+    const config = resolvedConfig({});
+    config.getSortedPlugins = rs.fn((hook) =>
+      hook === 'outputOptions'
+        ? [
+            plugin,
+            { name: 'late-options', outputOptions: { order: 'post', handler: rs.fn() } },
+          ]
+        : []
+    ) as ResolvedConfig['getSortedPlugins'];
+    await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
+    const outputOptions = plugin.outputOptions as {
+      handler: (options: object) => unknown;
+    };
+    expect(() => outputOptions.handler({})).toThrow('output-plugin writers');
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  });
+
+  test('tracks interleaved environment factories and resets for a later build', async () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const plugin = withZephyr()[0] as Plugin;
+    const environments = {
+      client: { consumer: 'client', build: { outDir: 'dist/client' } },
+      server: { consumer: 'server', build: { outDir: 'dist/server' } },
+    };
+    const receivers: unknown[] = [];
+    const factory = rs.fn(function (this: unknown, name: string) {
+      receivers.push(this);
+      return { name } as never;
+    });
+    const configure = async (name: string) => {
+      const config = resolvedConfig(environments);
+      config.build.createEnvironment = factory;
+      await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(config);
+      expect(config.build.createEnvironment(name, config)).toEqual({ name });
+      expect(factory).toHaveBeenLastCalledWith(name, config);
+      expect(receivers.at(-1)).toBe(config.build);
+    };
+    await configure('client');
+    await configure('server');
+    (plugin.buildStart as () => void)();
+    await expect(
+      writeBundleHandler(plugin).call(
+        { environment: { name: 'client' } },
+        { dir: '/repo/dist/client' },
+        {}
+      )
+    ).rejects.toThrow('builder.buildApp()');
+    expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+
+    await configure('client');
+    await writeBundleHandler(plugin).call(
+      { environment: { name: 'client' } },
+      { dir: '/repo/dist/client' },
+      {}
+    );
+    await closeBundleHandler(plugin)();
+    expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(1);
   });
 
   test('withZephyr injects every mfConfig runtime plugin and delegates to MF', () => {
@@ -269,6 +427,7 @@ describe('vite-plugin-zephyr', () => {
       'module-federation-vite',
       'module-federation-vite',
       'with-zephyr',
+      'with-zephyr:build-app-start',
     ]);
   });
 
@@ -294,7 +453,7 @@ describe('vite-plugin-zephyr', () => {
     expect(mfConfig.runtimePlugins).toBeUndefined();
     expect(mocks.engine.resolve_remote_dependencies).not.toHaveBeenCalled();
 
-    await (plugin.writeBundle as TestWriteBundle).call(
+    await writeBundleHandler(plugin).call(
       { environment: { name: 'client' } },
       { dir: '/repo/dist/client' },
       {}
@@ -526,7 +685,7 @@ describe('vite-plugin-zephyr', () => {
     const emitFile = rs.fn();
 
     await (plugin.generateBundle as unknown as () => Promise<void>).call({ emitFile });
-    await (plugin.writeBundle as TestWriteBundle).call(
+    await writeBundleHandler(plugin).call(
       { environment: { name: 'client' } },
       { dir: '/repo/dist/client' },
       {}
@@ -717,7 +876,7 @@ describe('vite-plugin-zephyr', () => {
     const plugin = await configuredPlugin({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const context = { environment: { name: 'client' } };
     mocks.extractAssets
       .mockResolvedValueOnce(asset('client/app.mjs', 'esm-output'))
@@ -760,11 +919,12 @@ describe('vite-plugin-zephyr', () => {
       desktop: { consumer: 'client', build: { outDir: 'dist/tap/desktop' } },
       worker: { consumer: 'client', build: { outDir: 'dist/tap/worker' } },
     };
-    const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
+    const [plugin, buildAppStart] = withZephyr({ target: 'tap-app' }) as Plugin[];
     await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
       resolvedConfig(environments)
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    await buildAppHandler(buildAppStart)({ environments: {}, build: rs.fn() });
+    const writeBundle = writeBundleHandler(plugin);
     const desktopAssets = asset('sdk/desktop/runtime.js', 'desktop-sdk-lock');
     const workerAssets = asset('sdk/worker/runtime.js', 'worker-sdk-lock');
     desktopAssets['desktop-sdk-lock']!.buffer = 'desktop SDK bytes';
@@ -809,7 +969,7 @@ describe('vite-plugin-zephyr', () => {
       desktop: { consumer: 'client', build: { outDir: 'dist/tap/desktop' } },
       worker: { consumer: 'client', build: { outDir: 'dist/tap/worker' } },
     });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     mocks.extractAssets
       .mockResolvedValueOnce(asset('sdk/runtime.js', 'desktop-sdk'))
       .mockResolvedValueOnce(asset('sdk/runtime.js', 'worker-sdk'));
@@ -841,7 +1001,7 @@ describe('vite-plugin-zephyr', () => {
     const plugin = await configuredPlugin({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const context = { environment: { name: 'client' } };
     mocks.extractAssets
       .mockResolvedValueOnce(asset('client/app.js', 'first-output'))
@@ -1035,7 +1195,7 @@ describe('vite-plugin-zephyr', () => {
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
       true
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     mocks.extractAssets
       .mockResolvedValueOnce(asset('app-0.js', 'generation-0'))
       .mockResolvedValueOnce(asset('app-1.js', 'generation-1'));
@@ -1055,7 +1215,7 @@ describe('vite-plugin-zephyr', () => {
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
       true
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
     const error = new Error('first upload failed');
     mocks.engine.upload_assets.mockRejectedValueOnce(error).mockResolvedValue(undefined);
     const context = { environment: { name: 'client' } };
@@ -1131,6 +1291,62 @@ describe('vite-plugin-zephyr', () => {
     );
     expect(mocks.commitPartialAssetMapClaimBatch).not.toHaveBeenCalled();
   });
+
+  test.each([
+    ['direct', 'true'],
+    ['direct', undefined],
+    ['coordinated', 'true'],
+    ['coordinated', undefined],
+  ] as const)(
+    'preserves the %s publication error when rollback fails, ZE_FAIL_BUILD=%s',
+    async (mode, failBuild) => {
+      if (failBuild) process.env['ZE_FAIL_BUILD'] = failBuild;
+      const errorLog = rs.spyOn(console, 'error').mockImplementation(() => {});
+      const publicationError = new Error('original publication failure');
+      const rollbackError = new Error('secondary rollback failure');
+      mocks.engine.upload_assets.mockRejectedValue(publicationError);
+      mocks.rollbackPartialAssetMapClaimBatch.mockRejectedValueOnce(rollbackError);
+      mocks.claimPartialAssetMapBatch.mockResolvedValue({
+        claims: [claimed({ [environmentOutput('client')]: asset('app.js') })],
+      });
+      const environments = {
+        client: { consumer: 'client', build: { outDir: 'dist' } },
+      };
+      const plugin =
+        mode === 'direct'
+          ? (withZephyr({ partialBuild: { invocationId: 'external' } })[0] as Plugin)
+          : await configuredPlugin(environments);
+      if (mode === 'direct') {
+        await (plugin.configResolved as (config: ResolvedConfig) => Promise<void>)(
+          resolvedConfig(environments)
+        );
+        await writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist' },
+          {}
+        );
+      }
+      const publication =
+        mode === 'direct'
+          ? closeBundleHandler(plugin)()
+          : buildAppHandler(plugin)({
+              environments: { client: { isBuilt: true, config: { consumer: 'client' } } },
+              build: rs.fn(),
+            });
+      if (failBuild) await expect(publication).rejects.toBe(publicationError);
+      else {
+        await expect(publication).resolves.toBeUndefined();
+        expect(errorLog).toHaveBeenCalledWith(
+          expect.stringContaining(publicationError.message)
+        );
+      }
+      expect(mocks.logFn).toHaveBeenCalledWith(
+        'error',
+        expect.stringContaining(rollbackError.message)
+      );
+      expect(mocks.commitPartialAssetMapClaimBatch).not.toHaveBeenCalled();
+    }
+  );
 });
 
 describe('withZephyrPartial', () => {
@@ -1161,7 +1377,7 @@ describe('withZephyrPartial', () => {
     await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
       resolvedConfig({})
     );
-    const writeBundle = plugin.writeBundle as TestWriteBundle;
+    const writeBundle = writeBundleHandler(plugin);
 
     await Promise.all([
       writeBundle.call({ environment: { name: 'client' } }, { dir: clientOutput }, {}),
@@ -1195,7 +1411,7 @@ describe('withZephyrPartial', () => {
       resolvedConfig({})
     );
 
-    await (plugin.writeBundle as TestWriteBundle).call(
+    await writeBundleHandler(plugin).call(
       { environment: { name: 'desktop' } },
       { dir: '/repo/dist/desktop' },
       {}
@@ -1219,7 +1435,7 @@ describe('withZephyrPartial', () => {
     );
 
     await expect(
-      (plugin.writeBundle as TestWriteBundle).call(
+      writeBundleHandler(plugin).call(
         { environment: { name: 'client' } },
         { dir: '/repo/dist/client' },
         {}

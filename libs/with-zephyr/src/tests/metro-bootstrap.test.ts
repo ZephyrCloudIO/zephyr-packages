@@ -752,6 +752,23 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.existsSync(path.join(tempDir, 'react-native.config.js'))).toBe(false);
   });
 
+  it('rejects federation setup replaced by a later CommonJS Metro export', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\nmodule.exports = { resolver: {} };\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.packageRequirements).toEqual([]);
+    expect(result.manualGuidance[0]).toContain('is not verifiably configured');
+    expect(fs.existsSync(path.join(tempDir, 'react-native.config.js'))).toBe(false);
+  });
+
   it('recognizes an aliased federation wrapper through an exported identifier', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },

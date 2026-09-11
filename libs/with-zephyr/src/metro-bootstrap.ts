@@ -176,6 +176,9 @@ function getMetroResolutionDirectories(directory: string): string[] {
 
 function hasModuleFederationSetup(filePath: string): boolean {
   const content = fs.readFileSync(filePath, 'utf8');
+  if ((content.match(/module\.exports\s*=/g)?.length ?? 0) > 1) {
+    return false;
+  }
   const localName = findImportedHelperExpression(
     filePath,
     content,

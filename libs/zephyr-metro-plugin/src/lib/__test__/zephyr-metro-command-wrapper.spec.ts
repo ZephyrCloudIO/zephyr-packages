@@ -218,7 +218,30 @@ describe('zephyrCommandWrapper', () => {
   });
 
   describe('mode handling', () => {
-    it('should set development mode when mode is truthy', async () => {
+    for (const [dev, expectedMode] of [
+      [true, 'development'],
+      [false, 'production'],
+    ] as const) {
+      it(`derives ${expectedMode} mode from dev=${dev}`, async () => {
+        const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
+        const wrapper = await zephyrCommandWrapper(
+          mockBundleFederatedRemote,
+          mockLoadMetroConfig,
+          mockUpdateManifest
+        );
+        const args = createMockArgs({ configOptions: {}, mode: undefined });
+        args[0][0] = { dev, platform: 'ios' };
+
+        await wrapper(...args);
+
+        expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
+          expect.objectContaining({ mode: expectedMode })
+        );
+        expect(mockBundleFederatedRemote).toHaveBeenCalledWith(...args);
+      });
+    }
+
+    it('keeps RNEF development mode as development', async () => {
       const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
@@ -236,7 +259,7 @@ describe('zephyrCommandWrapper', () => {
       );
     });
 
-    it('should set production mode when mode is falsy', async () => {
+    it('keeps RNEF production mode as production without changing upstream arguments', async () => {
       const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
 
       const wrapper = await zephyrCommandWrapper(
@@ -245,13 +268,15 @@ describe('zephyrCommandWrapper', () => {
         mockUpdateManifest
       );
 
-      await wrapper(...createMockArgs({ mode: '' }));
+      const args = createMockArgs({ mode: 'production' });
+      await wrapper(...args);
 
       expect(ZephyrMetroPlugin).toHaveBeenCalledWith(
         expect.objectContaining({
           mode: 'production',
         })
       );
+      expect(mockBundleFederatedRemote).toHaveBeenCalledWith(...args);
     });
   });
 

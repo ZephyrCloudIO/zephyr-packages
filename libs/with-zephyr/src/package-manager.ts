@@ -1,13 +1,17 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
+import { createRequire } from 'module';
 import path from 'path';
 import type { PackageManager } from './types.js';
 
 /** Detect the package manager being used in the project */
-export function detectPackageManager(directory: string = process.cwd()): PackageManager {
+export function detectPackageManager(
+  directory: string = process.cwd(),
+  options: { ignoreUserAgent?: boolean } = {}
+): PackageManager {
   // Priority 1: Check which CLI is actually running (npm_config_user_agent)
   // This is most accurate when someone runs `pnpm dlx with-zephyr` or `npx with-zephyr`
-  if (process.env['npm_config_user_agent']) {
+  if (!options.ignoreUserAgent && process.env['npm_config_user_agent']) {
     const userAgent = process.env['npm_config_user_agent'].toLowerCase();
     if (userAgent.includes('pnpm')) return 'pnpm';
     if (userAgent.includes('yarn')) return 'yarn';
@@ -19,6 +23,7 @@ export function detectPackageManager(directory: string = process.cwd()): Package
   const lockFiles: Record<string, PackageManager> = {
     'pnpm-lock.yaml': 'pnpm',
     'yarn.lock': 'yarn',
+    'bun.lock': 'bun',
     'bun.lockb': 'bun',
     'package-lock.json': 'npm',
   };
@@ -101,6 +106,189 @@ export function isPackageInstalled(
   } catch {
     return false;
   }
+}
+
+interface ParsedVersion {
+  major: number;
+  minor: number;
+  patch: number;
+}
+
+function parseVersion(value: string): ParsedVersion | undefined {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(value.trim());
+  if (!match) return undefined;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+  };
+}
+
+function compareVersions(left: ParsedVersion, right: ParsedVersion): number {
+  return left.major - right.major || left.minor - right.minor || left.patch - right.patch;
+}
+
+export function isVersionAtLeast(version: string, minimumVersion: string): boolean {
+  const parsedVersion = parseVersion(version);
+  const parsedMinimum = parseVersion(minimumVersion);
+  return Boolean(
+    parsedVersion && parsedMinimum && compareVersions(parsedVersion, parsedMinimum) >= 0
+  );
+}
+
+export function isVersionCompatible(
+  version: string,
+  minimumVersion: string,
+  maximumVersionExclusive?: string
+): boolean {
+  if (!isVersionAtLeast(version, minimumVersion)) return false;
+  if (!maximumVersionExclusive) return true;
+  const parsedVersion = parseVersion(version);
+  const parsedMaximum = parseVersion(maximumVersionExclusive);
+  return Boolean(
+    parsedVersion && parsedMaximum && compareVersions(parsedVersion, parsedMaximum) < 0
+  );
+}
+
+export function isSafelyConstrainedVersion(
+  declaration: string,
+  minimumVersion: string,
+  maximumVersionExclusive?: string
+): boolean {
+  const value = declaration.trim();
+  const exactOrPrefixed = /^([~^]?)(\d+\.\d+\.\d+)$/.exec(value);
+  if (exactOrPrefixed) {
+    const prefix = exactOrPrefixed[1];
+    const version = exactOrPrefixed[2]!;
+    if (!isVersionCompatible(version, minimumVersion, maximumVersionExclusive)) {
+      return false;
+    }
+    if (!maximumVersionExclusive || prefix !== '^') return true;
+    const parsedVersion = parseVersion(version)!;
+    const parsedMaximum = parseVersion(maximumVersionExclusive)!;
+    const caretUpperBound =
+      parsedVersion.major > 0
+        ? { major: parsedVersion.major + 1, minor: 0, patch: 0 }
+        : parsedVersion.minor > 0
+          ? { major: 0, minor: parsedVersion.minor + 1, patch: 0 }
+          : { major: 0, minor: 0, patch: parsedVersion.patch + 1 };
+    return compareVersions(caretUpperBound, parsedMaximum) <= 0;
+  }
+
+  const comparatorRange = /^>=(\d+\.\d+\.\d+)(?:\s+(<|<=)(\d+\.\d+\.\d+))?$/.exec(value);
+  if (!comparatorRange || !isVersionAtLeast(comparatorRange[1]!, minimumVersion)) {
+    return false;
+  }
+  if (!maximumVersionExclusive) return true;
+  if (!comparatorRange[2] || !comparatorRange[3]) return false;
+  const upper = parseVersion(comparatorRange[3])!;
+  const maximum = parseVersion(maximumVersionExclusive)!;
+  const comparison = compareVersions(upper, maximum);
+  return comparison < 0 || (comparison === 0 && comparatorRange[2] === '<');
+}
+
+export function getDeclaredPackageVersion(
+  packageName: string,
+  directory: string
+): string | undefined {
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(directory, 'package.json'), 'utf8')
+    );
+    return (
+      packageJson.dependencies?.[packageName] ??
+      packageJson.devDependencies?.[packageName]
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+export function getResolvedPackageDirectory(
+  packageName: string,
+  directory: string
+): string | undefined {
+  try {
+    let currentDirectory = path.resolve(directory);
+    while (true) {
+      const candidate = path.join(
+        currentDirectory,
+        'node_modules',
+        ...packageName.split('/'),
+        'package.json'
+      );
+      if (fs.existsSync(candidate)) {
+        return fs.realpathSync(path.dirname(candidate));
+      }
+      const parentDirectory = path.dirname(currentDirectory);
+      if (parentDirectory === currentDirectory) break;
+      currentDirectory = parentDirectory;
+    }
+
+    const runtimeRequire = createRequire(path.join(directory, 'package.json'));
+    const packageJsonPath = runtimeRequire.resolve(`${packageName}/package.json`);
+    currentDirectory = path.resolve(directory);
+    while (true) {
+      if (
+        fs.existsSync(path.join(currentDirectory, 'package.json')) &&
+        packageJsonPath.startsWith(`${currentDirectory}${path.sep}`)
+      ) {
+        return path.dirname(packageJsonPath);
+      }
+      const parentDirectory = path.dirname(currentDirectory);
+      if (parentDirectory === currentDirectory) break;
+      currentDirectory = parentDirectory;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getResolvedPackageVersion(
+  packageName: string,
+  directory: string
+): string | undefined {
+  try {
+    const packageDirectory = getResolvedPackageDirectory(packageName, directory);
+    if (!packageDirectory) return undefined;
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(packageDirectory, 'package.json'), 'utf8')
+    );
+    return typeof packageJson.version === 'string' ? packageJson.version : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function isPackageRequirementSatisfied(
+  packageName: string,
+  directory: string,
+  minimumVersion?: string
+): boolean {
+  const declaration = getDeclaredPackageVersion(packageName, directory);
+  if (!minimumVersion) {
+    return declaration !== undefined;
+  }
+  if (!declaration) return false;
+  if (isSafelyConstrainedVersion(declaration, minimumVersion)) return true;
+  if (isSafelyConstrainedVersion(declaration, '0.0.0')) return false;
+  const resolvedVersion = getResolvedPackageVersion(packageName, directory);
+  return Boolean(resolvedVersion && isVersionAtLeast(resolvedVersion, minimumVersion));
+}
+
+export function isResolvedPackageRequirementSatisfied(
+  packageName: string,
+  directory: string,
+  minimumVersion?: string,
+  maximumVersionExclusive?: string
+): boolean {
+  const resolvedVersion = getResolvedPackageVersion(packageName, directory);
+  return Boolean(
+    resolvedVersion &&
+    (!minimumVersion ||
+      isVersionCompatible(resolvedVersion, minimumVersion, maximumVersionExclusive))
+  );
 }
 
 /** Build an add command for one or more packages */
@@ -239,11 +427,15 @@ export function addToPackageJson(
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
     const depType = isDev ? 'devDependencies' : 'dependencies';
+    const oppositeDepType = isDev ? 'dependencies' : 'devDependencies';
     if (!packageJson[depType]) {
       packageJson[depType] = {};
     }
 
-    packageJson[depType][packageName] = `^${version}`;
+    delete packageJson[oppositeDepType]?.[packageName];
+    packageJson[depType][packageName] = /^[~^<>=*]|\s|\|\|/.test(version)
+      ? version
+      : `^${version}`;
 
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
     return true;

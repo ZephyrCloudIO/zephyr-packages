@@ -30,8 +30,11 @@ import {
   installDependencies,
   installPackages as installPackagesDirect,
   isPackageInstalled,
+  isPackageRequirementSatisfied,
+  isResolvedPackageRequirementSatisfied,
 } from './package-manager.js';
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
+import { bootstrapMetroCommands } from './metro-bootstrap.js';
 import { bootstrapSlidevVite } from './slidev-vite.js';
 import { applyBundlerOperations, hasZephyrCall } from './operations.js';
 import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
@@ -57,6 +60,19 @@ const BUNDLER_CONFIGS: BundlerConfigs = {
 /** Normalize file path separators to forward slashes for consistent output */
 function normalizePathForOutput(filePath: string): string {
   return filePath.replace(/\\/g, '/');
+}
+
+function isRequirementResolved(packageRequirement: PackageRequirement): boolean {
+  const projectDirectory = packageRequirement.projectDirectory ?? process.cwd();
+  const minimumVersion = packageRequirement.version?.match(/^\^(\d+\.\d+\.\d+)$/)?.[1];
+  const maximumVersionExclusive =
+    packageRequirement.name === '@module-federation/metro' ? '3.0.0' : undefined;
+  return isResolvedPackageRequirementSatisfied(
+    packageRequirement.name,
+    projectDirectory,
+    minimumVersion,
+    maximumVersionExclusive
+  );
 }
 
 /** Find all bundler configuration files in the given directory */
@@ -267,6 +283,8 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     console.log(chalk.yellow(`🔍 Dry run mode - no files will be modified\n`));
   }
 
+  const configFiles = findConfigFiles(directory);
+
   const nextJsBootstrap = bootstrapNextJsVinext(directory, { dryRun });
   const slidevBootstrapRequested =
     !bundlers || bundlers.includes('vite') || bundlers.includes('slidev');
@@ -278,6 +296,25 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
         updatedPackageJson: false,
         packageRequirements: [] as PackageRequirement[],
       };
+  const metroProjects = new Map<string, string[]>();
+  for (const { bundlerName, filePath } of configFiles) {
+    if (bundlerName !== 'metro') continue;
+    const projectDirectory = path.resolve(path.dirname(filePath));
+    metroProjects.set(projectDirectory, [
+      ...(metroProjects.get(projectDirectory) ?? []),
+      path.resolve(filePath),
+    ]);
+  }
+  const metroBootstraps =
+    !bundlers || bundlers.includes('metro')
+      ? [...metroProjects].map(([projectDirectory, metroConfigFilePaths]) => ({
+          projectDirectory,
+          result: bootstrapMetroCommands(projectDirectory, {
+            dryRun,
+            metroConfigFilePaths,
+          }),
+        }))
+      : [];
 
   if (nextJsBootstrap.isNextJsApp) {
     if (nextJsBootstrap.createdFiles.length > 0) {
@@ -319,7 +356,39 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     }
   }
 
-  const configFiles = findConfigFiles(directory);
+  for (const { projectDirectory, result } of metroBootstraps) {
+    const displayPath = (fileName: string) =>
+      normalizePathForOutput(
+        path.relative(path.resolve(directory), path.join(projectDirectory, fileName))
+      );
+    for (const createdFile of result.createdFiles) {
+      console.log(
+        chalk.green(
+          `✓ ${dryRun ? 'Would create' : 'Created'} ${displayPath(createdFile)}`
+        )
+      );
+    }
+    for (const updatedFile of result.updatedFiles) {
+      console.log(
+        chalk.green(
+          `✓ ${dryRun ? 'Would update' : 'Updated'} ${displayPath(updatedFile)}`
+        )
+      );
+    }
+    if (result.manualGuidance.length > 0) {
+      console.log(
+        chalk.yellow(
+          `\nMetro publication command registration requires manual setup in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory) || '.')}:`
+        )
+      );
+      for (const line of result.manualGuidance) {
+        console.log(chalk.yellow(line));
+      }
+      console.log();
+    } else if (result.createdFiles.length > 0 || result.updatedFiles.length > 0) {
+      console.log();
+    }
+  }
 
   if (
     configFiles.length === 0 &&
@@ -334,12 +403,33 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const requiredPackages = new Map<string, PackageRequirement>();
   const packagesToProcess: ConfigFile[] = [];
   const filteredConfigFiles: ConfigFile[] = [];
+  const addRequiredPackage = (packageRequirement: PackageRequirement) => {
+    const projectDirectory = path.resolve(
+      packageRequirement.projectDirectory ?? directory
+    );
+    const key = `${projectDirectory}\0${packageRequirement.name}`;
+    const existing = requiredPackages.get(key);
+    requiredPackages.set(key, {
+      ...existing,
+      ...packageRequirement,
+      projectDirectory,
+      isDev: existing
+        ? existing.isDev && packageRequirement.isDev
+        : packageRequirement.isDev,
+      requireResolved: existing?.requireResolved || packageRequirement.requireResolved,
+    });
+  };
 
   for (const packageRequirement of nextJsBootstrap.packageRequirements) {
-    requiredPackages.set(packageRequirement.name, packageRequirement);
+    addRequiredPackage(packageRequirement);
   }
   for (const packageRequirement of slidevBootstrap.packageRequirements) {
-    requiredPackages.set(packageRequirement.name, packageRequirement);
+    addRequiredPackage(packageRequirement);
+  }
+  for (const { result } of metroBootstraps) {
+    for (const packageRequirement of result.packageRequirements) {
+      addRequiredPackage(packageRequirement);
+    }
   }
 
   for (const { filePath, bundlerName, config } of configFiles) {
@@ -370,7 +460,16 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       continue;
     }
 
-    requiredPackages.set(config.plugin, { name: config.plugin, isDev: true });
+    addRequiredPackage({
+      name: config.plugin,
+      isDev: true,
+      ...(bundlerName === 'metro'
+        ? {
+            version: '^1.4.0',
+            projectDirectory: path.resolve(path.dirname(filePath)),
+          }
+        : {}),
+    });
     packagesToProcess.push({ filePath, bundlerName, config });
   }
 
@@ -378,7 +477,23 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const missingPackages: PackageRequirement[] = [];
   if (installPackages) {
     for (const packageRequirement of requiredPackages.values()) {
-      if (!isPackageInstalled(packageRequirement.name, directory)) {
+      const projectDirectory = packageRequirement.projectDirectory ?? directory;
+      const minimumVersion =
+        packageRequirement.version?.match(/^\^(\d+\.\d+\.\d+)$/)?.[1];
+      const satisfied = packageRequirement.requireResolved
+        ? isPackageRequirementSatisfied(
+            packageRequirement.name,
+            projectDirectory,
+            minimumVersion
+          ) && isRequirementResolved(packageRequirement)
+        : packageRequirement.version
+          ? isPackageRequirementSatisfied(
+              packageRequirement.name,
+              projectDirectory,
+              minimumVersion
+            )
+          : isPackageInstalled(packageRequirement.name, projectDirectory);
+      if (!satisfied) {
         missingPackages.push(packageRequirement);
       }
     }
@@ -387,7 +502,11 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   if (installPackages && missingPackages.length > 0 && dryRun) {
     console.log(chalk.blue(`\n📦 Packages that would be installed:\n`));
     for (const packageRequirement of missingPackages) {
-      console.log(chalk.yellow(`  - ${packageRequirement.name}`));
+      console.log(
+        chalk.yellow(
+          `  - ${packageRequirement.name}${packageRequirement.version ? `@${packageRequirement.version}` : ''}${packageRequirement.projectDirectory && path.resolve(packageRequirement.projectDirectory) !== path.resolve(directory) ? ` (${normalizePathForOutput(path.relative(path.resolve(directory), packageRequirement.projectDirectory))})` : ''}`
+        )
+      );
     }
     console.log();
   }
@@ -395,6 +514,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   // Process configuration files
   let processed = 0;
   let errors = 0;
+  let dependencyInstallFailed = false;
 
   for (const { filePath, bundlerName, config } of packagesToProcess) {
     const success = transformConfigFile(filePath, bundlerName, config, {
@@ -413,33 +533,57 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     const packageManager = detectPackageManager(directory);
     console.log(chalk.gray(`Detected package manager: ${packageManager}`));
 
-    const packageJsonPath = path.join(directory, 'package.json');
     const stagedPackages: PackageRequirement[] = [];
     const fallbackPackages: PackageRequirement[] = [];
 
-    if (fs.existsSync(packageJsonPath)) {
-      for (const packageRequirement of missingPackages) {
-        const latestVersion = getLatestVersion(packageRequirement.name);
+    for (const packageRequirement of missingPackages) {
+      const projectDirectory = packageRequirement.projectDirectory ?? directory;
+      const packageJsonPath = path.join(projectDirectory, 'package.json');
+      if (fs.existsSync(packageJsonPath)) {
+        const version =
+          packageRequirement.version ?? getLatestVersion(packageRequirement.name);
         const added = addToPackageJson(
-          directory,
+          projectDirectory,
           packageRequirement.name,
-          latestVersion,
+          version,
           packageRequirement.isDev
         );
         if (added) {
           stagedPackages.push(packageRequirement);
-          console.log(chalk.green(`✓ Added ${packageRequirement.name} to package.json`));
-        } else {
+          console.log(
+            chalk.green(
+              `✓ Added ${packageRequirement.name} to ${normalizePathForOutput(path.relative(path.resolve(directory), packageJsonPath) || 'package.json')}`
+            )
+          );
+        } else if (path.resolve(projectDirectory) === path.resolve(directory)) {
           fallbackPackages.push(packageRequirement);
           console.log(
             chalk.red(
               `✗ Failed to stage ${packageRequirement.name} in package.json, falling back`
             )
           );
+        } else {
+          console.log(
+            chalk.red(
+              `✗ Failed to stage ${packageRequirement.name} in ${normalizePathForOutput(path.relative(path.resolve(directory), packageJsonPath))}`
+            )
+          );
+          errors++;
+          dependencyInstallFailed = true;
         }
+      } else if (path.resolve(projectDirectory) === path.resolve(directory)) {
+        fallbackPackages.push(packageRequirement);
+      } else {
+        console.log(
+          chalk.red(
+            `✗ No package.json found for ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}`
+          )
+        );
+        errors++;
+        dependencyInstallFailed = true;
       }
-    } else {
-      fallbackPackages.push(...missingPackages);
+    }
+    if (fallbackPackages.length > 0) {
       console.log(
         chalk.yellow('No package.json found; falling back to direct package manager add')
       );
@@ -449,18 +593,80 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       const installSuccess = installDependencies(directory, packageManager);
       if (installSuccess) {
         console.log(chalk.green('✓ Installed dependencies from package.json'));
+
+        const nestedProjects = new Map<string, PackageRequirement[]>();
+        for (const packageRequirement of stagedPackages) {
+          const projectDirectory = path.resolve(
+            packageRequirement.projectDirectory ?? directory
+          );
+          if (projectDirectory === path.resolve(directory)) continue;
+          nestedProjects.set(projectDirectory, [
+            ...(nestedProjects.get(projectDirectory) ?? []),
+            packageRequirement,
+          ]);
+        }
+        for (const [projectDirectory, requirements] of nestedProjects) {
+          const isUnresolved = (packageRequirement: PackageRequirement) =>
+            !isRequirementResolved(packageRequirement);
+          const unresolved = requirements.filter(isUnresolved);
+          if (unresolved.length === 0) continue;
+
+          const nestedPackageManager = detectPackageManager(projectDirectory, {
+            ignoreUserAgent: true,
+          });
+          const nestedInstallSuccess = installDependencies(
+            projectDirectory,
+            nestedPackageManager
+          );
+          const stillUnresolved = nestedInstallSuccess
+            ? unresolved.filter(isUnresolved)
+            : unresolved;
+          if (nestedInstallSuccess && stillUnresolved.length === 0) {
+            console.log(
+              chalk.green(
+                `✓ Installed dependencies in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}`
+              )
+            );
+          } else if (!nestedInstallSuccess) {
+            console.log(
+              chalk.red(
+                `✗ Failed to install dependencies in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}`
+              )
+            );
+            errors += stillUnresolved.length;
+            dependencyInstallFailed = true;
+          } else {
+            console.log(
+              chalk.red(
+                `✗ Installed dependencies in ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory))}, but ${stillUnresolved.map(({ name }) => name).join(', ')} still cannot be resolved at compatible versions`
+              )
+            );
+            errors += stillUnresolved.length;
+            dependencyInstallFailed = true;
+          }
+        }
       } else {
         console.log(chalk.red('✗ Failed to install dependencies from package.json'));
+        errors += stagedPackages.length;
+        dependencyInstallFailed = true;
       }
     }
 
     if (fallbackPackages.length > 0) {
       const prodPackages = fallbackPackages
         .filter((packageRequirement) => !packageRequirement.isDev)
-        .map((packageRequirement) => packageRequirement.name);
+        .map((packageRequirement) =>
+          packageRequirement.version
+            ? `${packageRequirement.name}@${packageRequirement.version}`
+            : packageRequirement.name
+        );
       const devPackages = fallbackPackages
         .filter((packageRequirement) => packageRequirement.isDev)
-        .map((packageRequirement) => packageRequirement.name);
+        .map((packageRequirement) =>
+          packageRequirement.version
+            ? `${packageRequirement.name}@${packageRequirement.version}`
+            : packageRequirement.name
+        );
 
       if (prodPackages.length > 0) {
         const success = installPackagesDirect(
@@ -473,6 +679,8 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
           console.log(chalk.green(`✓ Installed ${prodPackages.join(', ')}`));
         } else {
           console.log(chalk.red(`✗ Failed to install ${prodPackages.join(', ')}`));
+          errors += prodPackages.length;
+          dependencyInstallFailed = true;
         }
       }
 
@@ -487,11 +695,51 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
           console.log(chalk.green(`✓ Installed ${devPackages.join(', ')}`));
         } else {
           console.log(chalk.red(`✗ Failed to install ${devPackages.join(', ')}`));
+          errors += devPackages.length;
+          dependencyInstallFailed = true;
         }
       }
     }
 
     console.log();
+  }
+
+  if (!dryRun && !dependencyInstallFailed) {
+    for (const { projectDirectory, result } of metroBootstraps) {
+      if (result.manualGuidance.length > 0 || result.integration === 'none') continue;
+      const unresolved = result.packageRequirements.filter(
+        (packageRequirement) => !isRequirementResolved(packageRequirement)
+      );
+      if (unresolved.length === 0) continue;
+      console.log(
+        chalk.red(
+          `✗ Cannot publish from ${normalizePathForOutput(path.relative(path.resolve(directory), projectDirectory) || '.')}: ${unresolved.map(({ name }) => name).join(', ')} cannot be resolved at compatible versions`
+        )
+      );
+      errors += unresolved.length;
+      dependencyInstallFailed = true;
+    }
+  }
+
+  if (!dryRun && !dependencyInstallFailed) {
+    for (const { projectDirectory, result } of metroBootstraps) {
+      if (result.manualGuidance.length > 0 || result.integration === 'none') {
+        continue;
+      }
+      const command =
+        result.integration === 'rnef'
+          ? `rnef bundle-mf-remote --platform ${result.platformArgument} --dev false`
+          : `npx react-native bundle-mf-remote --platform ${result.platformArgument} --dev false`;
+      const relativeProjectDirectory = normalizePathForOutput(
+        path.relative(path.resolve(directory), projectDirectory)
+      );
+      const projectPrefix = relativeProjectDirectory
+        ? `cd "${relativeProjectDirectory}" && `
+        : '';
+      console.log(
+        chalk.blue(`Publish the first bundle with: ${projectPrefix}${command}`)
+      );
+    }
   }
 
   console.log(`\n${chalk.bold('Summary:')}`);
@@ -502,6 +750,10 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     }`
   );
   console.log(`${chalk.red('✗')} Errors: ${errors}`);
+
+  if (dependencyInstallFailed) {
+    process.exitCode = 1;
+  }
 
   if (dryRun && processed > 0) {
     console.log(chalk.yellow(`\nRun without --dry-run to apply changes.`));

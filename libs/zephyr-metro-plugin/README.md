@@ -20,19 +20,24 @@ Installing the `zephyr-metro-plugin` for your React Native application:
 
 ```bash
 # npm
-npm install --save-dev zephyr-metro-plugin
+npm install --save-dev zephyr-metro-plugin @module-federation/metro
 
 # yarn
-yarn add --dev zephyr-metro-plugin
+yarn add --dev zephyr-metro-plugin @module-federation/metro
 
 # pnpm
-pnpm add --dev zephyr-metro-plugin
+pnpm add --dev zephyr-metro-plugin @module-federation/metro
 
 # bun
-bun add --dev zephyr-metro-plugin
+bun add --dev zephyr-metro-plugin @module-federation/metro
 ```
 
 ## Usage
+
+Publication commands using `@module-federation/metro@2.9.0` require React 19,
+React Native 0.79 or newer, `@babel/types` at `>=7.25.0 <8.0.0`, and `metro`,
+`metro-config`, `metro-file-map`, `metro-resolver`, and `metro-source-map`
+versions `>=0.82.1 <0.83.0`.
 
 ### Basic Configuration
 
@@ -42,27 +47,50 @@ The Metro plugin provides two main integration points depending on your setup:
 
 For Metro configuration file integration:
 
+`withZephyr` is configuration-only. It does not register a CLI command or upload
+artifacts by itself. Register one of the command integrations below to publish.
+
 ```javascript
 // metro.config.js
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { getDefaultConfig } = require('@react-native/metro-config');
+const { withModuleFederation } = require('@module-federation/metro');
 const { withZephyr } = require('zephyr-metro-plugin');
 
 const baseConfig = getDefaultConfig(__dirname);
 
-module.exports = (async () => {
-  const zephyrConfig = await withZephyr({
+module.exports = withZephyr({
+  target: 'ios', // or 'android'
+  remotes: {
+    SharedComponents: 'SharedComponents@http://localhost:9000/remoteEntry.js',
+  },
+})(
+  withModuleFederation(baseConfig, {
     name: 'MyApp',
-    target: 'ios', // or 'android'
-    remotes: {
-      SharedComponents: 'SharedComponents@http://localhost:9000/remoteEntry.js',
-    },
-  })(baseConfig);
-
-  return mergeConfig(baseConfig, zephyrConfig);
-})();
+  })
+);
 ```
 
-#### 2. Using Command Wrapper
+#### 2. React Native CLI commands
+
+Register `bundle-mf-host` and `bundle-mf-remote` while preserving existing CLI
+configuration:
+
+```javascript
+// react-native.config.js
+const { zephyrMetroReactNativeCli } = require('zephyr-metro-plugin');
+
+module.exports = {
+  commands: [...zephyrMetroReactNativeCli().commands],
+};
+```
+
+Run a publication command with the target platform, for example:
+
+```bash
+npx react-native bundle-mf-remote --platform <platform>
+```
+
+#### 3. Using Command Wrapper
 
 For CLI-level integration with custom bundling commands:
 
@@ -85,6 +113,15 @@ RNEF plugin:
 
 ```bash
 pnpm add --save-dev @module-federation/metro@2.9.0
+```
+
+```javascript
+// rnef.config.mjs
+import { zephyrMetroRNEFPlugin } from 'zephyr-metro-plugin';
+
+export default {
+  plugins: [zephyrMetroRNEFPlugin()],
+};
 ```
 
 ### Module Federation Configuration
@@ -223,6 +260,11 @@ my-react-native-app/
 - **Metro**: 0.80 or higher
 - **Node.js**: 18 or higher
 - **Zephyr Cloud account**: Sign up at [zephyr-cloud.io](https://zephyr-cloud.io)
+
+The `bundle-mf-host` and `bundle-mf-remote` publication commands additionally
+require React Native 0.79 or higher, Metro `>=0.82.1 <0.83.0`, and
+`@module-federation/metro@^2.9.0`. The configuration-only `withZephyr` wrapper
+does not require those command-integration minimums.
 
 ## Advanced Configuration
 

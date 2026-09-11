@@ -4,6 +4,9 @@ import path from 'path';
 export interface PackageRequirement {
   name: string;
   isDev: boolean;
+  version?: string;
+  projectDirectory?: string;
+  requireResolved?: boolean;
 }
 
 export interface NextJsVinextBootstrapResult {

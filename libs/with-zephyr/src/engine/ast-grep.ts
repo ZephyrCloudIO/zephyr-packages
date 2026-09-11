@@ -24,6 +24,11 @@ export interface AstGrepResult {
   stdout: string;
 }
 
+export interface ExportedConfigCallOptions extends AstGrepRunOptions {
+  propertyName?: 'commands' | 'plugins';
+  allowDirectExport?: boolean;
+}
+
 interface AstGrepRuntime {
   parse: (language: string, source: string) => { root: () => SgNode };
 }
@@ -148,6 +153,169 @@ export function searchWithAstGrep(options: AstGrepRunOptions): AstGrepResult {
       stdout: '',
       stderr: (error as Error).message,
     };
+  }
+}
+
+export function hasExportedConfigCall(options: ExportedConfigCallOptions): boolean {
+  try {
+    const language = options.language ?? detectLanguage(options.filePath);
+    const source = fs.readFileSync(options.filePath, 'utf8');
+    const { parse } = getAstGrepRuntime();
+    const root = parse(toNapiLanguage(language), source).root();
+    const calls = root.findAll(buildMatcher(options));
+    const exportedIdentifiers = new Set<string>();
+    for (const pattern of ['module.exports = $IDENT', 'export default $IDENT']) {
+      for (const exported of root.findAll(pattern)) {
+        const identifier = exported.getMatch('IDENT');
+        if (identifier?.kind() === 'identifier')
+          exportedIdentifiers.add(identifier.text());
+      }
+    }
+
+    const isExportedObject = (object: SgNode | null): boolean => {
+      const parent = object?.parent();
+      if (!parent) return false;
+      if (
+        parent.matches('module.exports = {$$$PROPS}') ||
+        parent.matches('export default {$$$PROPS}')
+      ) {
+        return true;
+      }
+      if (parent.kind() !== 'variable_declarator') return false;
+      const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
+      return Boolean(identifier && exportedIdentifiers.has(identifier));
+    };
+
+    const isReturnedFromFunction = (bindingName: string, functionNode: SgNode): boolean =>
+      root
+        .findAll(bindingName)
+        .filter((identifier) => identifier.kind() === 'identifier')
+        .some((identifier) => {
+          let ancestor = identifier.parent();
+          while (ancestor && ancestor.id() !== functionNode.id()) {
+            if (
+              ancestor.kind() === 'arrow_function' ||
+              ancestor.kind() === 'function_expression' ||
+              ancestor.kind() === 'function_declaration'
+            ) {
+              return false;
+            }
+            if (ancestor.kind() === 'return_statement') return true;
+            ancestor = ancestor.parent();
+          }
+          return false;
+        });
+
+    const isDirectlyExportedExpression = (call: SgNode): boolean => {
+      let expression = call;
+      let parent = expression.parent();
+      while (parent) {
+        for (const pattern of ['module.exports = $VALUE', 'export default $VALUE']) {
+          if (parent.matches(pattern) && expression.parent()?.id() === parent.id()) {
+            return true;
+          }
+        }
+
+        if (parent.kind() === 'variable_declarator') {
+          const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
+          if (!identifier) return false;
+          if (exportedIdentifiers.has(identifier)) return true;
+
+          const functionNode = parent
+            .ancestors()
+            .find(
+              (ancestor) =>
+                ancestor.kind() === 'arrow_function' ||
+                ancestor.kind() === 'function_expression'
+            );
+          return Boolean(
+            functionNode &&
+            isReturnedFromFunction(identifier, functionNode) &&
+            isDirectlyExportedExpression(functionNode)
+          );
+        }
+
+        const parentKind = parent.kind();
+        if (
+          parentKind !== 'call_expression' &&
+          parentKind !== 'arguments' &&
+          parentKind !== 'parenthesized_expression' &&
+          parentKind !== 'await_expression'
+        ) {
+          return false;
+        }
+        expression = parent;
+        parent = parent.parent();
+      }
+      return false;
+    };
+
+    const isRegisteredInExportedProperty = (value: SgNode): boolean => {
+      const property = value
+        .ancestors()
+        .find(
+          (ancestor) =>
+            ancestor.kind() === 'pair' &&
+            new RegExp(
+              `^\\s*(?:${options.propertyName}|["']${options.propertyName}["']|\\[\\s*["']${options.propertyName}["']\\s*\\])\\s*:`
+            ).test(ancestor.text())
+        );
+      if (!property || !isExportedObject(property.parent())) return false;
+
+      if (options.propertyName === 'plugins') {
+        const array = value.parent();
+        return Boolean(
+          array?.kind() === 'array' && array.parent()?.id() === property.id()
+        );
+      }
+
+      if (value.parent()?.id() === property.id()) return true;
+      const spread = value.parent();
+      const array = spread?.parent();
+      return Boolean(
+        spread?.kind() === 'spread_element' &&
+        array?.kind() === 'array' &&
+        array.parent()?.id() === property.id()
+      );
+    };
+
+    return calls.some((call) => {
+      if (options.allowDirectExport && isDirectlyExportedExpression(call)) {
+        return true;
+      }
+
+      if (!options.propertyName) return false;
+
+      if (options.propertyName === 'plugins') {
+        if (isRegisteredInExportedProperty(call)) return true;
+      } else {
+        const member = call.parent();
+        if (
+          member?.kind() === 'member_expression' &&
+          /\.\s*commands\s*$/.test(member.text()) &&
+          isRegisteredInExportedProperty(member)
+        ) {
+          return true;
+        }
+      }
+
+      const declaration = call.parent();
+      if (declaration?.kind() !== 'variable_declarator') return false;
+      const bindingName = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(declaration.text())?.[1];
+      if (!bindingName) return false;
+
+      if (options.propertyName === 'commands') {
+        return root
+          .findAll(`${bindingName}.commands`)
+          .some(isRegisteredInExportedProperty);
+      }
+      return root
+        .findAll(bindingName)
+        .filter((identifier) => identifier.kind() === 'identifier')
+        .some(isRegisteredInExportedProperty);
+    });
+  } catch {
+    return false;
   }
 }
 

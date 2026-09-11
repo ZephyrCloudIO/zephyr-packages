@@ -439,14 +439,16 @@ describe('bootstrapMetroCommands', () => {
     const configPath = path.join(tempDir, 'react-native.config.js');
     fs.writeFileSync(
       configPath,
-      '// zephyrMetroReactNativeCli() is added below by the codemod\nmodule.exports = { assets: [] };\n'
+      '// const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\n// zephyrMetroReactNativeCli() is added below by the codemod\nmodule.exports = { assets: [] };\n'
     );
 
     const result = bootstrapMetroCommands(tempDir);
 
     expect(result.updatedFiles).toEqual(['react-native.config.js']);
-    expect(fs.readFileSync(configPath, 'utf8')).toContain(
-      '...zephyrMetroReactNativeCli().commands'
+    const content = fs.readFileSync(configPath, 'utf8');
+    expect(content).toContain('...zephyrMetroReactNativeCli().commands');
+    expect(content).toContain(
+      '\nconst { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\n'
     );
   });
 

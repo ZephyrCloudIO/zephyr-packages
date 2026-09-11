@@ -177,6 +177,7 @@ function getMetroResolutionDirectories(directory: string): string[] {
 function hasModuleFederationSetup(filePath: string): boolean {
   const content = fs.readFileSync(filePath, 'utf8');
   const localName = findImportedHelperExpression(
+    filePath,
     content,
     '@module-federation/metro',
     'withModuleFederation'
@@ -207,6 +208,7 @@ function discoverConfigFiles(
 }
 
 function findImportedHelperExpression(
+  filePath: string,
   content: string,
   packageName: string,
   importName: string
@@ -222,6 +224,12 @@ function findImportedHelperExpression(
 
   for (const pattern of importPatterns) {
     for (const match of content.matchAll(pattern)) {
+      if (
+        !match[0] ||
+        searchWithAstGrep({ filePath, pattern: match[0] }).status !== 'match'
+      ) {
+        continue;
+      }
       const specifiers = match[1]?.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
       for (const specifier of specifiers?.split(',') ?? []) {
         const parts = specifier.trim().split(/\s+(?:as\s+)?|\s*:\s*/);
@@ -234,15 +242,25 @@ function findImportedHelperExpression(
 
   const namespacePatterns = [
     new RegExp(
-      `import\\s*\\*\\s*as\\s*([A-Za-z_$][\\w$]*)\\s*from\\s*["']${escapedPackageName}["']`
+      `import\\s*\\*\\s*as\\s*([A-Za-z_$][\\w$]*)\\s*from\\s*["']${escapedPackageName}["']`,
+      'g'
     ),
     new RegExp(
-      `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*require\\(\\s*["']${escapedPackageName}["']\\s*\\)`
+      `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*require\\(\\s*["']${escapedPackageName}["']\\s*\\)`,
+      'g'
     ),
   ];
   for (const pattern of namespacePatterns) {
-    const namespace = pattern.exec(content)?.[1];
-    if (namespace) return `${namespace}.${importName}`;
+    for (const match of content.matchAll(pattern)) {
+      const namespace = match[1];
+      if (
+        namespace &&
+        match[0] &&
+        searchWithAstGrep({ filePath, pattern: match[0] }).status === 'match'
+      ) {
+        return `${namespace}.${importName}`;
+      }
+    }
   }
 
   return undefined;
@@ -255,6 +273,7 @@ function hasExportedHelperCall(
   propertyName: 'commands' | 'plugins'
 ): boolean {
   const localName = findImportedHelperExpression(
+    filePath,
     content,
     'zephyr-metro-plugin',
     importName
@@ -272,8 +291,15 @@ function hasExportedHelperCall(
     });
 }
 
-function addImport(content: string, importName: string, esm: boolean): string {
-  if (findImportedHelperExpression(content, 'zephyr-metro-plugin', importName)) {
+function addImport(
+  filePath: string,
+  content: string,
+  importName: string,
+  esm: boolean
+): string {
+  if (
+    findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName)
+  ) {
     return content;
   }
 
@@ -305,7 +331,7 @@ function updateCommonJsConfig(
     return 'already-configured';
   }
   const localName =
-    findImportedHelperExpression(content, 'zephyr-metro-plugin', importName) ??
+    findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName) ??
     importName;
   bindingName = getUniqueBindingName(content, bindingName);
   if (
@@ -318,7 +344,7 @@ function updateCommonJsConfig(
     return 'unsupported';
   }
 
-  const nextContent = `${addImport(content, importName, false).trimEnd()}
+  const nextContent = `${addImport(filePath, content, importName, false).trimEnd()}
 
 const ${bindingName} = module.exports;
 module.exports = {
@@ -348,7 +374,7 @@ function updateEsmConfig(
     return 'already-configured';
   }
   const localName =
-    findImportedHelperExpression(content, 'zephyr-metro-plugin', importName) ??
+    findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName) ??
     importName;
   bindingName = getUniqueBindingName(content, bindingName);
 
@@ -371,7 +397,7 @@ export default {
 
   if (!dryRun) {
     const updatedContent = fs.readFileSync(filePath, 'utf8');
-    fs.writeFileSync(filePath, addImport(updatedContent, importName, true));
+    fs.writeFileSync(filePath, addImport(filePath, updatedContent, importName, true));
   }
   return 'updated';
 }

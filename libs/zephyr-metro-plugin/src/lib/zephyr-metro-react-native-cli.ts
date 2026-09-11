@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { ZephyrError, ZeErrors } from 'zephyr-agent';
 import { zephyrCommandWrapper } from './zephyr-metro-command-wrapper';
 
@@ -50,7 +50,7 @@ export function zephyrMetroReactNativeCli(
   adapterConfig: ZephyrMetroReactNativeCliConfig = {}
 ): ZephyrMetroReactNativeCliAdapter {
   const projectRoot = adapterConfig.projectRoot ?? process.cwd();
-  const runtimeRequire = createRequire(join(projectRoot, 'package.json'));
+  const runtimeRequire = createRequire(resolve(projectRoot, 'package.json'));
 
   try {
     const { updateManifest } = runtimeRequire('@module-federation/metro') as {

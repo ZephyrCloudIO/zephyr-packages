@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { resolve } from 'node:path';
 
-const { runtimeRequire, wrappedCommand, zephyrCommandWrapper } = rs.hoisted(() => ({
-  runtimeRequire: rs.fn(),
-  wrappedCommand: rs.fn(),
-  zephyrCommandWrapper: rs.fn(),
-}));
+const { createRequire, runtimeRequire, wrappedCommand, zephyrCommandWrapper } =
+  rs.hoisted(() => {
+    const runtimeRequire = rs.fn();
+    return {
+      createRequire: rs.fn(() => runtimeRequire),
+      runtimeRequire,
+      wrappedCommand: rs.fn(),
+      zephyrCommandWrapper: rs.fn(),
+    };
+  });
 
 rs.mock('node:module', () => ({
-  createRequire: () => runtimeRequire,
+  createRequire,
 }));
 
 rs.mock('../zephyr-metro-command-wrapper', () => ({
@@ -62,6 +68,12 @@ describe('zephyrMetroReactNativeCli', () => {
       expect.objectContaining({ name: '--config-cmd [string]' }),
     ]);
     expect(adapter.commands[1]?.options).toEqual([{ name: '--remote-option' }]);
+  });
+
+  it('resolves a relative project root before creating the runtime loader', () => {
+    zephyrMetroReactNativeCli({ projectRoot: './apps/mobile' });
+
+    expect(createRequire).toHaveBeenCalledWith(resolve('./apps/mobile/package.json'));
   });
 
   it('uses the existing Metro command wrapper and manifest globals', async () => {

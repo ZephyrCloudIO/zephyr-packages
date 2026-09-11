@@ -124,7 +124,7 @@ function getVersionProblem(
 
 function hasModuleFederationSetup(filePath: string): boolean {
   const content = fs.readFileSync(filePath, 'utf8');
-  const localName = findImportedHelperName(
+  const localName = findImportedHelperExpression(
     content,
     '@module-federation/metro',
     'withModuleFederation'
@@ -154,7 +154,7 @@ function discoverConfigFiles(
   };
 }
 
-function findImportedHelperName(
+function findImportedHelperExpression(
   content: string,
   packageName: string,
   importName: string
@@ -180,6 +180,19 @@ function findImportedHelperName(
     }
   }
 
+  const namespacePatterns = [
+    new RegExp(
+      `import\\s*\\*\\s*as\\s*([A-Za-z_$][\\w$]*)\\s*from\\s*["']${escapedPackageName}["']`
+    ),
+    new RegExp(
+      `(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*require\\(\\s*["']${escapedPackageName}["']\\s*\\)`
+    ),
+  ];
+  for (const pattern of namespacePatterns) {
+    const namespace = pattern.exec(content)?.[1];
+    if (namespace) return `${namespace}.${importName}`;
+  }
+
   return undefined;
 }
 
@@ -189,7 +202,11 @@ function hasExportedHelperCall(
   importName: string,
   propertyName: 'commands' | 'plugins'
 ): boolean {
-  const localName = findImportedHelperName(content, 'zephyr-metro-plugin', importName);
+  const localName = findImportedHelperExpression(
+    content,
+    'zephyr-metro-plugin',
+    importName
+  );
   return [importName, localName]
     .filter((name): name is string => Boolean(name))
     .some((name) => {
@@ -204,7 +221,7 @@ function hasExportedHelperCall(
 }
 
 function addImport(content: string, importName: string, esm: boolean): string {
-  if (findImportedHelperName(content, 'zephyr-metro-plugin', importName)) {
+  if (findImportedHelperExpression(content, 'zephyr-metro-plugin', importName)) {
     return content;
   }
 
@@ -236,7 +253,8 @@ function updateCommonJsConfig(
     return 'already-configured';
   }
   const localName =
-    findImportedHelperName(content, 'zephyr-metro-plugin', importName) ?? importName;
+    findImportedHelperExpression(content, 'zephyr-metro-plugin', importName) ??
+    importName;
   if (
     (content.match(/module\.exports\s*=/g)?.length ?? 0) !== 1 ||
     searchWithAstGrep({
@@ -277,7 +295,8 @@ function updateEsmConfig(
     return 'already-configured';
   }
   const localName =
-    findImportedHelperName(content, 'zephyr-metro-plugin', importName) ?? importName;
+    findImportedHelperExpression(content, 'zephyr-metro-plugin', importName) ??
+    importName;
 
   const result = rewriteWithAstGrep({
     filePath,

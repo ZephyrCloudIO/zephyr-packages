@@ -317,6 +317,53 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
   });
 
+  it('detects React Native commands through a CommonJS namespace import', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    const content = `const zephyr = require("zephyr-metro-plugin");\nmodule.exports = { commands: [...zephyr.zephyrMetroReactNativeCli().commands] };\n`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual([]);
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('detects RNEF plugins through an ESM namespace import', () => {
+    writePackageJson({
+      type: 'module',
+      devDependencies: { '@rnef/cli': '^0.8.0' },
+    });
+    const configPath = path.join(tempDir, 'rnef.config.mjs');
+    const content = `import * as zephyr from "zephyr-metro-plugin";\nexport default { plugins: [zephyr.zephyrMetroRNEFPlugin()] };\n`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.updatedFiles).toEqual([]);
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('reuses a namespace import when adding missing commands', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    fs.writeFileSync(
+      configPath,
+      `const zephyr = require("zephyr-metro-plugin");\nmodule.exports = { commands: [] };\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+    const content = fs.readFileSync(configPath, 'utf8');
+
+    expect(result.updatedFiles).toEqual(['react-native.config.js']);
+    expect(content).toContain('...zephyr.zephyrMetroReactNativeCli().commands');
+    expect(content.match(/require\("zephyr-metro-plugin"\)/g)).toHaveLength(1);
+  });
+
   it('uses an existing CommonJS helper alias when adding commands', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },

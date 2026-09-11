@@ -204,7 +204,7 @@ export function getDeclaredPackageVersion(
   }
 }
 
-export function getResolvedPackageVersion(
+export function getResolvedPackageDirectory(
   packageName: string,
   directory: string
 ): string | undefined {
@@ -218,8 +218,7 @@ export function getResolvedPackageVersion(
         'package.json'
       );
       if (fs.existsSync(candidate)) {
-        const packageJson = JSON.parse(fs.readFileSync(candidate, 'utf8'));
-        return typeof packageJson.version === 'string' ? packageJson.version : undefined;
+        return fs.realpathSync(path.dirname(candidate));
       }
       const parentDirectory = path.dirname(currentDirectory);
       if (parentDirectory === currentDirectory) break;
@@ -229,21 +228,33 @@ export function getResolvedPackageVersion(
     const runtimeRequire = createRequire(path.join(directory, 'package.json'));
     const packageJsonPath = runtimeRequire.resolve(`${packageName}/package.json`);
     currentDirectory = path.resolve(directory);
-    let belongsToProject = false;
     while (true) {
       if (
         fs.existsSync(path.join(currentDirectory, 'package.json')) &&
         packageJsonPath.startsWith(`${currentDirectory}${path.sep}`)
       ) {
-        belongsToProject = true;
-        break;
+        return path.dirname(packageJsonPath);
       }
       const parentDirectory = path.dirname(currentDirectory);
       if (parentDirectory === currentDirectory) break;
       currentDirectory = parentDirectory;
     }
-    if (!belongsToProject) return undefined;
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getResolvedPackageVersion(
+  packageName: string,
+  directory: string
+): string | undefined {
+  try {
+    const packageDirectory = getResolvedPackageDirectory(packageName, directory);
+    if (!packageDirectory) return undefined;
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(packageDirectory, 'package.json'), 'utf8')
+    );
     return typeof packageJson.version === 'string' ? packageJson.version : undefined;
   } catch {
     return undefined;

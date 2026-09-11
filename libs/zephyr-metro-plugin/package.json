@@ -81,13 +81,7 @@
     "typescript": "catalog:typescript"
   },
   "peerDependencies": {
-    "@module-federation/metro": "catalog:peer-compat",
     "metro": "catalog:peer-compat",
     "react-native": "catalog:peer-compat"
-  },
-  "peerDependenciesMeta": {
-    "@module-federation/metro": {
-      "optional": true
-    }
   }
 }

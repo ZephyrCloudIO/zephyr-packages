@@ -290,9 +290,6 @@ catalogs:
       specifier: ^2.16.4
       version: 2.16.4
   peer-compat:
-    '@module-federation/metro':
-      specifier: ^2.9.0
-      version: 2.9.0
     react-native:
       specifier: '>=0.60.0'
       version: 0.87.1
@@ -1999,9 +1996,6 @@ importers:
 
   libs/zephyr-metro-plugin:
     dependencies:
-      '@module-federation/metro':
-        specifier: catalog:peer-compat
-        version: 2.9.0(@babel/types@7.29.8)(metro-config@0.87.0(supports-color@10.2.2))(metro-file-map@0.87.0(supports-color@10.2.2))(metro-resolver@0.87.0)(metro-source-map@0.87.0(supports-color@10.2.2))(metro@0.87.0(supports-color@10.2.2))(react-native@0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@7.0.2)
       react-native:
         specifier: catalog:peer-compat
         version: 0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
@@ -3918,11 +3912,6 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@expo/metro-runtime@5.0.5':
-    resolution: {integrity: sha512-P8UFTi+YsmiD1BmdTdiIQITzDMcZgronsA3RTQ4QKJjHM3bas11oGzLQOnFaIZnlEV8Rrr3m1m+RHxvnpL+t/A==}
-    peerDependencies:
-      react-native: '*'
-
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
@@ -4895,23 +4884,6 @@ packages:
 
   '@module-federation/manifest@2.9.0':
     resolution: {integrity: sha512-Zhm9luVOw9XPou50eTwsvdgr208CszoQ6cGORQDCPAMhjpGb5oYFtilJ+LKW7hQ1LktD15bEZmGhC1anvgXEiQ==}
-
-  '@module-federation/metro@2.9.0':
-    resolution: {integrity: sha512-IkTbg5eNaEfl+pTFxu9d0JUySmPRGByMQCVmZ2ivI/J/ivHYGYM2KwNQR1iI2pJr6zPHSLFA45fozRnFjvk9ww==}
-    peerDependencies:
-      '@babel/types': ^7.25.0
-      metro: ^0.82.1
-      metro-config: ^0.82.1
-      metro-file-map: ^0.82.1
-      metro-resolver: ^0.82.1
-      metro-source-map: ^0.82.1
-      react: '>=19.0.0'
-      react-native: '>=0.79.0'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-native:
-        optional: true
 
   '@module-federation/node@2.7.50':
     resolution: {integrity: sha512-mbpQRdafyeWgsmYoJfdhOQf76zS6onOGpC2X1ELpWXB1Y4BcZGloL0CLjNMNon9m3ucfpc99tOGAQqFzQVkSBQ==}
@@ -17602,10 +17574,6 @@ snapshots:
 
   '@exodus/bytes@1.15.1': {}
 
-  '@expo/metro-runtime@5.0.5(react-native@0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))':
-    dependencies:
-      react-native: 0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
-
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -18798,27 +18766,6 @@ snapshots:
       '@module-federation/dts-plugin': 2.9.0(typescript@7.0.2)
       '@module-federation/managers': 2.9.0
       '@module-federation/sdk': 2.9.0
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - vue-tsc
-
-  '@module-federation/metro@2.9.0(@babel/types@7.29.8)(metro-config@0.87.0(supports-color@10.2.2))(metro-file-map@0.87.0(supports-color@10.2.2))(metro-resolver@0.87.0)(metro-source-map@0.87.0(supports-color@10.2.2))(metro@0.87.0(supports-color@10.2.2))(react-native@0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))(react@19.2.8)(typescript@7.0.2)':
-    dependencies:
-      '@babel/types': 7.29.8
-      '@expo/metro-runtime': 5.0.5(react-native@0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2))
-      '@module-federation/dts-plugin': 2.9.0(typescript@7.0.2)
-      '@module-federation/runtime': 2.9.0
-      '@module-federation/sdk': 2.9.0
-      metro: 0.87.0(supports-color@10.2.2)
-      metro-config: 0.87.0(supports-color@10.2.2)
-      metro-file-map: 0.87.0(supports-color@10.2.2)
-      metro-resolver: 0.87.0
-      metro-source-map: 0.87.0(supports-color@10.2.2)
-    optionalDependencies:
-      react: 19.2.8
-      react-native: 0.87.1(@babel/core@7.29.7(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
     transitivePeerDependencies:
       - bufferutil
       - typescript

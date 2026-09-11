@@ -8,6 +8,7 @@ import {
 import type { PackageRequirement } from './nextjs-vinext.js';
 import {
   getDeclaredPackageVersion,
+  getResolvedPackageDirectory,
   getResolvedPackageVersion,
   isSafelyConstrainedVersion,
   isVersionCompatible,
@@ -92,12 +93,34 @@ function getVersionProblem(
   directory: string,
   packageName: string,
   minimumVersion: string,
-  options: { allowMissing?: boolean; maximumVersionExclusive?: string } = {}
+  options: {
+    allowMissing?: boolean;
+    maximumVersionExclusive?: string;
+    resolutionDirectories?: string[];
+  } = {}
 ): string | undefined {
   const expectedVersion = options.maximumVersionExclusive
     ? `${minimumVersion} or newer but below ${options.maximumVersionExclusive}`
     : `${minimumVersion} or newer`;
-  const resolvedVersion = getResolvedPackageVersion(packageName, directory);
+  const declaration = getDeclaredPackageVersion(packageName, directory);
+  const usesWorkspaceProtocol = /^(?:catalog:|workspace:)/.test(declaration ?? '');
+  if (
+    declaration &&
+    !usesWorkspaceProtocol &&
+    !isSafelyConstrainedVersion(
+      declaration,
+      minimumVersion,
+      options.maximumVersionExclusive
+    )
+  ) {
+    return `${packageName} declaration "${declaration}" could not be verified as ${expectedVersion}.`;
+  }
+
+  const resolvedVersion = [directory, ...(options.resolutionDirectories ?? [])]
+    .map((resolutionDirectory) =>
+      getResolvedPackageVersion(packageName, resolutionDirectory)
+    )
+    .find((version): version is string => Boolean(version));
   if (resolvedVersion) {
     return isVersionCompatible(
       resolvedVersion,
@@ -108,7 +131,6 @@ function getVersionProblem(
       : `${packageName} ${resolvedVersion} is installed, but ${expectedVersion} is required.`;
   }
 
-  const declaration = getDeclaredPackageVersion(packageName, directory);
   if (!declaration) {
     if (options.allowMissing) return undefined;
     return `${packageName} could not be resolved and has no direct version declaration.`;
@@ -120,6 +142,16 @@ function getVersionProblem(
   )
     ? undefined
     : `${packageName} declaration "${declaration}" could not be verified as ${expectedVersion}.`;
+}
+
+function getUniqueBindingName(content: string, bindingName: string): string {
+  let candidate = bindingName;
+  let suffix = 2;
+  while (new RegExp(`\\b${candidate}\\b`).test(content)) {
+    candidate = `${bindingName}${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
 }
 
 function hasModuleFederationSetup(filePath: string): boolean {
@@ -233,7 +265,7 @@ function addImport(content: string, importName: string, esm: boolean): string {
     return `${content}\n${declaration}`;
   }
   const directivePrologue =
-    /^(?:(?:[ \t]*(?:"[^"\r\n]*"|'[^'\r\n]*')[ \t]*;?[ \t]*(?:\r?\n|$))|(?:[ \t]*\/\/[^\r\n]*(?:\r?\n|$))|(?:[ \t]*\/\*[\s\S]*?\*\/[ \t]*(?:\r?\n|$))|(?:[ \t]*\r?\n))+/.exec(
+    /^(?:(?:[ \t]*(?:"[^"\r\n]*"|'[^'\r\n]*')[ \t]*;?[ \t]*(?:(?:\/\/[^\r\n]*)|(?:\/\*[\s\S]*?\*\/[ \t]*))?(?:\r?\n|$))|(?:[ \t]*\/\/[^\r\n]*(?:\r?\n|$))|(?:[ \t]*\/\*[\s\S]*?\*\/[ \t]*(?:\r?\n|$))|(?:[ \t]*\r?\n))+/.exec(
       content.slice(insertionIndex)
     );
   insertionIndex += directivePrologue?.[0].length ?? 0;
@@ -255,6 +287,7 @@ function updateCommonJsConfig(
   const localName =
     findImportedHelperExpression(content, 'zephyr-metro-plugin', importName) ??
     importName;
+  bindingName = getUniqueBindingName(content, bindingName);
   if (
     (content.match(/module\.exports\s*=/g)?.length ?? 0) !== 1 ||
     searchWithAstGrep({
@@ -297,6 +330,7 @@ function updateEsmConfig(
   const localName =
     findImportedHelperExpression(content, 'zephyr-metro-plugin', importName) ??
     importName;
+  bindingName = getUniqueBindingName(content, bindingName);
 
   const result = rewriteWithAstGrep({
     filePath,
@@ -395,6 +429,11 @@ export function bootstrapMetroCommands(
     return result;
   }
 
+  const metroConfigDirectory = getResolvedPackageDirectory(
+    '@react-native/metro-config',
+    directory
+  );
+  const metroResolutionDirectories = metroConfigDirectory ? [metroConfigDirectory] : [];
   const versionProblems = [
     getVersionProblem(directory, '@module-federation/metro', '2.9.0', {
       allowMissing: true,
@@ -408,6 +447,7 @@ export function bootstrapMetroCommands(
     ...METRO_PEER_PACKAGES.map((packageName) =>
       getVersionProblem(directory, packageName, '0.82.1', {
         maximumVersionExclusive: '0.83.0',
+        resolutionDirectories: metroResolutionDirectories,
       })
     ),
   ].filter((problem): problem is string => Boolean(problem));

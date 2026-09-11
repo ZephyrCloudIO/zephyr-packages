@@ -42,6 +42,24 @@ describe('bootstrapMetroCommands', () => {
     );
   }
 
+  function writeResolvedPackage(
+    packageName: string,
+    version: string,
+    directory = tempDir
+  ): string {
+    const packageDirectory = path.join(
+      directory,
+      'node_modules',
+      ...packageName.split('/')
+    );
+    fs.mkdirSync(packageDirectory, { recursive: true });
+    fs.writeFileSync(
+      path.join(packageDirectory, 'package.json'),
+      JSON.stringify({ name: packageName, version })
+    );
+    return packageDirectory;
+  }
+
   it('creates a CommonJS React Native CLI config and companion requirements', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },
@@ -138,6 +156,38 @@ describe('bootstrapMetroCommands', () => {
     expect(content).toContain('import { zephyrMetroReactNativeCli }');
     expect(content).toContain('const __zephyrReactNativeConfig = {');
     expect(content).toContain('...zephyrMetroReactNativeCli().commands');
+  });
+
+  it('avoids temporary binding collisions in CommonJS and ESM configs', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const commonJsPath = path.join(tempDir, 'react-native.config.js');
+    fs.writeFileSync(
+      commonJsPath,
+      'const __zephyrReactNativeConfig = "existing";\nmodule.exports = { commands: [] };\n'
+    );
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual([
+      'react-native.config.js',
+    ]);
+    expect(fs.readFileSync(commonJsPath, 'utf8')).toContain(
+      'const __zephyrReactNativeConfig2 = module.exports;'
+    );
+
+    fs.rmSync(commonJsPath);
+    writePackageJson({
+      type: 'module',
+      devDependencies: { '@rnef/cli': '^0.8.0' },
+    });
+    const esmPath = path.join(tempDir, 'rnef.config.mjs');
+    fs.writeFileSync(
+      esmPath,
+      'const __zephyrRnefConfig = "existing";\nexport default { plugins: [] };\n'
+    );
+
+    expect(bootstrapMetroCommands(tempDir).updatedFiles).toEqual(['rnef.config.mjs']);
+    expect(fs.readFileSync(esmPath, 'utf8')).toContain('const __zephyrRnefConfig2 = {');
   });
 
   it('registers the existing RNEF plugin without replacing config', () => {
@@ -611,14 +661,14 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
   });
 
-  it('preserves CommonJS shebangs and directive prologues when adding imports', () => {
+  it('preserves CommonJS shebangs and commented directive prologues', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },
     });
     const configPath = path.join(tempDir, 'react-native.config.js');
     fs.writeFileSync(
       configPath,
-      '#!/usr/bin/env node\n// Keep this config strict.\n"use strict";\nmodule.exports = { commands: [] };\n'
+      '#!/usr/bin/env node\n// Keep this config strict.\n"use strict"; // Retain strict behavior.\nmodule.exports = { commands: [] };\n'
     );
 
     const result = bootstrapMetroCommands(tempDir);
@@ -626,7 +676,7 @@ describe('bootstrapMetroCommands', () => {
 
     expect(result.updatedFiles).toEqual(['react-native.config.js']);
     expect(content).toMatch(
-      /^#!\/usr\/bin\/env node\n\/\/ Keep this config strict\.\n"use strict";\nconst \{ zephyrMetroReactNativeCli \}/
+      /^#!\/usr\/bin\/env node\n\/\/ Keep this config strict\.\n"use strict"; \/\/ Retain strict behavior\.\nconst \{ zephyrMetroReactNativeCli \}/
     );
   });
 
@@ -737,48 +787,95 @@ describe('bootstrapMetroCommands', () => {
     );
   });
 
-  it('prefers a compatible resolved Module Federation version', () => {
+  it('accepts a compatible resolved Module Federation workspace declaration', () => {
     writePackageJson({
       devDependencies: {
         '@module-federation/metro': 'workspace:*',
         '@react-native-community/cli': '^19.0.0',
       },
     });
-    const packageDirectory = path.join(
-      tempDir,
-      'node_modules',
-      '@module-federation',
-      'metro'
-    );
-    fs.mkdirSync(packageDirectory, { recursive: true });
-    fs.writeFileSync(
-      path.join(packageDirectory, 'package.json'),
-      JSON.stringify({ name: '@module-federation/metro', version: '2.9.1' })
-    );
+    writeResolvedPackage('@module-federation/metro', '2.9.1');
 
     const result = bootstrapMetroCommands(tempDir);
 
     expect(result.integration).toBe('react-native-cli');
   });
 
-  it('prefers compatible resolved versions over broad declarations', () => {
+  it('accepts compatible resolved versions for workspace declarations', () => {
     writePackageJson({
       dependencies: { 'react-native': 'workspace:*' },
       devDependencies: {
         '@react-native-community/cli': '^19.0.0',
-        metro: '*',
+        metro: 'workspace:*',
       },
     });
     for (const [packageName, version] of [
       ['react-native', '0.79.2'],
       ['metro', '0.82.2'],
     ]) {
-      const packageDirectory = path.join(tempDir, 'node_modules', packageName);
-      fs.mkdirSync(packageDirectory, { recursive: true });
-      fs.writeFileSync(
-        path.join(packageDirectory, 'package.json'),
-        JSON.stringify({ name: packageName, version })
-      );
+      writeResolvedPackage(packageName, version);
+    }
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.createdFiles).toEqual(['react-native.config.js']);
+  });
+
+  it('rejects incompatible declarations despite compatible resolved versions', () => {
+    writePackageJson({
+      devDependencies: {
+        '@module-federation/metro': '^3.0.0',
+        '@react-native-community/cli': '^19.0.0',
+        metro: '^0.83.0',
+      },
+    });
+    writeResolvedPackage('@module-federation/metro', '2.9.1');
+    writeResolvedPackage('metro', '0.82.2');
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.manualGuidance).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('@module-federation/metro declaration "^3.0.0"'),
+        expect.stringContaining('metro declaration "^0.83.0"'),
+      ])
+    );
+  });
+
+  it('resolves Metro peers through the React Native Metro config dependency graph', () => {
+    writePackageJson({
+      devDependencies: {
+        '@react-native-community/cli': '^19.0.0',
+        '@react-native/metro-config': '^0.79.0',
+      },
+    });
+    const packageJsonPath = path.join(tempDir, 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    for (const packageName of [
+      'metro',
+      'metro-config',
+      'metro-file-map',
+      'metro-resolver',
+      'metro-source-map',
+    ]) {
+      delete packageJson.devDependencies[packageName];
+    }
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+
+    const metroConfigDirectory = writeResolvedPackage(
+      '@react-native/metro-config',
+      '0.79.0'
+    );
+    for (const packageName of [
+      'metro',
+      'metro-config',
+      'metro-file-map',
+      'metro-resolver',
+      'metro-source-map',
+    ]) {
+      writeResolvedPackage(packageName, '0.82.1', metroConfigDirectory);
     }
 
     const result = bootstrapMetroCommands(tempDir);

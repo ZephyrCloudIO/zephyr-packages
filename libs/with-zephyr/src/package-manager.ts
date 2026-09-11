@@ -416,7 +416,8 @@ export function addToPackageJson(
   directory: string,
   packageName: string,
   version = 'latest',
-  isDev = true
+  isDev = true,
+  preserveVersion = false
 ): boolean {
   const packageJsonPath = path.join(directory, 'package.json');
   if (!fs.existsSync(packageJsonPath)) {
@@ -433,9 +434,10 @@ export function addToPackageJson(
     }
 
     delete packageJson[oppositeDepType]?.[packageName];
-    packageJson[depType][packageName] = /^[~^<>=*]|\s|\|\|/.test(version)
-      ? version
-      : `^${version}`;
+    packageJson[depType][packageName] =
+      preserveVersion || /^(?:catalog:|workspace:|[~^<>=*])|\s|\|\|/.test(version)
+        ? version
+        : `^${version}`;
 
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
     return true;

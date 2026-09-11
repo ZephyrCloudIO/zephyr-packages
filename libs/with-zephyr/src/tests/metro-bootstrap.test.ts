@@ -80,6 +80,22 @@ describe('bootstrapMetroCommands', () => {
     expect(content).toContain('module.exports = zephyrMetroReactNativeCli()');
   });
 
+  it('recognizes Module Federation in an exported top-level declaration', () => {
+    writePackageJson({
+      type: 'module',
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `import { withModuleFederation } from "@module-federation/metro";\nexport const config = withModuleFederation({}, { name: "app" });\nexport default config;\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.createdFiles).toEqual(['react-native.config.js']);
+  });
+
   it('requires an adapter-capable plugin upgrade', () => {
     writePackageJson({
       devDependencies: {
@@ -446,9 +462,9 @@ describe('bootstrapMetroCommands', () => {
 
     expect(result.updatedFiles).toEqual(['react-native.config.js']);
     const content = fs.readFileSync(configPath, 'utf8');
-    expect(content).toContain('...zephyrMetroReactNativeCli().commands');
+    expect(content).toContain('...zephyrMetroReactNativeCli2().commands');
     expect(content).toContain(
-      '\nconst { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\n'
+      '\nconst { zephyrMetroReactNativeCli: zephyrMetroReactNativeCli2 } = require("zephyr-metro-plugin");\n'
     );
   });
 
@@ -468,6 +484,101 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.readFileSync(configPath, 'utf8')).toContain(
       '...zephyrMetroReactNativeCli().commands'
     );
+  });
+
+  it('does not confuse a nested config binding with the exported config', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    const content = `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");
+const config = { commands: [] };
+function unused() {
+  const config = { commands: [...zephyrMetroReactNativeCli().commands] };
+  return config;
+}
+module.exports = config;
+`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.packageRequirements).toEqual([]);
+    expect(result.manualGuidance[0]).toContain('does not directly export an object');
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
+  it('does not let a nested package import authorize an unrelated adapter call', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    fs.writeFileSync(
+      configPath,
+      `function loadZephyrAdapter() {
+  const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");
+  return zephyrMetroReactNativeCli();
+}
+function zephyrMetroReactNativeCli() { return { commands: [] }; }
+module.exports = { commands: [...zephyrMetroReactNativeCli().commands] };
+`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+    const content = fs.readFileSync(configPath, 'utf8');
+
+    expect(result.updatedFiles).toEqual(['react-native.config.js']);
+    expect(content).toContain(
+      'const { zephyrMetroReactNativeCli: zephyrMetroReactNativeCli2 } = require("zephyr-metro-plugin");'
+    );
+    expect(content).toContain('...zephyrMetroReactNativeCli2().commands');
+  });
+
+  it('aliases an ESM adapter import that collides with a local binding', () => {
+    writePackageJson({
+      type: 'module',
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.mjs');
+    fs.writeFileSync(
+      configPath,
+      `function zephyrMetroReactNativeCli() { return { commands: [] }; }
+export default { commands: [...zephyrMetroReactNativeCli().commands] };
+`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+    const content = fs.readFileSync(configPath, 'utf8');
+
+    expect(result.updatedFiles).toEqual(['react-native.config.mjs']);
+    expect(content).toContain(
+      'import { zephyrMetroReactNativeCli as zephyrMetroReactNativeCli2 } from "zephyr-metro-plugin";'
+    );
+    expect(content).toContain('...zephyrMetroReactNativeCli2().commands');
+  });
+
+  it('does not match a nested helper result to an exported top-level binding', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    const content = `const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");
+const adapter = { commands: [] };
+function unused() {
+  const zephyrMetroReactNativeCli = () => ({ commands: [] });
+  const adapter = zephyrMetroReactNativeCli();
+  return adapter;
+}
+module.exports = { commands: adapter.commands };
+`;
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+    const updatedContent = fs.readFileSync(configPath, 'utf8');
+
+    expect(result.updatedFiles).toEqual(['react-native.config.js']);
+    expect(updatedContent).toContain('...zephyrMetroReactNativeCli().commands');
+    expect(updatedContent).not.toBe(content);
   });
 
   it('rejects a registered adapter replaced by a later CommonJS export', () => {
@@ -769,6 +880,30 @@ describe('bootstrapMetroCommands', () => {
     expect(fs.existsSync(path.join(tempDir, 'react-native.config.js'))).toBe(false);
   });
 
+  it('does not confuse a nested federation binding with the exported config', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `const { withModuleFederation } = require("@module-federation/metro");
+const config = {};
+function unused() {
+  const config = withModuleFederation({}, { name: "app" });
+  return config;
+}
+module.exports = config;
+`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('ambiguous');
+    expect(result.packageRequirements).toEqual([]);
+    expect(result.manualGuidance[0]).toContain('is not verifiably configured');
+    expect(fs.existsSync(path.join(tempDir, 'react-native.config.js'))).toBe(false);
+  });
+
   it('recognizes an aliased federation wrapper through an exported identifier', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },
@@ -806,7 +941,7 @@ describe('bootstrapMetroCommands', () => {
     );
   });
 
-  it('rejects an unresolved broad Module Federation declaration', () => {
+  it('defers an unresolved managed Module Federation declaration to install', () => {
     writePackageJson({
       devDependencies: {
         '@module-federation/metro': 'workspace:*',
@@ -816,9 +951,14 @@ describe('bootstrapMetroCommands', () => {
 
     const result = bootstrapMetroCommands(tempDir);
 
-    expect(result.integration).toBe('ambiguous');
-    expect(result.manualGuidance[0]).toContain(
-      '@module-federation/metro declaration "workspace:*"'
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.manualGuidance).toEqual([]);
+    expect(result.packageRequirements).toContainEqual(
+      expect.objectContaining({
+        name: '@module-federation/metro',
+        requireResolved: true,
+        version: '^2.9.0',
+      })
     );
   });
 

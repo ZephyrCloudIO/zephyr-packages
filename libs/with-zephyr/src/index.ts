@@ -419,6 +419,38 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       requireResolved: existing?.requireResolved || packageRequirement.requireResolved,
     });
   };
+  const getPackageDeclaration = (packageRequirement: PackageRequirement) => {
+    const projectDirectory = packageRequirement.projectDirectory ?? directory;
+    try {
+      const packageJson = JSON.parse(
+        fs.readFileSync(path.join(projectDirectory, 'package.json'), 'utf8')
+      );
+      const depType = packageRequirement.isDev ? 'devDependencies' : 'dependencies';
+      const oppositeDepType = packageRequirement.isDev
+        ? 'dependencies'
+        : 'devDependencies';
+      const dependencies = packageJson[depType] ?? {};
+      const oppositeDependencies = packageJson[oppositeDepType] ?? {};
+      const inRequiredSection = Object.hasOwn(dependencies, packageRequirement.name);
+      const inOppositeSection = Object.hasOwn(
+        oppositeDependencies,
+        packageRequirement.name
+      );
+      return {
+        version: (inRequiredSection ? dependencies : oppositeDependencies)[
+          packageRequirement.name
+        ] as string | undefined,
+        inRequiredSection,
+        inOppositeSection,
+      };
+    } catch {
+      return {
+        version: undefined,
+        inRequiredSection: false,
+        inOppositeSection: false,
+      };
+    }
+  };
 
   for (const packageRequirement of nextJsBootstrap.packageRequirements) {
     addRequiredPackage(packageRequirement);
@@ -475,6 +507,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
   console.log(chalk.blue(`Found ${filteredConfigFiles.length} configuration file(s):\n`));
   const missingPackages: PackageRequirement[] = [];
+  const packagesToRelocate = new Set<PackageRequirement>();
   if (installPackages) {
     for (const packageRequirement of requiredPackages.values()) {
       const projectDirectory = packageRequirement.projectDirectory ?? directory;
@@ -493,7 +526,13 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
               minimumVersion
             )
           : isPackageInstalled(packageRequirement.name, projectDirectory);
-      if (!satisfied) {
+      const declaration = getPackageDeclaration(packageRequirement);
+      const correctlyPlaced =
+        declaration.inRequiredSection && !declaration.inOppositeSection;
+      if (!satisfied || !correctlyPlaced) {
+        if (satisfied && declaration.version !== undefined) {
+          packagesToRelocate.add(packageRequirement);
+        }
         missingPackages.push(packageRequirement);
       }
     }
@@ -502,9 +541,13 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   if (installPackages && missingPackages.length > 0 && dryRun) {
     console.log(chalk.blue(`\n📦 Packages that would be installed:\n`));
     for (const packageRequirement of missingPackages) {
+      const declaration = getPackageDeclaration(packageRequirement).version;
+      const version = /^(?:catalog:|workspace:)/.test(declaration ?? '')
+        ? declaration
+        : packageRequirement.version;
       console.log(
         chalk.yellow(
-          `  - ${packageRequirement.name}${packageRequirement.version ? `@${packageRequirement.version}` : ''}${packageRequirement.projectDirectory && path.resolve(packageRequirement.projectDirectory) !== path.resolve(directory) ? ` (${normalizePathForOutput(path.relative(path.resolve(directory), packageRequirement.projectDirectory))})` : ''}`
+          `  - ${packageRequirement.name}${version ? `@${version}` : ''}${packageRequirement.projectDirectory && path.resolve(packageRequirement.projectDirectory) !== path.resolve(directory) ? ` (${normalizePathForOutput(path.relative(path.resolve(directory), packageRequirement.projectDirectory))})` : ''}`
         )
       );
     }
@@ -540,19 +583,25 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       const projectDirectory = packageRequirement.projectDirectory ?? directory;
       const packageJsonPath = path.join(projectDirectory, 'package.json');
       if (fs.existsSync(packageJsonPath)) {
+        const declaration = getPackageDeclaration(packageRequirement).version;
+        const isManagedDeclaration = /^(?:catalog:|workspace:)/.test(declaration ?? '');
+        const preserveDeclaration =
+          isManagedDeclaration || packagesToRelocate.has(packageRequirement);
         const version =
-          packageRequirement.version ?? getLatestVersion(packageRequirement.name);
+          (preserveDeclaration ? declaration : packageRequirement.version) ??
+          getLatestVersion(packageRequirement.name);
         const added = addToPackageJson(
           projectDirectory,
           packageRequirement.name,
           version,
-          packageRequirement.isDev
+          packageRequirement.isDev,
+          preserveDeclaration
         );
         if (added) {
           stagedPackages.push(packageRequirement);
           console.log(
             chalk.green(
-              `✓ Added ${packageRequirement.name} to ${normalizePathForOutput(path.relative(path.resolve(directory), packageJsonPath) || 'package.json')}`
+              `✓ ${preserveDeclaration ? `Preserved ${packageRequirement.name}@${declaration} in` : `Added ${packageRequirement.name} to`} ${normalizePathForOutput(path.relative(path.resolve(directory), packageJsonPath) || 'package.json')}`
             )
           );
         } else if (path.resolve(projectDirectory) === path.resolve(directory)) {

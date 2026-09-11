@@ -233,6 +233,52 @@ describe('Zephyr Codemod CLI', () => {
       expect(updatedPackageJson.scripts.build).toBe('vinext build');
       expect(updatedPackageJson.scripts.start).toBe('vinext start');
     });
+
+    it('should move existing declarations to their required dependency sections', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          name: '@acme/next-app',
+          packageManager: 'pnpm@11.0.0',
+          dependencies: {
+            next: '^15.0.0',
+            vite: '^8.1.4',
+          },
+          devDependencies: {
+            vinext: 'workspace:*',
+            '@vitejs/plugin-rsc': '0.5.19',
+            'vite-plugin-vinext-zephyr': 'catalog:',
+            '@cloudflare/vite-plugin': 'catalog:',
+            vite: 'catalog:',
+            wrangler: 'catalog:',
+          },
+        })
+      );
+      const fakeBin = path.join(tempDir, 'fake-bin');
+      fs.mkdirSync(fakeBin);
+      const fakeScript = path.join(fakeBin, 'fake-pnpm.js');
+      fs.writeFileSync(fakeScript, 'process.exit(0);\n');
+      const fakePnpm = path.join(fakeBin, 'pnpm');
+      fs.writeFileSync(fakePnpm, `#!/bin/sh\n"${process.execPath}" "${fakeScript}"\n`);
+      fs.chmodSync(fakePnpm, 0o755);
+      fs.writeFileSync(
+        path.join(fakeBin, 'pnpm.cmd'),
+        `@"${process.execPath}" "${fakeScript}"\r\n`
+      );
+
+      runCodemod('.', false, {
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        npm_config_user_agent: 'pnpm/11.0.0',
+      });
+      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(updatedPackageJson.dependencies.vinext).toBe('workspace:*');
+      expect(updatedPackageJson.devDependencies.vinext).toBeUndefined();
+      expect(updatedPackageJson.dependencies['@vitejs/plugin-rsc']).toBe('0.5.19');
+      expect(updatedPackageJson.devDependencies['@vitejs/plugin-rsc']).toBeUndefined();
+      expect(updatedPackageJson.devDependencies.vite).toBe('catalog:');
+      expect(updatedPackageJson.dependencies.vite).toBeUndefined();
+    });
   });
 
   describe('Slidev Scaffold', () => {
@@ -840,6 +886,50 @@ describe('Zephyr Codemod CLI', () => {
 
       expect(packageJson.dependencies['zephyr-metro-plugin']).toBe('^1.4.0');
       expect(packageJson.devDependencies['zephyr-metro-plugin']).toBeUndefined();
+    });
+
+    it('should preserve managed Metro companion declarations during install', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          packageManager: 'pnpm@11.0.0',
+          dependencies: { 'react-native': '^0.79.0' },
+          devDependencies: {
+            '@module-federation/metro': 'catalog:',
+            '@react-native-community/cli': '^19.0.0',
+            ...compatibleMetroPeers,
+            'zephyr-metro-plugin': 'workspace:*',
+          },
+        })
+      );
+      fs.writeFileSync(
+        'metro.config.js',
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
+      );
+      const fakeBin = path.join(tempDir, 'fake-bin');
+      fs.mkdirSync(fakeBin);
+      const fakeScript = path.join(fakeBin, 'fake-pnpm.js');
+      fs.writeFileSync(
+        fakeScript,
+        `const fs = require("node:fs"); const path = require("node:path"); for (const [name, version] of [["zephyr-metro-plugin", "1.4.2"], ["@module-federation/metro", "2.9.1"]]) { const dir = path.join(process.cwd(), "node_modules", ...name.split("/")); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name, version })); }\n`
+      );
+      const fakePnpm = path.join(fakeBin, 'pnpm');
+      fs.writeFileSync(fakePnpm, `#!/bin/sh\n"${process.execPath}" "${fakeScript}"\n`);
+      fs.chmodSync(fakePnpm, 0o755);
+      fs.writeFileSync(
+        path.join(fakeBin, 'pnpm.cmd'),
+        `@"${process.execPath}" "${fakeScript}"\r\n`
+      );
+
+      const output = runCodemod('', false, {
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        npm_config_user_agent: 'pnpm/11.0.0',
+      });
+      const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(packageJson.devDependencies['zephyr-metro-plugin']).toBe('workspace:*');
+      expect(packageJson.devDependencies['@module-federation/metro']).toBe('catalog:');
+      expect(output).toContain('Publish the first bundle with:');
     });
 
     it('should fail when a successful nested install leaves requirements unresolved', () => {

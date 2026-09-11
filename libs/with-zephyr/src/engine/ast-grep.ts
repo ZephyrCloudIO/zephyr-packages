@@ -8,6 +8,7 @@ export type AstGrepLanguage = 'js' | 'ts' | 'json';
 export interface AstGrepRunOptions {
   filePath: string;
   pattern: string;
+  topLevel?: boolean;
   selector?: string;
   strictness?: 'cst' | 'smart' | 'ast' | 'relaxed' | 'signature' | 'template';
   language?: AstGrepLanguage;
@@ -139,8 +140,11 @@ export function searchWithAstGrep(options: AstGrepRunOptions): AstGrepResult {
     const language = options.language ?? detectLanguage(options.filePath);
     const source = fs.readFileSync(options.filePath, 'utf8');
     const { parse } = getAstGrepRuntime();
-    const root = parse(toNapiLanguage(language), source);
-    const match = root.root().find(buildMatcher(options));
+    const root = parse(toNapiLanguage(language), source).root();
+    const matcher = buildMatcher(options);
+    const match = options.topLevel
+      ? root.findAll(matcher).find((node) => node.parent()?.id() === root.id())
+      : root.find(matcher);
 
     return {
       status: match ? 'match' : 'no-match',
@@ -172,6 +176,15 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
       }
     }
 
+    const isTopLevelDeclaration = (declaration: SgNode): boolean => {
+      const container = declaration.parent()?.parent();
+      return Boolean(
+        container?.id() === root.id() ||
+        (container?.kind() === 'export_statement' &&
+          container.parent()?.id() === root.id())
+      );
+    };
+
     const isExportedObject = (object: SgNode | null): boolean => {
       const parent = object?.parent();
       if (!parent) return false;
@@ -182,6 +195,7 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
         return true;
       }
       if (parent.kind() !== 'variable_declarator') return false;
+      if (!isTopLevelDeclaration(parent)) return false;
       const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
       return Boolean(identifier && exportedIdentifiers.has(identifier));
     };
@@ -219,7 +233,9 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
         if (parent.kind() === 'variable_declarator') {
           const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
           if (!identifier) return false;
-          if (exportedIdentifiers.has(identifier)) return true;
+          if (isTopLevelDeclaration(parent) && exportedIdentifiers.has(identifier)) {
+            return true;
+          }
 
           const functionNode = parent
             .ancestors()
@@ -301,6 +317,7 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
 
       const declaration = call.parent();
       if (declaration?.kind() !== 'variable_declarator') return false;
+      if (!isTopLevelDeclaration(declaration)) return false;
       const bindingName = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(declaration.text())?.[1];
       if (!bindingName) return false;
 

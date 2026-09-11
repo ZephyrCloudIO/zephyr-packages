@@ -327,6 +327,9 @@ function updateCommonJsConfig(
   dryRun: boolean
 ): ConfigUpdateResult {
   const content = fs.readFileSync(filePath, 'utf8');
+  if ((content.match(/module\.exports\s*=/g)?.length ?? 0) !== 1) {
+    return 'unsupported';
+  }
   if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
     return 'already-configured';
   }
@@ -335,7 +338,6 @@ function updateCommonJsConfig(
     importName;
   bindingName = getUniqueBindingName(content, bindingName);
   if (
-    (content.match(/module\.exports\s*=/g)?.length ?? 0) !== 1 ||
     searchWithAstGrep({
       filePath,
       pattern: 'module.exports = {$$$PROPS}',

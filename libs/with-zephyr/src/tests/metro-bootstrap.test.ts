@@ -470,6 +470,22 @@ describe('bootstrapMetroCommands', () => {
     );
   });
 
+  it('rejects a registered adapter replaced by a later CommonJS export', () => {
+    writePackageJson({
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    const configPath = path.join(tempDir, 'react-native.config.js');
+    const content =
+      'const { zephyrMetroReactNativeCli } = require("zephyr-metro-plugin");\nmodule.exports = zephyrMetroReactNativeCli();\nmodule.exports = { commands: [] };\n';
+    fs.writeFileSync(configPath, content);
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.packageRequirements).toEqual([]);
+    expect(result.manualGuidance[0]).toContain('does not directly export an object');
+    expect(fs.readFileSync(configPath, 'utf8')).toBe(content);
+  });
+
   it('recognizes adapter commands merged into the exported config', () => {
     writePackageJson({
       devDependencies: { '@react-native-community/cli': '^19.0.0' },

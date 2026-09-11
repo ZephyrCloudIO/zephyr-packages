@@ -233,6 +233,52 @@ describe('Zephyr Codemod CLI', () => {
       expect(updatedPackageJson.scripts.build).toBe('vinext build');
       expect(updatedPackageJson.scripts.start).toBe('vinext start');
     });
+
+    it('should move existing declarations to their required dependency sections', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          name: '@acme/next-app',
+          packageManager: 'pnpm@11.0.0',
+          dependencies: {
+            next: '^15.0.0',
+            vite: '^8.1.4',
+          },
+          devDependencies: {
+            vinext: 'workspace:*',
+            '@vitejs/plugin-rsc': '0.5.19',
+            'vite-plugin-vinext-zephyr': 'catalog:',
+            '@cloudflare/vite-plugin': 'catalog:',
+            vite: 'catalog:',
+            wrangler: 'catalog:',
+          },
+        })
+      );
+      const fakeBin = path.join(tempDir, 'fake-bin');
+      fs.mkdirSync(fakeBin);
+      const fakeScript = path.join(fakeBin, 'fake-pnpm.js');
+      fs.writeFileSync(fakeScript, 'process.exit(0);\n');
+      const fakePnpm = path.join(fakeBin, 'pnpm');
+      fs.writeFileSync(fakePnpm, `#!/bin/sh\n"${process.execPath}" "${fakeScript}"\n`);
+      fs.chmodSync(fakePnpm, 0o755);
+      fs.writeFileSync(
+        path.join(fakeBin, 'pnpm.cmd'),
+        `@"${process.execPath}" "${fakeScript}"\r\n`
+      );
+
+      runCodemod('.', false, {
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        npm_config_user_agent: 'pnpm/11.0.0',
+      });
+      const updatedPackageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(updatedPackageJson.dependencies.vinext).toBe('workspace:*');
+      expect(updatedPackageJson.devDependencies.vinext).toBeUndefined();
+      expect(updatedPackageJson.dependencies['@vitejs/plugin-rsc']).toBe('0.5.19');
+      expect(updatedPackageJson.devDependencies['@vitejs/plugin-rsc']).toBeUndefined();
+      expect(updatedPackageJson.devDependencies.vite).toBe('catalog:');
+      expect(updatedPackageJson.dependencies.vite).toBeUndefined();
+    });
   });
 
   describe('Slidev Scaffold', () => {

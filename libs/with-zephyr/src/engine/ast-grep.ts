@@ -176,6 +176,15 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
       }
     }
 
+    const isTopLevelDeclaration = (declaration: SgNode): boolean => {
+      const container = declaration.parent()?.parent();
+      return Boolean(
+        container?.id() === root.id() ||
+        (container?.kind() === 'export_statement' &&
+          container.parent()?.id() === root.id())
+      );
+    };
+
     const isExportedObject = (object: SgNode | null): boolean => {
       const parent = object?.parent();
       if (!parent) return false;
@@ -186,7 +195,7 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
         return true;
       }
       if (parent.kind() !== 'variable_declarator') return false;
-      if (parent.parent()?.parent()?.id() !== root.id()) return false;
+      if (!isTopLevelDeclaration(parent)) return false;
       const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
       return Boolean(identifier && exportedIdentifiers.has(identifier));
     };
@@ -224,10 +233,7 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
         if (parent.kind() === 'variable_declarator') {
           const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
           if (!identifier) return false;
-          if (
-            parent.parent()?.parent()?.id() === root.id() &&
-            exportedIdentifiers.has(identifier)
-          ) {
+          if (isTopLevelDeclaration(parent) && exportedIdentifiers.has(identifier)) {
             return true;
           }
 
@@ -311,7 +317,7 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
 
       const declaration = call.parent();
       if (declaration?.kind() !== 'variable_declarator') return false;
-      if (declaration.parent()?.parent()?.id() !== root.id()) return false;
+      if (!isTopLevelDeclaration(declaration)) return false;
       const bindingName = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(declaration.text())?.[1];
       if (!bindingName) return false;
 

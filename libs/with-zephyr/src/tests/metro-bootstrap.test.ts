@@ -80,6 +80,22 @@ describe('bootstrapMetroCommands', () => {
     expect(content).toContain('module.exports = zephyrMetroReactNativeCli()');
   });
 
+  it('recognizes Module Federation in an exported top-level declaration', () => {
+    writePackageJson({
+      type: 'module',
+      devDependencies: { '@react-native-community/cli': '^19.0.0' },
+    });
+    fs.writeFileSync(
+      path.join(tempDir, 'metro.config.js'),
+      `import { withModuleFederation } from "@module-federation/metro";\nexport const config = withModuleFederation({}, { name: "app" });\nexport default config;\n`
+    );
+
+    const result = bootstrapMetroCommands(tempDir);
+
+    expect(result.integration).toBe('react-native-cli');
+    expect(result.createdFiles).toEqual(['react-native.config.js']);
+  });
+
   it('requires an adapter-capable plugin upgrade', () => {
     writePackageJson({
       devDependencies: {

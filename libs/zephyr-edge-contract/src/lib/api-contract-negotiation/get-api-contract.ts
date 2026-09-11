@@ -19,6 +19,7 @@ export const ze_api_gateway = {
   authorize_link: '/authorize-link',
   resolve: '/resolve',
   application_config: '/application-config',
+  user_info: '/user-info',
   websocket: '/websocket',
   get_access_token_by_server_token: 'get-access-token-by-server-token',
   ci_token_exchange: 'ci-token-exchange',

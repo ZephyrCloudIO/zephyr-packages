@@ -128,9 +128,9 @@ Failed to load git information:
   ERR_AUTH_ERROR: {
     id: '018',
     message: `
-Failed to authenticate with Zephyr.
+Zephyr authentication is missing, invalid, or expired.
 
-Please make sure you have a valid Zephyr account and you are logged in.
+Run the deployment in an interactive terminal to complete normal browser login, or provide a valid authentication token in non-interactive environments.
 
 {{ message }}
 `,
@@ -140,13 +140,9 @@ Please make sure you have a valid Zephyr account and you are logged in.
   ERR_GET_BUILD_ID: {
     id: '019',
     message: `
-Could not generate Build ID. Ensure you meet the following requirements:
+Could not create a Build ID for {{ application_uid }} as {{ username }}.
 
-1. Your Zephyr Account ({{ username }}) has write access to {{ application_uid }}
-2. You own the repository or is a collaborator with write access.
-3. This repository has commit history and has a proper git remote origin url.
-
-When trying out public examples, make sure to fork the repository to your account so you can have write access.
+Review the reported reason below. Authentication, target access, and service availability require different recovery actions.
 
 `,
     kind: 'build',
@@ -170,9 +166,9 @@ When trying out public examples, make sure to fork the repository to your accoun
   ERR_AUTH_FORBIDDEN_ERROR: {
     id: '022',
     message: `
-User not allowed to access the requested resource.
+The authenticated Zephyr account is not allowed to access the requested target.
 
-Please make sure you are logged in with the correct Zephyr account.
+Verify the application target and account, or ask an organization administrator for access. Reconfiguring Git will not grant target access.
 
 {{ message }}
 `,
@@ -240,7 +236,7 @@ Please make sure you have set them correctly in your package.json and git reposi
 
 Failed to load Application Configuration for {{ application_uid }}.
 
-Try to remove ~/.zephyr folder and try again.
+Review the reported reason below before retrying. Do not print, export, or share credential-file contents.
 
     `,
     kind: 'deploy',

@@ -103,6 +103,8 @@ Local build can still deploy, and Zephyr can infer org/project from `origin`.
   remote-origin inference, not deployment history.
 - Without commits in local, Zephyr uses placeholder commit metadata (`no-git-commit`) but keeps local flow working.
 - If no Git metadata is available at all, Zephyr falls back to global Git config, then token/user-based fallback metadata.
+- The local user fallback requires authentication. In an interactive terminal Zephyr opens the normal browser-login flow and retries the user lookup once. Non-interactive builds must provide a valid token.
+- Authentication (`ZE10018`), target access (`ZE10022`), and service availability (`ZE40035`) failures are not Git setup failures. Their diagnostics retain the failing operation and reason instead of reporting `ZE10016`.
 - In CI with `ZE_CI_TOKEN`, Zephyr infers the build actor in the plugin. GitLab reads built-in `CI_JOB_TOKEN` JWT
   claims locally, then falls back to GitLab's `/job` API from the runner and GitLab's predefined `GITLAB_USER_EMAIL` for
   legacy/non-JWT job tokens. GitHub Actions reads `GITHUB_EVENT_PATH` commit/pusher emails, then falls back to GitHub
@@ -118,3 +120,7 @@ If you see `Git repository not found`:
 2. Confirm origin: `git remote -v`
 3. For CI failures, confirm commit exists: `git rev-parse HEAD`
 4. If CI still fails, ensure checkout step fetches commit history (not detached shallow state without commit metadata)
+
+If the diagnostic reports `ZE10018`, complete normal browser login from an interactive terminal or provide the supported token for the environment. Do not print, export, or share files from `~/.zephyr`.
+
+If the diagnostic reports `ZE10022`, verify the configured application target and request access from an organization administrator. Re-running Git setup will not change target authorization.

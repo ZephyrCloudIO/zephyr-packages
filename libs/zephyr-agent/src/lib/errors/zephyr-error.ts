@@ -31,7 +31,16 @@ import {
 export type ZephyrErrorOpts<T extends ZeErrorType> = {
   cause?: unknown;
   data?: Record<string, unknown>;
+  operation?: ZephyrErrorOperation;
+  reason?: ZeErrorCodes;
 } & Record<FindTemplates<T['message']>, string | number | boolean>;
+
+/** Stable initialization operations exposed to users and automated recovery tooling. */
+export type ZephyrErrorOperation =
+  | 'resolve-git-metadata'
+  | 'get-user-info'
+  | 'get-application-config'
+  | 'create-build-id';
 
 export const docsUrl = 'https://docs.zephyr-cloud.io/errors';
 export const discordUrl = 'https://zephyr-cloud.io/discord';
@@ -54,7 +63,13 @@ export class ZephyrError<
   public data?: Record<string, unknown>;
 
   /** Data used when templating the message */
-  readonly template?: Omit<ZephyrErrorOpts<T>, 'cause' | 'data'>;
+  readonly template?: Omit<ZephyrErrorOpts<T>, 'cause' | 'data' | 'operation' | 'reason'>;
+
+  /** The deployment operation that failed. */
+  operation?: ZephyrErrorOperation;
+
+  /** The stable error code identifying the actionable failure reason. */
+  reason!: ZeErrorCodes;
 
   /**
    * Indicates the specific original cause of the error.
@@ -93,11 +108,18 @@ export class ZephyrError<
     this.code = ZephyrError.toZeCode<K>(type);
 
     if (opts) {
-      const { cause, data, ...template } = opts;
+      const { cause, data, operation, reason, ...template } = opts;
       this.template = template;
       this.data = data;
       this.cause = cause;
+      this.operation = operation;
+      this.reason =
+        reason ??
+        (ZephyrError.is(cause)
+          ? (cause.reason ?? (cause.code as ZeErrorCodes))
+          : (this.code as ZeErrorCodes));
     }
+    this.reason ??= this.code as ZeErrorCodes;
 
     // Simpler stack traces in VIte
     if (process.env['VITE']) {
@@ -120,6 +142,22 @@ export class ZephyrError<
     }
 
     return ZephyrError.toZeCode(codeOrType) === err.code;
+  }
+
+  /** Add stable operation context without replacing an existing public error code. */
+  static withContext(
+    error: unknown,
+    operation: ZephyrErrorOperation
+  ): ZephyrError<ZeErrorKeys> {
+    const zeError = ZephyrError.is(error)
+      ? error
+      : new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: (error as Error)?.message || String(error),
+          cause: error,
+        });
+
+    zeError.operation ??= operation;
+    return zeError;
   }
 
   /** Formats a Zephyr error code. */
@@ -188,9 +226,11 @@ export class ZephyrError<
     const messages = [
       `${bold(underline(zeError.code))}: ${redactString(zeError.message)}`,
 
+      formatDiagnosticContext(zeError),
+
       `
 
-Visit ${cyanBright(`${docsUrl}/${zeError.code}`)} for more information
+Visit ${cyanBright(`${docsUrl}/${zeError.code.toLowerCase()}`)} for more information
 Or join our ${blue('Discord')} server at ${cyanBright(discordUrl)}
 
 `.trim(),
@@ -247,6 +287,8 @@ function format_error(err: unknown): unknown {
   return sanitizeForLogging({
     name: error.name,
     code: error.code,
+    operation: error.operation,
+    reason: error.reason,
     template: undefined,
     ...error?.template,
     data: error?.data,
@@ -254,6 +296,23 @@ function format_error(err: unknown): unknown {
     stack: split_stack(error.stack, error.message),
     cause: error.cause,
   });
+}
+
+function formatDiagnosticContext(error: ZephyrError<ZeErrorKeys>): string | undefined {
+  if (!error.operation && error.reason === error.code) {
+    return undefined;
+  }
+
+  const cause = ZephyrError.is(error.cause) ? error.cause : undefined;
+  const reasonMessage =
+    cause && cause.code === error.reason ? redactString(cause.message) : undefined;
+
+  return [
+    error.operation && `Operation: ${error.operation}`,
+    error.reason && `Reason: ${error.reason}${reasonMessage ? `: ${reasonMessage}` : ''}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 function split_stack(stack?: string, message?: string) {

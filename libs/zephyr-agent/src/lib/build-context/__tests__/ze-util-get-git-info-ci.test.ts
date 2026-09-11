@@ -95,9 +95,14 @@ describe('getGitInfo - CI environments', () => {
     // Every git command fails => not a git repository.
     mockGit(() => ({ error: new Error('Not a git repository') }));
 
-    await expect(getGitInfo()).rejects.toThrow(
-      'Stable Git branch and commit information is required in CI environments'
-    );
+    await expect(getGitInfo()).rejects.toMatchObject({
+      code: 'ZE10016',
+      operation: 'resolve-git-metadata',
+      reason: 'ZE10016',
+      message: expect.stringContaining(
+        'Stable Git branch and commit information is required in CI environments'
+      ),
+    });
   });
 
   it('does not let configured identity create timestamp metadata in CI', async () => {

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 (2026-09-11)
+
+## What's Changed
+* fix(vite): load optional federation peer lazily by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/607
+* fix(deps): remediate exported vulnerabilities by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/606
+* fix(vite): publish legacy programmatic builds by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/610
+* feat(agent): distinguish deployment failure reasons by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/609
+* fix(metro): install publication commands in codemod by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/611
+* fix(metro): harden codemod binding resolution by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/614
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.3.0...v1.4.0
+
 ## 1.3.0 (2026-09-07)
 
 ## What's Changed

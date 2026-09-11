@@ -95,6 +95,7 @@ function getVersionProblem(
   minimumVersion: string,
   options: {
     allowMissing?: boolean;
+    allowUnresolvedManagedDeclaration?: boolean;
     maximumVersionExclusive?: string;
     resolutionDirectories?: string[];
   } = {}
@@ -129,6 +130,10 @@ function getVersionProblem(
     )
       ? undefined
       : `${packageName} ${resolvedVersion} is installed, but ${expectedVersion} is required.`;
+  }
+
+  if (usesWorkspaceProtocol && options.allowUnresolvedManagedDeclaration) {
+    return undefined;
   }
 
   if (!declaration) {
@@ -229,7 +234,8 @@ function findImportedHelperExpression(
     for (const match of content.matchAll(pattern)) {
       if (
         !match[0] ||
-        searchWithAstGrep({ filePath, pattern: match[0] }).status !== 'match'
+        searchWithAstGrep({ filePath, pattern: match[0], topLevel: true }).status !==
+          'match'
       ) {
         continue;
       }
@@ -259,7 +265,8 @@ function findImportedHelperExpression(
       if (
         namespace &&
         match[0] &&
-        searchWithAstGrep({ filePath, pattern: match[0] }).status === 'match'
+        searchWithAstGrep({ filePath, pattern: match[0], topLevel: true }).status ===
+          'match'
       ) {
         return `${namespace}.${importName}`;
       }
@@ -281,7 +288,7 @@ function hasExportedHelperCall(
     'zephyr-metro-plugin',
     importName
   );
-  return [importName, localName]
+  return [localName]
     .filter((name): name is string => Boolean(name))
     .some((name) => {
       if (name.startsWith('$')) return false;
@@ -298,6 +305,7 @@ function addImport(
   filePath: string,
   content: string,
   importName: string,
+  localName: string,
   esm: boolean
 ): string {
   if (
@@ -307,8 +315,8 @@ function addImport(
   }
 
   const declaration = esm
-    ? `import { ${importName} } from "zephyr-metro-plugin";\n`
-    : `const { ${importName} } = require("zephyr-metro-plugin");\n`;
+    ? `import { ${importName}${localName === importName ? '' : ` as ${localName}`} } from "zephyr-metro-plugin";\n`
+    : `const { ${importName}${localName === importName ? '' : `: ${localName}`} } = require("zephyr-metro-plugin");\n`;
   let insertionIndex = content.startsWith('#!') ? content.indexOf('\n') + 1 : 0;
   if (insertionIndex === 0 && content.startsWith('#!')) {
     return `${content}\n${declaration}`;
@@ -338,7 +346,7 @@ function updateCommonJsConfig(
   }
   const localName =
     findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName) ??
-    importName;
+    getUniqueBindingName(content, importName);
   bindingName = getUniqueBindingName(content, bindingName);
   if (
     searchWithAstGrep({
@@ -349,7 +357,7 @@ function updateCommonJsConfig(
     return 'unsupported';
   }
 
-  const nextContent = `${addImport(filePath, content, importName, false).trimEnd()}
+  const nextContent = `${addImport(filePath, content, importName, localName, false).trimEnd()}
 
 const ${bindingName} = module.exports;
 module.exports = {
@@ -380,7 +388,7 @@ function updateEsmConfig(
   }
   const localName =
     findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName) ??
-    importName;
+    getUniqueBindingName(content, importName);
   bindingName = getUniqueBindingName(content, bindingName);
 
   const result = rewriteWithAstGrep({
@@ -402,7 +410,10 @@ export default {
 
   if (!dryRun) {
     const updatedContent = fs.readFileSync(filePath, 'utf8');
-    fs.writeFileSync(filePath, addImport(filePath, updatedContent, importName, true));
+    fs.writeFileSync(
+      filePath,
+      addImport(filePath, updatedContent, importName, localName, true)
+    );
   }
   return 'updated';
 }
@@ -484,6 +495,7 @@ export function bootstrapMetroCommands(
   const versionProblems = [
     getVersionProblem(directory, '@module-federation/metro', '2.9.0', {
       allowMissing: true,
+      allowUnresolvedManagedDeclaration: true,
       maximumVersionExclusive: '3.0.0',
     }),
     getVersionProblem(directory, '@babel/types', '7.25.0', {

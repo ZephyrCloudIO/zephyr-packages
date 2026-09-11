@@ -26,6 +26,7 @@ import type { BundlerConfigs } from './types.js';
 import {
   addToPackageJson,
   detectPackageManager,
+  getDeclaredPackageVersion,
   getLatestVersion,
   installDependencies,
   installPackages as installPackagesDirect,
@@ -502,9 +503,16 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   if (installPackages && missingPackages.length > 0 && dryRun) {
     console.log(chalk.blue(`\n📦 Packages that would be installed:\n`));
     for (const packageRequirement of missingPackages) {
+      const declaration = getDeclaredPackageVersion(
+        packageRequirement.name,
+        packageRequirement.projectDirectory ?? directory
+      );
+      const version = /^(?:catalog:|workspace:)/.test(declaration ?? '')
+        ? declaration
+        : packageRequirement.version;
       console.log(
         chalk.yellow(
-          `  - ${packageRequirement.name}${packageRequirement.version ? `@${packageRequirement.version}` : ''}${packageRequirement.projectDirectory && path.resolve(packageRequirement.projectDirectory) !== path.resolve(directory) ? ` (${normalizePathForOutput(path.relative(path.resolve(directory), packageRequirement.projectDirectory))})` : ''}`
+          `  - ${packageRequirement.name}${version ? `@${version}` : ''}${packageRequirement.projectDirectory && path.resolve(packageRequirement.projectDirectory) !== path.resolve(directory) ? ` (${normalizePathForOutput(path.relative(path.resolve(directory), packageRequirement.projectDirectory))})` : ''}`
         )
       );
     }
@@ -540,6 +548,19 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       const projectDirectory = packageRequirement.projectDirectory ?? directory;
       const packageJsonPath = path.join(projectDirectory, 'package.json');
       if (fs.existsSync(packageJsonPath)) {
+        const declaration = getDeclaredPackageVersion(
+          packageRequirement.name,
+          projectDirectory
+        );
+        if (/^(?:catalog:|workspace:)/.test(declaration ?? '')) {
+          stagedPackages.push(packageRequirement);
+          console.log(
+            chalk.green(
+              `✓ Preserved ${packageRequirement.name}@${declaration} in ${normalizePathForOutput(path.relative(path.resolve(directory), packageJsonPath) || 'package.json')}`
+            )
+          );
+          continue;
+        }
         const version =
           packageRequirement.version ?? getLatestVersion(packageRequirement.name);
         const added = addToPackageJson(

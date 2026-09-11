@@ -481,7 +481,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
 
       const output = runCodemod();
@@ -492,6 +492,35 @@ describe('Zephyr Codemod CLI', () => {
         'Publish the first bundle with: npx react-native bundle-mf-remote --platform <platform> --dev false'
       );
       expect(cliConfig).toContain('module.exports = zephyrMetroReactNativeCli()');
+    });
+
+    it('should not print federation guidance after a successful Metro rerun', () => {
+      writeResolvedMetroCompanions();
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          dependencies: { 'react-native': '^0.79.0' },
+          devDependencies: {
+            '@react-native-community/cli': '^19.0.0',
+            '@module-federation/metro': '^2.9.0',
+            ...compatibleMetroPeers,
+            'zephyr-metro-plugin': '^1.4.0',
+          },
+        })
+      );
+      fs.writeFileSync(
+        'metro.config.js',
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
+      );
+
+      expect(runCodemod()).toContain('Created react-native.config.js');
+      const output = runCodemod();
+
+      expect(output).toContain(
+        'Skipping metro.config.js (already has Zephyr integration)'
+      );
+      expect(output).not.toContain('is not verifiably configured');
+      expect(output).not.toContain('Companion command config was left unchanged');
     });
 
     it('should bootstrap every unique nested Metro project', () => {
@@ -525,7 +554,7 @@ describe('Zephyr Codemod CLI', () => {
         );
         fs.writeFileSync(
           path.join(project, 'metro.config.js'),
-          `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+          `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
         );
       }
 
@@ -689,7 +718,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
 
       const output = runCodemod('--dry-run');
@@ -712,7 +741,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withModuleFederation } = require("@module-federation/metro");\nconst { withZephyr } = require("zephyr-metro-plugin");\nmodule.exports = withZephyr()(withModuleFederation({ name: "app" })({}));\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nconst { withZephyr } = require("zephyr-metro-plugin");\nmodule.exports = withZephyr()(withModuleFederation({}, { name: "app" }));\n`
       );
       const fakeBin = path.join(tempDir, 'fake-bin');
       fs.mkdirSync(fakeBin);
@@ -747,7 +776,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
       const fakeBin = path.join(tempDir, 'fake-bin');
       fs.mkdirSync(fakeBin);
@@ -786,7 +815,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
       const fakeBin = path.join(tempDir, 'fake-bin');
       fs.mkdirSync(fakeBin);
@@ -830,7 +859,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         path.join(projectDirectory, 'metro.config.js'),
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
       const fakeBin = path.join(tempDir, 'fake-bin');
       fs.mkdirSync(fakeBin);
@@ -887,7 +916,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         path.join(projectDirectory, 'metro.config.js'),
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
       const fakeBin = path.join(tempDir, 'fake-bin');
       fs.mkdirSync(fakeBin);
@@ -935,7 +964,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       fs.writeFileSync(
         'metro.config.js',
-        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+        `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
       );
 
       const output = runCodemod();

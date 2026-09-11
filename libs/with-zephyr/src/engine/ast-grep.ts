@@ -186,6 +186,26 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
       return Boolean(identifier && exportedIdentifiers.has(identifier));
     };
 
+    const isReturnedFromFunction = (bindingName: string, functionNode: SgNode): boolean =>
+      root
+        .findAll(bindingName)
+        .filter((identifier) => identifier.kind() === 'identifier')
+        .some((identifier) => {
+          let ancestor = identifier.parent();
+          while (ancestor && ancestor.id() !== functionNode.id()) {
+            if (
+              ancestor.kind() === 'arrow_function' ||
+              ancestor.kind() === 'function_expression' ||
+              ancestor.kind() === 'function_declaration'
+            ) {
+              return false;
+            }
+            if (ancestor.kind() === 'return_statement') return true;
+            ancestor = ancestor.parent();
+          }
+          return false;
+        });
+
     const isDirectlyExportedExpression = (call: SgNode): boolean => {
       let expression = call;
       let parent = expression.parent();
@@ -198,7 +218,21 @@ export function hasExportedConfigCall(options: ExportedConfigCallOptions): boole
 
         if (parent.kind() === 'variable_declarator') {
           const identifier = /^\s*([A-Za-z_$][\w$]*)\s*=/.exec(parent.text())?.[1];
-          return Boolean(identifier && exportedIdentifiers.has(identifier));
+          if (!identifier) return false;
+          if (exportedIdentifiers.has(identifier)) return true;
+
+          const functionNode = parent
+            .ancestors()
+            .find(
+              (ancestor) =>
+                ancestor.kind() === 'arrow_function' ||
+                ancestor.kind() === 'function_expression'
+            );
+          return Boolean(
+            functionNode &&
+            isReturnedFromFunction(identifier, functionNode) &&
+            isDirectlyExportedExpression(functionNode)
+          );
         }
 
         const parentKind = parent.kind();

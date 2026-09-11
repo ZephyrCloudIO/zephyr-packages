@@ -64,9 +64,9 @@ module.exports = withZephyr({
     SharedComponents: 'SharedComponents@http://localhost:9000/remoteEntry.js',
   },
 })(
-  withModuleFederation({
+  withModuleFederation(baseConfig, {
     name: 'MyApp',
-  })(baseConfig)
+  })
 );
 ```
 

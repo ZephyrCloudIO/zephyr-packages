@@ -154,6 +154,26 @@ function getUniqueBindingName(content: string, bindingName: string): string {
   return candidate;
 }
 
+function getMetroResolutionDirectories(directory: string): string[] {
+  const reactNativeMetroConfigDirectory = getResolvedPackageDirectory(
+    '@react-native/metro-config',
+    directory
+  );
+  if (!reactNativeMetroConfigDirectory) return [];
+
+  const metroConfigDirectory = getResolvedPackageDirectory(
+    'metro-config',
+    reactNativeMetroConfigDirectory
+  );
+  const metroDirectory = getResolvedPackageDirectory(
+    'metro',
+    metroConfigDirectory ?? reactNativeMetroConfigDirectory
+  );
+  return [reactNativeMetroConfigDirectory, metroConfigDirectory, metroDirectory].filter(
+    (value): value is string => Boolean(value)
+  );
+}
+
 function hasModuleFederationSetup(filePath: string): boolean {
   const content = fs.readFileSync(filePath, 'utf8');
   const localName = findImportedHelperExpression(
@@ -429,11 +449,7 @@ export function bootstrapMetroCommands(
     return result;
   }
 
-  const metroConfigDirectory = getResolvedPackageDirectory(
-    '@react-native/metro-config',
-    directory
-  );
-  const metroResolutionDirectories = metroConfigDirectory ? [metroConfigDirectory] : [];
+  const metroResolutionDirectories = getMetroResolutionDirectories(directory);
   const versionProblems = [
     getVersionProblem(directory, '@module-federation/metro', '2.9.0', {
       allowMissing: true,
@@ -441,6 +457,7 @@ export function bootstrapMetroCommands(
     }),
     getVersionProblem(directory, '@babel/types', '7.25.0', {
       maximumVersionExclusive: '8.0.0',
+      resolutionDirectories: metroResolutionDirectories,
     }),
     getVersionProblem(directory, 'react', '19.0.0'),
     getVersionProblem(directory, 'react-native', '0.79.0'),

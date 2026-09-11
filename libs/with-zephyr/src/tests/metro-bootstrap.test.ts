@@ -11,7 +11,7 @@ describe('bootstrapMetroCommands', () => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'zephyr-metro-bootstrap-'));
     fs.writeFileSync(
       path.join(tempDir, 'metro.config.js'),
-      `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({ name: "app" })({});\n`
+      `const { withModuleFederation } = require("@module-federation/metro");\nmodule.exports = withModuleFederation({}, { name: "app" });\n`
     );
   });
 
@@ -724,7 +724,7 @@ describe('bootstrapMetroCommands', () => {
     });
     fs.writeFileSync(
       path.join(tempDir, 'metro.config.js'),
-      `const { withModuleFederation } = require("@module-federation/metro");\nconst unused = withModuleFederation({ name: "app" })({});\nmodule.exports = { resolver: {} };\n`
+      `const { withModuleFederation } = require("@module-federation/metro");\nconst unused = withModuleFederation({}, { name: "app" });\nmodule.exports = { resolver: {} };\n`
     );
 
     const result = bootstrapMetroCommands(tempDir);
@@ -854,6 +854,7 @@ describe('bootstrapMetroCommands', () => {
     const packageJsonPath = path.join(tempDir, 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     for (const packageName of [
+      '@babel/types',
       'metro',
       'metro-config',
       'metro-file-map',
@@ -864,18 +865,27 @@ describe('bootstrapMetroCommands', () => {
     }
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson));
 
-    const metroConfigDirectory = writeResolvedPackage(
+    const reactNativeMetroConfigDirectory = writeResolvedPackage(
       '@react-native/metro-config',
       '0.79.0'
     );
-    for (const packageName of [
-      'metro',
+    const metroConfigDirectory = writeResolvedPackage(
       'metro-config',
+      '0.82.1',
+      reactNativeMetroConfigDirectory
+    );
+    const metroDirectory = writeResolvedPackage('metro', '0.82.1', metroConfigDirectory);
+    for (const packageName of [
+      '@babel/types',
       'metro-file-map',
       'metro-resolver',
       'metro-source-map',
     ]) {
-      writeResolvedPackage(packageName, '0.82.1', metroConfigDirectory);
+      writeResolvedPackage(
+        packageName,
+        packageName === '@babel/types' ? '7.25.0' : '0.82.1',
+        metroDirectory
+      );
     }
 
     const result = bootstrapMetroCommands(tempDir);

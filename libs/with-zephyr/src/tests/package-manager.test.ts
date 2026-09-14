@@ -3,10 +3,15 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import {
+  addToPackageJson,
   buildAddCommand,
   buildInstallCommand,
   detectPackageManager,
+  getResolvedPackageVersion,
   isPackageInstalled,
+  isPackageRequirementSatisfied,
+  isResolvedPackageRequirementSatisfied,
+  isSafelyConstrainedVersion,
 } from '../package-manager.js';
 
 describe('Package Manager Utils', () => {
@@ -51,6 +56,11 @@ describe('Package Manager Utils', () => {
       expect(detectPackageManager(tempDir)).toBe('bun');
     });
 
+    it('should detect bun from bun.lock', () => {
+      fs.writeFileSync('bun.lock', 'lockfileVersion = 1');
+      expect(detectPackageManager(tempDir)).toBe('bun');
+    });
+
     it('should detect npm from package-lock.json', () => {
       fs.writeFileSync('package-lock.json', '{"lockfileVersion": 2}');
       expect(detectPackageManager(tempDir)).toBe('npm');
@@ -66,6 +76,13 @@ describe('Package Manager Utils', () => {
       fs.writeFileSync('package-lock.json', '{"lockfileVersion": 2}');
 
       expect(detectPackageManager(tempDir)).toBe('pnpm');
+    });
+
+    it('should detect a nested project manager without the invoking user agent', () => {
+      process.env.npm_config_user_agent = 'pnpm/11.0.0';
+      fs.writeFileSync('yarn.lock', '# Yarn lockfile');
+
+      expect(detectPackageManager(tempDir, { ignoreUserAgent: true })).toBe('yarn');
     });
 
     it('should prioritize yarn over npm when both exist', () => {
@@ -324,6 +341,126 @@ describe('Package Manager Utils', () => {
 
     it('should build install command for pnpm', () => {
       expect(buildInstallCommand('pnpm')).toBe('pnpm install');
+    });
+
+    it('should preserve an explicit package version range', () => {
+      fs.writeFileSync('package.json', '{}');
+
+      expect(addToPackageJson(tempDir, '@module-federation/metro', '^2.9.0', true)).toBe(
+        true
+      );
+      const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(packageJson.devDependencies['@module-federation/metro']).toBe('^2.9.0');
+    });
+
+    it('should preserve production placement and remove a conflicting dev entry', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({
+          dependencies: { 'zephyr-metro-plugin': '^1.3.0' },
+          devDependencies: { 'zephyr-metro-plugin': '^1.2.0' },
+        })
+      );
+
+      expect(addToPackageJson(tempDir, 'zephyr-metro-plugin', '^1.4.0', false)).toBe(
+        true
+      );
+      const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+
+      expect(packageJson.dependencies['zephyr-metro-plugin']).toBe('^1.4.0');
+      expect(packageJson.devDependencies['zephyr-metro-plugin']).toBeUndefined();
+    });
+
+    it('should conservatively validate complete version declarations', () => {
+      expect(isSafelyConstrainedVersion('^0.82.0', '0.82.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('>=0.82.0 <1.0.0', '0.82.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('^0.81.0', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('workspace:^0.82.0', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('*', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('latest', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('0.82.0 || >=1.0.0', '0.82.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('^2.9.0', '2.9.0', '3.0.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('>=2.9.0', '2.9.0', '3.0.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('>=2.9.0 <3.0.0', '2.9.0', '3.0.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('^3.0.0', '2.9.0', '3.0.0')).toBe(false);
+      expect(isSafelyConstrainedVersion('^0.82.1', '0.82.1', '0.83.0')).toBe(true);
+      expect(isSafelyConstrainedVersion('^0.83.0', '0.82.1', '0.83.0')).toBe(false);
+    });
+
+    it('should require the declared adapter-capable plugin range', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { 'zephyr-metro-plugin': '^1.3.0' } })
+      );
+      const packageDirectory = path.join(tempDir, 'node_modules', 'zephyr-metro-plugin');
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: 'zephyr-metro-plugin', version: '1.4.2' })
+      );
+
+      expect(isPackageRequirementSatisfied('zephyr-metro-plugin', tempDir, '1.4.0')).toBe(
+        false
+      );
+    });
+
+    it('should accept a compatible resolved package behind a workspace declaration', () => {
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ devDependencies: { '@module-federation/metro': 'workspace:*' } })
+      );
+      const packageDirectory = path.join(
+        tempDir,
+        'node_modules',
+        '@module-federation',
+        'metro'
+      );
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: '@module-federation/metro', version: '2.9.1' })
+      );
+
+      expect(
+        isPackageRequirementSatisfied('@module-federation/metro', tempDir, '2.9.0')
+      ).toBe(true);
+    });
+
+    it('should not resolve packages outside the target project', () => {
+      fs.writeFileSync('package.json', '{}');
+
+      expect(getResolvedPackageVersion('react-native', tempDir)).toBeUndefined();
+      expect(getResolvedPackageVersion('metro', tempDir)).toBeUndefined();
+    });
+
+    it('should detect requirements resolved from a workspace root', () => {
+      fs.writeFileSync('package.json', '{}');
+      const projectDirectory = path.join(tempDir, 'apps', 'native');
+      fs.mkdirSync(projectDirectory, { recursive: true });
+      fs.writeFileSync(path.join(projectDirectory, 'package.json'), '{}');
+      const packageDirectory = path.join(tempDir, 'node_modules', 'zephyr-metro-plugin');
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: 'zephyr-metro-plugin', version: '1.4.2' })
+      );
+
+      expect(
+        isResolvedPackageRequirementSatisfied(
+          'zephyr-metro-plugin',
+          projectDirectory,
+          '1.4.0'
+        )
+      ).toBe(true);
+      expect(
+        isResolvedPackageRequirementSatisfied(
+          '@module-federation/metro',
+          projectDirectory,
+          '2.9.0',
+          '3.0.0'
+        )
+      ).toBe(false);
     });
   });
 });

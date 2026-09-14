@@ -11,7 +11,8 @@ export type MetroConfig = Record<string, unknown>;
 export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
 
 interface MetroBundleOptions {
-  mode: string;
+  dev?: boolean;
+  mode?: string | boolean;
   platform: MetroNativeBuildTarget;
 }
 
@@ -43,7 +44,18 @@ export async function zephyrCommandWrapper(
     let wrapperOwnsRollback = false;
     try {
       // before build
-      const isDev = args[0][0].mode;
+      const requestedDev = args[0][0].dev;
+      const requestedMode = args[0][0].mode;
+      const mode =
+        typeof requestedDev === 'boolean'
+          ? requestedDev
+            ? 'development'
+            : 'production'
+          : requestedMode === 'production'
+            ? 'production'
+            : requestedMode === 'development' || Boolean(requestedMode)
+              ? 'development'
+              : 'production';
 
       const context = args[1].root;
 
@@ -59,7 +71,7 @@ export async function zephyrCommandWrapper(
 
       zephyrMetroPlugin = new ZephyrMetroPlugin({
         platform,
-        mode: isDev ? 'development' : 'production',
+        mode,
         context,
         outDir: 'dist',
         mfConfig: (global as any).__METRO_FEDERATION_CONFIG,

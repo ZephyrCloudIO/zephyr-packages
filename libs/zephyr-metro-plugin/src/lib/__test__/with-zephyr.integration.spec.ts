@@ -83,12 +83,16 @@ describe('withZephyr integration', () => {
     });
 
     it('should return enhanced Metro config', async () => {
+      const { ze_log } = await import('zephyr-agent');
       const enhancer = withZephyr({ name: 'TestApp' });
       const result = await enhancer(baseMetroConfig);
 
       expect(result).toBeDefined();
       expect(result.resolver).toBeDefined();
       expect(result.server).toBeDefined();
+      expect(ze_log.app).toHaveBeenCalledWith(
+        'Zephyr Metro configured; no artifacts were uploaded'
+      );
     });
 
     it('should add zephyr to resolver main fields', async () => {

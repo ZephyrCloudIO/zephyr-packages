@@ -9,6 +9,10 @@ rs.mock('../zephyr-metro-command-wrapper', () => ({
   zephyrCommandWrapper: rs.fn(),
 }));
 
+rs.mock('../zephyr-metro-react-native-cli', () => ({
+  zephyrMetroReactNativeCli: rs.fn(),
+}));
+
 rs.mock('../zephyr-metro-rnef-plugin', () => ({
   zephyrMetroRNEFPlugin: rs.fn(),
 }));
@@ -24,5 +28,10 @@ describe('package root exports', () => {
   it('exports zephyrMetroRNEFPlugin for RNEF integrations', () => {
     expect(zephyrMetroPlugin).toHaveProperty('zephyrMetroRNEFPlugin');
     expect(typeof zephyrMetroPlugin.zephyrMetroRNEFPlugin).toBe('function');
+  });
+
+  it('exports the React Native CLI adapter', () => {
+    expect(zephyrMetroPlugin).toHaveProperty('zephyrMetroReactNativeCli');
+    expect(typeof zephyrMetroPlugin.zephyrMetroReactNativeCli).toBe('function');
   });
 });

@@ -34,7 +34,7 @@ export interface ZephyrModuleFederationConfig {
   shared?: Record<string, any>;
 }
 
-/** Metro plugin configuration function for Zephyr */
+/** Configure Metro for Zephyr. Publication commands must be registered separately. */
 export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
   assertConfiguredMetroTarget(zephyrOptions.target);
 
@@ -151,7 +151,7 @@ async function applyZephyrToMetroConfig(
       ze_log.error(errorMessage);
     }
 
-    ze_log.app('Zephyr Metro plugin configured successfully');
+    ze_log.app('Zephyr Metro configured; no artifacts were uploaded');
 
     return enhancedConfig;
   } finally {

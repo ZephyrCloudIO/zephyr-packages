@@ -15,6 +15,14 @@ export {
   type MetroFederationConfig,
 } from './lib/zephyr-metro-command-wrapper';
 
+// React Native CLI adapter for Module Federation host/remote publication commands
+export {
+  zephyrMetroReactNativeCli,
+  type ReactNativeCliCommand,
+  type ZephyrMetroReactNativeCliAdapter,
+  type ZephyrMetroReactNativeCliConfig,
+} from './lib/zephyr-metro-react-native-cli';
+
 // RNEF plugin export for Module Federation host/remote bundling commands
 export {
   zephyrMetroRNEFPlugin,

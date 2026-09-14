@@ -96,6 +96,7 @@ tasks/
 **/.claude/**/*.local.*
 
 .serena
+.playwright-mcp/
 
 # Turborepo
 .turbo

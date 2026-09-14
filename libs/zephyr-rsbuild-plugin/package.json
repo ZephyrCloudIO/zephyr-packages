@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rsbuild-plugin",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Rsbuild plugin for Zephyr",
   "license": "Apache-2.0",
   "author": {

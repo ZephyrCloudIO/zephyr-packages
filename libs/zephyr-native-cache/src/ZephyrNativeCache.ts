@@ -5,6 +5,7 @@ import {
   clearCache,
   getCacheStatus,
   register,
+  rollback,
   startUpdatePolling,
   stopUpdatePolling,
   subscribeCacheStatus,
@@ -14,6 +15,7 @@ import type {
   CacheStatusSnapshot,
   CheckForUpdatesOptions,
   CheckForUpdatesResult,
+  ManifestOutcome,
   MFECacheConfig,
 } from './types';
 
@@ -25,6 +27,7 @@ export interface ZephyrNativeCacheApi {
   startUpdatePolling(intervalMs?: number): void;
   stopUpdatePolling(): void;
   clearCache(): Promise<void>;
+  rollback(remoteNameOrManifestId: string): Promise<ManifestOutcome>;
   /** Reloads the React Native JS context without terminating the native app. */
   reloadApp(): void;
 }
@@ -41,6 +44,7 @@ export const ZephyrNativeCache: ZephyrNativeCacheApi = {
   startUpdatePolling,
   stopUpdatePolling,
   clearCache,
+  rollback,
   reloadApp,
 };
 

@@ -26,8 +26,11 @@ export function buildEnvImportMap(
 ): Record<string, string> {
   const imports: Record<string, string> = {};
 
-  // Add the main env module mapping - now points to zephyr-manifest.json
-  imports[`env:vars:${appUid}`] = '/zephyr-manifest.json';
+  // Add the main env module mapping - now points to zephyr-manifest.json.
+  // Document-relative on purpose: relative values in an inline import map resolve against
+  // the document base URL, so this honours a `<base href>` when the same artifact is
+  // re-served under a subpath. A leading `/` would ignore it and hit the origin root.
+  imports[`env:vars:${appUid}`] = './zephyr-manifest.json';
 
   // Add environment variable manifest entries for remotes
   // Note: Module Federation remotes are loaded by MF runtime, not through import maps

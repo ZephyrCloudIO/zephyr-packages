@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, rs } from '@rstest/core';
 import type { ZephyrDependency, ZephyrManifest } from 'zephyr-edge-contract';
 import type { BeforeRequestHookArgs } from '../types/module-federation.types';
-import { createZephyrRuntimePlugin } from './runtime-plugin';
+import { createZephyrRuntimePlugin, resolveManifestUrl } from './runtime-plugin';
 
 const originalFetch = globalThis.fetch;
 const originalSessionStorage = Object.getOwnPropertyDescriptor(
@@ -123,5 +123,87 @@ describe('createZephyrRuntimePlugin remote resolution', () => {
       entry: 'https://dev.example.test/remoteEntry.mjs?tag=local',
       type: 'module',
     });
+  });
+});
+
+describe('resolveManifestUrl', () => {
+  afterEach(() => {
+    Reflect.deleteProperty(globalThis, 'document');
+  });
+
+  /** Minimal document stub exposing only what the resolver reads. */
+  function stubDocument(baseHref?: string): void {
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        baseURI: baseHref ?? 'https://app.example.test/',
+        querySelector: (selector: string) =>
+          selector === 'base[href]' && baseHref ? { href: baseHref } : null,
+      },
+    });
+  }
+
+  it('resolves against the origin root when the app is deployed at the root', () => {
+    expect(resolveManifestUrl('https://app.example.test/main.js')).toBe(
+      'https://app.example.test/zephyr-manifest.json'
+    );
+  });
+
+  it('ignores where the entry chunk is nested', () => {
+    // rsbuild emits the entry under `static/js/`; the manifest stays at the root.
+    expect(resolveManifestUrl('https://app.example.test/static/js/main.js')).toBe(
+      'https://app.example.test/zephyr-manifest.json'
+    );
+  });
+
+  it('uses an explicit <base href> when the artifact is re-served under a subpath', () => {
+    stubDocument('https://app.example.test/activate/');
+
+    expect(resolveManifestUrl('https://app.example.test/activate/main.js')).toBe(
+      'https://app.example.test/activate/zephyr-manifest.json'
+    );
+  });
+
+  it('keeps the script origin when assets are served from a separate CDN', () => {
+    // A `<base href>` describes the document, not where the deployment lives.
+    stubDocument('https://app.example.test/');
+
+    expect(resolveManifestUrl('https://cdn.example.test/static/main.js')).toBe(
+      'https://cdn.example.test/zephyr-manifest.json'
+    );
+  });
+
+  it('falls back to the base href when no script URL is available', () => {
+    stubDocument('https://app.example.test/activate/');
+
+    expect(resolveManifestUrl(undefined)).toBe(
+      'https://app.example.test/activate/zephyr-manifest.json'
+    );
+  });
+
+  it('does not trust document.baseURI without a <base href> element', () => {
+    // Without the element baseURI is just the page URL, so a deep route would otherwise
+    // place the manifest under `/products/`.
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        baseURI: 'https://app.example.test/products/42',
+        querySelector: () => null,
+      },
+    });
+
+    expect(resolveManifestUrl('https://app.example.test/main.js')).toBe(
+      'https://app.example.test/zephyr-manifest.json'
+    );
+  });
+
+  it('is document-relative when nothing is inspectable', () => {
+    // A leading `/` would ignore `<base href>` and break subpath deployments.
+    expect(resolveManifestUrl(undefined)).toBe('./zephyr-manifest.json');
+  });
+
+  it('rejects script URLs with no usable origin', () => {
+    expect(resolveManifestUrl('file:///tmp/main.js')).toBe('./zephyr-manifest.json');
+    expect(resolveManifestUrl('not a url')).toBe('./zephyr-manifest.json');
   });
 });

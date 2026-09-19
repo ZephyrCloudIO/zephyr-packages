@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.1 (2026-09-19)
+
+## What's Changed
+* chore(deps): update dependency adm-zip@<0.6.0 to v0.6.1 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/620
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.4.0...v1.4.1
+
 ## 1.4.0 (2026-09-14)
 
 ## What's Changed

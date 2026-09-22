@@ -126,7 +126,7 @@ catalogs:
     '@babel/types': ^8.0.0
     babel-loader: ^10.1.1
   biome:
-    '@biomejs/biome': 2.5.12
+    '@biomejs/biome': 2.5.14
   cloudflare:
     '@cloudflare/vite-plugin': ^1.54.3
   esbuild:

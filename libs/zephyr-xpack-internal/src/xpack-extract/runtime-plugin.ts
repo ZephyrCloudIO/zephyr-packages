@@ -112,9 +112,10 @@ export function resolveManifestUrl(scriptUrl?: string): string {
     return `${script.origin}/${manifestFileName}`;
   }
 
-  // Document-relative on purpose: a leading `/` ignores `<base href>` entirely and breaks
-  // subpath deployments that expose no classic script to inspect.
-  return `./${manifestFileName}`;
+  // Root-relative: this is only reached when there is no `<base href>`, so a
+  // document-relative path would resolve against the page URL and break deep routes
+  // (`/products/42` -> `/products/zephyr-manifest.json`).
+  return `/${manifestFileName}`;
 }
 
 /**

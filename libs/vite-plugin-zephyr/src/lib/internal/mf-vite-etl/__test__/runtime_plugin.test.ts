@@ -63,12 +63,12 @@ describe('resolveManifestUrl', () => {
     );
   });
 
-  it('is document-relative when nothing is inspectable', () => {
-    expect(resolveManifestUrl(undefined)).toBe('./zephyr-manifest.json');
+  it('falls back to the origin root when nothing is inspectable', () => {
+    expect(resolveManifestUrl(undefined)).toBe('/zephyr-manifest.json');
   });
 
   it('rejects module URLs with no usable origin', () => {
-    expect(resolveManifestUrl('file:///tmp/index.js')).toBe('./zephyr-manifest.json');
-    expect(resolveManifestUrl('not a url')).toBe('./zephyr-manifest.json');
+    expect(resolveManifestUrl('file:///tmp/index.js')).toBe('/zephyr-manifest.json');
+    expect(resolveManifestUrl('not a url')).toBe('/zephyr-manifest.json');
   });
 });

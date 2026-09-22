@@ -197,13 +197,13 @@ describe('resolveManifestUrl', () => {
     );
   });
 
-  it('is document-relative when nothing is inspectable', () => {
-    // A leading `/` would ignore `<base href>` and break subpath deployments.
-    expect(resolveManifestUrl(undefined)).toBe('./zephyr-manifest.json');
+  it('falls back to the origin root when nothing is inspectable', () => {
+    // Document-relative would resolve against the page URL on deep client-side routes.
+    expect(resolveManifestUrl(undefined)).toBe('/zephyr-manifest.json');
   });
 
   it('rejects script URLs with no usable origin', () => {
-    expect(resolveManifestUrl('file:///tmp/main.js')).toBe('./zephyr-manifest.json');
-    expect(resolveManifestUrl('not a url')).toBe('./zephyr-manifest.json');
+    expect(resolveManifestUrl('file:///tmp/main.js')).toBe('/zephyr-manifest.json');
+    expect(resolveManifestUrl('not a url')).toBe('/zephyr-manifest.json');
   });
 });

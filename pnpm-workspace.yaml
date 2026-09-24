@@ -259,7 +259,7 @@ overrides:
   '@rspress/runtime@1.47.2>react-router-dom': 7.18.3
   'astro>@astrojs/markdown-satteri': 0.4.1
   '@humanfs/node@<0.16.8': 0.16.8
-  adm-zip@<0.6.0: 0.6.1
+  adm-zip@<0.6.1: 0.6.1
   brace-expansion@>=3.0.0 <5.0.9: 5.0.9
   fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
   fflate@>=0.7.0 <0.7.5: 0.7.5
@@ -271,7 +271,10 @@ overrides:
   qs@>=2.2.5 <6.16.0: 6.16.0
   'refractor@3.6.0>prismjs': 1.30.0
   serialize-javascript@<=7.0.2: '>=7.0.3'
-  sharp@<0.35.0: 0.35.4
+  colord@>=2.0.0 <2.9.4: 2.9.4
+  devalue@>=5.0.0 <5.9.2: 5.9.2
+  sharp@<0.35.4: 0.35.4
+  svgo@>=4.0.0 <4.1.0: 4.1.0
   shell-quote@<=1.8.4: 1.10.0
   socket.io-parser@>=4.0.0 <4.2.7: 4.2.7
   tar@<=7.5.20: 7.5.22

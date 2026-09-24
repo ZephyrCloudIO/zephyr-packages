@@ -109,12 +109,6 @@ minimumReleaseAgeExclude:
 blockExoticSubdeps: true
 
 auditConfig:
-  ignoreGhsas:
-    # No image-size release contains these parser fixes yet. Remove these once
-    # 2.0.3 or newer is published.
-    - GHSA-5p2g-fcmc-qvqq
-    - GHSA-w3rx-r6r6-pgpr
-
 catalogs:
   babel:
     '@babel/core': 8.0.5
@@ -273,6 +267,7 @@ overrides:
   serialize-javascript@<=7.0.2: '>=7.0.3'
   colord@>=2.0.0 <2.9.4: 2.9.4
   devalue@>=5.0.0 <5.9.2: 5.9.2
+  image-size@<2.0.3: 2.0.3
   sharp@<0.35.4: 0.35.4
   svgo@>=4.0.0 <4.1.0: 4.1.0
   shell-quote@<=1.8.4: 1.10.0

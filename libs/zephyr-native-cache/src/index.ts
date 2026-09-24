@@ -7,16 +7,20 @@ export {
   getCacheStatus,
   getRegisteredCacheLayer,
   register,
+  rollback,
   startUpdatePolling,
   stopUpdatePolling,
   subscribeCacheStatus,
 } from './register';
 export { ZephyrNativeCache, default } from './ZephyrNativeCache';
+export { NativeCacheLoadError } from './NativeCacheError';
 export { useCacheStatus } from './useCacheStatus';
 export type { ZephyrNativeCacheApi } from './ZephyrNativeCache';
 export type { UseCacheStatusResult } from './useCacheStatus';
 export type {
   CachePollResult,
+  ArtifactOutcome,
+  BundleLoadResult,
   CacheStatusListener,
   CacheStatusRemoteEntry,
   CacheStatusSnapshot,
@@ -27,6 +31,11 @@ export type {
   BundleStatus,
   CachedBundleResult,
   MFECacheConfig,
+  ManifestArtifact,
+  ManifestArtifactKind,
+  ManifestOutcome,
+  ManifestRelease,
+  NativeCacheFailureReason,
   UpdatePolicy,
 } from './types';
 export { CacheEvents } from './events';

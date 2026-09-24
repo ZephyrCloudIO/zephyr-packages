@@ -1,11 +1,15 @@
 package com.modulefederation.metrocache
 
+import android.system.Os
 import com.facebook.react.ReactApplication
 import com.facebook.react.bridge.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import java.net.SocketTimeoutException
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -43,17 +47,23 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun writeFile(path: String, content: String, encoding: String, promise: Promise) {
     Thread {
+      val file = File(path)
+      val tempFile = File("$path.${UUID.randomUUID()}.tmp")
       try {
-        val file = File(path)
         file.parentFile?.mkdirs()
-        if (encoding == "base64") {
-          val bytes = android.util.Base64.decode(content, android.util.Base64.DEFAULT)
-          file.writeBytes(bytes)
+        val bytes = if (encoding == "base64") {
+          android.util.Base64.decode(content, android.util.Base64.DEFAULT)
         } else {
-          file.writeText(content, Charsets.UTF_8)
+          content.toByteArray(Charsets.UTF_8)
         }
+        FileOutputStream(tempFile).use { output ->
+          output.write(bytes)
+          output.fd.sync()
+        }
+        Os.rename(tempFile.absolutePath, file.absolutePath)
         promise.resolve(null)
       } catch (e: Exception) {
+        tempFile.delete()
         promise.reject("WRITE_ERROR", e.message, e)
       }
     }.start()
@@ -81,12 +91,46 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
+  fun readVerifiedFile(path: String, expectedSha256: String, promise: Promise) {
+    Thread {
+      try {
+        val file = File(path)
+        if (!file.exists()) {
+          promise.reject("READ_ERROR", "Cached bundle is unavailable")
+          return@Thread
+        }
+        val bytes = file.readBytes()
+        val sha256 = sha256Hex(bytes)
+        if (sha256 != expectedSha256.lowercase()) {
+          promise.reject("HASH_MISMATCH", "Cached bundle integrity check failed")
+          return@Thread
+        }
+        val source = Charsets.UTF_8.newDecoder()
+          .onMalformedInput(CodingErrorAction.REPORT)
+          .onUnmappableCharacter(CodingErrorAction.REPORT)
+          .decode(ByteBuffer.wrap(bytes))
+          .toString()
+        val result = Arguments.createMap().apply {
+          putString("source", source)
+          putString("sha256", sha256)
+        }
+        promise.resolve(result)
+      } catch (e: Exception) {
+        promise.reject("READ_ERROR", "Failed to read cached bundle", e)
+      }
+    }.start()
+  }
+
+  @ReactMethod
   fun deleteFile(path: String, promise: Promise) {
     Thread {
       try {
         val file = File(path)
         if (file.exists()) {
-          file.deleteRecursively()
+          if (!file.deleteRecursively() || file.exists()) {
+            promise.reject("DELETE_ERROR", "Failed to remove cache path")
+            return@Thread
+          }
         }
         promise.resolve(null)
       } catch (e: Exception) {
@@ -103,6 +147,11 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   fun getDocumentDirectory(promise: Promise) {
     promise.resolve(reactApplicationContext.filesDir.absolutePath)
+  }
+
+  @ReactMethod
+  fun getCacheDirectory(promise: Promise) {
+    promise.resolve(File(reactApplicationContext.noBackupFilesDir, "zephyr-native-cache").absolutePath)
   }
 
   @ReactMethod
@@ -164,7 +213,7 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
         httpClient.newCall(request).execute().use { response ->
 
           if (!response.isSuccessful) {
-            promise.reject("DOWNLOAD_ERROR", "HTTP ${response.code}")
+            promise.reject("HTTP_ERROR", "HTTP ${response.code}")
             return@Thread
           }
 
@@ -187,13 +236,21 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
                 digest.update(buffer, 0, read)
                 bytesWritten += read
               }
+              output.fd.sync()
             }
           }
 
-          destFile.delete()
-          if (!tempFile.renameTo(destFile)) {
-            tempFile.copyTo(destFile, overwrite = true)
+          if (destFile.exists()) {
             tempFile.delete()
+            promise.reject("STORAGE_ERROR", "Staging destination already exists")
+            return@Thread
+          }
+          try {
+            Os.rename(tempFile.absolutePath, destFile.absolutePath)
+          } catch (_: Exception) {
+            tempFile.delete()
+            promise.reject("STORAGE_ERROR", "Failed to save staged bundle")
+            return@Thread
           }
 
           val sha256 = digest.digest().joinToString("") { "%02x".format(it) }
@@ -204,9 +261,12 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
           }
           promise.resolve(result)
         }
-      } catch (e: Exception) {
+      } catch (_: SocketTimeoutException) {
         tempFile.delete()
-        promise.reject("DOWNLOAD_ERROR", e.message, e)
+        promise.reject("DOWNLOAD_TIMEOUT", "Bundle download timed out")
+      } catch (_: Exception) {
+        tempFile.delete()
+        promise.reject("NETWORK_ERROR", "Failed to download staged bundle")
       }
     }.start()
   }

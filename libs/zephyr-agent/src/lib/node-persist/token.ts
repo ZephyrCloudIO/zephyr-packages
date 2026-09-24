@@ -190,8 +190,9 @@ async function getTokenFromCiToken(
             Authorization: `Bearer ${ci_token}`,
             'Content-Type': 'application/json',
           },
+          // A rejected CI token is handled below by dropping its cache entry; it must
+          // not invalidate the unrelated persisted browser token.
           credentialToken: ci_token,
-          skipTokenCleanup: true,
         },
         JSON.stringify(identity)
       );

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.1 (2026-09-24)
+
+## What's Changed
+* chore(deps): update dependency adm-zip@<0.6.0 to v0.6.1 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/620
+* chore(deps): update dependency @biomejs/biome to v2.5.14 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/622
+* chore(deps): update dependency @lynx-js/qrcode-rsbuild-plugin to v0.7.2 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/623
+* chore: add Pullfrog workflow file by @pullfrog[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/624
+* fix(runtime): resolve zephyr-manifest.json under subpath deployments by @leooliveirax in https://github.com/ZephyrCloudIO/zephyr-packages/pull/540
+* fix(deps): remediate Dependabot security alerts by @arthurfiorette in https://github.com/ZephyrCloudIO/zephyr-packages/pull/626
+* fix(deps): update image-size for security alerts by @arthurfiorette in https://github.com/ZephyrCloudIO/zephyr-packages/pull/627
+
+## New Contributors
+* @pullfrog[bot] made their first contribution in https://github.com/ZephyrCloudIO/zephyr-packages/pull/624
+* @leooliveirax made their first contribution in https://github.com/ZephyrCloudIO/zephyr-packages/pull/540
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.4.0...v1.4.1
+
 ## 1.4.0 (2026-09-14)
 
 ## What's Changed

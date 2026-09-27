@@ -7,6 +7,12 @@ export interface ZephyrRspackPluginOptions {
   /** Wait for HTML processing before deployment when the framework emits HTML late. */
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
+  /**
+   * Fail the build when Zephyr cannot resolve, build, or upload the deployment. Takes
+   * precedence over the `ZE_FAIL_BUILD` environment variable; when unset,
+   * `ZE_FAIL_BUILD=true` still enables it.
+   */
+  failBuild?: boolean;
   /** Override automatic CSR/SSR detection for coordinated compiler arrays. */
   snapshotType?: 'csr' | 'ssr';
   /** Server entrypoint relative to the shared output root. */

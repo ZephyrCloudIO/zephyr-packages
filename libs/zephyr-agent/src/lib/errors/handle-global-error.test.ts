@@ -52,6 +52,22 @@ describe('handleGlobalError', () => {
     expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
   });
 
+  it('should throw when failBuild is true and ZE_FAIL_BUILD is unset', () => {
+    const error = new Error('upload failed');
+
+    expect(() => handleGlobalError(error, { failBuild: true })).toThrow('upload failed');
+    expect(mockLogFn).not.toHaveBeenCalled();
+  });
+
+  it('should log when failBuild is false even if ZE_FAIL_BUILD=true', () => {
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    const error = new Error('test error');
+
+    handleGlobalError(error, { failBuild: false });
+
+    expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+  });
+
   it('should handle unknown error types', () => {
     const error = 'string error';
 

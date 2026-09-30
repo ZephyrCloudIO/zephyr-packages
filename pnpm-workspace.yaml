@@ -105,6 +105,8 @@ minimumReleaseAgeExclude:
   - '@module-federation/webpack-bundler-runtime@2.9.0'
   # Renovate security update: adm-zip@0.6.1
   - adm-zip@0.6.1
+  # Renovate security update: brace-expansion@5.0.12
+  - brace-expansion@5.0.12
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -254,7 +256,7 @@ overrides:
   'astro>@astrojs/markdown-satteri': 0.4.1
   '@humanfs/node@<0.16.8': 0.16.8
   adm-zip@<0.6.1: 0.6.1
-  brace-expansion@>=3.0.0 <5.0.9: 5.0.9
+  brace-expansion@>=3.0.0 <5.0.9: 5.0.12
   fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
   fflate@>=0.7.0 <0.7.5: 0.7.5
   hono: 4.13.5

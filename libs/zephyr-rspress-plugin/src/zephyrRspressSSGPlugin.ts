@@ -11,7 +11,7 @@ export const zephyrRspressSSGPlugin = <
   TConfig extends RspressUserConfig = RspressUserConfig,
 >(
   config: TConfig,
-  options?: ZephyrRspressSSGOptions
+  options?: ZephyrRspressSSGOptions<TConfig>
 ): RspressPlugin<TConfig> => {
   if (options?.target !== undefined) {
     assertZephyrBuildTarget(options.target, 'zephyrRspressSSGPlugin({ target })');
@@ -19,7 +19,6 @@ export const zephyrRspressSSGPlugin = <
 
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const root = resolve(config.root ?? '');
-  const outDir = resolve(config.outDir ?? './doc_build');
 
   zephyr_defer_create({
     builder: 'rspack',
@@ -29,8 +28,10 @@ export const zephyrRspressSSGPlugin = <
 
   return {
     name: 'zephyr-rspress-plugin-ssg',
-    async afterBuild() {
+    async afterBuild(buildConfig = config, isProd = false) {
       try {
+        await options?.beforeUpload?.(buildConfig, isProd);
+        const outDir = resolve(buildConfig.outDir ?? './doc_build');
         const files = await walkFiles(outDir, '', options?.target);
 
         if (files.length === 0) {

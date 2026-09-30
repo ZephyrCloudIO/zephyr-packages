@@ -15,10 +15,13 @@ export interface ZephyrRspressPluginOptions {
 }
 
 /** Internal SSG publication options shared by the Rspress config and build hooks. */
-export interface ZephyrRspressSSGOptions {
+export interface ZephyrRspressSSGOptions<
+  TConfig extends RspressUserConfig = RspressUserConfig,
+> {
   hooks?: ZephyrBuildHooks;
   target?: ZephyrBuildTarget;
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
+  beforeUpload?: (config: TConfig, isProd: boolean) => void | Promise<void>;
 }
 
 /**
@@ -65,7 +68,7 @@ export interface RspressPlugin<TConfig extends RspressUserConfig = RspressUserCo
     },
     isProd: boolean
   ) => TConfig | Promise<TConfig>;
-  afterBuild?: () => void | Promise<void>;
+  afterBuild?: (config?: TConfig, isProd?: boolean) => void | Promise<void>;
 }
 
 export interface StatsAsset {

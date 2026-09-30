@@ -158,4 +158,27 @@ describe('zephyrRspressSSGPlugin', () => {
 
     expect(handleGlobalError).toHaveBeenCalledWith(err);
   });
+
+  it('aborts publication and rolls back when output preparation fails', async () => {
+    const error = new Error('sitemap generation failed');
+    const buildFailed = rs.fn();
+    (ZephyrEngine.defer_create as Mock).mockReturnValueOnce({
+      zephyr_engine_defer: Promise.resolve({
+        hasActiveBuild: true,
+        build_failed: buildFailed,
+      }),
+      zephyr_defer_create: mockZephyrDefer,
+    });
+    const plugin = zephyrRspressSSGPlugin(
+      { outDir: 'dist' },
+      { beforeUpload: () => Promise.reject(error) }
+    );
+
+    await plugin.afterBuild?.();
+
+    expect(walkFiles).not.toHaveBeenCalled();
+    expect(setupZeDeploy).not.toHaveBeenCalled();
+    expect(buildFailed).toHaveBeenCalledOnce();
+    expect(handleGlobalError).toHaveBeenCalledWith(error);
+  });
 });

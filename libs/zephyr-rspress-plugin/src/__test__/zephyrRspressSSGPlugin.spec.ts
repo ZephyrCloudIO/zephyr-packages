@@ -158,4 +158,34 @@ describe('zephyrRspressSSGPlugin', () => {
 
     expect(handleGlobalError).toHaveBeenCalledWith(err);
   });
+
+  it('aborts publication and rolls back when a configured afterBuild hook fails', async () => {
+    const error = new Error('sitemap generation failed');
+    const buildFailed = rs.fn();
+    (ZephyrEngine.defer_create as Mock).mockReturnValueOnce({
+      zephyr_engine_defer: Promise.resolve({
+        hasActiveBuild: true,
+        build_failed: buildFailed,
+      }),
+      zephyr_defer_create: mockZephyrDefer,
+    });
+    const sibling = {
+      name: 'sitemap',
+      afterBuild: (_config: object, _isProd: boolean) => Promise.reject(error),
+    };
+    const config = { outDir: 'dist', plugins: [sibling] };
+    const plugin = zephyrRspressSSGPlugin(config);
+    await plugin.beforeBuild?.(config, true);
+
+    const results = await Promise.allSettled([
+      sibling.afterBuild(config, true),
+      plugin.afterBuild?.(config, true),
+    ]);
+
+    expect(walkFiles).not.toHaveBeenCalled();
+    expect(setupZeDeploy).not.toHaveBeenCalled();
+    expect(buildFailed).toHaveBeenCalledOnce();
+    expect(handleGlobalError).toHaveBeenCalledWith(error);
+    expect(results[0]).toEqual({ status: 'rejected', reason: error });
+  });
 });

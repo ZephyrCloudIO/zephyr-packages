@@ -5,6 +5,7 @@ import { setupZeDeploy } from './internal/assets/setupZeDeploy';
 import { rewriteRspressModuleFederationAssets } from './internal/assets/rewriteRspressModuleFederationAssets';
 import { showFiles } from './internal/files/showFiles';
 import { walkFiles } from './internal/files/walkFiles';
+import { trackAfterBuildHooks } from './internal/lifecycle/afterBuildHooks';
 import type { RspressUserConfig, RspressPlugin, ZephyrRspressSSGOptions } from './types';
 
 export const zephyrRspressSSGPlugin = <
@@ -19,7 +20,7 @@ export const zephyrRspressSSGPlugin = <
 
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const root = resolve(config.root ?? '');
-  const outDir = resolve(config.outDir ?? './doc_build');
+  let waitForAfterBuildHooks: (buildConfig: TConfig) => Promise<void> = async () => {};
 
   zephyr_defer_create({
     builder: 'rspack',
@@ -29,8 +30,13 @@ export const zephyrRspressSSGPlugin = <
 
   return {
     name: 'zephyr-rspress-plugin-ssg',
-    async afterBuild() {
+    beforeBuild(buildConfig = config) {
+      waitForAfterBuildHooks = trackAfterBuildHooks(buildConfig.plugins ?? []);
+    },
+    async afterBuild(buildConfig = config) {
       try {
+        await waitForAfterBuildHooks(buildConfig);
+        const outDir = resolve(buildConfig.outDir ?? './doc_build');
         const files = await walkFiles(outDir, '', options?.target);
 
         if (files.length === 0) {

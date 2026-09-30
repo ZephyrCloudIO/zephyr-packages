@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.2 (2026-09-30)
+
+## What's Changed
+* fix(rspress): wait for post-build plugins before SSG upload by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/630
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.4.1...v1.4.2
+
 ## 1.4.1 (2026-09-24)
 
 ## What's Changed

@@ -15,13 +15,10 @@ export interface ZephyrRspressPluginOptions {
 }
 
 /** Internal SSG publication options shared by the Rspress config and build hooks. */
-export interface ZephyrRspressSSGOptions<
-  TConfig extends RspressUserConfig = RspressUserConfig,
-> {
+export interface ZephyrRspressSSGOptions {
   hooks?: ZephyrBuildHooks;
   target?: ZephyrBuildTarget;
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
-  beforeUpload?: (config: TConfig, isProd: boolean) => void | Promise<void>;
 }
 
 /**
@@ -45,6 +42,7 @@ export interface BuilderConfigWithPlugins {
  * stricter types like RsbuildConfig that don't have index signatures.
  */
 export interface RspressUserConfig {
+  plugins?: unknown[];
   ssg?: SSGConfig;
   root?: string;
   outDir?: string;
@@ -68,6 +66,7 @@ export interface RspressPlugin<TConfig extends RspressUserConfig = RspressUserCo
     },
     isProd: boolean
   ) => TConfig | Promise<TConfig>;
+  beforeBuild?: (config?: TConfig, isProd?: boolean) => void | Promise<void>;
   afterBuild?: (config?: TConfig, isProd?: boolean) => void | Promise<void>;
 }
 

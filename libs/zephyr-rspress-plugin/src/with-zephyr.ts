@@ -15,13 +15,10 @@ import type {
   ZephyrRspressSSGOptions,
 } from './types';
 
-export interface ZephyrRspressOptions<
-  TConfig extends RspressUserConfig = RspressUserConfig,
-> {
+export interface ZephyrRspressOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
   target?: ZephyrBuildTarget;
   hooks?: ZephyrBuildHooks;
-  beforeUpload?: (config: TConfig, isProd: boolean) => void | Promise<void>;
 }
 
 /**
@@ -67,7 +64,7 @@ function isSsgEnabled(
  *   ```;
  */
 export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig>(
-  options?: ZephyrRspressOptions<TConfig>
+  options?: ZephyrRspressOptions
 ): RspressPlugin<TConfig> {
   if (options?.target !== undefined) {
     assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
@@ -107,7 +104,7 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
           (config as { builderConfig?: BuilderConfigWithPlugins }).builderConfig =
             newBuilderConfig;
         }
-        const ssgOptions: ZephyrRspressSSGOptions<TConfig> = {
+        const ssgOptions: ZephyrRspressSSGOptions = {
           ...options,
           mfConfig: mfConfigs,
         };

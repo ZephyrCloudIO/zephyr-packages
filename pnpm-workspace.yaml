@@ -107,6 +107,10 @@ minimumReleaseAgeExclude:
   - adm-zip@0.6.1
   # Renovate security update: brace-expansion@5.0.12
   - brace-expansion@5.0.12
+  # Renovate security update: hono@4.13.7
+  - hono@4.13.7
+  # Renovate security update: devalue@5.9.3
+  - devalue@5.9.3
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -259,7 +263,7 @@ overrides:
   brace-expansion@>=3.0.0 <5.0.9: 5.0.12
   fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
   fflate@>=0.7.0 <0.7.5: 0.7.5
-  hono: 4.13.5
+  hono: 4.13.7
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.9
   nuxt@>=4.0.0 <4.5.1: 4.5.2
   postcss: 8.5.28
@@ -268,7 +272,7 @@ overrides:
   'refractor@3.6.0>prismjs': 1.30.0
   serialize-javascript@<=7.0.2: '>=7.0.3'
   colord@>=2.0.0 <2.9.4: 2.9.4
-  devalue@>=5.0.0 <5.9.2: 5.9.2
+  devalue@>=5.0.0 <5.9.2: 5.9.3
   image-size@<2.0.3: 2.0.3
   sharp@<0.35.4: 0.35.4
   svgo@>=4.0.0 <4.1.0: 4.1.0

@@ -118,6 +118,27 @@ describe('getToken', () => {
     });
   });
 
+  it('gives EAS-specific email guidance when exchange is rejected', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue({
+      provider: 'eas',
+      email: 'dev@example.com',
+      emails: ['dev@example.com'],
+      username: 'expo-dev',
+      source: 'git',
+    });
+    mockMakeRequest.mockResolvedValue([
+      false,
+      new Error('CI actor is not a member of the token organization'),
+    ]);
+
+    await expect(getToken()).rejects.toMatchObject({
+      code: ZephyrError.toZeCode(ZeErrors.ERR_CI_TOKEN_AUTH),
+      message: expect.stringMatching(
+        /detected: dev@example\.com.*active Zephyr organization member/s
+      ),
+    });
+  });
+
   it('persists CI-derived access tokens in an identity-scoped cache', async () => {
     mockInferCiTokenIdentity.mockResolvedValue(githubIdentity);
     mockMakeRequest.mockResolvedValue([true, null, { access_token: 'ci-access-token' }]);

@@ -72,8 +72,8 @@ Zephyr detects the existing federation config. The optional peer is unnecessary
 for an ordinary Vite app and is required when `mfConfig` is supplied.
 
 For hosts, keep normal federation wiring and Zephyr's `zephyr:dependencies`
-mapping distinct. The repository's `zephyr-module-federation` skill covers the
-cross-project deployment model; it is not a required locally installed skill.
+mapping distinct. The `zephyr-module-federation` skill shipped in this package
+covers `zephyr:dependencies`, remote resolution, and build order.
 
 ## Choose the publication lifecycle
 

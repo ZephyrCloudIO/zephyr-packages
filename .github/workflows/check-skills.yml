@@ -28,8 +28,10 @@ jobs:
           cache: pnpm
       - name: Install locked tooling without lifecycle scripts
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Build the packages whose examples are checked
-        run: pnpm exec turbo run build --filter=vite-plugin-zephyr --filter=create-zephyr-apps
+      - name: Build published packages and prepare their shared skills
+        run: pnpm build
+      - name: Verify skills in every published package archive
+        run: pnpm skills:verify-packages
       - name: Check guidance and recorded source reviews
         if: github.event_name == 'pull_request'
         env:

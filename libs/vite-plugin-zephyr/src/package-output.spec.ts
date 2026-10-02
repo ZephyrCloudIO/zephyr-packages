@@ -119,8 +119,11 @@ beforeAll(async () => {
   tempRoot = await mkdtemp(path.join(tmpdir(), 'vite-plugin-zephyr-package-'));
   tarballPath = path.join(tempRoot, 'vite-plugin-zephyr.tgz');
   const pnpmCli = process.env['npm_execpath'];
-  if (pnpmCli) {
+  // pnpm may be a JavaScript entry point or a standalone executable (@pnpm/exe).
+  if (pnpmCli && /\.[cm]?js$/u.test(pnpmCli)) {
     run(process.execPath, [pnpmCli, 'pack', '--out', tarballPath], packageRoot);
+  } else if (pnpmCli) {
+    run(pnpmCli, ['pack', '--out', tarballPath], packageRoot);
   } else if (process.platform === 'win32') {
     run(
       process.env['ComSpec'] ?? 'cmd.exe',
@@ -246,13 +249,18 @@ describe('published Intent skill', () => {
     );
 
     expect(discovery.warnings).toEqual([]);
-    expect(discovery.skills).toEqual([
-      expect.objectContaining({
-        use: 'vite-plugin-zephyr#zephyr-vite',
-        packageVersion: manifest.version,
-        packageSource: 'local',
-      }),
-    ]);
+    expect(discovery.skills).toEqual(
+      expect.arrayContaining(
+        ['zephyr-core', 'zephyr-module-federation', 'zephyr-vite'].map((skillName) =>
+          expect.objectContaining({
+            use: `vite-plugin-zephyr#${skillName}`,
+            packageVersion: manifest.version,
+            packageSource: 'local',
+          })
+        )
+      )
+    );
+    expect(discovery.skills).toHaveLength(3);
 
     const skillPath = run(
       process.execPath,
@@ -268,7 +276,7 @@ describe('published Intent skill', () => {
     ).toContain('builder.buildApp()');
     expect(
       await readdir(path.join(consumerRoot, 'node_modules/vite-plugin-zephyr/skills'))
-    ).toEqual(['zephyr-vite']);
+    ).toEqual(['zephyr-core', 'zephyr-module-federation', 'zephyr-vite']);
 
     const packagedSkill = await readFile(path.join(skillDirectory, 'SKILL.md'), 'utf8');
     for (const reference of packagedSkill.matchAll(

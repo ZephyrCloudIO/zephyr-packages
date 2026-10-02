@@ -27,6 +27,7 @@
     "LICENSE",
     "skills",
     "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     "!dist/**/*.map"
   ],
   "type": "commonjs",
@@ -51,7 +52,7 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "pnpm build",
+    "prepack": "node ../../scripts/sync-package-skills.mjs && pnpm build",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

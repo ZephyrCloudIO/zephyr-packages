@@ -13,6 +13,8 @@ out-tsc/
 
 # dependencies
 node_modules
+libs/*/skills/zephyr-core/
+libs/*/skills/zephyr-module-federation/
 
 # IDEs and editors
 /.idea

@@ -57,9 +57,10 @@ Select `vite-plugin-zephyr` during setup. The consumer's `intent.skills` allowli
 controls which installed packages appear in the agent's catalog. Intent is agent
 tooling; the Zephyr plugin does not require it at runtime.
 
-For product concepts and cross-project deployment workflows, use the shared
-[Zephyr skills](https://github.com/ZephyrCloudIO/skills). SDK-specific guidance
-remains in the installed package. Maintainers run `pnpm skills:check` at the
+Every published Zephyr package also bundles `zephyr-core` and
+`zephyr-module-federation` from the canonical guides in this repository.
+Plugin setup and cross-bundler configuration no longer live in the separate
+skills repository. Maintainers run `pnpm skills:check` at the
 workspace root after updating the guidance and recording source reviews.
 
 ### Basic Configuration

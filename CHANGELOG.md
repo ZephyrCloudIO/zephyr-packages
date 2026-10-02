@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.0 (2026-10-02)
+
+## What's Changed
+* chore(deps): update dependency brace-expansion@>=3.0.0 <5.0.9 to v5.0.12 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/632
+* feat(skills): adopt Intent and ship skills with every plugin by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/639
+* chore(deps): update dependency hono to v4.13.7 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/642
+* chore(deps): update dependency devalue@>=5.0.0 <5.9.2 to v5.9.3 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/641
+* ci(skills): skip the Intent review step on release-please PRs by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/640
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.4.2...v1.5.0
+
 ## 1.4.2 (2026-09-30)
 
 ## What's Changed

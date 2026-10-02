@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rsbuild-plugin",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Rsbuild plugin for Zephyr",
   "keywords": [
     "tanstack-intent"

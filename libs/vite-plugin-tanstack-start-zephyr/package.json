@@ -1,10 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "vite-plugin-tanstack-start-zephyr",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Vite plugin for Zephyr with TanStack Start support",
   "keywords": [
     "deploy",
+    "tanstack-intent",
     "tanstack-start",
     "vite",
     "vite-plugin",
@@ -21,6 +22,9 @@
     "directory": "libs/vite-plugin-tanstack-start-zephyr"
   },
   "files": [
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     "dist",
     "README.md",
     "!dist/**/*.map"
@@ -47,7 +51,7 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "pnpm build",
+    "prepack": "node ../../scripts/sync-package-skills.mjs && pnpm build",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

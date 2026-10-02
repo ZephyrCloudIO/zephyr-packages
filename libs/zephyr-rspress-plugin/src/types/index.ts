@@ -42,6 +42,7 @@ export interface BuilderConfigWithPlugins {
  * stricter types like RsbuildConfig that don't have index signatures.
  */
 export interface RspressUserConfig {
+  plugins?: unknown[];
   ssg?: SSGConfig;
   root?: string;
   outDir?: string;
@@ -65,7 +66,8 @@ export interface RspressPlugin<TConfig extends RspressUserConfig = RspressUserCo
     },
     isProd: boolean
   ) => TConfig | Promise<TConfig>;
-  afterBuild?: () => void | Promise<void>;
+  beforeBuild?: (config?: TConfig, isProd?: boolean) => void | Promise<void>;
+  afterBuild?: (config?: TConfig, isProd?: boolean) => void | Promise<void>;
 }
 
 export interface StatsAsset {

@@ -237,13 +237,15 @@ The CLI automatically detects configuration files for:
 
 If your build tool uses a JavaScript configuration file (e.g., `webpack.config.js`, `rollup.config.js`), the CLI will warn you that the configuration is too dynamic to analyze and suggest:
 
-- Using one of the Zephyr bundler plugins from `@libs/`
+- Using the Zephyr plugin for that bundler, such as `zephyr-webpack-plugin`,
+  `rollup-plugin-zephyr`, or `vite-plugin-zephyr`
 - Using `ze-cli deploy <dir>` after building
 
 ## Requirements
 
 - Node.js 18+ or 20+
-- A valid Zephyr authentication token (run `zephyr login` if needed)
+- Zephyr authentication: an interactive terminal opens a browser login; CI and
+  other non-interactive shells need `ZE_CI_TOKEN`
 - A git repository (for application identification)
 - A `package.json` file (for application metadata)
 

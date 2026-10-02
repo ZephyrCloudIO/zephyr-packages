@@ -38,6 +38,31 @@ bun add --dev vite-plugin-zephyr
 
 ## Usage
 
+### Agent guidance
+
+This package ships the `zephyr-vite` Agent Skill alongside its implementation.
+Use the installed package's guidance for configuration and build lifecycle
+behavior rather than a repository skill from a different SDK release.
+
+Install Intent as a development dependency when adding agent tooling is appropriate:
+
+```sh
+pnpm add -D @tanstack/intent@0.5.0
+pnpm exec intent install
+pnpm exec intent list
+pnpm exec intent load 'vite-plugin-zephyr#zephyr-vite'
+```
+
+Select `vite-plugin-zephyr` during setup. The consumer's `intent.skills` allowlist
+controls which installed packages appear in the agent's catalog. Intent is agent
+tooling; the Zephyr plugin does not require it at runtime.
+
+Every published Zephyr package also bundles `zephyr-core` and
+`zephyr-module-federation` from the canonical guides in this repository.
+Plugin setup and cross-bundler configuration no longer live in the separate
+skills repository. Maintainers run `pnpm skills:check` at the
+workspace root after updating the guidance and recording source reviews.
+
 ### Basic Configuration
 
 Add the plugin to your Vite configuration:

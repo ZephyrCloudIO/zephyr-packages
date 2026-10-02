@@ -20,9 +20,11 @@ used by the SDK packages. CI runs the same wrapper.
    `pnpm skills:review --unchanged "<reason>"` when no guidance is affected.
 4. Commit `.intent/review-state.json` and confirm `pnpm skills:check` passes.
 
-release-please pull requests skip this review step because they only bump
-versions, changelogs, and `library_version` lines; the published release runs
-the read-only review report.
+Release pull requests opened and updated by the release-please automation app
+skip this review step because they only bump versions, changelogs, and
+`library_version` lines; the published release runs the read-only review
+report. The exception checks the app identity, not just the branch name, so any
+other pull request, including a human push to a release branch, still runs it.
 
 `.intent/review-state.json` stores per-file hashes, so parallel pull requests
 can conflict on it. Resolve a conflict by taking the base branch's copy,

@@ -250,17 +250,15 @@
       ]
     },
     "source:pnpm-workspace.yaml": {
-      "fingerprint": "5997d0ac2d0b6bb389ab61edfce35839ff3b8056e73a008960cc2da7de0987d2",
+      "fingerprint": "14b9579180058c124cf8744fbe198db6154268b58964d1ade3a92ff41ef01de4",
       "snapshot": {
-        "pnpm-workspace.yaml": "11f71e8bf4f3f8028901133cf929ae2fa9d82153b2bf6191097f4a0578023fc1"
+        "pnpm-workspace.yaml": "5b1046bd8e964dd65890acd551e29ee2a072828c02b3fd946a7d5736f6523ca4"
       },
-      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "head": "6fcb9147d98acbf63dd488baff16bf5c6430de04",
       "outcome": "out-of-scope",
-      "reason": "This is development-tooling compatibility rather than a consumer SDK behavior change. Intent 0.5.0 needs the classic compiler API, isolated in a private tooling package without replacing native TypeScript 7.",
+      "reason": "Merged Renovate security updates from main (#641, #642): hono and devalue overrides and their minimumReleaseAgeExclude entries. No catalog or peer range that skills document changed.",
       "evidence": [
-        "scripts/intent.mjs and packages/intent-tooling isolate compiler API resolution to the Intent process.",
-        "The packed-package regression verifies successful example validation, error exit propagation, and unchanged native TypeScript 7.0.2.",
-        "pnpm-workspace.yaml pins Intent 0.5.0; both workflows pass actionlint."
+        "The diff touches only overrides (hono 4.13.7, devalue 5.9.3) and minimumReleaseAgeExclude; the peer-compat catalog is unchanged."
       ]
     },
     "source:scripts/intent.mjs": {

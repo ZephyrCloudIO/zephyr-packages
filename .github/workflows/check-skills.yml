@@ -32,8 +32,22 @@ jobs:
         run: pnpm build
       - name: Verify skills in every published package archive
         run: pnpm skills:verify-packages
+      # Genuine release-please PRs only bump versions, changelogs, and
+      # library_version lines; the published release produces the read-only
+      # review report instead. Match the trusted release identity used in
+      # on_pull_request.yml, not the branch name alone, so other PRs cannot opt
+      # out. Human pushes and reopens on a release branch still run the review.
       - name: Check guidance and recorded source reviews
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request' &&
+          !(
+            github.actor == 'zephyr-workflows-automation[bot]' &&
+            github.event.action != 'reopened' &&
+            github.event.pull_request.user.login == 'zephyr-workflows-automation[bot]' &&
+            github.event.pull_request.base.ref == 'main' &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            startsWith(github.event.pull_request.head.ref, 'release-please--branches--')
+          )
         env:
           REVIEW_BASE: ${{ github.event.pull_request.base.sha }}
         run: pnpm skills:check --base "$REVIEW_BASE" --github-summary

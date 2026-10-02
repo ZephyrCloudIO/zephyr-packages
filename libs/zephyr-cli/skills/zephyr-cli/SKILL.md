@@ -6,7 +6,7 @@ description: Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
   ze-cli doctor to inspect project readiness.
 metadata:
   library: zephyr-cli
-  library_version: '1.4.2' # x-release-please-version
+  library_version: '1.5.0' # x-release-please-version
   purpose: Publish an application's existing build output through ze-cli without a bundler plugin, choosing between run, deploy, watch, and doctor and confirming that an upload actually happened.
   domain: cli
   type: core

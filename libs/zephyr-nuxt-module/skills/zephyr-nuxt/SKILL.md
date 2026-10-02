@@ -6,7 +6,7 @@ description: Configure and deploy Nuxt applications with zephyr-nuxt-module; use
   a TAP package, or diagnosing why nuxt build did not publish.
 metadata:
   library: zephyr-nuxt-module
-  library_version: '1.4.2' # x-release-please-version
+  library_version: '1.5.0' # x-release-please-version
   purpose: Publish a Nuxt application's Nitro build output to Zephyr after nuxt build, choosing an SSR or static snapshot from what Nitro actually emitted.
   domain: frameworks
   type: core

@@ -7,7 +7,7 @@ description: Configure and deploy Astro sites with zephyr-astro-integration; use
   publish.
 metadata:
   library: zephyr-astro-integration
-  library_version: '1.4.2' # x-release-please-version
+  library_version: '1.5.0' # x-release-please-version
   purpose: Publish an Astro site's static build output to Zephyr from Astro's build lifecycle while leaving the site's own integrations and config intact.
   domain: frameworks
   type: core

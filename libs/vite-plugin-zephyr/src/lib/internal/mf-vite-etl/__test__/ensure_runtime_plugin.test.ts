@@ -24,4 +24,13 @@ describe('ensureRuntimePlugin', () => {
 
     expect(matches).toHaveLength(1);
   });
+
+  test('skips injecting the zephyr runtime plugin when disableRuntimePlugin is true', () => {
+    const mfConfig = ensureRuntimePlugin({
+      name: 'host',
+      disableRuntimePlugin: true,
+    });
+
+    expect(mfConfig.runtimePlugins).toBeUndefined();
+  });
 });

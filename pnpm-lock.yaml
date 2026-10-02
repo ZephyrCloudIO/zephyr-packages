@@ -2109,6 +2109,25 @@ importers:
         specifier: catalog:typescript
         version: 7.0.2
 
+  libs/zephyr-native-env:
+    dependencies:
+      zephyr-edge-contract:
+        specifier: workspace:*
+        version: link:../zephyr-edge-contract
+    devDependencies:
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 2.9.0
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(jsdom@30.0.1)
+      typescript:
+        specifier: catalog:typescript
+        version: 7.0.2
+
   libs/zephyr-nuxt-module:
     dependencies:
       zephyr-agent:

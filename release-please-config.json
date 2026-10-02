@@ -93,6 +93,11 @@
         },
         {
           "type": "json",
+          "path": "libs/zephyr-native-env/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "libs/zephyr-nuxt-module/package.json",
           "jsonpath": "$.version"
         },

@@ -44,6 +44,9 @@
       "path": "./libs/zephyr-native-cache/tsconfig.json"
     },
     {
+      "path": "./libs/zephyr-native-env/tsconfig.json"
+    },
+    {
       "path": "./libs/zephyr-nuxt-module/tsconfig.json"
     },
     {

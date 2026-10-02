@@ -189,7 +189,8 @@ test('the skill setup example publishes a complete Vite snapshot exactly once', 
     import.meta.dirname,
     '../../skills/zephyr-vite/SKILL.md'
   );
-  const skill = await readFile(skillPath, 'utf8');
+  // Windows checkouts may use CRLF line endings.
+  const skill = (await readFile(skillPath, 'utf8')).replace(/\r\n/gu, '\n');
   const setupExample = skill.match(/```typescript\n([\s\S]*?)```/u)?.[1];
   if (!setupExample) throw new Error('The Vite skill needs an executable setup example');
 

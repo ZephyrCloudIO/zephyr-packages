@@ -24,26 +24,26 @@
       ]
     },
     "skill:libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": {
-      "fingerprint": "d29bdf6841881e46d78cce7dbb1e599a3eb1338bb05008807c86c525e8e476e4",
+      "fingerprint": "6d22a169b7ec98749e8fd8c60d80fd3068d14d9a5db4b06f5f1e898ef11fee5b",
       "snapshot": {
         "libs/vite-plugin-zephyr/README.md": "5e8d8ff2e645bdca5fb9bb485875cef097fd285f951243c22259511645de342f",
         "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "2292229ae0c71d25be6111d9467340f0af36fd1a67af78626e941027fc16894f",
         "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "2700e14554b964f03d229f499039f08c4b76e1f9d0d16b3e4e8ca595f40f817d",
         "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
         "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
-        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a3f2ec74a4480e30e3c217476f5b6cef9f9bc35590c22791b71fe01f85c5a9e7",
+        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a2bbea26b9736583d2e9318ba61cd3c0b82e7075cf0ae94e3f84d18e4dd388f5",
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "59f02744b893ba7a5c06faef9a61c660393608af78ae3188ecaf88f09451bead",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271"
       },
-      "head": "8ecbd7b205099ac3fec705150ef4290dca3615d0",
+      "head": "8c0cd3a375407a9732f152be2e8a9a5b8cdfafc2",
       "outcome": "no-change",
-      "reason": "oxfmt formatting of vite-api.integration.spec.ts after the recorded review; test behavior and zephyr-vite guidance are unchanged.",
+      "reason": "Normalize CRLF line endings before extracting the skill's setup example so the integration test passes on Windows checkouts; zephyr-vite guidance is unchanged.",
       "evidence": [
-        "Changed: libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts at 8ecbd7b205099ac3fec705150ef4290dca3615d0"
+        "Changed: libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts at 8c0cd3a375407a9732f152be2e8a9a5b8cdfafc2"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "e3c1b4ea57d5581cc71ea1f13620778b66bdaa8458cdb3a3b4e1a7e7c92cfc35",
+      "fingerprint": "d500fd9cb831ad63815495c2431b8fabbdff2f031826bbe6e55661c2d888cacf",
       "snapshot": {
         "_artifacts/domain_map.yaml": "c30a6985440c1a2efc74553da8777959443ae91f45800cdbe36be5add021508b",
         "_artifacts/skill_spec.md": "a111834a909a6978d61e13602bf60fe38cfb939febf6a0741c950feabfe68344",
@@ -96,7 +96,7 @@
         "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "2700e14554b964f03d229f499039f08c4b76e1f9d0d16b3e4e8ca595f40f817d",
         "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
         "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
-        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a3f2ec74a4480e30e3c217476f5b6cef9f9bc35590c22791b71fe01f85c5a9e7",
+        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a2bbea26b9736583d2e9318ba61cd3c0b82e7075cf0ae94e3f84d18e4dd388f5",
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "59f02744b893ba7a5c06faef9a61c660393608af78ae3188ecaf88f09451bead",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f",
@@ -228,11 +228,11 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "8ecbd7b205099ac3fec705150ef4290dca3615d0",
+      "head": "8c0cd3a375407a9732f152be2e8a9a5b8cdfafc2",
       "outcome": "no-change",
-      "reason": "oxfmt formatting of vite-api.integration.spec.ts after the recorded review; test behavior and zephyr-vite guidance are unchanged.",
+      "reason": "Normalize CRLF line endings before extracting the skill's setup example so the integration test passes on Windows checkouts; zephyr-vite guidance is unchanged.",
       "evidence": [
-        "Changed: libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts at 8ecbd7b205099ac3fec705150ef4290dca3615d0"
+        "Changed: libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts at 8c0cd3a375407a9732f152be2e8a9a5b8cdfafc2"
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {

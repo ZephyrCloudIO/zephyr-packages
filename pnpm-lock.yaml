@@ -462,7 +462,7 @@ overrides:
   brace-expansion@>=3.0.0 <5.0.9: 5.0.12
   fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
   fflate@>=0.7.0 <0.7.5: 0.7.5
-  hono: 4.13.5
+  hono: 4.13.7
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.9
   nuxt@>=4.0.0 <4.5.1: 4.5.2
   postcss: 8.5.28
@@ -619,8 +619,8 @@ importers:
   examples/hono-app:
     dependencies:
       hono:
-        specifier: 4.13.5
-        version: 4.13.5
+        specifier: 4.13.7
+        version: 4.13.7
     devDependencies:
       '@types/node':
         specifier: catalog:typescript
@@ -10764,8 +10764,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.13.5:
-    resolution: {integrity: sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw==}
+  hono@4.13.7:
+    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -18515,7 +18515,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.4.4
-      hono: 4.13.5
+      hono: 4.13.7
       ts-deepmerge: 8.0.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
@@ -25878,7 +25878,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.13.5: {}
+  hono@4.13.7: {}
 
   hookable@5.5.3: {}
 

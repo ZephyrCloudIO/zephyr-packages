@@ -17,6 +17,13 @@ export interface ZephyrGlobalNamespace {
 export interface ZephyrRuntimeNamespace {
   /** Namespace reserved for zephyr-native-cache integrations. */
   nativeCache?: ZephyrNativeCacheNamespace;
+
+  /**
+   * Public `ZE_PUBLIC_*` environment values read by compiled mobile code, keyed by Zephyr
+   * application UID. Values are strings; missing keys fall back to the build-time value
+   * compiled into the bundle.
+   */
+  env?: Record<string, Readonly<Record<string, string>>>;
   [namespace: string]: unknown;
 }
 

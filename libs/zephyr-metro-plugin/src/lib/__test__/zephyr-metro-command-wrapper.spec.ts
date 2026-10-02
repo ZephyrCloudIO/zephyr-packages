@@ -14,6 +14,8 @@ rs.mock('zephyr-agent', () => ({
     ERR_UNKNOWN: 'ERR_UNKNOWN',
     ERR_INVALID_MF_CONFIG: 'ERR_INVALID_MF_CONFIG',
   },
+  collectZEPublicVars: rs.fn().mockReturnValue({}),
+  ze_log: { app: rs.fn() },
 }));
 
 const { mockBeforeBuild, mockAfterBuild, mockBuildFailed } = rs.hoisted(() => ({

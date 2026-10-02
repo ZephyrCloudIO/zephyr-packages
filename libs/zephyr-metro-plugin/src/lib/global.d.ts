@@ -15,8 +15,15 @@ declare global {
         remotes?: Record<string, string>;
         exposes?: Record<string, string>;
         shared?: Record<string, unknown>;
+        runtimePlugins?: Array<string | [string, Record<string, unknown>]>;
       }
     | undefined;
+
+  /**
+   * Application UID set by `withZephyr` once Metro's Babel transformer rewrites
+   * `ZE_PUBLIC_*` reads. Read by zephyrCommandWrapper to warn when it is missing.
+   */
+  var __ZEPHYR_METRO_ENV_REWRITE__: string | undefined;
 }
 
 export {};

@@ -2,7 +2,7 @@
 
 Use this reference when choosing `output.dir`, debugging missing files in a
 published Rolldown snapshot, or publishing TAP containers. This reference
-describes behavior verified against `zephyr-rolldown-plugin` 1.4.2.
+describes behavior of the installed `zephyr-rolldown-plugin` release.
 
 ## How `output.dir` becomes a prefix
 

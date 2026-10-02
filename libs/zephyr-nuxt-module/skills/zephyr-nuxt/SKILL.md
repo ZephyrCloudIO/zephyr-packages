@@ -6,7 +6,7 @@ description: Configure and deploy Nuxt applications with zephyr-nuxt-module; use
   a TAP package, or diagnosing why nuxt build did not publish.
 metadata:
   library: zephyr-nuxt-module
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Publish a Nuxt application's Nitro build output to Zephyr after nuxt build, choosing an SSR or static snapshot from what Nitro actually emitted.
   domain: frameworks
   type: core
@@ -77,25 +77,29 @@ for static sites, custom output paths, or `app.baseURL`.
 ## Avoid misleading fixes
 
 - Do not force `snapshotType: 'ssr'` without an emitted server entry. The module
-  then logs `SSR snapshot requested but no entrypoint found.` and skips
-  publication without failing the build, even with `ZE_FAIL_BUILD=true`.
+  then skips publication without failing the build, even with
+  `ZE_FAIL_BUILD=true`, and prints nothing unless `DEBUG=zephyr:upload` is set.
+  With it set, the skip logs `SSR snapshot requested but no entrypoint found.`
 - Do not trust an explicit `entrypoint` blindly; the module normalizes it but
   never checks that the file exists. Prefer auto-detection.
 - Do not set `target: 'tap-app'` on an ordinary app. TAP requires paired
   federation metadata and changes how public files are mapped.
 - Do not treat a successful `nuxt build` as publication. Upload errors are
   logged and the build continues unless `ZE_FAIL_BUILD=true` is set. An empty
-  output directory skips publication with only a log line in either case.
+  output directory skips publication silently in either case.
 - Do not put credentials in `ZE_PUBLIC_*`; those values are client-visible.
 
 ## Verify completion
 
 Run the authorized build with the application's existing package runner.
 Confirm the Nitro output contains the expected server entry or public files,
-that Zephyr logs `Zephyr upload starting. snapshotType=...` with the intended
-type and directory, and that it ends with `Zephyr upload complete.` and a
-version URL. A build without credentials can establish local output
-correctness, but not live deployment success. Report that distinction.
+and that the build prints `Deployed to Zephyr's edge in ...ms.` followed by a
+version URL. A missing deploy line means nothing was published, even when
+`nuxt build` succeeds. To see which snapshot type and directory the module
+chose, rerun with `DEBUG=zephyr:upload`; it then logs
+`Zephyr upload starting. snapshotType=...` and `Zephyr upload complete.`. A
+build without credentials can establish local output correctness, but not
+live deployment success. Report that distinction.
 
 On failure, keep the actionable log line and fix the matching configuration.
 Do not silently change the Nitro preset, force a snapshot type, or claim a

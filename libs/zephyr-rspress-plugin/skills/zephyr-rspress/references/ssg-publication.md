@@ -2,7 +2,7 @@
 
 Use this reference for post-build plugin ordering, Module Federation in SSG
 builds, or output files that Zephyr rewrites before upload. It describes
-behavior verified against `zephyr-rspress-plugin` 1.4.2.
+behavior of the installed `zephyr-rspress-plugin` release.
 
 ## Post-build ordering
 

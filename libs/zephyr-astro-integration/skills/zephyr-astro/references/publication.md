@@ -1,8 +1,7 @@
 # Publication details
 
 Use this reference for integration options, deployment hooks, uploaded file
-selection, or TAP packages. It describes behavior verified against
-`zephyr-astro-integration` 1.4.2.
+selection, or TAP packages. It describes behavior of the installed `zephyr-astro-integration` release.
 
 ## Options
 

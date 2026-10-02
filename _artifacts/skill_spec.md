@@ -134,5 +134,25 @@ environment })` and `@module-federation/webpack` (webpack), the object form
 - Modern.js publishes client and server configs independently, so
   `snapshotType` and `entrypoint` have no effect there.
 - `verify_mf_fastly_config` in Re.Pack appears to have an inverted condition.
+- Metro's missing `withModuleFederation` check throws `ERR_INVALID_MF_CONFIG`,
+  whose message describes an invalid library name, and the command wrapper
+  rethrows it as `ZE00000: Unknown error` with the `{{library_name}}`
+  placeholder unfilled.
+- Upload progress and skip messages in the Nuxt, TanStack Start, Vinext, and
+  Rspress plugins use debug-gated `ze_log` namespaces, so silent skips print
+  nothing without `DEBUG=zephyr:*`. The skills verify against the always-visible
+  `Deployed to Zephyr's edge` line instead.
 - Rollup, Rolldown, Parcel, and the Vite framework plugins record but do not
   resolve `zephyr:dependencies`.
+
+- 2026-10-02: Addressed review findings. Verification steps now rely on the
+  always-visible deploy line and version URL rather than debug-gated logs; the
+  Metro skill describes the real missing-config symptom; `ze-cli` guidance uses
+  `--verbose`, which works in every position; `workspace:*` is documented as
+  falling back to the latest published version, matching
+  `resolve_remote_dependency`. Package-owned `library_version` lines carry the
+  release-please marker and are listed as generic extra files, with a unit test
+  that fails on drift, and reference prose no longer pins a version.
+  `verify-package-skills.mjs` compares every file of the shared guides. The Vite
+  example test compiles the skill example with Vite instead of the Intent-only
+  compiler, and the package declares `@tanstack/intent` for its discovery tests.

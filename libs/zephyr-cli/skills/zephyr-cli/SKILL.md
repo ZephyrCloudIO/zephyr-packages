@@ -6,7 +6,7 @@ description: Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
   ze-cli doctor to inspect project readiness.
 metadata:
   library: zephyr-cli
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Publish an application's existing build output through ze-cli without a bundler plugin, choosing between run, deploy, watch, and doctor and confirming that an upload actually happened.
   domain: cli
   type: core
@@ -98,7 +98,7 @@ place credentials in `ZE_PUBLIC_*` values, which are client-visible.
 
 ## Verify completion
 
-Run the authorized command with `--verbose` (`-v`) to see the detected tool,
+Run the authorized command with `--verbose` to see the detected tool,
 output directory, and asset count. Confirm the output directory holds the
 expected assets and that Zephyr reports a published version URL. Without
 credentials you can verify the build and directory detection, but not

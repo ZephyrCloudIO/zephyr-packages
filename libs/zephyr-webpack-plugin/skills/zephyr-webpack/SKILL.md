@@ -7,7 +7,7 @@ description: Configure and deploy webpack 5 applications with zephyr-webpack-plu
   zephyr-rspack-plugin for Rspack projects.
 metadata:
   library: zephyr-webpack-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Wrap an existing webpack 5 configuration for Zephyr publication after its Module Federation plugins are in place, keeping one publication per logical build.
   domain: xpack
   type: core
@@ -100,7 +100,7 @@ and failure semantics, read [compiler arrays and publication](references/compile
 - Do not wrap each element of a config array separately. That creates
   independent publications instead of one coordinated snapshot.
 - Do not pass `deploy` or `environment`. The README shows them, but they are not
-  options in 1.4.2; choose environments in Zephyr, as the `zephyr-core` guide describes.
+  options; choose environments in Zephyr, as the `zephyr-core` guide describes.
 - Do not use this package for Rspack. `zephyr-rspack-plugin` identifies the
   Rspack builder and adds Rspack-only `ZE_PUBLIC_*` handling.
 - Do not treat a finished webpack build as a deployment. Single-config

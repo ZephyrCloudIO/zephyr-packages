@@ -7,7 +7,7 @@ description: Configure and deploy React Native Metro applications with
   publication with @module-federation/metro.
 metadata:
   library: zephyr-metro-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Publish iOS and Android Metro Module Federation bundles to Zephyr by pairing the configuration-only withZephyr wrapper with the command integration that actually uploads.
   domain: native
   type: core
@@ -80,8 +80,12 @@ when authorized.
 ## Configure Module Federation and platforms
 
 Keep the federation container in `withModuleFederation(...)`. The commands read
-it from the global that `withModuleFederation` sets while Metro config loads; a
-missing config fails with `ERR_MISSING_METRO_FEDERATION_CONFIG`. Before
+it from the global that `withModuleFederation` sets while Metro config loads. A
+missing config fails with a misleading message: `ZE00000: Unknown error:
+Library name {{library_name}} must be a valid identifier...`. When that
+template text appears with the placeholder unfilled, check that
+`metro.config.js` wraps its config in `withModuleFederation` rather than
+renaming the container. Before
 bundling, Zephyr resolves `zephyr:dependencies` and federation `remotes`, then
 rewrites each resolved remote to the plain `name@url` form that Metro accepts,
 preferring the remote's manifest URL.

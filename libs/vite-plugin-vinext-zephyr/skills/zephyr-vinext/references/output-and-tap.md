@@ -2,8 +2,7 @@
 
 Use this reference when the server entry cannot be detected, the output
 directory or snapshot type differs from the defaults, or when publishing a TAP
-package. It describes behavior verified against `vite-plugin-vinext-zephyr`
-1.4.2.
+package. It describes behavior of the installed `vite-plugin-vinext-zephyr` release.
 
 ## Options
 

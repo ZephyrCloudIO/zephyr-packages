@@ -150,6 +150,74 @@
           "type": "json",
           "path": "libs/create-zephyr-apps/.cursor-plugin/plugin.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "generic",
+          "path": "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/parcel-reporter-zephyr/skills/zephyr-parcel/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-cli/skills/zephyr-cli/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md"
         }
       ]
     }

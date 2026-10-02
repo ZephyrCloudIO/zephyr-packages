@@ -126,6 +126,48 @@ describe('shared skill distribution', () => {
     }
   });
 
+  test('package-owned skills track their package version through releases', () => {
+    const workspaceRoot = path.resolve(import.meta.dirname, '../../..');
+    const releaseFiles = new Set(
+      JSON.parse(
+        readFileSync(path.join(workspaceRoot, 'release-please-config.json'), 'utf8')
+      )
+        .packages['.']['extra-files'].filter(
+          (file: { type: string }) => file.type === 'generic'
+        )
+        .map((file: { path: string }) => file.path)
+    );
+    const drift: string[] = [];
+    for (const directory of publishedPackages()) {
+      const { version } = JSON.parse(
+        readFileSync(path.join(directory, 'package.json'), 'utf8')
+      );
+      const skillsDirectory = path.join(directory, 'skills');
+      if (!existsSync(skillsDirectory)) continue;
+      for (const entry of readdirSync(skillsDirectory, { withFileTypes: true })) {
+        const skillPath = path.join(skillsDirectory, entry.name, 'SKILL.md');
+        if (
+          !entry.isDirectory() ||
+          sharedSkills.includes(entry.name) ||
+          !existsSync(skillPath)
+        )
+          continue;
+        const relativePath = path
+          .relative(workspaceRoot, skillPath)
+          .split(path.sep)
+          .join('/');
+        const line = readFileSync(skillPath, 'utf8').match(
+          /^ {2}library_version:.*$/mu
+        )?.[0];
+        if (line !== `  library_version: '${version}' # x-release-please-version`)
+          drift.push(`${relativePath}: ${line ?? 'missing library_version'}`);
+        if (!releaseFiles.has(relativePath))
+          drift.push(`${relativePath}: not in release-please extra-files`);
+      }
+    }
+    expect(drift).toEqual([]);
+  });
+
   test('every published build integration authors a dedicated skill', () => {
     const missing = publishedPackages()
       .map((directory) => ({

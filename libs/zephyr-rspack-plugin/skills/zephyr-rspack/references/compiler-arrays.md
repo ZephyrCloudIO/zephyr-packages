@@ -1,8 +1,7 @@
 # Compiler arrays and publication
 
 Use this reference for Rspack config arrays, SSR snapshots, `ZE_PUBLIC_*`
-rewrites, late HTML, base paths, or publication failures. It describes behavior
-verified against `zephyr-rspack-plugin` 1.4.2.
+rewrites, late HTML, base paths, or publication failures. It describes behavior of the installed `zephyr-rspack-plugin` release.
 
 ## When publication happens
 

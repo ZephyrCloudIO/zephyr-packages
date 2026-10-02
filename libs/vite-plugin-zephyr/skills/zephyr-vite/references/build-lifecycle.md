@@ -2,7 +2,7 @@
 
 Use this reference for SSR, multiple Vite environments, ordering conflicts, or
 intentionally separate producer builds. This reference describes publication
-behavior verified against `vite-plugin-zephyr` 1.4.2.
+behavior of the installed `vite-plugin-zephyr` release.
 
 ## Direct builds and coordinated application builds
 

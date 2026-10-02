@@ -7,7 +7,7 @@ description: Configure and deploy Vinext applications with
   of the generic vite-plugin-zephyr.
 metadata:
   library: vite-plugin-vinext-zephyr
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Publish a Vinext application's finalized RSC, SSR, and client output to Zephyr as one Worker-compatible snapshot after the framework build completes.
   domain: vite
   type: core
@@ -107,8 +107,10 @@ deployment; `ZephyrBuildHooks` and `DeploymentInfo` types are re-exported.
 
 Run the authorized build with the application's existing package runner.
 Confirm the output root contains the client assets and a server entry, and
-that Zephyr logs `Uploading Vinext build (... snapshotType: ssr)` followed by a
-successful publication with a version URL. A build without credentials can
+that the build prints `Deployed to Zephyr's edge in ...ms.` followed by a
+version URL. The plugin's `Uploading Vinext build (... snapshotType: ssr)` line
+appears only with `DEBUG=zephyr:upload`; use it to confirm the snapshot type
+and output root when diagnosing. A build without credentials can
 establish local output correctness, but not live deployment success. Report
 that distinction.
 

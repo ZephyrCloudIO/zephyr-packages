@@ -6,7 +6,7 @@ description: Configure and deploy Vite applications with vite-plugin-zephyr; use
   integrations for TanStack Start and Vinext.
 metadata:
   library: vite-plugin-zephyr
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Configure an existing Vite application for Zephyr publication while preserving its framework plugins and selecting the correct build lifecycle.
   domain: vite
   type: core

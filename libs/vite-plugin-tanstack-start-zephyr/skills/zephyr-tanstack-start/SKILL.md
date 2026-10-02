@@ -7,7 +7,7 @@ description: Configure and deploy TanStack Start applications with
   publish. Use it instead of the generic vite-plugin-zephyr.
 metadata:
   library: vite-plugin-tanstack-start-zephyr
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Publish a TanStack Start application's finalized client and server output to Zephyr as one SSR snapshot without taking over the framework's own Vite build.
   domain: vite
   type: core
@@ -101,7 +101,9 @@ entry, output directory, or snapshot type differ from the defaults.
 
 Run the authorized build with the application's existing package runner.
 Confirm `dist/` contains the expected client output and the server entry, and
-that Zephyr logs `TanStack Start deployment successful!` with a version URL. A
+that the build prints `Deployed to Zephyr's edge in ...ms.` followed by a
+version URL. Plugin progress lines such as `TanStack Start deployment
+successful!` appear only with `DEBUG=zephyr:upload`, so do not wait for them. A
 build without credentials can establish local output correctness, but not live
 deployment success. Report that distinction.
 

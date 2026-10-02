@@ -42,10 +42,10 @@ If these drift, resolution and runtime loading become fragile fast.
 
 - MF setup can be correct while deployment still fails because git context or app access is missing.
 
-### Missing remote environment fallback
+### Missing remote build
 
-- `workspace:*` and other selectors can still fail if the remote app has never been built into a resolvable environment/default path.
-- If resolution fails, check that the remote was built first and that Zephyr has a fallback environment to resolve.
+- `workspace:*` falls back to the latest published version of the remote when no matching workspace build exists, so it still fails if the remote has never been published.
+- If resolution fails, check that the remote was built and published first. Other selectors have no such fallback and need a matching tag, environment, or version.
 
 ## Quick diagnostic flow
 

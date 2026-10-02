@@ -6,7 +6,7 @@ description: Configure and deploy Rollup applications with rollup-plugin-zephyr;
   files it uploads.
 metadata:
   library: rollup-plugin-zephyr
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Add Zephyr publication to an existing Rollup 4 build so each written output bundle is uploaded as a Zephyr version without changing how Rollup bundles it.
   domain: rollup
   type: core
@@ -83,8 +83,8 @@ the cross-project host and remote model.
 
 ## Avoid misleading fixes
 
-- Do not import `zephyrPlugin`. The package README shows that name, but 1.4.2
-  exports only `withZephyr`.
+- Do not import `zephyrPlugin`. The package README shows that name, but the
+  package exports only `withZephyr`.
 - Do not spread `withZephyr()` into `plugins`. It returns one plugin object,
   not an array.
 - Do not add extra `output` entries to "try" Zephyr. Every written output is a

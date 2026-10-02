@@ -1,8 +1,7 @@
 # Output and snapshots
 
 Use this reference for module options, custom output paths, static sites,
-`app.baseURL`, or TAP packages. It describes behavior verified against
-`zephyr-nuxt-module` 1.4.2.
+`app.baseURL`, or TAP packages. It describes behavior of the installed `zephyr-nuxt-module` release.
 
 ## Options
 

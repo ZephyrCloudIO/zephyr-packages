@@ -8,7 +8,7 @@ description: Configure and deploy Rspack applications with zephyr-rspack-plugin;
   frameworks.
 metadata:
   library: zephyr-rspack-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Wrap an existing Rspack configuration for Zephyr publication after its Module Federation plugins are in place, keeping one publication per logical build.
   domain: xpack
   type: core
@@ -102,7 +102,7 @@ compiler succeeds. For arrays, SSR layouts, `ZE_PUBLIC_*` rewrites,
   `new ZeRspackPlugin(...)` by hand. Both produce duplicate or split publications.
 - Do not copy the README's `target: 'tap-app'` example into an ordinary web app.
   That target skips remote rewrites and `ZE_PUBLIC_*` handling for SDK-locked output.
-- Do not rely on the README's "Rspack 0.3 or higher". The 1.4.2 peer range is
+- Do not rely on the README's "Rspack 0.3 or higher". The package's peer range is
   `@rspack/core` `^1.0.0 || ^2.0.0-0`.
 - Do not treat a finished Rspack build as a deployment. Single-config
   publication errors are logged and the build continues unless

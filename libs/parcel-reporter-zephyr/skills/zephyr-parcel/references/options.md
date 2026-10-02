@@ -2,7 +2,8 @@
 
 Use this reference when the Parcel reporter needs options, publishes TAP
 containers, or builds more than one Parcel target. This reference describes
-behavior verified against `parcel-reporter-zephyr` 1.4.2 with Parcel 2.16.4.
+behavior of the installed `parcel-reporter-zephyr` release, checked with Parcel
+2.16.4.
 
 ## Project-local reporter module
 

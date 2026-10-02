@@ -24,6 +24,13 @@ function run(command, args, cwd) {
   return result.stdout;
 }
 
+function filesUnder(directory) {
+  return readdirSync(directory, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.relative(directory, path.join(entry.parentPath, entry.name)))
+    .sort();
+}
+
 function markdownFiles(directory) {
   return readdirSync(directory, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
@@ -73,12 +80,21 @@ try {
     }
     for (const skill of [...sharedSkills, ...dedicatedSkills]) {
       if (sharedSkills.includes(skill)) {
-        const actual = readFileSync(path.join(skillRoot, skill, 'SKILL.md'), 'utf8');
-        const expected = readFileSync(
-          path.join(workspaceRoot, 'skills', skill, 'SKILL.md'),
-          'utf8'
-        );
-        if (actual !== expected) throw new Error(`${manifest.name} ships stale ${skill} guidance`);
+        const actualRoot = path.join(skillRoot, skill);
+        const expectedRoot = path.join(workspaceRoot, 'skills', skill);
+        const actualFiles = filesUnder(actualRoot);
+        const expectedFiles = filesUnder(expectedRoot);
+        if (
+          actualFiles.join('\n') !== expectedFiles.join('\n') ||
+          expectedFiles.some(
+            (file) =>
+              !readFileSync(path.join(actualRoot, file)).equals(
+                readFileSync(path.join(expectedRoot, file))
+              )
+          )
+        ) {
+          throw new Error(`${manifest.name} ships stale ${skill} guidance`);
+        }
       }
       if (
         !discovery.skills.some(

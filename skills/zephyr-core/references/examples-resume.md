@@ -16,7 +16,7 @@ Repo root: `https://github.com/ZephyrCloudIO/zephyr-examples`
 ## Core pattern
 
 - Install the Zephyr integration that matches the stack.
-- Add `withZephyr()` as the last plugin, or wrap the final config with `withZephyr()`.
+- Add `withZephyr()` to the plugin list or wrap the final config with it. Placement is stack-specific, not always last; follow the installed package's dedicated skill.
 - For special frameworks, use the framework-specific Zephyr integration instead of the generic bundler plugin.
 
 ## Good references

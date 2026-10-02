@@ -2,7 +2,7 @@
 
 Use this reference when a Rollup build publishes TAP containers or forwards
 federation metadata through `mfConfigs` and `federation`. This reference
-describes behavior verified against `rollup-plugin-zephyr` 1.4.2.
+describes behavior of the installed `rollup-plugin-zephyr` release.
 
 ## What the options do
 

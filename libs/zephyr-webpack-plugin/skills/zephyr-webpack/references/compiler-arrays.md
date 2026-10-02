@@ -1,8 +1,7 @@
 # Compiler arrays and publication
 
 Use this reference for webpack config arrays, SSR snapshots, late HTML, base
-paths, or publication failures. It describes behavior verified against
-`zephyr-webpack-plugin` 1.4.2.
+paths, or publication failures. It describes behavior of the installed `zephyr-webpack-plugin` release.
 
 ## When publication happens
 

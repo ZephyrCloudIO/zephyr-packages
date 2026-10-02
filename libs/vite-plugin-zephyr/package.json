@@ -69,6 +69,7 @@
     "@module-federation/vite": "catalog:module-federation-vite",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
+    "@tanstack/intent": "catalog:",
     "@types/node": "catalog:typescript",
     "rollup": "catalog:rollup4",
     "typescript": "catalog:typescript",

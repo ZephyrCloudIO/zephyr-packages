@@ -7,7 +7,7 @@ description: Configure and deploy Rspress documentation sites with
   Module Federation SSG builds.
 metadata:
   library: zephyr-rspress-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Add Zephyr publication to an existing Rspress site and pick the SSG or Rsbuild publication path so every emitted and post-build file is uploaded.
   domain: frameworks
   type: core
@@ -81,16 +81,19 @@ change on disk before upload, read
   before `afterBuild` hooks and omits files they generate.
 - Do not also add the Rsbuild `withZephyr()` to `builderConfig.plugins`.
   The Rspress plugin selects and installs the publication path itself.
-- Do not ignore `No files found in output directory.` It means the SSG path
-  found nothing under `outDir`, resolved from the working directory, and
-  published nothing. Check `outDir` and where the build runs.
+- Do not assume a quiet build published. When the SSG path finds nothing under
+  `outDir`, resolved from the working directory, it publishes nothing and
+  prints nothing by default; with `DEBUG=zephyr:upload` it logs
+  `No files found in output directory.`. Check `outDir` and where the build
+  runs.
 - Do not put credentials in `ZE_PUBLIC_*`; those values are client-visible.
 
 ## Verify completion
 
 Run the authorized `rspress build` through the site's package runner. Confirm
 the expected HTML and assets are in `outDir`, including files from post-build
-plugins, and that Zephyr reports a successful upload with a version URL. A
+plugins, and that the build prints `Deployed to Zephyr's edge in ...ms.`
+followed by a version URL. A
 build without credentials can establish local output correctness, not live
 deployment. Report that distinction.
 

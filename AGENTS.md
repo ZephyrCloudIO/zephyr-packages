@@ -6,6 +6,25 @@ requires the classic TypeScript compiler API; the wrapper supplies the pinned
 development-only compatibility compiler without changing native TypeScript 7
 used by the SDK packages. CI runs the same wrapper.
 
+## Clearing the Check Skills gate
+
+`Check Skills` fails when a pull request changes a file listed in a skill's
+`sources:` or the planning records without a recorded review. To clear it:
+
+1. Run `pnpm skills:review --json` to list the pending items and their changed
+   files.
+2. Update any skill whose guidance the change affects, then rerun
+   `pnpm skills:sync`.
+3. Record each outcome with evidence: annotate the JSON report and pass it to
+   `pnpm skills:review --record <report.json>`, or use
+   `pnpm skills:review --unchanged "<reason>"` when no guidance is affected.
+4. Commit `.intent/review-state.json` and confirm `pnpm skills:check` passes.
+
+`.intent/review-state.json` stores per-file hashes, so parallel pull requests
+can conflict on it. Resolve a conflict by taking the base branch's copy,
+rerunning the review steps on the rebased branch, and recording again; do not
+hand-merge hashes.
+
 <!-- intent-maintainer:start -->
 
 ## Library Skill Maintenance

@@ -2,7 +2,7 @@
 
 Use this reference when the emitted server entry, output directory, or snapshot
 type differs from the defaults, or when publishing a TAP package. It describes
-behavior verified against `vite-plugin-tanstack-start-zephyr` 1.4.2.
+behavior of the installed `vite-plugin-tanstack-start-zephyr` release.
 
 ## Options
 

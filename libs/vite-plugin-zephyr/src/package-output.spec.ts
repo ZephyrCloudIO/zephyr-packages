@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from '@rstest/core';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import {
   mkdtemp,
   mkdir,
@@ -234,9 +235,11 @@ describe('published optional federation peer', () => {
 });
 
 describe('published Intent skill', () => {
-  const intentCli = path.resolve(
-    packageRoot,
-    '../../node_modules/@tanstack/intent/dist/cli.mjs'
+  // Resolve the declared devDependency; its exports map hides package.json and the CLI.
+  const intentRoot = path.join(packageRoot, 'node_modules/@tanstack/intent');
+  const intentCli = path.join(
+    intentRoot,
+    JSON.parse(readFileSync(path.join(intentRoot, 'package.json'), 'utf8')).bin.intent
   );
 
   test('discovers and loads the skill from the packed consumer dependency', async () => {

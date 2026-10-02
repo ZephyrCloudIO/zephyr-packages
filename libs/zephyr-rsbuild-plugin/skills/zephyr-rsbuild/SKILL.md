@@ -7,7 +7,7 @@ description: Configure and deploy Rsbuild applications with zephyr-rsbuild-plugi
   integrations for Modern.js and Rspress.
 metadata:
   library: zephyr-rsbuild-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Add Zephyr to an existing Rsbuild config as a plugin that publishes every Rsbuild environment as one coordinated snapshot after federation setup.
   domain: xpack
   type: core

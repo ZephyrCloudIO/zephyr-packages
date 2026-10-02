@@ -6,7 +6,7 @@ description: Configure and deploy Modern.js 3 applications with
   and output layout, or diagnosing Modern.js client/server publication.
 metadata:
   library: zephyr-modernjs-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Add Zephyr to an existing Modern.js 3 app as a CLI plugin that delegates each Rspack config to zephyr-rspack-plugin after federation config runs.
   domain: frameworks
   type: core
@@ -57,7 +57,7 @@ export default defineConfig({
 The options are `target` (`web`, `ios`, `android`, or `tap-app`),
 `wait_for_index_html`, and `hooks.onDeployComplete`, exported as
 `ZephyrModernjsPluginOptions`. `snapshotType` and `entrypoint` are accepted but
-have no effect in 1.4.2; see the publication section below.
+have no effect; see the publication section below.
 
 ## Order with Module Federation
 
@@ -78,7 +78,7 @@ per generated Rspack config, and this plugin wraps each config separately with
 `zephyr-rspack-plugin`. Each config therefore gets its own Zephyr engine and
 publication; client and server configs are not coordinated into one snapshot.
 `snapshotType` and `entrypoint` only take effect for coordinated config arrays,
-so they do not change Modern.js output in 1.4.2.
+so they do not change Modern.js output.
 
 When `NODE_ENV` is `development` as the config loads, a companion plugin sets
 the client `output.publicPath` to `auto` for the dev server, except for

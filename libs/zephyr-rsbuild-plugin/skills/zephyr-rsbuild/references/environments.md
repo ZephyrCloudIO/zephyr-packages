@@ -1,8 +1,7 @@
 # Environments and publication
 
 Use this reference for multi-environment or SSR Rsbuild builds, `ZE_PUBLIC_*`
-reads, late HTML, base paths, or publication failures. It describes behavior
-verified against `zephyr-rsbuild-plugin` 1.4.2.
+reads, late HTML, base paths, or publication failures. It describes behavior of the installed `zephyr-rsbuild-plugin` release.
 
 ## How the plugin hooks into Rsbuild
 

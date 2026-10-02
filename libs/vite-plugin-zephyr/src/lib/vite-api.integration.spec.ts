@@ -3,8 +3,14 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { afterEach, beforeEach, expect, test, rs } from '@rstest/core';
-import { build, createBuilder, defineConfig, type InlineConfig, type Plugin } from 'vite';
-import typescript from '@zephyrcloudio/intent-tooling/compiler';
+import {
+  build,
+  createBuilder,
+  defineConfig,
+  type InlineConfig,
+  type Plugin,
+  type Rolldown,
+} from 'vite';
 import {
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
@@ -189,10 +195,7 @@ test('the skill setup example publishes a complete Vite snapshot exactly once', 
 
   const moduleExports: { default?: InlineConfig } = {};
   runInNewContext(
-    typescript.transpile(setupExample, {
-      module: typescript.ModuleKind.CommonJS,
-      target: typescript.ScriptTarget.ES2022,
-    }),
+    await compileExample(setupExample),
     {
       exports: moduleExports,
       require(specifier: string) {
@@ -213,6 +216,40 @@ test('the skill setup example publishes a complete Vite snapshot exactly once', 
   expect(paths.some((name) => name.endsWith('.js'))).toBe(true);
   expect(mocks.events).toEqual(['upload', 'finish']);
 });
+
+/**
+ * Compiles a TypeScript skill example to CommonJS with Vite itself, leaving its imports
+ * external.
+ */
+async function compileExample(source: string): Promise<string> {
+  const entry = path.join(fixtureRoot, 'skill-example.ts');
+  const result = await build({
+    configFile: false,
+    logLevel: 'silent',
+    root: fixtureRoot,
+    plugins: [
+      {
+        name: 'skill-example',
+        enforce: 'pre',
+        resolveId: (id) => (id === entry ? entry : null),
+        load: (id) => (id === entry ? source : null),
+      },
+    ],
+    build: {
+      write: false,
+      minify: false,
+      lib: { entry, formats: ['cjs'], fileName: 'skill-example' },
+      rolldownOptions: {
+        external: ['vite', 'vite-plugin-zephyr'],
+        output: { exports: 'named' },
+      },
+    },
+  });
+  const [output] = (
+    Array.isArray(result) ? result : [result]
+  ) as Rolldown.RolldownOutput[];
+  return output.output[0].code;
+}
 
 test('the skill task checker rejects a local build without Zephyr publication', async () => {
   await build({ ...config(), plugins: [] });

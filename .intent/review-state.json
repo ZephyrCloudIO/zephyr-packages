@@ -3,9 +3,9 @@
   "baseline": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
   "items": {
     "skill:libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": {
-      "fingerprint": "44d7318df49eb3c2d51af480d4479acd0dbb81dcdf06f1957c264e39a7bb0e32",
+      "fingerprint": "4d133ca27a31f5f94faf60ae496b1e6c9020629060c4f9708f2ec65cdce2a078",
       "snapshot": {
-        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "b757e56cb80942c1dfe6f28572d55066c7767abc0eea247a3b04d4761dc79b62",
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "91490112f744c787e0914fe81e08886d3387da9e984557bdce9226a58ea899cd",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
         "libs/create-zephyr-apps/src/cli.spec.ts": "8501d0c55963413103d42d469ad73e39ef5f7736748275141170f56cb855f268",
         "libs/create-zephyr-apps/src/cli.ts": "116e23cb28e3f4a2e6d8cf521c06ab50391368be2c81db3b898e4d55510237eb",
@@ -13,42 +13,45 @@
         "libs/create-zephyr-apps/src/scaffold.ts": "fc1fb0df62ee21c37f253e7343071cbc02d6d645c099cb2a2038780da668955b",
         "libs/create-zephyr-apps/src/templates.ts": "f5e38228b1cb457fa5645138aed1cab68cfa210199dda4bedcb1a3304458557b"
       },
-      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Preserved the existing bootstrap instructions and description as purpose; added verified 1.4.2 provenance and source mappings for meaningful future reviews.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md has metadata-only changes.",
-        "CLI, scaffold, template, and receipt sources were inspected; all 33 generator tests pass.",
-        "Intent structural validation passes; no fresh-agent execution is claimed."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": {
-      "fingerprint": "7ae84176e43ec77d0566d1db12cbdfef45a6666268df96cba909d2fa7b706844",
+      "fingerprint": "9b58ad4039ba46f01d93c81da2353fdaf769f744e6853218b9cd2a9cbd66fc98",
       "snapshot": {
         "libs/vite-plugin-zephyr/README.md": "5e8d8ff2e645bdca5fb9bb485875cef097fd285f951243c22259511645de342f",
-        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "a3e9d5b5aeb14f2b0ae21e20e17a8d1a1089350ef0de414d62263fa477715358",
-        "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "e339d9144c31542314e336a98a925c748c22b77117b952b4c30e062f0845be9a",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "2292229ae0c71d25be6111d9467340f0af36fd1a67af78626e941027fc16894f",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "2700e14554b964f03d229f499039f08c4b76e1f9d0d16b3e4e8ca595f40f817d",
         "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
         "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
-        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "b446a7e0687651d468e275174d1e6fb258d429ab284e6cdf45df7a6b8d2afd4b",
+        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "f2302c1dfc97eddcdaa54dccb4783cbeba24467b1fffd1aad81f1343c10f5d76",
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "59f02744b893ba7a5c06faef9a61c660393608af78ae3188ecaf88f09451bead",
-        "libs/vite-plugin-zephyr/src/package-output.spec.ts": "703116c4a969b5d54ab30309c836e152c835de35b477281515f38caae7ce4b80"
+        "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Replaced the statement that zephyr-module-federation is an uninstalled repository skill; it now ships beside zephyr-vite in this package.",
+      "reason": "Reference prose no longer pins a release version.",
       "evidence": [
-        "The Vite package tests pass, including packed discovery of zephyr-core, zephyr-module-federation, and zephyr-vite.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package."
+        "Only the version wording changed; lifecycle guidance is unchanged.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "7d3daaf1f885d45fa2dea498c01d71b5028e5300af47fe6edd945e345826e178",
+      "fingerprint": "db53d0da174918387689a767fcb260db45788757614eaa855ebd00ffc43144cb",
       "snapshot": {
         "_artifacts/domain_map.yaml": "c30a6985440c1a2efc74553da8777959443ae91f45800cdbe36be5add021508b",
-        "_artifacts/skill_spec.md": "3bfb6420a160ff65a934609188446593c2fae6d80a9036339856df459b224085",
+        "_artifacts/skill_spec.md": "a111834a909a6978d61e13602bf60fe38cfb939febf6a0741c950feabfe68344",
         "_artifacts/skill_tree.yaml": "3140fd522fe782b644fe5c2309e638e0a1eae2c24b17938b9dd0579e77e5ff08",
-        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "b757e56cb80942c1dfe6f28572d55066c7767abc0eea247a3b04d4761dc79b62",
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "91490112f744c787e0914fe81e08886d3387da9e984557bdce9226a58ea899cd",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
         "libs/create-zephyr-apps/src/cli.spec.ts": "8501d0c55963413103d42d469ad73e39ef5f7736748275141170f56cb855f268",
         "libs/create-zephyr-apps/src/cli.ts": "116e23cb28e3f4a2e6d8cf521c06ab50391368be2c81db3b898e4d55510237eb",
@@ -57,8 +60,8 @@
         "libs/create-zephyr-apps/src/templates.ts": "f5e38228b1cb457fa5645138aed1cab68cfa210199dda4bedcb1a3304458557b",
         "libs/parcel-reporter-zephyr/README.md": "f91e6f54e9f7c902791a7eb994e09c5d317675c7ff06e7c7d0d0396e5842853c",
         "libs/parcel-reporter-zephyr/package.json": "b40d39eba46a985b907101e039e5c5dfc50bc61ee03924c666d0da05a4e04e34",
-        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/SKILL.md": "e98f626faa395d4dc74e6730da45325947dda40df00189b8636087d049569545",
-        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/references/options.md": "869f3d318c68deaf886e974aa80b780f011e405fc50dcc16ce17cb5a5b0c0e9f",
+        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/SKILL.md": "232dbb50fb1fcdd1253568b9f3292c758cb264ce819e1a4bc8e933d7dd5ebf36",
+        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/references/options.md": "6ec54adc1afb881180632e87e764135cb8c2f4b469b0221baa256ac4204283d8",
         "libs/parcel-reporter-zephyr/src/index.test.ts": "a29e3623b954a802477c665fdc949198760e50ea9b97c85ebe773c60fdfa3008",
         "libs/parcel-reporter-zephyr/src/index.ts": "5c90be497f66084acacab2b61b49f034ed63583341eeb2d49dfe4c436581a9b1",
         "libs/parcel-reporter-zephyr/src/lib/get-assets-map.test.ts": "2d112d834373e169c51757566a2535cdc634bb586502d261ff5296f14085ce56",
@@ -67,16 +70,16 @@
         "libs/parcel-reporter-zephyr/src/lib/on-build-success.ts": "9a6134033af302b80e6914e3e75a9d2b8d18a35a2db5bb3aec8639c93a0641c3",
         "libs/rollup-plugin-zephyr/README.md": "f73463f571fb34818faea83b81ca1cbde867b8339d5a742a981c608896cd9396",
         "libs/rollup-plugin-zephyr/package.json": "550d93f5e33d2275e84b60979ae7fe919b27e19db1853937a43a74d0e765e814",
-        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md": "2439e03b447dad0daf80d2b6b2f192b121c26c71d5d85c101769bb4c31233c57",
-        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/references/tap-metadata.md": "559e3abcadd31d39d2d134d14ece5d2c46ad27295ceba972ccdab211a702100e",
+        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md": "a1d0bb2b27262634bdaa1fbdf6a783db1180e7b52e08d96c61059dc0d42ab929",
+        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/references/tap-metadata.md": "d7aafd8e164d22b07d93662dd88fc526b7ca146c464e40b6d6c4fec975fdc79a",
         "libs/rollup-plugin-zephyr/src/index.ts": "31f79f32be811f3dd727bc6f339dc89a2dbdb1561fbe180db367d027c6ba4455",
         "libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.spec.ts": "bf6b00cd0ff8ef8d569bbf639e6c396054cb4cac468fae057f7ad6f431a85089",
         "libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.ts": "377e931fab4f021bb42ee5268eb8acdc93f1f51310a5e041a675e274559d2356",
         "libs/rollup-plugin-zephyr/src/lib/transform/get-assets-map.ts": "698ba536df37588f48214206393ca3c1099f60dc93e4272b8b19a70473ff1d04",
         "libs/vite-plugin-tanstack-start-zephyr/README.md": "ec56c6a989ffcde608f17143a1154e407c56353597abaf41d0b40ba3adaf26b3",
         "libs/vite-plugin-tanstack-start-zephyr/package.json": "f1deaf38a9b793fdae50b89f15e4ab8ade571041e2eacad418718e879297788e",
-        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md": "b87fe1ffc62bf27f71438f533a08aee704528929498a55056a9ed5db038411a8",
-        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/references/output-and-tap.md": "41f650e95a385d1351a1dd261979734640db058bce6c8ca236490767f373b006",
+        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md": "9d755b35674c448ca5be3a20b3a0558ae3b693100b1ce0d30278832071eff3e0",
+        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/references/output-and-tap.md": "93931d6c2f3525c880f664aeb9293d6ff0d8aed9acd187e624e0c9e61efe9ab4",
         "libs/vite-plugin-tanstack-start-zephyr/src/index.ts": "6e63215f9193d973391ec7cf307329db6b5b61ee8bc3dd06949c38879fbea198",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/internal/extract/load-tanstack-output.ts": "3db367c61996b3230d44026c9481c425104cc1176de42775688c3e419e237865",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.spec.ts": "78c06c50fdac6f349a69182ed67decd01f1b748d1558137e27d1edc36819448c",
@@ -84,34 +87,34 @@
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.ts": "201b8abd903a7c796414fae999883ebf64ac85f6d89f8335e2e0c0db5ec8f404",
         "libs/vite-plugin-vinext-zephyr/README.md": "71f4070710828c26e6ed13e220f4abd8baa5c66b1193d69b68b85469caa83128",
         "libs/vite-plugin-vinext-zephyr/package.json": "26892202c5e41f77f570a566f9ed90dfe47a924b25dd8692a5b9716a6e09e7a7",
-        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md": "3027415f5a0d245e84f04f7c561ede14c9148ea123042784c83eb3dcd6c01182",
-        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/references/output-and-tap.md": "6a9a08fd43ff455afe02ae4e1850f8bd64581289be1ad1e706f6f0cd428f9fea",
+        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md": "0b5703c2e69e412eab483cbe2e4ad4d9084db84ac81b9c243e47e4167bf7e45b",
+        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/references/output-and-tap.md": "610a97ab371b607de53ebee036b05c677dcc9ef0af1f9a911f2f6fa5b4efe653",
         "libs/vite-plugin-vinext-zephyr/src/index.ts": "a7e9911da9040ed1e2fbee100b8f388549dd860e4489647298bfd99f87165a1b",
         "libs/vite-plugin-vinext-zephyr/src/lib/internal/vinext-output.spec.ts": "fa20524c03f7363e7c79a2b2b6482cc3f9e3b3137310f98d4433deff5e226d84",
         "libs/vite-plugin-vinext-zephyr/src/lib/internal/vinext-output.ts": "029596063a4b8adcde43ec68da81c05af24838507f775c4d70ac153627532435",
         "libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.spec.ts": "15b8d08bc5b3fb5a6a45e41c0a18c2448336a47217a5bc9c833d5f6b1ad725c7",
         "libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.ts": "1d224009f5938483155ab3cd66743c3a8598ccf7bcee50a1773a6e9ca8f58d40",
         "libs/vite-plugin-zephyr/README.md": "5e8d8ff2e645bdca5fb9bb485875cef097fd285f951243c22259511645de342f",
-        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "a3e9d5b5aeb14f2b0ae21e20e17a8d1a1089350ef0de414d62263fa477715358",
-        "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "e339d9144c31542314e336a98a925c748c22b77117b952b4c30e062f0845be9a",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "2292229ae0c71d25be6111d9467340f0af36fd1a67af78626e941027fc16894f",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "2700e14554b964f03d229f499039f08c4b76e1f9d0d16b3e4e8ca595f40f817d",
         "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
         "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
-        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "b446a7e0687651d468e275174d1e6fb258d429ab284e6cdf45df7a6b8d2afd4b",
+        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "f2302c1dfc97eddcdaa54dccb4783cbeba24467b1fffd1aad81f1343c10f5d76",
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "59f02744b893ba7a5c06faef9a61c660393608af78ae3188ecaf88f09451bead",
-        "libs/vite-plugin-zephyr/src/package-output.spec.ts": "703116c4a969b5d54ab30309c836e152c835de35b477281515f38caae7ce4b80",
+        "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f",
         "libs/zephyr-agent/src/lib/transformers/ze-basehref-handler.ts": "0ef516efb334924dd33a7de77adb70e580648066adb90bb4137edfadd975674c",
         "libs/zephyr-astro-integration/README.md": "240ae03fae156cab6e92f2250ba198ed29c91310ce5713b73a634d4bb8bb41b6",
         "libs/zephyr-astro-integration/package.json": "109c2f52939198f9536c59195be3258a2f991d84f9fe346f154b81cffa8d9d2f",
-        "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": "031f3b0f410b42b568ade310617dea0c7715929b5185269c5167c770c260f7ef",
-        "libs/zephyr-astro-integration/skills/zephyr-astro/references/publication.md": "47e16caac145df7a2503235fba4f3e16a1812e388078bfffd50e474cfbcf888c",
+        "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": "c29d9e5ab2f384c27d0b761edb4d47b194a65944fcc38c909e34067a6671534a",
+        "libs/zephyr-astro-integration/skills/zephyr-astro/references/publication.md": "a5363923e9405a67262f36fa3a5f71beb395c331b413ce9aa4aef9275ce2c2ed",
         "libs/zephyr-astro-integration/src/index.ts": "f804fe5178ffea2ad7928f0fa766a825e2c451899b3f398582bab6006f330ed4",
         "libs/zephyr-astro-integration/src/lib/__test__/astro-integration-zephyr.spec.ts": "4e74ffa87b63053aa19e10c5718dbdaa77700094228b8b8583430ce6f777d809",
         "libs/zephyr-astro-integration/src/lib/astro-integration-zephyr.ts": "33a1463865e78585c46d8fe0c7e9336c768f263f38165898fce2ed9b0fdc5ff5",
         "libs/zephyr-astro-integration/src/lib/internal/__test__/extract-astro-assets-map.spec.ts": "b79b190a7a23437894821ae761d0f6b1fb85bd44ea9cf9dc9c8af6bd6f14b3dc",
         "libs/zephyr-astro-integration/src/lib/internal/extract-astro-assets-map.ts": "7a3d7205eec9dc1cdb34cebdbfacaa776d4bef918a3fcb052de88002160045e8",
         "libs/zephyr-cli/README.md": "dcfa05746784c8d2aff86a3ac1048c31710444aed44efc7c297f2e0231aabfed",
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "f1156d7913a8572e20663bb7a45bec71d80e21f90460b3f14f741e76e52d5828",
+        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "7eac3f270762740da284fb9b89215a2a1b098b75d25044b2968e64241352dfee",
         "libs/zephyr-cli/src/cli.ts": "64a00a77c8418dd867debb1ea9dbf97010de078a2cb03e3efda23057a84e631a",
         "libs/zephyr-cli/src/commands/deploy.ts": "510a098911f5e44e8333f054e07f5fa3c101ec12ba3b6a5a198abb004d742254",
         "libs/zephyr-cli/src/commands/run.ts": "fdde9c0b9c3b9f3e6b2361e32457c0995a747a3a0f257f1f183e84d1c01a39d3",
@@ -121,8 +124,8 @@
         "libs/zephyr-cli/src/lib/command-detector.ts": "e8a63e3b2cbebf1b5c53cb66947f57e3fc9aae176408c445facae5149edbc0ce",
         "libs/zephyr-cli/src/lib/publication-metadata.ts": "269c38fb707543c36d4b116c0c846454cf3c20482c111cea137abd63353046fe",
         "libs/zephyr-metro-plugin/README.md": "cfabaec7d310fd33a2175f35db79d110cbbeac9bc14efc5038f2f35ed8fce479",
-        "libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": "bd111076552857a234d40247a3782d516f29e0de4bc02b9adc1753c7bc784f73",
-        "libs/zephyr-metro-plugin/skills/zephyr-metro/references/publication-commands.md": "04c5c0588ebcebb9567c81f497c9306dd3b5974e8cd3ffe7e2b4ae9f4d38893d",
+        "libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": "2b069c74c94961226f1dfa354b8da803ba33060048da2c7cb0005b416d17d18a",
+        "libs/zephyr-metro-plugin/skills/zephyr-metro/references/publication-commands.md": "59b2ad88377d9249f565bfddc949f2254fc7f505442dca6d9955a77465c9e7a9",
         "libs/zephyr-metro-plugin/src/index.ts": "ad884ea6b9cfe89786af3745bc5d7a62ab3a4145de7a8cb858d96fc7c1597403",
         "libs/zephyr-metro-plugin/src/lib/__test__/with-zephyr.integration.spec.ts": "ba8bcd4644d6dd078eb60a9bd5d8a341ff6d566655312193c04a02af23ba3a22",
         "libs/zephyr-metro-plugin/src/lib/__test__/zephyr-metro-command-wrapper.spec.ts": "fc9da07eff5f708d3398fa1e1c2a9bcb8ee0bb95ea3ab73d0d733d5da36d269f",
@@ -135,14 +138,14 @@
         "libs/zephyr-metro-plugin/src/lib/zephyr-metro-rnef-plugin.ts": "1a6e41d91bbeb8678630e8adcf7d6cc9a6bedbc3ec9b01e3f6f4b4c3faffa1fb",
         "libs/zephyr-modernjs-plugin/README.md": "0418cea6e26b93072222e0c1f61c9f3801b5e014c45f6885bbdb908c3e320fa9",
         "libs/zephyr-modernjs-plugin/package.json": "63aa7c17f519415f944efeeeb8392d3e1f3862ade9433514bab0d28dd6d372f7",
-        "libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md": "9bf9bc49e9ba3c8e16133a789f6e17e302d636ed0810f7c493513c3d31576c48",
+        "libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md": "892a21e16d1bbb84ee3f58a2f1bb28cd0e9711ed242c80eb3ec162ddaf1b67a2",
         "libs/zephyr-modernjs-plugin/src/index.ts": "2b3d8294a6ebcde3aa59c81b6dca12415e3832a752455e45633fa3d29ee913da",
         "libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.spec.ts": "a1eb94cc79b4dd84c961ce3945f67f43a010100e25caabc6cd93bca51fbb7974",
         "libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.ts": "7278d85aa372cdd8f712996d8bc839b0df144243eb2c264e0c93ae4cf63a3a02",
         "libs/zephyr-nuxt-module/README.md": "89e83986d8809002a22ce3f3a035b9eec60d6317a7a2d6c6f3165cf581c86d42",
         "libs/zephyr-nuxt-module/package.json": "bcf8b8900c10aaf938236b10e638aaec5badb73833ef18d9708e77d502903465",
-        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md": "16a83bc669719cb9ab8f58034c87c910da81e81c12edb864002639edfeaeadcc",
-        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/references/output-and-snapshots.md": "acdf18592b85040070baf4c8f8e657d6ddd96abb15cc1862650d0fcc1a7bbd38",
+        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md": "e184a79931367f7458a4fe02c8687b73d4d9faefd3b379ae9b5144e0d7888245",
+        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/references/output-and-snapshots.md": "bf85dd68bcaea191599c750440542a5b7953767d712e79a3787f4be81bfaa344",
         "libs/zephyr-nuxt-module/src/index.ts": "3fb4d0a0dbb4b9994ad664dee6bfbb5b0cc51ce7719d6bb747ea62d9909e9112",
         "libs/zephyr-nuxt-module/src/lib/nuxt-module.ts": "f7f6f23e4dc7ecdba7e18710ae0ee37ceec098c59caa1f250735d850dc1104f9",
         "libs/zephyr-nuxt-module/src/lib/paths.ts": "95c48f7da07ed36a2095c562889cbd0cbd747cbcb85a79a2fa0456bdeb9e32e1",
@@ -151,7 +154,7 @@
         "libs/zephyr-nuxt-module/src/lib/ssr-upload.ts": "acaa8a88216570c06443ff007531d4e297db8ae162fc5a643108968f0f30717e",
         "libs/zephyr-nuxt-module/src/lib/types.ts": "9c71469516edb14ff45d4c2568b6280504d3284fa5b80732c55628f7e3e254fd",
         "libs/zephyr-repack-plugin/README.md": "3e6c979b42fce1bed75f02387dd4a527b94178b645901e848e925352f0748d74",
-        "libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md": "256a2b46d9679f748bf475ff7dd06a2ada90b72402f52cc2127aced00c1e579b",
+        "libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md": "edaeceeb5ece229453ab698c938d3adb9ec80fb09e5457ecbb729f3a70b8ea7d",
         "libs/zephyr-repack-plugin/src/index.ts": "660e560b9becfc556c6c2f6c10fc7a94377785fd96fb70902c0074d142e0b553",
         "libs/zephyr-repack-plugin/src/lib/native-target.ts": "fbdd4a0f5879bfdfe2b7ca6b6a777882c960b70df90a1d51a5fef6d187f6d4ac",
         "libs/zephyr-repack-plugin/src/lib/utils/ze-util-verification.ts": "c130bac7f1cf7766696aa37be64d462d95c1e8c0fa45c6c422f73c6f52921aff",
@@ -162,23 +165,23 @@
         "libs/zephyr-repack-plugin/src/type/zephyr-internal-types.ts": "15af64c1dfca8776de9fe1b08209a0d0d5f54df53b12ab7de4287759076f31e2",
         "libs/zephyr-rolldown-plugin/README.md": "bf8135b086c512746e36955b6ece03e2685b5ab133f64706050957866b67cad9",
         "libs/zephyr-rolldown-plugin/package.json": "9633f1e5a1f487bf24b373e231e00b58884e20f4faa57926a9081d42e1ab314b",
-        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md": "29299864cfc210984fa48d7c11fd8196d9d7f72dacc3eee665706b791f8e9364",
-        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/references/snapshot-paths.md": "44171d720ffaa99e19538ad8b867c2d5f501c9bd9e9535216f030facbbda6dc8",
+        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md": "11dda76563aeaab2ceee7eb423adc580ef01984d25cd8c9d73672c9d52bc0b3d",
+        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/references/snapshot-paths.md": "db955146eda6a9b1f65e13764a752d7c0a4408d94f892688ffcfdc33121434a0",
         "libs/zephyr-rolldown-plugin/src/index.ts": "044d247ce68f2705c16646c030c0c352ab8d43a87c8e874faa5d96ea6f9a5968",
         "libs/zephyr-rolldown-plugin/src/lib/internal/get-assets-map.ts": "ae5806891ddb2c764e0d21b8542b7cbc313f568f8b0107a1f42ba66e984b7ffd",
         "libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.spec.ts": "19e711ae48279199efb40cedfc7a25b0331a58da944998b58b9d2f0417352e31",
         "libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts": "be7a976a008bf64405f36157c639fcc15b5cb802f99a50163829ab6d3d206451",
         "libs/zephyr-rsbuild-plugin/README.md": "3e7aee3166d50be73a30e44bccf67eaf2e2a2c9b4ea1e9ab947ee2bedf61f587",
         "libs/zephyr-rsbuild-plugin/package.json": "89752372517651ca30d7c789f9e206018365b1ec3730062cc3c787508c206140",
-        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md": "1feec8b25338829b057380485a0e6e99825edc1e6fb8da862fd88e878c64ea7a",
-        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/references/environments.md": "bfd8ab8b6ddcd91f283edbd131ec91f0fd1abeeb63228388fbd20e98ceef05d3",
+        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md": "178ca74ec03471886516a3a003862be57ccb617e3426917c49f426679b332f86",
+        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/references/environments.md": "373eb91836917db040910014ccf86813aee47f7872b111253fae8f84aced66f1",
         "libs/zephyr-rsbuild-plugin/src/index.ts": "ac7172468291250ca03e13d7cb96017fa30f05808fdab25ffe8223c188b7768d",
         "libs/zephyr-rsbuild-plugin/src/rsbuild-plugin/with-zephyr.spec.ts": "437ee62a680b446175bd32ee1c7f30333759971b0daa9213d982861c0a7a54f4",
         "libs/zephyr-rsbuild-plugin/src/rsbuild-plugin/with-zephyr.ts": "84f571bfe9653c7190e4de2033c10f4b0e51e3874c7a1353c469173b7007aa10",
         "libs/zephyr-rspack-plugin/README.md": "fb5d4ee0f342f7816f95b169001dc17a59cdf20ed5a2b37a5d3751fe48133c4d",
         "libs/zephyr-rspack-plugin/package.json": "4f85fe4aa313cc28fb4a2876cf448b2b579b5b323765e97a8d66dcf16f6b1ce4",
-        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md": "fd1f724e850670bb3d72f6b50cab99872ee23f2f9b1915408039c387c4e722c1",
-        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/references/compiler-arrays.md": "4981bc83ac2329172208d0301aa3b7fb4f004dbdc76a96251a195e044e262949",
+        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md": "e26a4ebe1fc4575b02147fe25c3ccb7adb8f48bbb68d298f134095380eb6461a",
+        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/references/compiler-arrays.md": "ebbe43a2902b26cff7179f8f639d3044facb043a8ec25d4ce04bb4285c0dfb57",
         "libs/zephyr-rspack-plugin/src/index.ts": "a3504584d461573043a7bfa660a285167d3bb5d5f11397ba61b5f7bd86fbfa31",
         "libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.spec.ts": "f93523ff3f7fc807568e3712ecea8bdda21a956c4ac77ded465472cefb53de7d",
         "libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts": "1e94d0611e505b0170acd5c9e0d486b4a2aaf650f1c11295bb5458fba0a0e9df",
@@ -186,8 +189,8 @@
         "libs/zephyr-rspack-plugin/src/rspack-plugin/ze-rspack-plugin.ts": "0715e8fa4bf88e11940c9f63462ccfdbadb4a56497f291340c59ac3330f28a75",
         "libs/zephyr-rspack-plugin/src/types/index.ts": "0bf589cbe88ac8d1195a944bc9c112d42617c9697b3e428b28edbcfea312bb58",
         "libs/zephyr-rspress-plugin/README.md": "c8c168abf7c4ff089f0aa596e82ce1cb207cada9afe9ad9173efea3ef3451c67",
-        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md": "1e62202848fde6704ada238fcc2c6e75c7e9b4bf60b3007aa0a65f32ac5dfa4e",
-        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/references/ssg-publication.md": "309c92842d6c85ba3dde1438acd75658188984f9ee9a1ae7432e59dbe1c06f45",
+        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md": "2861c74eca133520d292c7bf6e451f25ed90277a7ba34ebc90c9e7f3a92f01c9",
+        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/references/ssg-publication.md": "71ec4003a7e6dbefb89cc5a6714a5627fc40d7a1204abeb70e15e1e35bb194b3",
         "libs/zephyr-rspress-plugin/src/__test__/afterBuildHooks.spec.ts": "8117f28d32705462e8a7c692023be44f8503693aed6b5650e7b6924ccaf6541e",
         "libs/zephyr-rspress-plugin/src/__test__/with-zephyr.spec.ts": "9a1a69d8a4dba4faa059886b05f4bf0389f858db9ff96133353cf84286c951a0",
         "libs/zephyr-rspress-plugin/src/__test__/zephyrRspressSSGPlugin.spec.ts": "dbcc9dbabae11eb608d7d402112f33ff6518bb2c7c82df5e32b6928c98446dd9",
@@ -199,8 +202,8 @@
         "libs/zephyr-rspress-plugin/src/zephyrRspressSSGPlugin.ts": "23726c199f6c023da3cf4641a9fbc85119c8e18476fe545d67cabf99b5efe646",
         "libs/zephyr-webpack-plugin/README.md": "28c2a7ccb33eb581fba4ac0b80316778a3f8b7d71f013ec7b85425affd10841f",
         "libs/zephyr-webpack-plugin/package.json": "0d56b00f6f0d868d0d9dc4fa62745e04af24998ca60a6fc05a81ed802758f389",
-        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md": "82c67e32df62200cef2ae9e967ab3993ae84a9538850b594af539a5ecf1c9f17",
-        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/references/compiler-arrays.md": "688c9c94e85efe8f08a91c3e606b1799200894d36a3851f0252fc7c876a18547",
+        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md": "e922ee097e7f11f62514f91c642caa426f50d6ff910824caedcda9c8ea877d95",
+        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/references/compiler-arrays.md": "96c2f2c5b3b6f5d0e0d381788949d4de22469aaa3ea615dc09d1cc89c0ca35f2",
         "libs/zephyr-webpack-plugin/src/index.ts": "57b91e9d78683d7dece1844f581ea694ed869194cf8d2acefd021bb0d02be5f2",
         "libs/zephyr-webpack-plugin/src/types/index.ts": "81899adff796107b8d63ed4b25f6fe55ca542489340306d6df0f674aec7a1c64",
         "libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.spec.ts": "a2d910f4fbe27e8665ae5a1ffeb9724b52e1f724c2a3b038758401d47ace811e",
@@ -216,7 +219,7 @@
         "skills/zephyr-core/references/deployment-model.md": "ac1f8cf02f2f42443d21a096f277b4c7f8a60be99f7c7615130ef08afb203443",
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
-        "skills/zephyr-core/references/examples-resume.md": "b77adba4932a126df2e7d0b4c055321524e40b4384afb27d7d6332619eff4ec7",
+        "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
         "skills/zephyr-core/references/sdk-setup.md": "4738dc896ef6130f16bbac1b1f5d7fc239d608c4c2a9cdcb6510df99e63ddff8",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3",
         "skills/zephyr-module-federation/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
@@ -224,15 +227,16 @@
         "skills/zephyr-module-federation/SKILL.md": "3cb107933d184fe0f662741ec0c184ebf4d05aa1123cd1e02d989ecd86701dc4",
         "skills/zephyr-module-federation/references/docs-map.md": "60aac928ef74587a36a318ff6a1048e59e5f179c324464b214abe24f3fbda5f2",
         "skills/zephyr-module-federation/references/examples.md": "39b1acd6671156c42b554d22701e4cfb270cea455cc1d2bb5096c3676d093bea",
-        "skills/zephyr-module-federation/references/gotchas.md": "b2d31d222369e4a1a587181882ceb19395d065b23726a793064f61853f7f95fa",
-        "skills/zephyr-module-federation/references/remote-resolution.md": "83bfa03e85025f87fa1e19eafa9a77008cfc0f9c95bb20ccec7c9ccc55be36df",
+        "skills/zephyr-module-federation/references/gotchas.md": "9e183acb84be22fe123a3a591e9e3c39cff867ccefaffc57a03012303952cd3e",
+        "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
-      "outcome": "no-change",
-      "reason": "Formatting-only change from oxfmt to satisfy the pre-commit format check; record content is unchanged.",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
+      "outcome": "updated",
+      "reason": "Recorded the review-driven fixes and new maintainer findings (Metro error message, debug-gated plugin logs).",
       "evidence": [
-        "Changed: _artifacts/domain_map.yaml, _artifacts/skill_spec.md, _artifacts/skill_tree.yaml at 42e20636c3d16bdf7354db06cb789f2c29fdf2d0"
+        "skill_spec.md batch history and Source findings list the changes.",
+        "Intent sync reports nothing to synchronize."
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -278,7 +282,7 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "740bdbd7f10da8af0dc291b5fe5300723347a24abeb0ce6f35148d95daee6f7d",
+      "fingerprint": "82dc8578e6af04e195d6bbfbff214d9687db688606c38af37ed118c68d3046bd",
       "snapshot": {
         "scripts/sync-package-skills.mjs": "f88fd832f7bfee4aa7686657552d39f16fcafee6d21ea15008e38069eeb148b8",
         "skills/zephyr-core/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
@@ -287,20 +291,20 @@
         "skills/zephyr-core/references/deployment-model.md": "ac1f8cf02f2f42443d21a096f277b4c7f8a60be99f7c7615130ef08afb203443",
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
-        "skills/zephyr-core/references/examples-resume.md": "b77adba4932a126df2e7d0b4c055321524e40b4384afb27d7d6332619eff4ec7",
+        "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
         "skills/zephyr-core/references/sdk-setup.md": "4738dc896ef6130f16bbac1b1f5d7fc239d608c4c2a9cdcb6510df99e63ddff8",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Replaced the deprecated withZephyrTanstackStart alias with withZephyr in the setup and examples references; sync-package-skills.mjs gained the dedicated-skill exemption list, which does not change mirroring.",
+      "reason": "examples-resume no longer says withZephyr must be the last plugin, matching sdk-setup and the federation gotchas.",
       "evidence": [
-        "vite-plugin-tanstack-start-zephyr marks withZephyrTanstackStart @deprecated in favor of withZephyr.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package."
+        "Placement is stack-specific; dedicated skills document each plugin's ordering.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides."
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {
-      "fingerprint": "fca981d760dfdcd07aa653232250c4d976a30e50bddb65eb4e92b2ed346572b6",
+      "fingerprint": "4157262f15dbf00cd48a4fc47f8c0bb35de5991d87ca5b0198b16322d9a58818",
       "snapshot": {
         "scripts/sync-package-skills.mjs": "f88fd832f7bfee4aa7686657552d39f16fcafee6d21ea15008e38069eeb148b8",
         "skills/zephyr-module-federation/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
@@ -308,15 +312,16 @@
         "skills/zephyr-module-federation/SKILL.md": "3cb107933d184fe0f662741ec0c184ebf4d05aa1123cd1e02d989ecd86701dc4",
         "skills/zephyr-module-federation/references/docs-map.md": "60aac928ef74587a36a318ff6a1048e59e5f179c324464b214abe24f3fbda5f2",
         "skills/zephyr-module-federation/references/examples.md": "39b1acd6671156c42b554d22701e4cfb270cea455cc1d2bb5096c3676d093bea",
-        "skills/zephyr-module-federation/references/gotchas.md": "b2d31d222369e4a1a587181882ceb19395d065b23726a793064f61853f7f95fa",
-        "skills/zephyr-module-federation/references/remote-resolution.md": "83bfa03e85025f87fa1e19eafa9a77008cfc0f9c95bb20ccec7c9ccc55be36df",
+        "skills/zephyr-module-federation/references/gotchas.md": "9e183acb84be22fe123a3a591e9e3c39cff867ccefaffc57a03012303952cd3e",
+        "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
-      "outcome": "no-change",
-      "reason": "sync-package-skills.mjs only gained the dedicated-skill exemption list; the federation guide and its mirroring are unchanged.",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
+      "outcome": "updated",
+      "reason": "workspace:* is documented as falling back to the latest published version, as resolve_remote_dependency implements; the fallback log is noted as DEBUG=zephyr:remotes only.",
       "evidence": [
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package."
+        "resolve_remote_dependency.ts retries request_remote_dependency with version '*' when no workspace build exists and logs through ze_log.remotes.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides."
       ]
     },
     "source:.gitignore": {
@@ -332,36 +337,36 @@
       ]
     },
     "source:libs/vite-plugin-zephyr/src/package-skills.spec.ts": {
-      "fingerprint": "1404185f337ba4071740c23042df9a513c41c57a091a28074e4f460353b5fef3",
+      "fingerprint": "0f2ddac60490df4ab8c17ea5e8ed333ece0b5c2c21fccbd08fc95c481791d511",
       "snapshot": {
-        "libs/vite-plugin-zephyr/src/package-skills.spec.ts": "a27f99274c8d3d2fba8ad62c916d5e150592b2e4a8288118c27f7f86618342ee"
+        "libs/vite-plugin-zephyr/src/package-skills.spec.ts": "e017d83bea19d4dd8c89c58418dad1de5051480fa3bbd0303094691bb1001dbd"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "out-of-scope",
-      "reason": "Distribution test: requires a dedicated skill in every non-exempt published package; not guidance content.",
+      "reason": "Adds a test that each package-owned skill's library_version equals its package version, carries the release-please marker, and is a release-please extra file. It does not change skill guidance.",
       "evidence": [
-        "Removing zephyr-parcel makes the test fail naming parcel-reporter-zephyr; restoring it passes."
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "source:scripts/verify-package-skills.mjs": {
-      "fingerprint": "9155cc13a4f0018bc8718b12d6203cbb9a5bff4aa9c1403f042076c8a2897993",
+      "fingerprint": "d1dca8136e1254b3197bd638118ac2423abd80d8a4a600b4c80e06552d41d430",
       "snapshot": {
-        "scripts/verify-package-skills.mjs": "b1309cbfe40437e9abf9eac9cb8ef16e7edda822d104f83111c0147096c55edd"
+        "scripts/verify-package-skills.mjs": "d5af1c8837fa44c49dbea92e110f816871a42c5babc12dc3281534603a541d04"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "out-of-scope",
-      "reason": "Packed-archive verification now also requires and loads each package's dedicated skills; not guidance content.",
+      "reason": "Compares every file of the shared guides, not only SKILL.md. It does not change skill guidance.",
       "evidence": [
-        "pnpm skills:verify-packages packs all 23 published packages; each dedicated skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package."
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides."
       ]
     },
     "skill:libs/parcel-reporter-zephyr/skills/zephyr-parcel/SKILL.md": {
-      "fingerprint": "40ac3aed76103a865d0ce5e191d804985366e47fde6b989aa2b66129f1915f1f",
+      "fingerprint": "5ffc2fe3281abea058a0345561dab6fc11f8025fa2958d881a2a3feafc407139",
       "snapshot": {
         "libs/parcel-reporter-zephyr/README.md": "f91e6f54e9f7c902791a7eb994e09c5d317675c7ff06e7c7d0d0396e5842853c",
         "libs/parcel-reporter-zephyr/package.json": "b40d39eba46a985b907101e039e5c5dfc50bc61ee03924c666d0da05a4e04e34",
-        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/SKILL.md": "e98f626faa395d4dc74e6730da45325947dda40df00189b8636087d049569545",
-        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/references/options.md": "869f3d318c68deaf886e974aa80b780f011e405fc50dcc16ce17cb5a5b0c0e9f",
+        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/SKILL.md": "232dbb50fb1fcdd1253568b9f3292c758cb264ce819e1a4bc8e933d7dd5ebf36",
+        "libs/parcel-reporter-zephyr/skills/zephyr-parcel/references/options.md": "6ec54adc1afb881180632e87e764135cb8c2f4b469b0221baa256ac4204283d8",
         "libs/parcel-reporter-zephyr/src/index.test.ts": "a29e3623b954a802477c665fdc949198760e50ea9b97c85ebe773c60fdfa3008",
         "libs/parcel-reporter-zephyr/src/index.ts": "5c90be497f66084acacab2b61b49f034ed63583341eeb2d49dfe4c436581a9b1",
         "libs/parcel-reporter-zephyr/src/lib/get-assets-map.test.ts": "2d112d834373e169c51757566a2535cdc634bb586502d261ff5296f14085ce56",
@@ -370,113 +375,113 @@
         "libs/parcel-reporter-zephyr/src/lib/on-build-success.ts": "9a6134033af302b80e6914e3e75a9d2b8d18a35a2db5bb3aec8639c93a0641c3",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-parcel from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "Every TypeScript/.cjs example type-checks with tsc 7.0.2 against the built package; negatives for zephyrPlugin and target: 'desktop' fail as expected; both .parcelrc blocks parse.",
-        "Parcel 2.16.4 without credentials: the documented .parcelrc and local createZephyrReporter module load and run, logging ZE10018, and exit 1 with ZE_FAIL_BUILD=true.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md": {
-      "fingerprint": "9a8e30b3e144179836ec358a740bec757a7cee381479740f3a6dd9a52bf6a97d",
+      "fingerprint": "2119b0c2246f5e0ab6ee5f0229efe449d12ccffc81c62f520678e2534457feff",
       "snapshot": {
         "libs/rollup-plugin-zephyr/README.md": "f73463f571fb34818faea83b81ca1cbde867b8339d5a742a981c608896cd9396",
         "libs/rollup-plugin-zephyr/package.json": "550d93f5e33d2275e84b60979ae7fe919b27e19db1853937a43a74d0e765e814",
-        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md": "2439e03b447dad0daf80d2b6b2f192b121c26c71d5d85c101769bb4c31233c57",
-        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/references/tap-metadata.md": "559e3abcadd31d39d2d134d14ece5d2c46ad27295ceba972ccdab211a702100e",
+        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md": "a1d0bb2b27262634bdaa1fbdf6a783db1180e7b52e08d96c61059dc0d42ab929",
+        "libs/rollup-plugin-zephyr/skills/zephyr-rollup/references/tap-metadata.md": "d7aafd8e164d22b07d93662dd88fc526b7ca146c464e40b6d6c4fec975fdc79a",
         "libs/rollup-plugin-zephyr/src/index.ts": "31f79f32be811f3dd727bc6f339dc89a2dbdb1561fbe180db367d027c6ba4455",
         "libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.spec.ts": "bf6b00cd0ff8ef8d569bbf639e6c396054cb4cac468fae057f7ad6f431a85089",
         "libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.ts": "377e931fab4f021bb42ee5268eb8acdc93f1f51310a5e041a675e274559d2356",
         "libs/rollup-plugin-zephyr/src/lib/transform/get-assets-map.ts": "698ba536df37588f48214206393ca3c1099f60dc93e4272b8b19a70473ff1d04",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-rollup from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "Examples type-check against the built package and rollup ^4; spreading withZephyr() fails as expected.",
-        "Rollup 4.63.1 without credentials builds the skill config, logs ZE10018, exits 1 with ZE_FAIL_BUILD=true; generate() never fires writeBundle and each write() fires it once.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md": {
-      "fingerprint": "0c89f85897f96b52275c3ad933a9cb5a0b6889c3f9c25701fa4ca59c2e4ce116",
+      "fingerprint": "408ec088cd1bb9d6d30b90e5a8e59b51a460ffa6b76a1a78b930b69f956e0d8d",
       "snapshot": {
         "libs/vite-plugin-tanstack-start-zephyr/README.md": "ec56c6a989ffcde608f17143a1154e407c56353597abaf41d0b40ba3adaf26b3",
         "libs/vite-plugin-tanstack-start-zephyr/package.json": "f1deaf38a9b793fdae50b89f15e4ab8ade571041e2eacad418718e879297788e",
-        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md": "b87fe1ffc62bf27f71438f533a08aee704528929498a55056a9ed5db038411a8",
-        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/references/output-and-tap.md": "41f650e95a385d1351a1dd261979734640db058bce6c8ca236490767f373b006",
+        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md": "9d755b35674c448ca5be3a20b3a0558ae3b693100b1ce0d30278832071eff3e0",
+        "libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/references/output-and-tap.md": "93931d6c2f3525c880f664aeb9293d6ff0d8aed9acd187e624e0c9e61efe9ab4",
         "libs/vite-plugin-tanstack-start-zephyr/src/index.ts": "6e63215f9193d973391ec7cf307329db6b5b61ee8bc3dd06949c38879fbea198",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/internal/extract/load-tanstack-output.ts": "3db367c61996b3230d44026c9481c425104cc1176de42775688c3e419e237865",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.spec.ts": "78c06c50fdac6f349a69182ed67decd01f1b748d1558137e27d1edc36819448c",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.target.spec.ts": "92717aabbdd0961794c6d649b92de989897b830228eb70b14b311a2b06ead667",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.ts": "201b8abd903a7c796414fae999883ebf64ac85f6d89f8335e2e0c0db5ec8f404"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-tanstack-start from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "Verification relies on the always-visible deploy line instead of the debug-only 'TanStack Start deployment successful!'.",
       "evidence": [
-        "Examples type-check in examples/tanstack-start-basic with the installed Vite 8.2.2; spreading withZephyr() and unsupported targets are rejected.",
-        "Runtime probe confirms post-ordered buildApp and config-time rejection of out-of-root entrypoints and invalid TAP metadata.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "The success line is ze_log.upload (debug-gated); build_finished logs the deploy line and version URL through logFn.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md": {
-      "fingerprint": "c2218ad6ed9aba0a7cd915aca062704ecce56b214099be3966ca9a50b871b6b7",
+      "fingerprint": "b6e93c29f6163a618314a050721295bfd4b78f2ddb18e59c0adc46792a020c1c",
       "snapshot": {
         "libs/vite-plugin-vinext-zephyr/README.md": "71f4070710828c26e6ed13e220f4abd8baa5c66b1193d69b68b85469caa83128",
         "libs/vite-plugin-vinext-zephyr/package.json": "26892202c5e41f77f570a566f9ed90dfe47a924b25dd8692a5b9716a6e09e7a7",
-        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md": "3027415f5a0d245e84f04f7c561ede14c9148ea123042784c83eb3dcd6c01182",
-        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/references/output-and-tap.md": "6a9a08fd43ff455afe02ae4e1850f8bd64581289be1ad1e706f6f0cd428f9fea",
+        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md": "0b5703c2e69e412eab483cbe2e4ad4d9084db84ac81b9c243e47e4167bf7e45b",
+        "libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/references/output-and-tap.md": "610a97ab371b607de53ebee036b05c677dcc9ef0af1f9a911f2f6fa5b4efe653",
         "libs/vite-plugin-vinext-zephyr/src/index.ts": "a7e9911da9040ed1e2fbee100b8f388549dd860e4489647298bfd99f87165a1b",
         "libs/vite-plugin-vinext-zephyr/src/lib/internal/vinext-output.spec.ts": "fa20524c03f7363e7c79a2b2b6482cc3f9e3b3137310f98d4433deff5e226d84",
         "libs/vite-plugin-vinext-zephyr/src/lib/internal/vinext-output.ts": "029596063a4b8adcde43ec68da81c05af24838507f775c4d70ac153627532435",
         "libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.spec.ts": "15b8d08bc5b3fb5a6a45e41c0a18c2448336a47217a5bc9c833d5f6b1ad725c7",
         "libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.ts": "1d224009f5938483155ab3cd66743c3a8598ccf7bcee50a1773a6e9ca8f58d40"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-vinext from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "The 'Uploading Vinext build' line is documented as DEBUG=zephyr:upload only; verification relies on the deploy line.",
       "evidence": [
-        "Examples type-check in examples/vinext-hackernews against Vinext 1.0.0-beta.9; the three export aliases resolve.",
-        "Runtime probe confirms apply: 'build', post ordering, and the source's entrypoint detection order.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "vite-plugin-vinext-zephyr.ts logs the upload line through ze_log.upload.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": {
-      "fingerprint": "23047d13982b50c0a0516edda25800d371dfb2c72118acf30152e0e33a5f90c7",
+      "fingerprint": "b12558847071edb4308a95bf452da1814113274222f4b3ca8a0dec3f12b43eab",
       "snapshot": {
         "libs/zephyr-astro-integration/README.md": "240ae03fae156cab6e92f2250ba198ed29c91310ce5713b73a634d4bb8bb41b6",
         "libs/zephyr-astro-integration/package.json": "109c2f52939198f9536c59195be3258a2f991d84f9fe346f154b81cffa8d9d2f",
-        "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": "031f3b0f410b42b568ade310617dea0c7715929b5185269c5167c770c260f7ef",
-        "libs/zephyr-astro-integration/skills/zephyr-astro/references/publication.md": "47e16caac145df7a2503235fba4f3e16a1812e388078bfffd50e474cfbcf888c",
+        "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": "c29d9e5ab2f384c27d0b761edb4d47b194a65944fcc38c909e34067a6671534a",
+        "libs/zephyr-astro-integration/skills/zephyr-astro/references/publication.md": "a5363923e9405a67262f36fa3a5f71beb395c331b413ce9aa4aef9275ce2c2ed",
         "libs/zephyr-astro-integration/src/index.ts": "f804fe5178ffea2ad7928f0fa766a825e2c451899b3f398582bab6006f330ed4",
         "libs/zephyr-astro-integration/src/lib/__test__/astro-integration-zephyr.spec.ts": "4e74ffa87b63053aa19e10c5718dbdaa77700094228b8b8583430ce6f777d809",
         "libs/zephyr-astro-integration/src/lib/astro-integration-zephyr.ts": "33a1463865e78585c46d8fe0c7e9336c768f263f38165898fce2ed9b0fdc5ff5",
         "libs/zephyr-astro-integration/src/lib/internal/__test__/extract-astro-assets-map.spec.ts": "b79b190a7a23437894821ae761d0f6b1fb85bd44ea9cf9dc9c8af6bd6f14b3dc",
         "libs/zephyr-astro-integration/src/lib/internal/extract-astro-assets-map.ts": "7a3d7205eec9dc1cdb34cebdbfacaa776d4bef918a3fcb052de88002160045e8"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-astro from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "Examples type-check in examples/astro-blog against Astro 7.3.2.",
-        "Source and runtime probe confirm sequential astro:build:done hooks and client-directory-only upload, hence the last-integration placement.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-cli/skills/zephyr-cli/SKILL.md": {
-      "fingerprint": "2bdde3d14ec0ebb343a138e82dacec9437ffc39a0eeb4601dfbbe481608fea84",
+      "fingerprint": "5eb84131f3bd1c90876402c56accfcc0de0f0e6e918392efcf32efc78ac18f0e",
       "snapshot": {
         "libs/zephyr-cli/README.md": "dcfa05746784c8d2aff86a3ac1048c31710444aed44efc7c297f2e0231aabfed",
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "f1156d7913a8572e20663bb7a45bec71d80e21f90460b3f14f741e76e52d5828",
+        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "7eac3f270762740da284fb9b89215a2a1b098b75d25044b2968e64241352dfee",
         "libs/zephyr-cli/src/cli.ts": "64a00a77c8418dd867debb1ea9dbf97010de078a2cb03e3efda23057a84e631a",
         "libs/zephyr-cli/src/commands/deploy.ts": "510a098911f5e44e8333f054e07f5fa3c101ec12ba3b6a5a198abb004d742254",
         "libs/zephyr-cli/src/commands/run.ts": "fdde9c0b9c3b9f3e6b2361e32457c0995a747a3a0f257f1f183e84d1c01a39d3",
@@ -486,23 +491,22 @@
         "libs/zephyr-cli/src/lib/command-detector.ts": "e8a63e3b2cbebf1b5c53cb66947f57e3fc9aae176408c445facae5149edbc0ce",
         "libs/zephyr-cli/src/lib/publication-metadata.ts": "269c38fb707543c36d4b116c0c846454cf3c20482c111cea137abd63353046fe"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-cli from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "Recommends --verbose, which the run and deploy/watch parsers both accept; -v is accepted only before the command.",
       "evidence": [
-        "The built ze-cli exits 0 after printing 'Could not detect output directory. Skipping upload.' for an undetectable command, matching the documented pitfall; doctor exits 1 on a project without a bundler.",
-        "Auth guidance follows zephyr-agent login: browser prompt on a TTY, ZE_CI_TOKEN in CI; the README's nonexistent zephyr login command was corrected.",
-        "zephyr-cli tests pass, including recommended-plugins.spec.ts.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "cli.ts accepts --verbose in the deploy/watch option loop and -v only in the leading flag loop.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": {
-      "fingerprint": "bc97e8f900fbd8e879e25d8ee8c94badbbe78d4b8aedf6c0525c2fe228479095",
+      "fingerprint": "3c74200656901f91ebcb919c9dc65d5bb78c437c2b88dde59188db9556781aaa",
       "snapshot": {
         "libs/zephyr-metro-plugin/README.md": "cfabaec7d310fd33a2175f35db79d110cbbeac9bc14efc5038f2f35ed8fce479",
-        "libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": "bd111076552857a234d40247a3782d516f29e0de4bc02b9adc1753c7bc784f73",
-        "libs/zephyr-metro-plugin/skills/zephyr-metro/references/publication-commands.md": "04c5c0588ebcebb9567c81f497c9306dd3b5974e8cd3ffe7e2b4ae9f4d38893d",
+        "libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": "2b069c74c94961226f1dfa354b8da803ba33060048da2c7cb0005b416d17d18a",
+        "libs/zephyr-metro-plugin/skills/zephyr-metro/references/publication-commands.md": "59b2ad88377d9249f565bfddc949f2254fc7f505442dca6d9955a77465c9e7a9",
         "libs/zephyr-metro-plugin/src/index.ts": "ad884ea6b9cfe89786af3745bc5d7a62ab3a4145de7a8cb858d96fc7c1597403",
         "libs/zephyr-metro-plugin/src/lib/__test__/with-zephyr.integration.spec.ts": "ba8bcd4644d6dd078eb60a9bd5d8a341ff6d566655312193c04a02af23ba3a22",
         "libs/zephyr-metro-plugin/src/lib/__test__/zephyr-metro-command-wrapper.spec.ts": "fc9da07eff5f708d3398fa1e1c2a9bcb8ee0bb95ea3ab73d0d733d5da36d269f",
@@ -514,44 +518,44 @@
         "libs/zephyr-metro-plugin/src/lib/zephyr-metro-react-native-cli.ts": "27c9ba8758c2edad6d25edcd68d36a767d5009af7ac9e8db0fadfcdf16b31971",
         "libs/zephyr-metro-plugin/src/lib/zephyr-metro-rnef-plugin.ts": "1a6e41d91bbeb8678630e8adcf7d6cc9a6bedbc3ec9b01e3f6f4b4c3faffa1fb"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-metro from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "Describes the real missing-config symptom (ZE00000 wrapping an unfilled library-name message) instead of the TypeScript-only alias name.",
       "evidence": [
-        "Examples type-check against metro-config, @module-federation/metro 2.9.0 (packed), and the built package; tap-app and entryFiles are rejected.",
-        "Runtime smoke test of dist confirms the exports, the tap-app error, and the missing @module-federation/metro error; package tests pass (75).",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Reproduced with the built zephyr-agent: ERR_INVALID_MF_CONFIG rethrown as ERR_UNKNOWN formats as 'ZE00000: Unknown error: Library name {{library_name}} must be a valid identifier...'.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md": {
-      "fingerprint": "4599bd528fc75c2c27faaefdc60b3aae92615e03a455b3ed19a0d6a7931e6a05",
+      "fingerprint": "27d6db325d41a2f8814a7ee319b62b350893ed6bb37041c2f03f78dca136f064",
       "snapshot": {
         "libs/zephyr-modernjs-plugin/README.md": "0418cea6e26b93072222e0c1f61c9f3801b5e014c45f6885bbdb908c3e320fa9",
         "libs/zephyr-modernjs-plugin/package.json": "63aa7c17f519415f944efeeeb8392d3e1f3862ade9433514bab0d28dd6d372f7",
-        "libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md": "9bf9bc49e9ba3c8e16133a789f6e17e302d636ed0810f7c493513c3d31576c48",
+        "libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md": "892a21e16d1bbb84ee3f58a2f1bb28cd0e9711ed242c80eb3ec162ddaf1b67a2",
         "libs/zephyr-modernjs-plugin/src/index.ts": "2b3d8294a6ebcde3aa59c81b6dca12415e3832a752455e45633fa3d29ee913da",
         "libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.spec.ts": "a1eb94cc79b4dd84c961ce3945f67f43a010100e25caabc6cd93bca51fbb7974",
         "libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.ts": "7278d85aa372cdd8f712996d8bc839b0df144243eb2c264e0c93ae4cf63a3a02",
         "libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts": "1e94d0611e505b0170acd5c9e0d486b4a2aaf650f1c11295bb5458fba0a0e9df"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-modernjs from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "All TypeScript blocks type-check against @modern-js/app-tools 3.8.3; appTools({ bundler: 'webpack' }) is a type error.",
-        "Runtime check confirms the pre ordering, the development-only public-path plugin, and the build-time import of zephyr-rspack-plugin; package tests pass.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md": {
-      "fingerprint": "388d675632e170a38fdd9b1a5574d421ee86959f345a6d6e0ffd46c089d0f565",
+      "fingerprint": "40dbda671df5cc0b4fdd26acfc822b31bb133ec89f1bc1854643fef7b5124084",
       "snapshot": {
         "libs/zephyr-nuxt-module/README.md": "89e83986d8809002a22ce3f3a035b9eec60d6317a7a2d6c6f3165cf581c86d42",
         "libs/zephyr-nuxt-module/package.json": "bcf8b8900c10aaf938236b10e638aaec5badb73833ef18d9708e77d502903465",
-        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md": "16a83bc669719cb9ab8f58034c87c910da81e81c12edb864002639edfeaeadcc",
-        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/references/output-and-snapshots.md": "acdf18592b85040070baf4c8f8e657d6ddd96abb15cc1862650d0fcc1a7bbd38",
+        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md": "e184a79931367f7458a4fe02c8687b73d4d9faefd3b379ae9b5144e0d7888245",
+        "libs/zephyr-nuxt-module/skills/zephyr-nuxt/references/output-and-snapshots.md": "bf85dd68bcaea191599c750440542a5b7953767d712e79a3787f4be81bfaa344",
         "libs/zephyr-nuxt-module/src/index.ts": "3fb4d0a0dbb4b9994ad664dee6bfbb5b0cc51ce7719d6bb747ea62d9909e9112",
         "libs/zephyr-nuxt-module/src/lib/nuxt-module.ts": "f7f6f23e4dc7ecdba7e18710ae0ee37ceec098c59caa1f250735d850dc1104f9",
         "libs/zephyr-nuxt-module/src/lib/paths.ts": "95c48f7da07ed36a2095c562889cbd0cbd747cbcb85a79a2fa0456bdeb9e32e1",
@@ -560,21 +564,21 @@
         "libs/zephyr-nuxt-module/src/lib/ssr-upload.ts": "acaa8a88216570c06443ff007531d4e297db8ae162fc5a643108968f0f30717e",
         "libs/zephyr-nuxt-module/src/lib/types.ts": "9c71469516edb14ff45d4c2568b6280504d3284fa5b80732c55628f7e3e254fd"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-nuxt from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "Verification relies on the always-visible deploy line; the SSR skip and upload progress messages are documented as DEBUG=zephyr:upload only.",
       "evidence": [
-        "Examples type-check in examples/nuxt against Nuxt 4.5.2 after nuxi prepare; an invalid zephyr.target is rejected, proving the config key is typed.",
-        "Runtime probe confirms configKey zephyr; the dev/prepare/postinstall skips and close-hook upload are read from source.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "ssr-upload.ts emits the skip and progress lines through ze_log.upload, which wrapDebugLogger prints only when DEBUG matches; logFn prints 'Deployed to Zephyr's edge' unconditionally from build_finished.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md": {
-      "fingerprint": "e594a8f008a93c0dd5659ff2ac94e53045b4e9235cc84feb3fa1122137264a30",
+      "fingerprint": "d7a58fd1b0c4d54b7ea2cf14b7ef70e00cb192efd1eab8faa493de18b62db1f9",
       "snapshot": {
         "libs/zephyr-repack-plugin/README.md": "3e6c979b42fce1bed75f02387dd4a527b94178b645901e848e925352f0748d74",
-        "libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md": "256a2b46d9679f748bf475ff7dd06a2ada90b72402f52cc2127aced00c1e579b",
+        "libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md": "edaeceeb5ece229453ab698c938d3adb9ec80fb09e5457ecbb729f3a70b8ea7d",
         "libs/zephyr-repack-plugin/src/index.ts": "660e560b9becfc556c6c2f6c10fc7a94377785fd96fb70902c0074d142e0b553",
         "libs/zephyr-repack-plugin/src/lib/native-target.ts": "fbdd4a0f5879bfdfe2b7ca6b6a777882c960b70df90a1d51a5fef6d187f6d4ac",
         "libs/zephyr-repack-plugin/src/lib/utils/ze-util-verification.ts": "c130bac7f1cf7766696aa37be64d462d95c1e8c0fa45c6c422f73c6f52921aff",
@@ -586,47 +590,47 @@
         "libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts": "024ba6378171d5b746d31bd0a9c55f94682f99acbb86800f629861690c039f81",
         "libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts": "ddd364607c3b26d54ac4f7e87df070cdf612ecd0221e38707b6213a32d340f23"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-repack from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "Examples type-check against @callstack/repack 5.4.0 (packed) and @rspack/core; tap-app and the object form are rejected.",
-        "Runtime probe shows the config function receives only {platform, mode} and the object form throws configFn is not a function; package tests pass.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md": {
-      "fingerprint": "d547fd6a7ab390c56f051181659384cc49b0a34e762e45fc75dea210773994e3",
+      "fingerprint": "12ba811064917cb4998e1a8fc001bed8b3acb5cd75ee421fbbdd3f0296556041",
       "snapshot": {
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f",
         "libs/zephyr-agent/src/lib/transformers/ze-basehref-handler.ts": "0ef516efb334924dd33a7de77adb70e580648066adb90bb4137edfadd975674c",
         "libs/zephyr-rolldown-plugin/README.md": "bf8135b086c512746e36955b6ece03e2685b5ab133f64706050957866b67cad9",
         "libs/zephyr-rolldown-plugin/package.json": "9633f1e5a1f487bf24b373e231e00b58884e20f4faa57926a9081d42e1ab314b",
-        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md": "29299864cfc210984fa48d7c11fd8196d9d7f72dacc3eee665706b791f8e9364",
-        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/references/snapshot-paths.md": "44171d720ffaa99e19538ad8b867c2d5f501c9bd9e9535216f030facbbda6dc8",
+        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md": "11dda76563aeaab2ceee7eb423adc580ef01984d25cd8c9d73672c9d52bc0b3d",
+        "libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/references/snapshot-paths.md": "db955146eda6a9b1f65e13764a752d7c0a4408d94f892688ffcfdc33121434a0",
         "libs/zephyr-rolldown-plugin/src/index.ts": "044d247ce68f2705c16646c030c0c352ab8d43a87c8e874faa5d96ea6f9a5968",
         "libs/zephyr-rolldown-plugin/src/lib/internal/get-assets-map.ts": "ae5806891ddb2c764e0d21b8542b7cbc313f568f8b0107a1f42ba66e984b7ffd",
         "libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.spec.ts": "19e711ae48279199efb40cedfc7a25b0331a58da944998b58b9d2f0417352e31",
         "libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts": "be7a976a008bf64405f36157c639fcc15b5cb802f99a50163829ab6d3d206451"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-rolldown from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "Examples type-check against the built package and Rolldown 1.2.7.",
-        "Rolldown probe confirms output.dir is passed verbatim and normalizeBasePath/applyBaseHrefToAssets produce the documented snapshot paths.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md": {
-      "fingerprint": "ed2a9ac5995a1947529fb063fd920b543d133c945725491e01b1406850b89f8e",
+      "fingerprint": "c4f721c5f4bd55c1ae2a772e8853d650549e11de4e547b3d6d74157aa3080b23",
       "snapshot": {
         "libs/zephyr-rsbuild-plugin/README.md": "3e7aee3166d50be73a30e44bccf67eaf2e2a2c9b4ea1e9ab947ee2bedf61f587",
         "libs/zephyr-rsbuild-plugin/package.json": "89752372517651ca30d7c789f9e206018365b1ec3730062cc3c787508c206140",
-        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md": "1feec8b25338829b057380485a0e6e99825edc1e6fb8da862fd88e878c64ea7a",
-        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/references/environments.md": "bfd8ab8b6ddcd91f283edbd131ec91f0fd1abeeb63228388fbd20e98ceef05d3",
+        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md": "178ca74ec03471886516a3a003862be57ccb617e3426917c49f426679b332f86",
+        "libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/references/environments.md": "373eb91836917db040910014ccf86813aee47f7872b111253fae8f84aced66f1",
         "libs/zephyr-rsbuild-plugin/src/index.ts": "ac7172468291250ca03e13d7cb96017fa30f05808fdab25ffe8223c188b7768d",
         "libs/zephyr-rsbuild-plugin/src/rsbuild-plugin/with-zephyr.spec.ts": "437ee62a680b446175bd32ee1c7f30333759971b0daa9213d982861c0a7a54f4",
         "libs/zephyr-rsbuild-plugin/src/rsbuild-plugin/with-zephyr.ts": "84f571bfe9653c7190e4de2033c10f4b0e51e3874c7a1353c469173b7007aa10",
@@ -635,23 +639,23 @@
         "libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts": "024ba6378171d5b746d31bd0a9c55f94682f99acbb86800f629861690c039f81",
         "libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts": "57508e90ac3822cd74e1779fb1e81c34ebb51d31b4b1b87b183e5f769a235b11"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-rsbuild from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "All TypeScript blocks type-check against @rsbuild/core 2.2.3 and @module-federation/rsbuild-plugin 2.9.0.",
-        "Runtime check confirms the plugin name and post-ordered onBeforeCreateCompiler; package tests pass.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md": {
-      "fingerprint": "edd4440653b6c476db8372f04dc02eeca9b2abd5ea8f21256cccdea80357443a",
+      "fingerprint": "a07aab2aa87d5fef058493de9396aa51d32da393e5bf62b3ba58d53e22214a72",
       "snapshot": {
         "libs/zephyr-rspack-plugin/README.md": "fb5d4ee0f342f7816f95b169001dc17a59cdf20ed5a2b37a5d3751fe48133c4d",
         "libs/zephyr-rspack-plugin/package.json": "4f85fe4aa313cc28fb4a2876cf448b2b579b5b323765e97a8d66dcf16f6b1ce4",
-        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md": "fd1f724e850670bb3d72f6b50cab99872ee23f2f9b1915408039c387c4e722c1",
-        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/references/compiler-arrays.md": "4981bc83ac2329172208d0301aa3b7fb4f004dbdc76a96251a195e044e262949",
+        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md": "e26a4ebe1fc4575b02147fe25c3ccb7adb8f48bbb68d298f134095380eb6461a",
+        "libs/zephyr-rspack-plugin/skills/zephyr-rspack/references/compiler-arrays.md": "ebbe43a2902b26cff7179f8f639d3044facb043a8ec25d4ce04bb4285c0dfb57",
         "libs/zephyr-rspack-plugin/src/index.ts": "a3504584d461573043a7bfa660a285167d3bb5d5f11397ba61b5f7bd86fbfa31",
         "libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.spec.ts": "f93523ff3f7fc807568e3712ecea8bdda21a956c4ac77ded465472cefb53de7d",
         "libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts": "1e94d0611e505b0170acd5c9e0d486b4a2aaf650f1c11295bb5458fba0a0e9df",
@@ -661,22 +665,22 @@
         "libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts": "024ba6378171d5b746d31bd0a9c55f94682f99acbb86800f629861690c039f81",
         "libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts": "57508e90ac3822cd74e1779fb1e81c34ebb51d31b4b1b87b183e5f769a235b11"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-rspack from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "All TypeScript blocks type-check against @rspack/core 2.2.2.",
-        "Runtime export check of dist confirms the invalid-target error and empty-array passthrough; package tests pass.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md": {
-      "fingerprint": "f33ea9518c5e8bc77c1887d719a23419f505ec424b35eabbb616bda56ae421c2",
+      "fingerprint": "f101dd503c312fa51f86e1de629f9e3a4ca086bd6c1520c8fb1a3041a15e9354",
       "snapshot": {
         "libs/zephyr-rspress-plugin/README.md": "c8c168abf7c4ff089f0aa596e82ce1cb207cada9afe9ad9173efea3ef3451c67",
-        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md": "1e62202848fde6704ada238fcc2c6e75c7e9b4bf60b3007aa0a65f32ac5dfa4e",
-        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/references/ssg-publication.md": "309c92842d6c85ba3dde1438acd75658188984f9ee9a1ae7432e59dbe1c06f45",
+        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md": "2861c74eca133520d292c7bf6e451f25ed90277a7ba34ebc90c9e7f3a92f01c9",
+        "libs/zephyr-rspress-plugin/skills/zephyr-rspress/references/ssg-publication.md": "71ec4003a7e6dbefb89cc5a6714a5627fc40d7a1204abeb70e15e1e35bb194b3",
         "libs/zephyr-rspress-plugin/src/__test__/afterBuildHooks.spec.ts": "8117f28d32705462e8a7c692023be44f8503693aed6b5650e7b6924ccaf6541e",
         "libs/zephyr-rspress-plugin/src/__test__/with-zephyr.spec.ts": "9a1a69d8a4dba4faa059886b05f4bf0389f858db9ff96133353cf84286c951a0",
         "libs/zephyr-rspress-plugin/src/__test__/zephyrRspressSSGPlugin.spec.ts": "dbcc9dbabae11eb608d7d402112f33ff6518bb2c7c82df5e32b6928c98446dd9",
@@ -687,23 +691,23 @@
         "libs/zephyr-rspress-plugin/src/with-zephyr.ts": "3cc02a561fa1c5d90b4090c431531c49a5550202425fab3e96955ec36f84acaf",
         "libs/zephyr-rspress-plugin/src/zephyrRspressSSGPlugin.ts": "23726c199f6c023da3cf4641a9fbc85119c8e18476fe545d67cabf99b5efe646"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-rspress from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "An empty outDir skip is documented as silent by default; verification relies on the deploy line.",
       "evidence": [
-        "Examples type-check against @rspress/core 2.0.21.",
-        "Runtime probe confirms the non-SSG path adds zephyr-rsbuild-plugin; Rspress 2 normalizes ssg before plugin hooks and runs afterBuild hooks in parallel; package tests pass (55).",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "zephyrRspressSSGPlugin.ts logs 'No files found in output directory.' through ze_log.upload.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "skill:libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md": {
-      "fingerprint": "1ddc75d41642813a9f063cb179f07e0eede81140bf1cca4a0a73b30447c486c3",
+      "fingerprint": "a1487bb640486ea3eeca6efb4c0bf1d353c0005ffebb1ee58ddf1467021556bc",
       "snapshot": {
         "libs/zephyr-webpack-plugin/README.md": "28c2a7ccb33eb581fba4ac0b80316778a3f8b7d71f013ec7b85425affd10841f",
         "libs/zephyr-webpack-plugin/package.json": "0d56b00f6f0d868d0d9dc4fa62745e04af24998ca60a6fc05a81ed802758f389",
-        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md": "82c67e32df62200cef2ae9e967ab3993ae84a9538850b594af539a5ecf1c9f17",
-        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/references/compiler-arrays.md": "688c9c94e85efe8f08a91c3e606b1799200894d36a3851f0252fc7c876a18547",
+        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md": "e922ee097e7f11f62514f91c642caa426f50d6ff910824caedcda9c8ea877d95",
+        "libs/zephyr-webpack-plugin/skills/zephyr-webpack/references/compiler-arrays.md": "96c2f2c5b3b6f5d0e0d381788949d4de22469aaa3ea615dc09d1cc89c0ca35f2",
         "libs/zephyr-webpack-plugin/src/index.ts": "57b91e9d78683d7dece1844f581ea694ed869194cf8d2acefd021bb0d02be5f2",
         "libs/zephyr-webpack-plugin/src/types/index.ts": "81899adff796107b8d63ed4b25f6fe55ca542489340306d6df0f674aec7a1c64",
         "libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.spec.ts": "a2d910f4fbe27e8665ae5a1ffeb9724b52e1f724c2a3b038758401d47ace811e",
@@ -713,14 +717,14 @@
         "libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts": "57508e90ac3822cd74e1779fb1e81c34ebb51d31b4b1b87b183e5f769a235b11",
         "libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts": "ddd364607c3b26d54ac4f7e87df070cdf612ecd0221e38707b6213a32d340f23"
       },
-      "head": "42e20636c3d16bdf7354db06cb789f2c29fdf2d0",
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
       "outcome": "updated",
-      "reason": "Authored zephyr-webpack from the package's source, specs, and package.json following the Vite pilot; README claims that disagree with source are recorded in skill_spec.md rather than repeated.",
+      "reason": "library_version is release-managed and version-pinned prose was reworded; guidance is otherwise unchanged.",
       "evidence": [
-        "All TypeScript blocks type-check against webpack 5.110.3 and @module-federation/enhanced 2.9.0; withZephyr({ deploy }) and invalid targets are type errors.",
-        "Runtime export check of dist passes; package tests pass.",
-        "pnpm skills:verify-packages packs all 23 published packages; this skill is discoverable and loadable from its installed package at 1.4.2 and every local Markdown link resolves inside the packed package.",
-        "Live deployment, device or framework end-to-end builds, and fresh-agent selection remain unverified."
+        "Only version metadata and wording changed.",
+        "library_version now carries the release-please marker and is listed as a generic extra file; reference prose no longer pins 1.4.2.",
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides.",
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
       ]
     },
     "source:libs/zephyr-cli/src/lib/recommended-plugins.spec.ts": {
@@ -733,6 +737,42 @@
       "reason": "Regression test for ze-cli warning text naming real workspace packages; not guidance content.",
       "evidence": [
         "Against the previous source the same pattern finds @zephyrcloud/webpack-plugin, @zephyrcloud/rollup-plugin, and @zephyrcloud/vite-plugin, none of which exist in the workspace."
+      ]
+    },
+    "source:.github/pull_request_template.md": {
+      "fingerprint": "eeacd697e3f8178391c8b1ebe0d7bc58c4daf18cea8e45e91f809af182f957b2",
+      "snapshot": {
+        ".github/pull_request_template.md": "9e1fe35536fbbc1ced32874e08688b107898d9b6cbe3ab989861cfea8b1f543f"
+      },
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
+      "outcome": "out-of-scope",
+      "reason": "Adds a checklist item pointing contributors at the Check Skills gate instructions in AGENTS.md. It does not change skill guidance.",
+      "evidence": [
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides."
+      ]
+    },
+    "source:release-please-config.json": {
+      "fingerprint": "4b5f64509463517627300418201b2ebbc379ac656ec876491154048bfe4786d2",
+      "snapshot": {
+        "release-please-config.json": "4cfac26af4d3e871dc5421b83972cb33b9de82cdc3c5e85466c04741e5317dce"
+      },
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
+      "outcome": "out-of-scope",
+      "reason": "Registers every package-owned SKILL.md as a generic release-please extra file so library_version follows each release. It does not change skill guidance.",
+      "evidence": [
+        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
+      ]
+    },
+    "source:turbo.json": {
+      "fingerprint": "4a1daa64ccc69957fd42e4d5fd31a2b939a61edaec6a65f8221229b1ef8789db",
+      "snapshot": {
+        "turbo.json": "a8d1a86d9f6cc569d0efa7aa12a850deb24f75a7f6b1138bb14d54cf93c958ce"
+      },
+      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
+      "outcome": "out-of-scope",
+      "reason": "Adds the root Intent wrapper, skill sync script, and canonical skills as inputs to vite-plugin-zephyr's test task hash. It does not change skill guidance.",
+      "evidence": [
+        "pnpm skills:verify-packages passes for all 23 packages, now comparing every file of the shared guides."
       ]
     }
   }

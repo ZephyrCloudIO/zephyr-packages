@@ -6,7 +6,7 @@ description: Configure and deploy React Native Re.Pack applications with
   or diagnosing why a Re.Pack build did not publish to Zephyr.
 metadata:
   library: zephyr-repack-plugin
-  library_version: '1.4.2'
+  library_version: '1.4.2' # x-release-please-version
   purpose: Wrap an existing Re.Pack configuration function so each iOS or Android bundle build resolves its Zephyr remotes and publishes its own platform snapshot.
   domain: native
   type: core

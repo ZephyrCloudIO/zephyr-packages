@@ -63,12 +63,13 @@ Concrete example:
 - Host on branch `feature/cart`, user `alice`, local build, platform `web`
 - Remote selector is `workspace:*`
 - Zephyr prefers the most recent remote build that also matches `feature/cart`, `alice`, local context, and `web`
-- If none exists, Zephyr falls back toward the default environment path described in the docs
+- If none exists, the SDK retries the same remote with version `*` and uses the latest published version
 
 What to expect if no exact match exists:
 
-- Public docs say `workspace:*` falls back to the default environment.
-- That means the remote needs at least one environment/default environment path to resolve cleanly.
+- The SDK resolves version `*` silently; with `DEBUG=zephyr:remotes` it logs `No workspace build found for <remote>@workspace:*; falling back to the latest published version`.
+- Some public docs describe this as a default-environment fallback; the current SDK uses the latest published version instead.
+- That means the remote needs at least one published build to resolve cleanly; an exact workspace match always wins when it exists.
 - If the user sees unresolved remotes, check whether the remote app has actually been built and exposed through an environment.
 
 ## Selector guidance by scenario

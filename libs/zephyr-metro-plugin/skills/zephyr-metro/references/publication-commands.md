@@ -1,8 +1,7 @@
 # Publication commands
 
 Use this reference for custom output paths, RNEF registration, hand-written
-command wrappers, or `withZephyr` manifest options. It describes behavior
-verified against `zephyr-metro-plugin` 1.4.2.
+command wrappers, or `withZephyr` manifest options. It describes behavior of the installed `zephyr-metro-plugin` release.
 
 ## Command order
 

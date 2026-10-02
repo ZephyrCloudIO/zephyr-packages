@@ -8,9 +8,10 @@ export interface ZephyrRspackPluginOptions {
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   /**
-   * Fail the build when Zephyr cannot resolve, build, or upload the deployment. Takes
-   * precedence over the `ZE_FAIL_BUILD` environment variable; when unset,
-   * `ZE_FAIL_BUILD=true` still enables it.
+   * Rethrow Zephyr errors routed through `handleGlobalError`, including single-compiler
+   * configuration and upload failures. `false` does not suppress compilation errors or
+   * coordinated-build failures. Takes precedence over `ZE_FAIL_BUILD`. When neither is
+   * set, defaults to true in CI with a nonempty `ZE_CI_TOKEN` and false otherwise.
    */
   failBuild?: boolean;
   /** Override automatic CSR/SSR detection for coordinated compiler arrays. */

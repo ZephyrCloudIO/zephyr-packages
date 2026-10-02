@@ -447,6 +447,8 @@ async function getUserInfoFromAPI(): Promise<UserInfo> {
         {
           headers: { Authorization: `Bearer ${token}` },
           credentialToken: token,
+          // A 401 here re-runs login below, which must not re-read the rejected token.
+          invalidateCredentialOn401: true,
         }
       );
 

@@ -35,6 +35,7 @@ rs.mock('zephyr-edge-contract', () => ({
     )
   ),
   stripAnsi: rs.fn((value: string) => value),
+  ze_api_gateway: { logs: '/logs' },
   ZE_API_ENDPOINT_HOST: rs.fn(() => 'api.zephyr.com'),
   ZE_IS_PREVIEW: rs.fn(() => false),
   ZEPHYR_API_ENDPOINT: rs.fn(() => 'https://api.zephyr.com'),
@@ -112,11 +113,29 @@ describe('Pure HTTP Request Functions', () => {
       const [ok, error] = await makeHttpRequest(url, {
         headers: { Authorization: 'Bearer rejected-token' },
         credentialToken: 'rejected-token',
+        invalidateCredentialOn401: true,
       });
 
       expect(ok).toBe(false);
       expect(error).toBeInstanceOf(Error);
       expect(mockCleanTokens).toHaveBeenCalledWith('rejected-token');
+    });
+
+    it('keeps the credential when a non-authoritative endpoint answers 401', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 401,
+        text: async () => 'Unauthorized',
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(new URL('https://api.example.com/logs'), {
+        headers: { Authorization: 'Bearer live-token' },
+        credentialToken: 'live-token',
+      });
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10018', reason: 'ZE10018' });
+      expect(mockCleanTokens).not.toHaveBeenCalled();
     });
 
     it('preserves 401 classification when credential cleanup fails', async () => {
@@ -132,6 +151,7 @@ describe('Pure HTTP Request Functions', () => {
         {
           headers: { Authorization: 'Bearer rejected-token' },
           credentialToken: 'rejected-token',
+          invalidateCredentialOn401: true,
         }
       );
 
@@ -148,11 +168,14 @@ describe('Pure HTTP Request Functions', () => {
       } as Response);
 
       const url = new URL('https://api.example.com/endpoint');
-      await makeHttpRequest(url, { credentialToken: 'secret-token' });
+      await makeHttpRequest(url, {
+        credentialToken: 'secret-token',
+        invalidateCredentialOn401: true,
+      });
 
       const [, requestInit] = mockFetchWithRetries.mock.calls[0];
       expect(requestInit).not.toHaveProperty('credentialToken');
-      expect(requestInit).not.toHaveProperty('skipTokenCleanup');
+      expect(requestInit).not.toHaveProperty('invalidateCredentialOn401');
     });
 
     it('does not recursively clean tokens when a credential refresh gets a 401', async () => {
@@ -163,7 +186,7 @@ describe('Pure HTTP Request Functions', () => {
       } as Response);
 
       const url = new URL('https://api.example.com/endpoint');
-      const [ok, error] = await makeHttpRequest(url, { skipTokenCleanup: true });
+      const [ok, error] = await makeHttpRequest(url);
 
       expect(ok).toBe(false);
       expect(error).toMatchObject({ code: 'ZE10018', reason: 'ZE10018' });

@@ -58,6 +58,7 @@
     "test:deployment": "cross-env ZE_RUN_AGENT_DEPLOYMENT_E2E=true rstest run"
   },
   "dependencies": {
+    "@babel/parser": "catalog:",
     "@bybrave/proper-lockfile2": "catalog:",
     "@toon-format/toon": "catalog:",
     "axios": "catalog:",
@@ -67,6 +68,7 @@
     "https-proxy-agent": "catalog:",
     "jiti": "catalog:",
     "jose": "catalog:",
+    "magic-string": "catalog:",
     "open": "catalog:",
     "zephyr-edge-contract": "workspace:*"
   },

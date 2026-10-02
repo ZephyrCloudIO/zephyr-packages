@@ -13,6 +13,7 @@ catalog:
   '@astrojs/mdx': ^8.0.0
   '@astrojs/rss': ^4.0.19
   '@astrojs/sitemap': ^3.7.3
+  '@babel/parser': ^7.29.0
   '@clack/prompts': ^1.7.0
   '@elysiajs/node': ^1.4.5
   '@lynx-js/qrcode-rsbuild-plugin': ^0.7.0

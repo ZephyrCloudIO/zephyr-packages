@@ -51,6 +51,9 @@ catalogs:
     '@astrojs/sitemap':
       specifier: ^3.7.3
       version: 3.7.4
+    '@babel/parser':
+      specifier: ^7.29.0
+      version: 7.29.8
     '@bybrave/proper-lockfile2':
       specifier: 5.0.0
       version: 5.0.0
@@ -1880,6 +1883,9 @@ importers:
 
   libs/zephyr-agent:
     dependencies:
+      '@babel/parser':
+        specifier: 'catalog:'
+        version: 7.29.8
       '@bybrave/proper-lockfile2':
         specifier: 'catalog:'
         version: 5.0.0
@@ -1907,6 +1913,9 @@ importers:
       jose:
         specifier: 'catalog:'
         version: 6.2.12
+      magic-string:
+        specifier: 'catalog:'
+        version: 1.2.3
       open:
         specifier: 'catalog:'
         version: 11.0.0
@@ -2766,16 +2775,6 @@ packages:
   '@babel/parser@7.29.8':
     resolution: {integrity: sha512-E8lTAYNB1KW+FH+VGJuZM1ioAx2E6oVlvQFRrf5P8ZZmsiJXYAD9vTFV7yyEURNzgh1dFqMZuO6tUwcARbqFCA==}
     engines: {node: '>=6.0.0'}
-    hasBin: true
-
-  '@babel/parser@8.0.0':
-    resolution: {integrity: sha512-aLxAE+imI9bCcyaPrUDjBv3uSkWieifjLe0kuFOZF0zli0L6GCsTmsePnTr55adbIAgYz2zhN1vnFimCBUYcRQ==}
-    engines: {node: ^22.18.0 || >=24.11.0}
-    hasBin: true
-
-  '@babel/parser@8.0.4':
-    resolution: {integrity: sha512-srpptsAkEbbNIC/q8nT7o+m6CQe8CJUTV/t7MYc9NnWlgYVtHOb7JH6SorxMhN0kuRJjVqXbKClG6xSbPtzz+g==}
-    engines: {node: ^22.18.0 || >=24.11.0}
     hasBin: true
 
   '@babel/parser@8.0.5':
@@ -16190,7 +16189,7 @@ snapshots:
 
   '@babel/generator@8.0.0':
     dependencies:
-      '@babel/parser': 8.0.0
+      '@babel/parser': 8.0.5
       '@babel/types': 8.0.0
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
@@ -16212,7 +16211,7 @@ snapshots:
 
   '@babel/helper-annotate-as-pure@8.0.0':
     dependencies:
-      '@babel/types': 8.0.4
+      '@babel/types': 8.0.5
 
   '@babel/helper-compilation-targets@7.29.7':
     dependencies:
@@ -16415,14 +16414,6 @@ snapshots:
   '@babel/parser@7.29.8':
     dependencies:
       '@babel/types': 7.29.8
-
-  '@babel/parser@8.0.0':
-    dependencies:
-      '@babel/types': 8.0.4
-
-  '@babel/parser@8.0.4':
-    dependencies:
-      '@babel/types': 8.0.4
 
   '@babel/parser@8.0.5':
     dependencies:
@@ -16941,7 +16932,7 @@ snapshots:
       '@babel/helper-plugin-utils': 8.0.1(@babel/core@8.0.5)
       '@babel/plugin-transform-dotall-regex': 8.0.1(@babel/core@8.0.5)
       '@babel/plugin-transform-unicode-property-regex': 8.0.1(@babel/core@8.0.5)
-      '@babel/types': 8.0.4
+      '@babel/types': 8.0.5
       esutils: 2.0.3
 
   '@babel/preset-react@8.0.1(@babel/core@8.0.5)':
@@ -16975,7 +16966,7 @@ snapshots:
   '@babel/template@8.0.0':
     dependencies:
       '@babel/code-frame': 8.0.0
-      '@babel/parser': 8.0.4
+      '@babel/parser': 8.0.5
       '@babel/types': 8.0.4
 
   '@babel/traverse@7.29.7(supports-color@10.2.2)':
@@ -16997,7 +16988,7 @@ snapshots:
       '@babel/helper-globals': 8.0.0
       '@babel/parser': 8.0.5
       '@babel/template': 8.0.0
-      '@babel/types': 8.0.4
+      '@babel/types': 8.0.5
       obug: 2.1.4
 
   '@babel/traverse@8.0.5':
@@ -17229,11 +17220,11 @@ snapshots:
   '@dxup/nuxt@0.5.6(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(magicast@0.5.4)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)':
     dependencies:
       '@dxup/unimport': 0.1.2
-      '@nuxt/kit': 4.5.2(magic-string@1.1.0)(magicast@0.5.4)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(magicast@0.5.4)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
       '@vue/compiler-dom': 3.5.41
       chokidar: 5.0.0
       knitwork: 1.3.0
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       pathe: 2.0.3
       tinyglobby: 0.2.17
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
@@ -17253,11 +17244,11 @@ snapshots:
   '@dxup/nuxt@0.5.6(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(magicast@0.5.4)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)':
     dependencies:
       '@dxup/unimport': 0.1.2
-      '@nuxt/kit': 4.5.2(magic-string@1.1.0)(magicast@0.5.4)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(magicast@0.5.4)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
       '@vue/compiler-dom': 3.5.41
       chokidar: 5.0.0
       knitwork: 1.3.0
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       pathe: 2.0.3
       tinyglobby: 0.2.17
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
@@ -19132,6 +19123,66 @@ snapshots:
       tinyglobby: 0.2.17
       ufo: 1.6.4
       unctx: 3.0.0(magic-string@1.1.0)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
+      untyped: 2.0.0
+      verkit: 0.3.2
+    transitivePeerDependencies:
+      - magic-string
+      - magicast
+      - oxc-parser
+      - rolldown
+      - unplugin
+
+  '@nuxt/kit@4.5.2(magic-string@1.2.3)(magicast@0.5.4)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))':
+    dependencies:
+      c12: 3.3.4(magicast@0.5.4)
+      consola: 3.4.2
+      defu: 6.1.7
+      destr: 2.0.5
+      errx: 0.1.2
+      exsolve: 1.1.1
+      ignore: 7.0.6
+      jiti: 2.7.0
+      klona: 2.0.6
+      mlly: 1.8.2
+      nostics: 1.2.0
+      ohash: 2.0.11
+      pathe: 2.0.3
+      pkg-types: 2.3.1
+      rc9: 3.0.1
+      scule: 1.3.0
+      tinyglobby: 0.2.17
+      ufo: 1.6.4
+      unctx: 3.0.0(magic-string@1.2.3)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
+      untyped: 2.0.0
+      verkit: 0.3.2
+    transitivePeerDependencies:
+      - magic-string
+      - magicast
+      - oxc-parser
+      - rolldown
+      - unplugin
+
+  '@nuxt/kit@4.5.2(magic-string@1.2.3)(magicast@0.5.4)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))':
+    dependencies:
+      c12: 3.3.4(magicast@0.5.4)
+      consola: 3.4.2
+      defu: 6.1.7
+      destr: 2.0.5
+      errx: 0.1.2
+      exsolve: 1.1.1
+      ignore: 7.0.6
+      jiti: 2.7.0
+      klona: 2.0.6
+      mlly: 1.8.2
+      nostics: 1.2.0
+      ohash: 2.0.11
+      pathe: 2.0.3
+      pkg-types: 2.3.1
+      rc9: 3.0.1
+      scule: 1.3.0
+      tinyglobby: 0.2.17
+      ufo: 1.6.4
+      unctx: 3.0.0(magic-string@1.2.3)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
       untyped: 2.0.0
       verkit: 0.3.2
     transitivePeerDependencies:
@@ -22769,7 +22820,7 @@ snapshots:
 
   '@unhead/bundler@3.3.1(@oxc-project/types@0.148.0)(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(rolldown@1.2.7)(rollup@4.62.2)(unhead@3.3.1(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)':
     dependencies:
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       oxc-walker: 1.1.1(@oxc-project/types@0.148.0)(rolldown@1.2.7)
       unhead: 3.3.1(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
@@ -22789,7 +22840,7 @@ snapshots:
 
   '@unhead/bundler@3.3.1(@oxc-project/types@0.148.0)(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(rolldown@1.2.7)(rollup@4.63.1)(unhead@3.3.1(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)':
     dependencies:
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       oxc-walker: 1.1.1(@oxc-project/types@0.148.0)(rolldown@1.2.7)
       unhead: 3.3.1(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
@@ -30399,7 +30450,7 @@ snapshots:
 
   rolldown-string@0.3.1(rolldown@1.2.7):
     dependencies:
-      magic-string: 1.1.0
+      magic-string: 1.2.3
     optionalDependencies:
       rolldown: 1.2.7
 
@@ -31698,6 +31749,18 @@ snapshots:
       rolldown: 1.2.7
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
 
+  unctx@3.0.0(magic-string@1.2.3)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)):
+    optionalDependencies:
+      magic-string: 1.2.3
+      rolldown: 1.2.7
+      unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
+
+  unctx@3.0.0(magic-string@1.2.3)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)):
+    optionalDependencies:
+      magic-string: 1.2.3
+      rolldown: 1.2.7
+      unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
+
   undici-types@7.18.2: {}
 
   undici-types@8.3.0: {}
@@ -31828,7 +31891,7 @@ snapshots:
       escape-string-regexp: 5.0.0
       estree-walker: 3.0.3
       local-pkg: 1.2.1
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       mlly: 1.8.2
       pathe: 2.0.3
       picomatch: 4.0.7
@@ -31856,7 +31919,7 @@ snapshots:
       escape-string-regexp: 5.0.0
       estree-walker: 3.0.3
       local-pkg: 1.2.1
-      magic-string: 1.1.0
+      magic-string: 1.2.3
       mlly: 1.8.2
       pathe: 2.0.3
       picomatch: 4.0.7

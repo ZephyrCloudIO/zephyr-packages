@@ -138,7 +138,31 @@ describe('Rspack withZephyr compiler arrays', () => {
 
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'invalid federation config' })
+      expect.objectContaining({ message: 'invalid federation config' }),
+      { failBuild: undefined }
     );
+  });
+
+  it('forwards failBuild to the upload plugin', async () => {
+    const config = { name: 'client', context: '/repo' } as unknown as Configuration;
+
+    await withZephyr({ failBuild: true })(config);
+
+    const [plugin] = config.plugins as unknown as { options: { failBuild?: boolean } }[];
+    expect(plugin?.options.failBuild).toBe(true);
+  });
+
+  it('rejects direct configuration errors when failBuild is set', async () => {
+    const config = { name: 'broken', context: '/repo' } as unknown as Configuration;
+    mocks.handleGlobalError.mockImplementationOnce(
+      (error: unknown, options?: { failBuild?: boolean }) => {
+        if (options?.failBuild) throw error;
+      }
+    );
+
+    await expect(withZephyr({ failBuild: true })(config)).rejects.toThrow(
+      'invalid federation config'
+    );
+    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
   });
 });

@@ -7,6 +7,13 @@ export interface ZephyrWebpackPluginOptions {
   /** Wait for HTML processing before deployment when the framework emits HTML late. */
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
+  /**
+   * Rethrow Zephyr errors routed through `handleGlobalError`, including single-compiler
+   * configuration and upload failures. `false` does not suppress compilation errors or
+   * coordinated-build failures. Takes precedence over `ZE_FAIL_BUILD`. When neither is
+   * set, defaults to true in CI with a nonempty `ZE_CI_TOKEN` and false otherwise.
+   */
+  failBuild?: boolean;
   /** Override automatic CSR/SSR detection for coordinated compiler arrays. */
   snapshotType?: 'csr' | 'ssr';
   /** Server entrypoint relative to the shared output root. */

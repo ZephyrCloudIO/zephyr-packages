@@ -8,7 +8,7 @@
 <img src="https://cdn.prod.website-files.com/669061ee3adb95b628c3acda/66981c766e352fe1f57191e2_Opengraph-zephyr.png" alt="Zephyr Logo" />
 </div>
 
-A React Native native cache layer for Module Federation Metro bundles. It verifies bundle hashes, caches validated bundles on device, and supports background polling for updates.
+A React Native native cache layer for Module Federation Metro bundles. It verifies bundle hashes, atomically activates complete manifest generations, retains known-good code for rollback, and supports background polling for updates.
 
 ## Installation
 
@@ -58,6 +58,17 @@ ZephyrNativeCache.register({
 - `enablePolling`: start automatic manifest polling (default `true`)
 - `pollIntervalMs`: polling interval in ms (default `5 minutes`)
 - `forceCacheInDev`: enable cache in development mode (production is always enabled)
+- `validateBundle`: optional side-effect-free validator called for every staged artifact before activation (the default performs a syntax smoke check)
+
+## Integrity And Activation
+
+Production remote bundles fail closed. Every container, exposed module, and shared bundle must have a valid SHA-256 from its Module Federation manifest. Missing hashes, malformed hashes, download failures, and mismatches reject the load and never invoke the ordinary network loader.
+
+Updates are downloaded into an isolated generation. The cache verifies and smoke-validates every artifact before atomically changing the active generation, and retains the prior verified generation for rollback. Cached source is read and hashed as one native operation before every execution. A rejected generation is quarantined until its manifest changes or the cache is cleared, preventing repeated activation loops.
+
+The active generation also retains its verified Module Federation manifest. If a later manifest request fails offline, the runtime plugin re-extracts its executable graph and serves the cached manifest only when it still identifies that complete active generation.
+
+The default native storage is Android no-backup storage or iOS Application Support with iCloud backup exclusion. Package logs do not include bundle URLs, manifest URLs, or cache paths.
 
 ## Runtime APIs
 
@@ -70,8 +81,8 @@ ZephyrNativeCache.register({
 - `startUpdatePolling(intervalMs?)`
 - `stopUpdatePolling()`
 - `clearCache()`
+- `rollback(remoteNameOrManifestId)`
 - `reloadApp()` — reloads the React Native JS context after an update is ready
-- `restart()` — alias for `reloadApp()` for compatibility with existing app code
 
 `ZephyrNativeCache.register` returns a `BundleCacheLayer` instance:
 
@@ -80,6 +91,7 @@ ZephyrNativeCache.register({
 - `startPolling(intervalMs?)`
 - `stopPolling()`
 - `clearCache()`
+- `rollback(remoteNameOrManifestId)`
 - `getLoadedBundles()`
 
 `checkForUpdates` also supports policy options:
@@ -87,7 +99,9 @@ ZephyrNativeCache.register({
 - `checkForUpdates({ policy: 'downloadOnly' })`
 - `checkForUpdates({ policy: 'downloadAndApply' })`
 
-`downloadAndApply` reloads the React Native JS context through the native reload path after a successful download. Avoid using it in flows that cannot tolerate an immediate reload, or persist any critical UI state before calling it.
+`downloadAndApply` reloads the React Native JS context after a complete generation is staged. The generation is activated only after its verified artifacts pass validation during loading. Avoid using this policy in flows that cannot tolerate an immediate reload, or persist any critical UI state before calling it.
+
+`checkForUpdates()` preserves the existing `updated`, `checked`, and `applied` counters and also returns typed per-manifest and per-artifact `outcomes`. Failures distinguish timeout, network, HTTP, integrity, storage, evaluation, activation, and rollback states.
 
 The package also exposes status helpers as named exports:
 
@@ -100,6 +114,7 @@ And package-level control helpers for existing integrations:
 - `startUpdatePolling(intervalMs?)`
 - `stopUpdatePolling()`
 - `clearCache()`
+- `rollback(remoteNameOrManifestId)`
 
 The raw React Native native module is intentionally not exported from the root API. Use `ZephyrNativeCache.reloadApp()` instead of calling native module methods directly.
 

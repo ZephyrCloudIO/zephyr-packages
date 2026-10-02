@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "baseline": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+  "items": {
+    "skill:libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": {
+      "fingerprint": "44d7318df49eb3c2d51af480d4479acd0dbb81dcdf06f1957c264e39a7bb0e32",
+      "snapshot": {
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "b757e56cb80942c1dfe6f28572d55066c7767abc0eea247a3b04d4761dc79b62",
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
+        "libs/create-zephyr-apps/src/cli.spec.ts": "8501d0c55963413103d42d469ad73e39ef5f7736748275141170f56cb855f268",
+        "libs/create-zephyr-apps/src/cli.ts": "116e23cb28e3f4a2e6d8cf521c06ab50391368be2c81db3b898e4d55510237eb",
+        "libs/create-zephyr-apps/src/scaffold.spec.ts": "4b73c36eea4ea87d27d2e6c671ed788d5b12c0c469cb608bc7705b9927f9b175",
+        "libs/create-zephyr-apps/src/scaffold.ts": "fc1fb0df62ee21c37f253e7343071cbc02d6d645c099cb2a2038780da668955b",
+        "libs/create-zephyr-apps/src/templates.ts": "f5e38228b1cb457fa5645138aed1cab68cfa210199dda4bedcb1a3304458557b"
+      },
+      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "outcome": "updated",
+      "reason": "Preserved the existing bootstrap instructions and description as purpose; added verified 1.4.2 provenance and source mappings for meaningful future reviews.",
+      "evidence": [
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md has metadata-only changes.",
+        "CLI, scaffold, template, and receipt sources were inspected; all 33 generator tests pass.",
+        "Intent structural validation passes; no fresh-agent execution is claimed."
+      ]
+    },
+    "skill:libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": {
+      "fingerprint": "d7e3d4a69ecdfcf45655c7c31b90583cf85d4f3afe8f17fcdabdf063ef9ff295",
+      "snapshot": {
+        "libs/vite-plugin-zephyr/README.md": "bcb463977cc5a10463b04659e7a495b5104fc3a0c8bafc677d04bfdc993fff5c",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "f955d251da0c0105cfa6dbf21bc6ef5faacc1c1fdd21f641b95830d6b180a544",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "e339d9144c31542314e336a98a925c748c22b77117b952b4c30e062f0845be9a",
+        "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
+        "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
+        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "b446a7e0687651d468e275174d1e6fb258d429ab284e6cdf45df7a6b8d2afd4b",
+        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "59f02744b893ba7a5c06faef9a61c660393608af78ae3188ecaf88f09451bead",
+        "libs/vite-plugin-zephyr/src/package-output.spec.ts": "5ec9af4ec4b3f5a56fd6d2f35b04bf613fec427b2a6d44695463a6985d1fba03"
+      },
+      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "outcome": "updated",
+      "reason": "Replaced repository-only body pointers with bundled lifecycle links and removed the implication that a consumer must inspect unshipped integration tests. The packed-consumer regression now resolves every local Markdown reference within the shipped skill directory.",
+      "evidence": [
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md routes ordering and SSR entrypoint guidance to its shipped references/build-lifecycle.md.",
+        "All 145 Vite and generator tests pass after this correction; the packed skill links resolve to readable files inside the consumer package.",
+        "Fresh-agent activation, native host acceptance, and live deployment remain unverified; the source mappings remain maintainer provenance."
+      ]
+    },
+    "planning:_artifacts": {
+      "fingerprint": "d96e41f6a9e769ad42f4dcbf6a6babb88a30cbca1a881f5b91d97202d057ad4a",
+      "snapshot": {
+        "_artifacts/domain_map.yaml": "941dc72c4a99ef5f563b9c678364177e79336645ce07501fcc8fce93e73cf001",
+        "_artifacts/skill_spec.md": "e193b15639328af077e62fe1965982589e20cb75cb3cf90f8be016f0a2566f7c",
+        "_artifacts/skill_tree.yaml": "212eb7a0c6ee951c6d1926147a17fb721bcec7b61b676df4fad9555c8d0cd268",
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "b757e56cb80942c1dfe6f28572d55066c7767abc0eea247a3b04d4761dc79b62",
+        "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
+        "libs/create-zephyr-apps/src/cli.spec.ts": "8501d0c55963413103d42d469ad73e39ef5f7736748275141170f56cb855f268",
+        "libs/create-zephyr-apps/src/cli.ts": "116e23cb28e3f4a2e6d8cf521c06ab50391368be2c81db3b898e4d55510237eb",
+        "libs/create-zephyr-apps/src/scaffold.spec.ts": "4b73c36eea4ea87d27d2e6c671ed788d5b12c0c469cb608bc7705b9927f9b175",
+        "libs/create-zephyr-apps/src/scaffold.ts": "fc1fb0df62ee21c37f253e7343071cbc02d6d645c099cb2a2038780da668955b",
+        "libs/create-zephyr-apps/src/templates.ts": "f5e38228b1cb457fa5645138aed1cab68cfa210199dda4bedcb1a3304458557b",
+        "libs/vite-plugin-zephyr/README.md": "bcb463977cc5a10463b04659e7a495b5104fc3a0c8bafc677d04bfdc993fff5c",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "f955d251da0c0105cfa6dbf21bc6ef5faacc1c1fdd21f641b95830d6b180a544",
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/references/build-lifecycle.md": "e339d9144c31542314e336a98a925c748c22b77117b952b4c30e062f0845be9a",
+        "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
+        "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
+        "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "b446a7e0687651d468e275174d1e6fb258d429ab284e6cdf45df7a6b8d2afd4b",
+        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "59f02744b893ba7a5c06faef9a61c660393608af78ae3188ecaf88f09451bead",
+        "libs/vite-plugin-zephyr/src/package-output.spec.ts": "5ec9af4ec4b3f5a56fd6d2f35b04bf613fec427b2a6d44695463a6985d1fba03"
+      },
+      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "outcome": "updated",
+      "reason": "Replaced repository-only body pointers with bundled lifecycle links and removed the implication that a consumer must inspect unshipped integration tests. The packed-consumer regression now resolves every local Markdown reference within the shipped skill directory.",
+      "evidence": [
+        "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md routes ordering and SSR entrypoint guidance to its shipped references/build-lifecycle.md.",
+        "All 145 Vite and generator tests pass after this correction; the packed skill links resolve to readable files inside the consumer package.",
+        "Fresh-agent activation, native host acceptance, and live deployment remain unverified; the source mappings remain maintainer provenance."
+      ]
+    },
+    "source:packages/intent-tooling/compiler.mjs": {
+      "fingerprint": "cedfbb63c2af57d34cdb5a2a95b147eaa04ae4d602dd0c2b937a56eb1ce50580",
+      "snapshot": {
+        "packages/intent-tooling/compiler.mjs": "eded60fb6f6a06a25f3d719e35b65066f0c44c2c355562ec7a399191abe18c0b"
+      },
+      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "outcome": "out-of-scope",
+      "reason": "This is development-tooling compatibility rather than a consumer SDK behavior change. Intent 0.5.0 needs the classic compiler API, isolated in a private tooling package without replacing native TypeScript 7.",
+      "evidence": [
+        "scripts/intent.mjs and packages/intent-tooling isolate compiler API resolution to the Intent process.",
+        "The packed-package regression verifies successful example validation, error exit propagation, and unchanged native TypeScript 7.0.2.",
+        "pnpm-workspace.yaml pins Intent 0.5.0; both workflows pass actionlint."
+      ]
+    },
+    "source:pnpm-workspace.yaml": {
+      "fingerprint": "5997d0ac2d0b6bb389ab61edfce35839ff3b8056e73a008960cc2da7de0987d2",
+      "snapshot": {
+        "pnpm-workspace.yaml": "11f71e8bf4f3f8028901133cf929ae2fa9d82153b2bf6191097f4a0578023fc1"
+      },
+      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "outcome": "out-of-scope",
+      "reason": "This is development-tooling compatibility rather than a consumer SDK behavior change. Intent 0.5.0 needs the classic compiler API, isolated in a private tooling package without replacing native TypeScript 7.",
+      "evidence": [
+        "scripts/intent.mjs and packages/intent-tooling isolate compiler API resolution to the Intent process.",
+        "The packed-package regression verifies successful example validation, error exit propagation, and unchanged native TypeScript 7.0.2.",
+        "pnpm-workspace.yaml pins Intent 0.5.0; both workflows pass actionlint."
+      ]
+    },
+    "source:scripts/intent.mjs": {
+      "fingerprint": "3e5f7008bf4fee0012a06498f22f5c6a5fdd03a3342b274a9cc0471506ce7b54",
+      "snapshot": {
+        "scripts/intent.mjs": "946bd94c256f0da16de385535bb5d782c8b660fcaaa926ac0892c729a603d196"
+      },
+      "head": "103bbe4a2e433e3393e84406df2e047cd4c5fe17",
+      "outcome": "out-of-scope",
+      "reason": "This is development-tooling compatibility rather than a consumer SDK behavior change. Intent 0.5.0 needs the classic compiler API, isolated in a private tooling package without replacing native TypeScript 7.",
+      "evidence": [
+        "scripts/intent.mjs and packages/intent-tooling isolate compiler API resolution to the Intent process.",
+        "The packed-package regression verifies successful example validation, error exit propagation, and unchanged native TypeScript 7.0.2.",
+        "pnpm-workspace.yaml pins Intent 0.5.0; both workflows pass actionlint."
+      ]
+    }
+  }
+}

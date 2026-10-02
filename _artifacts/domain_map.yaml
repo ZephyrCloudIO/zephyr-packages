@@ -1,0 +1,40 @@
+library:
+  name: zephyr-packages
+  version: 1.4.2
+domains:
+  - name: Project bootstrap
+    slug: bootstrap
+    description: Generate a new application with explicit side effects and a verifiable receipt.
+  - name: Vite publication
+    slug: vite
+    description: Configure the installed Vite integration and choose a complete publication lifecycle.
+skills:
+  - name: create-zephyr-apps
+    slug: create-zephyr-apps
+    domain: bootstrap
+    description: Scaffold current Zephyr application projects with create-zephyr-apps; use when selecting a template, generating a fresh web or React Native project non-interactively, or verifying the CLI's JSON receipt and structured failures.
+    packages: [create-zephyr-apps]
+    tasks:
+      - Choose a supported template and scaffold non-interactively.
+      - Keep Git initialization, dependency installation, and builds explicit.
+      - Verify the JSON receipt and retain structured failures.
+    covers: [templates, explicit side effects, JSON receipts, structured failures]
+  - name: zephyr-vite
+    slug: zephyr-vite
+    domain: vite
+    description: Configure and deploy Vite applications with vite-plugin-zephyr; use when adding withZephyr, configuring its Module Federation integration, or diagnosing Vite build publication and plugin ordering. Use the dedicated integrations for TanStack Start and Vinext.
+    packages: [vite-plugin-zephyr]
+    tasks:
+      - Add Zephyr to an existing Vite application without replacing its framework configuration.
+      - Configure Module Federation through withZephyr without installing duplicate federation plugins.
+      - Choose the supported publication lifecycle for direct, multi-environment, and SSR Vite builds.
+    covers: [withZephyr, mfConfig, optional federation peer, buildApp, SSR entrypoints]
+gaps:
+  - skill: zephyr-vite
+    question: Fresh-agent activation and end-to-end live deployment are not verified by local tests.
+    context: Packing, Intent discovery, and a network-disabled publication fixture are separate from those outcomes.
+    status: open
+  - skill: unassessed-integrations
+    question: Other SDK packages have not received package-owned skills in this pilot.
+    context: Keep the pilot scoped to Vite and preserve the existing generator skill rather than claiming full coverage.
+    status: open

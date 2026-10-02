@@ -6,6 +6,7 @@
   "keywords": [
     "deploy",
     "module-federation",
+    "tanstack-intent",
     "vite",
     "vite-plugin",
     "zephyr"
@@ -24,6 +25,8 @@
     "dist",
     "README.md",
     "LICENSE",
+    "skills",
+    "!skills/_artifacts",
     "!dist/**/*.map"
   ],
   "type": "commonjs",

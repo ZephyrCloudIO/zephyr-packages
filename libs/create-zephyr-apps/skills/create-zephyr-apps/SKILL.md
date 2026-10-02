@@ -1,6 +1,18 @@
 ---
 name: create-zephyr-apps
 description: Scaffold current Zephyr application projects with create-zephyr-apps; use when selecting a template, generating a fresh web or React Native project non-interactively, or verifying the CLI's JSON receipt and structured failures.
+metadata:
+  purpose: Scaffold current Zephyr application projects with create-zephyr-apps; use when selecting a template, generating a fresh web or React Native project non-interactively, or verifying the CLI's JSON receipt and structured failures.
+  library: create-zephyr-apps
+  library_version: '1.4.2'
+  domain: bootstrap
+  type: lifecycle
+sources:
+  - ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/cli.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/scaffold.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/templates.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/cli.spec.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/scaffold.spec.ts
 ---
 
 # Create Zephyr Apps

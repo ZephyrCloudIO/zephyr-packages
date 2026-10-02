@@ -1,8 +1,10 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { afterEach, beforeEach, expect, test, rs } from '@rstest/core';
-import { build, createBuilder, type InlineConfig, type Plugin } from 'vite';
+import { build, createBuilder, defineConfig, type InlineConfig, type Plugin } from 'vite';
+import typescript from '@zephyrcloudio/intent-tooling/compiler';
 import {
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
@@ -174,6 +176,49 @@ test('real vite.build publishes the single environment exactly once', async () =
   expect(paths.some((name) => name.endsWith('.js'))).toBe(true);
   expect(mocks.events).toEqual(['upload', 'finish']);
   expect(mocks.partials.size).toBe(0);
+});
+
+test('the skill setup example publishes a complete Vite snapshot exactly once', async () => {
+  const skillPath = path.resolve(
+    import.meta.dirname,
+    '../../skills/zephyr-vite/SKILL.md'
+  );
+  const skill = await readFile(skillPath, 'utf8');
+  const setupExample = skill.match(/```typescript\n([\s\S]*?)```/u)?.[1];
+  if (!setupExample) throw new Error('The Vite skill needs an executable setup example');
+
+  const moduleExports: { default?: InlineConfig } = {};
+  runInNewContext(
+    typescript.transpile(setupExample, {
+      module: typescript.ModuleKind.CommonJS,
+      target: typescript.ScriptTarget.ES2022,
+    }),
+    {
+      exports: moduleExports,
+      require(specifier: string) {
+        if (specifier === 'vite') return { defineConfig };
+        if (specifier === 'vite-plugin-zephyr') return { withZephyr };
+        throw new Error(`Unsupported setup example dependency: ${specifier}`);
+      },
+    },
+    { filename: skillPath, timeout: 1000 }
+  );
+  if (!moduleExports.default) throw new Error('The setup example must export its config');
+
+  await build({ ...config(), plugins: moduleExports.default.plugins });
+
+  const paths = publishedPaths();
+  expect(paths).toContain('index.html');
+  expect(paths).toContain('zephyr-manifest.json');
+  expect(paths.some((name) => name.endsWith('.js'))).toBe(true);
+  expect(mocks.events).toEqual(['upload', 'finish']);
+});
+
+test('the skill task checker rejects a local build without Zephyr publication', async () => {
+  await build({ ...config(), plugins: [] });
+
+  expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  expect(() => publishedPaths()).toThrow();
 });
 
 function ssrConfig(

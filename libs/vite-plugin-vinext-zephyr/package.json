@@ -5,6 +5,7 @@
   "description": "Vite plugin for deploying Vinext applications with Zephyr",
   "keywords": [
     "deploy",
+    "tanstack-intent",
     "vinext",
     "vite",
     "vite-plugin",
@@ -21,6 +22,9 @@
     "directory": "libs/vite-plugin-vinext-zephyr"
   },
   "files": [
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     "dist",
     "README.md",
     "LICENSE",
@@ -48,7 +52,7 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "pnpm build",
+    "prepack": "node ../../scripts/sync-package-skills.mjs && pnpm build",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

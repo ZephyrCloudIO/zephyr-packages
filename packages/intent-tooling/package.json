@@ -1,0 +1,11 @@
+{
+  "name": "@zephyrcloudio/intent-tooling",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./compiler": "./compiler.mjs"
+  },
+  "dependencies": {
+    "typescript": "6.0.3"
+  }
+}

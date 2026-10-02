@@ -1,0 +1,388 @@
+library:
+  name: zephyr-packages
+  version: 1.4.2
+domains:
+  - name: Project bootstrap
+    slug: bootstrap
+    description: Generate a new application with explicit side effects and a
+      verifiable receipt.
+  - name: Vite publication
+    slug: vite
+    description: Configure the installed Vite integration and choose a complete
+      publication lifecycle.
+  - name: SDK adoption
+    slug: sdk
+    description: Select the supported Zephyr integration for a stack and explain the
+      version, tag, and environment model it publishes into.
+  - name: Module Federation
+    slug: federation
+    description: Wire hosts and remotes through Zephyr dependency resolution across
+      bundlers and monorepos.
+  - name: Upload CLI
+    slug: cli
+    description: Publish existing build output with ze-cli when no bundler plugin
+      applies, and inspect project readiness without mutation.
+  - name: Webpack-family publication
+    slug: xpack
+    description: Wrap webpack, Rspack, and Rsbuild builds after their federation
+      plugins and publish coordinated compilations.
+  - name: Rollup-family publication
+    slug: rollup
+    description: Publish Rollup and Rolldown output bundles from the write phase.
+  - name: Parcel publication
+    slug: parcel
+    description: Publish Parcel builds through a registered reporter.
+  - name: Framework publication
+    slug: frameworks
+    description: Publish Astro, Nuxt, Modern.js, and Rspress output through each
+      framework's own build lifecycle.
+  - name: React Native publication
+    slug: native
+    description: Publish iOS and Android Module Federation bundles from Metro and
+      Re.Pack builds.
+skills:
+  - name: create-zephyr-apps
+    slug: create-zephyr-apps
+    domain: bootstrap
+    description: Scaffold current Zephyr application projects with
+      create-zephyr-apps; use when selecting a template, generating a fresh web
+      or React Native project non-interactively, or verifying the CLI's JSON
+      receipt and structured failures.
+    packages: [create-zephyr-apps]
+    tasks:
+      - Choose a supported template and scaffold non-interactively.
+      - Keep Git initialization, dependency installation, and builds explicit.
+      - Verify the JSON receipt and retain structured failures.
+    covers: [templates, explicit side effects, JSON receipts, structured failures]
+  - name: zephyr-vite
+    slug: zephyr-vite
+    domain: vite
+    description: Configure and deploy Vite applications with vite-plugin-zephyr; use
+      when adding withZephyr, configuring its Module Federation integration, or
+      diagnosing Vite build publication and plugin ordering. Use the dedicated
+      integrations for TanStack Start and Vinext.
+    packages: [vite-plugin-zephyr]
+    tasks:
+      - Add Zephyr to an existing Vite application without replacing its
+        framework configuration.
+      - Configure Module Federation through withZephyr without installing
+        duplicate federation plugins.
+      - Choose the supported publication lifecycle for direct,
+        multi-environment, and SSR Vite builds.
+    covers: [withZephyr, mfConfig, optional federation peer, buildApp, SSR entrypoints]
+  - name: zephyr-core
+    slug: zephyr-core
+    domain: sdk
+    description: Use when the user asks about Zephyr setup, with-zephyr, SDK
+      selection, versions, tags, environments, snapshot/version URLs, dashboard
+      workflows, docs, or public env vars.
+    tasks:
+      - Select the supported SDK or upload fallback for the application's stack.
+      - Explain immutable versions versus mutable tags and environments.
+      - Keep ZE_PUBLIC_* values public and diagnose git, auth, and SDK
+        mismatches.
+    covers:
+      [
+        with-zephyr,
+        SDK picker,
+        zephyr-agent upload fallback,
+        zephyr-cli,
+        versions,
+        tags,
+        environments,
+        ZE_PUBLIC_* overrides,
+      ]
+  - name: zephyr-module-federation
+    slug: zephyr-module-federation
+    domain: federation
+    description: Use when the user asks about zephyr:dependencies, hosts/remotes,
+      Module Federation build order, remote resolution, cross-bundler remotes,
+      or monorepo MF on Zephyr.
+    tasks:
+      - Configure host and remote federation through the stack's Zephyr plugin.
+      - Map remotes with zephyr:dependencies and choose a resolution selector.
+      - Order remote and host builds and diagnose naming or remote type
+        mismatches.
+    covers: [zephyr:dependencies, workspace:*, selectors, build order, cross-bundler remote types]
+  - name: zephyr-cli
+    slug: zephyr-cli
+    domain: cli
+    description: Publish an application's existing build output through ze-cli
+      without a bundler plugin, choosing between run, deploy, watch, and doctor
+      and confirming that an upload actually happened.
+    packages:
+      - zephyr-cli
+    tasks:
+      - Choose between ze-cli run, deploy, watch, and doctor for a stack without
+        a bundler plugin.
+      - Publish TAP mini-app output with its metadata sidecar.
+      - Confirm that a run actually uploaded instead of skipping an undetected
+        output directory.
+    covers:
+      [
+        'run, deploy, watch, doctor',
+        output directory detection,
+        silent upload skip,
+        TAP metadata sidecar,
+        ZE_CI_TOKEN,
+      ]
+  - name: zephyr-webpack
+    slug: zephyr-webpack
+    domain: xpack
+    description: Wrap an existing webpack 5 configuration for Zephyr publication
+      after its Module Federation plugins are in place, keeping one publication
+      per logical build.
+    packages:
+      - zephyr-webpack-plugin
+    tasks:
+      - Wrap an existing webpack config with withZephyr.
+      - Connect an existing Module Federation plugin before wrapping.
+      - Publish a client/server config array as one SSR snapshot.
+    covers:
+      [withZephyr wrapper, federation plugin order, config arrays and SSR, ZE_FAIL_BUILD, tap-app]
+  - name: zephyr-rspack
+    slug: zephyr-rspack
+    domain: xpack
+    description: Wrap an existing Rspack configuration for Zephyr publication after
+      its Module Federation plugins are in place, keeping one publication per
+      logical build.
+    packages:
+      - zephyr-rspack-plugin
+    tasks:
+      - Wrap an existing Rspack config with withZephyr.
+      - Connect an @module-federation/enhanced/rspack plugin before wrapping.
+      - Diagnose a ZE_PUBLIC_* read that fails at runtime.
+    covers:
+      [
+        withZephyr wrapper,
+        federation plugin order,
+        config arrays and SSR,
+        'ZE_PUBLIC_* import map',
+        tap-app,
+      ]
+  - name: zephyr-rsbuild
+    slug: zephyr-rsbuild
+    domain: xpack
+    description: Add Zephyr to an existing Rsbuild config as a plugin that publishes
+      every Rsbuild environment as one coordinated snapshot after federation
+      setup.
+    packages:
+      - zephyr-rsbuild-plugin
+    tasks:
+      - Add withZephyr to an existing Rsbuild plugin list.
+      - Combine it with pluginModuleFederation.
+      - Publish client and server environments as one SSR snapshot.
+    covers:
+      [plugin setup, pluginModuleFederation order, environments and SSR, HTML import map, tap-app]
+  - name: zephyr-modernjs
+    slug: zephyr-modernjs
+    domain: frameworks
+    description: Add Zephyr to an existing Modern.js 3 app as a CLI plugin that
+      delegates each Rspack config to zephyr-rspack-plugin after federation
+      config runs.
+    packages:
+      - zephyr-modernjs-plugin
+    tasks:
+      - Add withZephyr after appTools in modern.config.
+      - Install zephyr-rspack-plugin alongside the Modern.js plugin.
+      - Diagnose why an SSR app is not published as one snapshot.
+    covers:
+      [
+        zephyr-rspack-plugin dependency,
+        pre ordering,
+        Rspack-only Modern.js 3,
+        per-config publication,
+      ]
+  - name: zephyr-rollup
+    slug: zephyr-rollup
+    domain: rollup
+    description: Add Zephyr publication to an existing Rollup 4 build so each
+      written output bundle is uploaded as a Zephyr version without changing how
+      Rollup bundles it.
+    packages:
+      - rollup-plugin-zephyr
+    tasks:
+      - Add withZephyr to an existing Rollup config.
+      - Supply TAP mfConfigs and federation metadata for a Rollup build.
+      - Diagnose why a Rollup build did not publish, or published more than once.
+    covers:
+      [withZephyr setup, writeBundle publication, emitted files only, TAP metadata, ZE_FAIL_BUILD]
+  - name: zephyr-rolldown
+    slug: zephyr-rolldown
+    domain: rollup
+    description: Add Zephyr publication to an existing Rolldown build while keeping
+      the uploaded snapshot paths consistent with how the app references its own
+      files.
+    packages:
+      - zephyr-rolldown-plugin
+    tasks:
+      - Add withZephyr to an existing Rolldown config.
+      - Choose output.dir without breaking published asset paths.
+      - Supply TAP Module Federation metadata for a Rolldown build.
+    covers: [withZephyr setup, output.dir snapshot prefix, TAP metadata, ZE_FAIL_BUILD]
+  - name: zephyr-parcel
+    slug: zephyr-parcel
+    domain: parcel
+    description: Register Zephyr as a Parcel 2 reporter in the project's .parcelrc
+      so successful builds publish their emitted bundles without displacing
+      Parcel's other reporters.
+    packages:
+      - parcel-reporter-zephyr
+    tasks:
+      - Register parcel-reporter-zephyr in .parcelrc.
+      - Pass hooks or a target through a project-local createZephyrReporter
+        module.
+      - Diagnose a Parcel build that succeeded but did not publish.
+    covers: [.parcelrc reporter, local reporter module, watch and serve publication, TAP metadata]
+  - name: zephyr-tanstack-start
+    slug: zephyr-tanstack-start
+    domain: vite
+    description: Publish a TanStack Start application's finalized client and server
+      output to Zephyr as one SSR snapshot without taking over the framework's
+      own Vite build.
+    packages:
+      - vite-plugin-tanstack-start-zephyr
+    tasks:
+      - Add withZephyr to a TanStack Start Vite config.
+      - Set the SSR server entrypoint when the emitted entry differs from the
+        default.
+      - Publish a TanStack Start TAP package with paired federation metadata.
+    covers:
+      [
+        withZephyr and deprecated alias,
+        buildApp publication,
+        SSR entrypoint,
+        Cloudflare target,
+        TAP metadata,
+      ]
+  - name: zephyr-vinext
+    slug: zephyr-vinext
+    domain: vite
+    description: Publish a Vinext application's finalized RSC, SSR, and client
+      output to Zephyr as one Worker-compatible snapshot after the framework
+      build completes.
+    packages:
+      - vite-plugin-vinext-zephyr
+    tasks:
+      - Add withZephyr after vinext() and the Cloudflare plugin.
+      - Fix a failed Vinext entrypoint detection with an explicit emitted
+        entrypoint.
+      - Observe deployments with an onDeployComplete hook.
+    covers: [plugin order, buildApp publication, entrypoint detection, deploy hooks, TAP metadata]
+  - name: zephyr-astro
+    slug: zephyr-astro
+    domain: frameworks
+    description: Publish an Astro site's static build output to Zephyr from Astro's
+      build lifecycle while leaving the site's own integrations and config
+      intact.
+    packages:
+      - zephyr-astro-integration
+    tasks:
+      - Add withZephyr as the last Astro integration.
+      - Decide whether an Astro app's output mode can be published by Zephyr.
+      - Wire ZE_PUBLIC_* runtime values or an onDeployComplete hook.
+    covers:
+      [
+        integration placement,
+        static-only output,
+        'ZE_PUBLIC_* rewriting',
+        TAP metadata,
+        ZE_FAIL_BUILD,
+      ]
+  - name: zephyr-nuxt
+    slug: zephyr-nuxt
+    domain: frameworks
+    description: Publish a Nuxt application's Nitro build output to Zephyr after
+      nuxt build, choosing an SSR or static snapshot from what Nitro actually
+      emitted.
+    packages:
+      - zephyr-nuxt-module
+    tasks:
+      - Add zephyr-nuxt-module with a Cloudflare Worker Nitro preset.
+      - Choose between an SSR and a static snapshot from the emitted Nitro
+        output.
+      - Configure zephyr options such as outputDir or a TAP target.
+    covers:
+      [
+        module setup,
+        SSR versus static snapshot,
+        Worker Nitro preset,
+        output directory mapping,
+        TAP target,
+      ]
+  - name: zephyr-metro
+    slug: zephyr-metro
+    domain: native
+    description: Publish iOS and Android Metro Module Federation bundles to Zephyr
+      by pairing the configuration-only withZephyr wrapper with the command
+      integration that actually uploads.
+    packages:
+      - zephyr-metro-plugin
+    tasks:
+      - Add Zephyr to an existing Metro Module Federation config.
+      - Register the Zephyr publication commands for the React Native CLI or
+        RNEF.
+      - Publish a Metro remote for iOS and Android.
+    covers:
+      [
+        configuration-only withZephyr,
+        publication commands,
+        ios and android targets,
+        'dist/<platform> upload',
+        remote rewriting,
+      ]
+  - name: zephyr-repack
+    slug: zephyr-repack
+    domain: native
+    description: Wrap an existing Re.Pack configuration function so each iOS or
+      Android bundle build resolves its Zephyr remotes and publishes its own
+      platform snapshot.
+    packages:
+      - zephyr-repack-plugin
+    tasks:
+      - Wrap an existing Re.Pack config function with withZephyr.
+      - Configure a Re.Pack Module Federation host or mini-app for Zephyr.
+      - Diagnose a Re.Pack build that completed without publishing.
+    covers:
+      [
+        config function wrapper,
+        per-platform targets,
+        remote rewriting,
+        container naming,
+        ZE_FAIL_BUILD,
+      ]
+  - name: zephyr-rspress
+    slug: zephyr-rspress
+    domain: frameworks
+    description: Add Zephyr publication to an existing Rspress site and pick the SSG
+      or Rsbuild publication path so every emitted and post-build file is
+      uploaded.
+    packages:
+      - zephyr-rspress-plugin
+    tasks:
+      - Add Zephyr publication to an existing Rspress site.
+      - Ensure files generated by other Rspress plugins are included in the
+        upload.
+      - Publish an Rspress SSG site that uses Module Federation.
+    covers:
+      [SSG versus Rsbuild path, explicit ssg, afterBuild hook ordering, federation public path]
+gaps:
+  - skill: zephyr-vite
+    question: Fresh-agent activation and end-to-end live deployment are not verified
+      by local tests.
+    context: Packing, Intent discovery, and a network-disabled publication fixture
+      are separate from those outcomes.
+    status: open
+  - skill: dedicated-plugin-skills
+    question: Plugin skills other than zephyr-vite were verified by type-checking
+      their examples and probing built packages, not by an executable fixture
+      test like the Vite pilot's.
+    context: Add a network-disabled build fixture per plugin before treating the
+      examples as regression-tested.
+    status: open
+  - skill: zephyr-core
+    question: The packaged guide and the platform-only zephyr-core in
+      ZephyrCloudIO/skills share a name and overlap on platform topics.
+    context: Agents with both installed see two zephyr-core entries in separate
+      namespaces. Decide whether to rename one before the next release.
+    status: open

@@ -33,6 +33,7 @@
     "LICENSE",
     "skills",
     "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     ".codex-plugin/plugin.json",
     ".claude-plugin/plugin.json",
     ".cursor-plugin/plugin.json",
@@ -47,6 +48,7 @@
     "provenance": true
   },
   "scripts": {
+    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "dev": "rslib build --watch",
     "build": "rslib build",
     "patch-version": "pnpm version",

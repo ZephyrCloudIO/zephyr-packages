@@ -1,0 +1,512 @@
+library:
+  name: zephyr-packages
+  version: 1.4.2
+generated_from:
+  domain_map: _artifacts/domain_map.yaml
+  skill_spec: _artifacts/skill_spec.md
+skills:
+  [
+    {
+      name: create-zephyr-apps,
+      slug: create-zephyr-apps,
+      domain: bootstrap,
+      package: libs/create-zephyr-apps,
+      path: skills/create-zephyr-apps/SKILL.md,
+      description: "Scaffold current Zephyr application projects with
+        create-zephyr-apps; use when selecting a template, generating a fresh
+        web or React Native project non-interactively, or verifying the CLI's
+        JSON receipt and structured failures.",
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/cli.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/scaffold.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/templates.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/cli.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/create-zephyr-apps/src/scaffold.spec.ts,
+        ],
+      requires: [],
+      purpose: "Scaffold current Zephyr application projects with create-zephyr-apps;
+        use when selecting a template, generating a fresh web or React Native
+        project non-interactively, or verifying the CLI's JSON receipt and
+        structured failures.",
+    },
+    {
+      name: zephyr-vite,
+      slug: zephyr-vite,
+      domain: vite,
+      package: libs/vite-plugin-zephyr,
+      path: skills/zephyr-vite/SKILL.md,
+      description: 'Configure and deploy Vite applications with vite-plugin-zephyr;
+        use when adding withZephyr, configuring its Module Federation
+        integration, or diagnosing Vite build publication and plugin ordering.
+        Use the dedicated integrations for TanStack Start and Vinext.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-zephyr/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-zephyr/src/package-output.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-zephyr/README.md,
+        ],
+      requires: [],
+      purpose: Configure an existing Vite application for Zephyr publication while
+        preserving its framework plugins and selecting the correct build
+        lifecycle.,
+    },
+    {
+      name: zephyr-core,
+      slug: zephyr-core,
+      domain: sdk,
+      path: skills/zephyr-core/SKILL.md,
+      description: 'Use when the user asks about Zephyr setup, with-zephyr, SDK
+        selection, versions, tags, environments, snapshot/version URLs,
+        dashboard workflows, docs, or public env vars.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/skills/zephyr-core/references/*.md,
+          ZephyrCloudIO/zephyr-packages:**/scripts/sync-package-skills.mjs,
+        ],
+      requires: [],
+      purpose: 'Use when the user asks about Zephyr setup, with-zephyr, SDK selection,
+        versions, tags, environments, snapshot/version URLs, dashboard
+        workflows, docs, or public env vars.',
+    },
+    {
+      name: zephyr-module-federation,
+      slug: zephyr-module-federation,
+      domain: federation,
+      path: skills/zephyr-module-federation/SKILL.md,
+      description: 'Use when the user asks about zephyr:dependencies, hosts/remotes,
+        Module Federation build order, remote resolution, cross-bundler
+        remotes, or monorepo MF on Zephyr.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/skills/zephyr-module-federation/references/*.md,
+          ZephyrCloudIO/zephyr-packages:**/scripts/sync-package-skills.mjs,
+        ],
+      requires: [],
+      purpose: 'Use when the user asks about zephyr:dependencies, hosts/remotes,
+        Module Federation build order, remote resolution, cross-bundler
+        remotes, or monorepo MF on Zephyr.',
+    },
+    {
+      name: zephyr-cli,
+      slug: zephyr-cli,
+      domain: cli,
+      package: libs/zephyr-cli,
+      path: skills/zephyr-cli/SKILL.md,
+      description: 'Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
+        stack has no Zephyr bundler plugin, when wrapping a build command or
+        deploying a prebuilt directory, when publishing TAP mini-app output,
+        or when running ze-cli doctor to inspect project readiness.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/cli.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/run.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/deploy.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/watch.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/lib/command-detector.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/lib/publication-metadata.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/doctor/schema.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/README.md,
+        ],
+      requires: [],
+      purpose: "Publish an application's existing build output through ze-cli without
+        a bundler plugin, choosing between run, deploy, watch, and doctor and
+        confirming that an upload actually happened.",
+    },
+    {
+      name: zephyr-webpack,
+      slug: zephyr-webpack,
+      domain: xpack,
+      package: libs/zephyr-webpack-plugin,
+      path: skills/zephyr-webpack/SKILL.md,
+      description: 'Configure and deploy webpack 5 applications with
+        zephyr-webpack-plugin; use when wrapping a webpack config with
+        withZephyr, connecting an existing Module Federation plugin or Nx
+        composePlugins chain, publishing webpack config arrays or SSR builds,
+        or diagnosing why a webpack build did not publish. Use
+        zephyr-rspack-plugin for Rspack projects.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/src/types/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/src/webpack-plugin/ze-webpack-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/src/webpack-plugin/with-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-webpack-plugin/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts,
+        ],
+      requires: [],
+      purpose: 'Wrap an existing webpack 5 configuration for Zephyr publication after
+        its Module Federation plugins are in place, keeping one publication
+        per logical build.',
+    },
+    {
+      name: zephyr-rspack,
+      slug: zephyr-rspack,
+      domain: xpack,
+      package: libs/zephyr-rspack-plugin,
+      path: skills/zephyr-rspack/SKILL.md,
+      description: 'Configure and deploy Rspack applications with
+        zephyr-rspack-plugin; use when wrapping an rspack.config with
+        withZephyr, connecting an existing Module Federation plugin or Nx
+        composePlugins chain, publishing Rspack config arrays or SSR builds,
+        or diagnosing ZE_PUBLIC_* rewrites and missing publications. Use
+        zephyr-rsbuild-plugin or zephyr-modernjs-plugin for those frameworks.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/types/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/ze-rspack-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/ze-rspack-plugin.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts,
+        ],
+      requires: [],
+      purpose: 'Wrap an existing Rspack configuration for Zephyr publication after its
+        Module Federation plugins are in place, keeping one publication per
+        logical build.',
+    },
+    {
+      name: zephyr-rsbuild,
+      slug: zephyr-rsbuild,
+      domain: xpack,
+      package: libs/zephyr-rsbuild-plugin,
+      path: skills/zephyr-rsbuild/SKILL.md,
+      description: 'Configure and deploy Rsbuild applications with
+        zephyr-rsbuild-plugin; use when adding withZephyr to rsbuild.config,
+        combining it with @module-federation/rsbuild-plugin, publishing
+        multi-environment or SSR Rsbuild builds, or diagnosing Rsbuild
+        publication. Use the dedicated Zephyr integrations for Modern.js and
+        Rspress.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rsbuild-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rsbuild-plugin/src/rsbuild-plugin/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rsbuild-plugin/src/rsbuild-plugin/with-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rsbuild-plugin/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rsbuild-plugin/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/ze-rspack-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts,
+        ],
+      requires: [],
+      purpose: Add Zephyr to an existing Rsbuild config as a plugin that publishes
+        every Rsbuild environment as one coordinated snapshot after federation
+        setup.,
+    },
+    {
+      name: zephyr-modernjs,
+      slug: zephyr-modernjs,
+      domain: frameworks,
+      package: libs/zephyr-modernjs-plugin,
+      path: skills/zephyr-modernjs/SKILL.md,
+      description: 'Configure and deploy Modern.js 3 applications with
+        zephyr-modernjs-plugin; use when adding withZephyr to modern.config,
+        ordering it with Modern.js Module Federation, checking the Rspack
+        plugin dependency and output layout, or diagnosing Modern.js
+        client/server publication.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-modernjs-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-modernjs-plugin/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-modernjs-plugin/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts,
+        ],
+      requires: [],
+      purpose: Add Zephyr to an existing Modern.js 3 app as a CLI plugin that
+        delegates each Rspack config to zephyr-rspack-plugin after federation
+        config runs.,
+    },
+    {
+      name: zephyr-rollup,
+      slug: zephyr-rollup,
+      domain: rollup,
+      package: libs/rollup-plugin-zephyr,
+      path: skills/zephyr-rollup/SKILL.md,
+      description: 'Configure and deploy Rollup applications with
+        rollup-plugin-zephyr; use when adding withZephyr to a Rollup config,
+        supplying TAP Module Federation metadata, or diagnosing when a Rollup
+        build publishes to Zephyr and which files it uploads.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/rollup-plugin-zephyr/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/rollup-plugin-zephyr/src/lib/rollup-plugin-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/rollup-plugin-zephyr/src/lib/transform/get-assets-map.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/rollup-plugin-zephyr/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/rollup-plugin-zephyr/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/errors/handle-global-error.ts,
+        ],
+      requires: [],
+      purpose: Add Zephyr publication to an existing Rollup 4 build so each written
+        output bundle is uploaded as a Zephyr version without changing how
+        Rollup bundles it.,
+    },
+    {
+      name: zephyr-rolldown,
+      slug: zephyr-rolldown,
+      domain: rollup,
+      package: libs/zephyr-rolldown-plugin,
+      path: skills/zephyr-rolldown/SKILL.md,
+      description: 'Configure and deploy Rolldown applications with
+        zephyr-rolldown-plugin; use when adding withZephyr to a Rolldown
+        config, choosing output.dir, supplying TAP Module Federation metadata,
+        or diagnosing when a Rolldown build publishes to Zephyr and which
+        paths it uploads.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rolldown-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rolldown-plugin/src/lib/internal/get-assets-map.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rolldown-plugin/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rolldown-plugin/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/transformers/ze-basehref-handler.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/errors/handle-global-error.ts,
+        ],
+      requires: [],
+      purpose: Add Zephyr publication to an existing Rolldown build while keeping the
+        uploaded snapshot paths consistent with how the app references its own
+        files.,
+    },
+    {
+      name: zephyr-parcel,
+      slug: zephyr-parcel,
+      domain: parcel,
+      package: libs/parcel-reporter-zephyr,
+      path: skills/zephyr-parcel/SKILL.md,
+      description: 'Configure and deploy Parcel applications with
+        parcel-reporter-zephyr; use when adding the Zephyr reporter to
+        .parcelrc, passing reporter options through createZephyrReporter,
+        supplying TAP Module Federation metadata, or diagnosing when a Parcel
+        build publishes to Zephyr.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/src/index.test.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/src/lib/on-build-start.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/src/lib/on-build-success.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/src/lib/on-build-success.test.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/src/lib/get-assets-map.test.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/parcel-reporter-zephyr/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/errors/handle-global-error.ts,
+        ],
+      requires: [],
+      purpose: Register Zephyr as a Parcel 2 reporter in the project's .parcelrc so
+        successful builds publish their emitted bundles without displacing
+        Parcel's other reporters.,
+    },
+    {
+      name: zephyr-tanstack-start,
+      slug: zephyr-tanstack-start,
+      domain: vite,
+      package: libs/vite-plugin-tanstack-start-zephyr,
+      path: skills/zephyr-tanstack-start/SKILL.md,
+      description: 'Configure and deploy TanStack Start applications with
+        vite-plugin-tanstack-start-zephyr; use when adding withZephyr to a
+        TanStack Start Vite config, choosing the SSR server entrypoint or
+        output directory, publishing a TAP package, or diagnosing why a
+        TanStack Start build did not publish. Use it instead of the generic
+        vite-plugin-zephyr.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/src/lib/internal/extract/load-tanstack-output.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.target.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-tanstack-start-zephyr/README.md,
+        ],
+      requires: [],
+      purpose: Publish a TanStack Start application's finalized client and server
+        output to Zephyr as one SSR snapshot without taking over the
+        framework's own Vite build.,
+    },
+    {
+      name: zephyr-vinext,
+      slug: zephyr-vinext,
+      domain: vite,
+      package: libs/vite-plugin-vinext-zephyr,
+      path: skills/zephyr-vinext/SKILL.md,
+      description: 'Configure and deploy Vinext applications with
+        vite-plugin-vinext-zephyr; use when adding withZephyr to a Vinext Vite
+        config, resolving the Worker server entrypoint, wiring deployment
+        hooks, publishing a TAP package, or diagnosing why a Vinext build did
+        not publish. Use it instead of the generic vite-plugin-zephyr.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/src/lib/internal/vinext-output.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/src/lib/internal/vinext-output.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/vite-plugin-vinext-zephyr/README.md,
+        ],
+      requires: [],
+      purpose: "Publish a Vinext application's finalized RSC, SSR, and client output
+        to Zephyr as one Worker-compatible snapshot after the framework build
+        completes.",
+    },
+    {
+      name: zephyr-astro,
+      slug: zephyr-astro,
+      domain: frameworks,
+      package: libs/zephyr-astro-integration,
+      path: skills/zephyr-astro/SKILL.md,
+      description: "Configure and deploy Astro sites with zephyr-astro-integration;
+        use when adding withZephyr to astro.config integrations, deciding
+        whether an Astro app's output can be published, wiring ZE_PUBLIC_*
+        runtime values or deployment hooks, publishing a TAP package, or
+        diagnosing why an Astro build did not publish.",
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/src/lib/astro-integration-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/src/lib/internal/extract-astro-assets-map.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/src/lib/__test__/astro-integration-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/src/lib/internal/__test__/extract-astro-assets-map.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-astro-integration/README.md,
+        ],
+      requires: [],
+      purpose: Publish an Astro site's static build output to Zephyr from Astro's
+        build lifecycle while leaving the site's own integrations and config
+        intact.,
+    },
+    {
+      name: zephyr-nuxt,
+      slug: zephyr-nuxt,
+      domain: frameworks,
+      package: libs/zephyr-nuxt-module,
+      path: skills/zephyr-nuxt/SKILL.md,
+      description: 'Configure and deploy Nuxt applications with zephyr-nuxt-module;
+        use when adding the module to nuxt.config, setting zephyr options,
+        choosing between SSR and static (CSR) snapshots, selecting the Nitro
+        preset, publishing a TAP package, or diagnosing why nuxt build did not
+        publish.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/lib/nuxt-module.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/lib/ssr-upload.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/lib/paths.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/lib/runtime-guards.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/lib/types.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/src/lib/ssr-upload.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/package.json,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-nuxt-module/README.md,
+        ],
+      requires: [],
+      purpose: "Publish a Nuxt application's Nitro build output to Zephyr after nuxt
+        build, choosing an SSR or static snapshot from what Nitro actually
+        emitted.",
+    },
+    {
+      name: zephyr-metro,
+      slug: zephyr-metro,
+      domain: native,
+      package: libs/zephyr-metro-plugin,
+      path: skills/zephyr-metro/SKILL.md,
+      description: 'Configure and deploy React Native Metro applications with
+        zephyr-metro-plugin; use when adding withZephyr to metro.config.js,
+        registering the bundle-mf-host or bundle-mf-remote publication
+        commands for the React Native CLI or RNEF, or diagnosing iOS and
+        Android Module Federation publication with @module-federation/metro.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/zephyr-metro-react-native-cli.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/zephyr-metro-rnef-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/zephyr-metro-command-wrapper.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/zephyr-metro-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/internal/mutate-mf-config.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/__test__/with-zephyr.integration.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/__test__/zephyr-metro-command-wrapper.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/src/lib/__test__/zephyr-metro-react-native-cli.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-metro-plugin/README.md,
+        ],
+      requires: [],
+      purpose: Publish iOS and Android Metro Module Federation bundles to Zephyr by
+        pairing the configuration-only withZephyr wrapper with the command
+        integration that actually uploads.,
+    },
+    {
+      name: zephyr-repack,
+      slug: zephyr-repack,
+      domain: native,
+      package: libs/zephyr-repack-plugin,
+      path: skills/zephyr-repack/SKILL.md,
+      description: 'Configure and deploy React Native Re.Pack applications with
+        zephyr-repack-plugin; use when wrapping a Re.Pack rspack.config with
+        withZephyr, publishing iOS and Android Module Federation hosts or
+        mini-apps, or diagnosing why a Re.Pack build did not publish to
+        Zephyr.',
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/lib/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/lib/ze-repack-plugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/lib/native-target.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/lib/utils/ze-util-verification.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/type/zephyr-internal-types.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/lib/with-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/src/lib/ze-repack-plugin.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-repack-plugin/README.md,
+        ],
+      requires: [],
+      purpose: Wrap an existing Re.Pack configuration function so each iOS or Android
+        bundle build resolves its Zephyr remotes and publishes its own
+        platform snapshot.,
+    },
+    {
+      name: zephyr-rspress,
+      slug: zephyr-rspress,
+      domain: frameworks,
+      package: libs/zephyr-rspress-plugin,
+      path: skills/zephyr-rspress/SKILL.md,
+      description: "Configure and deploy Rspress documentation sites with
+        zephyr-rspress-plugin; use when adding withZephyr to rspress.config,
+        choosing between SSG and non-SSG publication, or diagnosing files
+        missing from an Rspress upload, including output from other plugins'
+        afterBuild hooks and Module Federation SSG builds.",
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/with-zephyr.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/zephyrRspressSSGPlugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/internal/lifecycle/afterBuildHooks.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/internal/assets/moduleFederationPublicPathPlugin.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/internal/assets/rewriteRspressModuleFederationAssets.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/__test__/with-zephyr.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/__test__/zephyrRspressSSGPlugin.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/src/__test__/afterBuildHooks.spec.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-rspress-plugin/README.md,
+        ],
+      requires: [],
+      purpose: Add Zephyr publication to an existing Rspress site and pick the SSG or
+        Rsbuild publication path so every emitted and post-build file is
+        uploaded.,
+    },
+  ]
+distribution:
+  mode: none

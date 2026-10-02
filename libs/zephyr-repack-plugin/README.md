@@ -132,6 +132,10 @@ plugins: [
       ...
 ```
 
+### Environment variables
+
+`withZephyr` rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value, and emits `zephyr-manifest.json` next to the bundle. To apply the values configured for a Zephyr environment on device, preload the host's published manifest and add the remote plugin to `runtimePlugins` with [`zephyr-native-env`](https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-native-env). Without it, bundles keep their build-time values.
+
 ## Creation command
 
 To create a complete example of a React Native application, with Zephyr enabled, configured, you can use our creation command where you can find most of our examples.

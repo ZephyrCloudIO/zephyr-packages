@@ -23,7 +23,9 @@ used by the SDK packages. CI runs the same wrapper.
 Release pull requests opened and updated by the release-please automation app
 skip this review step because they only bump versions, changelogs, and
 `library_version` lines; the published release runs the read-only review
-report. The exception checks the app identity, not just the branch name, so any
+report. The Release Please workflow records those version-only changes as
+reviewed on the release branch, so merging a release never leaves pending items
+on `main`. The exception checks the app identity, not just the branch name, so any
 other pull request, including a human push to a release branch, still runs it.
 
 `.intent/review-state.json` stores per-file hashes, so parallel pull requests

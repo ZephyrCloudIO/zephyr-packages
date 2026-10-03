@@ -371,3 +371,32 @@ src/
 ## Contributing
 
 Found a configuration pattern that isn't supported? Please open an issue or submit a pull request!
+
+## Optional Change Attribution
+
+After setup, interactive runs ask whether to enable Change Attribution and link
+to [Git AI installation](https://usegitai.com/docs/get-started). A second prompt
+offers project agent hooks. Skipping either choice keeps ordinary Zephyr setup
+working. Non-interactive runs require explicit flags:
+
+```bash
+pnpm dlx with-zephyr . --attribution --attribution-agents codex claude
+```
+
+`--no-attribution` skips the offer. `--dry-run` does not write attribution or hook
+configuration. `--git-ai-path <executable>` selects a compatible Git AI binary or
+fork. Git AI 1.7.x is supported, tested with 1.7.5. The codemod does not download
+or execute its installer.
+
+The opt-in writes `.zephyr/attribution.json` at the Git repository root. Agent
+integration flags merge hooks into `.codex/hooks.json` or `.claude/settings.json`
+without replacing existing hooks, global settings, or trust. Review Codex hooks
+with `/hooks` and restart agent sessions. Git AI editor integrations are needed
+for known-human evidence; missing instrumentation remains unknown.
+
+Source copies stay in the private Git directory. Snapshots emit file hashes and
+self-reported contributor/tool/model metadata. The scoped source record includes
+eligible unstaged and untracked files and omits ignored files, common build
+output, `.env*`, private key files, `.npmrc`, and `.netrc`. Configure additional
+repository-relative prefix exclusions through the `exclude` array. See the
+bundled `zephyr-core/references/change-attribution.md` for limits and comparisons.

@@ -182,6 +182,9 @@ Commands:
   deploy <directory>       Upload pre-built assets from a directory
   watch <directory>        Watch pre-built output and publish each settled change
   doctor [directory]       Inspect project readiness without installing or building
+  attribution capture     Save a private source record, including local edits
+  attribution compare <before> <after>  Compare source records or version IDs
+  attribution status      Check optional Change Attribution configuration
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered

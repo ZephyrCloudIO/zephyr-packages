@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { captureSource } from '../../lib/change-attribution/source';
 
 import {
   ZEPHYR_MANIFEST_FILENAME,
@@ -81,6 +86,40 @@ describe('ZephyrEngine.upload_assets', () => {
     mocks.uploadStrategy.mockResolvedValue('https://deploy.example.test/app');
     mocks.getUploadStrategy.mockReturnValue(mocks.uploadStrategy);
     mocks.setAppDeployResult.mockResolvedValue(undefined);
+  });
+
+  it('carries the same opted-in source receipt to snapshot and build stats without changing the deployer', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'zephyr-upload-attribution-'));
+    try {
+      execFileSync('git', ['init', '-q', root]);
+      mkdirSync(join(root, '.zephyr'));
+      writeFileSync(
+        join(root, '.zephyr', 'attribution.json'),
+        '{"schemaVersion":1,"enabled":true}'
+      );
+      writeFileSync(join(root, 'app.txt'), 'local source\n');
+      const engine = readyEngine();
+      engine.sourceContext = root;
+      engine.sourceCapture = captureSource(root, 'build-start');
+      await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
+      const options = uploadedOptions();
+      expect(options.snapshot.changeAttribution).toMatchObject({
+        status: 'captured',
+        consistency: 'boundary-match',
+      });
+      expect(options.getDashData(engine).changeAttribution).toEqual(
+        options.snapshot.changeAttribution
+      );
+      expect(options.snapshot.creator).toEqual({
+        name: 'developer',
+        email: 'developer@example.test',
+      });
+      expect(options.snapshot.changeAttribution?.files?.['app.txt']).not.toHaveProperty(
+        'content'
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   it('adds an empty zephyr manifest asset when no federated dependencies were resolved', async () => {

@@ -1,5 +1,42 @@
 # zephyr-packages skill spec
 
+## Change Attribution addition, 2026-10-03
+
+The maintainer requested an optional codemod offer and installation link, then a
+trial on an actual generated example app. The name is Change Attribution; agent
+integration installation is separate from capture opt-in. Extend the existing
+shared `zephyr-core` setup/version task and `zephyr-cli` local-inspection task,
+keeping the established package-only skill distribution and prior decisions.
+
+The integration records the Git-eligible working tree independently from HEAD,
+stores immutable source copies privately in the worktree Git directory, and
+emits source fingerprints and self-reported provenance in snapshot/build-stat
+contracts. It preserves unknown evidence, keeps deployer and contributor separate,
+and checks exact checkpoint blob hashes before accepting Git AI ranges. The
+Git AI adapter targets checkpoint/1.0.0 from 1.7.x, tested with 1.7.5; a compatible
+fork can be selected by executable path. Native pre/post hooks preserve existing
+project settings and require the agent's ordinary trust review. The upstream
+Codex Stop preset is rejected in 1.7.5, so it is not installed by this setup.
+
+Vite and CLI run-mode have build-start observations. Prebuilt and other adapter
+flows remain publication-only. Boundary matching does not prove no transient
+edits or capture every dependency/environment input. Control-plane persistence,
+dashboard rendering, source-copy synchronization/retention, and broader adapter
+build-start instrumentation remain future work; this SDK batch does not claim
+them as implemented.
+
+The generated React/Vite verifier uses real local SDK snapshot construction and
+Git AI with explicit Codex/editor-event fixtures, plus an uninstrumented edit.
+It disables cloud transport and checks three versions sharing a commit but
+carrying distinct source records, AI/model, known-human, and unknown differences.
+Hook replay evidence is distinct from a live agent session or human typing.
+Unit tests cover opt-in, preserving hooks, dirty/staged/untracked/deleted/reverted
+source, binary contents, stale hashes, model switches, and immutable receipts.
+Git AI JSON blame omits known humans, so committed human evidence follows native
+line origins into explicit authorship/3.0.0 human records in refs/notes/ai; a
+regression test retains that evidence across a subsequent commit.
+Validation results and remaining limits are recorded in the source review.
+
 Package-owned skills describe the implementation shipped in their owning npm
 package. Every published build integration and `zephyr-cli` ships a dedicated
 skill, and two shared guides, `zephyr-core` and `zephyr-module-federation`,

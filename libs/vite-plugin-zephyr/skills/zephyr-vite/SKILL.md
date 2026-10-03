@@ -108,3 +108,12 @@ asset correctness, but not live deployment success. Report that distinction.
 On failure, retain the actionable error and fix the matching configuration or
 publication issue. Do not silently change the framework integration, suppress
 errors, or claim that a partial build was deployed.
+
+## Optional Change Attribution
+
+The bundled `zephyr-core/references/change-attribution.md` covers explicit
+opt-in and project agent hooks. With capture enabled, Vite observes source at
+`buildStart` and snapshot creation, including dirty and eligible untracked files.
+Matching boundaries do not prove exact compiler inputs; changed boundaries must
+be reported as such. Metadata emission does not establish cloud persistence or
+dashboard support. Missing or stale Git AI evidence remains unknown.

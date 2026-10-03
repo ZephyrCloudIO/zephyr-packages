@@ -5,6 +5,7 @@ import { program } from 'commander';
 import fs from 'fs';
 import { glob } from 'glob';
 import path from 'path';
+import { offerAttribution, type AttributionSetupOptions } from './attribution.js';
 
 import {
   webpackConfig,
@@ -817,18 +818,35 @@ program
   .argument('[directory]', 'Directory to search for config files', '.')
   .option('-d, --dry-run', 'Show what would be changed without modifying files')
   .option(
+    '--attribution',
+    'Enable optional Change Attribution (requires a Git repository)'
+  )
+  .option('--no-attribution', 'Skip Change Attribution setup')
+  .option(
+    '--attribution-agents <agents...>',
+    'Install project hooks for codex and/or claude'
+  )
+  .option(
+    '--git-ai-path <path>',
+    'Use a specific Git AI executable, including a compatible fork'
+  )
+  .option(
     '-b, --bundlers <bundlers...>',
     'Only process specific bundlers (webpack, vite, rollup, etc.)'
   )
-  .action((directory: string, options: CodemodOptions) => {
-    runCodemod(directory, options);
-  });
+  .action(
+    async (directory: string, options: CodemodOptions & AttributionSetupOptions) => {
+      if (options.attributionAgents && options.attribution !== true) {
+        throw new Error('--attribution-agents requires --attribution');
+      }
+      runCodemod(directory, options);
+      await offerAttribution(directory, options);
+    }
+  );
 
-// If no arguments provided, run with defaults (current directory)
-if (process.argv.length === 2) {
-  runCodemod('.', {});
-} else {
-  program.parse();
-}
+program.parseAsync().catch((error: Error) => {
+  console.error(chalk.red(error.message));
+  process.exitCode = 1;
+});
 
 export { findConfigFiles, runCodemod, transformConfigFile };

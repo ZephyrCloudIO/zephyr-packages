@@ -83,3 +83,8 @@ export {
 // string proto methods
 export { formatString, type FindTemplates } from './lib/string/string';
 export { stripAnsi } from './lib/string/strip-ansi';
+export type {
+  ChangeAttribution,
+  ChangeAttributionRange,
+  ChangeOrigin,
+} from './lib/change-attribution';

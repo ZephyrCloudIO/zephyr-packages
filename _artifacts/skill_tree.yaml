@@ -60,12 +60,25 @@ skills:
       domain: sdk,
       path: skills/zephyr-core/SKILL.md,
       description: 'Use when the user asks about Zephyr setup, with-zephyr, SDK
-        selection, versions, tags, environments, snapshot/version URLs,
-        dashboard workflows, docs, or public env vars.',
+        selection, Change Attribution, human/AI contributions, dirty-source
+        version differences, versions, tags, environments, snapshot/version
+        URLs, dashboard workflows, docs, or public env vars.',
       sources:
         [
           ZephyrCloudIO/zephyr-packages:**/skills/zephyr-core/references/*.md,
           ZephyrCloudIO/zephyr-packages:**/scripts/sync-package-skills.mjs,
+          ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/attribution.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/attribution.test.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/README.md,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/change-attribution/*.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/change-attribution.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/snapshot.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts,
+          ZephyrCloudIO/zephyr-packages:**/scripts/verify-change-attribution.mjs,
         ],
       requires: [],
       purpose: 'Use when the user asks about Zephyr setup, with-zephyr, SDK selection,
@@ -99,12 +112,14 @@ skills:
       description: 'Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
         stack has no Zephyr bundler plugin, when wrapping a build command or
         deploying a prebuilt directory, when publishing TAP mini-app output,
-        or when running ze-cli doctor to inspect project readiness.',
+        or when running ze-cli doctor to inspect project readiness, or
+        comparing opted-in Change Attribution records.',
       sources:
         [
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/cli.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/index.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/run.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/attribution.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/deploy.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/watch.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/lib/command-detector.ts,

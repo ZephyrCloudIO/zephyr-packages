@@ -15,6 +15,7 @@ import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getZephyrAgentVersion } from '../version/zephyr-agent-version';
 import { posix, win32 } from 'node:path';
+import { finishSourceCapture } from '../change-attribution/source';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -109,6 +110,13 @@ export async function createSnapshot(
   };
 
   // Set snapshot type if SSR flag is enabled
+  if (zephyr_engine.sourceContext) {
+    snapshot.changeAttribution = finishSourceCapture(
+      zephyr_engine.sourceContext,
+      zephyr_engine.sourceCapture,
+      snapshot.snapshot_id
+    );
+  }
   if (zephyr_engine.env.ssr) {
     snapshot.type = 'ssr';
   }

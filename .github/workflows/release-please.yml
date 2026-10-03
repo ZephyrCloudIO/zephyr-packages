@@ -15,7 +15,7 @@ permissions:
 jobs:
   release-please:
     runs-on: depot-ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Mint workflow automation token
         id: app-token
@@ -30,8 +30,51 @@ jobs:
           permission-pull-requests: write
 
       - name: Create or update release PR
+        id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Release PRs skip the Intent review step (check-skills.yml) because they only bump versions, library_version
+      # lines, the manifest and the changelog. Intent still counts those as source changes, so record them on the
+      # release branch; otherwise main inherits pending review items and every later pull request fails Check Skills.
+      - name: Check out the release PR branch
+        if: steps.release.outputs.prs_created == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+      - if: steps.release.outputs.prs_created == 'true'
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+        with:
+          run_install: false
+      - if: steps.release.outputs.prs_created == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.20.0'
+          cache: pnpm
+      - name: Record the release's skill reviews
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          reason="release-please: only package versions, library_version lines, the release manifest and CHANGELOG changed; no skill guidance is affected"
+          pnpm --silent skills:review --base origin/main --unchanged "$reason"
+          pnpm --silent skills:review --unchanged "$reason"
+          pnpm exec oxfmt .intent/review-state.json
+          pnpm skills:check --base origin/main
+          if git diff --quiet -- .intent/review-state.json; then
+            echo "No release review outcomes to record."
+            exit 0
+          fi
+          user_id="$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${user_id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          git add .intent/review-state.json
+          git commit -m "chore(skills): record release review outcomes"
+          git push origin HEAD

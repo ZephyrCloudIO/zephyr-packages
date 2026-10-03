@@ -2,16 +2,18 @@ import { createHash } from 'crypto';
 import { type Snapshot } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
-import { uploadSnapshot } from '../http/upload-snapshot';
+import { type OnSnapshotMissingAssets, uploadSnapshot } from '../http/upload-snapshot';
 import { green, yellow } from '../logging/picocolor';
 
 interface ZeUploadSnapshotProps {
   snapshot: Snapshot;
+  /** Restores files the edge reports as missing; the snapshot upload is retried once. */
+  onMissingAssets?: OnSnapshotMissingAssets;
 }
 
 export async function zeUploadSnapshot(
   zephyr_engine: ZephyrEngine,
-  { snapshot }: ZeUploadSnapshotProps
+  { snapshot, onMissingAssets }: ZeUploadSnapshotProps
 ): Promise<string> {
   const zeStart = Date.now();
   const application_uid = zephyr_engine.application_uid;
@@ -51,6 +53,7 @@ export async function zeUploadSnapshot(
   const edgeTodo = await uploadSnapshot({
     body: snapshot,
     application_uid,
+    onMissingAssets,
   });
 
   const worker_version = edgeTodo?.worker_version;

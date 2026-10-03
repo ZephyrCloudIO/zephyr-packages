@@ -30,3 +30,23 @@ export async function update_hash_list(
   const new_hashes = new Set([...(local_hash_list?.hashes || []), ...hashes]);
   await setAppHashCache(cacheKey, { hashes: Array.from(new_hashes).sort() });
 }
+
+/**
+ * Drops hashes from the local hash cache so later builds no longer assume those files
+ * exist on the edge (e.g. after build retention deleted them).
+ */
+export async function remove_hashes_from_hash_list(
+  application_uid: string,
+  hashes: readonly string[]
+): Promise<void> {
+  const cacheKey = await getCacheKey(application_uid);
+  const local_hash_list = await getAppHashCache(cacheKey);
+  if (!local_hash_list) {
+    return;
+  }
+
+  const removed = new Set(hashes);
+  await setAppHashCache(cacheKey, {
+    hashes: local_hash_list.hashes.filter((hash) => !removed.has(hash)),
+  });
+}

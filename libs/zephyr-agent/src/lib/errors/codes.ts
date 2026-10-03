@@ -553,6 +553,32 @@ Were the required packages in Module federation plugin installed and included in
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
   },
+
+  /** Edge still reports build files as missing after they were re-uploaded. */
+  ERR_SNAPSHOT_MISSING_ASSETS: {
+    id: '038',
+    message: `
+
+The snapshot upload was rejected because {{ count }} build file(s) it references are no longer stored on your Edge Provider. Zephyr build retention removes files that no remaining build uses.
+
+Re-uploading the missing files did not resolve it. Please rebuild your application to upload all of its files again.
+
+`,
+    kind: 'deploy',
+  },
+
+  /** Edge reports missing files that are not part of the current build output. */
+  ERR_SNAPSHOT_MISSING_ASSETS_NOT_IN_BUILD: {
+    id: '039',
+    message: `
+
+The snapshot upload was rejected because {{ count }} build file(s) it references are no longer stored on your Edge Provider (removed by Zephyr build retention), and they are not part of the current build output, so they cannot be re-uploaded.
+
+Please rebuild your application to upload all of its files again.
+
+`,
+    kind: 'deploy',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

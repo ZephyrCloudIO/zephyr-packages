@@ -7,7 +7,26 @@ const mocks = rs.hoisted(() => ({
   updateHashList: rs.fn(),
   zeUploadSnapshot: rs.fn(),
   fallbackUploadAssets: rs.fn(),
+  fallbackUploadAssetsToEdge: rs.fn(),
   uploadBuildStatsAndEnableEnvs: rs.fn(),
+  // Pass-through of the shared handler: restore the reported assets via the strategy.
+  createMissingAssetsHandler: rs.fn(
+    (
+      _engine: unknown,
+      {
+        assetsMap,
+        uploadAssetsToEdge,
+      }: {
+        assetsMap: Record<string, unknown>;
+        uploadAssetsToEdge: (assets: unknown[], edgeUrl: string) => Promise<void>;
+      }
+    ) =>
+      ({ hashes, edgeUrl }: { hashes: string[]; edgeUrl: string }) =>
+        uploadAssetsToEdge(
+          hashes.map((hash) => assetsMap[hash]),
+          edgeUrl
+        )
+  ),
 }));
 
 rs.mock('../edge-requests/get-application-configuration', () => ({
@@ -23,7 +42,9 @@ rs.mock('../edge-hash-list/distributed-hash-control', () => ({
 }));
 rs.mock('../edge-actions', () => ({ zeUploadSnapshot: mocks.zeUploadSnapshot }));
 rs.mock('./upload-base', () => ({
+  createMissingAssetsHandler: mocks.createMissingAssetsHandler,
   uploadAssets: mocks.fallbackUploadAssets,
+  uploadAssetsToEdge: mocks.fallbackUploadAssetsToEdge,
   uploadBuildStatsAndEnableEnvs: mocks.uploadBuildStatsAndEnableEnvs,
 }));
 
@@ -125,5 +146,101 @@ describe('awsUploadStrategy', () => {
       assets.missingAssets.map((asset) => asset.buffer)
     );
     expect(maximumActiveUploads).toBe(6);
+  });
+
+  describe('snapshot missing assets recovery', () => {
+    const ENV_EDGE_URL = 'https://environment.edge.example';
+
+    function engine() {
+      return {
+        application_uid: 'app-id',
+        application_configuration: Promise.resolve(appConfig),
+        logger: Promise.resolve(rs.fn()),
+      } as never;
+    }
+
+    beforeEach(() => {
+      // Snapshot upload reports hash-1 as removed by retention on an environment edge.
+      mocks.zeUploadSnapshot.mockImplementation(
+        async (
+          _engine: unknown,
+          {
+            onMissingAssets,
+          }: {
+            onMissingAssets: (missing: {
+              hashes: string[];
+              edgeUrl: string;
+            }) => Promise<void>;
+          }
+        ) => {
+          await onMissingAssets({ hashes: ['hash-1'], edgeUrl: ENV_EDGE_URL });
+          return 'https://edge.example/version';
+        }
+      );
+    });
+
+    it('re-uploads reported assets through presigned URLs of the rejecting edge', async () => {
+      const assets = createAssets(3);
+      mocks.makeRequest.mockImplementation(async (url) => {
+        if (!(url instanceof URL) && url.query?.type === 'uploadUrl') {
+          return [
+            true,
+            null,
+            {
+              url: `https://uploads.example/${url.query.hash}`,
+              contentType: 'application/octet-stream',
+            },
+          ];
+        }
+        return [true, null, undefined];
+      });
+
+      await expect(
+        awsUploadStrategy(engine(), {
+          snapshot: {} as never,
+          getDashData: rs.fn(),
+          assets: { assetsMap: assets.assetsMap, missingAssets: [] },
+        })
+      ).resolves.toBe('https://edge.example/version');
+
+      const presignCalls = mocks.makeRequest.mock.calls.filter(
+        ([url]) => !(url instanceof URL) && url.query?.type === 'uploadUrl'
+      );
+      expect(presignCalls).toHaveLength(1);
+      expect(presignCalls[0]?.[0]).toMatchObject({
+        base: ENV_EDGE_URL,
+        query: { hash: 'hash-1' },
+      });
+      const putCalls = mocks.makeRequest.mock.calls.filter(
+        ([, options]) => options?.method === 'PUT'
+      );
+      expect(putCalls.map((call) => call[2])).toEqual([
+        assets.assetsMap['hash-1']?.buffer,
+      ]);
+      expect(mocks.fallbackUploadAssetsToEdge).not.toHaveBeenCalled();
+    });
+
+    it('falls back to direct file uploads when presigned URLs are not implemented', async () => {
+      const assets = createAssets(2);
+      mocks.fallbackUploadAssetsToEdge.mockResolvedValue(undefined);
+      mocks.makeRequest.mockImplementation(async (url) => {
+        if (!(url instanceof URL) && url.query?.type === 'uploadUrl') {
+          return [false, { template: { content: 'Not Implemented' } }];
+        }
+        return [true, null, undefined];
+      });
+
+      await awsUploadStrategy(engine(), {
+        snapshot: {} as never,
+        getDashData: rs.fn(),
+        assets: { assetsMap: assets.assetsMap, missingAssets: [] },
+      });
+
+      expect(mocks.fallbackUploadAssetsToEdge).toHaveBeenCalledWith(
+        expect.anything(),
+        [assets.assetsMap['hash-1']],
+        ENV_EDGE_URL
+      );
+    });
   });
 });

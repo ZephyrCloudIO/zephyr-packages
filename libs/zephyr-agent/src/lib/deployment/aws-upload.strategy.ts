@@ -14,8 +14,10 @@ import { ze_log } from '../logging';
 import { white, whiteBright } from '../logging/picocolor';
 import type { ZeApplicationConfig } from '../node-persist/upload-provider-options';
 import {
+  createMissingAssetsHandler,
   uploadAssets as fallbackUploadAssets,
   type UploadAssetsOptions,
+  uploadAssetsToEdge as fallbackUploadAssetsToEdge,
   uploadBuildStatsAndEnableEnvs,
 } from './upload-base';
 
@@ -52,18 +54,39 @@ export async function awsUploadStrategy(
     // Backwards compatibility after new AWS integration workflow to
     // enable bigger body size upload.
     // It can be removed after new AWS integration gets stabilized
-    if (error.cause?.template?.content === 'Not Implemented') {
+    if (isUploadUrlNotImplemented(error)) {
       return fallbackUploadAssets(zephyr_engine, { assetsMap, missingAssets });
     }
     throw error;
   });
-  const versionUrl = await zeUploadSnapshot(zephyr_engine, { snapshot });
+
+  const onMissingAssets = createMissingAssetsHandler(zephyr_engine, {
+    assetsMap,
+    uploadAssetsToEdge: async (assets, edgeUrl) => {
+      await zeUploadAssets(zephyr_engine, { missingAssets: assets, assetsMap }, edgeUrl)
+        // Same backwards compatibility as the initial asset upload above.
+        .catch((error) => {
+          if (isUploadUrlNotImplemented(error)) {
+            return fallbackUploadAssetsToEdge(zephyr_engine, assets, edgeUrl);
+          }
+          throw error;
+        });
+    },
+  });
+  const versionUrl = await zeUploadSnapshot(zephyr_engine, { snapshot, onMissingAssets });
 
   // Waits for the reply to check upload problems, but the reply is a simply
   // 200 OK sent before any processing
   await uploadBuildStatsAndEnableEnvs(zephyr_engine, { getDashData, versionUrl });
 
   return versionUrl;
+}
+
+function isUploadUrlNotImplemented(error: unknown): boolean {
+  return (
+    (error as { cause?: { template?: { content?: unknown } } } | undefined)?.cause
+      ?.template?.content === 'Not Implemented'
+  );
 }
 
 export async function createBucket(application_uid: string): Promise<void> {
@@ -111,11 +134,13 @@ async function uploadAssets(
 
 async function zeUploadAssets(
   zephyr_engine: ZephyrEngine,
-  { missingAssets, assetsMap }: ZeUploadAssetsOptions
+  { missingAssets, assetsMap }: ZeUploadAssetsOptions,
+  edgeUrl?: string
 ): Promise<boolean> {
   const count = Object.keys(assetsMap).length;
   const logger = await zephyr_engine.logger;
-  const appConfig = await zephyr_engine.application_configuration;
+  const engineAppConfig = await zephyr_engine.application_configuration;
+  const appConfig = edgeUrl ? { ...engineAppConfig, EDGE_URL: edgeUrl } : engineAppConfig;
 
   if (missingAssets.length === 0) {
     logger({

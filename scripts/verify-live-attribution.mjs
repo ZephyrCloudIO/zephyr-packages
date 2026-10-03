@@ -74,8 +74,10 @@ const engine = {
       snapshotType,
       entrypoint,
     });
-    assert.equal(snapshot.changeAttribution.status, 'captured');
-    assert.equal(snapshot.changeAttribution.consistency, 'boundary-match');
+    assert.equal(snapshot.changeAttribution, undefined, 'Local attribution must not be published');
+    const attribution = sdk.loadVersionAttribution(directory, snapshot.snapshot_id);
+    assert.equal(attribution.status, 'captured');
+    assert.equal(attribution.consistency, 'boundary-match');
     assert(Object.keys(snapshot.assets).some((file) => file.endsWith('.js')));
     versions.push(snapshot);
   },
@@ -186,7 +188,7 @@ const report = {
     snapshotId: versions[0].snapshot_id,
     creator: versions[0].creator,
     assets: Object.keys(versions[0].assets),
-    attribution: versions[0].changeAttribution,
+    attribution: sdk.loadVersionAttribution(directory, versions[0].snapshot_id),
   },
 };
 const reportPath = join(directory, '.git/zephyr-attribution/live-test-report.json');

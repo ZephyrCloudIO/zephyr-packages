@@ -16,14 +16,8 @@ import type {
 } from 'zephyr-edge-contract';
 import { committedRanges, readGitAiWorkingAttribution, workingRanges } from './git-ai';
 import { readSessionMetadata, sessionForOrigin } from './sessions';
-
-export interface AttributionConfig {
-  schemaVersion: 1;
-  enabled: boolean;
-  gitAiPath?: string;
-  /** Repository-relative prefixes to omit, in addition to the built-in exclusions. */
-  exclude?: string[];
-}
+import { readAttributionConfig, type AttributionConfig } from './config';
+export { readAttributionConfig, type AttributionConfig } from './config';
 export interface SourceFile {
   hash: string;
   mode: string;
@@ -66,22 +60,6 @@ export function attributionRepository(directory: string) {
   const root = git(resolve(directory), ['rev-parse', '--show-toplevel'], 'utf8').trim();
   const gitDir = git(root, ['rev-parse', '--absolute-git-dir'], 'utf8').trim();
   return { root, gitDir };
-}
-export function readAttributionConfig(root: string): AttributionConfig | undefined {
-  const filename = join(root, '.zephyr', 'attribution.json');
-  if (!existsSync(filename)) return undefined;
-  const config = JSON.parse(readFileSync(filename, 'utf8')) as AttributionConfig;
-  if (
-    config.schemaVersion !== 1 ||
-    typeof config.enabled !== 'boolean' ||
-    (config.gitAiPath !== undefined && typeof config.gitAiPath !== 'string') ||
-    (config.exclude !== undefined &&
-      (!Array.isArray(config.exclude) ||
-        config.exclude.some((prefix) => typeof prefix !== 'string' || !prefix)))
-  ) {
-    throw new Error('Invalid .zephyr/attribution.json');
-  }
-  return config;
 }
 function excluded(file: string, config: AttributionConfig) {
   return (
@@ -128,7 +106,7 @@ export function captureSource(
   }
   const { root, gitDir } = repository;
   try {
-    const config = readAttributionConfig(root);
+    const config = readAttributionConfig(root, gitDir);
     if (!config?.enabled) return undefined;
     let baseCommit = '';
     try {
@@ -299,6 +277,7 @@ export function finishSourceCapture(
     status: 'captured',
     scope: 'git-working-tree',
     identity: 'self-reported',
+    storage: readAttributionConfig(end!.root, end!.gitDir)?.storage ?? 'local',
     sourceId: record.id,
     sourceFingerprint: record.fingerprint,
     baseCommit: record.baseCommit,
@@ -363,4 +342,77 @@ export function loadSourceRecord(directory: string, id: string): SourceRecord {
   if (record.schemaVersion !== 1 || record.id !== sourceId)
     throw new Error('Unsupported source record');
   return record;
+}
+
+export function loadVersionAttribution(
+  directory: string,
+  version: string
+): ChangeAttribution {
+  const { gitDir } = attributionRepository(directory);
+  const receipt = JSON.parse(
+    readFileSync(
+      join(privateDirectory(gitDir), `version-${digest(version)}.json`),
+      'utf8'
+    )
+  );
+  if (receipt.version !== version || receipt.summary?.schemaVersion !== 1)
+    throw new Error('Invalid private version receipt');
+  return receipt.summary;
+}
+
+/** Exact Git HEAD baseline for a captured dirty tree, applying the same exclusions. */
+export function sourceCommitBaseline(
+  directory: string,
+  captured: SourceRecord
+): SourceRecord {
+  const { root, gitDir } = attributionRepository(directory);
+  const config = readAttributionConfig(root, gitDir);
+  if (!config?.enabled) throw new Error('Attribution is disabled');
+  const files: Record<string, SourceFile> = Object.create(null);
+  let bytes = 0;
+  const entries = captured.baseCommit
+    ? git(root, ['ls-tree', '-rz', '--full-tree', captured.baseCommit], 'utf8')
+        .split('\0')
+        .filter(Boolean)
+    : [];
+  if (entries.length > 20000) throw new Error('Git baseline exceeds 20,000 entries');
+  for (const entry of entries) {
+    const tab = entry.indexOf('\t');
+    const [mode, type, oid] = entry.slice(0, tab).split(' ');
+    const file = entry.slice(tab + 1);
+    if (excluded(file, config)) continue;
+    if (type !== 'blob')
+      throw new Error('Git baseline contains a submodule; configure exclusions');
+    const content = git(root, ['cat-file', 'blob', oid]);
+    bytes += content.length;
+    if (bytes > 50 * 1024 * 1024) throw new Error('Git baseline exceeds 50 MiB');
+    const hash = digest(content);
+    files[file] = {
+      hash,
+      mode,
+      content: content.toString('base64'),
+      attribution:
+        hash === captured.files[file]?.hash
+          ? captured.files[file].attribution
+          : committedRanges(
+              root,
+              config.gitAiPath ?? 'git-ai',
+              file,
+              captured.baseCommit
+            ),
+    };
+  }
+  return {
+    schemaVersion: 1,
+    id: `head-${captured.baseCommit || 'unborn'}`,
+    fingerprint: digest(
+      JSON.stringify(
+        Object.entries(files).map(([file, value]) => [file, value.mode, value.hash])
+      )
+    ),
+    baseCommit: captured.baseCommit,
+    dirty: false,
+    capturedAt: captured.capturedAt,
+    files,
+  };
 }

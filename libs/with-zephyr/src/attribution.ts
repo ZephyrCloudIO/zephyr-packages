@@ -7,6 +7,7 @@ export const GIT_AI_SETUP_URL = 'https://usegitai.com/docs/get-started';
 export interface AttributionSetupOptions {
   attribution?: boolean;
   attributionAgents?: string[];
+  attributionStorage?: string;
   gitAiPath?: string;
   dryRun?: boolean;
 }
@@ -28,6 +29,11 @@ export function configureAttribution(
   options: AttributionSetupOptions
 ) {
   const agents = [...new Set(options.attributionAgents ?? [])];
+  if (
+    options.attributionStorage !== undefined &&
+    !['local', 'remote'].includes(options.attributionStorage)
+  )
+    throw new Error('Attribution storage must be local or remote');
   if (agents.some((agent) => !['codex', 'claude', 'grok'].includes(agent))) {
     throw new Error(
       'Supported attribution agents: codex, claude, grok. See the Git AI link for other integrations.'
@@ -43,6 +49,33 @@ export function configureAttribution(
   }).trim();
   const configPath = join(root, '.zephyr', 'attribution.json');
   const config = jsonObject(configPath);
+  if (
+    Object.keys(config).some(
+      (key) =>
+        ![
+          'schemaVersion',
+          'enabled',
+          'storage',
+          'content',
+          'repositoryId',
+          'gitAiPath',
+          'exclude',
+        ].includes(key)
+    ) ||
+    (config['storage'] !== undefined &&
+      (typeof config['storage'] !== 'string' ||
+        !['local', 'remote'].includes(config['storage']))) ||
+    (config['content'] !== undefined &&
+      (!config['content'] ||
+        typeof config['content'] !== 'object' ||
+        Array.isArray(config['content']) ||
+        Object.entries(config['content'] as JsonObject).some(
+          ([key, flag]) => !['patch', 'lines'].includes(key) || typeof flag !== 'boolean'
+        )))
+  )
+    throw new Error(
+      'Invalid attribution preferences; do not store credentials, endpoints, or account tier in repo configuration'
+    );
   if (config['schemaVersion'] !== undefined && config['schemaVersion'] !== 1)
     throw new Error('Unsupported attribution configuration');
   const changes: [string, JsonObject][] = [
@@ -52,6 +85,7 @@ export function configureAttribution(
         ...config,
         schemaVersion: 1,
         enabled: true,
+        storage: options.attributionStorage ?? config['storage'] ?? 'local',
         ...(options.gitAiPath ? { gitAiPath: binary } : {}),
       },
     ],
@@ -164,10 +198,11 @@ export async function offerAttribution(
   );
   console.log(`Git AI installation and agent integrations: ${GIT_AI_SETUP_URL}`);
   console.log(
-    'Source copies stay in your private Git directory. Zephyr receives file hashes and self-reported contributor, harness, model, effort, session, prompt-initiator, and usage metadata when available. Prompt text is not included. Git-ignored files, common build output, .env files, and private key files are excluded.'
+    'Local mode keeps all attribution in your private Git directory. Remote mode uploads evidence linked to the build: free accounts include patches and changed-line text; paid/BYOC can opt into either. Credentials and account tier are never stored in repository configuration. Prompt text is not included.'
   );
   let enabled: boolean | undefined = options.attribution;
   let agents = options.attributionAgents;
+  let storage = options.attributionStorage;
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
   let input: ReturnType<typeof createInterface> | undefined;
   try {
@@ -181,6 +216,13 @@ export async function offerAttribution(
       console.log('To enable later: with-zephyr . --attribution');
       return;
     }
+    if (interactive && storage === undefined) {
+      input ??= createInterface({ input: process.stdin, output: process.stdout });
+      storage =
+        (
+          await input.question('Attribution storage: local or remote? [local]: ')
+        ).trim() || 'local';
+    }
     if (interactive && agents === undefined) {
       input ??= createInterface({ input: process.stdin, output: process.stdout });
       const answer = (
@@ -193,6 +235,7 @@ export async function offerAttribution(
     const result = configureAttribution(directory, {
       ...options,
       attributionAgents: agents,
+      attributionStorage: storage,
     });
     console.log(`Change Attribution enabled in ${result.root}.`);
     if (!result.installed)

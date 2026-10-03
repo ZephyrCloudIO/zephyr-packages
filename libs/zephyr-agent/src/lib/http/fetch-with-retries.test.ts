@@ -85,6 +85,17 @@ describe('fetchWithRetries', () => {
     expect(requestConfig.timeout).toBeGreaterThan(0);
     expect(requestConfig.timeout).toBeLessThanOrEqual(DEFAULT_HTTP_DEADLINE_MS);
   });
+  it('refuses redirects for private evidence requests', async () => {
+    mocks.axiosInstance.mockResolvedValue({
+      status: 302,
+      headers: { location: 'https://other.example.com' },
+      data: '',
+    });
+    expect(
+      (await fetchWithRetries(url, { method: 'POST', redirect: 'error' })).status
+    ).toBe(302);
+    expect(mocks.axiosInstance.mock.calls[0][1].maxRedirects).toBe(0);
+  });
 
   it('does not retry non-idempotent POST requests after an ambiguous server failure', async () => {
     mocks.axiosInstance.mockResolvedValue({ status: 503, headers: {}, data: 'retry' });

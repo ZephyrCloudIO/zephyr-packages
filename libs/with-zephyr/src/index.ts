@@ -823,6 +823,10 @@ program
   )
   .option('--no-attribution', 'Skip Change Attribution setup')
   .option(
+    '--attribution-storage <mode>',
+    'Attribution storage: local (default) or remote'
+  )
+  .option(
     '--attribution-agents <agents...>',
     'Install project hooks for codex, claude, and/or grok'
   )
@@ -836,8 +840,13 @@ program
   )
   .action(
     async (directory: string, options: CodemodOptions & AttributionSetupOptions) => {
-      if (options.attributionAgents && options.attribution !== true) {
-        throw new Error('--attribution-agents requires --attribution');
+      if (
+        (options.attributionAgents || options.attributionStorage) &&
+        options.attribution !== true
+      ) {
+        throw new Error(
+          '--attribution-agents and --attribution-storage require --attribution'
+        );
       }
       runCodemod(directory, options);
       await offerAttribution(directory, options);

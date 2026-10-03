@@ -16,6 +16,11 @@ Explicit non-interactive setup:
 pnpm dlx with-zephyr . --attribution --attribution-agents codex claude grok
 ```
 
+Storage defaults to **local**. The interactive offer also asks local versus
+remote; `--attribution-storage remote` selects remote explicitly. Read
+[repository storage and policy](attribution-storage.md) before enabling remote:
+free accounts include patches/changed-line text; paid/BYOC defaults omit them.
+
 This writes repository-root `.zephyr/attribution.json` and merges hooks into
 `.codex/hooks.json`, `.claude/settings.json`, and/or `.grok/hooks/zephyr-attribution.json`. Codex/Grok also install `.zephyr/attribution-hook.cjs` for metadata. It preserves existing hooks
 and settings, validates documents before writing, and does not modify global
@@ -54,12 +59,13 @@ removals, binary changes, and file modes. Attribution on a removed line describe
 its original contributor; it does not identify who deleted it. Reverted edits
 disappear from the net source difference.
 
-Snapshot and build-stat `changeAttribution` metadata contain hashes and recorded
-line origins (human, tool, model, session), not raw source or prompts. The
+Local mode attaches no attribution to uploaded snapshots or build stats. Remote
+mode sends full evidence to a dedicated private endpoint and includes a small
+acknowledged record reference in snapshot/build-stat `changeAttribution`. The
 authenticated snapshot `creator` remains the deployer; contributor identities
-are self-reported Git AI evidence, not verified people. This repository emits
-the metadata; server persistence and a dashboard version-difference UI require
-control-plane support and are not provided here.
+are self-reported Git AI evidence, not verified people. Server endpoint/policy
+persistence and a dashboard version-difference UI require control-plane support
+and are not implemented in this SDK workspace.
 
 ## Harness, prompt initiator, effort, and usage
 

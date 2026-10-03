@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { ChangeOrigin } from 'zephyr-edge-contract';
 import { unknownOrigin } from './git-ai';
-import { loadSourceRecord, type SourceFile } from './source';
+import { loadSourceRecord, type SourceFile, type SourceRecord } from './source';
 
 export interface AttributedDiffLine {
   operation: 'add' | 'remove';
@@ -31,6 +31,10 @@ function originAt(file: SourceFile | undefined, line: number) {
 export function compareSourceRecords(directory: string, before: string, after: string) {
   const left = loadSourceRecord(directory, before);
   const right = loadSourceRecord(directory, after);
+  return compareSourceContents(left, right);
+}
+
+export function compareSourceContents(left: SourceRecord, right: SourceRecord) {
   const changes: AttributedFileDiff[] = [];
   const temporary = mkdtempSync(join(tmpdir(), 'zephyr-source-diff-'));
   try {

@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { captureSource } from '../../lib/change-attribution/source';
+import { captureSource, loadSourceRecord } from '../../lib/change-attribution/source';
 
 import {
   ZEPHYR_MANIFEST_FILENAME,
@@ -20,7 +20,11 @@ const mocks = rs.hoisted(() => ({
   getUploadStrategy: rs.fn(),
   uploadStrategy: rs.fn(),
   setAppDeployResult: rs.fn(),
+  getToken: rs.fn(),
+  makeRequest: rs.fn(),
 }));
+rs.mock('../../lib/node-persist/token', () => ({ getToken: mocks.getToken }));
+rs.mock('../../lib/http/http-request', () => ({ makeRequest: mocks.makeRequest }));
 
 rs.mock('../../lib/deployment/get-upload-strategy', () => ({
   getUploadStrategy: mocks.getUploadStrategy,
@@ -86,9 +90,26 @@ describe('ZephyrEngine.upload_assets', () => {
     mocks.uploadStrategy.mockResolvedValue('https://deploy.example.test/app');
     mocks.getUploadStrategy.mockReturnValue(mocks.uploadStrategy);
     mocks.setAppDeployResult.mockResolvedValue(undefined);
+    mocks.getToken.mockResolvedValue('test-token');
+    mocks.makeRequest.mockImplementation(async (_url, _options, body) => {
+      const payload = JSON.parse(body);
+      return [
+        true,
+        null,
+        {
+          status: 'ok',
+          recordId: 'record-1',
+          applicationUid: payload.applicationUid,
+          repositoryId: payload.repositoryId,
+          buildId: payload.buildId,
+          snapshotId: payload.snapshotId,
+          sourceFingerprint: payload.attribution.sourceFingerprint,
+        },
+      ];
+    });
   });
 
-  it('carries the same opted-in source receipt to snapshot and build stats without changing the deployer', async () => {
+  it('keeps local attribution out of snapshots and build stats without changing the deployer', async () => {
     const root = mkdtempSync(join(tmpdir(), 'zephyr-upload-attribution-'));
     try {
       execFileSync('git', ['init', '-q', root]);
@@ -103,19 +124,65 @@ describe('ZephyrEngine.upload_assets', () => {
       engine.sourceCapture = captureSource(root, 'build-start');
       await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
       const options = uploadedOptions();
-      expect(options.snapshot.changeAttribution).toMatchObject({
-        status: 'captured',
-        consistency: 'boundary-match',
-      });
-      expect(options.getDashData(engine).changeAttribution).toEqual(
-        options.snapshot.changeAttribution
-      );
+      expect(options.snapshot.changeAttribution).toBeUndefined();
+      expect(options.getDashData(engine).changeAttribution).toBeUndefined();
+      expect(mocks.getToken).not.toHaveBeenCalled();
+      expect(mocks.makeRequest).not.toHaveBeenCalled();
+      expect(
+        loadSourceRecord(root, options.snapshot.snapshot_id).files['app.txt']
+      ).toBeTruthy();
       expect(options.snapshot.creator).toEqual({
         name: 'developer',
         email: 'developer@example.test',
       });
-      expect(options.snapshot.changeAttribution?.files?.['app.txt']).not.toHaveProperty(
-        'content'
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  it('uploads remote evidence tied to the real build before publishing only its reference', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'zephyr-upload-remote-'));
+    try {
+      execFileSync('git', ['init', '-q', root]);
+      mkdirSync(join(root, '.zephyr'));
+      writeFileSync(
+        join(root, '.zephyr/attribution.json'),
+        '{"schemaVersion":1,"enabled":true,"storage":"remote"}'
+      );
+      writeFileSync(join(root, 'app.txt'), 'remote source\n');
+      const engine = readyEngine();
+      engine.application_configuration = Promise.resolve({
+        ...appConfig(),
+        ATTRIBUTION_POLICY: {
+          schemaVersion: 1,
+          repositoryId: 'repo-1',
+          revision: 'v1',
+          storage: 'remote',
+          tier: 'free',
+          content: { patch: true, lines: true },
+        },
+      });
+      engine.sourceContext = root;
+      engine.sourceCapture = captureSource(root, 'build-start');
+      await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
+      const options = uploadedOptions();
+      const payload = JSON.parse(mocks.makeRequest.mock.calls[0][2]);
+      expect(payload).toMatchObject({
+        applicationUid: engine.application_uid,
+        buildId: 'build-1',
+        snapshotId: options.snapshot.snapshot_id,
+      });
+      expect(
+        payload.comparison.changes.find(
+          (change: { file: string }) => change.file === 'app.txt'
+        ).lines[0].text
+      ).toBe('remote source');
+      expect(options.snapshot.changeAttribution?.remote?.recordId).toBe('record-1');
+      expect(options.snapshot.changeAttribution).not.toHaveProperty('files');
+      expect(options.getDashData(engine).changeAttribution).toEqual(
+        options.snapshot.changeAttribution
+      );
+      expect(mocks.makeRequest.mock.invocationCallOrder[0]).toBeLessThan(
+        mocks.uploadStrategy.mock.invocationCallOrder[0]
       );
     } finally {
       rmSync(root, { recursive: true, force: true });

@@ -83,6 +83,8 @@ skills:
         agent hooks; compare dirty-source versions without guessing human authorship.
       - Capture per-turn harness, agent, provider, model, effort, prompt-initiator,
         session usage and reported cost; preserve self-reported identity and inferred Grok prompt linkage.
+      - Choose per-repository local or remote attribution, enforce authenticated
+        tier policy for patches/changed lines, and restrict sharing with a private override.
       - Keep ZE_PUBLIC_* values public and diagnose git, auth, and SDK
         mismatches.
     covers:

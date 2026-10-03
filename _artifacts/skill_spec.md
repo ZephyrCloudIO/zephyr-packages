@@ -1,5 +1,29 @@
 # zephyr-packages skill spec
 
+## Attribution storage extension, 2026-10-03
+
+At baseline `c9e9a1a4`, the maintainer requested local and remote storage and
+confirmed that remote free accounts include both HEAD patches and structured
+changed-line text; paid/BYOC can choose either, with both off by default. Local
+now means no attribution in HTTP requests or public snapshots/build stats,
+superseding the earlier emission behavior below. Private source receipts remain
+local. Remote sends evidence through the new fixed authenticated gateway route,
+bound to repository/application/build/snapshot IDs and an authoritative policy
+revision, then emits only an acknowledged record reference. Account tier is
+server-owned; no repo credential/URL/tier is accepted. Shared preferences are
+Git-reviewable per repo, with atomic owner-only private overrides that can only
+restrict sharing. Patches imply source text even when structured lines are off.
+Full source/binary contents are not uploaded; remote differences use captured
+HEAD as the baseline, which server comparisons must also possess.
+
+The existing SDK/core and CLI guides own this workflow, with Vite linking to
+the shared storage reference. Client checks use real private source captures,
+the built CLI/SDK, and a real local HTTP fixture credential/endpoint. Production
+endpoint authorization, policy administration, encrypted evidence storage,
+retention, and BYOC routing remain control-plane work outside this workspace;
+the SDK fails remote publication without that policy/acknowledgment. This batch
+does not claim those server controls were verified.
+
 ## Live attribution extension, 2026-10-03
 
 The maintainer requested actual hooks-off and model/effort switches on the same

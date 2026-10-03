@@ -78,6 +78,18 @@ describe('optional Change Attribution setup', () => {
       'quotes'
     );
   });
+  it('defaults to local and offers remote without storing credentials or account tier', () => {
+    configureAttribution(root, {});
+    const file = join(root, '.zephyr/attribution.json');
+    expect(JSON.parse(readFileSync(file, 'utf8')).storage).toBe('local');
+    configureAttribution(root, { attributionStorage: 'remote' });
+    expect(JSON.parse(readFileSync(file, 'utf8')).storage).toBe('remote');
+    expect(() => configureAttribution(root, { attributionStorage: 'invented' })).toThrow(
+      'local or remote'
+    );
+    writeFileSync(file, '{"schemaVersion":1,"enabled":true,"token":"secret"}');
+    expect(() => configureAttribution(root, {})).toThrow('credentials');
+  });
   it('records Grok tools against an explicitly inferred active prompt and closes it on stop', () => {
     configureAttribution(root, {
       attributionAgents: ['grok'],

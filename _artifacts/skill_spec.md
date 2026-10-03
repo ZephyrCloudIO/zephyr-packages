@@ -1,5 +1,25 @@
 # zephyr-packages skill spec
 
+## Live attribution extension, 2026-10-03
+
+The maintainer requested actual hooks-off and model/effort switches on the same
+generated app: Codex GPT-6.1-Sol high/low and GPT-6-Luna xhigh, followed by T3/Grok
+models. Extend the existing Change Attribution guidance rather than creating a
+second skill. Source receipts retain observed per-turn metadata and independent
+Git workspace, prompt-initiator, and deployer identities. Launcher identity and
+harness fields are self-reports; authenticated prompt identity is future work.
+Codex 0.160.0 native hooks supply turn/tool IDs; bounded local rollouts supply
+effort/provider/cumulative counters. Grok 1.0.46 supports native project hooks
+and Git AI's public agent-v1 interface, avoiding a fork. Its tool events omit
+prompt IDs, so active-prompt association is marked inferred, closes on stop or
+cancellation, and does not claim exact linkage for background/concurrent work.
+Grok reported USD ticks and usage include observation timestamps and partial
+flags. Only a matching finished native turn refreshes the final ledger; snapshots
+are not summed or allocated to code lines. Commit-only evidence without a tool
+join does not invent effort or initiator metadata. Private ledgers/receipts remain
+local and unsynchronized. Live checks and executable source-difference/build
+verification are recorded in the review, separately from prior replay fixtures.
+
 ## Change Attribution addition, 2026-10-03
 
 The maintainer requested an optional codemod offer and installation link, then a

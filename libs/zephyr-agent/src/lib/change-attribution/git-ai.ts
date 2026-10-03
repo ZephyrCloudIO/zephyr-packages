@@ -23,6 +23,7 @@ interface Checkpoint {
   kind: string;
   author: string;
   agent_id?: Agent;
+  agent_metadata?: { tool_use_id?: string };
   api_version: string;
   git_ai_version?: string;
   entries: Entry[];
@@ -102,12 +103,30 @@ export function readGitAiWorkingAttribution(gitDir: string, commit: string) {
         const agent = checkpoint.agent_id;
         // Git AI hashes the tool + session identity; model may change in one session.
         const session = `s_${hash(`${agent.tool}:${agent.id}`).slice(0, 14)}`;
+        let nativeSession = agent.id;
+        let toolCall = checkpoint.agent_metadata?.tool_use_id;
+        if (agent.tool === 'grok') {
+          try {
+            const invocation = JSON.parse(agent.id);
+            if (
+              Array.isArray(invocation) &&
+              invocation.length === 3 &&
+              invocation.every((part) => typeof part === 'string')
+            ) {
+              nativeSession = invocation[0];
+              toolCall = invocation[2];
+            }
+          } catch {
+            /* Ordinary Grok session IDs remain unchanged. */
+          }
+        }
         const origin: ChangeOrigin = {
           kind: 'ai',
           human: checkpoint.author,
           tool: agent.tool,
           model: agent.model,
-          session: agent.id,
+          session: nativeSession,
+          toolCall,
           evidence: 'git-ai-checkpoint',
         };
         // Match only this checkpoint's trace; don't relabel older turns after a model switch.

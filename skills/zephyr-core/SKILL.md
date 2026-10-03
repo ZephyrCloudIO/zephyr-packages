@@ -11,6 +11,7 @@ sources:
   - ZephyrCloudIO/zephyr-packages:**/skills/zephyr-core/references/*.md
   - ZephyrCloudIO/zephyr-packages:**/scripts/sync-package-skills.mjs
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/attribution.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/hooks/*.cjs
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/index.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/attribution.test.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/README.md
@@ -19,9 +20,11 @@ sources:
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/index.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/change-attribution.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/index.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/snapshot.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts
   - ZephyrCloudIO/zephyr-packages:**/scripts/verify-change-attribution.mjs
+  - ZephyrCloudIO/zephyr-packages:**/scripts/verify-live-attribution.mjs
 ---
 
 # Zephyr Core

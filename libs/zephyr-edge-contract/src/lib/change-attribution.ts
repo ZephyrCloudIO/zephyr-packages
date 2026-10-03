@@ -5,7 +5,53 @@ export interface ChangeOrigin {
   tool?: string;
   model?: string;
   session?: string;
+  /** Per-turn metadata. Harness and initiator claims remain self-reported. */
+  harness?: string;
+  agent?: string;
+  provider?: string;
+  reasoningEffort?: string;
+  turn?: string;
+  turnAssociation?: 'native-turn-id' | 'active-prompt';
+  toolCall?: string;
+  promptInitiator?: { id: string; evidence: 'launcher-self-report' };
   evidence: 'git-ai-checkpoint' | 'git-ai-blame' | 'none';
+}
+
+/** One observed session/turn, referenced by contributors; never add costs per line. */
+export interface ChangeSession {
+  agent: string;
+  session: string;
+  turn: string;
+  turnAssociation?: ChangeOrigin['turnAssociation'];
+  harness?: string;
+  provider?: string;
+  model?: string;
+  reasoningEffort?: string;
+  promptInitiator?: ChangeOrigin['promptInitiator'];
+  capturedAt: string;
+  evidence: 'codex-hook' | 'codex-hook-and-rollout' | 'grok-hook-and-session';
+  usage?: {
+    /** Cumulative session counters through this turn; snapshots are not additive. */
+    scope: 'session-cumulative';
+    inputTokens?: number;
+    cachedInputTokens?: number;
+    cacheWriteInputTokens?: number;
+    outputTokens?: number;
+    reasoningOutputTokens?: number;
+    totalTokens?: number;
+    observedAt?: string;
+    incomplete?: boolean;
+  };
+  cost:
+    | { status: 'unavailable'; reason: string }
+    | {
+        status: 'reported';
+        currency: 'USD';
+        usdTicks: number;
+        scope: 'session-cumulative';
+        partial: boolean;
+        observedAt?: string;
+      };
 }
 
 export interface ChangeAttributionRange {
@@ -33,6 +79,9 @@ export interface ChangeAttribution {
     | 'publication-only'
     | 'unavailable';
   identity: 'self-reported';
+  /** Git identity associated with the capture, not proof of who edited/prompted. */
+  workspaceHuman?: string;
+  sessions?: Record<string, ChangeSession>;
   files?: Record<
     string,
     {

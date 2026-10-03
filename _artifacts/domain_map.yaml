@@ -81,6 +81,8 @@ skills:
       - Explain immutable versions versus mutable tags and environments.
       - Enable optional Change Attribution with separate consent for capture and
         agent hooks; compare dirty-source versions without guessing human authorship.
+      - Capture per-turn harness, agent, provider, model, effort, prompt-initiator,
+        session usage and reported cost; preserve self-reported identity and inferred Grok prompt linkage.
       - Keep ZE_PUBLIC_* values public and diagnose git, auth, and SDK
         mismatches.
     covers:
@@ -96,6 +98,7 @@ skills:
         Change Attribution,
         Git AI agent and editor integrations,
         private source records and dirty-version comparisons,
+        native Codex and Grok metadata hooks and live T3 trials,
       ]
   - name: zephyr-module-federation
     slug: zephyr-module-federation

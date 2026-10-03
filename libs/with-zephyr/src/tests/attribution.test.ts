@@ -45,11 +45,14 @@ describe('optional Change Attribution setup', () => {
     expect(settings.hooks.PostToolUse).toHaveLength(2);
     expect(settings.hooks.PostToolUse[0].hooks[0].command).toBe('existing-hook');
     const codex = JSON.parse(readFileSync(join(root, '.codex/hooks.json'), 'utf8'));
-    expect(codex.hooks.PreToolUse).toHaveLength(1);
+    expect(codex.hooks.PreToolUse).toHaveLength(2);
     expect(codex.hooks.PostToolUse[0].hooks[0].command).toBe(
       "'/missing/git-ai' checkpoint codex --hook-input stdin"
     );
-    expect(codex.hooks.Stop).toBeUndefined();
+    expect(codex.hooks.Stop[0].hooks[0].command).toContain('attribution-hook.cjs');
+    expect(readFileSync(join(root, '.zephyr/attribution-hook.cjs'), 'utf8')).toContain(
+      'launcher-self-report'
+    );
     expect(codex).not.toHaveProperty('trusted');
   });
   it('validates all hook documents before writing any files', () => {
@@ -74,5 +77,84 @@ describe('optional Change Attribution setup', () => {
     expect(() => configureAttribution(root, { gitAiPath: "bad'command" })).toThrow(
       'quotes'
     );
+  });
+  it('records Grok tools against an explicitly inferred active prompt and closes it on stop', () => {
+    configureAttribution(root, {
+      attributionAgents: ['grok'],
+      gitAiPath: '/missing/git-ai',
+    });
+    const hook = join(root, '.zephyr/attribution-hook.cjs');
+    const sessionDir = join(root, '.git', 'native-session');
+    mkdirSync(sessionDir);
+    const transcript = join(sessionDir, 'updates.jsonl');
+    writeFileSync(
+      join(sessionDir, 'summary.json'),
+      JSON.stringify({
+        info: { id: 'grok-session' },
+        current_model_id: 'grok-4.7',
+        reasoning_effort: 'high',
+      })
+    );
+    writeFileSync(
+      join(sessionDir, 'usage.json'),
+      JSON.stringify({
+        sessionId: 'grok-session',
+        updatedAt: '2026-10-03',
+        session: { inputTokens: 42, costUsdTicks: 10, costIsPartial: true },
+      })
+    );
+    const run = (event: Record<string, unknown>) =>
+      execFileSync(process.execPath, [hook], {
+        input: JSON.stringify({
+          sessionId: 'grok-session',
+          cwd: root,
+          transcriptPath: transcript,
+          ...event,
+        }),
+        env: {
+          ...process.env,
+          ZE_ATTRIBUTION_HARNESS: 't3',
+          ZE_ATTRIBUTION_INITIATOR: 'Zack',
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    run({
+      hook_event_name: 'UserPromptSubmit',
+      promptId: 'prompt-1',
+      prompt: 'PRIVATE PROMPT',
+    });
+    run({
+      hook_event_name: 'PostToolUse',
+      toolUseId: 'edit-1',
+      toolName: 'search_replace',
+      toolInput: { text: 'PRIVATE CONTENT' },
+    });
+    run({
+      hook_event_name: 'Stop',
+      promptId: 'prompt-1',
+      lastAssistantMessage: 'PRIVATE RESPONSE',
+    });
+    run({ hook_event_name: 'PostToolUse', toolUseId: 'background', toolName: 'write' });
+    const log = readFileSync(join(root, '.git/zephyr-attribution/events.jsonl'), 'utf8');
+    const rows = log
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    expect(rows).toHaveLength(3);
+    expect(rows[1]).toMatchObject({
+      agent: 'grok',
+      turn: 'prompt-1',
+      turnAssociation: 'active-prompt',
+      toolCall: 'edit-1',
+      model: 'grok-4.7',
+      reasoningEffort: 'high',
+      harness: 't3',
+      reportedCost: { usdTicks: 10, partial: true },
+    });
+    expect(log).not.toContain('PRIVATE');
+    expect(rows[1].promptInitiator).toEqual({
+      id: 'Zack',
+      evidence: 'launcher-self-report',
+    });
   });
 });

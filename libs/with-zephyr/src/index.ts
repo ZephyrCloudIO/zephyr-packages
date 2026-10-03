@@ -824,7 +824,7 @@ program
   .option('--no-attribution', 'Skip Change Attribution setup')
   .option(
     '--attribution-agents <agents...>',
-    'Install project hooks for codex and/or claude'
+    'Install project hooks for codex, claude, and/or grok'
   )
   .option(
     '--git-ai-path <path>',

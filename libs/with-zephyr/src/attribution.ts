@@ -28,9 +28,9 @@ export function configureAttribution(
   options: AttributionSetupOptions
 ) {
   const agents = [...new Set(options.attributionAgents ?? [])];
-  if (agents.some((agent) => agent !== 'codex' && agent !== 'claude')) {
+  if (agents.some((agent) => !['codex', 'claude', 'grok'].includes(agent))) {
     throw new Error(
-      'Supported attribution agents: codex, claude. See the Git AI link for other integrations.'
+      'Supported attribution agents: codex, claude, grok. See the Git AI link for other integrations.'
     );
   }
   const binary = options.gitAiPath ?? 'git-ai';
@@ -56,10 +56,16 @@ export function configureAttribution(
       },
     ],
   ];
+  const metadataCommand =
+    'node "$(git rev-parse --show-toplevel)/.zephyr/attribution-hook.cjs"';
   for (const agent of agents) {
     const filename = join(
       root,
-      agent === 'codex' ? '.codex/hooks.json' : '.claude/settings.json'
+      agent === 'codex'
+        ? '.codex/hooks.json'
+        : agent === 'grok'
+          ? '.grok/hooks/zephyr-attribution.json'
+          : '.claude/settings.json'
     );
     const document = jsonObject(filename);
     const hooksValue = document['hooks'] ?? {};
@@ -72,7 +78,7 @@ export function configureAttribution(
     const hooks: JsonObject = { ...(hooksValue as JsonObject) };
     // JSON config contains a shell command. POSIX single quotes prevent expansions.
     const command = `'${binary}' checkpoint ${agent} --hook-input stdin`;
-    for (const event of ['PreToolUse', 'PostToolUse']) {
+    for (const event of agent === 'grok' ? [] : ['PreToolUse', 'PostToolUse']) {
       const existing = hooks[event] ?? [];
       if (!Array.isArray(existing))
         throw new Error(`Expected a hooks array for ${event} in ${filename}`);
@@ -89,10 +95,49 @@ export function configureAttribution(
             },
           ];
     }
+    if (agent === 'codex' || agent === 'grok') {
+      for (const event of [
+        'UserPromptSubmit',
+        'PreToolUse',
+        'PostToolUse',
+        'Stop',
+        ...(agent === 'grok' ? ['StopCancelled', 'StopFailure'] : []),
+      ]) {
+        const existing = hooks[event] ?? [];
+        if (!Array.isArray(existing)) throw new Error(`Invalid ${event} hooks`);
+        if (
+          !existing.some((entry) =>
+            entry?.hooks?.some(
+              (hook: { command?: string }) => hook.command === metadataCommand
+            )
+          )
+        ) {
+          hooks[event] = [
+            ...existing,
+            {
+              ...(event.includes('ToolUse')
+                ? {
+                    matcher:
+                      agent === 'grok'
+                        ? 'Edit|Write|Bash|apply_patch|write|write_file|edit_file'
+                        : 'Edit|Write|Bash',
+                  }
+                : {}),
+              hooks: [{ type: 'command', command: metadataCommand, timeout: 10 }],
+            },
+          ];
+        }
+      }
+    }
     changes.push([filename, { ...document, hooks }]);
   }
-  if (!options.dryRun)
+  if (!options.dryRun) {
+    const collector = agents.some((agent) => ['codex', 'grok'].includes(agent))
+      ? readFileSync(new URL('../hooks/codex.cjs', import.meta.url), 'utf8')
+      : undefined;
     for (const [filename, value] of changes) writeJson(filename, value);
+    if (collector) writeFileSync(join(root, '.zephyr/attribution-hook.cjs'), collector);
+  }
   let installed = false;
   try {
     installed = /^(?:git-ai version )?1\.7\./.test(
@@ -119,7 +164,7 @@ export async function offerAttribution(
   );
   console.log(`Git AI installation and agent integrations: ${GIT_AI_SETUP_URL}`);
   console.log(
-    'Source copies stay in your private Git directory. Zephyr receives file hashes and self-reported contributor, tool, and model metadata. Git-ignored files, common build output, .env files, and private key files are excluded.'
+    'Source copies stay in your private Git directory. Zephyr receives file hashes and self-reported contributor, harness, model, effort, session, prompt-initiator, and usage metadata when available. Prompt text is not included. Git-ignored files, common build output, .env files, and private key files are excluded.'
   );
   let enabled: boolean | undefined = options.attribution;
   let agents = options.attributionAgents;
@@ -140,7 +185,7 @@ export async function offerAttribution(
       input ??= createInterface({ input: process.stdin, output: process.stdout });
       const answer = (
         await input.question(
-          'Install Agent Integrations? Enter codex, claude, or leave blank to skip: '
+          'Install Agent Integrations? Enter codex, claude, grok, or leave blank to skip: '
         )
       ).trim();
       agents = answer ? answer.split(/[,\s]+/) : [];
@@ -158,6 +203,10 @@ export async function offerAttribution(
       );
     if (result.agents.includes('claude'))
       console.log('In Claude Code, review the project hooks and restart the session.');
+    if (result.agents.includes('grok'))
+      console.log(
+        'In Grok, review and trust the project hooks with /hooks-trust, then restart the session. T3 runs Grok through this same native integration.'
+      );
     console.log(
       'Missing integration evidence is labeled unknown. Attribution starts after the hooks are enabled.'
     );

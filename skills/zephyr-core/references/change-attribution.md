@@ -13,14 +13,14 @@ does not opt in; `--dry-run` and `--no-attribution` do not create configuration.
 Explicit non-interactive setup:
 
 ```bash
-pnpm dlx with-zephyr . --attribution --attribution-agents codex claude
+pnpm dlx with-zephyr . --attribution --attribution-agents codex claude grok
 ```
 
 This writes repository-root `.zephyr/attribution.json` and merges hooks into
-`.codex/hooks.json` and/or `.claude/settings.json`. It preserves existing hooks
+`.codex/hooks.json`, `.claude/settings.json`, and/or `.grok/hooks/zephyr-attribution.json`. Codex/Grok also install `.zephyr/attribution-hook.cjs` for metadata. It preserves existing hooks
 and settings, validates documents before writing, and does not modify global
 settings or grant hook trust. Review the Codex project hooks with `/hooks` and
-restart agent sessions. Install the Git AI binary separately through its linked
+restart agent sessions. Grok requires its native project trust review (`/hooks-trust`); this grants folder trust for its other project integrations too. T3 uses the same Grok integration through ACP. Install the Git AI binary separately through its linked
 instructions; the codemod does not run a downloaded installer. Skip the agents
 flag for source capture only, or when existing Git AI hooks already cover the
 agents. The installer may also configure agent hooks globally; avoid duplicating
@@ -61,6 +61,44 @@ are self-reported Git AI evidence, not verified people. This repository emits
 the metadata; server persistence and a dashboard version-difference UI require
 control-plane support and are not provided here.
 
+## Harness, prompt initiator, effort, and usage
+
+`workspaceHuman` identifies the Git author associated with a capture. Hooks-off AI
+changes can appear under this identity, but their edit origin remains unknown.
+The Git author, prompting human, and authenticated snapshot creator are separate.
+Set `ZE_ATTRIBUTION_INITIATOR` in each person's launcher environment to record the
+prompt initiator, and `ZE_ATTRIBUTION_HARNESS` to identify a wrapper such as `t3`
+versus `codex-cli`. For T3, configure these in the selected project/provider's
+environment settings. These are self-reports, not verified account assertions;
+do not put a shared person's identity into team-wide hooks. Missing values stay
+absent. A skill cannot reliably prove which person typed a prompt.
+
+Codex/Grok collect a private metadata ledger under the worktree Git directory.
+Line origins join exact tool-call identities into `sessions`, keyed by agent,
+native session, and turn. Model and effort changes retain the earlier turn's
+metadata. Codex effort/provider/counters use a bounded optional rollout adapter
+tested with CLI 0.160.0; rollout parsing is not a stable API. Grok model/effort
+use its observed summary and usage files, tested with CLI 1.0.46 and T3 0.0.44.
+Unsupported/missing metadata does not invent defaults. Grok uses Git AI's public
+`agent-v1` interface; no fork is required for this bridge.
+
+Grok 1.0.46 omits prompt IDs on tool events. The bridge brackets an active prompt
+from `UserPromptSubmit` to `Stop`/cancellation and marks `turnAssociation` as
+`active-prompt`, an inferred association. Native Codex turn IDs are marked
+`native-turn-id`. Unassociated/background completions stay unknown. Concurrent
+or background Grok work needs stronger native event linkage before claiming an
+exact prompt association. Integration labels alone do not prove the harness.
+
+Usage and cost belong to sessions, not individual lines. Session-cumulative
+snapshots are **not additive**, including across model switches or versions.
+The captured cost is either unavailable or harness-reported USD ticks with an
+observation timestamp and partial flag. It is not inferred from token counts or
+presented as an invoice. [xAI defines one USD as 10 billion USD ticks](https://docs.x.ai/developers/cost-tracking).
+Hook-time Grok counters can lag a turn; only a native
+finished-turn match refreshes them, otherwise they remain incomplete/partial.
+Historical source receipts retain their observed metadata. Raw prompts,
+responses, transcript paths, and arbitrary provider fields are not published.
+
 ## Coverage and correctness
 
 - Git-ignored files, common build output (`dist`, `build`, `.next`, `.nuxt`,
@@ -86,7 +124,7 @@ control-plane support and are not provided here.
 - `gitAiPath` can point to a compatible fork. Keep format changes behind the
   adapter; don't infer authorship from file style or the absence of AI marks.
 
-To disable capture, set `enabled` to `false`. Remove the installed Git AI command
+To disable capture, set `enabled` to `false`. Remove the installed Git AI and metadata command
 entries from project hook documents to stop those hooks, retaining other hooks.
 Existing local receipts remain available until explicitly deleted.
 
@@ -111,3 +149,12 @@ node scripts/verify-change-attribution.mjs /tmp/zephyr-attribution-demo /absolut
 Use a disposable app: the verifier edits its template source and writes a private
 `demo-report.json`. It needs Git AI's background service running. A replay failure
 or missing evidence must fail verification, not be relabeled as human or AI.
+
+For live trials, retain a source receipt after each real agent edit. The
+`scripts/verify-live-attribution.mjs <generated-app> <manifest.json>` verifier
+loads those private records, checks the expected model/effort/harness and actual
+added line, compares versions sharing a commit, then builds the final app using
+real Vite/SDK snapshot construction with cloud transport disabled. Manifest
+cases specify `name`, `sourceId`, `file`, `text`, `kind`, and optional `model`,
+`effort`, `harness`. These receipts are local observations, not cloud deployments.
+Do not substitute hook replay for a requested live model/harness trial.

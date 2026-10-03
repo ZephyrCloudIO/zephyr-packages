@@ -9,8 +9,13 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
-import type { ChangeAttribution, ChangeAttributionRange } from 'zephyr-edge-contract';
+import type {
+  ChangeAttribution,
+  ChangeAttributionRange,
+  ChangeSession,
+} from 'zephyr-edge-contract';
 import { committedRanges, readGitAiWorkingAttribution, workingRanges } from './git-ai';
+import { readSessionMetadata, sessionForOrigin } from './sessions';
 
 export interface AttributionConfig {
   schemaVersion: 1;
@@ -32,6 +37,8 @@ export interface SourceRecord {
   baseCommit: string;
   dirty: boolean;
   capturedAt: string;
+  workspaceHuman?: string;
+  sessions?: Record<string, ChangeSession>;
   files: Record<string, SourceFile>;
 }
 export interface SourceCapture {
@@ -145,6 +152,8 @@ export function captureSource(
     if (paths.length > 20000)
       throw new Error('Source capture exceeds 20,000 files; configure exclude prefixes');
     const working = readGitAiWorkingAttribution(gitDir, baseCommit);
+    const metadata = readSessionMetadata(gitDir);
+    const sessions: Record<string, ChangeSession> = Object.create(null);
     const files: Record<string, SourceFile> = Object.create(null);
     let bytes = 0;
     for (const file of paths) {
@@ -207,6 +216,22 @@ export function captureSource(
           /* new or deleted file in HEAD */
         }
       }
+      for (const range of attribution ?? []) {
+        const match = sessionForOrigin(range.origin, metadata);
+        if (!match) continue;
+        sessions[match.key] = match.session;
+        const session = match.session;
+        range.origin = {
+          ...range.origin,
+          agent: session.agent,
+          harness: session.harness,
+          provider: session.provider,
+          reasoningEffort: session.reasoningEffort,
+          turn: session.turn,
+          turnAssociation: session.turnAssociation,
+          promptInitiator: session.promptInitiator,
+        };
+      }
       files[file] = {
         hash,
         mode,
@@ -219,6 +244,14 @@ export function captureSource(
         Object.entries(files).map(([file, value]) => [file, value.mode, value.hash])
       )
     );
+    let workspaceHuman: string | undefined;
+    try {
+      workspaceHuman = git(root, ['var', 'GIT_AUTHOR_IDENT'], 'utf8')
+        .trim()
+        .replace(/ \d+ [+-]\d{4}$/, '');
+    } catch {
+      /* Git identity unavailable. */
+    }
     const record: SourceRecord = {
       schemaVersion: 1,
       id: `source-${randomUUID()}`,
@@ -228,6 +261,8 @@ export function captureSource(
         git(root, ['status', '--porcelain', '--untracked-files=normal'], 'utf8').trim()
       ),
       capturedAt: new Date().toISOString(),
+      workspaceHuman,
+      sessions,
       files,
     };
     writeFileSync(
@@ -269,6 +304,8 @@ export function finishSourceCapture(
     baseCommit: record.baseCommit,
     dirty: record.dirty,
     capturedAt: record.capturedAt,
+    workspaceHuman: record.workspaceHuman,
+    sessions: record.sessions,
     reason: start?.reason,
     startSourceId: start?.record?.id,
     startSourceFingerprint: start?.record?.fingerprint,

@@ -380,7 +380,7 @@ offers project agent hooks. Skipping either choice keeps ordinary Zephyr setup
 working. Non-interactive runs require explicit flags:
 
 ```bash
-pnpm dlx with-zephyr . --attribution --attribution-agents codex claude
+pnpm dlx with-zephyr . --attribution --attribution-agents codex claude grok
 ```
 
 `--no-attribution` skips the offer. `--dry-run` does not write attribution or hook
@@ -389,13 +389,18 @@ fork. Git AI 1.7.x is supported, tested with 1.7.5. The codemod does not downloa
 or execute its installer.
 
 The opt-in writes `.zephyr/attribution.json` at the Git repository root. Agent
-integration flags merge hooks into `.codex/hooks.json` or `.claude/settings.json`
+integration flags merge hooks into `.codex/hooks.json`, `.claude/settings.json`, or
+`.grok/hooks/zephyr-attribution.json`; Codex/Grok also install a project metadata collector
 without replacing existing hooks, global settings, or trust. Review Codex hooks
-with `/hooks` and restart agent sessions. Git AI editor integrations are needed
+with `/hooks`; Grok requires `/hooks-trust`. Restart agent sessions. Git AI editor integrations are needed
 for known-human evidence; missing instrumentation remains unknown.
 
 Source copies stay in the private Git directory. Snapshots emit file hashes and
-self-reported contributor/tool/model metadata. The scoped source record includes
+self-reported contributor/harness/model/effort/session metadata and observed usage/cost
+when available. The prompt initiator comes from the launcher's `ZE_ATTRIBUTION_INITIATOR`
+self-report, separately from the Git author and deployer. `ZE_ATTRIBUTION_HARNESS`
+identifies wrappers such as T3. Session-cumulative usage/cost snapshots are not additive.
+Grok tool-to-prompt linkage is explicitly inferred from the active prompt. The scoped source record includes
 eligible unstaged and untracked files and omits ignored files, common build
 output, `.env*`, private key files, `.npmrc`, and `.netrc`. Configure additional
 repository-relative prefix exclusions through the `exclude` array. See the

@@ -87,4 +87,5 @@ export type {
   ChangeAttribution,
   ChangeAttributionRange,
   ChangeOrigin,
+  ChangeSession,
 } from './lib/change-attribution';

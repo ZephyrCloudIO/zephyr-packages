@@ -790,6 +790,138 @@
       "evidence": [
         "Changed: .github/workflows/release-please.yml at 2af3855d6f0842736ae9dbc38820926a01ce70c8"
       ]
+    },
+    "source:libs/zephyr-agent/src/lib/deployment/aws-upload.strategy.test.ts": {
+      "fingerprint": "d3ec585129ebe0478f90c4db400536726b7dbbcb24046bf4d929fb9fb6c6ad91",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/deployment/aws-upload.strategy.test.ts": "57bb2435376c2aab4cdecc4e5996ae6756b6f66cb13193eaec3eff5e0c9394f1"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/deployment/aws-upload.strategy.test.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/deployment/aws-upload.strategy.ts": {
+      "fingerprint": "28689760d39eb1127f241aba8103286cf17e0653c9d60a29a064c52d053fa9cd",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/deployment/aws-upload.strategy.ts": "19d8526a9c9a6ca24f02cb8fae261c74b9ff083c518aa75165b707f6c79fe06d"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/deployment/aws-upload.strategy.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/deployment/common-upload.strategy.test.ts": {
+      "fingerprint": "d613353f3a8a6475ed81689e57c7e8d57feea25604b704b0e935397857654f0d",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/deployment/common-upload.strategy.test.ts": "f9a693ffca4e06b19e6eddcbf8c1c8e06839faf6606174776218ae2f4791d119"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/deployment/common-upload.strategy.test.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/deployment/common-upload.strategy.ts": {
+      "fingerprint": "e949b43840efbbb0914eee0b046df5a380766f159f3c0d7efa97b06676fd6abd",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/deployment/common-upload.strategy.ts": "3aa2215e760da24b6e1b27791b7cdec1f8937bc95ce09b41c2c7670166746b6f"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/deployment/common-upload.strategy.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/deployment/upload-base/index.ts": {
+      "fingerprint": "50747b228b5486779b93c33227314502b8c80f965359deada3d96e011bf58b81",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/deployment/upload-base/index.ts": "e2a859d07ac931fc17902a0c0471251b6f13b5c5b15d783da982a07c5eaae29b"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/deployment/upload-base/index.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/deployment/upload-base/restore-missing-assets.ts": {
+      "fingerprint": "41fe3fe755083eadb67d8f6aada8e7e50b45cc8b97313c614ed8b4b16daaf7f0",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/deployment/upload-base/restore-missing-assets.ts": "6427c60a9afe24ec78c503b8074ef8bb84fd09361db4280d686ed449181db249"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/deployment/upload-base/restore-missing-assets.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/edge-actions/ze-upload-snapshot.ts": {
+      "fingerprint": "6d18c6dd1e5a67bbd433aeb755ee213ed2bcc812e8ee03286f6b52a05c2a32bc",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/edge-actions/ze-upload-snapshot.ts": "5f077f93c3b205e0daf63fc0c10e465fffd10c5371263516a67cdc50d795c07f"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/edge-actions/ze-upload-snapshot.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/edge-hash-list/distributed-hash-control.ts": {
+      "fingerprint": "1ea585c7eb83d977c2997954a6e2cdb1615db1444d84a0daa858fc2ebc6e58aa",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/edge-hash-list/distributed-hash-control.ts": "116122067828b376799bc39918e4df51f106b0abac4b645d3bda8379d0654050"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/edge-hash-list/distributed-hash-control.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/errors/codes.ts": {
+      "fingerprint": "5b5898a7f38ef2537608d1deebb27bec4f325a98016f71fceff411a6b1127205",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/errors/codes.ts": "c32da20306b390cc2a318446cbb0246af5d6bae4e0b117b07bb17cbede0fe589"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/errors/codes.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/http/upload-snapshot.test.ts": {
+      "fingerprint": "fd886e775e846a09a458314d0d9899768efaa92d9d18e7be1fe744c66f4b4609",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/http/upload-snapshot.test.ts": "7d95470452ced7102274a9710a1e4c3e2b3f28ccb5b5fc13ea6532913a8ba032"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/http/upload-snapshot.test.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
+    },
+    "source:libs/zephyr-agent/src/lib/http/upload-snapshot.ts": {
+      "fingerprint": "428ab784785a6026aeb6e7d9b1455ab5ad1f898f876d2298ed0219a3c65f2a63",
+      "snapshot": {
+        "libs/zephyr-agent/src/lib/http/upload-snapshot.ts": "9867069a195c6a8ae26e01a72fb61e276d4b855dd33e3f153999b8ee5d89d850"
+      },
+      "head": "b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386",
+      "outcome": "no-change",
+      "reason": "Internal snapshot-upload recovery for build-retention 409 missing_assets replies; no public plugin API, configuration, or setup guidance changes, so no skill guidance is affected.",
+      "evidence": [
+        "Changed: libs/zephyr-agent/src/lib/http/upload-snapshot.ts at b67ddfcca0ea03ee3ac2b16cc77b857c9cf35386"
+      ]
     }
   }
 }

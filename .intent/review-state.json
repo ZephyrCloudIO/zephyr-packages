@@ -999,6 +999,18 @@
         "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
         "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
       ]
+    },
+    "source:.github/workflows/release-please.yml": {
+      "fingerprint": "03c4f7bdd72dcf0d1cbf79a1c010545172e54f24e419916f95c6f40580ce76a8",
+      "snapshot": {
+        ".github/workflows/release-please.yml": "dc998564126f7045c0c812865f1caf8f81ed68538ec7a8bc70e80e95f305ca62"
+      },
+      "head": "8bc5e110d533b39ef36d5c42e917831d03379cdf",
+      "outcome": "no-change",
+      "reason": "release-please workflow records release-only review outcomes; CI automation only, no skill guidance affected",
+      "evidence": [
+        "Changed: .github/workflows/release-please.yml at 8bc5e110d533b39ef36d5c42e917831d03379cdf"
+      ]
     }
   }
 }

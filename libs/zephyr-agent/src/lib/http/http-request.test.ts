@@ -83,6 +83,22 @@ describe('Pure HTTP Request Functions', () => {
   });
 
   describe('makeHttpRequest', () => {
+    it('omits private attribution response bodies from diagnostics and errors', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 400,
+        text: async () => 'PRIVATE_SOURCE_ECHO',
+        ok: false,
+      } as Response);
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://api.example.com/attribution'),
+        { method: 'POST', sensitiveResponse: true },
+        'PRIVATE_SOURCE_REQUEST'
+      );
+      expect(ok).toBe(false);
+      expect(String(error)).not.toContain('PRIVATE_SOURCE');
+      expect(JSON.stringify(mocks.httpLog.mock.calls)).not.toContain('PRIVATE_SOURCE');
+      expect(mocks.httpLog).toHaveBeenCalled();
+    });
     it('should handle successful JSON responses', async () => {
       mockFetchWithRetries.mockResolvedValueOnce({
         status: 200,

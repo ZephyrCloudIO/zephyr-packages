@@ -1,6 +1,7 @@
 import { isCI } from 'ci-info';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { captureSource, type SourceCapture } from '../lib/change-attribution/source';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
 import {
   assertZephyrBuildTarget,
@@ -146,6 +147,9 @@ export interface DeploymentInfo {
  * ./internal
  */
 export class ZephyrEngine {
+  sourceContext: string;
+  sourceCapture?: SourceCapture;
+  pendingSourceCapture?: SourceCapture;
   // npm and git properties initialized in `create` method
   npmProperties!: ZePackageJson;
   gitProperties!: ZeGitInfo;
@@ -204,6 +208,7 @@ export class ZephyrEngine {
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
+    this.sourceContext = options.context ?? process.cwd();
   }
 
   static defer_create(): DeferredZephyrEngine {
@@ -264,6 +269,8 @@ export class ZephyrEngine {
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
     const application_uid = ze.application_uid;
+    ze.sourceCapture = ze.pendingSourceCapture ?? captureSource(ze.sourceContext);
+    ze.pendingSourceCapture = undefined;
 
     // starting async load of application configuration, build_id and hash_list
 
@@ -704,6 +711,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
           return {
             ...dash_data,
+            changeAttribution: snapshot.changeAttribution,
             builder: dash_data.builder ?? zephyr_engine.builder,
             plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
             worker_version:
@@ -779,6 +787,8 @@ function indexAssetsBySnapshotPath(
 }
 
 function resetBuildState(zephyr_engine: ZephyrEngine): void {
+  zephyr_engine.sourceCapture = undefined;
+  zephyr_engine.pendingSourceCapture = undefined;
   zephyr_engine.build_id = null;
   zephyr_engine.snapshotId = null;
   zephyr_engine.hash_list = null;

@@ -371,3 +371,43 @@ src/
 ## Contributing
 
 Found a configuration pattern that isn't supported? Please open an issue or submit a pull request!
+
+## Optional Change Attribution
+
+After setup, interactive runs ask whether to enable Change Attribution and link
+to [Git AI installation](https://usegitai.com/docs/get-started). A second prompt
+offers project agent hooks. Skipping either choice keeps ordinary Zephyr setup
+working. Non-interactive runs require explicit flags:
+
+```bash
+pnpm dlx with-zephyr . --attribution --attribution-agents codex claude grok
+```
+
+`--no-attribution` skips the offer. `--dry-run` does not write attribution or hook
+configuration. `--git-ai-path <executable>` selects a compatible Git AI binary or
+fork. Git AI 1.7.x is supported, tested with 1.7.5. The codemod does not download
+or execute its installer.
+
+The opt-in writes `.zephyr/attribution.json` at the Git repository root. Agent
+integration flags merge hooks into `.codex/hooks.json`, `.claude/settings.json`, or
+`.grok/hooks/zephyr-attribution.json`; Codex/Grok also install a project metadata collector
+without replacing existing hooks, global settings, or trust. Review Codex hooks
+with `/hooks`; Grok requires `/hooks-trust`. Restart agent sessions. Git AI editor integrations are needed
+for known-human evidence; missing instrumentation remains unknown.
+
+Storage defaults to local: all attribution stays in the private Git directory
+and is omitted from uploaded snapshots/build stats. `--attribution-storage remote`
+selects dedicated build-linked publication, requiring authenticated repository
+policy and the new control-plane endpoint. Free remote accounts include patches
+and changed-line text; paid/BYOC defaults omit both, with independent opt-in.
+Snapshots carry only an acknowledged remote record reference. The prompt
+initiator comes from the launcher's `ZE_ATTRIBUTION_INITIATOR`
+self-report, separately from the Git author and deployer. `ZE_ATTRIBUTION_HARNESS`
+identifies wrappers such as T3. Session-cumulative usage/cost snapshots are not additive.
+Grok tool-to-prompt linkage is explicitly inferred from the active prompt. The scoped source record includes
+eligible unstaged and untracked files and omits ignored files, common build
+output, `.env*`, private key files, `.npmrc`, and `.netrc`. Configure additional
+repository-relative prefix exclusions through the `exclude` array. See the
+bundled `zephyr-core/references/change-attribution.md` for limits and comparisons.
+The companion `attribution-storage.md` describes per-repo preferences, a private
+local-only override, and the server authorization/encrypted-storage contract.

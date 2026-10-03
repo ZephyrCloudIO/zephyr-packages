@@ -58,6 +58,7 @@ export async function zeBuildDashData(
     tags: [],
     project: '',
     metadata: {},
+    changeAttribution: zephyr_engine.snapshot_with_envs?.changeAttribution,
     default: false,
     remote: 'remoteEntry.js',
     build_target: zephyr_engine.env.target ?? 'web',

@@ -36,6 +36,11 @@ Why: the codemod detects the stack and makes the smallest setup change for suppo
 
 ## SDK picker
 
+For optional human/AI provenance, the codemod also offers **Change Attribution**
+and links to Git AI installation. Enabling capture and installing project agent
+hooks are separate choices. Read [Change Attribution](change-attribution.md) for
+consent, supported integrations, dirty-source records, and coverage limits.
+
 Use the official picker doc first:
 
 - Docs page: `https://docs.zephyr-cloud.io/getting-started/find-your-sdk`

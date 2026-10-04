@@ -380,6 +380,15 @@ skills:
     covers:
       [SSG versus Rsbuild path, explicit ssg, afterBuild hook ordering, federation public path]
 gaps:
+  - skill: zephyr-core
+    question: The proposed attribution publication protocol is not implemented or
+      released; current remote tier policy does not provide direct BYOC routing or
+      versioned agreement/source authorization.
+    context: docs/attribution-publication-design.md and issue 647 define the planned
+      contract, isolated evidence/report flows, human acceptance, verification,
+      and coordinated release. Update core/CLI guidance with that implementation;
+      existing skills continue to describe the version 1 client.
+    status: open
   - skill: zephyr-vite
     question: Fresh-agent activation and end-to-end live deployment are not verified
       by local tests.

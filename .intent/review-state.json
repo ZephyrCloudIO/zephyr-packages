@@ -46,10 +46,10 @@
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "26e16fc592be3f8e25df0b3c34b731f7a90d4c28e6c04257f8761d23d1e0e14b",
+      "fingerprint": "d04611340046aba6f2ab948864b0223b813bd88dd89f8febe771a1e67d552b5c",
       "snapshot": {
-        "_artifacts/domain_map.yaml": "050102d644e9198d1a278ed5c83b019055745c82e540cd99477fcf1a8468753b",
-        "_artifacts/skill_spec.md": "dbedb13734744c04bca747311c169d4122a3d777c7e13e90a8972e6e67267fab",
+        "_artifacts/domain_map.yaml": "a107123eab86baaea45f7d83a00bf659a252b5b07f49c2e515afc64273fd4d7e",
+        "_artifacts/skill_spec.md": "39e47e7d4b9cfd4c3c7030fd8812badb4a781e9b0ede34acef3e3d7dae3e961e",
         "_artifacts/skill_tree.yaml": "c342732f9b4e91105dc3a7284a6f4a8e7738300d34bc6d8b71b513227cb67a20",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "ecc40d6cbf7c60399c0f90241326af5800622311cd0dcb88ec09ab41714cd97f",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
@@ -266,13 +266,13 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "5aa0da1ea4847b7c077d84b4e3c56738c22faf62",
-      "outcome": "no-change",
-      "reason": "Restored real file paths in the exact generated binary diff marker, outside hunks. Binary contents remain omitted; text hunk preservation, source attribution, and storage policy are unchanged. Reviewed all three planning records and shared capture/storage guidance; no recommendation or task ownership changes.",
+      "head": "8bc5e110d533b39ef36d5c42e917831d03379cdf",
+      "outcome": "updated",
+      "reason": "Recorded the proposed remote attribution contract in the spec and its unimplemented release gap in the domain map. The tree remains accurate: package ownership, source mappings, versions and distribution do not change. Existing skills continue to describe the version 1 implementation.",
       "evidence": [
-        "libs/zephyr-agent/src/lib/change-attribution/compare.ts and source.spec.ts current diff against 5aa0da1e",
-        "pnpm test:affected: 45 tasks passed; binary source regression checks real paths and absence of temporary path markers",
-        "Shared attribution references and _artifacts/domain_map.yaml, skill_spec.md, skill_tree.yaml reviewed"
+        "Baseline 8bc5e110d533b39ef36d5c42e917831d03379cdf; inspected remote.ts, change-attribution.ts and the existing storage guide.",
+        "_artifacts/domain_map.yaml and _artifacts/skill_spec.md preserve prior decisions and explicitly mark the new protocol as planned; _artifacts/skill_tree.yaml is unchanged.",
+        "Oxfmt, relative-link/code-fence checks, YAML parsing and git diff --check passed. No runtime guidance changed; a fresh-consumer protocol check is inapplicable until implementation in issue 647."
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -998,6 +998,20 @@
         "Affected typecheck graph: 13 tasks passed; format and lint passed",
         "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
         "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
+      ]
+    },
+    "source:docs/attribution-publication-design.md": {
+      "fingerprint": "7815ed578bd1240822f1a64ec2e2990dd8c418f3ef34491ccfb5b303dcf80217",
+      "snapshot": {
+        "docs/attribution-publication-design.md": "206a221efbff9c8102c73ea0a232596b26e0daeedec510b87ba62583ee487222"
+      },
+      "head": "8bc5e110d533b39ef36d5c42e917831d03379cdf",
+      "outcome": "no-change",
+      "reason": "The new design document explicitly proposes an unimplemented protocol and links current version 1 behavior separately. No runtime API, exports, package version, skill instructions or supported consumer workflow changed; update existing core/CLI guidance with the later implementation instead of advertising planned capabilities now.",
+      "evidence": [
+        "docs/attribution-publication-design.md states proposed status and leaves issue 647 open for implementation and release.",
+        "Compared the current uploader, shared contract and skills/zephyr-core/references/attribution-storage.md against the design and backend PR 3803.",
+        "Oxfmt and all 5 local Markdown links passed. New API runtime and fresh-consumer tests are not claimed for a design-only diff."
       ]
     }
   }

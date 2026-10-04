@@ -184,6 +184,7 @@ Commands:
   doctor [directory]       Inspect project readiness without installing or building
   attribution capture     Save a private source record, including local edits
   attribution compare <before> <after>  Compare source records or version IDs
+  attribution report <before> <after> [--output file.json]  Export a local browser report
   attribution status      Check optional Change Attribution configuration
 
 Options:

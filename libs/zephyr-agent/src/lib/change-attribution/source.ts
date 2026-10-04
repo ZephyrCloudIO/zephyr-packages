@@ -43,7 +43,7 @@ export interface SourceCapture {
   gitDir: string;
   record?: SourceRecord;
   reason?: string;
-  storage?: 'local' | 'remote';
+  storage?: 'local';
 }
 const digest = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 function git(root: string, args: string[], encoding: 'utf8'): string;

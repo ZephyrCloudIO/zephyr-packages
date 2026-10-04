@@ -172,3 +172,8 @@ export {
   type AttributedDiffLine,
   type AttributedFileDiff,
 } from './lib/change-attribution/compare';
+export {
+  createLocalAttributionReport,
+  type LocalAttributionReport,
+  type AttributionLineCounts,
+} from './lib/change-attribution/report';

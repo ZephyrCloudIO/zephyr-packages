@@ -723,7 +723,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
           return {
             ...dash_data,
-            changeAttribution: snapshot.changeAttribution,
             builder: dash_data.builder ?? zephyr_engine.builder,
             plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
             worker_version:

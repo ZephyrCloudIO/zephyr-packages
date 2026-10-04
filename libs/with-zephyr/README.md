@@ -395,13 +395,12 @@ without replacing existing hooks, global settings, or trust. Review Codex hooks
 with `/hooks`; Grok requires `/hooks-trust`. Restart agent sessions. Git AI editor integrations are needed
 for known-human evidence; missing instrumentation remains unknown.
 
-Storage defaults to local: all attribution stays in the private Git directory
-and is omitted from uploaded snapshots/build stats. `--attribution-storage remote`
-selects dedicated build-linked publication, requiring authenticated repository
-policy and the new control-plane endpoint. Free remote accounts include patches
-and changed-line text; paid/BYOC defaults omit both, with independent opt-in.
-Snapshots carry only an acknowledged remote record reference. The prompt
-initiator comes from the launcher's `ZE_ATTRIBUTION_INITIATOR`
+Storage is local-only: all attribution stays in the private Git directory and is
+omitted from uploaded snapshots/build stats. `--attribution-storage remote` is
+rejected; old remote configurations normalize to local. Export aggregate JSON with
+`ze-cli attribution report <before> <after>` for local import into a compatible
+Zephyr app's Activity → Contributors page. The viewer does not upload the report.
+The prompt initiator comes from the launcher's `ZE_ATTRIBUTION_INITIATOR`
 self-report, separately from the Git author and deployer. `ZE_ATTRIBUTION_HARNESS`
 identifies wrappers such as T3. Session-cumulative usage/cost snapshots are not additive.
 Grok tool-to-prompt linkage is explicitly inferred from the active prompt. The scoped source record includes
@@ -410,4 +409,4 @@ output, `.env*`, private key files, `.npmrc`, and `.netrc`. Configure additional
 repository-relative prefix exclusions through the `exclude` array. See the
 bundled `zephyr-core/references/change-attribution.md` for limits and comparisons.
 The companion `attribution-storage.md` describes per-repo preferences, a private
-local-only override, and the server authorization/encrypted-storage contract.
+local-only override, and browser report export/retention.

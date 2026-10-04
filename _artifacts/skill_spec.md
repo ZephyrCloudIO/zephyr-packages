@@ -1,5 +1,26 @@
 # zephyr-packages skill spec
 
+## Local-only attribution decision, 2026-10-04
+
+The maintainer superseded the proposed cloud ingestion design with local-only
+capture/export and local browser import in the existing app. Remove the remote
+uploader, authenticated policy and wire types; legacy remote config normalizes
+to local and new remote selections fail. Snapshots/build stats carry no attribution.
+Reports contain only aggregate added/removed origins and changed-file counts,
+capture identifiers/fingerprints and generation time. They omit source, paths,
+identities and sessions. Export defaults to a new owner-only private Git file.
+The app viewer (companion PR 3803) owns file selection inside a sandboxed frame
+with network access blocked; no report contents enter the parent app or server.
+
+Update existing core/CLI guidance, not a new skill. Preserve the history below
+as prior decisions, now superseded for remote behavior. Issue 647 tracks publishing;
+no version bump or npm publication is part of this change. Custom hosted/BYOC
+agreements and OSS ingestion are deferred with cloud support. Tests must exercise
+legacy configuration, absence from snapshot/stats and transport, export privacy,
+permissions/no-overwrite, and browser isolation in the companion application.
+Fresh independent consumer-agent validation remains unverified; do not conflate
+maintainer-run fixtures with a fresh session.
+
 ## Attribution publication design, 2026-10-03
 
 At baseline `8bc5e110`, the maintainer requested design PRs in the backend and

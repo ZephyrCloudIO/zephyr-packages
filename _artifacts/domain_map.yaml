@@ -83,9 +83,9 @@ skills:
         agent hooks; compare dirty-source versions without guessing human authorship.
       - Capture per-turn harness, agent, provider, model, effort, prompt-initiator,
         session usage and reported cost; preserve self-reported identity and inferred Grok prompt linkage.
-      - Choose per-repository local or remote attribution, enforce authenticated
-        tier policy for patches/changed lines, and restrict sharing with a private override;
-        retain local evidence and continue deployment when remote attribution is unavailable.
+      - Keep attribution local, normalize legacy remote preferences without uploads,
+        and export aggregate JSON for an isolated browser viewer in the Zephyr app;
+        retain private evidence and exclude attribution from deployment metadata.
       - Keep ZE_PUBLIC_* values public and diagnose git, auth, and SDK
         mismatches.
     covers:
@@ -381,13 +381,11 @@ skills:
       [SSG versus Rsbuild path, explicit ssg, afterBuild hook ordering, federation public path]
 gaps:
   - skill: zephyr-core
-    question: The proposed attribution publication protocol is not implemented or
-      released; current remote tier policy does not provide direct BYOC routing or
-      versioned agreement/source authorization.
-    context: docs/attribution-publication-design.md and issue 647 define the planned
-      contract, isolated evidence/report flows, human acceptance, verification,
-      and coordinated release. Update core/CLI guidance with that implementation;
-      existing skills continue to describe the version 1 client.
+    question: Local-only report support needs coordinated SDK publishing and app release;
+      cloud analytics, BYOC collectors, and hosted OSS ingestion are deferred.
+    context: docs/attribution-publication-design.md and issue 647 track the local-only
+      SDK export and companion browser viewer. Previous remote policy was removed;
+      no package or dashboard availability is claimed before release verification.
     status: open
   - skill: zephyr-vite
     question: Fresh-agent activation and end-to-end live deployment are not verified

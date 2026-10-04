@@ -9,13 +9,17 @@ import {
 } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
-import type { AttributionContentOptions } from 'zephyr-edge-contract';
+/** Legacy source-sharing preferences are accepted on disk but have no effect. */
+interface AttributionContentOptions {
+  patch?: boolean;
+  lines?: boolean;
+}
 
 export interface AttributionConfig {
   schemaVersion: 1;
   enabled: boolean;
   /** Missing storage means local, including configurations written by older SDKs. */
-  storage?: 'local' | 'remote';
+  storage?: 'local';
   repositoryId?: string;
   content?: AttributionContentOptions;
   gitAiPath?: string;
@@ -44,8 +48,7 @@ export function validateAttributionConfig(
     value['schemaVersion'] !== 1 ||
     typeof value['enabled'] !== 'boolean' ||
     (value['storage'] !== undefined &&
-      (typeof value['storage'] !== 'string' ||
-        !['local', 'remote'].includes(value['storage']))) ||
+      (typeof value['storage'] !== 'string' || value['storage'] !== 'local')) ||
     (value['repositoryId'] !== undefined &&
       (typeof value['repositoryId'] !== 'string' ||
         !/^[a-zA-Z0-9._-]{1,128}$/.test(value['repositoryId']))) ||
@@ -73,14 +76,19 @@ function readJson(filename: string): unknown {
   }
 }
 
-/** Private overrides can restrict sharing, never enable remote storage or more content. */
+/** Legacy private overrides remain restrictions; no config can enable uploads. */
 export function readAttributionConfig(
   root: string,
   gitDir?: string
 ): AttributionConfig | undefined {
   const filename = join(root, '.zephyr/attribution.json');
   if (!existsSync(filename)) return undefined;
-  const config = readJson(filename);
+  const stored = readJson(filename);
+  // Version 1 remote preferences never authorize a request in this local-only SDK.
+  const config =
+    object(stored) && stored['storage'] === 'remote'
+      ? { ...stored, storage: 'local' }
+      : stored;
   validateAttributionConfig(config);
   if (!gitDir) return config;
   const local = join(gitDir, 'zephyr-attribution/config.local.json');

@@ -262,10 +262,10 @@ private source records, including local changes at the same Git commit:
 ```bash
 ze-cli attribution status
 ze-cli attribution configure --storage local
-ze-cli attribution configure --storage remote --patches include --lines omit
 ze-cli attribution configure --storage local --local
 ze-cli attribution capture --format json
 ze-cli attribution compare <before-source-id> <after-source-id> --format json
+ze-cli attribution report <before-source-id> <after-source-id> --format json
 ```
 
 `compare` also accepts local Zephyr snapshot IDs. Use `-C <project>` to select the
@@ -277,11 +277,21 @@ contributor rather than who deleted it.
 
 Opted-in run-mode builds capture source before the build command and again at
 snapshot creation. Prebuilt deployments report publication-only observations.
-Local storage (the default) emits no attribution in uploaded snapshots/build stats.
-Remote storage posts evidence to the dedicated endpoint and emits an acknowledged
-record reference; it requires authenticated policy/control-plane support. Free
-remote requires patches/changed lines; paid/BYOC defaults omit them. `configure`
-writes non-secret repo preferences; `--local` writes a private restriction that
-cannot enable remote sharing. See the bundled `zephyr-core` Change
-Attribution reference for source exclusions, limits, hook consent, and Git AI
-compatibility, and its `attribution-storage.md` for server requirements.
+Storage is local-only. Uploaded snapshots/build stats contain no attribution.
+Legacy remote configurations resolve to local; new remote settings are rejected.
+`configure` writes non-secret repository preferences; `--local` writes a private
+restriction. Server policy, billing tier, BYOC, and OSS cannot enable uploads.
+
+`report` writes a new aggregate JSON file under the private Git directory and
+prints its absolute path. `--output /path/report.json` selects another path and
+refuses to overwrite existing files. Keep custom exports outside deployment
+output and tracked directories. The report contains counts by AI/human/unknown
+origin without source text, paths, personal identities, sessions, prompts, or
+transcripts. Choose it in a compatible app's Activity → Contributors → Local
+attribution report; the file is processed only in that browser frame. Clearing,
+reloading, or navigating away removes the display; it does not delete the export
+on disk. Local receipts and exports are not automatically pruned.
+
+See the bundled `zephyr-core` Change Attribution reference for source exclusions,
+limits, hook consent, and Git AI compatibility, and `attribution-storage.md` for
+report semantics, browser isolation, and coordinated release availability.

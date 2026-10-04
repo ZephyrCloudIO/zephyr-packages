@@ -29,11 +29,8 @@ export function configureAttribution(
   options: AttributionSetupOptions
 ) {
   const agents = [...new Set(options.attributionAgents ?? [])];
-  if (
-    options.attributionStorage !== undefined &&
-    !['local', 'remote'].includes(options.attributionStorage)
-  )
-    throw new Error('Attribution storage must be local or remote');
+  if (options.attributionStorage !== undefined && options.attributionStorage !== 'local')
+    throw new Error('Attribution is local-only; remote storage is not supported');
   if (agents.some((agent) => !['codex', 'claude', 'grok'].includes(agent))) {
     throw new Error(
       'Supported attribution agents: codex, claude, grok. See the Git AI link for other integrations.'
@@ -85,7 +82,7 @@ export function configureAttribution(
         ...config,
         schemaVersion: 1,
         enabled: true,
-        storage: options.attributionStorage ?? config['storage'] ?? 'local',
+        storage: 'local',
         ...(options.gitAiPath ? { gitAiPath: binary } : {}),
       },
     ],
@@ -198,11 +195,11 @@ export async function offerAttribution(
   );
   console.log(`Git AI installation and agent integrations: ${GIT_AI_SETUP_URL}`);
   console.log(
-    'Local mode keeps all attribution in your private Git directory. Remote mode uploads evidence linked to the build: free accounts include patches and changed-line text; paid/BYOC can opt into either. Credentials and account tier are never stored in repository configuration. Prompt text is not included.'
+    'Attribution stays in your private Git directory and is never uploaded by the SDK. Reports can be exported for local viewing in the Zephyr app. Prompt text is not included.'
   );
   let enabled: boolean | undefined = options.attribution;
   let agents = options.attributionAgents;
-  let storage = options.attributionStorage;
+  const storage = options.attributionStorage;
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
   let input: ReturnType<typeof createInterface> | undefined;
   try {
@@ -215,15 +212,6 @@ export async function offerAttribution(
     if (!enabled) {
       console.log('To enable later: with-zephyr . --attribution');
       return;
-    }
-    if (interactive && storage === undefined) {
-      input ??= createInterface({ input: process.stdin, output: process.stdout });
-      storage =
-        (
-          await input.question(
-            'Attribution storage: local or remote? [keep current, default local]: '
-          )
-        ).trim() || undefined;
     }
     if (interactive && agents === undefined) {
       input ??= createInterface({ input: process.stdin, output: process.stdout });

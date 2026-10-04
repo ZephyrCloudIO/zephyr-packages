@@ -822,10 +822,7 @@ program
     'Enable optional Change Attribution (requires a Git repository)'
   )
   .option('--no-attribution', 'Skip Change Attribution setup')
-  .option(
-    '--attribution-storage <mode>',
-    'Attribution storage: local (default) or remote'
-  )
+  .option('--attribution-storage <mode>', 'Attribution storage: local only')
   .option(
     '--attribution-agents <agents...>',
     'Install project hooks for codex, claude, and/or grok'

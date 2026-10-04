@@ -88,9 +88,4 @@ export type {
   ChangeAttributionRange,
   ChangeOrigin,
   ChangeSession,
-  AttributionContentOptions,
-  AttributionRepositoryPolicy,
-  AttributionStoredChange,
-  AttributionUploadRequest,
-  AttributionUploadResponse,
 } from './lib/change-attribution';

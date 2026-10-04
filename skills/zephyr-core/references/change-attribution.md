@@ -16,10 +16,9 @@ Explicit non-interactive setup:
 pnpm dlx with-zephyr . --attribution --attribution-agents codex claude grok
 ```
 
-Storage defaults to **local**. The interactive offer also asks local versus
-remote; `--attribution-storage remote` selects remote explicitly. Read
-[repository storage and policy](attribution-storage.md) before enabling remote:
-free accounts include patches/changed-line text; paid/BYOC defaults omit them.
+Storage is **local only**. Legacy remote settings fall back to local; new remote
+settings are rejected. Read [local storage and reports](attribution-storage.md)
+for export commands, browser import, retention, and release availability.
 
 This writes repository-root `.zephyr/attribution.json` and merges hooks into
 `.codex/hooks.json`, `.claude/settings.json`, and/or `.grok/hooks/zephyr-attribution.json`. Codex/Grok also install `.zephyr/attribution-hook.cjs` for metadata. It preserves existing hooks
@@ -59,13 +58,13 @@ removals, binary changes, and file modes. Attribution on a removed line describe
 its original contributor; it does not identify who deleted it. Reverted edits
 disappear from the net source difference.
 
-Local mode attaches no attribution to uploaded snapshots or build stats. Remote
-mode sends full evidence to a dedicated private endpoint and includes a small
-acknowledged record reference in snapshot/build-stat `changeAttribution`. The
-authenticated snapshot `creator` remains the deployer; contributor identities
-are self-reported Git AI evidence, not verified people. Server endpoint/policy
-persistence and a dashboard version-difference UI require control-plane support
-and are not implemented in this SDK workspace.
+Attribution is omitted from uploaded snapshots and build stats. The authenticated
+snapshot `creator` remains the deployer; contributor identities are self-reported
+Git AI evidence, not verified people. `ze-cli attribution report <before> <after>`
+exports aggregate JSON without source, paths, or contributor/session identities.
+A compatible app can read it locally in Activity → Contributors; no attribution
+API or cloud storage is involved. The detailed `compare` command still prints
+local source differences; do not treat that output as an aggregate report.
 
 ## Harness, prompt initiator, effort, and usage
 
@@ -124,7 +123,7 @@ responses, transcript paths, and arbitrary provider fields are not published.
 - The Git AI working-log adapter supports `checkpoint/1.0.0` from Git AI 1.7.x,
   tested with 1.7.5. It accepts attribution only when the checkpoint's content
   hash matches the captured file. Stale checkpoints remain unknown. Committed
-  blame is deferred to files changed in local/remote comparisons, only for bytes
+  blame is deferred to files changed in local comparisons, only for bytes
   matching the captured commit. Captures retain working-checkpoint ranges and
   mark matching committed bytes privately; unchanged files do not trigger blame
   processes at build start. HEAD trees are read once and missing baseline blobs

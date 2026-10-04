@@ -74,20 +74,21 @@ separate choice. `ze-cli attribution capture --format json` returns a source ID,
 and `ze-cli attribution compare <before> <after> --format json` accepts source IDs
 or locally saved snapshot IDs. `-C <project>` selects the repository. Source
 copies stay in the private Git directory; a fresh clone lacks those copies.
-After explicit enablement, use `attribution configure --storage local|remote` for shared repo preferences,
-and `--storage local --local` for a private restriction. Read the companion
-`attribution-storage.md` for remote tier defaults and authenticated policy.
-Local mode sends no attribution; remote snapshots contain only a record reference
-after the dedicated endpoint acknowledges the matching build. Remote failure
-warns and continues deployment with private evidence and no attribution reference.
+Storage is local-only. Legacy remote settings resolve to local, and new remote
+settings are rejected. Use `attribution report <before> <after>` to export aggregate
+JSON under the private Git directory; the command prints the path. `--output`
+chooses a new file without overwriting. Keep exports outside deployment output.
+Read the companion `attribution-storage.md` before browser import: compatible apps
+show a local viewer under Activity → Contributors, with no report upload or
+persistence. Captures, exports, and detailed comparisons require no account.
 
 Run mode observes source before its build command and at snapshot creation.
 `boundary-match` reports matching observations, not proof of exact compiler
 inputs; prebuilt deployments use `publication-only`. Missing or stale Git AI
 evidence remains unknown. Contributor identities are self-reported and separate
 from the authenticated deployer. A removal's origin identifies the original
-contributor, not the deleting actor. This repository emits metadata but does not
-implement control-plane persistence or dashboard display.
+contributor, not the deleting actor. This package exports aggregate reports; the companion application owns the
+browser viewer. Neither implements attribution cloud persistence.
 
 ## TAP mini-app publication
 

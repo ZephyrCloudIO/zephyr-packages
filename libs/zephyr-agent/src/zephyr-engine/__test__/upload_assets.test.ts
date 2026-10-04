@@ -124,8 +124,8 @@ describe('ZephyrEngine.upload_assets', () => {
       engine.sourceCapture = captureSource(root, 'build-start');
       await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
       const options = uploadedOptions();
-      expect(options.snapshot.changeAttribution).toBeUndefined();
-      expect(options.getDashData(engine).changeAttribution).toBeUndefined();
+      expect(options.snapshot).not.toHaveProperty('changeAttribution');
+      expect(options.getDashData(engine)).not.toHaveProperty('changeAttribution');
       expect(mocks.getToken).not.toHaveBeenCalled();
       expect(mocks.makeRequest).not.toHaveBeenCalled();
       expect(
@@ -139,101 +139,46 @@ describe('ZephyrEngine.upload_assets', () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
-  it('uploads remote evidence tied to the real build before publishing only its reference', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'zephyr-upload-remote-'));
-    try {
-      execFileSync('git', ['init', '-q', root]);
-      mkdirSync(join(root, '.zephyr'));
-      writeFileSync(
-        join(root, '.zephyr/attribution.json'),
-        '{"schemaVersion":1,"enabled":true,"storage":"remote"}'
-      );
-      writeFileSync(join(root, 'app.txt'), 'remote source\n');
-      const engine = readyEngine();
-      engine.application_configuration = Promise.resolve({
-        ...appConfig(),
-        ATTRIBUTION_POLICY: {
-          schemaVersion: 1,
-          repositoryId: 'repo-1',
-          revision: 'v1',
-          storage: 'remote',
-          tier: 'free',
-          content: { patch: true, lines: true },
-        },
-      });
-      engine.sourceContext = root;
-      engine.sourceCapture = captureSource(root, 'build-start');
-      await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
-      const options = uploadedOptions();
-      const payload = JSON.parse(mocks.makeRequest.mock.calls[0][2]);
-      expect(payload).toMatchObject({
-        applicationUid: engine.application_uid,
-        buildId: 'build-1',
-        snapshotId: options.snapshot.snapshot_id,
-      });
-      expect(
-        payload.comparison.changes.find(
-          (change: { file: string }) => change.file === 'app.txt'
-        ).lines[0].text
-      ).toBe('remote source');
-      expect(options.snapshot.changeAttribution?.remote?.recordId).toBe('record-1');
-      expect(options.snapshot.changeAttribution).not.toHaveProperty('files');
-      expect(options.getDashData(engine).changeAttribution).toEqual(
-        options.snapshot.changeAttribution
-      );
-      expect(mocks.makeRequest.mock.invocationCallOrder[0]).toBeLessThan(
-        mocks.uploadStrategy.mock.invocationCallOrder[0]
-      );
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  it.each(['missing-policy', 'failed-upload'])(
-    'continues deployment with private evidence when remote attribution is unavailable: %s',
-    async (failure) => {
-      const root = mkdtempSync(join(tmpdir(), 'zephyr-upload-fallback-'));
+  it.each(['free', 'paid', 'byoc'])(
+    'ignores legacy remote settings and server policy for %s',
+    async (tier) => {
+      const root = mkdtempSync(join(tmpdir(), 'zephyr-legacy-local-'));
       try {
         execFileSync('git', ['init', '-q', root]);
         mkdirSync(join(root, '.zephyr'));
         writeFileSync(
           join(root, '.zephyr/attribution.json'),
-          '{"schemaVersion":1,"enabled":true,"storage":"remote"}'
+          JSON.stringify({
+            schemaVersion: 1,
+            enabled: true,
+            storage: 'remote',
+            content: { patch: true, lines: true },
+          })
         );
-        writeFileSync(join(root, 'app.txt'), 'private evidence\n');
+        writeFileSync(join(root, 'app.txt'), 'PRIVATE ATTRIBUTION SOURCE\n');
         const engine = readyEngine();
-        if (failure === 'failed-upload') {
-          engine.application_configuration = Promise.resolve({
-            ...appConfig(),
-            ATTRIBUTION_POLICY: {
-              schemaVersion: 1,
-              repositoryId: 'repo-1',
-              revision: 'v1',
-              storage: 'remote',
-              tier: 'paid',
-              content: { patch: true, lines: true },
-            },
-          });
-          mocks.makeRequest.mockResolvedValue([false, new Error('PRIVATE ERROR')]);
-        }
+        engine.application_configuration = Promise.resolve({
+          ...appConfig(),
+          ATTRIBUTION_POLICY: {
+            storage: 'remote',
+            tier,
+            content: { patch: true, lines: true },
+          },
+        });
         engine.sourceContext = root;
         engine.sourceCapture = captureSource(root, 'build-start');
-        const warning = rs.spyOn(console, 'warn').mockImplementation(() => {});
-        try {
-          await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
-          const options = uploadedOptions();
-          expect(options.snapshot.changeAttribution).toBeUndefined();
-          expect(options.getDashData(engine).changeAttribution).toBeUndefined();
-          expect(
-            loadSourceRecord(root, options.snapshot.snapshot_id).files['app.txt']
-          ).toBeTruthy();
-          expect(warning).toHaveBeenCalledWith(
-            expect.stringContaining('evidence remains local')
-          );
-          expect(JSON.stringify(warning.mock.calls)).not.toContain('PRIVATE ERROR');
-        } finally {
-          warning.mockRestore();
-        }
+        await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
+        const options = uploadedOptions();
+        expect(options.snapshot).not.toHaveProperty('changeAttribution');
+        expect(options.getDashData(engine)).not.toHaveProperty('changeAttribution');
+        expect(JSON.stringify(options.snapshot)).not.toContain(
+          'PRIVATE ATTRIBUTION SOURCE'
+        );
+        expect(mocks.getToken).not.toHaveBeenCalled();
+        expect(mocks.makeRequest).not.toHaveBeenCalled();
+        expect(
+          loadSourceRecord(root, options.snapshot.snapshot_id).files['app.txt']
+        ).toBeTruthy();
       } finally {
         rmSync(root, { recursive: true, force: true });
       }

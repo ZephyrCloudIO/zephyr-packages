@@ -81,36 +81,24 @@ describe('optional Change Attribution setup', () => {
       'quotes'
     );
   });
-  it('defaults to local and offers remote without storing credentials or account tier', () => {
+  it('supports local only and rejects remote before writing any configuration', () => {
+    expect(() => configureAttribution(root, { attributionStorage: 'remote' })).toThrow(
+      'local-only'
+    );
+    expect(existsSync(join(root, '.zephyr'))).toBe(false);
     configureAttribution(root, {});
     const file = join(root, '.zephyr/attribution.json');
     expect(JSON.parse(readFileSync(file, 'utf8')).storage).toBe('local');
-    configureAttribution(root, { attributionStorage: 'remote' });
-    expect(JSON.parse(readFileSync(file, 'utf8')).storage).toBe('remote');
-    expect(() => configureAttribution(root, { attributionStorage: 'invented' })).toThrow(
-      'local or remote'
-    );
     writeFileSync(file, '{"schemaVersion":1,"enabled":true,"token":"secret"}');
     expect(() => configureAttribution(root, {})).toThrow('credentials');
   });
-  it('preserves remote storage when the interactive storage answer is blank', async () => {
-    configureAttribution(root, { attributionStorage: 'remote' });
-    const stdin = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
-    const stdout = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-    try {
-      Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true });
-      Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: true });
-      prompt.question.mockResolvedValueOnce('');
-      await offerAttribution(root, { attribution: true, attributionAgents: [] });
-      expect(
-        JSON.parse(readFileSync(join(root, '.zephyr/attribution.json'), 'utf8')).storage
-      ).toBe('remote');
-    } finally {
-      if (stdin) Object.defineProperty(process.stdin, 'isTTY', stdin);
-      else delete process.stdin.isTTY;
-      if (stdout) Object.defineProperty(process.stdout, 'isTTY', stdout);
-      else delete process.stdout.isTTY;
-    }
+  it('migrates existing remote preferences to local without offering uploads', async () => {
+    configureAttribution(root, {});
+    const file = join(root, '.zephyr/attribution.json');
+    writeFileSync(file, '{"schemaVersion":1,"enabled":true,"storage":"remote"}');
+    await offerAttribution(root, { attribution: true, attributionAgents: [] });
+    expect(JSON.parse(readFileSync(file, 'utf8')).storage).toBe('local');
+    expect(prompt.question).not.toHaveBeenCalled();
   });
   it('records Grok tools against an explicitly inferred active prompt and closes it on stop', () => {
     configureAttribution(root, {

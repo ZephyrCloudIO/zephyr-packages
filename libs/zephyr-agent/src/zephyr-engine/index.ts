@@ -250,7 +250,11 @@ export class ZephyrEngine {
     const zephyrConfig = getZephyrConfig(context);
 
     ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
-    const ze = new ZephyrEngine({ context, builder: options.builder });
+    const ze = new ZephyrEngine({
+      context,
+      builder: options.builder,
+      sourceCapture: options.sourceCapture,
+    });
     if (options.target !== undefined) {
       ze.env.target = options.target;
     }

@@ -46,7 +46,7 @@
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "7bd5c0780b8298304a286e5ca6e36b9e0852cb64f6ad95f1b2e4599ba7b13ed7",
+      "fingerprint": "e94c3131c09de9dddf5e2597f0ccdb469d1316d7e20b062a909c345851194ce9",
       "snapshot": {
         "_artifacts/domain_map.yaml": "050102d644e9198d1a278ed5c83b019055745c82e540cd99477fcf1a8468753b",
         "_artifacts/skill_spec.md": "dbedb13734744c04bca747311c169d4122a3d777c7e13e90a8972e6e67267fab",
@@ -127,7 +127,7 @@
         "libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts": "bbb73482b8368291d71bb39f774a3731879f35bfbcff66e48f2d3548f46c7877",
         "libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts": "fd3254c21b9e4675cac227c2cfb5c3b897f2d92855636589b9641c427529cf0b",
         "libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts": "f211e0df8a9c5ef71e5514265b6286147b6336f051c097715e2b101825e53e81",
-        "libs/zephyr-agent/src/zephyr-engine/index.ts": "0e9f2aaac2c39c35e3bd99435076c27105a3693abb520ac3fce7f60c2e2cc7b2",
+        "libs/zephyr-agent/src/zephyr-engine/index.ts": "d4df93ad4c4d9b924945488ebbd182a0f2a7dcf9badb8da681a4724d26237da3",
         "libs/zephyr-astro-integration/README.md": "240ae03fae156cab6e92f2250ba198ed29c91310ce5713b73a634d4bb8bb41b6",
         "libs/zephyr-astro-integration/package.json": "bfbeadc413a484fdc0e2c40d53e8cf285f6f8d7573aca2bd917fcefa1e847ea7",
         "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": "f0db2fff6ac447d55c3f0f7d906a16d1ff42c74ee035a287209840de9c4ce701",
@@ -266,15 +266,14 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
-      "outcome": "updated",
-      "reason": "Reconciled domain_map.yaml and skill_spec.md with PR review corrections, preserved prior batches, and checked skill_tree.yaml ownership remains accurate; no new independent task or skill is required.",
+      "head": "bd0037fbe5bb016ef7b37779f0272d8e894dae6b",
+      "outcome": "no-change",
+      "reason": "Engine creation now forwards the already documented optional source boundary into its constructor. The creation lifecycle regression verifies identity preservation and clearing the pending boundary. The three planning records and shared capture/storage guidance already describe this behavior and remain accurate.",
       "evidence": [
-        "PR #645 review at 8f468124 and current working diff",
-        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
-        "Affected typecheck graph: 13 tasks passed; format and lint passed",
-        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
-        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
+        "libs/zephyr-agent/src/zephyr-engine/index.ts and __test__/engine-lifecycle.test.ts current diff against bd0037fb",
+        "pnpm test:affected: 45 tasks passed, including 411 agent tests and 5 skipped",
+        "Affected typecheck graph: 13 tasks passed",
+        "Existing recorded guidance in skills/zephyr-core/references/change-attribution.md and _artifacts/{domain_map.yaml,skill_spec.md,skill_tree.yaml} reviewed"
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -318,7 +317,7 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "bb9ec7365def94a99749e1cd5d60e8e9b064f51a4066af5151d344cddf7f6e2a",
+      "fingerprint": "0c76e7d891931c26f3713e2f83001634ffb15d0ef7a624b66a61a9d8c4c66602",
       "snapshot": {
         "libs/with-zephyr/README.md": "16c3c1bf882a21b977a60c27835186b16bb51972a39e65835e52c1ac04dc5708",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
@@ -343,7 +342,7 @@
         "libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts": "bbb73482b8368291d71bb39f774a3731879f35bfbcff66e48f2d3548f46c7877",
         "libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts": "fd3254c21b9e4675cac227c2cfb5c3b897f2d92855636589b9641c427529cf0b",
         "libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts": "f211e0df8a9c5ef71e5514265b6286147b6336f051c097715e2b101825e53e81",
-        "libs/zephyr-agent/src/zephyr-engine/index.ts": "0e9f2aaac2c39c35e3bd99435076c27105a3693abb520ac3fce7f60c2e2cc7b2",
+        "libs/zephyr-agent/src/zephyr-engine/index.ts": "d4df93ad4c4d9b924945488ebbd182a0f2a7dcf9badb8da681a4724d26237da3",
         "libs/zephyr-edge-contract/src/index.ts": "e5e754a90345f193a40b9d8d8ecd6e180df1455b2eceb45af5e788db44053f4e",
         "libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts": "722a8cabc2de4a3988675d0b17a6681b6e0e827f65e007e32367079ef2df5680",
         "libs/zephyr-edge-contract/src/lib/change-attribution.ts": "6a46af170194e98ae7e5dc28225767543616958a979a2a4d555856b8d16e3d90",
@@ -365,15 +364,14 @@
         "skills/zephyr-core/references/sdk-setup.md": "44a555ebfbcc3fc6040ecffb31eb76029313418a828a69ba45cceee03e5a51cb",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
-      "outcome": "updated",
-      "reason": "Updated attribution references for one generation boundary plus publication capture, deferred committed blame and batched baseline, preservation of preferences, invalid-config privacy fallback, and best-effort remote publication.",
+      "head": "bd0037fbe5bb016ef7b37779f0272d8e894dae6b",
+      "outcome": "no-change",
+      "reason": "Engine creation now forwards the already documented optional source boundary into its constructor. The creation lifecycle regression verifies identity preservation and clearing the pending boundary. The three planning records and shared capture/storage guidance already describe this behavior and remain accurate.",
       "evidence": [
-        "PR #645 review at 8f468124 and current working diff",
-        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
-        "Affected typecheck graph: 13 tasks passed; format and lint passed",
-        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
-        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
+        "libs/zephyr-agent/src/zephyr-engine/index.ts and __test__/engine-lifecycle.test.ts current diff against bd0037fb",
+        "pnpm test:affected: 45 tasks passed, including 411 agent tests and 5 skipped",
+        "Affected typecheck graph: 13 tasks passed",
+        "Existing recorded guidance in skills/zephyr-core/references/change-attribution.md and _artifacts/{domain_map.yaml,skill_spec.md,skill_tree.yaml} reviewed"
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {
@@ -974,19 +972,18 @@
       ]
     },
     "source:libs/zephyr-agent/src/zephyr-engine/__test__/engine-lifecycle.test.ts": {
-      "fingerprint": "8d877171686064dc0768ff925d15443dc3be12c429bc9410632f2a9fe0bb0e83",
+      "fingerprint": "fe3dd40a93a2811edb148007f33c7d35c6cf14ba8464dbc22a740cafd518d3c1",
       "snapshot": {
-        "libs/zephyr-agent/src/zephyr-engine/__test__/engine-lifecycle.test.ts": "a2f1b839c3946e5ef34e9ae72cf903ff8d78303b70a041827e9a8c70e055d026"
+        "libs/zephyr-agent/src/zephyr-engine/__test__/engine-lifecycle.test.ts": "ff4c0533c3f4ddf276a0e71f66828eb79265ce14c7cbe05ef3dd985ab3974154"
       },
-      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
+      "head": "bd0037fbe5bb016ef7b37779f0272d8e894dae6b",
       "outcome": "no-change",
-      "reason": "Reviewed affected Vite fail-open and generation tests plus the optional sourceCapture engine input against shared attribution guidance. Existing Vite lifecycle/error guidance remains accurate; implementation and regression tests do not require another skill. Shared core references contain the changed capture semantics.",
+      "reason": "Engine creation now forwards the already documented optional source boundary into its constructor. The creation lifecycle regression verifies identity preservation and clearing the pending boundary. The three planning records and shared capture/storage guidance already describe this behavior and remain accurate.",
       "evidence": [
-        "PR #645 review at 8f468124 and current working diff",
-        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
-        "Affected typecheck graph: 13 tasks passed; format and lint passed",
-        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
-        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
+        "libs/zephyr-agent/src/zephyr-engine/index.ts and __test__/engine-lifecycle.test.ts current diff against bd0037fb",
+        "pnpm test:affected: 45 tasks passed, including 411 agent tests and 5 skipped",
+        "Affected typecheck graph: 13 tasks passed",
+        "Existing recorded guidance in skills/zephyr-core/references/change-attribution.md and _artifacts/{domain_map.yaml,skill_spec.md,skill_tree.yaml} reviewed"
       ]
     },
     "source:libs/zephyr-agent/src/zephyr-engine/zephyr-engine.types.ts": {

@@ -143,10 +143,18 @@ describe('ZephyrEngine build lifecycle', () => {
     mocks.getApplicationConfiguration.mockResolvedValue(appConfig());
     mocks.getBuildId.mockResolvedValue('configured-build-id');
 
+    const boundary = {
+      phase: 'build-start',
+      root: '/fixture',
+      gitDir: '/fixture/.git',
+    } as const;
     const value = await ZephyrEngine.create({
       builder: 'vite',
       context: '/workspace/configured-app',
+      sourceCapture: boundary,
     });
+    expect(value.sourceCapture).toBe(boundary);
+    expect(value.pendingSourceCapture).toBeUndefined();
 
     expect(mocks.getZephyrConfig).toHaveBeenCalledTimes(1);
     expect(mocks.getPackageJson).toHaveBeenCalledWith(

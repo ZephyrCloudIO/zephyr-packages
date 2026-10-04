@@ -152,3 +152,23 @@ export {
   calculateManifestHash,
   collectZEPublicVars,
 } from './lib/env-variables';
+export {
+  captureSource,
+  finishSourceCapture,
+  loadSourceRecord,
+  loadVersionAttribution,
+  attributionRepository,
+  readAttributionConfig,
+  type SourceCapture,
+  type SourceRecord,
+  type AttributionConfig,
+} from './lib/change-attribution/source';
+export {
+  writeAttributionConfig,
+  validateAttributionConfig,
+} from './lib/change-attribution/config';
+export {
+  compareSourceRecords,
+  type AttributedDiffLine,
+  type AttributedFileDiff,
+} from './lib/change-attribution/compare';

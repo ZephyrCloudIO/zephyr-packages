@@ -1,10 +1,12 @@
 /* istanbul ignore file */
 
 import type { ZephyrBuildTarget } from './build-target';
+import type { ChangeAttribution } from './change-attribution';
 import type { ZephyrModuleFederationBuildMetadata } from './module-federation';
 
 /** Legacy dashboard/build-statistics envelope shared by every Zephyr adapter. */
 export interface ZephyrBuildStats {
+  changeAttribution?: ChangeAttribution;
   /** @deprecated */
   project: string;
   /** Application_uid */

@@ -79,6 +79,13 @@ skills:
     tasks:
       - Select the supported SDK or upload fallback for the application's stack.
       - Explain immutable versions versus mutable tags and environments.
+      - Enable optional Change Attribution with separate consent for capture and
+        agent hooks; compare dirty-source versions without guessing human authorship.
+      - Capture per-turn harness, agent, provider, model, effort, prompt-initiator,
+        session usage and reported cost; preserve self-reported identity and inferred Grok prompt linkage.
+      - Choose per-repository local or remote attribution, enforce authenticated
+        tier policy for patches/changed lines, and restrict sharing with a private override;
+        retain local evidence and continue deployment when remote attribution is unavailable.
       - Keep ZE_PUBLIC_* values public and diagnose git, auth, and SDK
         mismatches.
     covers:
@@ -91,6 +98,10 @@ skills:
         tags,
         environments,
         ZE_PUBLIC_* overrides,
+        Change Attribution,
+        Git AI agent and editor integrations,
+        private source records and dirty-version comparisons,
+        native Codex and Grok metadata hooks and live T3 trials,
       ]
   - name: zephyr-module-federation
     slug: zephyr-module-federation
@@ -118,6 +129,8 @@ skills:
       - Publish TAP mini-app output with its metadata sidecar.
       - Confirm that a run actually uploaded instead of skipping an undetected
         output directory.
+      - Capture and compare optional local source records without authentication
+        or deployment, preserving unknown provenance and build-boundary limits.
     covers:
       [
         'run, deploy, watch, doctor',

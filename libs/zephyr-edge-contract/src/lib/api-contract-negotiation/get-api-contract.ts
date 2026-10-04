@@ -16,6 +16,7 @@ export const ZE_ENV = () => process.env['ZE_ENV'];
 export const ze_api_gateway = {
   logs: '/logs',
   build_stats: '/build-stats',
+  attribution: '/attribution',
   authorize_link: '/authorize-link',
   resolve: '/resolve',
   application_config: '/application-config',

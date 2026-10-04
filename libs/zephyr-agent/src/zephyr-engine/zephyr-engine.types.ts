@@ -1,4 +1,5 @@
 import type { ZeBuildAssetsMap, ZephyrBuildTarget } from 'zephyr-edge-contract';
+import type { SourceCapture } from '../lib/change-attribution/source';
 
 export type ZephyrEngineBuilderTypes =
   | 'webpack'
@@ -18,6 +19,8 @@ export interface ZephyrEngineOptions {
   builder: ZephyrEngineBuilderTypes;
   /** Build target supplied by a public adapter before dependency resolution starts. */
   target?: ZephyrBuildTarget;
+  /** Existing build-start boundary, e.g. CLI capture before running build commands. */
+  sourceCapture?: SourceCapture;
 }
 
 /** Adapter-defined role, commonly client, server, csr, ssr, rsc, or worker. */

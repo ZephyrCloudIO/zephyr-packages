@@ -179,9 +179,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     builder: primaryTool as any,
     context: cwd,
+    sourceCapture,
     ...(target === undefined ? {} : { target }),
   });
-  zephyr_engine.sourceCapture = sourceCapture;
 
   // Set SSR flag if specified
   if (ssr) {

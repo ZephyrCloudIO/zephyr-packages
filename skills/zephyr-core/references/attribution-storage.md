@@ -13,7 +13,9 @@ credentials, custom endpoint URLs, or a claimed account tier:
 { "schemaVersion": 1, "enabled": true, "storage": "local" }
 ```
 
-Missing `storage`, including older configs, means **local**. Source copies,
+Storage configuration requires an existing enabled repository; enable with
+`with-zephyr . --attribution` first. A blank codemod storage answer preserves
+existing preferences. Missing `storage`, including older configs, means **local**. Source copies,
 attribution, and version receipts stay in the worktree Git directory. Local
 mode neither resolves attribution credentials nor makes attribution requests,
 and attaches no attribution to uploaded snapshots/build stats. Ordinary Zephyr
@@ -65,7 +67,9 @@ filesystem protection, not disk encryption. Windows relies on worktree ACLs.
 Private restrictions apply first. Sharing requires both repo opt-in and server
 authorization. An optional shared `repositoryId` must match the service's
 application/repository binding. Unknown fields, including tokens, URLs, and tier,
-are rejected. Credentials use existing SDK authentication/private storage; CI
+are rejected by configuration commands. Invalid or newer configuration at build
+time disables sharing without blocking deployment; the SDK does not ignore
+unrecognized permissions and accidentally authorize remote uploads. Credentials use existing SDK authentication/private storage; CI
 supplies credentials through its secret environment.
 
 ## Control-plane contract and secure persistence
@@ -111,8 +115,10 @@ Return `AttributionUploadResponse`: `status: "ok"`, opaque record ID, matching
 application/repository/build/snapshot IDs, and source fingerprint. Only after
 acknowledgment does the client put a small record reference in snapshots and
 build stats. Full evidence stays at the private endpoint. A private delivery
-receipt stays locally. Remote failure stops publication and retains local
-source evidence. Reconcile pending records when the build publishes and expire
+receipt stays locally. If policy, source capture, credentials, delivery, or
+acknowledgment is unavailable, deployment continues without an attribution
+reference and emits a warning; source evidence stays local when capture succeeded.
+This also permits deployment before the control-plane endpoint ships. Reconcile pending records when the build publishes and expire
 orphaned records from failed deployments.
 
 Store policy in an access-controlled database and source evidence in private

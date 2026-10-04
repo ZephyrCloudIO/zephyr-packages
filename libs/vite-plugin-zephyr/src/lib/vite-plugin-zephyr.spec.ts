@@ -16,6 +16,7 @@ const mocks = rs.hoisted(() => ({
   rollbackPartialAssetMapClaimBatch: rs.fn(),
   zeBuildDashData: rs.fn(async () => ({})),
   deferCreate: rs.fn(),
+  enginePromise: rs.fn(),
   zeLogInit: rs.fn(),
   logFn: rs.fn(),
   engine: {
@@ -67,7 +68,7 @@ rs.mock('zephyr-agent', () => {
     },
     ZephyrEngine: {
       defer_create: () => ({
-        zephyr_engine_defer: Promise.resolve(mocks.engine),
+        zephyr_engine_defer: mocks.enginePromise() ?? Promise.resolve(mocks.engine),
         zephyr_defer_create: mocks.deferCreate,
       }),
     },
@@ -234,6 +235,7 @@ describe('vite-plugin-zephyr', () => {
     mocks.engine.federated_dependencies = [];
     mocks.engine.application_configuration = Promise.resolve({});
     mocks.engine.hasActiveBuild = true;
+    mocks.enginePromise.mockImplementation(() => Promise.resolve(mocks.engine));
     mocks.engine.start_new_build.mockImplementation(async () => {
       mocks.engine.hasActiveBuild = true;
     });
@@ -1424,6 +1426,19 @@ describe('withZephyrPartial', () => {
     });
     expect(seenOptions).toEqual([expect.objectContaining({ target: 'tap-app' })]);
   });
+
+  test.each([false, true])(
+    'handles engine rejection at build start with ZE_FAIL_BUILD=%s',
+    async (failBuild) => {
+      if (failBuild) process.env['ZE_FAIL_BUILD'] = 'true';
+      const error = new Error('engine unavailable');
+      mocks.enginePromise.mockRejectedValueOnce(error);
+      const [plugin] = withZephyr() as Plugin[];
+      const hook = (plugin.buildStart as () => Promise<void>)();
+      if (failBuild) await expect(hook).rejects.toBe(error);
+      else await expect(hook).resolves.toBeUndefined();
+    }
+  );
 
   test('propagates extraction failures when ZE_FAIL_BUILD is enabled', async () => {
     process.env['ZE_FAIL_BUILD'] = 'true';

@@ -153,7 +153,7 @@ export function configureAttribution(
                 ? {
                     matcher:
                       agent === 'grok'
-                        ? 'Edit|Write|Bash|apply_patch|write|write_file|edit_file'
+                        ? 'Edit|Write|Bash|apply_patch|write|write_file|edit_file|search_replace|run_terminal_command'
                         : 'Edit|Write|Bash',
                   }
                 : {}),
@@ -220,8 +220,10 @@ export async function offerAttribution(
       input ??= createInterface({ input: process.stdin, output: process.stdout });
       storage =
         (
-          await input.question('Attribution storage: local or remote? [local]: ')
-        ).trim() || 'local';
+          await input.question(
+            'Attribution storage: local or remote? [keep current, default local]: '
+          )
+        ).trim() || undefined;
     }
     if (interactive && agents === undefined) {
       input ??= createInterface({ input: process.stdin, output: process.stdout });

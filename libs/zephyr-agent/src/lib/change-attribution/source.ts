@@ -23,6 +23,8 @@ export interface SourceFile {
   mode: string;
   content: string;
   attribution: ChangeAttributionRange[];
+  /** Matching committed bytes; blame is deferred until this file differs in a comparison. */
+  committed?: boolean;
 }
 export interface SourceRecord {
   schemaVersion: 1;
@@ -41,6 +43,7 @@ export interface SourceCapture {
   gitDir: string;
   record?: SourceRecord;
   reason?: string;
+  storage?: 'local' | 'remote';
 }
 const digest = (data: string | Buffer) => createHash('sha256').update(data).digest('hex');
 function git(root: string, args: string[], encoding: 'utf8'): string;
@@ -129,6 +132,9 @@ export function captureSource(
       .sort();
     if (paths.length > 20000)
       throw new Error('Source capture exceeds 20,000 files; configure exclude prefixes');
+    const head = new Map(
+      commitEntries(root, baseCommit, config).map((entry) => [entry.file, entry.oid])
+    );
     const working = readGitAiWorkingAttribution(gitDir, baseCommit);
     const metadata = readSessionMetadata(gitDir);
     const sessions: Record<string, ChangeSession> = Object.create(null);
@@ -173,27 +179,15 @@ export function captureSource(
         : stat.mode & 0o111
           ? '100755'
           : '100644';
-      let attribution = workingRanges(working.entries.get(file), hash, working.authors);
-      // A stale checkpoint must not be patched with HEAD blame: local lines can have moved.
-      if (
+      const attribution = workingRanges(working.entries.get(file), hash, working.authors);
+      // Compare Git blob IDs in-process; no per-file Git processes or blame at capture.
+      // Stale working checkpoints cannot be repaired with committed attribution.
+      const oid = head.get(file);
+      const committed =
         attribution === undefined &&
         !working.entries.has(file) &&
-        baseCommit &&
-        !stat.isSymbolicLink()
-      ) {
-        try {
-          if (digest(git(root, ['show', `${baseCommit}:${file}`])) === hash) {
-            attribution = committedRanges(
-              root,
-              config.gitAiPath ?? 'git-ai',
-              file,
-              baseCommit
-            );
-          }
-        } catch {
-          /* new or deleted file in HEAD */
-        }
-      }
+        Boolean(oid && blobId(content, oid.length) === oid) &&
+        !stat.isSymbolicLink();
       for (const range of attribution ?? []) {
         const match = sessionForOrigin(range.origin, metadata);
         if (!match) continue;
@@ -215,6 +209,7 @@ export function captureSource(
         mode,
         content: content.toString('base64'),
         attribution: attribution ?? [],
+        ...(committed ? { committed: true } : {}),
       };
     }
     const fingerprint = digest(
@@ -248,7 +243,7 @@ export function captureSource(
       JSON.stringify(record),
       { flag: 'wx', mode: 0o600 }
     );
-    return { ...repository, phase, record };
+    return { ...repository, phase, record, storage: config.storage ?? 'local' };
   } catch (error) {
     return { ...repository, phase, reason: (error as Error).message };
   }
@@ -277,7 +272,7 @@ export function finishSourceCapture(
     status: 'captured',
     scope: 'git-working-tree',
     identity: 'self-reported',
-    storage: readAttributionConfig(end!.root, end!.gitDir)?.storage ?? 'local',
+    storage: end!.storage ?? 'local',
     sourceId: record.id,
     sourceFingerprint: record.fingerprint,
     baseCommit: record.baseCommit,
@@ -360,6 +355,50 @@ export function loadVersionAttribution(
   return receipt.summary;
 }
 
+function blobId(content: Buffer, oidLength: number): string {
+  return createHash(oidLength === 64 ? 'sha256' : 'sha1')
+    .update(`blob ${content.length}\0`)
+    .update(content)
+    .digest('hex');
+}
+function commitEntries(root: string, commit: string, config: AttributionConfig) {
+  const entries = (
+    commit ? git(root, ['ls-tree', '-rz', '--full-tree', commit], 'utf8') : ''
+  )
+    .split('\0')
+    .filter(Boolean)
+    .map((entry) => {
+      const tab = entry.indexOf('\t');
+      const [mode, type, oid] = entry.slice(0, tab).split(' ');
+      return { mode, type, oid, file: entry.slice(tab + 1) };
+    })
+    .filter(({ file }) => !excluded(file, config));
+  if (entries.length > 20000) throw new Error('Git baseline exceeds 20,000 entries');
+  if (entries.some(({ type }) => type !== 'blob'))
+    throw new Error('Git baseline contains a submodule; configure exclusions');
+  return entries;
+}
+/** Enrich only changed comparison files. Never mutate an immutable source receipt. */
+export function comparisonFile(
+  directory: string,
+  record: SourceRecord,
+  file: string
+): SourceFile | undefined {
+  const value = record.files[file];
+  if (!value?.committed || !record.baseCommit || value.attribution.length) return value;
+  const { root, gitDir } = attributionRepository(directory);
+  const config = readAttributionConfig(root, gitDir);
+  return {
+    ...value,
+    attribution: committedRanges(
+      root,
+      config?.gitAiPath ?? 'git-ai',
+      file,
+      record.baseCommit
+    ),
+  };
+}
+
 /** Exact Git HEAD baseline for a captured dirty tree, applying the same exclusions. */
 export function sourceCommitBaseline(
   directory: string,
@@ -369,37 +408,66 @@ export function sourceCommitBaseline(
   const config = readAttributionConfig(root, gitDir);
   if (!config?.enabled) throw new Error('Attribution is disabled');
   const files: Record<string, SourceFile> = Object.create(null);
+  const entries = commitEntries(root, captured.baseCommit, config);
+  const reused = new Map<string, Buffer>();
+  const missing = new Set<string>();
+  for (const { file, oid } of entries) {
+    const current = captured.files[file];
+    const content = current && Buffer.from(current.content, 'base64');
+    if (content && blobId(content, oid.length) === oid) reused.set(oid, content);
+    else missing.add(oid);
+  }
+  // One bounded batch for modified/deleted blobs, independent of unchanged file count.
+  const blobs = new Map(reused);
+  const requested = [...missing].filter((oid) => !blobs.has(oid));
+  if (requested.length) {
+    const output = execFileSync('git', ['cat-file', '--batch'], {
+      cwd: root,
+      input: requested.join('\n') + '\n',
+      timeout: 5000,
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    let offset = 0;
+    let fetched = 0;
+    for (const oid of requested) {
+      const end = output.indexOf(10, offset);
+      const header = output.subarray(offset, end).toString('ascii');
+      const match = /^([a-f0-9]{40,64}) blob (\d+)$/.exec(header);
+      if (end < 0 || !match || match[1] !== oid)
+        throw new Error('Invalid Git blob batch');
+      const size = Number(match[2]);
+      fetched += size;
+      if (fetched > 50 * 1024 * 1024) throw new Error('Git baseline exceeds 50 MiB');
+      offset = end + 1;
+      if (
+        !Number.isSafeInteger(size) ||
+        offset + size >= output.length ||
+        output[offset + size] !== 10
+      )
+        throw new Error('Incomplete Git blob batch');
+      blobs.set(oid, output.subarray(offset, offset + size));
+      offset += size + 1;
+    }
+  }
   let bytes = 0;
-  const entries = captured.baseCommit
-    ? git(root, ['ls-tree', '-rz', '--full-tree', captured.baseCommit], 'utf8')
-        .split('\0')
-        .filter(Boolean)
-    : [];
-  if (entries.length > 20000) throw new Error('Git baseline exceeds 20,000 entries');
-  for (const entry of entries) {
-    const tab = entry.indexOf('\t');
-    const [mode, type, oid] = entry.slice(0, tab).split(' ');
-    const file = entry.slice(tab + 1);
-    if (excluded(file, config)) continue;
-    if (type !== 'blob')
-      throw new Error('Git baseline contains a submodule; configure exclusions');
-    const content = git(root, ['cat-file', 'blob', oid]);
+  for (const { mode, oid, file } of entries) {
+    const content = blobs.get(oid)!;
     bytes += content.length;
     if (bytes > 50 * 1024 * 1024) throw new Error('Git baseline exceeds 50 MiB');
     const hash = digest(content);
+    const current = captured.files[file];
+    const unchanged = hash === current?.hash;
     files[file] = {
       hash,
       mode,
       content: content.toString('base64'),
-      attribution:
-        hash === captured.files[file]?.hash
-          ? captured.files[file].attribution
-          : committedRanges(
-              root,
-              config.gitAiPath ?? 'git-ai',
-              file,
-              captured.baseCommit
-            ),
+      attribution: unchanged ? current.attribution : [],
+      ...(unchanged
+        ? current.committed
+          ? { committed: true }
+          : {}
+        : { committed: mode !== '120000' }),
     };
   }
   return {

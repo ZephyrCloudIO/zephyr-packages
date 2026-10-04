@@ -62,8 +62,7 @@ const engine = {
     this.hasActiveBuild = true;
     this.build_id = Promise.resolve(`${invocation}-${++buildNumber}`);
     this.snapshotId = this.build_id;
-    this.sourceCapture = this.pendingSourceCapture ?? sdk.captureSource(directory);
-    this.pendingSourceCapture = undefined;
+    sdk.ZephyrEngine.prototype.start_source_capture.call(this);
   },
   async upload_assets({ assetsMap, mfConfig, mfConfigs, snapshotType, entrypoint }) {
     // Replace the network transport only; use the SDK's real snapshot transformer.

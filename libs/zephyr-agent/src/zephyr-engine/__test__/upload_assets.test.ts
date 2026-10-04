@@ -189,6 +189,57 @@ describe('ZephyrEngine.upload_assets', () => {
     }
   });
 
+  it.each(['missing-policy', 'failed-upload'])(
+    'continues deployment with private evidence when remote attribution is unavailable: %s',
+    async (failure) => {
+      const root = mkdtempSync(join(tmpdir(), 'zephyr-upload-fallback-'));
+      try {
+        execFileSync('git', ['init', '-q', root]);
+        mkdirSync(join(root, '.zephyr'));
+        writeFileSync(
+          join(root, '.zephyr/attribution.json'),
+          '{"schemaVersion":1,"enabled":true,"storage":"remote"}'
+        );
+        writeFileSync(join(root, 'app.txt'), 'private evidence\n');
+        const engine = readyEngine();
+        if (failure === 'failed-upload') {
+          engine.application_configuration = Promise.resolve({
+            ...appConfig(),
+            ATTRIBUTION_POLICY: {
+              schemaVersion: 1,
+              repositoryId: 'repo-1',
+              revision: 'v1',
+              storage: 'remote',
+              tier: 'paid',
+              content: { patch: true, lines: true },
+            },
+          });
+          mocks.makeRequest.mockResolvedValue([false, new Error('PRIVATE ERROR')]);
+        }
+        engine.sourceContext = root;
+        engine.sourceCapture = captureSource(root, 'build-start');
+        const warning = rs.spyOn(console, 'warn').mockImplementation(() => {});
+        try {
+          await engine.upload_assets({ assetsMap: {}, buildStats: {} as never });
+          const options = uploadedOptions();
+          expect(options.snapshot.changeAttribution).toBeUndefined();
+          expect(options.getDashData(engine).changeAttribution).toBeUndefined();
+          expect(
+            loadSourceRecord(root, options.snapshot.snapshot_id).files['app.txt']
+          ).toBeTruthy();
+          expect(warning).toHaveBeenCalledWith(
+            expect.stringContaining('evidence remains local')
+          );
+          expect(JSON.stringify(warning.mock.calls)).not.toContain('PRIVATE ERROR');
+        } finally {
+          warning.mockRestore();
+        }
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+  );
+
   it('adds an empty zephyr manifest asset when no federated dependencies were resolved', async () => {
     const engine = readyEngine();
     const assetsMap: ZeBuildAssetsMap = {};

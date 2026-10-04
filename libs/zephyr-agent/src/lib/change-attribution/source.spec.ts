@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
@@ -11,8 +11,15 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { captureSource, finishSourceCapture, loadSourceRecord } from './source';
+import {
+  captureSource,
+  finishSourceCapture,
+  loadSourceRecord,
+  sourceCommitBaseline,
+} from './source';
 import { compareSourceRecords } from './compare';
+
+rs.mock('node:child_process', { spy: true });
 
 describe('Change Attribution source records', () => {
   let root: string;
@@ -36,13 +43,17 @@ describe('Change Attribution source records', () => {
     git('init', '-q');
     git('config', 'user.name', 'Test Contributor');
     git('config', 'user.email', 'test@example.invalid');
+    git('config', 'gc.auto', '0');
+    git('config', 'maintenance.auto', 'false');
     git('config', 'core.hooksPath', join(root, '.git', 'hooks'));
     put('app.txt', 'original\n');
     put('.gitignore', 'ignored.txt\n');
     git('add', '.');
     git('commit', '-qm', 'Initial source');
   });
-  afterEach(() => rmSync(root, { recursive: true, force: true }));
+  afterEach(() =>
+    rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 })
+  );
 
   it('writes nothing before opt-in and honors disabled configuration', () => {
     expect(captureSource(root)).toBeUndefined();
@@ -198,6 +209,47 @@ describe('Change Attribution source records', () => {
     const diff = compareSourceRecords(root, record.id, captureSource(root)!.record!.id);
     expect(diff.changes[0].lines[0].origin.kind).toBe('unknown');
   });
+  it('preserves path-like text in context, removed lines, and added lines', () => {
+    enabled();
+    put('app.txt', 'context a/before b/after\n-- a/before\nold b/after\n');
+    const before = captureSource(root)!.record!;
+    put('app.txt', 'context a/before b/after\n++ b/after\nnew a/before\n');
+    const after = captureSource(root)!.record!;
+    const patch = compareSourceRecords(root, before.id, after.id).changes[0].patch;
+    expect(patch).toContain('diff --git a/app.txt b/app.txt');
+    expect(patch).toContain(' context a/before b/after');
+    expect(patch).toContain('--- a/before');
+    expect(patch).toContain('+++ b/after');
+    expect(patch).toContain('-old b/after');
+    expect(patch).toContain('+new a/before');
+  });
+  it('captures thousands of files with bounded Git processes and batches changed HEAD blobs', () => {
+    for (let i = 0; i < 2000; i++) put(`many/${i}.txt`, `file ${i}\n`);
+    git('add', '.');
+    git('commit', '-qm', 'Large tree');
+    enabled();
+    put('many/1.txt', 'changed\n');
+    rmSync(join(root, 'many/2.txt'));
+    const run = rs.mocked(execFileSync);
+    run.mockClear();
+    try {
+      const record = captureSource(root)!.record!;
+      const baseline = sourceCommitBaseline(root, record);
+      expect(Object.keys(record.files)).toHaveLength(2002);
+      expect(Buffer.from(baseline.files['many/1.txt'].content, 'base64').toString()).toBe(
+        'file 1\n'
+      );
+      expect(Buffer.from(baseline.files['many/2.txt'].content, 'base64').toString()).toBe(
+        'file 2\n'
+      );
+      expect(run.mock.calls.length).toBeLessThan(15);
+      expect(
+        run.mock.calls.filter(([, args]) => (args as string[])[0] === 'cat-file')
+      ).toHaveLength(1);
+    } finally {
+      run.mockClear();
+    }
+  });
   it('returns unavailable for malformed opt-in configuration', () => {
     put('.zephyr/attribution.json', '{');
     expect(captureSource(root)!.record).toBeUndefined();
@@ -223,8 +275,13 @@ describe('Change Attribution source records', () => {
     git('add', 'app.txt');
     git('commit', '-qm', 'Later commit');
     enabled();
-    expect(captureSource(root)!.record!.files['app.txt'].attribution).toEqual([
-      { start: 1, end: 1, origin: { kind: 'human', human, evidence: 'git-ai-blame' } },
-    ]);
+    const before = captureSource(root)!.record!;
+    expect(before.files['app.txt'].attribution).toEqual([]);
+    put('app.txt', 'unknown baseline\nlater unknown addition\n');
+    const after = captureSource(root)!.record!;
+    expect(
+      compareSourceRecords(root, before.id, after.id).changes[0].lines[0].origin
+    ).toEqual({ kind: 'human', human, evidence: 'git-ai-blame' });
+    expect(loadSourceRecord(root, before.id).files['app.txt'].attribution).toEqual([]);
   });
 });

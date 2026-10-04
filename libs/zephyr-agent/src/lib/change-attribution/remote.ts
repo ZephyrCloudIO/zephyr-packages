@@ -95,7 +95,13 @@ export async function publishAttribution({
     return undefined;
   }
   const { root, gitDir } = repository;
-  const config = readAttributionConfig(root, gitDir);
+  let config;
+  try {
+    config = readAttributionConfig(root, gitDir);
+  } catch {
+    // Unknown or malformed preferences never authorize sharing or block deployment.
+    return undefined;
+  }
   if (!config?.enabled || (config.storage ?? 'local') === 'local') return undefined;
   if (!summary || summary.status !== 'captured' || !summary.sourceId)
     throw new Error(
@@ -128,7 +134,11 @@ export async function publishAttribution({
     attribution: summary,
   };
   if (content.patch || content.lines) {
-    const difference = compareSourceContents(sourceCommitBaseline(root, record), record);
+    const difference = compareSourceContents(
+      sourceCommitBaseline(root, record),
+      record,
+      root
+    );
     payload.comparison = {
       base: 'git-head',
       baseCommit: record.baseCommit,

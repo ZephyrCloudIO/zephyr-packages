@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { ChangeOrigin } from 'zephyr-edge-contract';
 import { unknownOrigin } from './git-ai';
-import { loadSourceRecord, type SourceFile, type SourceRecord } from './source';
+import {
+  comparisonFile,
+  loadSourceRecord,
+  type SourceFile,
+  type SourceRecord,
+} from './source';
 
 export interface AttributedDiffLine {
   operation: 'add' | 'remove';
@@ -31,19 +36,31 @@ function originAt(file: SourceFile | undefined, line: number) {
 export function compareSourceRecords(directory: string, before: string, after: string) {
   const left = loadSourceRecord(directory, before);
   const right = loadSourceRecord(directory, after);
-  return compareSourceContents(left, right);
+  return compareSourceContents(left, right, directory);
 }
 
-export function compareSourceContents(left: SourceRecord, right: SourceRecord) {
+export function compareSourceContents(
+  left: SourceRecord,
+  right: SourceRecord,
+  directory?: string
+) {
   const changes: AttributedFileDiff[] = [];
   const temporary = mkdtempSync(join(tmpdir(), 'zephyr-source-diff-'));
   try {
     for (const file of [
       ...new Set([...Object.keys(left.files), ...Object.keys(right.files)]),
     ].sort()) {
-      const oldFile = left.files[file];
-      const newFile = right.files[file];
-      if (oldFile?.hash === newFile?.hash && oldFile?.mode === newFile?.mode) continue;
+      if (
+        left.files[file]?.hash === right.files[file]?.hash &&
+        left.files[file]?.mode === right.files[file]?.mode
+      )
+        continue;
+      const oldFile = directory
+        ? comparisonFile(directory, left, file)
+        : left.files[file];
+      const newFile = directory
+        ? comparisonFile(directory, right, file)
+        : right.files[file];
       const oldContent = Buffer.from(oldFile?.content ?? '', 'base64');
       const newContent = Buffer.from(newFile?.content ?? '', 'base64');
       writeFileSync(join(temporary, 'before'), oldContent, { mode: 0o600 });
@@ -97,15 +114,32 @@ export function compareSourceContents(left: SourceRecord, right: SourceRecord) {
           newLine++;
         }
       }
+      const patchLines = result.stdout.split('\n');
+      const firstHunk = patchLines.findIndex((entry) => entry.startsWith('@@ '));
       changes.push({
         file,
         status: !oldFile ? 'added' : !newFile ? 'deleted' : 'modified',
         binary: oldContent.includes(0) || newContent.includes(0),
         beforeMode: oldFile?.mode,
         afterMode: newFile?.mode,
-        patch: result.stdout
-          .replaceAll('a/before', `a/${file}`)
-          .replaceAll('b/after', `b/${file}`),
+        patch: patchLines
+          .map((line, index) => {
+            if (firstHunk >= 0 && index >= firstHunk) return line;
+            if (
+              line.startsWith('diff --git ') ||
+              line.startsWith('--- ') ||
+              line.startsWith('+++ ')
+            ) {
+              // Header-like text inside a hunk is prefixed by its diff operation.
+              // Only the three exact generated headers may be rewritten.
+              if (line === 'diff --git a/before b/after')
+                return `diff --git a/${file} b/${file}`;
+              if (line === '--- a/before') return `--- a/${file}`;
+              if (line === '+++ b/after') return `+++ b/${file}`;
+            }
+            return line;
+          })
+          .join('\n'),
         lines,
       });
     }

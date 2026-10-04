@@ -23,7 +23,7 @@
       ]
     },
     "skill:libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": {
-      "fingerprint": "63405716e880428567c9f8d9865548af2849ac4ba821ca134eb360546a882dc4",
+      "fingerprint": "b029d27aaee09a0b9b570d7738e2211991942b28b0a136be408d40e0737b6e0e",
       "snapshot": {
         "libs/vite-plugin-zephyr/README.md": "5e8d8ff2e645bdca5fb9bb485875cef097fd285f951243c22259511645de342f",
         "libs/vite-plugin-zephyr/skills/zephyr-vite/SKILL.md": "0390c969c917206774ebfdfa8353e3755abbda2e15dbe43db8ed855f33c99f30",
@@ -31,25 +31,25 @@
         "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
         "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
         "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a2bbea26b9736583d2e9318ba61cd3c0b82e7075cf0ae94e3f84d18e4dd388f5",
-        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "04fa99a934be75b1fae8a121528b81c12de71d362dc781115735a34bc8a5f483",
+        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "b08bbc1cdab4bf538be5b09be970e7277ba039758718f1344df752d38bf601a5",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271"
       },
-      "head": "c9e9a1a4cf1e674c87d24a9aea7d67448bae5d0e",
-      "outcome": "updated",
-      "reason": "Vite source boundary capture is unchanged, but local mode now omits all public attribution and remote mode requires policy/acknowledgment before publishing only a reference; updated the guide and linked storage controls.",
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
+      "outcome": "no-change",
+      "reason": "Reviewed affected Vite fail-open and generation tests plus the optional sourceCapture engine input against shared attribution guidance. Existing Vite lifecycle/error guidance remains accurate; implementation and regression tests do not require another skill. Shared core references contain the changed capture semantics.",
       "evidence": [
-        "45 affected build/test tasks passed: zephyr-agent 402 passed/5 skipped; edge contract 98 passed; with-zephyr 182 passed; CLI 42 passed; Vite 118 passed. Format/lint and relevant package type checks passed.",
-        "Built SDK/CLI consumer fixture on the generated app passed local/free, remote/free, remote/paid metadata, remote/paid patch-only, and remote/BYOC lines-only over a real loopback HTTP endpoint using a fixture credential. Private CLI override preserved shared config; remote escalation, mismatched acknowledgments, and redirects were rejected; same-build retry kept its key.",
-        "The eight original live model/harness source receipts still passed exact added-line/model/effort checks and contribution retention. Final real Vite/SDK build passed with private boundary-matched receipt and no attribution in its local-mode snapshot.",
-        "All 23 packed package skill checks passed, including the new attribution-storage reference. Source exclusions also apply to HEAD comparisons; secret/tier/URL configuration fields are rejected; responses do not leak source bodies into diagnostics.",
-        "Production endpoint, authenticated repository policy administration, server tier/ownership enforcement, encrypted storage, retention, and BYOC routing are not implemented or verified in this SDK-only workspace. Native model trials were not rerun or substituted with fixture agent events for this storage extension."
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "fbbf1c079da86eb9c57bcb1dba830803419fa01bd1e0dd3d72fc85cf1b031cc1",
+      "fingerprint": "7bd5c0780b8298304a286e5ca6e36b9e0852cb64f6ad95f1b2e4599ba7b13ed7",
       "snapshot": {
-        "_artifacts/domain_map.yaml": "fc1e7e94c67cb9d30fde626f13cfcba3fc70afe47451a8c354d5969146654f15",
-        "_artifacts/skill_spec.md": "feda9009667787b78242d1bb3e3903e6f5e1588d2984fddd7be0786e1d055733",
+        "_artifacts/domain_map.yaml": "050102d644e9198d1a278ed5c83b019055745c82e540cd99477fcf1a8468753b",
+        "_artifacts/skill_spec.md": "dbedb13734744c04bca747311c169d4122a3d777c7e13e90a8972e6e67267fab",
         "_artifacts/skill_tree.yaml": "c342732f9b4e91105dc3a7284a6f4a8e7738300d34bc6d8b71b513227cb67a20",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "ecc40d6cbf7c60399c0f90241326af5800622311cd0dcb88ec09ab41714cd97f",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
@@ -100,23 +100,23 @@
         "libs/vite-plugin-zephyr/src/index.ts": "ea246938d80852e1a996441aaeedd2869702f60c86df04d672c07446760a43d4",
         "libs/vite-plugin-zephyr/src/lib/__fixtures__/vite-api/skill-task.md": "360de226019bd6a81a809cccce501ba250e4b2e80cb9ffc0c5751a2943b396e7",
         "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a2bbea26b9736583d2e9318ba61cd3c0b82e7075cf0ae94e3f84d18e4dd388f5",
-        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "04fa99a934be75b1fae8a121528b81c12de71d362dc781115735a34bc8a5f483",
+        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "b08bbc1cdab4bf538be5b09be970e7277ba039758718f1344df752d38bf601a5",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271",
         "libs/with-zephyr/README.md": "16c3c1bf882a21b977a60c27835186b16bb51972a39e65835e52c1ac04dc5708",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
-        "libs/with-zephyr/src/attribution.ts": "f1f8d46c6ffa26d3a4eef95a0201efc929a5ff4cd1804f2c7488c1c4936dfd18",
+        "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
         "libs/with-zephyr/src/index.ts": "c493444b866c2b1e5eb64ad5fca305dc8635eeb6bdd050b4c02f4d1afc63ede3",
-        "libs/with-zephyr/src/tests/attribution.test.ts": "bd414f74055bbf612bf658c9528525d3b07585c49a7966d70197569ea6b6b262",
+        "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
-        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "b262b98b5c88ceb05f4ee103df0dff43085907027995b4fac7a96fcf65d18fe5",
+        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "ff8a6be34bdeb11740684e34db6e3e4010cab34026d4e32ca80439706ef1c415",
         "libs/zephyr-agent/src/lib/change-attribution/config.ts": "903f437e643f3af1be9128176c9ea5d084383ee35f91ef4d5172fe14a84a8800",
         "libs/zephyr-agent/src/lib/change-attribution/git-ai.ts": "52e475769451545cee73c51ca7506ffac78f530a88b637339748c5a655b547e0",
-        "libs/zephyr-agent/src/lib/change-attribution/remote.spec.ts": "92f1e3734e6c1a5681aef04f61360b7a402de5fefd46739d4b62ef9ddc6c15db",
-        "libs/zephyr-agent/src/lib/change-attribution/remote.ts": "ce1de475230b74c826d14c579fd3ced1ee8729756f6ac2bf3ec592574df56021",
+        "libs/zephyr-agent/src/lib/change-attribution/remote.spec.ts": "bb6411eca412e56bf8e684cba5dfbd7c6ea4f6794b0ae547f2900ed7b6822aee",
+        "libs/zephyr-agent/src/lib/change-attribution/remote.ts": "7b6ae47bcc2ae072d610465f0e3743472f06ba8bb32a85a28862fb75e71679d2",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.spec.ts": "7bc317b5959ccc4ae70168367c878b9dfdd45ee755b5e07e373e214d0adfbbfc",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.ts": "c08955f897d3e96b32aa00fa275b45aa728736f13f41207ce30e41b247b7b48b",
-        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "ab9b79f8d5a349a1ed064c74e8d414c949ac4ea76ac0f293976732afe1e4b260",
-        "libs/zephyr-agent/src/lib/change-attribution/source.ts": "a5b5c9c7a5201740de82edfbda25af0c1396df27854c9b7df262cdd8bc2af9a1",
+        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "89605b7a18ae9edbd06b8d4f67968f7106a5e21d23134b606e35c76f2d27b3cf",
+        "libs/zephyr-agent/src/lib/change-attribution/source.ts": "4d86b579e30a55357d267e9040e09199efc2ef970a8b4c955cdf955ad75fad81",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.test.ts": "36f44e0fafbf4ba74a5de76ababdb7d77c45dde604cea7101f2856f969fc0f59",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.ts": "43e822be0b140485ac639845f86a5c301aa962b6d45144cb1d6d6933e8943b88",
@@ -125,9 +125,9 @@
         "libs/zephyr-agent/src/lib/node-persist/upload-provider-options.ts": "836b9e3f3c736cb25430d12a1e6103000b21948f18833738658a28b387b66b63",
         "libs/zephyr-agent/src/lib/transformers/ze-basehref-handler.ts": "0ef516efb334924dd33a7de77adb70e580648066adb90bb4137edfadd975674c",
         "libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts": "bbb73482b8368291d71bb39f774a3731879f35bfbcff66e48f2d3548f46c7877",
-        "libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts": "32540021d54c94c2ed68b8b236bece7670796b89b6cb120d4947f89cb3f893c2",
-        "libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts": "0d914dcac8039a37443952a1223a46bc4b83b42820775d8f25e069363fe7861b",
-        "libs/zephyr-agent/src/zephyr-engine/index.ts": "e5f57762496a348fc44b8fe328a58d745ebcb66dfeb0afd89de8042858ff6833",
+        "libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts": "fd3254c21b9e4675cac227c2cfb5c3b897f2d92855636589b9641c427529cf0b",
+        "libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts": "f211e0df8a9c5ef71e5514265b6286147b6336f051c097715e2b101825e53e81",
+        "libs/zephyr-agent/src/zephyr-engine/index.ts": "0e9f2aaac2c39c35e3bd99435076c27105a3693abb520ac3fce7f60c2e2cc7b2",
         "libs/zephyr-astro-integration/README.md": "240ae03fae156cab6e92f2250ba198ed29c91310ce5713b73a634d4bb8bb41b6",
         "libs/zephyr-astro-integration/package.json": "bfbeadc413a484fdc0e2c40d53e8cf285f6f8d7573aca2bd917fcefa1e847ea7",
         "libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": "f0db2fff6ac447d55c3f0f7d906a16d1ff42c74ee035a287209840de9c4ce701",
@@ -138,11 +138,11 @@
         "libs/zephyr-astro-integration/src/lib/internal/__test__/extract-astro-assets-map.spec.ts": "b79b190a7a23437894821ae761d0f6b1fb85bd44ea9cf9dc9c8af6bd6f14b3dc",
         "libs/zephyr-astro-integration/src/lib/internal/extract-astro-assets-map.ts": "7a3d7205eec9dc1cdb34cebdbfacaa776d4bef918a3fcb052de88002160045e8",
         "libs/zephyr-cli/README.md": "73e619cc912077d42ce17db2bfc3f7e3da0555ee9f74a21dcbe38f0b531d0fb2",
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "e70130badfdcb5b594ff43ed6c4f57120b2ad0c14de01acd4bb907173cbdd74d",
+        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "8442a9dfe960f9951c63f5feb41a23ec9ce42f1957b0e6b8aad5f3ded9a50bd7",
         "libs/zephyr-cli/src/cli.ts": "fafd0aafe613642759a2a42b213d8e514af07eb3effc78fc9eb7b4f14afb05b7",
-        "libs/zephyr-cli/src/commands/attribution.ts": "3947c352915693ad5886de1e674e8618a88ecd85e12573dab40040194030525b",
+        "libs/zephyr-cli/src/commands/attribution.ts": "6dddc66ea8930f3757256b272860c3e6a1550c07790eeed4e17b4ff9b39418fa",
         "libs/zephyr-cli/src/commands/deploy.ts": "510a098911f5e44e8333f054e07f5fa3c101ec12ba3b6a5a198abb004d742254",
-        "libs/zephyr-cli/src/commands/run.ts": "a4348b55e6270ca5545e8f2d18016dda368cded07bee90ee95ea6886634e7f3d",
+        "libs/zephyr-cli/src/commands/run.ts": "7460f1a9fa19f53440086961c8c57c21d17f4361b7b56fbb5385ce2134905ef3",
         "libs/zephyr-cli/src/commands/watch.ts": "345af851f8f2da26964842142342927460aba0f36965521133aee2b593e8dca8",
         "libs/zephyr-cli/src/doctor/schema.ts": "79aee6fa5c9e89f4894c0ba89d242ba42d2cf132068c622abd4a76f7b6901084",
         "libs/zephyr-cli/src/index.ts": "060b19a5d683d9d3161163a6b6fb847c30b63c342ba7583d0ab415445cbfda5a",
@@ -244,13 +244,13 @@
         "libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts": "ddd364607c3b26d54ac4f7e87df070cdf612ecd0221e38707b6213a32d340f23",
         "scripts/sync-package-skills.mjs": "f88fd832f7bfee4aa7686657552d39f16fcafee6d21ea15008e38069eeb148b8",
         "scripts/verify-attribution-storage.mjs": "ead4bc02b2500ebb5c8e4633ba5c2aedd84f095471f09961f3dab64ade432487",
-        "scripts/verify-change-attribution.mjs": "720c53e6b0bf727135f0b7e5959e692573068b0b8fd4a0dec1860c39fa3aa423",
-        "scripts/verify-live-attribution.mjs": "2c1a9c710bc64d46a79538e8ccfcfc42da5dcc34d4b3ebccb8b4e46ea0407450",
+        "scripts/verify-change-attribution.mjs": "1d23326700575c312245c751327cbcaa026b287943ee5611571ecc1ede1a68be",
+        "scripts/verify-live-attribution.mjs": "e041c3b1798f77953e95ec278865fa173562391926e19af43b2babd02c31037e",
         "skills/zephyr-core/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
         "skills/zephyr-core/README.md": "29a583b6d94243789f36d07208ddfbf10d5b47d06ed6c9d6816277a3fa2c3668",
         "skills/zephyr-core/SKILL.md": "952cbc11c1d63a7130f2183cf1fe78420218b8e20416268d5f72f5fe44a638a9",
-        "skills/zephyr-core/references/attribution-storage.md": "cc6dfeae5ef61cc3c0fcfc0720182c17cc6b557ca1a37b1665d7a42f872691c7",
-        "skills/zephyr-core/references/change-attribution.md": "5000253030031031e0f698d89db85e39d2bdc9ce2fb0f58dc18e6d42f11e4210",
+        "skills/zephyr-core/references/attribution-storage.md": "c7c968f01d4820bfab560eeb521b125e1d467db1c77864fb361fef95ba3a5e9a",
+        "skills/zephyr-core/references/change-attribution.md": "38df45f8577c7a6031d6ea238d1e102fffbfd973717f939bd0421507d7d5b18e",
         "skills/zephyr-core/references/deployment-model.md": "ac1f8cf02f2f42443d21a096f277b4c7f8a60be99f7c7615130ef08afb203443",
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
@@ -266,15 +266,15 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "c9e9a1a4cf1e674c87d24a9aea7d67448bae5d0e",
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
       "outcome": "updated",
-      "reason": "Reconciled all three existing planning records: added storage/content tasks and source mappings, preserved earlier batches, recorded that no-public-attribution local mode supersedes earlier envelope emission, and retained the server authorization/encryption/BYOC implementation gap.",
+      "reason": "Reconciled domain_map.yaml and skill_spec.md with PR review corrections, preserved prior batches, and checked skill_tree.yaml ownership remains accurate; no new independent task or skill is required.",
       "evidence": [
-        "45 affected build/test tasks passed: zephyr-agent 402 passed/5 skipped; edge contract 98 passed; with-zephyr 182 passed; CLI 42 passed; Vite 118 passed. Format/lint and relevant package type checks passed.",
-        "Built SDK/CLI consumer fixture on the generated app passed local/free, remote/free, remote/paid metadata, remote/paid patch-only, and remote/BYOC lines-only over a real loopback HTTP endpoint using a fixture credential. Private CLI override preserved shared config; remote escalation, mismatched acknowledgments, and redirects were rejected; same-build retry kept its key.",
-        "The eight original live model/harness source receipts still passed exact added-line/model/effort checks and contribution retention. Final real Vite/SDK build passed with private boundary-matched receipt and no attribution in its local-mode snapshot.",
-        "All 23 packed package skill checks passed, including the new attribution-storage reference. Source exclusions also apply to HEAD comparisons; secret/tier/URL configuration fields are rejected; responses do not leak source bodies into diagnostics.",
-        "Production endpoint, authenticated repository policy administration, server tier/ownership enforcement, encrypted storage, retention, and BYOC routing are not implemented or verified in this SDK-only workspace. Native model trials were not rerun or substituted with fixture agent events for this storage extension."
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -318,32 +318,32 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "4e935b5aafeb61f9cf89a60f6a4a5577e893aad40d7e1d722be749b3ab280ccf",
+      "fingerprint": "bb9ec7365def94a99749e1cd5d60e8e9b064f51a4066af5151d344cddf7f6e2a",
       "snapshot": {
         "libs/with-zephyr/README.md": "16c3c1bf882a21b977a60c27835186b16bb51972a39e65835e52c1ac04dc5708",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
-        "libs/with-zephyr/src/attribution.ts": "f1f8d46c6ffa26d3a4eef95a0201efc929a5ff4cd1804f2c7488c1c4936dfd18",
+        "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
         "libs/with-zephyr/src/index.ts": "c493444b866c2b1e5eb64ad5fca305dc8635eeb6bdd050b4c02f4d1afc63ede3",
-        "libs/with-zephyr/src/tests/attribution.test.ts": "bd414f74055bbf612bf658c9528525d3b07585c49a7966d70197569ea6b6b262",
+        "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
-        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "b262b98b5c88ceb05f4ee103df0dff43085907027995b4fac7a96fcf65d18fe5",
+        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "ff8a6be34bdeb11740684e34db6e3e4010cab34026d4e32ca80439706ef1c415",
         "libs/zephyr-agent/src/lib/change-attribution/config.ts": "903f437e643f3af1be9128176c9ea5d084383ee35f91ef4d5172fe14a84a8800",
         "libs/zephyr-agent/src/lib/change-attribution/git-ai.ts": "52e475769451545cee73c51ca7506ffac78f530a88b637339748c5a655b547e0",
-        "libs/zephyr-agent/src/lib/change-attribution/remote.spec.ts": "92f1e3734e6c1a5681aef04f61360b7a402de5fefd46739d4b62ef9ddc6c15db",
-        "libs/zephyr-agent/src/lib/change-attribution/remote.ts": "ce1de475230b74c826d14c579fd3ced1ee8729756f6ac2bf3ec592574df56021",
+        "libs/zephyr-agent/src/lib/change-attribution/remote.spec.ts": "bb6411eca412e56bf8e684cba5dfbd7c6ea4f6794b0ae547f2900ed7b6822aee",
+        "libs/zephyr-agent/src/lib/change-attribution/remote.ts": "7b6ae47bcc2ae072d610465f0e3743472f06ba8bb32a85a28862fb75e71679d2",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.spec.ts": "7bc317b5959ccc4ae70168367c878b9dfdd45ee755b5e07e373e214d0adfbbfc",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.ts": "c08955f897d3e96b32aa00fa275b45aa728736f13f41207ce30e41b247b7b48b",
-        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "ab9b79f8d5a349a1ed064c74e8d414c949ac4ea76ac0f293976732afe1e4b260",
-        "libs/zephyr-agent/src/lib/change-attribution/source.ts": "a5b5c9c7a5201740de82edfbda25af0c1396df27854c9b7df262cdd8bc2af9a1",
+        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "89605b7a18ae9edbd06b8d4f67968f7106a5e21d23134b606e35c76f2d27b3cf",
+        "libs/zephyr-agent/src/lib/change-attribution/source.ts": "4d86b579e30a55357d267e9040e09199efc2ef970a8b4c955cdf955ad75fad81",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.test.ts": "36f44e0fafbf4ba74a5de76ababdb7d77c45dde604cea7101f2856f969fc0f59",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.ts": "43e822be0b140485ac639845f86a5c301aa962b6d45144cb1d6d6933e8943b88",
         "libs/zephyr-agent/src/lib/http/http-request.test.ts": "834b6ed9bd29cac9cbe7bac8307e775edaa7c82d9bf9eaa2274c6ff3a355a09a",
         "libs/zephyr-agent/src/lib/http/http-request.ts": "4853e409fcc19056e3764cd9fcbd9e6433659083aa850ac43fd1728c546c1479",
         "libs/zephyr-agent/src/lib/node-persist/upload-provider-options.ts": "836b9e3f3c736cb25430d12a1e6103000b21948f18833738658a28b387b66b63",
         "libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts": "bbb73482b8368291d71bb39f774a3731879f35bfbcff66e48f2d3548f46c7877",
-        "libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts": "32540021d54c94c2ed68b8b236bece7670796b89b6cb120d4947f89cb3f893c2",
-        "libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts": "0d914dcac8039a37443952a1223a46bc4b83b42820775d8f25e069363fe7861b",
-        "libs/zephyr-agent/src/zephyr-engine/index.ts": "e5f57762496a348fc44b8fe328a58d745ebcb66dfeb0afd89de8042858ff6833",
+        "libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts": "fd3254c21b9e4675cac227c2cfb5c3b897f2d92855636589b9641c427529cf0b",
+        "libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts": "f211e0df8a9c5ef71e5514265b6286147b6336f051c097715e2b101825e53e81",
+        "libs/zephyr-agent/src/zephyr-engine/index.ts": "0e9f2aaac2c39c35e3bd99435076c27105a3693abb520ac3fce7f60c2e2cc7b2",
         "libs/zephyr-edge-contract/src/index.ts": "e5e754a90345f193a40b9d8d8ecd6e180df1455b2eceb45af5e788db44053f4e",
         "libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts": "722a8cabc2de4a3988675d0b17a6681b6e0e827f65e007e32367079ef2df5680",
         "libs/zephyr-edge-contract/src/lib/change-attribution.ts": "6a46af170194e98ae7e5dc28225767543616958a979a2a4d555856b8d16e3d90",
@@ -351,13 +351,13 @@
         "libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts": "8eaaacb6a62247687c08efad5395c50d05899492956d67f0b7a24d6bf967e670",
         "scripts/sync-package-skills.mjs": "f88fd832f7bfee4aa7686657552d39f16fcafee6d21ea15008e38069eeb148b8",
         "scripts/verify-attribution-storage.mjs": "ead4bc02b2500ebb5c8e4633ba5c2aedd84f095471f09961f3dab64ade432487",
-        "scripts/verify-change-attribution.mjs": "720c53e6b0bf727135f0b7e5959e692573068b0b8fd4a0dec1860c39fa3aa423",
-        "scripts/verify-live-attribution.mjs": "2c1a9c710bc64d46a79538e8ccfcfc42da5dcc34d4b3ebccb8b4e46ea0407450",
+        "scripts/verify-change-attribution.mjs": "1d23326700575c312245c751327cbcaa026b287943ee5611571ecc1ede1a68be",
+        "scripts/verify-live-attribution.mjs": "e041c3b1798f77953e95ec278865fa173562391926e19af43b2babd02c31037e",
         "skills/zephyr-core/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
         "skills/zephyr-core/README.md": "29a583b6d94243789f36d07208ddfbf10d5b47d06ed6c9d6816277a3fa2c3668",
         "skills/zephyr-core/SKILL.md": "952cbc11c1d63a7130f2183cf1fe78420218b8e20416268d5f72f5fe44a638a9",
-        "skills/zephyr-core/references/attribution-storage.md": "cc6dfeae5ef61cc3c0fcfc0720182c17cc6b557ca1a37b1665d7a42f872691c7",
-        "skills/zephyr-core/references/change-attribution.md": "5000253030031031e0f698d89db85e39d2bdc9ce2fb0f58dc18e6d42f11e4210",
+        "skills/zephyr-core/references/attribution-storage.md": "c7c968f01d4820bfab560eeb521b125e1d467db1c77864fb361fef95ba3a5e9a",
+        "skills/zephyr-core/references/change-attribution.md": "38df45f8577c7a6031d6ea238d1e102fffbfd973717f939bd0421507d7d5b18e",
         "skills/zephyr-core/references/deployment-model.md": "ac1f8cf02f2f42443d21a096f277b4c7f8a60be99f7c7615130ef08afb203443",
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
@@ -365,15 +365,15 @@
         "skills/zephyr-core/references/sdk-setup.md": "44a555ebfbcc3fc6040ecffb31eb76029313418a828a69ba45cceee03e5a51cb",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "c9e9a1a4cf1e674c87d24a9aea7d67448bae5d0e",
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
       "outcome": "updated",
-      "reason": "Updated the shared guide for default-local isolation, free remote mandatory patches/changed lines, paid/BYOC optional content, authenticated policy/identity reconciliation, private restriction, response-log privacy, and the explicitly unimplemented server persistence/authorization contract.",
+      "reason": "Updated attribution references for one generation boundary plus publication capture, deferred committed blame and batched baseline, preservation of preferences, invalid-config privacy fallback, and best-effort remote publication.",
       "evidence": [
-        "45 affected build/test tasks passed: zephyr-agent 402 passed/5 skipped; edge contract 98 passed; with-zephyr 182 passed; CLI 42 passed; Vite 118 passed. Format/lint and relevant package type checks passed.",
-        "Built SDK/CLI consumer fixture on the generated app passed local/free, remote/free, remote/paid metadata, remote/paid patch-only, and remote/BYOC lines-only over a real loopback HTTP endpoint using a fixture credential. Private CLI override preserved shared config; remote escalation, mismatched acknowledgments, and redirects were rejected; same-build retry kept its key.",
-        "The eight original live model/harness source receipts still passed exact added-line/model/effort checks and contribution retention. Final real Vite/SDK build passed with private boundary-matched receipt and no attribution in its local-mode snapshot.",
-        "All 23 packed package skill checks passed, including the new attribution-storage reference. Source exclusions also apply to HEAD comparisons; secret/tier/URL configuration fields are rejected; responses do not leak source bodies into diagnostics.",
-        "Production endpoint, authenticated repository policy administration, server tier/ownership enforcement, encrypted storage, retention, and BYOC routing are not implemented or verified in this SDK-only workspace. Native model trials were not rerun or substituted with fixture agent events for this storage extension."
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {
@@ -546,29 +546,29 @@
       ]
     },
     "skill:libs/zephyr-cli/skills/zephyr-cli/SKILL.md": {
-      "fingerprint": "f9fd983ec864ef4338a816031b4350423eec3cba24e140bd25dfd501d10ce9dc",
+      "fingerprint": "34abe9e443f238145ffde9d4abbf1960681ceaee20e20a1f6591b2a44b57b333",
       "snapshot": {
         "libs/zephyr-cli/README.md": "73e619cc912077d42ce17db2bfc3f7e3da0555ee9f74a21dcbe38f0b531d0fb2",
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "e70130badfdcb5b594ff43ed6c4f57120b2ad0c14de01acd4bb907173cbdd74d",
+        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "8442a9dfe960f9951c63f5feb41a23ec9ce42f1957b0e6b8aad5f3ded9a50bd7",
         "libs/zephyr-cli/src/cli.ts": "fafd0aafe613642759a2a42b213d8e514af07eb3effc78fc9eb7b4f14afb05b7",
-        "libs/zephyr-cli/src/commands/attribution.ts": "3947c352915693ad5886de1e674e8618a88ecd85e12573dab40040194030525b",
+        "libs/zephyr-cli/src/commands/attribution.ts": "6dddc66ea8930f3757256b272860c3e6a1550c07790eeed4e17b4ff9b39418fa",
         "libs/zephyr-cli/src/commands/deploy.ts": "510a098911f5e44e8333f054e07f5fa3c101ec12ba3b6a5a198abb004d742254",
-        "libs/zephyr-cli/src/commands/run.ts": "a4348b55e6270ca5545e8f2d18016dda368cded07bee90ee95ea6886634e7f3d",
+        "libs/zephyr-cli/src/commands/run.ts": "7460f1a9fa19f53440086961c8c57c21d17f4361b7b56fbb5385ce2134905ef3",
         "libs/zephyr-cli/src/commands/watch.ts": "345af851f8f2da26964842142342927460aba0f36965521133aee2b593e8dca8",
         "libs/zephyr-cli/src/doctor/schema.ts": "79aee6fa5c9e89f4894c0ba89d242ba42d2cf132068c622abd4a76f7b6901084",
         "libs/zephyr-cli/src/index.ts": "060b19a5d683d9d3161163a6b6fb847c30b63c342ba7583d0ab415445cbfda5a",
         "libs/zephyr-cli/src/lib/command-detector.ts": "e8a63e3b2cbebf1b5c53cb66947f57e3fc9aae176408c445facae5149edbc0ce",
         "libs/zephyr-cli/src/lib/publication-metadata.ts": "269c38fb707543c36d4b116c0c846454cf3c20482c111cea137abd63353046fe"
       },
-      "head": "c9e9a1a4cf1e674c87d24a9aea7d67448bae5d0e",
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
       "outcome": "updated",
-      "reason": "Added configure/status preferences for per-repository storage, independent patch/line flags, optional pinned repository ID, and a private local restriction; capture/compare remain local and require no authentication.",
+      "reason": "CLI guidance now requires prior explicit enablement for storage configuration and documents remote failure fallback. Run mode passes its existing pre-command boundary through engine creation.",
       "evidence": [
-        "45 affected build/test tasks passed: zephyr-agent 402 passed/5 skipped; edge contract 98 passed; with-zephyr 182 passed; CLI 42 passed; Vite 118 passed. Format/lint and relevant package type checks passed.",
-        "Built SDK/CLI consumer fixture on the generated app passed local/free, remote/free, remote/paid metadata, remote/paid patch-only, and remote/BYOC lines-only over a real loopback HTTP endpoint using a fixture credential. Private CLI override preserved shared config; remote escalation, mismatched acknowledgments, and redirects were rejected; same-build retry kept its key.",
-        "The eight original live model/harness source receipts still passed exact added-line/model/effort checks and contribution retention. Final real Vite/SDK build passed with private boundary-matched receipt and no attribution in its local-mode snapshot.",
-        "All 23 packed package skill checks passed, including the new attribution-storage reference. Source exclusions also apply to HEAD comparisons; secret/tier/URL configuration fields are rejected; responses do not leak source bodies into diagnostics.",
-        "Production endpoint, authenticated repository policy administration, server tier/ownership enforcement, encrypted storage, retention, and BYOC routing are not implemented or verified in this SDK-only workspace. Native model trials were not rerun or substituted with fixture agent events for this storage extension."
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
       ]
     },
     "skill:libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": {
@@ -955,6 +955,54 @@
         "Interactive codemod exercised both opt-in and agent integration prompts; current Git AI binary recognized; existing configuration preserved.",
         "zephyr-agent: 390 passed, 5 skipped; edge-contract: 98 passed; with-zephyr: 180 passed; CLI: 42 passed; Vite: 118 passed. Agent suite includes immutable receipts, stale blob rejection, model turns, committed known-human notes, and matching snapshot/build-stat metadata.",
         "Relevant package builds and type checks passed; root format and lint passed; skills:verify-packages verified packed guidance for all 23 packages. Fresh skill discovery/loading covered; live deployment and fresh-agent activation not established."
+      ]
+    },
+    "source:libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.spec.ts": {
+      "fingerprint": "b4b8988dccc1d61fca10bb3fd9bc89dddf3e240d84aefc6b42458f4597edb88b",
+      "snapshot": {
+        "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.spec.ts": "0d14ed87be58b67d8d4045f9a3f768e7d7a1c71dbdaa1f60eb9b63b2405d0840"
+      },
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
+      "outcome": "no-change",
+      "reason": "Reviewed affected Vite fail-open and generation tests plus the optional sourceCapture engine input against shared attribution guidance. Existing Vite lifecycle/error guidance remains accurate; implementation and regression tests do not require another skill. Shared core references contain the changed capture semantics.",
+      "evidence": [
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
+      ]
+    },
+    "source:libs/zephyr-agent/src/zephyr-engine/__test__/engine-lifecycle.test.ts": {
+      "fingerprint": "8d877171686064dc0768ff925d15443dc3be12c429bc9410632f2a9fe0bb0e83",
+      "snapshot": {
+        "libs/zephyr-agent/src/zephyr-engine/__test__/engine-lifecycle.test.ts": "a2f1b839c3946e5ef34e9ae72cf903ff8d78303b70a041827e9a8c70e055d026"
+      },
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
+      "outcome": "no-change",
+      "reason": "Reviewed affected Vite fail-open and generation tests plus the optional sourceCapture engine input against shared attribution guidance. Existing Vite lifecycle/error guidance remains accurate; implementation and regression tests do not require another skill. Shared core references contain the changed capture semantics.",
+      "evidence": [
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
+      ]
+    },
+    "source:libs/zephyr-agent/src/zephyr-engine/zephyr-engine.types.ts": {
+      "fingerprint": "52a0899bc69ed00a27799a1d0ac8e6b343d9d3a70e189895a020eb6d0a2b13f6",
+      "snapshot": {
+        "libs/zephyr-agent/src/zephyr-engine/zephyr-engine.types.ts": "960804212652fc50556a3da82d796d9fd344ea42e7568649b925e6c8625e8e77"
+      },
+      "head": "8f468124d59e4c0d254bf10d041c84b6295a41e6",
+      "outcome": "no-change",
+      "reason": "Reviewed affected Vite fail-open and generation tests plus the optional sourceCapture engine input against shared attribution guidance. Existing Vite lifecycle/error guidance remains accurate; implementation and regression tests do not require another skill. Shared core references contain the changed capture semantics.",
+      "evidence": [
+        "PR #645 review at 8f468124 and current working diff",
+        "pnpm test:affected: 45 tasks passed; agent 411 passed/5 skipped, codemod 183 passed, Vite 120 passed",
+        "Affected typecheck graph: 13 tasks passed; format and lint passed",
+        "Generated external app: eight original native case receipts and real Vite build verified; five storage cases and negative HTTP/config checks passed with built SDK/CLI",
+        "Package-skill verification passed for 23 packages; production attribution server still outside this workspace"
       ]
     }
   }

@@ -1,5 +1,20 @@
 # zephyr-packages skill spec
 
+## Attribution review corrections, 2026-10-03
+
+At baseline `8f468124`, the maintainer requested resolving PR #645 review comments
+and CI. Preserve fail-open Vite initialization unless ZE_FAIL_BUILD=true. Each
+engine generation promotes an existing adapter boundary or takes one start copy;
+CLI passes its pre-command boundary through creation and verifiers call the real
+promotion method. Captures defer committed blame to changed comparison files;
+HEAD comparison reuses matching bytes and batches remaining blobs. Header
+rewrites preserve hunk text, Grok hook matchers include native mutating tools, and
+blank storage answers retain preferences. Invalid configuration authorizes no
+sharing. Remote failures retain local evidence and warn while deployment proceeds
+without a reference. Storage commands require existing explicit enablement.
+The production build-ID service returned HTTP 500 in prior Ubuntu CI; retain
+strict end-to-end deployment validation and verify the corrected PR head.
+
 ## Attribution storage extension, 2026-10-03
 
 At baseline `c9e9a1a4`, the maintainer requested local and remote storage and

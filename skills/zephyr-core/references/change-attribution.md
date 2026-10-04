@@ -118,11 +118,17 @@ responses, transcript paths, and arbitrary provider fields are not published.
   `boundary-match` means those two observations match; it does not prove no
   transient edit occurred between observations. `changed-during-build` means
   the records differ and neither should be presented as the exact consumed
-  inputs. Other adapters and prebuilt deployments report `publication-only`.
+  inputs. Other engine adapters observe their generation start and publication;
+  prebuilt deployments observe upload preparation rather than the earlier compiler
+  invocation. Each generation uses at most one start and one publication copy.
 - The Git AI working-log adapter supports `checkpoint/1.0.0` from Git AI 1.7.x,
   tested with 1.7.5. It accepts attribution only when the checkpoint's content
   hash matches the captured file. Stale checkpoints remain unknown. Committed
-  JSON blame is used only for files matching the HEAD content. Legacy untracked
+  blame is deferred to files changed in local/remote comparisons, only for bytes
+  matching the captured commit. Captures retain working-checkpoint ranges and
+  mark matching committed bytes privately; unchanged files do not trigger blame
+  processes at build start. HEAD trees are read once and missing baseline blobs
+  in one batch. Comparison enrichment never rewrites the original receipts. Legacy untracked
   `Human` checkpoints are not known-human evidence.
   Since Git AI 1.7 JSON blame omits known humans, the adapter follows native Git
   line origins into explicit `authorship/3.0.0` human attestations in local

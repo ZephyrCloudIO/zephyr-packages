@@ -886,15 +886,19 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
 
     async buildStart() {
       environmentBuildStarted = true;
-      const engine = await zephyr_engine_defer;
-      if (
-        engine.sourceContext &&
-        engine.sourceCapture?.phase !== 'build-start' &&
-        !engine.pendingSourceCapture
-      ) {
-        const capture = captureSource(engine.sourceContext, 'build-start');
-        if (engine.hasActiveBuild) engine.sourceCapture = capture;
-        else engine.pendingSourceCapture = capture;
+      try {
+        const engine = await zephyr_engine_defer;
+        if (
+          engine.sourceContext &&
+          engine.sourceCapture?.phase !== 'build-start' &&
+          !engine.pendingSourceCapture
+        ) {
+          const capture = captureSource(engine.sourceContext, 'build-start');
+          if (engine.hasActiveBuild) engine.sourceCapture = capture;
+          else engine.pendingSourceCapture = capture;
+        }
+      } catch (error) {
+        handleGlobalError(error);
       }
     },
 

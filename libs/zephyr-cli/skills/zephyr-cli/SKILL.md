@@ -74,11 +74,12 @@ separate choice. `ze-cli attribution capture --format json` returns a source ID,
 and `ze-cli attribution compare <before> <after> --format json` accepts source IDs
 or locally saved snapshot IDs. `-C <project>` selects the repository. Source
 copies stay in the private Git directory; a fresh clone lacks those copies.
-Use `attribution configure --storage local|remote` for shared repo preferences,
+After explicit enablement, use `attribution configure --storage local|remote` for shared repo preferences,
 and `--storage local --local` for a private restriction. Read the companion
 `attribution-storage.md` for remote tier defaults and authenticated policy.
 Local mode sends no attribution; remote snapshots contain only a record reference
-after the dedicated endpoint acknowledges the matching build.
+after the dedicated endpoint acknowledges the matching build. Remote failure
+warns and continues deployment with private evidence and no attribution reference.
 
 Run mode observes source before its build command and at snapshot creation.
 `boundary-match` reports matching observations, not proof of exact compiler

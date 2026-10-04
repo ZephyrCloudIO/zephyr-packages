@@ -102,6 +102,27 @@ describe('ZephyrEngine build lifecycle', () => {
     mocks.maybeShowOutdatedPluginWarning.mockResolvedValue(undefined);
   });
 
+  it('promotes an adapter boundary once per generation, including watch rebuilds', async () => {
+    const value = engine();
+    const first = {
+      phase: 'build-start',
+      root: '/fixture',
+      gitDir: '/fixture/.git',
+    } as const;
+    const second = { ...first, reason: 'second generation boundary' };
+    mocks.getBuildId.mockResolvedValueOnce('first').mockResolvedValueOnce('second');
+    value.pendingSourceCapture = first;
+    await value.start_new_build();
+    expect(value.sourceCapture).toBe(first);
+    expect(value.pendingSourceCapture).toBeUndefined();
+    await value.start_new_build();
+    expect(value.sourceCapture).toBe(first);
+    value.build_failed();
+    value.pendingSourceCapture = second;
+    await value.start_new_build();
+    expect(value.sourceCapture).toBe(second);
+    expect(value.pendingSourceCapture).toBeUndefined();
+  });
   it('loads one immutable config and uses it for package, git, and app identity', async () => {
     const config = Object.freeze({
       org: 'configured-org',

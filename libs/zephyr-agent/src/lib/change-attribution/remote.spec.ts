@@ -109,6 +109,27 @@ describe('local and remote attribution', () => {
     expect(mocks.request).not.toHaveBeenCalled();
     expect(loadSourceRecord(root, 'build-1').files['app.txt'].content).toBeTruthy();
   });
+  it.each([
+    '{"schemaVersion":1,"enabled":true,"futureOption":true}',
+    '{"schemaVersion":1,"enabled":false,"futureOption":true}',
+    '{',
+  ])(
+    'keeps invalid or newer configuration private without blocking publication: %s',
+    async (text) => {
+      writeFileSync(join(root, '.zephyr/attribution.json'), text);
+      expect(await publish()).toBeUndefined();
+      expect(mocks.token).not.toHaveBeenCalled();
+      expect(mocks.request).not.toHaveBeenCalled();
+    }
+  );
+  it('keeps malformed private overrides private without blocking publication', async () => {
+    config();
+    mkdirSync(join(gitDir, 'zephyr-attribution'));
+    writeFileSync(join(gitDir, 'zephyr-attribution/config.local.json'), '{');
+    expect(await publish()).toBeUndefined();
+    expect(mocks.token).not.toHaveBeenCalled();
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
   it('publishes free patches/changed lines with exact build identity and a small public reference', async () => {
     config();
     const reference = await publish('free');

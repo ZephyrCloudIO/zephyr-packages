@@ -209,6 +209,7 @@ export class ZephyrEngine {
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
     this.sourceContext = options.context ?? process.cwd();
+    this.pendingSourceCapture = options.sourceCapture;
   }
 
   static defer_create(): DeferredZephyrEngine {
@@ -269,8 +270,6 @@ export class ZephyrEngine {
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
     const application_uid = ze.application_uid;
-    ze.sourceCapture = ze.pendingSourceCapture ?? captureSource(ze.sourceContext);
-    ze.pendingSourceCapture = undefined;
 
     // starting async load of application configuration, build_id and hash_list
 
@@ -450,6 +449,14 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     return this.federated_dependencies;
   }
 
+  /** Use a boundary already captured by an adapter, or capture once for this generation. */
+  start_source_capture(): void {
+    this.sourceCapture =
+      this.pendingSourceCapture ??
+      (this.sourceContext ? captureSource(this.sourceContext, 'build-start') : undefined);
+    this.pendingSourceCapture = undefined;
+  }
+
   async start_new_build(): Promise<void> {
     ze_log.init('Starting new build');
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -461,6 +468,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       return;
     }
 
+    ze.start_source_capture();
     const application_uid = ze.application_uid;
 
     ze_log.init('Initializing: loading of hash list');

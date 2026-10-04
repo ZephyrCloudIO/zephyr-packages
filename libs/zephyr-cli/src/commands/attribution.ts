@@ -74,12 +74,11 @@ export function attributionCommand(args: string[], cwd: string) {
       return value === 'include';
     };
     const { root, gitDir } = attributionRepository(directory);
-    if (values.local && !readAttributionConfig(root)?.enabled)
-      throw new Error('Enable repository attribution before adding a private override');
-    const existing = readAttributionConfig(root) ?? {
-      schemaVersion: 1 as const,
-      enabled: true,
-    };
+    const existing = readAttributionConfig(root);
+    if (!existing?.enabled)
+      throw new Error(
+        'Enable repository attribution with with-zephyr . --attribution before configuring storage'
+      );
     const config = {
       ...existing,
       storage: values.storage as 'local' | 'remote',

@@ -3,7 +3,7 @@ name: zephyr-cli
 description: Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
   stack has no Zephyr bundler plugin, when wrapping a build command or deploying
   a prebuilt directory, when publishing TAP mini-app output, or when running
-  ze-cli doctor to inspect project readiness.
+  ze-cli doctor to inspect project readiness, or comparing opted-in Change Attribution records.
 metadata:
   library: zephyr-cli
   library_version: '1.5.0' # x-release-please-version
@@ -14,6 +14,7 @@ sources:
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/cli.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/index.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/run.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/attribution.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/deploy.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/commands/watch.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/lib/command-detector.ts
@@ -39,12 +40,13 @@ Zephyr derives application identity from them.
 
 ## Pick the command
 
-| Command                    | Use when                                                   |
-| -------------------------- | ---------------------------------------------------------- |
-| `ze-cli [options] <build>` | Run the build, then upload the output directory it detects |
-| `ze-cli deploy <dir>`      | The output already exists in a known directory             |
-| `ze-cli watch <dir>`       | Iterating on TAP mini-app output only (`--target tap-app`) |
-| `ze-cli doctor [dir]`      | Inspecting readiness without installing, building, or auth |
+| Command                    | Use when                                                            |
+| -------------------------- | ------------------------------------------------------------------- |
+| `ze-cli [options] <build>` | Run the build, then upload the output directory it detects          |
+| `ze-cli deploy <dir>`      | The output already exists in a known directory                      |
+| `ze-cli watch <dir>`       | Iterating on TAP mini-app output only (`--target tap-app`)          |
+| `ze-cli doctor [dir]`      | Inspecting readiness without installing, building, or auth          |
+| `ze-cli attribution`       | Capturing/comparing local source records without auth or deployment |
 
 ```bash
 ze-cli pnpm build
@@ -63,6 +65,29 @@ scripts (followed recursively), `tsc`, `webpack`, `rollup`, `vite`, `esbuild`,
 and `swc`. Commands joined with `&&` run in order and upload their common output
 ancestor. When a JavaScript config is too dynamic to analyze, run the build
 yourself and use `ze-cli deploy <dir>` with the directory you know it writes.
+
+## Change Attribution
+
+Read the bundled `zephyr-core/references/change-attribution.md`. Enable only with
+explicit opt-in via `with-zephyr . --attribution`; agent hook installation is a
+separate choice. `ze-cli attribution capture --format json` returns a source ID,
+and `ze-cli attribution compare <before> <after> --format json` accepts source IDs
+or locally saved snapshot IDs. `-C <project>` selects the repository. Source
+copies stay in the private Git directory; a fresh clone lacks those copies.
+After explicit enablement, use `attribution configure --storage local|remote` for shared repo preferences,
+and `--storage local --local` for a private restriction. Read the companion
+`attribution-storage.md` for remote tier defaults and authenticated policy.
+Local mode sends no attribution; remote snapshots contain only a record reference
+after the dedicated endpoint acknowledges the matching build. Remote failure
+warns and continues deployment with private evidence and no attribution reference.
+
+Run mode observes source before its build command and at snapshot creation.
+`boundary-match` reports matching observations, not proof of exact compiler
+inputs; prebuilt deployments use `publication-only`. Missing or stale Git AI
+evidence remains unknown. Contributor identities are self-reported and separate
+from the authenticated deployer. A removal's origin identifies the original
+contributor, not the deleting actor. This repository emits metadata but does not
+implement control-plane persistence or dashboard display.
 
 ## TAP mini-app publication
 

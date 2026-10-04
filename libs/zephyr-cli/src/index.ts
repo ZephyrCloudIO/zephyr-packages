@@ -7,11 +7,16 @@ import { deployCommand } from './commands/deploy';
 import { doctorCommand } from './commands/doctor';
 import { runCommand } from './commands/run';
 import { watchCommand } from './commands/watch';
+import { attributionCommand } from './commands/attribution';
 
 async function main(): Promise<void> {
   try {
     // Parse command line arguments
     const args = process.argv.slice(2);
+    if (args[0] === 'attribution') {
+      attributionCommand(args.slice(1), cwd());
+      return;
+    }
     const options = parseArgs(args);
 
     // Get current working directory

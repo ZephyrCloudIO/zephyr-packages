@@ -1,5 +1,101 @@
 # zephyr-packages skill spec
 
+## Attribution review corrections, 2026-10-03
+
+At baseline `8f468124`, the maintainer requested resolving PR #645 review comments
+and CI. Preserve fail-open Vite initialization unless ZE_FAIL_BUILD=true. Each
+engine generation promotes an existing adapter boundary or takes one start copy;
+CLI passes its pre-command boundary through creation and verifiers call the real
+promotion method. Captures defer committed blame to changed comparison files;
+HEAD comparison reuses matching bytes and batches remaining blobs. Header
+rewrites preserve hunk text, Grok hook matchers include native mutating tools, and
+blank storage answers retain preferences. Invalid configuration authorizes no
+sharing. Remote failures retain local evidence and warn while deployment proceeds
+without a reference. Storage commands require existing explicit enablement.
+The production build-ID service returned HTTP 500 in prior Ubuntu CI; retain
+strict end-to-end deployment validation and verify the corrected PR head.
+
+## Attribution storage extension, 2026-10-03
+
+At baseline `c9e9a1a4`, the maintainer requested local and remote storage and
+confirmed that remote free accounts include both HEAD patches and structured
+changed-line text; paid/BYOC can choose either, with both off by default. Local
+now means no attribution in HTTP requests or public snapshots/build stats,
+superseding the earlier emission behavior below. Private source receipts remain
+local. Remote sends evidence through the new fixed authenticated gateway route,
+bound to repository/application/build/snapshot IDs and an authoritative policy
+revision, then emits only an acknowledged record reference. Account tier is
+server-owned; no repo credential/URL/tier is accepted. Shared preferences are
+Git-reviewable per repo, with atomic owner-only private overrides that can only
+restrict sharing. Patches imply source text even when structured lines are off.
+Full source/binary contents are not uploaded; remote differences use captured
+HEAD as the baseline, which server comparisons must also possess.
+
+The existing SDK/core and CLI guides own this workflow, with Vite linking to
+the shared storage reference. Client checks use real private source captures,
+the built CLI/SDK, and a real local HTTP fixture credential/endpoint. Production
+endpoint authorization, policy administration, encrypted evidence storage,
+retention, and BYOC routing remain control-plane work outside this workspace;
+the SDK fails remote publication without that policy/acknowledgment. This batch
+does not claim those server controls were verified.
+
+## Live attribution extension, 2026-10-03
+
+The maintainer requested actual hooks-off and model/effort switches on the same
+generated app: Codex GPT-6.1-Sol high/low and GPT-6-Luna xhigh, followed by T3/Grok
+models. Extend the existing Change Attribution guidance rather than creating a
+second skill. Source receipts retain observed per-turn metadata and independent
+Git workspace, prompt-initiator, and deployer identities. Launcher identity and
+harness fields are self-reports; authenticated prompt identity is future work.
+Codex 0.160.0 native hooks supply turn/tool IDs; bounded local rollouts supply
+effort/provider/cumulative counters. Grok 1.0.46 supports native project hooks
+and Git AI's public agent-v1 interface, avoiding a fork. Its tool events omit
+prompt IDs, so active-prompt association is marked inferred, closes on stop or
+cancellation, and does not claim exact linkage for background/concurrent work.
+Grok reported USD ticks and usage include observation timestamps and partial
+flags. Only a matching finished native turn refreshes the final ledger; snapshots
+are not summed or allocated to code lines. Commit-only evidence without a tool
+join does not invent effort or initiator metadata. Private ledgers/receipts remain
+local and unsynchronized. Live checks and executable source-difference/build
+verification are recorded in the review, separately from prior replay fixtures.
+
+## Change Attribution addition, 2026-10-03
+
+The maintainer requested an optional codemod offer and installation link, then a
+trial on an actual generated example app. The name is Change Attribution; agent
+integration installation is separate from capture opt-in. Extend the existing
+shared `zephyr-core` setup/version task and `zephyr-cli` local-inspection task,
+keeping the established package-only skill distribution and prior decisions.
+
+The integration records the Git-eligible working tree independently from HEAD,
+stores immutable source copies privately in the worktree Git directory, and
+emits source fingerprints and self-reported provenance in snapshot/build-stat
+contracts. It preserves unknown evidence, keeps deployer and contributor separate,
+and checks exact checkpoint blob hashes before accepting Git AI ranges. The
+Git AI adapter targets checkpoint/1.0.0 from 1.7.x, tested with 1.7.5; a compatible
+fork can be selected by executable path. Native pre/post hooks preserve existing
+project settings and require the agent's ordinary trust review. The upstream
+Codex Stop preset is rejected in 1.7.5, so it is not installed by this setup.
+
+Vite and CLI run-mode have build-start observations. Prebuilt and other adapter
+flows remain publication-only. Boundary matching does not prove no transient
+edits or capture every dependency/environment input. Control-plane persistence,
+dashboard rendering, source-copy synchronization/retention, and broader adapter
+build-start instrumentation remain future work; this SDK batch does not claim
+them as implemented.
+
+The generated React/Vite verifier uses real local SDK snapshot construction and
+Git AI with explicit Codex/editor-event fixtures, plus an uninstrumented edit.
+It disables cloud transport and checks three versions sharing a commit but
+carrying distinct source records, AI/model, known-human, and unknown differences.
+Hook replay evidence is distinct from a live agent session or human typing.
+Unit tests cover opt-in, preserving hooks, dirty/staged/untracked/deleted/reverted
+source, binary contents, stale hashes, model switches, and immutable receipts.
+Git AI JSON blame omits known humans, so committed human evidence follows native
+line origins into explicit authorship/3.0.0 human records in refs/notes/ai; a
+regression test retains that evidence across a subsequent commit.
+Validation results and remaining limits are recorded in the source review.
+
 Package-owned skills describe the implementation shipped in their owning npm
 package. Every published build integration and `zephyr-cli` ships a dedicated
 skill, and two shared guides, `zephyr-core` and `zephyr-module-federation`,

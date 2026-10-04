@@ -46,7 +46,7 @@
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "e94c3131c09de9dddf5e2597f0ccdb469d1316d7e20b062a909c345851194ce9",
+      "fingerprint": "26e16fc592be3f8e25df0b3c34b731f7a90d4c28e6c04257f8761d23d1e0e14b",
       "snapshot": {
         "_artifacts/domain_map.yaml": "050102d644e9198d1a278ed5c83b019055745c82e540cd99477fcf1a8468753b",
         "_artifacts/skill_spec.md": "dbedb13734744c04bca747311c169d4122a3d777c7e13e90a8972e6e67267fab",
@@ -108,14 +108,14 @@
         "libs/with-zephyr/src/index.ts": "c493444b866c2b1e5eb64ad5fca305dc8635eeb6bdd050b4c02f4d1afc63ede3",
         "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
-        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "ff8a6be34bdeb11740684e34db6e3e4010cab34026d4e32ca80439706ef1c415",
+        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "11b60d81ddaa3d3e6819ce011c01b21afe93606a7764243ffe92d717a6aae414",
         "libs/zephyr-agent/src/lib/change-attribution/config.ts": "903f437e643f3af1be9128176c9ea5d084383ee35f91ef4d5172fe14a84a8800",
         "libs/zephyr-agent/src/lib/change-attribution/git-ai.ts": "52e475769451545cee73c51ca7506ffac78f530a88b637339748c5a655b547e0",
         "libs/zephyr-agent/src/lib/change-attribution/remote.spec.ts": "bb6411eca412e56bf8e684cba5dfbd7c6ea4f6794b0ae547f2900ed7b6822aee",
         "libs/zephyr-agent/src/lib/change-attribution/remote.ts": "7b6ae47bcc2ae072d610465f0e3743472f06ba8bb32a85a28862fb75e71679d2",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.spec.ts": "7bc317b5959ccc4ae70168367c878b9dfdd45ee755b5e07e373e214d0adfbbfc",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.ts": "c08955f897d3e96b32aa00fa275b45aa728736f13f41207ce30e41b247b7b48b",
-        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "89605b7a18ae9edbd06b8d4f67968f7106a5e21d23134b606e35c76f2d27b3cf",
+        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "36d4972f2fd8837e679642dd8cc1bee64dc22611cb4e558f228a4595fb7ce951",
         "libs/zephyr-agent/src/lib/change-attribution/source.ts": "4d86b579e30a55357d267e9040e09199efc2ef970a8b4c955cdf955ad75fad81",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.test.ts": "36f44e0fafbf4ba74a5de76ababdb7d77c45dde604cea7101f2856f969fc0f59",
@@ -266,14 +266,13 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "bd0037fbe5bb016ef7b37779f0272d8e894dae6b",
+      "head": "5aa0da1ea4847b7c077d84b4e3c56738c22faf62",
       "outcome": "no-change",
-      "reason": "Engine creation now forwards the already documented optional source boundary into its constructor. The creation lifecycle regression verifies identity preservation and clearing the pending boundary. The three planning records and shared capture/storage guidance already describe this behavior and remain accurate.",
+      "reason": "Restored real file paths in the exact generated binary diff marker, outside hunks. Binary contents remain omitted; text hunk preservation, source attribution, and storage policy are unchanged. Reviewed all three planning records and shared capture/storage guidance; no recommendation or task ownership changes.",
       "evidence": [
-        "libs/zephyr-agent/src/zephyr-engine/index.ts and __test__/engine-lifecycle.test.ts current diff against bd0037fb",
-        "pnpm test:affected: 45 tasks passed, including 411 agent tests and 5 skipped",
-        "Affected typecheck graph: 13 tasks passed",
-        "Existing recorded guidance in skills/zephyr-core/references/change-attribution.md and _artifacts/{domain_map.yaml,skill_spec.md,skill_tree.yaml} reviewed"
+        "libs/zephyr-agent/src/lib/change-attribution/compare.ts and source.spec.ts current diff against 5aa0da1e",
+        "pnpm test:affected: 45 tasks passed; binary source regression checks real paths and absence of temporary path markers",
+        "Shared attribution references and _artifacts/domain_map.yaml, skill_spec.md, skill_tree.yaml reviewed"
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -317,7 +316,7 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "0c76e7d891931c26f3713e2f83001634ffb15d0ef7a624b66a61a9d8c4c66602",
+      "fingerprint": "1dbf5a688ee001e64cba5114d2cd3bdc8112bd8b74c3ce8f5b1aceae0744d6fe",
       "snapshot": {
         "libs/with-zephyr/README.md": "16c3c1bf882a21b977a60c27835186b16bb51972a39e65835e52c1ac04dc5708",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
@@ -325,14 +324,14 @@
         "libs/with-zephyr/src/index.ts": "c493444b866c2b1e5eb64ad5fca305dc8635eeb6bdd050b4c02f4d1afc63ede3",
         "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
-        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "ff8a6be34bdeb11740684e34db6e3e4010cab34026d4e32ca80439706ef1c415",
+        "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "11b60d81ddaa3d3e6819ce011c01b21afe93606a7764243ffe92d717a6aae414",
         "libs/zephyr-agent/src/lib/change-attribution/config.ts": "903f437e643f3af1be9128176c9ea5d084383ee35f91ef4d5172fe14a84a8800",
         "libs/zephyr-agent/src/lib/change-attribution/git-ai.ts": "52e475769451545cee73c51ca7506ffac78f530a88b637339748c5a655b547e0",
         "libs/zephyr-agent/src/lib/change-attribution/remote.spec.ts": "bb6411eca412e56bf8e684cba5dfbd7c6ea4f6794b0ae547f2900ed7b6822aee",
         "libs/zephyr-agent/src/lib/change-attribution/remote.ts": "7b6ae47bcc2ae072d610465f0e3743472f06ba8bb32a85a28862fb75e71679d2",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.spec.ts": "7bc317b5959ccc4ae70168367c878b9dfdd45ee755b5e07e373e214d0adfbbfc",
         "libs/zephyr-agent/src/lib/change-attribution/sessions.ts": "c08955f897d3e96b32aa00fa275b45aa728736f13f41207ce30e41b247b7b48b",
-        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "89605b7a18ae9edbd06b8d4f67968f7106a5e21d23134b606e35c76f2d27b3cf",
+        "libs/zephyr-agent/src/lib/change-attribution/source.spec.ts": "36d4972f2fd8837e679642dd8cc1bee64dc22611cb4e558f228a4595fb7ce951",
         "libs/zephyr-agent/src/lib/change-attribution/source.ts": "4d86b579e30a55357d267e9040e09199efc2ef970a8b4c955cdf955ad75fad81",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.test.ts": "36f44e0fafbf4ba74a5de76ababdb7d77c45dde604cea7101f2856f969fc0f59",
         "libs/zephyr-agent/src/lib/http/fetch-with-retries.ts": "43e822be0b140485ac639845f86a5c301aa962b6d45144cb1d6d6933e8943b88",
@@ -364,14 +363,13 @@
         "skills/zephyr-core/references/sdk-setup.md": "44a555ebfbcc3fc6040ecffb31eb76029313418a828a69ba45cceee03e5a51cb",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "bd0037fbe5bb016ef7b37779f0272d8e894dae6b",
+      "head": "5aa0da1ea4847b7c077d84b4e3c56738c22faf62",
       "outcome": "no-change",
-      "reason": "Engine creation now forwards the already documented optional source boundary into its constructor. The creation lifecycle regression verifies identity preservation and clearing the pending boundary. The three planning records and shared capture/storage guidance already describe this behavior and remain accurate.",
+      "reason": "Restored real file paths in the exact generated binary diff marker, outside hunks. Binary contents remain omitted; text hunk preservation, source attribution, and storage policy are unchanged. Reviewed all three planning records and shared capture/storage guidance; no recommendation or task ownership changes.",
       "evidence": [
-        "libs/zephyr-agent/src/zephyr-engine/index.ts and __test__/engine-lifecycle.test.ts current diff against bd0037fb",
-        "pnpm test:affected: 45 tasks passed, including 411 agent tests and 5 skipped",
-        "Affected typecheck graph: 13 tasks passed",
-        "Existing recorded guidance in skills/zephyr-core/references/change-attribution.md and _artifacts/{domain_map.yaml,skill_spec.md,skill_tree.yaml} reviewed"
+        "libs/zephyr-agent/src/lib/change-attribution/compare.ts and source.spec.ts current diff against 5aa0da1e",
+        "pnpm test:affected: 45 tasks passed; binary source regression checks real paths and absence of temporary path markers",
+        "Shared attribution references and _artifacts/domain_map.yaml, skill_spec.md, skill_tree.yaml reviewed"
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {

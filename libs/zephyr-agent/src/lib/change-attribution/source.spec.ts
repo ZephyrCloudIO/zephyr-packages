@@ -121,9 +121,14 @@ describe('Change Attribution source records', () => {
     expect(Buffer.from(record.files['image.bin'].content, 'base64').includes(0)).toBe(
       true
     );
-    expect(
-      compareSourceRecords(root, start.record!.id, 'version-1').changes[0].binary
-    ).toBe(true);
+    const binaryChange = compareSourceRecords(root, start.record!.id, 'version-1')
+      .changes[0];
+    expect(binaryChange.binary).toBe(true);
+    expect(binaryChange.patch).toContain(
+      'Binary files a/image.bin and b/image.bin differ'
+    );
+    expect(binaryChange.patch).not.toContain('a/before');
+    expect(binaryChange.patch).not.toContain('b/after');
     const receipt = readFileSync(
       join(
         root,

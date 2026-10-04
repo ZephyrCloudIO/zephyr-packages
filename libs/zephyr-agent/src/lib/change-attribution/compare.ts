@@ -137,6 +137,8 @@ export function compareSourceContents(
               if (line === '--- a/before') return `--- a/${file}`;
               if (line === '+++ b/after') return `+++ b/${file}`;
             }
+            if (line === 'Binary files a/before and b/after differ')
+              return `Binary files a/${file} and b/${file} differ`;
             return line;
           })
           .join('\n'),

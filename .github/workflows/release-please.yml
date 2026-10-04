@@ -61,11 +61,21 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        # bash (not the default `bash -e`) adds pipefail, so a failing review report fails the step.
+        shell: bash
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           reason="release-please: only package versions, library_version lines, the release manifest and CHANGELOG changed; no skill guidance is affected"
-          pnpm --silent skills:review --base origin/main --unchanged "$reason"
-          pnpm --silent skills:review --unchanged "$reason"
+          # `skills:review --unchanged` exits 1 when nothing is pending, so record each pass only when it has items.
+          pending() { pnpm --silent skills:review --json "$@" | jq '.items | length'; }
+          count="$(pending --base origin/main)"
+          if [ "$count" -gt 0 ]; then
+            pnpm --silent skills:review --base origin/main --unchanged "$reason"
+          fi
+          count="$(pending)"
+          if [ "$count" -gt 0 ]; then
+            pnpm --silent skills:review --unchanged "$reason"
+          fi
           pnpm exec oxfmt .intent/review-state.json
           pnpm skills:check --base origin/main
           if git diff --quiet -- .intent/review-state.json; then

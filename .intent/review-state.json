@@ -1001,15 +1001,15 @@
       ]
     },
     "source:.github/workflows/release-please.yml": {
-      "fingerprint": "03c4f7bdd72dcf0d1cbf79a1c010545172e54f24e419916f95c6f40580ce76a8",
+      "fingerprint": "fa8789815f8c66c2d4fd73d6e3298897cb9f5d1c3e07cee3317c0c9bf4513181",
       "snapshot": {
-        ".github/workflows/release-please.yml": "dc998564126f7045c0c812865f1caf8f81ed68538ec7a8bc70e80e95f305ca62"
+        ".github/workflows/release-please.yml": "123afc432ad2397e80a8d7d24d3bccac34781d3811738f9d5712fc589af5ce83"
       },
-      "head": "8bc5e110d533b39ef36d5c42e917831d03379cdf",
+      "head": "8f8921125a242d4dd4e8af8da76ced133effa4ea",
       "outcome": "no-change",
       "reason": "release-please workflow records release-only review outcomes; CI automation only, no skill guidance affected",
       "evidence": [
-        "Changed: .github/workflows/release-please.yml at 8bc5e110d533b39ef36d5c42e917831d03379cdf"
+        "Changed: .github/workflows/release-please.yml at 8f8921125a242d4dd4e8af8da76ced133effa4ea"
       ]
     }
   }

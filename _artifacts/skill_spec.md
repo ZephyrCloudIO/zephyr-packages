@@ -1,5 +1,23 @@
 # zephyr-packages skill spec
 
+## Attribution publication design, 2026-10-03
+
+At baseline `8bc5e110`, the maintainer requested design PRs in the backend and
+packages repositories before implementation. The proposed
+[publication contract](../docs/attribution-publication-design.md) replaces the
+future tier-driven sharing rule with independent destination, source authorization,
+and versioned agreement acceptance; BYOC evidence goes directly to customer
+infrastructure, hosted source is an explicitly consented OSS exception, and
+reporting accepts only approved analytics. Custom agreements and report disclosures
+require counsel review before enablement.
+
+This is planned behavior, not a change to the version 1 SDK or published guidance.
+Existing core/CLI skills still describe the implementation below. The domain map
+records the implementation/release gap; the tree's ownership, source mappings,
+versions, and package-only distribution remain unchanged. Issue 647 tracks the
+contract, runtime, verification, guidance, and publishing work. No new skill or
+fresh-consumer runtime check is appropriate for an unimplemented protocol.
+
 ## Attribution review corrections, 2026-10-03
 
 At baseline `8f468124`, the maintainer requested resolving PR #645 review comments

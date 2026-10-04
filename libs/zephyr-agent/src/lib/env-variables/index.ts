@@ -19,6 +19,10 @@ export {
   calculateManifestHash,
   collectZEPublicVars,
 } from './env-var-rewrites';
+export {
+  rewriteEnvReadsToNativeLookup,
+  type NativeEnvRewriteOptions,
+} from './native-env-rewrite';
 
 export function buildEnvImportMap(
   appUid: string,

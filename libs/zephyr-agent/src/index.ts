@@ -140,6 +140,8 @@ export {
   buildEnvImportMapScript,
   buildEnvModuleSource,
   rewriteEnvReadsToVirtualModule,
+  rewriteEnvReadsToNativeLookup,
+  type NativeEnvRewriteOptions,
   type RemoteEntry,
   VIRTUAL_SPECIFIER,
   detectEnvReads,

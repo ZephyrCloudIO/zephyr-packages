@@ -55,6 +55,8 @@ Current mapping:
 | Webpack           | `zephyr-webpack-plugin`             |
 | Rspack            | `zephyr-rspack-plugin`              |
 | Rsbuild / Rslib   | `zephyr-rsbuild-plugin`             |
+| Rstack app / lib  | `zephyr-rsbuild-plugin`             |
+| Rstack doc        | `zephyr-rspress-plugin`             |
 | Rollup            | `rollup-plugin-zephyr`              |
 | Rolldown          | `zephyr-rolldown-plugin`            |
 | Parcel            | `parcel-reporter-zephyr`            |
@@ -148,6 +150,21 @@ export default defineConfig({
 Source example: `https://github.com/ZephyrCloudIO/zephyr-examples/blob/main/frameworks/astro/astro.config.mjs`
 
 ## Important setup notes
+
+For Rstack CLI, run `pnpm dlx with-zephyr --bundlers rstack --dry-run` before
+applying the same command without `--dry-run`. The codemod discovers
+`rstack.config.ts`, `.js`, `.mts`, and `.mjs`, then configures `define.app()`,
+`define.lib()`, and `define.doc()` independently. It preserves other tool
+sections and existing plugins, reuses imported Zephyr aliases, and adds each
+dependency to the nearest project manifest. Inline objects and configuration
+functions returning inline objects are supported; imported configurations and
+spreads without explicit `plugins`, or placed after `plugins`, require manual setup. Custom config filenames
+are not discovered. Use the existing Rsbuild or Rspress plugin, not a separate
+Rstack package. If local builds must not deploy, explicitly gate the plugin in
+the deployment workflow rather than assuming the codemod makes builds read-only.
+
+Malformed Rstack files are isolated to that file; other selected configurations
+still run. The bundler filter excludes other tools before parsing their files.
 
 - Plugin placement is stack-specific, not globally “always last”.
 - Nx compose-plugin setups usually put Zephyr last in the composition.

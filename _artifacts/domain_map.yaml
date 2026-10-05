@@ -78,6 +78,8 @@ skills:
       workflows, docs, or public env vars.
     tasks:
       - Select the supported SDK or upload fallback for the application's stack.
+      - Configure Rstack app, library, and documentation sections independently
+        without modifying its test, lint, formatting, or staged-file settings.
       - Explain immutable versions versus mutable tags and environments.
       - Enable optional Change Attribution with separate consent for capture and
         agent hooks; compare dirty-source versions without guessing human authorship.
@@ -91,6 +93,7 @@ skills:
     covers:
       [
         with-zephyr,
+        Rstack section-aware setup and project-local dependencies,
         SDK picker,
         zephyr-agent upload fallback,
         zephyr-cli,

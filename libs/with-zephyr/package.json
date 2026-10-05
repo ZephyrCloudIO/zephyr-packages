@@ -15,6 +15,7 @@
     "rslib",
     "rspack",
     "rspress",
+    "rstack",
     "tanstack-intent",
     "vite",
     "webpack",

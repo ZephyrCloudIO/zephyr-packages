@@ -49,6 +49,7 @@ This codemod supports **15+ bundlers/framework configs** with their respective Z
 - **Parcel** ([`parcel-reporter-zephyr`](https://www.npmjs.com/package/parcel-reporter-zephyr))
 - **RSBuild** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
 - **RSLib** ([`zephyr-rsbuild-plugin`](https://www.npmjs.com/package/zephyr-rsbuild-plugin))
+- **Rstack CLI** (`zephyr-rsbuild-plugin` for apps/libraries, `zephyr-rspress-plugin` for docs)
 - **Metro** (React Native) ([`zephyr-metro-plugin`](https://www.npmjs.com/package/zephyr-metro-plugin))
 - **Re.Pack** (React Native) ([`zephyr-repack-plugin`](https://www.npmjs.com/package/zephyr-repack-plugin))
 
@@ -119,6 +120,59 @@ pnpm dlx with-zephyr
 yarn dlx with-zephyr --dry-run
 bunx with-zephyr --bundlers vite rollup
 ```
+
+### Rstack CLI
+
+Run the codemod from the project or workspace root:
+
+```bash
+pnpm dlx with-zephyr --bundlers rstack --dry-run
+pnpm dlx with-zephyr --bundlers rstack
+```
+
+It recognizes `rstack.config.ts`, `.js`, `.mts`, and `.mjs` and configures each
+build section independently. `define.app()` and `define.lib()` use
+`zephyr-rsbuild-plugin`; `define.doc()` uses `zephyr-rspress-plugin`.
+Test, lint, formatting, and staged-file settings remain unchanged.
+
+```ts
+import { define } from 'rstack';
+import { withZephyr as withZephyrRsbuild } from 'zephyr-rsbuild-plugin';
+import { withZephyr as withZephyrRspress } from 'zephyr-rspress-plugin';
+
+define.app({ plugins: [withZephyrRsbuild()] });
+define.doc({ root: 'docs', plugins: [withZephyrRspress()] });
+```
+
+Inline objects and synchronous or asynchronous functions returning inline
+objects are supported. Imported configuration objects or functions and spreads
+without an explicit `plugins` property require manual setup; the codemod reports
+them instead of replacing inherited configuration. Custom filenames passed to
+Rstack's `--config` option are not discovered automatically.
+
+Place configuration spreads before an explicit `plugins` property. Spreads
+after it could replace the new plugin list, so those configurations also require
+manual setup.
+
+Existing Zephyr calls are checked per section, including import aliases and
+options, so configuring an app does not prevent docs from being configured.
+Dependencies are added to the nearest project manifest, and `--dry-run` changes
+neither configuration files nor manifests.
+
+Malformed Rstack files are reported individually without blocking other config
+files. A `--bundlers` filter excludes unselected tools before their files are parsed.
+
+The added plugins publish when their build runs. If ordinary local builds must
+remain credential-free, gate the plugin list behind an explicit deployment flag:
+
+```ts
+define.app({
+  plugins: [...(process.env.ZEPHYR_DEPLOY === 'true' ? [withZephyrRsbuild()] : [])],
+});
+```
+
+Use `ZEPHYR_DEPLOY=true` only in the deployment command or workflow. For Rspress,
+follow the plugin's typed configuration guidance when adding a conditional list.
 
 ### Options
 

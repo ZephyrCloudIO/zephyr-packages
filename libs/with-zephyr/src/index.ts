@@ -20,6 +20,7 @@ import {
   modernjsConfig,
   nuxtConfig,
   rspressConfig,
+  rstackConfig,
   metroConfig,
   repackConfig,
 } from './bundlers/index.js';
@@ -37,6 +38,7 @@ import {
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
 import { bootstrapMetroCommands } from './metro-bootstrap.js';
 import { bootstrapSlidevVite } from './slidev-vite.js';
+import { findRstackSections } from './rstack.js';
 import { applyBundlerOperations, hasZephyrCall } from './operations.js';
 import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
 
@@ -54,6 +56,7 @@ const BUNDLER_CONFIGS: BundlerConfigs = {
   modernjs: modernjsConfig,
   nuxt: nuxtConfig,
   rspress: rspressConfig,
+  rstack: rstackConfig,
   metro: metroConfig,
   repack: repackConfig,
 };
@@ -77,16 +80,41 @@ function isRequirementResolved(packageRequirement: PackageRequirement): boolean 
 }
 
 /** Find all bundler configuration files in the given directory */
-function findConfigFiles(directory: string): ConfigFile[] {
+function findConfigFiles(directory: string, bundlers?: string[] | null): ConfigFile[] {
   const configFiles: ConfigFile[] = [];
 
   for (const [bundlerName, config] of Object.entries(BUNDLER_CONFIGS)) {
+    if (bundlers && !bundlers.includes(bundlerName)) continue;
     for (const fileName of config.files) {
       // Use forward slashes for glob pattern, even on Windows
       const pattern = `${directory}/**/${fileName}`.replace(/\\/g, '/');
       const matches = glob.sync(pattern, { ignore: ['**/node_modules/**'] });
 
       for (const filePath of matches) {
+        if (bundlerName === 'rstack') {
+          try {
+            for (const rstackSection of findRstackSections(filePath)) {
+              configFiles.push({
+                filePath,
+                bundlerName,
+                config: {
+                  ...config,
+                  rstackSection,
+                  plugin:
+                    rstackSection === 'doc' ? 'zephyr-rspress-plugin' : config.plugin,
+                },
+              });
+            }
+          } catch (error) {
+            configFiles.push({
+              filePath,
+              bundlerName,
+              config,
+              discoveryError: (error as Error).message,
+            });
+          }
+          continue;
+        }
         configFiles.push({
           filePath,
           bundlerName,
@@ -97,6 +125,16 @@ function findConfigFiles(directory: string): ConfigFile[] {
   }
 
   return configFiles;
+}
+
+function findProjectDirectory(filePath: string, directory: string): string {
+  const root = path.resolve(directory);
+  let current = path.resolve(path.dirname(filePath));
+  while (current !== root && current !== path.dirname(current)) {
+    if (fs.existsSync(path.join(current, 'package.json'))) return current;
+    current = path.dirname(current);
+  }
+  return root;
 }
 
 /** Check if a rspack config file is actually a repack configuration */
@@ -284,7 +322,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     console.log(chalk.yellow(`🔍 Dry run mode - no files will be modified\n`));
   }
 
-  const configFiles = findConfigFiles(directory);
+  const configFiles = findConfigFiles(directory, bundlers);
 
   const nextJsBootstrap = bootstrapNextJsVinext(directory, { dryRun });
   const slidevBootstrapRequested =
@@ -404,6 +442,8 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const requiredPackages = new Map<string, PackageRequirement>();
   const packagesToProcess: ConfigFile[] = [];
   const filteredConfigFiles: ConfigFile[] = [];
+  let errors = 0;
+  let rstackSetupFailed = false;
   const addRequiredPackage = (packageRequirement: PackageRequirement) => {
     const projectDirectory = path.resolve(
       packageRequirement.projectDirectory ?? directory
@@ -465,7 +505,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     }
   }
 
-  for (const { filePath, bundlerName, config } of configFiles) {
+  for (const { filePath, bundlerName, config, discoveryError } of configFiles) {
     // Filter by specific bundlers if requested
     if (bundlers && !bundlers.includes(bundlerName)) {
       continue;
@@ -483,8 +523,32 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     filteredConfigFiles.push({ filePath, bundlerName, config });
 
+    if (discoveryError) {
+      console.error(
+        chalk.red(`Cannot inspect ${normalizePathForOutput(filePath)}: ${discoveryError}`)
+      );
+      errors++;
+      rstackSetupFailed = true;
+      continue;
+    }
+
+    const packageRequirement: PackageRequirement = {
+      name: config.plugin,
+      isDev: true,
+      ...(bundlerName === 'rstack'
+        ? { projectDirectory: findProjectDirectory(filePath, directory) }
+        : {}),
+      ...(bundlerName === 'metro'
+        ? {
+            version: '^1.4.0',
+            projectDirectory: path.resolve(path.dirname(filePath)),
+          }
+        : {}),
+    };
+
     // Check if already has Zephyr integration
     if (checkHasZephyr(filePath, config)) {
+      if (bundlerName === 'rstack') addRequiredPackage(packageRequirement);
       console.log(
         chalk.gray(
           `⏭️  Skipping ${normalizePathForOutput(filePath)} (already has Zephyr integration)`
@@ -493,16 +557,21 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       continue;
     }
 
-    addRequiredPackage({
-      name: config.plugin,
-      isDev: true,
-      ...(bundlerName === 'metro'
-        ? {
-            version: '^1.4.0',
-            projectDirectory: path.resolve(path.dirname(filePath)),
-          }
-        : {}),
-    });
+    if (bundlerName === 'rstack') {
+      const preflight = applyBundlerOperations({ filePath, config, dryRun: true });
+      if (preflight.status !== 'changed') {
+        console.error(
+          chalk.red(
+            `Cannot configure ${normalizePathForOutput(filePath)} define.${config.rstackSection}(): ${preflight.error ?? 'No supported inline configuration found'}`
+          )
+        );
+        errors++;
+        rstackSetupFailed = true;
+        continue;
+      }
+    }
+
+    addRequiredPackage(packageRequirement);
     packagesToProcess.push({ filePath, bundlerName, config });
   }
 
@@ -557,7 +626,6 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
   // Process configuration files
   let processed = 0;
-  let errors = 0;
   let dependencyInstallFailed = false;
 
   for (const { filePath, bundlerName, config } of packagesToProcess) {
@@ -568,6 +636,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
       processed++;
     } else {
       errors++;
+      if (bundlerName === 'rstack') rstackSetupFailed = true;
     }
   }
 
@@ -801,7 +870,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   );
   console.log(`${chalk.red('✗')} Errors: ${errors}`);
 
-  if (dependencyInstallFailed) {
+  if (dependencyInstallFailed || rstackSetupFailed) {
     process.exitCode = 1;
   }
 

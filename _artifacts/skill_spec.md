@@ -180,6 +180,17 @@ commands; both the check scripts and CI use that wrapper.
 
 ## Coverage and batch history
 
+- 2026-10-05: Extended the existing SDK-adoption task for Rstack CLI at source
+  baseline `7f6056b0` and package version 1.5.0. Apps and libraries retain the
+  Rsbuild integration; documentation retains the Rspress integration. The
+  codemod owns section-aware edits, import aliases, rerun safety, dry runs,
+  isolated discovery failures,
+  and project-local dependency placement. It does not change deployment
+  lifecycles or rewrite imported configurations. Regression checks cover
+  mixed sections and inline factories. Fresh-agent selection and a new live
+  deployment are not claimed by this batch; prior package-only distribution
+  and remaining work stay unchanged.
+
 - 2026-10-02: Adopted Intent 0.5.0 at source baseline
   `103bbe4a2e433e3393e84406df2e047cd4c5fe17`. Registered the existing
   `create-zephyr-apps` guidance and preserved its prior description as purpose.

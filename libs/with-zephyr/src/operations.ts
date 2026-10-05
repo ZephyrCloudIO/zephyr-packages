@@ -1,5 +1,6 @@
 import fs from 'fs';
 import type { BundlerConfig, BundlerOperationId, OperationResult } from './types.js';
+import { hasRstackZephyr, transformRstackSection } from './rstack.js';
 import {
   findFirstMatchTextWithAstGrep,
   rewriteWithAstGrep,
@@ -455,6 +456,8 @@ const OPERATION_HANDLERS: Record<
   'rsbuild-asset-prefix': handleRsbuildAssetPrefix,
   'wrap-exported-function': handleWrapExportedFunction,
   'parcel-reporters': handleParcelReporters,
+  'rstack-plugins': (context) =>
+    transformRstackSection(context.filePath, context.config, context.dryRun),
 };
 
 export function runBundlerOperation(
@@ -492,8 +495,13 @@ export function applyBundlerOperations(context: OperationContext): OperationResu
 
 export function hasZephyrCall(
   filePath: string,
-  config?: Pick<BundlerConfig, 'plugin'>
+  config?: Pick<BundlerConfig, 'plugin' | 'rstackSection'>
 ): OperationResult {
+  if (config?.rstackSection) {
+    return {
+      status: hasRstackZephyr(filePath, config) ? 'changed' : 'no-match',
+    };
+  }
   if (config?.plugin === 'zephyr-nuxt-module') {
     const content = fs.readFileSync(filePath, 'utf8');
     if (/['"]zephyr-nuxt-module['"]/.test(content)) {

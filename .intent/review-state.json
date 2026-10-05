@@ -282,15 +282,15 @@
       ]
     },
     "source:pnpm-workspace.yaml": {
-      "fingerprint": "14b9579180058c124cf8744fbe198db6154268b58964d1ade3a92ff41ef01de4",
+      "fingerprint": "8e4c14c50a29ab13c0a3f2a81c5473e20214c5f9a5ebf62e982369925a8edf51",
       "snapshot": {
-        "pnpm-workspace.yaml": "5b1046bd8e964dd65890acd551e29ee2a072828c02b3fd946a7d5736f6523ca4"
+        "pnpm-workspace.yaml": "4793dbb02c854a996babee96b1d3dcc50c767659f1f0ae45bc9b466a4fde2310"
       },
-      "head": "6fcb9147d98acbf63dd488baff16bf5c6430de04",
-      "outcome": "out-of-scope",
-      "reason": "Merged Renovate security updates from main (#641, #642): hono and devalue overrides and their minimumReleaseAgeExclude entries. No catalog or peer range that skills document changed.",
+      "head": "3fbdbcf8e4f2567ee20e3dff50d517cc521c459e",
+      "outcome": "no-change",
+      "reason": "Development-tooling bump of @tanstack/intent from 0.5.0 to 0.5.3 (Windows discovery and TypeScript 7.0 example-check fixes) with a version-pinned release-age exclusion; no consumer SDK behavior or skill guidance changes.",
       "evidence": [
-        "The diff touches only overrides (hono 4.13.7, devalue 5.9.3) and minimumReleaseAgeExclude; the peer-compat catalog is unchanged."
+        "pnpm-workspace.yaml catalog pin and minimumReleaseAgeExclude entry, rebased on main; intent maintainer check validates all 19 skill files on 0.5.3 with and without scripts/intent.mjs."
       ]
     },
     "source:scripts/intent.mjs": {

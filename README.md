@@ -39,6 +39,21 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 - `zephyr-xpack-internal` - Sharing types, module federation capabilities and utilities for bundler built on top of webpack or Rspack.
 - `zephyr-edge-contract` - Provide typings, constants and smaller utilites for Zephyr plugins.
 
+### AI Agent Skills
+
+Every published package ships Agent Skills for AI coding agents, versioned with
+the package. Zephyr does not need them at runtime. To let your coding agent use
+them, opt in with
+[TanStack Intent](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers)
+in your project:
+
+```bash
+pnpm add -D @tanstack/intent
+pnpm dlx @tanstack/intent@latest install
+```
+
+Each plugin README names its skill.
+
 ## Repository Structure
 
 This is a [Turborepo](https://turborepo.com) monorepo. Libraries are built with

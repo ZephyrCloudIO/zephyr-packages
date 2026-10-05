@@ -36,32 +36,32 @@ pnpm add --dev vite-plugin-zephyr
 bun add --dev vite-plugin-zephyr
 ```
 
-## Usage
+## AI Agent Skills (Optional)
 
-### Agent guidance
+This package ships the `zephyr-vite` Agent Skill for AI coding agents, together
+with the shared `zephyr-core` and `zephyr-module-federation` guides. The
+skills are versioned with the package, so your agent reads guidance that
+matches the release you installed.
 
-This package ships the `zephyr-vite` Agent Skill alongside its implementation.
-Use the installed package's guidance for configuration and build lifecycle
-behavior rather than a repository skill from a different SDK release.
-
-Install Intent as a development dependency when adding agent tooling is appropriate:
+Zephyr does not need Intent at runtime. Coding agents only find these skills
+after you opt in with
+[TanStack Intent](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers):
 
 ```sh
-pnpm add -D @tanstack/intent@0.5.0
-pnpm exec intent install
+pnpm add -D @tanstack/intent
+pnpm dlx @tanstack/intent@latest install
+```
+
+Allow `vite-plugin-zephyr` when `install` asks. Intent saves that choice in the
+`intent.skills` allowlist in your `package.json`. To check or load the skill
+yourself:
+
+```sh
 pnpm exec intent list
 pnpm exec intent load 'vite-plugin-zephyr#zephyr-vite'
 ```
 
-Select `vite-plugin-zephyr` during setup. The consumer's `intent.skills` allowlist
-controls which installed packages appear in the agent's catalog. Intent is agent
-tooling; the Zephyr plugin does not require it at runtime.
-
-Every published Zephyr package also bundles `zephyr-core` and
-`zephyr-module-federation` from the canonical guides in this repository.
-Plugin setup and cross-bundler configuration no longer live in the separate
-skills repository. Maintainers run `pnpm skills:check` at the
-workspace root after updating the guidance and recording source reviews.
+## Usage
 
 ### Basic Configuration
 

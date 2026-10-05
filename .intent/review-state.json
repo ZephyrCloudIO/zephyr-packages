@@ -290,15 +290,15 @@
       ]
     },
     "source:pnpm-workspace.yaml": {
-      "fingerprint": "14b9579180058c124cf8744fbe198db6154268b58964d1ade3a92ff41ef01de4",
+      "fingerprint": "808572a52a95e954b7a656ad0c3b8f7640a8f7fdedcb09830afe1fea08e4ce1a",
       "snapshot": {
-        "pnpm-workspace.yaml": "5b1046bd8e964dd65890acd551e29ee2a072828c02b3fd946a7d5736f6523ca4"
+        "pnpm-workspace.yaml": "6e8a05d403cb8d178999e4bd55cb97f11870d2a2a89562e3b5fac86ff7dc901b"
       },
-      "head": "6fcb9147d98acbf63dd488baff16bf5c6430de04",
+      "head": "496fa4c5fa03fd2839490f14f32882ab5ff76b2e",
       "outcome": "out-of-scope",
-      "reason": "Merged Renovate security updates from main (#641, #642): hono and devalue overrides and their minimumReleaseAgeExclude entries. No catalog or peer range that skills document changed.",
+      "reason": "Security remediation: adds narrowly-scoped overrides for transitive deps (@xhmikosr/decompress, engine.io, fast-uri, piscina, undici 7.x/8.x, webpack-dev-middleware). No catalog or peer range that skills document changed.",
       "evidence": [
-        "The diff touches only overrides (hono 4.13.7, devalue 5.9.3) and minimumReleaseAgeExclude; the peer-compat catalog is unchanged."
+        "The diff touches only the overrides block; catalogs, peer-compat catalog and minimumReleaseAgeExclude are unchanged."
       ]
     },
     "source:scripts/intent.mjs": {

@@ -21,6 +21,7 @@ sources:
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/types.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/bundler-configs.test.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/rstack.test.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/rstack-inheritance.test.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/codemod.test.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/attribution.test.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/README.md

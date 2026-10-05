@@ -163,6 +163,16 @@ are not discovered. Use the existing Rsbuild or Rspress plugin, not a separate
 Rstack package. If local builds must not deploy, explicitly gate the plugin in
 the deployment workflow rather than assuming the codemod makes builds read-only.
 
+Rstack automatically inherits app/library plugins into Rstest, including inline
+projects. Generated and existing direct Zephyr registrations therefore gain an
+`RSTEST` environment guard, using a collision-free import from `node:process`.
+This excludes only Zephyr during tests, preserving inherited aliases, transforms,
+and other plugins. Build commands still include Zephyr; optional deployment
+opt-in must retain the test guard. Integration detection considers plugin-list
+expressions, not calls inside nested callbacks, methods, or metadata. Factory
+rewrites leave nested object/class method returns untouched and only reuse
+imports when no enclosing lexical declaration shadows them.
+
 Malformed Rstack files are isolated to that file; other selected configurations
 still run. The bundler filter excludes other tools before parsing their files.
 

@@ -137,12 +137,23 @@ Test, lint, formatting, and staged-file settings remain unchanged.
 
 ```ts
 import { define } from 'rstack';
+import { env as zephyrEnv } from 'node:process';
 import { withZephyr as withZephyrRsbuild } from 'zephyr-rsbuild-plugin';
 import { withZephyr as withZephyrRspress } from 'zephyr-rspress-plugin';
 
-define.app({ plugins: [withZephyrRsbuild()] });
+define.app({
+  plugins: [...(zephyrEnv['RSTEST'] ? [] : [withZephyrRsbuild()])],
+});
 define.doc({ root: 'docs', plugins: [withZephyrRspress()] });
 ```
+
+Rstack automatically inherits app or library configuration into Rstest, including
+inline test projects. Generated app/library registrations use Rstest's `RSTEST`
+signal to exclude only the deployment plugin during tests. Existing direct Zephyr
+registrations gain the same guard without losing options. Other inherited
+plugins, aliases, and compiler transforms remain available, and ordinary build
+commands still include Zephyr. The imported environment binding is chosen to
+avoid local shadowing.
 
 Inline objects and synchronous or asynchronous functions returning inline
 objects are supported. Imported configuration objects or functions and spreads
@@ -156,6 +167,9 @@ manual setup.
 
 Existing Zephyr calls are checked per section, including import aliases and
 options, so configuring an app does not prevent docs from being configured.
+Calls inside helper methods, callbacks, or another plugin's metadata do not count
+as registration. Import reuse is checked in the actual lexical scope, and nested
+object/class method returns are not rewritten as factory configuration.
 Dependencies are added to the nearest project manifest, and `--dry-run` changes
 neither configuration files nor manifests.
 
@@ -167,7 +181,13 @@ remain credential-free, gate the plugin list behind an explicit deployment flag:
 
 ```ts
 define.app({
-  plugins: [...(process.env.ZEPHYR_DEPLOY === 'true' ? [withZephyrRsbuild()] : [])],
+  plugins: [
+    ...(zephyrEnv['RSTEST']
+      ? []
+      : zephyrEnv['ZEPHYR_DEPLOY'] === 'true'
+        ? [withZephyrRsbuild()]
+        : []),
+  ],
 });
 ```
 

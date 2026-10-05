@@ -80,6 +80,8 @@ skills:
       - Select the supported SDK or upload fallback for the application's stack.
       - Configure Rstack app, library, and documentation sections independently
         without modifying its test, lint, formatting, or staged-file settings.
+      - Exclude only Zephyr from inherited Rstack test compilation while keeping
+        inherited aliases, transforms, and non-deployment plugins intact.
       - Explain immutable versions versus mutable tags and environments.
       - Enable optional Change Attribution with separate consent for capture and
         agent hooks; compare dirty-source versions without guessing human authorship.

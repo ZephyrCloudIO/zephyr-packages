@@ -266,7 +266,7 @@ describe('Zephyr Codemod CLI', () => {
 
     it('still identifies a missing dependency when the section is already configured', () => {
       const original =
-        "import { define } from 'rstack'; import { withZephyr } from 'zephyr-rsbuild-plugin'; define.app({ plugins: [withZephyr()] });";
+        "import { define } from 'rstack'; import { env as zephyrEnv } from 'node:process'; import { withZephyr } from 'zephyr-rsbuild-plugin'; define.app({ plugins: [...(zephyrEnv['RSTEST'] ? [] : [withZephyr()])] });";
       fs.writeFileSync('rstack.config.ts', original);
       fs.writeFileSync(
         'package.json',

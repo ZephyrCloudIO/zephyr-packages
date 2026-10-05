@@ -1,6 +1,6 @@
 {
   "name": "zephyr-metro-plugin",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Metro bundler plugin for deploying React Native applications with Zephyr Cloud - OTA updates, Module Federation, and seamless deployment",
   "keywords": [
     "android",
@@ -15,6 +15,7 @@
     "over-the-air",
     "plugin",
     "react-native",
+    "tanstack-intent",
     "zephyr",
     "zephyr-cloud"
   ],
@@ -29,6 +30,9 @@
     "directory": "libs/zephyr-metro-plugin"
   },
   "files": [
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     "dist",
     "README.md",
     "LICENSE",
@@ -56,6 +60,7 @@
     "provenance": true
   },
   "scripts": {
+    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

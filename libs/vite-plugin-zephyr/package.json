@@ -1,11 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/vitejs/vite-plugin-registry/refs/heads/main/data/schema/extended-package-json.schema.json",
   "name": "vite-plugin-zephyr",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Vite plugin for Zephyr",
   "keywords": [
     "deploy",
     "module-federation",
+    "tanstack-intent",
     "vite",
     "vite-plugin",
     "zephyr"
@@ -24,6 +25,9 @@
     "dist",
     "README.md",
     "LICENSE",
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     "!dist/**/*.map"
   ],
   "type": "commonjs",
@@ -48,7 +52,7 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "pnpm build",
+    "prepack": "node ../../scripts/sync-package-skills.mjs && pnpm build",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
@@ -65,6 +69,7 @@
     "@module-federation/vite": "catalog:module-federation-vite",
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
+    "@tanstack/intent": "catalog:",
     "@types/node": "catalog:typescript",
     "rollup": "catalog:rollup4",
     "typescript": "catalog:typescript",

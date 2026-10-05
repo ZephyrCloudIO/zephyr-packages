@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import { captureSource, ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
@@ -90,9 +90,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error('[ze-cli] ');
     console.error('[ze-cli] Recommendations:');
     console.error('[ze-cli] 1. Use a Zephyr bundler plugin:');
-    console.error('[ze-cli]    - @zephyrcloud/webpack-plugin');
-    console.error('[ze-cli]    - @zephyrcloud/rollup-plugin');
-    console.error('[ze-cli]    - @zephyrcloud/vite-plugin');
+    console.error('[ze-cli]    - zephyr-webpack-plugin');
+    console.error('[ze-cli]    - rollup-plugin-zephyr');
+    console.error('[ze-cli]    - vite-plugin-zephyr');
     console.error('[ze-cli]    - etc.');
     console.error('[ze-cli] 2. Or use "ze-cli deploy <dir>" after building');
     console.error('[ze-cli] ');
@@ -110,6 +110,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
   }
 
   // Execute all build commands sequentially
+  const sourceCapture = captureSource(cwd, 'build-start');
   for (let i = 0; i < individualCommands.length; i++) {
     const cmd = individualCommands[i];
     log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
@@ -178,6 +179,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     builder: primaryTool as any,
     context: cwd,
+    sourceCapture,
     ...(target === undefined ? {} : { target }),
   });
 

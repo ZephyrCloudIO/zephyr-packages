@@ -1,8 +1,16 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { afterEach, beforeEach, expect, test, rs } from '@rstest/core';
-import { build, createBuilder, type InlineConfig, type Plugin } from 'vite';
+import {
+  build,
+  createBuilder,
+  defineConfig,
+  type InlineConfig,
+  type Plugin,
+  type Rolldown,
+} from 'vite';
 import {
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
@@ -174,6 +182,81 @@ test('real vite.build publishes the single environment exactly once', async () =
   expect(paths.some((name) => name.endsWith('.js'))).toBe(true);
   expect(mocks.events).toEqual(['upload', 'finish']);
   expect(mocks.partials.size).toBe(0);
+});
+
+test('the skill setup example publishes a complete Vite snapshot exactly once', async () => {
+  const skillPath = path.resolve(
+    import.meta.dirname,
+    '../../skills/zephyr-vite/SKILL.md'
+  );
+  // Windows checkouts may use CRLF line endings.
+  const skill = (await readFile(skillPath, 'utf8')).replace(/\r\n/gu, '\n');
+  const setupExample = skill.match(/```typescript\n([\s\S]*?)```/u)?.[1];
+  if (!setupExample) throw new Error('The Vite skill needs an executable setup example');
+
+  const moduleExports: { default?: InlineConfig } = {};
+  runInNewContext(
+    await compileExample(setupExample),
+    {
+      exports: moduleExports,
+      require(specifier: string) {
+        if (specifier === 'vite') return { defineConfig };
+        if (specifier === 'vite-plugin-zephyr') return { withZephyr };
+        throw new Error(`Unsupported setup example dependency: ${specifier}`);
+      },
+    },
+    { filename: skillPath, timeout: 1000 }
+  );
+  if (!moduleExports.default) throw new Error('The setup example must export its config');
+
+  await build({ ...config(), plugins: moduleExports.default.plugins });
+
+  const paths = publishedPaths();
+  expect(paths).toContain('index.html');
+  expect(paths).toContain('zephyr-manifest.json');
+  expect(paths.some((name) => name.endsWith('.js'))).toBe(true);
+  expect(mocks.events).toEqual(['upload', 'finish']);
+});
+
+/**
+ * Compiles a TypeScript skill example to CommonJS with Vite itself, leaving its imports
+ * external.
+ */
+async function compileExample(source: string): Promise<string> {
+  const entry = path.join(fixtureRoot, 'skill-example.ts');
+  const result = await build({
+    configFile: false,
+    logLevel: 'silent',
+    root: fixtureRoot,
+    plugins: [
+      {
+        name: 'skill-example',
+        enforce: 'pre',
+        resolveId: (id) => (id === entry ? entry : null),
+        load: (id) => (id === entry ? source : null),
+      },
+    ],
+    build: {
+      write: false,
+      minify: false,
+      lib: { entry, formats: ['cjs'], fileName: 'skill-example' },
+      rolldownOptions: {
+        external: ['vite', 'vite-plugin-zephyr'],
+        output: { exports: 'named' },
+      },
+    },
+  });
+  const [output] = (
+    Array.isArray(result) ? result : [result]
+  ) as Rolldown.RolldownOutput[];
+  return output.output[0].code;
+}
+
+test('the skill task checker rejects a local build without Zephyr publication', async () => {
+  await build({ ...config(), plugins: [] });
+
+  expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+  expect(() => publishedPaths()).toThrow();
 });
 
 function ssrConfig(

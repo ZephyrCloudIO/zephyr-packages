@@ -237,16 +237,51 @@ The CLI automatically detects configuration files for:
 
 If your build tool uses a JavaScript configuration file (e.g., `webpack.config.js`, `rollup.config.js`), the CLI will warn you that the configuration is too dynamic to analyze and suggest:
 
-- Using one of the Zephyr bundler plugins from `@libs/`
+- Using the Zephyr plugin for that bundler, such as `zephyr-webpack-plugin`,
+  `rollup-plugin-zephyr`, or `vite-plugin-zephyr`
 - Using `ze-cli deploy <dir>` after building
 
 ## Requirements
 
 - Node.js 18+ or 20+
-- A valid Zephyr authentication token (run `zephyr login` if needed)
+- Zephyr authentication: an interactive terminal opens a browser login; CI and
+  other non-interactive shells need `ZE_CI_TOKEN`
 - A git repository (for application identification)
 - A `package.json` file (for application metadata)
 
 ## License
 
 Apache-2.0
+
+## Optional Change Attribution
+
+Enable with `with-zephyr . --attribution`, install Git AI through the linked
+instructions, and optionally install project agent hooks. Then save and compare
+private source records, including local changes at the same Git commit:
+
+```bash
+ze-cli attribution status
+ze-cli attribution configure --storage local
+ze-cli attribution configure --storage remote --patches include --lines omit
+ze-cli attribution configure --storage local --local
+ze-cli attribution capture --format json
+ze-cli attribution compare <before-source-id> <after-source-id> --format json
+```
+
+`compare` also accepts local Zephyr snapshot IDs. Use `-C <project>` to select the
+repository. These commands do not authenticate or deploy. Source text stays in
+`zephyr-attribution/` under the worktree's private Git directory; comparisons need
+both records on that machine. Missing provenance is unknown. Recorded identities
+are self-reported, and removal attribution describes the removed line's original
+contributor rather than who deleted it.
+
+Opted-in run-mode builds capture source before the build command and again at
+snapshot creation. Prebuilt deployments report publication-only observations.
+Local storage (the default) emits no attribution in uploaded snapshots/build stats.
+Remote storage posts evidence to the dedicated endpoint and emits an acknowledged
+record reference; it requires authenticated policy/control-plane support. Free
+remote requires patches/changed lines; paid/BYOC defaults omit them. `configure`
+writes non-secret repo preferences; `--local` writes a private restriction that
+cannot enable remote sharing. See the bundled `zephyr-core` Change
+Attribution reference for source exclusions, limits, hook consent, and Git AI
+compatibility, and its `attribution-storage.md` for server requirements.

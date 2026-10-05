@@ -417,12 +417,12 @@ async function detectWebpackCommand(
       // Config loaded but couldn't extract output directory
       warnings.push(
         'Webpack configuration loaded but output directory could not be determined.',
-        'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
+        'Consider using zephyr-webpack-plugin or ze-cli deploy after building.'
       );
     } catch {
       warnings.push(
         'Failed to load Webpack configuration.',
-        'Consider using @zephyrcloud/webpack-plugin or ze-cli deploy after building.'
+        'Consider using zephyr-webpack-plugin or ze-cli deploy after building.'
       );
     }
   }
@@ -462,12 +462,12 @@ async function detectRollupCommand(
       // Config loaded but couldn't extract output directory
       warnings.push(
         'Rollup configuration loaded but output directory could not be determined.',
-        'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
+        'Consider using rollup-plugin-zephyr or ze-cli deploy after building.'
       );
     } catch {
       warnings.push(
         'Failed to load Rollup configuration.',
-        'Consider using @zephyrcloud/rollup-plugin or ze-cli deploy after building.'
+        'Consider using rollup-plugin-zephyr or ze-cli deploy after building.'
       );
     }
   }
@@ -545,12 +545,12 @@ async function detectViteCommand(
 
       warnings.push(
         'Failed to load Vite configuration.',
-        'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
+        'Consider using vite-plugin-zephyr or ze-cli deploy after building.'
       );
     } catch {
       warnings.push(
         'Failed to load Vite configuration.',
-        'Consider using @zephyrcloud/vite-plugin or ze-cli deploy after building.'
+        'Consider using vite-plugin-zephyr or ze-cli deploy after building.'
       );
     }
   }

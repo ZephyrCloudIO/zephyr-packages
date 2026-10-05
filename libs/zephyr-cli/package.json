@@ -1,12 +1,13 @@
 {
   "name": "zephyr-cli",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "CLI tool for running build commands and uploading assets to Zephyr",
   "keywords": [
     "build",
     "cli",
     "deploy",
     "runner",
+    "tanstack-intent",
     "zephyr"
   ],
   "license": "Apache-2.0",
@@ -23,6 +24,9 @@
     "ze-cli": "dist/index.js"
   },
   "files": [
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
     "dist",
     "README.md",
     "LICENSE",
@@ -61,6 +65,7 @@
     "provenance": true
   },
   "scripts": {
+    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

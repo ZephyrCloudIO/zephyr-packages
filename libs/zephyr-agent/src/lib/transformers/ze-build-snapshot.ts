@@ -15,6 +15,9 @@ import type { ZephyrEngine } from '../../zephyr-engine';
 import { ZeErrors, ZephyrError } from '../errors';
 import { getZephyrAgentVersion } from '../version/zephyr-agent-version';
 import { posix, win32 } from 'node:path';
+import { finishSourceCapture } from '../change-attribution/source';
+import { publishAttribution } from '../change-attribution/remote';
+import { logFn } from '../logging/ze-log-event';
 
 interface CreateSnapshotProps {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
@@ -109,6 +112,30 @@ export async function createSnapshot(
   };
 
   // Set snapshot type if SSR flag is enabled
+  if (zephyr_engine.sourceContext) {
+    const attribution = finishSourceCapture(
+      zephyr_engine.sourceContext,
+      zephyr_engine.sourceCapture,
+      snapshot.snapshot_id
+    );
+    // A snapshot can contain only an acknowledged remote reference, never the
+    // full evidence. Local mode performs no attribution credential/network work.
+    try {
+      snapshot.changeAttribution = await publishAttribution({
+        directory: zephyr_engine.sourceContext,
+        summary: attribution,
+        applicationUid: snapshot.application_uid,
+        buildId,
+        snapshotId: snapshot.snapshot_id,
+        appConfig: await zephyr_engine.application_configuration,
+      });
+    } catch {
+      logFn(
+        'warn',
+        'Remote attribution unavailable; evidence remains local and deployment will continue without an attribution reference.'
+      );
+    }
+  }
   if (zephyr_engine.env.ssr) {
     snapshot.type = 'ssr';
   }

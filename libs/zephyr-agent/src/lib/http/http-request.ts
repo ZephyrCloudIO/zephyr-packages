@@ -16,6 +16,8 @@ export type HttpResponse<T> =
   | [ok: false, error: Error];
 
 export interface HttpRequestOptions extends RequestInit {
+  /** Private evidence endpoints must not echo response bodies into diagnostics. */
+  sensitiveResponse?: boolean;
   /**
    * The credential this request authenticates with. A 401 invalidates only this
    * credential, so a delayed response cannot remove a newer token persisted by another
@@ -89,7 +91,12 @@ export async function makeHttpRequest<T = void>(
   data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const startTime = Date.now();
-  const { credentialToken, skipTokenCleanup = false, ...requestOptions } = options;
+  const {
+    credentialToken,
+    skipTokenCleanup = false,
+    sensitiveResponse = false,
+    ...requestOptions
+  } = options;
 
   try {
     const response = await fetchWithRetries(url, {
@@ -121,7 +128,13 @@ export async function makeHttpRequest<T = void>(
       });
     }
 
-    const message = redactResponse(url, requestOptions, data, resText, startTime);
+    const message = redactResponse(
+      url,
+      requestOptions,
+      data,
+      sensitiveResponse ? '[private response omitted]' : resText,
+      startTime
+    );
 
     if (resText.trim() === 'Not Implemented') {
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -140,8 +153,9 @@ export async function makeHttpRequest<T = void>(
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: response.status,
         url: redactUrl(url),
-        content:
-          typeof resData === 'string'
+        content: sensitiveResponse
+          ? 'Private endpoint rejected the request; response body omitted'
+          : typeof resData === 'string'
             ? redactString(resData)
             : safeStringifyForLogging(resData),
         method: requestOptions.method?.toUpperCase() ?? 'GET',

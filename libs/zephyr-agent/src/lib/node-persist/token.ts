@@ -285,10 +285,19 @@ function throwCiTokenAuthError(
     source: identity?.source ?? 'unknown',
     issuer: identity?.issuer ?? 'unknown',
     actorType: identity?.providerActorType ?? 'unknown',
-    resolution:
-      identity?.providerActorType === 'bot'
-        ? 'This bot is authorized by the CI token creator. Check that the token creator is still an active member of the Zephyr organization.'
-        : "Link this CI actor's Git provider account in Zephyr Cloud, then rerun the workflow. Zephyr uses linked Git provider identities to map provider-native CI actor data, such as GitHub actor IDs or GitLab user IDs/emails, to a Zephyr user.",
+    resolution: getCiTokenAuthResolution(identity),
     details,
   });
+}
+
+function getCiTokenAuthResolution(identity: CiTokenIdentity | undefined): string {
+  if (identity?.providerActorType === 'bot') {
+    return 'This bot is authorized by the CI token creator. Check that the token creator is still an active member of the Zephyr organization.';
+  }
+
+  if (identity?.provider === 'eas') {
+    return `Zephyr maps EAS builds to a user by the built commit's author or committer email (detected: ${identity.emails?.join(', ') || 'none'}). Make sure one of them belongs to an active Zephyr organization member, then rerun the build.`;
+  }
+
+  return "Link this CI actor's Git provider account in Zephyr Cloud, then rerun the workflow. Zephyr uses linked Git provider identities to map provider-native CI actor data, such as GitHub actor IDs or GitLab user IDs/emails, to a Zephyr user.";
 }

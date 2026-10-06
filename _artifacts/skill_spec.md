@@ -157,7 +157,7 @@ These deterministic checks do not establish fresh-agent selection or successful
 live deployment. Neither has been claimed as passing. Register additional SDK
 skills only after their developer task and implementation evidence are assessed.
 
-`scripts/verify-package-skills.mjs` (`pnpm skills:verify-packages`, run in CI
+`scripts/verify-package-skills.mjs` (`pnpm skills:verify-packages`, run
 after `pnpm build`) packs every published package into a disposable consumer.
 It requires the shared guides to match the canonical copies byte for byte, to be
 discoverable and loadable from the installed package at its version, to resolve
@@ -165,9 +165,8 @@ every local Markdown link inside the packed package, and to exclude
 maintainer-only metadata. `src/package-skills.spec.ts` covers the mirroring
 rules and asserts that every published manifest has the pack hook and allowlist.
 
-Root CI validation and release review remain read-only. They use the installed,
-lockfile-pinned Intent 0.5.0 and SHA-pinned actions. The workflow does not create
-review pull requests or publish fixes.
+No CI workflow runs the skill checks; maintainers run them locally with the
+installed, lockfile-pinned Intent 0.5.0.
 
 This workspace uses native TypeScript 7, whose default module does not expose
 the JavaScript compiler API required by Intent 0.5.0. `scripts/intent.mjs`

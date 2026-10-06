@@ -1,4 +1,4 @@
-export type CiProvider = 'gitlab' | 'github';
+export type CiProvider = 'gitlab' | 'github' | 'eas';
 
 export interface CiTokenIdentity {
   provider: CiProvider;
@@ -8,7 +8,7 @@ export interface CiTokenIdentity {
   providerSubject?: string;
   username?: string;
   providerActorType?: 'user' | 'bot';
-  source: 'jwt' | 'api' | 'env' | 'event' | 'noreply';
+  source: 'jwt' | 'api' | 'env' | 'event' | 'noreply' | 'git';
 }
 
 export interface CiIdentityProvider {

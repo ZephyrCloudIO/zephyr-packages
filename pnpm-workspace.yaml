@@ -113,6 +113,8 @@ minimumReleaseAgeExclude:
   - devalue@5.9.3
   # Renovate security update: postcss-selector-parser@7.1.6
   - postcss-selector-parser@7.1.6
+  # Renovate security update: sharp@0.35.5
+  - sharp@0.35.5
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

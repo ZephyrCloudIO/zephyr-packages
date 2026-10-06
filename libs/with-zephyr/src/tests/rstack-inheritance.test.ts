@@ -25,7 +25,12 @@ describe('Rstack inherited test compilation', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  function writeFixture(section: 'app' | 'lib', inlineProjects = false, unsafe = false) {
+  function writeFixture(
+    section: 'app' | 'lib',
+    inlineProjects = false,
+    unsafe = false,
+    globalGuard = false
+  ) {
     const traceFile = path.join(tempDir, 'compiler-trace.log');
     fs.mkdirSync(path.join(tempDir, 'src'));
     fs.mkdirSync(path.join(tempDir, 'node_modules', '@rstest'), { recursive: true });
@@ -107,7 +112,7 @@ describe('Rstack inherited test compilation', () => {
       `
       import { define } from 'rstack';
       import fs from 'node:fs';
-      ${unsafe ? "import { withZephyr } from 'zephyr-rsbuild-plugin';" : ''}
+      ${unsafe || globalGuard ? "import { withZephyr } from 'zephyr-rsbuild-plugin';" : ''}
       const inheritedPlugin = {
         name: 'inherited-plugin',
         setup(api) {
@@ -122,7 +127,7 @@ describe('Rstack inherited test compilation', () => {
       define.${section}({
         source: { entry: { index: './src/index.mjs' }, define: { FROM_CONFIG: JSON.stringify('config-kept') } },
         resolve: { alias: { 'inherited-alias': ${JSON.stringify(path.join(tempDir, 'src', 'alias.mjs'))} } },
-        plugins: [inheritedPlugin${unsafe ? ', withZephyr()' : ''}],
+        plugins: [inheritedPlugin${globalGuard ? ', ...(process.env.RSTEST ? [] : [withZephyr()])' : unsafe ? ', withZephyr()' : ''}],
         ${section === 'lib' ? "lib: [{ format: 'esm' }]," : ''}
       });
       define.test({
@@ -193,11 +198,43 @@ describe('Rstack inherited test compilation', () => {
     }
   );
 
-  it('rejects the original unsafe setup before any deployment can happen', () => {
+  it('unguarded setup reaches the deployment hook during rs test', () => {
     const traceFile = writeFixture('app', false, true);
     expect(runCli(['test', 'run'], true)).toContain('ZEPHYR_INITIALIZATION_REACHED');
     expect(fs.readFileSync(traceFile, 'utf8')).toContain('zephyr-initialization');
   });
+
+  it.each(['app', 'lib'] as const)(
+    'preserves an existing global %s guard through real test inheritance',
+    (section) => {
+      const traceFile = writeFixture(section, true, false, true);
+      const configPath = path.join(tempDir, 'rstack.config.mjs');
+      const original = fs.readFileSync(configPath, 'utf8');
+      const output = execFileSync(
+        process.execPath,
+        [
+          path.join(packageRoot, 'dist', 'index.js'),
+          tempDir,
+          '--bundlers',
+          'rstack',
+          '--no-attribution',
+        ],
+        {
+          encoding: 'utf8',
+          env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: undefined },
+        }
+      );
+      expect(output).toContain('Processed: 0');
+      expect(fs.readFileSync(configPath, 'utf8')).toBe(original);
+      expect(runCli(['test', 'run', '--reporter', 'verbose'])).toContain(
+        'ordinary inherited test'
+      );
+      const trace = fs.readFileSync(traceFile, 'utf8');
+      expect(trace).toContain('inherited-plugin');
+      expect(trace).not.toContain('zephyr-factory');
+      expect(trace).not.toContain('zephyr-initialization');
+    }
+  );
 
   it('still reaches the deployment compiler hook for an application build', () => {
     const traceFile = writeFixture('app');

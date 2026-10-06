@@ -41,7 +41,10 @@ function executeConfiguration(filePath: string, env: Record<string, string> = {}
     'zephyr-rsbuild-plugin': { withZephyr: pluginFactory('zephyr-rsbuild-plugin') },
     'zephyr-rspress-plugin': { withZephyr: pluginFactory('zephyr-rspress-plugin') },
   };
-  const values: Record<string, unknown> = { pluginReact: () => ({ name: 'react' }) };
+  const values: Record<string, unknown> = {
+    pluginReact: () => ({ name: 'react' }),
+    process: { env },
+  };
   const imports = root.findAll({ rule: { kind: 'import_statement' } });
   for (const statement of imports) {
     const module = modules[statement.field('source')!.text().slice(1, -1)];
@@ -427,6 +430,77 @@ describe('Rstack configuration', () => {
       expect(transform(section).status).toBe('no-match');
     }
   );
+
+  it.each([
+    ['app', 'process.env.RSTEST'],
+    ['app', "process.env['RSTEST']"],
+    ['lib', 'process.env.RSTEST'],
+    ['lib', "process.env['RSTEST']"],
+    ['app', 'process . env . RSTEST'],
+  ] as const)(
+    'preserves an existing %s global test guard: %s',
+    async (section, guard) => {
+      const original = `import { define } from 'rstack'; import { withZephyr } from 'zephyr-rsbuild-plugin'; define.${section}({ plugins: [pluginReact(), ...(${guard} ? [] : [withZephyr({ target: 'web' })])] });`;
+      fs.writeFileSync(filePath, original);
+      expect(hasZephyrCall(filePath, configFor(section)).status).toBe('changed');
+      expect(transform(section, true).status).toBe('no-match');
+      expect(transform(section).status).toBe('no-match');
+      expect(fs.readFileSync(filePath, 'utf8')).toBe(original);
+      const tests = executeConfiguration(filePath, { RSTEST: 'true' });
+      expect(
+        (await resolveDefinition(tests.definitions[section])).plugins.map(
+          (plugin) => plugin?.name
+        )
+      ).toEqual(['react']);
+      expect(tests.factoryCalls()).toBe(0);
+      const build = executeConfiguration(filePath);
+      expect(
+        (await resolveDefinition(build.definitions[section])).plugins.map(
+          (plugin) => plugin?.name
+        )
+      ).toEqual(['react', 'zephyr-rsbuild-plugin']);
+      expect(build.factoryCalls()).toBe(1);
+    }
+  );
+
+  it.each([
+    'define.app(() => { const process = { env: {} }; return { plugins: [pluginReact(), ...(process.env.RSTEST ? [] : [withZephyr()])] }; });',
+    '{ const process = { env: {} }; define.app({ plugins: [pluginReact(), ...(process.env.RSTEST ? [] : [withZephyr()])] }); }',
+    'define.app(({ process = { env: {} } }) => ({ plugins: [pluginReact(), ...(process.env.RSTEST ? [] : [withZephyr()])] }));',
+    '{ const process = { env: {} }; define.app({ plugins: [pluginReact(), ...(process . env . RSTEST ? [] : [withZephyr()])] }); }',
+  ])('does not trust a locally shadowed process guard: %s', async (configuration) => {
+    fs.writeFileSync(
+      filePath,
+      `import { define } from 'rstack'; import { withZephyr } from 'zephyr-rsbuild-plugin'; ${configuration}`
+    );
+    expect(hasZephyrCall(filePath, configFor('app')).status).toBe('no-match');
+    expect(transform('app').status).toBe('changed');
+    const tests = executeConfiguration(filePath, { RSTEST: 'true' });
+    expect(
+      (await resolveDefinition(tests.definitions.app)).plugins
+        .filter(Boolean)
+        .map((plugin) => plugin?.name)
+    ).toEqual(['react']);
+    expect(tests.factoryCalls()).toBe(0);
+    expect(transform('app').status).toBe('no-match');
+  });
+
+  it.each([
+    "import { env as process } from 'node:process';",
+    "import * as process from 'rstack';",
+    "import process from 'unrelated-process';",
+  ])('does not trust an imported binding named process: %s', (importStatement) => {
+    fs.writeFileSync(
+      filePath,
+      `import { define } from 'rstack'; import { withZephyr } from 'zephyr-rsbuild-plugin'; ${importStatement} define.app({ plugins: [...(process.env.RSTEST ? [] : [withZephyr()])] });`
+    );
+    expect(hasZephyrCall(filePath, configFor('app')).status).toBe('no-match');
+    expect(transform('app').status).toBe('changed');
+    expect(fs.readFileSync(filePath, 'utf8')).toMatch(
+      /(?:zephyrEnv|process)\['RSTEST'\] \? undefined : withZephyr\(\)/
+    );
+    expect(transform('app').status).toBe('no-match');
+  });
 
   it.each([
     'define.app(importedConfiguration);',

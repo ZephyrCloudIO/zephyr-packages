@@ -117,7 +117,11 @@ function boundNames(pattern: SgNode | null): string[] {
   )
     return [pattern.text()];
   if (pattern.kind() === 'pair_pattern') return boundNames(pattern.field('value'));
-  if (pattern.kind() === 'assignment_pattern') return boundNames(pattern.field('left'));
+  if (
+    pattern.kind() === 'assignment_pattern' ||
+    pattern.kind() === 'object_assignment_pattern'
+  )
+    return boundNames(pattern.field('left'));
   if (['required_parameter', 'optional_parameter'].includes(String(pattern.kind())))
     return boundNames(pattern.field('pattern'));
   if (
@@ -317,7 +321,42 @@ function testGuarded(call: SgNode, envBindings: string[]): boolean {
   return call.ancestors().some((ancestor) => {
     if (ancestor.kind() !== 'ternary_expression') return false;
     const condition = unwrap(ancestor.field('condition'));
-    const object = condition?.field('object')?.text();
+    const environment = unwrap(condition?.field('object') ?? null);
+    const object = environment?.text();
+    const globalProcessEnvironment =
+      environment?.kind() === 'member_expression' &&
+      environment.field('object')?.text() === 'process' &&
+      environment.field('property')?.text() === 'env' &&
+      !call
+        .ancestors()
+        .at(-1)!
+        .findAll({ rule: { kind: 'import_statement' } })
+        .some((statement) => {
+          if (/^import\s+type\b/.test(statement.text())) return false;
+          const clause = statement
+            .namedChildren()
+            .find((node) => node.kind() === 'import_clause');
+          if (
+            clause
+              ?.namedChildren()
+              .some((node) => node.kind() === 'identifier' && node.text() === 'process')
+          )
+            return true;
+          if (
+            statement
+              .findAll({ rule: { kind: 'namespace_import' } })
+              .some((namespace) => namespace.namedChildren().at(-1)?.text() === 'process')
+          )
+            return true;
+          return statement
+            .findAll({ rule: { kind: 'import_specifier' } })
+            .some(
+              (specifier) =>
+                !/^type\s/.test(specifier.text()) &&
+                (specifier.field('alias') ?? specifier.field('name'))?.text() ===
+                  'process'
+            );
+        });
     const key =
       condition?.kind() === 'subscript_expression'
         ? condition.field('index')?.text().slice(1, -1)
@@ -325,8 +364,8 @@ function testGuarded(call: SgNode, envBindings: string[]): boolean {
     if (
       key !== 'RSTEST' ||
       !object ||
-      !envBindings.includes(object) ||
-      shadowsBinding(call, object)
+      (!envBindings.includes(object) && !globalProcessEnvironment) ||
+      shadowsBinding(call, globalProcessEnvironment ? 'process' : object)
     )
       return false;
     return Boolean(

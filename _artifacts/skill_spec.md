@@ -180,6 +180,14 @@ commands; both the check scripts and CI use that wrapper.
 
 ## Coverage and batch history
 
+- 2026-10-06: At PR #655 baseline `42ff4993`, preserve existing global
+  `process.env.RSTEST` guards without redundant imports or nested guards, while
+  retaining safe handling of local/imported bindings named `process`. The
+  app/library ownership and test-inheritance behavior are unchanged. Rename the
+  unsafe compiler control to describe the deployment hook it reaches. Shared
+  SDK guidance owns the new no-op behavior; no skill identity or dependency
+  changes are needed.
+
 - Rstack review corrections for PR #655 at baseline `57851f24`: guard generated
   and existing direct app/library deployment registrations with Rstest's `RSTEST`
   signal, rather than disabling automatic test inheritance. Compiler

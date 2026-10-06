@@ -46,10 +46,10 @@
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "bc69bb60c5708ca81c65fb140427e896a368d568fee9c5f4fde6e9aafc8a3e46",
+      "fingerprint": "b82fedf07ff87699e759dd2d8e0d325cc1ced01166f621e6f1774c6b9db1029e",
       "snapshot": {
         "_artifacts/domain_map.yaml": "2b2b28b15857ea802f530a1d437194a3b919c520b66491ed58fadb41c8f1824f",
-        "_artifacts/skill_spec.md": "3312f6561aef13994ed94c002fd126e8577be28b43fed805ccd57ac6bd7fe268",
+        "_artifacts/skill_spec.md": "723e7669545f3078f600b682a748aa0b04deae2f2b78546660e253b5cb4aa257",
         "_artifacts/skill_tree.yaml": "cbcf3f2bcd7cc83544b7288a788620ed4e10589fc1eb73fa927c81bd5c5b535b",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "ecc40d6cbf7c60399c0f90241326af5800622311cd0dcb88ec09ab41714cd97f",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
@@ -102,7 +102,7 @@
         "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a2bbea26b9736583d2e9318ba61cd3c0b82e7075cf0ae94e3f84d18e4dd388f5",
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "b08bbc1cdab4bf538be5b09be970e7277ba039758718f1344df752d38bf601a5",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271",
-        "libs/with-zephyr/README.md": "35fab1a283ed39d14540bb2daaf39be9a34c7fdfa8a00ca14d85ac162ec00a99",
+        "libs/with-zephyr/README.md": "372736aea04ee76a6cc6be4f2469b3d35f14ad720e3c432bdc48740d2cad4aa1",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
         "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
         "libs/with-zephyr/src/bundlers/index.ts": "60f1f947e9214e2427403367bb89b79a57952b56c22710dc7b5d54100ebb6964",
@@ -110,12 +110,12 @@
         "libs/with-zephyr/src/engine/ast-grep.ts": "b2af0d2e8473b16327969f0993caa08f8c42cd30e4c1bcbe4f3f93d1a070da92",
         "libs/with-zephyr/src/index.ts": "5a9b03563beb20ac95acfe0423c908aa28c3b2276be6edf577185d87559133e8",
         "libs/with-zephyr/src/operations.ts": "b4c957be5a33ad5b0007a55cc17361b68a452647a32ceee404a3da90c13dc6ec",
-        "libs/with-zephyr/src/rstack.ts": "eb5ec4645487e830075c7b85d183c0869e8595dbeb527acc05ba36fd9094cb2d",
+        "libs/with-zephyr/src/rstack.ts": "95abc07bccb5848227537d0d9ed1dd84e3814a00f595e241d14e1e3129aaa7c3",
         "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
         "libs/with-zephyr/src/tests/bundler-configs.test.ts": "3dd4ee5b251e2a592f36680da399e0e8e78cfc8acda9266def85b39f15a27f6e",
         "libs/with-zephyr/src/tests/codemod.test.ts": "59c108769b67c55b8ab8913604da46ff285209a19ecec44724aef6a7ef40ab9c",
-        "libs/with-zephyr/src/tests/rstack-inheritance.test.ts": "309f7ff2d63e5f0f2780cf7cb57962f0e9603a5c43946631b78e6f10a77f0d3e",
-        "libs/with-zephyr/src/tests/rstack.test.ts": "303b7cd6fc7a2011f36096439115efbc889f513bbd86d1d4c3e0fefaf25eb3da",
+        "libs/with-zephyr/src/tests/rstack-inheritance.test.ts": "99ba8a3cf49350b0441389bdb670c0889463821dafd9fa57c89b449860940708",
+        "libs/with-zephyr/src/tests/rstack.test.ts": "757a1e6dd212bc82094c770969821c1cb804e6139ce2cf0eea9bcd5fefea3c78",
         "libs/with-zephyr/src/types.ts": "63002ab622766076fce9844e6266d261a4f9605e3ed10627c7b271372d490fd8",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
         "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "11b60d81ddaa3d3e6819ce011c01b21afe93606a7764243ffe92d717a6aae414",
@@ -265,7 +265,7 @@
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
         "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
-        "skills/zephyr-core/references/sdk-setup.md": "7ed48a113f240a0a93cc40863f670743216824af23cd613a762b8c90dcc50607",
+        "skills/zephyr-core/references/sdk-setup.md": "be4a20bec2ad1a0768807db097ed41a3f139551b7ca0efd4977293d54b23ec5a",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3",
         "skills/zephyr-module-federation/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
         "skills/zephyr-module-federation/README.md": "5ab281a4d1ca1bd5541a979a1793f19442df4eede3044c42856b5c29c9fdfb9d",
@@ -276,16 +276,16 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "57851f2464cf4244380713ede0c6331086899bcd",
+      "head": "42ff499341d1a61e696becfd692e294cf893020a",
       "outcome": "updated",
-      "reason": "Reconciled all three existing records for the four accepted Pullfrog findings on PR #655: test-safe app/library registration without disabling inheritance, lexical binding resolution, nested-method return ownership, and actual plugin-list registration detection. Existing distribution decisions and unrelated tasks remain intact.",
+      "reason": "Reviewed all three established planning records. skill_spec records preserving an unshadowed global process.env.RSTEST guard at baseline 42ff4993 and the sentinel control rename. domain_map and skill_tree require no content change because SDK-adoption ownership, test-safety semantics, skill identity, mapped source/test paths, and dependencies remain unchanged. Prior scope and remaining work are preserved.",
       "evidence": [
-        "Source baseline 57851f24; with-zephyr version 1.5.0; pinned development-only rstack@0.8.0, published September 22, 2026; upstream repository active and not archived.",
-        "pnpm --filter with-zephyr test: 243 tests passed across 8 files, including runtime/rerun tests for factory-local function, block, class, and loop bindings; nested object/class methods; unused closures and metadata; environment guards; and all four config formats.",
-        "Six real Rstack CLI compiler regressions passed: ordinary rs test with app/library automatic inheritance and inline projects retains aliases, configuration defines, and another plugin transform while invoking zero Zephyr factories or initialization hooks. The original unsafe configuration reaches a throwing initialization sentinel; rs build still reaches the sentinel. No live deployment occurs.",
-        "pnpm install --frozen-lockfile passed supply-chain checks. The added Rstack dependency closure preserves every prior importer dependency and existing package/snapshot resolution; all lockfile changes are additions for that development-only closure.",
-        "pnpm --filter with-zephyr build; full repository typecheck (28 tasks across 23 packages); pnpm format:check; pnpm lint; publint strict/warning; git diff --check: passed.",
-        "pnpm skills:intent validate skills passed for both shared skills; tree metadata synchronized. The activation description is unchanged. Fresh consumer-agent discovery remains unverified."
+        "PR #655 baseline 42ff499341d1a61e696becfd692e294cf893020a; with-zephyr 1.5.0. Latest Pullfrog comment 4189623016 requested preserving global process.env guards; review summary also requested clarifying the unsafe sentinel test name.",
+        "pnpm --filter with-zephyr exec rstest run src/tests/rstack.test.ts src/tests/rstack-inheritance.test.ts: all 64 focused tests passed.",
+        "pnpm --filter with-zephyr test: all 257 tests passed across 8 files, covering global dot/bracket guards for app/lib, formatted property access, dry-run and real no-op transforms, preserved source bytes, build behavior, and local/parameter/destructuring/import process shadows.",
+        "The real pinned Rstack 0.8.0 CLI compiler tests preserve existing global guards unchanged for app/lib with inline test projects, keep inherited alias/defines/another plugin transform, and record zero Zephyr factory or initialization calls. All 8 inheritance/compiler cases pass; no deployment is sent.",
+        "Package build, repository typecheck (28 successful tasks across 23 packages), format:check, lint, strict/warning publint, and git diff --check passed. No dependencies or lockfile changes.",
+        "Shared skill structural validation passed for both shared skills. Entry activation descriptions, source mappings, and prerequisites are unchanged; fresh consumer-agent discovery was not rerun and no live deployment is claimed."
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -329,9 +329,9 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "857ca64b62290468382f0d2c5d69cbd5ae0b9858f4ab01790d15d16d0b7529da",
+      "fingerprint": "967a019fcd7947f51f41eb683a075fe55489e5db440a8f430205964e3f9fa427",
       "snapshot": {
-        "libs/with-zephyr/README.md": "35fab1a283ed39d14540bb2daaf39be9a34c7fdfa8a00ca14d85ac162ec00a99",
+        "libs/with-zephyr/README.md": "372736aea04ee76a6cc6be4f2469b3d35f14ad720e3c432bdc48740d2cad4aa1",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
         "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
         "libs/with-zephyr/src/bundlers/index.ts": "60f1f947e9214e2427403367bb89b79a57952b56c22710dc7b5d54100ebb6964",
@@ -339,12 +339,12 @@
         "libs/with-zephyr/src/engine/ast-grep.ts": "b2af0d2e8473b16327969f0993caa08f8c42cd30e4c1bcbe4f3f93d1a070da92",
         "libs/with-zephyr/src/index.ts": "5a9b03563beb20ac95acfe0423c908aa28c3b2276be6edf577185d87559133e8",
         "libs/with-zephyr/src/operations.ts": "b4c957be5a33ad5b0007a55cc17361b68a452647a32ceee404a3da90c13dc6ec",
-        "libs/with-zephyr/src/rstack.ts": "eb5ec4645487e830075c7b85d183c0869e8595dbeb527acc05ba36fd9094cb2d",
+        "libs/with-zephyr/src/rstack.ts": "95abc07bccb5848227537d0d9ed1dd84e3814a00f595e241d14e1e3129aaa7c3",
         "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
         "libs/with-zephyr/src/tests/bundler-configs.test.ts": "3dd4ee5b251e2a592f36680da399e0e8e78cfc8acda9266def85b39f15a27f6e",
         "libs/with-zephyr/src/tests/codemod.test.ts": "59c108769b67c55b8ab8913604da46ff285209a19ecec44724aef6a7ef40ab9c",
-        "libs/with-zephyr/src/tests/rstack-inheritance.test.ts": "309f7ff2d63e5f0f2780cf7cb57962f0e9603a5c43946631b78e6f10a77f0d3e",
-        "libs/with-zephyr/src/tests/rstack.test.ts": "303b7cd6fc7a2011f36096439115efbc889f513bbd86d1d4c3e0fefaf25eb3da",
+        "libs/with-zephyr/src/tests/rstack-inheritance.test.ts": "99ba8a3cf49350b0441389bdb670c0889463821dafd9fa57c89b449860940708",
+        "libs/with-zephyr/src/tests/rstack.test.ts": "757a1e6dd212bc82094c770969821c1cb804e6139ce2cf0eea9bcd5fefea3c78",
         "libs/with-zephyr/src/types.ts": "63002ab622766076fce9844e6266d261a4f9605e3ed10627c7b271372d490fd8",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
         "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "11b60d81ddaa3d3e6819ce011c01b21afe93606a7764243ffe92d717a6aae414",
@@ -383,19 +383,19 @@
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
         "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
-        "skills/zephyr-core/references/sdk-setup.md": "7ed48a113f240a0a93cc40863f670743216824af23cd613a762b8c90dcc50607",
+        "skills/zephyr-core/references/sdk-setup.md": "be4a20bec2ad1a0768807db097ed41a3f139551b7ca0efd4977293d54b23ec5a",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "57851f2464cf4244380713ede0c6331086899bcd",
+      "head": "42ff499341d1a61e696becfd692e294cf893020a",
       "outcome": "updated",
-      "reason": "Updated Rstack SDK adoption guidance to guard generated and existing direct app/library registrations using the real Rstest signal, retain other inherited plugins/aliases/transforms, preserve nested method returns, and avoid shadowed imports or callback/metadata false positives. The existing zephyr-core task still owns setup.",
+      "reason": "Updated the package README and existing zephyr-core SDK setup reference to state that genuine global process.env.RSTEST and bracket-access guards are kept byte-for-byte without redundant imports/wrappers. Local and imported process bindings remain conservatively guarded. Added object-assignment-pattern binding recognition for destructuring-default shadow safety and renamed the unsafe compiler control accurately.",
       "evidence": [
-        "Source baseline 57851f24; with-zephyr version 1.5.0; pinned development-only rstack@0.8.0, published September 22, 2026; upstream repository active and not archived.",
-        "pnpm --filter with-zephyr test: 243 tests passed across 8 files, including runtime/rerun tests for factory-local function, block, class, and loop bindings; nested object/class methods; unused closures and metadata; environment guards; and all four config formats.",
-        "Six real Rstack CLI compiler regressions passed: ordinary rs test with app/library automatic inheritance and inline projects retains aliases, configuration defines, and another plugin transform while invoking zero Zephyr factories or initialization hooks. The original unsafe configuration reaches a throwing initialization sentinel; rs build still reaches the sentinel. No live deployment occurs.",
-        "pnpm install --frozen-lockfile passed supply-chain checks. The added Rstack dependency closure preserves every prior importer dependency and existing package/snapshot resolution; all lockfile changes are additions for that development-only closure.",
-        "pnpm --filter with-zephyr build; full repository typecheck (28 tasks across 23 packages); pnpm format:check; pnpm lint; publint strict/warning; git diff --check: passed.",
-        "pnpm skills:intent validate skills passed for both shared skills; tree metadata synchronized. The activation description is unchanged. Fresh consumer-agent discovery remains unverified."
+        "PR #655 baseline 42ff499341d1a61e696becfd692e294cf893020a; with-zephyr 1.5.0. Latest Pullfrog comment 4189623016 requested preserving global process.env guards; review summary also requested clarifying the unsafe sentinel test name.",
+        "pnpm --filter with-zephyr exec rstest run src/tests/rstack.test.ts src/tests/rstack-inheritance.test.ts: all 64 focused tests passed.",
+        "pnpm --filter with-zephyr test: all 257 tests passed across 8 files, covering global dot/bracket guards for app/lib, formatted property access, dry-run and real no-op transforms, preserved source bytes, build behavior, and local/parameter/destructuring/import process shadows.",
+        "The real pinned Rstack 0.8.0 CLI compiler tests preserve existing global guards unchanged for app/lib with inline test projects, keep inherited alias/defines/another plugin transform, and record zero Zephyr factory or initialization calls. All 8 inheritance/compiler cases pass; no deployment is sent.",
+        "Package build, repository typecheck (28 successful tasks across 23 packages), format:check, lint, strict/warning publint, and git diff --check passed. No dependencies or lockfile changes.",
+        "Shared skill structural validation passed for both shared skills. Entry activation descriptions, source mappings, and prerequisites are unchanged; fresh consumer-agent discovery was not rerun and no live deployment is claimed."
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {

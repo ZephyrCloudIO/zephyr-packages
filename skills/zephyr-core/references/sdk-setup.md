@@ -173,6 +173,10 @@ expressions, not calls inside nested callbacks, methods, or metadata. Factory
 rewrites leave nested object/class method returns untouched and only reuse
 imports when no enclosing lexical declaration shadows them.
 
+Existing global `process.env.RSTEST` and `process.env['RSTEST']` guards remain
+unchanged, including imports. A local or imported `process` binding is not trusted
+as the global guard and still receives the collision-free environment guard.
+
 Malformed Rstack files are isolated to that file; other selected configurations
 still run. The bundler filter excludes other tools before parsing their files.
 

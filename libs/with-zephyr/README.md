@@ -155,6 +155,11 @@ plugins, aliases, and compiler transforms remain available, and ordinary build
 commands still include Zephyr. The imported environment binding is chosen to
 avoid local shadowing.
 
+An existing `process.env.RSTEST` or `process.env['RSTEST']` guard is preserved
+without an extra import or nested guard when `process` refers to the global.
+Locally declared or imported bindings named `process` do not count as that global
+guard, so those registrations still receive the safe imported environment guard.
+
 Inline objects and synchronous or asynchronous functions returning inline
 objects are supported. Imported configuration objects or functions and spreads
 without an explicit `plugins` property require manual setup; the codemod reports

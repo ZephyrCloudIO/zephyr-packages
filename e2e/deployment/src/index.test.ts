@@ -67,15 +67,18 @@ for (const appName of testTargets) {
           console.log(
             'Skipping asset check for SSR app. Verifying index page response only.'
           );
-          const res = await fetchWithRetries(url, 3);
+          const res = await fetchWithRetries(url, 3, Date.now() + NOT_FOUND_GRACE_MS);
           expect(res.status).toBe(200);
           expect(res.ok).toBe(true);
           return;
         }
+        // One deadline for the whole app keeps a genuinely missing asset from
+        // stretching the test by the grace period per asset.
+        const notFoundGraceUntil = Date.now() + NOT_FOUND_GRACE_MS;
         const assetEntries = Object.values(deployResult.snapshot.assets);
         await mapWithConcurrency(assetEntries, 8, async (asset) => {
           const assetUrl = new URL(asset.path.replace(/^\/+/, ''), baseUrl).toString();
-          await fetchWithRetries(assetUrl, 4);
+          await fetchWithRetries(assetUrl, 4, notFoundGraceUntil);
         });
       },
       60 * 1000
@@ -83,15 +86,16 @@ for (const appName of testTargets) {
   });
 }
 
-async function fetchWithRetries(url: string, maxAttempts = 1): Promise<Response> {
+async function fetchWithRetries(
+  url: string,
+  maxAttempts = 1,
+  notFoundGraceUntil = 0
+): Promise<Response> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const response = await fetch(url, {
-        method: 'HEAD',
-        signal: AbortSignal.timeout(15_000),
-      });
+      const response = await headWithNotFoundGrace(url, notFoundGraceUntil);
       if (response.ok) return response;
 
       const retryable =
@@ -111,9 +115,7 @@ async function fetchWithRetries(url: string, maxAttempts = 1): Promise<Response>
       if (attempt === maxAttempts) break;
     }
 
-    const exponentialDelay = Math.min(2_000, 200 * 2 ** (attempt - 1));
-    const jitter = Math.floor(Math.random() * Math.max(1, exponentialDelay / 4));
-    await new Promise((resolve) => setTimeout(resolve, exponentialDelay + jitter));
+    await backoff(attempt);
   }
 
   const detail = lastError instanceof Error ? lastError.message : String(lastError);
@@ -126,6 +128,32 @@ async function fetchWithRetries(url: string, maxAttempts = 1): Promise<Response>
 }
 
 class NonRetryableResponseError extends Error {}
+
+// Snapshot and assets upload concurrently, so each file of a fresh deployment
+// can return 404 for a few seconds before the edge serves it.
+const NOT_FOUND_GRACE_MS = 30_000;
+
+// Retries 404s until the deadline, then returns the response so the caller's
+// strict status handling reports anything still missing.
+async function headWithNotFoundGrace(
+  url: string,
+  notFoundGraceUntil: number
+): Promise<Response> {
+  for (let attempt = 1; ; attempt += 1) {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (response.status !== 404 || Date.now() >= notFoundGraceUntil) return response;
+    await backoff(attempt);
+  }
+}
+
+async function backoff(attempt: number): Promise<void> {
+  const exponentialDelay = Math.min(2_000, 200 * 2 ** (attempt - 1));
+  const jitter = Math.floor(Math.random() * Math.max(1, exponentialDelay / 4));
+  await new Promise((resolve) => setTimeout(resolve, exponentialDelay + jitter));
+}
 
 async function mapWithConcurrency<T>(
   items: readonly T[],

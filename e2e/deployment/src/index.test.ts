@@ -67,14 +67,19 @@ for (const appName of testTargets) {
           console.log(
             'Skipping asset check for SSR app. Verifying index page response only.'
           );
+          await waitUntilServed(url);
           const res = await fetchWithRetries(url, 3);
           expect(res.status).toBe(200);
           expect(res.ok).toBe(true);
           return;
         }
-        const assetEntries = Object.values(deployResult.snapshot.assets);
-        await mapWithConcurrency(assetEntries, 8, async (asset) => {
-          const assetUrl = new URL(asset.path.replace(/^\/+/, ''), baseUrl).toString();
+        const assetUrls = Object.values(deployResult.snapshot.assets).map((asset) =>
+          new URL(asset.path.replace(/^\/+/, ''), baseUrl).toString()
+        );
+        const probeUrl =
+          assetUrls.find((assetUrl) => assetUrl.endsWith('/index.html')) ?? assetUrls[0];
+        if (probeUrl) await waitUntilServed(probeUrl);
+        await mapWithConcurrency(assetUrls, 8, async (assetUrl) => {
           await fetchWithRetries(assetUrl, 4);
         });
       },
@@ -111,9 +116,7 @@ async function fetchWithRetries(url: string, maxAttempts = 1): Promise<Response>
       if (attempt === maxAttempts) break;
     }
 
-    const exponentialDelay = Math.min(2_000, 200 * 2 ** (attempt - 1));
-    const jitter = Math.floor(Math.random() * Math.max(1, exponentialDelay / 4));
-    await new Promise((resolve) => setTimeout(resolve, exponentialDelay + jitter));
+    await backoff(attempt);
   }
 
   const detail = lastError instanceof Error ? lastError.message : String(lastError);
@@ -126,6 +129,27 @@ async function fetchWithRetries(url: string, maxAttempts = 1): Promise<Response>
 }
 
 class NonRetryableResponseError extends Error {}
+
+// A fresh deployment can return 404 for a few seconds before the edge serves
+// it. Poll until it stops returning 404, then let the strict checks report any
+// real failure; after the timeout, return and let those checks fail.
+async function waitUntilServed(url: string, timeoutMs = 30_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  for (let attempt = 1; Date.now() < deadline; attempt += 1) {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(15_000),
+    }).catch(() => undefined);
+    if (response && response.status !== 404) return;
+    await backoff(attempt);
+  }
+}
+
+async function backoff(attempt: number): Promise<void> {
+  const exponentialDelay = Math.min(2_000, 200 * 2 ** (attempt - 1));
+  const jitter = Math.floor(Math.random() * Math.max(1, exponentialDelay / 4));
+  await new Promise((resolve) => setTimeout(resolve, exponentialDelay + jitter));
+}
 
 async function mapWithConcurrency<T>(
   items: readonly T[],

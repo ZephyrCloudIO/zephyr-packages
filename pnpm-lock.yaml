@@ -479,6 +479,13 @@ overrides:
   socket.io-parser@>=4.0.0 <4.2.7: 4.2.7
   tar@<=7.5.20: 7.5.22
   ts-deepmerge@<8.0.0: 8.0.0
+  '@xhmikosr/decompress@>=11.0.0 <=11.1.3': 11.1.4
+  engine.io@>=6.6.0 <6.6.10: 6.6.10
+  fast-uri@>=3.0.0 <3.1.8: 3.1.8
+  piscina@>=4.0.0 <4.9.4: 4.9.4
+  undici@>=7.24.1 <7.29.1: 7.29.1
+  undici@>=8.0.0 <8.10.2: 8.10.2
+  webpack-dev-middleware@>=8.0.0 <8.3.0: 8.3.0
 
 patchedDependencies:
   '@rspress/runtime@1.47.2': 508bc0489afc2265f6f151152cf5a80627830a537f43c78e9bf0287a8cec1b54
@@ -8590,6 +8597,10 @@ packages:
     resolution: {integrity: sha512-4AkVR1SoqTxYY22IRRYKDeLirPIDGqMqYsqgjKYuwhgRcBb+yDP4t5Xph33UCzL/nahK/aADmlMEjTNstbX7kw==}
     engines: {node: '>=20'}
 
+  '@xhmikosr/decompress-tar@9.0.2':
+    resolution: {integrity: sha512-8nPZ6lZ3ExhsSxi/X/PMB3K+Vtsuxk43HowxYpxw4AsCHTYqFBXwC8B3Y+M/meaUOGOVm+2tFNUAfWGRjBt+Ww==}
+    engines: {node: '>=20'}
+
   '@xhmikosr/decompress-tarbz2@9.0.2':
     resolution: {integrity: sha512-m0DvZhE7remCxtS8xY2iHSjivT4v+iyYDdfNoeuu8Nm+7g8xEXdLKSyDEicu4u1ImJLLGEfjMuTLera/F6UGWw==}
     engines: {node: '>=20'}
@@ -8602,8 +8613,8 @@ packages:
     resolution: {integrity: sha512-2MS94QnmXQwjkKN8WyFiu1sU7J3rcWJcMze4kRYsX7tN+CXpUGECgkh4YSOhujpkWPuVlFudIziJHO/TxOqkQQ==}
     engines: {node: '>=20'}
 
-  '@xhmikosr/decompress@11.1.3':
-    resolution: {integrity: sha512-NiyhJq6z7ERsYghcnXZUI6ooDXgZtoB+G9eUsYhfSM4VLp2rKx9UxhKI1NEf1PqosrNPxG3bnSsr2UBVbNurlg==}
+  '@xhmikosr/decompress@11.1.4':
+    resolution: {integrity: sha512-ZbYL7SAfY37/TMpopqBR3mQiuQ76kI/RNpN4q82YHSw/UxktZNy8P4wgiKPSrTImMAWRaUG8UK1pgEa56YdLaw==}
     engines: {node: '>=20'}
 
   '@xhmikosr/downloader@16.2.0':
@@ -10007,8 +10018,8 @@ packages:
     resolution: {integrity: sha512-HqD3yTBfnBxIrbnM1DoD6Pcq8NECnh8d4As1Qgh0z5Gg3jRRIqijury0CL3ghu/edArpUYiYqQiDUQBIs4np3Q==}
     engines: {node: '>=10.0.0'}
 
-  engine.io@6.6.9:
-    resolution: {integrity: sha512-clKkw4C7nJ22mGgoVcCg6V/W/TxdNyIOTr89k2ONZu81qqkddPFDF0LXcbAwhzPD8DjkiRCjzuiO6Y+fkpD4vg==}
+  engine.io@6.6.10:
+    resolution: {integrity: sha512-9/lX2bdlizlCXMHRMOIm03VBQHQYC7VvydcxtTAUJRxNW1QzM/2PMFSmr6h/lCiMHcyCP6abK+t9Q+j4vekk8Q==}
     engines: {node: '>=10.2.0'}
 
   enhanced-resolve@5.18.0:
@@ -10328,8 +10339,8 @@ packages:
   fast-string-width@3.0.2:
     resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
 
-  fast-uri@3.1.6:
-    resolution: {integrity: sha512-7Ical1vFEMr0onbVzEDIreM22I4khW+fzyQPwvAFWBp1iwdshSZRsL4jjRvPG9JP1uiqMHRto+YU6R2/CzDz5Q==}
+  fast-uri@3.1.8:
+    resolution: {integrity: sha512-GZMtZUTNRpOVIECoXwLNZS5xUGE+mVNbTB8h/7Rwh2TFWcBQiPzTgyZi05BF9UMZKkLJv8XBRJTlU7zg8+ZfMg==}
 
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
@@ -12967,8 +12978,8 @@ packages:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
 
-  piscina@4.9.3:
-    resolution: {integrity: sha512-3e3ka9QCE8RJ5I9uszdAADZnkcYi21cqmF3gxox3u884N72qpFHCsIVhHt8cEQ9t3Auq/NqoiCEuhxlxxQuDWA==}
+  piscina@4.9.4:
+    resolution: {integrity: sha512-RyBDr2VheQ8ZfH3N8SzQZHztqVyOtadTwLnUYof6gdj5161/eu2wNhCbGl5GHnNKDpnkicJYpKtL2J+y/gk6XA==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -13669,6 +13680,10 @@ packages:
 
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
+    engines: {node: '>= 0.6'}
+
+  range-parser@1.3.0:
+    resolution: {integrity: sha512-hek2mFQpPuI4E1BBKrSto+BU3e3x4xuarsbiwr3+lf7p44juvFMV0XFWQAP3xUyqXA4RrXLIoaSUGbSt056ZMw==}
     engines: {node: '>= 0.6'}
 
   raw-body@3.0.2:
@@ -15123,16 +15138,12 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
-  undici@7.29.0:
-    resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
+  undici@7.29.1:
+    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
     engines: {node: '>=20.18.1'}
 
-  undici@8.10.0:
-    resolution: {integrity: sha512-HvltHd7avK13QIw/oLe4qoOLyoVSoafqJ2jYOrtMRBkbYT31eiBQ8O0ehRKZiEZCMEyLFQNIADpgCWC5fALvYQ==}
-    engines: {node: '>=22.19.0'}
-
-  undici@8.10.1:
-    resolution: {integrity: sha512-YQ3WlbqjYMmNpdvDH64jAgLjxuAR9+649calDWhbshYaeQGO2bR4nI94ORJmwI3J9YhoKQnpyGOK+0zlWS5N5Q==}
+  undici@8.10.2:
+    resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
     engines: {node: '>=22.19.0'}
 
   unenv@2.0.0-rc.24:
@@ -15703,8 +15714,8 @@ packages:
       webpack-dev-server:
         optional: true
 
-  webpack-dev-middleware@8.0.3:
-    resolution: {integrity: sha512-zWrde9VZDiRaFuWsjHO40wm9LxxtXEk8DdzFXdU7eU5ZpiANnZZDBbZgN3guxbEoKqUHd9YupBmynyioz42nkA==}
+  webpack-dev-middleware@8.3.0:
+    resolution: {integrity: sha512-jFNNMB29ugmkEUFW9cpWNqcWFQNwuMTMVoRpKVAiz/5nh3gA4x9x6DRPhNHGc/SLre7pEP9yrAPDAmCvdCblKg==}
     engines: {node: '>= 20.9.0'}
     peerDependencies:
       webpack: ^5.101.0
@@ -18665,7 +18676,7 @@ snapshots:
       adm-zip: 0.6.1
       isomorphic-ws: 5.0.0(ws@8.21.0)
       typescript: 7.0.2
-      undici: 7.29.0
+      undici: 7.29.1
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
@@ -21931,7 +21942,7 @@ snapshots:
       '@xhmikosr/bin-wrapper': 14.4.0(supports-color@10.2.2)
       commander: 8.3.0
       minimatch: 9.0.9
-      piscina: 4.9.3
+      piscina: 4.9.4
       semver: 7.8.4
       slash: 3.0.0
       source-map: 0.7.6
@@ -23328,6 +23339,16 @@ snapshots:
       - react-native-b4a
       - supports-color
 
+  '@xhmikosr/decompress-tar@9.0.2(supports-color@10.2.2)':
+    dependencies:
+      file-type: 21.3.4(supports-color@10.2.2)
+      is-stream: 4.0.1
+      tar-stream: 3.1.7
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - react-native-b4a
+      - supports-color
+
   '@xhmikosr/decompress-tarbz2@9.0.2(supports-color@10.2.2)':
     dependencies:
       '@xhmikosr/decompress-tar': 9.0.1(supports-color@10.2.2)
@@ -23358,9 +23379,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@xhmikosr/decompress@11.1.3(supports-color@10.2.2)':
+  '@xhmikosr/decompress@11.1.4(supports-color@10.2.2)':
     dependencies:
-      '@xhmikosr/decompress-tar': 9.0.1(supports-color@10.2.2)
+      '@xhmikosr/decompress-tar': 9.0.2(supports-color@10.2.2)
       '@xhmikosr/decompress-tarbz2': 9.0.2(supports-color@10.2.2)
       '@xhmikosr/decompress-targz': 9.0.1(supports-color@10.2.2)
       '@xhmikosr/decompress-unzip': 8.2.1(supports-color@10.2.2)
@@ -23374,7 +23395,7 @@ snapshots:
   '@xhmikosr/downloader@16.2.0(supports-color@10.2.2)':
     dependencies:
       '@xhmikosr/archive-type': 8.1.0(supports-color@10.2.2)
-      '@xhmikosr/decompress': 11.1.3(supports-color@10.2.2)
+      '@xhmikosr/decompress': 11.1.4(supports-color@10.2.2)
       content-disposition: 2.0.1
       ext-name: 5.0.0
       file-type: 21.3.4(supports-color@10.2.2)
@@ -23464,7 +23485,7 @@ snapshots:
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.6
+      fast-uri: 3.1.8
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -24844,13 +24865,12 @@ snapshots:
 
   engine.io-parser@5.2.3: {}
 
-  engine.io@6.6.9(supports-color@10.2.2):
+  engine.io@6.6.10(supports-color@10.2.2):
     dependencies:
       '@types/cors': 2.8.19
       '@types/node': 26.4.1
       '@types/ws': 8.18.1
       accepts: 1.3.8
-      base64id: 2.0.0
       cookie: 0.7.2
       cors: 2.8.5
       debug: 4.4.3(supports-color@10.2.2)
@@ -25299,7 +25319,7 @@ snapshots:
       parseurl: 1.3.3
       proxy-addr: 2.0.7
       qs: 6.16.0
-      range-parser: 1.2.1
+      range-parser: 1.3.0
       router: 2.2.0(supports-color@10.2.2)
       send: 1.2.1(supports-color@10.2.2)
       serve-static: 2.2.1(supports-color@10.2.2)
@@ -25358,7 +25378,7 @@ snapshots:
     dependencies:
       fast-string-truncated-width: 3.0.3
 
-  fast-uri@3.1.6: {}
+  fast-uri@3.1.8: {}
 
   fast-wrap-ansi@0.2.2:
     dependencies:
@@ -26590,7 +26610,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.2
-      undici: 8.10.1
+      undici: 8.10.2
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -28159,7 +28179,7 @@ snapshots:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.4(@types/node@24.13.3)
-      undici: 7.29.0
+      undici: 7.29.1
       workerd: 1.20260903.1
       ws: 8.21.0
       youch: 4.1.0-beta.10
@@ -28671,7 +28691,7 @@ snapshots:
       ultrahtml: 1.7.0
       uncrypto: 0.1.3
       unctx: 3.0.0(magic-string@1.1.0)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
-      undici: 8.10.0
+      undici: 8.10.2
       unhead: 3.3.1(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
       unimport: 6.4.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
@@ -28813,7 +28833,7 @@ snapshots:
       ultrahtml: 1.7.0
       uncrypto: 0.1.3
       unctx: 3.0.0(magic-string@1.1.0)(rolldown@1.2.7)(unplugin@3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3))
-      undici: 8.10.0
+      undici: 8.10.2
       unhead: 3.3.1(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
       unimport: 6.4.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
       unplugin: 3.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3)
@@ -29265,7 +29285,7 @@ snapshots:
 
   picomatch@4.0.7: {}
 
-  piscina@4.9.3:
+  piscina@4.9.4:
     optionalDependencies:
       '@napi-rs/nice': 1.1.1
 
@@ -29923,6 +29943,8 @@ snapshots:
   range-parser@1.2.0: {}
 
   range-parser@1.2.1: {}
+
+  range-parser@1.3.0: {}
 
   raw-body@3.0.2:
     dependencies:
@@ -30908,7 +30930,7 @@ snapshots:
       mime-types: 3.0.2
       ms: 2.1.3
       on-finished: 2.4.1
-      range-parser: 1.2.1
+      range-parser: 1.3.0
       statuses: 2.0.2
     transitivePeerDependencies:
       - supports-color
@@ -31180,7 +31202,7 @@ snapshots:
       base64id: 2.0.0
       cors: 2.8.5
       debug: 4.3.7(supports-color@10.2.2)
-      engine.io: 6.6.9(supports-color@10.2.2)
+      engine.io: 6.6.10(supports-color@10.2.2)
       socket.io-adapter: 2.5.8(supports-color@10.2.2)
       socket.io-parser: 4.2.7(supports-color@10.2.2)
     transitivePeerDependencies:
@@ -31796,11 +31818,9 @@ snapshots:
 
   undici-types@8.3.0: {}
 
-  undici@7.29.0: {}
+  undici@7.29.1: {}
 
-  undici@8.10.0: {}
-
-  undici@8.10.1: {}
+  undici@8.10.2: {}
 
   unenv@2.0.0-rc.24:
     dependencies:
@@ -31886,7 +31906,7 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
       ohash: 2.0.12
-      undici: 8.10.1
+      undici: 8.10.2
 
   unimport@6.3.0(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.7)(rollup@4.62.2)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3):
     dependencies:
@@ -32510,12 +32530,12 @@ snapshots:
       webpack-dev-server: 6.0.0(supports-color@10.2.2)(webpack-cli@7.2.3)(webpack@5.110.3)
     optional: true
 
-  webpack-dev-middleware@8.0.3(webpack@5.110.3):
+  webpack-dev-middleware@8.3.0(webpack@5.110.3):
     dependencies:
+      ansi-html-community: 0.0.8
       memfs: 4.69.1
       mime-types: 3.0.2
-      on-finished: 2.4.1
-      range-parser: 1.2.1
+      range-parser: 1.3.0
       schema-utils: 4.3.3
     optionalDependencies:
       webpack: 5.110.3(@swc/core@1.16.1(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@8.0.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(lightningcss@1.33.0)(postcss@8.5.28)(sharp@0.35.4(@types/node@24.13.3))(svgo@4.1.0)(webpack-cli@7.2.3)
@@ -32545,7 +32565,7 @@ snapshots:
       selfsigned: 5.5.0
       serve-index: 1.9.2(supports-color@10.2.2)
       tinyglobby: 0.2.17
-      webpack-dev-middleware: 8.0.3(webpack@5.110.3)
+      webpack-dev-middleware: 8.3.0(webpack@5.110.3)
       ws: 8.21.3
     optionalDependencies:
       webpack: 5.110.3(@swc/core@1.16.1(@swc/helpers@0.5.23))(clean-css@5.3.3)(cssnano@8.0.2(postcss@8.5.28))(csso@5.0.5)(esbuild@0.28.2)(html-minifier-terser@7.2.0)(lightningcss@1.33.0)(postcss@8.5.28)(sharp@0.35.4(@types/node@24.13.3))(svgo@4.1.0)(webpack-cli@7.2.3)

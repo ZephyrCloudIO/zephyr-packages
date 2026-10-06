@@ -4,34 +4,7 @@ Use `pnpm skills:intent` for Intent commands in this workspace. Replace the
 managed block's `pnpm exec intent` invocations with that wrapper. Intent 0.5
 requires the classic TypeScript compiler API; the wrapper supplies the pinned
 development-only compatibility compiler without changing native TypeScript 7
-used by the SDK packages. CI runs the same wrapper.
-
-## Clearing the Check Skills gate
-
-`Check Skills` fails when a pull request changes a file listed in a skill's
-`sources:` or the planning records without a recorded review. To clear it:
-
-1. Run `pnpm skills:review --json` to list the pending items and their changed
-   files.
-2. Update any skill whose guidance the change affects, then rerun
-   `pnpm skills:sync`.
-3. Record each outcome with evidence: annotate the JSON report and pass it to
-   `pnpm skills:review --record <report.json>`, or use
-   `pnpm skills:review --unchanged "<reason>"` when no guidance is affected.
-4. Commit `.intent/review-state.json` and confirm `pnpm skills:check` passes.
-
-Release pull requests opened and updated by the release-please automation app
-skip this review step because they only bump versions, changelogs, and
-`library_version` lines; the published release runs the read-only review
-report. The Release Please workflow records those version-only changes as
-reviewed on the release branch, so merging a release never leaves pending items
-on `main`. The exception checks the app identity, not just the branch name, so any
-other pull request, including a human push to a release branch, still runs it.
-
-`.intent/review-state.json` stores per-file hashes, so parallel pull requests
-can conflict on it. Resolve a conflict by taking the base branch's copy,
-rerunning the review steps on the rebased branch, and recording again; do not
-hand-merge hashes.
+used by the SDK packages.
 
 <!-- intent-maintainer:start -->
 

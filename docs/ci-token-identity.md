@@ -1,7 +1,7 @@
 ---
 summary: Describes plugin-side CI actor inference for ZE_CI_TOKEN attribution.
 read_when:
-  - Changing ZE_CI_TOKEN auth, CI actor attribution, GitLab/GitHub CI support, or adding a CI provider adapter.
+  - Changing ZE_CI_TOKEN auth, CI actor attribution, GitLab/GitHub/EAS CI support, or adding a CI provider adapter.
 ---
 
 # CI Token Identity
@@ -33,6 +33,16 @@ shape as an email candidate. When the event sender matches that actor, the adapt
 classification as `providerActorType`. This requires no
 workflow YAML changes beyond setting `ZE_CI_TOKEN`. Reliable multi-email attribution requires the user's GitHub account
 to be linked in cloud-io as a `GitProviderIdentity`; email candidates are only a fallback.
+
+Expo EAS Build is detected through `EAS_BUILD=true` and is checked last, so `eas build --local` inside GitHub Actions
+or GitLab CI keeps that provider's identity. EAS exposes no email or verifiable identity token, only
+`EAS_BUILD_USERNAME` (undefined for robot users), and Expo accounts cannot be linked in cloud-io. The adapter therefore
+sends the author and committer emails of `EAS_BUILD_GIT_COMMIT_HASH` (read with `git show` in `EAS_BUILD_WORKINGDIR`)
+as email candidates, without `issuer`/`providerSubject`, because cloud-io resolves a canonical identity strictly and
+never falls back to email for an unlinked one. It deliberately does not read `ZE_USER_EMAIL`: `ZE_CI_TOKEN` is the only
+supported CI credential, and the legacy `ZE_SERVER_TOKEN`/`ZE_USER_EMAIL` pair is being deprecated. When no email is available, the adapter reports a
+bot with issuer `https://expo.dev` and the EAS username, or `EAS_BUILD_PROJECT_ID` for robot users, as the subject. The
+CI token creator then authorizes the deployment and the Expo actor is kept as deployment attribution.
 
 Cloud-io does not call GitLab for this flow; provider-specific validation stays in the plugin. The plugin calls
 ze-api-gateway's `ci-token-exchange` route, which proxies to cloud-io and does not use worker-auth. Cloud-io validates

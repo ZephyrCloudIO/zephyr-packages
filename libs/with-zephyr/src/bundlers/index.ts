@@ -11,6 +11,7 @@ import { rsbuildConfig } from './rsbuild.js';
 import { rslibConfig } from './rslib.js';
 import { rspackConfig } from './rspack.js';
 import { rspressConfig } from './rspress.js';
+import { rstackConfig } from './rstack.js';
 import { viteConfig } from './vite.js';
 import { webpackConfig } from './webpack.js';
 
@@ -43,6 +44,7 @@ export const BUNDLER_CONFIGS: BundlerConfigs = {
   // Build tools
   rsbuild: rsbuildConfig,
   rslib: rslibConfig,
+  rstack: rstackConfig,
   parcel: parcelConfig,
 
   // Framework-specific
@@ -70,4 +72,5 @@ export { modernjsConfig } from './modernjs.js';
 export { nuxtConfig } from './nuxt.js';
 export { metroConfig } from './metro.js';
 export { rspressConfig } from './rspress.js';
+export { rstackConfig } from './rstack.js';
 export { repackConfig } from './repack.js';

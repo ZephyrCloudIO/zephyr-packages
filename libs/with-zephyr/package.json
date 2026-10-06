@@ -15,6 +15,7 @@
     "rslib",
     "rspack",
     "rspress",
+    "rstack",
     "tanstack-intent",
     "vite",
     "webpack",
@@ -64,6 +65,7 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "catalog:typescript",
+    "rstack": "0.8.0",
     "typescript": "catalog:typescript",
     "zephyr-rsbuild-plugin": "workspace:*"
   }

@@ -34,20 +34,20 @@
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "b08bbc1cdab4bf538be5b09be970e7277ba039758718f1344df752d38bf601a5",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/vite-plugin-zephyr/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "97eba035ff2e6dfe6b411f148460d5ddc5e5d47eeeb4a3c9f88f8a933345c05e",
+      "fingerprint": "c65bd4e6ee491de2018dff0fb36b84af273a3caaeafbe473f47138af7a1370d3",
       "snapshot": {
-        "_artifacts/domain_map.yaml": "050102d644e9198d1a278ed5c83b019055745c82e540cd99477fcf1a8468753b",
-        "_artifacts/skill_spec.md": "4177499480a94923d8ae5a1d7088ba6deaea3848921f4cc97816faf04ffe7299",
-        "_artifacts/skill_tree.yaml": "c342732f9b4e91105dc3a7284a6f4a8e7738300d34bc6d8b71b513227cb67a20",
+        "_artifacts/domain_map.yaml": "2b2b28b15857ea802f530a1d437194a3b919c520b66491ed58fadb41c8f1824f",
+        "_artifacts/skill_spec.md": "38952c65d923fd28166ed7f98ccf5ae3fd6ca199f3cb80acc443e63856879a0f",
+        "_artifacts/skill_tree.yaml": "cbcf3f2bcd7cc83544b7288a788620ed4e10589fc1eb73fa927c81bd5c5b535b",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "ecc40d6cbf7c60399c0f90241326af5800622311cd0dcb88ec09ab41714cd97f",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
         "libs/create-zephyr-apps/src/cli.spec.ts": "8501d0c55963413103d42d469ad73e39ef5f7736748275141170f56cb855f268",
@@ -99,11 +99,21 @@
         "libs/vite-plugin-zephyr/src/lib/vite-api.integration.spec.ts": "a2bbea26b9736583d2e9318ba61cd3c0b82e7075cf0ae94e3f84d18e4dd388f5",
         "libs/vite-plugin-zephyr/src/lib/vite-plugin-zephyr.ts": "b08bbc1cdab4bf538be5b09be970e7277ba039758718f1344df752d38bf601a5",
         "libs/vite-plugin-zephyr/src/package-output.spec.ts": "f77ef57f34d875153ba25a9f72c3936b8a7af234889b590a643d4647b2e43271",
-        "libs/with-zephyr/README.md": "16c3c1bf882a21b977a60c27835186b16bb51972a39e65835e52c1ac04dc5708",
+        "libs/with-zephyr/README.md": "372736aea04ee76a6cc6be4f2469b3d35f14ad720e3c432bdc48740d2cad4aa1",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
         "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
-        "libs/with-zephyr/src/index.ts": "c493444b866c2b1e5eb64ad5fca305dc8635eeb6bdd050b4c02f4d1afc63ede3",
+        "libs/with-zephyr/src/bundlers/index.ts": "60f1f947e9214e2427403367bb89b79a57952b56c22710dc7b5d54100ebb6964",
+        "libs/with-zephyr/src/bundlers/rstack.ts": "79057da01e30ab61216c6da486b04567b4884c6609d772d47621fff4379ad3a9",
+        "libs/with-zephyr/src/engine/ast-grep.ts": "b2af0d2e8473b16327969f0993caa08f8c42cd30e4c1bcbe4f3f93d1a070da92",
+        "libs/with-zephyr/src/index.ts": "5a9b03563beb20ac95acfe0423c908aa28c3b2276be6edf577185d87559133e8",
+        "libs/with-zephyr/src/operations.ts": "b4c957be5a33ad5b0007a55cc17361b68a452647a32ceee404a3da90c13dc6ec",
+        "libs/with-zephyr/src/rstack.ts": "95abc07bccb5848227537d0d9ed1dd84e3814a00f595e241d14e1e3129aaa7c3",
         "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
+        "libs/with-zephyr/src/tests/bundler-configs.test.ts": "3dd4ee5b251e2a592f36680da399e0e8e78cfc8acda9266def85b39f15a27f6e",
+        "libs/with-zephyr/src/tests/codemod.test.ts": "59c108769b67c55b8ab8913604da46ff285209a19ecec44724aef6a7ef40ab9c",
+        "libs/with-zephyr/src/tests/rstack-inheritance.test.ts": "99ba8a3cf49350b0441389bdb670c0889463821dafd9fa57c89b449860940708",
+        "libs/with-zephyr/src/tests/rstack.test.ts": "757a1e6dd212bc82094c770969821c1cb804e6139ce2cf0eea9bcd5fefea3c78",
+        "libs/with-zephyr/src/types.ts": "63002ab622766076fce9844e6266d261a4f9605e3ed10627c7b271372d490fd8",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
         "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "11b60d81ddaa3d3e6819ce011c01b21afe93606a7764243ffe92d717a6aae414",
         "libs/zephyr-agent/src/lib/change-attribution/config.ts": "903f437e643f3af1be9128176c9ea5d084383ee35f91ef4d5172fe14a84a8800",
@@ -245,14 +255,14 @@
         "scripts/verify-live-attribution.mjs": "e041c3b1798f77953e95ec278865fa173562391926e19af43b2babd02c31037e",
         "skills/zephyr-core/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
         "skills/zephyr-core/README.md": "29a583b6d94243789f36d07208ddfbf10d5b47d06ed6c9d6816277a3fa2c3668",
-        "skills/zephyr-core/SKILL.md": "952cbc11c1d63a7130f2183cf1fe78420218b8e20416268d5f72f5fe44a638a9",
+        "skills/zephyr-core/SKILL.md": "3fb2c5e9f9926ebb116b15450ef124896b1de84abbbd7364139303af741d9551",
         "skills/zephyr-core/references/attribution-storage.md": "c7c968f01d4820bfab560eeb521b125e1d467db1c77864fb361fef95ba3a5e9a",
         "skills/zephyr-core/references/change-attribution.md": "38df45f8577c7a6031d6ea238d1e102fffbfd973717f939bd0421507d7d5b18e",
         "skills/zephyr-core/references/deployment-model.md": "ac1f8cf02f2f42443d21a096f277b4c7f8a60be99f7c7615130ef08afb203443",
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
         "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
-        "skills/zephyr-core/references/sdk-setup.md": "44a555ebfbcc3fc6040ecffb31eb76029313418a828a69ba45cceee03e5a51cb",
+        "skills/zephyr-core/references/sdk-setup.md": "be4a20bec2ad1a0768807db097ed41a3f139551b7ca0efd4977293d54b23ec5a",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3",
         "skills/zephyr-module-federation/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
         "skills/zephyr-module-federation/README.md": "5ab281a4d1ca1bd5541a979a1793f19442df4eede3044c42856b5c29c9fdfb9d",
@@ -263,12 +273,12 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "updated",
       "reason": "Recorded the consumer opt-in documentation decision in the batch history.",
       "evidence": [
         "_artifacts/skill_spec.md 2026-10-04 entry",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
@@ -290,13 +300,13 @@
       "snapshot": {
         "pnpm-workspace.yaml": "9fce08558727f629b5f2be7c62c3fabfdad251dd6022b571f7521a99562da470"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "Development-tooling bump of @tanstack/intent from 0.5.0 to 0.5.3 (Windows discovery and TypeScript 7.0 example-check fixes) with a version-pinned release-age exclusion; no consumer SDK behavior or skill guidance changes.",
       "evidence": [
         "pnpm-workspace.yaml catalog pin and minimumReleaseAgeExclude entry, rebased on main; intent maintainer check validates all 19 skill files on 0.5.3 with and without scripts/intent.mjs.",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9.",
-        "git diff 44973de9 a3ebb668 -- pnpm-workspace.yaml: only the transitive-dependency security overrides merged from main (#654); dependency pins only, no skill guidance affected."
+        "git diff 44973de9 a3ebb668 -- pnpm-workspace.yaml: only the transitive-dependency security overrides merged from main (#654); dependency pins only, no skill guidance affected.",
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "source:scripts/intent.mjs": {
@@ -314,13 +324,23 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "1dbf5a688ee001e64cba5114d2cd3bdc8112bd8b74c3ce8f5b1aceae0744d6fe",
+      "fingerprint": "967a019fcd7947f51f41eb683a075fe55489e5db440a8f430205964e3f9fa427",
       "snapshot": {
-        "libs/with-zephyr/README.md": "16c3c1bf882a21b977a60c27835186b16bb51972a39e65835e52c1ac04dc5708",
+        "libs/with-zephyr/README.md": "372736aea04ee76a6cc6be4f2469b3d35f14ad720e3c432bdc48740d2cad4aa1",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
         "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
-        "libs/with-zephyr/src/index.ts": "c493444b866c2b1e5eb64ad5fca305dc8635eeb6bdd050b4c02f4d1afc63ede3",
+        "libs/with-zephyr/src/bundlers/index.ts": "60f1f947e9214e2427403367bb89b79a57952b56c22710dc7b5d54100ebb6964",
+        "libs/with-zephyr/src/bundlers/rstack.ts": "79057da01e30ab61216c6da486b04567b4884c6609d772d47621fff4379ad3a9",
+        "libs/with-zephyr/src/engine/ast-grep.ts": "b2af0d2e8473b16327969f0993caa08f8c42cd30e4c1bcbe4f3f93d1a070da92",
+        "libs/with-zephyr/src/index.ts": "5a9b03563beb20ac95acfe0423c908aa28c3b2276be6edf577185d87559133e8",
+        "libs/with-zephyr/src/operations.ts": "b4c957be5a33ad5b0007a55cc17361b68a452647a32ceee404a3da90c13dc6ec",
+        "libs/with-zephyr/src/rstack.ts": "95abc07bccb5848227537d0d9ed1dd84e3814a00f595e241d14e1e3129aaa7c3",
         "libs/with-zephyr/src/tests/attribution.test.ts": "cbe87610b06ff8a948591d6d756fee502b6b18b4c85eedf976a21aeae50e84a3",
+        "libs/with-zephyr/src/tests/bundler-configs.test.ts": "3dd4ee5b251e2a592f36680da399e0e8e78cfc8acda9266def85b39f15a27f6e",
+        "libs/with-zephyr/src/tests/codemod.test.ts": "59c108769b67c55b8ab8913604da46ff285209a19ecec44724aef6a7ef40ab9c",
+        "libs/with-zephyr/src/tests/rstack-inheritance.test.ts": "99ba8a3cf49350b0441389bdb670c0889463821dafd9fa57c89b449860940708",
+        "libs/with-zephyr/src/tests/rstack.test.ts": "757a1e6dd212bc82094c770969821c1cb804e6139ce2cf0eea9bcd5fefea3c78",
+        "libs/with-zephyr/src/types.ts": "63002ab622766076fce9844e6266d261a4f9605e3ed10627c7b271372d490fd8",
         "libs/zephyr-agent/src/index.ts": "18a876437109523a17cf33ff3c9ac7ca58c2b2749d994ccf8817eb1a1c01bac9",
         "libs/zephyr-agent/src/lib/change-attribution/compare.ts": "11b60d81ddaa3d3e6819ce011c01b21afe93606a7764243ffe92d717a6aae414",
         "libs/zephyr-agent/src/lib/change-attribution/config.ts": "903f437e643f3af1be9128176c9ea5d084383ee35f91ef4d5172fe14a84a8800",
@@ -351,23 +371,26 @@
         "scripts/verify-live-attribution.mjs": "e041c3b1798f77953e95ec278865fa173562391926e19af43b2babd02c31037e",
         "skills/zephyr-core/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
         "skills/zephyr-core/README.md": "29a583b6d94243789f36d07208ddfbf10d5b47d06ed6c9d6816277a3fa2c3668",
-        "skills/zephyr-core/SKILL.md": "952cbc11c1d63a7130f2183cf1fe78420218b8e20416268d5f72f5fe44a638a9",
+        "skills/zephyr-core/SKILL.md": "3fb2c5e9f9926ebb116b15450ef124896b1de84abbbd7364139303af741d9551",
         "skills/zephyr-core/references/attribution-storage.md": "c7c968f01d4820bfab560eeb521b125e1d467db1c77864fb361fef95ba3a5e9a",
         "skills/zephyr-core/references/change-attribution.md": "38df45f8577c7a6031d6ea238d1e102fffbfd973717f939bd0421507d7d5b18e",
         "skills/zephyr-core/references/deployment-model.md": "ac1f8cf02f2f42443d21a096f277b4c7f8a60be99f7c7615130ef08afb203443",
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
         "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
-        "skills/zephyr-core/references/sdk-setup.md": "44a555ebfbcc3fc6040ecffb31eb76029313418a828a69ba45cceee03e5a51cb",
+        "skills/zephyr-core/references/sdk-setup.md": "be4a20bec2ad1a0768807db097ed41a3f139551b7ca0efd4977293d54b23ec5a",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "5aa0da1ea4847b7c077d84b4e3c56738c22faf62",
-      "outcome": "no-change",
-      "reason": "Restored real file paths in the exact generated binary diff marker, outside hunks. Binary contents remain omitted; text hunk preservation, source attribution, and storage policy are unchanged. Reviewed all three planning records and shared capture/storage guidance; no recommendation or task ownership changes.",
+      "head": "42ff499341d1a61e696becfd692e294cf893020a",
+      "outcome": "updated",
+      "reason": "Updated the package README and existing zephyr-core SDK setup reference to state that genuine global process.env.RSTEST and bracket-access guards are kept byte-for-byte without redundant imports/wrappers. Local and imported process bindings remain conservatively guarded. Added object-assignment-pattern binding recognition for destructuring-default shadow safety and renamed the unsafe compiler control accurately.",
       "evidence": [
-        "libs/zephyr-agent/src/lib/change-attribution/compare.ts and source.spec.ts current diff against 5aa0da1e",
-        "pnpm test:affected: 45 tasks passed; binary source regression checks real paths and absence of temporary path markers",
-        "Shared attribution references and _artifacts/domain_map.yaml, skill_spec.md, skill_tree.yaml reviewed"
+        "PR #655 baseline 42ff499341d1a61e696becfd692e294cf893020a; with-zephyr 1.5.0. Latest Pullfrog comment 4189623016 requested preserving global process.env guards; review summary also requested clarifying the unsafe sentinel test name.",
+        "pnpm --filter with-zephyr exec rstest run src/tests/rstack.test.ts src/tests/rstack-inheritance.test.ts: all 64 focused tests passed.",
+        "pnpm --filter with-zephyr test: all 257 tests passed across 8 files, covering global dot/bracket guards for app/lib, formatted property access, dry-run and real no-op transforms, preserved source bytes, build behavior, and local/parameter/destructuring/import process shadows.",
+        "The real pinned Rstack 0.8.0 CLI compiler tests preserve existing global guards unchanged for app/lib with inline test projects, keep inherited alias/defines/another plugin transform, and record zero Zephyr factory or initialization calls. All 8 inheritance/compiler cases pass; no deployment is sent.",
+        "Package build, repository typecheck (28 successful tasks across 23 packages), format:check, lint, strict/warning publint, and git diff --check passed. No dependencies or lockfile changes.",
+        "Shared skill structural validation passed for both shared skills. Entry activation descriptions, source mappings, and prerequisites are unchanged; fresh consumer-agent discovery was not rerun and no live deployment is claimed."
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {
@@ -442,12 +465,12 @@
         "libs/parcel-reporter-zephyr/src/lib/on-build-success.ts": "9a6134033af302b80e6914e3e75a9d2b8d18a35a2db5bb3aec8639c93a0641c3",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/parcel-reporter-zephyr/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/rollup-plugin-zephyr/skills/zephyr-rollup/SKILL.md": {
@@ -463,12 +486,12 @@
         "libs/rollup-plugin-zephyr/src/lib/transform/get-assets-map.ts": "698ba536df37588f48214206393ca3c1099f60dc93e4272b8b19a70473ff1d04",
         "libs/zephyr-agent/src/lib/errors/handle-global-error.ts": "14344e718f427518f32ad4bbc7ffaa2ef8cbe960a39bfd0b7ca61f7dffab642f"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/rollup-plugin-zephyr/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/vite-plugin-tanstack-start-zephyr/skills/zephyr-tanstack-start/SKILL.md": {
@@ -484,12 +507,12 @@
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.target.spec.ts": "92717aabbdd0961794c6d649b92de989897b830228eb70b14b311a2b06ead667",
         "libs/vite-plugin-tanstack-start-zephyr/src/lib/vite-plugin-tanstack-start-zephyr.ts": "201b8abd903a7c796414fae999883ebf64ac85f6d89f8335e2e0c0db5ec8f404"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/vite-plugin-tanstack-start-zephyr/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/vite-plugin-vinext-zephyr/skills/zephyr-vinext/SKILL.md": {
@@ -505,12 +528,12 @@
         "libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.spec.ts": "15b8d08bc5b3fb5a6a45e41c0a18c2448336a47217a5bc9c833d5f6b1ad725c7",
         "libs/vite-plugin-vinext-zephyr/src/lib/vite-plugin-vinext-zephyr.ts": "1d224009f5938483155ab3cd66743c3a8598ccf7bcee50a1773a6e9ca8f58d40"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/vite-plugin-vinext-zephyr/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-astro-integration/skills/zephyr-astro/SKILL.md": {
@@ -526,12 +549,12 @@
         "libs/zephyr-astro-integration/src/lib/internal/__test__/extract-astro-assets-map.spec.ts": "b79b190a7a23437894821ae761d0f6b1fb85bd44ea9cf9dc9c8af6bd6f14b3dc",
         "libs/zephyr-astro-integration/src/lib/internal/extract-astro-assets-map.ts": "7a3d7205eec9dc1cdb34cebdbfacaa776d4bef918a3fcb052de88002160045e8"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-astro-integration/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-cli/skills/zephyr-cli/SKILL.md": {
@@ -549,12 +572,12 @@
         "libs/zephyr-cli/src/lib/command-detector.ts": "e8a63e3b2cbebf1b5c53cb66947f57e3fc9aae176408c445facae5149edbc0ce",
         "libs/zephyr-cli/src/lib/publication-metadata.ts": "269c38fb707543c36d4b116c0c846454cf3c20482c111cea137abd63353046fe"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-cli/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": {
@@ -574,12 +597,12 @@
         "libs/zephyr-metro-plugin/src/lib/zephyr-metro-react-native-cli.ts": "27c9ba8758c2edad6d25edcd68d36a767d5009af7ac9e8db0fadfcdf16b31971",
         "libs/zephyr-metro-plugin/src/lib/zephyr-metro-rnef-plugin.ts": "1a6e41d91bbeb8678630e8adcf7d6cc9a6bedbc3ec9b01e3f6f4b4c3faffa1fb"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-metro-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-modernjs-plugin/skills/zephyr-modernjs/SKILL.md": {
@@ -593,12 +616,12 @@
         "libs/zephyr-modernjs-plugin/src/modernjs-plugin/with-zephyr.ts": "7278d85aa372cdd8f712996d8bc839b0df144243eb2c264e0c93ae4cf63a3a02",
         "libs/zephyr-rspack-plugin/src/rspack-plugin/with-zephyr.ts": "1e94d0611e505b0170acd5c9e0d486b4a2aaf650f1c11295bb5458fba0a0e9df"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-modernjs-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-nuxt-module/skills/zephyr-nuxt/SKILL.md": {
@@ -616,12 +639,12 @@
         "libs/zephyr-nuxt-module/src/lib/ssr-upload.ts": "acaa8a88216570c06443ff007531d4e297db8ae162fc5a643108968f0f30717e",
         "libs/zephyr-nuxt-module/src/lib/types.ts": "9c71469516edb14ff45d4c2568b6280504d3284fa5b80732c55628f7e3e254fd"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-nuxt-module/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-repack-plugin/skills/zephyr-repack/SKILL.md": {
@@ -640,12 +663,12 @@
         "libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts": "024ba6378171d5b746d31bd0a9c55f94682f99acbb86800f629861690c039f81",
         "libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts": "ddd364607c3b26d54ac4f7e87df070cdf612ecd0221e38707b6213a32d340f23"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-repack-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-rolldown-plugin/skills/zephyr-rolldown/SKILL.md": {
@@ -662,12 +685,12 @@
         "libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.spec.ts": "19e711ae48279199efb40cedfc7a25b0331a58da944998b58b9d2f0417352e31",
         "libs/zephyr-rolldown-plugin/src/lib/zephyr-rolldown-plugin.ts": "be7a976a008bf64405f36157c639fcc15b5cb802f99a50163829ab6d3d206451"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-rolldown-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-rsbuild-plugin/skills/zephyr-rsbuild/SKILL.md": {
@@ -685,12 +708,12 @@
         "libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts": "024ba6378171d5b746d31bd0a9c55f94682f99acbb86800f629861690c039f81",
         "libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts": "57508e90ac3822cd74e1779fb1e81c34ebb51d31b4b1b87b183e5f769a235b11"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-rsbuild-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-rspack-plugin/skills/zephyr-rspack/SKILL.md": {
@@ -709,12 +732,12 @@
         "libs/zephyr-xpack-internal/src/hooks/ze-setup-ze-deploy.ts": "024ba6378171d5b746d31bd0a9c55f94682f99acbb86800f629861690c039f81",
         "libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts": "57508e90ac3822cd74e1779fb1e81c34ebb51d31b4b1b87b183e5f769a235b11"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-rspack-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-rspress-plugin/skills/zephyr-rspress/SKILL.md": {
@@ -733,12 +756,12 @@
         "libs/zephyr-rspress-plugin/src/with-zephyr.ts": "3cc02a561fa1c5d90b4090c431531c49a5550202425fab3e96955ec36f84acaf",
         "libs/zephyr-rspress-plugin/src/zephyrRspressSSGPlugin.ts": "23726c199f6c023da3cf4641a9fbc85119c8e18476fe545d67cabf99b5efe646"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-rspress-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "skill:libs/zephyr-webpack-plugin/skills/zephyr-webpack/SKILL.md": {
@@ -757,12 +780,12 @@
         "libs/zephyr-xpack-internal/src/xpack-extract/multi-compiler-coordinator.ts": "57508e90ac3822cd74e1779fb1e81c34ebb51d31b4b1b87b183e5f769a235b11",
         "libs/zephyr-xpack-internal/src/xpack-extract/mut-webpack-federated-remotes-config.ts": "ddd364607c3b26d54ac4f7e87df070cdf612ecd0221e38707b6213a32d340f23"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/zephyr-webpack-plugin/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "source:libs/zephyr-cli/src/lib/recommended-plugins.spec.ts": {
@@ -998,12 +1021,12 @@
       "snapshot": {
         "README.md": "7e27e68412e5a78972c8a536bc972b14cb971d64ff724ad53868996dd831ee06"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     },
     "source:libs/create-zephyr-apps/README.md": {
@@ -1011,12 +1034,12 @@
       "snapshot": {
         "libs/create-zephyr-apps/README.md": "e66d5167a12943490d5090f239d463eb7d2a615acb1c20342f9a277500a94622"
       },
-      "head": "a3ebb6686dda9a5a22dcbefc166bfcba80bb212d",
+      "head": "262247d663039dab150abb18eb253e8db69d8bae",
       "outcome": "no-change",
       "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
       "evidence": [
         "git diff libs/create-zephyr-apps/README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at a3ebb668, which took main's copy of .intent/review-state.json per AGENTS.md; content is unchanged from the outcome recorded at 44973de9."
+        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
       ]
     }
   }

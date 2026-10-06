@@ -469,7 +469,7 @@ overrides:
   colord@>=2.0.0 <2.9.4: 2.9.4
   devalue@>=5.0.0 <5.9.2: 5.9.3
   image-size@<2.0.3: 2.0.3
-  sharp@<0.35.4: 0.35.4
+  sharp@<0.35.4: 0.35.5
   svgo@>=4.0.0 <4.1.0: 4.1.0
   shell-quote@<=1.8.4: 1.10.0
   socket.io-parser@>=4.0.0 <4.2.7: 4.2.7
@@ -29191,7 +29191,7 @@ snapshots:
   miniflare@5.20260903.0-alpha(@types/node@24.13.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
-      sharp: 0.35.4(@types/node@24.13.3)
+      sharp: 0.35.5(@types/node@24.13.3)
       undici: 7.29.1
       workerd: 1.20260903.1
       ws: 8.21.0

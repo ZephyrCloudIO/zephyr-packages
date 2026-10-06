@@ -120,5 +120,9 @@ export enum StorageKeys {
   ze_ci_auth_token = 'ze-ci-auth-token',
   ze_server_token = 'ZE_SERVER_TOKEN',
   ze_ci_token = 'ZE_CI_TOKEN',
+  /**
+   * Legacy companion of ZE_SERVER_TOKEN only. Every auth env var except ZE_CI_TOKEN is
+   * being deprecated, so new code must not read ZE_USER_EMAIL.
+   */
   ze_user_email = 'ZE_USER_EMAIL',
 }

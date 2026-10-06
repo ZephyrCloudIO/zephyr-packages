@@ -238,6 +238,16 @@ commands; both the check scripts and CI use that wrapper.
   `ze-cli` recommending nonexistent `@zephyrcloud/*` packages and replaced the
   deprecated `withZephyrTanstackStart` in the shared guide.
 
+- 2026-10-04: Documented consumer opt-in in the root README and every README
+  of a package with a dedicated skill, under an "AI Agent Skills (Optional)"
+  section placed after Installation. The section uses upstream's quick start
+  (`pnpm add -D @tanstack/intent`, then `pnpm dlx @tanstack/intent@latest
+install`) instead of pinning the workspace's Intent version, names the
+  package's skill for `intent load`, and states that Zephyr does not need Intent
+  at runtime. The Vite README's earlier "Agent guidance" block, which pinned
+  0.5.0, was replaced by the same section. Skill guidance is unchanged because
+  no skill describes consumer setup.
+
 ## Source findings for maintainers
 
 The skill research found these README or implementation issues. The skills

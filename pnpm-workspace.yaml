@@ -21,7 +21,7 @@ catalog:
   '@lynx-js/rspeedy': ^0.17.0
   '@lynx-js/types': ^4.2.1
   '@sentry/react': ^10.73.0
-  '@tanstack/intent': 0.5.0
+  '@tanstack/intent': 0.5.3
   '@toon-format/toon': ^4.0.0
   '@types/debug': ^4.1.13
   '@vitejs/plugin-rsc': ^0.5.34
@@ -103,6 +103,8 @@ minimumReleaseAgeExclude:
   - '@module-federation/sdk@2.9.0'
   - '@module-federation/third-party-dts-extractor@2.9.0'
   - '@module-federation/webpack-bundler-runtime@2.9.0'
+  # Intent 0.5.3 adds TypeScript 7.0 support; pinned before the 24h window elapsed
+  - '@tanstack/intent@0.5.3'
   # Renovate security update: adm-zip@0.6.1
   - adm-zip@0.6.1
   # Renovate security update: brace-expansion@5.0.12

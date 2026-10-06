@@ -35,6 +35,31 @@ pnpm add --dev zephyr-repack-plugin
 bun add --dev zephyr-repack-plugin
 ```
 
+## AI Agent Skills (Optional)
+
+This package ships the `zephyr-repack` Agent Skill for AI coding agents, together
+with the shared `zephyr-core` and `zephyr-module-federation` guides. The
+skills are versioned with the package, so your agent reads guidance that
+matches the release you installed.
+
+Zephyr does not need Intent at runtime. Coding agents only find these skills
+after you opt in with
+[TanStack Intent](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers):
+
+```sh
+pnpm add -D @tanstack/intent
+pnpm dlx @tanstack/intent@latest install
+```
+
+Allow `zephyr-repack-plugin` when `install` asks. Intent saves that choice in the
+`intent.skills` allowlist in your `package.json`. To check or load the skill
+yourself:
+
+```sh
+pnpm exec intent list
+pnpm exec intent load 'zephyr-repack-plugin#zephyr-repack'
+```
+
 ## Usage
 
 ### Native target compatibility

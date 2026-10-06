@@ -113,6 +113,8 @@ minimumReleaseAgeExclude:
   - devalue@5.9.3
   # Renovate security update: postcss-selector-parser@7.1.6
   - postcss-selector-parser@7.1.6
+  # Renovate security update: sharp@0.35.5
+  - sharp@0.35.5
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -276,7 +278,7 @@ overrides:
   colord@>=2.0.0 <2.9.4: 2.9.4
   devalue@>=5.0.0 <5.9.2: 5.9.3
   image-size@<2.0.3: 2.0.3
-  sharp@<0.35.4: 0.35.4
+  sharp@<0.35.4: 0.35.5
   svgo@>=4.0.0 <4.1.0: 4.1.0
   shell-quote@<=1.8.4: 1.10.0
   socket.io-parser@>=4.0.0 <4.2.7: 4.2.7

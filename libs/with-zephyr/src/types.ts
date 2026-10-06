@@ -16,6 +16,7 @@ export type BundlerOperationId =
   | 'astro-integrations-function-or-create'
   | 'rsbuild-asset-prefix'
   | 'wrap-exported-function'
+  | 'rstack-plugins'
   | 'parcel-reporters';
 
 export interface BundlerConfig {
@@ -24,6 +25,7 @@ export interface BundlerConfig {
   importName: string | null;
   strategy: BundlerStrategy;
   operations: BundlerOperationId[];
+  rstackSection?: 'app' | 'lib' | 'doc';
 }
 
 export interface BundlerConfigs {
@@ -34,6 +36,7 @@ export interface ConfigFile {
   filePath: string;
   bundlerName: string;
   config: BundlerConfig;
+  discoveryError?: string;
 }
 
 export interface CodemodOptions {

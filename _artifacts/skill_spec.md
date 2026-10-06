@@ -179,6 +179,37 @@ commands; both the check scripts and CI use that wrapper.
 
 ## Coverage and batch history
 
+- 2026-10-06: At PR #655 baseline `42ff4993`, preserve existing global
+  `process.env.RSTEST` guards without redundant imports or nested guards, while
+  retaining safe handling of local/imported bindings named `process`. The
+  app/library ownership and test-inheritance behavior are unchanged. Rename the
+  unsafe compiler control to describe the deployment hook it reaches. Shared
+  SDK guidance owns the new no-op behavior; no skill identity or dependency
+  changes are needed.
+
+- Rstack review corrections for PR #655 at baseline `57851f24`: guard generated
+  and existing direct app/library deployment registrations with Rstest's `RSTEST`
+  signal, rather than disabling automatic test inheritance. Compiler
+  probes use pinned published `rstack@0.8.0` as a development-only dependency and
+  an inert deployment sentinel. They cover app/library inheritance and inline
+  projects, preserve aliases and transforms, reject the prior unsafe setup, and
+  keep build-time deployment hooks available without sending a live deployment.
+  Import reuse now follows enclosing lexical bindings, factory returns exclude
+  nested methods, and integration detection follows plugin-list expressions
+  instead of unrelated descendant calls. Existing ownership, distribution, and
+  remaining work are preserved.
+
+- 2026-10-05: Extended the existing SDK-adoption task for Rstack CLI at source
+  baseline `7f6056b0` and package version 1.5.0. Apps and libraries retain the
+  Rsbuild integration; documentation retains the Rspress integration. The
+  codemod owns section-aware edits, import aliases, rerun safety, dry runs,
+  isolated discovery failures,
+  and project-local dependency placement. It does not change deployment
+  lifecycles or rewrite imported configurations. Regression checks cover
+  mixed sections and inline factories. Fresh-agent selection and a new live
+  deployment are not claimed by this batch; prior package-only distribution
+  and remaining work stay unchanged.
+
 - 2026-10-02: Adopted Intent 0.5.0 at source baseline
   `103bbe4a2e433e3393e84406df2e047cd4c5fe17`. Registered the existing
   `create-zephyr-apps` guidance and preserved its prior description as purpose.

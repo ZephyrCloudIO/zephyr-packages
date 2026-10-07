@@ -6,7 +6,7 @@ description: Configure and deploy Modern.js 3 applications with
   and output layout, or diagnosing Modern.js client/server publication.
 metadata:
   library: zephyr-modernjs-plugin
-  library_version: '1.6.0' # x-release-please-version
+  library_version: '1.6.1' # x-release-please-version
   purpose: Add Zephyr to an existing Modern.js 3 app as a CLI plugin that delegates each Rspack config to zephyr-rspack-plugin after federation config runs.
   domain: frameworks
   type: core

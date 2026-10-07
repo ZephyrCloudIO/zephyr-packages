@@ -7,7 +7,7 @@ description: Configure and deploy Rspress documentation sites with
   Module Federation SSG builds.
 metadata:
   library: zephyr-rspress-plugin
-  library_version: '1.6.0' # x-release-please-version
+  library_version: '1.6.1' # x-release-please-version
   purpose: Add Zephyr publication to an existing Rspress site and pick the SSG or Rsbuild publication path so every emitted and post-build file is uploaded.
   domain: frameworks
   type: core

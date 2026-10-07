@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.1 (2026-10-07)
+
+## What's Changed
+* chore(deps): pin actions/checkout action to d23441a by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/649
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.6.0...v1.6.1
+
 ## 1.6.0 (2026-10-06)
 
 ## What's Changed

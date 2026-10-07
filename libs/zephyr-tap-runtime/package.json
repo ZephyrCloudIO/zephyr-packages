@@ -1,6 +1,6 @@
 {
   "name": "zephyr-tap-runtime",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Host-owned TAP lifecycle runtime plugin for Module Federation",
   "keywords": [
     "tanstack-intent"

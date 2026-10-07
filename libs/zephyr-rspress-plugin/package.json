@@ -1,6 +1,6 @@
 {
   "name": "zephyr-rspress-plugin",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Rspress plugin for Zephyr",
   "keywords": [
     "tanstack-intent"

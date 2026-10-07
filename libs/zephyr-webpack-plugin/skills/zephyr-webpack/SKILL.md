@@ -7,7 +7,7 @@ description: Configure and deploy webpack 5 applications with zephyr-webpack-plu
   zephyr-rspack-plugin for Rspack projects.
 metadata:
   library: zephyr-webpack-plugin
-  library_version: '1.6.0' # x-release-please-version
+  library_version: '1.6.1' # x-release-please-version
   purpose: Wrap an existing webpack 5 configuration for Zephyr publication after its Module Federation plugins are in place, keeping one publication per logical build.
   domain: xpack
   type: core

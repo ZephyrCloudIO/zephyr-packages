@@ -7,7 +7,7 @@ description: Configure and deploy TanStack Start applications with
   publish. Use it instead of the generic vite-plugin-zephyr.
 metadata:
   library: vite-plugin-tanstack-start-zephyr
-  library_version: '1.6.0' # x-release-please-version
+  library_version: '1.6.1' # x-release-please-version
   purpose: Publish a TanStack Start application's finalized client and server output to Zephyr as one SSR snapshot without taking over the framework's own Vite build.
   domain: vite
   type: core

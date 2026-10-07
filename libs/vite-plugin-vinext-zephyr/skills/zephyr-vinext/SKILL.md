@@ -7,7 +7,7 @@ description: Configure and deploy Vinext applications with
   of the generic vite-plugin-zephyr.
 metadata:
   library: vite-plugin-vinext-zephyr
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   purpose: Publish a Vinext application's finalized RSC, SSR, and client output to Zephyr as one Worker-compatible snapshot after the framework build completes.
   domain: vite
   type: core

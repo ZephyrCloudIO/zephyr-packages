@@ -6,7 +6,7 @@ description: Configure and deploy Rollup applications with rollup-plugin-zephyr;
   files it uploads.
 metadata:
   library: rollup-plugin-zephyr
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   purpose: Add Zephyr publication to an existing Rollup 4 build so each written output bundle is uploaded as a Zephyr version without changing how Rollup bundles it.
   domain: rollup
   type: core

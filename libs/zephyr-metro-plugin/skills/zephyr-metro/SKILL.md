@@ -7,7 +7,7 @@ description: Configure and deploy React Native Metro applications with
   publication with @module-federation/metro.
 metadata:
   library: zephyr-metro-plugin
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   purpose: Publish iOS and Android Metro Module Federation bundles to Zephyr by pairing the configuration-only withZephyr wrapper with the command integration that actually uploads.
   domain: native
   type: core

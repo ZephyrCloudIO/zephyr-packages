@@ -4,7 +4,7 @@ description: Scaffold current Zephyr application projects with create-zephyr-app
 metadata:
   purpose: Scaffold current Zephyr application projects with create-zephyr-apps; use when selecting a template, generating a fresh web or React Native project non-interactively, or verifying the CLI's JSON receipt and structured failures.
   library: create-zephyr-apps
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   domain: bootstrap
   type: lifecycle
 sources:

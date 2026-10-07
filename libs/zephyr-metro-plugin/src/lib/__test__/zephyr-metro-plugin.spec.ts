@@ -30,10 +30,25 @@ rs.mock('zephyr-agent', () => ({
         },
       ]),
       build_id: Promise.resolve('build-id'),
-      start_new_build: rs.fn().mockResolvedValue(undefined),
+      snapshotId: Promise.resolve('snapshot-id'),
+      version_url: 'https://example.invalid/version',
+      hasActiveBuild: true,
+      start_new_build: rs
+        .fn()
+        .mockImplementation(function (this: { hasActiveBuild: boolean }) {
+          this.hasActiveBuild = true;
+        }),
       upload_assets: rs.fn().mockResolvedValue(undefined),
-      build_finished: rs.fn().mockResolvedValue(undefined),
-      build_failed: rs.fn(),
+      build_finished: rs
+        .fn()
+        .mockImplementation(function (this: { hasActiveBuild: boolean }) {
+          this.hasActiveBuild = false;
+        }),
+      build_failed: rs
+        .fn()
+        .mockImplementation(function (this: { hasActiveBuild: boolean }) {
+          this.hasActiveBuild = false;
+        }),
     }),
   },
   buildAssetsMap: rs.fn().mockReturnValue({}),

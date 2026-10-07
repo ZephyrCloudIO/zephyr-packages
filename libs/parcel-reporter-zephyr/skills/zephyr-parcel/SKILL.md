@@ -6,7 +6,7 @@ description: Configure and deploy Parcel applications with parcel-reporter-zephy
   diagnosing when a Parcel build publishes to Zephyr.
 metadata:
   library: parcel-reporter-zephyr
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   purpose: Register Zephyr as a Parcel 2 reporter in the project's .parcelrc so successful builds publish their emitted bundles without displacing Parcel's other reporters.
   domain: parcel
   type: core

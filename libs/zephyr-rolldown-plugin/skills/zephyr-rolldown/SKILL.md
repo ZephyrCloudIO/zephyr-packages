@@ -6,7 +6,7 @@ description: Configure and deploy Rolldown applications with zephyr-rolldown-plu
   to Zephyr and which paths it uploads.
 metadata:
   library: zephyr-rolldown-plugin
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   purpose: Add Zephyr publication to an existing Rolldown build while keeping the uploaded snapshot paths consistent with how the app references its own files.
   domain: rollup
   type: core

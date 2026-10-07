@@ -8,7 +8,7 @@ description: Configure and deploy Rspack applications with zephyr-rspack-plugin;
   frameworks.
 metadata:
   library: zephyr-rspack-plugin
-  library_version: '1.5.0' # x-release-please-version
+  library_version: '1.6.0' # x-release-please-version
   purpose: Wrap an existing Rspack configuration for Zephyr publication after its Module Federation plugins are in place, keeping one publication per logical build.
   domain: xpack
   type: core

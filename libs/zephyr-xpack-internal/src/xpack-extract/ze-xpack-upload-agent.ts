@@ -26,6 +26,12 @@ export interface UploadAgentPluginOptions {
   // federated module config
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   hooks?: ZephyrBuildHooks;
+  /**
+   * Overrides `ZE_FAIL_BUILD` for errors routed through `handleGlobalError`. Compilation
+   * errors, `start_new_build` failures, and coordinated-build errors throw independently
+   * of this option.
+   */
+  failBuild?: boolean;
   coordinator?: XPackBuildCoordinator;
   participant?: string;
   assetPrefix?: string;
@@ -132,7 +138,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     if (zephyr_engine.hasActiveBuild !== false) {
       zephyr_engine.build_failed();
     }
-    handleGlobalError(err);
+    handleGlobalError(err, { failBuild: pluginOptions.failBuild });
   } finally {
     if (logicalDeploymentCompleted) {
       emitDeploymentDone();

@@ -149,6 +149,47 @@ export default {
 };
 ```
 
+### Publishing prebuilt Metro artifacts
+
+Compile a federated remote once, then publish that immutable output to each
+native Zephyr target with `publishPrebuiltMetroArtifacts`:
+
+```typescript
+import { publishPrebuiltMetroArtifacts } from 'zephyr-metro-plugin';
+import path from 'node:path';
+
+const publications = await publishPrebuiltMetroArtifacts({
+  context: process.cwd(),
+  artifactDirectory: path.resolve('dist/ios'),
+  mfConfig: {
+    name: 'MyRemote',
+    filename: 'my-remote.bundle',
+    exposes: { './Card': './src/Card.tsx' },
+    remotes: {},
+  },
+  targets: ['ios', 'android'],
+});
+```
+
+`PublishPrebuiltMetroOptions` requires an absolute or context-relative
+`artifactDirectory`, the Metro project `context`, the exact `mfConfig` used to
+produce the manifest, and a non-empty, duplicate-free `targets` array
+(`ios`/`android`). The result contains one `MetroPublicationResult` per target:
+`target`, `applicationUid`, `buildId`, `snapshotId`, and `versionUrl`.
+
+For multi-target publication, the federated graph must be self-contained:
+configured remotes, manifest remotes, and Zephyr manifest dependencies are
+rejected because their resolution may vary by platform. Executable files,
+manifest declarations, configured exposes, raw SHA-256 digests, and source-map
+shape are checked before any Zephyr engine is created. The same immutable asset
+map is passed to each target's engine in order. If a later target fails,
+`PrebuiltMetroPublishError.target` identifies it and `.completed` lists prior
+successful target publications; those publications are not rolled back.
+
+This API is being added in this source change; it is not exported by the
+currently published `zephyr-metro-plugin@1.2.4`. Consumers must use a release
+that includes this API, or build the sibling source checkout explicitly.
+
 ### Module Federation Configuration
 
 The plugin works with Metro's Module Federation setup. Configure your federated modules.

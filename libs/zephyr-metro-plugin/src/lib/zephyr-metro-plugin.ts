@@ -1,10 +1,5 @@
 import type { ZeBuildAssetsMap } from 'zephyr-agent';
-import {
-  buildAssetsMap,
-  resolveMfManifestPath,
-  ze_log,
-  ZephyrEngine,
-} from 'zephyr-agent';
+import { resolveMfManifestPath, ze_log, ZephyrEngine } from 'zephyr-agent';
 import type {
   ApplicationConsumes,
   ZeBuildAsset,
@@ -22,6 +17,8 @@ import {
 import { mutateMfConfig } from './internal/mutate-mf-config';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
 import type { OutputAsset } from './internal/types';
+import { createMetroAssetsMap } from './internal/create-metro-assets-map';
+import type { MetroPublicationResult } from './publish-prebuilt-metro-artifacts';
 import {
   assertMetroNativeBuildTarget,
   type MetroNativeBuildTarget,
@@ -83,36 +80,56 @@ export class ZephyrMetroPlugin {
     }
   }
 
-  async afterBuild() {
-    // create() already owns generation zero; mark it active before the idempotent start
-    // call so every later failure is guaranteed to roll it back.
-    let buildInProgress = true;
+  async afterBuild(): Promise<void> {
+    try {
+      const assetsMap = await this.makeAssetsMap();
+      await this.publishAssetsMap(assetsMap);
+    } catch (error) {
+      if (this.zephyr_engine?.hasActiveBuild !== false) {
+        this.zephyr_engine.build_failed();
+      }
+      throw error;
+    }
+  }
+
+  async publishAssetsMap(assetsMap: ZeBuildAssetsMap): Promise<MetroPublicationResult> {
     try {
       this.assertEngineTargetMatchesPlatform();
       await this.zephyr_engine.start_new_build();
-
-      const assetsMap = await this.makeAssetsMap();
-
       const buildStats = await this.getBuildStats(
         Object.values(assetsMap).filter(
           (asset) => asset.extname === '.map' && !asset.path.includes('shared/')
         )
       );
-
-      // Asset discovery and stat creation are asynchronous. Check again at the
-      // publication boundary in case an untyped consumer changed engine state.
       this.assertEngineTargetMatchesPlatform();
       await this.zephyr_engine.upload_assets({
         assetsMap,
         buildStats: buildStats as any,
         mfConfig: this.#config.mfConfig,
       });
-      buildInProgress = false;
+      const applicationUid = this.zephyr_engine.application_uid;
+      const buildId = await this.zephyr_engine.build_id;
+      const snapshotId = await this.zephyr_engine.snapshotId;
+      const versionUrl = this.zephyr_engine.version_url;
+      if (!applicationUid || !buildId || !snapshotId || !versionUrl) {
+        throw new Error(
+          'Zephyr publication completed without a complete version identity'
+        );
+      }
+      const result = {
+        target: this.#config.platform,
+        applicationUid,
+        buildId,
+        snapshotId,
+        versionUrl,
+      };
       await this.zephyr_engine.build_finished();
-    } finally {
-      if (buildInProgress && this.zephyr_engine.hasActiveBuild !== false) {
+      return result;
+    } catch (error) {
+      if (this.zephyr_engine?.hasActiveBuild !== false) {
         this.zephyr_engine.build_failed();
       }
+      throw error;
     }
   }
 
@@ -258,23 +275,17 @@ export class ZephyrMetroPlugin {
           : this.#config.outDir,
     });
 
-    return assets.reduce((acc, asset) => {
-      acc[asset.fileName] = asset;
-      return acc;
-    }, {} as any);
+    const byPath: Record<string, OutputAsset> = {};
+    for (const asset of assets) {
+      if (!asset.fileName || byPath[asset.fileName]) {
+        throw new Error(`Duplicate or empty Metro output path: ${asset.fileName}`);
+      }
+      byPath[asset.fileName] = asset;
+    }
+    return byPath;
   }
 
   private async makeAssetsMap(): Promise<ZeBuildAssetsMap> {
-    const assets = await this.loadStaticAssets();
-
-    return buildAssetsMap(assets, this.extractBuffer, this.getAssetType);
-  }
-
-  private extractBuffer(asset: OutputAsset): string | undefined {
-    return asset.source?.toString();
-  }
-
-  private getAssetType(asset: OutputAsset): string {
-    return asset.type ?? 'asset';
+    return createMetroAssetsMap(await this.loadStaticAssets());
   }
 }

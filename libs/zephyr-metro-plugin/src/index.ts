@@ -29,3 +29,10 @@ export {
   type ZephyrMetroRNEFPluginConfig,
   type RNEFPluginApi,
 } from './lib/zephyr-metro-rnef-plugin';
+
+export {
+  publishPrebuiltMetroArtifacts,
+  PrebuiltMetroPublishError,
+  type PublishPrebuiltMetroOptions,
+  type MetroPublicationResult,
+} from './lib/publish-prebuilt-metro-artifacts';

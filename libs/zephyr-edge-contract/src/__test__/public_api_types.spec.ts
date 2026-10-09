@@ -2,6 +2,7 @@ import { describe, expect, test } from '@rstest/core';
 
 import type {
   PublishRequest,
+  PublishedZephyrManifest,
   StageZeroPublishRequest,
   PublishTarget,
   ZeEnvs,
@@ -28,6 +29,21 @@ import type {
 } from '../index';
 
 describe('type exports', () => {
+  test('should export the additive PublishedZephyrManifest type', () => {
+    const manifest = {
+      content: {
+        version: '1.0.0',
+        timestamp: '2026-08-10T00:00:00.000Z',
+        dependencies: {},
+        zeVars: {},
+      },
+      serializedContent: '{"version":"1.0.0"}',
+      hash: '0'.repeat(64),
+    } satisfies PublishedZephyrManifest;
+
+    expect(manifest.serializedContent).toBe('{"version":"1.0.0"}');
+  });
+
   test('should export PublishRequest type', () => {
     type TestPublishRequest = PublishRequest;
     const obj: TestPublishRequest = {} as TestPublishRequest;

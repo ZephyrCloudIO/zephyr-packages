@@ -8,6 +8,7 @@ const originalSessionStorage = Object.getOwnPropertyDescriptor(
   globalThis,
   'sessionStorage'
 );
+const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
 let manifestSequence = 0;
 
 afterEach(() => {
@@ -17,6 +18,12 @@ afterEach(() => {
   } else {
     Reflect.deleteProperty(globalThis, 'sessionStorage');
   }
+  if (originalDocument) {
+    Object.defineProperty(globalThis, 'document', originalDocument);
+  } else {
+    Reflect.deleteProperty(globalThis, 'document');
+  }
+  (globalThis as any).__ZEPHYR_MANIFEST_CACHE__?.clear();
 });
 
 function dependency(overrides: Partial<ZephyrDependency> = {}): ZephyrDependency {
@@ -66,6 +73,69 @@ async function resolveRemote(
 
   return await plugin.beforeRequest!(args);
 }
+
+function mockManifestFetch() {
+  globalThis.fetch = rs.fn(async () => ({
+    ok: true,
+    json: async () => manifest(dependency()),
+  })) as unknown as typeof fetch;
+}
+
+function injectManifestMeta(content: string) {
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      currentScript: null,
+      querySelector: () => ({ getAttribute: () => content }),
+    },
+  });
+}
+
+describe('createZephyrRuntimePlugin manifest URL resolution', () => {
+  it('prefers an explicit URL over injected metadata and preserves it opaquely', () => {
+    mockManifestFetch();
+    injectManifestMeta('/zephyr-manifest.meta.json');
+    const explicitUrl = '/manifests/pinned.json?target=a%2Fb#revision';
+
+    createZephyrRuntimePlugin({ manifestUrl: explicitUrl });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(explicitUrl);
+  });
+
+  it('uses the injected metadata URL when no explicit URL is provided', () => {
+    mockManifestFetch();
+    const metaUrl =
+      '/zephyr-manifest.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json?source=edge#pin';
+    injectManifestMeta(metaUrl);
+
+    createZephyrRuntimePlugin();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(metaUrl);
+  });
+
+  it('falls back to the stable alias without a DOM', () => {
+    mockManifestFetch();
+    Reflect.deleteProperty(globalThis, 'document');
+
+    createZephyrRuntimePlugin();
+
+    expect(globalThis.fetch).toHaveBeenCalledWith('/zephyr-manifest.json');
+  });
+
+  it('keys the global cache by the complete selected URL', () => {
+    mockManifestFetch();
+    const first = '/manifest.json?revision=one#pin';
+    const second = '/manifest.json?revision=two#pin';
+
+    createZephyrRuntimePlugin({ manifestUrl: first });
+    createZephyrRuntimePlugin({ manifestUrl: second });
+    createZephyrRuntimePlugin({ manifestUrl: first });
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    expect(globalThis.fetch).toHaveBeenCalledWith(first);
+    expect(globalThis.fetch).toHaveBeenCalledWith(second);
+  });
+});
 
 describe('createZephyrRuntimePlugin remote resolution', () => {
   it('preserves the MF manifest URL and lets its snapshot define the entry type', async () => {

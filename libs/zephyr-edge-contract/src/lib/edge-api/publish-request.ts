@@ -1,12 +1,15 @@
 import type { ZephyrManifest } from '../zephyr-manifest';
 
+export interface PublishedZephyrManifest {
+  content: ZephyrManifest;
+  serializedContent?: string;
+  hash: string;
+}
+
 export interface PublishTarget {
   url: string;
   hostname: string;
-  zephyrManifestFile?: {
-    content: ZephyrManifest;
-    hash: string;
-  };
+  zephyrManifestFile?: PublishedZephyrManifest;
 }
 
 /** The control plane records every version, tag, environment, and CNAME target. */

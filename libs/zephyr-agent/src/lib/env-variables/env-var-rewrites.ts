@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
+
 // Shared helpers for virtual env module + import map
 
 export const VIRTUAL_SPECIFIER = 'env:vars';
@@ -172,18 +175,10 @@ export function generateManifestContent(
 }
 
 export function calculateManifestHash(content: string): string {
-  // Try to use Node.js crypto module if available
-  try {
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update(content).digest('hex');
-  } catch {
-    // Fallback to djb2 hash for environments without crypto
-    let h = 5381;
-    for (let i = 0; i < content.length; i++) {
-      h = ((h << 5) + h) ^ content.charCodeAt(i);
-    }
-    return (h >>> 0).toString(36);
-  }
+  return createHash('sha256')
+    .update(Buffer.from(content, 'utf8'))
+    .update(Buffer.from(ZEPHYR_MANIFEST_FILENAME, 'utf8'))
+    .digest('hex');
 }
 
 export function collectZEPublicVars(

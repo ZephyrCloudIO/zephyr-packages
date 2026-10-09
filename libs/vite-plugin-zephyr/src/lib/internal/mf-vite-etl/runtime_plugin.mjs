@@ -35,6 +35,19 @@ function getScriptBaseUrl() {
   return '';
 }
 
+function getInjectedManifestUrl() {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const manifestUrl = document
+    .querySelector('meta[name="zephyr-manifest"]')
+    ?.getAttribute('content')
+    ?.trim();
+
+  return manifestUrl || undefined;
+}
+
 function getRemotes(args) {
   if (Array.isArray(args?.options?.remotes)) {
     return args.options.remotes;
@@ -49,7 +62,7 @@ function getRemotes(args) {
 
 export default function createZephyrRuntimePlugin(options = {}) {
   const defaultManifestUrl = `${getScriptBaseUrl()}/zephyr-manifest.json`;
-  const { manifestUrl = defaultManifestUrl } = options;
+  const manifestUrl = options.manifestUrl ?? getInjectedManifestUrl() ?? defaultManifestUrl;
 
   let processedRemotes;
 
@@ -98,7 +111,7 @@ export default function createZephyrRuntimePlugin(options = {}) {
         return args;
       }
 
-      const resolvedUrl = getResolvedRemoteUrl(processedRemotes[remoteName]);
+      const resolvedEntry = getResolvedRemoteEntry(processedRemotes[remoteName]);
       const remotes = getRemotes(args);
 
       const targetRemote = remotes.find(
@@ -109,7 +122,13 @@ export default function createZephyrRuntimePlugin(options = {}) {
         return args;
       }
 
-      targetRemote.entry = resolvedUrl;
+      targetRemote.entry = resolvedEntry.url;
+
+      if (resolvedEntry.isManifest) {
+        delete targetRemote.type;
+      } else if (resolvedEntry.libraryType) {
+        targetRemote.type = resolvedEntry.libraryType;
+      }
 
       return args;
     },
@@ -153,17 +172,39 @@ function hasEntry(remote) {
   );
 }
 
-function getResolvedRemoteUrl(resolvedRemote) {
+function getResolvedRemoteEntry(resolvedRemote) {
   const _window = typeof window !== 'undefined' ? window : globalThis;
 
   const sessionEdgeURL = _window.sessionStorage?.getItem?.(resolvedRemote.application_uid);
 
-  let edgeUrl = sessionEdgeURL ?? resolvedRemote.remote_entry_url;
+  let edgeUrl = sessionEdgeURL ?? resolvedRemote.manifest_url ?? resolvedRemote.remote_entry_url;
 
-  if (edgeUrl.indexOf('@') !== -1) {
-    const [, url] = edgeUrl.split('@');
-    edgeUrl = url;
+  edgeUrl = stripRemoteNamePrefix(edgeUrl);
+
+  const pathname = edgeUrl.split(/[?#]/, 1)[0];
+  const isManifest = pathname.endsWith('.json');
+
+  return {
+    url: edgeUrl,
+    isManifest,
+    libraryType: isManifest ? undefined : resolvedRemote.library_type,
+  };
+}
+
+function stripRemoteNamePrefix(entry) {
+  if (/^(?:https?:)?\/\//.test(entry)) {
+    return entry;
   }
 
-  return edgeUrl;
+  const absoluteUrlIndex = entry.search(/https?:\/\//);
+  if (absoluteUrlIndex > 0) {
+    return entry.slice(absoluteUrlIndex);
+  }
+
+  const separatorIndex = entry.lastIndexOf('@');
+  if (separatorIndex !== -1) {
+    return entry.slice(separatorIndex + 1);
+  }
+
+  return entry;
 }

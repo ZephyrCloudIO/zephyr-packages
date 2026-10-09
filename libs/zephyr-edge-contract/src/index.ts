@@ -9,6 +9,7 @@ export {
 } from './lib/build-target';
 export type {
   GatewayPublishRequest,
+  PublishedZephyrManifest,
   PublishRequest,
   PublishTarget,
   PublishTargets,
@@ -55,7 +56,12 @@ export type {
   ZephyrRuntimeNamespace,
 } from './lib/zephyr-global';
 export {
+  getHashedZephyrManifestFilename,
+  getHashedZephyrManifestPath,
+  isZephyrManifestHash,
   ZEPHYR_MANIFEST_FILENAME,
+  ZEPHYR_MANIFEST_HASH_REGEXP,
+  ZEPHYR_MANIFEST_META_NAME,
   ZEPHYR_MANIFEST_VERSION,
   type ZephyrManifest,
 } from './lib/zephyr-manifest';

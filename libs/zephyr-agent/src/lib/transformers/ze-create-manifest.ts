@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
 import {
+  ZEPHYR_MANIFEST_FILENAME,
   ZEPHYR_MANIFEST_VERSION,
   type ZeBuildAsset,
   type ZephyrDependency,
@@ -7,7 +7,7 @@ import {
 } from 'zephyr-edge-contract';
 import type { ZeResolvedDependency } from '../../zephyr-engine/resolve_remote_dependency';
 import { ze_log } from '../logging';
-import { collectZEPublicVars } from '../env-variables';
+import { calculateManifestHash, collectZEPublicVars } from '../env-variables';
 
 export function convertResolvedDependencies(
   dependencies: ZeResolvedDependency[]
@@ -94,16 +94,12 @@ export function createManifestContent(
 }
 
 export function createManifestAsset(content: string): ZeBuildAsset {
-  const contentBuffer = Buffer.from(content);
-
-  // Calculate hash for the content
-  const hash = createHash('sha256')
-    .update(content + 'zephyr-manifest.json')
-    .digest('hex');
+  const contentBuffer = Buffer.from(content, 'utf8');
+  const hash = calculateManifestHash(content);
 
   // Return the asset object
   return {
-    path: 'zephyr-manifest.json',
+    path: ZEPHYR_MANIFEST_FILENAME,
     extname: '.json',
     hash,
     size: contentBuffer.length,

@@ -58,6 +58,19 @@ function getScriptBaseUrl(): string {
   return '';
 }
 
+function getInjectedManifestUrl(): string | undefined {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const manifestUrl = document
+    .querySelector('meta[name="zephyr-manifest"]')
+    ?.getAttribute('content')
+    ?.trim();
+
+  return manifestUrl || undefined;
+}
+
 /**
  * Basic Zephyr Runtime Plugin (no OTA features) Suitable for web applications that don't
  * need OTA updates
@@ -74,8 +87,8 @@ export function createZephyrRuntimePlugin(
   options: ZephyrRuntimePluginOptions = {}
 ): FederationRuntimePlugin {
   const defaultManifestUrl = `${getScriptBaseUrl()}/zephyr-manifest.json`;
-
-  const { manifestUrl = defaultManifestUrl } = options;
+  const manifestUrl =
+    options.manifestUrl ?? getInjectedManifestUrl() ?? defaultManifestUrl;
 
   let processedRemotes: Record<string, ZephyrDependency> | undefined;
 

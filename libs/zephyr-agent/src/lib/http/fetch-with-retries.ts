@@ -264,7 +264,8 @@ export async function fetchWithRetries(
   url: URL,
   options: RequestInit = {},
   retries = 3,
-  deadlineMs = DEFAULT_HTTP_DEADLINE_MS
+  deadlineMs = DEFAULT_HTTP_DEADLINE_MS,
+  retryClientErrors = true
 ): Promise<Response> {
   const method = (options.method ?? 'GET').toUpperCase();
   // Mutation requests remain single-shot unless the caller explicitly supplies a
@@ -329,6 +330,7 @@ export async function fetchWithRetries(
       if (
         attempt < maxRetries &&
         isRetryableStatus(response.status) &&
+        (retryClientErrors || response.status >= 500) &&
         (await waitForRetry(
           attempt,
           deadline,

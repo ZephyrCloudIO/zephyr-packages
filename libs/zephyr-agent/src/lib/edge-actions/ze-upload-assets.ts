@@ -99,9 +99,15 @@ export async function zeUploadAssets(
     appConfig: ZeApplicationConfig,
     assetsMap: ZeBuildAssetsMap
   ) {
+    // The hash list is an optimization; a failed (e.g. forbidden) list means "upload all".
     const hash_set = await getApplicationHashList({
       application_uid: zephyr_engine.application_uid,
       edge_url: envCfg.edgeUrl,
+    }).catch((error: unknown) => {
+      ze_log.upload(
+        `Failed to load hash list for env ${env}; uploading all assets: ${error}`
+      );
+      return { hashes: [] as string[] };
     });
     const missingAssets = get_missing_assets({
       assetsMap,

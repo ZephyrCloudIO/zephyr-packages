@@ -21,7 +21,20 @@ export interface ZephyrEngineOptions {
   target?: ZephyrBuildTarget;
   /** Existing build-start boundary, e.g. CLI capture before running build commands. */
   sourceCapture?: SourceCapture;
+  /**
+   * Isolated application identity for projects that are not npm packages, such as an MCP
+   * skills repository. The engine reads `zephyr.config.*` only from `context`, never
+   * walks up, never reads `package.json`, and uses version `0.0.0`. `appName` from that
+   * config still wins and must already be a valid skill name.
+   */
+  identity?: ZephyrEngineIdentity;
 }
+
+/** See {@link ZephyrEngineOptions.identity}. */
+export type ZephyrEngineIdentity =
+  | { name: string; version?: '0.0.0'; isolated: true }
+  /** Derive the name as `slug(git project)`, else `slug(basename(context))`. */
+  | { fromGitProject: true; isolated: true };
 
 /** Adapter-defined role, commonly client, server, csr, ssr, rsc, or worker. */
 export type BuildParticipantRole = string;

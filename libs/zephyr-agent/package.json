@@ -75,6 +75,7 @@
     "jiti": "catalog:",
     "jose": "catalog:",
     "open": "catalog:",
+    "yaml": "catalog:",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {

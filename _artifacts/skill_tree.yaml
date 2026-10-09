@@ -59,10 +59,11 @@ skills:
       slug: zephyr-core,
       domain: sdk,
       path: skills/zephyr-core/SKILL.md,
-      description: 'Use when the user asks about Zephyr setup, with-zephyr, SDK
+      description: "Use when the user asks about Zephyr setup, with-zephyr, SDK
         selection, Change Attribution, human/AI contributions, dirty-source
         version differences, versions, tags, environments, snapshot/version
-        URLs, dashboard workflows, docs, or public env vars.',
+        URLs, dashboard workflows, docs, public env vars, or publishing agent
+        skills and tools privately to the organization's Zephyr MCP.",
       sources:
         [
           ZephyrCloudIO/zephyr-packages:**/skills/zephyr-core/references/*.md,
@@ -101,6 +102,11 @@ skills:
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/node-persist/upload-provider-options.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/mcp-provider.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/mcp/*.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/build-context/isolated-identity.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/zephyr-engine.types.ts,
+          ZephyrCloudIO/zephyr-packages:**/docs/mcp-provider-publication.md,
         ],
       requires: [],
       purpose: 'Use when the user asks about Zephyr setup, with-zephyr, SDK selection,
@@ -131,11 +137,13 @@ skills:
       domain: cli,
       package: libs/zephyr-cli,
       path: skills/zephyr-cli/SKILL.md,
-      description: 'Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
+      description: "Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
         stack has no Zephyr bundler plugin, when wrapping a build command or
         deploying a prebuilt directory, when publishing TAP mini-app output,
-        or when running ze-cli doctor to inspect project readiness, or
-        comparing opted-in Change Attribution records.',
+        when publishing a skills repo or @module-federation/mcp tools build
+        privately to the organization's Zephyr MCP (with optional CI eval
+        results), when running ze-cli doctor to inspect project or MCP
+        provider readiness, or comparing opted-in Change Attribution records.",
       sources:
         [
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/cli.ts,
@@ -147,7 +155,10 @@ skills:
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/lib/command-detector.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/lib/publication-metadata.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/doctor/schema.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/doctor/analyze.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/src/mcp/*.ts,
           ZephyrCloudIO/zephyr-packages:**/libs/zephyr-cli/README.md,
+          ZephyrCloudIO/zephyr-packages:**/docs/mcp-provider-publication.md,
         ],
       requires: [],
       purpose: "Publish an application's existing build output through ze-cli without

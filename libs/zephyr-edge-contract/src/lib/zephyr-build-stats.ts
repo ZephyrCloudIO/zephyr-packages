@@ -2,6 +2,7 @@
 
 import type { ZephyrBuildTarget } from './build-target';
 import type { ChangeAttribution } from './change-attribution';
+import type { ZephyrBuildStatsMcp } from './mcp-provider';
 import type { ZephyrModuleFederationBuildMetadata } from './module-federation';
 
 /** Legacy dashboard/build-statistics envelope shared by every Zephyr adapter. */
@@ -159,6 +160,8 @@ export interface ZephyrBuildStats {
   worker_version?: string;
   /** When true, plugin waits for terminal deployment status before finishing. */
   waitForCompletion?: boolean;
+  /** Descriptor, inline catalog and optional eval results of an MCP provider version. */
+  mcp?: ZephyrBuildStatsMcp;
 }
 
 enum DeploymentIntegrationPlatform {

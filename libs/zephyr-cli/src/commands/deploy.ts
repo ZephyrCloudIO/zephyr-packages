@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 import { ZephyrEngine, logFn, ZephyrError, ZeErrors } from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
+import { classifyMcpDirectory } from '../mcp/classify';
+import { deployMcpProvider, warnPublicSkillsDirectory } from '../mcp/deploy';
 import { loadPublicationMetadata } from '../lib/publication-metadata';
 import { uploadAssets } from '../lib/upload';
 
@@ -13,6 +15,8 @@ export interface DeployOptions {
   ssr?: boolean;
   /** JSON sidecar emitted by a TAP SDK or compatible bundler. */
   metadataPath?: string;
+  /** CI eval results (`zephyr-evals/v1`) for an MCP provider deploy. */
+  evalResultsPath?: string;
   cwd: string;
 }
 
@@ -21,7 +25,7 @@ export interface DeployOptions {
  * the standalone zephyr-cli tool.
  */
 export async function deployCommand(options: DeployOptions): Promise<void> {
-  const { directory, target, verbose, ssr, metadataPath, cwd } = options;
+  const { directory, target, verbose, ssr, metadataPath, evalResultsPath, cwd } = options;
 
   // Resolve the directory path
   const directoryPath = resolve(cwd, directory);
@@ -33,6 +37,32 @@ export async function deployCommand(options: DeployOptions): Promise<void> {
     throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
       message: `Directory does not exist: ${directoryPath}`,
     });
+  }
+
+  // MCP providers (artifact or skills repo) take their own checked path and never fall
+  // through to the generic directory upload (contract section 8.1).
+  const classification = await classifyMcpDirectory(directoryPath);
+  if (classification.kind !== 'legacy') {
+    await deployMcpProvider({
+      directoryPath,
+      classification,
+      target,
+      ssr,
+      metadataPath,
+      evalResultsPath,
+      verbose,
+      cwd,
+    });
+    return;
+  }
+  if (evalResultsPath !== undefined) {
+    throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+      message:
+        '--eval-results is only supported when deploying an MCP provider (a skills repo or a directory with mcp-provider.json).',
+    });
+  }
+  if (classification.publicSkillsDirectory) {
+    warnPublicSkillsDirectory(directoryPath);
   }
 
   if (verbose) {

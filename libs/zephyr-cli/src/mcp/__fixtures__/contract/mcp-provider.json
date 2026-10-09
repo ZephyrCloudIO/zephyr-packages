@@ -1,0 +1,10 @@
+{
+  "manifestVersion": 1,
+  "name": "tools-basic",
+  "version": "1.0.0",
+  "catalog": "catalog.json",
+  "generator": {
+    "name": "@module-federation/mcp/rslib",
+    "version": "0.2.0"
+  }
+}

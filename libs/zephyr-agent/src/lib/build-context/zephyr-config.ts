@@ -19,6 +19,8 @@ export interface ZephyrConfig {
   remoteDependencies?: Record<string, string>;
   /** Chooses mutable selector URLs or immutable version URLs for resolved remotes. */
   dependencyUrlMode?: ZephyrDependencyUrlMode;
+  /** Opts a package directory into MCP provider handling (skills repo) in ze-cli. */
+  mcp?: boolean;
 }
 
 export type ResolvedZephyrConfig = Readonly<
@@ -42,6 +44,7 @@ const CONFIG_FIELDS = new Set<keyof ZephyrConfig>([
   'appName',
   'remoteDependencies',
   'dependencyUrlMode',
+  'mcp',
 ]);
 
 const CONFIG_ERROR_MAX_LENGTH = 1_000;
@@ -74,9 +77,20 @@ export function resolveZephyrContextDirectory(context?: string): string {
   }
 }
 
+export interface GetZephyrConfigOptions {
+  /** Read only `<context>/zephyr.config.*`; never walk up to parent directories. */
+  isolated?: boolean;
+}
+
 /** Load and validate the nearest Zephyr config without reading environment overrides. */
-export function getZephyrConfig(context?: string): ResolvedZephyrConfig {
-  const configPath = findConfigPath(resolveZephyrContextDirectory(context));
+export function getZephyrConfig(
+  context?: string,
+  options: GetZephyrConfigOptions = {}
+): ResolvedZephyrConfig {
+  const configPath = findConfigPath(
+    resolveZephyrContextDirectory(context),
+    options.isolated
+  );
   if (!configPath) {
     return Object.freeze({});
   }
@@ -108,7 +122,7 @@ export function mergeRemoteDependencies(
   };
 }
 
-function findConfigPath(startingDirectory: string): string | undefined {
+function findConfigPath(startingDirectory: string, isolated = false): string | undefined {
   let directory = startingDirectory;
 
   while (true) {
@@ -124,6 +138,9 @@ function findConfigPath(startingDirectory: string): string | undefined {
     }
     if (matches[0]) {
       return matches[0];
+    }
+    if (isolated) {
+      return undefined;
     }
 
     const parent = dirname(directory);
@@ -215,6 +232,10 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     configPath
   );
   const dependencyUrlMode = readDependencyUrlMode(value['dependencyUrlMode'], configPath);
+  const mcp = value['mcp'];
+  if (mcp !== undefined && typeof mcp !== 'boolean') {
+    throwConfigError(configPath, 'mcp must be a boolean');
+  }
 
   return Object.freeze({
     ...(org ? { org } : {}),
@@ -222,6 +243,7 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     ...(appName ? { appName } : {}),
     ...(remoteDependencies ? { remoteDependencies } : {}),
     ...(dependencyUrlMode ? { dependencyUrlMode } : {}),
+    ...(mcp !== undefined ? { mcp } : {}),
   });
 }
 

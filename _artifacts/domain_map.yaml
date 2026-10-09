@@ -92,6 +92,9 @@ skills:
         retain local evidence and continue deployment when remote attribution is unavailable.
       - Keep ZE_PUBLIC_* values public and diagnose git, auth, and SDK
         mismatches.
+      - Explain MCP provider versions as private snapshots that release to the
+        organization's Zephyr MCP, their eligibility, isolated identity, and
+        exact upload set.
     covers:
       [
         with-zephyr,
@@ -107,6 +110,7 @@ skills:
         Git AI agent and editor integrations,
         private source records and dirty-version comparisons,
         native Codex and Grok metadata hooks and live T3 trials,
+        MCP provider snapshots and eval results,
       ]
   - name: zephyr-module-federation
     slug: zephyr-module-federation
@@ -136,6 +140,9 @@ skills:
         output directory.
       - Capture and compare optional local source records without authentication
         or deployment, preserving unknown provenance and build-boundary limits.
+      - Publish a skills repo or a @module-federation/mcp tools build to the
+        organization's Zephyr MCP with ze-cli deploy, check it with ze-cli doctor
+        (ZD07xx), and attach CI eval results.
     covers:
       [
         'run, deploy, watch, doctor',
@@ -143,6 +150,10 @@ skills:
         silent upload skip,
         TAP metadata sidecar,
         ZE_CI_TOKEN,
+        MCP classifier and deploy mode,
+        isolated skills-repo identity,
+        '--eval-results',
+        doctor schema 1.1.0 and ZD07xx,
       ]
   - name: zephyr-webpack
     slug: zephyr-webpack
@@ -403,4 +414,11 @@ gaps:
       ZephyrCloudIO/skills share a name and overlap on platform topics.
     context: Agents with both installed see two zephyr-core entries in separate
       namespaces. Decide whether to rename one before the next release.
+    status: open
+  - skill: zephyr-cli
+    question: MCP provider deploys were verified with fixture tests and mocked
+      engine/HTTP, not against a live Zephyr API or edge with the federated-mcp
+      flag.
+    context: The Zephyr edge and API halves of M1 land
+      separately; run one live skills-repo and tools-repo deploy after they ship.
     status: open

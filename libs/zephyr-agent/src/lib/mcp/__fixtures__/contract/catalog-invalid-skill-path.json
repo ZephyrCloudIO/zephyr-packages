@@ -1,0 +1,133 @@
+{
+  "manifestVersion": 1,
+  "provider": {
+    "name": "tools-basic",
+    "version": "1.0.0"
+  },
+  "skills": [
+    {
+      "name": "quote-a-deal",
+      "path": "skills/other",
+      "frontmatter": {
+        "name": "quote-a-deal",
+        "description": "Quote a deal with the current price book. Use when a customer asks for a price.",
+        "metadata": {
+          "owner": "billing",
+          "contact": "#billing-team"
+        }
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "mimeType": "text/markdown",
+          "size": 380,
+          "sha256": "0db3e99a5c97902110fd0622c42f182e7fa554cc3afcedf1876582296f0d8f11"
+        },
+        {
+          "path": "assets/logo.bin",
+          "mimeType": "application/octet-stream",
+          "size": 13,
+          "sha256": "697637f8378e9f435b6afe1da029e522a57dba35af7f88f6bfd46c61eae81a19"
+        },
+        {
+          "path": "references/Zebra.md",
+          "mimeType": "text/markdown",
+          "size": 15,
+          "sha256": "cfb25c02a263a12b4cf8197cdef1d7c0d6066be10d851a7f73d583a7937b64f0"
+        },
+        {
+          "path": "references/apple.md",
+          "mimeType": "text/markdown",
+          "size": 15,
+          "sha256": "9fec896d2977e81343eb330cd7a88ec0d7ee153680d3387fa4fc10965f10864e"
+        },
+        {
+          "path": "references/price-book.md",
+          "mimeType": "text/markdown",
+          "size": 42,
+          "sha256": "2a7ab6bd9d831a4e2fd2da3b668436db61f46fba97224e69b0af5806e0f9862b"
+        },
+        {
+          "path": "scripts/check.ts",
+          "mimeType": "text/typescript",
+          "size": 62,
+          "sha256": "abcfd76745aa4927203b35ce6bcfa24a9983d72d836490c015f754b697044536"
+        }
+      ]
+    },
+    {
+      "name": "release-a-frontend",
+      "path": "skills/release-a-frontend",
+      "frontmatter": {
+        "name": "release-a-frontend",
+        "description": "Release a frontend version through Zephyr environments. Use when asked to ship or roll back a web app.",
+        "license": "MIT",
+        "metadata": {
+          "owner": "platform",
+          "contact": "platform@example.com"
+        }
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "mimeType": "text/markdown",
+          "size": 327,
+          "sha256": "9e03cf6ceddd483d9b683e7469ef72dfae43d679f22e732e564a281d4dd18cf7"
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "quote_price",
+      "description": "Price a basket with the checkout pricing rules.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "sku",
+          "quantity"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true
+      }
+    }
+  ],
+  "runtime": {
+    "protocol": 1,
+    "entry": "tools/index.js",
+    "modules": [
+      {
+        "path": "tools/index.js",
+        "size": 2348,
+        "sha256": "c49264d91dc6d7450b98529a96ed2f5d89a7a1492f6e90c71efb8e5ff35209b8"
+      }
+    ],
+    "compatibilityDate": "2026-07-01",
+    "compatibilityFlags": [
+      "enable_request_signal"
+    ]
+  }
+}

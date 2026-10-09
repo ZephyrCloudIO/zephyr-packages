@@ -11,6 +11,7 @@
     "**/.turbo/**",
     "pnpm-lock.yaml",
     "**/*.gen.ts",
+    "libs/*/src/**/mcp/__fixtures__/contract/**",
     "CHANGELOG.md",
     "libs/create-zephyr-apps/.claude-plugin/plugin.json",
     "libs/create-zephyr-apps/.codex-plugin/plugin.json",

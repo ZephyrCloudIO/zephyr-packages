@@ -1,6 +1,6 @@
 ---
 name: zephyr-core
-description: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, Change Attribution, human/AI contributions, dirty-source version differences, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or public env vars.
+description: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, Change Attribution, human/AI contributions, dirty-source version differences, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, public env vars, or publishing agent skills and tools privately to the organization's Zephyr MCP.
 license: Apache-2.0
 metadata:
   author: Zephyr Cloud IO
@@ -44,6 +44,11 @@ sources:
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/node-persist/upload-provider-options.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts
   - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/mcp-provider.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/mcp/*.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/build-context/isolated-identity.ts
+  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/zephyr-engine.types.ts
+  - ZephyrCloudIO/zephyr-packages:**/docs/mcp-provider-publication.md
 ---
 
 # Zephyr Core
@@ -95,6 +100,8 @@ Zephyr is a build-integrated deployment platform for frontend and frontend-adjac
 8. Read `references/change-attribution.md` for optional tracking, agent/editor hooks,
    source fingerprints, and version comparisons involving local changes. Obtain
    explicit opt-in before enabling capture or installing hooks.
+9. Read `references/mcp-providers.md` when the user publishes agent skills or tools
+   to the organization's Zephyr MCP, or a deploy unexpectedly became private.
 
 ## Source priorities
 

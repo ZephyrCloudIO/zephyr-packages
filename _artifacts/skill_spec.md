@@ -179,6 +179,69 @@ commands; both the check scripts and CI use that wrapper.
 
 ## Coverage and batch history
 
+- 2026-10-09: Zephyr MCP for teams M1 at baseline `1010dd6a`. zephyr-agent now
+  detects a root `mcp-provider.json`, validates the exact artifact set, requires
+  `MCP_PRIVATE_SNAPSHOTS`, and sets `snapshot.mcp` and `buildStats.mcp`
+  (synchronous, 120 s, 4xx as issue paths). The engine gains an isolated
+  identity option without new class methods. ze-cli gains one classifier for
+  deploy/run/watch/doctor, skills-repo and provider-artifact deploy modes,
+  `--eval-results`, ZD07xx doctor codes with shared rule ids, and doctor schema
+  `1.1.0`. Updated `zephyr-cli` (new MCP section, `npx zephyr-cli` naming,
+  pitfalls) and `zephyr-core` (new `references/mcp-providers.md` behind a reading
+  condition); existing purposes preserved. Checks: rstest suites for the three
+  libraries, contract fixtures (skills-basic catalog equality, skills-broken
+  findings, every invalid catalog), built-CLI doctor smoke runs. Remaining: live
+  deploy against the M1 edge and API (see gaps), and preset-only ZD0735/ZD0736.
+  Second pass (same baseline): the catalog itself rejects denied skill paths
+  (ZD0742, `.map` and tools TypeScript matched in any case); skills-repo deploys
+  validate the in-memory artifact before `ZephyrEngine.create`; non-string
+  `license`/`allowed-tools` is ZD0711 like `@module-federation/mcp`; run and watch
+  print the public `skills/` warning; doctor runs artifact checks on a tools
+  repo's built `dist/`; only ZD07xx warnings are non-failing. Updated the
+  `zephyr-cli` doctor exit wording; `zephyr-core` needed no change.
+  Third pass (same baseline): deploy, run and watch read the zephyr.config opt-in
+  through the agent's config loader (doctor stays static), so a non-literal
+  `mcp: true` never falls through to a public upload; the secret scan no longer
+  skips files that are not valid UTF-8; eval results accept unknown keys like the
+  API; isolated names come from the repository even when zephyr.config sets
+  `project`; a mapped build-stats 403 keeps its issue paths; doctor's `mcp` section
+  gains `packageChecks`. Updated `zephyr-cli` (opt-in evaluation note) and the
+  publication doc; `zephyr-core` needed no change.
+  Contract v2.1 pass (same baseline): per-skill limits are 512 files, 16 MiB total
+  and 5 MiB per file (ZD0719) in agent and ze-cli; eval results are strict again
+  (unknown keys rejected at every level, real calendar `generatedAt`); the agent
+  rejects skill files outside the served folders and `node_modules` (ZD0742); a
+  BOM before SKILL.md frontmatter is ZD0711; links skip CommonMark code; latin1
+  fallback for the secret scan; dot files under `tools/` are not tools; a 401 on
+  MCP build stats stays an auth error; 409 and default-edge 422 get fixed hints.
+  Updated `zephyr-cli` (limits, strict eval results), the `zephyr-core` MCP
+  reference (limits, `node_modules`) and the publication doc.
+  Contract v2.2 pass (same baseline): `validateMcpArtifact` rejects a runtime
+  module that is not self-contained (static import, export-from, `import()`,
+  `node:`/`cloudflare:` specifiers, invalid UTF-8) as ZD0741 at `tools/index.js`,
+  with the same regex semantics as `@module-federation/mcp`, so agent deploys,
+  ze-cli deploy and doctor all report it; catalog frontmatter violations use
+  ZD0712/ZD0713/ZD0714; unserved and `node_modules` skill paths are ZD0741 and
+  ZD0742 is back to its listed set; ze-cli compares each served SKILL.md's
+  parsed frontmatter with the catalog's (key-sorted JSON, ZD0741); impossible
+  `compatibilityDate` values and folder links (ZD0716) are covered by tests.
+  Updated `zephyr-cli` (artifact rules), the `zephyr-core` MCP reference
+  (self-contained runtime) and the publication doc.
+  Contract v2.3 pass (same baseline): zephyr-agent's `validateMcpArtifact` now
+  owns the SKILL.md-vs-catalog frontmatter comparison (shared YAML parser, key-
+  sorted JSON, ZD0741 at `skills/<name>/SKILL.md`, ZD0711 when it does not
+  parse), so bundler-plugin uploads get it and ze-cli dropped its copy;
+  zephyr-agent now depends on `yaml` (workspace catalog) and ze-cli no longer
+  does. `runtime.compatibilityDate` before `2025-11-17` is ZD0741; backslash,
+  empty-segment and absolute catalog paths are ZD0741 (ZD0742 keeps the denied
+  list and dot segments); doctor passes catalog-listed denied paths to the agent
+  and resolves A-mode links against catalog-listed files, so a missing file is
+  reported once; R-mode non-string `license`/`allowed-tools` is ZD0714; ZD0732
+  evidence is `dist/mcp-provider.json` for an opted-in package, else `tools`,
+  in doctor and deploy. Binary fixtures are stored as `.base64`. Updated
+  `zephyr-cli` (artifact rules), the `zephyr-core` MCP reference and the
+  publication doc.
+
 - 2026-10-06: At PR #655 baseline `42ff4993`, preserve existing global
   `process.env.RSTEST` guards without redundant imports or nested guards, while
   retaining safe handling of local/imported bindings named `process`. The

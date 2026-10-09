@@ -1929,6 +1929,9 @@ importers:
       open:
         specifier: 'catalog:'
         version: 11.0.0
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.0
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract

@@ -3862,6 +3862,26 @@
       "outcome": "no-change",
       "reason": "Repository wiring for the new zephyr-mcp package (release config, TypeScript references, formatter ignores); no guidance change.",
       "evidence": ["Changed: tsconfig.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"]
+    },
+    "source:.gitattributes": {
+      "fingerprint": "6cfcf16f4034de881664c9a9b298f6e72caeb12ba65707740bfd2765cbd89fd0",
+      "snapshot": {
+        ".gitattributes": "4204af6f1775d76b383155dff2d9b17db9f1eff54d80930f16f84cfef51ebe17"
+      },
+      "head": "1eeabd12350672f2ae6311ff39d0302d20354f96",
+      "outcome": "no-change",
+      "reason": "CI configuration for byte-exact MCP fixtures on Windows and coverage collection; no guidance change.",
+      "evidence": ["Changed: .gitattributes at 1eeabd12350672f2ae6311ff39d0302d20354f96"]
+    },
+    "source:rstest.config.mts": {
+      "fingerprint": "d2986f776bc2d925fe3ca7921cf419865289a124e0dea8231fedb3be5c0e411b",
+      "snapshot": {
+        "rstest.config.mts": "f69414ca3029ae6c874c5251c9a3b5684f6509f6ae3018588642cec385508311"
+      },
+      "head": "1eeabd12350672f2ae6311ff39d0302d20354f96",
+      "outcome": "no-change",
+      "reason": "CI configuration for byte-exact MCP fixtures on Windows and coverage collection; no guidance change.",
+      "evidence": ["Changed: rstest.config.mts at 1eeabd12350672f2ae6311ff39d0302d20354f96"]
     }
   }
 }

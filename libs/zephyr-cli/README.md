@@ -92,7 +92,16 @@ ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 
 # Mark as SSR
 ze-cli deploy ./dist --ssr
+
+# Print the result as one JSON line on stdout, with logs on stderr
+ze-cli deploy ./dist --format json
 ```
+
+With `--format json`, a successful deploy prints
+`{"applicationUid":"…","versionUrl":"https://…","targetUrls":["https://…"]}`.
+`versionUrl` is the immutable URL of this version and is `null` if Zephyr returned
+none; `targetUrls` lists the tag and environment URLs that now serve it. Tools that
+deploy on a user's behalf should read this line instead of parsing logs.
 
 ### Watch Command
 
@@ -183,7 +192,7 @@ Every finding contains `code`, `severity`, `message`, structured `evidence`, and
 - `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
-- `--format <json|text>` - Doctor output format (default: `text`)
+- `--format <json|text>` - Doctor report format, or deploy result format (default: `text`)
 - `--verbose, -v` - Enable verbose output
 - `--help, -h` - Show help message
 

@@ -12,6 +12,7 @@
     "pnpm-lock.yaml",
     "**/*.gen.ts",
     "libs/*/src/**/mcp/__fixtures__/contract/**",
+    "libs/zephyr-mcp/__tests__/fixtures/**",
     "CHANGELOG.md",
     "libs/create-zephyr-apps/.claude-plugin/plugin.json",
     "libs/create-zephyr-apps/.codex-plugin/plugin.json",

@@ -39,7 +39,7 @@ const SEVERITY: Readonly<Record<DoctorMcpFindingCode, DoctorSeverity>> = {
 
 const REMEDIATION: Readonly<Record<DoctorMcpFindingCode, string>> = {
   ZD0701:
-    'Add skills/<skill-name>/SKILL.md, or tools/<tool_name>.ts built with the @module-federation/mcp/rslib preset.',
+    'Add skills/<skill-name>/SKILL.md, or tools/<tool_name>.ts built with the zephyr-mcp/rslib preset.',
   ZD0702:
     'Move the entry into references/, assets/ or scripts/, or delete it. It is not uploaded.',
   ZD0710: 'Add SKILL.md to the skill folder, or remove the folder.',
@@ -65,7 +65,7 @@ const REMEDIATION: Readonly<Record<DoctorMcpFindingCode, string>> = {
   ZD0731:
     'Declare annotations.readOnlyHint or annotations.destructiveHint in defineTool.',
   ZD0732:
-    'Build tools with the @module-federation/mcp/rslib preset, then run npx zephyr-cli deploy dist.',
+    'Build tools with the zephyr-mcp/rslib preset, then run npx zephyr-cli deploy dist.',
   ZD0733:
     'Remove the secret from the tool source and rotate it. Tool bundles are uploaded to Zephyr.',
   ZD0734:
@@ -75,9 +75,9 @@ const REMEDIATION: Readonly<Record<DoctorMcpFindingCode, string>> = {
   ZD0737:
     'Give the tool an input and output schema whose JSON Schema root is type "object".',
   ZD0740:
-    'Rebuild with the @module-federation/mcp/rslib preset; mcp-provider.json must match the contract exactly.',
+    'Rebuild with the zephyr-mcp/rslib preset; mcp-provider.json must match the contract exactly.',
   ZD0741:
-    'Keep the generated catalog.json within its limits (524,288 bytes, 200 skills, 200 tools), serve skill files only as SKILL.md or under references/, assets/ or scripts/ (never node_modules), bundle tools/index.js into one file without imports, and do not edit the catalog or the files it lists by hand; rebuild tools repos with the @module-federation/mcp/rslib preset.',
+    'Keep the generated catalog.json within its limits (524,288 bytes, 200 skills, 200 tools), serve skill files only as SKILL.md or under references/, assets/ or scripts/ (never node_modules), bundle tools/index.js into one file without imports, and do not edit the catalog or the files it lists by hand; rebuild tools repos with the zephyr-mcp/rslib preset.',
   ZD0742:
     'Remove evals, source maps, dotfiles and TypeScript sources under tools/ from the artifact.',
   ZD0743: 'Give every skill and every tool a unique name.',

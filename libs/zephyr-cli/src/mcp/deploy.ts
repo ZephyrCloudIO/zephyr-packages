@@ -32,7 +32,7 @@ export interface McpDeployOptions {
 }
 
 const TOOLS_BUILD_REMEDIATION =
-  'Tool files must be built with the @module-federation/mcp/rslib preset; then run npx zephyr-cli deploy dist.';
+  'Tool files must be built with the zephyr-mcp/rslib preset; then run npx zephyr-cli deploy dist.';
 
 /**
  * Deploy an MCP provider (contract sections 2, 3 and 8.1). Checks run first and any error
@@ -135,7 +135,7 @@ export async function assertNotMcpOutput(
 export function warnPublicSkillsDirectory(directory: string): void {
   logFn(
     'warn',
-    `${directory}/skills will be published publicly as part of this web upload. To publish skills privately to your organization's Zephyr MCP, add "mcp: true" to zephyr.config or depend on @module-federation/mcp, then run npx zephyr-cli deploy.`
+    `${directory}/skills will be published publicly as part of this web upload. To publish skills privately to your organization's Zephyr MCP, add "mcp: true" to zephyr.config or depend on zephyr-mcp, then run npx zephyr-cli deploy.`
   );
 }
 

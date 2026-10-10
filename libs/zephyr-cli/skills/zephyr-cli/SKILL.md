@@ -3,7 +3,7 @@ name: zephyr-cli
 description: Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
   stack has no Zephyr bundler plugin, when wrapping a build command or deploying
   a prebuilt directory, when publishing TAP mini-app output, when publishing a
-  skills repo or @module-federation/mcp tools build privately to the
+  skills repo or zephyr-mcp tools build privately to the
   organization's Zephyr MCP (with optional CI eval results), when running ze-cli
   doctor to inspect project or MCP provider readiness, or comparing opted-in
   Change Attribution records.
@@ -106,7 +106,7 @@ runs for `deploy`, `run`, `watch`, and `doctor`:
 1. `<dir>/mcp-provider.json` exists: a built provider artifact.
 2. No `<dir>/package.json`: `tools/*.ts` files fail with ZD0732; a `skills/`
    directory is a skills repo.
-3. `<dir>/package.json` opts in (a dependency on `@module-federation/mcp`, or
+3. `<dir>/package.json` opts in (a dependency on `zephyr-mcp`, or
    `mcp: true` in `<dir>/zephyr.config.*`): tool files fail with ZD0732 until
    built; a `skills/` directory is a skills repo.
 4. Anything else is a normal web deploy; a `skills/` folder there is published
@@ -118,7 +118,7 @@ that resolves to `mcp: true` opts in; `doctor` only sees a literal `mcp: true`.
 ```bash
 npx zephyr-cli doctor .                       # ZD07xx checks, no auth, no writes
 npx zephyr-cli deploy .                       # skills repo, built in memory
-npx zephyr-cli deploy dist                    # @module-federation/mcp/rslib output
+npx zephyr-cli deploy dist                    # zephyr-mcp/rslib output
 npx zephyr-cli deploy . --eval-results ./eval-results.json
 ```
 
@@ -186,7 +186,7 @@ place credentials in `ZE_PUBLIC_*` values, which are client-visible.
   cover Rsbuild and Module Federation setups and, for MCP providers, ZD07xx.
 - Do not add a `package.json` or `--target` to make a skills repo deploy; it is
   identified without one, and a `package.json` name is ignored for it.
-- Do not deploy a tools repo root; build it with the `@module-federation/mcp/rslib`
+- Do not deploy a tools repo root; build it with the `zephyr-mcp/rslib`
   preset and deploy `dist` (ZD0732 otherwise).
 
 ## Verify completion

@@ -3,8 +3,8 @@ import path from 'node:path';
 import { getZephyrConfig } from 'zephyr-agent';
 import { ZEPHYR_MCP_PROVIDER_FILENAME } from 'zephyr-edge-contract';
 
-/** The `@module-federation/mcp` package whose dependency opts a package directory in. */
-export const MCP_PACKAGE_NAME = '@module-federation/mcp';
+/** The `zephyr-mcp` package whose dependency opts a package directory in. */
+export const MCP_PACKAGE_NAME = 'zephyr-mcp';
 
 const ZEPHYR_CONFIG_FILES = [
   'zephyr.config.ts',

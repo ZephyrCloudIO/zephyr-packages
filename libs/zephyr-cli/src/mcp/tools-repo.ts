@@ -21,7 +21,7 @@ export interface ToolsRepoScan {
 /**
  * Source-repo (R) tool rules ze-cli can check without executing code: ZD0730, ZD0733,
  * ZD0734, and ZD0732 when the preset's `dist/mcp-provider.json` is missing. ZD0735 to
- * ZD0737 need the module and are enforced by the @module-federation/mcp/rslib preset.
+ * ZD0737 need the module and are enforced by the zephyr-mcp/rslib preset.
  */
 export async function scanToolsRepo(
   directory: string,
@@ -74,7 +74,7 @@ export async function scanToolsRepo(
     findings.push(
       mcpFinding(
         'ZD0732',
-        'Tool files need a package.json that depends on @module-federation/mcp and builds with its Rslib preset.',
+        'Tool files need a package.json that depends on zephyr-mcp and builds with its Rslib preset.',
         [{ path: 'tools' }]
       )
     );

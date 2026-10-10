@@ -11,7 +11,8 @@ read_when:
 An uploaded output whose root contains `mcp-provider.json` is an MCP provider. Its
 skills and tools are served to the organization's agents through the Zephyr MCP and
 are never public. This is M1 of Zephyr MCP for teams; the same contract is
-implemented by `@module-federation/mcp` (repo shape, Rslib preset), the Zephyr edge
+implemented by [`zephyr-mcp`](../libs/zephyr-mcp/README.md) (repo shape, Rslib
+preset, isolate protocol), the Zephyr edge
 (upload binding and private snapshots), the Zephyr API (storage, release, and
 resolve), and the Zephyr MCP (serving).
 
@@ -26,7 +27,7 @@ resolve), and the Zephyr MCP (serving).
 ```
 
 A skills-only repo has no `package.json` and no build: `npx zephyr-cli deploy .`
-builds the artifact in memory. A repo with tools depends on `@module-federation/mcp`,
+builds the artifact in memory. A repo with tools depends on `zephyr-mcp`,
 builds with its Rslib preset into `dist/`, and runs `npx zephyr-cli deploy dist`.
 
 `ze-cli` classifies `<dir>` the same way for `deploy`, `run`, `watch`, and `doctor`:
@@ -34,7 +35,7 @@ builds with its Rslib preset into `dist/`, and runs `npx zephyr-cli deploy dist`
 1. `<dir>/mcp-provider.json` exists: provider artifact.
 2. No `<dir>/package.json`: tool files are ZD0732 (evidence `tools`); a `skills/`
    directory is a skills repo.
-3. `<dir>/package.json` opts in (any dependency field names `@module-federation/mcp`,
+3. `<dir>/package.json` opts in (any dependency field names `zephyr-mcp`,
    or `<dir>/zephyr.config.*` sets `mcp: true`): tool files are ZD0732 (evidence
    `dist/mcp-provider.json`; deploy the built `dist/`); a `skills/` directory is a
    skills repo.

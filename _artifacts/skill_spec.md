@@ -195,7 +195,7 @@ commands; both the check scripts and CI use that wrapper.
   Second pass (same baseline): the catalog itself rejects denied skill paths
   (ZD0742, `.map` and tools TypeScript matched in any case); skills-repo deploys
   validate the in-memory artifact before `ZephyrEngine.create`; non-string
-  `license`/`allowed-tools` is ZD0711 like `@module-federation/mcp`; run and watch
+  `license`/`allowed-tools` is ZD0711 like `zephyr-mcp`; run and watch
   print the public `skills/` warning; doctor runs artifact checks on a tools
   repo's built `dist/`; only ZD07xx warnings are non-failing. Updated the
   `zephyr-cli` doctor exit wording; `zephyr-core` needed no change.
@@ -219,7 +219,7 @@ commands; both the check scripts and CI use that wrapper.
   Contract v2.2 pass (same baseline): `validateMcpArtifact` rejects a runtime
   module that is not self-contained (static import, export-from, `import()`,
   `node:`/`cloudflare:` specifiers, invalid UTF-8) as ZD0741 at `tools/index.js`,
-  with the same regex semantics as `@module-federation/mcp`, so agent deploys,
+  with the same regex semantics as `zephyr-mcp`, so agent deploys,
   ze-cli deploy and doctor all report it; catalog frontmatter violations use
   ZD0712/ZD0713/ZD0714; unserved and `node_modules` skill paths are ZD0741 and
   ZD0742 is back to its listed set; ze-cli compares each served SKILL.md's
@@ -241,6 +241,14 @@ commands; both the check scripts and CI use that wrapper.
   in doctor and deploy. Binary fixtures are stored as `.base64`. Updated
   `zephyr-cli` (artifact rules), the `zephyr-core` MCP reference and the
   publication doc.
+  zephyr-mcp pass (same baseline): the repo loader, checks, catalog manifest,
+  isolate worker protocol, `defineTool` and the Rslib preset move into this
+  repository as `libs/zephyr-mcp` (npm `zephyr-mcp`), with a new dedicated
+  `zephyr-mcp` skill in the `cli` domain. ze-cli opts a package in through a
+  `zephyr-mcp` dependency and names the `zephyr-mcp/rslib` preset, and fixture
+  descriptors name that generator. The package's fixture skills are stored as
+  `SKILL.fixture.md` so Intent does not register them. Updated `zephyr-cli`
+  (package name), the `zephyr-core` MCP reference and the publication doc.
 
 - 2026-10-06: At PR #655 baseline `42ff4993`, preserve existing global
   `process.env.RSTEST` guards without redundant imports or nested guards, while

@@ -70,8 +70,8 @@ export type DoctorFindingCode =
 export type DoctorMcpFindingCode = Extract<DoctorFindingCode, `ZD07${string}`>;
 
 /**
- * Stable rule ids shared with `@module-federation/mcp` repo checks. Each ZD07xx code maps
- * to exactly one rule id.
+ * Stable rule ids shared with `zephyr-mcp` repo checks. Each ZD07xx code maps to exactly
+ * one rule id.
  */
 export const DoctorMcpRuleId: Readonly<Record<DoctorMcpFindingCode, string>> = {
   ZD0701: 'repo-empty',

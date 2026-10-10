@@ -1,4 +1,4 @@
-// Same semantics as `runtimeModuleProblems` in @module-federation/mcp (contract amendment
+// Same semantics as `runtimeModuleProblems` in zephyr-mcp (contract amendment
 // 12.2), so every validator rejects the same runtime modules.
 
 // Whitespace and comments between tokens: `/**/import` hides nothing.

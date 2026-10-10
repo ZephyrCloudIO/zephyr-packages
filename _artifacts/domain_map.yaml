@@ -140,7 +140,7 @@ skills:
         output directory.
       - Capture and compare optional local source records without authentication
         or deployment, preserving unknown provenance and build-boundary limits.
-      - Publish a skills repo or a @module-federation/mcp tools build to the
+      - Publish a skills repo or a zephyr-mcp tools build to the
         organization's Zephyr MCP with ze-cli deploy, check it with ze-cli doctor
         (ZD07xx), and attach CI eval results.
     covers:
@@ -155,6 +155,19 @@ skills:
         '--eval-results',
         doctor schema 1.1.0 and ZD07xx,
       ]
+  - name: zephyr-mcp
+    slug: zephyr-mcp
+    domain: cli
+    description: Build a repo's tools into a provider artifact that the Zephyr MCP
+      runs in an isolate, and deploy it with ze-cli.
+    packages:
+      - zephyr-mcp
+    tasks:
+      - Decide whether a skills repo needs a build at all.
+      - Write tools/<tool_name>.ts with defineTool and the required hints.
+      - Build with the zephyr-mcp/rslib preset and deploy dist with ze-cli.
+      - Fix ZD07xx findings without moving secrets or splitting the bundle.
+    covers: [defineTool, zephyr-mcp/rslib, provider artifact, Worker Loader isolate, ZD07xx]
   - name: zephyr-webpack
     slug: zephyr-webpack
     domain: xpack

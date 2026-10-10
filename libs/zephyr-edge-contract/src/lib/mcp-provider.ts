@@ -27,7 +27,7 @@ export interface McpProviderDescriptor {
   version?: string;
   /** Artifact-relative catalog path, `catalog.json` in M1. */
   catalog: string;
-  /** `zephyr-cli` or `@module-federation/mcp/rslib`. */
+  /** `zephyr-cli` or `zephyr-mcp/rslib`. */
   generator: { name: string; version: string };
 }
 

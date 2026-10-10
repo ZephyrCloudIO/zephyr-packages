@@ -140,7 +140,7 @@ skills:
       description: "Upload build output to Zephyr with zephyr-cli (ze-cli); use when a
         stack has no Zephyr bundler plugin, when wrapping a build command or
         deploying a prebuilt directory, when publishing TAP mini-app output,
-        when publishing a skills repo or @module-federation/mcp tools build
+        when publishing a skills repo or zephyr-mcp tools build
         privately to the organization's Zephyr MCP (with optional CI eval
         results), when running ze-cli doctor to inspect project or MCP
         provider readiness, or comparing opted-in Change Attribution records.",
@@ -164,6 +164,31 @@ skills:
       purpose: "Publish an application's existing build output through ze-cli without
         a bundler plugin, choosing between run, deploy, watch, and doctor and
         confirming that an upload actually happened.",
+    },
+    {
+      name: zephyr-mcp,
+      slug: zephyr-mcp,
+      domain: cli,
+      package: libs/zephyr-mcp,
+      path: skills/zephyr-mcp/SKILL.md,
+      description: "Write and build agent tools for the organization's Zephyr MCP with
+        zephyr-mcp; use when adding tools/<tool_name>.ts with defineTool,
+        setting up the zephyr-mcp/rslib preset, fixing ZD07xx findings from a
+        tools build, or deciding whether a skills repo needs a build at all.",
+      sources:
+        [
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/src/define.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/src/types.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/src/rules.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/src/rslib/index.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/src/checks/*.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/src/worker/handler.ts,
+          ZephyrCloudIO/zephyr-packages:**/libs/zephyr-mcp/README.md,
+          ZephyrCloudIO/zephyr-packages:**/docs/mcp-provider-publication.md,
+        ],
+      requires: [],
+      purpose: "Build a repo's tools into a provider artifact that the Zephyr MCP runs
+        in an isolate, and deploy it with ze-cli.",
     },
     {
       name: zephyr-webpack,

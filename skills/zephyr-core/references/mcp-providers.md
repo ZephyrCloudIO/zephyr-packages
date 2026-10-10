@@ -21,7 +21,7 @@ skill.
   `scripts/`, and optional `evals/evals.json`. No `package.json` is needed. Deploy
   with `npx zephyr-cli deploy .`.
 - Tools repo: `tools/<tool_name>.ts`, a `package.json` depending on
-  `@module-federation/mcp`, built with its Rslib preset into `dist/`. Deploy with
+  `zephyr-mcp`, built with its Rslib preset into `dist/`. Deploy with
   `npx zephyr-cli deploy dist`.
 - Every skill needs frontmatter `name` (equal to the folder), `description`, and
   `metadata.owner` and `metadata.contact`. Run `npx zephyr-cli doctor .` for the

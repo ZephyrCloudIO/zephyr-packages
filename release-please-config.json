@@ -78,6 +78,11 @@
         },
         {
           "type": "json",
+          "path": "libs/zephyr-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "libs/zephyr-metro-plugin/package.json",
           "jsonpath": "$.version"
         },
@@ -182,6 +187,10 @@
         {
           "type": "generic",
           "path": "libs/zephyr-cli/skills/zephyr-cli/SKILL.md"
+        },
+        {
+          "type": "generic",
+          "path": "libs/zephyr-mcp/skills/zephyr-mcp/SKILL.md"
         },
         {
           "type": "generic",

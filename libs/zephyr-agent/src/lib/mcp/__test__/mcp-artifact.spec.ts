@@ -641,7 +641,7 @@ describe('Runtime module self-containment (amendment 12.2)', () => {
   });
 });
 
-describe('mcpRuntimeModuleProblems (same cases as @module-federation/mcp)', () => {
+describe('mcpRuntimeModuleProblems (same cases as zephyr-mcp)', () => {
   it.each([
     ['import x from "y";', 'static import'],
     ['a();import{b}from"y";', 'static import'],

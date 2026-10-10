@@ -157,7 +157,7 @@ export function checkSkill({
   }
 
   // Metadata that is not a mapping is already ZD0714; only absent or mapping metadata
-  // can be missing owner or contact, as in @module-federation/mcp.
+  // can be missing owner or contact, as in zephyr-mcp.
   const record =
     metadata === undefined
       ? {}
@@ -215,10 +215,9 @@ const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 
 /**
  * SKILL.md lines outside fenced code blocks, with inline code spans removed. Like
- * CommonMark and @module-federation/mcp: a fence is 3 or more backticks or tildes
- * indented up to 3 spaces, closes only on the same character with at least the same
- * length, and an unclosed fence runs to the end; a code span closes on a run of the same
- * length.
+ * CommonMark and zephyr-mcp: a fence is 3 or more backticks or tildes indented up to 3
+ * spaces, closes only on the same character with at least the same length, and an
+ * unclosed fence runs to the end; a code span closes on a run of the same length.
  */
 export function markdownProseLines(markdown: string): string[] {
   const lines: string[] = [];

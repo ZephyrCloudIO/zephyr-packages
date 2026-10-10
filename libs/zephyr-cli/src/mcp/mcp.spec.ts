@@ -67,7 +67,7 @@ describe('MCP classifier (contract section 8.1)', () => {
       'package.json',
       JSON.stringify({
         name: 'tools-repo',
-        devDependencies: { '@module-federation/mcp': '^0.2.0' },
+        devDependencies: { 'zephyr-mcp': '^0.2.0' },
       })
     );
     await writeFile(optedIn, 'tools/quote_price.ts', 'export default {};');
@@ -947,7 +947,7 @@ describe('ze-cli doctor for MCP providers', () => {
       'package.json',
       JSON.stringify({
         name: 'tools-repo',
-        dependencies: { '@module-federation/mcp': '0.2.0', '@rslib/core': '1.0.0' },
+        dependencies: { 'zephyr-mcp': '0.2.0', '@rslib/core': '1.0.0' },
       })
     );
     await writeFile(toolsRepo, 'tools/quote_price.ts', 'export default {};');

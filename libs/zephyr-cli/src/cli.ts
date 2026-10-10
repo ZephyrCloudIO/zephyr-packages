@@ -236,7 +236,7 @@ Examples:
 
   # Publish skills and tools to your organization's Zephyr MCP
   ze-cli deploy .                                   # skills repo (skills/<name>/SKILL.md)
-  ze-cli deploy dist                                # @module-federation/mcp/rslib output
+  ze-cli deploy dist                                # zephyr-mcp/rslib output
   ze-cli deploy . --eval-results ./eval-results.json
 
   # Inspect without mutation
@@ -249,7 +249,7 @@ How it works:
   - For deploy commands, ze-cli uploads assets from the specified directory.
   - A directory with mcp-provider.json, or a skills repo (skills/ without a
     package.json, or opted in with "mcp: true" in zephyr.config or a dependency
-    on @module-federation/mcp) is checked first and published privately as an
+    on zephyr-mcp) is checked first and published privately as an
     MCP provider: only the provider files are uploaded, never evals. run and
     watch refuse MCP providers.
   - For watch commands, ze-cli publishes each settled output change as a new immutable

@@ -1,0 +1,23 @@
+{
+  "cases": [
+    {
+      "providers": [
+        {
+          "providerId": "0b8c1c34-0000-4000-8000-000000000001",
+          "versionId": "7f3e9a10-0000-4000-8000-000000000001",
+          "catalogSha256": "446fbba346591f3570fff6937e35c2836b1682943801e11737f1df8c7f3ca209"
+        },
+        {
+          "providerId": "0b8c1c34-0000-4000-8000-000000000002",
+          "versionId": "7f3e9a10-0000-4000-8000-000000000002",
+          "catalogSha256": "d9298a10d1b0735837dc4bd85dac641b0f3cef27a47e5d53a54f2f3f5b2fcffa"
+        }
+      ],
+      "expected": "332d66ca62111174e385ee00de47fd2e2c7158f80d0cae593a0f7d84a78a240a"
+    },
+    {
+      "providers": [],
+      "expected": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

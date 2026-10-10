@@ -43,12 +43,12 @@
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "8105ca46c35e424078c09094f705d6702cebbf4beac271adc866d89a93427159",
+      "fingerprint": "f41eac3afda911a734d43c3261cdc249f17949c1b077aabab2ff19a62afb5f65",
       "snapshot": {
-        "_artifacts/domain_map.yaml": "5b2ef4504128b99057c36148360dde599f67a0622dcdaea6793066d14c8c5960",
-        "_artifacts/skill_spec.md": "8a6094fef73201c3142a0986579fa5d789d193ec76ca2ab13571f0e3c700a775",
-        "_artifacts/skill_tree.yaml": "40ccb20ecff0aa3304ab5880284592ef49b4bf4f96ef860c88667727cc49f888",
-        "docs/mcp-provider-publication.md": "9de28eb568a205f499b6c3eacdb947154051980ed79e368e5c1d761428a12830",
+        "_artifacts/domain_map.yaml": "6bf68774d11c034de363025a6a67decdfe2d35bc374eac56846e39422738a344",
+        "_artifacts/skill_spec.md": "b565aee7f561c60721769c65f890b41f5025c4ed6ecd303696a8ef92f5eefd12",
+        "_artifacts/skill_tree.yaml": "c30644c69313e6ddf7f0a6688e9dbea50f2aed5336ce9bc2306b363004afea8c",
+        "docs/mcp-provider-publication.md": "9726d33f0251ac66246dbcc21e64f3725d5f0f4b3de6a418b60cf880d30aec04",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/SKILL.md": "e72542b81098f5ee55f599a504b48bf586cf3f5b4e220a344ee5bd351eff3773",
         "libs/create-zephyr-apps/skills/create-zephyr-apps/agents/openai.yaml": "d431deb0d531f30b886ac666027daf841cedbe93d723e0383e7d068dedf10674",
         "libs/create-zephyr-apps/src/cli.spec.ts": "8501d0c55963413103d42d469ad73e39ef5f7736748275141170f56cb855f268",
@@ -135,7 +135,7 @@
         "libs/zephyr-agent/src/lib/mcp/map-build-stats-rejection.ts": "da89585eb01b6c7cab0beab05b16054776ab46b6b84be9b0f83033f6998367ea",
         "libs/zephyr-agent/src/lib/mcp/mcp-rules.ts": "959624f150e5784e3e187f749e0ace1c80275aa31a71673c4d32dd66775d1615",
         "libs/zephyr-agent/src/lib/mcp/prepare-mcp-upload.ts": "281e5a3a380dcd89eeeb19143afd3a679282b25dc404f34523ce57767e8d4c45",
-        "libs/zephyr-agent/src/lib/mcp/runtime-module.ts": "cdd73198a02bffa207191719fb441059a5047d62f4cedf056d6d857b04800720",
+        "libs/zephyr-agent/src/lib/mcp/runtime-module.ts": "7cf2ddf4935735a3faca027ec610bfc8f0a57893363dd3d82670efe6210310c0",
         "libs/zephyr-agent/src/lib/mcp/skill-frontmatter.ts": "a0cb9b1e8ca9c2481dd688cf24c6a92b5b659c744920216eee848c775ba46fbf",
         "libs/zephyr-agent/src/lib/mcp/validate-eval-results.ts": "0f9079c87559520cb0723f43a0fe389a0e0032a36737cc8f534291fe7c926a01",
         "libs/zephyr-agent/src/lib/mcp/validate-mcp-artifact.ts": "d8a6e93217b18b27b334c04fba19e3c8079df549b87e03da7b0c6584632cf874",
@@ -155,36 +155,52 @@
         "libs/zephyr-astro-integration/src/lib/astro-integration-zephyr.ts": "33a1463865e78585c46d8fe0c7e9336c768f263f38165898fce2ed9b0fdc5ff5",
         "libs/zephyr-astro-integration/src/lib/internal/__test__/extract-astro-assets-map.spec.ts": "b79b190a7a23437894821ae761d0f6b1fb85bd44ea9cf9dc9c8af6bd6f14b3dc",
         "libs/zephyr-astro-integration/src/lib/internal/extract-astro-assets-map.ts": "7a3d7205eec9dc1cdb34cebdbfacaa776d4bef918a3fcb052de88002160045e8",
-        "libs/zephyr-cli/README.md": "0c6b870183f3bc4f27296202d236aa62afe206b7ae15344579ae5f9b3223a9e3",
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "14ee05718373f91b7bad808a09c38a5be44d2535206da718a30ca83faaa74cb2",
-        "libs/zephyr-cli/src/cli.ts": "b934bf5c584c88018cf099b8a8f32dc9605d2b27558bd692e74baf6d85bf2fd1",
+        "libs/zephyr-cli/README.md": "a83b12a2e16a9208d887ad737e3a7c517a9bfe285135a54e98d7c24dd5319555",
+        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "42c4ff35b34cfb5a302bb8da7e70e1a49c9dc2f5102e2709b9b0c6d2e94cdf89",
+        "libs/zephyr-cli/src/cli.ts": "f7b2f97433adcee15af183624bc5544749d855114ef0e3e6f5cf773fabd87a6a",
         "libs/zephyr-cli/src/commands/attribution.ts": "6dddc66ea8930f3757256b272860c3e6a1550c07790eeed4e17b4ff9b39418fa",
         "libs/zephyr-cli/src/commands/deploy.ts": "be3b77c3dee93ee5e5dada298837fe549a3eb111bfeeefe9da08af5084243f4a",
         "libs/zephyr-cli/src/commands/run.ts": "9d5ac5b6f0e4ca8c236a496dd9cf956fec83bb7ad645bd6025ed6fad2ef2cb59",
         "libs/zephyr-cli/src/commands/watch.ts": "84e8e2c0bef916007999d21b19ef666708dffa2ff5e133c960dde3238de28e55",
         "libs/zephyr-cli/src/doctor/analyze.ts": "14d9d842cda7ee1469da2030806d5340565ff8d008de535381f11bca7ab0ad5e",
-        "libs/zephyr-cli/src/doctor/schema.ts": "daa1156821b6e93057b7b38b9cd780ab4e8c3dff6fff8e3f17f2ffb1a9efbd65",
+        "libs/zephyr-cli/src/doctor/schema.ts": "fd8436c28cbb4171b5378c79ce3feea6733929dfab1289f6376df1be89358f9d",
         "libs/zephyr-cli/src/index.ts": "8a59424f07b234964f82452878abba5d3637835ee6c57a687a4176038ce4864c",
         "libs/zephyr-cli/src/lib/command-detector.ts": "e8a63e3b2cbebf1b5c53cb66947f57e3fc9aae176408c445facae5149edbc0ce",
         "libs/zephyr-cli/src/lib/publication-metadata.ts": "269c38fb707543c36d4b116c0c846454cf3c20482c111cea137abd63353046fe",
-        "libs/zephyr-cli/src/mcp/classify.ts": "ca887d4211a7b35e383bab1a594678604179110f0319f6bbee4cfb36abaf7278",
-        "libs/zephyr-cli/src/mcp/deploy.spec.ts": "6bf85ec91387ef881c2a9e03727ccfa37066380122f5b46043e43c62b0c7d964",
-        "libs/zephyr-cli/src/mcp/deploy.ts": "5f28bec0561be64bfcb6e2b6140613855fcd52e60ab4fb87db8649ead53690bf",
+        "libs/zephyr-cli/src/mcp/classify.ts": "8030675c3eb23c24a817d5ab520d33a189277a6522369f2396313d601b023f09",
+        "libs/zephyr-cli/src/mcp/deploy.spec.ts": "be35ffa52fdc0a38e289bb37b6dc59ce7ef4b96917c4f594d1f8946d8186f0ac",
+        "libs/zephyr-cli/src/mcp/deploy.ts": "0212ae66e790bef30cedc510fb6d994aaa45cb8e2db9bfafaebdb7238cbb3012",
         "libs/zephyr-cli/src/mcp/eval-results.ts": "b927b5ae12d86ddcecaa7b502c17aa5ac744468957be2c81d724998123dc5838",
-        "libs/zephyr-cli/src/mcp/findings.ts": "90c044b4dc380a2e67d3f50b835fb0f569b57aef58c6ad9a06e75b3b775dd7ce",
+        "libs/zephyr-cli/src/mcp/findings.ts": "888c3fc92468f4510e4fc456372ccb2f68eb188e95528dc7edf4dd9df0d42e29",
         "libs/zephyr-cli/src/mcp/inspect.ts": "e8ffdfb70929f2242c89242d37c86c54e56230cde4073fcab88895c10fc40a4a",
-        "libs/zephyr-cli/src/mcp/mcp.spec.ts": "e5069fb73cd440c76da718a050b76ec845dd8ff4dc05fa52fc3fbfcf866c8c36",
+        "libs/zephyr-cli/src/mcp/mcp.spec.ts": "c302c75a93046fb306cc3ecbfc79798e8757450ee903ae29807705629d766cbd",
         "libs/zephyr-cli/src/mcp/provider-artifact.ts": "7378b4fb85bbff03d1282a9eb8c7e6cfdfb0515322292439243e19a37a50a1ec",
         "libs/zephyr-cli/src/mcp/secrets.ts": "5d5c79c0abff879b9dc3dc3725638cccc472b1312dbfcd60af6b9d7ae9d9b082",
-        "libs/zephyr-cli/src/mcp/skill-rules.ts": "e79f49c40383783f7e060d0bea0dfaadd4183620dddbc5583b6aae7f971d8155",
+        "libs/zephyr-cli/src/mcp/skill-rules.ts": "f76f6769b99e2f02f61ae9f8cb2289bf7be6f30da13d0793e89b4ef22919a193",
         "libs/zephyr-cli/src/mcp/skills-repo.ts": "b808e025e4c73925b9e68e76838783f2a8b5d3423c4a7691bd00c43d2ebf903a",
-        "libs/zephyr-cli/src/mcp/tools-repo.ts": "8c37b4f2f0ebbca36eb7757d422b0991c17fe82c4711a32ffc02eeaae4df280c",
+        "libs/zephyr-cli/src/mcp/tools-repo.ts": "f764ec16707eb1d87dd440a1ed98369f214b521b7ae53e2b375f787eaa6a08d0",
         "libs/zephyr-edge-contract/src/index.ts": "b9e6acbcd905ce9f233df497f0972e56739b5e88bed8ec73dafb4d01595846fd",
         "libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts": "722a8cabc2de4a3988675d0b17a6681b6e0e827f65e007e32367079ef2df5680",
         "libs/zephyr-edge-contract/src/lib/change-attribution.ts": "6a46af170194e98ae7e5dc28225767543616958a979a2a4d555856b8d16e3d90",
-        "libs/zephyr-edge-contract/src/lib/mcp-provider.ts": "322d591c6d71243b2680a2f1bd081c1ab5082c9a0d8592c1a2d92fe776e6d70e",
+        "libs/zephyr-edge-contract/src/lib/mcp-provider.ts": "ae268a47540ee06f19c44f0095f54ff1f532924328b9cebf2b55d8e672f34095",
         "libs/zephyr-edge-contract/src/lib/snapshot.ts": "14bace04c4a2cf91f5bb1a76f0ca5f36e9a9191055613f2f81a9030de9caf347",
         "libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts": "7e2ba45236ebc8e13419e577ebbf6fc8c72e3d630a933c353aee1c83b78c9f71",
+        "libs/zephyr-mcp/README.md": "8837370e172b39c20adb4a7bfb837693222462a513a0d36e0717788cf8d42b10",
+        "libs/zephyr-mcp/skills/zephyr-mcp/SKILL.md": "3889b436350356efa57b207f01dda53faaa5d421ded7e34f32da621b052ee8b3",
+        "libs/zephyr-mcp/src/checks/artifact.ts": "48c5e24a77920470cd508b8d5126050b83104feff93eec6dab61cd1c257afac1",
+        "libs/zephyr-mcp/src/checks/catalog.ts": "be230420a72fb82b8f4fcfe35f50829465edd5a83b55dca4bc50724d252acaec",
+        "libs/zephyr-mcp/src/checks/finding.ts": "abcd55e704e89da39ecfa3d7cf6a23e9a009d428f65adafe205328c30d710570",
+        "libs/zephyr-mcp/src/checks/index.ts": "d16002fc6ab8a5d7fc2ca8035b83349ccf1d82e85e82ba5624ad975532c92b7e",
+        "libs/zephyr-mcp/src/checks/links.ts": "bdbea4632859c996660ebf3ed4584659916549cc91b3255d1994a8ad5ae20373",
+        "libs/zephyr-mcp/src/checks/repo.ts": "fed684c9c929b6afcbcabef5fbe7d39d393bbd3fabee590a7947e1d4aa473b15",
+        "libs/zephyr-mcp/src/checks/secrets.ts": "9b07e34c9b863baffa9b67ddc0da8b05c43426d772604bee2e8d029113ebe2b9",
+        "libs/zephyr-mcp/src/checks/skill.ts": "ad7d2a7d6094ad53a1480c678a25282842218ba2503103084ba4dad604498707",
+        "libs/zephyr-mcp/src/checks/tool-module.ts": "06d2d8e3dea89ca3ab6801d807a7b328a51bdff6bef721cd2b50d98160db61db",
+        "libs/zephyr-mcp/src/define.ts": "4f7cc4640a9f53eb55c729d20ed549665ceddfcc93a14ed2782224a6afddd665",
+        "libs/zephyr-mcp/src/rslib/index.ts": "69472ead47f3844d2fab3fd3b968d986f9a07d35366c5c059721f1ea3a483650",
+        "libs/zephyr-mcp/src/rules.ts": "d80fbd8679e0b6757ea28c52bfbae4e06ed3a39b8f3dcb52a6d1cf1107019b15",
+        "libs/zephyr-mcp/src/types.ts": "509926d7ba5a3a404b4569ce5e3d3d209683efc83f0d8145cc67f52f0ecd62ca",
+        "libs/zephyr-mcp/src/worker/handler.ts": "c11ac1f098e606395f6ec7ae3ba961f2feea59f39434f0748393926d71648842",
         "libs/zephyr-metro-plugin/README.md": "26c6654736f5d3d1e67414e7118e3692c9754e2d36af845b3936edea763d4c44",
         "libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": "298ab4285ced31f61e485fc1c5bc505f4207d98d675173b08cd0431f07c91373",
         "libs/zephyr-metro-plugin/skills/zephyr-metro/references/publication-commands.md": "59b2ad88377d9249f565bfddc949f2254fc7f505442dca6d9955a77465c9e7a9",
@@ -287,7 +303,7 @@
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
         "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
-        "skills/zephyr-core/references/mcp-providers.md": "1e1f6c76bff63a7e8888ef306705d3892a43e97f7f56bca833b1b80f1e934a42",
+        "skills/zephyr-core/references/mcp-providers.md": "6ca15f25bbf8ffadc86c949316b718034b1628083cea57249adfad0cf1c0b2fe",
         "skills/zephyr-core/references/sdk-setup.md": "be4a20bec2ad1a0768807db097ed41a3f139551b7ca0efd4977293d54b23ec5a",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3",
         "skills/zephyr-module-federation/LICENSE": "65abda125624d2220f6f8f2a6a1c4ed4b6abc42cf493e43018eed14ab1e3bca0",
@@ -299,10 +315,12 @@
         "skills/zephyr-module-federation/references/remote-resolution.md": "1b794709686372d3189c5d2b030e749812fe88cf9fe5a4ea4a33c9de8322a3a3",
         "skills/zephyr-module-federation/references/setup-patterns.md": "6c2b9533e063aafd9f4aaaa2bbd45899c42ab2e1e4b34f8f857dd37768de4a7e"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "updated",
-      "reason": "Logged the contract v2.3 pass; the open live-verification gap names the Zephyr edge and API generically.",
-      "evidence": ["_artifacts/skill_spec.md; _artifacts/domain_map.yaml"]
+      "reason": "Registered the zephyr-mcp skill in skill_tree.yaml and domain_map.yaml and recorded the move in skill_spec.md.",
+      "evidence": [
+        "Changed: _artifacts/domain_map.yaml, _artifacts/skill_spec.md, _artifacts/skill_tree.yaml, docs/mcp-provider-publication.md, libs/zephyr-agent/src/lib/mcp/runtime-module.ts, libs/zephyr-cli/README.md, libs/zephyr-cli/skills/zephyr-cli/SKILL.md, libs/zephyr-cli/src/cli.ts, libs/zephyr-cli/src/doctor/schema.ts, libs/zephyr-cli/src/mcp/classify.ts, libs/zephyr-cli/src/mcp/deploy.spec.ts, libs/zephyr-cli/src/mcp/deploy.ts, libs/zephyr-cli/src/mcp/findings.ts, libs/zephyr-cli/src/mcp/mcp.spec.ts, libs/zephyr-cli/src/mcp/skill-rules.ts, libs/zephyr-cli/src/mcp/tools-repo.ts, libs/zephyr-edge-contract/src/lib/mcp-provider.ts, libs/zephyr-mcp/README.md, libs/zephyr-mcp/skills/zephyr-mcp/SKILL.md, libs/zephyr-mcp/src/checks/artifact.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
     },
     "source:packages/intent-tooling/compiler.mjs": {
       "fingerprint": "cedfbb63c2af57d34cdb5a2a95b147eaa04ae4d602dd0c2b937a56eb1ce50580",
@@ -347,9 +365,9 @@
       ]
     },
     "skill:skills/zephyr-core/SKILL.md": {
-      "fingerprint": "2cba6c514b117a1d5b8dcadb15ab37d52a6be6e93c1e5175118fc7b7de85ff06",
+      "fingerprint": "6957695006f3b1c739b024425913a283db4064b1b1772f045664ca238d8bf012",
       "snapshot": {
-        "docs/mcp-provider-publication.md": "9de28eb568a205f499b6c3eacdb947154051980ed79e368e5c1d761428a12830",
+        "docs/mcp-provider-publication.md": "9726d33f0251ac66246dbcc21e64f3725d5f0f4b3de6a418b60cf880d30aec04",
         "libs/with-zephyr/README.md": "372736aea04ee76a6cc6be4f2469b3d35f14ad720e3c432bdc48740d2cad4aa1",
         "libs/with-zephyr/hooks/codex.cjs": "2c18d5ca1d62b978eb51eaff8731f9ea6aae58882eb4e6a51f9ca039a61878f7",
         "libs/with-zephyr/src/attribution.ts": "7cd06d45e610bcf7c07faa2b0ca83444d1e0fba51974164280d351fa052fa5c1",
@@ -384,7 +402,7 @@
         "libs/zephyr-agent/src/lib/mcp/map-build-stats-rejection.ts": "da89585eb01b6c7cab0beab05b16054776ab46b6b84be9b0f83033f6998367ea",
         "libs/zephyr-agent/src/lib/mcp/mcp-rules.ts": "959624f150e5784e3e187f749e0ace1c80275aa31a71673c4d32dd66775d1615",
         "libs/zephyr-agent/src/lib/mcp/prepare-mcp-upload.ts": "281e5a3a380dcd89eeeb19143afd3a679282b25dc404f34523ce57767e8d4c45",
-        "libs/zephyr-agent/src/lib/mcp/runtime-module.ts": "cdd73198a02bffa207191719fb441059a5047d62f4cedf056d6d857b04800720",
+        "libs/zephyr-agent/src/lib/mcp/runtime-module.ts": "7cf2ddf4935735a3faca027ec610bfc8f0a57893363dd3d82670efe6210310c0",
         "libs/zephyr-agent/src/lib/mcp/skill-frontmatter.ts": "a0cb9b1e8ca9c2481dd688cf24c6a92b5b659c744920216eee848c775ba46fbf",
         "libs/zephyr-agent/src/lib/mcp/validate-eval-results.ts": "0f9079c87559520cb0723f43a0fe389a0e0032a36737cc8f534291fe7c926a01",
         "libs/zephyr-agent/src/lib/mcp/validate-mcp-artifact.ts": "d8a6e93217b18b27b334c04fba19e3c8079df549b87e03da7b0c6584632cf874",
@@ -397,7 +415,7 @@
         "libs/zephyr-edge-contract/src/index.ts": "b9e6acbcd905ce9f233df497f0972e56739b5e88bed8ec73dafb4d01595846fd",
         "libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts": "722a8cabc2de4a3988675d0b17a6681b6e0e827f65e007e32367079ef2df5680",
         "libs/zephyr-edge-contract/src/lib/change-attribution.ts": "6a46af170194e98ae7e5dc28225767543616958a979a2a4d555856b8d16e3d90",
-        "libs/zephyr-edge-contract/src/lib/mcp-provider.ts": "322d591c6d71243b2680a2f1bd081c1ab5082c9a0d8592c1a2d92fe776e6d70e",
+        "libs/zephyr-edge-contract/src/lib/mcp-provider.ts": "ae268a47540ee06f19c44f0095f54ff1f532924328b9cebf2b55d8e672f34095",
         "libs/zephyr-edge-contract/src/lib/snapshot.ts": "14bace04c4a2cf91f5bb1a76f0ca5f36e9a9191055613f2f81a9030de9caf347",
         "libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts": "7e2ba45236ebc8e13419e577ebbf6fc8c72e3d630a933c353aee1c83b78c9f71",
         "scripts/sync-package-skills.mjs": "f88fd832f7bfee4aa7686657552d39f16fcafee6d21ea15008e38069eeb148b8",
@@ -413,15 +431,15 @@
         "skills/zephyr-core/references/docs-map.md": "a47cebd2322d18b832f865eda82e03a857365903514ebd53b4e86f06efbff18a",
         "skills/zephyr-core/references/env-vars.md": "6c4451b8e229b56e86d4a346bc0e268281365b0ef1f7a1f0e514d57c1d0a2c81",
         "skills/zephyr-core/references/examples-resume.md": "b9a2f0155b6ea94814183ff0d43c91607b3385ad26f1ebd0f47d9597c7fe89ca",
-        "skills/zephyr-core/references/mcp-providers.md": "1e1f6c76bff63a7e8888ef306705d3892a43e97f7f56bca833b1b80f1e934a42",
+        "skills/zephyr-core/references/mcp-providers.md": "6ca15f25bbf8ffadc86c949316b718034b1628083cea57249adfad0cf1c0b2fe",
         "skills/zephyr-core/references/sdk-setup.md": "be4a20bec2ad1a0768807db097ed41a3f139551b7ca0efd4977293d54b23ec5a",
         "skills/zephyr-core/references/troubleshooting.md": "29610c00390c6438291fa7a509a632843bafc2c9e0247a6951e65de91c5c5ab3"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "updated",
-      "reason": "MCP reference states the agent-owned frontmatter check; publication doc names services generically.",
+      "reason": "The opt-in package and Rslib preset are now zephyr-mcp and zephyr-mcp/rslib; guidance renamed accordingly.",
       "evidence": [
-        "skills/zephyr-core/references/mcp-providers.md; docs/mcp-provider-publication.md"
+        "Changed: docs/mcp-provider-publication.md, libs/zephyr-agent/src/lib/mcp/runtime-module.ts, libs/zephyr-edge-contract/src/lib/mcp-provider.ts, skills/zephyr-core/references/mcp-providers.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "skill:skills/zephyr-module-federation/SKILL.md": {
@@ -589,39 +607,39 @@
       ]
     },
     "skill:libs/zephyr-cli/skills/zephyr-cli/SKILL.md": {
-      "fingerprint": "29fe3f5e3089963881b55e77ad3b8ea8bc86684e1be02b66a21b41279677c3a5",
+      "fingerprint": "652aa62fb3fd003460a6b98ac6e7b0b25e81dcd2595b3a9511b1b80042925db5",
       "snapshot": {
-        "docs/mcp-provider-publication.md": "9de28eb568a205f499b6c3eacdb947154051980ed79e368e5c1d761428a12830",
-        "libs/zephyr-cli/README.md": "0c6b870183f3bc4f27296202d236aa62afe206b7ae15344579ae5f9b3223a9e3",
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "14ee05718373f91b7bad808a09c38a5be44d2535206da718a30ca83faaa74cb2",
-        "libs/zephyr-cli/src/cli.ts": "b934bf5c584c88018cf099b8a8f32dc9605d2b27558bd692e74baf6d85bf2fd1",
+        "docs/mcp-provider-publication.md": "9726d33f0251ac66246dbcc21e64f3725d5f0f4b3de6a418b60cf880d30aec04",
+        "libs/zephyr-cli/README.md": "a83b12a2e16a9208d887ad737e3a7c517a9bfe285135a54e98d7c24dd5319555",
+        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md": "42c4ff35b34cfb5a302bb8da7e70e1a49c9dc2f5102e2709b9b0c6d2e94cdf89",
+        "libs/zephyr-cli/src/cli.ts": "f7b2f97433adcee15af183624bc5544749d855114ef0e3e6f5cf773fabd87a6a",
         "libs/zephyr-cli/src/commands/attribution.ts": "6dddc66ea8930f3757256b272860c3e6a1550c07790eeed4e17b4ff9b39418fa",
         "libs/zephyr-cli/src/commands/deploy.ts": "be3b77c3dee93ee5e5dada298837fe549a3eb111bfeeefe9da08af5084243f4a",
         "libs/zephyr-cli/src/commands/run.ts": "9d5ac5b6f0e4ca8c236a496dd9cf956fec83bb7ad645bd6025ed6fad2ef2cb59",
         "libs/zephyr-cli/src/commands/watch.ts": "84e8e2c0bef916007999d21b19ef666708dffa2ff5e133c960dde3238de28e55",
         "libs/zephyr-cli/src/doctor/analyze.ts": "14d9d842cda7ee1469da2030806d5340565ff8d008de535381f11bca7ab0ad5e",
-        "libs/zephyr-cli/src/doctor/schema.ts": "daa1156821b6e93057b7b38b9cd780ab4e8c3dff6fff8e3f17f2ffb1a9efbd65",
+        "libs/zephyr-cli/src/doctor/schema.ts": "fd8436c28cbb4171b5378c79ce3feea6733929dfab1289f6376df1be89358f9d",
         "libs/zephyr-cli/src/index.ts": "8a59424f07b234964f82452878abba5d3637835ee6c57a687a4176038ce4864c",
         "libs/zephyr-cli/src/lib/command-detector.ts": "e8a63e3b2cbebf1b5c53cb66947f57e3fc9aae176408c445facae5149edbc0ce",
         "libs/zephyr-cli/src/lib/publication-metadata.ts": "269c38fb707543c36d4b116c0c846454cf3c20482c111cea137abd63353046fe",
-        "libs/zephyr-cli/src/mcp/classify.ts": "ca887d4211a7b35e383bab1a594678604179110f0319f6bbee4cfb36abaf7278",
-        "libs/zephyr-cli/src/mcp/deploy.spec.ts": "6bf85ec91387ef881c2a9e03727ccfa37066380122f5b46043e43c62b0c7d964",
-        "libs/zephyr-cli/src/mcp/deploy.ts": "5f28bec0561be64bfcb6e2b6140613855fcd52e60ab4fb87db8649ead53690bf",
+        "libs/zephyr-cli/src/mcp/classify.ts": "8030675c3eb23c24a817d5ab520d33a189277a6522369f2396313d601b023f09",
+        "libs/zephyr-cli/src/mcp/deploy.spec.ts": "be35ffa52fdc0a38e289bb37b6dc59ce7ef4b96917c4f594d1f8946d8186f0ac",
+        "libs/zephyr-cli/src/mcp/deploy.ts": "0212ae66e790bef30cedc510fb6d994aaa45cb8e2db9bfafaebdb7238cbb3012",
         "libs/zephyr-cli/src/mcp/eval-results.ts": "b927b5ae12d86ddcecaa7b502c17aa5ac744468957be2c81d724998123dc5838",
-        "libs/zephyr-cli/src/mcp/findings.ts": "90c044b4dc380a2e67d3f50b835fb0f569b57aef58c6ad9a06e75b3b775dd7ce",
+        "libs/zephyr-cli/src/mcp/findings.ts": "888c3fc92468f4510e4fc456372ccb2f68eb188e95528dc7edf4dd9df0d42e29",
         "libs/zephyr-cli/src/mcp/inspect.ts": "e8ffdfb70929f2242c89242d37c86c54e56230cde4073fcab88895c10fc40a4a",
-        "libs/zephyr-cli/src/mcp/mcp.spec.ts": "e5069fb73cd440c76da718a050b76ec845dd8ff4dc05fa52fc3fbfcf866c8c36",
+        "libs/zephyr-cli/src/mcp/mcp.spec.ts": "c302c75a93046fb306cc3ecbfc79798e8757450ee903ae29807705629d766cbd",
         "libs/zephyr-cli/src/mcp/provider-artifact.ts": "7378b4fb85bbff03d1282a9eb8c7e6cfdfb0515322292439243e19a37a50a1ec",
         "libs/zephyr-cli/src/mcp/secrets.ts": "5d5c79c0abff879b9dc3dc3725638cccc472b1312dbfcd60af6b9d7ae9d9b082",
-        "libs/zephyr-cli/src/mcp/skill-rules.ts": "e79f49c40383783f7e060d0bea0dfaadd4183620dddbc5583b6aae7f971d8155",
+        "libs/zephyr-cli/src/mcp/skill-rules.ts": "f76f6769b99e2f02f61ae9f8cb2289bf7be6f30da13d0793e89b4ef22919a193",
         "libs/zephyr-cli/src/mcp/skills-repo.ts": "b808e025e4c73925b9e68e76838783f2a8b5d3423c4a7691bd00c43d2ebf903a",
-        "libs/zephyr-cli/src/mcp/tools-repo.ts": "8c37b4f2f0ebbca36eb7757d422b0991c17fe82c4711a32ffc02eeaae4df280c"
+        "libs/zephyr-cli/src/mcp/tools-repo.ts": "f764ec16707eb1d87dd440a1ed98369f214b521b7ae53e2b375f787eaa6a08d0"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "updated",
-      "reason": "Contract v2.3 rules are reflected in the MCP section; the publication doc now names the Zephyr edge, API and MCP generically instead of internal repository names.",
+      "reason": "The opt-in package and Rslib preset are now zephyr-mcp and zephyr-mcp/rslib; guidance renamed accordingly.",
       "evidence": [
-        "libs/zephyr-cli/skills/zephyr-cli/SKILL.md; docs/mcp-provider-publication.md; zephyr-cli tests pass"
+        "Changed: docs/mcp-provider-publication.md, libs/zephyr-cli/README.md, libs/zephyr-cli/skills/zephyr-cli/SKILL.md, libs/zephyr-cli/src/cli.ts, libs/zephyr-cli/src/doctor/schema.ts, libs/zephyr-cli/src/mcp/classify.ts, libs/zephyr-cli/src/mcp/deploy.spec.ts, libs/zephyr-cli/src/mcp/deploy.ts, libs/zephyr-cli/src/mcp/findings.ts, libs/zephyr-cli/src/mcp/mcp.spec.ts, libs/zephyr-cli/src/mcp/skill-rules.ts, libs/zephyr-cli/src/mcp/tools-repo.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "skill:libs/zephyr-metro-plugin/skills/zephyr-metro/SKILL.md": {
@@ -857,15 +875,15 @@
       ]
     },
     "source:release-please-config.json": {
-      "fingerprint": "4b5f64509463517627300418201b2ebbc379ac656ec876491154048bfe4786d2",
+      "fingerprint": "0e0b23fec01c662e598e413cc8eed5bab043421ff51b4868a63292fba4807182",
       "snapshot": {
-        "release-please-config.json": "4cfac26af4d3e871dc5421b83972cb33b9de82cdc3c5e85466c04741e5317dce"
+        "release-please-config.json": "fac78195439e80bd61579bb15e44cd3cd1d7e027700c1584bfce8c8b31718e93"
       },
-      "head": "2ec98c43d0d24cdd6bb373fcb4d6c3218670968a",
-      "outcome": "out-of-scope",
-      "reason": "Registers every package-owned SKILL.md as a generic release-please extra file so library_version follows each release. It does not change skill guidance.",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Repository wiring for the new zephyr-mcp package (release config, TypeScript references, formatter ignores); no guidance change.",
       "evidence": [
-        "vite-plugin-zephyr (118, including the library_version drift test), zephyr-cli (42), and create-zephyr-apps (33) tests pass."
+        "Changed: release-please-config.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "source:turbo.json": {
@@ -1061,17 +1079,14 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ee14e6992c60eca59c28d843e6f5e3993310ef6be14f006e9c4c76d0cefef8a4",
+      "fingerprint": "5ce0017b0acb620cf87ce2bbcbafde3376b31ec66b0fb598edcb56bd5b15770c",
       "snapshot": {
-        "README.md": "7e27e68412e5a78972c8a536bc972b14cb971d64ff724ad53868996dd831ee06"
+        "README.md": "fa8c4d8a575489a33c0638af010c01afe4ff79f549663dd0767ba3eb4ef87e28"
       },
-      "head": "262247d663039dab150abb18eb253e8db69d8bae",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "README change only adds an optional consumer Intent setup section; it does not alter plugin configuration, APIs, or build behavior the skill describes.",
-      "evidence": [
-        "git diff README.md; grep finds no Intent setup guidance under libs/*/skills or skills/",
-        "Re-recorded after merging main at f21071b0 (#634, #655), which took main's copy of .intent/review-state.json per AGENTS.md; the PR diff for these files against main is identical to the one reviewed at 262247d6."
-      ]
+      "reason": "Lists the new zephyr-mcp package among the utility packages; no guidance change.",
+      "evidence": ["Changed: README.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"]
     },
     "source:libs/create-zephyr-apps/README.md": {
       "fingerprint": "bc522f27d78e41549a7e7efd485d1d5283fc0797e944c3bc289d1583c17e1a75",
@@ -1087,14 +1102,14 @@
       ]
     },
     "source:.oxfmtrc.json": {
-      "fingerprint": "09df5bf9a96e53b702d90d27b662dd9e4e24507b62036464b032fd2401418cc8",
+      "fingerprint": "dc1695975031e2e96cf2bb90eba20b27f3c1f876f73d2b1a577d91e12da29211",
       "snapshot": {
-        ".oxfmtrc.json": "ae53aa960bc22d653b111ce5fb196ce6d8db881f32e68e64e924674f193f5606"
+        ".oxfmtrc.json": "8f9ea62d2c4d225d9d5ca8e752f86b44cbe921c94c55be2b7093cf131778fc49"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "Tooling config that keeps contract fixtures byte-identical (format ignore) and out of the agent declaration build; no developer guidance.",
-      "evidence": [".oxfmtrc.json", "pnpm typecheck, pnpm lint, pnpm format:check: passed."]
+      "reason": "Repository wiring for the new zephyr-mcp package (release config, TypeScript references, formatter ignores); no guidance change.",
+      "evidence": ["Changed: .oxfmtrc.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"]
     },
     "source:libs/zephyr-agent/src/lib/build-context/__test__/zephyr-config.test.ts": {
       "fingerprint": "95ef4b37715f7445228b39fac2845c2a4239c547b03708858110c9562c74e975",
@@ -1250,16 +1265,15 @@
       ]
     },
     "source:libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json": {
-      "fingerprint": "f8bb453f1b1f46be7aa7a6679d9bf3f9d1d469daf84d446980230fd4cc5e7ef6",
+      "fingerprint": "55a3534204675e13b7170706ca7ec57fa472cc15645625e2db8bab9a08513935",
       "snapshot": {
-        "libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json": "c273ce80fa5c4861e271ca8834edb2d15610d9c60b459e4946e2f70b488d44a3"
+        "libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json": "8ffcfca2b08ca0b34cd494ff8165c21315949df94108532df3a5d5c0640152f8"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "Contract fixture or test for the MCP provider change; it carries no developer guidance. Behavior it covers is documented in the updated zephyr-cli and zephyr-core skills.",
+      "reason": "Fixture descriptors and test names now say zephyr-mcp/rslib; behavior unchanged, no guidance change.",
       "evidence": [
-        "libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json",
-        "pnpm turbo run test --filter=zephyr-cli --filter=zephyr-agent --filter=zephyr-edge-contract: 6/6 tasks passed (agent 482+ tests, cli 86 tests, contract tests)."
+        "Changed: libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "source:libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/artifacts/tools-basic/skills/quote-a-deal/SKILL.fixture.md": {
@@ -1549,16 +1563,15 @@
       ]
     },
     "source:libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/mcp-provider.json": {
-      "fingerprint": "193767280298abda9d01c35dc3b852e702a489546e9163541d15c3595a45db26",
+      "fingerprint": "6c66cb9e264d4d040e058d059a2795f8736895635260ec4c4a02432d418cfbf3",
       "snapshot": {
-        "libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/mcp-provider.json": "c273ce80fa5c4861e271ca8834edb2d15610d9c60b459e4946e2f70b488d44a3"
+        "libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/mcp-provider.json": "8ffcfca2b08ca0b34cd494ff8165c21315949df94108532df3a5d5c0640152f8"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "Contract fixture or test for the MCP provider change; it carries no developer guidance. Behavior it covers is documented in the updated zephyr-cli and zephyr-core skills.",
+      "reason": "Fixture descriptors and test names now say zephyr-mcp/rslib; behavior unchanged, no guidance change.",
       "evidence": [
-        "libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/mcp-provider.json",
-        "pnpm turbo run test --filter=zephyr-cli --filter=zephyr-agent --filter=zephyr-edge-contract: 6/6 tasks passed (agent 482+ tests, cli 86 tests, contract tests)."
+        "Changed: libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/mcp-provider.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "source:libs/zephyr-agent/src/lib/mcp/__fixtures__/contract/mime-table.json": {
@@ -1585,15 +1598,15 @@
       "evidence": ["zephyr-agent slug fixture test passes"]
     },
     "source:libs/zephyr-agent/src/lib/mcp/__test__/mcp-artifact.spec.ts": {
-      "fingerprint": "18a8809a1e48c2c600d6f1c752e1666f019e94bdeedd9ff632fdcfaef19359a3",
+      "fingerprint": "7c2055a5b7e4e1bca9ad05b71ae1573779f0ce070f4b48eb42fa426ec214255a",
       "snapshot": {
-        "libs/zephyr-agent/src/lib/mcp/__test__/mcp-artifact.spec.ts": "92b8f1c810b58a7924a23953aef25731b843b23ec6eebba85ff1b420ef862ec2"
+        "libs/zephyr-agent/src/lib/mcp/__test__/mcp-artifact.spec.ts": "0325787b6eb6ea7906a3b66acd1a843cf1d381978d68b1c7538c4a3b98ff5b28"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "Test fixture or test helper change (binary fixtures stored as .base64 and materialized at test time; new regression tests); no user-facing guidance affected.",
+      "reason": "Fixture descriptors and test names now say zephyr-mcp/rslib; behavior unchanged, no guidance change.",
       "evidence": [
-        "pnpm turbo run test --filter=zephyr-cli --filter=zephyr-agent passes; decoded fixture sha256 matches the catalog"
+        "Changed: libs/zephyr-agent/src/lib/mcp/__test__/mcp-artifact.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "source:libs/zephyr-agent/src/zephyr-engine/__test__/isolated-identity.test.ts": {
@@ -1722,16 +1735,15 @@
       ]
     },
     "source:libs/zephyr-cli/src/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json": {
-      "fingerprint": "dff988089a34ed192efc1a16577697b8eaab8cf32f50f94c6397666c8c0ad34a",
+      "fingerprint": "31daa129269c210fbcf77c4584469033d62097890b4158d3f411faea55ea540a",
       "snapshot": {
-        "libs/zephyr-cli/src/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json": "c273ce80fa5c4861e271ca8834edb2d15610d9c60b459e4946e2f70b488d44a3"
+        "libs/zephyr-cli/src/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json": "8ffcfca2b08ca0b34cd494ff8165c21315949df94108532df3a5d5c0640152f8"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "Contract fixture or test for the MCP provider change; it carries no developer guidance. Behavior it covers is documented in the updated zephyr-cli and zephyr-core skills.",
+      "reason": "Fixture descriptors and test names now say zephyr-mcp/rslib; behavior unchanged, no guidance change.",
       "evidence": [
-        "libs/zephyr-cli/src/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json",
-        "pnpm turbo run test --filter=zephyr-cli --filter=zephyr-agent --filter=zephyr-edge-contract: 6/6 tasks passed (agent 482+ tests, cli 86 tests, contract tests)."
+        "Changed: libs/zephyr-cli/src/mcp/__fixtures__/contract/artifacts/tools-basic/mcp-provider.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "source:libs/zephyr-cli/src/mcp/__fixtures__/contract/artifacts/tools-basic/skills/quote-a-deal/SKILL.fixture.md": {
@@ -2021,16 +2033,15 @@
       ]
     },
     "source:libs/zephyr-cli/src/mcp/__fixtures__/contract/mcp-provider.json": {
-      "fingerprint": "71d252bc1226ae7875ec655cdff10266d76ecdd37018a93a3d13b2f67fab9eb4",
+      "fingerprint": "2af3b15dbe6347426502bc4db80855fb5b847fc0607240edd9091048e34e9649",
       "snapshot": {
-        "libs/zephyr-cli/src/mcp/__fixtures__/contract/mcp-provider.json": "c273ce80fa5c4861e271ca8834edb2d15610d9c60b459e4946e2f70b488d44a3"
+        "libs/zephyr-cli/src/mcp/__fixtures__/contract/mcp-provider.json": "8ffcfca2b08ca0b34cd494ff8165c21315949df94108532df3a5d5c0640152f8"
       },
-      "head": "1010dd6a92a022b51d22befa940f2659bc36c845",
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
       "outcome": "no-change",
-      "reason": "Contract fixture or test for the MCP provider change; it carries no developer guidance. Behavior it covers is documented in the updated zephyr-cli and zephyr-core skills.",
+      "reason": "Fixture descriptors and test names now say zephyr-mcp/rslib; behavior unchanged, no guidance change.",
       "evidence": [
-        "libs/zephyr-cli/src/mcp/__fixtures__/contract/mcp-provider.json",
-        "pnpm turbo run test --filter=zephyr-cli --filter=zephyr-agent --filter=zephyr-edge-contract: 6/6 tasks passed (agent 482+ tests, cli 86 tests, contract tests)."
+        "Changed: libs/zephyr-cli/src/mcp/__fixtures__/contract/mcp-provider.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
       ]
     },
     "source:libs/zephyr-cli/src/mcp/__fixtures__/contract/mime-table.json": {
@@ -2509,6 +2520,1348 @@
       "evidence": [
         "pnpm turbo run test --filter=zephyr-cli --filter=zephyr-agent passes; decoded fixture sha256 matches the catalog"
       ]
+    },
+    "skill:libs/zephyr-mcp/skills/zephyr-mcp/SKILL.md": {
+      "fingerprint": "4aacfa8a3e1e5e6ab01392fccefa49d2e87952fb683b24a2db1303e805947c97",
+      "snapshot": {
+        "docs/mcp-provider-publication.md": "9726d33f0251ac66246dbcc21e64f3725d5f0f4b3de6a418b60cf880d30aec04",
+        "libs/zephyr-mcp/README.md": "8837370e172b39c20adb4a7bfb837693222462a513a0d36e0717788cf8d42b10",
+        "libs/zephyr-mcp/skills/zephyr-mcp/SKILL.md": "3889b436350356efa57b207f01dda53faaa5d421ded7e34f32da621b052ee8b3",
+        "libs/zephyr-mcp/src/checks/artifact.ts": "48c5e24a77920470cd508b8d5126050b83104feff93eec6dab61cd1c257afac1",
+        "libs/zephyr-mcp/src/checks/catalog.ts": "be230420a72fb82b8f4fcfe35f50829465edd5a83b55dca4bc50724d252acaec",
+        "libs/zephyr-mcp/src/checks/finding.ts": "abcd55e704e89da39ecfa3d7cf6a23e9a009d428f65adafe205328c30d710570",
+        "libs/zephyr-mcp/src/checks/index.ts": "d16002fc6ab8a5d7fc2ca8035b83349ccf1d82e85e82ba5624ad975532c92b7e",
+        "libs/zephyr-mcp/src/checks/links.ts": "bdbea4632859c996660ebf3ed4584659916549cc91b3255d1994a8ad5ae20373",
+        "libs/zephyr-mcp/src/checks/repo.ts": "fed684c9c929b6afcbcabef5fbe7d39d393bbd3fabee590a7947e1d4aa473b15",
+        "libs/zephyr-mcp/src/checks/secrets.ts": "9b07e34c9b863baffa9b67ddc0da8b05c43426d772604bee2e8d029113ebe2b9",
+        "libs/zephyr-mcp/src/checks/skill.ts": "ad7d2a7d6094ad53a1480c678a25282842218ba2503103084ba4dad604498707",
+        "libs/zephyr-mcp/src/checks/tool-module.ts": "06d2d8e3dea89ca3ab6801d807a7b328a51bdff6bef721cd2b50d98160db61db",
+        "libs/zephyr-mcp/src/define.ts": "4f7cc4640a9f53eb55c729d20ed549665ceddfcc93a14ed2782224a6afddd665",
+        "libs/zephyr-mcp/src/rslib/index.ts": "69472ead47f3844d2fab3fd3b968d986f9a07d35366c5c059721f1ea3a483650",
+        "libs/zephyr-mcp/src/rules.ts": "d80fbd8679e0b6757ea28c52bfbae4e06ed3a39b8f3dcb52a6d1cf1107019b15",
+        "libs/zephyr-mcp/src/types.ts": "509926d7ba5a3a404b4569ce5e3d3d209683efc83f0d8145cc67f52f0ecd62ca",
+        "libs/zephyr-mcp/src/worker/handler.ts": "c11ac1f098e606395f6ec7ae3ba961f2feea59f39434f0748393926d71648842"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "updated",
+      "reason": "New zephyr-mcp skill for the package moved into this repository: defineTool, the zephyr-mcp/rslib preset, ZD07xx fixes and deploying dist.",
+      "evidence": [
+        "Changed: docs/mcp-provider-publication.md, libs/zephyr-mcp/README.md, libs/zephyr-mcp/skills/zephyr-mcp/SKILL.md, libs/zephyr-mcp/src/checks/artifact.ts, libs/zephyr-mcp/src/checks/catalog.ts, libs/zephyr-mcp/src/checks/finding.ts, libs/zephyr-mcp/src/checks/index.ts, libs/zephyr-mcp/src/checks/links.ts, libs/zephyr-mcp/src/checks/repo.ts, libs/zephyr-mcp/src/checks/secrets.ts, libs/zephyr-mcp/src/checks/skill.ts, libs/zephyr-mcp/src/checks/tool-module.ts, libs/zephyr-mcp/src/define.ts, libs/zephyr-mcp/src/rslib/index.ts, libs/zephyr-mcp/src/rules.ts, libs/zephyr-mcp/src/types.ts, libs/zephyr-mcp/src/worker/handler.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/.npmignore": {
+      "fingerprint": "5421ba0dcce28fdf1f267e1a7fe99edf9c5a9dd9bc7112c913a41a9020bfbe02",
+      "snapshot": {
+        "libs/zephyr-mcp/.npmignore": "15fd6713322d4ebb1e37998694e8ecc4614238be164dbb4814d12ddb5175ad34"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/.npmignore at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/LICENSE": {
+      "fingerprint": "265a85779bc8b09a9e472b0b031c521118332897d82f97c97e9711afc3319cef",
+      "snapshot": {
+        "libs/zephyr-mcp/LICENSE": "f114f141305980861b5d1ceba4ab2f4fa6063dcaeaafd4fb98ee7778b198fba8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": ["Changed: libs/zephyr-mcp/LICENSE at 0fd302be3d0609db91849b3fa4e8603aee83dc44"]
+    },
+    "source:libs/zephyr-mcp/__tests__/checks.spec.ts": {
+      "fingerprint": "157b1d42760228e3611d4bb326c6f779da7c029e6925f4a17941c85a719a39ce",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/checks.spec.ts": "db0de51f54b53d7927cb76c1a45c81a1527b42f98c054015911b4abf05d49318"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/checks.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/agents.json": {
+      "fingerprint": "cc3a3316eecd0fdf48d29a649acab76883077957cb03d5770701a59fa1e83e76",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/agents.json": "ca4875299565f883d86fcdfc078dc527a3c29a58e28634b528380d48b1b7bfd3"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/agents.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic.catalog-sha256.json": {
+      "fingerprint": "5fb8bcca6a6560d17a8b458618b743317076446220c23eec1cab0c5132d7eeeb",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic.catalog-sha256.json": "7abed125cc19b51ea10cbd56b161257ce1317ed5887b6966198c44b726d7708b"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic.catalog-sha256.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/catalog.json": {
+      "fingerprint": "228b8fe3345b7305704e861ab33e6161b1fa9abe165e17fd364bb2675d847734",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/catalog.json": "446fbba346591f3570fff6937e35c2836b1682943801e11737f1df8c7f3ca209"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/catalog.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/mcp-provider.json": {
+      "fingerprint": "c76a5697507df712a422656bf2564bd8c7d9f06a6946b5895706675996fc78ef",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/mcp-provider.json": "8ffcfca2b08ca0b34cd494ff8165c21315949df94108532df3a5d5c0640152f8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/mcp-provider.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/SKILL.fixture.md": {
+      "fingerprint": "b994a6394869c2e60c7609a68593a96705dfd25436de86063ef501f519f83ffd",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/SKILL.fixture.md": "0db3e99a5c97902110fd0622c42f182e7fa554cc3afcedf1876582296f0d8f11"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/assets/logo.bin.base64": {
+      "fingerprint": "adc4b64b2c68e660db56ff034a78a67f2c13b2ac3623726719ee6943f3b3481e",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/assets/logo.bin.base64": "4110495dc2d6a78d96eac77ff610256129e1600baf1825a38acfffa0da4f0be9"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/assets/logo.bin.base64 at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/Zebra.md": {
+      "fingerprint": "b1f3789d6ab0e1412c047c39a099e120fa03da9f5c54de7ffb7d8c5e1caadb8e",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/Zebra.md": "cfb25c02a263a12b4cf8197cdef1d7c0d6066be10d851a7f73d583a7937b64f0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/Zebra.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/apple.md": {
+      "fingerprint": "360c5b28d6f4f4a053e8b4c159385cc1cef258a024dc57bd5043a14ebbf17f82",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/apple.md": "9fec896d2977e81343eb330cd7a88ec0d7ee153680d3387fa4fc10965f10864e"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/apple.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/price-book.md": {
+      "fingerprint": "d562d25fcf30b4a8ed50e3d2348e6b9b9e88f8e203c480b92f0483a05d174a8f",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/price-book.md": "2a7ab6bd9d831a4e2fd2da3b668436db61f46fba97224e69b0af5806e0f9862b"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/references/price-book.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/scripts/check.ts": {
+      "fingerprint": "a205d75a15d62d9c458d045d05235002157265fef2f47f8c285f8a44799fee38",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/scripts/check.ts": "abcfd76745aa4927203b35ce6bcfa24a9983d72d836490c015f754b697044536"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/quote-a-deal/scripts/check.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/release-a-frontend/SKILL.fixture.md": {
+      "fingerprint": "90ebdd0906621bbfc9f7c69f729285046884692c385964e1dcfc527f8307e0df",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/release-a-frontend/SKILL.fixture.md": "9e03cf6ceddd483d9b683e7469ef72dfae43d679f22e732e564a281d4dd18cf7"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/skills/release-a-frontend/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/tools/index.js": {
+      "fingerprint": "60331f59d3b0b9f543a224221a45cba9eafc519a93ccddab9695239154659f0e",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/tools/index.js": "c49264d91dc6d7450b98529a96ed2f5d89a7a1492f6e90c71efb8e5ff35209b8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/artifacts/tools-basic/tools/index.js at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-evals-path.json": {
+      "fingerprint": "a13659ddc1db262039ea4fbac195bd97bbe177069ad5d5dff44e86ae61619f3d",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-evals-path.json": "0a86306beb63ccc2c0875e0ef5a25ab2ad1eeb7d673293d272cff14981cf000d"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-evals-path.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-flags.json": {
+      "fingerprint": "f724df03ab193d20a5dcd7ab8511d25fe262e7869acc7aafab6b2011442e81f8",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-flags.json": "eb6506056c72ee9e1b025878cf7db78f34740cb82993f7520914822ea6364c39"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-flags.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-mime.json": {
+      "fingerprint": "1ef1f837bd2173e9ae410471d23dba9c21f5e1733c25fe84118a35c10e19c3a6",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-mime.json": "6485e7b9a1ed3b6095c76d8807bf98b29d77ffdbd29e95670ef3c88a352e1543"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-mime.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-reserved-tool.json": {
+      "fingerprint": "bc9dbc628b30beece71e32392cb7bf92fb699334363b0d64f8455fa9413e7a09",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-reserved-tool.json": "60e9145ad6b4bf15b5344069b1d046dfc6a8ba6467b2b47823b577649488eb0f"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-reserved-tool.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-runtime-modules.json": {
+      "fingerprint": "70c52c0709cac52bc9b42e87b87f5d4642efe1d84c407f18063979ba5f9b0cfd",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-runtime-modules.json": "3a54705847ced56756d16e119a987a4899c4a1fbc263a217b89a46ef4fd24739"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-runtime-modules.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-runtime-without-tools.json": {
+      "fingerprint": "6dd8d0c0ab7966efa0a0177381a0e785977d65d711238a447d8b27ae1c7318bc",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-runtime-without-tools.json": "271ff8a5df0dd2779f76cd07dc9b8bd47e4fb271a1b4fabbbf9f2d145107a088"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-runtime-without-tools.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-sha256-uppercase.json": {
+      "fingerprint": "aa2c1310a7447bf01e4265fec09ac1cd7c8929fa877e72b9c1387e5c4df634e1",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-sha256-uppercase.json": "e3502a6e5830f7899e8750384e12ae9f5d2aa3e675ba989f051d13fff9429b8d"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-sha256-uppercase.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-skill-path.json": {
+      "fingerprint": "388e0e9b91a76cdf4346ad03350d8be6c214f09164b63b82a47ba3e6e26708d2",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-skill-path.json": "9a92cf3dbee8540ebd07e00e919f747515c866350d6d99d78d4080d9e394667b"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-skill-path.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-tool-schema-root.json": {
+      "fingerprint": "d11c35683de10d0784ee93f0ab0e2e7bfc0703a896e5cef903fa6eea13d28e11",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-tool-schema-root.json": "98f1ffac02609487bda0b793058b33c8e9e4eb13c532b85d5da7df689bc85b9d"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-invalid-tool-schema-root.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog-unknown-key.json": {
+      "fingerprint": "78376f4ec436f6dfffed5204922b37d9cdb95eab2102dd561437f4682db75851",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog-unknown-key.json": "0d7bb542991862c50b8a1f621902e736fb571603649640620f480dbd9be028f1"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog-unknown-key.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/catalog.json": {
+      "fingerprint": "8cc29547a5e44222b7ba22fe140f9d2aba375709fdfb209fe3df22c8b5b250a2",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/catalog.json": "446fbba346591f3570fff6937e35c2836b1682943801e11737f1df8c7f3ca209"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/catalog.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/eval-results-invalid-skill.json": {
+      "fingerprint": "138ef47bfa7befc14f3489855abb072dcc83589c399427a26b312543c15b7f37",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/eval-results-invalid-skill.json": "8aef2d3f256168adafa28f8bdd72b99556dc2e953d814d3bf86645566cad6466"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/eval-results-invalid-skill.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/eval-results-invalid-totals.json": {
+      "fingerprint": "e5dded075f6aa00fa931822cf1f0b5b2adc8642a5bc9f3b3a2d9541fb5dc4d79",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/eval-results-invalid-totals.json": "6a2e107f1224edabfce6194762353cd265578e372ab4ebabf9acda205c6824a0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/eval-results-invalid-totals.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/eval-results.json": {
+      "fingerprint": "e2732c52769be2deb2b5acde29c117d8dd21b8564c1b62e1d60916d4e5dbf836",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/eval-results.json": "8a514a0ba44f203889d78170409d99e137ca6ac9e741297647a9c06bb9fd0171"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/eval-results.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/mcp-provider.json": {
+      "fingerprint": "b0a5cfdcfb3fe8e7a4b2821b0976e69ba6e3ff64fd494c03480af042b6908bd0",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/mcp-provider.json": "8ffcfca2b08ca0b34cd494ff8165c21315949df94108532df3a5d5c0640152f8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/mcp-provider.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/mime-table.json": {
+      "fingerprint": "83395265d677822d57b3620a37116b58b1f5f3589f556ee11dbd462605249344",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/mime-table.json": "44981a028bfae6604b53915367f1de6c4789fdd73eb49cb57a59199827497734"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/mime-table.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-catalog.json": {
+      "fingerprint": "03a4d8bbac6512facee082a56a266cbf5d3edf7f1f56784ade2920128fe14e29",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-catalog.json": "d279ac54f02f7a825ce6f207a0efce9d8864fa2aee0eaf9f6ce9f144affb01df"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-catalog.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-descriptor.json": {
+      "fingerprint": "49f4260d07eed2d03b6a64499e30cdea6f606ae700ebdb115d37ee1060e45ce1",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-descriptor.json": "1da4924855a3d1ffcef0f97bf4321b8a4b978b816c44abd66dd160cb61a77d3d"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-descriptor.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-findings.json": {
+      "fingerprint": "44638fd8a909bfe6ab4756fa026e62bb494d5f921a868d946b2b3102a8029e85",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic.expected-findings.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/SKILL.fixture.md": {
+      "fingerprint": "5543844e9bfc6c3532212a063b903addaadc1c9eb0cbb49a49056bea3ac2995d",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/SKILL.fixture.md": "0db3e99a5c97902110fd0622c42f182e7fa554cc3afcedf1876582296f0d8f11"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/assets/.hidden-note.md": {
+      "fingerprint": "62ddf7c108fddb4d74ce67ea9dfaf622aa8323eecf38f50c3aef17c89dd36d97",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/assets/.hidden-note.md": "b5fc7b42b13a8b76e41e1a742cdf2b88a3ae94799b079040de0a32a666f80d17"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/assets/.hidden-note.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/assets/logo.bin.base64": {
+      "fingerprint": "fc743fd373d2b4be3135c0c65534888759e009b496f018c910f97ef7097997d6",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/assets/logo.bin.base64": "4110495dc2d6a78d96eac77ff610256129e1600baf1825a38acfffa0da4f0be9"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/assets/logo.bin.base64 at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/evals/evals.json": {
+      "fingerprint": "8bf4b6da5a6d9b00da16f36cb8309ca3b42a395c171b2bcc96df047450ff3fdb",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/evals/evals.json": "084951aea9bfe43137805ee7d55bb490fe26bdca9f5f0b59b6449450ded5eee5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/evals/evals.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/Zebra.md": {
+      "fingerprint": "6f3790e54ed531861fb1e3208bf50a07628656f25569003e1dba23772a6e67ae",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/Zebra.md": "cfb25c02a263a12b4cf8197cdef1d7c0d6066be10d851a7f73d583a7937b64f0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/Zebra.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/app.js.map": {
+      "fingerprint": "f67ed14685ff55bca0f26e76932fe7a9d89bd4a2bcb65b92087b141bd476b1e8",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/app.js.map": "7afebfc97c3d239f9c0ed7e814d7c5df33ff6e2628e9b7a3f4af5d21c1e32479"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/app.js.map at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/apple.md": {
+      "fingerprint": "1bf3403946e90b7dd016a6493d36d6522f1e15437da45e840449b900ec0f7a00",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/apple.md": "9fec896d2977e81343eb330cd7a88ec0d7ee153680d3387fa4fc10965f10864e"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/apple.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/price-book.md": {
+      "fingerprint": "b9730ad93c65e8cea71982269727a4c9ab32e2f63072ee6c70dec7147a796dad",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/price-book.md": "2a7ab6bd9d831a4e2fd2da3b668436db61f46fba97224e69b0af5806e0f9862b"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/references/price-book.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/scripts/check.ts": {
+      "fingerprint": "fc7dcef8a6e1a3fb3bb2b951631c26bfb224a21649ad755e98433508feb16961",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/scripts/check.ts": "abcfd76745aa4927203b35ce6bcfa24a9983d72d836490c015f754b697044536"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/quote-a-deal/scripts/check.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/release-a-frontend/SKILL.fixture.md": {
+      "fingerprint": "23ed52e7064fa08472296eeb4cda81a6bfa01aeb10b871bf08e6716315e567a6",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/release-a-frontend/SKILL.fixture.md": "9e03cf6ceddd483d9b683e7469ef72dfae43d679f22e732e564a281d4dd18cf7"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-basic/skills/release-a-frontend/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken.expected-findings.json": {
+      "fingerprint": "ede11b377b50579729e5c40c634bf8acf89f545926df6848646767376dce3dd2",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken.expected-findings.json": "bdc7e1a25133bb04795deac112b1b36b7325e258928e738c4022a6d18e34c528"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken.expected-findings.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/Bad_Name/SKILL.fixture.md": {
+      "fingerprint": "c02c1eca022e6cbe9bb0e4dd27832da4aaf3b6aead6fe59b2ba2d3ee22e32731",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/Bad_Name/SKILL.fixture.md": "cb3fb7940aef2672ef1da57a4b0ff7908704cad1cbb5a99167e751221b9057a8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/Bad_Name/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-evals/SKILL.fixture.md": {
+      "fingerprint": "e2fe652bb6a61c98f8674104a6d1ec1d7b679a4eb628907af0139e73cea1f2d5",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-evals/SKILL.fixture.md": "58cb6474c1506d459ffaa35a4ce5a92f197178d063760ba33e4b9b88c15a20b8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-evals/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-evals/evals/evals.json": {
+      "fingerprint": "6be6fcd3bbdd599cb1245f1e11ba6d9be0e106564c7b86a9fca3d0fd9380aad6",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-evals/evals/evals.json": "0228f717792ffbc02f7fa058c934c10d7e91d0de743e365ebd78bfebf019254e"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-evals/evals/evals.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-meta/SKILL.fixture.md": {
+      "fingerprint": "625dbb5c26704cba2bbd8482ad35220a5bd70f12f3118021a0b327efe2812338",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-meta/SKILL.fixture.md": "b7b3a160c48f4b19838f6fd8f471348622b5643e4ff99b3fd6d568c6bd5cff2d"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/bad-meta/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/broken-link/SKILL.fixture.md": {
+      "fingerprint": "2dadf423727c34ad63aad8d382373c7dab45ad7a7f1627e81b445b48ba1c206d",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/broken-link/SKILL.fixture.md": "aec278563184b9e70f914241edeb5f77d1a2e3ed08441ea4bdd941cfccc852dd"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/broken-link/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/long-desc/SKILL.fixture.md": {
+      "fingerprint": "a1bc0adfc202512aaf56559bc918a9272dabf2d3c85d95edc037933c91fe0171",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/long-desc/SKILL.fixture.md": "5b12b2b3b5615773341788b75409703cf3080d9f164e2e07f4f72f84fcd3320e"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/long-desc/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/missing-owner/SKILL.fixture.md": {
+      "fingerprint": "2abe466c6cb5961f53a3ffe26249657e6b35b4dae39bef0bfa5e1a9a00a21ebe",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/missing-owner/SKILL.fixture.md": "1f1f664f7e8140c68440136338b98e661ff4da7b54ff5658d74edffe5e293d8a"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/missing-owner/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/no-frontmatter/SKILL.fixture.md": {
+      "fingerprint": "6f6bfa7f944f89afb8d60e00cc3e3e77b6384d3ffe2b5e5c548c8221ead6e4dd",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/no-frontmatter/SKILL.fixture.md": "9f10e88780d8e31ccca2e5e508ffeda6166967c76e28d235ffb52694b891c1ac"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/no-frontmatter/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/no-skill-file/references/x.md": {
+      "fingerprint": "371929fe4061d7ff7badf5bead0874a9eac37be51183bce3c1b251964d5a31ca",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/no-skill-file/references/x.md": "a25e8b9ee5874ef52cb8c40e74322e5aadc0e8d9a070bce36cdebb04b791399a"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/no-skill-file/references/x.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/outside-link/SKILL.fixture.md": {
+      "fingerprint": "8b5efee6de55d3df5718e67f6491b3b22c7bcf6cb12c81db467adfcf9d6bdf1e",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/outside-link/SKILL.fixture.md": "45f5010829abb2b9488f735fdbe00861e633df4ff091326ee2d25c91c449a8c0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/outside-link/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/secret-skill/SKILL.fixture.md": {
+      "fingerprint": "a37270edf001398d6291b7e6b25830f2db706abb27ba24e05bee7140a3002ea3",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/secret-skill/SKILL.fixture.md": "c21cfc8b00d5d5fc7cbfb0ceffd13099d59eacd6764dc9e19ff13f8bb29dfe32"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/secret-skill/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/unknown-entry/SKILL.fixture.md": {
+      "fingerprint": "677f46a2b04d12dc6f64f799664d414d43e4c9933193ce9e18d5f277774e6071",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/unknown-entry/SKILL.fixture.md": "c57a35783b6bf0c771beb0de358ed50270d09b07844d8195bf29c6d4893c9107"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/unknown-entry/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/unknown-entry/notes.txt": {
+      "fingerprint": "a95358458199514f267c7a690e7f9f0ae6bc4109614bf92942e7d44cf0750c16",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/unknown-entry/notes.txt": "43bab6c26bc03299f3e5108f37cfa190ef6446cfe38f4229204a0d6b88e4b102"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/repos/skills-broken/skills/unknown-entry/notes.txt at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/resolve-revision.json": {
+      "fingerprint": "ba49c1bc4d4d8edaf8b55c4382c1b7cc60a34b26f188c21d02da26d00379770f",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/resolve-revision.json": "617af33ba44cfb6970c0566e7e2c4ff0b026667c9ada9634ce29db50bb8cca4f"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/resolve-revision.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/contract/slug.json": {
+      "fingerprint": "46c972fe78de3ebb9c65595d4d500d90ba6623eb52284b85aa35d26415b21059",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/contract/slug.json": "28ca621d64cdbe9974f9fb156d745753441f4860b279be865ae985c3fd64578c"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/contract/slug.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/package.fixture.json": {
+      "fingerprint": "51a449517caf436c85d573eea8f258ba3cc42f9ca7dab88c4b04e6b35564b398",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/package.fixture.json": "75daaadbe57ce9b358a3188aac620a583dd72d1f3c5c1f2a5c3673efe76bbcc4"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/package.fixture.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/SKILL.fixture.md": {
+      "fingerprint": "847f93c40db2bed58933314658b47085aade487f789b947c813e00bbbb44a616",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/SKILL.fixture.md": "0db3e99a5c97902110fd0622c42f182e7fa554cc3afcedf1876582296f0d8f11"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/assets/.hidden-note.md": {
+      "fingerprint": "e8f9440bbe1237ee51f1946595f78ee9592396db06ad343f75958ded8f235545",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/assets/.hidden-note.md": "b5fc7b42b13a8b76e41e1a742cdf2b88a3ae94799b079040de0a32a666f80d17"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/assets/.hidden-note.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/assets/logo.bin.base64": {
+      "fingerprint": "3660e5ef051d50e6931fdd29c9e03036b5bfbe32443eaa619a2c4374313f7645",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/assets/logo.bin.base64": "4110495dc2d6a78d96eac77ff610256129e1600baf1825a38acfffa0da4f0be9"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/assets/logo.bin.base64 at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/evals/evals.json": {
+      "fingerprint": "bf8177eac95dabe6abfe7398d5a25dade70a34ab7d3436d7fcdcebed1b313ce1",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/evals/evals.json": "084951aea9bfe43137805ee7d55bb490fe26bdca9f5f0b59b6449450ded5eee5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/evals/evals.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/Zebra.md": {
+      "fingerprint": "3ea7dafbc506458beaf8e5c6429808c6abe858537b2b9f9b3e00b5f654316a22",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/Zebra.md": "cfb25c02a263a12b4cf8197cdef1d7c0d6066be10d851a7f73d583a7937b64f0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/Zebra.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/app.js.map": {
+      "fingerprint": "eb7cee31bdb58ce56c345c65d67a91aa13102592c06b94e596fc06fe2733255d",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/app.js.map": "7afebfc97c3d239f9c0ed7e814d7c5df33ff6e2628e9b7a3f4af5d21c1e32479"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/app.js.map at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/apple.md": {
+      "fingerprint": "2ec8b14290a22a4284e2d4ee5ce2a647c7b005362202cce5c40f8b846c871789",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/apple.md": "9fec896d2977e81343eb330cd7a88ec0d7ee153680d3387fa4fc10965f10864e"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/apple.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/price-book.md": {
+      "fingerprint": "1a27a877c7104255c86b0911e74a3bfe4e3976ee9b87ea02d7aa930d8586f822",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/price-book.md": "2a7ab6bd9d831a4e2fd2da3b668436db61f46fba97224e69b0af5806e0f9862b"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/references/price-book.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/scripts/check.ts": {
+      "fingerprint": "83f621f56622f8b43da6b60c0e2bc94d97ca29f7c7aba931f5aa3dbea12eba42",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/scripts/check.ts": "abcfd76745aa4927203b35ce6bcfa24a9983d72d836490c015f754b697044536"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/quote-a-deal/scripts/check.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/release-a-frontend/SKILL.fixture.md": {
+      "fingerprint": "9a72efa35c9584b40841a552868c693565768fc0920bab9a38940f79d876d1c2",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/release-a-frontend/SKILL.fixture.md": "9e03cf6ceddd483d9b683e7469ef72dfae43d679f22e732e564a281d4dd18cf7"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/skills/release-a-frontend/SKILL.fixture.md at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/_helpers.ts": {
+      "fingerprint": "f075efe1b14c85b4b53a385d5abdbce0b4547b9f6f0375147dc57d6f99764768",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/_helpers.ts": "c45d93f1e8c0fe57d560d20fa8a6b7d80cf9ee9b2e926f0fd97a0d9b358a3b9c"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/_helpers.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/lib/pricing.ts": {
+      "fingerprint": "fb60f157c8bee8f2aa3f9f356d6902278ef07be16b128c75fbc09e5eb4da9edd",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/lib/pricing.ts": "b63258c62d6211257ab7734df4dfcc63a7f7067105eca15211bae8c668241ae1"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/lib/pricing.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/quote_price.test.ts": {
+      "fingerprint": "82de67a2ca7bf1d0bf36089d23c67ad71eda03f52dfe4e9cd3e1b7e50478bbdb",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/quote_price.test.ts": "67f070f081b4f3b9180fb82aa3e36bcb80b5ff3dda0d1276aad81859ef9e55df"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/quote_price.test.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/quote_price.ts": {
+      "fingerprint": "dedda4777a2d7796048dbe78bd22b7ccc055387932d117ef8ca69eeeac507f18",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/quote_price.ts": "eecea4f3965b1332fda54206d85bbbcbd4b8fb41d82853e28764fab0ce674fa5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/quote_price.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/slow_echo.ts": {
+      "fingerprint": "d8eb9196ad382699c1828e6a9bd9a37ae00e32174ec6881ee05ab7ebe9d0c1de",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/slow_echo.ts": "abf9304ba22b2cfd5a6c25c719407d616271330095e4e3ccf5c62ae860a02d68"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/fixtures/tools-repo/tools/slow_echo.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/helpers/fixtures.ts": {
+      "fingerprint": "21ab483e60d7b299e261cfaf710d8b82b98015c4163d2f0173de6b5fe9b1af05",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/helpers/fixtures.ts": "fdccb906a4edfa1be476f378c4333079f4bbcca486b9c5dde65ed53a44dd14f8"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/helpers/fixtures.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/manifest.spec.ts": {
+      "fingerprint": "5df3d6474c0b2d158a1e44edc2cf6e7e5da89f33ea922b6f356d5ab1b9c336a2",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/manifest.spec.ts": "e1c15101929992a2b4cc73d6d7f2791282188663d8489b6ca1e0d82350d05128"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/manifest.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/repo.spec.ts": {
+      "fingerprint": "d279d45e5ce217a612d4372c27496d1f3ecf80b663b97c62125716fa050be44c",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/repo.spec.ts": "d3597ba3737460eec0d967373864013597c70e52f63609ce7fd21edd01e61f1f"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/repo.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/rslib.spec.ts": {
+      "fingerprint": "84a036a7ee7280d8c62b482e40f169526e08d131a8ef237ea79d62ec8c8c6cde",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/rslib.spec.ts": "7a36a71b2949853466ce9bf0ce0d39d299028ff8b265012bb3a1f45dfc244b0c"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/rslib.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/worker-safety.spec.ts": {
+      "fingerprint": "1cd07383c18ac4551974a85e277f6630653d941873f55304bdd464a17ce7ef95",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/worker-safety.spec.ts": "4ef874caa7630307e96b9103c93a058fab587c8ccb490f60418f8649a3709187"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/worker-safety.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/__tests__/worker.spec.ts": {
+      "fingerprint": "918ab0079c9b6169e19c980168de11b13adeaf11a643c098adee946b5a202504",
+      "snapshot": {
+        "libs/zephyr-mcp/__tests__/worker.spec.ts": "bcbb103c092d9a8d10f93ed9555c6072e0ae38021f1d744a808ce6a286cfb9bf"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/__tests__/worker.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/raw.d.ts": {
+      "fingerprint": "297cabdc36155bffe1edc867a2b8786a9a94109d1a381623e7cc53a006503779",
+      "snapshot": {
+        "libs/zephyr-mcp/raw.d.ts": "71109c5bc916b21d4225cf64ce114fd356b94a9530efa53a0f88d2b63df77351"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": ["Changed: libs/zephyr-mcp/raw.d.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"]
+    },
+    "source:libs/zephyr-mcp/rslib.config.mts": {
+      "fingerprint": "3aa7adafe04f6d4005c7d7262892f8cb16e2ea3dad63191caa8204c6c6f39f28",
+      "snapshot": {
+        "libs/zephyr-mcp/rslib.config.mts": "fb2aa6d4581865f9391d328af24a9b39327e1332465b6a9af99a1bc67c771886"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/rslib.config.mts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/rstest.config.mts": {
+      "fingerprint": "5d301baea9f711e9d432260c66a4efe9d2fe5da4b541f3eaeec32ef478a65c13",
+      "snapshot": {
+        "libs/zephyr-mcp/rstest.config.mts": "677dba6933615898d2f0289091a46216af1f955a0f9b1912c9115070f900837a"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/rstest.config.mts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/frontmatter.ts": {
+      "fingerprint": "528953c6b2b31bdf6b30dc5a7cea24ce48d26da1cfb7bd2a4dbe13aa0f327e65",
+      "snapshot": {
+        "libs/zephyr-mcp/src/frontmatter.ts": "b139312eea6a9b40953305547f68fa4cec7e7ffbfdc8c641f8b410a35c38f607"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/frontmatter.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/index.ts": {
+      "fingerprint": "c4a9b3298206cda334c7ff332c190a4c6968e24e78d1c81137f6f73eaf254880",
+      "snapshot": {
+        "libs/zephyr-mcp/src/index.ts": "39e40f5aadc84117c935798621113755f9c0a7e533fb58348f2b1a7b6e8c4dd2"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/index.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/build.ts": {
+      "fingerprint": "f682c08acb7f2c24e015d9afa745bfdcc24dbe742d2445d7117d5704c3de2e3e",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/build.ts": "ff45dbe9cfd36aee19057c6ca7fe555d6bd11cd1e922b6099b554b7eaab99931"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/build.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/catalog.ts": {
+      "fingerprint": "4086e08f8b3071f9a76ed6708a7ace5196a017f63713851f0edf9fed7d7aa353",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/catalog.ts": "65a43a9c1adf66f7ea31fdaaff65aec28c82837ef9a007cd9388427bbce383b5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/catalog.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/constants.ts": {
+      "fingerprint": "eb6d732cbf0c7fd4db5031065857ed8aac41419e4f7ba607471ee7930b682d00",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/constants.ts": "3e9c880692cc08b8c55aa12945db84a7d3d84e43fde5d7d9484778ca70d80c1f"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/constants.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/eval-results.ts": {
+      "fingerprint": "cd6d4cbf3f258b401aa663ae67efa010954b7b81885eed8948dfdd50b90c4e11",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/eval-results.ts": "8551c7e111219beac303550f6fe054677226943dac787a0ad57f3c9c9bb9fc49"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/eval-results.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/hash.ts": {
+      "fingerprint": "504adc45994e041955e23c9d51d615e8b25af12fd344df51d05874c3a5202026",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/hash.ts": "bb49da64b1099af9eb67ffa4cacfc4b7f26a6968d4d8415a203871ce79342e81"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/hash.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/index.ts": {
+      "fingerprint": "af09b7fdd6b4dec6bb154ba056732e27c48c4523403ab4180c40ee1020be3413",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/index.ts": "a6db3f70f607b2297cd8b8c24da2ce9fe033296bff201afefdf9326111ca1ab5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/index.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/paths.ts": {
+      "fingerprint": "e36a3e2052e06618be57e5f5ed95957ab2699b78dccf830bdcc7490e6da1816b",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/paths.ts": "a4da288d7a8b8b7cf3cad789dc0306cdf8431f5d0a38b70f6d3739dc83048311"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/paths.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/skill-rules.ts": {
+      "fingerprint": "e27c16caba77901e5bb69a3ce9f9f45dafdac238b06fe2a1ada76f833513fd54",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/skill-rules.ts": "d80bd70e42d3211e9ee21db6183469a0aa8c0670297519d28223ffa704af83d7"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/skill-rules.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/slug.ts": {
+      "fingerprint": "7dcd1163902b2b5bf600662767b08f0bdfa2e91ec71165b5c5b18e4ee070ae08",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/slug.ts": "c0504ed61aa78292e6762aaf2ee56f2463f51f011826a226e999b1c4b57e1dc0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/slug.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/manifest/tool.ts": {
+      "fingerprint": "6e4de32122ec05778edf0b55d130ac739607dd99ba741167ef865e48d99226f3",
+      "snapshot": {
+        "libs/zephyr-mcp/src/manifest/tool.ts": "af406a11bf2ccbe11a9d24d2d3917d3692b1ec276bed377338b720b3aa9a2fb0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/manifest/tool.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/mime.ts": {
+      "fingerprint": "0ef727314b12e1e6d6c999781ee32cbd07d92b74662154148f4f11b2a135413d",
+      "snapshot": {
+        "libs/zephyr-mcp/src/mime.ts": "cacbb025729f015d363a0beaa53e3c31cdc8b57a9a390b6d2f96a96439de3cd7"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/mime.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/object.ts": {
+      "fingerprint": "a9b1d313cb368503ddeee44ddc372c36f7769134bcfedb89da18943ae897e314",
+      "snapshot": {
+        "libs/zephyr-mcp/src/object.ts": "b4a6d6cfe727aca4ba3a813dc75977c9e564ba4d1f8e61db6e3f048faf75ec20"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/object.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/repo/index.ts": {
+      "fingerprint": "d4090b31543e9fec2b119e731d1c6732cc55cce53013d4226fc765e7f238f0d3",
+      "snapshot": {
+        "libs/zephyr-mcp/src/repo/index.ts": "ffd6db3d97fbf097d5b8ecb3e2d4aa163f4a135bc4713afbe95bf3be8f79ae47"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/repo/index.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/repo/scan.ts": {
+      "fingerprint": "958ed97248286e11e77afe3109d36d95011381a1b7f4f8ace2e366f510e620b8",
+      "snapshot": {
+        "libs/zephyr-mcp/src/repo/scan.ts": "87bff554f575ffec8a2ee7a51e971fcafcf8a98eec3f69acb385c9c6cb87d206"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/repo/scan.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/rslib/entry.ts": {
+      "fingerprint": "c5e3ab477cc8a5f8f51c0f8e42eec3d4df04ba7f9f5b0c8e88b23479124abc37",
+      "snapshot": {
+        "libs/zephyr-mcp/src/rslib/entry.ts": "a55e78381b85e8900f5eaa4a256368dc44b9bed7b2471d5e1a448f6506b741e7"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/rslib/entry.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/rslib/symbols.ts": {
+      "fingerprint": "c466e3460c384649634e6766a24291f9b90fcd1fa1f1652578fafedb1bb3a90b",
+      "snapshot": {
+        "libs/zephyr-mcp/src/rslib/symbols.ts": "513260d232547dfb16801d70d6d635d031bbd17c89d87ef18f4ad7be6ee34ea5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/rslib/symbols.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/tools.ts": {
+      "fingerprint": "c3839b0735a3b6eb2cc36520afc33a01742b44d211e5c42ce4a698614cbdf966",
+      "snapshot": {
+        "libs/zephyr-mcp/src/tools.ts": "e7632e7150278797e2aa38233fb2afb1466ac7fe7fce13b4b043496675fb1231"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/tools.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/validate.ts": {
+      "fingerprint": "4cd70e211a9f196f8ac8f584902fba89f95214ae6cb7664f4ebca8169a5b9120",
+      "snapshot": {
+        "libs/zephyr-mcp/src/validate.ts": "a13f206d342890b164cd94cdf1bed83717ca1f6149cdc5a72e4aca88a1eaaab5"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/validate.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/worker/client.ts": {
+      "fingerprint": "f88e13adfab8ccb1caf0d78f643d94d272547aa8efbe90704f1d97acdaa4a6c9",
+      "snapshot": {
+        "libs/zephyr-mcp/src/worker/client.ts": "aefb2d8e18742b8708f19f34070870db16a23f2496c201257a05fe2cf445deb4"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/worker/client.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/worker/index.ts": {
+      "fingerprint": "7b8d156ca9f43de2ce3faddc4a68af4adb94272046f62830f925b9fae24b9141",
+      "snapshot": {
+        "libs/zephyr-mcp/src/worker/index.ts": "5a7bb86af4f6ed2445bea5b2ae5f2672bc5f424ee79b2a191e245c637871e8f0"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/worker/index.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/src/worker/protocol.ts": {
+      "fingerprint": "1fa3ee86f23e14c3762f1dd82f8ce9a5e23cdbee2ce81b866da1d38120327e8d",
+      "snapshot": {
+        "libs/zephyr-mcp/src/worker/protocol.ts": "cf06bba3e3e8d3b9c78b69ad84f630c9b4dc38dfe54207ff6af42fe2756a0384"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/src/worker/protocol.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:libs/zephyr-mcp/tsconfig.json": {
+      "fingerprint": "f22080d6536a0efeca8031533584c23769bd71b4c361c6933158b90e2433a959",
+      "snapshot": {
+        "libs/zephyr-mcp/tsconfig.json": "94f9c62688eeebceda7c20af759e5eceb89382cd1820b04349bcbf21b19cc088"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "evidence": [
+        "Changed: libs/zephyr-mcp/tsconfig.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+      ]
+    },
+    "source:tsconfig.json": {
+      "fingerprint": "46c9eb2268afff694fdeb393d4cd5de5be1fa13815314520b962bbc4eb89881b",
+      "snapshot": {
+        "tsconfig.json": "5f054669bd4f40883888cd51db694d42e19ea4019ae2d63ecee4b705a612297e"
+      },
+      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "outcome": "no-change",
+      "reason": "Repository wiring for the new zephyr-mcp package (release config, TypeScript references, formatter ignores); no guidance change.",
+      "evidence": ["Changed: tsconfig.json at 0fd302be3d0609db91849b3fa4e8603aee83dc44"]
     }
   }
 }

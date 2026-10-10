@@ -260,7 +260,7 @@ describe('ze-cli deploy for MCP providers', () => {
       'package.json',
       JSON.stringify({
         name: 'tools-repo',
-        dependencies: { '@module-federation/mcp': '0.2.0' },
+        dependencies: { 'zephyr-mcp': '0.2.0' },
       })
     );
     await writeFile(dir, 'tools/quote_price.ts', 'export default {};');

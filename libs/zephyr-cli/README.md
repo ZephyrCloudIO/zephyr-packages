@@ -114,7 +114,7 @@ web app. Two shapes are supported:
 # A skills repo: skills/<skill-name>/SKILL.md, references/, assets/, scripts/
 npx zephyr-cli deploy .
 
-# A tools repo built with the @module-federation/mcp/rslib preset
+# A tools repo built with the zephyr-mcp/rslib preset
 npx zephyr-cli deploy dist
 
 # Store CI eval results with the version (never uploaded to the edge)
@@ -127,7 +127,7 @@ npx zephyr-cli deploy . --eval-results ./eval-results.json
 1. `mcp-provider.json` at the root: a built provider artifact.
 2. No `package.json`: tool files (`tools/*.ts`) are an error (ZD0732); a
    `skills/` directory is a skills repo.
-3. A `package.json` that opts in (a dependency on `@module-federation/mcp`, or
+3. A `package.json` that opts in (a dependency on `zephyr-mcp`, or
    `mcp: true` in `zephyr.config.*`): tool files are an error until built
    (ZD0732, deploy `dist`); a `skills/` directory is a skills repo.
 4. Anything else is a normal web deploy. A `skills/` directory there is
@@ -245,7 +245,7 @@ Every finding contains `code`, `severity`, `message`, structured `evidence`, and
 | `ZD0601` | Module Federation DTS diagnostic failure found        |
 
 MCP provider codes. Mode R runs on a source repo (doctor and skills-repo deploy),
-mode A on a built artifact. The rule id is shared with `@module-federation/mcp`.
+mode A on a built artifact. The rule id is shared with `zephyr-mcp`.
 
 | Code     | Rule id                       | Severity | Mode | Check                                                                              |
 | -------- | ----------------------------- | -------- | ---- | ---------------------------------------------------------------------------------- |
@@ -277,7 +277,7 @@ mode A on a built artifact. The rule id is shared with `@module-federation/mcp`.
 | `ZD0743` | `catalog-name-clash`          | error    | R A  | Duplicate skill or tool name in one catalog                                        |
 
 ZD0735 and ZD0736 need the tool module and are reported by the
-`@module-federation/mcp/rslib` preset, not by `ze-cli`.
+`zephyr-mcp/rslib` preset, not by `ze-cli`.
 
 ## Options
 

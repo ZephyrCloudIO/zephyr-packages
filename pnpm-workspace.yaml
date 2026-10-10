@@ -65,6 +65,7 @@ catalog:
   wrangler: ^4.129.0
   webpack-sources: ^3.5.1
   yaml: ^2.9.0
+  zod: ^4.2.0
 
 # Fails if trusted package stops being trusted
 trustPolicy: no-downgrade

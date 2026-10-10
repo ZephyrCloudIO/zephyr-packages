@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
 import { execFile as node_execFile } from 'node:child_process';
-import { getGitInfo } from '../ze-util-get-git-info';
+import { getGitInfo, getGitRepositoryName } from '../ze-util-get-git-info';
 
 rs.mock('node:child_process', () => ({
   execFile: rs.fn(),
@@ -347,5 +347,18 @@ describe('getGitInfo - CI environments', () => {
       expect(call[0]).toBe('git');
       expect(Array.isArray(call[1])).toBe(true);
     }
+  });
+
+  it('reads the repository name from origin, ignoring any configured project', async () => {
+    gitAvailable({
+      'config --get remote.origin.url': 'git@github.com:example/Team_Skills.git',
+    });
+    expect(await getGitRepositoryName('/work/skills')).toBe('team_skills');
+
+    mockGit(() => ({ error: new Error('No origin') }));
+    expect(await getGitRepositoryName('/work/skills')).toBeUndefined();
+
+    gitAvailable({ 'config --get remote.origin.url': 'not a url' });
+    expect(await getGitRepositoryName('/work/skills')).toBeUndefined();
   });
 });

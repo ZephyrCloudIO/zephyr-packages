@@ -1,5 +1,7 @@
 import * as fs from 'node:fs';
 import path from 'node:path';
+import { classifyMcpDirectory } from '../mcp/classify';
+import { inspectMcpDirectory } from '../mcp/inspect';
 import {
   DOCTOR_SCHEMA_VERSION,
   DoctorExitCode,
@@ -115,6 +117,23 @@ export async function analyzeProject(
       );
     }
 
+    // MCP providers are classified before the package.json gate: a skills repo and a
+    // built provider artifact have no package.json (contract section 8.1). Doctor never
+    // executes project code, so it reads the zephyr.config opt-in statically.
+    const classification = await classifyMcpDirectory(projectDirectory, {
+      zephyrConfig: 'static',
+    });
+    const mcp = await inspectMcpDirectory(projectDirectory, classification);
+    if (mcp) {
+      const runsPackageChecks =
+        classification.kind === 'tools-repo' ||
+        (classification.kind === 'skills-repo' && classification.hasPackageJson);
+      report.mcp = { ...mcp.state, packageChecks: runsPackageChecks };
+      if (!runsPackageChecks) {
+        return finalizeReport(report, mcp.findings);
+      }
+    }
+
     const rootPackagePath = path.join(projectDirectory, 'package.json');
     if (!(await pathExists(rootPackagePath))) {
       return invalidProjectReport(
@@ -139,7 +158,7 @@ export async function analyzeProject(
       );
     }
 
-    const findings: DoctorFinding[] = [];
+    const findings: DoctorFinding[] = [...(mcp?.findings ?? [])];
     const manifests = await discoverPackageManifests(
       projectDirectory,
       rootManifestResult.manifest,
@@ -261,7 +280,12 @@ function finalizeReport(report: DoctorReport, findings: DoctorFinding[]): Doctor
     warnings: findings.filter(({ severity }) => severity === 'warning').length,
     info: findings.filter(({ severity }) => severity === 'info').length,
   };
-  if (report.summary.errors > 0 || report.summary.warnings > 0) {
+  // ZD07xx warnings alone stay healthy and exit 0 (contract 8.1); every other warning
+  // keeps its existing exit code, including package checks in a tools repo.
+  const warningsFail = findings.some(
+    ({ severity, code }) => severity === 'warning' && !code.startsWith('ZD07')
+  );
+  if (report.summary.errors > 0 || warningsFail) {
     report.status = 'findings';
     report.exitCode = DoctorExitCode.Findings;
   }

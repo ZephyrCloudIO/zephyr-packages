@@ -40,6 +40,7 @@ export { handleGlobalError } from './lib/errors';
 export {
   defineConfig,
   getZephyrConfig,
+  type GetZephyrConfigOptions,
   type ResolvedZephyrConfig,
   type ZephyrConfig,
   type ZephyrDependencyUrlMode,
@@ -122,12 +123,64 @@ export {
   type PublishedBuildContribution,
   type ZeDependencyPair,
   type ZephyrDependencies,
+  type ZephyrEngineIdentity,
   type ZephyrEngineOptions,
 } from './zephyr-engine';
 export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
 export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
-export { assertZephyrBuildTarget, ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
+
+// MCP provider artifacts (pure; shared with ze-cli)
+export {
+  MCP_AGENT_KEYS,
+  MCP_DEFAULT_MIME_TYPE,
+  MCP_LIMITS,
+  MCP_MIME_TYPES,
+  MCP_MIN_COMPATIBILITY_DATE,
+  MCP_RESERVED_TOOL_NAMES,
+  MCP_SKILL_NAME_PATTERN,
+  MCP_TOOL_NAME_PATTERN,
+  canonicalMcpJson,
+  expectedMcpArtifactPaths,
+  formatEvalResultsIssues,
+  formatMcpArtifactIssues,
+  isDeniedMcpArtifactPath,
+  isMcpTextMimeType,
+  isSafeMcpRelativePath,
+  isSourceMapPath,
+  isValidMcpSkillName,
+  isValidMcpToolName,
+  mcpMimeTypeForPath,
+  parseCatalogManifest,
+  parseMcpJson,
+  parseMcpProviderDescriptor,
+  parseMcpSkillMarkdown,
+  sha256Hex,
+  slugifyMcpName,
+  validateEvalResults,
+  validateMcpArtifact,
+  type EvalResultsIssue,
+  type McpArtifactIssue,
+  type McpArtifactIssueCode,
+  type McpArtifactValidation,
+  type ParsedMcpSkillMarkdown,
+  type ValidateMcpArtifactOptions,
+} from './lib/mcp';
+export {
+  resolveIsolatedIdentityName,
+  type ResolveIsolatedIdentityInput,
+} from './lib/build-context/isolated-identity';
+export {
+  assertZephyrBuildTarget,
+  ZEPHYR_MANIFEST_FILENAME,
+  ZEPHYR_MCP_CATALOG_FILENAME,
+  ZEPHYR_MCP_PROVIDER_FILENAME,
+} from 'zephyr-edge-contract';
 export type {
+  CatalogManifest,
+  EvalResults,
+  McpProviderDescriptor,
+  SnapshotMcp,
+  ZephyrBuildStatsMcp,
   ZephyrBuildTarget,
   ZephyrLegacyModuleFederationConfig,
   ZephyrModuleFederationBuildMetadata,

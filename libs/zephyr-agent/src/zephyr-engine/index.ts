@@ -2,7 +2,7 @@ import { isCI } from 'ci-info';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { captureSource, type SourceCapture } from '../lib/change-attribution/source';
-import type { ZephyrDependency } from 'zephyr-edge-contract';
+import type { EvalResults, ZephyrDependency } from 'zephyr-edge-contract';
 import {
   assertZephyrBuildTarget,
   type Snapshot,
@@ -18,8 +18,16 @@ import {
   flatCreateSnapshotId,
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
+import {
+  createIsolatedPackageJson,
+  resolveIsolatedIdentityName,
+} from '../lib/build-context/isolated-identity';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
-import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
+import {
+  type ZeGitInfo,
+  getGitInfo,
+  getGitRepositoryName,
+} from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
   getZephyrConfig,
@@ -33,6 +41,7 @@ import { getApplicationConfiguration } from '../lib/edge-requests/get-applicatio
 import { getBuildId } from '../lib/edge-requests/get-build-id';
 import { ZeErrors, ZephyrError } from '../lib/errors';
 import { ze_log } from '../lib/logging';
+import { prepareMcpUpload, withMcpBuildStats } from '../lib/mcp';
 import { cyanBright, greenBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
 import { setAppDeployResult } from '../lib/node-persist/app-deploy-result-cache';
@@ -80,6 +89,7 @@ export type {
   BuildSessionStatus,
   PublishedBuildContribution,
   ZephyrEngineBuilderTypes,
+  ZephyrEngineIdentity,
   ZephyrEngineOptions,
 } from './zephyr-engine.types';
 export interface ZeApplicationProperties {
@@ -247,7 +257,8 @@ export class ZephyrEngine {
       assertZephyrBuildTarget(options.target, 'ZephyrEngine.create({ target })');
     }
     const context = options.context || process.cwd();
-    const zephyrConfig = getZephyrConfig(context);
+    const isolated = options.identity?.isolated === true;
+    const zephyrConfig = getZephyrConfig(context, { isolated });
 
     ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
     const ze = new ZephyrEngine({
@@ -260,17 +271,36 @@ export class ZephyrEngine {
     }
     ze.zephyrConfig = zephyrConfig;
 
-    ze_log.init('Initializing: npm package info...');
+    if (options.identity) {
+      // Isolated identity (e.g. an MCP skills repo): no package.json, no walking up.
+      ze_log.init('Initializing: git info...');
+      ze.gitProperties = await getGitInfo(context, zephyrConfig, { isolated });
+      // A zephyr.config `project` overrides app.project; the name still comes from the
+      // repository itself (contract section 1.1).
+      const gitProject =
+        zephyrConfig.project !== undefined && 'fromGitProject' in options.identity
+          ? await getGitRepositoryName(context)
+          : ze.gitProperties.app.project;
+      ze.npmProperties = createIsolatedPackageJson(
+        resolveIsolatedIdentityName({
+          identity: options.identity,
+          appName: zephyrConfig.appName,
+          gitProject,
+          context,
+        })
+      );
+    } else {
+      ze_log.init('Initializing: npm package info...');
+      ze.npmProperties = await getPackageJson(context, zephyrConfig);
+      const pluginPackageName = resolveZephyrPluginPackageName(
+        ze.npmProperties,
+        options.builder
+      );
+      void maybeShowOutdatedPluginWarning(pluginPackageName);
 
-    ze.npmProperties = await getPackageJson(context, zephyrConfig);
-    const pluginPackageName = resolveZephyrPluginPackageName(
-      ze.npmProperties,
-      options.builder
-    );
-    void maybeShowOutdatedPluginWarning(pluginPackageName);
-
-    ze_log.init('Initializing: git info...');
-    ze.gitProperties = await getGitInfo(context, zephyrConfig);
+      ze_log.init('Initializing: git info...');
+      ze.gitProperties = await getGitInfo(context, zephyrConfig);
+    }
     // mut: set application_uid and applicationProperties
     mut_zephyr_app_uid(ze);
     const application_uid = ze.application_uid;
@@ -618,6 +648,12 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     snapshotType?: 'csr' | 'ssr';
     entrypoint?: string;
     hooks?: ZephyrBuildHooks;
+    /**
+     * CI eval results for an MCP provider upload. Stored with the version through build
+     * stats and never uploaded to the edge. Rejected unless the output has a root
+     * mcp-provider.json.
+     */
+    mcpEvalResults?: EvalResults;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const zephyr_engine = this;
@@ -643,10 +679,21 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       // publish to the same normalized snapshot path.
       const assetsByPath = indexAssetsBySnapshotPath(assetsMap);
 
+      // An output with a root mcp-provider.json is a private MCP provider. Validate it and
+      // its eligibility before anything is uploaded; its asset set must stay exact, so no
+      // Zephyr manifest is generated for it.
+      const mcpUpload = prepareMcpUpload({
+        assetsByPath,
+        appConfig: await zephyr_engine.application_configuration,
+        baseHref: zephyr_engine.buildProperties.baseHref,
+        evalResults: props.mcpEvalResults,
+        warn: (message) => logFn('warn', message),
+      });
+
       // Reuse a manifest emitted by a bundler rather than generating a second asset at
       // the same snapshot path.
       const emittedManifest = assetsByPath.get(ZEPHYR_MANIFEST_FILENAME);
-      if (!emittedManifest) {
+      if (!emittedManifest && !mcpUpload) {
         const manifest = {
           filepath: ZEPHYR_MANIFEST_FILENAME,
           content: createManifestContent(zephyr_engine.federated_dependencies ?? []),
@@ -695,9 +742,11 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         mfConfigs,
         snapshotType,
         entrypoint,
+        mcp: mcpUpload?.snapshot,
       });
 
-      const waitForCompletion = !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim();
+      const waitForCompletion =
+        !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim() || mcpUpload !== undefined;
 
       if (waitForCompletion) {
         const logger = await this.logger;
@@ -721,7 +770,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
                   ze_envs_hash: (engine || zephyr_engine).ze_env_vars_hash || undefined,
                 };
 
-          return {
+          const stats: ZephyrBuildStats = {
             ...dash_data,
             changeAttribution: snapshot.changeAttribution,
             builder: dash_data.builder ?? zephyr_engine.builder,
@@ -730,6 +779,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
               dash_data.worker_version ?? zephyr_engine.worker_version ?? undefined,
             waitForCompletion,
           };
+          return mcpUpload ? withMcpBuildStats(stats, mcpUpload.buildStats) : stats;
         },
         assets: {
           assetsMap,

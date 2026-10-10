@@ -1,0 +1,57 @@
+[
+  {
+    "code": "ZD0712",
+    "severity": "error",
+    "skill": "Bad_Name"
+  },
+  {
+    "code": "ZD0720",
+    "severity": "warning",
+    "skill": "bad-evals"
+  },
+  {
+    "code": "ZD0714",
+    "severity": "error",
+    "skill": "bad-meta"
+  },
+  {
+    "code": "ZD0716",
+    "severity": "error",
+    "skill": "broken-link"
+  },
+  {
+    "code": "ZD0713",
+    "severity": "error",
+    "skill": "long-desc"
+  },
+  {
+    "code": "ZD0715",
+    "severity": "error",
+    "skill": "missing-owner"
+  },
+  {
+    "code": "ZD0711",
+    "severity": "error",
+    "skill": "no-frontmatter"
+  },
+  {
+    "code": "ZD0710",
+    "severity": "error",
+    "skill": "no-skill-file"
+  },
+  {
+    "code": "ZD0716",
+    "severity": "error",
+    "skill": "outside-link"
+  },
+  {
+    "code": "ZD0718",
+    "severity": "error",
+    "skill": "secret-skill"
+  },
+  {
+    "code": "ZD0702",
+    "severity": "warning",
+    "skill": "unknown-entry"
+  }
+]

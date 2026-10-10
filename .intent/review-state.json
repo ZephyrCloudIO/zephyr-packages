@@ -3496,15 +3496,15 @@
       ]
     },
     "source:libs/zephyr-mcp/__tests__/rslib.spec.ts": {
-      "fingerprint": "84a036a7ee7280d8c62b482e40f169526e08d131a8ef237ea79d62ec8c8c6cde",
+      "fingerprint": "c4130b48b77d91159a9dee679187b5403894122f3741a8b6b2cb75a6b64356fa",
       "snapshot": {
-        "libs/zephyr-mcp/__tests__/rslib.spec.ts": "7a36a71b2949853466ce9bf0ce0d39d299028ff8b265012bb3a1f45dfc244b0c"
+        "libs/zephyr-mcp/__tests__/rslib.spec.ts": "a45eb51df7fd7f2b8f6f96137182bdfc0aa1826161d9e04c25db963c35885679"
       },
-      "head": "0fd302be3d0609db91849b3fa4e8603aee83dc44",
+      "head": "6645db414933c58ad069efb6d4e8ae1a407c9673",
       "outcome": "no-change",
-      "reason": "Internal formats, protocol, tests, fixtures and build config of zephyr-mcp; the zephyr-mcp skill covers the public surface.",
+      "reason": "Test fix for Windows paths in a generated tool file; no guidance change.",
       "evidence": [
-        "Changed: libs/zephyr-mcp/__tests__/rslib.spec.ts at 0fd302be3d0609db91849b3fa4e8603aee83dc44"
+        "Changed: libs/zephyr-mcp/__tests__/rslib.spec.ts at 6645db414933c58ad069efb6d4e8ae1a407c9673"
       ]
     },
     "source:libs/zephyr-mcp/__tests__/worker-safety.spec.ts": {

@@ -247,7 +247,8 @@ describe('defineMcpConfig failures and options', () => {
         "export default { description: 'Bad schema.', inputSchema: { type: 'array' }, annotations: { readOnlyHint: true }, handler: () => 'x' };",
       // defineTool returns a definition without a handler unchanged, so the
       // preset gets to report ZD0736 instead of failing on import.
-      'tools/no_handler.ts': `import { defineTool } from '${srcIndex}';\nexport default defineTool({ description: 'No handler.', annotations: { readOnlyHint: true } } as never);`,
+      // JSON.stringify keeps a Windows path's backslashes from becoming escapes.
+      'tools/no_handler.ts': `import { defineTool } from ${JSON.stringify(srcIndex)};\nexport default defineTool({ description: 'No handler.', annotations: { readOnlyHint: true } } as never);`,
       'skills/hello/SKILL.md': '---\nname: hello\ndescription: Say hello.\n---\nHello.\n',
     });
     const { error, lines } = await captureErrors(() => build(root));

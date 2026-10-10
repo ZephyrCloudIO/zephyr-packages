@@ -16,11 +16,20 @@ export interface DeployOptions {
   cwd: string;
 }
 
+/** What `deploy --format json` prints. */
+export interface DeployResult {
+  applicationUid: string;
+  /** The immutable URL of this version, or `null` when Zephyr returned none. */
+  versionUrl: string | null;
+  /** Tag and environment URLs this version now serves. */
+  targetUrls: string[];
+}
+
 /**
  * Deploy command: Upload pre-built assets from a directory to Zephyr. This is similar to
  * the standalone zephyr-cli tool.
  */
-export async function deployCommand(options: DeployOptions): Promise<void> {
+export async function deployCommand(options: DeployOptions): Promise<DeployResult> {
   const { directory, target, verbose, ssr, metadataPath, cwd } = options;
 
   // Resolve the directory path
@@ -79,7 +88,7 @@ export async function deployCommand(options: DeployOptions): Promise<void> {
   }
 
   // Upload assets
-  await uploadAssets({
+  const uploaded = await uploadAssets({
     zephyr_engine,
     assetsMap,
     publicationMetadata,
@@ -88,4 +97,6 @@ export async function deployCommand(options: DeployOptions): Promise<void> {
   if (verbose) {
     logFn('info', 'Upload completed successfully');
   }
+
+  return { applicationUid: zephyr_engine.application_uid, ...uploaded };
 }

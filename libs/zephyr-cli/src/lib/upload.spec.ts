@@ -32,7 +32,10 @@ describe('CLI upload lifecycle', () => {
     const options = { zephyr_engine: engine, assetsMap: {} } as never;
 
     await expect(uploadAssets(options)).rejects.toBe(uploadFailure);
-    await expect(uploadAssets(options)).resolves.toBeUndefined();
+    await expect(uploadAssets(options)).resolves.toEqual({
+      versionUrl: null,
+      targetUrls: [],
+    });
 
     expect(engine.build_failed).toHaveBeenCalledTimes(1);
     expect(engine.start_new_build).toHaveBeenCalledTimes(2);
@@ -66,5 +69,24 @@ describe('CLI upload lifecycle', () => {
       mfConfigs,
     });
     expect(uploadProps).not.toHaveProperty('mfConfig');
+  });
+
+  it('returns the URLs captured before build_finished resets them', async () => {
+    const urls = {
+      version_url: 'https://acme-1-site-acme.zephyrcloud.app',
+      target_urls: ['https://site-acme.zephyrcloud.app'],
+    };
+    Object.assign(engine, urls);
+    engine.build_finished.mockImplementationOnce(async () => {
+      Object.assign(engine, { version_url: null, target_urls: null });
+    });
+
+    await expect(
+      uploadAssets({ zephyr_engine: engine as never, assetsMap: {} })
+    ).resolves.toEqual({
+      versionUrl: urls.version_url,
+      targetUrls: urls.target_urls,
+    });
+    Object.assign(engine, { version_url: undefined, target_urls: undefined });
   });
 });

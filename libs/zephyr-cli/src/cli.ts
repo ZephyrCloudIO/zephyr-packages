@@ -4,7 +4,7 @@ export interface CliOptions {
   command: 'run' | 'deploy' | 'watch' | 'doctor';
   commandLine?: string; // For 'run' command
   directory?: string; // For 'deploy', 'watch', and 'doctor' commands
-  format?: 'json' | 'text'; // For 'doctor'
+  format?: 'json' | 'text'; // For 'doctor' and 'deploy'
   target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
@@ -33,6 +33,7 @@ export interface CliOptions {
  * - Ze-cli watch ./dist --target tap-app
  * - Ze-cli doctor . --format json
  * - Ze-cli deploy ./dist --ssr
+ * - Ze-cli deploy ./dist --format json
  */
 export function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
@@ -157,6 +158,12 @@ export function parseArgs(args: string[]): CliOptions {
         options.debounceMs = value;
       } else if (arg === '--verbose') {
         options.verbose = true;
+      } else if (arg === '--format' && firstArg === 'deploy') {
+        const value = args[++i];
+        if (value !== 'json' && value !== 'text') {
+          throw new Error('--format must be either json or text.');
+        }
+        options.format = value;
       }
     }
   } else {
@@ -192,7 +199,8 @@ Options:
   --metadata <path>        JSON sidecar for Module Federation publication metadata
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output
-  --format <json|text>     Doctor output format (default: text)
+  --format <json|text>     Doctor report format, or deploy result format; json prints
+                           one result line on stdout and logs on stderr (default: text)
   --help, -h               Show this help message
 
 Examples:

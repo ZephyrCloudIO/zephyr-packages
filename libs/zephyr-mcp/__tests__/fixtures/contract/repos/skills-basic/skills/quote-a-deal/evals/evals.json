@@ -1,0 +1,10 @@
+{
+  "skill_name": "quote-a-deal",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "What would 3 units of SKU-42 cost?",
+      "expected_output": "A price with the price book version."
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import type {
 } from './module-federation';
 import type { ZephyrBuildTarget } from './build-target';
 import type { ChangeAttribution } from './change-attribution';
+import type { SnapshotMcp } from './mcp-provider';
 
 export interface Snapshot {
   changeAttribution?: ChangeAttribution;
@@ -62,6 +63,12 @@ export interface Snapshot {
   plugin_version?: string;
   // version of the edge worker that processed the snapshot
   worker_version?: string;
+  /**
+   * Present only for a private MCP provider snapshot (root `mcp-provider.json`). Names
+   * and paths only; the edge hides every snapshot with a non-null `mcp` from anonymous
+   * reads.
+   */
+  mcp?: SnapshotMcp;
 }
 
 export interface SnapshotAsset {

@@ -74,6 +74,16 @@ describe('zeUploadAssets environment fanout', () => {
     expect(maximumActiveRequests).toBe(3);
   });
 
+  it('uploads every asset when an environment hash list fails', async () => {
+    const { assetsMap } = createAssets(2);
+    mocks.getApplicationHashList.mockRejectedValue(new Error('forbidden'));
+    mocks.uploadFile.mockResolvedValue(undefined);
+
+    await zeUploadAssets(createEngine(1), { missingAssets: [], assetsMap });
+
+    expect(mocks.uploadFile).toHaveBeenCalledTimes(2);
+  });
+
   it('bounds missing-asset uploads within each environment', async () => {
     const { assetsMap } = createAssets(8);
     let activeUploads = 0;

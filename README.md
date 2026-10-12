@@ -38,6 +38,7 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 - `zephyr-agent` - The main internal package to build bundler integration with Zephyr. Public plugins mostly interact with this package.
 - `zephyr-xpack-internal` - Sharing types, module federation capabilities and utilities for bundler built on top of webpack or Rspack.
 - `zephyr-edge-contract` - Provide typings, constants and smaller utilites for Zephyr plugins.
+- [`zephyr-mcp`](libs/zephyr-mcp/README.md) - Build agent tools into a provider artifact for the Zephyr MCP, with the repo shape, formats and checks `ze-cli` uses.
 
 ### AI Agent Skills
 

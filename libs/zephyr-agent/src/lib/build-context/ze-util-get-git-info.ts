@@ -63,23 +63,57 @@ function generateBranchName(context: 'global-git' | 'no-git', userId?: string): 
   return `${context}${userSuffix}-${timestamp}`;
 }
 
+export interface GetGitInfoOptions {
+  /**
+   * Isolated identity: non-git fallbacks never search parent directories for a
+   * package.json and name the project after the context directory instead.
+   */
+  isolated?: boolean;
+}
+
 /** Loads Git information and application identity from the supplied project context. */
 export async function getGitInfo(
   context?: string,
-  zephyrConfig: ResolvedZephyrConfig = getZephyrConfig(context)
+  zephyrConfig: ResolvedZephyrConfig = getZephyrConfig(context),
+  options: GetGitInfoOptions = {}
 ): Promise<ZeGitInfo> {
   try {
     // Always gather fresh git info for build accuracy
-    return await gatherGitInfo(resolveZephyrContextDirectory(context), zephyrConfig);
+    return await gatherGitInfo(
+      resolveZephyrContextDirectory(context),
+      zephyrConfig,
+      options.isolated === true
+    );
   } catch (error) {
     throw ZephyrError.withContext(error, 'resolve-git-metadata');
+  }
+}
+
+/**
+ * The repository name from `remote.origin.url`, before any zephyr.config `project`
+ * override; `undefined` when there is no parseable origin. Isolated identities are named
+ * from it (contract section 1.1).
+ */
+export async function getGitRepositoryName(
+  context?: string
+): Promise<string | undefined> {
+  const remoteOrigin = await runGit(
+    ['config', '--get', 'remote.origin.url'],
+    resolveZephyrContextDirectory(context)
+  );
+  if (!remoteOrigin) return undefined;
+  try {
+    return getGitProviderInfo(remoteOrigin).project || undefined;
+  } catch {
+    return undefined;
   }
 }
 
 /** Internal function that actually gathers git information. */
 async function gatherGitInfo(
   context: string,
-  zephyrConfig: ResolvedZephyrConfig
+  zephyrConfig: ResolvedZephyrConfig,
+  isolated: boolean
 ): Promise<ZeGitInfo> {
   const hasToken = hasSecretToken();
 
@@ -119,14 +153,14 @@ async function gatherGitInfo(
     ze_log.git('Git repository not found, falling back to global git config');
 
     try {
-      const globalGitInfo = await loadGlobalGitInfo(context, zephyrConfig);
+      const globalGitInfo = await loadGlobalGitInfo(context, zephyrConfig, isolated);
       return globalGitInfo;
     } catch {
       // If global git config also fails, use authenticated user metadata.
       logFn('warn', 'Global git config not found, checking authenticated user metadata');
       ze_log.git('Global git config not found, checking authenticated user metadata');
 
-      const fallbackInfo = await getFallbackGitInfo(context, zephyrConfig);
+      const fallbackInfo = await getFallbackGitInfo(context, zephyrConfig, isolated);
       return fallbackInfo;
     }
   }
@@ -330,7 +364,8 @@ function parseGitUrl(
 /** Try to load git info from global git config */
 async function loadGlobalGitInfo(
   context: string,
-  zephyrConfig: ResolvedZephyrConfig
+  zephyrConfig: ResolvedZephyrConfig,
+  isolated: boolean
 ): Promise<ZeGitInfo> {
   try {
     const [globalName, globalEmail] = await Promise.all([
@@ -374,7 +409,7 @@ async function loadGlobalGitInfo(
     const app = hasConfiguredApp(zephyrConfig)
       ? { org: zephyrConfig.org, project: zephyrConfig.project }
       : applyConfiguredApp(
-          await getAppNamingFromPackageJson(name, context, zephyrConfig),
+          await getAppNamingFromPackageJson(name, context, zephyrConfig, isolated),
           zephyrConfig
         );
 
@@ -480,7 +515,8 @@ async function getUserInfoFromAPI(): Promise<UserInfo> {
 /** Generate fallback git info when git is completely unavailable */
 async function getFallbackGitInfo(
   context: string,
-  zephyrConfig: ResolvedZephyrConfig
+  zephyrConfig: ResolvedZephyrConfig,
+  isolated: boolean
 ): Promise<ZeGitInfo> {
   let userInfo: UserInfo;
 
@@ -504,7 +540,7 @@ async function getFallbackGitInfo(
   const app = hasConfiguredApp(zephyrConfig)
     ? { org: zephyrConfig.org, project: zephyrConfig.project }
     : applyConfiguredApp(
-        await getAppNamingFromPackageJson(userInfo.name, context, zephyrConfig),
+        await getAppNamingFromPackageJson(userInfo.name, context, zephyrConfig, isolated),
         zephyrConfig
       );
 
@@ -556,8 +592,11 @@ function getCurrentDirectoryName(context: string): string {
 async function getAppNamingFromPackageJson(
   tokenUserName: string | undefined,
   context: string,
-  zephyrConfig: ResolvedZephyrConfig
+  zephyrConfig: ResolvedZephyrConfig,
+  isolated = false
 ): Promise<{ org: string; project: string; app: string }> {
+  // Isolated identities never inherit a parent package; use the directory name.
+  if (isolated) return getAppNamingFromDirectory(tokenUserName, context);
   try {
     const packageJson = await getPackageJson(context, zephyrConfig);
     const packageName = packageJson.name;
@@ -624,17 +663,25 @@ async function getAppNamingFromPackageJson(
     };
   } catch {
     // No package.json: use directory name
-    const dirName = getCurrentDirectoryName(context);
-    if (!tokenUserName) {
-      throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
-        message:
-          'Unable to determine organization: no authenticated user found and no package.json available. Please ensure you are logged in with a valid token.',
-      });
-    }
-    return {
-      org: sanitizeName(tokenUserName),
-      project: dirName,
-      app: dirName,
-    };
+    return getAppNamingFromDirectory(tokenUserName, context);
   }
+}
+
+/** Name the org after the authenticated user and the project after the directory. */
+function getAppNamingFromDirectory(
+  tokenUserName: string | undefined,
+  context: string
+): { org: string; project: string; app: string } {
+  const dirName = getCurrentDirectoryName(context);
+  if (!tokenUserName) {
+    throw new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+      message:
+        'Unable to determine organization: no authenticated user found and no package.json available. Please ensure you are logged in with a valid token.',
+    });
+  }
+  return {
+    org: sanitizeName(tokenUserName),
+    project: dirName,
+    app: dirName,
+  };
 }

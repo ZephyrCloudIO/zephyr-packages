@@ -1,0 +1,26 @@
+{
+  "format": "zephyr-evals/v1",
+  "generatedAt": "2026-10-09T12:00:00.000Z",
+  "runner": "skill-creator",
+  "agent": "claude-code",
+  "results": [
+    {
+      "skill": "not-in-catalog",
+      "evalId": "1",
+      "passed": true,
+      "runs": 3,
+      "passRate": 1
+    },
+    {
+      "skill": "quote-a-deal",
+      "evalId": "2",
+      "passed": false,
+      "runs": 3,
+      "passRate": 0.33
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "passed": 1
+  }
+}

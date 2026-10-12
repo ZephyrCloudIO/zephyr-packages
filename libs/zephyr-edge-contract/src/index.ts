@@ -22,6 +22,26 @@ export type {
   ZephyrModuleFederationConfig,
   ZephyrLegacyModuleFederationConfig,
 } from './lib/module-federation';
+export {
+  ZEPHYR_EVAL_RESULTS_FORMAT,
+  ZEPHYR_MCP_CATALOG_FILENAME,
+  ZEPHYR_MCP_MANIFEST_VERSION,
+  ZEPHYR_MCP_PROVIDER_FILENAME,
+  ZEPHYR_MCP_RUNTIME_ENTRY,
+  type CatalogFile,
+  type CatalogManifest,
+  type CatalogRuntime,
+  type CatalogRuntimeModule,
+  type CatalogSkill,
+  type CatalogSkillFrontmatter,
+  type CatalogTool,
+  type CatalogToolAnnotations,
+  type EvalResult,
+  type EvalResults,
+  type McpProviderDescriptor,
+  type SnapshotMcp,
+  type ZephyrBuildStatsMcp,
+} from './lib/mcp-provider';
 export * as ZeUtils from './lib/promise';
 export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';

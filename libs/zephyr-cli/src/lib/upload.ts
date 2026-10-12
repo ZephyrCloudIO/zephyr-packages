@@ -1,4 +1,4 @@
-import type { ZeBuildAssetsMap } from 'zephyr-edge-contract';
+import type { EvalResults, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import type { ZephyrEngine } from 'zephyr-agent';
 import { logFn, ZephyrError } from 'zephyr-agent';
 import { getBuildStats } from './build-stats';
@@ -9,6 +9,8 @@ export interface UploadOptions {
   assetsMap: ZeBuildAssetsMap;
   /** Snapshot and dashboard Federation metadata supplied by the CLI sidecar. */
   publicationMetadata?: CliPublicationMetadata;
+  /** Validated `--eval-results` for an MCP provider; stored with the version. */
+  mcpEvalResults?: EvalResults;
 }
 
 /**
@@ -19,7 +21,7 @@ export interface UploadOptions {
  * 3. Finish the build
  */
 export async function uploadAssets(options: UploadOptions): Promise<void> {
-  const { zephyr_engine, assetsMap, publicationMetadata } = options;
+  const { zephyr_engine, assetsMap, publicationMetadata, mcpEvalResults } = options;
   // CLI commands pass an engine returned by create(), whose generation zero is active.
   let buildInProgress = true;
 
@@ -44,6 +46,7 @@ export async function uploadAssets(options: UploadOptions): Promise<void> {
       ...(publicationMetadata?.mfConfigs
         ? { mfConfigs: publicationMetadata.mfConfigs }
         : {}),
+      ...(mcpEvalResults ? { mcpEvalResults } : {}),
     });
 
     buildInProgress = false;

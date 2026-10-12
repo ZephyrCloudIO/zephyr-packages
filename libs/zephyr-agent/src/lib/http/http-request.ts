@@ -27,6 +27,16 @@ export interface HttpRequestOptions extends RequestInit {
   credentialToken?: string;
   /** Internal requests which are themselves refreshing credentials must not recurse. */
   skipTokenCleanup?: boolean;
+  /** Overall deadline including retries. Defaults to the transport deadline. */
+  deadlineMs?: number;
+  /** Retry 408/425/429 responses. Defaults to true; 5xx retry rules are unchanged. */
+  retryClientErrors?: boolean;
+  /**
+   * Turns a non-2xx response (other than 401 and 403, which keep their auth errors) into
+   * a caller-owned error. Receives the parsed body; the returned error must not echo
+   * response values.
+   */
+  mapErrorResponse?: (status: number, body: unknown) => Error | undefined;
 }
 
 export type UrlString =
@@ -95,14 +105,21 @@ export async function makeHttpRequest<T = void>(
     credentialToken,
     skipTokenCleanup = false,
     sensitiveResponse = false,
+    deadlineMs,
+    retryClientErrors,
+    mapErrorResponse,
     ...requestOptions
   } = options;
 
   try {
-    const response = await fetchWithRetries(url, {
-      ...requestOptions,
-      body: data as BodyInit | null | undefined,
-    });
+    const fetchOptions = { ...requestOptions, body: data as BodyInit | null | undefined };
+    const response = await fetchWithRetries(
+      url,
+      fetchOptions,
+      undefined,
+      deadlineMs,
+      retryClientErrors
+    );
 
     const resText = await response.text();
 
@@ -123,6 +140,14 @@ export async function makeHttpRequest<T = void>(
     }
 
     if (response.status === 403) {
+      // A caller that maps client errors (synchronous MCP build stats) also owns 403s,
+      // so a gateway-passed API rejection keeps its issue paths. 401 always stays an
+      // authentication error because it must clear rejected credentials.
+      const mappedForbidden = mapErrorResponse?.(
+        response.status,
+        safe_json_parse<unknown>(resText) ?? resText
+      );
+      if (mappedForbidden) throw mappedForbidden;
       throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
         message: 'The authenticated account does not have access to this target.',
       });
@@ -150,6 +175,8 @@ export async function makeHttpRequest<T = void>(
     const resData = safe_json_parse<unknown>(resText) ?? resText;
 
     if (!response.status || response.status >= 300) {
+      const mappedError = mapErrorResponse?.(response.status, resData);
+      if (mappedError) throw mappedError;
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
         status: response.status,
         url: redactUrl(url),

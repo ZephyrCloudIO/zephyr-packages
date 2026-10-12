@@ -1,6 +1,7 @@
 import {
   type Snapshot,
   type SnapshotAsset,
+  type SnapshotMcp,
   type ZeBuildAssetsMap,
   type ZephyrPluginOptions,
   createApplicationUid,
@@ -26,11 +27,13 @@ interface CreateSnapshotProps {
   // SSR-specific parameter
   snapshotType?: 'csr' | 'ssr';
   entrypoint?: string;
+  /** Private MCP provider marker; names and paths only. */
+  mcp?: SnapshotMcp;
 }
 
 export async function createSnapshot(
   zephyr_engine: ZephyrEngine,
-  { mfConfig, mfConfigs, assets, snapshotType, entrypoint }: CreateSnapshotProps
+  { mfConfig, mfConfigs, assets, snapshotType, entrypoint, mcp }: CreateSnapshotProps
 ): Promise<Snapshot> {
   const buildId = await zephyr_engine.build_id;
 
@@ -109,6 +112,7 @@ export async function createSnapshot(
     ...(snapshotType && { type: snapshotType }),
     // Add entrypoint field if provided
     ...(basedEntrypoint && { entrypoint: basedEntrypoint }),
+    ...(mcp && { mcp }),
   };
 
   // Set snapshot type if SSR flag is enabled

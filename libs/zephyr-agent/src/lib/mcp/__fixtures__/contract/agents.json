@@ -1,0 +1,191 @@
+{
+  "canonicalKeys": [
+    "claude-code",
+    "claude",
+    "codex",
+    "cursor",
+    "copilot",
+    "gemini-cli",
+    "opencode",
+    "windsurf",
+    "chatgpt",
+    "default"
+  ],
+  "rows": [
+    {
+      "key": "claude-code",
+      "matches": [
+        "claude-code",
+        "claude code"
+      ]
+    },
+    {
+      "key": "claude",
+      "matches": [
+        "claude-ai",
+        "claude desktop",
+        "claude.ai",
+        "claude"
+      ]
+    },
+    {
+      "key": "codex",
+      "matches": [
+        "codex"
+      ]
+    },
+    {
+      "key": "cursor",
+      "matches": [
+        "cursor"
+      ]
+    },
+    {
+      "key": "copilot",
+      "matches": [
+        "copilot",
+        "vscode",
+        "visual studio code"
+      ]
+    },
+    {
+      "key": "gemini-cli",
+      "matches": [
+        "gemini-cli",
+        "gemini cli",
+        "gemini"
+      ]
+    },
+    {
+      "key": "opencode",
+      "matches": [
+        "opencode"
+      ]
+    },
+    {
+      "key": "windsurf",
+      "matches": [
+        "windsurf"
+      ]
+    },
+    {
+      "key": "chatgpt",
+      "matches": [
+        "chatgpt",
+        "openai"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "identity": "claude-code",
+      "expected": "claude-code"
+    },
+    {
+      "identity": "Claude Code/2.1.0",
+      "expected": "claude-code"
+    },
+    {
+      "identity": "claude-ai",
+      "expected": "claude"
+    },
+    {
+      "identity": "Claude Desktop",
+      "expected": "claude"
+    },
+    {
+      "identity": "codex-mcp-client",
+      "expected": "codex"
+    },
+    {
+      "identity": "Codex CLI",
+      "expected": "codex"
+    },
+    {
+      "identity": "cursor-vscode",
+      "expected": "cursor"
+    },
+    {
+      "identity": "Cursor",
+      "expected": "cursor"
+    },
+    {
+      "identity": "Visual Studio Code",
+      "expected": "copilot"
+    },
+    {
+      "identity": "GitHub Copilot",
+      "expected": "copilot"
+    },
+    {
+      "identity": "gemini-cli-mcp-client",
+      "expected": "gemini-cli"
+    },
+    {
+      "identity": "opencode",
+      "expected": "opencode"
+    },
+    {
+      "identity": "Windsurf",
+      "expected": "windsurf"
+    },
+    {
+      "identity": "openai-mcp",
+      "expected": "chatgpt"
+    },
+    {
+      "identity": "ChatGPT",
+      "expected": "chatgpt"
+    },
+    {
+      "identity": "mcp-inspector",
+      "expected": "default"
+    },
+    {
+      "identity": "node-fetch/1.0",
+      "expected": "default"
+    },
+    {
+      "identity": "",
+      "expected": "default"
+    }
+  ],
+  "precedence": [
+    {
+      "envelope": "codex-mcp-client",
+      "oauthClientName": "Claude Code",
+      "userAgent": "cursor/1.0",
+      "expected": {
+        "key": "codex",
+        "source": "envelope"
+      }
+    },
+    {
+      "envelope": "mcp-inspector",
+      "oauthClientName": "Claude Code",
+      "userAgent": null,
+      "expected": {
+        "key": "claude-code",
+        "source": "oauth_client"
+      }
+    },
+    {
+      "envelope": null,
+      "oauthClientName": null,
+      "userAgent": "Cursor/1.4 (darwin)",
+      "expected": {
+        "key": "cursor",
+        "source": "user_agent"
+      }
+    },
+    {
+      "envelope": null,
+      "oauthClientName": "my-script",
+      "userAgent": "node",
+      "expected": {
+        "key": "default",
+        "source": "default"
+      }
+    }
+  ]
+}

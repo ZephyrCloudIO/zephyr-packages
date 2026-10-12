@@ -5,6 +5,7 @@ import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { loadPublicationMetadata } from '../lib/publication-metadata';
+import { assertNotMcpOutput } from '../mcp/deploy';
 import { parseShellCommand, splitCommands } from '../lib/shell-parser';
 import { executeCommand } from '../lib/spawn-helper';
 import { uploadAssets } from '../lib/upload';
@@ -161,6 +162,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
       message: `Output directory does not exist: ${outputDir}`,
     });
   }
+
+  // MCP providers are published with ze-cli deploy only (M1).
+  await assertNotMcpOutput(outputDir, 'run');
 
   // The SDK writes this during the build command, so load it only after output exists
   // but before opening a Zephyr build session.

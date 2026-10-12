@@ -6,6 +6,7 @@ import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { loadPublicationMetadata } from '../lib/publication-metadata';
 import { SequentialPublisher } from '../lib/sequential-publisher';
+import { assertNotMcpOutput } from '../mcp/deploy';
 import { uploadAssets } from '../lib/upload';
 
 export interface WatchOptions {
@@ -53,6 +54,9 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
       message: `Directory does not exist: ${directoryPath}`,
     });
   }
+
+  // MCP providers are published with ze-cli deploy only (M1).
+  await assertNotMcpOutput(directoryPath, 'watch');
 
   // Refuse an incomplete TAP publication before allocating a long-lived watcher. The
   // sidecar is read again for every snapshot below because SDK output can change.

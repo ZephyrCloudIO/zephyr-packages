@@ -104,3 +104,36 @@ describe('parseArgs doctor', () => {
     );
   });
 });
+
+describe('parseArgs --eval-results', () => {
+  it('accepts the flag before and after the deploy directory', () => {
+    expect(parseArgs(['deploy', '.', '--eval-results', './evals.json'])).toMatchObject({
+      command: 'deploy',
+      directory: '.',
+      evalResultsPath: './evals.json',
+    });
+    expect(parseArgs(['--eval-results', './evals.json', 'deploy', '.'])).toMatchObject({
+      command: 'deploy',
+      directory: '.',
+      evalResultsPath: './evals.json',
+    });
+  });
+
+  it('requires a path and rejects commands other than deploy', () => {
+    expect(() => parseArgs(['deploy', '.', '--eval-results'])).toThrow(
+      '--eval-results requires a JSON file path.'
+    );
+    expect(() => parseArgs(['deploy', '.', '--eval-results', '--verbose'])).toThrow(
+      '--eval-results requires a JSON file path.'
+    );
+    expect(() => parseArgs(['--eval-results', 'e.json', 'pnpm', 'build'])).toThrow(
+      '--eval-results is only supported by ze-cli deploy'
+    );
+    expect(() =>
+      parseArgs(['watch', './dist', '--target', 'tap-app', '--eval-results', 'e.json'])
+    ).toThrow('--eval-results is only supported by ze-cli deploy');
+    expect(() => parseArgs(['doctor', '.', '--eval-results', 'e.json'])).toThrow(
+      'Unknown doctor option: --eval-results'
+    );
+  });
+});

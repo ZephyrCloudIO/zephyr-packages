@@ -1,0 +1,9 @@
+{
+  "manifestVersion": 1,
+  "name": "skills-basic",
+  "catalog": "catalog.json",
+  "generator": {
+    "name": "zephyr-cli",
+    "version": "<any>"
+  }
+}

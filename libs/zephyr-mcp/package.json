@@ -1,0 +1,100 @@
+{
+  "name": "zephyr-mcp",
+  "version": "1.6.0",
+  "description": "Ship agent skills and tools to the Zephyr MCP: defineTool, an Rslib preset that builds tools/*.ts into a provider artifact, and the repo shape, formats and checks ze-cli uses.",
+  "keywords": [
+    "agent-skills",
+    "cloudflare-workers",
+    "mcp",
+    "model-context-protocol",
+    "rslib",
+    "tanstack-intent",
+    "zephyr"
+  ],
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-mcp"
+  },
+  "files": [
+    "skills",
+    "!skills/_artifacts",
+    "!skills/**/.zephyr-generated",
+    "dist",
+    "raw.d.ts",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./manifest": {
+      "types": "./dist/manifest/index.d.ts",
+      "default": "./dist/manifest/index.js"
+    },
+    "./worker": {
+      "types": "./dist/worker/index.d.ts",
+      "default": "./dist/worker/index.js"
+    },
+    "./repo": {
+      "types": "./dist/repo/index.d.ts",
+      "default": "./dist/repo/index.js"
+    },
+    "./checks": {
+      "types": "./dist/checks/index.d.ts",
+      "default": "./dist/checks/index.js"
+    },
+    "./rslib": {
+      "types": "./dist/rslib/index.d.ts",
+      "default": "./dist/rslib/index.js"
+    },
+    "./raw": {
+      "types": "./raw.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "prepack": "node ../../scripts/sync-package-skills.mjs",
+    "build": "rslib build",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "yaml": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@rslib/core": "1.0.3",
+    "@rstest/core": "catalog:rstest",
+    "@types/node": "catalog:typescript",
+    "typescript": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@rslib/core": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rslib/core": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

@@ -11,6 +11,8 @@ export interface CliOptions {
   debounceMs?: number;
   /** JSON sidecar containing Module Federation publication metadata. */
   metadataPath?: string;
+  /** CI eval results (`zephyr-evals/v1`) attached to an MCP provider deploy. */
+  evalResultsPath?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export interface CliOptions {
  * - Ze-cli watch ./dist --target tap-app
  * - Ze-cli doctor . --format json
  * - Ze-cli deploy ./dist --ssr
+ * - Ze-cli deploy . --eval-results ./eval-results.json (MCP skills repo)
  */
 export function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
@@ -70,6 +73,9 @@ export function parseArgs(args: string[]): CliOptions {
       }
       options.metadataPath = value;
       flags.push(arg, value);
+    } else if (arg === '--eval-results') {
+      options.evalResultsPath = readEvalResultsPath(args[++i]);
+      flags.push(arg, options.evalResultsPath);
     } else if (arg === '--debounce') {
       const value = Number(args[++i]);
       if (!Number.isSafeInteger(value) || value < 0) {
@@ -147,6 +153,8 @@ export function parseArgs(args: string[]): CliOptions {
           throw new Error('--metadata requires a JSON sidecar path.');
         }
         options.metadataPath = value;
+      } else if (arg === '--eval-results') {
+        options.evalResultsPath = readEvalResultsPath(args[++i]);
       } else if (arg === '--debounce') {
         const value = Number(args[++i]);
         if (!Number.isSafeInteger(value) || value < 0) {
@@ -165,7 +173,20 @@ export function parseArgs(args: string[]): CliOptions {
     options.commandLine = args.slice(commandStartIndex).join(' ');
   }
 
+  if (options.evalResultsPath !== undefined && options.command !== 'deploy') {
+    throw new Error(
+      '--eval-results is only supported by ze-cli deploy for MCP providers.'
+    );
+  }
+
   return options;
+}
+
+function readEvalResultsPath(value: string | undefined): string {
+  if (!value || value.startsWith('-')) {
+    throw new Error('--eval-results requires a JSON file path.');
+  }
+  return value;
 }
 
 function printHelp(): void {
@@ -190,6 +211,8 @@ Options:
   --ssr                    Mark this snapshot as server-side rendered
   --target, -t <target>    Build target: web, ios, android, or tap-app (default: web)
   --metadata <path>        JSON sidecar for Module Federation publication metadata
+  --eval-results <path>    CI eval results (zephyr-evals/v1) stored with an MCP
+                           provider version; deploy only, never uploaded to the edge
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output
   --format <json|text>     Doctor output format (default: text)
@@ -211,6 +234,11 @@ Examples:
   ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
   ze-cli watch ./dist --target tap-app
 
+  # Publish skills and tools to your organization's Zephyr MCP
+  ze-cli deploy .                                   # skills repo (skills/<name>/SKILL.md)
+  ze-cli deploy dist                                # zephyr-mcp/rslib output
+  ze-cli deploy . --eval-results ./eval-results.json
+
   # Inspect without mutation
   ze-cli doctor .
   ze-cli doctor ./apps/host --format json
@@ -219,6 +247,11 @@ How it works:
   - For run commands, ze-cli executes your build command and automatically
     detects the output directory to upload assets.
   - For deploy commands, ze-cli uploads assets from the specified directory.
+  - A directory with mcp-provider.json, or a skills repo (skills/ without a
+    package.json, or opted in with "mcp: true" in zephyr.config or a dependency
+    on zephyr-mcp) is checked first and published privately as an
+    MCP provider: only the provider files are uploaded, never evals. run and
+    watch refuse MCP providers.
   - For watch commands, ze-cli publishes each settled output change as a new immutable
     snapshot. The Zephyr control plane authorizes and advances any development tag.
   - The doctor command only reads project, package, config, lockfile, and diagnostic
@@ -227,7 +260,9 @@ How it works:
   - ze-cli logs are written to stderr only.
 
 Note: No configuration file is needed. Zephyr will automatically detect
-application information from your package.json and git repository.
+application information from your package.json and git repository. A skills
+repo is named from zephyr.config appName, else its git repository, else its
+directory name, and never from a package.json.
 
 For more information: https://docs.zephyr-cloud.io/cli
 `);

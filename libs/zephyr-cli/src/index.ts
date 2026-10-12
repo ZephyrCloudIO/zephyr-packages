@@ -44,6 +44,7 @@ async function main(): Promise<void> {
           verbose: options.verbose,
           ssr: options.ssr,
           metadataPath: options.metadataPath,
+          evalResultsPath: options.evalResultsPath,
           cwd: workingDir,
         });
       } else {

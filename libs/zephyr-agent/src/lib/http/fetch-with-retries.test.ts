@@ -190,6 +190,32 @@ describe('fetchWithRetries', () => {
     expect(mocks.axiosInstance).toHaveBeenCalledTimes(2);
   });
 
+  it('does not retry 4xx statuses when client-error retries are disabled', async () => {
+    mocks.axiosInstance.mockResolvedValueOnce({
+      status: 429,
+      headers: { 'retry-after': '0' },
+      data: 'busy',
+    });
+
+    const response = await fetchWithRetries(
+      url,
+      {
+        method: 'POST',
+        body: '{}',
+        headers: { 'Idempotency-Key': 'stable-build-identity' },
+      },
+      2,
+      120_000,
+      false
+    );
+
+    expect(response.status).toBe(429);
+    expect(mocks.axiosInstance).toHaveBeenCalledTimes(1);
+    expect(mocks.axiosInstance.mock.calls[0]?.[1]?.timeout).toBeGreaterThan(
+      DEFAULT_HTTP_DEADLINE_MS
+    );
+  });
+
   it('retries retry-safe GET responses and returns the successful attempt', async () => {
     mocks.axiosInstance
       .mockResolvedValueOnce({ status: 503, headers: {}, data: 'retry' })

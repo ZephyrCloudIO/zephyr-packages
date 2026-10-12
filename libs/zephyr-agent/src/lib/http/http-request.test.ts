@@ -202,6 +202,45 @@ describe('Pure HTTP Request Functions', () => {
       expect(mockCleanTokens).not.toHaveBeenCalled();
     });
 
+    it('lets a caller that maps client errors own a 403, keeping its issue paths', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 403,
+        text: async () => JSON.stringify({ issues: [{ path: ['mcp', 'catalog'] }] }),
+        ok: false,
+      } as Response);
+      const mapped = new Error('mapped');
+      const mapErrorResponse = rs.fn((status: number, body: unknown) =>
+        status === 403 && (body as { issues: unknown[] }).issues.length
+          ? mapped
+          : undefined
+      );
+
+      const [ok, error] = await makeHttpRequest(new URL('https://api.example/stats'), {
+        mapErrorResponse,
+      });
+
+      expect(ok).toBe(false);
+      expect(error).toBe(mapped);
+      expect(mockCleanTokens).not.toHaveBeenCalled();
+    });
+
+    it('keeps 401 an authentication error even when the caller maps client errors', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 401,
+        text: async () => 'Unauthorized',
+        ok: false,
+      } as Response);
+      const mapErrorResponse = rs.fn(() => new Error('mapped'));
+
+      const [ok, error] = await makeHttpRequest(new URL('https://api.example/stats'), {
+        mapErrorResponse,
+      });
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10018' });
+      expect(mapErrorResponse).not.toHaveBeenCalled();
+    });
+
     it('should handle network errors', async () => {
       mockFetchWithRetries.mockRejectedValueOnce(new Error('Network error'));
 
@@ -288,6 +327,49 @@ describe('Pure HTTP Request Functions', () => {
     });
   });
 
+  describe('caller-owned transport options', () => {
+    it('passes the deadline and client-error retry policy to the transport', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 200,
+        text: async () => '{}',
+        ok: true,
+      } as Response);
+
+      await makeHttpRequest(new URL('https://api.example/stats'), {
+        method: 'POST',
+        deadlineMs: 120_000,
+        retryClientErrors: false,
+      });
+
+      expect(mockFetchWithRetries).toHaveBeenCalledWith(
+        expect.any(URL),
+        expect.not.objectContaining({ deadlineMs: expect.anything() }),
+        undefined,
+        120_000,
+        false
+      );
+    });
+
+    it('lets the caller map an error response without echoing its body', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 422,
+        text: async () => JSON.stringify({ issues: [{ path: ['a'] }] }),
+        ok: false,
+      } as Response);
+      const mapped = new Error('mapped');
+
+      const [ok, error] = await makeHttpRequest(new URL('https://api.example/stats'), {
+        mapErrorResponse: (status, body) =>
+          status === 422 && (body as { issues: unknown[] }).issues.length
+            ? mapped
+            : undefined,
+      });
+
+      expect(ok).toBe(false);
+      expect(error).toBe(mapped);
+    });
+  });
+
   describe('makeRequest', () => {
     it('should call makeHttpRequest with the parsed URL', async () => {
       mockFetchWithRetries.mockResolvedValueOnce({
@@ -308,7 +390,10 @@ describe('Pure HTTP Request Functions', () => {
           href: 'https://api.example.com/endpoint',
           host: 'api.example.com',
         }),
-        expect.any(Object)
+        expect.any(Object),
+        undefined,
+        undefined,
+        undefined
       );
     });
   });

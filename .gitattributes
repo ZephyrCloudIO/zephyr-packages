@@ -1,0 +1,5 @@
+# MCP contract fixtures are compared byte for byte (sizes and sha256), so Git
+# must never convert their line endings on checkout.
+libs/zephyr-agent/src/lib/mcp/__fixtures__/** -text
+libs/zephyr-cli/src/mcp/__fixtures__/** -text
+libs/zephyr-mcp/__tests__/fixtures/** -text

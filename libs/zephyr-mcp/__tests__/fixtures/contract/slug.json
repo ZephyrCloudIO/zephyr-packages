@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "input": "@acme/billing-agent",
+      "expected": "billing-agent"
+    },
+    {
+      "input": "Billing_Agent",
+      "expected": "billing-agent"
+    },
+    {
+      "input": "my.repo.name",
+      "expected": "my-repo-name"
+    },
+    {
+      "input": "--weird--",
+      "expected": "weird"
+    },
+    {
+      "input": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "input": "acme-platform-tools",
+      "expected": "acme-platform-tools"
+    },
+    {
+      "input": "@@@",
+      "expected": null
+    }
+  ]
+}

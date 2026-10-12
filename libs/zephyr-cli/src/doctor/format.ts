@@ -19,6 +19,15 @@ function formatDoctorText(report: DoctorReport): string {
     `Findings: ${report.summary.errors} error(s), ${report.summary.warnings} warning(s), ${report.summary.info} info`,
   ];
 
+  if (report.mcp) {
+    lines.push(
+      `MCP provider: ${report.mcp.classification}`,
+      `MCP skills: ${report.mcp.skills.join(', ') || 'none'}`,
+      `MCP tools: ${report.mcp.tools.join(', ') || 'none'}`,
+      `MCP descriptor: ${report.mcp.descriptor ?? 'not built'}`
+    );
+  }
+
   if (report.findings.length === 0) {
     lines.push('', 'No actionable findings.');
   } else {
@@ -34,6 +43,11 @@ function formatDoctorText(report: DoctorReport): string {
       }
       lines.push(`  Remediation: ${finding.remediation}`);
     }
+  }
+
+  // Package-level sections mean nothing for a skills repo or artifact without package.json.
+  if (report.mcp && !report.mcp.packageChecks) {
+    return lines.join('\n');
   }
 
   lines.push(

@@ -204,6 +204,35 @@ describe('zephyr config', () => {
     expect(packageDependencies).toEqual({ shared: '1.0.0', packageOnly: '2.0.0' });
   });
 
+  it('reads only the context directory for an isolated identity', () => {
+    const root = createRoot('isolated');
+    const context = join(root, 'skills-repo');
+    mkdirSync(context, { recursive: true });
+    writeFileSync(
+      join(root, 'zephyr.config.cjs'),
+      `module.exports = { appName: 'parent-app' };`
+    );
+
+    expect(getZephyrConfig(context)).toEqual({ appName: 'parent-app' });
+    expect(getZephyrConfig(context, { isolated: true })).toEqual({});
+
+    writeFileSync(
+      join(context, 'zephyr.config.cjs'),
+      `module.exports = { appName: 'skills-repo', mcp: true };`
+    );
+    expect(getZephyrConfig(context, { isolated: true })).toEqual({
+      appName: 'skills-repo',
+      mcp: true,
+    });
+  });
+
+  it('accepts only a boolean mcp opt-in', () => {
+    const root = createRoot('mcp-flag');
+    writeFileSync(join(root, 'zephyr.config.cjs'), `module.exports = { mcp: 'yes' };`);
+
+    expect(() => getZephyrConfig(root)).toThrow('mcp must be a boolean');
+  });
+
   it('defineConfig preserves the user object for contextual typing', () => {
     const config = { org: 'org', project: 'project' };
     expect(defineConfig(config)).toBe(config);

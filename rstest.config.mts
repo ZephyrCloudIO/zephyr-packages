@@ -30,6 +30,7 @@ export default defineConfig({
       path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/zephyr-edge-contract.ts'),
       path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/snapshot.ts'),
       path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/zephyr-global.ts'),
+      path.resolve(workspaceRoot, 'libs/zephyr-edge-contract/src/lib/mcp-provider.ts'),
       path.resolve(
         workspaceRoot,
         'libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts'

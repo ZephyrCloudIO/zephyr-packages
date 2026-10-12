@@ -35,6 +35,9 @@
       "path": "./libs/zephyr-edge-contract/tsconfig.json"
     },
     {
+      "path": "./libs/zephyr-mcp/tsconfig.json"
+    },
+    {
       "path": "./libs/zephyr-metro-plugin/tsconfig.json"
     },
     {

@@ -143,7 +143,22 @@ describe('Webpack withZephyr compiler arrays', () => {
 
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'invalid federation config' })
+      expect.objectContaining({ message: 'invalid federation config' }),
+      { failBuild: undefined }
     );
+  });
+
+  it('rejects direct configuration errors when failBuild is set', async () => {
+    const config = { name: 'broken', context: '/repo' } as Configuration;
+    mocks.handleGlobalError.mockImplementationOnce(
+      (error: unknown, options?: { failBuild?: boolean }) => {
+        if (options?.failBuild) throw error;
+      }
+    );
+
+    await expect(withZephyr({ failBuild: true })(config)).rejects.toThrow(
+      'invalid federation config'
+    );
+    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
   });
 });

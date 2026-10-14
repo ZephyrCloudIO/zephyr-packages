@@ -575,6 +575,60 @@ describe('Zephyr Codemod CLI', () => {
       expect(output).toContain('Processed: 1');
     });
 
+    it('should ignore commented-out vinext imports when choosing the vite plugin', () => {
+      const originalContent = `
+        import { defineConfig } from 'vite';
+        // import vinext from 'vinext';
+        import { withZephyr } from 'vite-plugin-zephyr';
+
+        export default defineConfig({ plugins: [withZephyr()], define: { name: 'vinext' } });
+      `;
+      fs.writeFileSync('vite.config.ts', originalContent);
+
+      const output = runCodemod('.');
+
+      expect(fs.readFileSync('vite.config.ts', 'utf8')).toBe(originalContent);
+      expect(output).not.toContain('vite-plugin-vinext-zephyr');
+    });
+
+    it('should switch aliased CommonJS Vinext configs to the Vinext plugin', () => {
+      fs.writeFileSync(
+        'vite.config.js',
+        `
+        const vinext = require('vinext');
+        const { withZephyr: zephyr } = require("vite-plugin-zephyr");
+
+        module.exports = { plugins: [vinext(), zephyr(), withZephyr()] };
+      `
+      );
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.js', 'utf8');
+      expect(content).toContain('require("vite-plugin-vinext-zephyr")');
+      expect(content).not.toContain('"vite-plugin-zephyr"');
+    });
+
+    it('should not move generic-only vite plugin imports to the Vinext plugin', () => {
+      const originalContent = `
+        import { defineConfig } from 'vite';
+        import vinext from 'vinext';
+        import { withZephyr, type WithZephyrOptions } from 'vite-plugin-zephyr';
+
+        const options: WithZephyrOptions = {};
+        export default defineConfig({ plugins: [vinext(), withZephyr()] });
+      `;
+      fs.writeFileSync('vite.config.ts', originalContent);
+
+      const output = runCodemod('.');
+
+      expect(fs.readFileSync('vite.config.ts', 'utf8')).toBe(originalContent);
+      expect(output).toContain(
+        'Cannot switch vite.config.ts to vite-plugin-vinext-zephyr automatically'
+      );
+      expect(output).toContain('Errors: 1');
+    });
+
     it('should transform vite config with a trailing comma in plugins array', () => {
       const originalContent = `
         import { defineConfig } from 'vite';

@@ -38,6 +38,11 @@ import {
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
 import { bootstrapMetroCommands } from './metro-bootstrap.js';
 import { bootstrapSlidevVite } from './slidev-vite.js';
+import {
+  VINEXT_ZEPHYR_PLUGIN,
+  isVinextViteConfig,
+  repairVinextZephyrImport,
+} from './vinext-vite.js';
 import { findRstackSections } from './rstack.js';
 import { applyBundlerOperations, hasZephyrCall } from './operations.js';
 import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
@@ -138,36 +143,6 @@ function findProjectDirectory(filePath: string, directory: string): string {
     current = path.dirname(current);
   }
   return root;
-}
-
-const VINEXT_ZEPHYR_PLUGIN = 'vite-plugin-vinext-zephyr';
-
-/** Vinext apps need the Vinext-aware plugin, not the generic Vite one */
-function isVinextViteConfig(filePath: string): boolean {
-  try {
-    const content = fs.readFileSync(filePath, 'utf8');
-    return /from\s+['"]vinext['"]|require\(\s*['"]vinext['"]\s*\)/.test(content);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Earlier codemod releases wired Vinext configs to the generic Vite plugin. Point that
- * import at the Vinext plugin so re-running the codemod repairs those projects.
- */
-function repairVinextZephyrImport(
-  filePath: string,
-  options: { dryRun?: boolean } = {}
-): boolean {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const nextContent = content.replace(
-    /(from\s+|require\(\s*)(['"])vite-plugin-zephyr\2/g,
-    `$1$2${VINEXT_ZEPHYR_PLUGIN}$2`
-  );
-  if (nextContent === content) return false;
-  if (!options.dryRun) fs.writeFileSync(filePath, nextContent);
-  return true;
 }
 
 /** Check if a rspack config file is actually a repack configuration */
@@ -582,10 +557,20 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     // Check if already has Zephyr integration
     if (checkHasZephyr(filePath, config)) {
-      if (
-        config.plugin === VINEXT_ZEPHYR_PLUGIN &&
-        repairVinextZephyrImport(filePath, { dryRun })
-      ) {
+      const repair =
+        config.plugin === VINEXT_ZEPHYR_PLUGIN
+          ? repairVinextZephyrImport(filePath, { dryRun })
+          : { status: 'no-change' as const };
+      if (repair.status === 'unsupported') {
+        console.error(
+          chalk.red(
+            `Cannot switch ${normalizePathForOutput(filePath)} to ${VINEXT_ZEPHYR_PLUGIN} automatically: \`${repair.declaration}\` imports names that only vite-plugin-zephyr provides. Import withZephyr from ${VINEXT_ZEPHYR_PLUGIN} and remove the other vite-plugin-zephyr imports.`
+          )
+        );
+        errors++;
+        continue;
+      }
+      if (repair.status === 'repaired') {
         addRequiredPackage(packageRequirement);
         repaired++;
         console.log(

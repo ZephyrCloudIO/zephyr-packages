@@ -26,6 +26,7 @@ import {
   injectRscAssetsManifest,
   normalizeEntrypoint,
   resolveVinextEntrypoint,
+  resolveVinextOutputMounts,
   stripRedundantNodeSideEffectImports,
   type VinextBuildAsset,
   type OutputBundleLike,
@@ -245,6 +246,52 @@ describe('vinext-output helpers', () => {
     );
   });
 
+  it('injects rsc assets manifests into mounted Cloudflare output directories', () => {
+    const assets: Record<string, VinextBuildAsset> = {};
+    const bundleDir = '/repo/.cloudflare/output/v0/workers/default/bundle';
+
+    injectRscAssetsManifest(
+      assets,
+      '/repo/dist',
+      {
+        buildAssetsManifest: { clientReferenceDeps: {} },
+        config: {
+          environments: {
+            rsc: { build: { outDir: bundleDir } },
+            ssr: { build: { outDir: `${bundleDir}/ssr` } },
+          },
+        },
+      },
+      { mounts: [{ sourceDir: bundleDir, snapshotDir: 'server' }] }
+    );
+
+    expect(Object.keys(assets).sort()).toEqual([
+      'server/__vite_rsc_assets_manifest.js',
+      'server/ssr/__vite_rsc_assets_manifest.js',
+    ]);
+  });
+
+  it('mounts Cloudflare build output only when it is outside the output root', () => {
+    const workerDir = '/repo/.cloudflare/output/v0/workers/default';
+
+    expect(
+      resolveVinextOutputMounts('/repo/dist', {
+        rsc: { build: { outDir: `${workerDir}/bundle` } },
+        ssr: { build: { outDir: `${workerDir}/bundle/ssr` } },
+        client: { build: { outDir: `${workerDir}/assets` } },
+      })
+    ).toEqual([
+      { sourceDir: `${workerDir}/bundle`, snapshotDir: 'server' },
+      { sourceDir: `${workerDir}/assets`, snapshotDir: 'client' },
+    ]);
+    expect(
+      resolveVinextOutputMounts('/repo/dist', {
+        rsc: { build: { outDir: '/repo/dist/server' } },
+        client: { build: { outDir: '/repo/dist/client' } },
+      })
+    ).toEqual([]);
+  });
+
   it('does not synthesize an rsc assets manifest for tap-app transport', () => {
     const assets: Record<string, VinextBuildAsset> = {};
 
@@ -364,6 +411,63 @@ describe('vinext-output helpers', () => {
         'export default {};\n'
       );
       await expect(fs.readFile(workerPath, 'utf8')).resolves.toBe(emitted);
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('collects Cloudflare build output with the dist snapshot layout', async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'vinext-zephyr-'));
+    try {
+      const outputDir = path.join(tempDir, 'dist');
+      const workerDir = path.join(
+        tempDir,
+        '.cloudflare',
+        'output',
+        'v0',
+        'workers',
+        'default'
+      );
+      const bundleDir = path.join(workerDir, 'bundle');
+      const assetsDir = path.join(workerDir, 'assets');
+      await fs.mkdir(path.join(outputDir, 'server'), { recursive: true });
+      await fs.mkdir(path.join(bundleDir, 'ssr'), { recursive: true });
+      await fs.mkdir(path.join(assetsDir, '_next'), { recursive: true });
+      await fs.writeFile(path.join(outputDir, 'server', 'BUILD_ID'), 'build', 'utf8');
+      await fs.writeFile(
+        path.join(outputDir, 'server', 'vinext-server.json'),
+        'stale',
+        'utf8'
+      );
+      await fs.writeFile(path.join(bundleDir, 'vinext-server.json'), 'fresh', 'utf8');
+      await fs.writeFile(
+        path.join(bundleDir, 'index.js'),
+        'import "node:fs";\nexport default {};\n',
+        'utf8'
+      );
+      await fs.writeFile(path.join(bundleDir, 'ssr', 'index.js'), 'export {};', 'utf8');
+      await fs.writeFile(path.join(assetsDir, '_next', 'app.js'), 'client', 'utf8');
+
+      const assets: Record<string, VinextBuildAsset> = {};
+      await collectOutputDirectoryAssets(assets, outputDir, {
+        mounts: [
+          { sourceDir: bundleDir, snapshotDir: 'server' },
+          { sourceDir: assetsDir, snapshotDir: 'client' },
+        ],
+      });
+
+      expect(Object.keys(assets).sort()).toEqual([
+        'client/_next/app.js',
+        'server/BUILD_ID',
+        'server/index.js',
+        'server/ssr/index.js',
+        'server/vinext-server.json',
+      ]);
+      expect(assets['server/vinext-server.json']?.content.toString('utf8')).toBe('fresh');
+      expect(assets['server/index.js']?.content.toString('utf8')).toBe(
+        'export default {};\n'
+      );
+      expect(detectEntrypointFromAssets(assets)).toBe('server/index.js');
     } finally {
       await fs.rm(tempDir, { recursive: true, force: true });
     }

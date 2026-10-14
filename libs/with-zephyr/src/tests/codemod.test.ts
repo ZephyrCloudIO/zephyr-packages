@@ -528,6 +528,53 @@ describe('Zephyr Codemod CLI', () => {
       expect(content).toContain('react(), withZephyr()');
     });
 
+    it('should use the Vinext plugin for vite configs that import vinext', () => {
+      fs.writeFileSync(
+        'vite.config.ts',
+        `
+        import { defineConfig } from 'vite';
+        import vinext from 'vinext';
+
+        export default defineConfig({
+          plugins: [vinext()]
+        });
+      `
+      );
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(content).toContain('import { withZephyr } from "vite-plugin-vinext-zephyr"');
+      expect(content).not.toContain('"vite-plugin-zephyr"');
+      expect(content).toContain('vinext(), withZephyr()');
+    });
+
+    it('should switch Vinext configs wired to the generic vite plugin', () => {
+      fs.writeFileSync(
+        'vite.config.ts',
+        `
+        import { defineConfig } from 'vite';
+        import { withZephyr } from 'vite-plugin-zephyr';
+        import vinext from 'vinext';
+
+        export default defineConfig({
+          plugins: [vinext(), withZephyr()]
+        });
+      `
+      );
+
+      const output = runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(content).toContain(
+        "import { withZephyr } from 'vite-plugin-vinext-zephyr';"
+      );
+      expect(content).not.toContain("'vite-plugin-zephyr'");
+      expect(content.match(/withZephyr\(\)/g)).toHaveLength(1);
+      expect(output).toContain('Switched vite.config.ts to vite-plugin-vinext-zephyr');
+      expect(output).toContain('Processed: 1');
+    });
+
     it('should transform vite config with a trailing comma in plugins array', () => {
       const originalContent = `
         import { defineConfig } from 'vite';

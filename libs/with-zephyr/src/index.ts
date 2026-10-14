@@ -118,7 +118,10 @@ function findConfigFiles(directory: string, bundlers?: string[] | null): ConfigF
         configFiles.push({
           filePath,
           bundlerName,
-          config,
+          config:
+            bundlerName === 'vite' && isVinextViteConfig(filePath)
+              ? { ...config, plugin: VINEXT_ZEPHYR_PLUGIN }
+              : config,
         });
       }
     }
@@ -135,6 +138,36 @@ function findProjectDirectory(filePath: string, directory: string): string {
     current = path.dirname(current);
   }
   return root;
+}
+
+const VINEXT_ZEPHYR_PLUGIN = 'vite-plugin-vinext-zephyr';
+
+/** Vinext apps need the Vinext-aware plugin, not the generic Vite one */
+function isVinextViteConfig(filePath: string): boolean {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return /from\s+['"]vinext['"]|require\(\s*['"]vinext['"]\s*\)/.test(content);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Earlier codemod releases wired Vinext configs to the generic Vite plugin. Point that
+ * import at the Vinext plugin so re-running the codemod repairs those projects.
+ */
+function repairVinextZephyrImport(
+  filePath: string,
+  options: { dryRun?: boolean } = {}
+): boolean {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const nextContent = content.replace(
+    /(from\s+|require\(\s*)(['"])vite-plugin-zephyr\2/g,
+    `$1$2${VINEXT_ZEPHYR_PLUGIN}$2`
+  );
+  if (nextContent === content) return false;
+  if (!options.dryRun) fs.writeFileSync(filePath, nextContent);
+  return true;
 }
 
 /** Check if a rspack config file is actually a repack configuration */
@@ -443,6 +476,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const packagesToProcess: ConfigFile[] = [];
   const filteredConfigFiles: ConfigFile[] = [];
   let errors = 0;
+  let repaired = 0;
   let rstackSetupFailed = false;
   const addRequiredPackage = (packageRequirement: PackageRequirement) => {
     const projectDirectory = path.resolve(
@@ -548,6 +582,19 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     // Check if already has Zephyr integration
     if (checkHasZephyr(filePath, config)) {
+      if (
+        config.plugin === VINEXT_ZEPHYR_PLUGIN &&
+        repairVinextZephyrImport(filePath, { dryRun })
+      ) {
+        addRequiredPackage(packageRequirement);
+        repaired++;
+        console.log(
+          chalk.green(
+            `✓ ${dryRun ? 'Would switch' : 'Switched'} ${normalizePathForOutput(filePath)} to ${VINEXT_ZEPHYR_PLUGIN}`
+          )
+        );
+        continue;
+      }
       if (bundlerName === 'rstack') addRequiredPackage(packageRequirement);
       console.log(
         chalk.gray(
@@ -862,10 +909,10 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   }
 
   console.log(`\n${chalk.bold('Summary:')}`);
-  console.log(`${chalk.green('✓')} Processed: ${processed}`);
+  console.log(`${chalk.green('✓')} Processed: ${processed + repaired}`);
   console.log(
     `${chalk.gray('⏭️')} Skipped: ${
-      filteredConfigFiles.length - packagesToProcess.length
+      filteredConfigFiles.length - packagesToProcess.length - repaired
     }`
   );
   console.log(`${chalk.red('✗')} Errors: ${errors}`);
@@ -874,7 +921,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     process.exitCode = 1;
   }
 
-  if (dryRun && processed > 0) {
+  if (dryRun && processed + repaired > 0) {
     console.log(chalk.yellow(`\nRun without --dry-run to apply changes.`));
   }
 }

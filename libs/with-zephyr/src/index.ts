@@ -38,6 +38,11 @@ import {
 import { bootstrapNextJsVinext, type PackageRequirement } from './nextjs-vinext.js';
 import { bootstrapMetroCommands } from './metro-bootstrap.js';
 import { bootstrapSlidevVite } from './slidev-vite.js';
+import {
+  VINEXT_ZEPHYR_PLUGIN,
+  isVinextViteConfig,
+  repairVinextZephyrImport,
+} from './vinext-vite.js';
 import { findRstackSections } from './rstack.js';
 import { applyBundlerOperations, hasZephyrCall } from './operations.js';
 import type { BundlerConfig, CodemodOptions, ConfigFile } from './types.js';
@@ -118,7 +123,10 @@ function findConfigFiles(directory: string, bundlers?: string[] | null): ConfigF
         configFiles.push({
           filePath,
           bundlerName,
-          config,
+          config:
+            bundlerName === 'vite' && isVinextViteConfig(filePath)
+              ? { ...config, plugin: VINEXT_ZEPHYR_PLUGIN }
+              : config,
         });
       }
     }
@@ -443,6 +451,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   const packagesToProcess: ConfigFile[] = [];
   const filteredConfigFiles: ConfigFile[] = [];
   let errors = 0;
+  let repaired = 0;
   let rstackSetupFailed = false;
   const addRequiredPackage = (packageRequirement: PackageRequirement) => {
     const projectDirectory = path.resolve(
@@ -548,6 +557,29 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
 
     // Check if already has Zephyr integration
     if (checkHasZephyr(filePath, config)) {
+      const repair =
+        config.plugin === VINEXT_ZEPHYR_PLUGIN
+          ? repairVinextZephyrImport(filePath, { dryRun })
+          : { status: 'no-change' as const };
+      if (repair.status === 'unsupported') {
+        console.error(
+          chalk.red(
+            `Cannot switch ${normalizePathForOutput(filePath)} to ${VINEXT_ZEPHYR_PLUGIN} automatically: \`${repair.declaration}\` imports names that only vite-plugin-zephyr provides. Import withZephyr from ${VINEXT_ZEPHYR_PLUGIN} and remove the other vite-plugin-zephyr imports.`
+          )
+        );
+        errors++;
+        continue;
+      }
+      if (repair.status === 'repaired') {
+        addRequiredPackage(packageRequirement);
+        repaired++;
+        console.log(
+          chalk.green(
+            `✓ ${dryRun ? 'Would switch' : 'Switched'} ${normalizePathForOutput(filePath)} to ${VINEXT_ZEPHYR_PLUGIN}`
+          )
+        );
+        continue;
+      }
       if (bundlerName === 'rstack') addRequiredPackage(packageRequirement);
       console.log(
         chalk.gray(
@@ -862,10 +894,10 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
   }
 
   console.log(`\n${chalk.bold('Summary:')}`);
-  console.log(`${chalk.green('✓')} Processed: ${processed}`);
+  console.log(`${chalk.green('✓')} Processed: ${processed + repaired}`);
   console.log(
     `${chalk.gray('⏭️')} Skipped: ${
-      filteredConfigFiles.length - packagesToProcess.length
+      filteredConfigFiles.length - packagesToProcess.length - repaired
     }`
   );
   console.log(`${chalk.red('✗')} Errors: ${errors}`);
@@ -874,7 +906,7 @@ function runCodemod(directory: string, options: CodemodOptions = {}): void {
     process.exitCode = 1;
   }
 
-  if (dryRun && processed > 0) {
+  if (dryRun && processed + repaired > 0) {
     console.log(chalk.yellow(`\nRun without --dry-run to apply changes.`));
   }
 }

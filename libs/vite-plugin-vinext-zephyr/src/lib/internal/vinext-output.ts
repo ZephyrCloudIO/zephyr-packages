@@ -268,13 +268,14 @@ function isInsideDir(parentDir: string, childDir: string): boolean {
  * `.cloudflare/output/v0/workers/<name>` (`bundle` for the server, `assets` for the
  * client) instead of `dist/server` and `dist/client`. Mount those directories at their
  * `dist`-relative snapshot paths so the published snapshot keeps the same `server/` and
- * `client/` layout.
+ * `client/` layout. App Router builds the Worker in the `rsc` environment; Pages Router
+ * has no `rsc` environment and builds it in Cloudflare's default `ssr` environment.
  */
 export function resolveVinextOutputMounts(
   outputRootDir: string,
   environments: Record<string, RscEnvironmentConfigLike | undefined>
 ): VinextOutputMount[] {
-  const serverDir = environments['rsc']?.build?.outDir;
+  const serverDir = (environments['rsc'] ?? environments['ssr'])?.build?.outDir;
   if (!serverDir || isInsideDir(outputRootDir, serverDir)) {
     return [];
   }

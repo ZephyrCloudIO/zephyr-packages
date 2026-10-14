@@ -286,6 +286,21 @@ describe('vinext-output helpers', () => {
     ]);
     expect(
       resolveVinextOutputMounts('/repo/dist', {
+        ssr: { build: { outDir: `${workerDir}/bundle` } },
+        client: { build: { outDir: `${workerDir}/assets` } },
+      })
+    ).toEqual([
+      { sourceDir: `${workerDir}/bundle`, snapshotDir: 'server' },
+      { sourceDir: `${workerDir}/assets`, snapshotDir: 'client' },
+    ]);
+    expect(
+      resolveVinextOutputMounts('/repo/dist', {
+        ssr: { build: { outDir: '/repo/dist/vinext_app' } },
+        client: { build: { outDir: '/repo/dist/client' } },
+      })
+    ).toEqual([]);
+    expect(
+      resolveVinextOutputMounts('/repo/dist', {
         rsc: { build: { outDir: '/repo/dist/server' } },
         client: { build: { outDir: '/repo/dist/client' } },
       })

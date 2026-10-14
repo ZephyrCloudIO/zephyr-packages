@@ -22,8 +22,9 @@ A missing output root fails publication with
 `Vinext output directory does not exist`.
 
 The Cloudflare Vite plugin 2.x writes the Worker to
-`.cloudflare/output/v0/workers/<name>/` instead of `dist/`. When the `rsc`
-environment builds outside the output root, its `bundle` directory is uploaded
+`.cloudflare/output/v0/workers/<name>/` instead of `dist/`. When the Worker
+environment (`rsc` for App Router, `ssr` for Pages Router) builds outside the
+output root, its `bundle` directory is uploaded
 as `server/` and the client `assets` directory as `client/`, on top of anything
 Vinext left in `dist/`. The snapshot keeps the same layout as a 1.x build, so
 entrypoint detection and `entrypoint` overrides are unchanged.

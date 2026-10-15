@@ -27,6 +27,7 @@ export interface ModuleFederationOptions {
   shared?: Record<string, unknown>;
   manifest?: boolean | ModuleFederationManifestOptions;
   dts?: boolean | Record<string, unknown>;
+  disableRuntimePlugin?: boolean;
   [key: string]: unknown;
 }
 
@@ -40,6 +41,10 @@ export function getRuntimePluginPath() {
 export function ensureRuntimePlugin(
   mfConfig: ModuleFederationOptions
 ): ModuleFederationOptions {
+  if (mfConfig.disableRuntimePlugin) {
+    return mfConfig;
+  }
+
   const runtimePlugins = [...(mfConfig.runtimePlugins ?? [])];
 
   if (!runtimePlugins.includes(ZEPHYR_MF_RUNTIME_PLUGIN_ID)) {

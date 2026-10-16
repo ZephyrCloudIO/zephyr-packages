@@ -138,6 +138,23 @@ describe('getApplicationConfiguration', () => {
     });
   });
 
+  it('rejects with the build limit error itself instead of a configuration failure', async () => {
+    const cause = new ZephyrError(ZeErrors.ERR_BUILD_LIMIT_REACHED, {
+      message: 'Build limit reached for acme.',
+    });
+    mockGetAppConfig.mockResolvedValue(null);
+    mockMakeRequest.mockResolvedValue([false, cause]);
+
+    const rejection = getApplicationConfiguration({ application_uid });
+
+    await expect(rejection).rejects.toBe(cause);
+    await expect(rejection).rejects.toMatchObject({
+      code: 'ZE20038',
+      operation: 'get-application-config',
+    });
+    expect(mockSaveAppConfig).not.toHaveBeenCalled();
+  });
+
   it('attributes token resolution failures to the configuration operation', async () => {
     mockGetToken.mockRejectedValue(
       new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {

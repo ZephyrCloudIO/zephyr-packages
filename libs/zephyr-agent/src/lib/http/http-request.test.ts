@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 // Error types are used by mocks
-import '../errors';
+import { ZeErrors, ZephyrError } from '../errors';
 import { makeHttpRequest, makeRequest, parseUrl } from './http-request';
 
 const mocks = rs.hoisted(() => ({
@@ -200,6 +200,45 @@ describe('Pure HTTP Request Functions', () => {
       expect(ok).toBe(false);
       expect(error).toMatchObject({ code: 'ZE10022', reason: 'ZE10022' });
       expect(mockCleanTokens).not.toHaveBeenCalled();
+    });
+
+    it('shows the API message when an organization reaches its build limit', async () => {
+      const message =
+        'Build limit reached for acme. 1,150 of 1,000 builds used this cycle, including the free 15% buffer. Builds resume on Nov 1, 2026. Upgrade: https://app.zephyr-cloud.io/org/acme/settings/subscription/manage';
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 402,
+        text: async () =>
+          JSON.stringify({
+            code: 'BUILD_LIMIT_REACHED',
+            message,
+            used: 1150,
+            included: 1000,
+          }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://api.example.com/application-config/web.acme-app.acme')
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE20038', reason: 'ZE20038' });
+      expect(error?.message).toContain(message);
+    });
+
+    it('keeps any other 402 response a generic HTTP error', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 402,
+        text: async () => JSON.stringify({ message: 'Payment required' }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://api.example.com/application-config')
+      );
+
+      expect(ok).toBe(false);
+      expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
     });
 
     it('should handle network errors', async () => {

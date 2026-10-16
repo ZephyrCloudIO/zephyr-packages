@@ -84,6 +84,18 @@ function redactResponse(
   ].join('\n');
 }
 
+/** The API's 402 body when an organization has used its builds for the billing cycle. */
+function isBuildLimitReachedBody(
+  body: unknown
+): body is { code: 'BUILD_LIMIT_REACHED'; message: string } {
+  if (!body || typeof body !== 'object') {
+    return false;
+  }
+
+  const { code, message } = body as Record<string, unknown>;
+  return code === 'BUILD_LIMIT_REACHED' && typeof message === 'string' && message !== '';
+}
+
 /** Main HTTP request function that handles the request and response */
 export async function makeHttpRequest<T = void>(
   url: URL,
@@ -148,6 +160,14 @@ export async function makeHttpRequest<T = void>(
 
     // Only parses data if reply content is json
     const resData = safe_json_parse<unknown>(resText) ?? resText;
+
+    // Checked before the generic error, whose redaction masks the body's `code` field. The API writes the message for
+    // the terminal, so it is shown as is.
+    if (response.status === 402 && isBuildLimitReachedBody(resData)) {
+      throw new ZephyrError(ZeErrors.ERR_BUILD_LIMIT_REACHED, {
+        message: resData.message,
+      });
+    }
 
     if (!response.status || response.status >= 300) {
       throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {

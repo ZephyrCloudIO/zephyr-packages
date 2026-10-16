@@ -78,6 +78,11 @@ async function loadApplicationConfiguration(
     credentialToken: token,
   });
 
+  // The build limit is the whole story, so it isn't wrapped as a configuration failure.
+  if (!ok && ZephyrError.is(cause, ZeErrors.ERR_BUILD_LIMIT_REACHED)) {
+    throw cause;
+  }
+
   if (!ok || !data?.value || data.value.application_uid !== application_uid) {
     throw new ZephyrError(ZeErrors.ERR_LOAD_APP_CONFIG, {
       application_uid,

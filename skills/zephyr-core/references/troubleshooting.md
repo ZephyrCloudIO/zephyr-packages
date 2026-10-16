@@ -34,6 +34,15 @@ Common symptoms:
 - CI token works for one org/app but not another
 - build accepts config but publish fails later
 
+### Build limit reached
+
+Common symptoms:
+
+- `ZE20038` when the build starts, naming the builds used this billing cycle and the date builds resume
+- the bundler still finishes, but nothing is deployed
+
+The organization used its plan's builds for the billing cycle, free buffer included. Builds resume when the cycle resets. To build sooner, upgrade the plan or, on a paid plan, raise its overage allowance on the organization's subscription page.
+
 ### Docs drift to call out
 
 - If Rspack docs and examples disagree, prefer `zephyr-rspack-plugin` from the SDK picker and examples.

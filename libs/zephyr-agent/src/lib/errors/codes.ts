@@ -553,6 +553,15 @@ Were the required packages in Module federation plugin installed and included in
     message: `The "{{entity_name}}" is too large. It is {{entity_size}} bytes, but the maximum allowed size is {{max_allowed_size}} bytes.`,
     kind: 'deploy',
   },
+  /**
+   * The organization used its builds for the billing cycle. The API's message says how
+   * many builds were used, when builds resume and where to upgrade.
+   */
+  ERR_BUILD_LIMIT_REACHED: {
+    id: '038',
+    message: '{{ message }}',
+    kind: 'deploy',
+  },
 } as const satisfies {
   [name: string]: {
     /** Error id. See ErrorCategories to understand prefix */

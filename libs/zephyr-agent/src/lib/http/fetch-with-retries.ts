@@ -295,9 +295,6 @@ export async function fetchWithRetries(
   const axiosConfig: AxiosRequestConfig = {
     method,
     data: options.body,
-    ...(options.redirect === 'error' || options.redirect === 'manual'
-      ? { maxRedirects: 0 }
-      : {}),
     ...(options.signal ? { signal: options.signal } : {}),
   };
 

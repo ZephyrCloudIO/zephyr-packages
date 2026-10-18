@@ -1,6 +1,6 @@
 ---
 name: zephyr-core
-description: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, Change Attribution, human/AI contributions, dirty-source version differences, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or public env vars.
+description: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or public env vars.
 license: Apache-2.0
 metadata:
   author: Zephyr Cloud IO
@@ -55,9 +55,6 @@ Zephyr is a build-integrated deployment platform for frontend and frontend-adjac
 5. Read `references/examples-resume.md` when the user wants concrete starter patterns.
 6. Read `references/docs-map.md` when deeper docs links are useful.
 7. Read `references/troubleshooting.md` when setup/build/auth/git issues appear.
-8. Read `references/change-attribution.md` for optional tracking, agent/editor hooks,
-   source fingerprints, and version comparisons involving local changes. Obtain
-   explicit opt-in before enabling capture or installing hooks.
 
 ## Source priorities
 

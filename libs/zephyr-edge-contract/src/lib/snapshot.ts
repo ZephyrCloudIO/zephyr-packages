@@ -5,10 +5,8 @@ import type {
   ZephyrModuleFederationConfig,
 } from './module-federation';
 import type { ZephyrBuildTarget } from './build-target';
-import type { ChangeAttribution } from './change-attribution';
 
 export interface Snapshot {
-  changeAttribution?: ChangeAttribution;
   // app.repo.org
   application_uid: string;
   // package.json version + descriptor `.(user-(ci|ui?)-user_build_counter)`

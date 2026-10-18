@@ -1,7 +1,6 @@
 import { isCI } from 'ci-info';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { captureSource, type SourceCapture } from '../lib/change-attribution/source';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
 import {
   assertZephyrBuildTarget,
@@ -147,9 +146,6 @@ export interface DeploymentInfo {
  * ./internal
  */
 export class ZephyrEngine {
-  sourceContext: string;
-  sourceCapture?: SourceCapture;
-  pendingSourceCapture?: SourceCapture;
   // npm and git properties initialized in `create` method
   npmProperties!: ZePackageJson;
   gitProperties!: ZeGitInfo;
@@ -208,8 +204,6 @@ export class ZephyrEngine {
   /** This is intentionally PRIVATE use `await ZephyrEngine.create(context)` */
   private constructor(options: ZephyrEngineOptions) {
     this.builder = options.builder;
-    this.sourceContext = options.context ?? process.cwd();
-    this.pendingSourceCapture = options.sourceCapture;
   }
 
   static defer_create(): DeferredZephyrEngine {
@@ -250,11 +244,7 @@ export class ZephyrEngine {
     const zephyrConfig = getZephyrConfig(context);
 
     ze_log.init(`Initializing: Zephyr Engine for ${context}...`);
-    const ze = new ZephyrEngine({
-      context,
-      builder: options.builder,
-      sourceCapture: options.sourceCapture,
-    });
+    const ze = new ZephyrEngine({ context, builder: options.builder });
     if (options.target !== undefined) {
       ze.env.target = options.target;
     }
@@ -453,14 +443,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     return this.federated_dependencies;
   }
 
-  /** Use a boundary already captured by an adapter, or capture once for this generation. */
-  start_source_capture(): void {
-    this.sourceCapture =
-      this.pendingSourceCapture ??
-      (this.sourceContext ? captureSource(this.sourceContext, 'build-start') : undefined);
-    this.pendingSourceCapture = undefined;
-  }
-
   async start_new_build(): Promise<void> {
     ze_log.init('Starting new build');
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -472,7 +454,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       return;
     }
 
-    ze.start_source_capture();
     const application_uid = ze.application_uid;
 
     ze_log.init('Initializing: loading of hash list');
@@ -723,7 +704,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
 
           return {
             ...dash_data,
-            changeAttribution: snapshot.changeAttribution,
             builder: dash_data.builder ?? zephyr_engine.builder,
             plugin_version: dash_data.plugin_version ?? getZephyrAgentVersion(),
             worker_version:
@@ -799,8 +779,6 @@ function indexAssetsBySnapshotPath(
 }
 
 function resetBuildState(zephyr_engine: ZephyrEngine): void {
-  zephyr_engine.sourceCapture = undefined;
-  zephyr_engine.pendingSourceCapture = undefined;
   zephyr_engine.build_id = null;
   zephyr_engine.snapshotId = null;
   zephyr_engine.hash_list = null;

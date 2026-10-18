@@ -174,14 +174,14 @@ describe('Zephyr Codemod CLI', () => {
         define.test({ plugins: [] });
       `
       );
-      const output = runCodemod('--bundlers rstack --no-attribution');
+      const output = runCodemod('--bundlers rstack');
       expect(output).toContain('Processed: 3');
       expect(output).toContain('Errors: 0');
       const updated = fs.readFileSync('rstack.config.ts', 'utf8');
       expect(updated).toContain('withZephyrRsbuild()');
       expect(updated).toContain('withZephyrRspress()');
       expect(updated).toContain('define.test({ plugins: [] });');
-      const rerun = runCodemod('--bundlers rstack --no-attribution');
+      const rerun = runCodemod('--bundlers rstack');
       expect(rerun).toContain('Processed: 0');
       expect(rerun).toContain('Skipped: 3');
       expect(fs.readFileSync('rstack.config.ts', 'utf8')).toBe(updated);
@@ -196,7 +196,7 @@ describe('Zephyr Codemod CLI', () => {
         JSON.stringify({ name: 'rstack-fixture', version: '1.0.0' })
       );
       const manifest = fs.readFileSync('package.json', 'utf8');
-      const output = runCodemod('--dry-run --bundlers rstack --no-attribution');
+      const output = runCodemod('--dry-run --bundlers rstack');
       expect(output).toContain('zephyr-rsbuild-plugin');
       expect(output).toContain('zephyr-rspress-plugin');
       expect(output).toContain('Processed: 2');
@@ -212,7 +212,7 @@ describe('Zephyr Codemod CLI', () => {
       );
       const rsbuildConfig = 'export default { plugins: [] };';
       fs.writeFileSync('rsbuild.config.js', rsbuildConfig);
-      const output = runCodemod('--bundlers rstack --no-attribution');
+      const output = runCodemod('--bundlers rstack');
       expect(output).toContain('Processed: 1');
       expect(fs.readFileSync('rsbuild.config.js', 'utf8')).toBe(rsbuildConfig);
     });
@@ -231,7 +231,7 @@ describe('Zephyr Codemod CLI', () => {
         'website/rstack.config.mjs',
         "import { define } from 'rstack'; define.doc({ root: 'docs' });"
       );
-      const output = runCodemod('--dry-run --bundlers rstack --no-attribution');
+      const output = runCodemod('--dry-run --bundlers rstack');
       expect(output).toContain('zephyr-rspress-plugin (website)');
       expect(output).not.toContain('zephyr-rsbuild-plugin');
     });
@@ -243,7 +243,7 @@ describe('Zephyr Codemod CLI', () => {
         'config/rstack.config.ts',
         "import { define } from 'rstack'; define.app({});"
       );
-      const output = runCodemod('--bundlers rstack --no-attribution');
+      const output = runCodemod('--bundlers rstack');
       expect(output).toContain('Processed: 1');
       expect(output).not.toContain('Packages that would be installed');
       expect(output).not.toContain('Checking package dependencies');
@@ -255,8 +255,8 @@ describe('Zephyr Codemod CLI', () => {
       const manifest = JSON.stringify({ name: 'rstack-fixture', version: '1.0.0' });
       fs.writeFileSync('rstack.config.ts', original);
       fs.writeFileSync('package.json', manifest);
-      expect(() => runCodemod('--bundlers rstack --no-attribution')).toThrow();
-      const output = runCodemod('--bundlers rstack --no-attribution', true);
+      expect(() => runCodemod('--bundlers rstack')).toThrow();
+      const output = runCodemod('--bundlers rstack', true);
       expect(output).toContain('Configure define.app() manually');
       expect(output).toContain('Errors: 1');
       expect(output).not.toContain('Checking package dependencies');
@@ -272,7 +272,7 @@ describe('Zephyr Codemod CLI', () => {
         'package.json',
         JSON.stringify({ name: 'rstack-fixture', version: '1.0.0' })
       );
-      const output = runCodemod('--dry-run --bundlers rstack --no-attribution');
+      const output = runCodemod('--dry-run --bundlers rstack');
       expect(output).toContain('Packages that would be installed');
       expect(output).toContain('zephyr-rsbuild-plugin');
       expect(output).toContain('Processed: 0');
@@ -285,7 +285,7 @@ describe('Zephyr Codemod CLI', () => {
       const malformed = "import { define } from 'rstack'; define.app({";
       fs.writeFileSync('rstack.config.ts', malformed);
       fs.writeFileSync('vite.config.ts', 'export default { plugins: [] };');
-      const output = runCodemod('--dry-run --bundlers vite --no-attribution');
+      const output = runCodemod('--dry-run --bundlers vite');
       expect(output).toContain('Processed: 1');
       expect(output).toContain('Errors: 0');
       expect(output).not.toContain('rstack.config.ts');
@@ -296,7 +296,7 @@ describe('Zephyr Codemod CLI', () => {
       const malformed = "import { define } from 'rstack'; define.app({";
       fs.writeFileSync('rstack.config.ts', malformed);
       fs.writeFileSync('vite.config.ts', 'export default { plugins: [] };');
-      const output = runCodemod('--dry-run --no-attribution', true);
+      const output = runCodemod('--dry-run', true);
       expect(output).toContain('Cannot parse Rstack configuration');
       expect(output).toContain('Processed: 1');
       expect(output).toContain('Errors: 1');

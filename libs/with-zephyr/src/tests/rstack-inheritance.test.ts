@@ -177,13 +177,7 @@ describe('Rstack inherited test compilation', () => {
       const traceFile = writeFixture(section, inlineProjects);
       execFileSync(
         process.execPath,
-        [
-          path.join(packageRoot, 'dist', 'index.js'),
-          tempDir,
-          '--bundlers',
-          'rstack',
-          '--no-attribution',
-        ],
+        [path.join(packageRoot, 'dist', 'index.js'), tempDir, '--bundlers', 'rstack'],
         {
           encoding: 'utf8',
           env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: undefined },
@@ -212,13 +206,7 @@ describe('Rstack inherited test compilation', () => {
       const original = fs.readFileSync(configPath, 'utf8');
       const output = execFileSync(
         process.execPath,
-        [
-          path.join(packageRoot, 'dist', 'index.js'),
-          tempDir,
-          '--bundlers',
-          'rstack',
-          '--no-attribution',
-        ],
+        [path.join(packageRoot, 'dist', 'index.js'), tempDir, '--bundlers', 'rstack'],
         {
           encoding: 'utf8',
           env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: undefined },
@@ -240,13 +228,7 @@ describe('Rstack inherited test compilation', () => {
     const traceFile = writeFixture('app');
     execFileSync(
       process.execPath,
-      [
-        path.join(packageRoot, 'dist', 'index.js'),
-        tempDir,
-        '--bundlers',
-        'rstack',
-        '--no-attribution',
-      ],
+      [path.join(packageRoot, 'dist', 'index.js'), tempDir, '--bundlers', 'rstack'],
       { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1', FORCE_COLOR: undefined } }
     );
     expect(runCli(['build'], true, { NODE_ENV: 'production' })).toContain(

@@ -1,5 +1,3 @@
-import type { AttributionRepositoryPolicy } from 'zephyr-edge-contract';
-
 export interface ZeApplicationConfig {
   application_uid: string;
   BUILD_ID_ENDPOINT: string;
@@ -8,8 +6,6 @@ export interface ZeApplicationConfig {
   PLATFORM: UploadProviderType;
   ENVIRONMENTS?: Record<string, EnvironmentConfig>;
   fetched_at?: number;
-  /** Server-owned, repository-scoped policy. Never trust a tier from repo JSON. */
-  ATTRIBUTION_POLICY?: AttributionRepositoryPolicy;
 
   // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration
   // @deprecated

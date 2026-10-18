@@ -44,14 +44,21 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
       "outputs": []
     },
+    "create-zephyr-apps#test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/rstest.project.mts",
+        "$TURBO_ROOT$/skills/create-zephyr-apps/**"
+      ],
+      "outputs": []
+    },
     "vite-plugin-zephyr#test": {
       "dependsOn": ["build", "^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/rstest.project.mts",
-        "$TURBO_ROOT$/scripts/intent.mjs",
-        "$TURBO_ROOT$/scripts/sync-package-skills.mjs",
-        "$TURBO_ROOT$/skills/**"
+        "$TURBO_ROOT$/skills/zephyr-vite/**"
       ],
       "outputs": []
     },

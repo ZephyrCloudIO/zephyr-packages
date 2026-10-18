@@ -187,7 +187,7 @@ test('real vite.build publishes the single environment exactly once', async () =
 test('the skill setup example publishes a complete Vite snapshot exactly once', async () => {
   const skillPath = path.resolve(
     import.meta.dirname,
-    '../../skills/zephyr-vite/SKILL.md'
+    '../../../../skills/zephyr-vite/SKILL.md'
   );
   // Windows checkouts may use CRLF line endings.
   const skill = (await readFile(skillPath, 'utf8')).replace(/\r\n/gu, '\n');

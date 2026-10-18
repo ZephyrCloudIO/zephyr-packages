@@ -1,0 +1,21 @@
+{
+  "name": "zephyr",
+  "version": "1.7.0",
+  "description": "Agent Skills for deploying applications with Zephyr Cloud.",
+  "author": {
+    "name": "ZephyrCloudIO"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Zephyr Cloud",
+    "shortDescription": "Set up, scaffold, and deploy apps with Zephyr Cloud.",
+    "longDescription": "Agent Skills for every Zephyr bundler plugin, the Zephyr CLI, create-zephyr-apps, and Module Federation on Zephyr.",
+    "developerName": "ZephyrCloudIO",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": [
+      "Deploy this app with Zephyr using $zephyr-core.",
+      "Scaffold a Zephyr app with $create-zephyr-apps."
+    ]
+  }
+}

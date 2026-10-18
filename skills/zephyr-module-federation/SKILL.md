@@ -7,9 +7,6 @@ metadata:
   purpose: Use when the user asks about zephyr:dependencies, hosts/remotes, Module Federation build order, remote resolution, cross-bundler remotes, or monorepo MF on Zephyr.
   domain: federation
   type: core
-sources:
-  - ZephyrCloudIO/zephyr-packages:**/skills/zephyr-module-federation/references/*.md
-  - ZephyrCloudIO/zephyr-packages:**/scripts/sync-package-skills.mjs
 ---
 
 # Zephyr Module Federation

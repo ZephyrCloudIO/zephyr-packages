@@ -38,27 +38,16 @@ bun add --dev zephyr-rspack-plugin
 
 ## AI Agent Skills (Optional)
 
-This package ships the `zephyr-rspack` Agent Skill for AI coding agents, together
-with the shared `zephyr-core` and `zephyr-module-federation` guides. The
-skills are versioned with the package, so your agent reads guidance that
-matches the release you installed.
+The `zephyr-rspack` Agent Skill teaches AI coding agents how to set up and debug this
+package. It lives in the
+[`skills/`](https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/skills)
+directory of this repository, next to the shared `zephyr-core` and
+`zephyr-module-federation` guides. Zephyr does not need it at runtime.
 
-Zephyr does not need Intent at runtime. Coding agents only find these skills
-after you opt in with
-[TanStack Intent](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers):
-
-```sh
-pnpm add -D @tanstack/intent
-pnpm dlx @tanstack/intent@latest install
-```
-
-Allow `zephyr-rspack-plugin` when `install` asks. Intent saves that choice in the
-`intent.skills` allowlist in your `package.json`. To check or load the skill
-yourself:
+Add it to your project with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-pnpm exec intent list
-pnpm exec intent load 'zephyr-rspack-plugin#zephyr-rspack'
+npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-rspack
 ```
 
 ## Usage

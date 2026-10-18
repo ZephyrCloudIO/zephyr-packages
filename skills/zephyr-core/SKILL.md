@@ -7,43 +7,6 @@ metadata:
   purpose: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or public env vars.
   domain: sdk
   type: core
-sources:
-  - ZephyrCloudIO/zephyr-packages:**/skills/zephyr-core/references/*.md
-  - ZephyrCloudIO/zephyr-packages:**/scripts/sync-package-skills.mjs
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/attribution.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/hooks/*.cjs
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/index.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/rstack.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/bundlers/rstack.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/bundlers/index.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/engine/ast-grep.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/operations.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/types.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/bundler-configs.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/rstack.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/rstack-inheritance.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/codemod.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/src/tests/attribution.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/with-zephyr/README.md
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/change-attribution/*.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/transformers/ze-build-snapshot.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/transformers/ze-build-dash-data.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/index.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/change-attribution.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/index.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/snapshot.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/zephyr-build-stats.ts
-  - ZephyrCloudIO/zephyr-packages:**/scripts/verify-change-attribution.mjs
-  - ZephyrCloudIO/zephyr-packages:**/scripts/verify-live-attribution.mjs
-  - ZephyrCloudIO/zephyr-packages:**/scripts/verify-attribution-storage.mjs
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/index.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/http/http-request.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/http/http-request.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/http/fetch-with-retries.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/http/fetch-with-retries.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/lib/node-persist/upload-provider-options.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-agent/src/zephyr-engine/__test__/upload_assets.test.ts
-  - ZephyrCloudIO/zephyr-packages:**/libs/zephyr-edge-contract/src/lib/api-contract-negotiation/get-api-contract.ts
 ---
 
 # Zephyr Core

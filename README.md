@@ -41,18 +41,24 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 ### AI Agent Skills
 
-Every published package ships Agent Skills for AI coding agents, versioned with
-the package. Zephyr does not need them at runtime. To let your coding agent use
-them, opt in with
-[TanStack Intent](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers)
-in your project:
+The [`skills/`](./skills) directory holds Agent Skills that teach AI coding
+agents how to set up, deploy, and debug Zephyr: one skill per bundler plugin
+or framework integration, plus `create-zephyr-apps`, `zephyr-cli`, and the
+shared `zephyr-core` and `zephyr-module-federation` guides. Zephyr does not
+need them at runtime.
+
+Install them with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-pnpm add -D @tanstack/intent
-pnpm dlx @tanstack/intent@latest install
+# Pick from the list interactively
+npx skills add ZephyrCloudIO/zephyr-packages
+
+# Or install specific skills
+npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core --skill zephyr-vite
 ```
 
-Each plugin README names its skill.
+The repository is also a Claude Code, Codex, and Cursor plugin named `zephyr`
+that bundles every skill. Each plugin README names its skill.
 
 ## Repository Structure
 
@@ -62,6 +68,7 @@ repository checks use Oxlint, Oxfmt, and [Publint](https://publint.dev/).
 
 - `libs` - Contains all the plugins and utility packages.
 - `examples` - Contains examples to use and test the plugins.
+- `skills` - Contains the Agent Skills for AI coding agents.
 
 ## Using this repository
 

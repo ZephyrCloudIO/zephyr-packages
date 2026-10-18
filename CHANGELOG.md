@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.7.0 (2026-10-18)
+
+## What's Changed
+* chore(deps): pin actions/checkout action to d23441a by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/649
+* chore(deps): update babel monorepo to v8.0.7 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/667
+* feat(zephyr-cli): print a JSON deploy result with --format json by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/665
+* fix(vinext): wire codemod to the vinext plugin and support Cloudflare Vite plugin 2.x output by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/669
+* fix: describe federated containers once by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/672
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.6.0...v1.7.0
+
 ## 1.6.0 (2026-10-06)
 
 ## What's Changed

@@ -1,18 +1,3 @@
----
-name: zephyr-metro
-description: Configure and deploy React Native Metro applications with
-  zephyr-metro-plugin; use when adding withZephyr to metro.config.js,
-  registering the bundle-mf-host or bundle-mf-remote publication commands for
-  the React Native CLI or RNEF, or diagnosing iOS and Android Module Federation
-  publication with @module-federation/metro.
-metadata:
-  library: zephyr-metro-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Publish iOS and Android Metro Module Federation bundles to Zephyr by pairing the configuration-only withZephyr wrapper with the command integration that actually uploads.
-  domain: native
-  type: core
----
-
 # Configure Metro for Zephyr
 
 ## Setup
@@ -99,7 +84,7 @@ After the wrapped bundle command finishes, Zephyr uploads every file under
 command. A missing directory publishes no bundle files, which the source treats
 as normal for host bundles written elsewhere, such as by the Xcode bundling
 phase. For custom output paths, RNEF details, or a hand-written command
-wrapper, read [publication commands](references/publication-commands.md).
+wrapper, read [publication commands](metro-publication-commands.md).
 
 ## Avoid misleading fixes
 

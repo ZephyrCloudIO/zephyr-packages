@@ -41,11 +41,12 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 ### AI Agent Skills
 
-The [`skills/`](./skills) directory holds Agent Skills that teach AI coding
-agents how to set up, deploy, and debug Zephyr: one skill per bundler plugin
-or framework integration, plus `create-zephyr-apps`, `zephyr-cli`, and the
-shared `zephyr-core` and `zephyr-module-federation` guides. Zephyr does not
-need them at runtime.
+The [`skills/`](./skills) directory holds four Agent Skills that teach AI
+coding agents how to set up, deploy, and debug Zephyr. `zephyr-core` covers
+setup and deployment, with a guide for every bundler and framework
+integration. `zephyr-module-federation`, `zephyr-cli`, and
+`create-zephyr-apps` cover their own workflows. Zephyr does not need them at
+runtime.
 
 Install them with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
@@ -54,11 +55,12 @@ Install them with the [`skills` CLI](https://github.com/vercel-labs/skills):
 npx skills add ZephyrCloudIO/zephyr-packages
 
 # Or install specific skills
-npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core --skill zephyr-vite
+npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core --skill zephyr-module-federation
 ```
 
 The repository is also a Claude Code, Codex, and Cursor plugin named `zephyr`
-that bundles every skill. Each plugin README names its skill.
+that bundles every skill. See [`skills/README.md`](./skills/README.md) for
+details.
 
 ## Repository Structure
 

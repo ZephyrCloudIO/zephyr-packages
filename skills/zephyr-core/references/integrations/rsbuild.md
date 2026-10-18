@@ -1,18 +1,3 @@
----
-name: zephyr-rsbuild
-description: Configure and deploy Rsbuild applications with zephyr-rsbuild-plugin;
-  use when adding withZephyr to rsbuild.config, combining it with
-  @module-federation/rsbuild-plugin, publishing multi-environment or SSR
-  Rsbuild builds, or diagnosing Rsbuild publication. Use the dedicated Zephyr
-  integrations for Modern.js and Rspress.
-metadata:
-  library: zephyr-rsbuild-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Add Zephyr to an existing Rsbuild config as a plugin that publishes every Rsbuild environment as one coordinated snapshot after federation setup.
-  domain: xpack
-  type: core
----
-
 # Configure Rsbuild for Zephyr
 
 ## Setup
@@ -67,8 +52,8 @@ plugins and resolves remotes after they exist. Placing Zephyr after the
 federation plugin keeps the config readable; the hook order is what matters.
 
 Zephyr resolves declared remotes together with the package's
-`zephyr:dependencies`. The `zephyr-module-federation` guide shipped beside this
-skill covers dependency declarations and host/remote build order.
+`zephyr:dependencies`. The `zephyr-module-federation` skill
+covers dependency declarations and host/remote build order.
 
 ## Choose the publication shape
 
@@ -76,7 +61,7 @@ Every Rsbuild environment becomes one compiler config, and all of them are
 coordinated into a single snapshot published after every compiler succeeds.
 Node-target environments make the snapshot SSR. For SSR entrypoints, the
 `ZE_PUBLIC_*` import map, base paths, and failure semantics, read
-[environments and publication](references/environments.md).
+[environments and publication](rsbuild-environments.md).
 
 ## Avoid misleading fixes
 

@@ -1,17 +1,3 @@
----
-name: zephyr-modernjs
-description: Configure and deploy Modern.js 3 applications with
-  zephyr-modernjs-plugin; use when adding withZephyr to modern.config, ordering
-  it with Modern.js Module Federation, checking the Rspack plugin dependency
-  and output layout, or diagnosing Modern.js client/server publication.
-metadata:
-  library: zephyr-modernjs-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Add Zephyr to an existing Modern.js 3 app as a CLI plugin that delegates each Rspack config to zephyr-rspack-plugin after federation config runs.
-  domain: frameworks
-  type: core
----
-
 # Configure Modern.js for Zephyr
 
 ## Setup
@@ -62,7 +48,7 @@ work around federation detection.
 
 Modern.js applies `tools.rspack` after `modifyRspackConfig`, so federation
 plugins added there are invisible to Zephyr. The `zephyr-module-federation`
-guide shipped beside this skill covers `zephyr:dependencies` and build order.
+skill covers `zephyr:dependencies` and build order.
 
 ## Understand the publication shape
 

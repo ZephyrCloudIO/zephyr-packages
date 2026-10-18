@@ -58,7 +58,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/rstest.project.mts",
-        "$TURBO_ROOT$/skills/zephyr-vite/**"
+        "$TURBO_ROOT$/skills/zephyr-core/references/integrations/vite.md"
       ],
       "outputs": []
     },

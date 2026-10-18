@@ -62,7 +62,7 @@ Rsbuild 2 generates HTML with its JavaScript HTML plugin by default
 (`html.implementation: 'js'`). When the app reads `ZE_PUBLIC_*`, confirm the
 emitted HTML contains that import map before relying on the rewritten reads.
 If it is missing, report it with the Rsbuild version and HTML settings rather
-than hand-writing a map. The `zephyr-core` guide covers public variables.
+than hand-writing a map. [Environment variables](../env-vars.md) covers public variables.
 
 ## Failure semantics
 

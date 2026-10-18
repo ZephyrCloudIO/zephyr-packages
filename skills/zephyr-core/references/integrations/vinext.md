@@ -1,18 +1,3 @@
----
-name: zephyr-vinext
-description: Configure and deploy Vinext applications with
-  vite-plugin-vinext-zephyr; use when adding withZephyr to a Vinext Vite config,
-  resolving the Worker server entrypoint, wiring deployment hooks, publishing a
-  TAP package, or diagnosing why a Vinext build did not publish. Use it instead
-  of the generic vite-plugin-zephyr.
-metadata:
-  library: vite-plugin-vinext-zephyr
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Publish a Vinext application's finalized RSC, SSR, and client output to Zephyr as one Worker-compatible snapshot after the framework build completes.
-  domain: vite
-  type: core
----
-
 # Configure Vinext for Zephyr
 
 ## Setup
@@ -57,7 +42,7 @@ alongside it; both would try to publish the same application.
 This integration does not install federation plugins and does not resolve
 `zephyr:dependencies` into remote URLs. `mfConfigs` and `federation` are
 publication metadata forwarded unchanged and are required only for TAP
-packages. Read [output and TAP packages](references/output-and-tap.md) before
+packages. Read [output and TAP packages](vinext-output-and-tap.md) before
 setting them. The shared `zephyr-module-federation` guide covers the
 cross-project host and remote model.
 
@@ -74,7 +59,7 @@ The plugin uploads the whole output root (`dist/` under the Vite root unless
 outputs when the RSC plugin exposes it, and strips unused `node:fs` and
 `node:path` side-effect imports from server JavaScript in the uploaded copy.
 Ordinary deployments are SSR snapshots for Zephyr's Cloudflare-based edge
-runtime; the server entry is auto-detected. Read [output and TAP packages](references/output-and-tap.md)
+runtime; the server entry is auto-detected. Read [output and TAP packages](vinext-output-and-tap.md)
 when detection fails or the snapshot type must change.
 
 Pass `hooks: { onDeployComplete(info) { ... } }` to observe a completed

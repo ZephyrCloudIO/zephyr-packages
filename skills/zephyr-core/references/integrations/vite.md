@@ -1,17 +1,3 @@
----
-name: zephyr-vite
-description: Configure and deploy Vite applications with vite-plugin-zephyr; use
-  when adding withZephyr, configuring its Module Federation integration, or
-  diagnosing Vite build publication and plugin ordering. Use the dedicated
-  integrations for TanStack Start and Vinext.
-metadata:
-  library: vite-plugin-zephyr
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Configure an existing Vite application for Zephyr publication while preserving its framework plugins and selecting the correct build lifecycle.
-  domain: vite
-  type: core
----
-
 # Configure Vite for Zephyr
 
 ## Setup
@@ -65,8 +51,7 @@ Zephyr detects the existing federation config. The optional peer is unnecessary
 for an ordinary Vite app and is required when `mfConfig` is supplied.
 
 For hosts, keep normal federation wiring and Zephyr's `zephyr:dependencies`
-mapping distinct. The `zephyr-module-federation` skill shipped in this package
-covers `zephyr:dependencies`, remote resolution, and build order.
+mapping distinct. The `zephyr-module-federation` skill covers `zephyr:dependencies`, remote resolution, and build order.
 
 ## Choose the publication lifecycle
 
@@ -75,17 +60,17 @@ When an application uses `createBuilder()` with multiple environments, publish
 through `builder.buildApp()` rather than building each environment separately.
 
 When working on SSR, multi-environment builds, explicit plugin ordering, or
-separate producer builds, read [build lifecycle](references/build-lifecycle.md)
+separate producer builds, read [build lifecycle](vite-build-lifecycle.md)
 before choosing options or changing hooks.
 
 ## Avoid misleading fixes
 
 - Do not move Zephyr universally to the end of the plugin list. It must precede
   another `enforce: 'pre'` plugin with a pre-ordered `buildApp` hook. Read the
-  [build lifecycle](references/build-lifecycle.md) when resolving ordering conflicts.
+  [build lifecycle](vite-build-lifecycle.md) when resolving ordering conflicts.
 - Do not use an arbitrary source filename as an SSR `entrypoint`. It must name
   an emitted server chunk relative to the snapshot root. Read the SSR entrypoint
-  rules in [build lifecycle](references/build-lifecycle.md) when choosing that path.
+  rules in [build lifecycle](vite-build-lifecycle.md) when choosing that path.
 - Do not treat a successful local asset build as proof of deployment. Check
   Zephyr publication separately, especially when errors are configured to log
   rather than fail the build.

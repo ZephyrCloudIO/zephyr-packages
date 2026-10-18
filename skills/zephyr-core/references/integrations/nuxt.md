@@ -1,17 +1,3 @@
----
-name: zephyr-nuxt
-description: Configure and deploy Nuxt applications with zephyr-nuxt-module; use
-  when adding the module to nuxt.config, setting zephyr options, choosing
-  between SSR and static (CSR) snapshots, selecting the Nitro preset, publishing
-  a TAP package, or diagnosing why nuxt build did not publish.
-metadata:
-  library: zephyr-nuxt-module
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Publish a Nuxt application's Nitro build output to Zephyr after nuxt build, choosing an SSR or static snapshot from what Nitro actually emitted.
-  domain: frameworks
-  type: core
----
-
 # Configure Nuxt for Zephyr
 
 ## Setup
@@ -45,7 +31,7 @@ module, and `ZephyrNuxtOptions` types the `zephyr` key. Do not add
 This module does not configure Module Federation and does not resolve
 `zephyr:dependencies` into remote URLs. Its `mfConfigs` and `federation`
 options are publication metadata forwarded unchanged and are required only for
-TAP packages. Read [output and snapshots](references/output-and-snapshots.md)
+TAP packages. Read [output and snapshots](nuxt-output-and-snapshots.md)
 before setting them. The shared `zephyr-module-federation` guide covers the
 cross-project host and remote model.
 
@@ -61,7 +47,7 @@ or `server/index.cjs` exists there, it publishes an SSR snapshot with that
 entry; otherwise it publishes a static CSR snapshot. SSR snapshots run in
 Zephyr's Cloudflare-based edge runtime and the module does not check the
 preset, so keep a Worker preset such as `cloudflare_module` rather than the
-default Node server. Read [output and snapshots](references/output-and-snapshots.md)
+default Node server. Read [output and snapshots](nuxt-output-and-snapshots.md)
 for static sites, custom output paths, or `app.baseURL`.
 
 ## Avoid misleading fixes

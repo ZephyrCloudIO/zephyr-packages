@@ -1,24 +1,23 @@
 ---
 name: zephyr-core
-description: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or public env vars.
+description: Set up, deploy, and debug Zephyr in a frontend project. Use when adding or configuring a Zephyr bundler or framework integration (Vite, webpack, Rspack, Rsbuild, Rollup, Rolldown, Parcel, Metro, Re.Pack, Astro, Modern.js, Nuxt, Rspress, TanStack Start, Vinext), running with-zephyr, diagnosing why a build did not publish, or asking about versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or ZE_PUBLIC_* env vars.
 license: Apache-2.0
 metadata:
   author: Zephyr Cloud IO
-  purpose: Use when the user asks about Zephyr setup, with-zephyr, SDK selection, versions, tags, environments, snapshot/version URLs, dashboard workflows, docs, or public env vars.
+  purpose: Set up a Zephyr integration for the application's stack and explain Zephyr's deployment model.
   domain: sdk
   type: core
 ---
 
 # Zephyr Core
 
-Use this skill for Zephyr SDK adoption and build-integrated deployment. It ships
-with every published Zephyr package, including supporting libraries that are not
-themselves build plugins. Do not assume the package containing this guide exports
-`withZephyr`; choose the actual integration for the application's stack.
+Use this skill for Zephyr SDK adoption and build-integrated deployment. Choose
+the integration for the application's actual stack, then read only that
+stack's guide below. Check the installed integration's README, exported types,
+and peer compatibility before applying code examples.
 
-Prefer a more specific skill shipped alongside this one for its supported task,
-such as `zephyr-vite` or `create-zephyr-apps`. Check the installed integration's
-README, exported types, and peer compatibility before applying code examples.
+Use `create-zephyr-apps` to scaffold a new project and `zephyr-cli` to publish
+a stack without a bundler integration.
 
 Zephyr is a build-integrated deployment platform for frontend and frontend-adjacent apps: it plugs into the build, publishes immutable versions, and lets users route traffic through tags and environments.
 
@@ -46,10 +45,35 @@ Zephyr is a build-integrated deployment platform for frontend and frontend-adjac
 - Promotion and rollback are mostly pointer changes, not rebuilds.
 - `ZE_PUBLIC_*` values can be captured at build time and overridden per environment later.
 
+## Configure the integration
+
+Identify the stack from the project's build config files and installed
+packages, then read the matching guide. Framework integrations take precedence
+over the bundler they build on: use the TanStack Start or Vinext guide rather
+than the Vite guide, and Modern.js or Rspress rather than Rsbuild.
+
+| Stack          | Package                             | Guide                                                          |
+| -------------- | ----------------------------------- | -------------------------------------------------------------- |
+| Vite           | `vite-plugin-zephyr`                | [vite.md](references/integrations/vite.md)                     |
+| TanStack Start | `vite-plugin-tanstack-start-zephyr` | [tanstack-start.md](references/integrations/tanstack-start.md) |
+| Vinext         | `vite-plugin-vinext-zephyr`         | [vinext.md](references/integrations/vinext.md)                 |
+| webpack        | `zephyr-webpack-plugin`             | [webpack.md](references/integrations/webpack.md)               |
+| Rspack         | `zephyr-rspack-plugin`              | [rspack.md](references/integrations/rspack.md)                 |
+| Rsbuild        | `zephyr-rsbuild-plugin`             | [rsbuild.md](references/integrations/rsbuild.md)               |
+| Modern.js      | `zephyr-modernjs-plugin`            | [modernjs.md](references/integrations/modernjs.md)             |
+| Rspress        | `zephyr-rspress-plugin`             | [rspress.md](references/integrations/rspress.md)               |
+| Rollup         | `rollup-plugin-zephyr`              | [rollup.md](references/integrations/rollup.md)                 |
+| Rolldown       | `zephyr-rolldown-plugin`            | [rolldown.md](references/integrations/rolldown.md)             |
+| Parcel         | `parcel-reporter-zephyr`            | [parcel.md](references/integrations/parcel.md)                 |
+| Astro          | `zephyr-astro-integration`          | [astro.md](references/integrations/astro.md)                   |
+| Nuxt           | `zephyr-nuxt-module`                | [nuxt.md](references/integrations/nuxt.md)                     |
+| Metro          | `zephyr-metro-plugin`               | [metro.md](references/integrations/metro.md)                   |
+| Re.Pack        | `zephyr-repack-plugin`              | [repack.md](references/integrations/repack.md)                 |
+
 ## Answer flow
 
 1. Identify the user's stack and deployment goal.
-2. Read `references/sdk-setup.md` for setup guidance.
+2. Read `references/sdk-setup.md` to pick an SDK or run `with-zephyr`, then the stack's guide above to configure it.
 3. Read `references/deployment-model.md` for versions, snapshots, tags, envs, and dashboard workflows.
 4. Read `references/env-vars.md` if the task mentions env vars, runtime config, build once deploy everywhere, or `ZE_PUBLIC_*`.
 5. Read `references/examples-resume.md` when the user wants concrete starter patterns.

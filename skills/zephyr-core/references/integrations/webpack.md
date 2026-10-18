@@ -1,18 +1,3 @@
----
-name: zephyr-webpack
-description: Configure and deploy webpack 5 applications with zephyr-webpack-plugin;
-  use when wrapping a webpack config with withZephyr, connecting an existing
-  Module Federation plugin or Nx composePlugins chain, publishing webpack config
-  arrays or SSR builds, or diagnosing why a webpack build did not publish. Use
-  zephyr-rspack-plugin for Rspack projects.
-metadata:
-  library: zephyr-webpack-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Wrap an existing webpack 5 configuration for Zephyr publication after its Module Federation plugins are in place, keeping one publication per logical build.
-  domain: xpack
-  type: core
----
-
 # Configure webpack for Zephyr
 
 ## Setup
@@ -72,7 +57,7 @@ Webpack's built-in `container.ModuleFederationPlugin` is also detected. In Nx
 Zephyr resolves remotes declared in the plugin together with the package's
 `zephyr:dependencies`, then rewrites matched remotes. A remote that cannot be
 resolved is logged as a warning and keeps its declared URL. The
-`zephyr-module-federation` guide shipped beside this skill covers dependency
+`zephyr-module-federation` skill covers dependency
 declarations and host/remote build order.
 
 ## Choose the publication shape
@@ -80,7 +65,7 @@ declarations and host/remote build order.
 A single config publishes its own snapshot. An exported array is wrapped once
 and coordinated as one logical build: one engine, one snapshot after every
 compiler succeeds. For arrays, SSR layouts, `wait_for_index_html`, base paths,
-and failure semantics, read [compiler arrays and publication](references/compiler-arrays.md).
+and failure semantics, read [compiler arrays and publication](webpack-compiler-arrays.md).
 
 ## Avoid misleading fixes
 
@@ -89,7 +74,8 @@ and failure semantics, read [compiler arrays and publication](references/compile
 - Do not wrap each element of a config array separately. That creates
   independent publications instead of one coordinated snapshot.
 - Do not pass `deploy` or `environment`. The README shows them, but they are not
-  options; choose environments in Zephyr, as the `zephyr-core` guide describes.
+  options; choose environments in Zephyr, as the
+  [deployment model](../deployment-model.md) describes.
 - Do not use this package for Rspack. `zephyr-rspack-plugin` identifies the
   Rspack builder and adds Rspack-only `ZE_PUBLIC_*` handling.
 - Do not treat a finished webpack build as a deployment. Single-config

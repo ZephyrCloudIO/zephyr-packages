@@ -1,18 +1,3 @@
----
-name: zephyr-tanstack-start
-description: Configure and deploy TanStack Start applications with
-  vite-plugin-tanstack-start-zephyr; use when adding withZephyr to a TanStack
-  Start Vite config, choosing the SSR server entrypoint or output directory,
-  publishing a TAP package, or diagnosing why a TanStack Start build did not
-  publish. Use it instead of the generic vite-plugin-zephyr.
-metadata:
-  library: vite-plugin-tanstack-start-zephyr
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Publish a TanStack Start application's finalized client and server output to Zephyr as one SSR snapshot without taking over the framework's own Vite build.
-  domain: vite
-  type: core
----
-
 # Configure TanStack Start for Zephyr
 
 ## Setup
@@ -54,7 +39,7 @@ alongside it; both would try to publish the same application.
 This integration does not install federation plugins and does not resolve
 `zephyr:dependencies` into remote URLs. Its `mfConfigs` and `federation`
 options are publication metadata forwarded unchanged, and they are required
-only for TAP packages. Read [output and TAP packages](references/output-and-tap.md)
+only for TAP packages. Read [output and TAP packages](tanstack-start-output-and-tap.md)
 before setting them. The shared `zephyr-module-federation` guide covers the
 cross-project host and remote model.
 
@@ -73,7 +58,7 @@ to `server/index.js` inside that root. SSR snapshots run in Zephyr's
 Cloudflare-based edge runtime, so keep a Worker-targeted server build; the
 package's example app uses `@cloudflare/vite-plugin` with
 `viteEnvironment: { name: 'ssr' }`. Read
-[output and TAP packages](references/output-and-tap.md) when the emitted server
+[output and TAP packages](tanstack-start-output-and-tap.md) when the emitted server
 entry, output directory, or snapshot type differ from the defaults.
 
 ## Avoid misleading fixes

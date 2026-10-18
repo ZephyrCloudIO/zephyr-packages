@@ -1,7 +1,7 @@
 # Compiler arrays and publication
 
-Use this reference for webpack config arrays, SSR snapshots, late HTML, base
-paths, or publication failures. It describes behavior of the installed `zephyr-webpack-plugin` release.
+Use this reference for Rspack config arrays, SSR snapshots, `ZE_PUBLIC_*`
+rewrites, late HTML, base paths, or publication failures. It describes behavior of the installed `zephyr-rspack-plugin` release.
 
 ## When publication happens
 
@@ -28,8 +28,8 @@ published only after all compilers finish successfully.
   prefixed with the path relative to the common output root.
 
 ```typescript
-import type { Configuration } from 'webpack';
-import { withZephyr } from 'zephyr-webpack-plugin';
+import type { Configuration } from '@rspack/core';
+import { withZephyr } from 'zephyr-rspack-plugin';
 
 const client: Configuration = { name: 'client', target: 'web' };
 const server: Configuration = { name: 'server', target: 'node' };
@@ -50,6 +50,20 @@ then any emitted `server.*` or `index.*` file. An explicit `entrypoint` is a pat
 relative to the shared output root. It must stay inside the snapshot and must
 be emitted; otherwise publication fails instead of guessing.
 
+## Public variables and the import map
+
+For non-`tap-app` targets, the plugin adds a loader for first-party
+`.js`, `.jsx`, `.ts`, and `.tsx` files (not `node_modules`). It rewrites
+`process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads to an import
+of the external module `env:vars:<application uid>`. It also emits
+`zephyr-manifest.json` and adds a matching `<script type="importmap">` through
+`@rspack/core`'s `HtmlRspackPlugin` hooks unless the HTML already has one.
+
+When rewritten reads fail at runtime, check that the emitted HTML contains that
+import map. The plugin does not inject it through other HTML plugins. Function
+`externals` are left untouched, so the virtual module is not added to them.
+[Environment variables](../env-vars.md) covers public variables.
+
 ## Base paths
 
 The snapshot base comes from the HTML plugin's `base` option, otherwise from a
@@ -60,7 +74,7 @@ array must resolve to the same base, or publication fails.
 ## Failure semantics
 
 For a single config, configuration and publication errors are logged and the
-webpack build continues. Set `ZE_FAIL_BUILD=true` when the build must fail on
+Rspack build continues. Set `ZE_FAIL_BUILD=true` when the build must fail on
 them. For arrays, a configuration error rejects the wrapper and releases the
 shared build instead of waiting for a compiler that will never report.
 
@@ -69,12 +83,9 @@ version URL; `info.url` is that URL. The exported `onDeploymentDone()` promise
 resolves when a publication attempt ends, including failed attempts, so it is
 not proof of success.
 
-## Public variables and targets
+## TAP artifacts
 
-The plugin emits `zephyr-manifest.json` with resolved remotes and public
-variables. Unlike the Rspack plugin, it does not rewrite `ZE_PUBLIC_*` reads or
-inject an import map. The `zephyr-core` guide covers public variables.
-
-`target: 'tap-app'` publishes SDK-locked mini-app output: remotes are not
-rewritten and output paths are kept package-relative. Use it only for that
+`target: 'tap-app'` publishes SDK-locked mini-app output. Publication hooks
+remain, but remotes are not rewritten, the import map and `ZE_PUBLIC_*` loader
+are skipped, and output paths stay package-relative. Use it only for that
 artifact family.

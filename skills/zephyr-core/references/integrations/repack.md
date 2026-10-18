@@ -1,17 +1,3 @@
----
-name: zephyr-repack
-description: Configure and deploy React Native Re.Pack applications with
-  zephyr-repack-plugin; use when wrapping a Re.Pack rspack.config with
-  withZephyr, publishing iOS and Android Module Federation hosts or mini-apps,
-  or diagnosing why a Re.Pack build did not publish to Zephyr.
-metadata:
-  library: zephyr-repack-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Wrap an existing Re.Pack configuration function so each iOS or Android bundle build resolves its Zephyr remotes and publishes its own platform snapshot.
-  domain: native
-  type: core
----
-
 # Configure Re.Pack for Zephyr
 
 ## Setup

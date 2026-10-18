@@ -157,67 +157,7 @@
         },
         {
           "type": "generic",
-          "path": "skills/zephyr-parcel/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-rollup/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-tanstack-start/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-vinext/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-vite/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-astro/SKILL.md"
-        },
-        {
-          "type": "generic",
           "path": "skills/zephyr-cli/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-metro/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-modernjs/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-nuxt/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-repack/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-rolldown/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-rsbuild/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-rspack/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-rspress/SKILL.md"
-        },
-        {
-          "type": "generic",
-          "path": "skills/zephyr-webpack/SKILL.md"
         }
       ]
     }

@@ -1,19 +1,3 @@
----
-name: zephyr-rspack
-description: Configure and deploy Rspack applications with zephyr-rspack-plugin;
-  use when wrapping an rspack.config with withZephyr, connecting an existing
-  Module Federation plugin or Nx composePlugins chain, publishing Rspack config
-  arrays or SSR builds, or diagnosing ZE_PUBLIC_* rewrites and missing
-  publications. Use zephyr-rsbuild-plugin or zephyr-modernjs-plugin for those
-  frameworks.
-metadata:
-  library: zephyr-rspack-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Wrap an existing Rspack configuration for Zephyr publication after its Module Federation plugins are in place, keeping one publication per logical build.
-  domain: xpack
-  type: core
----
-
 # Configure Rspack for Zephyr
 
 ## Setup
@@ -73,7 +57,7 @@ In Nx `composePlugins(...)`, put `withZephyr()` after `withModuleFederation(...)
 Zephyr resolves remotes declared in the plugin together with the package's
 `zephyr:dependencies`, then rewrites matched remotes. An unresolved remote is
 logged as a warning and keeps its declared URL. The `zephyr-module-federation`
-guide shipped beside this skill covers dependency declarations and build order.
+skill covers dependency declarations and build order.
 
 ## Choose the publication shape
 
@@ -81,7 +65,7 @@ A single config publishes its own snapshot. An exported array is wrapped once
 and coordinated as one logical build: one engine, one snapshot after every
 compiler succeeds. For arrays, SSR layouts, `ZE_PUBLIC_*` rewrites,
 `wait_for_index_html`, base paths, and failure semantics, read
-[compiler arrays and publication](references/compiler-arrays.md).
+[compiler arrays and publication](rspack-compiler-arrays.md).
 
 ## Avoid misleading fixes
 

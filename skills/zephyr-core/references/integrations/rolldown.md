@@ -1,17 +1,3 @@
----
-name: zephyr-rolldown
-description: Configure and deploy Rolldown applications with zephyr-rolldown-plugin;
-  use when adding withZephyr to a Rolldown config, choosing output.dir, supplying
-  TAP Module Federation metadata, or diagnosing when a Rolldown build publishes
-  to Zephyr and which paths it uploads.
-metadata:
-  library: zephyr-rolldown-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Add Zephyr publication to an existing Rolldown build while keeping the uploaded snapshot paths consistent with how the app references its own files.
-  domain: rollup
-  type: core
----
-
 # Configure Rolldown for Zephyr
 
 ## Setup
@@ -49,7 +35,7 @@ published under `dist/` except files whose names end in `index.html`, which stay
 at the root. Without an explicit `dir`, no prefix is added, even though Rolldown
 still writes to `dist`. The bundled example config omits `dir`.
 
-Read [snapshot paths](references/snapshot-paths.md) before you add, change, or
+Read [snapshot paths](rolldown-snapshot-paths.md) before you add, change, or
 remove `output.dir`, or when a published page loads its HTML but its scripts
 return 404.
 
@@ -59,7 +45,7 @@ This plugin does not install a federation runtime, read containers from the
 Rolldown config, or resolve `zephyr:dependencies` into remote URLs. `mfConfigs`
 and `federation` only describe containers that the build already emits. For
 `tap-app` they are required and strictly validated, and the output-directory
-prefix is never applied. Read [snapshot paths](references/snapshot-paths.md)
+prefix is never applied. Read [snapshot paths](rolldown-snapshot-paths.md)
 for the TAP rules. The shared `zephyr-module-federation` guide covers the
 cross-project host and remote model.
 

@@ -38,17 +38,17 @@ bun add --dev zephyr-rspack-plugin
 
 ## AI Agent Skills (Optional)
 
-The `zephyr-rspack` Agent Skill teaches AI coding agents how to set up and debug this
-package. It lives in the
-[`skills/`](https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/skills)
-directory of this repository, next to the shared `zephyr-core` and
-`zephyr-module-federation` guides. Zephyr does not need it at runtime.
-
-Add it to your project with the [`skills` CLI](https://github.com/vercel-labs/skills):
+The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
+this package, with a dedicated
+[Rspack guide](https://github.com/ZephyrCloudIO/zephyr-packages/blob/main/skills/zephyr-core/references/integrations/rspack.md).
+Zephyr does not need it at runtime. Add it to your project with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-rspack
+npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core
 ```
+
+Add `--skill zephyr-module-federation` if the application uses Module Federation.
 
 ## Usage
 

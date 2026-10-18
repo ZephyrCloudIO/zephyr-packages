@@ -1,17 +1,3 @@
----
-name: zephyr-rollup
-description: Configure and deploy Rollup applications with rollup-plugin-zephyr; use
-  when adding withZephyr to a Rollup config, supplying TAP Module Federation
-  metadata, or diagnosing when a Rollup build publishes to Zephyr and which
-  files it uploads.
-metadata:
-  library: rollup-plugin-zephyr
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Add Zephyr publication to an existing Rollup 4 build so each written output bundle is uploaded as a Zephyr version without changing how Rollup bundles it.
-  domain: rollup
-  type: core
----
-
 # Configure Rollup for Zephyr
 
 ## Setup
@@ -52,7 +38,7 @@ This plugin does not install a federation runtime, read containers from the
 Rollup config, or resolve `zephyr:dependencies` into remote URLs. Keep the
 federation tooling the build already uses. `mfConfigs` and `federation` only
 describe containers that the build already emits. For `target: 'tap-app'` they
-are required and strictly validated. Read [TAP metadata](references/tap-metadata.md)
+are required and strictly validated. Read [TAP metadata](rollup-tap-metadata.md)
 before setting either option. The shared `zephyr-module-federation` guide covers
 the cross-project host and remote model.
 

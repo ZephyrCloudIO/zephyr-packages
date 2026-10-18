@@ -14,41 +14,34 @@ It works with Claude Code, Codex, Cursor, and other agents.
 npx skills add ZephyrCloudIO/zephyr-packages
 
 # Install specific skills
-npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core --skill zephyr-vite
+npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core --skill zephyr-module-federation
 
 # List the available skills without installing
 npx skills add ZephyrCloudIO/zephyr-packages --list
 ```
 
-Install `zephyr-core` with the skill for your bundler or framework. Add
-`zephyr-module-federation` if you use Module Federation.
+Most projects need only `zephyr-core`. Add `zephyr-module-federation` if the
+application uses Module Federation.
 
 ## Skills
 
-| Skill                      | Package                             |
-| -------------------------- | ----------------------------------- |
-| `zephyr-core`              | Shared Zephyr setup and deployment  |
-| `zephyr-module-federation` | Shared Module Federation on Zephyr  |
-| `create-zephyr-apps`       | `create-zephyr-apps`                |
-| `zephyr-cli`               | `zephyr-cli`                        |
-| `zephyr-astro`             | `zephyr-astro-integration`          |
-| `zephyr-metro`             | `zephyr-metro-plugin`               |
-| `zephyr-modernjs`          | `zephyr-modernjs-plugin`            |
-| `zephyr-nuxt`              | `zephyr-nuxt-module`                |
-| `zephyr-parcel`            | `parcel-reporter-zephyr`            |
-| `zephyr-repack`            | `zephyr-repack-plugin`              |
-| `zephyr-rolldown`          | `zephyr-rolldown-plugin`            |
-| `zephyr-rollup`            | `rollup-plugin-zephyr`              |
-| `zephyr-rsbuild`           | `zephyr-rsbuild-plugin`             |
-| `zephyr-rspack`            | `zephyr-rspack-plugin`              |
-| `zephyr-rspress`           | `zephyr-rspress-plugin`             |
-| `zephyr-tanstack-start`    | `vite-plugin-tanstack-start-zephyr` |
-| `zephyr-vinext`            | `vite-plugin-vinext-zephyr`         |
-| `zephyr-vite`              | `vite-plugin-zephyr`                |
-| `zephyr-webpack`           | `zephyr-webpack-plugin`             |
+| Skill                      | Use it for                                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `zephyr-core`              | Adding Zephyr to an app, configuring its bundler or framework integration, versions, tags, environments |
+| `zephyr-module-federation` | Hosts, remotes, `zephyr:dependencies`, and remote resolution                                            |
+| `zephyr-cli`               | Publishing build output with `ze-cli` when there is no bundler integration                              |
+| `create-zephyr-apps`       | Scaffolding a new Zephyr project                                                                        |
+
+`zephyr-core` has a guide for every integration in
+[`zephyr-core/references/integrations/`](./zephyr-core/references/integrations):
+Vite, TanStack Start, Vinext, webpack, Rspack, Rsbuild, Modern.js, Rspress,
+Rollup, Rolldown, Parcel, Astro, Nuxt, Metro, and Re.Pack. The agent reads only
+the guide that matches the project's stack.
 
 ## Contributing
 
-Each skill lives in `skills/<name>/SKILL.md`. When a change alters a
-package's setup, options, or behavior, update its skill in the same pull
-request and run `pnpm skills:check`.
+Each skill lives in `skills/<name>/SKILL.md`. Integration guides live in
+`skills/zephyr-core/references/integrations/<stack>.md` and are listed in the
+`zephyr-core` routing table. When a change alters a package's setup, options,
+or behavior, update its guide in the same pull request and run
+`pnpm skills:check`.

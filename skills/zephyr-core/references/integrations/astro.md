@@ -1,18 +1,3 @@
----
-name: zephyr-astro
-description: Configure and deploy Astro sites with zephyr-astro-integration; use
-  when adding withZephyr to astro.config integrations, deciding whether an Astro
-  app's output can be published, wiring ZE_PUBLIC_* runtime values or deployment
-  hooks, publishing a TAP package, or diagnosing why an Astro build did not
-  publish.
-metadata:
-  library: zephyr-astro-integration
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Publish an Astro site's static build output to Zephyr from Astro's build lifecycle while leaving the site's own integrations and config intact.
-  domain: frameworks
-  type: core
----
-
 # Configure Astro for Zephyr
 
 ## Setup
@@ -50,7 +35,7 @@ export is the same `withZephyr` function. Do not add `vite-plugin-zephyr` to
 This integration does not configure Module Federation and does not resolve
 `zephyr:dependencies` into remote URLs. Its `mfConfigs` and `federation`
 options are publication metadata forwarded unchanged and are required only for
-TAP packages. Read [publication details](references/publication.md) before
+TAP packages. Read [publication details](astro-publication.md) before
 setting them. The shared `zephyr-module-federation` guide covers the
 cross-project host and remote model.
 
@@ -66,8 +51,8 @@ authorization; report the limitation instead.
 
 The integration also loads `ZE_PUBLIC_*` values from the site's `.env` files
 and rewrites `import.meta.env.ZE_PUBLIC_*` and `process.env.ZE_PUBLIC_*` reads
-so environments can override them after the build. The shared `zephyr-core`
-guide covers that model.
+so environments can override them after the build. [Environment
+variables](../env-vars.md) covers that model.
 
 ## Avoid misleading fixes
 

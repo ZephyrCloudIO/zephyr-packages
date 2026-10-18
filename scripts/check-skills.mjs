@@ -2,7 +2,8 @@ import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 
 // Published packages that are not build integrations. Every other published
-// package must have a skill in skills/ whose metadata.library names it.
+// package must have its own skill (metadata.library) or a row in the zephyr-core
+// integration table linking to its guide.
 const packagesWithoutDedicatedSkill = [
   'with-zephyr',
   'zephyr-agent',
@@ -45,6 +46,10 @@ const releaseFiles = new Set(
   )
 );
 const rootVersion = readJson('package.json').version;
+for (const file of releaseFiles) {
+  if (!existsSync(path.join(workspaceRoot, file)))
+    errors.push(`release-please-config.json: extra-file ${file} does not exist`);
+}
 
 function frontmatter(source) {
   const match = source.replace(/\r\n/gu, '\n').match(/^---\n([\s\S]*?)\n---\n/u);
@@ -65,7 +70,7 @@ function frontmatter(source) {
   return fields;
 }
 
-const librariesWithSkill = new Set();
+const coveredPackages = new Set();
 for (const entry of readdirSync(skillsRoot, { withFileTypes: true })) {
   if (!entry.isDirectory()) continue;
   const skillRoot = path.join(skillsRoot, entry.name);
@@ -91,7 +96,7 @@ for (const entry of readdirSync(skillsRoot, { withFileTypes: true })) {
 
   const library = fields.get('metadata.library');
   if (library) {
-    librariesWithSkill.add(library);
+    coveredPackages.add(library);
     const version = publishedPackages.get(library);
     if (!version) errors.push(`${relativeSkillFile}: ${library} is not a published package`);
     else if (fields.get('metadata.library_version') !== `'${version}' # x-release-please-version`)
@@ -119,9 +124,20 @@ for (const entry of readdirSync(skillsRoot, { withFileTypes: true })) {
   }
 }
 
+// Integration table rows look like: | Stack | `package` | [guide](references/integrations/x.md) |
+const integrationRow =
+  /^\|[^|\n]*\|\s*`([^`]+)`\s*\|\s*\[[^\]]+\]\(references\/integrations\/[^)]+\.md\)/gmu;
+for (const [, name] of readFileSync(path.join(skillsRoot, 'zephyr-core/SKILL.md'), 'utf8').matchAll(
+  integrationRow
+)) {
+  if (!publishedPackages.has(name))
+    errors.push(`skills/zephyr-core/SKILL.md: ${name} is not a published package`);
+  coveredPackages.add(name);
+}
+
 for (const name of publishedPackages.keys()) {
-  if (!packagesWithoutDedicatedSkill.includes(name) && !librariesWithSkill.has(name))
-    errors.push(`${name} has no skill in skills/ with metadata.library: ${name}`);
+  if (!packagesWithoutDedicatedSkill.includes(name) && !coveredPackages.has(name))
+    errors.push(`${name} has no skill and no guide in the zephyr-core integration table`);
 }
 
 for (const file of pluginManifests) {

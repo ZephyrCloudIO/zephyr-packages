@@ -1,18 +1,3 @@
----
-name: zephyr-rspress
-description: Configure and deploy Rspress documentation sites with
-  zephyr-rspress-plugin; use when adding withZephyr to rspress.config, choosing
-  between SSG and non-SSG publication, or diagnosing files missing from an
-  Rspress upload, including output from other plugins' afterBuild hooks and
-  Module Federation SSG builds.
-metadata:
-  library: zephyr-rspress-plugin
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Add Zephyr publication to an existing Rspress site and pick the SSG or Rsbuild publication path so every emitted and post-build file is uploaded.
-  domain: frameworks
-  type: core
----
-
 # Configure Rspress for Zephyr
 
 ## Setup
@@ -58,7 +43,7 @@ that mismatch.
 
 For post-build plugin ordering, Module Federation in SSG builds, or files that
 change on disk before upload, read
-[SSG publication](references/ssg-publication.md).
+[SSG publication](rspress-ssg-publication.md).
 
 ## Avoid misleading fixes
 

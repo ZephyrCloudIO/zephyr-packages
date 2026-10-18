@@ -6,6 +6,7 @@ Includes:
 
 - `SKILL.md` for the main trigger and workflow
 - `references/sdk-setup.md` for plugin and codemod setup
+- `references/integrations/` for configuring each bundler and framework integration
 - `references/deployment-model.md` for versions, snapshots, tags, and environments
 - `references/env-vars.md` for `ZE_PUBLIC_*` and environment overrides
 - `references/examples-resume.md` for concrete starter examples

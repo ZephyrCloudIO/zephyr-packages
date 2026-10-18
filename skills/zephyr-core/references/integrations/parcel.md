@@ -1,17 +1,3 @@
----
-name: zephyr-parcel
-description: Configure and deploy Parcel applications with parcel-reporter-zephyr;
-  use when adding the Zephyr reporter to .parcelrc, passing reporter options
-  through createZephyrReporter, supplying TAP Module Federation metadata, or
-  diagnosing when a Parcel build publishes to Zephyr.
-metadata:
-  library: parcel-reporter-zephyr
-  library_version: '1.7.0' # x-release-please-version
-  purpose: Register Zephyr as a Parcel 2 reporter in the project's .parcelrc so successful builds publish their emitted bundles without displacing Parcel's other reporters.
-  domain: parcel
-  type: core
----
-
 # Configure Parcel for Zephyr
 
 ## Setup
@@ -50,7 +36,7 @@ The default export takes no options. To set `target`, `hooks.onDeployComplete`,
 default-exports `createZephyrReporter(options)`. Register it by relative path
 in place of the package name, for example `"reporters": ["...", "./zephyr-reporter.js"]`.
 Do not register both, because each would publish. Read
-[reporter options](references/options.md) for the module, the TAP
+[reporter options](parcel-options.md) for the module, the TAP
 validation rules, and multi-target output paths.
 
 The reporter does not install a federation runtime or resolve

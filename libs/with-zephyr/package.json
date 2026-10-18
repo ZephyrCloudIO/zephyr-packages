@@ -39,7 +39,6 @@
     "!skills/_artifacts",
     "!skills/**/.zephyr-generated",
     "dist",
-    "hooks",
     "!dist/**/*.map"
   ],
   "type": "module",

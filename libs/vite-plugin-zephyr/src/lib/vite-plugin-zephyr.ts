@@ -8,7 +8,6 @@ import type { Plugin, ResolvedConfig, UserConfig } from 'vite' with {
 };
 import {
   ApplicationContext,
-  captureSource,
   assertZephyrBuildTarget,
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
@@ -884,22 +883,8 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
       },
     },
 
-    async buildStart() {
+    buildStart() {
       environmentBuildStarted = true;
-      try {
-        const engine = await zephyr_engine_defer;
-        if (
-          engine.sourceContext &&
-          engine.sourceCapture?.phase !== 'build-start' &&
-          !engine.pendingSourceCapture
-        ) {
-          const capture = captureSource(engine.sourceContext, 'build-start');
-          if (engine.hasActiveBuild) engine.sourceCapture = capture;
-          else engine.pendingSourceCapture = capture;
-        }
-      } catch (error) {
-        handleGlobalError(error);
-      }
     },
 
     buildEnd(error) {

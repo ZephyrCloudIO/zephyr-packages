@@ -33,14 +33,14 @@ bunx create-zephyr-apps
 
 The `create-zephyr-apps` Agent Skill teaches AI coding agents how to set up and debug this
 package. It lives in the
-[`skills/`](https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/skills)
-directory of this repository, next to the shared `zephyr-core` and
+[ZephyrCloudIO/skills](https://github.com/ZephyrCloudIO/skills)
+repository, next to the shared `zephyr-core` and
 `zephyr-module-federation` guides. Zephyr does not need it at runtime.
 
 Add it to your project with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-npx skills add ZephyrCloudIO/zephyr-packages --skill create-zephyr-apps
+npx skills add ZephyrCloudIO/skills --skill create-zephyr-apps
 ```
 
 ## Usage

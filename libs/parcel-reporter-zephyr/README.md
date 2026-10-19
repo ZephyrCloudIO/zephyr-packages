@@ -30,12 +30,12 @@ bun add --dev parcel-reporter-zephyr
 
 The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
 this package, with a dedicated
-[Parcel guide](https://github.com/ZephyrCloudIO/zephyr-packages/blob/main/skills/zephyr-core/references/integrations/parcel.md).
+[Parcel guide](https://github.com/ZephyrCloudIO/skills/blob/main/skills/zephyr-core/references/integrations/parcel.md).
 Zephyr does not need it at runtime. Add it to your project with the
 [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core
+npx skills add ZephyrCloudIO/skills --skill zephyr-core
 ```
 
 Add `--skill zephyr-module-federation` if the application uses Module Federation.

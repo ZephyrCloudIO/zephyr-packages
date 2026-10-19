@@ -15,7 +15,6 @@
     "publint": "pnpm --filter './libs/**' exec publint --strict --level warning",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "skills:check": "node scripts/check-skills.mjs",
     "test": "turbo run test --filter='./libs/*'",
     "test:miniapp-wave1": "node scripts/verify-miniapp-wave1.mjs",
     "test:affected": "turbo run test --affected --output-logs=new-only",

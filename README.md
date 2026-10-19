@@ -41,26 +41,22 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 
 ### AI Agent Skills
 
-The [`skills/`](./skills) directory holds four Agent Skills that teach AI
-coding agents how to set up, deploy, and debug Zephyr. `zephyr-core` covers
-setup and deployment, with a guide for every bundler and framework
-integration. `zephyr-module-federation`, `zephyr-cli`, and
-`create-zephyr-apps` cover their own workflows. Zephyr does not need them at
-runtime.
+Agent Skills that teach AI coding agents how to set up, deploy, and debug
+Zephyr live in [ZephyrCloudIO/skills](https://github.com/ZephyrCloudIO/skills).
+`zephyr-core` covers setup and deployment, with a guide for every bundler and
+framework integration in this repository. `zephyr-module-federation`,
+`zephyr-cli`, and `create-zephyr-apps` cover their own workflows. Zephyr does
+not need them at runtime.
 
 Install them with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```bash
 # Pick from the list interactively
-npx skills add ZephyrCloudIO/zephyr-packages
+npx skills add ZephyrCloudIO/skills
 
 # Or install specific skills
-npx skills add ZephyrCloudIO/zephyr-packages --skill zephyr-core --skill zephyr-module-federation
+npx skills add ZephyrCloudIO/skills --skill zephyr-core --skill zephyr-module-federation
 ```
-
-The repository is also a Claude Code, Codex, and Cursor plugin named `zephyr`
-that bundles every skill. See [`skills/README.md`](./skills/README.md) for
-details.
 
 ## Repository Structure
 
@@ -70,7 +66,6 @@ repository checks use Oxlint, Oxfmt, and [Publint](https://publint.dev/).
 
 - `libs` - Contains all the plugins and utility packages.
 - `examples` - Contains examples to use and test the plugins.
-- `skills` - Contains the Agent Skills for AI coding agents.
 
 ## Using this repository
 

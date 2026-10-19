@@ -78,9 +78,6 @@ catalogs:
     '@sentry/react':
       specifier: ^10.73.0
       version: 10.73.0
-    '@tanstack/intent':
-      specifier: 0.5.3
-      version: 0.5.3
     '@toon-format/toon':
       specifier: ^4.0.0
       version: 4.1.1
@@ -514,15 +511,9 @@ importers:
       '@swc/helpers':
         specifier: catalog:swc
         version: 0.5.23
-      '@tanstack/intent':
-        specifier: 'catalog:'
-        version: 0.5.3
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3
-      '@zephyrcloudio/intent-tooling':
-        specifier: workspace:*
-        version: link:packages/intent-tooling
       cross-env:
         specifier: 'catalog:'
         version: 10.1.0
@@ -1712,9 +1703,6 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(jsdom@30.0.1)
-      '@tanstack/intent':
-        specifier: 'catalog:'
-        version: 0.5.3
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3
@@ -1843,9 +1831,6 @@ importers:
       '@rstest/core':
         specifier: catalog:rstest
         version: 0.11.12(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(jsdom@30.0.1)
-      '@tanstack/intent':
-        specifier: 'catalog:'
-        version: 0.5.3
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3
@@ -2329,12 +2314,6 @@ importers:
       typescript:
         specifier: catalog:typescript
         version: 7.0.2
-
-  packages/intent-tooling:
-    dependencies:
-      typescript:
-        specifier: 6.0.3
-        version: 6.0.3
 
 packages:
 
@@ -8104,11 +8083,6 @@ packages:
   '@tanstack/history@1.162.1':
     resolution: {integrity: sha512-DR9t6lfLVdrjgCwpglrR9DR7Ok8/HlXjcOE+goWXF3zyuLUO/ug7vMbSFxTqrQTtbRghJfyhmIZ0S6LhPIy44w==}
     engines: {node: '>=20.19'}
-
-  '@tanstack/intent@0.5.3':
-    resolution: {integrity: sha512-2zeLGRJ+796daqv3DrwXsrXn7TZb4yOIogJgrqeF96YEIwOsJoDIW/eQBwZVAcR1OQ3znA3dGDizb5GBmxk4Zg==}
-    engines: {node: '>=20.12.0'}
-    hasBin: true
 
   '@tanstack/query-core@5.102.8':
     resolution: {integrity: sha512-ZNjkJ33CqvPNec/6lZBnHqLc3EVGPZ9ySLhYahU9TcuRFdmwXewuj0c4hwSWcGHqEUwcSrKeZ+oGcvPBqXcQcg==}
@@ -15461,11 +15435,6 @@ packages:
   typed-array-length@1.0.7:
     resolution: {integrity: sha512-3KS2b+kL7fsuk/eJZ7EQdnEmQoaho/r6KUef7hxvltNA5DR8NAUM+8wJMbJyZ4G9/7i3v5zPBIMN5aybAh2/Jg==}
     engines: {node: '>= 0.4'}
-
-  typescript@6.0.3:
-    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
 
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
@@ -22993,8 +22962,6 @@ snapshots:
       - utf-8-validate
 
   '@tanstack/history@1.162.1': {}
-
-  '@tanstack/intent@0.5.3': {}
 
   '@tanstack/query-core@5.102.8': {}
 
@@ -32545,8 +32512,6 @@ snapshots:
       is-typed-array: 1.1.15
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
-
-  typescript@6.0.3: {}
 
   typescript@7.0.2:
     optionalDependencies:

@@ -16,7 +16,6 @@
     "rspack",
     "rspress",
     "rstack",
-    "tanstack-intent",
     "vite",
     "webpack",
     "zephyr"
@@ -35,16 +34,12 @@
     "with-zephyr": "dist/index.js"
   },
   "files": [
-    "skills",
-    "!skills/_artifacts",
-    "!skills/**/.zephyr-generated",
     "dist",
     "!dist/**/*.map"
   ],
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "build": "rslib build",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

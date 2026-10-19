@@ -10,7 +10,6 @@
     "deployment",
     "module-federation",
     "performance",
-    "tanstack-intent",
     "withastro",
     "zephyr"
   ],
@@ -26,9 +25,6 @@
     "directory": "libs/zephyr-astro-integration"
   },
   "files": [
-    "skills",
-    "!skills/_artifacts",
-    "!skills/**/.zephyr-generated",
     "dist",
     "README.md",
     "LICENSE",
@@ -56,7 +52,6 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

@@ -38,28 +38,17 @@ bun add --dev zephyr-rsbuild-plugin
 
 ## AI Agent Skills (Optional)
 
-This package ships the `zephyr-rsbuild` Agent Skill for AI coding agents, together
-with the shared `zephyr-core` and `zephyr-module-federation` guides. The
-skills are versioned with the package, so your agent reads guidance that
-matches the release you installed.
-
-Zephyr does not need Intent at runtime. Coding agents only find these skills
-after you opt in with
-[TanStack Intent](https://tanstack.com/intent/latest/docs/getting-started/quick-start-consumers):
+The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
+this package, with a dedicated
+[Rsbuild guide](https://github.com/ZephyrCloudIO/skills/blob/main/skills/zephyr-core/references/integrations/rsbuild.md).
+Zephyr does not need it at runtime. Add it to your project with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
-pnpm add -D @tanstack/intent
-pnpm dlx @tanstack/intent@latest install
+npx skills add ZephyrCloudIO/skills --skill zephyr-core
 ```
 
-Allow `zephyr-rsbuild-plugin` when `install` asks. Intent saves that choice in the
-`intent.skills` allowlist in your `package.json`. To check or load the skill
-yourself:
-
-```sh
-pnpm exec intent list
-pnpm exec intent load 'zephyr-rsbuild-plugin#zephyr-rsbuild'
-```
+Add `--skill zephyr-module-federation` if the application uses Module Federation.
 
 ## Usage
 

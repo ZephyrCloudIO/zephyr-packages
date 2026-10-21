@@ -47,7 +47,10 @@ export const withZephyr = (
         const { withZephyr } = await import('zephyr-rspack-plugin');
         // Modern.js owns this config and can bundle a different Rspack version than
         // the Zephyr peer. Keep its exact type at the adapter boundary.
-        const configureZephyr = withZephyr(zephyrOptions) as unknown as (
+        const configureZephyr = withZephyr({
+          ...zephyrOptions,
+          __useClientBaseHref: true,
+        }) as unknown as (
           modernConfigs: typeof bundlerConfigs
         ) => Promise<typeof bundlerConfigs>;
         await configureZephyr(bundlerConfigs);

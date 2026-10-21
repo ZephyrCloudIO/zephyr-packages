@@ -19,4 +19,8 @@ export interface ZephyrRspackPluginOptions {
   __participant?: string;
   /** Framework integration only. */
   __assetPrefix?: string;
+  /** Framework integration only: server public paths are output locations, not app bases. */
+  __useClientBaseHref?: boolean;
+  /** Framework integration only. */
+  __baseHref?: string;
 }

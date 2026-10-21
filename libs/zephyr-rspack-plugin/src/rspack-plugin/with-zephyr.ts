@@ -11,6 +11,7 @@ import {
   extractFederatedDependencyPairs,
   extractLibraryType,
   coordinateXPackCompilers,
+  detectBaseHref,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
@@ -80,6 +81,12 @@ export function withZephyr(
         snapshotType: zephyrPluginOptions?.snapshotType,
         entrypoint: zephyrPluginOptions?.entrypoint,
       });
+      const clientConfig = zephyrPluginOptions?.__useClientBaseHref
+        ? config.find((_, index) => compilers[index]?.role === 'client')
+        : undefined;
+      const clientBaseHref = clientConfig
+        ? detectBaseHref({ options: clientConfig }) || '/'
+        : undefined;
       for (const [index, item] of config.entries()) {
         await _zephyr_configuration(item, {
           ...zephyrPluginOptions,
@@ -88,6 +95,7 @@ export function withZephyr(
           __coordinator: coordinator,
           __participant: compilers[index]?.participant,
           __assetPrefix: compilers[index]?.assetPrefix,
+          __baseHref: compilers[index]?.role === 'server' ? clientBaseHref : undefined,
         });
       }
     } catch (error: unknown) {
@@ -141,6 +149,7 @@ async function _zephyr_configuration(
         coordinator: _zephyrOptions?.__coordinator,
         participant: _zephyrOptions?.__participant,
         assetPrefix: _zephyrOptions?.__assetPrefix,
+        baseHref: _zephyrOptions?.__baseHref,
       })
     );
   } catch (error) {

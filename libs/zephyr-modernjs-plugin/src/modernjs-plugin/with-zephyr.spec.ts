@@ -46,7 +46,10 @@ describe('Modern.js withZephyr', () => {
     ];
     await beforeCreate?.({ bundlerConfigs: configs });
     expect(plugin.pre).toEqual(['@modern-js/plugin-module-federation-config']);
-    expect(mocks.rspackWithZephyr).toHaveBeenCalledExactlyOnceWith(options);
+    expect(mocks.rspackWithZephyr).toHaveBeenCalledExactlyOnceWith({
+      ...options,
+      __useClientBaseHref: true,
+    });
     expect(mocks.rspackConfigure).toHaveBeenCalledExactlyOnceWith(configs);
   });
 

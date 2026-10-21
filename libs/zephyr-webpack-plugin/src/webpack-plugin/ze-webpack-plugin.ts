@@ -42,7 +42,7 @@ export class ZeWebpackPlugin {
     if (this._options.coordinator && this._options.participant) {
       this._options.coordinator.registerParticipantBaseHref(
         this._options.participant,
-        detectBaseHref(compiler)
+        detectBaseHref(compiler, undefined, this._options.assetPrefix)
       );
     } else {
       detectAndStoreBaseHref(this._options.zephyr_engine, compiler);

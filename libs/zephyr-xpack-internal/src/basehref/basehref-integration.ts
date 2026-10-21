@@ -1,4 +1,4 @@
-import type { ZephyrEngine } from 'zephyr-agent';
+import { normalizeBasePath, type ZephyrEngine } from 'zephyr-agent';
 
 /** Interface for options that might contain baseHref settings */
 export interface BaseHrefOptions {
@@ -69,7 +69,8 @@ function extractBaseHrefFromHtmlPlugin(plugins: any[]): string | undefined {
  * @returns The publicPath value or undefined if not found
  */
 function extractBaseHrefFromPublicPath(
-  compiler: WebpackLikeCompiler
+  compiler: WebpackLikeCompiler,
+  assetPrefix?: string
 ): string | undefined {
   const publicPath = compiler.options.output?.publicPath;
 
@@ -80,6 +81,10 @@ function extractBaseHrefFromPublicPath(
 
   // Handle string publicPath directly
   if (typeof publicPath === 'string') {
+    const prefix = normalizeBasePath(assetPrefix);
+    const base = normalizeBasePath(publicPath);
+    if (prefix && base === prefix) return '';
+    if (prefix && base.endsWith(`/${prefix}`)) return base.slice(0, -(prefix.length + 1));
     return publicPath;
   }
 
@@ -127,7 +132,8 @@ export function detectAndStoreBaseHref(
  */
 export function detectBaseHref(
   compiler: WebpackLikeCompiler,
-  pluginOptions?: BaseHrefOptions
+  pluginOptions?: BaseHrefOptions,
+  assetPrefix?: string
 ): string | undefined {
   // Check for baseHref in plugin options (highest priority)
   let baseHref = extractBaseHrefFromPluginOptions(pluginOptions);
@@ -139,7 +145,7 @@ export function detectBaseHref(
 
   // Check for baseHref in output.publicPath (lowest priority)
   if (!baseHref) {
-    baseHref = extractBaseHrefFromPublicPath(compiler);
+    baseHref = extractBaseHrefFromPublicPath(compiler, assetPrefix);
   }
 
   return baseHref;

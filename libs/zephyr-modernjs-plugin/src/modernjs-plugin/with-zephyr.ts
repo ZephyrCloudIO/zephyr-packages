@@ -43,14 +43,14 @@ export const withZephyr = (
     pre: ['@modern-js/plugin-module-federation-config'],
 
     async setup(api) {
-      api['modifyRspackConfig'](async (config) => {
+      api.onBeforeCreateCompiler(async ({ bundlerConfigs }) => {
         const { withZephyr } = await import('zephyr-rspack-plugin');
         // Modern.js owns this config and can bundle a different Rspack version than
         // the Zephyr peer. Keep its exact type at the adapter boundary.
         const configureZephyr = withZephyr(zephyrOptions) as unknown as (
-          modernConfig: typeof config
-        ) => Promise<typeof config>;
-        return await configureZephyr(config);
+          modernConfigs: typeof bundlerConfigs
+        ) => Promise<typeof bundlerConfigs>;
+        await configureZephyr(bundlerConfigs);
       });
     },
 

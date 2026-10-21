@@ -28,53 +28,55 @@ describe('Modern.js withZephyr', () => {
     mocks.rspackConfigure.mockImplementation(async (config) => config);
   });
 
-  it('runs after federation config and forwards Modern.js options', async () => {
-    let modifier:
-      | ((config: Record<string, unknown>) => Promise<Record<string, unknown>>)
+  it('configures the finalized compiler array once and forwards options', async () => {
+    let beforeCreate:
+      | ((input: { bundlerConfigs: object[] }) => Promise<void>)
       | undefined;
-    const plugin = withZephyr({
-      target: 'tap-app',
-      snapshotType: 'ssr',
-      entrypoint: 'server/index.js',
-    });
+    const hooks = { onDeployComplete: rs.fn() };
+    const options = { target: 'tap-app' as const, snapshotType: 'csr' as const, hooks };
+    const plugin = withZephyr(options);
     await plugin.setup?.({
-      modifyRspackConfig(nextModifier: typeof modifier) {
-        modifier = nextModifier;
+      onBeforeCreateCompiler(callback: typeof beforeCreate) {
+        beforeCreate = callback;
       },
     } as never);
-    const config = { name: 'server' };
-
-    await modifier?.(config);
-
+    const configs = [
+      { name: 'client', output: { path: '/repo/dist' } },
+      { name: 'server', target: 'node', output: { path: '/repo/dist/bundles' } },
+    ];
+    await beforeCreate?.({ bundlerConfigs: configs });
     expect(plugin.pre).toEqual(['@modern-js/plugin-module-federation-config']);
-    expect(mocks.rspackWithZephyr).toHaveBeenCalledWith({
-      target: 'tap-app',
-      snapshotType: 'ssr',
-      entrypoint: 'server/index.js',
-    });
-    expect(mocks.rspackConfigure).toHaveBeenCalledTimes(1);
-    expect(mocks.rspackConfigure).toHaveBeenCalledWith(config);
+    expect(mocks.rspackWithZephyr).toHaveBeenCalledExactlyOnceWith(options);
+    expect(mocks.rspackConfigure).toHaveBeenCalledExactlyOnceWith(configs);
   });
 
-  it('handles client and server compiler configs from Modern.js independently', async () => {
-    let modifier:
-      | ((config: Record<string, unknown>) => Promise<Record<string, unknown>>)
+  it('passes a client-only build through the same array integration', async () => {
+    let beforeCreate:
+      | ((input: { bundlerConfigs: object[] }) => Promise<void>)
       | undefined;
-    const plugin = withZephyr();
-    await plugin.setup?.({
-      modifyRspackConfig(nextModifier: typeof modifier) {
-        modifier = nextModifier;
+    await withZephyr().setup?.({
+      onBeforeCreateCompiler(callback: typeof beforeCreate) {
+        beforeCreate = callback;
       },
     } as never);
-    const clientConfig = { name: 'client' };
-    const serverConfig = { name: 'server' };
+    const configs = [{ name: 'client' }];
+    await beforeCreate?.({ bundlerConfigs: configs });
+    expect(mocks.rspackConfigure).toHaveBeenCalledExactlyOnceWith(configs);
+  });
 
-    await modifier?.(clientConfig);
-    await modifier?.(serverConfig);
-
-    expect(mocks.rspackWithZephyr).toHaveBeenCalledTimes(2);
-    expect(mocks.rspackConfigure).toHaveBeenNthCalledWith(1, clientConfig);
-    expect(mocks.rspackConfigure).toHaveBeenNthCalledWith(2, serverConfig);
+  it('propagates coordinated initialization failures to Modern.js', async () => {
+    let beforeCreate:
+      | ((input: { bundlerConfigs: object[] }) => Promise<void>)
+      | undefined;
+    await withZephyr().setup?.({
+      onBeforeCreateCompiler(callback: typeof beforeCreate) {
+        beforeCreate = callback;
+      },
+    } as never);
+    mocks.rspackConfigure.mockRejectedValue(new Error('server configuration failed'));
+    await expect(
+      beforeCreate?.({ bundlerConfigs: [{ name: 'client' }, { name: 'server' }] })
+    ).rejects.toThrow('server configuration failed');
   });
 
   it('rejects unsupported targets before registering Modern.js hooks', () => {

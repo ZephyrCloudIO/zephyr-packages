@@ -1,9 +1,8 @@
 import { parse, type ParserPlugin } from '@babel/parser';
 import MagicString, { type SourceMap } from 'magic-string';
+import { createRequire } from 'node:module';
 
-export interface NativeEnvRewriteOptions {
-  /** Source file path; selects parser plugins and names the source map source. */
-  filename: string;
+export interface NativeEnvLookupOptions {
   /**
    * Zephyr application UID that scopes runtime overrides; `ZE_APPLICATION_UID` reads
    * compile to it.
@@ -11,6 +10,11 @@ export interface NativeEnvRewriteOptions {
   applicationUid: string;
   /** Build-time `ZE_PUBLIC_*` values compiled in as fallbacks. */
   buildEnv: Readonly<Record<string, string>>;
+}
+
+export interface NativeEnvRewriteOptions extends NativeEnvLookupOptions {
+  /** Source file path; selects parser plugins and names the source map source. */
+  filename: string;
 }
 
 /** Babel AST node; parsed nodes always carry source offsets. */
@@ -24,6 +28,9 @@ interface AstNode {
 const APPLICATION_UID_KEY = 'ZE_APPLICATION_UID';
 /** Keys whose reads are rewritten: public values and the application UID. */
 const REWRITTEN_KEY = /^(?:ZE_PUBLIC_[A-Z0-9_]+|ZE_APPLICATION_UID)$/;
+const LINE_BREAK = /\r\n|[\n\r\u2028\u2029]/g;
+
+const requireFromHere = createRequire(__filename);
 
 const SKIPPED_KEYS = new Set([
   'loc',
@@ -158,24 +165,30 @@ function collectWriteTargets(target: unknown, out: Set<AstNode>): void {
   }
 }
 
-/** Non-computed rewritten keys bound by an object pattern, in source order. */
-function destructuredKeys(pattern: AstNode): string[] {
+/**
+ * Non-computed rewritten keys bound by an object pattern, in source order, and whether
+ * the pattern binds nothing else (no other keys, computed keys or rest element).
+ */
+function destructuredKeys(pattern: AstNode): { keys: string[]; onlyRewritten: boolean } {
   const keys: string[] = [];
+  let onlyRewritten = true;
   for (const property of nodeList(pattern['properties'])) {
-    if (property.type !== 'ObjectProperty' || property['computed']) continue;
     const key = property['key'];
-    if (!isNode(key)) continue;
     const name =
-      key.type === 'Identifier'
-        ? key['name']
-        : key.type === 'StringLiteral'
-          ? key['value']
-          : undefined;
-    if (typeof name === 'string' && REWRITTEN_KEY.test(name) && !keys.includes(name)) {
+      property.type !== 'ObjectProperty' || property['computed'] || !isNode(key)
+        ? undefined
+        : key.type === 'Identifier'
+          ? key['name']
+          : key.type === 'StringLiteral'
+            ? key['value']
+            : undefined;
+    if (typeof name !== 'string' || !REWRITTEN_KEY.test(name)) {
+      onlyRewritten = false;
+    } else if (!keys.includes(name)) {
       keys.push(name);
     }
   }
-  return keys;
+  return { keys, onlyRewritten };
 }
 
 /** JSON literal that is also safe as single-line JS source. */
@@ -185,43 +198,26 @@ function jsLiteral(value: string): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
+/** Whether `source` may contain env reads the native rewrite replaces; a cheap prefilter. */
+export function hasNativeEnvReads(source: string): boolean {
+  return source.includes('ZE_PUBLIC_') || source.includes(APPLICATION_UID_KEY);
+}
+
 /**
- * Rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads into
- * synchronous lookups of `globalThis.__ZEPHYR__.runtime.env[applicationUid]`, with the
- * build-time value as fallback. Writes are left untouched and no newlines are inserted,
- * so line numbers stay stable. `process.env.ZE_APPLICATION_UID` and
- * `import.meta.env.ZE_APPLICATION_UID` reads become the `applicationUid` literal.
+ * Plans the native env rewrite of a parsed Babel-compatible program. Maps each
+ * `process.env` / `import.meta.env` read of a `ZE_PUBLIC_*` key to a synchronous lookup
+ * of `globalThis.__ZEPHYR__.runtime.env[applicationUid]` with the build-time value as
+ * fallback, and each `ZE_APPLICATION_UID` read to the `applicationUid` literal. A
+ * destructured env object maps to an object literal providing those keys. Writes are
+ * never planned.
  *
- * Returns `null` when nothing was rewritten. Throws when the source cannot be parsed: an
- * un-rewritten read would silently yield `undefined` on device.
+ * Keys are the AST nodes to replace; values are JS expression sources.
  */
-export function rewriteEnvReadsToNativeLookup(
-  source: string,
-  options: NativeEnvRewriteOptions
-): { code: string; map: SourceMap } | null {
-  if (!source.includes('ZE_PUBLIC_') && !source.includes(APPLICATION_UID_KEY))
-    return null;
-
-  const { filename, applicationUid, buildEnv } = options;
-
-  let program: AstNode;
-  try {
-    const file = parse(source, {
-      sourceType: 'unambiguous',
-      allowReturnOutsideFunction: true,
-      allowUndeclaredExports: true,
-      errorRecovery: false,
-      plugins: parserPlugins(filename),
-    });
-    // Babel nodes are walked generically; only `type`, `start` and `end` are relied on.
-    program = file.program as unknown as AstNode;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `[zephyr] Cannot rewrite ZE_PUBLIC_* reads in ${filename}: ${message}`
-    );
-  }
-
+export function planNativeEnvRewrites(
+  program: object,
+  options: NativeEnvLookupOptions
+): ReadonlyMap<object, string> {
+  const { applicationUid, buildEnv } = options;
   const uidLiteral = jsLiteral(applicationUid);
   const lookup = (key: string): string => {
     if (key === APPLICATION_UID_KEY) return uidLiteral;
@@ -231,28 +227,34 @@ export function rewriteEnvReadsToNativeLookup(
     return `globalThis.__ZEPHYR__?.runtime?.env?.[${uidLiteral}]?.[${jsLiteral(key)}] ?? ${fallback}`;
   };
 
-  const output = new MagicString(source);
+  const rewrites = new Map<AstNode, string>();
   const writeTargets = new Set<AstNode>();
-  const replaced = new Set<AstNode>();
-  let changed = false;
 
   const destructure = (pattern: unknown, init: unknown): void => {
     if (!isNode(pattern) || pattern.type !== 'ObjectPattern' || !isEnvObject(init)) {
       return;
     }
-    const keys = destructuredKeys(pattern);
+    const { keys, onlyRewritten } = destructuredKeys(pattern);
     if (keys.length === 0) return;
-    const original = source.slice(init.start, init.end);
-    const entries = keys.map((key) => `${jsLiteral(key)}: (${lookup(key)})`).join(', ');
-    output.overwrite(init.start, init.end, `{ ...${original}, ${entries} }`);
-    replaced.add(init);
-    changed = true;
+    const entries = keys.map((key) => `${jsLiteral(key)}: (${lookup(key)})`);
+    const object = init['object'];
+    const isProcessEnv = isNode(object) && object.type === 'Identifier';
+    // `import.meta` is not valid in React Native script bundles, so it is only kept
+    // when the pattern also reads keys this rewrite cannot provide.
+    if (isProcessEnv || !onlyRewritten) {
+      entries.unshift(
+        isProcessEnv
+          ? `...process${init['optional'] ? '?.' : '.'}env`
+          : '...import.meta.env'
+      );
+    }
+    rewrites.set(init, `{ ${entries.join(', ')} }`);
   };
 
-  const stack: AstNode[] = [program];
+  const stack: AstNode[] = [program as AstNode];
   let node: AstNode | undefined;
   while ((node = stack.pop()) !== undefined) {
-    if (replaced.has(node)) continue;
+    if (rewrites.has(node)) continue;
 
     switch (node.type) {
       case 'AssignmentExpression':
@@ -278,8 +280,7 @@ export function rewriteEnvReadsToNativeLookup(
         if (writeTargets.has(node)) break;
         const key = readKey(node);
         if (key !== undefined) {
-          output.overwrite(node.start, node.end, `(${lookup(key)})`);
-          changed = true;
+          rewrites.set(node, lookup(key));
           continue;
         }
       }
@@ -298,10 +299,81 @@ export function rewriteEnvReadsToNativeLookup(
     }
   }
 
-  if (!changed) return null;
+  return rewrites;
+}
+
+/**
+ * Parses with Babel; JS files Babel rejects are retried with hermes-parser, which accepts
+ * the Flow component and hook syntax React Native's Babel preset parses. Its Babel-mode
+ * AST keeps the source offsets the rewrite relies on.
+ */
+function parseProgram(source: string, filename: string): AstNode {
+  try {
+    const file = parse(source, {
+      sourceType: 'unambiguous',
+      allowReturnOutsideFunction: true,
+      allowUndeclaredExports: true,
+      errorRecovery: false,
+      plugins: parserPlugins(filename),
+    });
+    // Babel nodes are walked generically; only `type`, `start` and `end` are relied on.
+    return file.program as unknown as AstNode;
+  } catch (error) {
+    if (!/\.(?:[mc]?ts|tsx)$/i.test(filename)) {
+      try {
+        // Loaded lazily: only Flow sources Babel cannot parse need it.
+        const hermes = requireFromHere('hermes-parser') as {
+          parse(source: string, options: Record<string, unknown>): { program: unknown };
+        };
+        return hermes.parse(source, {
+          babel: true,
+          flow: 'all',
+          sourceType: 'unambiguous',
+          allowReturnOutsideFunction: true,
+        }).program as AstNode;
+      } catch {
+        // Report Babel's error: it describes the source as the user wrote it.
+      }
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `[zephyr] Cannot rewrite ZE_PUBLIC_* reads in ${filename}: ${message}`
+    );
+  }
+}
+
+/**
+ * Applies {@link planNativeEnvRewrites} to source text. Replacements keep the line breaks
+ * of the code they replace, so line numbers stay stable for transformers that receive no
+ * input source map; columns after a replacement on the same line shift.
+ *
+ * Returns `null` when nothing was rewritten. Throws when the source cannot be parsed: an
+ * un-rewritten read would silently yield `undefined` on device.
+ */
+export function rewriteEnvReadsToNativeLookup(
+  source: string,
+  options: NativeEnvRewriteOptions
+): { code: string; map: SourceMap } | null {
+  if (!hasNativeEnvReads(source)) return null;
+
+  const program = parseProgram(source, options.filename);
+  const rewrites = planNativeEnvRewrites(program, options);
+  if (rewrites.size === 0) return null;
+
+  const output = new MagicString(source);
+  for (const [node, code] of rewrites) {
+    const { start, end } = node as AstNode;
+    const lineBreaks = source.slice(start, end).match(LINE_BREAK)?.join('') ?? '';
+    // Inside the parentheses, the kept line breaks cannot trigger semicolon insertion.
+    output.overwrite(start, end, `(${code}${lineBreaks})`);
+  }
 
   return {
     code: output.toString(),
-    map: output.generateMap({ source: filename, includeContent: true, hires: true }),
+    map: output.generateMap({
+      source: options.filename,
+      includeContent: true,
+      hires: true,
+    }),
   };
 }

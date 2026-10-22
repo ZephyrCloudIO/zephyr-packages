@@ -42,6 +42,7 @@ catalog:
   eventsource: ^5.0.0
   glob: ^13.0.6
   globby: ^16.2.4
+  hermes-parser: ^0.36.1
   hono: ^4.13.5
   https-proxy-agent: ^9.0.0
   jiti: ^2.7.0

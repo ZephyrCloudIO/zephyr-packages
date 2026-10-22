@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, rs } from '@rste
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { preloadZephyrEnv } from '../src/index';
+import { preloadZephyrEnv, type ZephyrEnvStorage } from '../src/index';
 import createZephyrNativeEnvPlugin from '../src/runtime-plugin';
 
 type AfterResolveArgs = Parameters<
@@ -53,12 +53,27 @@ function env(uid: string): Readonly<Record<string, string>> | undefined {
   return globalThis.__ZEPHYR__?.runtime.env?.[uid];
 }
 
-function serveHost(dependencies: Record<string, unknown> = {}, zeVars: unknown = {}) {
+function memoryStorage(seed: Record<string, string> = {}): ZephyrEnvStorage {
+  const data = new Map(Object.entries(seed));
+  return {
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => {
+      data.set(key, value);
+    },
+  };
+}
+
+function serveHost(
+  dependencies: Record<string, unknown> = {},
+  zeVars: unknown = {},
+  storage?: ZephyrEnvStorage
+) {
   routes.set('/host/zephyr-manifest.json', { body: { zeVars, dependencies } });
   return preloadZephyrEnv({
     applicationUid: HOST_UID,
     manifestUrl: `${origin}/host/zephyr-manifest.json`,
     timeoutMs: 1000,
+    storage,
   });
 }
 
@@ -109,6 +124,74 @@ describe('preloadZephyrEnv', () => {
     await preloadZephyrEnv({ applicationUid: HOST_UID });
     await preloadZephyrEnv({ applicationUid: HOST_UID, manifestUrl: 'file:///x.json' });
     expect(hits.size).toBe(0);
+    expect(env(HOST_UID)).toBeUndefined();
+  });
+
+  it('skips overrides when applicationUid is missing', async () => {
+    await preloadZephyrEnv({
+      applicationUid: undefined,
+      manifestUrl: `${origin}/host/zephyr-manifest.json`,
+    });
+    expect(hits.size).toBe(0);
+    expect(env(HOST_UID)).toBeUndefined();
+  });
+
+  it('applies the last persisted values when manifests cannot be loaded', async () => {
+    const storage = memoryStorage();
+    await serveHost(
+      { mini: { application_uid: 'mini.p.o' } },
+      { ZE_PUBLIC_DEMO: 'staging' },
+      storage
+    );
+    routes.set('/mini/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'mini' } },
+    });
+    await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
+
+    // Simulate an offline cold start.
+    globalThis.__ZEPHYR__ = undefined;
+    routes.clear();
+    await preloadZephyrEnv({
+      applicationUid: HOST_UID,
+      manifestUrl: `${origin}/host/zephyr-manifest.json`,
+      storage,
+    });
+    await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
+
+    expect(env(HOST_UID)).toEqual({ ZE_PUBLIC_DEMO: 'staging' });
+    expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini' });
+  });
+
+  it('keeps build-time values without readable persisted values for the URL', async () => {
+    const storage = memoryStorage({
+      [`zephyr-native-env:${origin}/host/zephyr-manifest.json`]: '{not json',
+      [`zephyr-native-env:${origin}/other/zephyr-manifest.json`]: JSON.stringify({
+        zeVars: { ZE_PUBLIC_DEMO: 'other' },
+      }),
+    });
+    await preloadZephyrEnv({
+      applicationUid: HOST_UID,
+      manifestUrl: `${origin}/host/zephyr-manifest.json`,
+      storage,
+    });
+    expect(env(HOST_UID)).toBeUndefined();
+  });
+
+  it('loads normally when storage fails', async () => {
+    const storage: ZephyrEnvStorage = {
+      getItem: () => Promise.reject(new Error('read failed')),
+      setItem: () => Promise.reject(new Error('write failed')),
+    };
+    await serveHost({}, { ZE_PUBLIC_DEMO: 'staging' }, storage);
+    expect(env(HOST_UID)).toEqual({ ZE_PUBLIC_DEMO: 'staging' });
+
+    globalThis.__ZEPHYR__ = undefined;
+    routes.clear();
+    await preloadZephyrEnv({
+      applicationUid: HOST_UID,
+      manifestUrl: `${origin}/host/zephyr-manifest.json`,
+      storage,
+    });
     expect(env(HOST_UID)).toBeUndefined();
   });
 });

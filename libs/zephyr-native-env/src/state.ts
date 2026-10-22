@@ -7,6 +7,7 @@ const ZEPHYR_GLOBAL_VERSION = 1 as const;
 const STATE_KEY = 'zephyr-native-env';
 const PUBLIC_KEY = /^ZE_PUBLIC_[A-Z0-9_]+$/;
 const HTTP_URL = /^https?:\/\//;
+const STORAGE_PREFIX = 'zephyr-native-env:';
 
 export const DEFAULT_TIMEOUT_MS = 3000;
 
@@ -20,6 +21,12 @@ export interface ParsedManifest {
   dependencies: Record<string, ManifestDependency>;
 }
 
+/** AsyncStorage-compatible store; MMKV and similar stores need a thin wrapper. */
+export interface ZephyrEnvStorage {
+  getItem(key: string): Promise<string | null> | string | null;
+  setItem(key: string, value: string): Promise<void> | void;
+}
+
 export interface NativeEnvState {
   timeoutMs: number;
   hostReady?: Promise<void>;
@@ -29,6 +36,8 @@ export interface NativeEnvState {
   loadedFrom: Map<string, string>;
   /** Session cache of manifest loads by absolute URL; failures are evicted. */
   manifests: Map<string, Promise<ParsedManifest | undefined>>;
+  /** Store for the last loaded values per manifest URL, used when a load fails. */
+  storage?: ZephyrEnvStorage;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -164,21 +173,64 @@ async function loadManifest(url: string, timeoutMs: number): Promise<ParsedManif
   }
 }
 
+async function persistManifest(
+  storage: ZephyrEnvStorage | undefined,
+  url: string,
+  manifest: ParsedManifest
+): Promise<void> {
+  if (!storage) return;
+  try {
+    await storage.setItem(
+      STORAGE_PREFIX + url,
+      JSON.stringify({ zeVars: manifest.vars, dependencies: manifest.dependencies })
+    );
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    console.warn(`[zephyr-native-env] ${url}: cannot persist values: ${reason}`);
+  }
+}
+
+async function readPersistedManifest(
+  storage: ZephyrEnvStorage | undefined,
+  url: string
+): Promise<ParsedManifest | undefined> {
+  if (!storage) return undefined;
+  try {
+    const raw = await storage.getItem(STORAGE_PREFIX + url);
+    if (raw === null || raw === undefined) return undefined;
+    // Re-parse so persisted data passes the same key and type checks as fetched data.
+    return parseManifest(JSON.parse(raw));
+  } catch {
+    console.warn(`[zephyr-native-env] ${url}: ignoring unreadable persisted values`);
+    return undefined;
+  }
+}
+
 /**
- * Loads a manifest once per URL for the session. Resolves `undefined` on failure (after
- * warning, without values) and evicts it so a later call retries.
+ * Loads a manifest once per URL for the session and persists it to `state.storage`. On
+ * failure it warns, evicts the entry so a later call retries, and resolves the last
+ * values persisted for that URL, or `undefined` without any.
  */
 export function fetchManifest(url: string): Promise<ParsedManifest | undefined> {
   const state = getNativeEnvState();
   const cached = state.manifests.get(url);
   if (cached) return cached;
 
-  const pending = loadManifest(url, state.timeoutMs).catch((error: unknown) => {
-    state.manifests.delete(url);
-    const reason = error instanceof Error ? error.message : String(error);
-    console.warn(`[zephyr-native-env] ${url}: ${reason}`);
-    return undefined;
-  });
+  const pending = loadManifest(url, state.timeoutMs).then(
+    (manifest) => {
+      // Persisting must not delay startup.
+      void persistManifest(state.storage, url, manifest);
+      return manifest;
+    },
+    async (error: unknown) => {
+      state.manifests.delete(url);
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`[zephyr-native-env] ${url}: ${reason}`);
+      const lastKnown = await readPersistedManifest(state.storage, url);
+      if (lastKnown) console.warn(`[zephyr-native-env] ${url}: using last known values`);
+      return lastKnown;
+    }
+  );
   state.manifests.set(url, pending);
   return pending;
 }

@@ -10,7 +10,7 @@
 
 Environment-specific `ZE_PUBLIC_*` values for React Native apps built with `zephyr-metro-plugin` or `zephyr-repack-plugin`, for the embedded host bundle and its Module Federation remotes.
 
-The Zephyr bundler plugins compile every `process.env.ZE_PUBLIC_*` / `import.meta.env.ZE_PUBLIC_*` read into a synchronous lookup scoped by application UID, with the build-time value as fallback. This package loads the published `zephyr-manifest.json` files on device before host and remote code evaluates, so those lookups return the values configured for the Zephyr environment. Offline or failed loads start the app with build-time values.
+The Zephyr bundler plugins compile every `process.env.ZE_PUBLIC_*` / `import.meta.env.ZE_PUBLIC_*` read into a synchronous lookup scoped by application UID, with the build-time value as fallback. This package loads the published `zephyr-manifest.json` files on device before host and remote code evaluates, so those lookups return the values configured for the Zephyr environment. A failed load applies the last values persisted for that manifest URL (when `storage` is set), otherwise build-time values.
 
 ## Installation
 
@@ -24,19 +24,22 @@ pnpm add zephyr-native-env
 
 Start the preload at the top of the host entry file and gate the app module on it. Modules evaluated before the gate (the entry file, Suspense fallbacks, error boundaries) see build-time values.
 
-- `applicationUid`: the UID the Zephyr plugin logs for the host build.
+- `applicationUid`: compiled to the host build's UID by `withZephyr` (Metro/Re.Pack); pass `process.env.ZE_APPLICATION_UID`.
 - `manifestUrl`: the absolute `…/zephyr-manifest.json` URL of the host's published environment, chosen per build. Omitting it disables host **and** remote overrides; a wrong UID makes the host read build-time values only.
 - `timeoutMs`: per-manifest timeout (default `3000`). `preloadZephyrEnv` never rejects.
+- `storage`: optional AsyncStorage-compatible `{ getItem, setItem }`; persists the last loaded values per manifest URL.
 
 Metro (`@module-federation/metro/bootstrap`):
 
 ```js
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { withAsyncStartup } from '@module-federation/metro/bootstrap';
 import { preloadZephyrEnv } from 'zephyr-native-env';
 
 const envReady = preloadZephyrEnv({
-  applicationUid: 'host.project.org',
+  applicationUid: process.env.ZE_APPLICATION_UID,
   manifestUrl: HOST_MANIFEST_URL,
+  storage: AsyncStorage,
 });
 
 withAsyncStartup(
@@ -48,9 +51,12 @@ withAsyncStartup(
 Re.Pack:
 
 ```jsx
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const envReady = preloadZephyrEnv({
-  applicationUid: 'host.project.org',
+  applicationUid: process.env.ZE_APPLICATION_UID,
   manifestUrl: HOST_MANIFEST_URL,
+  storage: AsyncStorage,
 });
 const App = React.lazy(() => envReady.then(() => require('./src/App')));
 
@@ -78,7 +84,9 @@ Before Module Federation evaluates a remote, the plugin loads the `zephyr-manife
 
 - Values apply at JS context start (including `ZephyrNativeCache.reloadApp()`) or a remote's first load; modules that already evaluated never change.
 - Only string values with `ZE_PUBLIC_[A-Z0-9_]+` keys are applied.
+- Manifests are fetched on every cold start; dashboard changes reach users on their next launch.
 - Manifests are fetched once per URL per session; failed loads are retried on the next resolution.
+- A failed load applies the last values persisted for that manifest URL (when `storage` is set), otherwise build-time values.
 - A remote loaded from a different root never reuses the previous environment's values.
 
 ## License

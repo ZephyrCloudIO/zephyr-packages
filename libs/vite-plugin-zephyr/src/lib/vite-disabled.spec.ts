@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, rs } from '@rstest/core';
+import { execFileSync } from 'node:child_process';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import net from 'node:net';
@@ -34,10 +35,22 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
     process.env['USERPROFILE'] = home;
     process.env['ZE_API'] = origin;
     process.env['ZE_API_GATE'] = origin;
-    delete process.env['ZE_SECRET_TOKEN'];
     process.env['ZE_DISABLED'] = 'true';
 
     await writeFile(path.join(project, 'index.js'), 'console.log("hello");\n');
+    await writeFile(
+      path.join(project, 'package.json'),
+      JSON.stringify({ name: 'disabled-fixture', version: '1.0.0' })
+    );
+    // A complete project: with Zephyr on, the plugin would find a git remote and use the
+    // token to call the server above, so a request here proves skip mode did not hold.
+    execFileSync('git', ['init', '--quiet'], { cwd: project });
+    execFileSync(
+      'git',
+      ['remote', 'add', 'origin', 'git@github.com:example-org/example-repo.git'],
+      { cwd: project }
+    );
+    process.env['ZE_SECRET_TOKEN'] = 'dummy-token-for-tests';
   });
 
   afterAll(async () => {
@@ -47,15 +60,16 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
     await rm(project, { recursive: true, force: true });
   });
 
-  it.each(['withZephyr', 'withZephyrPartial'] as const)(
-    'builds the bundle, says it was not deployed, and sends no request (%s)',
-    async (name) => {
-      const connect = rs.spyOn(net.Socket.prototype, 'connect');
-      const warn = rs.spyOn(console, 'warn').mockImplementation(() => undefined);
-      const log = rs.spyOn(console, 'log').mockImplementation(() => undefined);
+  /** Runs one real build and reports what it printed and opened. */
+  async function run(name: 'withZephyr' | 'withZephyrPartial', entry = 'index.js') {
+    const connect = rs.spyOn(net.Socket.prototype, 'connect');
+    const warn = rs.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const log = rs.spyOn(console, 'log').mockImplementation(() => undefined);
+    const error = rs.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
       const plugins = await import('./vite-plugin-zephyr');
       const partial = await import('./vite-plugin-zephyr-partial');
-
+      let failure: unknown;
       await build({
         root: project,
         configFile: false,
@@ -64,26 +78,64 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
           name === 'withZephyr' ? plugins.withZephyr() : [partial.withZephyrPartial()],
         build: {
           outDir: 'dist',
-          lib: {
-            entry: path.join(project, 'index.js'),
-            formats: ['es'],
-            fileName: 'out',
-          },
+          emptyOutDir: true,
+          lib: { entry: path.join(project, entry), formats: ['es'], fileName: 'out' },
         },
+      }).catch((buildError: unknown) => {
+        failure = buildError;
       });
-
-      const output = [...warn.mock.calls, ...log.mock.calls].flat().join('\n');
-      const [file] = await readdir(path.join(project, 'dist'));
-      const emitted = await readFile(path.join(project, 'dist', file ?? ''), 'utf8');
-      const connections = connect.mock.calls.length;
+      return {
+        failure,
+        output: [...warn.mock.calls, ...log.mock.calls, ...error.mock.calls]
+          .flat()
+          .join('\n'),
+        connections: connect.mock.calls.length,
+      };
+    } finally {
+      connect.mockRestore();
       warn.mockRestore();
       log.mockRestore();
-      connect.mockRestore();
+      error.mockRestore();
+    }
+  }
 
-      expect(emitted).toContain('hello');
+  it.each(['withZephyr', 'withZephyrPartial'] as const)(
+    'builds the bundle, says it was not deployed, and sends no request (%s)',
+    async (name) => {
+      const { failure, output, connections } = await run(name);
+
+      expect(failure).toBeUndefined();
+      const [file] = await readdir(path.join(project, 'dist'));
+      expect(await readFile(path.join(project, 'dist', file ?? ''), 'utf8')).toContain(
+        'hello'
+      );
       expect(output).toContain(DISABLED_LINE);
       expect(requests).toEqual([]);
       expect(connections).toBe(0);
     }
   );
+
+  it('does not say the bundle is built when the build fails', async () => {
+    await writeFile(path.join(project, 'broken.js'), "import './does-not-exist';\n");
+
+    const { failure, output } = await run('withZephyr', 'broken.js');
+
+    expect(failure).toBeDefined();
+    expect(output).not.toContain(DISABLED_LINE);
+    expect(requests).toEqual([]);
+  });
+
+  // Control: the same project, token and server reach Zephyr when skip mode is off, so
+  // the empty request list above is not an accident of the fixture.
+  it('contacts Zephyr when ZE_DISABLED is not set', async () => {
+    process.env['ZE_DISABLED'] = 'false';
+    try {
+      const { output } = await run('withZephyr');
+
+      expect(requests.length).toBeGreaterThan(0);
+      expect(output).not.toContain(DISABLED_LINE);
+    } finally {
+      process.env['ZE_DISABLED'] = 'true';
+    }
+  });
 });

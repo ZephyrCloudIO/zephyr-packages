@@ -481,7 +481,53 @@ describe('doctor --online against local fakes', () => {
     expect(report.status).toBe('tool_failure');
     expect(report.exitCode).toBe(DoctorExitCode.ToolFailure);
     expect(codes(report)).toContain(DoctorFindingCode.ToolFailure);
+    expect(checkStatuses(report)).toEqual({ api: 'passed', gateway: 'passed' });
     expect(JSON.stringify(report)).not.toContain('storage unreadable');
+  });
+
+  it('reports a malformed ZE_API_GATE as a configuration problem, not a tool failure', async () => {
+    const zephyr = await start(reachable);
+    process.env['ZE_API'] = zephyr.origin;
+    process.env['ZE_API_GATE'] = 'zeapi.example.com';
+
+    const report = await runOnline();
+
+    expect(codes(report)).toEqual([DoctorFindingCode.EndpointInvalid]);
+    expect(report.findings[0]).toMatchObject({
+      check: 'gateway',
+      nextAction: 'correct_request',
+      message: expect.stringContaining('ZE_API_GATE'),
+    });
+    expect(checkStatuses(report)).toEqual({
+      api: 'passed',
+      gateway: 'failed',
+      token: 'skipped',
+      application: 'skipped',
+      edge: 'skipped',
+    });
+    expect(report.exitCode).toBe(DoctorExitCode.Findings);
+  });
+
+  it('keeps finished checks and a missing-project exit code when a check throws', async () => {
+    const zephyr = await start(reachable);
+    point(zephyr.origin);
+    const offline = await analyzeProject(
+      path.join(path.dirname(healthyProject), 'missing')
+    );
+
+    const report = await addOnlineChecks(offline, {
+      timeoutMs: 2_000,
+      deps: {
+        ...deps,
+        resolveCredentials: async () => {
+          throw new Error('storage unreadable');
+        },
+      },
+    });
+
+    expect(report.exitCode).toBe(DoctorExitCode.InvalidProject);
+    expect(codes(report)).toContain(DoctorFindingCode.ToolFailure);
+    expect(checkStatuses(report)).toEqual({ api: 'passed', gateway: 'passed' });
   });
 
   it('never prints the token or an absolute path in a finding or the check list', async () => {

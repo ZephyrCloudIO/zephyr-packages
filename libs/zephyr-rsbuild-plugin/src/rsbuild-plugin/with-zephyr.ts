@@ -1,6 +1,7 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 import {
   assertZephyrBuildTarget,
+  isZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
@@ -8,7 +9,7 @@ import {
   withZephyr as rspackWithZephyr,
   type ZephyrBuildHooks,
 } from 'zephyr-rspack-plugin';
-import { coordinateXPackCompilers } from 'zephyr-xpack-internal';
+import { coordinateXPackCompilers, disableZephyrForXpack } from 'zephyr-xpack-internal';
 
 export interface ZephyrRsbuildPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
@@ -37,6 +38,11 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
         order: 'post',
         handler: async ({ bundlerConfigs }) => {
           if (bundlerConfigs.length === 0) {
+            return;
+          }
+          // Skip mode: no engine, no token, no git information, no request.
+          if (isZephyrDisabled()) {
+            disableZephyrForXpack(bundlerConfigs);
             return;
           }
           const engine = await ZephyrEngine.create({

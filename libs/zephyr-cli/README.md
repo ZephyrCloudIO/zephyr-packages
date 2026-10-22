@@ -105,7 +105,8 @@ ze-cli watch ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 ### Doctor Command
 
 Inspect a project or monorepo without installing dependencies, evaluating config
-files, editing files, building, authenticating, or deploying:
+files, editing files, building, or deploying. By default it also makes no network
+request and does not authenticate (see [Online checks](#online-checks) for `--online`):
 
 ```bash
 ze-cli doctor [directory] --format text
@@ -181,23 +182,24 @@ The report keeps the offline schema and adds an `online` object, plus `check`,
 The exit codes above do not change. Online errors and warnings exit `1`. A missing
 project (`2`) or a tool failure (`3`) still outranks them.
 
-| Code     | Check         | Meaning                                                            |
-| -------- | ------------- | ------------------------------------------------------------------ |
-| `ZD0701` | `api`         | API cannot be reached (network error or timeout)                   |
-| `ZD0702` | `api`         | API answered with HTTP 5xx                                         |
-| `ZD0703` | `gateway`     | Gateway cannot be reached (network error or timeout)               |
-| `ZD0704` | `gateway`     | Gateway answered with HTTP 5xx                                     |
-| `ZD0705` | `token`       | No token found                                                     |
-| `ZD0706` | `token`       | Token rejected (HTTP 401)                                          |
-| `ZD0707` | `token`       | Token not allowed (HTTP 403)                                       |
-| `ZD0708` | `token`       | Token not checked (exchange token, or the gateway gave no verdict) |
-| `ZD0709` | `application` | Application name not found, so the application was not checked     |
-| `ZD0710` | `application` | No configuration for this application (HTTP 404)                   |
-| `ZD0711` | `application` | Token cannot read this application (HTTP 403)                      |
-| `ZD0712` | `application` | Configuration answer is not correct                                |
-| `ZD0713` | `application` | Configuration could not be loaded (network error, timeout, 5xx)    |
-| `ZD0714` | `edge`        | Edge URL cannot be reached (network error or timeout)              |
-| `ZD0715` | `edge`        | Edge URL answered with HTTP 5xx                                    |
+| Code     | Check            | Meaning                                                            |
+| -------- | ---------------- | ------------------------------------------------------------------ |
+| `ZD0701` | `api`            | API cannot be reached (network error or timeout)                   |
+| `ZD0702` | `api`            | API answered with HTTP 5xx                                         |
+| `ZD0703` | `gateway`        | Gateway cannot be reached (network error or timeout)               |
+| `ZD0704` | `gateway`        | Gateway answered with HTTP 5xx                                     |
+| `ZD0705` | `token`          | No token found                                                     |
+| `ZD0706` | `token`          | Token rejected (HTTP 401)                                          |
+| `ZD0707` | `token`          | Token not allowed (HTTP 403)                                       |
+| `ZD0708` | `token`          | Token not checked (exchange token, or the gateway gave no verdict) |
+| `ZD0709` | `application`    | Application name not found, so the application was not checked     |
+| `ZD0710` | `application`    | No configuration for this application (HTTP 404)                   |
+| `ZD0711` | `application`    | Token cannot read this application (HTTP 403)                      |
+| `ZD0712` | `application`    | Configuration answer is not correct                                |
+| `ZD0713` | `application`    | Configuration could not be loaded (network error, timeout, 5xx)    |
+| `ZD0714` | `edge`           | Edge URL cannot be reached (network error or timeout)              |
+| `ZD0715` | `edge`           | Edge URL answered with HTTP 5xx                                    |
+| `ZD0716` | `api`, `gateway` | `ZE_API` or `ZE_API_GATE` is not a valid http or https URL         |
 
 #### Stable finding codes
 
@@ -244,10 +246,17 @@ The bundle is built. The bundle is not deployed. Zephyr is disabled (ZE_DISABLED
 
 Only the exact value `true` turns it on. It never turns on by itself, and it is not the
 same as the fail-open behavior after an outage, where Zephyr is still contacted.
-`ze-cli deploy --format json` prints `{"skipped":true,"reason":"ZE_DISABLED"}`. The
-webpack, rspack and Vite plugins follow the same rule: set `ZE_DISABLED=true` and they
-leave the build as it is. The CLI never exits non-zero because of it. Set it next to
+`ze-cli deploy --format json` prints `{"skipped":true,"reason":"ZE_DISABLED"}`. A failed
+build command still fails: skip mode never hides a build error. Set it next to
 `ZE_FAIL_BUILD`, which makes a Zephyr failure fail the build.
+
+These integrations read it: `zephyr-webpack-plugin`, `zephyr-rspack-plugin`,
+`zephyr-rsbuild-plugin` (and so `zephyr-modernjs-plugin`), `vite-plugin-zephyr`
+(`withZephyr` and `withZephyrPartial`), and `ze-cli`. The plugins print the line once,
+after the bundle is built without errors. Other integrations do not read it yet. With
+skip mode on, `vite-plugin-zephyr` does not add the Zephyr runtime plugin to Module
+Federation or rewrite `ZE_PUBLIC_*` reads, so remotes keep the URLs in your config. If
+the wrapped build already runs a Zephyr plugin, both print the line.
 
 ## Options
 

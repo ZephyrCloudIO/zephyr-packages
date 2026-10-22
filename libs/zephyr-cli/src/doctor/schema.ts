@@ -58,6 +58,7 @@ export const DoctorFindingCode = {
   ApplicationConfigUnavailable: 'ZD0713',
   EdgeUnreachable: 'ZD0714',
   EdgeUnavailable: 'ZD0715',
+  EndpointInvalid: 'ZD0716',
 } as const;
 
 export type DoctorFindingCode =

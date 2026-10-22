@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { execFileSync } from 'node:child_process';
 import { createServer, type Server } from 'node:http';
 import net, { type AddressInfo } from 'node:net';
 import { existsSync } from 'node:fs';
@@ -50,11 +51,23 @@ describe('ze-cli commands with ZE_DISABLED=true', () => {
 
     process.env['ZE_API'] = origin;
     process.env['ZE_API_GATE'] = origin;
-    delete process.env['ZE_SECRET_TOKEN'];
+    process.env['ZE_SECRET_TOKEN'] = 'dummy-token-for-tests';
     delete process.env['ZE_CI_TOKEN'];
     delete process.env['ZE_SERVER_TOKEN'];
     process.env['ZE_DISABLED'] = 'true';
 
+    await writeFile(
+      path.join(project, 'package.json'),
+      JSON.stringify({ name: 'disabled-fixture', version: '1.0.0' })
+    );
+    // A complete project: with Zephyr on, the commands find a git remote and use the
+    // token to call the server above, so a request here proves skip mode did not hold.
+    execFileSync('git', ['init', '--quiet'], { cwd: project });
+    execFileSync(
+      'git',
+      ['remote', 'add', 'origin', 'git@github.com:example-org/example-repo.git'],
+      { cwd: project }
+    );
     await mkdir(path.join(project, 'dist'));
     await writeFile(path.join(project, 'dist', 'index.js'), 'console.log("hello");\n');
     await writeFile(
@@ -107,6 +120,8 @@ describe('ze-cli commands with ZE_DISABLED=true', () => {
 
     expect(existsSync(marker)).toBe(true);
     expect(output).toContain(DISABLED_LINE);
+    // Skip mode does not look at the build tool or its output.
+    expect(output).not.toContain('too dynamic');
     expect(requests).toEqual([]);
     expect(connections).toBe(0);
   });
@@ -127,6 +142,20 @@ describe('ze-cli commands with ZE_DISABLED=true', () => {
     expect(output).toContain(DISABLED_LINE);
     expect(requests).toEqual([]);
     expect(connections).toBe(0);
+  });
+
+  // Control: the same project, token and server reach Zephyr when skip mode is off, so
+  // the empty request lists in this file are not an accident of the fixture.
+  it('deploy contacts Zephyr when ZE_DISABLED is not set', async () => {
+    process.env['ZE_DISABLED'] = 'false';
+    try {
+      await observe(() =>
+        deployCommand({ directory: 'dist', cwd: project }).catch(() => {})
+      );
+      expect(requests.length).toBeGreaterThan(0);
+    } finally {
+      process.env['ZE_DISABLED'] = 'true';
+    }
   });
 
   it('deploy still rejects a directory that does not exist', async () => {

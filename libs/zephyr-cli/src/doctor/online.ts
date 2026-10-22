@@ -67,35 +67,31 @@ export async function addOnlineChecks(
   const verdicts: Verdict[] = [];
 
   try {
-    const api = await checkOrigin(
-      'api',
-      new URL(ZEPHYR_API_ENDPOINT()),
-      deps,
-      timeoutMs,
-      {
-        unreachable: DoctorFindingCode.ApiUnreachable,
-        unavailable: DoctorFindingCode.ApiUnavailable,
-      }
-    );
-    const gateway = await checkOrigin(
-      'gateway',
-      new URL(ZE_API_ENDPOINT()),
-      deps,
-      timeoutMs,
-      {
-        unreachable: DoctorFindingCode.GatewayUnreachable,
-        unavailable: DoctorFindingCode.GatewayUnavailable,
-      }
-    );
+    const apiUrl = parseEndpoint(ZEPHYR_API_ENDPOINT());
+    const gatewayUrl = parseEndpoint(ZE_API_ENDPOINT());
+
+    const api = apiUrl
+      ? await checkOrigin('api', apiUrl, deps, timeoutMs, {
+          unreachable: DoctorFindingCode.ApiUnreachable,
+          unavailable: DoctorFindingCode.ApiUnavailable,
+        })
+      : invalidEndpoint('api', 'ZE_API');
+    const gateway = gatewayUrl
+      ? await checkOrigin('gateway', gatewayUrl, deps, timeoutMs, {
+          unreachable: DoctorFindingCode.GatewayUnreachable,
+          unavailable: DoctorFindingCode.GatewayUnavailable,
+        })
+      : invalidEndpoint('gateway', 'ZE_API_GATE');
     verdicts.push(api, gateway);
 
-    const token = await checkToken(gateway, deps, timeoutMs);
+    const token = await checkToken(gateway, gatewayUrl, deps, timeoutMs);
     verdicts.push(token.verdict);
 
     const application = await checkApplication(
       report,
       token.credentials,
       token.verdict,
+      gatewayUrl,
       deps,
       timeoutMs
     );
@@ -105,10 +101,33 @@ export async function addOnlineChecks(
       await checkEdge(application.verdict, application.edgeUrl, deps, timeoutMs)
     );
   } catch {
-    return withToolFailure(report, timeoutMs);
+    return withToolFailure(report, verdicts, timeoutMs);
   }
 
   return merge(report, verdicts, timeoutMs);
+}
+
+/** `ZE_API` and `ZE_API_GATE` must be http or https URLs, or no request can be made. */
+function parseEndpoint(value: string): URL | undefined {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function invalidEndpoint(id: 'api' | 'gateway', variable: string): Verdict {
+  return failed(
+    id,
+    null,
+    DoctorFindingCode.EndpointInvalid,
+    'error',
+    `${variable} is not a valid address.`,
+    'It must be a full http or https URL.',
+    `Set ${variable} to a full URL such as https://example.com, or remove it to use the default.`,
+    'correct_request'
+  );
 }
 
 async function checkOrigin(
@@ -163,11 +182,11 @@ function reachability(
 
 async function checkToken(
   gateway: Verdict,
+  gatewayUrl: URL | undefined,
   deps: OnlineChecksDependencies,
   timeoutMs: number
 ): Promise<{ verdict: Verdict; credentials: PreflightCredentials }> {
   const credentials = await deps.resolveCredentials();
-  const base = new URL(ZE_API_ENDPOINT());
 
   if (credentials.source === 'none') {
     return {
@@ -201,9 +220,10 @@ async function checkToken(
     };
   }
 
-  if (gateway.check.status !== 'passed') {
+  if (gateway.check.status !== 'passed' || !gatewayUrl) {
     return { credentials, verdict: skippedAfter('token', gateway) };
   }
+  const base = gatewayUrl;
 
   const result = await deps.probe(new URL(ze_api_gateway.user_info, base), {
     headers: { Authorization: `Bearer ${credentials.token}` },
@@ -286,14 +306,14 @@ async function checkApplication(
   report: DoctorReport,
   credentials: PreflightCredentials,
   token: Verdict,
+  gatewayUrl: URL | undefined,
   deps: OnlineChecksDependencies,
   timeoutMs: number
 ): Promise<{ verdict: Verdict; edgeUrl?: string }> {
-  const base = new URL(ZE_API_ENDPOINT());
-
-  if (token.check.status !== 'passed' || !credentials.token) {
+  if (token.check.status !== 'passed' || !credentials.token || !gatewayUrl) {
     return { verdict: skippedAfter('application', token) };
   }
+  const base = gatewayUrl;
   if (report.exitCode === DoctorExitCode.InvalidProject) {
     return {
       verdict: skipped(
@@ -579,11 +599,13 @@ function verdict(
 function merge(
   report: DoctorReport,
   verdicts: Verdict[],
-  timeoutMs: number
+  timeoutMs: number,
+  extraFindings: DoctorFinding[] = []
 ): DoctorReport {
   const findings = [
     ...report.findings,
     ...verdicts.flatMap(({ finding }) => (finding ? [finding] : [])),
+    ...extraFindings,
   ];
   const { status, exitCode } = report;
 
@@ -602,7 +624,11 @@ function merge(
   return report;
 }
 
-function withToolFailure(report: DoctorReport, timeoutMs: number): DoctorReport {
+function withToolFailure(
+  report: DoctorReport,
+  verdicts: Verdict[],
+  timeoutMs: number
+): DoctorReport {
   const finding: DoctorFinding = {
     code: DoctorFindingCode.ToolFailure,
     severity: 'error',
@@ -611,10 +637,12 @@ function withToolFailure(report: DoctorReport, timeoutMs: number): DoctorReport 
     remediation:
       'Run doctor without --online to get the project checks, and report this failure.',
   };
-  report.schemaVersion = DOCTOR_ONLINE_SCHEMA_VERSION;
-  report.online = { timeoutMs, checks: [] };
-  finalizeReport(report, [...report.findings, finding]);
-  report.status = 'tool_failure';
-  report.exitCode = DoctorExitCode.ToolFailure;
-  return report;
+  // Keep the checks that finished. A missing project (2) keeps its exit code; anything
+  // else becomes a tool failure (3).
+  const merged = merge(report, verdicts, timeoutMs, [finding]);
+  if (merged.exitCode !== DoctorExitCode.InvalidProject) {
+    merged.status = 'tool_failure';
+    merged.exitCode = DoctorExitCode.ToolFailure;
+  }
+  return merged;
 }

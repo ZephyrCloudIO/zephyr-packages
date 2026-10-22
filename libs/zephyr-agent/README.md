@@ -129,11 +129,12 @@ generations.
 | `ZE_DISABLED`   | `true` skips Zephyr. The bundle is built and is not deployed. Zephyr is not contacted. |
 
 `ZE_DISABLED=true` is the supported way to build during an outage or without access to
-Zephyr, such as a fork build. The webpack, rspack and Vite plugins and `ze-cli` make no
-request, ask for no token, and read no git information. Each prints
+Zephyr, such as a fork build. The webpack, rspack, rsbuild and Vite plugins
+(`withZephyr` and `withZephyrPartial`) and `ze-cli` make no request, ask for no token,
+and read no git information. Each prints
 `The bundle is built. The bundle is not deployed. Zephyr is disabled (ZE_DISABLED).`
-Only the exact value `true` counts. It never turns on by itself.
-`isZephyrDisabled()` and `logZephyrDisabled()` are exported for other integrations.
+Only the exact value `true` counts. It never turns on by itself. Other integrations do
+not read it yet. `isZephyrDisabled()` and `logZephyrDisabled()` are exported for them.
 
 ### Git Repository Requirements
 

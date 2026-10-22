@@ -46,6 +46,39 @@ export async function runCommand(options: RunOptions): Promise<void> {
     log('info', `Detected ${individualCommands.length} commands to execute`);
   }
 
+  const executeBuildCommands = async (): Promise<void> => {
+    for (let i = 0; i < individualCommands.length; i++) {
+      const cmd = individualCommands[i];
+      log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
+
+      try {
+        const parsed = parseShellCommand(cmd);
+        const result = await executeCommand(parsed, cwd);
+
+        if (result.exitCode !== 0) {
+          throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+            message: `Build command failed with exit code ${result.exitCode}`,
+          });
+        }
+
+        log('info', `Command ${i + 1} completed successfully`);
+      } catch (error) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: `Failed to execute command: ${cmd}\n${(error as Error).message}`,
+        });
+      }
+    }
+  };
+
+  // Skip mode: run the build as it is. No output detection, no Zephyr engine, no token,
+  // no git information and no network request.
+  if (isZephyrDisabled()) {
+    await executeBuildCommands();
+    log('info', 'All build commands completed successfully');
+    console.error(`[ze-cli] ${ZE_DISABLED_MESSAGE}`);
+    return;
+  }
+
   // Detect multiple commands and their output directories
   const multiDetection = await detectMultipleCommands(commandLine, cwd);
   const { commands: detectedCommands, outputDirs, commonOutputDir } = multiDetection;
@@ -115,37 +148,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
     }
   }
 
-  // Execute all build commands sequentially
-  for (let i = 0; i < individualCommands.length; i++) {
-    const cmd = individualCommands[i];
-    log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
-
-    try {
-      const parsed = parseShellCommand(cmd);
-      const result = await executeCommand(parsed, cwd);
-
-      if (result.exitCode !== 0) {
-        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-          message: `Build command failed with exit code ${result.exitCode}`,
-        });
-      }
-
-      log('info', `Command ${i + 1} completed successfully`);
-    } catch (error) {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: `Failed to execute command: ${cmd}\n${(error as Error).message}`,
-      });
-    }
-  }
+  await executeBuildCommands();
 
   log('info', 'All build commands completed successfully');
-
-  // Skip mode: the build ran as it is. No output detection, no Zephyr engine, no token,
-  // no git information and no network request.
-  if (isZephyrDisabled()) {
-    console.error(`[ze-cli] ${ZE_DISABLED_MESSAGE}`);
-    return;
-  }
 
   // Determine which output directory to use
   let outputDir: string | null = null;

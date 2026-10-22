@@ -1,5 +1,6 @@
 import { afterAll, afterEach, describe, expect, it } from '@rstest/core';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -13,10 +14,17 @@ fs.writeFileSync(
   `module.exports = {
     calls: [],
     transform(args) { module.exports.calls.push(args); return { ast: null, src: args.src }; },
-    getCacheKey() { return 'stub-key'; },
+    getCacheKey(options) { return 'stub-key:' + (options ? options.projectRoot : ''); },
     extra: 'kept',
   };`
 );
+// Metro requires `babelTransformerPath` itself; this module hands it the transformer
+// under test.
+const workerTransformerPath = path.join(tmpDir, 'worker-transformer.js');
+fs.writeFileSync(workerTransformerPath, 'module.exports = globalThis.__zeTransformer;');
+
+const metroRequire = createRequire(require.resolve('metro/package.json'));
+const metroBabelTransformerPath = metroRequire.resolve('metro-babel-transformer');
 
 afterAll(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -27,54 +35,132 @@ afterEach(() => {
 });
 
 function create(
+  originalTransformerPath = stubPath,
   applicationUid = 'host.project.org',
   buildEnv = { ZE_PUBLIC_DEMO: 'build' }
 ) {
   return createZephyrEnvTransformer({
-    originalTransformerPath: stubPath,
+    originalTransformerPath,
     applicationUid,
     buildEnv,
     cacheKey: JSON.stringify([applicationUid, buildEnv]),
   });
 }
 
-describe('createZephyrEnvTransformer', () => {
-  it('delegates app sources with rewritten src and keeps plugins/options', () => {
-    const transformer = create();
-    const plugins = [['some-plugin', {}]];
-    const options = { dev: false, platform: 'ios' };
-    const result = transformer.transform({
-      filename: 'src/App.js',
-      src: 'module.exports = process.env.ZE_PUBLIC_DEMO;',
-      plugins,
-      options,
-    }) as { src: string };
+function lastStubCall(): Record<string, unknown> | undefined {
+  return (require(stubPath).calls as Array<Record<string, unknown>>).at(-1);
+}
 
-    expect(result.src).toContain(
-      'globalThis.__ZEPHYR__?.runtime?.env?.["host.project.org"]'
-    );
-    expect(result.src).not.toContain('process.env.ZE_PUBLIC_DEMO');
-    const call = (require(stubPath).calls as Array<Record<string, unknown>>).at(-1);
-    expect(call?.['plugins']).toBe(plugins);
+/** Runs one file through Metro's transform worker with the env transformer installed. */
+async function transformWithMetro(
+  filename: string,
+  src: string,
+  hermesParser = false
+): Promise<{ code: string; map: unknown }> {
+  (globalThis as Record<string, unknown>)['__zeTransformer'] = create(
+    metroBabelTransformerPath
+  );
+  const { getDefaultConfig } = require('metro-config');
+  const { transform } = require('metro-transform-worker');
+  const { transformer } = await getDefaultConfig(tmpDir);
+  const result = await transform(
+    {
+      ...transformer,
+      babelTransformerPath: workerTransformerPath,
+      hermesParser,
+      enableBabelRCLookup: false,
+      enableBabelRuntime: false,
+    },
+    tmpDir,
+    filename,
+    Buffer.from(src),
+    {
+      dev: true,
+      hot: false,
+      inlinePlatform: false,
+      inlineRequires: false,
+      minify: false,
+      platform: 'ios',
+      type: 'module',
+      unstable_transformProfile: 'default',
+      experimentalImportSupport: false,
+      customTransformOptions: {},
+    }
+  );
+  return result.output[0].data;
+}
+
+/** 1-based line and 0-based column of `needle` in `text`. */
+function position(text: string, needle: string): [number, number] {
+  const lines = text.slice(0, text.indexOf(needle)).split('\n');
+  return [lines.length, lines.at(-1)?.length ?? 0];
+}
+
+describe('createZephyrEnvTransformer', () => {
+  it('adds its Babel plugin first and keeps plugins/options', () => {
+    const transformer = create();
+    const plugin = ['some-plugin', {}];
+    const options = { dev: false, platform: 'ios' };
+    const src = 'module.exports = process.env.ZE_PUBLIC_DEMO;';
+    transformer.transform({ filename: 'src/App.js', src, plugins: [plugin], options });
+
+    const call = lastStubCall();
+    expect(call?.['src']).toBe(src);
     expect(call?.['options']).toBe(options);
+    const plugins = call?.['plugins'] as unknown[];
+    expect(plugins).toHaveLength(2);
+    expect(plugins[1]).toBe(plugin);
     expect(transformer['extra']).toBe('kept');
   });
 
-  it('delegates node_modules sources untouched', () => {
+  it('delegates node_modules sources and sources without env reads untouched', () => {
     const transformer = create();
-    const src = 'module.exports = process.env.ZE_PUBLIC_DEMO;';
-    const result = transformer.transform({
-      filename: '/app/node_modules/lib/index.js',
-      src,
-    }) as { src: string };
-
-    expect(result.src).toBe(src);
+    const plugins = [['some-plugin', {}]];
+    for (const args of [
+      {
+        filename: '/app/node_modules/lib/index.js',
+        src: 'module.exports = process.env.ZE_PUBLIC_DEMO;',
+        plugins,
+      },
+      { filename: 'src/App.js', src: 'module.exports = process.env.NODE_ENV;', plugins },
+    ]) {
+      transformer.transform(args);
+      expect(lastStubCall()).toEqual(args);
+    }
   });
 
-  it('composes the original cache key with its own', () => {
-    expect(create().getCacheKey?.()).toBe(
-      `stub-key$${JSON.stringify(['host.project.org', { ZE_PUBLIC_DEMO: 'build' }])}`
+  it('forwards cache key options and composes the original key with its own', () => {
+    expect(
+      create().getCacheKey?.({ projectRoot: '/app', enableBabelRCLookup: true })
+    ).toBe(
+      `stub-key:/app$${JSON.stringify(['host.project.org', { ZE_PUBLIC_DEMO: 'build' }])}`
     );
+  });
+
+  it('rewrites reads in Metro output and keeps original source positions', async () => {
+    const src = 'const endpoint = process.env.ZE_PUBLIC_DEMO; throw new Error("boom");';
+    const { code, map } = await transformWithMetro('src/App.js', src);
+
+    expect(code).toContain('globalThis.__ZEPHYR__?.runtime?.env?.["host.project.org"]');
+    expect(code).not.toContain('process.env.ZE_PUBLIC_DEMO');
+    const { Consumer, fromRawMappings } = require('metro-source-map');
+    const sourceMap = fromRawMappings([
+      { code, map, source: src, path: 'src/App.js', functionMap: null, isIgnored: false },
+    ]).toMap();
+    const [line, column] = position(code, 'throw');
+    const original = new Consumer(sourceMap).originalPositionFor({ line, column });
+    expect([original.line, original.column]).toEqual([1, src.indexOf('throw')]);
+  });
+
+  it('rewrites reads in Flow component declarations parsed by Metro', async () => {
+    const src = [
+      '// @flow',
+      'component App() { return process.env.ZE_PUBLIC_DEMO; }',
+    ].join('\n');
+    const { code } = await transformWithMetro('src/App.js', src, true);
+
+    expect(code).toContain('globalThis.__ZEPHYR__?.runtime?.env?.["host.project.org"]');
+    expect(code).not.toContain('process.env.ZE_PUBLIC_DEMO');
   });
 });
 

@@ -140,21 +140,6 @@
           "type": "json",
           "path": "libs/zephyr-xpack-internal/package.json",
           "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "libs/create-zephyr-apps/.codex-plugin/plugin.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "libs/create-zephyr-apps/.claude-plugin/plugin.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "libs/create-zephyr-apps/.cursor-plugin/plugin.json",
-          "jsonpath": "$.version"
         }
       ]
     }

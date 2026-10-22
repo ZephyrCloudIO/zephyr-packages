@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, rs } from '@rstest/core';
 
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -311,6 +312,118 @@ describe('inferCiTokenIdentity', () => {
       source: 'noreply',
     });
   });
+
+  it('infers EAS actor emails from the built commit', async () => {
+    const { dir, commit } = await createGitRepo('author@example.com');
+
+    const identity = await inferCiTokenIdentity({
+      EAS_BUILD: 'true',
+      EAS_BUILD_USERNAME: 'expo-dev',
+      EAS_BUILD_WORKINGDIR: dir,
+      EAS_BUILD_GIT_COMMIT_HASH: commit,
+    });
+
+    expect(identity).toEqual({
+      provider: 'eas',
+      email: 'author@example.com',
+      emails: ['author@example.com', 'committer@example.com'],
+      username: 'expo-dev',
+      source: 'git',
+    });
+  });
+
+  it('ignores the deprecated ZE_USER_EMAIL on EAS', async () => {
+    const dir = await createTempDir('zephyr-eas-no-git-');
+
+    const identity = await inferCiTokenIdentity({
+      EAS_BUILD: 'true',
+      EAS_BUILD_USERNAME: 'expo-dev',
+      EAS_BUILD_WORKINGDIR: dir,
+      ZE_USER_EMAIL: 'member@example.com',
+    });
+
+    expect(identity?.emails).toBeUndefined();
+    expect(identity?.providerActorType).toBe('bot');
+  });
+
+  it('reports the EAS user as a bot when no email is available', async () => {
+    const dir = await createTempDir('zephyr-eas-no-git-');
+
+    const identity = await inferCiTokenIdentity({
+      EAS_BUILD: 'true',
+      EAS_BUILD_USERNAME: 'expo-dev',
+      EAS_BUILD_PROJECT_ID: 'project-id',
+      EAS_BUILD_WORKINGDIR: dir,
+    });
+
+    expect(identity).toEqual({
+      provider: 'eas',
+      issuer: 'https://expo.dev',
+      providerSubject: 'expo-dev',
+      username: 'expo-dev',
+      providerActorType: 'bot',
+      source: 'env',
+    });
+  });
+
+  it('reports EAS robot users by project ID', async () => {
+    const dir = await createTempDir('zephyr-eas-no-git-');
+
+    const identity = await inferCiTokenIdentity({
+      EAS_BUILD: 'true',
+      EAS_BUILD_PROJECT_ID: 'project-id',
+      EAS_BUILD_WORKINGDIR: dir,
+    });
+
+    expect(identity).toEqual({
+      provider: 'eas',
+      issuer: 'https://expo.dev',
+      providerSubject: 'project-id',
+      username: undefined,
+      providerActorType: 'bot',
+      source: 'env',
+    });
+  });
+
+  it('prefers GitHub Actions identity for local EAS builds on GitHub', async () => {
+    const identity = await inferCiTokenIdentity({
+      EAS_BUILD: 'true',
+      EAS_BUILD_USERNAME: 'expo-dev',
+      GITHUB_ACTIONS: 'true',
+      GITHUB_ACTOR: 'octocat',
+      GITHUB_ACTOR_ID: '12345',
+    });
+
+    expect(identity?.provider).toBe('github');
+  });
+
+  async function createTempDir(prefix: string): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), prefix));
+    tempDirs.push(dir);
+    return dir;
+  }
+
+  async function createGitRepo(
+    authorEmail: string
+  ): Promise<{ dir: string; commit: string }> {
+    const dir = await createTempDir('zephyr-eas-git-');
+    const git = (...args: string[]) =>
+      execFileSync('git', args, {
+        cwd: dir,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: 'Author',
+          GIT_AUTHOR_EMAIL: authorEmail,
+          GIT_COMMITTER_NAME: 'Committer',
+          GIT_COMMITTER_EMAIL: 'committer@example.com',
+        },
+      }).trim();
+
+    git('init', '-q');
+    git('commit', '-q', '--allow-empty', '--no-gpg-sign', '-m', 'init');
+    return { dir, commit: git('rev-parse', 'HEAD') };
+  }
 
   async function writeGitHubEvent(payload: Record<string, unknown>): Promise<string> {
     const dir = await mkdtemp(join(tmpdir(), 'zephyr-github-event-'));

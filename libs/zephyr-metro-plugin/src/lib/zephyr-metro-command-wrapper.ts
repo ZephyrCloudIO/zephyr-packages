@@ -1,4 +1,4 @@
-import { ZephyrError, ZeErrors } from 'zephyr-agent';
+import { collectZEPublicVars, ZephyrError, ZeErrors, ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
 import {
@@ -27,6 +27,31 @@ interface MetroCliOptions {
 }
 
 type MetroCommandArgs = [[MetroBundleOptions], MetroConfigOptions, MetroCliOptions];
+
+const NATIVE_ENV_RUNTIME_PLUGIN_HINT =
+  "Zephyr native env: add require.resolve('zephyr-native-env/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
+
+/** Warns about Metro setups that cannot deliver environment overrides on device. */
+function warnNativeEnvSetup(): void {
+  if (
+    !global.__ZEPHYR_METRO_ENV_REWRITE__ &&
+    Object.keys(collectZEPublicVars(process.env)).length > 0
+  ) {
+    ze_log.app(
+      'Zephyr native env: metro.config.js does not use withZephyr; ZE_PUBLIC_* reads are not rewritten and cannot receive environment overrides'
+    );
+  }
+
+  const federationConfig = global.__METRO_FEDERATION_CONFIG;
+  if (
+    Object.keys(federationConfig?.remotes ?? {}).length > 0 &&
+    !(federationConfig?.runtimePlugins ?? []).some((entry) =>
+      (typeof entry === 'string' ? entry : entry[0]).includes('zephyr-native-env')
+    )
+  ) {
+    ze_log.app(NATIVE_ENV_RUNTIME_PLUGIN_HINT);
+  }
+}
 
 export async function zephyrCommandWrapper(
   bundleFederatedRemote: (...args: MetroCommandArgs) => Promise<any>,
@@ -68,6 +93,7 @@ export async function zephyrCommandWrapper(
       if (!(global as any).__METRO_FEDERATION_CONFIG) {
         throw new ZephyrError(ERR_MISSING_METRO_FEDERATION_CONFIG);
       }
+      warnNativeEnvSetup();
 
       zephyrMetroPlugin = new ZephyrMetroPlugin({
         platform,

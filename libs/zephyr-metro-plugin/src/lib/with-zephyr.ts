@@ -1,7 +1,10 @@
+import { createHash } from 'crypto';
 import fs from 'fs';
 import type { ConfigT } from 'metro-config';
+import { createRequire } from 'module';
 import path from 'path';
 import {
+  collectZEPublicVars,
   createManifestContent,
   handleGlobalError,
   ze_log,
@@ -9,6 +12,7 @@ import {
   ZephyrEngine,
   ZephyrError,
 } from 'zephyr-agent';
+import type { ZephyrEnvTransformerOptions } from './env-transformer';
 import {
   assertMetroNativeBuildTarget,
   type MetroNativeBuildTarget,
@@ -83,8 +87,18 @@ async function applyZephyrToMetroConfig(
     const resolved_dependencies =
       await zephyr_engine.resolve_remote_dependencies(dependencyPairs);
 
+    const babelTransformerPath = installEnvTransformer(
+      projectRoot,
+      metroConfig.transformer?.babelTransformerPath,
+      zephyr_engine.application_uid
+    );
+
     const enhancedConfig: ConfigT = {
       ...metroConfig,
+      transformer: {
+        ...metroConfig.transformer,
+        babelTransformerPath,
+      },
       resolver: {
         ...metroConfig.resolver,
         // Add Zephyr-specific resolution logic
@@ -151,6 +165,8 @@ async function applyZephyrToMetroConfig(
       ze_log.error(errorMessage);
     }
 
+    // Lets the publication command wrapper detect that ZE_PUBLIC_* reads are rewritten.
+    global.__ZEPHYR_METRO_ENV_REWRITE__ = zephyr_engine.application_uid;
     ze_log.app('Zephyr Metro configured; no artifacts were uploaded');
 
     return enhancedConfig;
@@ -161,6 +177,54 @@ async function applyZephyrToMetroConfig(
       zephyr_engine.build_failed();
     }
   }
+}
+
+/**
+ * Writes a Babel transformer module that rewrites `ZE_PUBLIC_*` reads before delegating
+ * to the configured transformer, and returns its path.
+ *
+ * The file lives outside Module Federation's tmp dir (deleted on every config load) and
+ * its name embeds the cache key, so env or UID changes produce a new transformer and
+ * Metro never serves stale transforms.
+ *
+ * @internal Exported for tests.
+ */
+export function installEnvTransformer(
+  projectRoot: string,
+  configuredTransformerPath: string | undefined,
+  applicationUid: string
+): string {
+  const projectRequire = createRequire(path.resolve(projectRoot, 'package.json'));
+  const originalTransformerPath = projectRequire.resolve(
+    configuredTransformerPath ?? 'metro-babel-transformer'
+  );
+  const buildEnv = collectZEPublicVars(process.env);
+  const { version } = createRequire(__filename)('zephyr-metro-plugin/package.json');
+  // Metro hashes the configured transformer file's contents; wrapping hides the
+  // original's, so fold them in (Module Federation regenerates its transformer).
+  const cacheKey = createHash('sha256')
+    .update(JSON.stringify([version, applicationUid, originalTransformerPath, buildEnv]))
+    .update(fs.readFileSync(originalTransformerPath))
+    .digest('hex')
+    .slice(0, 16);
+
+  const options: ZephyrEnvTransformerOptions = {
+    originalTransformerPath,
+    applicationUid,
+    buildEnv,
+    cacheKey,
+  };
+  const adapterPath = path.join(__dirname, 'env-transformer.js');
+  const source = `module.exports = require(${JSON.stringify(adapterPath)}).createZephyrEnvTransformer(${JSON.stringify(options)});\n`;
+
+  const outDir = path.join(projectRoot, 'node_modules', '.zephyr-metro');
+  const outPath = path.join(outDir, `env-transformer-${cacheKey}.js`);
+  const tmpPath = `${outPath}.${process.pid}.tmp`;
+  fs.mkdirSync(outDir, { recursive: true });
+  // Rename atomically so parallel Metro workers never read a partial file.
+  fs.writeFileSync(tmpPath, source, 'utf-8');
+  fs.renameSync(tmpPath, outPath);
+  return outPath;
 }
 
 /** Extract remote dependencies from Metro configuration */

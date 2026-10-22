@@ -11,6 +11,14 @@ export interface UploadOptions {
   publicationMetadata?: CliPublicationMetadata;
 }
 
+/** Where a finished upload is served. */
+export interface UploadResult {
+  /** The immutable URL of this version, or `null` when Zephyr returned none. */
+  versionUrl: string | null;
+  /** Tag and environment URLs this version now serves. */
+  targetUrls: string[];
+}
+
 /**
  * Orchestrate the upload process:
  *
@@ -18,7 +26,7 @@ export interface UploadOptions {
  * 2. Upload assets with build stats
  * 3. Finish the build
  */
-export async function uploadAssets(options: UploadOptions): Promise<void> {
+export async function uploadAssets(options: UploadOptions): Promise<UploadResult> {
   const { zephyr_engine, assetsMap, publicationMetadata } = options;
   // CLI commands pass an engine returned by create(), whose generation zero is active.
   let buildInProgress = true;
@@ -47,7 +55,13 @@ export async function uploadAssets(options: UploadOptions): Promise<void> {
     });
 
     buildInProgress = false;
+    // build_finished() resets the engine's build state, URLs included.
+    const result: UploadResult = {
+      versionUrl: zephyr_engine.version_url ?? null,
+      targetUrls: [...(zephyr_engine.target_urls ?? [])],
+    };
     await zephyr_engine.build_finished();
+    return result;
   } catch (error) {
     logFn('error', ZephyrError.format(error));
     throw error;

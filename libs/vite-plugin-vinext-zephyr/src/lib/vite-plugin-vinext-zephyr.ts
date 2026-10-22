@@ -23,6 +23,7 @@ import {
   detectEntrypointFromAssets,
   injectRscAssetsManifest,
   resolveVinextEntrypoint,
+  resolveVinextOutputMounts,
   type RscPluginManagerLike,
   type VinextBuildAsset,
 } from './internal/vinext-output';
@@ -238,7 +239,15 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           const zephyrEngine = await ensureEngine();
           const generation = buildGeneration++;
           const assets: Record<string, VinextBuildAsset> = {};
-          const outputCollectionOptions = { target: options.target };
+          const outputCollectionOptions = {
+            target: options.target,
+            mounts: resolveVinextOutputMounts(
+              outputDir,
+              Object.fromEntries(
+                environments.map(([name, environment]) => [name, environment.config])
+              )
+            ),
+          };
           await collectOutputDirectoryAssets(assets, outputDir, outputCollectionOptions);
           injectRscAssetsManifest(
             assets,

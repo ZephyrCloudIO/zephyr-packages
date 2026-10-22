@@ -7,6 +7,7 @@ import { deployCommand } from './commands/deploy';
 import { doctorCommand } from './commands/doctor';
 import { runCommand } from './commands/run';
 import { watchCommand } from './commands/watch';
+import { reserveStdout } from './lib/stdout';
 
 async function main(): Promise<void> {
   try {
@@ -33,7 +34,9 @@ async function main(): Promise<void> {
       }
 
       if (options.command === 'deploy') {
-        await deployCommand({
+        // Keep stdout to the one result line; logs and login prompts go to stderr.
+        const writeResult = options.format === 'json' ? reserveStdout() : undefined;
+        const result = await deployCommand({
           directory: options.directory,
           target: options.target,
           verbose: options.verbose,
@@ -41,6 +44,7 @@ async function main(): Promise<void> {
           metadataPath: options.metadataPath,
           cwd: workingDir,
         });
+        writeResult?.(`${JSON.stringify(result)}\n`);
       } else {
         await watchCommand({
           directory: options.directory,

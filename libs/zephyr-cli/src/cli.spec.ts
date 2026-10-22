@@ -104,3 +104,16 @@ describe('parseArgs doctor', () => {
     );
   });
 });
+
+describe('parseArgs deploy result format', () => {
+  it('accepts a json result format for deploy', () => {
+    expect(parseArgs(['deploy', './dist', '--format', 'json'])).toMatchObject({
+      command: 'deploy',
+      directory: './dist',
+      format: 'json',
+    });
+    expect(() => parseArgs(['deploy', './dist', '--format', 'yaml'])).toThrow(
+      '--format must be either json or text.'
+    );
+  });
+});

@@ -1,7 +1,11 @@
 import type { Compiler } from '@rspack/core';
 import type { ZephyrEngine, ZephyrBuildHooks } from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
-import { logBuildSteps, setupZeDeploy } from 'zephyr-xpack-internal';
+import {
+  logBuildSteps,
+  setupManifestEmission,
+  setupZeDeploy,
+} from 'zephyr-xpack-internal';
 import {
   assertRepackNativeBuildTarget,
   type RepackNativeBuildTarget,
@@ -42,6 +46,7 @@ export class ZeRepackPlugin {
 
     this.#options.zephyr_engine.buildProperties.output = compiler.outputPath;
     logBuildSteps(this.#options, compiler);
+    setupManifestEmission(this.#options, compiler);
     setupZeDeploy(this.#options, compiler);
   }
 }

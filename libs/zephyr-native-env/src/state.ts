@@ -21,6 +21,11 @@ export interface ParsedManifest {
   dependencies: Record<string, ManifestDependency>;
 }
 
+export interface LoadedManifest extends ParsedManifest {
+  /** Values come from `state.storage` after a failed request, not from the network. */
+  persisted: boolean;
+}
+
 /** AsyncStorage-compatible store; MMKV and similar stores need a thin wrapper. */
 export interface ZephyrEnvStorage {
   getItem(key: string): Promise<string | null> | string | null;
@@ -35,7 +40,7 @@ export interface NativeEnvState {
   /** Application UID → manifest URL its current values were loaded from. */
   loadedFrom: Map<string, string>;
   /** Session cache of manifest loads by absolute URL; failures are evicted. */
-  manifests: Map<string, Promise<ParsedManifest | undefined>>;
+  manifests: Map<string, Promise<LoadedManifest | undefined>>;
   /** Store for the last loaded values per manifest URL, used when a load fails. */
   storage?: ZephyrEnvStorage;
 }
@@ -209,9 +214,9 @@ async function readPersistedManifest(
 /**
  * Loads a manifest once per URL for the session and persists it to `state.storage`. On
  * failure it warns, evicts the entry so a later call retries, and resolves the last
- * values persisted for that URL, or `undefined` without any.
+ * values persisted for that URL (marked `persisted`), or `undefined` without any.
  */
-export function fetchManifest(url: string): Promise<ParsedManifest | undefined> {
+export function fetchManifest(url: string): Promise<LoadedManifest | undefined> {
   const state = getNativeEnvState();
   const cached = state.manifests.get(url);
   if (cached) return cached;
@@ -220,15 +225,16 @@ export function fetchManifest(url: string): Promise<ParsedManifest | undefined> 
     (manifest) => {
       // Persisting must not delay startup.
       void persistManifest(state.storage, url, manifest);
-      return manifest;
+      return { ...manifest, persisted: false };
     },
     async (error: unknown) => {
       state.manifests.delete(url);
       const reason = error instanceof Error ? error.message : String(error);
       console.warn(`[zephyr-native-env] ${url}: ${reason}`);
       const lastKnown = await readPersistedManifest(state.storage, url);
-      if (lastKnown) console.warn(`[zephyr-native-env] ${url}: using last known values`);
-      return lastKnown;
+      if (!lastKnown) return undefined;
+      console.warn(`[zephyr-native-env] ${url}: using last known values`);
+      return { ...lastKnown, persisted: true };
     }
   );
   state.manifests.set(url, pending);

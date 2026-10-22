@@ -26,9 +26,11 @@ async function loadRemoteEnv(remote: RemoteConfig): Promise<void> {
   if (state.hostReady) await state.hostReady;
 
   const entry = 'entry' in remote ? remote.entry : undefined;
+  // Manifest dependencies are keyed by the consumer-side name: the alias when set.
   const uid =
-    state.dependencyUids.get(remote.name) ??
-    (remote.alias === undefined ? undefined : state.dependencyUids.get(remote.alias));
+    remote.alias !== undefined && state.dependencyUids.has(remote.alias)
+      ? state.dependencyUids.get(remote.alias)
+      : state.dependencyUids.get(remote.name);
   if (typeof uid !== 'string' || typeof entry !== 'string') return;
 
   const url = siblingManifestUrl(entry);
@@ -47,7 +49,8 @@ async function loadRemoteEnv(remote: RemoteConfig): Promise<void> {
     return;
   }
   setApplicationEnv(uid, manifest.vars);
-  state.loadedFrom.set(uid, url);
+  // Persisted values stand in until a later resolution reaches the network.
+  if (!manifest.persisted) state.loadedFrom.set(uid, url);
   indexDependencies(state, manifest.dependencies);
 }
 

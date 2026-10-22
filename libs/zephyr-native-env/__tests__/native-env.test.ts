@@ -77,10 +77,10 @@ function serveHost(
   });
 }
 
-async function resolveRemote(name: string, entry: string): Promise<void> {
+async function resolveRemote(name: string, entry: string, alias?: string): Promise<void> {
   const plugin = createZephyrNativeEnvPlugin();
   // MF passes far more fields; the plugin only reads `remote`.
-  const args = { remote: { name, entry } } as unknown as AfterResolveArgs;
+  const args = { remote: { name, alias, entry } } as unknown as AfterResolveArgs;
   const result = await plugin.afterResolve?.(args);
   expect(result).toBe(args);
 }
@@ -262,6 +262,29 @@ describe('zephyr-native-env runtime plugin', () => {
     expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini' });
   });
 
+  it('retries the network after applying persisted values for a failed manifest', async () => {
+    const storage = memoryStorage({
+      [`zephyr-native-env:${origin}/mini/zephyr-manifest.json`]: JSON.stringify({
+        zeVars: { ZE_PUBLIC_DEMO: 'cached' },
+      }),
+    });
+    await serveHost({ mini: { application_uid: 'mini.p.o' } }, {}, storage);
+    const entry = `${origin}/mini/mf-manifest.json`;
+
+    await resolveRemote('mini', entry);
+    expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'cached' });
+
+    routes.set('/mini/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'fresh' } },
+    });
+    await resolveRemote('mini', entry);
+    expect(hits.get('/mini/zephyr-manifest.json')).toBe(2);
+    expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'fresh' });
+
+    await resolveRemote('mini', entry);
+    expect(hits.get('/mini/zephyr-manifest.json')).toBe(2);
+  });
+
   it('clears values loaded from another root when the remote switches roots', async () => {
     await serveHost({ mini: { application_uid: 'mini.p.o' } });
     routes.set('/a/zephyr-manifest.json', { body: { zeVars: { ZE_PUBLIC_DEMO: 'a' } } });
@@ -302,6 +325,44 @@ describe('zephyr-native-env runtime plugin', () => {
     expect(hits.get('/mini/zephyr-manifest.json')).toBeUndefined();
     expect(env('mini.p.o')).toBeUndefined();
     expect(env('other.p.o')).toBeUndefined();
+  });
+
+  it('maps a remote by its consumer alias before its container name', async () => {
+    await serveHost({
+      mini: { application_uid: 'admin.p.o' },
+      shop: { application_uid: 'shop.p.o' },
+    });
+    routes.set('/admin/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'admin' } },
+    });
+    routes.set('/shop/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'shop' } },
+    });
+
+    await resolveRemote('admin', `${origin}/admin/mf-manifest.json`, 'mini');
+    await resolveRemote('mini', `${origin}/shop/mf-manifest.json`, 'shop');
+    expect(env('admin.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'admin' });
+    expect(env('shop.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'shop' });
+  });
+
+  it('skips an ambiguous alias without falling back to the container name', async () => {
+    await serveHost({
+      a: { application_uid: 'a.p.o' },
+      mini: { application_uid: 'mini.p.o' },
+      shop: { application_uid: 'shop.p.o' },
+    });
+    routes.set('/a/zephyr-manifest.json', {
+      body: { zeVars: {}, dependencies: { shop: { application_uid: 'other.p.o' } } },
+    });
+    routes.set('/shop/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'shop' } },
+    });
+
+    await resolveRemote('a', `${origin}/a/mf-manifest.json`);
+    await resolveRemote('mini', `${origin}/shop/mf-manifest.json`, 'shop');
+    expect(hits.get('/shop/zephyr-manifest.json')).toBeUndefined();
+    expect(env('mini.p.o')).toBeUndefined();
+    expect(env('shop.p.o')).toBeUndefined();
   });
 
   it('registers one global plugin copy for nested federation instances', () => {

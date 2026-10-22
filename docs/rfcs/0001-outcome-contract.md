@@ -22,11 +22,12 @@ related:
 ## Summary
 
 When Zephyr cannot be reached, a build can finish green and nothing says the build was not
-deployed. This RFC proposes one small, versioned JSON object, the **outcome**. Every
-surface reports it with the same field names and the same words: the plugin receipt file,
-the `ze-cli` JSON result, the CI step summary, MCP tool results and the dashboard. It also
-proposes CLI exit codes that do not collide with `doctor`, a light set of writing rules
-with a six-word glossary, and docs requirements for people and agents.
+deployed. This RFC proposes one small, versioned JSON object, the **outcome**. Every surface
+reports it with the same field names and the same words: the plugin receipt file, the
+`ze-cli` JSON result, the CI step summary, MCP tool results and the dashboard. It also
+proposes CLI exit codes that do not collide with `doctor` (contested, see open question 3),
+a light set of writing rules with a six-word glossary, and docs requirements for people and
+agents.
 
 Everything in this document is a **proposal** unless it cites a file. Statements about
 existing behavior were checked against `main` and cite the file. Where I could not verify a
@@ -62,16 +63,16 @@ claim in this repository, the text says so.
 
 ### What already exists and is reused
 
-| Existing piece                                                                                                               | Where                                                                             | What this RFC reuses                                                                                                                        |
-| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doctor` versioned report: `schemaVersion`, stable codes, severity, `remediation`, project-relative evidence, exit codes 0-3 | `libs/zephyr-cli/src/doctor/schema.ts`                                            | Versioning style, stable codes, project-relative paths. Exit codes 1-3 keep their `doctor` meaning (see [CLI exit codes](#cli-exit-codes)). |
-| `create-zephyr-apps --json`: prompts off, one JSON document, still emitted on failure                                        | `libs/create-zephyr-apps/README.md` ("JSON output")                               | The "one document on stdout, even on failure" pattern.                                                                                      |
-| `ZephyrError` with `code`, `operation`, `reason`                                                                             | `libs/zephyr-agent/src/lib/errors/zephyr-error.ts:71-72,111-120`                  | `reason` is "the stable error code identifying the actionable failure reason".                                                              |
-| Docs link per error code                                                                                                     | `zephyr-error.ts:45,233` (`https://docs.zephyr-cloud.io/errors/<code lowercase>`) | `docsUrl`.                                                                                                                                  |
-| Redaction helpers `redactString`, `redactUrl`                                                                                | `libs/zephyr-agent/src/lib/security/redaction.ts`                                 | Every value interpolated into a message or URL field passes through them. Fixed template text does not (see Rule 4).                        |
-| `Retry-After` parsing                                                                                                        | `fetch-with-retries.ts:157-170`                                                   | Source of `retryAfterSeconds`. It is not passed into the thrown `ZephyrError` today, so #692 must carry it through.                         |
-| MCP `nextAction` values                                                                                                      | MCP server, **not in this repository**                                            | See [MCP](#mcp).                                                                                                                            |
-| Matching skills PR rule                                                                                                      | `AGENTS.md`                                                                       | Docs requirements below.                                                                                                                    |
+| Existing piece                                                                                                               | Where                                                                             | What this RFC reuses                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `doctor` versioned report: `schemaVersion`, stable codes, severity, `remediation`, project-relative evidence, exit codes 0-3 | `libs/zephyr-cli/src/doctor/schema.ts`                                            | Versioning style, stable codes, project-relative paths. Exit codes 1-3 keep their `doctor` meaning when `doctor` runs (see [CLI exit codes](#cli-exit-codes)). |
+| `create-zephyr-apps --json`: prompts off, one JSON document, still emitted on failure                                        | `libs/create-zephyr-apps/README.md` ("JSON output")                               | The "one document on stdout, even on failure" pattern.                                                                                                         |
+| `ZephyrError` with `code`, `operation`, `reason`                                                                             | `libs/zephyr-agent/src/lib/errors/zephyr-error.ts:71-72,111-120`                  | `reason` is "the stable error code identifying the actionable failure reason".                                                                                 |
+| Docs link per error code                                                                                                     | `zephyr-error.ts:45,233` (`https://docs.zephyr-cloud.io/errors/<code lowercase>`) | `docsUrl`.                                                                                                                                                     |
+| Redaction helpers `redactString`, `redactUrl`                                                                                | `libs/zephyr-agent/src/lib/security/redaction.ts`                                 | Every value interpolated into a message or URL field passes through them. Fixed template text does not (see Rule 4).                                           |
+| `Retry-After` parsing                                                                                                        | `fetch-with-retries.ts:157-170`                                                   | Source of `retryAfterSeconds`. It is not passed into the thrown `ZephyrError` today, so #692 must carry it through.                                            |
+| MCP `nextAction` values                                                                                                      | MCP server, **not in this repository**                                            | See [MCP](#mcp).                                                                                                                                               |
+| Matching skills PR rule                                                                                                      | `AGENTS.md`                                                                       | Docs requirements below.                                                                                                                                       |
 
 ## Design principles
 
@@ -89,7 +90,7 @@ claim in this repository, the text says so.
   support first, so a retry does not do the work twice. The shared retry layer already
   retries `GET`, `HEAD`, `OPTIONS`, `PUT` and `DELETE`, and retries any other method only
   when the caller sets an `Idempotency-Key` header
-  (`libs/zephyr-agent/src/lib/http/fetch-with-retries.ts:25,266-273`). The reviewer says
+  (`libs/zephyr-agent/src/lib/http/fetch-with-retries.ts:26,29-36,272`). The reviewer says
   asset uploads are already safe to retry. I did not re-verify that here. `retryable` is
   about the whole step, so this RFC does not depend on either.
 - **Failing the build by default.** See [Alternatives](#alternatives-considered).
@@ -117,7 +118,7 @@ claim in this repository, the text says so.
 | `versionUrl`        | string \| null                      | The immutable URL of the deployed version. `null` unless `status` is `deployed`, or when Zephyr returned none.                                            |
 | `durationMs`        | integer                             | Wall-clock time from the start of the Zephyr step to the outcome. It is not the bundler build time.                                                       |
 | `docsUrl`           | string \| null                      | The docs page for `code`. `null` when `code` is `null`.                                                                                                   |
-| `statusUrl`         | string \| null                      | The Zephyr status page. Set only for `unreachable`, `timeout` and `upstream_error`.                                                                       |
+| `statusUrl`         | string \| null                      | The Zephyr status page. Non-null only for `unreachable`, `timeout` and `upstream_error`.                                                                  |
 
 Every field is always present. Unknown values are `null`, so a reader never has to test
 for a missing key.
@@ -144,8 +145,14 @@ edit to this RFC.
 socket and a user cancellation all become `ERR_HTTP_ERROR` with `status: -1` and differ only
 in the prose of `content` (`fetch-with-retries.ts:235-254`). A classifier that reads
 `status` alone would call every timeout `unreachable` and every cancellation an outage. So
-#691 must carry the Node error code (`ECONNREFUSED`, `ETIMEDOUT`, `ENOTFOUND` and the like)
-or an equivalent typed field on the error, and classify on that. A canceled request
+#691 must carry the Node error code, or an equivalent typed field, on the error and
+classify on that. The retry layer already lists the codes
+(`fetch-with-retries.ts:16-25`). **Proposal:** `ECONNABORTED` and `ETIMEDOUT` are
+`timeout`. `ECONNREFUSED`, `ECONNRESET`, `ENETUNREACH`, `EAI_AGAIN`, `ENOTFOUND` and
+`EPIPE` are `unreachable`. The 30 s deadline is enforced as an axios `timeout`
+(`fetch-with-retries.ts:323`), which axios reports as `ECONNABORTED` by default, not as
+`ETIMEDOUT`. A classifier that lists only `ETIMEDOUT` would call every deadline timeout
+`unreachable`, so #691 must confirm the code in a test. A canceled request
 (`ERR_CANCELED`) is not an outage. It maps to `unknown`, unless the user aborted the whole
 run, in which case no outcome is written.
 
@@ -160,13 +167,16 @@ Today's codes map as follows. These are the starting rows of the classification 
 | `ZE10013` | `ERR_PACKAGE_JSON_MUST_HAVE_NAME` (`codes.ts:67`) | `config`                                        |
 | `ZE40035` | `ERR_HTTP_ERROR` (`codes.ts:357`)                 | Depends on the request, see the next paragraph. |
 
-`ZE40035` cannot have one category. The category comes from the HTTP `status` when there
-was a response (5xx is `upstream_error`, 401 is `auth`, other 4xx is `config`), and from the
-structured cause when there was none (see above). The classification must not read the code
-or the `kind`. The `category` field of the outcome is a **new axis**.
-It is not the existing `ZeErrorCategories` in `codes.ts`, which is the two-digit code
-prefix (`10` build, `20` deploy, `30` browser, `40` config). The names collide, so the
-docs must say "outcome category" when they mean this field.
+`ZE40035` cannot have one category. For this code the category comes from the HTTP `status`
+when there was a response, per the table above (5xx, 425 and 429 are `upstream_error`, 408
+is `timeout`, other 4xx is `config`), and from the structured cause when there was none. It
+must not come from the code or the `kind`. On the shared paths 401 and 403 do not reach
+`ZE40035`: `http-request.ts:102-122` throws `ZE10018` and `ZE10022` first, and
+`validateStatus: () => true` (`fetch-with-retries.ts:291`) keeps HTTP responses in-band.
+Other codes in the table above are classified by code, as listed. The `category` field of
+the outcome is a **new axis**. It is not the existing `ZeErrorCategories` in `codes.ts`,
+which is the two-digit code prefix (`10` build, `20` deploy, `30` browser, `40` config). The
+names collide, so the docs must say "outcome category" when they mean this field.
 
 ### Rules
 
@@ -175,11 +185,12 @@ docs must say "outcome category" when they mean this field.
 2. **Additive only.**
    - New optional fields may be added without a version change. Consumers must ignore
      fields they do not know. The JSON Schema does not set `additionalProperties: false`.
-   - A new `category` value is additive for consumers: a consumer that meets a `category`
-     it does not know reads `nextAction` and `retryable` only. For writers it is a schema
-     edit inside version 1: the `category` enum is extended, and the new value follows the
+   - A new `category` value is additive for consumers: a consumer that meets a `category` it
+     does not know reads `nextAction` and `retryable` only. For writers it is a schema edit
+     inside version 1: the `category` enum is extended, and the new value follows the
      `retryable` and `nextAction` invariants below. A strict validator that holds an older
-     copy of the schema will reject it, so validators should fetch the current schema.
+     copy of the schema will reject it, so validators should fetch the current schema once
+     it is published (open question 12).
    - A new value of `status` or `nextAction`, a rename, or a change of meaning is
      breaking. It needs `schemaVersion` `2.0.0`.
 3. **Consistent invariants.** The schema encodes them, so a writer cannot produce a
@@ -209,8 +220,11 @@ docs must say "outcome category" when they mean this field.
      valid". Template text is fixed and trusted. Only values that come from outside the
      template (an application UID, a URL) are checked. #691 should remove this false
      positive along with the status-code one. A contract test asserts that
-     `redactString(message) === message` for every golden fixture, so a redactor change
-     that mangles a template fails in CI. Today the `auth` and `forbidden` templates fail that
+     `redactString(line) === line` for the `message` and for the full final line (including
+     the status page sentence) of every golden fixture, so a redactor change that mangles
+     a template fails in CI. Fixtures use the normalized form of each URL, with a trailing
+     slash on a bare origin. `codes.ts:526` already tells users to see
+     `https://status.zephyr-cloud.io`. Today the `auth` and `forbidden` templates fail that
      test (checked with the current `redactString`), which is the evidence for the false
      positive.
    - **URL fields hold no userinfo, query or fragment.** `versionUrl`, `docsUrl` and
@@ -284,7 +298,12 @@ URL yet (see [open question 12](#open-questions)).
     "retryAfterSeconds": {
       "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0, "maximum": 86400 }]
     },
-    "message": { "type": "string", "minLength": 1, "maxLength": 600, "pattern": "^[^\\r\\n]*$" },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600,
+      "pattern": "^[^\\u0000-\\u001f\\u2028\\u2029]*$"
+    },
     "applicationUid": {
       "oneOf": [{ "type": "null" }, { "type": "string", "pattern": "^\\S{1,256}$" }]
     },
@@ -392,7 +411,7 @@ URL yet (see [open question 12](#open-questions)).
 
 ### Golden examples
 
-Each example is a complete, valid outcome. Hosts use reserved example domains. The codes
+Each example is a complete, valid outcome. Application hosts use reserved example domains. The codes
 for the three transient categories are `ZE40035`, because that is the code today's HTTP
 failures carry. #691 may add a dedicated code. If it does, the fixtures change with it.
 
@@ -458,7 +477,7 @@ failures carry. #691 may add a dedicated code. If it does, the fixtures change w
   "versionUrl": null,
   "durationMs": 1668,
   "docsUrl": "https://docs.zephyr-cloud.io/errors/ze40035",
-  "statusUrl": "https://status.zephyr-cloud.io"
+  "statusUrl": "https://status.zephyr-cloud.io/"
 }
 ```
 
@@ -480,7 +499,7 @@ failures carry. #691 may add a dedicated code. If it does, the fixtures change w
   "versionUrl": null,
   "durationMs": 30412,
   "docsUrl": "https://docs.zephyr-cloud.io/errors/ze40035",
-  "statusUrl": "https://status.zephyr-cloud.io"
+  "statusUrl": "https://status.zephyr-cloud.io/"
 }
 ```
 
@@ -502,7 +521,7 @@ failures carry. #691 may add a dedicated code. If it does, the fixtures change w
   "versionUrl": null,
   "durationMs": 2954,
   "docsUrl": "https://docs.zephyr-cloud.io/errors/ze40035",
-  "statusUrl": "https://status.zephyr-cloud.io"
+  "statusUrl": "https://status.zephyr-cloud.io/"
 }
 ```
 
@@ -652,7 +671,9 @@ as the receipt writer:
   `ZEPHYR_LOG_PATH` overrides it (`file-logger.ts:34-36`). That directory exists only when
   file logging has created a run (`initializeLogRun`, line 42, called from
   `writeLogToFile`, line 119).
-- Its fields are `success`, `duration` and `errorCount`, not the outcome.
+- Its fields (`success`, `duration`, `errorCount`, `warnCount`, `buildId`,
+  `applicationUid`, and the written `startTime` and `endTime`) are not the outcome. There
+  is no `code`, `category` or `nextAction`.
 - It uses `appendFileSync` (line 201), so a second call would append a second JSON
   document to the same file.
 
@@ -696,9 +717,11 @@ jq -e '.deployed == true' .zephyr/last-deploy.json
 
 ### 2. CLI `--format json`
 
-- With `--format json`, stdout carries **exactly one** JSON document, even on failure.
-  All other output goes to stderr. The CLI already has the mechanism: `reserveStdout`
-  (`libs/zephyr-cli/src/lib/stdout.ts`) sends other stdout writes to stderr.
+- With `--format json`, stdout carries **exactly one** JSON document, even on failure. The
+  document is an outcome, or, for an exit `1` failure that is not an outcome, the minimal
+  error document from #691 (`code`, `message`). All other output goes to stderr. The CLI
+  already has the mechanism: `reserveStdout` (`libs/zephyr-cli/src/lib/stdout.ts`) sends
+  other stdout writes to stderr.
 - The document is the outcome. It is also written to the receipt.
 - Today only `doctor` and `deploy` accept `--format`. **Proposal:** `run` accepts it too.
   `watch` is an open question, because it is long-running ([open question 5](#open-questions)).
@@ -707,14 +730,20 @@ jq -e '.deployed == true' .zephyr/last-deploy.json
   `category: config`, `nextAction: correct_request`.
 - Failures before a Zephyr step starts (a usage error, or the user's own build command
   failing) are not Zephyr outcomes. `ze-cli run` throws a build-command failure as
-  `ERR_UNKNOWN` (`run.ts:123-131`), which the classification would call `unknown`. It is
-  special-cased: exit `1`, no outcome document. See [open question 8](#open-questions).
+  `ERR_UNKNOWN` (`run.ts:121-131`), which the classification would call `unknown`. It is
+  special-cased: exit `1`, and in JSON mode the minimal error document instead of an outcome.
+  The CLI decides this by **phase**, not by code: did the Zephyr step start? Usage errors
+  (`index.ts:31,61`), build-command failures (`run.ts:122,129`) and unclassified HTTP
+  failures (`fetch-with-retries.ts:257,353`) all throw the same `ERR_UNKNOWN`. See
+  [open question 8](#open-questions).
 - When `run` cannot detect the output directory (`run.ts:147-152`) there is no `ZE` code
   yet, and `failed` needs one. **Proposal:** #691 adds a code for it, with category
   `config` and `nextAction: correct_request`, because the fix is to run `ze-cli deploy
   <dir>` or set the output directory. #691 also treats the "code, kind, message" error
   document as temporary: it must not emit `kind`, which is the existing code-prefix axis
-  (see [Categories](#categories-and-the-decision-mapping)). Use `category`.
+  (see [Categories](#categories-and-the-decision-mapping)). Use `category`. The body of #691
+  says "code, kind, message" and needs that update, as #692 needs one for
+  `writeRunSummary` ([open question 13](#open-questions)).
 
 ### 3. CI step summary and annotation
 
@@ -749,8 +778,8 @@ anything is deployed. This is a deliberate departure from the issue text.
 
 Color is already unreliable in this repository. `picocolor.ts:22-24` turns color on when
 `FORCE_COLOR` is set while `NO_COLOR` is not and debug is off, **or** when stdout is a TTY,
-`CI` is unset and `TERM` is not `dumb`. A TTY without `CI` still gets color when `NO_COLOR` is set. The final
-line therefore uses no color at all, and #692 should make `NO_COLOR` win.
+`CI` is unset and `TERM` is not `dumb`. A TTY without `CI` still gets color when `NO_COLOR`
+is set. The final line therefore uses no color at all, and #692 should make `NO_COLOR` win.
 
 ## CLI exit codes
 
@@ -775,19 +804,20 @@ only.
 
 `ze-cli run`, `deploy` and `watch` map the outcome to the exit code. One table covers the
 whole `ze-cli` binary, so there is one documented scheme with owned ranges. `doctor` owns
-1-3. The outcome commands never emit 2 or 3, and `doctor` never emits 10 or above.
+2 and 3. Exit 1 is the generic failure code of every command, and what it means depends on
+the command. The outcome commands never emit 2 or 3, and `doctor` never emits 10 or above.
 
-| Exit | Used by                  | Meaning                                                                                                                |
-| ---- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `0`  | all commands             | Success. `doctor`: healthy. `run`, `deploy`, `watch`: `deployed`, or `skipped` because the user set `ZE_DISABLED`.     |
-| `1`  | `doctor`                 | Findings (unchanged).                                                                                                  |
-| `1`  | `run`, `deploy`, `watch` | A failure that is not a Zephyr outcome: a usage error, the user's build command failing, a crash. No outcome document. |
-| `2`  | `doctor` only            | Invalid project (unchanged).                                                                                           |
-| `3`  | `doctor` only            | Tool failure (unchanged).                                                                                              |
-| `10` | none                     | Reserved. Not used in version 1. See [open question 3](#open-questions).                                               |
-| `20` | `run`, `deploy`, `watch` | Failed, a later retry can work. `nextAction: retry_later`.                                                             |
-| `30` | `run`, `deploy`, `watch` | Failed, credentials or access must change. `nextAction: refresh_credentials` or `check_permissions`.                   |
-| `40` | `run`, `deploy`, `watch` | Failed, a setting or input must change. `nextAction: correct_request`.                                                 |
+| Exit | Used by                  | Meaning                                                                                                                                                                  |
+| ---- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `0`  | all commands             | Success. `doctor`: healthy. `run`, `deploy`, `watch`: `deployed`, or `skipped` because the user set `ZE_DISABLED`.                                                       |
+| `1`  | `doctor`                 | Findings (unchanged).                                                                                                                                                    |
+| `1`  | `run`, `deploy`, `watch` | A failure that is not a Zephyr outcome: a usage error, the user's build command failing, a crash. No outcome document. With `--format json`: the minimal error document. |
+| `2`  | `doctor` only            | Invalid project (unchanged).                                                                                                                                             |
+| `3`  | `doctor` only            | Tool failure (unchanged).                                                                                                                                                |
+| `10` | none                     | Reserved. Not used in version 1. See [open question 3](#open-questions).                                                                                                 |
+| `20` | `run`, `deploy`, `watch` | Failed, a later retry can work. `nextAction: retry_later`.                                                                                                               |
+| `30` | `run`, `deploy`, `watch` | Failed, credentials or access must change. `nextAction: refresh_credentials` or `check_permissions`.                                                                     |
+| `40` | `run`, `deploy`, `watch` | Failed, a setting or input must change. `nextAction: correct_request`. Also used for `unknown`: inspect the error code page, and report it if it is unexplained.         |
 
 **This is the part of the RFC most likely to be contested.** The reviewer comment on #688
 says "`doctor` already uses 0-3, so let's not add a second set to the same CLI." This
@@ -816,9 +846,11 @@ Reasons for the table:
   reads it today, and the CLI does not call that function. **Proposal:** the CLI keeps
   ignoring `ZE_FAIL_BUILD`, because the CLI already exits non-zero on failure.
 
-`ze-cli run` on a failed upload today exits 1. After this change a Zephyr failure exits
-`20`, `30` or `40`. That is a behavior change for scripts that test `== 1`, and the
-release notes for #692 must call it out.
+`ze-cli run`, `deploy` and `watch` on a failed Zephyr step today exit 1. After this change
+a Zephyr failure exits `20`, `30` or `40`. That is a behavior change for scripts that test
+`== 1`, and the release notes for #692 must call it out. The `run` output-directory skip
+changes twice: from `0` to a plain non-zero exit in #691 (the issue asks for "a plain
+non-zero exit"), then to `40` in #692.
 
 ## Writing rules
 
@@ -876,10 +908,10 @@ For `unreachable`, `timeout` and `upstream_error`, the final line printed to the
 the status page sentence described in [section 4](#4-the-final-line). That sentence is not
 part of the `message` field.
 
-A small automated test over the templates enforces the mechanical rules: the code is
-present, no emoji, no contractions, no sentence above about 20 words, and none of the
-banned words `ship`, `push`, `publish`, `promote` and `bundle` (the glossary words replace
-them). The test checks form. A person reviews wording.
+A small automated test over the templates enforces the mechanical rules: the code is present
+in every failure template, no emoji, no contractions, no sentence above 25 words, and none
+of the banned words `ship`, `push`, `publish`, `promote` and `bundle` (the glossary words
+replace them). The test checks form. A person reviews wording.
 
 ## Docs requirements
 

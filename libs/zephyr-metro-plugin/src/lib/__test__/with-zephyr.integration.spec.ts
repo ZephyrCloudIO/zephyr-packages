@@ -67,6 +67,7 @@ rs.mock('module', () => ({
 }));
 
 import fs from 'fs';
+import path from 'path';
 import { withZephyr, withZephyrMetro } from '../with-zephyr';
 
 describe('withZephyr integration', () => {
@@ -137,8 +138,12 @@ describe('withZephyr integration', () => {
       const enhancer = withZephyr({ name: 'TestApp' });
       const result = await enhancer(baseMetroConfig);
 
-      expect(result.transformer?.babelTransformerPath).toMatch(
-        /^\/project\/node_modules\/\.zephyr-metro\/env-transformer-[0-9a-f]{16}\.js$/
+      const transformerPath = String(result.transformer?.babelTransformerPath);
+      expect(path.dirname(transformerPath)).toBe(
+        path.join('/project', 'node_modules', '.zephyr-metro')
+      );
+      expect(path.basename(transformerPath)).toMatch(
+        /^env-transformer-[0-9a-f]{16}\.js$/
       );
       const source = String(rs.mocked(fs.writeFileSync).mock.calls[0]?.[1]);
       expect(source).toContain(

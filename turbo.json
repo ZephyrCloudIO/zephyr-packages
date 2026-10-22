@@ -59,6 +59,11 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
       "outputs": []
     },
+    "zephyr-native-env#test": {
+      "dependsOn": ["build", "^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/rstest.project.mts"],
+      "outputs": []
+    },
     "typecheck": {
       "dependsOn": ["^build", "^typecheck"],
       "outputs": ["*.tsbuildinfo", "dist/**/*.tsbuildinfo", "lib/**/*.tsbuildinfo"]

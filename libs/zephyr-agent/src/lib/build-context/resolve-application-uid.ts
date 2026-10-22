@@ -1,6 +1,7 @@
 import { createApplicationUid } from 'zephyr-edge-contract';
 import { getGitProviderInfo } from './git-provider-utils';
-import { getPackageJson } from './ze-util-read-package-json';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { runGit } from './ze-util-get-git-info';
 import { hasZephyrConfigFile } from './zephyr-config';
 
@@ -34,8 +35,12 @@ export async function resolvePreflightApplicationUid(
     if (!remoteOrigin) return { reason: 'unresolved' };
     const { owner, project } = getGitProviderInfo(remoteOrigin);
 
-    // An explicit empty config keeps this from loading a config file.
-    const { name } = await getPackageJson(context, {});
+    // Read the name directly. The build helper logs to stdout, which would corrupt the
+    // JSON report of `doctor --online --format json`.
+    const manifest = JSON.parse(
+      await readFile(path.join(context ?? process.cwd(), 'package.json'), 'utf8')
+    ) as { name?: unknown };
+    const name = typeof manifest.name === 'string' ? manifest.name : undefined;
     if (!name) return { reason: 'unresolved' };
 
     return { uid: createApplicationUid({ org: owner, project, name }) };

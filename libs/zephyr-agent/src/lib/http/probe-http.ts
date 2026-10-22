@@ -57,7 +57,8 @@ export async function probeHttp(
       target,
       { method: 'GET', headers, signal: controller.signal },
       0,
-      timeoutMs
+      // Our timer is the limit. A later deadline keeps axios from racing it.
+      timeoutMs + 1_000
     );
     return { outcome: 'response', status: response.status, body: await response.text() };
   } catch (error) {

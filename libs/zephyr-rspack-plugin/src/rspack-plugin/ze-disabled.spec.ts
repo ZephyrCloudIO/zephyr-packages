@@ -50,6 +50,15 @@ describe('rspack withZephyr with ZE_DISABLED=true', () => {
       ['remote', 'add', 'origin', 'git@github.com:example-org/example-repo.git'],
       { cwd: project }
     );
+    // CI builds need real commit history, so give the project one.
+    for (const args of [
+      ['config', 'user.name', 'Test'],
+      ['config', 'user.email', 'test@example.com'],
+      ['add', '-A'],
+      ['commit', '--quiet', '-m', 'init'],
+    ]) {
+      execFileSync('git', args, { cwd: project });
+    }
     process.env['ZE_SECRET_TOKEN'] = 'dummy-token-for-tests';
   });
 
@@ -124,10 +133,11 @@ describe('rspack withZephyr with ZE_DISABLED=true', () => {
   it('contacts Zephyr when ZE_DISABLED is not set', async () => {
     process.env['ZE_DISABLED'] = 'false';
     try {
-      const { output } = await build();
+      // CI sets ZE_FAIL_BUILD=true, which makes the failed request reject the config.
+      const result = await build().catch(() => undefined);
 
       expect(requests.length).toBeGreaterThan(0);
-      expect(output).not.toContain(DISABLED_LINE);
+      expect(result?.output ?? '').not.toContain(DISABLED_LINE);
     } finally {
       process.env['ZE_DISABLED'] = 'true';
     }

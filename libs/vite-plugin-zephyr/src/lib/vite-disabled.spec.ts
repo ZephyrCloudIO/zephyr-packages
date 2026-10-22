@@ -50,6 +50,15 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
       ['remote', 'add', 'origin', 'git@github.com:example-org/example-repo.git'],
       { cwd: project }
     );
+    // CI builds need real commit history, so give the project one.
+    for (const args of [
+      ['config', 'user.name', 'Test'],
+      ['config', 'user.email', 'test@example.com'],
+      ['add', '-A'],
+      ['commit', '--quiet', '-m', 'init'],
+    ]) {
+      execFileSync('git', args, { cwd: project });
+    }
     process.env['ZE_SECRET_TOKEN'] = 'dummy-token-for-tests';
   });
 

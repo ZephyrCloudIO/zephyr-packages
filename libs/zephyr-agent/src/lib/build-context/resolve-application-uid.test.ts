@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from '@rstest/core';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -37,6 +37,30 @@ describe('resolvePreflightApplicationUid', () => {
     await expect(resolvePreflightApplicationUid(directory)).resolves.toEqual({
       uid: 'host.example-repo.example-org',
     });
+  });
+
+  it('prints nothing, so a JSON report on stdout stays valid', async () => {
+    // No zephyr:dependencies field: the build helper would log a hint about it.
+    const directory = await project(
+      { 'package.json': JSON.stringify({ name: 'host', version: '1.0.0' }) },
+      'git@github.com:example-org/example-repo.git'
+    );
+    const log = rs.spyOn(console, 'log').mockImplementation(() => undefined);
+    const info = rs.spyOn(console, 'info').mockImplementation(() => undefined);
+    const warn = rs.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const write = rs.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    try {
+      await resolvePreflightApplicationUid(directory);
+      expect([
+        log.mock.calls,
+        info.mock.calls,
+        warn.mock.calls,
+        write.mock.calls,
+      ]).toEqual([[], [], [], []]);
+    } finally {
+      rs.restoreAllMocks();
+    }
   });
 
   it('says it cannot tell when there is no remote origin', async () => {

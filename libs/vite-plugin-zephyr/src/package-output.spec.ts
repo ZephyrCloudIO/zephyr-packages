@@ -65,7 +65,16 @@ async function createConsumer(name: string, includeFederationPeer = false) {
   await mkdir(nodeModules, { recursive: true });
   await writeFile(
     path.join(consumerRoot, 'package.json'),
-    JSON.stringify({ name, private: true, type: 'module' })
+    JSON.stringify({
+      name,
+      private: true,
+      type: 'module',
+      dependencies: {
+        'vite-plugin-zephyr': JSON.parse(
+          await readFile(path.join(packageRoot, 'package.json'), 'utf8')
+        ).version,
+      },
+    })
   );
 
   run('tar', ['-xzf', tarballPath, '-C', nodeModules], consumerRoot);
@@ -109,8 +118,11 @@ beforeAll(async () => {
   tempRoot = await mkdtemp(path.join(tmpdir(), 'vite-plugin-zephyr-package-'));
   tarballPath = path.join(tempRoot, 'vite-plugin-zephyr.tgz');
   const pnpmCli = process.env['npm_execpath'];
-  if (pnpmCli) {
+  // pnpm may be a JavaScript entry point or a standalone executable (@pnpm/exe).
+  if (pnpmCli && /\.[cm]?js$/u.test(pnpmCli)) {
     run(process.execPath, [pnpmCli, 'pack', '--out', tarballPath], packageRoot);
+  } else if (pnpmCli) {
+    run(pnpmCli, ['pack', '--out', tarballPath], packageRoot);
   } else if (process.platform === 'win32') {
     run(
       process.env['ComSpec'] ?? 'cmd.exe',

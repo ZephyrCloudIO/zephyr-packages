@@ -12,6 +12,20 @@ pnpm add zephyr-cli
 yarn add zephyr-cli
 ```
 
+## AI Agent Skills (Optional)
+
+The `zephyr-cli` Agent Skill teaches AI coding agents how to set up and debug this
+package. It lives in the
+[ZephyrCloudIO/skills](https://github.com/ZephyrCloudIO/skills)
+repository, next to the shared `zephyr-core` and
+`zephyr-module-federation` guides. Zephyr does not need it at runtime.
+
+Add it to your project with the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add ZephyrCloudIO/skills --skill zephyr-cli
+```
+
 ## Usage
 
 ### Run Command (Default)
@@ -67,7 +81,16 @@ ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 
 # Mark as SSR
 ze-cli deploy ./dist --ssr
+
+# Print the result as one JSON line on stdout, with logs on stderr
+ze-cli deploy ./dist --format json
 ```
+
+With `--format json`, a successful deploy prints
+`{"applicationUid":"…","versionUrl":"https://…","targetUrls":["https://…"]}`.
+`versionUrl` is the immutable URL of this version and is `null` if Zephyr returned
+none; `targetUrls` lists the tag and environment URLs that now serve it. Tools that
+deploy on a user's behalf should read this line instead of parsing logs.
 
 ### Watch Command
 
@@ -158,7 +181,7 @@ Every finding contains `code`, `severity`, `message`, structured `evidence`, and
 - `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
-- `--format <json|text>` - Doctor output format (default: `text`)
+- `--format <json|text>` - Doctor report format, or deploy result format (default: `text`)
 - `--verbose, -v` - Enable verbose output
 - `--help, -h` - Show help message
 
@@ -237,13 +260,15 @@ The CLI automatically detects configuration files for:
 
 If your build tool uses a JavaScript configuration file (e.g., `webpack.config.js`, `rollup.config.js`), the CLI will warn you that the configuration is too dynamic to analyze and suggest:
 
-- Using one of the Zephyr bundler plugins from `@libs/`
+- Using the Zephyr plugin for that bundler, such as `zephyr-webpack-plugin`,
+  `rollup-plugin-zephyr`, or `vite-plugin-zephyr`
 - Using `ze-cli deploy <dir>` after building
 
 ## Requirements
 
 - Node.js 18+ or 20+
-- A valid Zephyr authentication token (run `zephyr login` if needed)
+- Zephyr authentication: an interactive terminal opens a browser login; CI and
+  other non-interactive shells need `ZE_CI_TOKEN`
 - A git repository (for application identification)
 - A `package.json` file (for application metadata)
 

@@ -252,6 +252,89 @@ describe('XPackBuildCoordinator', () => {
     expect(zephyrEngine.upload_assets).not.toHaveBeenCalled();
   });
 
+  it('describes a container once when a server compiler builds its Node copy', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'web', role: 'client' },
+      { name: 'node', role: 'server' },
+    ]);
+    const mfConfig = {
+      name: 'product',
+      filename: 'remoteEntry.js',
+      exposes: { './ProductCard': './src/ProductCard.tsx' },
+    };
+    const federation = {
+      name: 'product',
+      remote: 'remoteEntry.js',
+      mf_manifest: 'mf-manifest.json',
+    };
+
+    await coordinator.contribute({
+      participant: 'web',
+      assetsMap: asset('remoteEntry.js', 'web-hash'),
+      buildStats: { ...stats, federation: [federation] },
+      mfConfigs: [mfConfig],
+    });
+    await coordinator.contribute({
+      participant: 'node',
+      assetsMap: asset('server/remoteEntry.js', 'node-hash'),
+      buildStats: {
+        ...stats,
+        federation: [{ ...federation, library_type: 'commonjs-module' }],
+      },
+      mfConfigs: [
+        {
+          ...mfConfig,
+          library: { type: 'commonjs-module' },
+          runtimePlugins: ['@module-federation/node/runtimePlugin'],
+          dts: false,
+          dev: false,
+        },
+      ],
+    });
+
+    expect(zephyrEngine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mfConfig,
+        mfConfigs: [mfConfig],
+        buildStats: expect.objectContaining({ federation: [federation] }),
+      })
+    );
+  });
+
+  it('keeps metadata for a container only a server compiler builds', async () => {
+    const zephyrEngine = engine();
+    const coordinator = new XPackBuildCoordinator(zephyrEngine, [
+      { name: 'web', role: 'client' },
+      { name: 'node', role: 'server' },
+    ]);
+
+    await coordinator.contribute({
+      participant: 'web',
+      assetsMap: asset('remoteEntry.js', 'web-hash'),
+      buildStats: { ...stats, federation: [{ name: 'product' }] },
+      mfConfigs: [{ name: 'product', filename: 'remoteEntry.js' }],
+    });
+    await coordinator.contribute({
+      participant: 'node',
+      assetsMap: asset('server/remoteEntry.js', 'node-hash'),
+      buildStats: { ...stats, federation: [{ name: 'renderer' }] },
+      mfConfigs: [{ name: 'renderer', filename: 'rendererEntry.js' }],
+    });
+
+    expect(zephyrEngine.upload_assets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mfConfigs: [
+          { name: 'product', filename: 'remoteEntry.js' },
+          { name: 'renderer', filename: 'rendererEntry.js' },
+        ],
+        buildStats: expect.objectContaining({
+          federation: [{ name: 'product' }, { name: 'renderer' }],
+        }),
+      })
+    );
+  });
+
   it('rejects cross-compiler path collisions before uploading', async () => {
     const zephyrEngine = engine();
     const coordinator = new XPackBuildCoordinator(zephyrEngine, [

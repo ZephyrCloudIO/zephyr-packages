@@ -36,6 +36,20 @@ pnpm add --dev vite-plugin-zephyr
 bun add --dev vite-plugin-zephyr
 ```
 
+## AI Agent Skills (Optional)
+
+The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
+this package, with a dedicated
+[Vite guide](https://github.com/ZephyrCloudIO/skills/blob/main/skills/zephyr-core/references/integrations/vite.md).
+Zephyr does not need it at runtime. Add it to your project with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add ZephyrCloudIO/skills --skill zephyr-core
+```
+
+Add `--skill zephyr-module-federation` if the application uses Module Federation.
+
 ## Usage
 
 ### Basic Configuration

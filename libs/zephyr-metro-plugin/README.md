@@ -32,6 +32,20 @@ pnpm add --dev zephyr-metro-plugin @module-federation/metro
 bun add --dev zephyr-metro-plugin @module-federation/metro
 ```
 
+## AI Agent Skills (Optional)
+
+The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
+this package, with a dedicated
+[Metro guide](https://github.com/ZephyrCloudIO/skills/blob/main/skills/zephyr-core/references/integrations/metro.md).
+Zephyr does not need it at runtime. Add it to your project with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add ZephyrCloudIO/skills --skill zephyr-core
+```
+
+Add `--skill zephyr-module-federation` if the application uses Module Federation.
+
 ## Usage
 
 Publication commands using `@module-federation/metro@2.9.0` require React 19,

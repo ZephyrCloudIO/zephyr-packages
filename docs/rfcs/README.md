@@ -20,8 +20,9 @@ pull request for those.
    the related issues in the description and in the `tracking` field.
 3. Discuss and revise in the pull request. Record every rejected option under
    _Alternatives considered_. Record every unresolved point under _Open questions_.
-4. When the maintainers agree, set `status: accepted` in the same pull request and merge it.
-   **Merging means the RFC is accepted.** An RFC that is not merged is not accepted.
+4. When the maintainers agree, set `status: accepted` in the same pull request. A
+   maintainer merges it. **Merging an RFC with `status: accepted` means it is accepted.**
+   An RFC that is not merged is not accepted.
 5. Implementation happens in separate pull requests that link the RFC.
 6. To change an accepted RFC, open a new pull request that edits it. Say what changed in
    the description. To replace it, add a new RFC and set the old one to `status: superseded`.

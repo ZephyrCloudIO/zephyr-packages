@@ -62,6 +62,16 @@ describe('rewriteEnvReadsToNativeLookup', () => {
     );
   });
 
+  test('compiles ZE_APPLICATION_UID reads to the build UID', () => {
+    const source = `module.exports = [process.env.ZE_APPLICATION_UID, import.meta.env['ZE_APPLICATION_UID'], (() => { const { ZE_APPLICATION_UID: uid } = process.env; return uid; })()];`;
+    expect(
+      run(source, {
+        processEnv: { ZE_APPLICATION_UID: 'other' },
+        runtimeEnv: { [UID]: { ZE_APPLICATION_UID: 'spoof' } },
+      })
+    ).toEqual([UID, UID, UID]);
+  });
+
   test('destructuring keeps alias, default, rest and non-public keys', () => {
     const source = [
       `const { ZE_PUBLIC_A: alias, ZE_PUBLIC_B = 'default-b', NODE_ENV, ...rest } = process.env;`,

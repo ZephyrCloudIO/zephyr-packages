@@ -2,6 +2,7 @@ import type { Configuration } from '@rspack/core';
 import {
   collectZEPublicVars,
   handleGlobalError,
+  logFn,
   ZephyrEngine,
   ze_log,
 } from 'zephyr-agent';
@@ -140,7 +141,7 @@ async function _zephyr_configuration(
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
     if (lacksNativeEnvRuntimePlugin(mf_configs)) {
-      ze_log.app(NATIVE_ENV_RUNTIME_PLUGIN_HINT);
+      logFn('warn', NATIVE_ENV_RUNTIME_PLUGIN_HINT);
     }
 
     ze_log.app('Application uid created...');

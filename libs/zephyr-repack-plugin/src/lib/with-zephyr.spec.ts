@@ -5,6 +5,7 @@ const mocks = rs.hoisted(() => {
   const engine = {
     env: { target: 'ios' },
     hasActiveBuild: true,
+    application_uid: 'host.project.org',
     build_failed: rs.fn(),
     resolve_remote_dependencies: rs.fn().mockResolvedValue([]),
   };
@@ -13,6 +14,9 @@ const mocks = rs.hoisted(() => {
     engine,
     create: rs.fn(async () => engine),
     handleGlobalError: rs.fn(),
+    collectZEPublicVars: rs.fn(() => ({ ZE_PUBLIC_API: 'https://build.example' })),
+    logFn: rs.fn(),
+    extractFederatedConfig: rs.fn((plugin: unknown) => plugin),
     extractFederatedDependencyPairs: rs.fn().mockReturnValue([]),
     extractLibraryType: rs.fn(),
     makeCopyOfModuleFederationOptions: rs.fn(),
@@ -24,6 +28,8 @@ const mocks = rs.hoisted(() => {
 
 rs.mock('zephyr-agent', () => ({
   handleGlobalError: mocks.handleGlobalError,
+  collectZEPublicVars: mocks.collectZEPublicVars,
+  logFn: mocks.logFn,
   ZephyrEngine: { create: mocks.create },
   ze_log: {
     init: rs.fn(),
@@ -33,6 +39,7 @@ rs.mock('zephyr-agent', () => ({
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
+  extractFederatedConfig: mocks.extractFederatedConfig,
   extractFederatedDependencyPairs: mocks.extractFederatedDependencyPairs,
   extractLibraryType: mocks.extractLibraryType,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
@@ -89,5 +96,63 @@ describe('Re.Pack native target boundaries', () => {
       context: '/repo',
     });
     expect(mocks.engine.env.target).toBe('android');
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+  });
+
+  it('prepends the env-native pre-loader scoped to the application UID', async () => {
+    const config = {
+      context: '/repo',
+      plugins: [],
+      module: { rules: [{ test: /\.js$/ }] },
+    } as Configuration;
+    await withZephyr()(() => config)({ platform: 'ios', mode: 'production' });
+
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+    expect(config.module?.rules).toHaveLength(2);
+    expect(config.module?.rules?.[0]).toMatchObject({
+      enforce: 'pre',
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: expect.stringMatching(/env-native-loader\.js$/),
+          options: {
+            applicationUid: 'host.project.org',
+            buildEnv: { ZE_PUBLIC_API: 'https://build.example' },
+          },
+        },
+      ],
+    });
+  });
+
+  it('warns when remotes are consumed without the zephyr-native-env runtime plugin', async () => {
+    mocks.makeCopyOfModuleFederationOptions.mockReturnValue([
+      { remotes: { mini: 'mini@http://x/mini.container.js.bundle' } },
+    ]);
+    await withZephyr()(() => ({ context: '/repo', plugins: [] }) as Configuration)({
+      platform: 'ios',
+      mode: 'production',
+    });
+
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+    expect(mocks.logFn).toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining("require.resolve('zephyr-native-env/runtime-plugin')")
+    );
+  });
+
+  it('does not warn when the zephyr-native-env runtime plugin is configured', async () => {
+    mocks.makeCopyOfModuleFederationOptions.mockReturnValue([
+      {
+        remotes: { mini: 'mini@http://x/mini.container.js.bundle' },
+        runtimePlugins: ['/node_modules/zephyr-native-env/lib/runtime-plugin.js'],
+      },
+    ]);
+    await withZephyr()(() => ({ context: '/repo', plugins: [] }) as Configuration)({
+      platform: 'ios',
+      mode: 'production',
+    });
+
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+    expect(mocks.logFn).not.toHaveBeenCalled();
   });
 });

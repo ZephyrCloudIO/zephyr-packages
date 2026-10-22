@@ -130,7 +130,9 @@ Doctor statically checks:
 JSON uses schema version `1.0.0` (`1.1.0` with `--online`). Consumers should branch on `status`,
 `exitCode`, and finding `code`; they must not match human-readable messages.
 Evidence paths are project-relative. Doctor never reads `.env` or emits config
-source, authentication state, environment values, or file contents.
+source, environment values, or file contents. Without `--online` it also emits no
+authentication state. With `--online`, a token finding names the token source
+(`ZE_SECRET_TOKEN` or `login`), never the token.
 TypeScript report types, schema version, finding codes, and exit-code constants
 are exported from `zephyr-cli/doctor/schema`.
 
@@ -251,9 +253,9 @@ build command still fails: skip mode never hides a build error. Set it next to
 `ZE_FAIL_BUILD`, which makes a Zephyr failure fail the build.
 
 These integrations read it: `zephyr-webpack-plugin`, `zephyr-rspack-plugin`,
-`zephyr-rsbuild-plugin` (and so `zephyr-modernjs-plugin`), `vite-plugin-zephyr`
-(`withZephyr` and `withZephyrPartial`), and `ze-cli`. The plugins print the line once,
-after the bundle is built without errors. Other integrations do not read it yet. With
+`zephyr-rsbuild-plugin`, `zephyr-modernjs-plugin` (through the rspack plugin), `vite-plugin-zephyr`
+(`withZephyr` and `withZephyrPartial`), and `ze-cli`. The plugins print the line after the
+bundle is built without errors (Modern.js can print it once per environment). Other integrations do not read it yet. With
 skip mode on, `vite-plugin-zephyr` does not add the Zephyr runtime plugin to Module
 Federation or rewrite `ZE_PUBLIC_*` reads, so remotes keep the URLs in your config. If
 the wrapped build already runs a Zephyr plugin, both print the line.

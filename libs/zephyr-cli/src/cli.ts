@@ -252,9 +252,10 @@ How it works:
   - For watch commands, ze-cli publishes each settled output change as a new immutable
     snapshot. The Zephyr control plane authorizes and advances any development tag.
   - The doctor command only reads project, package, config, lockfile, and diagnostic
-    artifact metadata. It never installs, edits, builds, authenticates, or deploys.
-    With --online it also sends read-only requests to Zephyr to check the API, the
-    gateway, the token, the application configuration and the edge URL.
+    artifact metadata. It never installs, edits, builds, or deploys. By default it makes
+    no network request. With --online it also sends read-only requests to Zephyr to
+    check the API, the gateway, the token (sent as a bearer header, never stored or
+    changed), the application configuration and the edge URL.
   - With ZE_DISABLED=true, ze-cli runs the build and does not contact Zephyr. It says that
     the bundle is not deployed.
   - All stdout/stderr from build commands are passed through.

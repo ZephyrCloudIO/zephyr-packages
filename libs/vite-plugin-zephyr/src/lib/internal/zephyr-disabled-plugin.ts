@@ -18,8 +18,15 @@ export function zephyrDisabledPlugin(): Plugin {
     buildStart() {
       failed = false;
     },
+    renderStart() {
+      failed = false;
+    },
     buildEnd(error) {
       failed = Boolean(error);
+    },
+    // Vite closes the bundle even when rendering or writing it failed.
+    renderError() {
+      failed = true;
     },
     closeBundle() {
       if (announced || failed) return;

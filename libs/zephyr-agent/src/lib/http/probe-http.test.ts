@@ -78,6 +78,21 @@ describe('probeHttp', () => {
     expect(Date.now() - started).toBeLessThan(2000);
   });
 
+  it('adds the preview api_host hint to gateway requests, like a build does', async () => {
+    const { origin, hits } = await listen(() => 200);
+    const saved = { ...process.env };
+    process.env['ZE_IS_PREVIEW'] = 'true';
+    process.env['ZE_API'] = 'http://api.example.test';
+    process.env['ZE_API_GATE'] = origin;
+    try {
+      await probeHttp(new URL('/user-info', origin), { timeoutMs: 1000 });
+    } finally {
+      process.env = saved;
+    }
+
+    expect(hits).toEqual(['/user-info?api_host=http%3A%2F%2Fapi.example.test']);
+  });
+
   it('sends the given headers', async () => {
     let seen: string | undefined;
     const server = createServer((request, response) => {

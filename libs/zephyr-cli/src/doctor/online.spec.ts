@@ -481,7 +481,13 @@ describe('doctor --online against local fakes', () => {
     expect(report.status).toBe('tool_failure');
     expect(report.exitCode).toBe(DoctorExitCode.ToolFailure);
     expect(codes(report)).toContain(DoctorFindingCode.ToolFailure);
-    expect(checkStatuses(report)).toEqual({ api: 'passed', gateway: 'passed' });
+    expect(checkStatuses(report)).toEqual({
+      api: 'passed',
+      gateway: 'passed',
+      token: 'skipped',
+      application: 'skipped',
+      edge: 'skipped',
+    });
     expect(JSON.stringify(report)).not.toContain('storage unreadable');
   });
 
@@ -527,7 +533,13 @@ describe('doctor --online against local fakes', () => {
 
     expect(report.exitCode).toBe(DoctorExitCode.InvalidProject);
     expect(codes(report)).toContain(DoctorFindingCode.ToolFailure);
-    expect(checkStatuses(report)).toEqual({ api: 'passed', gateway: 'passed' });
+    expect(checkStatuses(report)).toEqual({
+      api: 'passed',
+      gateway: 'passed',
+      token: 'skipped',
+      application: 'skipped',
+      edge: 'skipped',
+    });
   });
 
   it('never prints the token or an absolute path in a finding or the check list', async () => {

@@ -637,9 +637,21 @@ function withToolFailure(
     remediation:
       'Run doctor without --online to get the project checks, and report this failure.',
   };
-  // Keep the checks that finished. A missing project (2) keeps its exit code; anything
-  // else becomes a tool failure (3).
-  const merged = merge(report, verdicts, timeoutMs, [finding]);
+  // Keep the checks that finished and list the rest as skipped, so every report names
+  // all five checks. A missing project (2) keeps its exit code; anything else becomes a
+  // tool failure (3).
+  const done = new Set(verdicts.map(({ check }) => check.id));
+  const notRun: Verdict[] = (['api', 'gateway', 'token', 'application', 'edge'] as const)
+    .filter((id) => !done.has(id))
+    .map((id) => ({
+      check: {
+        id,
+        status: 'skipped',
+        target: null,
+        findingCode: DoctorFindingCode.ToolFailure,
+      },
+    }));
+  const merged = merge(report, [...verdicts, ...notRun], timeoutMs, [finding]);
   if (merged.exitCode !== DoctorExitCode.InvalidProject) {
     merged.status = 'tool_failure';
     merged.exitCode = DoctorExitCode.ToolFailure;

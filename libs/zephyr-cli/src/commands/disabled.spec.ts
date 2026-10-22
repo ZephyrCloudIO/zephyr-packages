@@ -30,8 +30,8 @@ const DISABLED_LINE =
   'The bundle is built. The bundle is not deployed. Zephyr is disabled (ZE_DISABLED).';
 
 /**
- * Real commands, no mocks of Zephyr. There is no git repository, no token and an empty
- * HOME, and every Zephyr address points at a local server that counts requests.
+ * Real commands, no mocks of Zephyr. The project has a git remote and a token, HOME is
+ * empty, and every Zephyr address points at a local server that counts requests.
  */
 describe('ze-cli commands with ZE_DISABLED=true', () => {
   const saved = { ...process.env };

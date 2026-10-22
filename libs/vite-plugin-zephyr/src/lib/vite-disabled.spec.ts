@@ -6,7 +6,7 @@ import net from 'node:net';
 import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { build } from 'vite';
+import { build, type Plugin } from 'vite';
 
 const DISABLED_LINE =
   'The bundle is built. The bundle is not deployed. Zephyr is disabled (ZE_DISABLED).';
@@ -61,7 +61,11 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
   });
 
   /** Runs one real build and reports what it printed and opened. */
-  async function run(name: 'withZephyr' | 'withZephyrPartial', entry = 'index.js') {
+  async function run(
+    name: 'withZephyr' | 'withZephyrPartial',
+    entry = 'index.js',
+    extraPlugins: Plugin[] = []
+  ) {
     const connect = rs.spyOn(net.Socket.prototype, 'connect');
     const warn = rs.spyOn(console, 'warn').mockImplementation(() => undefined);
     const log = rs.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -74,8 +78,12 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
         root: project,
         configFile: false,
         logLevel: 'silent',
-        plugins:
-          name === 'withZephyr' ? plugins.withZephyr() : [partial.withZephyrPartial()],
+        plugins: [
+          ...(name === 'withZephyr'
+            ? plugins.withZephyr()
+            : [partial.withZephyrPartial()]),
+          ...extraPlugins,
+        ],
         build: {
           outDir: 'dist',
           emptyOutDir: true,
@@ -119,6 +127,21 @@ describe('vite withZephyr with ZE_DISABLED=true', () => {
     await writeFile(path.join(project, 'broken.js'), "import './does-not-exist';\n");
 
     const { failure, output } = await run('withZephyr', 'broken.js');
+
+    expect(failure).toBeDefined();
+    expect(output).not.toContain(DISABLED_LINE);
+    expect(requests).toEqual([]);
+  });
+
+  it('does not say the bundle is built when rendering the output fails', async () => {
+    const failsToRender: Plugin = {
+      name: 'fails-to-render',
+      renderChunk() {
+        throw new Error('render failed');
+      },
+    };
+
+    const { failure, output } = await run('withZephyr', 'index.js', [failsToRender]);
 
     expect(failure).toBeDefined();
     expect(output).not.toContain(DISABLED_LINE);

@@ -1,4 +1,5 @@
 import { fetchWithRetries } from './fetch-with-retries';
+import { parseUrl } from './http-request';
 
 export type HttpProbeResult =
   | { outcome: 'response'; status: number; body: string }
@@ -36,6 +37,14 @@ export async function probeHttp(
   url: URL,
   { headers, timeoutMs }: HttpProbeOptions
 ): Promise<HttpProbeResult> {
+  // Builds add a hint to gateway requests in preview environments; match them. A
+  // malformed ZE_API_GATE makes that lookup throw, which must not stop the probe.
+  let target = url;
+  try {
+    target = parseUrl(new URL(url));
+  } catch {
+    target = url;
+  }
   const controller = new AbortController();
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -45,7 +54,7 @@ export async function probeHttp(
 
   try {
     const response = await fetchWithRetries(
-      url,
+      target,
       { method: 'GET', headers, signal: controller.signal },
       0,
       timeoutMs

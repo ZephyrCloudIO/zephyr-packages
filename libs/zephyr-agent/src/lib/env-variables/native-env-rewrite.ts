@@ -4,7 +4,10 @@ import MagicString, { type SourceMap } from 'magic-string';
 export interface NativeEnvRewriteOptions {
   /** Source file path; selects parser plugins and names the source map source. */
   filename: string;
-  /** Zephyr application UID that scopes runtime overrides. */
+  /**
+   * Zephyr application UID that scopes runtime overrides; `ZE_APPLICATION_UID` reads
+   * compile to it.
+   */
   applicationUid: string;
   /** Build-time `ZE_PUBLIC_*` values compiled in as fallbacks. */
   buildEnv: Readonly<Record<string, string>>;
@@ -18,7 +21,9 @@ interface AstNode {
   [key: string]: unknown;
 }
 
-const PUBLIC_KEY = /^ZE_PUBLIC_[A-Z0-9_]+$/;
+const APPLICATION_UID_KEY = 'ZE_APPLICATION_UID';
+/** Keys whose reads are rewritten: public values and the application UID. */
+const REWRITTEN_KEY = /^(?:ZE_PUBLIC_[A-Z0-9_]+|ZE_APPLICATION_UID)$/;
 
 const SKIPPED_KEYS = new Set([
   'loc',
@@ -87,7 +92,7 @@ function isEnvObject(node: unknown): node is AstNode {
   );
 }
 
-/** Public key of `<env>.KEY`, `<env>['KEY']` or ``<env>[`KEY`]``, else undefined. */
+/** Rewritten key of `<env>.KEY`, `<env>['KEY']` or ``<env>[`KEY`]``, else undefined. */
 function readKey(node: AstNode): string | undefined {
   if (
     (node.type !== 'MemberExpression' && node.type !== 'OptionalMemberExpression') ||
@@ -113,7 +118,7 @@ function readKey(node: AstNode): string | undefined {
         ? value.cooked
         : undefined;
   }
-  return typeof key === 'string' && PUBLIC_KEY.test(key) ? key : undefined;
+  return typeof key === 'string' && REWRITTEN_KEY.test(key) ? key : undefined;
 }
 
 /** Collects the member expressions written to by a binding/assignment target. */
@@ -153,8 +158,8 @@ function collectWriteTargets(target: unknown, out: Set<AstNode>): void {
   }
 }
 
-/** Non-computed public keys bound by an object pattern, in source order. */
-function destructuredPublicKeys(pattern: AstNode): string[] {
+/** Non-computed rewritten keys bound by an object pattern, in source order. */
+function destructuredKeys(pattern: AstNode): string[] {
   const keys: string[] = [];
   for (const property of nodeList(pattern['properties'])) {
     if (property.type !== 'ObjectProperty' || property['computed']) continue;
@@ -166,7 +171,7 @@ function destructuredPublicKeys(pattern: AstNode): string[] {
         : key.type === 'StringLiteral'
           ? key['value']
           : undefined;
-    if (typeof name === 'string' && PUBLIC_KEY.test(name) && !keys.includes(name)) {
+    if (typeof name === 'string' && REWRITTEN_KEY.test(name) && !keys.includes(name)) {
       keys.push(name);
     }
   }
@@ -184,7 +189,8 @@ function jsLiteral(value: string): string {
  * Rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads into
  * synchronous lookups of `globalThis.__ZEPHYR__.runtime.env[applicationUid]`, with the
  * build-time value as fallback. Writes are left untouched and no newlines are inserted,
- * so line numbers stay stable.
+ * so line numbers stay stable. `process.env.ZE_APPLICATION_UID` and
+ * `import.meta.env.ZE_APPLICATION_UID` reads become the `applicationUid` literal.
  *
  * Returns `null` when nothing was rewritten. Throws when the source cannot be parsed: an
  * un-rewritten read would silently yield `undefined` on device.
@@ -193,7 +199,8 @@ export function rewriteEnvReadsToNativeLookup(
   source: string,
   options: NativeEnvRewriteOptions
 ): { code: string; map: SourceMap } | null {
-  if (!source.includes('ZE_PUBLIC_')) return null;
+  if (!source.includes('ZE_PUBLIC_') && !source.includes(APPLICATION_UID_KEY))
+    return null;
 
   const { filename, applicationUid, buildEnv } = options;
 
@@ -217,6 +224,7 @@ export function rewriteEnvReadsToNativeLookup(
 
   const uidLiteral = jsLiteral(applicationUid);
   const lookup = (key: string): string => {
+    if (key === APPLICATION_UID_KEY) return uidLiteral;
     const fallback = Object.prototype.hasOwnProperty.call(buildEnv, key)
       ? jsLiteral(buildEnv[key])
       : 'void 0';
@@ -232,7 +240,7 @@ export function rewriteEnvReadsToNativeLookup(
     if (!isNode(pattern) || pattern.type !== 'ObjectPattern' || !isEnvObject(init)) {
       return;
     }
-    const keys = destructuredPublicKeys(pattern);
+    const keys = destructuredKeys(pattern);
     if (keys.length === 0) return;
     const original = source.slice(init.start, init.end);
     const entries = keys.map((key) => `${jsLiteral(key)}: (${lookup(key)})`).join(', ');

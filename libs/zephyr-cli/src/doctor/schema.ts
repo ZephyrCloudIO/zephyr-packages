@@ -1,5 +1,12 @@
 export const DOCTOR_SCHEMA_VERSION = '1.0.0';
 
+/**
+ * The version of a report made with `--online`. It adds the optional `online` object and
+ * the optional `check`, `target` and `nextAction` fields on findings. Offline reports
+ * keep `DOCTOR_SCHEMA_VERSION` and do not contain these fields.
+ */
+export const DOCTOR_ONLINE_SCHEMA_VERSION = '1.1.0';
+
 export const DoctorExitCode = {
   Healthy: 0,
   Findings: 1,
@@ -35,6 +42,22 @@ export const DoctorFindingCode = {
   TapWatchTargetMissing: 'ZD0502',
   TapWatchMetadataMissing: 'ZD0503',
   DtsDiagnosticFailure: 'ZD0601',
+  // Online checks (`doctor --online`)
+  ApiUnreachable: 'ZD0701',
+  ApiUnavailable: 'ZD0702',
+  GatewayUnreachable: 'ZD0703',
+  GatewayUnavailable: 'ZD0704',
+  TokenMissing: 'ZD0705',
+  TokenInvalid: 'ZD0706',
+  TokenForbidden: 'ZD0707',
+  TokenNotChecked: 'ZD0708',
+  ApplicationUnresolved: 'ZD0709',
+  ApplicationConfigNotFound: 'ZD0710',
+  ApplicationConfigRejected: 'ZD0711',
+  ApplicationConfigInvalid: 'ZD0712',
+  ApplicationConfigUnavailable: 'ZD0713',
+  EdgeUnreachable: 'ZD0714',
+  EdgeUnavailable: 'ZD0715',
 } as const;
 
 export type DoctorFindingCode =
@@ -51,12 +74,28 @@ export interface DoctorEvidence {
   detail?: string;
 }
 
+/** The same values as the MCP `nextAction` field. */
+export type DoctorNextAction =
+  | 'none'
+  | 'refresh_credentials'
+  | 'check_permissions'
+  | 'retry_later'
+  | 'correct_request';
+
+export type DoctorOnlineCheckId = 'api' | 'gateway' | 'token' | 'application' | 'edge';
+
 export interface DoctorFinding {
   code: DoctorFindingCode;
   severity: DoctorSeverity;
   message: string;
   evidence: DoctorEvidence[];
   remediation: string;
+  /** Online findings only: the check that produced this finding. */
+  check?: DoctorOnlineCheckId;
+  /** Online findings only: the origin that was contacted. It has no path or query. */
+  target?: string;
+  /** Online findings only: what to do next. */
+  nextAction?: DoctorNextAction;
 }
 
 export interface DoctorDeclaredVersion {
@@ -116,8 +155,33 @@ export interface DoctorDtsState {
   diagnosticCommands: string[];
 }
 
+/**
+ * - `passed`: the check ran and found nothing wrong.
+ * - `failed`: the check ran and produced a finding.
+ * - `skipped`: the check did not run, or could not reach a verdict, because an earlier
+ *   check failed or the input was missing.
+ */
+export type DoctorOnlineCheckStatus = 'passed' | 'failed' | 'skipped';
+
+export interface DoctorOnlineCheck {
+  id: DoctorOnlineCheckId;
+  status: DoctorOnlineCheckStatus;
+  /** The origin that was contacted, or `null` when no request was made. */
+  target: string | null;
+  /** The HTTP status code, when the server answered. */
+  httpStatus?: number;
+  /** The finding that explains a `failed` or `skipped` check. */
+  findingCode?: DoctorFindingCode;
+}
+
+export interface DoctorOnlineState {
+  /** The limit applied to each check, in milliseconds. */
+  timeoutMs: number;
+  checks: DoctorOnlineCheck[];
+}
+
 export interface DoctorReport {
-  schemaVersion: typeof DOCTOR_SCHEMA_VERSION;
+  schemaVersion: typeof DOCTOR_SCHEMA_VERSION | typeof DOCTOR_ONLINE_SCHEMA_VERSION;
   command: 'doctor';
   status: DoctorStatus;
   exitCode: DoctorExitCode;
@@ -135,4 +199,6 @@ export interface DoctorReport {
     info: number;
   };
   findings: DoctorFinding[];
+  /** Present only in reports made with `--online`. */
+  online?: DoctorOnlineState;
 }

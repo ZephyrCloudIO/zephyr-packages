@@ -3,12 +3,14 @@ import {
   assertZephyrBuildTarget,
   getGlobal,
   handleGlobalError,
+  isZephyrDisabled,
   ze_log,
   ZephyrEngine,
   type ZephyrBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
+  disableZephyrForXpack,
   extractFederatedDependencyPairs,
   extractLibraryType,
   coordinateXPackCompilers,
@@ -56,6 +58,10 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
     // Nx sets global.NX_GRAPH_CREATION = true during graph creation
     if (getGlobal().NX_GRAPH_CREATION) {
       return config;
+    }
+    // Skip mode: build the bundle without any Zephyr step or network request.
+    if (isZephyrDisabled()) {
+      return disableZephyrForXpack(config);
     }
     if (!Array.isArray(config)) {
       return (await _zephyr_configuration(config, zephyrPluginOptions)) as T;

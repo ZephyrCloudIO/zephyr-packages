@@ -121,6 +121,20 @@ compiler participating in that application build. Restart the bundler after chan
 the file so an active `ApplicationContext` never changes identity between watch
 generations.
 
+### Environment switches
+
+| Variable        | Effect                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `ZE_FAIL_BUILD` | `true` makes a Zephyr failure fail the build. Otherwise the failure is logged.         |
+| `ZE_DISABLED`   | `true` skips Zephyr. The bundle is built and is not deployed. Zephyr is not contacted. |
+
+`ZE_DISABLED=true` is the supported way to build during an outage or without access to
+Zephyr, such as a fork build. The webpack, rspack and Vite plugins and `ze-cli` make no
+request, ask for no token, and read no git information. Each prints
+`The bundle is built. The bundle is not deployed. Zephyr is disabled (ZE_DISABLED).`
+Only the exact value `true` counts. It never turns on by itself.
+`isZephyrDisabled()` and `logZephyrDisabled()` are exported for other integrations.
+
 ### Git Repository Requirements
 
 Git remains the richest source of version metadata. An explicit Zephyr config can

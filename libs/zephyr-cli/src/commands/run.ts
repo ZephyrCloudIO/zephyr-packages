@@ -1,6 +1,12 @@
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import {
+  isZephyrDisabled,
+  ZE_DISABLED_MESSAGE,
+  ZeErrors,
+  ZephyrEngine,
+  ZephyrError,
+} from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
@@ -133,6 +139,13 @@ export async function runCommand(options: RunOptions): Promise<void> {
   }
 
   log('info', 'All build commands completed successfully');
+
+  // Skip mode: the build ran as it is. No output detection, no Zephyr engine, no token,
+  // no git information and no network request.
+  if (isZephyrDisabled()) {
+    console.error(`[ze-cli] ${ZE_DISABLED_MESSAGE}`);
+    return;
+  }
 
   // Determine which output directory to use
   let outputDir: string | null = null;

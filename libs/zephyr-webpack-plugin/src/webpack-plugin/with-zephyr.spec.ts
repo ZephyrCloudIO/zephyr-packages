@@ -20,6 +20,8 @@ const mocks = rs.hoisted(() => {
     }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
+    isZephyrDisabled: rs.fn(() => false),
+    disableZephyrForXpack: rs.fn((config: unknown) => config),
     handleGlobalError: rs.fn(),
     extractFederatedDependencyPairs: rs.fn(),
     extractLibraryType: rs.fn(() => 'module'),
@@ -32,12 +34,14 @@ const mocks = rs.hoisted(() => {
 rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertBuildTarget,
   getGlobal: mocks.getGlobal,
+  isZephyrDisabled: mocks.isZephyrDisabled,
   handleGlobalError: mocks.handleGlobalError,
   ze_log: { mf: rs.fn() },
   ZephyrEngine: { create: mocks.create },
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
+  disableZephyrForXpack: mocks.disableZephyrForXpack,
   extractFederatedDependencyPairs: mocks.extractFederatedDependencyPairs,
   extractLibraryType: mocks.extractLibraryType,
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
@@ -145,5 +149,24 @@ describe('Webpack withZephyr compiler arrays', () => {
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'invalid federation config' })
     );
+  });
+  it('skips every Zephyr step when ZE_DISABLED is set', async () => {
+    mocks.isZephyrDisabled.mockReturnValue(true);
+    const configs = [
+      { name: 'client', context: '/repo' },
+      { name: 'server', context: '/repo' },
+    ] as unknown as Configuration[];
+
+    try {
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+      await expect(withZephyr()(configs[0] as Configuration)).resolves.toBe(configs[0]);
+    } finally {
+      mocks.isZephyrDisabled.mockReturnValue(false);
+    }
+
+    expect(mocks.disableZephyrForXpack).toHaveBeenCalledTimes(2);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.extractFederatedDependencyPairs).not.toHaveBeenCalled();
+    expect(mocks.coordinateXPackCompilers).not.toHaveBeenCalled();
   });
 });

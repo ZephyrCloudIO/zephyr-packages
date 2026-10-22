@@ -126,7 +126,7 @@ Doctor statically checks:
 - `.mf/typesGenerate.log`, `node_modules/.federation` temporary artifacts,
   `@mf-types.zip`, and safe DTS diagnostic commands.
 
-JSON uses schema version `1.0.0`. Consumers should branch on `status`,
+JSON uses schema version `1.0.0` (`1.1.0` with `--online`). Consumers should branch on `status`,
 `exitCode`, and finding `code`; they must not match human-readable messages.
 Evidence paths are project-relative. Doctor never reads `.env` or emits config
 source, authentication state, environment values, or file contents.
@@ -141,6 +141,63 @@ are exported from `zephyr-cli/doctor/schema`.
 | `1`  | Valid project with warning or error findings |
 | `2`  | Invalid project path or root `package.json`  |
 | `3`  | Doctor could not complete the read-only scan |
+
+#### Online checks
+
+By default doctor makes no network request. Add `--online` to also check that Zephyr
+works for this project:
+
+```bash
+ze-cli doctor [directory] --online [--timeout <milliseconds>] [--format json]
+```
+
+The checks send read-only requests, one at a time, and each has its own limit
+(default `5000` ms, at most `60000`). A slow or silent server cannot hang doctor.
+They do not log in, exchange tokens, or change stored state, and a rejected token is
+never deleted.
+
+| Check         | What it asks                                                            |
+| ------------- | ----------------------------------------------------------------------- |
+| `api`         | Does the API (`ZE_API`) answer?                                         |
+| `gateway`     | Does the gateway (`ZE_API_GATE`) answer?                                |
+| `token`       | Does the gateway accept your token (`ZE_SECRET_TOKEN` or stored login)? |
+| `application` | Does Zephyr have a configuration for this application?                  |
+| `edge`        | Does the edge URL in that configuration answer?                         |
+
+A check is `passed`, `failed` or `skipped`. A check is skipped when an earlier check it
+needs has failed; its `findingCode` points at the finding that explains why.
+`ZE_CI_TOKEN` and `ZE_SERVER_TOKEN` are exchanged for an access token during a build.
+Doctor does not exchange them, so it reports `ZD0708` (info) and does not check the
+token. The application name comes from `package.json` and the git remote `origin`.
+If a `zephyr.config` file exists, doctor does not run it and skips the application and
+edge checks (`ZD0709`, info).
+
+The report keeps the offline schema and adds an `online` object, plus `check`,
+`target` (an origin, never a path or a token) and `nextAction` on online findings. Its
+`schemaVersion` is `1.1.0`. A report made without `--online` is unchanged and keeps
+`1.0.0`. `nextAction` has the same values as the MCP field: `none`,
+`refresh_credentials`, `check_permissions`, `retry_later`, `correct_request`.
+
+The exit codes above do not change. Online errors and warnings exit `1`. A missing
+project (`2`) or a tool failure (`3`) still outranks them.
+
+| Code     | Check         | Meaning                                                            |
+| -------- | ------------- | ------------------------------------------------------------------ |
+| `ZD0701` | `api`         | API cannot be reached (network error or timeout)                   |
+| `ZD0702` | `api`         | API answered with HTTP 5xx                                         |
+| `ZD0703` | `gateway`     | Gateway cannot be reached (network error or timeout)               |
+| `ZD0704` | `gateway`     | Gateway answered with HTTP 5xx                                     |
+| `ZD0705` | `token`       | No token found                                                     |
+| `ZD0706` | `token`       | Token rejected (HTTP 401)                                          |
+| `ZD0707` | `token`       | Token not allowed (HTTP 403)                                       |
+| `ZD0708` | `token`       | Token not checked (exchange token, or the gateway gave no verdict) |
+| `ZD0709` | `application` | Application name not found, so the application was not checked     |
+| `ZD0710` | `application` | No configuration for this application (HTTP 404)                   |
+| `ZD0711` | `application` | Token cannot read this application (HTTP 403)                      |
+| `ZD0712` | `application` | Configuration answer is not correct                                |
+| `ZD0713` | `application` | Configuration could not be loaded (network error, timeout, 5xx)    |
+| `ZD0714` | `edge`        | Edge URL cannot be reached (network error or timeout)              |
+| `ZD0715` | `edge`        | Edge URL answered with HTTP 5xx                                    |
 
 #### Stable finding codes
 
@@ -175,6 +232,23 @@ Every finding contains `code`, `severity`, `message`, structured `evidence`, and
 | `ZD0503` | TAP watch metadata sidecar missing                    |
 | `ZD0601` | Module Federation DTS diagnostic failure found        |
 
+## Skip mode
+
+Set `ZE_DISABLED=true` to build without Zephyr. `ze-cli run` runs your build command,
+and `ze-cli deploy` and `ze-cli watch` do nothing. None of them contacts Zephyr, reads
+a token, or needs git information. Each prints:
+
+```text
+The bundle is built. The bundle is not deployed. Zephyr is disabled (ZE_DISABLED).
+```
+
+Only the exact value `true` turns it on. It never turns on by itself, and it is not the
+same as the fail-open behavior after an outage, where Zephyr is still contacted.
+`ze-cli deploy --format json` prints `{"skipped":true,"reason":"ZE_DISABLED"}`. The
+webpack, rspack and Vite plugins follow the same rule: set `ZE_DISABLED=true` and they
+leave the build as it is. The CLI never exits non-zero because of it. Set it next to
+`ZE_FAIL_BUILD`, which makes a Zephyr failure fail the build.
+
 ## Options
 
 - `--ssr` - Mark this snapshot as server-side rendered
@@ -182,6 +256,8 @@ Every finding contains `code`, `severity`, `message`, structured `evidence`, and
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
 - `--format <json|text>` - Doctor report format, or deploy result format (default: `text`)
+- `--online` - Doctor only: also check the API, gateway, token, application configuration and edge URL
+- `--timeout <milliseconds>` - Doctor `--online` only: limit for each check (default: `5000`)
 - `--verbose, -v` - Enable verbose output
 - `--help, -h` - Show help message
 

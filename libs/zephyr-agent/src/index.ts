@@ -21,6 +21,11 @@ export {
 // global utilities
 export { getGlobal } from './lib/utils/get-global';
 export {
+  isZephyrDisabled,
+  logZephyrDisabled,
+  ZE_DISABLED_MESSAGE,
+} from './lib/utils/ze-disabled';
+export {
   readDirRecursive,
   readDirRecursiveWithContents,
   type FileInfo,
@@ -89,6 +94,21 @@ export {
   resolveMfManifestPath,
   type MfManifestConfig,
 } from './lib/transformers/resolve-mf-manifest-path';
+
+// Read-only identity and credential lookups for `ze-cli doctor --online`
+export {
+  resolvePreflightApplicationUid,
+  type PreflightApplicationUid,
+} from './lib/build-context/resolve-application-uid';
+export {
+  probeHttp,
+  type HttpProbeOptions,
+  type HttpProbeResult,
+} from './lib/http/probe-http';
+export {
+  resolvePreflightCredentials,
+  type PreflightCredentials,
+} from './lib/node-persist/token';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';

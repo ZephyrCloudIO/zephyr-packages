@@ -286,6 +286,10 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
+  peer-compat:
+    react-native:
+      specifier: '>=0.60.0'
+      version: 0.87.1
   postcss:
     autoprefixer:
       specifier: ^10.5.4
@@ -455,7 +459,7 @@ overrides:
   brace-expansion@>=3.0.0 <5.0.9: 5.0.12
   fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
   fflate@>=0.7.0 <0.7.5: 0.7.5
-  hono: 4.13.7
+  hono: 4.13.11
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.9
   nuxt@>=4.0.0 <4.5.1: 4.5.2
   postcss: 8.5.28
@@ -613,8 +617,8 @@ importers:
   examples/hono-app:
     dependencies:
       hono:
-        specifier: 4.13.7
-        version: 4.13.7
+        specifier: 4.13.11
+        version: 4.13.11
     devDependencies:
       '@types/node':
         specifier: catalog:typescript
@@ -11137,8 +11141,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.13.7:
-    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
+  hono@4.13.11:
+    resolution: {integrity: sha512-/SMX/RQNJn7oNmFwH6DtwDqcrzZU2otm1FD6OJe2cWF6cfy/F8hq0XVBv7xW3FTJshRQwuBnXHDq2kNsdZnshg==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -17446,7 +17450,7 @@ snapshots:
       '@babel/code-frame': 8.0.6
       '@babel/generator': 8.0.6
       '@babel/helper-globals': 8.0.6
-      '@babel/parser': 8.0.6
+      '@babel/parser': 8.0.7
       '@babel/template': 8.0.0
       '@babel/types': 8.0.6
       obug: 2.1.4
@@ -18945,7 +18949,7 @@ snapshots:
       '@web-std/stream': 1.0.3
       cloneable-readable: 3.0.0
       flatted: 3.4.4
-      hono: 4.13.7
+      hono: 4.13.11
       ts-deepmerge: 8.0.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
@@ -26679,7 +26683,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.13.7: {}
+  hono@4.13.11: {}
 
   hookable@5.5.3: {}
 

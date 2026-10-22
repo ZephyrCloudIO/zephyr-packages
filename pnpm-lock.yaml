@@ -138,6 +138,9 @@ catalogs:
     globby:
       specifier: ^16.2.4
       version: 16.2.4
+    hermes-parser:
+      specifier: ^0.36.1
+      version: 0.36.1
     https-proxy-agent:
       specifier: ^9.0.0
       version: 9.1.0
@@ -1908,6 +1911,9 @@ importers:
       eventsource:
         specifier: 'catalog:'
         version: 5.1.1
+      hermes-parser:
+        specifier: 'catalog:'
+        version: 0.36.1
       https-proxy-agent:
         specifier: 'catalog:'
         version: 9.1.0(supports-color@10.2.2)

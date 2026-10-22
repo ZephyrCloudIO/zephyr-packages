@@ -29,6 +29,20 @@ pnpm create zephyr-apps
 bunx create-zephyr-apps
 ```
 
+## AI Agent Skills (Optional)
+
+The `create-zephyr-apps` Agent Skill teaches AI coding agents how to set up and debug this
+package. It lives in the
+[ZephyrCloudIO/skills](https://github.com/ZephyrCloudIO/skills)
+repository, next to the shared `zephyr-core` and
+`zephyr-module-federation` guides. Zephyr does not need it at runtime.
+
+Add it to your project with the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add ZephyrCloudIO/skills --skill create-zephyr-apps
+```
+
 ## Usage
 
 ### Interactive Mode

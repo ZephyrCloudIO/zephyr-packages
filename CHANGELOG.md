@@ -1,5 +1,50 @@
 # Changelog
 
+## 1.7.0 (2026-10-18)
+
+## What's Changed
+* chore(deps): pin actions/checkout action to d23441a by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/649
+* chore(deps): update babel monorepo to v8.0.7 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/667
+* feat(zephyr-cli): print a JSON deploy result with --format json by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/665
+* fix(vinext): wire codemod to the vinext plugin and support Cloudflare Vite plugin 2.x output by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/669
+* fix: describe federated containers once by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/672
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.6.0...v1.7.0
+
+## 1.6.0 (2026-10-06)
+
+## What's Changed
+* feat: add local and remote change attribution for dirty builds by @zackarychapple in https://github.com/ZephyrCloudIO/zephyr-packages/pull/645
+* fix(skills): record release review outcomes so main stays reviewable by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/644
+* chore(deps): update astro monorepo by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/650
+* chore(deps): update babel monorepo to v8.0.6 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/651
+* chore(deps): update dependency @biomejs/biome to v2.5.15 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/652
+* fix(deps): remediate security vulnerabilities in transitive dependencies by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/654
+* feat(agent): support ZE_CI_TOKEN identity inference on Expo EAS Build by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/634
+* feat(codemod): support Rstack CLI configs by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/655
+* chore(deps): update dependency postcss-selector-parser@>=6.1.0 <6.1.3 to v7 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/656
+* chore(deps): update dependency sharp to v0.35.5 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/658
+* chore(deps): update dependency sharp@<0.35.4 to v0.35.5 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/659
+* chore(deps): update dependency shell-quote@<=1.8.4 to v1.11.0 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/660
+* fix(e2e): wait for fresh deployments before checking assets by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/657
+* docs: document optional Intent setup and bump @tanstack/intent to 0.5.3 by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/653
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.5.0...v1.6.0
+
+## 1.5.0 (2026-10-02)
+
+## What's Changed
+* chore(deps): update dependency brace-expansion@>=3.0.0 <5.0.9 to v5.0.12 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/632
+* feat(skills): adopt Intent and ship skills with every plugin by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/639
+* chore(deps): update dependency hono to v4.13.7 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/642
+* chore(deps): update dependency devalue@>=5.0.0 <5.9.2 to v5.9.3 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/641
+* ci(skills): skip the Intent review step on release-please PRs by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/640
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.4.2...v1.5.0
+
 ## 1.4.2 (2026-09-30)
 
 ## What's Changed

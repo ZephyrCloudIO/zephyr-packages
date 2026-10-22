@@ -7,9 +7,16 @@ export interface VinextBuildAsset {
   type: string;
 }
 
+/** An environment output directory built outside the output root, and its snapshot path. */
+export interface VinextOutputMount {
+  sourceDir: string;
+  snapshotDir: string;
+}
+
 /** Controls target-specific transport transformations for finalized Vinext output. */
 export interface VinextOutputCollectionOptions {
   target?: ZephyrBuildTarget;
+  mounts?: VinextOutputMount[];
 }
 
 export interface RscEnvironmentBuildConfigLike {
@@ -246,25 +253,89 @@ export async function collectStaticClientAssets(
   }
 }
 
+function isInsideDir(parentDir: string, childDir: string): boolean {
+  const relativeDir = path.relative(path.resolve(parentDir), path.resolve(childDir));
+  return (
+    relativeDir === '' ||
+    (relativeDir !== '..' &&
+      !relativeDir.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativeDir))
+  );
+}
+
+/**
+ * The Cloudflare Vite plugin 2.x writes the Worker to
+ * `.cloudflare/output/v0/workers/<name>` (`bundle` for the server, `assets` for the
+ * client) instead of `dist/server` and `dist/client`. Mount those directories at their
+ * `dist`-relative snapshot paths so the published snapshot keeps the same `server/` and
+ * `client/` layout. App Router builds the Worker in the `rsc` environment; Pages Router
+ * has no `rsc` environment and builds it in Cloudflare's default `ssr` environment.
+ */
+export function resolveVinextOutputMounts(
+  outputRootDir: string,
+  environments: Record<string, RscEnvironmentConfigLike | undefined>
+): VinextOutputMount[] {
+  const serverDir = (environments['rsc'] ?? environments['ssr'])?.build?.outDir;
+  if (!serverDir || isInsideDir(outputRootDir, serverDir)) {
+    return [];
+  }
+
+  const mounts: VinextOutputMount[] = [{ sourceDir: serverDir, snapshotDir: 'server' }];
+  const clientDir = environments['client']?.build?.outDir;
+  if (
+    clientDir &&
+    !isInsideDir(outputRootDir, clientDir) &&
+    !isInsideDir(serverDir, clientDir)
+  ) {
+    mounts.push({ sourceDir: clientDir, snapshotDir: 'client' });
+  }
+  return mounts;
+}
+
+async function collectDirectoryAssets(
+  assets: Record<string, VinextBuildAsset>,
+  sourceDir: string,
+  snapshotDir: string,
+  options: VinextOutputCollectionOptions
+): Promise<void> {
+  for (const filePath of await walkFiles(sourceDir)) {
+    const snapshotPath = buildSnapshotPath(
+      snapshotDir,
+      path.relative(sourceDir, filePath)
+    );
+    const content = await fs.readFile(filePath);
+    assets[snapshotPath] = {
+      content: workerAssetContent(snapshotPath, content, options),
+      type: getAssetType(snapshotPath),
+    };
+  }
+}
+
 /** Collect the complete Vinext output after every Vite environment has finished. */
 export async function collectOutputDirectoryAssets(
   assets: Record<string, VinextBuildAsset>,
   outputRootDir: string,
   options: VinextOutputCollectionOptions = {}
 ): Promise<void> {
-  if (!(await pathExists(outputRootDir))) {
+  const mounts = options.mounts ?? [];
+  const outputRootExists = await pathExists(outputRootDir);
+  if (!outputRootExists && mounts.length === 0) {
     throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
       message: `Vinext output directory does not exist: ${outputRootDir}`,
     });
   }
 
-  for (const filePath of await walkFiles(outputRootDir)) {
-    const snapshotPath = normalizePathForSnapshot(path.relative(outputRootDir, filePath));
-    const content = await fs.readFile(filePath);
-    assets[snapshotPath] = {
-      content: workerAssetContent(snapshotPath, content, options),
-      type: getAssetType(snapshotPath),
-    };
+  if (outputRootExists) {
+    await collectDirectoryAssets(assets, outputRootDir, '', options);
+  }
+  // Mounted environment output is authoritative over leftovers in the output root.
+  for (const mount of mounts) {
+    if (!(await pathExists(mount.sourceDir))) {
+      throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+        message: `Vinext output directory does not exist: ${mount.sourceDir}`,
+      });
+    }
+    await collectDirectoryAssets(assets, mount.sourceDir, mount.snapshotDir, options);
   }
 }
 
@@ -295,6 +366,22 @@ export function detectEntrypointFromAssets(
     }
   }
   return undefined;
+}
+
+function getSnapshotDir(
+  outputRootDir: string,
+  targetDir: string,
+  mounts: readonly VinextOutputMount[] = []
+): string {
+  for (const mount of mounts) {
+    if (isInsideDir(mount.sourceDir, targetDir)) {
+      const relativeDir = path.relative(mount.sourceDir, targetDir);
+      return relativeDir
+        ? buildSnapshotPath(mount.snapshotDir, relativeDir)
+        : mount.snapshotDir;
+    }
+  }
+  return getRelativeDirFromRoot(outputRootDir, targetDir);
 }
 
 function getRelativeDirFromRoot(outputRootDir: string, targetDir: string): string {
@@ -349,7 +436,7 @@ export function injectRscAssetsManifest(
       continue;
     }
 
-    const relativeDir = getRelativeDirFromRoot(outputRootDir, outDir);
+    const relativeDir = getSnapshotDir(outputRootDir, outDir, options.mounts);
     if (!relativeDir) {
       continue;
     }

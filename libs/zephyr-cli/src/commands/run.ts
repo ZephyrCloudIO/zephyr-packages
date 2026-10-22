@@ -90,9 +90,9 @@ export async function runCommand(options: RunOptions): Promise<void> {
     console.error('[ze-cli] ');
     console.error('[ze-cli] Recommendations:');
     console.error('[ze-cli] 1. Use a Zephyr bundler plugin:');
-    console.error('[ze-cli]    - @zephyrcloud/webpack-plugin');
-    console.error('[ze-cli]    - @zephyrcloud/rollup-plugin');
-    console.error('[ze-cli]    - @zephyrcloud/vite-plugin');
+    console.error('[ze-cli]    - zephyr-webpack-plugin');
+    console.error('[ze-cli]    - rollup-plugin-zephyr');
+    console.error('[ze-cli]    - vite-plugin-zephyr');
     console.error('[ze-cli]    - etc.');
     console.error('[ze-cli] 2. Or use "ze-cli deploy <dir>" after building');
     console.error('[ze-cli] ');

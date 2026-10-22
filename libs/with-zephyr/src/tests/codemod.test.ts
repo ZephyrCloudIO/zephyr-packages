@@ -152,6 +152,158 @@ describe('Zephyr Codemod CLI', () => {
     });
   });
 
+  describe('Rstack setup', () => {
+    const packageJson = JSON.stringify({
+      name: 'rstack-fixture',
+      version: '1.0.0',
+      devDependencies: {
+        'zephyr-rsbuild-plugin': '^1.5.0',
+        'zephyr-rspress-plugin': '^1.5.0',
+      },
+    });
+
+    it('configures app, lib, and doc sections and skips them on rerun', () => {
+      fs.writeFileSync('package.json', packageJson);
+      fs.writeFileSync(
+        'rstack.config.ts',
+        `
+        import { define } from 'rstack';
+        define.app({ plugins: [] });
+        define.lib({ format: 'esm' });
+        define.doc({ root: 'docs' });
+        define.test({ plugins: [] });
+      `
+      );
+      const output = runCodemod('--bundlers rstack');
+      expect(output).toContain('Processed: 3');
+      expect(output).toContain('Errors: 0');
+      const updated = fs.readFileSync('rstack.config.ts', 'utf8');
+      expect(updated).toContain('withZephyrRsbuild()');
+      expect(updated).toContain('withZephyrRspress()');
+      expect(updated).toContain('define.test({ plugins: [] });');
+      const rerun = runCodemod('--bundlers rstack');
+      expect(rerun).toContain('Processed: 0');
+      expect(rerun).toContain('Skipped: 3');
+      expect(fs.readFileSync('rstack.config.ts', 'utf8')).toBe(updated);
+      expect(fs.readFileSync('package.json', 'utf8')).toBe(packageJson);
+    });
+
+    it('lists both required plugins without changing source or manifests in dry run', () => {
+      const original = "import { define } from 'rstack'; define.app({}); define.doc({});";
+      fs.writeFileSync('rstack.config.mts', original);
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ name: 'rstack-fixture', version: '1.0.0' })
+      );
+      const manifest = fs.readFileSync('package.json', 'utf8');
+      const output = runCodemod('--dry-run --bundlers rstack');
+      expect(output).toContain('zephyr-rsbuild-plugin');
+      expect(output).toContain('zephyr-rspress-plugin');
+      expect(output).toContain('Processed: 2');
+      expect(fs.readFileSync('rstack.config.mts', 'utf8')).toBe(original);
+      expect(fs.readFileSync('package.json', 'utf8')).toBe(manifest);
+    });
+
+    it('keeps Rstack filtering separate from ordinary Rsbuild configs', () => {
+      fs.writeFileSync('package.json', packageJson);
+      fs.writeFileSync(
+        'rstack.config.js',
+        "import { define } from 'rstack'; define.app({});"
+      );
+      const rsbuildConfig = 'export default { plugins: [] };';
+      fs.writeFileSync('rsbuild.config.js', rsbuildConfig);
+      const output = runCodemod('--bundlers rstack');
+      expect(output).toContain('Processed: 1');
+      expect(fs.readFileSync('rsbuild.config.js', 'utf8')).toBe(rsbuildConfig);
+    });
+
+    it('assigns plugin dependencies to nested Rstack projects', () => {
+      fs.mkdirSync('website');
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ name: 'workspace', version: '1.0.0' })
+      );
+      fs.writeFileSync(
+        'website/package.json',
+        JSON.stringify({ name: 'website', version: '1.0.0' })
+      );
+      fs.writeFileSync(
+        'website/rstack.config.mjs',
+        "import { define } from 'rstack'; define.doc({ root: 'docs' });"
+      );
+      const output = runCodemod('--dry-run --bundlers rstack');
+      expect(output).toContain('zephyr-rspress-plugin (website)');
+      expect(output).not.toContain('zephyr-rsbuild-plugin');
+    });
+
+    it('uses the parent project manifest for configurations in a subdirectory', () => {
+      fs.mkdirSync('config');
+      fs.writeFileSync('package.json', packageJson);
+      fs.writeFileSync(
+        'config/rstack.config.ts',
+        "import { define } from 'rstack'; define.app({});"
+      );
+      const output = runCodemod('--bundlers rstack');
+      expect(output).toContain('Processed: 1');
+      expect(output).not.toContain('Packages that would be installed');
+      expect(output).not.toContain('Checking package dependencies');
+    });
+
+    it('rejects unsupported sections before changing manifests or installing dependencies', () => {
+      const original =
+        "import { define } from 'rstack'; define.app(importedConfiguration);";
+      const manifest = JSON.stringify({ name: 'rstack-fixture', version: '1.0.0' });
+      fs.writeFileSync('rstack.config.ts', original);
+      fs.writeFileSync('package.json', manifest);
+      expect(() => runCodemod('--bundlers rstack')).toThrow();
+      const output = runCodemod('--bundlers rstack', true);
+      expect(output).toContain('Configure define.app() manually');
+      expect(output).toContain('Errors: 1');
+      expect(output).not.toContain('Checking package dependencies');
+      expect(fs.readFileSync('rstack.config.ts', 'utf8')).toBe(original);
+      expect(fs.readFileSync('package.json', 'utf8')).toBe(manifest);
+    });
+
+    it('still identifies a missing dependency when the section is already configured', () => {
+      const original =
+        "import { define } from 'rstack'; import { env as zephyrEnv } from 'node:process'; import { withZephyr } from 'zephyr-rsbuild-plugin'; define.app({ plugins: [...(zephyrEnv['RSTEST'] ? [] : [withZephyr()])] });";
+      fs.writeFileSync('rstack.config.ts', original);
+      fs.writeFileSync(
+        'package.json',
+        JSON.stringify({ name: 'rstack-fixture', version: '1.0.0' })
+      );
+      const output = runCodemod('--dry-run --bundlers rstack');
+      expect(output).toContain('Packages that would be installed');
+      expect(output).toContain('zephyr-rsbuild-plugin');
+      expect(output).toContain('Processed: 0');
+      expect(fs.readFileSync('rstack.config.ts', 'utf8')).toBe(original);
+    });
+  });
+
+  describe('Rstack discovery errors', () => {
+    it('does not parse malformed Rstack configs when another bundler is selected', () => {
+      const malformed = "import { define } from 'rstack'; define.app({";
+      fs.writeFileSync('rstack.config.ts', malformed);
+      fs.writeFileSync('vite.config.ts', 'export default { plugins: [] };');
+      const output = runCodemod('--dry-run --bundlers vite');
+      expect(output).toContain('Processed: 1');
+      expect(output).toContain('Errors: 0');
+      expect(output).not.toContain('rstack.config.ts');
+      expect(fs.readFileSync('rstack.config.ts', 'utf8')).toBe(malformed);
+    });
+
+    it('reports malformed Rstack files while continuing other configuration files', () => {
+      const malformed = "import { define } from 'rstack'; define.app({";
+      fs.writeFileSync('rstack.config.ts', malformed);
+      fs.writeFileSync('vite.config.ts', 'export default { plugins: [] };');
+      const output = runCodemod('--dry-run', true);
+      expect(output).toContain('Cannot parse Rstack configuration');
+      expect(output).toContain('Processed: 1');
+      expect(output).toContain('Errors: 1');
+      expect(fs.readFileSync('rstack.config.ts', 'utf8')).toBe(malformed);
+    });
+  });
+
   describe('Dry Run Mode', () => {
     it('should not modify files in dry run mode', () => {
       const originalContent = `
@@ -374,6 +526,107 @@ describe('Zephyr Codemod CLI', () => {
       const content = fs.readFileSync('vite.config.ts', 'utf8');
       expect(content).toContain('import { withZephyr } from "vite-plugin-zephyr"');
       expect(content).toContain('react(), withZephyr()');
+    });
+
+    it('should use the Vinext plugin for vite configs that import vinext', () => {
+      fs.writeFileSync(
+        'vite.config.ts',
+        `
+        import { defineConfig } from 'vite';
+        import vinext from 'vinext';
+
+        export default defineConfig({
+          plugins: [vinext()]
+        });
+      `
+      );
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(content).toContain('import { withZephyr } from "vite-plugin-vinext-zephyr"');
+      expect(content).not.toContain('"vite-plugin-zephyr"');
+      expect(content).toContain('vinext(), withZephyr()');
+    });
+
+    it('should switch Vinext configs wired to the generic vite plugin', () => {
+      fs.writeFileSync(
+        'vite.config.ts',
+        `
+        import { defineConfig } from 'vite';
+        import { withZephyr } from 'vite-plugin-zephyr';
+        import vinext from 'vinext';
+
+        export default defineConfig({
+          plugins: [vinext(), withZephyr()]
+        });
+      `
+      );
+
+      const output = runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.ts', 'utf8');
+      expect(content).toContain(
+        "import { withZephyr } from 'vite-plugin-vinext-zephyr';"
+      );
+      expect(content).not.toContain("'vite-plugin-zephyr'");
+      expect(content.match(/withZephyr\(\)/g)).toHaveLength(1);
+      expect(output).toContain('Switched vite.config.ts to vite-plugin-vinext-zephyr');
+      expect(output).toContain('Processed: 1');
+    });
+
+    it('should ignore commented-out vinext imports when choosing the vite plugin', () => {
+      const originalContent = `
+        import { defineConfig } from 'vite';
+        // import vinext from 'vinext';
+        import { withZephyr } from 'vite-plugin-zephyr';
+
+        export default defineConfig({ plugins: [withZephyr()], define: { name: 'vinext' } });
+      `;
+      fs.writeFileSync('vite.config.ts', originalContent);
+
+      const output = runCodemod('.');
+
+      expect(fs.readFileSync('vite.config.ts', 'utf8')).toBe(originalContent);
+      expect(output).not.toContain('vite-plugin-vinext-zephyr');
+    });
+
+    it('should switch aliased CommonJS Vinext configs to the Vinext plugin', () => {
+      fs.writeFileSync(
+        'vite.config.js',
+        `
+        const vinext = require('vinext');
+        const { withZephyr: zephyr } = require("vite-plugin-zephyr");
+
+        module.exports = { plugins: [vinext(), zephyr(), withZephyr()] };
+      `
+      );
+
+      runCodemod('.');
+
+      const content = fs.readFileSync('vite.config.js', 'utf8');
+      expect(content).toContain('require("vite-plugin-vinext-zephyr")');
+      expect(content).not.toContain('"vite-plugin-zephyr"');
+    });
+
+    it('should not move generic-only vite plugin imports to the Vinext plugin', () => {
+      const originalContent = `
+        import { defineConfig } from 'vite';
+        import vinext from 'vinext';
+        import { withZephyr, type WithZephyrOptions } from 'vite-plugin-zephyr';
+
+        const options: WithZephyrOptions = {};
+        export default defineConfig({ plugins: [vinext(), withZephyr()] });
+      `;
+      fs.writeFileSync('vite.config.ts', originalContent);
+
+      const output = runCodemod('.');
+
+      expect(fs.readFileSync('vite.config.ts', 'utf8')).toBe(originalContent);
+      expect(output).toContain(
+        'Cannot switch vite.config.ts to vite-plugin-vinext-zephyr automatically'
+      );
+      expect(output).toContain('Errors: 1');
     });
 
     it('should transform vite config with a trailing comma in plugins array', () => {

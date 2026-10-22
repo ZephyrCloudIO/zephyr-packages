@@ -5,6 +5,7 @@ import {
   ZephyrError,
   type BuildParticipant,
   type BuildSession,
+  type BuildContribution,
   type ZeBuildAssetsMap,
   type ZephyrBuildHooks,
   type ZephyrEngine,
@@ -152,6 +153,51 @@ function mergeMfConfigs(
   return merged.length > 0 ? merged : undefined;
 }
 
+/**
+ * A server compiler commonly builds a Node copy of a client container (the federation
+ * plugin derives it with a CommonJS library and Node runtime plugins). Both ship in the
+ * same snapshot under their own asset prefixes, but the client config is the container's
+ * one description; only server-only containers keep their server metadata.
+ */
+function describeContainersOnce(
+  contributions: readonly BuildContribution<ContributionMetadata>[],
+  serverParticipants: ReadonlySet<string>
+): ContributionMetadata[] {
+  const clientContainers = new Set<string>();
+  for (const { participant, data } of contributions) {
+    if (!data || serverParticipants.has(participant)) continue;
+    for (const { name } of [
+      ...(data.mfConfigs ?? []),
+      ...(data.buildStats.federation ?? []),
+    ]) {
+      if (name) clientContainers.add(name);
+    }
+  }
+  const isClientContainer = ({ name }: { name?: string }) =>
+    !!name && clientContainers.has(name);
+
+  return contributions.flatMap(({ participant, data }) => {
+    if (!data) return [];
+    if (!serverParticipants.has(participant) || clientContainers.size === 0) {
+      return [data];
+    }
+    return [
+      {
+        ...data,
+        mfConfigs: data.mfConfigs?.filter((config) => !isClientContainer(config)),
+        buildStats: data.buildStats.federation
+          ? {
+              ...data.buildStats,
+              federation: data.buildStats.federation.filter(
+                (entry) => !isClientContainer(entry)
+              ),
+            }
+          : data.buildStats,
+      },
+    ];
+  });
+}
+
 function resolveServerEntrypoint(
   assetsMap: ZeBuildAssetsMap,
   configuredEntrypoint: string | undefined
@@ -232,13 +278,17 @@ export class XPackBuildCoordinator {
         this.dependents.get(dependency)?.add(participant.name);
       }
     }
+    const serverParticipants = new Set(
+      participants.filter(({ role }) => role === 'server').map(({ name }) => name)
+    );
     this.context = new ApplicationContext<ContributionMetadata>({
       applicationUid: engine.application_uid,
       prepare: ({ generation }) => this.prepareLogicalGeneration(generation),
       publish: async (publication) => {
-        const metadata = publication.contributions
-          .map((contribution) => contribution.data)
-          .filter((item): item is ContributionMetadata => !!item);
+        const metadata = describeContainersOnce(
+          publication.contributions,
+          serverParticipants
+        );
         const entrypoint =
           options.snapshotType === 'ssr'
             ? resolveServerEntrypoint(publication.assetsMap, options.entrypoint)

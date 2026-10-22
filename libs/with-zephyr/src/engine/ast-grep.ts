@@ -90,6 +90,13 @@ function buildMatcher(options: AstGrepRunOptions): string | NapiConfig {
   } as unknown as NapiConfig;
 }
 
+export function parseConfigWithAstGrep(filePath: string): SgNode {
+  const source = fs.readFileSync(filePath, 'utf8');
+  return getAstGrepRuntime()
+    .parse(toNapiLanguage(detectLanguage(filePath)), source)
+    .root();
+}
+
 function sliceNodeText(source: string, node: SgNode | null): string {
   if (!node) {
     return '';

@@ -18,3 +18,41 @@ export function isZephyrDisabled(): boolean {
 export function logZephyrDisabled(): void {
   logFn('warn', ZE_DISABLED_MESSAGE);
 }
+
+/** The Rollup-compatible hooks that skip mode needs. Rollup, Rolldown and Vite share them. */
+export interface ZephyrDisabledBuildHooks {
+  buildStart(): void;
+  renderStart(): void;
+  buildEnd(error?: unknown): void;
+  renderError(): void;
+  closeBundle(): void;
+}
+
+/**
+ * Hooks for Rollup-style bundlers in skip mode (`ZE_DISABLED=true`). They only watch the
+ * build: once a bundle closes without an error they say once that it was not deployed.
+ */
+export function createZephyrDisabledBuildHooks(): ZephyrDisabledBuildHooks {
+  let announced = false;
+  let failed = false;
+  return {
+    buildStart() {
+      failed = false;
+    },
+    renderStart() {
+      failed = false;
+    },
+    buildEnd(error) {
+      failed = Boolean(error);
+    },
+    // Bundlers close the bundle even when rendering or writing it failed.
+    renderError() {
+      failed = true;
+    },
+    closeBundle() {
+      if (announced || failed) return;
+      announced = true;
+      logZephyrDisabled();
+    },
+  };
+}

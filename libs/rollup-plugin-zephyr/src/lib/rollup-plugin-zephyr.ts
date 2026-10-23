@@ -1,6 +1,8 @@
 import type { InputOptions, NormalizedOutputOptions, OutputBundle } from 'rollup';
 import {
+  createZephyrDisabledBuildHooks,
   handleGlobalError,
+  isZephyrDisabled,
   zeBuildDashData,
   ZeErrors,
   ZephyrEngine,
@@ -143,6 +145,10 @@ export function withZephyr(options: ZephyrRollupPluginOptions = {}) {
     options.mfConfigs,
     options.federation
   );
+  // Skip mode: build the bundle without an engine, a token, git information or a request.
+  if (isZephyrDisabled()) {
+    return { name: 'with-zephyr-disabled', ...createZephyrDisabledBuildHooks() };
+  }
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options?.hooks;
   const target = options.target;

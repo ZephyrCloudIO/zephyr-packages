@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Integration tests for withZephyr Metro configuration */
@@ -26,6 +26,7 @@ rs.mock('zephyr-agent', () => {
   };
 
   return {
+    isZephyrDisabled: () => process.env['ZE_DISABLED'] === 'true',
     ze_log: mockZeLog,
     ZephyrEngine: {
       create: rs.fn().mockResolvedValue(mockEngine),
@@ -70,6 +71,42 @@ describe('withZephyr integration', () => {
 
   beforeEach(() => {
     rs.clearAllMocks();
+  });
+
+  describe('ZE_DISABLED=true', () => {
+    afterEach(() => {
+      delete process.env['ZE_DISABLED'];
+    });
+
+    it('returns the Metro config untouched without creating an engine', async () => {
+      process.env['ZE_DISABLED'] = 'true';
+      const { ZephyrEngine, ze_log } = await import('zephyr-agent');
+      const config = structuredClone(baseMetroConfig);
+
+      const result = await withZephyr({ name: 'TestApp' })(config);
+
+      expect(result).toBe(config);
+      expect(result).toEqual(baseMetroConfig);
+      expect(ZephyrEngine.create).not.toHaveBeenCalled();
+      expect(ze_log.app).not.toHaveBeenCalled();
+    });
+
+    it('still rejects an unsupported target first', () => {
+      process.env['ZE_DISABLED'] = 'true';
+
+      expect(() => withZephyr({ target: 'tap-app' as never })).toThrow(
+        'Metro cannot publish tap-app artifacts.'
+      );
+    });
+
+    it('configures Zephyr again once the variable is not "true"', async () => {
+      process.env['ZE_DISABLED'] = 'false';
+      const { ZephyrEngine } = await import('zephyr-agent');
+
+      await withZephyr({ name: 'TestApp' })(baseMetroConfig);
+
+      expect(ZephyrEngine.create).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('config transformation', () => {

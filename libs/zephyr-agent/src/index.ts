@@ -21,9 +21,11 @@ export {
 // global utilities
 export { getGlobal } from './lib/utils/get-global';
 export {
+  createZephyrDisabledBuildHooks,
   isZephyrDisabled,
   logZephyrDisabled,
   ZE_DISABLED_MESSAGE,
+  type ZephyrDisabledBuildHooks,
 } from './lib/utils/ze-disabled';
 export {
   readDirRecursive,

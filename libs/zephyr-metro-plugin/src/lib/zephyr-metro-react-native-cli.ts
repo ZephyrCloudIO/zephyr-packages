@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
-import { ZephyrError, ZeErrors } from 'zephyr-agent';
+import { isZephyrDisabled, ZephyrError, ZeErrors } from 'zephyr-agent';
 import { zephyrCommandWrapper } from './zephyr-metro-command-wrapper';
 
 interface ReactNativeCliCommandOptions {
@@ -85,7 +85,9 @@ export function zephyrMetroReactNativeCli(
         );
 
         await bundleWithZephyr([args as any], config as any, args as any);
-        console.info('Bundle artifacts uploaded to Zephyr.');
+        if (!isZephyrDisabled()) {
+          console.info('Bundle artifacts uploaded to Zephyr.');
+        }
         console.info('Success.');
       },
       options: commands[optionsName] ?? [],

@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite' with {
   'resolution-mode': 'import',
 };
-import { logZephyrDisabled } from 'zephyr-agent';
+import { createZephyrDisabledBuildHooks } from 'zephyr-agent';
 
 /**
  * Skip mode for Vite (`ZE_DISABLED=true`). Vite builds the bundle as it is without
@@ -9,29 +9,10 @@ import { logZephyrDisabled } from 'zephyr-agent';
  * build closes without an error, the plugin says that the bundle was not deployed.
  */
 export function zephyrDisabledPlugin(): Plugin {
-  let announced = false;
-  let failed = false;
   return {
     name: 'with-zephyr-disabled',
     apply: 'build',
     enforce: 'post',
-    buildStart() {
-      failed = false;
-    },
-    renderStart() {
-      failed = false;
-    },
-    buildEnd(error) {
-      failed = Boolean(error);
-    },
-    // Vite closes the bundle even when rendering or writing it failed.
-    renderError() {
-      failed = true;
-    },
-    closeBundle() {
-      if (announced || failed) return;
-      announced = true;
-      logZephyrDisabled();
-    },
+    ...createZephyrDisabledBuildHooks(),
   };
 }

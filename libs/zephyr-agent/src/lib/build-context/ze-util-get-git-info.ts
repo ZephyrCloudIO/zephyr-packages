@@ -35,7 +35,7 @@ const execFile = promisify(node_execFile);
  * Returns the trimmed stdout, or `null` when the command exits non-zero or produces no
  * output.
  */
-async function runGit(args: string[], context: string): Promise<string | null> {
+export async function runGit(args: string[], context: string): Promise<string | null> {
   try {
     const { stdout } = await execFile('git', args, { cwd: context });
     const trimmed = stdout.trim();

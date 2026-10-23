@@ -23,6 +23,8 @@ async function main(): Promise<void> {
       const exitCode = await doctorCommand({
         directory: options.directory ?? '.',
         format: options.format ?? 'text',
+        online: options.online,
+        timeoutMs: options.timeoutMs,
         cwd: workingDir,
       });
       process.exitCode = exitCode;

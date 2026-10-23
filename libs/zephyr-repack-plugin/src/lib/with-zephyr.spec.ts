@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Configuration } from '@rspack/core';
 
 const mocks = rs.hoisted(() => {
@@ -19,10 +19,12 @@ const mocks = rs.hoisted(() => {
     mutWebpackFederatedRemotesConfig: rs.fn(),
     verifyMfConfig: rs.fn().mockResolvedValue(undefined),
     plugin: rs.fn(),
+    disableZephyrForXpack: rs.fn((config: unknown) => config),
   };
 });
 
 rs.mock('zephyr-agent', () => ({
+  isZephyrDisabled: () => process.env['ZE_DISABLED'] === 'true',
   handleGlobalError: mocks.handleGlobalError,
   ZephyrEngine: { create: mocks.create },
   ze_log: {
@@ -33,6 +35,7 @@ rs.mock('zephyr-agent', () => ({
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
+  disableZephyrForXpack: mocks.disableZephyrForXpack,
   extractFederatedDependencyPairs: mocks.extractFederatedDependencyPairs,
   extractLibraryType: mocks.extractLibraryType,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
@@ -89,5 +92,50 @@ describe('Re.Pack native target boundaries', () => {
       context: '/repo',
     });
     expect(mocks.engine.env.target).toBe('android');
+  });
+
+  describe('ZE_DISABLED=true', () => {
+    afterEach(() => {
+      delete process.env['ZE_DISABLED'];
+    });
+
+    it('builds the user config with the skip plugin and never creates an engine', async () => {
+      process.env['ZE_DISABLED'] = 'true';
+      const config = { context: '/repo', plugins: [] } as Configuration;
+      const configFn = rs.fn(() => config);
+
+      const result = await withZephyr()(configFn)({
+        platform: 'ios',
+        mode: 'production',
+      });
+
+      expect(configFn).toHaveBeenCalledWith({ platform: 'ios', mode: 'production' });
+      expect(result).toBe(config);
+      expect(mocks.disableZephyrForXpack).toHaveBeenCalledWith(config);
+      expect(mocks.create).not.toHaveBeenCalled();
+      expect(mocks.plugin).not.toHaveBeenCalled();
+    });
+
+    it('still rejects a tap-app platform first', async () => {
+      process.env['ZE_DISABLED'] = 'true';
+      const configFn = rs.fn(() => ({ context: '/repo' }) as Configuration);
+
+      await expect(
+        withZephyr()(configFn)({ platform: 'tap-app' as never, mode: 'production' })
+      ).rejects.toThrow('Re.Pack cannot publish tap-app artifacts.');
+      expect(configFn).not.toHaveBeenCalled();
+    });
+
+    it('does not skip Zephyr for other values', async () => {
+      process.env['ZE_DISABLED'] = '1';
+
+      await withZephyr()(() => ({ context: '/repo', plugins: [] }) as Configuration)({
+        platform: 'android',
+        mode: 'production',
+      });
+
+      expect(mocks.disableZephyrForXpack).not.toHaveBeenCalled();
+      expect(mocks.create).toHaveBeenCalledTimes(1);
+    });
   });
 });

@@ -2,6 +2,8 @@ import { Reporter } from '@parcel/plugin';
 import {
   assertZephyrBuildTarget,
   handleGlobalError,
+  isZephyrDisabled,
+  logZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildHooks,
   type ZephyrBuildTarget,
@@ -39,10 +41,21 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
   // Create the engine and assets map outside the reporter function
   // so they persist between calls
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
+  let announcedDisabled = false;
 
   return new Reporter({
     report: async ({ event, options: parcelOptions }) => {
       try {
+        // Skip mode: Parcel builds the bundle as it is. No engine, token, git
+        // information or request. Only a successful build reports it was not deployed.
+        if (isZephyrDisabled()) {
+          if (event.type === 'buildSuccess' && !announcedDisabled) {
+            announcedDisabled = true;
+            logZephyrDisabled();
+          }
+          return;
+        }
+
         const projectRoot = parcelOptions.inputFS.cwd();
 
         switch (event.type) {

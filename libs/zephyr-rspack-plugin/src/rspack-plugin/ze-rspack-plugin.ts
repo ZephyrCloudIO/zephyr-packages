@@ -34,6 +34,7 @@ export interface ZephyrRspackInternalPluginOptions {
   coordinator?: XPackBuildCoordinator;
   participant?: string;
   assetPrefix?: string;
+  baseHref?: string;
 }
 
 export class ZeRspackPlugin {
@@ -48,7 +49,7 @@ export class ZeRspackPlugin {
     if (this._options.coordinator && this._options.participant) {
       this._options.coordinator.registerParticipantBaseHref(
         this._options.participant,
-        detectBaseHref(compiler)
+        detectBaseHref(compiler, { baseHref: this._options.baseHref })
       );
     } else {
       detectAndStoreBaseHref(this._options.zephyr_engine, compiler);

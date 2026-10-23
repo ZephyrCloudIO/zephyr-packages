@@ -31,6 +31,7 @@ rs.mock('zephyr-agent', () => ({
       super(options?.message ?? _code);
     }
   },
+  isZephyrDisabled: () => false,
   ZephyrEngine: {
     defer_create: () => ({
       zephyr_engine_defer: Promise.resolve(mocks.engine),

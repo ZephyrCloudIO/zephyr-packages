@@ -249,7 +249,10 @@ function invalidProjectReport(
   return report;
 }
 
-function finalizeReport(report: DoctorReport, findings: DoctorFinding[]): DoctorReport {
+export function finalizeReport(
+  report: DoctorReport,
+  findings: DoctorFinding[]
+): DoctorReport {
   report.findings = findings.sort(
     (left, right) =>
       severityRank(left.severity) - severityRank(right.severity) ||

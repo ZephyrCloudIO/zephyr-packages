@@ -144,6 +144,7 @@ async function _zephyr_configuration(
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
         hooks: _zephyrOptions?.hooks,
+        failBuild: _zephyrOptions?.failBuild,
         coordinator: _zephyrOptions?.__coordinator,
         participant: _zephyrOptions?.__participant,
         assetPrefix: _zephyrOptions?.__assetPrefix,
@@ -156,7 +157,7 @@ async function _zephyr_configuration(
     if (zephyr_engine?.hasActiveBuild !== false) {
       zephyr_engine?.build_failed();
     }
-    handleGlobalError(error);
+    handleGlobalError(error, { failBuild: _zephyrOptions?.failBuild });
   }
 
   return config;

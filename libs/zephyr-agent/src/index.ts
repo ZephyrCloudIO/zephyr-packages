@@ -39,7 +39,7 @@ export {
 
 // errors
 export { ZeErrors, ZephyrError, type ZephyrErrorOperation } from './lib/errors';
-export { handleGlobalError } from './lib/errors';
+export { handleGlobalError, type HandleGlobalErrorOptions } from './lib/errors';
 
 // Project configuration
 export {

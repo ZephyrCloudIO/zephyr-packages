@@ -10,10 +10,11 @@
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "catalog:cloudflare",
-    "@vitejs/plugin-rsc": "catalog:",
-    "react": "catalog:react19",
-    "react-dom": "catalog:react19",
-    "vinext": "catalog:",
+    "@vitejs/plugin-rsc": "catalog:vinext",
+    "react": "catalog:vinext",
+    "react-dom": "catalog:vinext",
+    "react-server-dom-webpack": "catalog:vinext",
+    "vinext": "catalog:vinext",
     "vite": "catalog:vite8",
     "vite-plugin-vinext-zephyr": "workspace:*",
     "wrangler": "catalog:"

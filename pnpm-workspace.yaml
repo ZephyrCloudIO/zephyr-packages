@@ -23,7 +23,6 @@ catalog:
   '@sentry/react': ^10.73.0
   '@toon-format/toon': ^4.0.0
   '@types/debug': ^4.1.13
-  '@vitejs/plugin-rsc': ^0.5.34
   acorn: ^8.18.0
   acorn-walk: ^8.3.5
   astro: ^7.3.1
@@ -59,7 +58,6 @@ catalog:
   simple-git-hooks: 2.14.0
   terminal-link: ^5.0.0
   turbo: 2.10.12
-  vinext: 1.0.0-beta.9
   web-vitals: ^6.0.0
   wrangler: ^4.129.0
   webpack-sources: ^3.5.1
@@ -257,6 +255,12 @@ catalogs:
     '@types/node': ^24.13.3
     tsx: ^4.23.0
     typescript: ~7.0.0
+  vinext:
+    '@vitejs/plugin-rsc': ^0.5.38
+    react: ^19.3.1
+    react-dom: ^19.3.1
+    react-server-dom-webpack: 19.3.1
+    vinext: 1.3.0
   vite8:
     '@vitejs/plugin-react': ^6.1.1
     vite: ^8.2.2

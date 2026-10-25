@@ -481,7 +481,7 @@ overrides:
   fast-uri@>=3.0.0 <3.1.8: 3.1.9
   piscina@>=4.0.0 <4.9.4: 4.9.4
   undici@>=7.24.1 <7.29.1: 8.12.2
-  undici@>=8.0.0 <8.10.2: 8.10.2
+  undici@>=8.0.0 <8.10.2: 8.12.2
   webpack-dev-middleware@>=8.0.0 <8.3.0: 8.3.0
   axios@>=1.13.0 <1.20.0: 1.20.0
   compression@<1.8.2: 1.8.2
@@ -15284,10 +15284,6 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
-  undici@8.10.2:
-    resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
-    engines: {node: '>=22.19.0'}
-
   undici@8.12.2:
     resolution: {integrity: sha512-XtuDWVdqTLr3NAxm2ly9/hU6kUsJOgGh1RASzMBbsw6aWCOaQzHdW+QQDfdERjfJ2V5vL5pRPa4RetO9UfivDg==}
     engines: {node: '>=22.19.0'}
@@ -27477,7 +27473,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.2
-      undici: 8.10.2
+      undici: 8.12.2
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -32620,8 +32616,6 @@ snapshots:
 
   undici-types@8.3.0: {}
 
-  undici@8.10.2: {}
-
   undici@8.12.2: {}
 
   undici@8.12.3: {}
@@ -32712,7 +32706,7 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
       ohash: 2.0.12
-      undici: 8.10.2
+      undici: 8.12.2
 
   unimport@6.4.0(@rsbuild/core@2.2.11(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0))(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.63.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(less@4.9.1(supports-color@10.2.2))(sass-embedded@1.103.1)(sass@1.103.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))(webpack@5.110.3):
     dependencies:

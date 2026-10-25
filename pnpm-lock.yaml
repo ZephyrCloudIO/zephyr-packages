@@ -480,7 +480,7 @@ overrides:
   engine.io@>=6.6.0 <6.6.10: 6.6.10
   fast-uri@>=3.0.0 <3.1.8: 3.1.9
   piscina@>=4.0.0 <4.9.4: 4.9.4
-  undici@>=7.24.1 <7.29.1: 7.29.1
+  undici@>=7.24.1 <7.29.1: 8.12.2
   undici@>=8.0.0 <8.10.2: 8.10.2
   webpack-dev-middleware@>=8.0.0 <8.3.0: 8.3.0
   axios@>=1.13.0 <1.20.0: 1.20.0
@@ -15284,12 +15284,12 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
-  undici@7.29.1:
-    resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
-    engines: {node: '>=20.18.1'}
-
   undici@8.10.2:
     resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
+    engines: {node: '>=22.19.0'}
+
+  undici@8.12.2:
+    resolution: {integrity: sha512-XtuDWVdqTLr3NAxm2ly9/hU6kUsJOgGh1RASzMBbsw6aWCOaQzHdW+QQDfdERjfJ2V5vL5pRPa4RetO9UfivDg==}
     engines: {node: '>=22.19.0'}
 
   undici@8.12.3:
@@ -18943,7 +18943,7 @@ snapshots:
       adm-zip: 0.6.1
       isomorphic-ws: 5.0.0(ws@8.21.0)
       typescript: 7.0.2
-      undici: 7.29.1
+      undici: 8.12.2
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
@@ -29035,7 +29035,7 @@ snapshots:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.5(@types/node@24.13.3)
-      undici: 7.29.1
+      undici: 8.12.2
       workerd: 1.20260903.1
       ws: 8.21.0
       youch: 4.1.0-beta.10
@@ -32620,9 +32620,9 @@ snapshots:
 
   undici-types@8.3.0: {}
 
-  undici@7.29.1: {}
-
   undici@8.10.2: {}
+
+  undici@8.12.2: {}
 
   undici@8.12.3: {}
 

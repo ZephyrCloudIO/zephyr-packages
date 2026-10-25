@@ -122,6 +122,8 @@ minimumReleaseAgeExclude:
   - fast-uri@3.1.9
   # Renovate security update: undici@8.12.2
   - undici@8.12.2
+  # Renovate security update: vite@8.2.4
+  - vite@8.2.4
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

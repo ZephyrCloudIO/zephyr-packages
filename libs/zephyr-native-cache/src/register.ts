@@ -1,4 +1,5 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
+import { createNativeEnvStorage } from './env-storage';
 import type {
   CacheStatusListener,
   CacheStatusSnapshot,
@@ -36,6 +37,9 @@ function notifyCacheLayerRegistered(cacheLayer: BundleCacheLayer): void {
  * `runtimePlugins` in the metro MF config to enable hash extraction from manifests during
  * remote resolution.
  *
+ * Also provides the persistent store the Zephyr env runtime plugin uses for offline
+ * starts.
+ *
  * @example
  *   ```ts
  *   import { register } from 'zephyr-native-cache';
@@ -62,6 +66,8 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
 
   const nativeCacheRefs = ensureZephyrNativeCacheRefs();
   nativeCacheRefs.cacheLayer = cacheLayer;
+  const envStorage = createNativeEnvStorage();
+  if (envStorage) nativeCacheRefs.envStorage = envStorage;
 
   // Determine whether cache is active in the current environment.
   // Production: always enabled. Dev: only when forceCacheInDev is true.

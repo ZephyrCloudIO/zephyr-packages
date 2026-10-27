@@ -1,7 +1,7 @@
 import { describe, expect, test } from '@rstest/core';
 import vm from 'node:vm';
 
-import { rewriteEnvReadsToNativeLookup } from '../index';
+import { rewriteEnvReadsToNativeLookup } from './native-env-rewrite';
 
 const UID = 'host.project.org';
 

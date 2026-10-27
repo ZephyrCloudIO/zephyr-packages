@@ -270,6 +270,50 @@ describe('zephyr env runtime plugin', () => {
     expect(hits.get('/mini/zephyr-manifest.json')).toBe(2);
   });
 
+  it('keeps a pending persisted fallback from overwriting a newer network load', async () => {
+    const readStarted = Promise.withResolvers<void>();
+    const persistedRead = Promise.withResolvers<string | undefined>();
+    installEnvStorage({
+      getItem: async () => {
+        readStarted.resolve();
+        return persistedRead.promise;
+      },
+      setItem: async (key, value) => {
+        stored.set(key, value);
+      },
+    });
+    await serveHost({ mini: { application_uid: 'mini.p.o' } });
+    const entry = `${origin}/mini/mf-manifest.json`;
+    const manifestUrl = `${origin}/mini/zephyr-manifest.json`;
+    const fetchSpy = rs.spyOn(globalThis, 'fetch');
+    // `afterResolve` reaches `fetch` synchronously, so call counts need no waiting.
+    const manifestFetches = () =>
+      fetchSpy.mock.calls.filter(([url]) => url === manifestUrl).length;
+
+    try {
+      const first = resolveRemote('mini', entry);
+      await readStarted.promise;
+      routes.set('/mini/zephyr-manifest.json', {
+        body: { zeVars: { ZE_PUBLIC_DEMO: 'fresh' } },
+      });
+      const second = resolveRemote('mini', entry);
+      expect(manifestFetches()).toBe(1);
+
+      persistedRead.resolve(JSON.stringify({ zeVars: { ZE_PUBLIC_DEMO: 'stale' } }));
+      await Promise.all([first, second]);
+      expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'stale' });
+
+      await resolveRemote('mini', entry);
+      expect(manifestFetches()).toBe(2);
+      expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'fresh' });
+
+      await resolveRemote('mini', entry);
+      expect(manifestFetches()).toBe(2);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it('clears values loaded from another root when a remote switches roots', async () => {
     await serveHost({ mini: { application_uid: 'mini.p.o' } });
     routes.set('/a/zephyr-manifest.json', { body: { zeVars: { ZE_PUBLIC_DEMO: 'a' } } });

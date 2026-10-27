@@ -205,19 +205,24 @@ function fetchManifest(url: string): Promise<LoadedManifest | undefined> {
   const cached = state.manifests.get(url);
   if (cached) return cached;
 
-  const pending = loadManifest(url).then(
+  const pending: Promise<LoadedManifest | undefined> = loadManifest(url).then(
     (manifest) => {
       void persistManifest(url, manifest);
       return { ...manifest, persisted: false };
     },
     async (error: unknown) => {
-      state.manifests.delete(url);
-      const reason = error instanceof Error ? error.message : String(error);
-      console.warn(`${LOG_PREFIX} ${url}: ${reason}`);
-      const lastKnown = await readPersistedManifest(url);
-      if (!lastKnown) return undefined;
-      console.warn(`${LOG_PREFIX} ${url}: using last known values`);
-      return { ...lastKnown, persisted: true };
+      try {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.warn(`${LOG_PREFIX} ${url}: ${reason}`);
+        const lastKnown = await readPersistedManifest(url);
+        if (!lastKnown) return undefined;
+        console.warn(`${LOG_PREFIX} ${url}: using last known values`);
+        return { ...lastKnown, persisted: true };
+      } finally {
+        // Evict only once the fallback settles: concurrent resolutions share it instead
+        // of racing a newer fetch that the older fallback would then overwrite.
+        if (state.manifests.get(url) === pending) state.manifests.delete(url);
+      }
     }
   );
   state.manifests.set(url, pending);

@@ -24,12 +24,6 @@ export interface ZephyrRuntimeNamespace {
    * compiled into the bundle.
    */
   env?: Record<string, Readonly<Record<string, string>>>;
-  /**
-   * Module Federation remote name (the consumer's `remotes` key) → Zephyr application
-   * UID, written by modules that Zephyr bundler plugins generate at build time. Read by
-   * zephyr-native-cache to identify the deployment behind a remote it resolves.
-   */
-  remoteApplicationUids?: Record<string, string>;
   [namespace: string]: unknown;
 }
 
@@ -55,7 +49,18 @@ export interface ZephyrNativeCacheControls {
 export interface ZephyrNativeCacheRefs {
   cacheLayer?: unknown;
   bundleHashes?: Record<string, string>;
+  /**
+   * Set by zephyr-native-cache `register()`; the Zephyr env runtime plugin persists
+   * manifests here when present.
+   */
+  envStorage?: ZephyrNativeEnvStorage;
   [key: string]: unknown;
+}
+
+/** Persistent string store for the last Zephyr environment manifest loaded per URL. */
+export interface ZephyrNativeEnvStorage {
+  getItem(key: string): Promise<string | undefined>;
+  setItem(key: string, value: string): Promise<void>;
 }
 
 export interface ZephyrNativeCacheState {

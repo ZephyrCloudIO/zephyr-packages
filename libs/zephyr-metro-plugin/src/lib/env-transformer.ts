@@ -51,7 +51,7 @@ const NODE_MODULES = /(^|[\\/])node_modules[\\/]/;
  */
 function zephyrNativeEnvBabelPlugin(api: BabelApi, options: NativeEnvLookupOptions) {
   return {
-    name: 'zephyr-native-env',
+    name: 'zephyr-native-env-rewrite',
     visitor: {
       Program(program: BabelPath) {
         const rewrites = planNativeEnvRewrites(program.node, options);

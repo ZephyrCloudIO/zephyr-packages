@@ -2,9 +2,11 @@ import type { ZeBuildAssetsMap } from 'zephyr-agent';
 import {
   buildAssetsMap,
   resolveMfManifestPath,
+  writeNativeRemoteUidsPlugin,
   ze_log,
   ZephyrEngine,
 } from 'zephyr-agent';
+import * as path from 'node:path';
 import type {
   ApplicationConsumes,
   ZeBuildAsset,
@@ -72,6 +74,22 @@ export class ZephyrMetroPlugin {
           this.#config.mfConfig,
           resolved_dependency_pairs
         );
+        const remoteUids = Object.fromEntries(
+          (resolved_dependency_pairs ?? []).map(({ name, application_uid }) => [
+            name,
+            application_uid,
+          ])
+        );
+        if (Object.keys(remoteUids).length > 0) {
+          // Metro MF calls runtime plugins without params, so the map ships as a generated module.
+          const seedPath = writeNativeRemoteUidsPlugin(
+            path.join(this.#config.context, 'node_modules', '.zephyr-metro'),
+            remoteUids
+          );
+          const federationConfig = this.#config.mfConfig as { plugins?: string[] };
+          federationConfig.plugins ??= [];
+          federationConfig.plugins.push(seedPath.split(path.sep).join('/'));
+        }
       }
 
       return this.#config.mfConfig;

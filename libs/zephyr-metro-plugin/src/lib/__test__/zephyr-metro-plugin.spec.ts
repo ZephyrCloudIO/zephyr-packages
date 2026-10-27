@@ -1,3 +1,4 @@
+import * as path from 'node:path';
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
@@ -26,6 +27,7 @@ rs.mock('zephyr-agent', () => ({
         {
           name: 'RemoteApp',
           version: 'latest',
+          application_uid: 'remote-app.project.org',
           resolved_url: 'http://cdn.example.com/remote.js',
         },
       ]),
@@ -38,6 +40,9 @@ rs.mock('zephyr-agent', () => ({
   },
   buildAssetsMap: rs.fn().mockReturnValue({}),
   resolveMfManifestPath: rs.fn().mockReturnValue('mf-manifest.json'),
+  writeNativeRemoteUidsPlugin: rs
+    .fn()
+    .mockReturnValue('/project/node_modules/.zephyr-metro/remote-uids-abc.js'),
 }));
 
 // Mock internal dependencies
@@ -128,6 +133,54 @@ describe('ZephyrMetroPlugin', () => {
   });
 
   describe('beforeBuild', () => {
+    it('registers resolved remote UIDs as a runtime plugin', async () => {
+      const { writeNativeRemoteUidsPlugin } = await import('zephyr-agent');
+      const mfConfig = {
+        name: 'TestApp',
+        remotes: {},
+        plugins: ['core'],
+      } as never;
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'development',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig,
+      });
+
+      await plugin.beforeBuild();
+
+      expect(writeNativeRemoteUidsPlugin).toHaveBeenCalledWith(
+        path.join('/project', 'node_modules', '.zephyr-metro'),
+        { RemoteApp: 'remote-app.project.org' }
+      );
+      expect((mfConfig as { plugins: string[] }).plugins).toEqual([
+        'core',
+        '/project/node_modules/.zephyr-metro/remote-uids-abc.js',
+      ]);
+    });
+
+    it('adds no seed when no remote resolves', async () => {
+      const { ZephyrEngine, writeNativeRemoteUidsPlugin } = await import('zephyr-agent');
+      const engine = await ZephyrEngine.create({
+        builder: 'metro',
+        context: '/project',
+      } as never);
+      (engine.resolve_remote_dependencies as Mock).mockResolvedValueOnce([]);
+      const mfConfig = { name: 'TestApp', remotes: {}, plugins: ['core'] };
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'development',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig,
+      });
+
+      await plugin.beforeBuild();
+
+      expect(writeNativeRemoteUidsPlugin).not.toHaveBeenCalled();
+      expect(mfConfig.plugins).toEqual(['core']);
+    });
     it('should initialize ZephyrEngine with metro builder', async () => {
       const { ZephyrEngine } = await import('zephyr-agent');
 

@@ -29,7 +29,7 @@ interface MetroCliOptions {
 type MetroCommandArgs = [[MetroBundleOptions], MetroConfigOptions, MetroCliOptions];
 
 const NATIVE_ENV_RUNTIME_PLUGIN_HINT =
-  "Zephyr native env: add require.resolve('zephyr-native-env/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
+  "Zephyr native env: add require.resolve('zephyr-native-cache/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
 
 /** Warns about Metro setups that cannot deliver environment overrides on device. */
 function warnNativeEnvSetup(): void {
@@ -45,8 +45,8 @@ function warnNativeEnvSetup(): void {
   const federationConfig = global.__METRO_FEDERATION_CONFIG;
   if (
     Object.keys(federationConfig?.remotes ?? {}).length > 0 &&
-    !(federationConfig?.runtimePlugins ?? []).some((entry) =>
-      (typeof entry === 'string' ? entry : entry[0]).includes('zephyr-native-env')
+    !(federationConfig?.plugins ?? []).some((entry) =>
+      entry.includes('zephyr-native-cache')
     )
   ) {
     ze_log.app(NATIVE_ENV_RUNTIME_PLUGIN_HINT);

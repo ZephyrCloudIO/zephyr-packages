@@ -15,7 +15,8 @@ declare global {
         remotes?: Record<string, string>;
         exposes?: Record<string, string>;
         shared?: Record<string, unknown>;
-        runtimePlugins?: Array<string | [string, Record<string, unknown>]>;
+        /** Runtime plugin import paths after MF's option normalization. */
+        plugins?: string[];
       }
     | undefined;
 

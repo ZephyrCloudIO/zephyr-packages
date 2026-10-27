@@ -1,10 +1,7 @@
 import { collectZEPublicVars, ZephyrError, ZeErrors, ze_log } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
-import {
-  assertMetroNativeBuildTarget,
-  type MetroNativeBuildTarget,
-} from './native-target';
+import { assertNativeBuildTarget, type NativeBuildTarget } from 'zephyr-native-internal';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export type MetroConfig = Record<string, unknown>;
@@ -13,7 +10,7 @@ export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfCon
 interface MetroBundleOptions {
   dev?: boolean;
   mode?: string | boolean;
-  platform: MetroNativeBuildTarget;
+  platform: NativeBuildTarget;
 }
 
 interface MetroConfigOptions extends MetroConfig {
@@ -28,9 +25,6 @@ interface MetroCliOptions {
 
 type MetroCommandArgs = [[MetroBundleOptions], MetroConfigOptions, MetroCliOptions];
 
-const NATIVE_ENV_RUNTIME_PLUGIN_HINT =
-  "Zephyr native env: add require.resolve('zephyr-native-cache/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
-
 /** Warns about Metro setups that cannot deliver environment overrides on device. */
 function warnNativeEnvSetup(): void {
   if (
@@ -40,16 +34,6 @@ function warnNativeEnvSetup(): void {
     ze_log.app(
       'Zephyr native env: metro.config.js does not use withZephyr; ZE_PUBLIC_* reads are not rewritten and cannot receive environment overrides'
     );
-  }
-
-  const federationConfig = global.__METRO_FEDERATION_CONFIG;
-  if (
-    Object.keys(federationConfig?.remotes ?? {}).length > 0 &&
-    !(federationConfig?.plugins ?? []).some((entry) =>
-      entry.includes('zephyr-native-cache')
-    )
-  ) {
-    ze_log.app(NATIVE_ENV_RUNTIME_PLUGIN_HINT);
   }
 }
 
@@ -95,7 +79,7 @@ export async function zephyrCommandWrapper(
 
     // Keep this outside the error wrapper: an unsupported platform must stop
     // before Metro config loading, dependency resolution, or asset publication.
-    assertMetroNativeBuildTarget(platform, 'Metro bundle platform');
+    assertNativeBuildTarget(platform, 'Metro bundle platform', 'metro');
 
     let zephyrMetroPlugin: ZephyrMetroPlugin | undefined;
     let wrapperOwnsRollback = false;

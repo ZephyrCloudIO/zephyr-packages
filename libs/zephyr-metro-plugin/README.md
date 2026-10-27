@@ -253,7 +253,7 @@ Key OTA features:
 
 ## Environment Variables
 
-With `withZephyr` in `metro.config.js`, Zephyr rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value. To apply the values configured for a Zephyr environment on device, add `require.resolve('zephyr-native-cache/runtime-plugin')` to `runtimePlugins`; `bundle-mf-host`/`bundle-mf-remote` register the resolved remote UIDs automatically. See [`zephyr-native-cache`](https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-native-cache).
+With `withZephyr` in `metro.config.js`, Zephyr rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value. `bundle-mf-host`/`bundle-mf-remote` inject a Module Federation runtime plugin that loads the `zephyr-manifest.json` next to each resolved remote and applies its environment values before the remote's code runs; no setup is needed. With `zephyr-native-cache` registered, the last loaded values are kept for offline starts.
 
 ## Project Structure
 

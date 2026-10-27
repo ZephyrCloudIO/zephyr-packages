@@ -101,48 +101,6 @@ describe('zephyrCommandWrapper', () => {
     expect(later.plugins).toEqual([]);
   });
 
-  describe('native env runtime plugin hint', () => {
-    it('does not warn when the normalized plugin list includes native cache', async () => {
-      const { ze_log } = await import('zephyr-agent');
-      global.__METRO_FEDERATION_CONFIG = {
-        name: 'host',
-        remotes: { mini: 'mini@x' },
-        plugins: ['../../zephyr-native-cache/src/runtime-plugin.ts'],
-      };
-      const wrapper = await zephyrCommandWrapper(
-        mockBundleFederatedRemote,
-        mockLoadMetroConfig,
-        mockUpdateManifest
-      );
-
-      await wrapper(...createMockArgs());
-
-      expect(ze_log.app).not.toHaveBeenCalledWith(
-        expect.stringContaining('zephyr-native-cache/runtime-plugin')
-      );
-    });
-
-    it('warns with the native-cache setup hint when plugins are missing', async () => {
-      const { ze_log } = await import('zephyr-agent');
-      global.__METRO_FEDERATION_CONFIG = {
-        name: 'host',
-        remotes: { mini: 'mini@x' },
-        plugins: [],
-      };
-      const wrapper = await zephyrCommandWrapper(
-        mockBundleFederatedRemote,
-        mockLoadMetroConfig,
-        mockUpdateManifest
-      );
-
-      await wrapper(...createMockArgs());
-
-      expect(ze_log.app).toHaveBeenCalledWith(
-        expect.stringContaining('zephyr-native-cache/runtime-plugin')
-      );
-    });
-  });
-
   describe('wrapper creation', () => {
     it('should return an async function', async () => {
       const wrapper = await zephyrCommandWrapper(

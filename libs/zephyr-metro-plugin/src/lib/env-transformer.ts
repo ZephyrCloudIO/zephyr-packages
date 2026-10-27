@@ -3,7 +3,7 @@ import {
   hasNativeEnvReads,
   planNativeEnvRewrites,
   type NativeEnvLookupOptions,
-} from 'zephyr-agent';
+} from 'zephyr-native-internal';
 
 export interface ZephyrEnvTransformerOptions {
   /** Absolute path of the Babel transformer Metro was configured with. */

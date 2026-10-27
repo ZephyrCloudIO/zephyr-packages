@@ -13,10 +13,7 @@ import {
   ZephyrError,
 } from 'zephyr-agent';
 import type { ZephyrEnvTransformerOptions } from './env-transformer';
-import {
-  assertMetroNativeBuildTarget,
-  type MetroNativeBuildTarget,
-} from './native-target';
+import { assertNativeBuildTarget, type NativeBuildTarget } from 'zephyr-native-internal';
 
 export interface ZephyrMetroOptions {
   /** Application name */
@@ -24,7 +21,7 @@ export interface ZephyrMetroOptions {
   /** Remote dependencies configuration */
   remotes?: Record<string, string>;
   /** Target platform */
-  target?: MetroNativeBuildTarget;
+  target?: NativeBuildTarget;
   /** Custom manifest endpoint path (default: /zephyr-manifest.json) */
   manifestPath?: string;
   /** Throw an error if manifest generation fails (default: false - logs warning only) */
@@ -58,7 +55,7 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
 
 function assertConfiguredMetroTarget(target: unknown): void {
   if (target !== undefined) {
-    assertMetroNativeBuildTarget(target, 'withZephyr({ target })');
+    assertNativeBuildTarget(target, 'withZephyr({ target })', 'metro');
   }
 }
 

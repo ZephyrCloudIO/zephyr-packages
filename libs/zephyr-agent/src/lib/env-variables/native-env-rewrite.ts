@@ -3,10 +3,7 @@ import MagicString, { type SourceMap } from 'magic-string';
 import { createRequire } from 'node:module';
 
 export interface NativeEnvLookupOptions {
-  /**
-   * Zephyr application UID that scopes runtime overrides; `ZE_APPLICATION_UID` reads
-   * compile to it.
-   */
+  /** Zephyr application UID that scopes runtime overrides. */
   applicationUid: string;
   /** Build-time `ZE_PUBLIC_*` values compiled in as fallbacks. */
   buildEnv: Readonly<Record<string, string>>;
@@ -25,9 +22,8 @@ interface AstNode {
   [key: string]: unknown;
 }
 
-const APPLICATION_UID_KEY = 'ZE_APPLICATION_UID';
-/** Keys whose reads are rewritten: public values and the application UID. */
-const REWRITTEN_KEY = /^(?:ZE_PUBLIC_[A-Z0-9_]+|ZE_APPLICATION_UID)$/;
+/** Keys whose reads are rewritten. */
+const REWRITTEN_KEY = /^ZE_PUBLIC_[A-Z0-9_]+$/;
 const LINE_BREAK = /\r\n|[\n\r\u2028\u2029]/g;
 
 const requireFromHere = createRequire(__filename);
@@ -200,16 +196,15 @@ function jsLiteral(value: string): string {
 
 /** Whether `source` may contain env reads the native rewrite replaces; a cheap prefilter. */
 export function hasNativeEnvReads(source: string): boolean {
-  return source.includes('ZE_PUBLIC_') || source.includes(APPLICATION_UID_KEY);
+  return source.includes('ZE_PUBLIC_');
 }
 
 /**
  * Plans the native env rewrite of a parsed Babel-compatible program. Maps each
  * `process.env` / `import.meta.env` read of a `ZE_PUBLIC_*` key to a synchronous lookup
  * of `globalThis.__ZEPHYR__.runtime.env[applicationUid]` with the build-time value as
- * fallback, and each `ZE_APPLICATION_UID` read to the `applicationUid` literal. A
- * destructured env object maps to an object literal providing those keys. Writes are
- * never planned.
+ * fallback. A destructured env object maps to an object literal providing those keys.
+ * Writes are never planned.
  *
  * Keys are the AST nodes to replace; values are JS expression sources.
  */
@@ -220,7 +215,6 @@ export function planNativeEnvRewrites(
   const { applicationUid, buildEnv } = options;
   const uidLiteral = jsLiteral(applicationUid);
   const lookup = (key: string): string => {
-    if (key === APPLICATION_UID_KEY) return uidLiteral;
     const fallback = Object.prototype.hasOwnProperty.call(buildEnv, key)
       ? jsLiteral(buildEnv[key])
       : 'void 0';

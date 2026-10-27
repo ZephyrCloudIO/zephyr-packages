@@ -143,6 +143,7 @@ export {
   hasNativeEnvReads,
   planNativeEnvRewrites,
   rewriteEnvReadsToNativeLookup,
+  writeNativeRemoteUidsPlugin,
   type NativeEnvLookupOptions,
   type NativeEnvRewriteOptions,
   type RemoteEntry,

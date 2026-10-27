@@ -2,7 +2,7 @@
 // CommonJS to be consumable by Rspack; runs as an `enforce: 'pre'` loader so the
 // JS transform rules (SWC/Babel) and Hermes only ever see rewritten code.
 
-const { rewriteEnvReadsToNativeLookup } = require('zephyr-agent');
+const { rewriteEnvReadsToNativeLookup } = require('zephyr-native-internal');
 
 module.exports = function envNativeLoader(source, inputMap) {
   const { applicationUid, buildEnv } = this.getOptions();

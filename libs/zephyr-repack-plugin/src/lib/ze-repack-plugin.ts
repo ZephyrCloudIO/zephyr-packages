@@ -6,22 +6,19 @@ import {
   setupManifestEmission,
   setupZeDeploy,
 } from 'zephyr-xpack-internal';
-import {
-  assertRepackNativeBuildTarget,
-  type RepackNativeBuildTarget,
-} from './native-target';
+import { assertNativeBuildTarget, type NativeBuildTarget } from 'zephyr-native-internal';
 const pluginName = 'ZephyrRepackPlugin';
 
 export interface ZephyrRepackPluginOptions {
   zephyr_engine: ZephyrEngine;
   pluginName: string;
   mfConfig: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
-  target: RepackNativeBuildTarget;
+  target: NativeBuildTarget;
   hooks?: ZephyrBuildHooks;
 }
 
 export interface ZephyrRepackOptions {
-  target?: RepackNativeBuildTarget;
+  target?: NativeBuildTarget;
   hooks?: ZephyrBuildHooks;
 }
 
@@ -29,13 +26,13 @@ export class ZeRepackPlugin {
   #options: ZephyrRepackPluginOptions;
 
   constructor(options: Omit<ZephyrRepackPluginOptions, 'pluginName'>) {
-    assertRepackNativeBuildTarget(options.target, 'ZeRepackPlugin target');
+    assertNativeBuildTarget(options.target, 'ZeRepackPlugin target', 'repack');
     this.#options = Object.assign({ pluginName }, options);
   }
 
   apply(compiler: Compiler): void {
     const engineTarget = this.#options.zephyr_engine.env.target;
-    assertRepackNativeBuildTarget(engineTarget, 'ZeRepackPlugin engine target');
+    assertNativeBuildTarget(engineTarget, 'ZeRepackPlugin engine target', 'repack');
     if (engineTarget !== this.#options.target) {
       throw new TypeError(
         `ZeRepackPlugin engine target must match target ${JSON.stringify(

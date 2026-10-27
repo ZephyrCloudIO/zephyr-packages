@@ -1,6 +1,9 @@
 import * as path from 'node:path';
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Configuration } from '@rspack/core';
+import * as actualNativeInternal from 'zephyr-native-internal' with {
+  rstest: 'importActual',
+};
 
 const mocks = rs.hoisted(() => {
   const engine = {
@@ -16,15 +19,14 @@ const mocks = rs.hoisted(() => {
     create: rs.fn(async () => engine),
     handleGlobalError: rs.fn(),
     collectZEPublicVars: rs.fn(() => ({ ZE_PUBLIC_API: 'https://build.example' })),
-    logFn: rs.fn(),
     extractFederatedConfig: rs.fn((plugin: unknown) => plugin),
     extractFederatedDependencyPairs: rs.fn().mockReturnValue([]),
     extractLibraryType: rs.fn(),
     makeCopyOfModuleFederationOptions: rs.fn(),
     mutWebpackFederatedRemotesConfig: rs.fn(),
-    writeSeed: rs
+    writeEnvPlugin: rs
       .fn()
-      .mockReturnValue('/repo/node_modules/.zephyr-repack/remote-uids-abc.js'),
+      .mockReturnValue('/repo/node_modules/.zephyr-repack/env-plugin-abc.js'),
     configureRuntimePlugin: rs.fn(),
     isModuleFederationPlugin: rs.fn(
       (plugin: { isMf?: boolean } | undefined) => plugin?.isMf === true
@@ -37,14 +39,17 @@ const mocks = rs.hoisted(() => {
 rs.mock('zephyr-agent', () => ({
   handleGlobalError: mocks.handleGlobalError,
   collectZEPublicVars: mocks.collectZEPublicVars,
-  logFn: mocks.logFn,
-  writeNativeRemoteUidsPlugin: mocks.writeSeed,
   ZephyrEngine: { create: mocks.create },
   ze_log: {
     init: rs.fn(),
     remotes: rs.fn(),
     app: rs.fn(),
   },
+}));
+
+rs.mock('zephyr-native-internal', () => ({
+  ...actualNativeInternal,
+  writeNativeEnvRuntimePlugin: mocks.writeEnvPlugin,
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
@@ -135,21 +140,6 @@ describe('Re.Pack native target boundaries', () => {
     });
   });
 
-  it('warns when remotes are consumed without the native-cache runtime plugin', async () => {
-    mocks.makeCopyOfModuleFederationOptions.mockReturnValue([
-      { remotes: { mini: 'mini@http://x/mini.container.js.bundle' } },
-    ]);
-    await withZephyr()(() => ({ context: '/repo', plugins: [] }) as Configuration)({
-      platform: 'ios',
-      mode: 'production',
-    });
-
-    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
-    expect(mocks.logFn).toHaveBeenCalledWith(
-      'warn',
-      expect.stringContaining("require.resolve('zephyr-native-cache/runtime-plugin')")
-    );
-  });
   it('registers resolved remote UIDs on Module Federation plugins with remotes', async () => {
     const mfPlugin = { isMf: true, remotes: { mini: 'mini@x' } };
     const otherMf = { isMf: true, remotes: {} };
@@ -167,30 +157,23 @@ describe('Re.Pack native target boundaries', () => {
 
     await withZephyr()(() => config)({ platform: 'ios', mode: 'production' });
 
-    expect(mocks.writeSeed).toHaveBeenCalledWith(
+    expect(mocks.writeEnvPlugin).toHaveBeenCalledWith(
       path.join('/repo', 'node_modules', '.zephyr-repack'),
-      { mini: 'mini.p.o' }
+      [
+        {
+          name: 'mini',
+          application_uid: 'mini.p.o',
+          version: '*',
+          default_url: '',
+          remote_entry_url: '',
+          library_type: 'var',
+        },
+      ]
     );
     expect(mocks.configureRuntimePlugin).toHaveBeenCalledTimes(1);
     expect(mocks.configureRuntimePlugin).toHaveBeenCalledWith(
       mfPlugin,
-      '/repo/node_modules/.zephyr-repack/remote-uids-abc.js'
+      '/repo/node_modules/.zephyr-repack/env-plugin-abc.js'
     );
-  });
-
-  it('does not warn when the native-cache runtime plugin is configured', async () => {
-    mocks.makeCopyOfModuleFederationOptions.mockReturnValue([
-      {
-        remotes: { mini: 'mini@http://x/mini.container.js.bundle' },
-        runtimePlugins: ['/node_modules/zephyr-native-cache/src/runtime-plugin.ts'],
-      },
-    ]);
-    await withZephyr()(() => ({ context: '/repo', plugins: [] }) as Configuration)({
-      platform: 'ios',
-      mode: 'production',
-    });
-
-    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
-    expect(mocks.logFn).not.toHaveBeenCalled();
   });
 });

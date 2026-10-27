@@ -2,11 +2,13 @@ import type { Configuration } from '@rspack/core';
 import {
   collectZEPublicVars,
   handleGlobalError,
-  logFn,
-  writeNativeRemoteUidsPlugin,
   ZephyrEngine,
   ze_log,
 } from 'zephyr-agent';
+import {
+  assertNativeBuildTarget,
+  writeNativeEnvRuntimePlugin,
+} from 'zephyr-native-internal';
 import {
   configureZephyrRuntimePlugin,
   extractFederatedConfig,
@@ -15,34 +17,11 @@ import {
   isModuleFederationPlugin,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
-  type ModuleFederationPlugin,
 } from 'zephyr-xpack-internal';
 import * as path from 'node:path';
 import type { RepackEnv } from '../type/zephyr-internal-types';
-import { assertRepackNativeBuildTarget } from './native-target';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 import { ZeRepackPlugin, type ZephyrRepackOptions } from './ze-repack-plugin';
-
-const NATIVE_ENV_RUNTIME_PLUGIN_HINT =
-  "Zephyr native env: add require.resolve('zephyr-native-cache/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
-
-/** True when an MF config consumes remotes without the native-cache runtime plugin. */
-function lacksNativeCacheRuntimePlugin(
-  mfConfigs: ModuleFederationPlugin[] = []
-): boolean {
-  return mfConfigs.some((plugin) => {
-    const federation = extractFederatedConfig(plugin);
-    const remotes = federation?.remotes;
-    const remoteCount = Array.isArray(remotes)
-      ? remotes.length
-      : Object.keys(remotes ?? {}).length;
-    if (remoteCount === 0) return false;
-    return !(federation?.runtimePlugins ?? []).some((entry) =>
-      (typeof entry === 'string' ? entry : entry[0]).includes('zephyr-native-cache')
-    );
-  });
-}
-
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
   // First return: A function taking a config function
   configFn: (env: RepackEnv) => Configuration
@@ -51,7 +30,11 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
   config: RepackEnv
 ) => Promise<Configuration> {
   if (zephyrPluginOptions?.target !== undefined) {
-    assertRepackNativeBuildTarget(zephyrPluginOptions.target, 'withZephyr({ target })');
+    assertNativeBuildTarget(
+      zephyrPluginOptions.target,
+      'withZephyr({ target })',
+      'repack'
+    );
   }
 
   // RETURN 1: Function that takes the user's config function
@@ -60,12 +43,12 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
     return async (config: RepackEnv) => {
       // Extract environment from config
       const platform = config.platform;
-      assertRepackNativeBuildTarget(platform, 'Re.Pack config platform');
+      assertNativeBuildTarget(platform, 'Re.Pack config platform', 'repack');
 
       // Re-check at invocation time in case an untyped caller mutates the
       // options object after the wrapper is created.
       const target = zephyrPluginOptions?.target ?? platform;
-      assertRepackNativeBuildTarget(target, 'withZephyr({ target })');
+      assertNativeBuildTarget(target, 'withZephyr({ target })', 'repack');
 
       // Generate user config by calling their function with env
       const userConfig = configFn({
@@ -94,7 +77,7 @@ async function _zephyr_configuration(
   // Keep unsupported targets out of the error handler below. The handler is
   // intentionally best-effort for ordinary configuration errors, while an
   // unsupported target must fail closed before an engine can be created.
-  assertRepackNativeBuildTarget(target, 'Re.Pack target');
+  assertNativeBuildTarget(target, 'Re.Pack target', 'repack');
 
   let zephyr_engine: ZephyrEngine | undefined;
   try {
@@ -119,24 +102,18 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-    const remoteUids = Object.fromEntries(
-      (resolved_dependency_pairs ?? []).map(({ name, application_uid }) => [
-        name,
-        application_uid,
-      ])
+    const envRuntimePlugin = writeNativeEnvRuntimePlugin(
+      path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
+      resolved_dependency_pairs
     );
-    if (Object.keys(remoteUids).length > 0) {
-      const seedPath = writeNativeRemoteUidsPlugin(
-        path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
-        remoteUids
-      );
+    if (envRuntimePlugin) {
       for (const plugin of config.plugins ?? []) {
         if (!isModuleFederationPlugin(plugin)) continue;
         const remotes = extractFederatedConfig(plugin)?.remotes;
         const remoteCount = Array.isArray(remotes)
           ? remotes.length
           : Object.keys(remotes ?? {}).length;
-        if (remoteCount > 0) configureZephyrRuntimePlugin(plugin, seedPath);
+        if (remoteCount > 0) configureZephyrRuntimePlugin(plugin, envRuntimePlugin);
       }
     }
 
@@ -166,9 +143,6 @@ async function _zephyr_configuration(
     const mf_configs = makeCopyOfModuleFederationOptions(config);
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
-    if (lacksNativeCacheRuntimePlugin(mf_configs)) {
-      logFn('warn', NATIVE_ENV_RUNTIME_PLUGIN_HINT);
-    }
 
     ze_log.app('Application uid created...');
     config.plugins?.push(

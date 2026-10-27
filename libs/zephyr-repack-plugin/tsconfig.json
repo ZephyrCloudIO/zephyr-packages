@@ -29,6 +29,9 @@
       "path": "../zephyr-agent/tsconfig.json"
     },
     {
+      "path": "../zephyr-native-internal/tsconfig.json"
+    },
+    {
       "path": "../zephyr-xpack-internal/tsconfig.json"
     }
   ]

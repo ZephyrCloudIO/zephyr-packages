@@ -1890,9 +1890,6 @@ importers:
 
   libs/zephyr-agent:
     dependencies:
-      '@babel/parser':
-        specifier: 'catalog:'
-        version: 7.29.8
       '@bybrave/proper-lockfile2':
         specifier: 'catalog:'
         version: 5.0.0
@@ -1911,9 +1908,6 @@ importers:
       eventsource:
         specifier: 'catalog:'
         version: 5.1.1
-      hermes-parser:
-        specifier: 'catalog:'
-        version: 0.36.1
       https-proxy-agent:
         specifier: 'catalog:'
         version: 9.1.0(supports-color@10.2.2)
@@ -1923,9 +1917,6 @@ importers:
       jose:
         specifier: 'catalog:'
         version: 6.2.12
-      magic-string:
-        specifier: 'catalog:'
-        version: 1.2.3
       open:
         specifier: 'catalog:'
         version: 11.0.0
@@ -2115,6 +2106,34 @@ importers:
       react-native:
         specifier: catalog:metro
         version: 0.87.1(@babel/core@8.0.7)(@types/react@19.2.18)(react@19.2.8)(supports-color@10.2.2)
+      typescript:
+        specifier: catalog:typescript
+        version: 7.0.2
+
+  libs/zephyr-native-internal:
+    dependencies:
+      '@babel/parser':
+        specifier: 'catalog:'
+        version: 7.29.8
+      hermes-parser:
+        specifier: 'catalog:'
+        version: 0.36.1
+      magic-string:
+        specifier: 'catalog:'
+        version: 1.2.3
+      zephyr-edge-contract:
+        specifier: workspace:*
+        version: link:../zephyr-edge-contract
+    devDependencies:
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 2.9.0
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(jsdom@30.0.1)
       typescript:
         specifier: catalog:typescript
         version: 7.0.2

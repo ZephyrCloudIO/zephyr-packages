@@ -1,3 +1,4 @@
+import * as path from 'node:path';
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Configuration } from '@rspack/core';
 
@@ -21,6 +22,13 @@ const mocks = rs.hoisted(() => {
     extractLibraryType: rs.fn(),
     makeCopyOfModuleFederationOptions: rs.fn(),
     mutWebpackFederatedRemotesConfig: rs.fn(),
+    writeSeed: rs
+      .fn()
+      .mockReturnValue('/repo/node_modules/.zephyr-repack/remote-uids-abc.js'),
+    configureRuntimePlugin: rs.fn(),
+    isModuleFederationPlugin: rs.fn(
+      (plugin: { isMf?: boolean } | undefined) => plugin?.isMf === true
+    ),
     verifyMfConfig: rs.fn().mockResolvedValue(undefined),
     plugin: rs.fn(),
   };
@@ -30,6 +38,7 @@ rs.mock('zephyr-agent', () => ({
   handleGlobalError: mocks.handleGlobalError,
   collectZEPublicVars: mocks.collectZEPublicVars,
   logFn: mocks.logFn,
+  writeNativeRemoteUidsPlugin: mocks.writeSeed,
   ZephyrEngine: { create: mocks.create },
   ze_log: {
     init: rs.fn(),
@@ -39,9 +48,11 @@ rs.mock('zephyr-agent', () => ({
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
+  configureZephyrRuntimePlugin: mocks.configureRuntimePlugin,
   extractFederatedConfig: mocks.extractFederatedConfig,
   extractFederatedDependencyPairs: mocks.extractFederatedDependencyPairs,
   extractLibraryType: mocks.extractLibraryType,
+  isModuleFederationPlugin: mocks.isModuleFederationPlugin,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
 }));
@@ -124,7 +135,7 @@ describe('Re.Pack native target boundaries', () => {
     });
   });
 
-  it('warns when remotes are consumed without the zephyr-native-env runtime plugin', async () => {
+  it('warns when remotes are consumed without the native-cache runtime plugin', async () => {
     mocks.makeCopyOfModuleFederationOptions.mockReturnValue([
       { remotes: { mini: 'mini@http://x/mini.container.js.bundle' } },
     ]);
@@ -136,15 +147,42 @@ describe('Re.Pack native target boundaries', () => {
     expect(mocks.handleGlobalError).not.toHaveBeenCalled();
     expect(mocks.logFn).toHaveBeenCalledWith(
       'warn',
-      expect.stringContaining("require.resolve('zephyr-native-env/runtime-plugin')")
+      expect.stringContaining("require.resolve('zephyr-native-cache/runtime-plugin')")
+    );
+  });
+  it('registers resolved remote UIDs on Module Federation plugins with remotes', async () => {
+    const mfPlugin = { isMf: true, remotes: { mini: 'mini@x' } };
+    const otherMf = { isMf: true, remotes: {} };
+    const config = { context: '/repo', plugins: [mfPlugin, otherMf] } as Configuration;
+    mocks.engine.resolve_remote_dependencies.mockResolvedValueOnce([
+      {
+        name: 'mini',
+        application_uid: 'mini.p.o',
+        version: '*',
+        default_url: '',
+        remote_entry_url: '',
+        library_type: 'var',
+      },
+    ]);
+
+    await withZephyr()(() => config)({ platform: 'ios', mode: 'production' });
+
+    expect(mocks.writeSeed).toHaveBeenCalledWith(
+      path.join('/repo', 'node_modules', '.zephyr-repack'),
+      { mini: 'mini.p.o' }
+    );
+    expect(mocks.configureRuntimePlugin).toHaveBeenCalledTimes(1);
+    expect(mocks.configureRuntimePlugin).toHaveBeenCalledWith(
+      mfPlugin,
+      '/repo/node_modules/.zephyr-repack/remote-uids-abc.js'
     );
   });
 
-  it('does not warn when the zephyr-native-env runtime plugin is configured', async () => {
+  it('does not warn when the native-cache runtime plugin is configured', async () => {
     mocks.makeCopyOfModuleFederationOptions.mockReturnValue([
       {
         remotes: { mini: 'mini@http://x/mini.container.js.bundle' },
-        runtimePlugins: ['/node_modules/zephyr-native-env/lib/runtime-plugin.js'],
+        runtimePlugins: ['/node_modules/zephyr-native-cache/src/runtime-plugin.ts'],
       },
     ]);
     await withZephyr()(() => ({ context: '/repo', plugins: [] }) as Configuration)({

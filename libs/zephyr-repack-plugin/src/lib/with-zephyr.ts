@@ -3,27 +3,33 @@ import {
   collectZEPublicVars,
   handleGlobalError,
   logFn,
+  writeNativeRemoteUidsPlugin,
   ZephyrEngine,
   ze_log,
 } from 'zephyr-agent';
 import {
+  configureZephyrRuntimePlugin,
   extractFederatedConfig,
   extractFederatedDependencyPairs,
   extractLibraryType,
+  isModuleFederationPlugin,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
   type ModuleFederationPlugin,
 } from 'zephyr-xpack-internal';
+import * as path from 'node:path';
 import type { RepackEnv } from '../type/zephyr-internal-types';
 import { assertRepackNativeBuildTarget } from './native-target';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 import { ZeRepackPlugin, type ZephyrRepackOptions } from './ze-repack-plugin';
 
 const NATIVE_ENV_RUNTIME_PLUGIN_HINT =
-  "Zephyr native env: add require.resolve('zephyr-native-env/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
+  "Zephyr native env: add require.resolve('zephyr-native-cache/runtime-plugin') to Module Federation runtimePlugins so remotes receive environment overrides";
 
-/** True when an MF config consumes remotes without the zephyr-native-env runtime plugin. */
-function lacksNativeEnvRuntimePlugin(mfConfigs: ModuleFederationPlugin[] = []): boolean {
+/** True when an MF config consumes remotes without the native-cache runtime plugin. */
+function lacksNativeCacheRuntimePlugin(
+  mfConfigs: ModuleFederationPlugin[] = []
+): boolean {
   return mfConfigs.some((plugin) => {
     const federation = extractFederatedConfig(plugin);
     const remotes = federation?.remotes;
@@ -32,7 +38,7 @@ function lacksNativeEnvRuntimePlugin(mfConfigs: ModuleFederationPlugin[] = []): 
       : Object.keys(remotes ?? {}).length;
     if (remoteCount === 0) return false;
     return !(federation?.runtimePlugins ?? []).some((entry) =>
-      (typeof entry === 'string' ? entry : entry[0]).includes('zephyr-native-env')
+      (typeof entry === 'string' ? entry : entry[0]).includes('zephyr-native-cache')
     );
   });
 }
@@ -113,6 +119,26 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    const remoteUids = Object.fromEntries(
+      (resolved_dependency_pairs ?? []).map(({ name, application_uid }) => [
+        name,
+        application_uid,
+      ])
+    );
+    if (Object.keys(remoteUids).length > 0) {
+      const seedPath = writeNativeRemoteUidsPlugin(
+        path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
+        remoteUids
+      );
+      for (const plugin of config.plugins ?? []) {
+        if (!isModuleFederationPlugin(plugin)) continue;
+        const remotes = extractFederatedConfig(plugin)?.remotes;
+        const remoteCount = Array.isArray(remotes)
+          ? remotes.length
+          : Object.keys(remotes ?? {}).length;
+        if (remoteCount > 0) configureZephyrRuntimePlugin(plugin, seedPath);
+      }
+    }
 
     // Rewrite ZE_PUBLIC_* reads before the JS transform rules so SWC/Babel and
     // Hermes only ever see runtime lookups scoped by this application's UID.
@@ -140,7 +166,7 @@ async function _zephyr_configuration(
     const mf_configs = makeCopyOfModuleFederationOptions(config);
     // Verify Module Federation configuration's naming
     await verify_mf_fastly_config(mf_configs, zephyr_engine);
-    if (lacksNativeEnvRuntimePlugin(mf_configs)) {
+    if (lacksNativeCacheRuntimePlugin(mf_configs)) {
       logFn('warn', NATIVE_ENV_RUNTIME_PLUGIN_HINT);
     }
 

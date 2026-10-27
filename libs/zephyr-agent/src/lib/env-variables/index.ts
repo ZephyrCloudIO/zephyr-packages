@@ -20,9 +20,13 @@ export {
   collectZEPublicVars,
 } from './env-var-rewrites';
 export {
+  hasNativeEnvReads,
+  planNativeEnvRewrites,
   rewriteEnvReadsToNativeLookup,
+  type NativeEnvLookupOptions,
   type NativeEnvRewriteOptions,
 } from './native-env-rewrite';
+export { writeNativeRemoteUidsPlugin } from './native-remote-uids';
 
 export function buildEnvImportMap(
   appUid: string,

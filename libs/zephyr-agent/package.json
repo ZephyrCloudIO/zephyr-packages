@@ -65,6 +65,7 @@
     "ci-info": "catalog:",
     "debug": "catalog:",
     "eventsource": "catalog:",
+    "hermes-parser": "catalog:",
     "https-proxy-agent": "catalog:",
     "jiti": "catalog:",
     "jose": "catalog:",

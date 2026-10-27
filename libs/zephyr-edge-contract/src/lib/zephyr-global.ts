@@ -24,6 +24,12 @@ export interface ZephyrRuntimeNamespace {
    * compiled into the bundle.
    */
   env?: Record<string, Readonly<Record<string, string>>>;
+  /**
+   * Module Federation remote name (the consumer's `remotes` key) → Zephyr application
+   * UID, written by modules that Zephyr bundler plugins generate at build time. Read by
+   * zephyr-native-cache to identify the deployment behind a remote it resolves.
+   */
+  remoteApplicationUids?: Record<string, string>;
   [namespace: string]: unknown;
 }
 

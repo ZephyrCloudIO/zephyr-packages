@@ -39,6 +39,9 @@ export {
   type UploadOutputToZephyrResult,
 } from './lib/upload-output-to-zephyr';
 
+// security
+export { redactString } from './lib/security/redaction';
+
 // errors
 export { ZeErrors, ZephyrError, type ZephyrErrorOperation } from './lib/errors';
 export {

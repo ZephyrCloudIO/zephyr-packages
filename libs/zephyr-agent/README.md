@@ -128,6 +128,29 @@ generations.
 | `ZE_FAIL_BUILD` | `true` makes a Zephyr failure fail the build. Otherwise the failure is logged.         |
 | `ZE_DISABLED`   | `true` skips Zephyr. The bundle is built and is not deployed. Zephyr is not contacted. |
 
+`ZE_FAIL_BUILD` applies on every path: a single or an array config (webpack, rspack,
+rsbuild), a coordinated build, remote resolution and a missing build ID. The `failBuild`
+option of `withZephyr` overrides it. An unreachable Zephyr and a failed upload follow the
+same rule.
+
+### Error categories
+
+`getZephyrErrorCategory(error)` reports what an error means, from the code of its root
+cause:
+
+| Category                     | Meaning                                                                                            | Next step                 |
+| ---------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------- |
+| `unreachable`                | Zephyr cannot be reached or failed on its side: network, DNS, timeout, HTTP 5xx or 408 (`ZE50001`) | Retry later               |
+| `auth`                       | Credentials are missing, invalid or expired                                                        | Refresh the credentials   |
+| `forbidden`                  | Credentials are valid but the account lacks access                                                 | Change access             |
+| `config`                     | The project or Zephyr configuration is wrong (an HTTP 4xx response is `ZE40035`)                   | Correct the configuration |
+| `build`, `deploy`, `browser` | A failure in that stage                                                                            | See the message           |
+| `unknown`                    | Not classified                                                                                     |                           |
+
+`isZephyrUnreachableError(error)` is the shortcut for `unreachable`. A wrapper error such
+as `ZE20014` keeps the code of its cause in `reason`, so an outage behind it is still
+`unreachable`. Existing error codes do not change.
+
 `ZE_DISABLED=true` is the supported way to build during an outage or without access to
 Zephyr, such as a fork build. Every Zephyr integration (webpack, rspack, rsbuild, Modern.js,
 Rspress, Vite and `withZephyrPartial`, Rollup, Rolldown, TanStack Start, Vinext, Parcel,

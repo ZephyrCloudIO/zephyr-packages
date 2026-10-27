@@ -20,11 +20,13 @@ const mocks = rs.hoisted(() => {
     }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
-    handleGlobalError: rs.fn((error: unknown) => {
-      if (process.env['ZE_FAIL_BUILD'] === 'true') throw error;
+    handleGlobalError: rs.fn((error: unknown, options?: { failBuild?: boolean }) => {
+      if (options?.failBuild ?? process.env['ZE_FAIL_BUILD'] === 'true') throw error;
     }),
     snapshotPlugins: rs.fn(() => ['snapshot']),
     restorePlugins: rs.fn(),
+    isZephyrDisabled: rs.fn(() => false),
+    disableZephyrForXpack: rs.fn((config: unknown) => config),
     extractFederatedDependencyPairs: rs.fn(),
     extractLibraryType: rs.fn(() => 'module'),
     mutWebpackFederatedRemotesConfig: rs.fn(),
@@ -36,12 +38,14 @@ const mocks = rs.hoisted(() => {
 rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertBuildTarget,
   getGlobal: mocks.getGlobal,
+  isZephyrDisabled: mocks.isZephyrDisabled,
   handleGlobalError: mocks.handleGlobalError,
   ze_log: { mf: rs.fn() },
   ZephyrEngine: { create: mocks.create },
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
+  disableZephyrForXpack: mocks.disableZephyrForXpack,
   extractFederatedDependencyPairs: mocks.extractFederatedDependencyPairs,
   extractLibraryType: mocks.extractLibraryType,
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
@@ -163,7 +167,8 @@ describe('Webpack withZephyr compiler arrays', () => {
       await expect(withZephyr()(configs)).resolves.toBe(configs);
 
       expect(mocks.handleGlobalError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'invalid federation config' })
+        expect.objectContaining({ message: 'invalid federation config' }),
+        { failBuild: undefined }
       );
       expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
       expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
@@ -186,7 +191,9 @@ describe('Webpack withZephyr compiler arrays', () => {
 
       await expect(withZephyr()(configs)).resolves.toBe(configs);
 
-      expect(mocks.handleGlobalError).toHaveBeenCalledWith(unreachable);
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(unreachable, {
+        failBuild: undefined,
+      });
       expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
     });
   });
@@ -198,7 +205,41 @@ describe('Webpack withZephyr compiler arrays', () => {
 
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'invalid federation config' })
+      expect.objectContaining({ message: 'invalid federation config' }),
+      { failBuild: undefined }
     );
+  });
+  it('skips every Zephyr step when ZE_DISABLED is set', async () => {
+    mocks.isZephyrDisabled.mockReturnValue(true);
+    const configs = [
+      { name: 'client', context: '/repo' },
+      { name: 'server', context: '/repo' },
+    ] as unknown as Configuration[];
+
+    try {
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+      await expect(withZephyr()(configs[0] as Configuration)).resolves.toBe(configs[0]);
+    } finally {
+      mocks.isZephyrDisabled.mockReturnValue(false);
+    }
+
+    expect(mocks.disableZephyrForXpack).toHaveBeenCalledTimes(2);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.extractFederatedDependencyPairs).not.toHaveBeenCalled();
+    expect(mocks.coordinateXPackCompilers).not.toHaveBeenCalled();
+  });
+
+  it('rejects direct configuration errors when failBuild is set', async () => {
+    const config = { name: 'broken', context: '/repo' } as Configuration;
+    mocks.handleGlobalError.mockImplementationOnce(
+      (error: unknown, options?: { failBuild?: boolean }) => {
+        if (options?.failBuild) throw error;
+      }
+    );
+
+    await expect(withZephyr({ failBuild: true })(config)).rejects.toThrow(
+      'invalid federation config'
+    );
+    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
   });
 });

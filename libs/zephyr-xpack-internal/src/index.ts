@@ -24,6 +24,7 @@ export {
   type ModuleFederationBuildMetadata,
 } from './federation-dashboard-legacy/get-build-stats';
 
+export { disableZephyrForXpack } from './disabled/ze-disabled-plugin';
 export { setupManifestEmission } from './hooks/ze-emit-manifest';
 export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
 export { setupZeDeploy } from './hooks/ze-setup-ze-deploy';

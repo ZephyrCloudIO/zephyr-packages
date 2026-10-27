@@ -2,6 +2,7 @@ import type { RsbuildPlugin } from '@rsbuild/core';
 import {
   assertZephyrBuildTarget,
   handleGlobalError,
+  isZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
@@ -11,6 +12,7 @@ import {
 } from 'zephyr-rspack-plugin';
 import {
   coordinateXPackCompilers,
+  disableZephyrForXpack,
   restorePlugins,
   snapshotPlugins,
 } from 'zephyr-xpack-internal';
@@ -42,6 +44,11 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
         order: 'post',
         handler: async ({ bundlerConfigs }) => {
           if (bundlerConfigs.length === 0) {
+            return;
+          }
+          // Skip mode: no engine, no token, no git information, no request.
+          if (isZephyrDisabled()) {
+            disableZephyrForXpack(bundlerConfigs);
             return;
           }
           const pluginSnapshot = snapshotPlugins(bundlerConfigs);

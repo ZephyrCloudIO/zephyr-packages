@@ -3,11 +3,13 @@ import {
   assertZephyrBuildTarget,
   getGlobal,
   handleGlobalError,
+  isZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
+  disableZephyrForXpack,
   extractFederatedDependencyPairs,
   extractLibraryType,
   coordinateXPackCompilers,
@@ -61,6 +63,10 @@ export function withZephyr(
     if (getGlobal().NX_GRAPH_CREATION) {
       return config;
     }
+    // Skip mode: build the bundle without any Zephyr step or network request.
+    if (isZephyrDisabled()) {
+      return disableZephyrForXpack(config);
+    }
     if (!Array.isArray(config)) {
       return (await _zephyr_configuration(config, {
         ...zephyrPluginOptions,
@@ -99,7 +105,7 @@ export function withZephyr(
       // A half-configured compiler array would wait for compilers that never report.
       restorePlugins(config, pluginSnapshot);
       if (engine?.hasActiveBuild) engine.build_failed();
-      handleGlobalError(error);
+      handleGlobalError(error, { failBuild: zephyrPluginOptions?.failBuild });
     }
     return config;
   };
@@ -130,7 +136,8 @@ async function _zephyr_configuration(
     const previousDependencies = zephyr_engine.federated_dependencies ?? [];
     const resolved_dependency_pairs = await zephyr_engine.resolve_remote_dependencies(
       dependencyPairs,
-      extractLibraryType(config.output?.library)
+      extractLibraryType(config.output?.library),
+      { failBuild: _zephyrOptions?.failBuild }
     );
     zephyr_engine.federated_dependencies = mergeResolvedDependencies(
       previousDependencies,
@@ -145,6 +152,7 @@ async function _zephyr_configuration(
         mfConfig: makeCopyOfModuleFederationOptions(config),
         wait_for_index_html: _zephyrOptions?.wait_for_index_html,
         hooks: _zephyrOptions?.hooks,
+        failBuild: _zephyrOptions?.failBuild,
         coordinator: _zephyrOptions?.__coordinator,
         participant: _zephyrOptions?.__participant,
         assetPrefix: _zephyrOptions?.__assetPrefix,
@@ -157,7 +165,7 @@ async function _zephyr_configuration(
     if (zephyr_engine?.hasActiveBuild !== false) {
       zephyr_engine?.build_failed();
     }
-    handleGlobalError(error);
+    handleGlobalError(error, { failBuild: _zephyrOptions?.failBuild });
   }
 
   return config;

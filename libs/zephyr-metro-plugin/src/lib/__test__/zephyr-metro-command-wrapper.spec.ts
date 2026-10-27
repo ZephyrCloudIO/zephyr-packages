@@ -3,8 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Unit tests for zephyrCommandWrapper */
 
+const { mockLogZephyrDisabled } = rs.hoisted(() => ({
+  mockLogZephyrDisabled: rs.fn(),
+}));
+
 // Mock zephyr-agent - must be before imports
 rs.mock('zephyr-agent', () => ({
+  isZephyrDisabled: () => process.env['ZE_DISABLED'] === 'true',
+  logZephyrDisabled: mockLogZephyrDisabled,
   ZephyrError: rs.fn().mockImplementation((error, options) => {
     const err = new Error(options?.message || error);
     (err as any).code = error;
@@ -394,6 +400,60 @@ describe('zephyrCommandWrapper', () => {
           context: '/custom/project/path',
         })
       );
+    });
+  });
+
+  describe('ZE_DISABLED=true', () => {
+    beforeEach(() => {
+      process.env['ZE_DISABLED'] = 'true';
+    });
+
+    afterEach(() => {
+      delete process.env['ZE_DISABLED'];
+    });
+
+    it('bundles without the Zephyr plugin and says the bundle was not deployed', async () => {
+      const { ZephyrMetroPlugin } = require('../zephyr-metro-plugin');
+      const wrapper = await zephyrCommandWrapper(
+        mockBundleFederatedRemote,
+        mockLoadMetroConfig,
+        mockUpdateManifest
+      );
+      const args = createMockArgs();
+
+      const result = await wrapper(...args);
+
+      expect(result).toEqual({ success: true });
+      expect(mockLoadMetroConfig).toHaveBeenCalled();
+      expect(mockUpdateManifest).toHaveBeenCalled();
+      expect(mockBundleFederatedRemote).toHaveBeenCalledWith(...args);
+      expect(ZephyrMetroPlugin).not.toHaveBeenCalled();
+      expect(mockBeforeBuild).not.toHaveBeenCalled();
+      expect(mockAfterBuild).not.toHaveBeenCalled();
+      expect(mockLogZephyrDisabled).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not say the bundle was built when bundling fails', async () => {
+      mockBundleFederatedRemote.mockRejectedValueOnce(new Error('bundle failed'));
+      const wrapper = await zephyrCommandWrapper(
+        mockBundleFederatedRemote,
+        mockLoadMetroConfig,
+        mockUpdateManifest
+      );
+
+      await expect(wrapper(...createMockArgs())).rejects.toThrow('bundle failed');
+      expect(mockLogZephyrDisabled).not.toHaveBeenCalled();
+    });
+
+    it('still rejects an unsupported platform first', async () => {
+      const wrapper = await zephyrCommandWrapper(
+        mockBundleFederatedRemote,
+        mockLoadMetroConfig,
+        mockUpdateManifest
+      );
+
+      await expect(wrapper(...createMockArgs({ platform: 'tap-app' }))).rejects.toThrow();
+      expect(mockLoadMetroConfig).not.toHaveBeenCalled();
     });
   });
 });

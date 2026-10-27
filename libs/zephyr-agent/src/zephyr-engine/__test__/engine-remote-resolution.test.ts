@@ -71,6 +71,20 @@ describe('ZephyrEngine.resolve_remote_dependencies and ZE_FAIL_BUILD', () => {
     await expect(engine().resolve_remote_dependencies([dependency])).rejects.toBe(outage);
   });
 
+  it('lets the failBuild option override ZE_FAIL_BUILD in both directions', async () => {
+    const outage = unreachable();
+    mocks.resolve.mockRejectedValue(outage);
+
+    await expect(
+      engine().resolve_remote_dependencies([dependency], 'var', { failBuild: true })
+    ).rejects.toBe(outage);
+
+    process.env['ZE_FAIL_BUILD'] = 'true';
+    await expect(
+      engine().resolve_remote_dependencies([dependency], 'var', { failBuild: false })
+    ).resolves.toEqual([]);
+  });
+
   it('still skips a remote that does not exist when ZE_FAIL_BUILD=true', async () => {
     process.env['ZE_FAIL_BUILD'] = 'true';
     mocks.resolve.mockRejectedValue(

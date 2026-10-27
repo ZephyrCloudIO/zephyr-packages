@@ -202,10 +202,27 @@ describe('xpack_zephyr_agent', () => {
     } as never);
 
     expect(buildFailed).toHaveBeenCalledTimes(1);
-    expect(handleGlobalError).toHaveBeenCalledWith(error);
+    expect(handleGlobalError).toHaveBeenCalledWith(error, { failBuild: undefined });
     expect(emitDeploymentDone).toHaveBeenCalled();
     expect(ze_log.upload).toHaveBeenCalled();
     expect(getBuildStats).not.toHaveBeenCalled();
+  });
+
+  it('passes the failBuild option to handleGlobalError', async () => {
+    const error = new Error('upload failed');
+    (buildWebpackAssetMap as Mock).mockRejectedValue(error);
+
+    await xpack_zephyr_agent({
+      stats: {},
+      stats_json: {},
+      assets: {},
+      pluginOptions: {
+        zephyr_engine: { build_failed: rs.fn() },
+        failBuild: true,
+      },
+    } as never);
+
+    expect(handleGlobalError).toHaveBeenCalledWith(error, { failBuild: true });
   });
 
   it('rethrows when handleGlobalError throws', async () => {
@@ -296,7 +313,7 @@ describe('xpack_zephyr_agent', () => {
       expect(prepareParticipant).toHaveBeenCalledWith('client', 3);
       // The shared build is released so the other compilers stop waiting for this one.
       expect(failParticipant).toHaveBeenCalledWith('client', error);
-      expect(handleGlobalError).toHaveBeenCalledWith(error);
+      expect(handleGlobalError).toHaveBeenCalledWith(error, { failBuild: undefined });
       // Nobody awaiting onDeploymentDone() should wait for a build that cannot publish.
       expect(emitDeploymentDone).toHaveBeenCalled();
     });

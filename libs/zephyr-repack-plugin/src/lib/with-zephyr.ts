@@ -1,6 +1,7 @@
 import type { Configuration } from '@rspack/core';
-import { handleGlobalError, ZephyrEngine, ze_log } from 'zephyr-agent';
+import { handleGlobalError, isZephyrDisabled, ZephyrEngine, ze_log } from 'zephyr-agent';
 import {
+  disableZephyrForXpack,
   extractFederatedDependencyPairs,
   extractLibraryType,
   makeCopyOfModuleFederationOptions,
@@ -40,6 +41,11 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
         platform,
         mode: config.mode,
       });
+
+      // Skip mode: build the user's own config without any Zephyr step or request.
+      if (isZephyrDisabled()) {
+        return disableZephyrForXpack(userConfig);
+      }
 
       const updatedZephyrConfig = {
         ...zephyrPluginOptions,

@@ -21,6 +21,7 @@ rs.mock('../zephyr-metro-command-wrapper', () => ({
 }));
 
 rs.mock('zephyr-agent', () => ({
+  isZephyrDisabled: () => process.env['ZE_DISABLED'] === 'true',
   ZephyrError: Error,
   ZeErrors: { ERR_UNKNOWN: 'ERR_UNKNOWN' },
 }));
@@ -153,5 +154,25 @@ describe('zephyrMetroReactNativeCli', () => {
       )
     ).rejects.toThrow('upload failed');
     expect(info).not.toHaveBeenCalledWith('Success.');
+  });
+
+  it('does not claim an upload when ZE_DISABLED=true', async () => {
+    process.env['ZE_DISABLED'] = 'true';
+    const info = rs.spyOn(console, 'info').mockImplementation(() => undefined);
+    try {
+      const command = zephyrMetroReactNativeCli().commands[1]!;
+
+      await command.func(
+        [],
+        { root: '/app', platforms: {}, reactNativePath: '/react-native' },
+        { platform: 'android' }
+      );
+
+      expect(wrappedCommand).toHaveBeenCalled();
+      expect(info).not.toHaveBeenCalledWith('Bundle artifacts uploaded to Zephyr.');
+    } finally {
+      delete process.env['ZE_DISABLED'];
+      info.mockRestore();
+    }
   });
 });

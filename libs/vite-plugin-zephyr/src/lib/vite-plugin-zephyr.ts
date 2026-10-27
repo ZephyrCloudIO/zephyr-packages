@@ -13,6 +13,7 @@ import {
   commitPartialAssetMapClaimBatch,
   createManifestContent,
   handleGlobalError,
+  isZephyrDisabled,
   logFn,
   normalizeBasePath,
   rewriteEnvReadsToVirtualModule,
@@ -47,6 +48,7 @@ import {
   type ViteModuleFederationPublicationMetadata,
 } from './internal/mf-vite-etl/federation-metadata';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import { zephyrDisabledPlugin } from './internal/zephyr-disabled-plugin';
 import {
   resolveVitePartialBuildScope,
   type VitePartialBuildOptions,
@@ -1311,6 +1313,9 @@ export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
     assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
   }
   const plugins: Plugin[] = [];
+  // Skip mode builds the bundle with the user's own federation config, without the
+  // Zephyr runtime plugin and without any Zephyr step.
+  const disabled = isZephyrDisabled();
 
   const mfConfigs = toModuleFederationConfigArray(options.mfConfig);
   if (mfConfigs.length > 0) {
@@ -1319,12 +1324,14 @@ export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
     for (const mfConfig of mfConfigs) {
       plugins.push(
         ...federation(
-          preservesLockedArtifactPaths ? mfConfig : ensureRuntimePlugin(mfConfig)
+          preservesLockedArtifactPaths || disabled
+            ? mfConfig
+            : ensureRuntimePlugin(mfConfig)
         )
       );
     }
   }
 
-  plugins.push(...withZephyrCore(options));
+  plugins.push(...(disabled ? [zephyrDisabledPlugin()] : withZephyrCore(options)));
   return plugins;
 }

@@ -13,6 +13,7 @@
     "@vitejs/plugin-rsc": "catalog:",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "react-server-dom-webpack": "catalog:react19",
     "vinext": "catalog:",
     "vite": "catalog:vite8",
     "vite-plugin-vinext-zephyr": "workspace:*",

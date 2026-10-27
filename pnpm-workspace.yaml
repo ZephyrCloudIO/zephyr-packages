@@ -23,7 +23,7 @@ catalog:
   '@sentry/react': ^10.73.0
   '@toon-format/toon': ^4.0.0
   '@types/debug': ^4.1.13
-  '@vitejs/plugin-rsc': ^0.5.34
+  '@vitejs/plugin-rsc': ^0.5.38
   acorn: ^8.18.0
   acorn-walk: ^8.3.5
   astro: ^7.3.1
@@ -59,7 +59,7 @@ catalog:
   simple-git-hooks: 2.14.0
   terminal-link: ^5.0.0
   turbo: 2.10.12
-  vinext: 1.0.0-beta.9
+  vinext: 1.3.0
   web-vitals: ^6.0.0
   wrangler: ^4.129.0
   webpack-sources: ^3.5.1
@@ -106,8 +106,8 @@ minimumReleaseAgeExclude:
   - adm-zip@0.6.1
   # Renovate security update: brace-expansion@5.0.12
   - brace-expansion@5.0.12
-  # Renovate security update: hono@4.13.7
-  - hono@4.13.7
+  # Renovate security update: hono@4.13.7 || 4.13.11
+  - hono@4.13.7 || 4.13.11
   # Renovate security update: devalue@5.9.3
   - devalue@5.9.3
   # Renovate security update: postcss-selector-parser@7.1.6
@@ -116,6 +116,14 @@ minimumReleaseAgeExclude:
   - sharp@0.35.5
   # Renovate security update: shell-quote@1.11.0
   - shell-quote@1.11.0
+  # Renovate security update: nuxt@4.6.2
+  - nuxt@4.6.2
+  # Renovate security update: fast-uri@3.1.9
+  - fast-uri@3.1.9
+  # Renovate security update: undici@8.12.2
+  - undici@8.12.2
+  # Renovate security update: vite@8.2.4
+  - vite@8.2.4
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -158,8 +166,8 @@ catalogs:
     metro-transform-worker: ^0.87.0
     react-native: 0.87.1
   nuxt:
-    '@nuxt/kit': ^4.5.1
-    '@nuxt/schema': ^4.5.1
+    '@nuxt/kit': ^4.6.2
+    '@nuxt/schema': ^4.6.2
     nuxt: ^4.5.1
     vue: ^3.5.42
     vue-router: ^5.0.0
@@ -206,10 +214,10 @@ catalogs:
   react19:
     '@types/react': ^19.2.18
     '@types/react-dom': ^19.2.5
-    react: ^19.2.8
-    react-dom: ^19.2.8
+    react: ^19.3.1
+    react-dom: ^19.3.1
     react-refresh: ^0.18.0
-    react-server-dom-webpack: 19.2.8
+    react-server-dom-webpack: 19.3.1
   rolldown:
     rolldown: ^1.2.6
   rollup4:
@@ -237,11 +245,11 @@ catalogs:
     tailwindcss: ^4.3.3
   tanstack:
     '@tanstack/react-devtools': 0.10.12
-    '@tanstack/react-router': 1.170.32
-    '@tanstack/react-router-devtools': 1.167.1
-    '@tanstack/react-router-ssr-query': 1.167.2
-    '@tanstack/react-start': 1.168.49
-    '@tanstack/router-plugin': 1.168.35
+    '@tanstack/react-router': 1.170.45
+    '@tanstack/react-router-devtools': 1.167.2
+    '@tanstack/react-router-ssr-query': 1.167.3
+    '@tanstack/react-start': 1.169.3
+    '@tanstack/router-plugin': 1.168.47
   test-dom:
     jsdom: ^30.0.0
   typescript:
@@ -251,7 +259,7 @@ catalogs:
     typescript: ~7.0.0
   vite8:
     '@vitejs/plugin-react': ^6.1.1
-    vite: ^8.2.2
+    vite: ^8.2.4
   webpack5:
     dotenv-webpack: ^9.0.0
     html-webpack-plugin: ^5.6.7
@@ -262,15 +270,15 @@ catalogs:
 overrides:
   '@modern-js/runtime-utils>react-router': 7.18.3
   '@rspress/runtime@1.47.2>react-router-dom': 7.18.3
-  'astro>@astrojs/markdown-satteri': 0.4.2
+  'astro>@astrojs/markdown-satteri': 0.4.5
   '@humanfs/node@<0.16.8': 0.16.8
   adm-zip@<0.6.1: 0.6.1
   brace-expansion@>=3.0.0 <5.0.9: 5.0.12
   fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
   fflate@>=0.7.0 <0.7.5: 0.7.5
-  hono: 4.13.7
+  hono: 4.13.11
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.9
-  nuxt@>=4.0.0 <4.5.1: 4.5.2
+  nuxt@>=4.0.0 <4.5.1: 4.6.2
   postcss: 8.5.28
   postcss-selector-parser@>=6.1.0 <6.1.3: 7.1.6
   qs@>=2.2.5 <6.16.0: 6.16.0
@@ -287,11 +295,23 @@ overrides:
   ts-deepmerge@<8.0.0: 8.0.0
   '@xhmikosr/decompress@>=11.0.0 <=11.1.3': 11.1.4
   engine.io@>=6.6.0 <6.6.10: 6.6.10
-  fast-uri@>=3.0.0 <3.1.8: 3.1.8
+  fast-uri@>=3.0.0 <3.1.8: 3.1.9
   piscina@>=4.0.0 <4.9.4: 4.9.4
-  undici@>=7.24.1 <7.29.1: 7.29.1
-  undici@>=8.0.0 <8.10.2: 8.10.2
+  undici@>=7.24.1 <7.29.1: 8.12.2
+  undici@>=8.0.0 <8.10.2: 8.12.2
   webpack-dev-middleware@>=8.0.0 <8.3.0: 8.3.0
+  axios@>=1.13.0 <1.20.0: 1.20.0
+  compression@<1.8.2: 1.8.2
+  dompurify@<3.4.17: 3.4.17
+  follow-redirects@>=1.16.0 <1.16.1: 1.16.1
+  http-cache-semantics@<=4.2.0: 4.3.0
+  launch-editor@<2.14.2: 2.14.2
+  markdown-it@>=15.0.0 <15.0.3: 15.0.3
+  proxy-addr@>=1.1.0 <2.0.8: 2.0.8
+  solid-js@<1.9.17: 1.9.17
+  seroval@<1.6.3: 1.6.12
+  source-map-js@>=1.0.0 <1.2.2: 1.2.2
+  tinypool@<2.1.2: 2.2.0
 
 allowBuilds:
   '@biomejs/biome': true

@@ -17,6 +17,8 @@ const mocks = rs.hoisted(() => ({
   restorePlugins: rs.fn(),
   configure: rs.fn(),
   rspackWithZephyr: rs.fn(),
+  isZephyrDisabled: rs.fn(() => false),
+  disableZephyrForXpack: rs.fn(),
   assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
     if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
       throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
@@ -27,10 +29,12 @@ const mocks = rs.hoisted(() => ({
 rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertBuildTarget,
   handleGlobalError: mocks.handleGlobalError,
+  isZephyrDisabled: mocks.isZephyrDisabled,
   ZephyrEngine: { create: mocks.create },
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
+  disableZephyrForXpack: mocks.disableZephyrForXpack,
   coordinateXPackCompilers: mocks.coordinate,
   snapshotPlugins: mocks.snapshotPlugins,
   restorePlugins: mocks.restorePlugins,
@@ -104,6 +108,31 @@ describe('Rsbuild withZephyr compiler coordination', () => {
       })
     );
     expect(mocks.configure).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips every Zephyr step before creating an engine when ZE_DISABLED is set', async () => {
+    let hook:
+      | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
+      | undefined;
+    const plugin = withZephyr();
+    await plugin.setup({
+      onBeforeCreateCompiler(options: { handler: typeof hook }) {
+        hook = options.handler;
+      },
+    } as never);
+    const bundlerConfigs = [{ name: 'web', context: '/repo' }];
+    mocks.isZephyrDisabled.mockReturnValue(true);
+
+    try {
+      await hook?.({ bundlerConfigs });
+    } finally {
+      mocks.isZephyrDisabled.mockReturnValue(false);
+    }
+
+    expect(mocks.disableZephyrForXpack).toHaveBeenCalledWith(bundlerConfigs);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.coordinate).not.toHaveBeenCalled();
+    expect(mocks.rspackWithZephyr).not.toHaveBeenCalled();
   });
 
   describe('when Zephyr fails while configuring the bundler configs', () => {

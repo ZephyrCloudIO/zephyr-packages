@@ -115,9 +115,9 @@ export function setupZeDeploy<
         if (pluginOptions.zephyr_engine.hasActiveBuild !== false) {
           pluginOptions.zephyr_engine.build_failed();
         }
-        // Without ZE_FAIL_BUILD a Zephyr failure (for example an unreachable build-id
+        // Unless the build must fail (ZE_FAIL_BUILD or failBuild) a Zephyr failure (for example an unreachable build-id
         // service) must not fail the bundle. Skip the upload and keep the output.
-        handleGlobalError(error);
+        handleGlobalError(error, { failBuild: pluginOptions.failBuild });
         return;
       }
     }

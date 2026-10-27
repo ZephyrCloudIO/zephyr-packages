@@ -3,8 +3,22 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, rs } from '@rste
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { preloadZephyrEnv, type ZephyrEnvStorage } from '../src/index';
-import createZephyrNativeEnvPlugin from '../src/runtime-plugin';
+const native = rs.hoisted(() => ({
+  files: new Map<string, string>(),
+  getDocumentDirectory: rs.fn(async () => '/docs'),
+  sha256String: rs.fn(
+    async (value: string) => `h${value.length}${value.replace(/\W/g, '')}`
+  ),
+  fileExists: rs.fn(async (file: string) => native.files.has(file)),
+  readFile: rs.fn(async (file: string) => native.files.get(file)!),
+  writeFile: rs.fn(async (file: string, content: string) => {
+    native.files.set(file, content);
+  }),
+}));
+
+rs.mock('../src/NativeMFECache', () => ({ default: native }));
+
+import createZephyrNativeCachePlugin from '../src/runtime-plugin';
 
 type AfterResolveArgs = Parameters<
   NonNullable<ModuleFederationRuntimePlugin['afterResolve']>
@@ -19,9 +33,9 @@ let origin = '';
 
 beforeAll(async () => {
   server = http.createServer((req, res) => {
-    const path = req.url ?? '';
-    hits.set(path, (hits.get(path) ?? 0) + 1);
-    const route = routes.get(path);
+    const requestPath = req.url ?? '';
+    hits.set(requestPath, (hits.get(requestPath) ?? 0) + 1);
+    const route = routes.get(requestPath);
     if (route?.hang) return;
     res.statusCode = route ? (route.status ?? 200) : 404;
     res.setHeader('Content-Type', 'application/json');
@@ -44,6 +58,12 @@ beforeEach(() => {
   globalThis.__ZEPHYR__ = undefined;
   routes.clear();
   hits.clear();
+  native.files.clear();
+  native.fileExists.mockImplementation(async (file) => native.files.has(file));
+  native.readFile.mockImplementation(async (file) => native.files.get(file)!);
+  native.writeFile.mockImplementation(async (file, content) => {
+    native.files.set(file, content);
+  });
   rs.spyOn(console, 'warn').mockImplementation(() => undefined);
 });
 
@@ -53,151 +73,111 @@ function env(uid: string): Readonly<Record<string, string>> | undefined {
   return globalThis.__ZEPHYR__?.runtime.env?.[uid];
 }
 
-function memoryStorage(seed: Record<string, string> = {}): ZephyrEnvStorage {
-  const data = new Map(Object.entries(seed));
-  return {
-    getItem: (key) => data.get(key) ?? null,
-    setItem: (key, value) => {
-      data.set(key, value);
-    },
-  };
-}
-
-function serveHost(
-  dependencies: Record<string, unknown> = {},
-  zeVars: unknown = {},
-  storage?: ZephyrEnvStorage
-) {
-  routes.set('/host/zephyr-manifest.json', { body: { zeVars, dependencies } });
-  return preloadZephyrEnv({
-    applicationUid: HOST_UID,
-    manifestUrl: `${origin}/host/zephyr-manifest.json`,
-    timeoutMs: 1000,
-    storage,
-  });
-}
-
 async function resolveRemote(name: string, entry: string, alias?: string): Promise<void> {
-  const plugin = createZephyrNativeEnvPlugin();
-  // MF passes far more fields; the plugin only reads `remote`.
+  const plugin = createZephyrNativeCachePlugin();
   const args = { remote: { name, alias, entry } } as unknown as AfterResolveArgs;
   const result = await plugin.afterResolve?.(args);
   expect(result).toBe(args);
 }
 
-describe('preloadZephyrEnv', () => {
-  it('stores public string values for the host UID', async () => {
+async function serveHost(
+  dependencies: Record<string, unknown> = {},
+  zeVars: unknown = {}
+): Promise<void> {
+  globalThis.__ZEPHYR__ = {
+    version: 1,
+    runtime: { remoteApplicationUids: { host: HOST_UID } },
+  };
+  routes.set('/host/zephyr-manifest.json', { body: { dependencies, zeVars } });
+  await resolveRemote('host', `${origin}/host/mf-manifest.json`);
+}
+
+function persistedPath(url: string): string {
+  return `/docs/zephyr-env-h${url.length}${url.replace(/\W/g, '')}.json`;
+}
+
+describe('zephyr-native-cache environment loading', () => {
+  it('stores public string values for the Host UID', async () => {
     await serveHost({}, { ZE_PUBLIC_DEMO: 'staging', ZE_PUBLIC_EMPTY: '' });
+
     expect(env(HOST_UID)).toEqual({ ZE_PUBLIC_DEMO: 'staging', ZE_PUBLIC_EMPTY: '' });
   });
 
   it('drops non-string values and non-public keys', async () => {
     await serveHost(
       {},
-      { ZE_PUBLIC_DEMO: 'ok', ZE_PUBLIC_NUM: 1, PRIVATE: 'x', ze_public_lower: 'y' }
+      {
+        ZE_PUBLIC_DEMO: 'ok',
+        ZE_PUBLIC_NUM: 1,
+        PRIVATE: 'x',
+        ze_public_lower: 'y',
+      }
     );
+
     expect(env(HOST_UID)).toEqual({ ZE_PUBLIC_DEMO: 'ok' });
   });
 
-  it('times out a hanging server and resolves without values', async () => {
-    routes.set('/hang/zephyr-manifest.json', { hang: true });
-    const started = Date.now();
-    await preloadZephyrEnv({
-      applicationUid: HOST_UID,
-      manifestUrl: `${origin}/hang/zephyr-manifest.json`,
-      timeoutMs: 300,
-    });
-    expect(Date.now() - started).toBeLessThan(800);
+  it('times out a hanging manifest and resolves without values', async () => {
+    globalThis.__ZEPHYR__ = {
+      version: 1,
+      runtime: { remoteApplicationUids: { host: HOST_UID } },
+    };
+    routes.set('/host/zephyr-manifest.json', { hang: true });
+
+    await resolveRemote('host', `${origin}/host/mf-manifest.json`);
+
     expect(env(HOST_UID)).toBeUndefined();
-  });
+  }, 10_000);
 
   it('stores nothing for a 404', async () => {
-    await preloadZephyrEnv({
-      applicationUid: HOST_UID,
-      manifestUrl: `${origin}/missing/zephyr-manifest.json`,
-    });
+    globalThis.__ZEPHYR__ = {
+      version: 1,
+      runtime: { remoteApplicationUids: { host: HOST_UID } },
+    };
+    await resolveRemote('host', `${origin}/missing/mf-manifest.json`);
+
     expect(env(HOST_UID)).toBeUndefined();
     expect(hits.get('/missing/zephyr-manifest.json')).toBe(1);
   });
 
-  it('resolves without a request when manifestUrl is omitted or not http(s)', async () => {
-    await preloadZephyrEnv({ applicationUid: HOST_UID });
-    await preloadZephyrEnv({ applicationUid: HOST_UID, manifestUrl: 'file:///x.json' });
-    expect(hits.size).toBe(0);
-    expect(env(HOST_UID)).toBeUndefined();
-  });
-
-  it('skips overrides when applicationUid is missing', async () => {
-    await preloadZephyrEnv({
-      applicationUid: undefined,
-      manifestUrl: `${origin}/host/zephyr-manifest.json`,
-    });
-    expect(hits.size).toBe(0);
-    expect(env(HOST_UID)).toBeUndefined();
-  });
-
   it('applies the last persisted values when manifests cannot be loaded', async () => {
-    const storage = memoryStorage();
-    await serveHost(
-      { mini: { application_uid: 'mini.p.o' } },
-      { ZE_PUBLIC_DEMO: 'staging' },
-      storage
+    const url = `${origin}/mini/zephyr-manifest.json`;
+    native.files.set(
+      persistedPath(url),
+      JSON.stringify({ zeVars: { ZE_PUBLIC_DEMO: 'cached' } })
     );
-    routes.set('/mini/zephyr-manifest.json', {
-      body: { zeVars: { ZE_PUBLIC_DEMO: 'mini' } },
-    });
+    await serveHost({ mini: { application_uid: 'mini.p.o' } });
     await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
 
-    // Simulate an offline cold start.
-    globalThis.__ZEPHYR__ = undefined;
-    routes.clear();
-    await preloadZephyrEnv({
-      applicationUid: HOST_UID,
-      manifestUrl: `${origin}/host/zephyr-manifest.json`,
-      storage,
-    });
-    await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
-
-    expect(env(HOST_UID)).toEqual({ ZE_PUBLIC_DEMO: 'staging' });
-    expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini' });
+    expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'cached' });
   });
 
   it('keeps build-time values without readable persisted values for the URL', async () => {
-    const storage = memoryStorage({
-      [`zephyr-native-env:${origin}/host/zephyr-manifest.json`]: '{not json',
-      [`zephyr-native-env:${origin}/other/zephyr-manifest.json`]: JSON.stringify({
-        zeVars: { ZE_PUBLIC_DEMO: 'other' },
-      }),
-    });
-    await preloadZephyrEnv({
-      applicationUid: HOST_UID,
-      manifestUrl: `${origin}/host/zephyr-manifest.json`,
-      storage,
-    });
-    expect(env(HOST_UID)).toBeUndefined();
+    const url = `${origin}/mini/zephyr-manifest.json`;
+    native.files.set(persistedPath(url), '{not json');
+    await serveHost({ mini: { application_uid: 'mini.p.o' } });
+    await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
+
+    expect(env('mini.p.o')).toBeUndefined();
   });
 
-  it('loads normally when storage fails', async () => {
-    const storage: ZephyrEnvStorage = {
-      getItem: () => Promise.reject(new Error('read failed')),
-      setItem: () => Promise.reject(new Error('write failed')),
-    };
-    await serveHost({}, { ZE_PUBLIC_DEMO: 'staging' }, storage);
+  it('loads normally when native file persistence fails', async () => {
+    native.writeFile.mockRejectedValue(new Error('write failed'));
+    await serveHost(
+      { mini: { application_uid: 'mini.p.o' } },
+      { ZE_PUBLIC_DEMO: 'staging' }
+    );
+
     expect(env(HOST_UID)).toEqual({ ZE_PUBLIC_DEMO: 'staging' });
 
-    globalThis.__ZEPHYR__ = undefined;
-    routes.clear();
-    await preloadZephyrEnv({
-      applicationUid: HOST_UID,
-      manifestUrl: `${origin}/host/zephyr-manifest.json`,
-      storage,
-    });
-    expect(env(HOST_UID)).toBeUndefined();
+    const url = `${origin}/mini/zephyr-manifest.json`;
+    native.files.set(persistedPath(url), 'unreadable');
+    native.readFile.mockRejectedValue(new Error('read failed'));
+    await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
+    expect(env('mini.p.o')).toBeUndefined();
   });
-});
 
-describe('zephyr-native-env runtime plugin', () => {
-  it('loads the manifest next to the remote entry', async () => {
+  it('loads the manifest next to each resolved remote entry', async () => {
     await serveHost({
       mini: { application_uid: 'mini.p.o' },
       sub: { application_uid: 'sub.p.o' },
@@ -216,10 +196,11 @@ describe('zephyr-native-env runtime plugin', () => {
     expect(env('sub.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'sub' });
   });
 
-  it('issues no request for a remote the host manifest does not list', async () => {
-    await serveHost({ mini: { application_uid: 'mini.p.o' } });
+  it('issues no request for a remote that neither the seed nor a manifest lists', async () => {
+    await serveHost();
     hits.clear();
     await resolveRemote('unknown', `${origin}/unknown/mf-manifest.json`);
+
     expect(hits.size).toBe(0);
   });
 
@@ -231,18 +212,20 @@ describe('zephyr-native-env runtime plugin', () => {
     const entry = `${origin}/mini/mf-manifest.json`;
 
     await Promise.all([resolveRemote('mini', entry), resolveRemote('mini', entry)]);
+
     expect(hits.get('/mini/zephyr-manifest.json')).toBe(1);
     expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini' });
   });
 
   it('warms remote manifests listed with a remote_entry_url', async () => {
+    const entry = `${origin}/mini/mf-manifest.json`;
     routes.set('/mini/zephyr-manifest.json', {
       body: { zeVars: { ZE_PUBLIC_DEMO: 'mini' } },
     });
-    const entry = `${origin}/mini/mf-manifest.json`;
     await serveHost({ mini: { application_uid: 'mini.p.o', remote_entry_url: entry } });
 
     await resolveRemote('mini', entry);
+
     expect(hits.get('/mini/zephyr-manifest.json')).toBe(1);
     expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini' });
   });
@@ -258,17 +241,18 @@ describe('zephyr-native-env runtime plugin', () => {
       body: { zeVars: { ZE_PUBLIC_DEMO: 'mini' } },
     });
     await resolveRemote('mini', entry);
+
     expect(hits.get('/mini/zephyr-manifest.json')).toBe(2);
     expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini' });
   });
 
   it('retries the network after applying persisted values for a failed manifest', async () => {
-    const storage = memoryStorage({
-      [`zephyr-native-env:${origin}/mini/zephyr-manifest.json`]: JSON.stringify({
-        zeVars: { ZE_PUBLIC_DEMO: 'cached' },
-      }),
-    });
-    await serveHost({ mini: { application_uid: 'mini.p.o' } }, {}, storage);
+    const url = `${origin}/mini/zephyr-manifest.json`;
+    native.files.set(
+      persistedPath(url),
+      JSON.stringify({ zeVars: { ZE_PUBLIC_DEMO: 'cached' } })
+    );
+    await serveHost({ mini: { application_uid: 'mini.p.o' } });
     const entry = `${origin}/mini/mf-manifest.json`;
 
     await resolveRemote('mini', entry);
@@ -285,7 +269,7 @@ describe('zephyr-native-env runtime plugin', () => {
     expect(hits.get('/mini/zephyr-manifest.json')).toBe(2);
   });
 
-  it('clears values loaded from another root when the remote switches roots', async () => {
+  it('clears values loaded from another root when a remote switches roots', async () => {
     await serveHost({ mini: { application_uid: 'mini.p.o' } });
     routes.set('/a/zephyr-manifest.json', { body: { zeVars: { ZE_PUBLIC_DEMO: 'a' } } });
 
@@ -293,6 +277,7 @@ describe('zephyr-native-env runtime plugin', () => {
     expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'a' });
 
     await resolveRemote('mini', `${origin}/b/mf-manifest.json`);
+
     expect(env('mini.p.o')).toBeUndefined();
   });
 
@@ -301,10 +286,13 @@ describe('zephyr-native-env runtime plugin', () => {
     routes.set('/a/zephyr-manifest.json', {
       body: { zeVars: {}, dependencies: { b: { application_uid: 'b.p.o' } } },
     });
-    routes.set('/b/zephyr-manifest.json', { body: { zeVars: { ZE_PUBLIC_DEMO: 'b' } } });
+    routes.set('/b/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'b' } },
+    });
 
     await resolveRemote('a', `${origin}/a/mf-manifest.json`);
     await resolveRemote('b', `${origin}/b/mf-manifest.json`);
+
     expect(env('b.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'b' });
   });
 
@@ -322,12 +310,13 @@ describe('zephyr-native-env runtime plugin', () => {
 
     await resolveRemote('a', `${origin}/a/mf-manifest.json`);
     await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
+
     expect(hits.get('/mini/zephyr-manifest.json')).toBeUndefined();
     expect(env('mini.p.o')).toBeUndefined();
     expect(env('other.p.o')).toBeUndefined();
   });
 
-  it('maps a remote by its consumer alias before its container name', async () => {
+  it('maps a remote by consumer alias before its container name', async () => {
     await serveHost({
       mini: { application_uid: 'admin.p.o' },
       shop: { application_uid: 'shop.p.o' },
@@ -341,6 +330,7 @@ describe('zephyr-native-env runtime plugin', () => {
 
     await resolveRemote('admin', `${origin}/admin/mf-manifest.json`, 'mini');
     await resolveRemote('mini', `${origin}/shop/mf-manifest.json`, 'shop');
+
     expect(env('admin.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'admin' });
     expect(env('shop.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'shop' });
   });
@@ -360,6 +350,7 @@ describe('zephyr-native-env runtime plugin', () => {
 
     await resolveRemote('a', `${origin}/a/mf-manifest.json`);
     await resolveRemote('mini', `${origin}/shop/mf-manifest.json`, 'shop');
+
     expect(hits.get('/shop/zephyr-manifest.json')).toBeUndefined();
     expect(env('mini.p.o')).toBeUndefined();
     expect(env('shop.p.o')).toBeUndefined();
@@ -370,13 +361,35 @@ describe('zephyr-native-env runtime plugin', () => {
       __GLOBAL_PLUGIN__: [],
     } as unknown as typeof globalThis.__FEDERATION__;
     globalThis.__FEDERATION__ = federation;
-    const plugin = createZephyrNativeEnvPlugin();
-    // beforeInit only reads its argument to return it.
+    const plugin = createZephyrNativeCachePlugin();
     const args = {} as Parameters<NonNullable<typeof plugin.beforeInit>>[0];
     plugin.beforeInit?.(args);
-    createZephyrNativeEnvPlugin().beforeInit?.(args);
-    expect(federation.__GLOBAL_PLUGIN__.map((p) => p.name)).toEqual([
-      'zephyr-native-env-plugin',
+    createZephyrNativeCachePlugin().beforeInit?.(args);
+
+    expect(federation.__GLOBAL_PLUGIN__?.map((item) => item.name)).toEqual([
+      'zephyr-native-cache-plugin',
     ]);
+  });
+
+  it('applies the Host seed values, then nested remote values from the Host manifest', async () => {
+    routes.set('/host/zephyr-manifest.json', {
+      body: {
+        zeVars: { ZE_PUBLIC_DEMO: 'host-env' },
+        dependencies: { mini: { application_uid: 'mini.p.o' } },
+      },
+    });
+    globalThis.__ZEPHYR__ = {
+      version: 1,
+      runtime: { remoteApplicationUids: { host: HOST_UID } },
+    };
+    routes.set('/mini/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'mini-env' } },
+    });
+
+    await resolveRemote('host', `${origin}/host/mf-manifest.json`);
+    await resolveRemote('mini', `${origin}/mini/mf-manifest.json`);
+
+    expect(env('host.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'host-env' });
+    expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini-env' });
   });
 });

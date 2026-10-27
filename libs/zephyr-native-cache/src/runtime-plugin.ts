@@ -1,5 +1,4 @@
 import type { ModuleFederationRuntimePlugin } from '@module-federation/runtime';
-import { loadRemoteEnv } from './env';
 import { getZephyrNativeCacheNamespace } from './zephyr-global';
 import { getBundleCacheKey } from './cache-key';
 
@@ -13,10 +12,7 @@ type BeforeInitArgs = Parameters<
 
 /**
  * MF runtime plugin that extracts bundle hashes from manifests during remote resolution
- * and feeds them to the cache layer for integrity verification and background polling. It
- * also applies each remote's Zephyr environment `ZE_PUBLIC_*` values from the
- * `zephyr-manifest.json` next to its entry. Remote UIDs come from the bundler-generated
- * seed and from manifests loaded for resolved remotes.
+ * and feeds them to the cache layer for integrity verification and background polling.
  *
  * Add to `runtimePlugins` in your metro MF config:
  *
@@ -25,7 +21,7 @@ type BeforeInitArgs = Parameters<
  * ```
  *
  * Uses `beforeInit` to register a global copy so nested remotes also get hash extraction
- * and environment loading (same pattern as Tauri MF plugin).
+ * (same pattern as Tauri MF plugin).
  */
 
 // --- Manifest types (subset used for hash extraction) ---
@@ -225,28 +221,16 @@ export default function (): ModuleFederationRuntimePlugin {
     }
     return args;
   }
-  async function afterResolve(args: AfterResolveArgs): Promise<AfterResolveArgs> {
-    resolveHook(args);
-    try {
-      await loadRemoteEnv(
-        args.remote as { name: string; alias?: string; entry?: string }
-      );
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      console.warn(`[MFE-Cache] env ${args.remote.name}: ${reason}`);
-    }
-    return args;
-  }
 
   return {
     name: ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME,
-    afterResolve,
+    afterResolve: resolveHook,
     beforeInit: (args: BeforeInitArgs) => {
       const globalPlugins = globalThis.__FEDERATION__.__GLOBAL_PLUGIN__ ?? [];
       if (!globalPlugins.find((p) => p.name === ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME)) {
         globalPlugins.push({
           name: ZEPHYR_GLOBAL_CACHE_PLUGIN_NAME,
-          afterResolve,
+          afterResolve: resolveHook,
         });
       }
       return args;

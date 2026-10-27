@@ -1,17 +1,29 @@
 import type { Configuration } from '@rspack/core';
-import { handleGlobalError, isZephyrDisabled, ZephyrEngine, ze_log } from 'zephyr-agent';
 import {
+  collectZEPublicVars,
+  handleGlobalError,
+  isZephyrDisabled,
+  ZephyrEngine,
+  ze_log,
+} from 'zephyr-agent';
+import {
+  assertNativeBuildTarget,
+  writeNativeEnvRuntimePlugin,
+} from 'zephyr-native-internal';
+import {
+  configureZephyrRuntimePlugin,
   disableZephyrForXpack,
+  extractFederatedConfig,
   extractFederatedDependencyPairs,
   extractLibraryType,
+  isModuleFederationPlugin,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
+import * as path from 'node:path';
 import type { RepackEnv } from '../type/zephyr-internal-types';
-import { assertRepackNativeBuildTarget } from './native-target';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
 import { ZeRepackPlugin, type ZephyrRepackOptions } from './ze-repack-plugin';
-
 export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
   // First return: A function taking a config function
   configFn: (env: RepackEnv) => Configuration
@@ -20,7 +32,11 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
   config: RepackEnv
 ) => Promise<Configuration> {
   if (zephyrPluginOptions?.target !== undefined) {
-    assertRepackNativeBuildTarget(zephyrPluginOptions.target, 'withZephyr({ target })');
+    assertNativeBuildTarget(
+      zephyrPluginOptions.target,
+      'withZephyr({ target })',
+      'repack'
+    );
   }
 
   // RETURN 1: Function that takes the user's config function
@@ -29,12 +45,12 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
     return async (config: RepackEnv) => {
       // Extract environment from config
       const platform = config.platform;
-      assertRepackNativeBuildTarget(platform, 'Re.Pack config platform');
+      assertNativeBuildTarget(platform, 'Re.Pack config platform', 'repack');
 
       // Re-check at invocation time in case an untyped caller mutates the
       // options object after the wrapper is created.
       const target = zephyrPluginOptions?.target ?? platform;
-      assertRepackNativeBuildTarget(target, 'withZephyr({ target })');
+      assertNativeBuildTarget(target, 'withZephyr({ target })', 'repack');
 
       // Generate user config by calling their function with env
       const userConfig = configFn({
@@ -68,7 +84,7 @@ async function _zephyr_configuration(
   // Keep unsupported targets out of the error handler below. The handler is
   // intentionally best-effort for ordinary configuration errors, while an
   // unsupported target must fail closed before an engine can be created.
-  assertRepackNativeBuildTarget(target, 'Re.Pack target');
+  assertNativeBuildTarget(target, 'Re.Pack target', 'repack');
 
   let zephyr_engine: ZephyrEngine | undefined;
   try {
@@ -93,6 +109,39 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    const envRuntimePlugin = writeNativeEnvRuntimePlugin(
+      path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
+      resolved_dependency_pairs
+    );
+    if (envRuntimePlugin) {
+      for (const plugin of config.plugins ?? []) {
+        if (!isModuleFederationPlugin(plugin)) continue;
+        const remotes = extractFederatedConfig(plugin)?.remotes;
+        const remoteCount = Array.isArray(remotes)
+          ? remotes.length
+          : Object.keys(remotes ?? {}).length;
+        if (remoteCount > 0) configureZephyrRuntimePlugin(plugin, envRuntimePlugin);
+      }
+    }
+
+    // Rewrite ZE_PUBLIC_* reads before the JS transform rules so SWC/Babel and
+    // Hermes only ever see runtime lookups scoped by this application's UID.
+    config.module ??= {};
+    config.module.rules ??= [];
+    config.module.rules.unshift({
+      test: /\.[cm]?[jt]sx?$/,
+      exclude: /node_modules/,
+      enforce: 'pre',
+      use: [
+        {
+          loader: require.resolve('./env-native-loader.js'),
+          options: {
+            applicationUid: zephyr_engine.application_uid,
+            buildEnv: collectZEPublicVars(process.env),
+          },
+        },
+      ],
+    });
 
     ze_log.remotes(
       'dependency resolution completed successfully...or at least trying to...'

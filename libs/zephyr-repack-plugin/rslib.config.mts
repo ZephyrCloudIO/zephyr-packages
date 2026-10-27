@@ -25,6 +25,10 @@ const output = {
       from: './*.md',
       to: '.',
     },
+    {
+      from: './src/lib/env-native-loader.js',
+      to: './lib',
+    },
   ],
 } as const;
 

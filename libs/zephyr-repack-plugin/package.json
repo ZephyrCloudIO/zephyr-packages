@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "zephyr-agent": "workspace:*",
+    "zephyr-native-internal": "workspace:*",
     "zephyr-xpack-internal": "workspace:*"
   },
   "devDependencies": {

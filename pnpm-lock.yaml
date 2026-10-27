@@ -51,6 +51,9 @@ catalogs:
     '@astrojs/sitemap':
       specifier: ^3.7.3
       version: 3.7.4
+    '@babel/parser':
+      specifier: ^7.29.0
+      version: 7.29.9
     '@bybrave/proper-lockfile2':
       specifier: 5.0.0
       version: 5.0.0
@@ -135,6 +138,9 @@ catalogs:
     globby:
       specifier: ^16.2.4
       version: 16.2.4
+    hermes-parser:
+      specifier: ^0.36.1
+      version: 0.36.1
     https-proxy-agent:
       specifier: ^9.0.0
       version: 9.1.0
@@ -286,6 +292,10 @@ catalogs:
     parcel:
       specifier: ^2.16.4
       version: 2.16.4
+  peer-compat:
+    react-native:
+      specifier: '>=0.60.0'
+      version: 0.87.1
   postcss:
     autoprefixer:
       specifier: ^10.5.4
@@ -2027,6 +2037,9 @@ importers:
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
+      zephyr-native-internal:
+        specifier: workspace:*
+        version: link:../zephyr-native-internal
     devDependencies:
       '@rslib/core':
         specifier: catalog:rslib
@@ -2111,6 +2124,34 @@ importers:
       react-native:
         specifier: catalog:metro
         version: 0.87.1(@babel/core@8.0.7)(@types/react@19.2.18)(react@19.3.1)(supports-color@10.2.2)
+      typescript:
+        specifier: catalog:typescript
+        version: 7.0.2
+
+  libs/zephyr-native-internal:
+    dependencies:
+      '@babel/parser':
+        specifier: 'catalog:'
+        version: 7.29.9
+      hermes-parser:
+        specifier: 'catalog:'
+        version: 0.36.1
+      magic-string:
+        specifier: 'catalog:'
+        version: 1.2.3
+      zephyr-edge-contract:
+        specifier: workspace:*
+        version: link:../zephyr-edge-contract
+    devDependencies:
+      '@module-federation/runtime':
+        specifier: catalog:module-federation
+        version: 2.9.0
+      '@rslib/core':
+        specifier: catalog:rslib
+        version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
+      '@rstest/core':
+        specifier: catalog:rstest
+        version: 0.11.12(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(jsdom@30.0.1)
       typescript:
         specifier: catalog:typescript
         version: 7.0.2
@@ -2805,16 +2846,6 @@ packages:
   '@babel/parser@7.29.9':
     resolution: {integrity: sha512-CjXrNHTnvqBVqHgdBysY3vk2T8tpJHb5/RMeHJBTyVa9xgugCB0CJTx/3oO8RV2QRQP391RWpB7D6hLjm8V9uA==}
     engines: {node: '>=6.0.0'}
-    hasBin: true
-
-  '@babel/parser@8.0.0':
-    resolution: {integrity: sha512-aLxAE+imI9bCcyaPrUDjBv3uSkWieifjLe0kuFOZF0zli0L6GCsTmsePnTr55adbIAgYz2zhN1vnFimCBUYcRQ==}
-    engines: {node: ^22.18.0 || >=24.11.0}
-    hasBin: true
-
-  '@babel/parser@8.0.6':
-    resolution: {integrity: sha512-LpGDIYJAzc3Y3PT9x+FxBrGYu2PlWxLmyN7SwPTzaX0LSwEmFJBsRnPBqmaXF2r1v+Zhz6lNiEJ+7yKtM5+Ugg==}
-    engines: {node: ^22.18.0 || >=24.11.0}
     hasBin: true
 
   '@babel/parser@8.0.7':
@@ -16523,7 +16554,7 @@ snapshots:
 
   '@babel/generator@8.0.0':
     dependencies:
-      '@babel/parser': 8.0.0
+      '@babel/parser': 8.0.7
       '@babel/types': 8.0.6
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
@@ -16532,7 +16563,7 @@ snapshots:
 
   '@babel/generator@8.0.6':
     dependencies:
-      '@babel/parser': 8.0.6
+      '@babel/parser': 8.0.7
       '@babel/types': 8.0.6
       '@jridgewell/gen-mapping': 0.4.0-beta.0
       '@jridgewell/trace-mapping': 0.3.31
@@ -16765,14 +16796,6 @@ snapshots:
   '@babel/parser@7.29.9':
     dependencies:
       '@babel/types': 7.29.8
-
-  '@babel/parser@8.0.0':
-    dependencies:
-      '@babel/types': 8.0.6
-
-  '@babel/parser@8.0.6':
-    dependencies:
-      '@babel/types': 8.0.6
 
   '@babel/parser@8.0.7':
     dependencies:
@@ -17325,7 +17348,7 @@ snapshots:
   '@babel/template@8.0.0':
     dependencies:
       '@babel/code-frame': 8.0.6
-      '@babel/parser': 8.0.6
+      '@babel/parser': 8.0.7
       '@babel/types': 8.0.6
 
   '@babel/traverse@7.29.7(supports-color@10.2.2)':
@@ -23887,7 +23910,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.42':
     dependencies:
-      '@babel/parser': 7.29.8
+      '@babel/parser': 7.29.9
       '@vue/shared': 3.5.42
       entities: 7.0.1
       estree-walker: 2.0.2
@@ -23918,7 +23941,7 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.41':
     dependencies:
-      '@babel/parser': 7.29.8
+      '@babel/parser': 7.29.9
       '@vue/compiler-core': 3.5.41
       '@vue/compiler-dom': 3.5.41
       '@vue/compiler-ssr': 3.5.41
@@ -23930,7 +23953,7 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.42':
     dependencies:
-      '@babel/parser': 7.29.8
+      '@babel/parser': 7.29.9
       '@vue/compiler-core': 3.5.42
       '@vue/compiler-dom': 3.5.42
       '@vue/compiler-ssr': 3.5.42
@@ -24439,7 +24462,7 @@ snapshots:
 
   ast-kit@2.2.0:
     dependencies:
-      '@babel/parser': 7.29.8
+      '@babel/parser': 7.29.9
       pathe: 2.0.3
 
   ast-kit@3.0.0:
@@ -24456,7 +24479,7 @@ snapshots:
 
   ast-walker-scope@0.9.0:
     dependencies:
-      '@babel/parser': 7.29.8
+      '@babel/parser': 7.29.9
       '@babel/types': 7.29.8
       ast-kit: 2.2.0
 

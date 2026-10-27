@@ -18,11 +18,15 @@ rs.mock('zephyr-agent', () => ({
   ze_log: { app: rs.fn() },
 }));
 
-const { mockBeforeBuild, mockAfterBuild, mockBuildFailed } = rs.hoisted(() => ({
-  mockBeforeBuild: rs.fn().mockResolvedValue({ name: 'TestApp' }),
-  mockAfterBuild: rs.fn().mockResolvedValue(undefined),
-  mockBuildFailed: rs.fn(),
-}));
+const { mockBeforeBuild, mockAfterBuild, mockBuildFailed, mockApplyToFederationConfig } =
+  rs.hoisted(() => ({
+    mockBeforeBuild: rs.fn().mockResolvedValue({ name: 'TestApp' }),
+    mockAfterBuild: rs.fn().mockResolvedValue(undefined),
+    mockBuildFailed: rs.fn(),
+    mockApplyToFederationConfig: rs.fn((config?: { plugins?: string[] }) => {
+      if (config) config.plugins = [...(config.plugins ?? []), 'seed.js'];
+    }),
+  }));
 
 // Mock ZephyrMetroPlugin
 rs.mock('../zephyr-metro-plugin', () => {
@@ -30,6 +34,7 @@ rs.mock('../zephyr-metro-plugin', () => {
     ZephyrMetroPlugin: rs.fn().mockImplementation(() => ({
       beforeBuild: mockBeforeBuild,
       afterBuild: mockAfterBuild,
+      applyToFederationConfig: mockApplyToFederationConfig,
       zephyr_engine: {
         build_failed: mockBuildFailed,
       },
@@ -69,6 +74,33 @@ describe('zephyrCommandWrapper', () => {
   afterEach(() => {
     delete (global as any).__METRO_FEDERATION_CONFIG;
   });
+  it('applies Zephyr overrides to federation options MF rebuilds during bundling', async () => {
+    const reloaded = { name: 'TestApp', remotes: {}, plugins: ['core'] };
+    let bundledWith: unknown;
+    const bundleWithReload = rs.fn(async () => {
+      // MF's bundle commands reload function-exported configs and republish options.
+      global.__METRO_FEDERATION_CONFIG = reloaded;
+      bundledWith = global.__METRO_FEDERATION_CONFIG;
+      return { success: true };
+    });
+    const wrapper = await zephyrCommandWrapper(
+      bundleWithReload,
+      mockLoadMetroConfig,
+      mockUpdateManifest
+    );
+
+    await wrapper(...createMockArgs());
+
+    expect(bundledWith).toBe(reloaded);
+    expect(reloaded.plugins).toEqual(['core', 'seed.js']);
+
+    // Outside the bundle command the global is a plain value again.
+    const later = { name: 'TestApp', remotes: {}, plugins: [] };
+    global.__METRO_FEDERATION_CONFIG = later;
+    expect(global.__METRO_FEDERATION_CONFIG).toBe(later);
+    expect(later.plugins).toEqual([]);
+  });
+
   describe('native env runtime plugin hint', () => {
     it('does not warn when the normalized plugin list includes native cache', async () => {
       const { ze_log } = await import('zephyr-agent');

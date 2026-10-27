@@ -37,13 +37,40 @@ export interface ZephyrCommandWrapperConfig {
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
 }
 
+/** Normalized MF options fields Zephyr rewrites before bundling. */
+interface FederationConfigTarget {
+  remotes?: Record<string, string>;
+  plugins?: string[];
+}
+
 export class ZephyrMetroPlugin {
   #config: ZephyrCommandWrapperConfig;
+  /** Rewritten remote values and the UID seed plugin path, set by `beforeBuild`. */
+  #federationOverrides: { remotes: Record<string, string>; runtimePlugin?: string } = {
+    remotes: {},
+  };
   zephyr_engine!: ZephyrEngine;
 
   constructor(props: ZephyrCommandWrapperConfig) {
     assertMetroNativeBuildTarget(props.platform, 'ZephyrMetroPlugin platform');
     this.#config = props;
+  }
+
+  /**
+   * Applies the remote rewrites and UID seed plugin resolved by `beforeBuild` to a
+   * normalized MF options object. Idempotent. MF Metro's bundle commands reload the Metro
+   * config, and a function-exported config creates fresh options there, so the command
+   * wrapper reapplies the overrides to that object as well.
+   */
+  applyToFederationConfig(config: FederationConfigTarget | undefined): void {
+    if (!config) return;
+    for (const [name, value] of Object.entries(this.#federationOverrides.remotes)) {
+      if (config.remotes && name in config.remotes) config.remotes[name] = value;
+    }
+    const { runtimePlugin } = this.#federationOverrides;
+    if (runtimePlugin === undefined) return;
+    config.plugins ??= [];
+    if (!config.plugins.includes(runtimePlugin)) config.plugins.push(runtimePlugin);
   }
 
   async beforeBuild() {
@@ -68,12 +95,18 @@ export class ZephyrMetroPlugin {
       const resolved_dependency_pairs =
         await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
 
-      if (this.#config.mfConfig) {
+      const mfConfig = this.#config.mfConfig as FederationConfigTarget | undefined;
+      if (mfConfig) {
         mutateMfConfig(
           this.zephyr_engine,
           this.#config.mfConfig,
           resolved_dependency_pairs
         );
+        const remotes = mfConfig.remotes ?? {};
+        for (const { name } of resolved_dependency_pairs ?? []) {
+          const value = remotes[name];
+          if (typeof value === 'string') this.#federationOverrides.remotes[name] = value;
+        }
         const remoteUids = Object.fromEntries(
           (resolved_dependency_pairs ?? []).map(({ name, application_uid }) => [
             name,
@@ -86,10 +119,9 @@ export class ZephyrMetroPlugin {
             path.join(this.#config.context, 'node_modules', '.zephyr-metro'),
             remoteUids
           );
-          const federationConfig = this.#config.mfConfig as { plugins?: string[] };
-          federationConfig.plugins ??= [];
-          federationConfig.plugins.push(seedPath.split(path.sep).join('/'));
+          this.#federationOverrides.runtimePlugin = seedPath.split(path.sep).join('/');
         }
+        this.applyToFederationConfig(mfConfig);
       }
 
       return this.#config.mfConfig;

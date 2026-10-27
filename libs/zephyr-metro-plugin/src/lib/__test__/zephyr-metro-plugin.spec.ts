@@ -181,6 +181,45 @@ describe('ZephyrMetroPlugin', () => {
       expect(writeNativeRemoteUidsPlugin).not.toHaveBeenCalled();
       expect(mfConfig.plugins).toEqual(['core']);
     });
+
+    it('reapplies rewritten remotes and the seed to rebuilt federation options', async () => {
+      const { mutateMfConfig } = require('../internal/mutate-mf-config');
+      (mutateMfConfig as Mock).mockImplementationOnce(
+        (_engine: unknown, config: { remotes: Record<string, string> }) => {
+          config.remotes.RemoteApp = 'RemoteApp@https://edge.example/mf-manifest.json';
+        }
+      );
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'production',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig: {
+          name: 'TestApp',
+          remotes: { RemoteApp: 'RemoteApp@http://localhost:9000/mf-manifest.json' },
+        },
+      });
+      await plugin.beforeBuild();
+
+      const rebuilt = {
+        remotes: {
+          RemoteApp: 'RemoteApp@http://localhost:9000/mf-manifest.json',
+          Other: 'Other@http://localhost:9001/mf-manifest.json',
+        },
+        plugins: ['core'],
+      };
+      plugin.applyToFederationConfig(rebuilt);
+      plugin.applyToFederationConfig(rebuilt);
+
+      expect(rebuilt).toEqual({
+        remotes: {
+          RemoteApp: 'RemoteApp@https://edge.example/mf-manifest.json',
+          Other: 'Other@http://localhost:9001/mf-manifest.json',
+        },
+        plugins: ['core', '/project/node_modules/.zephyr-metro/remote-uids-abc.js'],
+      });
+    });
+
     it('should initialize ZephyrEngine with metro builder', async () => {
       const { ZephyrEngine } = await import('zephyr-agent');
 

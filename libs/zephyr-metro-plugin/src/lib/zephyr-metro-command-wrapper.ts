@@ -53,6 +53,38 @@ function warnNativeEnvSetup(): void {
   }
 }
 
+/**
+ * Runs `bundle` while every Module Federation options object MF Metro publishes on
+ * `global.__METRO_FEDERATION_CONFIG` receives Zephyr's overrides. MF's bundle commands
+ * reload the Metro config; for function-exported configs that rebuilds the options object
+ * its runtime modules are generated from, after `beforeBuild` already ran.
+ */
+async function withFederationOverrides<T>(
+  plugin: ZephyrMetroPlugin,
+  bundle: () => Promise<T>
+): Promise<T> {
+  let current = global.__METRO_FEDERATION_CONFIG;
+  Object.defineProperty(globalThis, '__METRO_FEDERATION_CONFIG', {
+    configurable: true,
+    enumerable: true,
+    get: () => current,
+    set: (next: typeof current) => {
+      plugin.applyToFederationConfig(next);
+      current = next;
+    },
+  });
+  try {
+    return await bundle();
+  } finally {
+    Object.defineProperty(globalThis, '__METRO_FEDERATION_CONFIG', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: current,
+    });
+  }
+}
+
 export async function zephyrCommandWrapper(
   bundleFederatedRemote: (...args: MetroCommandArgs) => Promise<any>,
   loadMetroConfig: (config: MetroConfig, options: MetroCliOptions) => Promise<any>,
@@ -108,7 +140,9 @@ export async function zephyrCommandWrapper(
 
       updateManifest();
 
-      const res = await bundleFederatedRemote(...args);
+      const res = await withFederationOverrides(zephyrMetroPlugin, () =>
+        bundleFederatedRemote(...args)
+      );
 
       // afterBuild owns rollback from this point onward.
       wrapperOwnsRollback = false;

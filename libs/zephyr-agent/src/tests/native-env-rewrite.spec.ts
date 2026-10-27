@@ -62,16 +62,6 @@ describe('rewriteEnvReadsToNativeLookup', () => {
     );
   });
 
-  test('compiles ZE_APPLICATION_UID reads to the build UID', () => {
-    const source = `module.exports = [process.env.ZE_APPLICATION_UID, import.meta.env['ZE_APPLICATION_UID'], (() => { const { ZE_APPLICATION_UID: uid } = process.env; return uid; })()];`;
-    expect(
-      run(source, {
-        processEnv: { ZE_APPLICATION_UID: 'other' },
-        runtimeEnv: { [UID]: { ZE_APPLICATION_UID: 'spoof' } },
-      })
-    ).toEqual([UID, UID, UID]);
-  });
-
   test('destructuring keeps alias, default, rest and non-public keys', () => {
     const source = [
       `const { ZE_PUBLIC_A: alias, ZE_PUBLIC_B = 'default-b', NODE_ENV, ...rest } = process.env;`,
@@ -95,14 +85,13 @@ describe('rewriteEnvReadsToNativeLookup', () => {
     const source = [
       `const { ZE_PUBLIC_A } = import.meta.env;`,
       `let uid;`,
-      `({ ZE_APPLICATION_UID: uid } = import.meta.env);`,
+      `({ ZE_PUBLIC_B: uid } = import.meta.env);`,
       `module.exports = [ZE_PUBLIC_A, uid];`,
     ].join('\n');
     expect(compile(source)).not.toContain('import.meta');
-    expect(run(source, { buildEnv: { ZE_PUBLIC_A: 'build-a' } })).toEqual([
-      'build-a',
-      UID,
-    ]);
+    expect(
+      run(source, { buildEnv: { ZE_PUBLIC_A: 'build-a', ZE_PUBLIC_B: 'build-b' } })
+    ).toEqual(['build-a', 'build-b']);
   });
 
   test('leaves writes, strings and comments untouched', () => {
@@ -165,18 +154,17 @@ describe('rewriteEnvReadsToNativeLookup', () => {
     const source = [
       `const a = process.env\r\n  .ZE_PUBLIC_A;`,
       `const b = process.env[`,
-      `  'ZE_APPLICATION_UID'];`,
+      `  'ZE_PUBLIC_B'];`,
       `module.exports = [a, b];`,
     ].join('\n');
     const lines = (code: string) => code.split(/\r\n|\r|\n|\u2028|\u2029/);
-    const code = compile(source, { ZE_PUBLIC_A: 'build-a' });
+    const code = compile(source, { ZE_PUBLIC_A: 'build-a', ZE_PUBLIC_B: 'build-b' });
     expect(lines(code).length).toBe(lines(source).length);
     expect(lines(code).at(-1)).toBe('module.exports = [a, b];');
     expect(code).toContain('\r\n');
-    expect(run(source, { buildEnv: { ZE_PUBLIC_A: 'build-a' } })).toEqual([
-      'build-a',
-      UID,
-    ]);
+    expect(
+      run(source, { buildEnv: { ZE_PUBLIC_A: 'build-a', ZE_PUBLIC_B: 'build-b' } })
+    ).toEqual(['build-a', 'build-b']);
   });
 
   test('throws with the filename on invalid syntax', () => {

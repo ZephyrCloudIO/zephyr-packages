@@ -95,3 +95,20 @@ describe('isUnreachableStatus', () => {
     expect(isUnreachableStatus(200)).toBe(false);
   });
 });
+
+describe('unreachable message after redaction', () => {
+  it('keeps the detail when the URL has a query string', () => {
+    const error = createHttpResponseError({
+      method: 'GET',
+      url: 'https://api.example.com/resolve?build_context=abc',
+      status: 503,
+      content: '',
+    });
+
+    const message = redactString(error.message);
+
+    expect(message).toContain('HTTP 503');
+    expect(message).toContain('Request: GET https://api.example.com/resolve');
+    expect(redactString(message)).toBe(message);
+  });
+});

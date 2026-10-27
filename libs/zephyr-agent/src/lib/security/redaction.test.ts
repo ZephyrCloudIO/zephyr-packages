@@ -117,6 +117,12 @@ describe('logging redaction', () => {
     });
   });
 
+  it('keeps the -1 status of a canceled request', () => {
+    expect(redactString('Request failed with status code -1.')).toBe(
+      'Request failed with status code -1.'
+    );
+  });
+
   it('still redacts opaque codes that are not HTTP statuses', () => {
     expect(redactString(`authorization code ${secrets.code}`)).not.toContain(
       secrets.code

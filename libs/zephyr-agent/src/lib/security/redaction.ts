@@ -22,7 +22,8 @@ const SENSITIVE_WORD_VALUE = new RegExp(
   String.raw`\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)((?:${REDACTED_MARKER}|[^\s,;"'}\]])+)`,
   'giu'
 );
-const HTTP_STATUS_CODE = /^[1-5]\d{2}$/u;
+/** HTTP status codes, and `-1` for a request that was canceled before any response. */
+const HTTP_STATUS_CODE = /^(?:[1-5]\d{2}|-1)$/u;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');

@@ -145,6 +145,17 @@ describe('Rspack withZephyr compiler arrays', () => {
       else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
     });
 
+    it('lets the failBuild option override ZE_FAIL_BUILD in both directions', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      await expect(withZephyr({ failBuild: true })(brokenArray())).rejects.toThrow(
+        'invalid federation config'
+      );
+
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const configs = brokenArray();
+      await expect(withZephyr({ failBuild: false })(configs)).resolves.toBe(configs);
+    });
+
     it('fails the build when ZE_FAIL_BUILD=true', async () => {
       process.env['ZE_FAIL_BUILD'] = 'true';
 

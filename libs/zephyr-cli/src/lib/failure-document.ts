@@ -1,3 +1,4 @@
+import { stripVTControlCharacters } from 'node:util';
 import {
   getZephyrErrorCategory,
   redactString,
@@ -52,7 +53,7 @@ export function createFailureDocument(error: unknown): FailureDocument {
         ? { reason: zephyrError.reason }
         : {}),
       kind: getZephyrErrorCategory(error),
-      message: redactString(message),
+      message: stripVTControlCharacters(redactString(message)),
     },
   };
 }

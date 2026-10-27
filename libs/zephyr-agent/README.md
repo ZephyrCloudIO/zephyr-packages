@@ -129,9 +129,12 @@ generations.
 | `ZE_DISABLED`   | `true` skips Zephyr. The bundle is built and is not deployed. Zephyr is not contacted. |
 
 `ZE_FAIL_BUILD` applies on every path: a single or an array config (webpack, rspack,
-rsbuild), a coordinated build, remote resolution and a missing build ID. The `failBuild`
-option of `withZephyr` overrides it. An unreachable Zephyr and a failed upload follow the
-same rule.
+rsbuild), a coordinated build, a missing build ID, an upload, and an unreachable Zephyr
+during remote resolution. A remote that Zephyr answers about but cannot resolve (for
+example a 404 because the remote is not published yet) is skipped even when the build
+must fail, so a host can build before its remote. The `failBuild` option of `withZephyr`
+in `zephyr-webpack-plugin` and `zephyr-rspack-plugin` overrides the variable; the other
+integrations read the variable only.
 
 ### Error categories
 

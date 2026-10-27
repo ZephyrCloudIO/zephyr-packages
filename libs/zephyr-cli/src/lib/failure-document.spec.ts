@@ -57,4 +57,10 @@ describe('createFailureDocument', () => {
   it('accepts a thrown string', () => {
     expect(createFailureDocument('boom').error.message).toBe('boom');
   });
+
+  it('strips terminal colors', () => {
+    expect(createFailureDocument(new Error('\u001b[31mred\u001b[0m')).error.message).toBe(
+      'red'
+    );
+  });
 });

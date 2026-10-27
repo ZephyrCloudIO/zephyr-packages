@@ -4,6 +4,7 @@ import {
 } from '../xpack-extract/ze-xpack-upload-agent';
 import type { Source } from 'zephyr-edge-contract';
 import { handleGlobalError, ZeErrors, ZephyrError } from 'zephyr-agent';
+import { emitDeploymentDone } from '../lifecycle-events';
 import type { XStats } from '../xpack.types';
 import type { XPackParticipantDependencyPaths } from '../xpack-extract/xpack-build-coordinator';
 import * as path from 'node:path';
@@ -118,6 +119,9 @@ export function setupZeDeploy<
         // Unless the build must fail (ZE_FAIL_BUILD or failBuild) a Zephyr failure (for example an unreachable build-id
         // service) must not fail the bundle. Skip the upload and keep the output.
         handleGlobalError(error, { failBuild: pluginOptions.failBuild });
+        // Reached only when the failure was logged. Nobody awaiting onDeploymentDone()
+        // should wait for a build that will never publish.
+        emitDeploymentDone();
         return;
       }
     }

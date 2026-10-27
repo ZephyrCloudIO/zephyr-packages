@@ -274,7 +274,7 @@ Expected one of: {{ candidates }}.
 
 Could not upload {{ type }} to your Edge Provider. This error will affect your tags and environments and it might fail deployments to custom domains.
 
-Please check your network connection and try again.
+Check the reason below. If it is a network or server error, try again later.
 
     `,
     kind: 'deploy',
@@ -385,7 +385,9 @@ HTTP request for {{ method }} {{ url }} failed with status code {{ status }}.
   ERR_ZEPHYR_UNREACHABLE: {
     id: '001',
     message: `
-Zephyr cannot be reached: {{ method }} {{ url }}: {{ detail }}.
+Zephyr cannot be reached: {{ detail }}.
+
+Request: {{ method }} {{ url }}
 
 {{ hint }}
 Service status: https://status.zephyr-cloud.io

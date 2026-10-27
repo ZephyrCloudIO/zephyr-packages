@@ -26,10 +26,13 @@ export function isJsonDeploy(args: string[]): boolean {
   while (index < args.length && args[index].startsWith('-')) {
     index += optionsWithValue.has(args[index]) ? 2 : 1;
   }
-  return (
-    args[index] === 'deploy' &&
-    args.some((arg, i) => i > index && arg === '--format' && args[i + 1] === 'json')
-  );
+  if (args[index] !== 'deploy') return false;
+  // The last `--format` wins, as in parseArgs.
+  let format: string | undefined;
+  for (let i = index + 1; i < args.length; i++) {
+    if (args[i] === '--format') format = args[++i];
+  }
+  return format === 'json';
 }
 
 /**

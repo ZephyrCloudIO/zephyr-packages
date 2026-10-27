@@ -1,15 +1,24 @@
-import axios from 'axios';
 import {
   assertZephyrBuildTarget,
   ZE_API_ENDPOINT,
   ze_api_gateway,
   type ZephyrBuildTarget,
 } from 'zephyr-edge-contract';
-import { ZeErrors, ZephyrError } from '../lib/errors';
+import { isZephyrUnreachableError, ZeErrors, ZephyrError } from '../lib/errors';
 import type { ZephyrDependencyUrlMode } from '../lib/build-context/zephyr-config';
+import { fetchWithRetries } from '../lib/http/fetch-with-retries';
+import { createHttpResponseError, isUnreachableStatus } from '../lib/http/http-failure';
 import { parseUrl } from '../lib/http/http-request';
 import { ze_log } from '../lib/logging';
 import { getToken } from '../lib/node-persist/token';
+import { redactString, redactUrl } from '../lib/security/redaction';
+
+/**
+ * Longest a single remote dependency lookup may take, retries included. Without a bound,
+ * a gateway that accepts the connection and never answers would stall the whole build.
+ */
+export const RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS = 15_000;
+
 export interface ZeResolvedDependency {
   name: string;
   version: string;
@@ -20,6 +29,14 @@ export interface ZeResolvedDependency {
   manifest_url?: string;
   library_type: string;
   platform?: ZephyrBuildTarget;
+}
+
+function parseResponseBody(body: string): unknown {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
 }
 
 export async function resolve_remote_dependency(params: {
@@ -41,7 +58,8 @@ export async function resolve_remote_dependency(params: {
     // fall back to the latest published version (`*`) instead of failing the remote,
     // so the host can still federate against a previously published remote. When a
     // workspace build does exist it wins, so this never weakens branch-aware resolution.
-    if (params.version.startsWith('workspace:')) {
+    // An unreachable Zephyr will not answer the `*` lookup either, so do not wait twice.
+    if (params.version.startsWith('workspace:') && !isZephyrUnreachableError(cause)) {
       ze_log.remotes(
         `No workspace build found for ${params.application_uid}@${params.version}; ` +
           'falling back to the latest published version'
@@ -89,19 +107,38 @@ async function request_remote_dependency({
     ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
-    const res = await axios.get(resolveDependency.toString(), {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
+    // GET lookups retry network errors and 5xx. The deadline bounds the whole lookup.
+    const res = await fetchWithRetries(
+      resolveDependency,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+        },
       },
-    });
+      undefined,
+      RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS
+    );
+    const responseBody = await res.text();
+    const responseData = parseResponseBody(responseBody);
 
     // used only for error logging
     const [appName, projectName, orgName] = application_uid.split('.');
 
     // Check response status
-    if (res.status < 200 || res.status >= 300) {
+    if (!res.ok) {
+      // Zephyr failing (5xx, 408) is not a problem with the remote, so say so.
+      if (isUnreachableStatus(res.status)) {
+        throw createHttpResponseError({
+          method: 'GET',
+          url: redactUrl(resolveDependency),
+          status: res.status,
+          content: redactString(responseBody),
+        });
+      }
+
       throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {
         appUid: application_uid,
         appName,
@@ -109,15 +146,15 @@ async function request_remote_dependency({
         orgName,
         version,
         data: {
-          url: resolveDependency.toString(),
-          error: res.data,
+          url: redactUrl(resolveDependency),
+          error: responseData,
         },
       });
     }
 
-    const response = res.data;
+    const response = responseData as { value?: ZeResolvedDependency } | undefined;
 
-    if (response.value) {
+    if (response?.value) {
       ze_log.remotes(
         'resolved dependency:',
         response.value,

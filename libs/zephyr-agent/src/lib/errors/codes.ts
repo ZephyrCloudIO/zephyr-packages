@@ -12,6 +12,13 @@ export const ZeErrorCategories = {
   browser: '30',
   /** Module Federation/Config related error */
   config: '40',
+  /**
+   * Zephyr could not be reached or failed on its side (network, DNS, timeout, HTTP 5xx).
+   * Nothing is wrong with the user's configuration or credentials, so retrying later is
+   * the right action. Use {@linkcode getZephyrErrorCategory} to ask whether an error, or
+   * the root cause of a wrapped error, belongs here.
+   */
+  unreachable: '50',
 } as const satisfies {
   [name: string]: `${Digit}${Digit}`;
 };
@@ -354,18 +361,36 @@ Git username or email is not configured
     kind: 'deploy',
   },
 
+  /**
+   * Zephyr answered with an HTTP error that retrying will not fix (4xx). Network
+   * failures, timeouts and 5xx responses use
+   * {@linkcode ZeErrors.ERR_ZEPHYR_UNREACHABLE}.
+   */
   ERR_HTTP_ERROR: {
     id: '035',
     message: `
 
 HTTP request for {{ method }} {{ url }} failed with status code {{ status }}.
 
-Please check your network connection and try again.
-
 {{ content }}
 
 `,
     kind: 'config',
+  },
+
+  /**
+   * Zephyr could not be reached, or it answered with a server error (5xx). Covers network
+   * errors, DNS failures, timeouts and HTTP 5xx. The category is `unreachable`.
+   */
+  ERR_ZEPHYR_UNREACHABLE: {
+    id: '001',
+    message: `
+Zephyr cannot be reached: {{ method }} {{ url }}: {{ detail }}.
+
+{{ hint }}
+Service status: https://status.zephyr-cloud.io
+`,
+    kind: 'unreachable',
   },
 
   ERR_NO_WRANGLER: {

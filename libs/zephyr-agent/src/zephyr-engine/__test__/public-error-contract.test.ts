@@ -108,7 +108,7 @@ describe('public initialization error contract', () => {
   it.each([
     [401, 'ZE10018', 'ZE10018'],
     [403, 'ZE10022', 'ZE10022'],
-    [503, 'ZE40035', 'ZE40035'],
+    [503, 'ZE50001', 'ZE50001'],
   ] as const)(
     'preserves a %i user-info failure through the package entry',
     async (status, code, reason) => {
@@ -164,7 +164,7 @@ describe('public initialization error contract', () => {
     ).rejects.toMatchObject({
       code: 'ZE10019',
       operation: 'create-build-id',
-      reason: 'ZE40035',
+      reason: 'ZE50001',
     });
   });
 });

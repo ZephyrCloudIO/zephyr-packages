@@ -1,6 +1,7 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 import {
   assertZephyrBuildTarget,
+  handleGlobalError,
   ZephyrEngine,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
@@ -8,7 +9,11 @@ import {
   withZephyr as rspackWithZephyr,
   type ZephyrBuildHooks,
 } from 'zephyr-rspack-plugin';
-import { coordinateXPackCompilers } from 'zephyr-xpack-internal';
+import {
+  coordinateXPackCompilers,
+  restorePlugins,
+  snapshotPlugins,
+} from 'zephyr-xpack-internal';
 
 export interface ZephyrRsbuildPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
@@ -39,15 +44,17 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
           if (bundlerConfigs.length === 0) {
             return;
           }
-          const engine = await ZephyrEngine.create({
-            builder: 'rspack',
-            context: bundlerConfigs[0]?.context,
-            target,
-          });
-          if (target !== undefined) {
-            engine.env.target = target;
-          }
+          const pluginSnapshot = snapshotPlugins(bundlerConfigs);
+          let engine: ZephyrEngine | undefined;
           try {
+            engine = await ZephyrEngine.create({
+              builder: 'rspack',
+              context: bundlerConfigs[0]?.context,
+              target,
+            });
+            if (target !== undefined) {
+              engine.env.target = target;
+            }
             const { coordinator, compilers } = coordinateXPackCompilers(
               engine,
               bundlerConfigs,
@@ -81,8 +88,10 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
               }
             }
           } catch (error: unknown) {
-            if (engine.hasActiveBuild) engine.build_failed();
-            throw error;
+            // Without ZE_FAIL_BUILD the bundle is built without Zephyr.
+            restorePlugins(bundlerConfigs, pluginSnapshot);
+            if (engine?.hasActiveBuild) engine.build_failed();
+            handleGlobalError(error);
           }
         },
       });

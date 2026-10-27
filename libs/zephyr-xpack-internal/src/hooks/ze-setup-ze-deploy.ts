@@ -3,7 +3,7 @@ import {
   type UploadAgentPluginOptions,
 } from '../xpack-extract/ze-xpack-upload-agent';
 import type { Source } from 'zephyr-edge-contract';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { handleGlobalError, ZeErrors, ZephyrError } from 'zephyr-agent';
 import type { XStats } from '../xpack.types';
 import type { XPackParticipantDependencyPaths } from '../xpack-extract/xpack-build-coordinator';
 import * as path from 'node:path';
@@ -115,7 +115,10 @@ export function setupZeDeploy<
         if (pluginOptions.zephyr_engine.hasActiveBuild !== false) {
           pluginOptions.zephyr_engine.build_failed();
         }
-        throw error;
+        // Without ZE_FAIL_BUILD a Zephyr failure (for example an unreachable build-id
+        // service) must not fail the bundle. Skip the upload and keep the output.
+        handleGlobalError(error);
+        return;
       }
     }
 

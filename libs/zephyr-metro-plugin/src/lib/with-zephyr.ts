@@ -66,10 +66,17 @@ async function applyZephyrToMetroConfig(
   const manifestPath = zephyrOptions.manifestPath || '/zephyr-manifest.json';
 
   // Initialize Zephyr Engine
-  const zephyr_engine = await ZephyrEngine.create({
-    builder: 'metro',
-    context: projectRoot,
-  });
+  let zephyr_engine: ZephyrEngine;
+  try {
+    zephyr_engine = await ZephyrEngine.create({
+      builder: 'metro',
+      context: projectRoot,
+    });
+  } catch (error) {
+    // Without ZE_FAIL_BUILD, Metro keeps its original config when Zephyr cannot start.
+    handleGlobalError(error);
+    return metroConfig;
+  }
 
   try {
     if (zephyrOptions.target) {

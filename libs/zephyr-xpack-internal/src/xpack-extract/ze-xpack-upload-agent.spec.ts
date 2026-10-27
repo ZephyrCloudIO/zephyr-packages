@@ -232,23 +232,29 @@ describe('xpack_zephyr_agent', () => {
     expect(ze_log.upload).toHaveBeenCalled();
   });
 
-  it('rehashes prefixed assets and propagates coordinated publication failures', async () => {
+  describe('coordinated publication failures', () => {
     const error = new Error('coordinated upload failed');
-    const contribute = rs.fn().mockRejectedValue(error);
-    const prepareParticipant = rs.fn().mockResolvedValue(undefined);
-    (buildWebpackAssetMap as Mock).mockResolvedValue({
-      original: {
-        path: 'app.js',
-        hash: 'original',
-        extname: '.js',
-        size: 1,
-        buffer: 'x',
-      },
-    });
-    (getBuildStats as Mock).mockResolvedValue({});
 
-    await expect(
-      xpack_zephyr_agent({
+    beforeEach(() => {
+      (handleGlobalError as Mock).mockReset();
+    });
+
+    async function runFailingCoordinatedUpload() {
+      const contribute = rs.fn().mockRejectedValue(error);
+      const prepareParticipant = rs.fn().mockResolvedValue(undefined);
+      const failParticipant = rs.fn();
+      (buildWebpackAssetMap as Mock).mockResolvedValue({
+        original: {
+          path: 'app.js',
+          hash: 'original',
+          extname: '.js',
+          size: 1,
+          buffer: 'x',
+        },
+      });
+      (getBuildStats as Mock).mockResolvedValue({});
+
+      const run = xpack_zephyr_agent({
         stats: {},
         stats_json: {},
         assets: {},
@@ -260,28 +266,52 @@ describe('xpack_zephyr_agent', () => {
               DELIMITER: '.',
             }),
           },
-          coordinator: { contribute, prepareParticipant },
+          coordinator: { contribute, prepareParticipant, failParticipant },
           participant: 'client',
           generation: 3,
           assetPrefix: 'client',
         },
-      } as never)
-    ).rejects.toThrow('coordinated upload failed');
+      } as never);
 
-    expect(contribute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        participant: 'client',
-        generation: 3,
-        assetsMap: {
-          'rehash:client/app.js': expect.objectContaining({
-            path: 'client/app.js',
-          }),
-        },
-      })
-    );
-    expect(prepareParticipant).toHaveBeenCalledWith('client', 3);
-    expect(handleGlobalError).not.toHaveBeenCalled();
-    expect(emitDeploymentDone).not.toHaveBeenCalled();
+      return { run, contribute, prepareParticipant, failParticipant };
+    }
+
+    it('rehashes prefixed assets and delegates the failure to handleGlobalError', async () => {
+      const { run, contribute, prepareParticipant, failParticipant } =
+        await runFailingCoordinatedUpload();
+
+      await expect(run).resolves.toBeUndefined();
+
+      expect(contribute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          participant: 'client',
+          generation: 3,
+          assetsMap: {
+            'rehash:client/app.js': expect.objectContaining({
+              path: 'client/app.js',
+            }),
+          },
+        })
+      );
+      expect(prepareParticipant).toHaveBeenCalledWith('client', 3);
+      // The shared build is released so the other compilers stop waiting for this one.
+      expect(failParticipant).toHaveBeenCalledWith('client', error);
+      expect(handleGlobalError).toHaveBeenCalledWith(error);
+      // Nobody awaiting onDeploymentDone() should wait for a build that cannot publish.
+      expect(emitDeploymentDone).toHaveBeenCalled();
+    });
+
+    it('rethrows when handleGlobalError throws, as with ZE_FAIL_BUILD=true', async () => {
+      (handleGlobalError as Mock).mockImplementation(() => {
+        throw error;
+      });
+      const { run, failParticipant } = await runFailingCoordinatedUpload();
+
+      await expect(run).rejects.toThrow('coordinated upload failed');
+
+      expect(failParticipant).toHaveBeenCalledWith('client', error);
+      expect(emitDeploymentDone).not.toHaveBeenCalled();
+    });
   });
 
   it('prepares a watch generation before deriving versioned build stats', async () => {

@@ -11,6 +11,8 @@ import {
   extractFederatedDependencyPairs,
   extractLibraryType,
   coordinateXPackCompilers,
+  restorePlugins,
+  snapshotPlugins,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
@@ -69,13 +71,15 @@ export function withZephyr(
       return config;
     }
 
-    const engine = await ZephyrEngine.create({
-      builder: 'rspack',
-      context: config[0]?.context,
-      target,
-    });
-    applyBuildTarget(engine, target);
+    const pluginSnapshot = snapshotPlugins(config);
+    let engine: ZephyrEngine | undefined;
     try {
+      engine = await ZephyrEngine.create({
+        builder: 'rspack',
+        context: config[0]?.context,
+        target,
+      });
+      applyBuildTarget(engine, target);
       const { coordinator, compilers } = coordinateXPackCompilers(engine, config, {
         snapshotType: zephyrPluginOptions?.snapshotType,
         entrypoint: zephyrPluginOptions?.entrypoint,
@@ -91,8 +95,11 @@ export function withZephyr(
         });
       }
     } catch (error: unknown) {
-      if (engine.hasActiveBuild) engine.build_failed();
-      throw error;
+      // Without ZE_FAIL_BUILD the bundle is built without Zephyr, as for a single config.
+      // A half-configured compiler array would wait for compilers that never report.
+      restorePlugins(config, pluginSnapshot);
+      if (engine?.hasActiveBuild) engine.build_failed();
+      handleGlobalError(error);
     }
     return config;
   };

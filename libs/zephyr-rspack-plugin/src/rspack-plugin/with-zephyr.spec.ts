@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { ZeResolvedDependency } from 'zephyr-agent';
 import type { Configuration } from './with-zephyr';
 
@@ -20,7 +20,11 @@ const mocks = rs.hoisted(() => {
     }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
-    handleGlobalError: rs.fn(),
+    handleGlobalError: rs.fn((error: unknown) => {
+      if (process.env['ZE_FAIL_BUILD'] === 'true') throw error;
+    }),
+    snapshotPlugins: rs.fn(() => ['snapshot']),
+    restorePlugins: rs.fn(),
     extractFederatedDependencyPairs: rs.fn(),
     extractLibraryType: rs.fn(() => 'module'),
     mutWebpackFederatedRemotesConfig: rs.fn(),
@@ -42,6 +46,8 @@ rs.mock('zephyr-xpack-internal', () => ({
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
   coordinateXPackCompilers: mocks.coordinateXPackCompilers,
+  snapshotPlugins: mocks.snapshotPlugins,
+  restorePlugins: mocks.restorePlugins,
 }));
 
 rs.mock('./ze-rspack-plugin', () => ({
@@ -120,15 +126,64 @@ describe('Rspack withZephyr compiler arrays', () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it('rejects coordinated configuration errors instead of waiting for a missing compiler', async () => {
-    const configs = [
-      { name: 'client', context: '/repo' },
-      { name: 'broken', context: '/repo' },
-    ] as unknown as Configuration[];
+  describe('when Zephyr fails while configuring a compiler array', () => {
+    const originalFailBuild = process.env['ZE_FAIL_BUILD'];
 
-    await expect(withZephyr()(configs)).rejects.toThrow('invalid federation config');
-    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
-    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    function brokenArray(): Configuration[] {
+      return [
+        { name: 'client', context: '/repo' },
+        { name: 'broken', context: '/repo' },
+      ] as unknown as Configuration[];
+    }
+
+    afterEach(() => {
+      if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+      else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    });
+
+    it('fails the build when ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+
+      await expect(withZephyr()(brokenArray())).rejects.toThrow(
+        'invalid federation config'
+      );
+      expect(mocks.handleGlobalError).toHaveBeenCalledTimes(1);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the build green without ZE_FAIL_BUILD and removes the partial plugins', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const configs = brokenArray();
+
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'invalid federation config' })
+      );
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('fails the build when Zephyr cannot start and ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const unreachable = new Error('Zephyr cannot be reached');
+      mocks.create.mockRejectedValueOnce(unreachable);
+
+      await expect(withZephyr()(brokenArray())).rejects.toBe(unreachable);
+      expect(mocks.engine.build_failed).not.toHaveBeenCalled();
+    });
+
+    it('keeps the build green when Zephyr cannot start and ZE_FAIL_BUILD is unset', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const unreachable = new Error('Zephyr cannot be reached');
+      mocks.create.mockRejectedValueOnce(unreachable);
+      const configs = brokenArray();
+
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(unreachable);
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
+    });
   });
 
   it('rolls back direct configuration errors before preserving fail-open semantics', async () => {

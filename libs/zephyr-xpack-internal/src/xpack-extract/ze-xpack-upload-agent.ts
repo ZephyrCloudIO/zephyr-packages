@@ -125,14 +125,26 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     await zephyr_engine.build_finished();
   } catch (err) {
     if (coordinator) {
-      throw err;
-    }
-    // setupZeDeploy starts direct builds. Any failure before build_finished must release
-    // that generation so watch mode can retry with fresh identity and logger state.
-    if (zephyr_engine.hasActiveBuild !== false) {
+      // Release the shared build so the other compilers stop waiting for this one. A
+      // contribution failure has already failed it, which makes this a no-op.
+      if (pluginOptions.participant) {
+        try {
+          coordinator.failParticipant(pluginOptions.participant, err);
+        } catch (releaseError) {
+          ze_log.upload('Failed to release coordinated participant:', releaseError);
+        }
+      }
+    } else if (zephyr_engine.hasActiveBuild !== false) {
+      // setupZeDeploy starts direct builds. Any failure before build_finished must release
+      // that generation so watch mode can retry with fresh identity and logger state.
       zephyr_engine.build_failed();
     }
+    // Throws only when ZE_FAIL_BUILD=true. Otherwise the bundle stays valid and the
+    // failure is logged, the same for direct and coordinated builds.
     handleGlobalError(err);
+    // Reached only when the failure was logged. Anyone awaiting onDeploymentDone() must
+    // not wait for a logical build that will never publish.
+    logicalDeploymentCompleted = true;
   } finally {
     if (logicalDeploymentCompleted) {
       emitDeploymentDone();

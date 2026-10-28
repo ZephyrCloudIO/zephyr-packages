@@ -5,6 +5,7 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
 import {
   assertZephyrBuildTarget,
   handleGlobalError,
+  isZephyrDisabled,
   savePartialAssetMap,
   ZeErrors,
   ZephyrEngine,
@@ -17,10 +18,14 @@ import {
   type VitePartialBuildOptions,
 } from './internal/partial-build-scope';
 import type { ZephyrInternalOptions } from './internal/types/zephyr-internal-options';
+import { zephyrDisabledPlugin } from './internal/zephyr-disabled-plugin';
 
 export function withZephyrPartial(options: VitePartialBuildOptions = {}): Plugin {
   if (options.target !== undefined) {
     assertZephyrBuildTarget(options.target, 'withZephyrPartial({ target })');
+  }
+  if (isZephyrDisabled()) {
+    return zephyrDisabledPlugin();
   }
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   let partialScope: PartialAssetMapScope | undefined;

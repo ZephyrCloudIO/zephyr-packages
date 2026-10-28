@@ -276,6 +276,8 @@ export class ZephyrMetroPlugin {
         this.#config.mfConfig,
         this.zephyr_engine.application_uid
       ),
+      // Resolved remotes; the API stores them as the version's and environments' dependencies
+      zephyrDependencies: this.zephyr_engine.zephyr_dependencies,
       // Module Federation related data
       dependencies: getPackageDependencies(
         resolveCatalogDependencies(this.zephyr_engine.npmProperties.dependencies)

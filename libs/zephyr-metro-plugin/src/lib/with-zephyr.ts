@@ -7,6 +7,7 @@ import {
   collectZEPublicVars,
   createManifestContent,
   handleGlobalError,
+  isZephyrDisabled,
   ze_log,
   ZeErrors,
   ZephyrEngine,
@@ -43,6 +44,12 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
     // Re-check at invocation time in case an untyped caller mutates the options
     // object after creating the wrapper.
     assertConfiguredMetroTarget(zephyrOptions.target);
+
+    // Skip mode: hand Metro its own config back. This hook only configures Metro, so
+    // there is no finished bundle to announce here.
+    if (isZephyrDisabled()) {
+      return metroConfig;
+    }
 
     try {
       return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);

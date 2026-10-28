@@ -16,20 +16,26 @@ export function extractFederatedDependencyPairs(
     });
   }
 
+  const remotePairs: ZeDependencyPair[] = [];
   iterateFederatedRemoteConfig(config, (remotesConfig: XFederatedRemotesConfig) => {
     if (!remotesConfig?.remotes) return;
 
     const remoteEntries = parseRemotesAsEntries(remotesConfig.remotes);
 
     remoteEntries.forEach(([remote_name, remote_version]) => {
-      depsPairs.push({
+      remotePairs.push({
         name: remote_name,
         version: remote_version,
       } as ZeDependencyPair);
     });
   });
 
-  return depsPairs
+  // A remote declared in both zephyr:dependencies and the MF remotes would otherwise
+  // be resolved and reported twice. Keep the MF declaration: remote rewriting matches
+  // on it, and resolution still applies the zephyr:dependencies version by name.
+  const remoteNames = new Set(remotePairs.map((dep) => dep.name));
+
+  return [...depsPairs.filter((dep) => !remoteNames.has(dep.name)), ...remotePairs]
     .flat()
     .filter((dep): dep is ZeDependencyPair => is_zephyr_dependency_pair(dep));
 }

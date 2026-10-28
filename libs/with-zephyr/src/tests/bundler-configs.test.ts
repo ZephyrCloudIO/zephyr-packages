@@ -13,6 +13,7 @@ import {
   modernjsConfig,
   nuxtConfig,
   rspressConfig,
+  rstackConfig,
   metroConfig,
   repackConfig,
 } from '../bundlers/index.js';
@@ -35,6 +36,7 @@ describe('Bundler Configurations', () => {
         'repack',
         'rsbuild',
         'rslib',
+        'rstack',
       ];
 
       expectedBundlers.forEach((bundler) => {
@@ -72,6 +74,7 @@ describe('Bundler Configurations', () => {
       expect(rolldownConfig).toBe(BUNDLER_CONFIGS.rolldown);
       expect(rsbuildConfig).toBe(BUNDLER_CONFIGS.rsbuild);
       expect(rslibConfig).toBe(BUNDLER_CONFIGS.rslib);
+      expect(rstackConfig).toBe(BUNDLER_CONFIGS.rstack);
       expect(parcelConfig).toBe(BUNDLER_CONFIGS.parcel);
       expect(astroConfig).toBe(BUNDLER_CONFIGS.astro);
       expect(modernjsConfig).toBe(BUNDLER_CONFIGS.modernjs);
@@ -119,6 +122,16 @@ describe('Bundler Configurations', () => {
         'rslib.config.mts',
         'rslib.config.cts',
       ]);
+    });
+
+    it('should recognize the configuration formats loaded by Rstack', () => {
+      expect(rstackConfig.files).toEqual([
+        'rstack.config.ts',
+        'rstack.config.js',
+        'rstack.config.mts',
+        'rstack.config.mjs',
+      ]);
+      expect(rstackConfig.operations).toEqual(['rstack-plugins']);
     });
 
     it('should prioritize rspack defineConfig wrapping before plugins array fallback', () => {

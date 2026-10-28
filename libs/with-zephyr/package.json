@@ -1,6 +1,6 @@
 {
   "name": "with-zephyr",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "A codemod to automatically add withZephyr plugin to bundler configurations",
   "keywords": [
     "astro",
@@ -15,7 +15,7 @@
     "rslib",
     "rspack",
     "rspress",
-    "tanstack-intent",
+    "rstack",
     "vite",
     "webpack",
     "zephyr"
@@ -34,16 +34,12 @@
     "with-zephyr": "dist/index.js"
   },
   "files": [
-    "skills",
-    "!skills/_artifacts",
-    "!skills/**/.zephyr-generated",
     "dist",
     "!dist/**/*.map"
   ],
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "build": "rslib build",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",
@@ -63,6 +59,7 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "catalog:typescript",
+    "rstack": "0.8.0",
     "typescript": "catalog:typescript",
     "zephyr-rsbuild-plugin": "workspace:*"
   }

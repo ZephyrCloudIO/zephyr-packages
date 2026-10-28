@@ -35,4 +35,3 @@
 - [ ] I have written new tests (if applicable)
 - [ ] I have tested this locally (standing from a first time user point of view, never touch this app before)
 - [ ] I have/will run tests, or ask for help to add test
-- [ ] If `pnpm skills:check` reports pending reviews, I updated the affected skills and recorded review outcomes (see `AGENTS.md`)

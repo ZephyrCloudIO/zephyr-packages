@@ -1,0 +1,61 @@
+{
+  "name": "zephyr-native-internal",
+  "version": "1.7.0",
+  "description": "React Native internals shared by the Zephyr Metro and Re.Pack plugins",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-native-internal"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "@babel/parser": "catalog:",
+    "hermes-parser": "catalog:",
+    "magic-string": "catalog:",
+    "zephyr-edge-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@module-federation/runtime": "catalog:module-federation",
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "typescript": "catalog:typescript"
+  }
+}

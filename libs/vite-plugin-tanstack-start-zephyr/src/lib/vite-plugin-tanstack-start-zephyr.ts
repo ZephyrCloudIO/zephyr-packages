@@ -8,6 +8,7 @@ import * as path from 'path';
 import {
   ApplicationContext,
   assertZephyrBuildTarget,
+  isZephyrDisabled,
   ZephyrEngine,
   type ZephyrEngineOptions,
   type ZephyrBuildTarget,
@@ -22,6 +23,7 @@ import {
   handleGlobalError,
 } from 'zephyr-agent';
 import { loadTanStackOutput } from './internal/extract/load-tanstack-output';
+import { zephyrDisabledPlugin } from './internal/zephyr-disabled-plugin';
 
 /** Extract buffer from Rollup output */
 function extractBuffer(item: OutputAsset | OutputChunk): Buffer {
@@ -243,6 +245,11 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
     assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
   }
   assertTapFederationMetadata(options);
+
+  // Skip mode: TanStack Start builds as it is. No engine, token, git information or request.
+  if (isZephyrDisabled()) {
+    return zephyrDisabledPlugin('vite-plugin-tanstack-start-zephyr');
+  }
 
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const snapshotType = resolveSnapshotType(options);

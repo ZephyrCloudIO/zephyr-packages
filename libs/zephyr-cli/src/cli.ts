@@ -1,10 +1,13 @@
 import { isZephyrBuildTarget, type ZephyrBuildTarget } from 'zephyr-edge-contract';
+import { MAX_ONLINE_TIMEOUT_MS } from './doctor/online-limits';
 
 export interface CliOptions {
   command: 'run' | 'deploy' | 'watch' | 'doctor';
   commandLine?: string; // For 'run' command
   directory?: string; // For 'deploy', 'watch', and 'doctor' commands
-  format?: 'json' | 'text'; // For 'doctor'
+  format?: 'json' | 'text'; // For 'doctor' and 'deploy'
+  online?: boolean; // For 'doctor': also check Zephyr over the network
+  timeoutMs?: number; // For 'doctor --online': limit for each check
   target?: ZephyrBuildTarget;
   verbose?: boolean;
   ssr?: boolean;
@@ -21,7 +24,8 @@ export interface CliOptions {
  * - Ze-cli [options] <command> [args...] - run command (default)
  * - Ze-cli deploy <directory> [options] - deploy command
  * - Ze-cli watch <directory> [options] - watch and publish command
- * - Ze-cli doctor [directory] [--format json|text] - inspect without mutation
+ * - Ze-cli doctor [directory] [--format json|text] [--online [--timeout ms]] - inspect
+ *   without mutation
  *
  * Examples:
  *
@@ -32,7 +36,9 @@ export interface CliOptions {
  * - Ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
  * - Ze-cli watch ./dist --target tap-app
  * - Ze-cli doctor . --format json
+ * - Ze-cli doctor . --online
  * - Ze-cli deploy ./dist --ssr
+ * - Ze-cli deploy ./dist --format json
  */
 export function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
@@ -112,9 +118,22 @@ export function parseArgs(args: string[]): CliOptions {
           throw new Error('--format must be either json or text.');
         }
         options.format = value;
+      } else if (arg === '--online') {
+        options.online = true;
+      } else if (arg === '--timeout') {
+        const value = Number(args[++i]);
+        if (!Number.isSafeInteger(value) || value < 1 || value > MAX_ONLINE_TIMEOUT_MS) {
+          throw new Error(
+            `--timeout must be an integer from 1 to ${MAX_ONLINE_TIMEOUT_MS} (milliseconds).`
+          );
+        }
+        options.timeoutMs = value;
       } else {
         throw new Error(`Unknown doctor option: ${String(arg)}`);
       }
+    }
+    if (options.timeoutMs !== undefined && !options.online) {
+      throw new Error('--timeout can only be used with --online.');
     }
   } else if (firstArg === 'deploy' || firstArg === 'watch') {
     options.command = firstArg;
@@ -157,6 +176,12 @@ export function parseArgs(args: string[]): CliOptions {
         options.debounceMs = value;
       } else if (arg === '--verbose') {
         options.verbose = true;
+      } else if (arg === '--format' && firstArg === 'deploy') {
+        const value = args[++i];
+        if (value !== 'json' && value !== 'text') {
+          throw new Error('--format must be either json or text.');
+        }
+        options.format = value;
       }
     }
   } else {
@@ -172,7 +197,7 @@ function printHelp(): void {
   console.log(`
 Usage: ze-cli [options] <command> [args...]
        ze-cli deploy <directory> [options]
-       ze-cli doctor [directory] [--format json|text]
+       ze-cli doctor [directory] [--format json|text] [--online [--timeout ms]]
 
 Run a build command and automatically upload assets to Zephyr, or deploy
 pre-built assets from a directory.
@@ -189,7 +214,11 @@ Options:
   --metadata <path>        JSON sidecar for Module Federation publication metadata
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output
-  --format <json|text>     Doctor output format (default: text)
+  --format <json|text>     Doctor report format, or deploy result format; json prints
+                           one result line on stdout and logs on stderr (default: text)
+  --online                 Doctor only: also check that Zephyr can be reached and that
+                           the token and application work (read-only network requests)
+  --timeout <milliseconds> Doctor --online only: limit for each check (default: 5000)
   --help, -h               Show this help message
 
 Examples:
@@ -211,6 +240,10 @@ Examples:
   # Inspect without mutation
   ze-cli doctor .
   ze-cli doctor ./apps/host --format json
+  ze-cli doctor . --online
+
+  # Build without deploying (no Zephyr request, no token, no git information)
+  ZE_DISABLED=true ze-cli pnpm build
 
 How it works:
   - For run commands, ze-cli executes your build command and automatically
@@ -219,7 +252,12 @@ How it works:
   - For watch commands, ze-cli publishes each settled output change as a new immutable
     snapshot. The Zephyr control plane authorizes and advances any development tag.
   - The doctor command only reads project, package, config, lockfile, and diagnostic
-    artifact metadata. It never installs, edits, builds, authenticates, or deploys.
+    artifact metadata. It never installs, edits, builds, or deploys. By default it makes
+    no network request. With --online it also sends read-only requests to Zephyr to
+    check the API, the gateway, the token (sent as a bearer header, never stored or
+    changed), the application configuration and the edge URL.
+  - With ZE_DISABLED=true, ze-cli runs the build and does not contact Zephyr. It says that
+    the bundle is not deployed.
   - All stdout/stderr from build commands are passed through.
   - ze-cli logs are written to stderr only.
 

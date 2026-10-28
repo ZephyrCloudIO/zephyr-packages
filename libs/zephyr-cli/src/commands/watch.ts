@@ -1,7 +1,14 @@
 import { watch } from 'node:fs';
 import { access, constants } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { ZeErrors, ZephyrEngine, ZephyrError, logFn } from 'zephyr-agent';
+import {
+  ZeErrors,
+  ZephyrEngine,
+  ZephyrError,
+  isZephyrDisabled,
+  logFn,
+  ZE_DISABLED_MESSAGE,
+} from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { loadPublicationMetadata } from '../lib/publication-metadata';
@@ -52,6 +59,12 @@ export async function watchCommand(options: WatchOptions): Promise<void> {
     throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
       message: `Directory does not exist: ${directoryPath}`,
     });
+  }
+
+  // Skip mode: no watcher, no publication and no Zephyr request.
+  if (isZephyrDisabled()) {
+    logFn('warn', ZE_DISABLED_MESSAGE);
+    return;
   }
 
   // Refuse an incomplete TAP publication before allocating a long-lived watcher. The

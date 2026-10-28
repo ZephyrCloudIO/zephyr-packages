@@ -30,7 +30,7 @@ export interface NuxtOptionsWithNitro {
 
 export interface NuxtLike {
   options: NuxtOptionsWithNitro;
-  hook: (name: 'close', fn: () => void | Promise<void>) => void;
+  hook: (name: 'close' | 'build:error', fn: () => void | Promise<void>) => void;
 }
 
 export interface ZephyrNuxtOptions {

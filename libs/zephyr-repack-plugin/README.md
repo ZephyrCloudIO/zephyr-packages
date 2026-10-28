@@ -35,6 +35,20 @@ pnpm add --dev zephyr-repack-plugin
 bun add --dev zephyr-repack-plugin
 ```
 
+## AI Agent Skills (Optional)
+
+The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
+this package, with a dedicated
+[Re.Pack guide](https://github.com/ZephyrCloudIO/skills/blob/main/skills/zephyr-core/references/integrations/repack.md).
+Zephyr does not need it at runtime. Add it to your project with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add ZephyrCloudIO/skills --skill zephyr-core
+```
+
+Add `--skill zephyr-module-federation` if the application uses Module Federation.
+
 ## Usage
 
 ### Native target compatibility
@@ -131,6 +145,10 @@ plugins: [
       }),
       ...
 ```
+
+### Environment variables
+
+`withZephyr` rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value, and emits `zephyr-manifest.json` next to the bundle. `withZephyr` injects a Module Federation runtime plugin that loads the `zephyr-manifest.json` next to each resolved remote and applies its environment values before the remote's code runs; no setup is needed. With `zephyr-native-cache` registered, the last loaded values are kept for offline starts.
 
 ## Creation command
 

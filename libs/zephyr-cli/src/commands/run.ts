@@ -1,6 +1,12 @@
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { ZeErrors, ZephyrEngine, ZephyrError } from 'zephyr-agent';
+import {
+  isZephyrDisabled,
+  ZE_DISABLED_MESSAGE,
+  ZeErrors,
+  ZephyrEngine,
+  ZephyrError,
+} from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { detectMultipleCommands } from '../lib/command-detector';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
@@ -38,6 +44,39 @@ export async function runCommand(options: RunOptions): Promise<void> {
 
   if (individualCommands.length > 1) {
     log('info', `Detected ${individualCommands.length} commands to execute`);
+  }
+
+  const executeBuildCommands = async (): Promise<void> => {
+    for (let i = 0; i < individualCommands.length; i++) {
+      const cmd = individualCommands[i];
+      log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
+
+      try {
+        const parsed = parseShellCommand(cmd);
+        const result = await executeCommand(parsed, cwd);
+
+        if (result.exitCode !== 0) {
+          throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+            message: `Build command failed with exit code ${result.exitCode}`,
+          });
+        }
+
+        log('info', `Command ${i + 1} completed successfully`);
+      } catch (error) {
+        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
+          message: `Failed to execute command: ${cmd}\n${(error as Error).message}`,
+        });
+      }
+    }
+  };
+
+  // Skip mode: run the build as it is. No output detection, no Zephyr engine, no token,
+  // no git information and no network request.
+  if (isZephyrDisabled()) {
+    await executeBuildCommands();
+    log('info', 'All build commands completed successfully');
+    console.error(`[ze-cli] ${ZE_DISABLED_MESSAGE}`);
+    return;
   }
 
   // Detect multiple commands and their output directories
@@ -109,28 +148,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
     }
   }
 
-  // Execute all build commands sequentially
-  for (let i = 0; i < individualCommands.length; i++) {
-    const cmd = individualCommands[i];
-    log('info', `Executing command ${i + 1}/${individualCommands.length}: ${cmd}`);
-
-    try {
-      const parsed = parseShellCommand(cmd);
-      const result = await executeCommand(parsed, cwd);
-
-      if (result.exitCode !== 0) {
-        throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-          message: `Build command failed with exit code ${result.exitCode}`,
-        });
-      }
-
-      log('info', `Command ${i + 1} completed successfully`);
-    } catch (error) {
-      throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: `Failed to execute command: ${cmd}\n${(error as Error).message}`,
-      });
-    }
-  }
+  await executeBuildCommands();
 
   log('info', 'All build commands completed successfully');
 

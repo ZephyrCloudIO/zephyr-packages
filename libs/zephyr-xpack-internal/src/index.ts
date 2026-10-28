@@ -2,6 +2,7 @@ export { emitDeploymentDone, onDeploymentDone } from './lifecycle-events';
 
 export {
   createMfRuntimeCode,
+  extractFederatedConfig,
   extractFederatedDependencyPairs,
   extractLibraryType,
   makeCopyOfModuleFederationOptions,
@@ -10,6 +11,7 @@ export {
 } from './xpack-extract';
 export { buildWebpackAssetMap } from './xpack-extract/build-webpack-assets-map';
 export { isModuleFederationPlugin } from './xpack-extract/is-module-federation-plugin';
+export { configureZephyrRuntimePlugin } from './xpack-extract/runtime-plugin-insert';
 
 export type {
   ModuleFederationPlugin,
@@ -24,6 +26,7 @@ export {
   type ModuleFederationBuildMetadata,
 } from './federation-dashboard-legacy/get-build-stats';
 
+export { disableZephyrForXpack } from './disabled/ze-disabled-plugin';
 export { setupManifestEmission } from './hooks/ze-emit-manifest';
 export { logBuildSteps } from './hooks/ze-setup-build-steps-logging';
 export { setupZeDeploy } from './hooks/ze-setup-ze-deploy';

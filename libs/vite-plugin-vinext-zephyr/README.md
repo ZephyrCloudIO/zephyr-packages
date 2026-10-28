@@ -16,6 +16,20 @@ A Vite plugin for deploying Vinext applications with Zephyr Cloud.
 pnpm add --save-dev vite-plugin-vinext-zephyr
 ```
 
+## AI Agent Skills (Optional)
+
+The `zephyr-core` Agent Skill teaches AI coding agents how to set up and debug
+this package, with a dedicated
+[Vinext guide](https://github.com/ZephyrCloudIO/skills/blob/main/skills/zephyr-core/references/integrations/vinext.md).
+Zephyr does not need it at runtime. Add it to your project with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add ZephyrCloudIO/skills --skill zephyr-core
+```
+
+Add `--skill zephyr-module-federation` if the application uses Module Federation.
+
 ## Usage
 
 Add the plugin after `vinext()` in your `vite.config.ts`:

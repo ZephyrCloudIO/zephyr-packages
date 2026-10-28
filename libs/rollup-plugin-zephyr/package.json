@@ -1,12 +1,11 @@
 {
   "name": "rollup-plugin-zephyr",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "Rollup plugin for Zephyr",
   "keywords": [
     "deploy",
     "rollup",
     "rollup-plugin",
-    "tanstack-intent",
     "zephyr"
   ],
   "license": "Apache-2.0",
@@ -20,9 +19,6 @@
     "directory": "libs/rollup-plugin-zephyr"
   },
   "files": [
-    "skills",
-    "!skills/_artifacts",
-    "!skills/**/.zephyr-generated",
     "dist",
     "README.md",
     "LICENSE",
@@ -51,7 +47,6 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
     "patch-version": "pnpm version",
     "dev": "rslib build --watch",

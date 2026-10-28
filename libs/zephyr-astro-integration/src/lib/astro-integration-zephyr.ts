@@ -18,6 +18,8 @@ import {
   zeBuildDashData,
   ZephyrError,
   ZephyrEngine,
+  isZephyrDisabled,
+  logZephyrDisabled,
   type ZephyrBuildHooks,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
@@ -133,6 +135,19 @@ function assertTapModuleFederationMetadata(
 export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
   if (options?.target !== undefined) {
     assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+  }
+
+  // Skip mode: Astro builds the site as it is. No engine, token, git information,
+  // Vite rewrite or request. A successful build says it was not deployed.
+  if (isZephyrDisabled()) {
+    return {
+      name: 'with-zephyr',
+      hooks: {
+        'astro:build:done': () => {
+          logZephyrDisabled();
+        },
+      },
+    };
   }
 
   const preserveTapArtifactBytes = options?.target === 'tap-app';

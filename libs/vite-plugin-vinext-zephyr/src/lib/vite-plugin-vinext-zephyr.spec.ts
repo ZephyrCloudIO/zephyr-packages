@@ -14,6 +14,7 @@ const mocks = rs.hoisted(() => ({
   detectEntrypointFromAssets: rs.fn(),
   injectRscAssetsManifest: rs.fn(),
   resolveVinextEntrypoint: rs.fn(),
+  resolveVinextOutputMounts: rs.fn(),
   completeParticipant: rs.fn(),
   contribute: rs.fn(),
   completePostprocess: rs.fn(),
@@ -62,6 +63,7 @@ rs.mock('zephyr-agent', () => {
     handleGlobalError: rs.fn(),
     zeBuildDashData: mocks.zeBuildDashData,
     ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
+    isZephyrDisabled: () => false,
     ZephyrEngine: { defer_create: mocks.deferCreate },
     ZephyrError: MockZephyrError,
     ze_log: { upload: rs.fn() },
@@ -73,6 +75,7 @@ rs.mock('./internal/vinext-output', () => ({
   detectEntrypointFromAssets: mocks.detectEntrypointFromAssets,
   injectRscAssetsManifest: mocks.injectRscAssetsManifest,
   resolveVinextEntrypoint: mocks.resolveVinextEntrypoint,
+  resolveVinextOutputMounts: mocks.resolveVinextOutputMounts,
 }));
 
 import { withZephyrVinext } from './vite-plugin-vinext-zephyr';
@@ -119,6 +122,7 @@ describe('withZephyrVinext', () => {
     );
     mocks.detectEntrypointFromAssets.mockReturnValue('server/index.js');
     mocks.resolveVinextEntrypoint.mockReturnValue('server/index.js');
+    mocks.resolveVinextOutputMounts.mockReturnValue([]);
     mocks.buildAssetsMap.mockReturnValue({
       asset: { path: 'server/index.js' },
     });
@@ -172,13 +176,48 @@ describe('withZephyrVinext', () => {
     expect(mocks.collectOutputDirectoryAssets).toHaveBeenCalledWith(
       expect.any(Object),
       path.join('/workspace/tap-package', 'dist'),
-      { target: 'tap-app' }
+      { target: 'tap-app', mounts: [] }
     );
     expect(mocks.injectRscAssetsManifest).toHaveBeenCalledWith(
       expect.any(Object),
       path.join('/workspace/tap-package', 'dist'),
       undefined,
-      { target: 'tap-app' }
+      { target: 'tap-app', mounts: [] }
+    );
+  });
+
+  it('collects environment output built outside the output root', async () => {
+    const mounts = [
+      {
+        sourceDir: '/workspace/app/.cloudflare/output/v0/workers/default/bundle',
+        snapshotDir: 'server',
+      },
+    ];
+    mocks.resolveVinextOutputMounts.mockReturnValue(mounts);
+    const rscConfig = { build: { outDir: mounts[0]?.sourceDir } };
+    const plugin = withZephyrVinext();
+    plugin.configResolved?.({ root: '/workspace/app', plugins: [] } as never);
+
+    await (plugin.buildApp as { handler: (builder: unknown) => Promise<void> }).handler({
+      environments: {
+        rsc: { isBuilt: true, config: rscConfig },
+      },
+    });
+
+    expect(mocks.resolveVinextOutputMounts).toHaveBeenCalledWith(
+      path.join('/workspace/app', 'dist'),
+      { rsc: rscConfig }
+    );
+    expect(mocks.collectOutputDirectoryAssets).toHaveBeenCalledWith(
+      expect.any(Object),
+      path.join('/workspace/app', 'dist'),
+      { target: undefined, mounts }
+    );
+    expect(mocks.injectRscAssetsManifest).toHaveBeenCalledWith(
+      expect.any(Object),
+      path.join('/workspace/app', 'dist'),
+      undefined,
+      { target: undefined, mounts }
     );
   });
 

@@ -1,12 +1,10 @@
 {
   "name": "create-zephyr-apps",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "A CLI tool to create web applications using Zephyr.",
   "keywords": [
-    "agent-skill",
     "create-zephyr-apps",
     "example",
-    "tanstack-intent",
     "template",
     "zephyr",
     "zephyr-apps",
@@ -31,13 +29,6 @@
     "dist",
     "README.md",
     "LICENSE",
-    "skills",
-    "!skills/_artifacts",
-    "!skills/**/.zephyr-generated",
-    ".codex-plugin/plugin.json",
-    ".claude-plugin/plugin.json",
-    ".cursor-plugin/plugin.json",
-    "scripts/sync-plugin-versions.mjs",
     "!dist/**/*.map"
   ],
   "type": "module",
@@ -48,11 +39,9 @@
     "provenance": true
   },
   "scripts": {
-    "prepack": "node ../../scripts/sync-package-skills.mjs",
     "dev": "rslib build --watch",
     "build": "rslib build",
     "patch-version": "pnpm version",
-    "version": "node scripts/sync-plugin-versions.mjs",
     "test": "rstest run",
     "typecheck": "tsc -b"
   },
@@ -64,15 +53,8 @@
   "devDependencies": {
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
-    "@tanstack/intent": "catalog:",
     "@types/node": "catalog:typescript",
     "tsx": "catalog:typescript",
     "typescript": "catalog:typescript"
-  },
-  "intent": {
-    "version": 1,
-    "repo": "ZephyrCloudIO/zephyr-packages",
-    "docs": "https://docs.zephyr-cloud.io/tools/create-zephyr-apps",
-    "requires": []
   }
 }

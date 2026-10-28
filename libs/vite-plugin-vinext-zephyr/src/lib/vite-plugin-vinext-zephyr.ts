@@ -7,6 +7,7 @@ import {
   assertZephyrBuildTarget,
   buildAssetsMap,
   handleGlobalError,
+  isZephyrDisabled,
   zeBuildDashData,
   ZeErrors,
   ZephyrEngine,
@@ -23,9 +24,11 @@ import {
   detectEntrypointFromAssets,
   injectRscAssetsManifest,
   resolveVinextEntrypoint,
+  resolveVinextOutputMounts,
   type RscPluginManagerLike,
   type VinextBuildAsset,
 } from './internal/vinext-output';
+import { zephyrDisabledPlugin } from './internal/zephyr-disabled-plugin';
 
 export interface VinextZephyrOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
@@ -172,6 +175,11 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
   }
   assertTapFederationMetadata(options);
 
+  // Skip mode: Vinext builds as it is. No engine, token, git information or request.
+  if (isZephyrDisabled()) {
+    return zephyrDisabledPlugin('vite-plugin-vinext-zephyr');
+  }
+
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const snapshotType = resolveSnapshotType(options);
   let resolvedConfig: ResolvedConfig | undefined;
@@ -238,7 +246,15 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           const zephyrEngine = await ensureEngine();
           const generation = buildGeneration++;
           const assets: Record<string, VinextBuildAsset> = {};
-          const outputCollectionOptions = { target: options.target };
+          const outputCollectionOptions = {
+            target: options.target,
+            mounts: resolveVinextOutputMounts(
+              outputDir,
+              Object.fromEntries(
+                environments.map(([name, environment]) => [name, environment.config])
+              )
+            ),
+          };
           await collectOutputDirectoryAssets(assets, outputDir, outputCollectionOptions);
           injectRscAssetsManifest(
             assets,

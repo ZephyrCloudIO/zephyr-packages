@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** Integration tests for withZephyr Metro configuration */
@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 // Mock zephyr-agent - must be before imports
 rs.mock('zephyr-agent', () => {
   const mockEngine = {
+    application_uid: 'testapp.project.org',
     env: { target: 'ios' as const },
     build_id: Promise.resolve('build-id'),
     build_failed: rs.fn(),
@@ -26,6 +27,7 @@ rs.mock('zephyr-agent', () => {
   };
 
   return {
+    isZephyrDisabled: () => process.env['ZE_DISABLED'] === 'true',
     ze_log: mockZeLog,
     ZephyrEngine: {
       create: rs.fn().mockResolvedValue(mockEngine),
@@ -36,6 +38,7 @@ rs.mock('zephyr-agent', () => {
     ZeErrors: {
       ERR_UNKNOWN: 'ERR_UNKNOWN',
     },
+    collectZEPublicVars: rs.fn().mockReturnValue({ ZE_PUBLIC_DEMO: 'build' }),
     createManifestContent: rs.fn().mockReturnValue(JSON.stringify({ version: '1.0.0' })),
     handleGlobalError: rs.fn().mockImplementation((error) => {
       mockZeLog.error(String(error));
@@ -44,15 +47,28 @@ rs.mock('zephyr-agent', () => {
   };
 });
 
-// Mock fs for manifest generation
+// Mock fs for manifest and env transformer generation
 rs.mock('fs', () => ({
   existsSync: rs.fn().mockReturnValue(true),
   mkdirSync: rs.fn(),
+  readFileSync: rs.fn().mockReturnValue('// transformer'),
+  writeFileSync: rs.fn(),
+  renameSync: rs.fn(),
   promises: {
     writeFile: rs.fn().mockResolvedValue(undefined),
   },
 }));
 
+// Resolve the configured transformer and package version without a real project
+rs.mock('module', () => ({
+  createRequire: () =>
+    Object.assign(() => ({ version: '0.0.0-test' }), {
+      resolve: (id: string) => `/project/node_modules/${id}/index.js`,
+    }),
+}));
+
+import fs from 'fs';
+import path from 'path';
 import { withZephyr, withZephyrMetro } from '../with-zephyr';
 
 describe('withZephyr integration', () => {
@@ -70,6 +86,42 @@ describe('withZephyr integration', () => {
 
   beforeEach(() => {
     rs.clearAllMocks();
+  });
+
+  describe('ZE_DISABLED=true', () => {
+    afterEach(() => {
+      delete process.env['ZE_DISABLED'];
+    });
+
+    it('returns the Metro config untouched without creating an engine', async () => {
+      process.env['ZE_DISABLED'] = 'true';
+      const { ZephyrEngine, ze_log } = await import('zephyr-agent');
+      const config = structuredClone(baseMetroConfig);
+
+      const result = await withZephyr({ name: 'TestApp' })(config);
+
+      expect(result).toBe(config);
+      expect(result).toEqual(baseMetroConfig);
+      expect(ZephyrEngine.create).not.toHaveBeenCalled();
+      expect(ze_log.app).not.toHaveBeenCalled();
+    });
+
+    it('still rejects an unsupported target first', () => {
+      process.env['ZE_DISABLED'] = 'true';
+
+      expect(() => withZephyr({ target: 'tap-app' as never })).toThrow(
+        'Metro cannot publish tap-app artifacts.'
+      );
+    });
+
+    it('configures Zephyr again once the variable is not "true"', async () => {
+      process.env['ZE_DISABLED'] = 'false';
+      const { ZephyrEngine } = await import('zephyr-agent');
+
+      await withZephyr({ name: 'TestApp' })(baseMetroConfig);
+
+      expect(ZephyrEngine.create).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('config transformation', () => {
@@ -117,6 +169,25 @@ describe('withZephyr integration', () => {
 
       expect(result.server?.enhanceMiddleware).toBeDefined();
       expect(typeof result.server?.enhanceMiddleware).toBe('function');
+    });
+
+    it('installs the env transformer wrapping the configured one', async () => {
+      const enhancer = withZephyr({ name: 'TestApp' });
+      const result = await enhancer(baseMetroConfig);
+
+      const transformerPath = String(result.transformer?.babelTransformerPath);
+      expect(path.dirname(transformerPath)).toBe(
+        path.join('/project', 'node_modules', '.zephyr-metro')
+      );
+      expect(path.basename(transformerPath)).toMatch(
+        /^env-transformer-[0-9a-f]{16}\.js$/
+      );
+      const source = String(rs.mocked(fs.writeFileSync).mock.calls[0]?.[1]);
+      expect(source).toContain(
+        '"originalTransformerPath":"/project/node_modules/metro-react-native-babel-transformer/index.js"'
+      );
+      expect(source).toContain('"applicationUid":"testapp.project.org"');
+      expect(global.__ZEPHYR_METRO_ENV_REWRITE__).toBe('testapp.project.org');
     });
   });
 

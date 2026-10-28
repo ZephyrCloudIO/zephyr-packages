@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from '@rstest/core';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import {
   mkdtemp,
   mkdir,
@@ -75,7 +74,6 @@ async function createConsumer(name: string, includeFederationPeer = false) {
           await readFile(path.join(packageRoot, 'package.json'), 'utf8')
         ).version,
       },
-      intent: { skills: ['vite-plugin-zephyr'] },
     })
   );
 
@@ -231,128 +229,5 @@ describe('published optional federation peer', () => {
       `const { withZephyr } = require('vite-plugin-zephyr'); ${assertion}`,
       false
     );
-  });
-});
-
-describe('published Intent skill', () => {
-  // Resolve the declared devDependency; its exports map hides package.json and the CLI.
-  const intentRoot = path.join(packageRoot, 'node_modules/@tanstack/intent');
-  const intentCli = path.join(
-    intentRoot,
-    JSON.parse(readFileSync(path.join(intentRoot, 'package.json'), 'utf8')).bin.intent
-  );
-
-  test('discovers and loads the skill from the packed consumer dependency', async () => {
-    const consumerRoot = await createConsumer('intent-discovery');
-    const discovery = JSON.parse(
-      run(process.execPath, [intentCli, 'list', '--json'], consumerRoot)
-    );
-    const manifest = JSON.parse(
-      await readFile(path.join(packageRoot, 'package.json'), 'utf8')
-    );
-
-    expect(discovery.warnings).toEqual([]);
-    expect(discovery.skills).toEqual(
-      expect.arrayContaining(
-        ['zephyr-core', 'zephyr-module-federation', 'zephyr-vite'].map((skillName) =>
-          expect.objectContaining({
-            use: `vite-plugin-zephyr#${skillName}`,
-            packageVersion: manifest.version,
-            packageSource: 'local',
-          })
-        )
-      )
-    );
-    expect(discovery.skills).toHaveLength(3);
-
-    const skillPath = run(
-      process.execPath,
-      [intentCli, 'load', 'vite-plugin-zephyr#zephyr-vite', '--path'],
-      consumerRoot
-    ).trim();
-    const skillDirectory = path.dirname(path.resolve(consumerRoot, skillPath));
-    expect(skillDirectory).toBe(
-      path.join(consumerRoot, 'node_modules/vite-plugin-zephyr/skills/zephyr-vite')
-    );
-    expect(
-      await readFile(path.join(skillDirectory, 'references/build-lifecycle.md'), 'utf8')
-    ).toContain('builder.buildApp()');
-    expect(
-      await readdir(path.join(consumerRoot, 'node_modules/vite-plugin-zephyr/skills'))
-    ).toEqual(['zephyr-core', 'zephyr-module-federation', 'zephyr-vite']);
-
-    const packagedSkill = await readFile(path.join(skillDirectory, 'SKILL.md'), 'utf8');
-    for (const reference of packagedSkill.matchAll(
-      /\[[^\]]+\]\(([^)#]+)(?:#[^)]*)?\)/gu
-    )) {
-      const destination = reference[1];
-      if (/^https?:\/\//u.test(destination)) continue;
-      const referencePath = path.resolve(skillDirectory, destination);
-      expect(path.relative(skillDirectory, referencePath)).not.toMatch(
-        /^\.\.(?:[/\\]|$)/u
-      );
-      expect(await readFile(referencePath, 'utf8')).not.toBe('');
-    }
-
-    const loadedSkill = run(
-      process.execPath,
-      [intentCli, 'load', 'vite-plugin-zephyr#zephyr-vite'],
-      consumerRoot
-    );
-    expect(loadedSkill).toContain("from 'vite-plugin-zephyr'");
-    expect(loadedSkill).toContain('build-lifecycle.md');
-  });
-
-  test('does not expose the package skill when the consumer has not selected it', async () => {
-    const consumerRoot = await createConsumer('intent-unselected');
-    const consumerManifestPath = path.join(consumerRoot, 'package.json');
-    const manifest = JSON.parse(await readFile(consumerManifestPath, 'utf8'));
-    manifest.intent.skills = [];
-    await writeFile(consumerManifestPath, JSON.stringify(manifest));
-
-    const discovery = JSON.parse(
-      run(process.execPath, [intentCli, 'list', '--json'], consumerRoot)
-    );
-    expect(discovery.skills).toEqual([]);
-    expect(() =>
-      run(
-        process.execPath,
-        [intentCli, 'load', 'vite-plugin-zephyr#zephyr-vite'],
-        consumerRoot
-      )
-    ).toThrow();
-  });
-
-  test('validates examples and propagates errors without replacing the native compiler', () => {
-    const workspaceRoot = path.resolve(packageRoot, '../..');
-    const nativeVersion = runNode(
-      workspaceRoot,
-      "console.log(require('typescript').version)",
-      false
-    ).trim();
-
-    run(
-      process.execPath,
-      [
-        path.join(workspaceRoot, 'scripts/intent.mjs'),
-        'validate',
-        path.join(packageRoot, 'skills'),
-        '--check',
-      ],
-      workspaceRoot
-    );
-
-    expect(() =>
-      run(
-        process.execPath,
-        [path.join(workspaceRoot, 'scripts/intent.mjs'), 'maintainer', 'unknown-action'],
-        workspaceRoot
-      )
-    ).toThrow();
-
-    expect(
-      runNode(workspaceRoot, "console.log(require('typescript').version)", false).trim()
-    ).toBe(nativeVersion);
-    expect(nativeVersion).toMatch(/^7\./u);
   });
 });

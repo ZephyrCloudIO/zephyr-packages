@@ -39,6 +39,25 @@ Plugins within this repository are built for applications to deploy with Zephyr.
 - `zephyr-xpack-internal` - Sharing types, module federation capabilities and utilities for bundler built on top of webpack or Rspack.
 - `zephyr-edge-contract` - Provide typings, constants and smaller utilites for Zephyr plugins.
 
+### AI Agent Skills
+
+Agent Skills that teach AI coding agents how to set up, deploy, and debug
+Zephyr live in [ZephyrCloudIO/skills](https://github.com/ZephyrCloudIO/skills).
+`zephyr-core` covers setup and deployment, with a guide for every bundler and
+framework integration in this repository. `zephyr-module-federation`,
+`zephyr-cli`, and `create-zephyr-apps` cover their own workflows. Zephyr does
+not need them at runtime.
+
+Install them with the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```bash
+# Pick from the list interactively
+npx skills add ZephyrCloudIO/skills
+
+# Or install specific skills
+npx skills add ZephyrCloudIO/skills --skill zephyr-core --skill zephyr-module-federation
+```
+
 ## Repository Structure
 
 This is a [Turborepo](https://turborepo.com) monorepo. Libraries are built with

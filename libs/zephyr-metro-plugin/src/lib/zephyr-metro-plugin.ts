@@ -5,6 +5,12 @@ import {
   ze_log,
   ZephyrEngine,
 } from 'zephyr-agent';
+import {
+  assertNativeBuildTarget,
+  type NativeBuildTarget,
+  writeNativeEnvRuntimePlugin,
+} from 'zephyr-native-internal';
+import * as path from 'node:path';
 import type {
   ApplicationConsumes,
   ZeBuildAsset,
@@ -22,26 +28,49 @@ import {
 import { mutateMfConfig } from './internal/mutate-mf-config';
 import { parseSharedDependencies } from './internal/parse-shared-dependencies';
 import type { OutputAsset } from './internal/types';
-import {
-  assertMetroNativeBuildTarget,
-  type MetroNativeBuildTarget,
-} from './native-target';
 
 export interface ZephyrCommandWrapperConfig {
-  platform: MetroNativeBuildTarget;
+  platform: NativeBuildTarget;
   mode: string;
   context: string;
   outDir: string;
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
 }
 
+/** Normalized MF options fields Zephyr rewrites before bundling. */
+interface FederationConfigTarget {
+  remotes?: Record<string, string>;
+  plugins?: string[];
+}
+
 export class ZephyrMetroPlugin {
   #config: ZephyrCommandWrapperConfig;
+  /** Rewritten remotes and the env runtime plugin path, set by `beforeBuild`. */
+  #federationOverrides: { remotes: Record<string, string>; runtimePlugin?: string } = {
+    remotes: {},
+  };
   zephyr_engine!: ZephyrEngine;
 
   constructor(props: ZephyrCommandWrapperConfig) {
-    assertMetroNativeBuildTarget(props.platform, 'ZephyrMetroPlugin platform');
+    assertNativeBuildTarget(props.platform, 'ZephyrMetroPlugin platform', 'metro');
     this.#config = props;
+  }
+
+  /**
+   * Applies the remote rewrites and env runtime plugin resolved by `beforeBuild` to a
+   * normalized MF options object. Idempotent. MF Metro's bundle commands reload the Metro
+   * config, and a function-exported config creates fresh options there, so the command
+   * wrapper reapplies the overrides to that object as well.
+   */
+  applyToFederationConfig(config: FederationConfigTarget | undefined): void {
+    if (!config) return;
+    for (const [name, value] of Object.entries(this.#federationOverrides.remotes)) {
+      if (config.remotes && name in config.remotes) config.remotes[name] = value;
+    }
+    const { runtimePlugin } = this.#federationOverrides;
+    if (runtimePlugin === undefined) return;
+    config.plugins ??= [];
+    if (!config.plugins.includes(runtimePlugin)) config.plugins.push(runtimePlugin);
   }
 
   async beforeBuild() {
@@ -66,12 +95,29 @@ export class ZephyrMetroPlugin {
       const resolved_dependency_pairs =
         await this.zephyr_engine.resolve_remote_dependencies(dependency_pairs);
 
-      if (this.#config.mfConfig) {
+      const mfConfig = this.#config.mfConfig as FederationConfigTarget | undefined;
+      if (mfConfig) {
         mutateMfConfig(
           this.zephyr_engine,
           this.#config.mfConfig,
           resolved_dependency_pairs
         );
+        const remotes = mfConfig.remotes ?? {};
+        for (const { name } of resolved_dependency_pairs ?? []) {
+          const value = remotes[name];
+          if (typeof value === 'string') this.#federationOverrides.remotes[name] = value;
+        }
+        // Metro MF calls runtime plugins without params, so the UID map ships in a generated module.
+        const envRuntimePlugin = writeNativeEnvRuntimePlugin(
+          path.join(this.#config.context, 'node_modules', '.zephyr-metro'),
+          resolved_dependency_pairs
+        );
+        if (envRuntimePlugin) {
+          this.#federationOverrides.runtimePlugin = envRuntimePlugin
+            .split(path.sep)
+            .join('/');
+        }
+        this.applyToFederationConfig(mfConfig);
       }
 
       return this.#config.mfConfig;
@@ -186,7 +232,7 @@ export class ZephyrMetroPlugin {
 
   private assertEngineTargetMatchesPlatform(): void {
     const engineTarget = this.zephyr_engine.env.target;
-    assertMetroNativeBuildTarget(engineTarget, 'ZephyrMetroPlugin engine target');
+    assertNativeBuildTarget(engineTarget, 'ZephyrMetroPlugin engine target', 'metro');
 
     if (engineTarget !== this.#config.platform) {
       throw new TypeError(
@@ -230,6 +276,8 @@ export class ZephyrMetroPlugin {
         this.#config.mfConfig,
         this.zephyr_engine.application_uid
       ),
+      // Resolved remotes; the API stores them as the version's and environments' dependencies
+      zephyrDependencies: this.zephyr_engine.zephyr_dependencies,
       // Module Federation related data
       dependencies: getPackageDependencies(
         resolveCatalogDependencies(this.zephyr_engine.npmProperties.dependencies)

@@ -83,6 +83,54 @@ describe('ZephyrEngine.upload_assets', () => {
     mocks.setAppDeployResult.mockResolvedValue(undefined);
   });
 
+  it('refuses a Cloudflare deployment before transport when the runtime lacks support', async () => {
+    const engine = readyEngine();
+    await expect(
+      engine.upload_assets({
+        assetsMap: {},
+        buildStats: {} as never,
+        snapshotType: 'ssr',
+        entrypoint: 'server/entry.mjs',
+        cloudflare: {
+          schemaVersion: 1,
+          compatibilityDate: '2026-10-28',
+          compatibilityFlags: ['nodejs_compat'],
+          bindings: [{ name: 'DB', type: 'd1' }],
+          assets: { directory: 'client', binding: 'ASSETS', runWorkerFirst: false },
+          crons: ['* * * * *'],
+        },
+      })
+    ).rejects.toThrow('does not advertise');
+    expect(mocks.uploadStrategy).not.toHaveBeenCalled();
+    expect(mocks.setAppDeployResult).not.toHaveBeenCalled();
+  });
+
+  it('carries Cloudflare requirements with the server entry when support is negotiated', async () => {
+    const engine = readyEngine();
+    engine.application_configuration = Promise.resolve({
+      ...appConfig(),
+      capabilities: { cloudflareDeployment: 1 },
+    });
+    const entry = asset('server/entry.mjs', 'export default {}');
+    const cloudflare = {
+      schemaVersion: 1 as const,
+      compatibilityDate: '2026-10-28',
+      compatibilityFlags: ['nodejs_compat'],
+      bindings: [],
+      assets: { directory: 'client' as const, binding: 'ASSETS', runWorkerFirst: false },
+      crons: [],
+    };
+    await engine.upload_assets({
+      assetsMap: { [entry.hash]: entry },
+      buildStats: {} as never,
+      snapshotType: 'ssr',
+      entrypoint: entry.path,
+      cloudflare,
+    });
+    expect(uploadedOptions().snapshot.cloudflare).toEqual(cloudflare);
+    expect(uploadedOptions().snapshot.entrypoint).toBe('server/entry.mjs');
+  });
+
   it('adds an empty zephyr manifest asset when no federated dependencies were resolved', async () => {
     const engine = readyEngine();
     const assetsMap: ZeBuildAssetsMap = {};

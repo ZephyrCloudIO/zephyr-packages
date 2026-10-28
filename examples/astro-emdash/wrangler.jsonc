@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zephyr-emdash-proof",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{ "binding": "DB", "database_name": "zephyr-emdash-proof" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zephyr-emdash-proof-media" }],
+  "triggers": { "crons": ["* * * * *"] },
+  "observability": { "enabled": true },
+}

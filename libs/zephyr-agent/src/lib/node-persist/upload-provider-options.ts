@@ -5,6 +5,8 @@ export interface ZeApplicationConfig {
   DELIMITER: string;
   PLATFORM: UploadProviderType;
   ENVIRONMENTS?: Record<string, EnvironmentConfig>;
+  /** Advertised only by runtimes implementing the complete Cloudflare deployment contract. */
+  capabilities?: { cloudflareDeployment?: 1 };
   fetched_at?: number;
 
   // todo: remove this after moving to a new auth flow which will provide user jwt separately from the application configuration

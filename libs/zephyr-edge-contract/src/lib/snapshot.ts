@@ -5,6 +5,7 @@ import type {
   ZephyrModuleFederationConfig,
 } from './module-federation';
 import type { ZephyrBuildTarget } from './build-target';
+import type { CloudflareDeployment } from './cloudflare-deployment';
 
 export interface Snapshot {
   // app.repo.org
@@ -25,6 +26,8 @@ export interface Snapshot {
   target: ZephyrBuildTarget;
   // server entry file path for SSR applications (relative path)
   entrypoint?: string;
+  /** Runtime requirements; resource values are resolved by the owning environment. */
+  cloudflare?: CloudflareDeployment;
   uid: {
     build: string;
     app_name: string;

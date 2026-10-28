@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { ZephyrDependency } from 'zephyr-edge-contract';
 import {
   assertZephyrBuildTarget,
+  type CloudflareDeployment,
   type Snapshot,
   ZEPHYR_MANIFEST_FILENAME,
   ZE_ENV,
@@ -598,6 +599,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     // SSR-specific parameter
     snapshotType?: 'csr' | 'ssr';
     entrypoint?: string;
+    cloudflare?: CloudflareDeployment;
     hooks?: ZephyrBuildHooks;
   }): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -611,9 +613,28 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         mfConfigs,
         snapshotType,
         entrypoint,
+        cloudflare,
       } = props;
       const target = zephyr_engine.env?.target ?? 'web';
       assertZephyrBuildTarget(target, 'ZephyrEngine.env.target');
+      if (cloudflare) {
+        if (snapshotType !== 'ssr' || !entrypoint || cloudflare.schemaVersion !== 1) {
+          throw new Error(
+            'Cloudflare deployment metadata requires an SSR snapshot and an explicit entrypoint.'
+          );
+        }
+        const config = await zephyr_engine.application_configuration;
+        if (config.capabilities?.cloudflareDeployment !== 1) {
+          throw new Error(
+            'The selected Zephyr integration does not advertise Cloudflare deployment protocol 1. Astro/EmDash requires runtime bindings, assets and scheduled-event support; no assets were uploaded.'
+          );
+        }
+        if (config.ENVIRONMENTS && Object.keys(config.ENVIRONMENTS).length) {
+          throw new Error(
+            'Cloudflare deployment protocol 1 does not yet support additional upload environments. Select one verified environment.'
+          );
+        }
+      }
       // BuildSession publications are immutable. Preserve the legacy mutation behavior for
       // direct adapter maps while accepting sealed maps without throwing.
       const assetsMap = Object.isFrozen(providedAssetsMap)
@@ -676,6 +697,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         mfConfigs,
         snapshotType,
         entrypoint,
+        cloudflare,
       });
 
       const waitForCompletion = !!process.env['ZE_WAIT_FOR_DEPLOYMENTS']?.trim();

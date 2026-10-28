@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 import type { Plugin, ResolvedConfig } from 'vite';
 
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -130,6 +130,105 @@ describe('withZephyr', () => {
   });
 
   describe('Basic Integration Structure', () => {
+    it('does not silently publish on-demand routes as static assets', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'zephyr-astro-on-demand-'));
+      try {
+        const integration = withZephyr();
+        await integration.hooks['astro:config:done']?.({
+          config: {
+            root: pathToFileURL(`${root}/`),
+            output: 'static',
+            adapter: { name: '@astrojs/cloudflare' },
+          },
+        } as never);
+        await integration.hooks['astro:routes:resolved']?.({
+          routes: [{ isPrerendered: false }],
+        } as never);
+        await expect(
+          integration.hooks['astro:build:done']?.({
+            dir: pathToFileURL(`${root}/dist/client/`),
+          } as never)
+        ).rejects.toThrow();
+        expect(mockZephyrEngine.upload_assets).not.toHaveBeenCalled();
+        expect(extractAstroAssetsFromBuildHook).not.toHaveBeenCalled();
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+    it('publishes Cloudflare SSR output with the generated entrypoint and requirements', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'zephyr-astro-ssr-hook-'));
+      try {
+        await mkdir(join(root, '.wrangler/deploy'), { recursive: true });
+        await mkdir(join(root, 'dist/server'), { recursive: true });
+        await mkdir(join(root, 'dist/client'), { recursive: true });
+        await writeFile(
+          join(root, '.wrangler/deploy/config.json'),
+          JSON.stringify({ configPath: '../../dist/server/wrangler.json' })
+        );
+        await writeFile(
+          join(root, 'dist/server/wrangler.json'),
+          JSON.stringify({
+            main: 'entry.mjs',
+            compatibility_date: '2026-10-28',
+            assets: { binding: 'ASSETS', directory: '../client' },
+            d1_databases: [{ binding: 'DB' }],
+            triggers: { crons: ['* * * * *'] },
+          })
+        );
+        await writeFile(
+          join(root, 'dist/server/entry.mjs'),
+          'export default {fetch(){return new Response("server")}}'
+        );
+        await writeFile(join(root, 'dist/client/admin.js'), 'console.log("admin")');
+        const integration = withZephyr();
+        await integration.hooks['astro:config:done']?.({
+          config: {
+            root: pathToFileURL(`${root}/`),
+            output: 'server',
+            adapter: { name: '@astrojs/cloudflare' },
+          },
+        } as never);
+        await integration.hooks['astro:build:done']?.({
+          dir: pathToFileURL(`${root}/dist/client/`),
+        } as never);
+        const upload = mockZephyrEngine.upload_assets.mock.calls[0]?.[0];
+        expect(upload.snapshotType).toBe('ssr');
+        expect(upload.entrypoint).toBe('server/entry.mjs');
+        expect(upload.cloudflare.bindings).toEqual([{ name: 'DB', type: 'd1' }]);
+        expect(upload.cloudflare.crons).toEqual(['* * * * *']);
+        expect(
+          Object.values(upload.assetsMap)
+            .map((a) => (a as { path: string }).path)
+            .sort()
+        ).toEqual(['client/admin.js', 'server/entry.mjs']);
+        expect(extractAstroAssetsFromBuildHook).not.toHaveBeenCalled();
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
+
+    it('fails incomplete SSR builds even when ordinary deployment errors are configured to log', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'zephyr-astro-ssr-missing-'));
+      try {
+        const integration = withZephyr();
+        await integration.hooks['astro:config:done']?.({
+          config: {
+            root: pathToFileURL(`${root}/`),
+            output: 'server',
+            adapter: { name: '@astrojs/cloudflare' },
+          },
+        } as never);
+        await expect(
+          integration.hooks['astro:build:done']?.({
+            dir: pathToFileURL(`${root}/dist/client/`),
+          } as never)
+        ).rejects.toThrow();
+        expect(mockZephyrEngine.upload_assets).not.toHaveBeenCalled();
+        expect(mockZephyrEngine.build_failed).toHaveBeenCalled();
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    });
     it('rejects an unsupported untyped target before creating an engine', () => {
       expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
         'withZephyr({ target }) must be one of'

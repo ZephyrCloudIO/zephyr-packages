@@ -59,6 +59,7 @@
     "test": "rstest run"
   },
   "dependencies": {
+    "es-module-lexer": "1.7.0",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },

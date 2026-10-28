@@ -37,6 +37,29 @@ async function ssrSnapshot(baseHref: string) {
 }
 
 describe('createSnapshot baseHref entrypoint handling', () => {
+  it('keeps Cloudflare asset mounts aligned with rebased module paths', async () => {
+    const entry = zeBuildAssets({ filepath: 'server/entry.mjs', content: 'server' });
+    const page = zeBuildAssets({ filepath: 'client/index.html', content: 'home' });
+    const cloudflare = {
+      schemaVersion: 1 as const,
+      compatibilityDate: '2026-10-23',
+      compatibilityFlags: ['nodejs_compat'],
+      bindings: [],
+      assets: { directory: 'client', binding: 'ASSETS', runWorkerFirst: false },
+      crons: [],
+    };
+    const snapshot = await createSnapshot(engine('/company/'), {
+      mfConfig: undefined,
+      assets: { [entry.hash]: entry, [page.hash]: page },
+      snapshotType: 'ssr',
+      entrypoint: entry.path,
+      cloudflare,
+    });
+    expect(snapshot.entrypoint).toBe('company/server/entry.mjs');
+    expect(snapshot.cloudflare?.assets.directory).toBe('company/client');
+    expect(snapshot.assets).toHaveProperty('company/client/index.html');
+    expect(cloudflare.assets.directory).toBe('client');
+  });
   it('retains every federation config in the snapshot metadata', async () => {
     const asset = zeBuildAssets({
       filepath: 'targets/desktop/remoteEntry.mjs',

@@ -24,6 +24,7 @@ import {
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from './internal/extract-astro-assets-map';
+import { collectCloudflareOutput } from './internal/cloudflare-output';
 
 type AstroBuildDoneParams = HookParameters<'astro:build:done'> & {
   assets?: Record<string, unknown> | Map<string, unknown> | Array<unknown>;
@@ -154,6 +155,9 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
   const hooks = options?.hooks;
   let cachedSpecifier: string | undefined;
+  let cloudflareRoot: string | undefined;
+  let projectRoot: string | undefined;
+  let adapterName: string | undefined;
 
   const getEnvSpecifier = async (): Promise<string> => {
     if (!cachedSpecifier) {
@@ -275,6 +279,14 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
       'astro:config:done': async ({ config }: HookParameters<'astro:config:done'>) => {
         // config.root is a URL object, convert to file path
         const contextPath = fileURLToPath(config.root);
+        projectRoot = contextPath;
+        adapterName = config.adapter?.name;
+        if (config.output === 'server' && options?.target !== 'tap-app') {
+          if (config.adapter?.name !== '@astrojs/cloudflare') {
+            throw new Error('Zephyr Astro SSR requires the @astrojs/cloudflare adapter.');
+          }
+          cloudflareRoot = contextPath;
+        }
         // Initialize ZephyrEngine with Astro context
         zephyr_defer_create({
           builder: 'astro',
@@ -304,11 +316,12 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
 
           // Extract assets from params if available (Astro v5+), fallback to filesystem walking
           const assets = (params as AstroBuildDoneParams).assets;
-          const assetsMap = await extractAstroAssetsFromBuildHook(
-            assets,
-            outputPath,
-            options?.target
-          );
+          const cloudflareOutput = cloudflareRoot
+            ? await collectCloudflareOutput(cloudflareRoot)
+            : undefined;
+          const assetsMap =
+            cloudflareOutput?.assetsMap ??
+            (await extractAstroAssetsFromBuildHook(assets, outputPath, options?.target));
 
           // Upload assets and build stats
           assertTapModuleFederationMetadata(
@@ -327,17 +340,37 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
             ...(mfConfig === undefined ? {} : { mfConfig }),
             ...(options?.mfConfigs === undefined ? {} : { mfConfigs: options.mfConfigs }),
             hooks,
+            ...(cloudflareOutput
+              ? {
+                  snapshotType: 'ssr' as const,
+                  entrypoint: cloudflareOutput.entrypoint,
+                  cloudflare: cloudflareOutput.deployment,
+                }
+              : {}),
           });
 
           // Mark build as finished
           buildInProgress = false;
           await zephyr_engine.build_finished();
         } catch (error) {
+          if (cloudflareRoot) throw error;
           handleGlobalError(error);
         } finally {
           if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
             zephyr_engine?.build_failed();
           }
+        }
+      },
+      'astro:routes:resolved': ({ routes }) => {
+        if (
+          options?.target !== 'tap-app' &&
+          routes.some((route) => route.isPrerendered === false)
+        ) {
+          if (adapterName !== '@astrojs/cloudflare')
+            throw new Error(
+              'Zephyr Astro on-demand routes require the @astrojs/cloudflare adapter.'
+            );
+          cloudflareRoot = projectRoot;
         }
       },
     },

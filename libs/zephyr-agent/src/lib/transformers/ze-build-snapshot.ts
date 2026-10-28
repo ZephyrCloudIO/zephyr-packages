@@ -1,5 +1,6 @@
 import {
   type Snapshot,
+  type CloudflareDeployment,
   type SnapshotAsset,
   type ZeBuildAssetsMap,
   type ZephyrPluginOptions,
@@ -23,11 +24,19 @@ interface CreateSnapshotProps {
   // SSR-specific parameter
   snapshotType?: 'csr' | 'ssr';
   entrypoint?: string;
+  cloudflare?: CloudflareDeployment;
 }
 
 export async function createSnapshot(
   zephyr_engine: ZephyrEngine,
-  { mfConfig, mfConfigs, assets, snapshotType, entrypoint }: CreateSnapshotProps
+  {
+    mfConfig,
+    mfConfigs,
+    assets,
+    snapshotType,
+    entrypoint,
+    cloudflare,
+  }: CreateSnapshotProps
 ): Promise<Snapshot> {
   const buildId = await zephyr_engine.build_id;
 
@@ -53,11 +62,16 @@ export async function createSnapshot(
     ? `${options.git_branch}.${options.buildId}`
     : `${options.username}.${options.buildId}`;
 
-  const basedAssets = applyBaseHrefToAssets(
-    assets,
-    zephyr_engine.buildProperties.baseHref
-  );
   const normalizedBaseHref = normalizeBasePath(zephyr_engine.buildProperties.baseHref);
+  const basedAssets =
+    cloudflare && normalizedBaseHref
+      ? Object.fromEntries(
+          Object.entries(assets).map(([hash, asset]) => [
+            hash,
+            { ...asset, path: `${normalizedBaseHref}/${asset.path}` },
+          ])
+        )
+      : applyBaseHrefToAssets(assets, zephyr_engine.buildProperties.baseHref);
   const basedEntrypoint =
     entrypoint && (snapshotType === 'ssr' || zephyr_engine.env.ssr)
       ? applyBaseHrefToPath(entrypoint, normalizedBaseHref)
@@ -106,6 +120,15 @@ export async function createSnapshot(
     ...(snapshotType && { type: snapshotType }),
     // Add entrypoint field if provided
     ...(basedEntrypoint && { entrypoint: basedEntrypoint }),
+    ...(cloudflare && {
+      cloudflare: {
+        ...cloudflare,
+        assets: {
+          ...cloudflare.assets,
+          directory: applyBaseHrefToPath(cloudflare.assets.directory, normalizedBaseHref),
+        },
+      },
+    }),
   };
 
   // Set snapshot type if SSR flag is enabled

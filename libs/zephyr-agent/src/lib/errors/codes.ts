@@ -556,7 +556,7 @@ Were the required packages in Module federation plugin installed and included in
 
   /** Edge still reports build files as missing after they were re-uploaded. */
   ERR_SNAPSHOT_MISSING_ASSETS: {
-    id: '038',
+    id: '039',
     message: `
 
 The snapshot upload was rejected because {{ count }} build file(s) it references are no longer stored on your Edge Provider. Zephyr build retention removes files that no remaining build uses.
@@ -569,7 +569,7 @@ Re-uploading the missing files did not resolve it. Please rebuild your applicati
 
   /** Edge reports missing files that are not part of the current build output. */
   ERR_SNAPSHOT_MISSING_ASSETS_NOT_IN_BUILD: {
-    id: '039',
+    id: '040',
     message: `
 
 The snapshot upload was rejected because {{ count }} build file(s) it references are no longer stored on your Edge Provider (removed by Zephyr build retention), and they are not part of the current build output, so they cannot be re-uploaded.

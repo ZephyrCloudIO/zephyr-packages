@@ -364,6 +364,7 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
       'astro:routes:resolved': ({ routes }) => {
         if (
           options?.target !== 'tap-app' &&
+          adapterName &&
           routes.some((route) => route.isPrerendered === false)
         ) {
           if (adapterName !== '@astrojs/cloudflare')

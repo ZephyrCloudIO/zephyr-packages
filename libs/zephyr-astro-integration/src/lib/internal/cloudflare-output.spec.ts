@@ -132,4 +132,17 @@ describe('Cloudflare Astro output', () => {
       Object.values(output.assetsMap).every((a) => !/\.env|\.map|wrangler/.test(a.path))
     ).toBe(true);
   });
+  it('retains public well-known documents needed for protocol discovery', async () => {
+    await mkdir(join(root, 'dist/client/.well-known'));
+    await writeFile(
+      join(root, 'dist/client/.well-known/oauth-protected-resource.json'),
+      '{"resource":"https://example.com"}'
+    );
+    const output = await collectCloudflareOutput(root);
+    expect(
+      Object.values(output.assetsMap).some(
+        (a) => a.path === 'client/.well-known/oauth-protected-resource.json'
+      )
+    ).toBe(true);
+  });
 });

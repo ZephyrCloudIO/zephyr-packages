@@ -188,7 +188,11 @@ export async function collectCloudflareOutput(
       const file = join(directory, item.name);
       if (item.isSymbolicLink())
         throw new Error('Cloudflare deployment output contains a symlink.');
-      if (item.name.startsWith('.') || item.name === 'node_modules') continue;
+      if (
+        (item.name.startsWith('.') && !['.well-known', '.vite'].includes(item.name)) ||
+        item.name === 'node_modules'
+      )
+        continue;
       if (item.isDirectory()) {
         await walk(file, mount, base);
         continue;

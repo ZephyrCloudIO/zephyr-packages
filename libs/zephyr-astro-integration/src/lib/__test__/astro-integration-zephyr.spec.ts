@@ -130,6 +130,18 @@ describe('withZephyr', () => {
   });
 
   describe('Basic Integration Structure', () => {
+    it('keeps adapter-free static sites working when Astro reports an internal on-demand route', async () => {
+      const integration = withZephyr();
+      await integration.hooks['astro:config:done']?.({
+        config: { root: TEST_PROJECT_URL, output: 'static' },
+      } as never);
+      await integration.hooks['astro:routes:resolved']?.({
+        routes: [{ isPrerendered: false, origin: 'internal' }],
+      } as never);
+      await integration.hooks['astro:build:done']?.({ dir: TEST_DIST_URL } as never);
+      expect(extractAstroAssetsFromBuildHook).toHaveBeenCalled();
+      expect(mockZephyrEngine.upload_assets).toHaveBeenCalled();
+    });
     it('does not silently publish on-demand routes as static assets', async () => {
       const root = await mkdtemp(join(tmpdir(), 'zephyr-astro-on-demand-'));
       try {

@@ -102,11 +102,9 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
       // Full URLs (container bundles + remote split bundles) go through cache.
       // Relative paths are host's own split bundles — handled by Expo directly.
       if (/^https?:\/\//.test(bundlePath)) {
-        const { status } = await cacheLayer.loadBundle(bundlePath);
-        if (status === 'skipped') {
-          await fallback(bundlePath);
-        }
-        // cache-hit or downloaded: bundle already eval'd by cache layer
+        // Remote code must pass through the integrity-enforcing loader. Any failure
+        // rejects this call instead of invoking the unverified network fallback.
+        await cacheLayer.loadBundle(bundlePath);
       } else {
         await fallback(bundlePath);
       }
@@ -183,7 +181,7 @@ export async function checkForUpdates(
   options?: CheckForUpdatesOptions
 ): Promise<CheckForUpdatesResult> {
   if (!cacheLayerInstance) {
-    return { updated: 0, checked: 0, applied: false };
+    return { updated: 0, checked: 0, applied: false, outcomes: [] };
   }
   return cacheLayerInstance.checkForUpdates(options);
 }
@@ -199,4 +197,17 @@ export function stopUpdatePolling(): void {
 export async function clearCache(): Promise<void> {
   if (!cacheLayerInstance) return;
   await cacheLayerInstance.clearCache();
+}
+
+export async function rollback(remoteNameOrManifestId: string) {
+  if (!cacheLayerInstance) {
+    return {
+      manifestId: remoteNameOrManifestId,
+      remoteName: remoteNameOrManifestId,
+      status: 'failed' as const,
+      reason: 'rollback-failure' as const,
+      artifacts: [],
+    };
+  }
+  return cacheLayerInstance.rollback(remoteNameOrManifestId);
 }

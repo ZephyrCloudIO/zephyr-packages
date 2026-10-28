@@ -17,6 +17,13 @@ export interface ZephyrGlobalNamespace {
 export interface ZephyrRuntimeNamespace {
   /** Namespace reserved for zephyr-native-cache integrations. */
   nativeCache?: ZephyrNativeCacheNamespace;
+
+  /**
+   * Public `ZE_PUBLIC_*` environment values read by compiled mobile code, keyed by Zephyr
+   * application UID. Values are strings; missing keys fall back to the build-time value
+   * compiled into the bundle.
+   */
+  env?: Record<string, Readonly<Record<string, string>>>;
   [namespace: string]: unknown;
 }
 
@@ -42,7 +49,18 @@ export interface ZephyrNativeCacheControls {
 export interface ZephyrNativeCacheRefs {
   cacheLayer?: unknown;
   bundleHashes?: Record<string, string>;
+  /**
+   * Set by zephyr-native-cache `register()`; the Zephyr env runtime plugin persists
+   * manifests here when present.
+   */
+  envStorage?: ZephyrNativeEnvStorage;
   [key: string]: unknown;
+}
+
+/** Persistent string store for the last Zephyr environment manifest loaded per URL. */
+export interface ZephyrNativeEnvStorage {
+  getItem(key: string): Promise<string | undefined>;
+  setItem(key: string, value: string): Promise<void>;
 }
 
 export interface ZephyrNativeCacheState {

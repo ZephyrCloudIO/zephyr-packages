@@ -1,10 +1,14 @@
-import { isZephyrDisabled, logZephyrDisabled, ZephyrError, ZeErrors } from 'zephyr-agent';
+import {
+  collectZEPublicVars,
+  isZephyrDisabled,
+  logZephyrDisabled,
+  ZephyrError,
+  ZeErrors,
+  ze_log,
+} from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
-import {
-  assertMetroNativeBuildTarget,
-  type MetroNativeBuildTarget,
-} from './native-target';
+import { assertNativeBuildTarget, type NativeBuildTarget } from 'zephyr-native-internal';
 import { ZephyrMetroPlugin } from './zephyr-metro-plugin';
 
 export type MetroConfig = Record<string, unknown>;
@@ -13,7 +17,7 @@ export type MetroFederationConfig = Pick<ZephyrPluginOptions, 'mfConfig'>['mfCon
 interface MetroBundleOptions {
   dev?: boolean;
   mode?: string | boolean;
-  platform: MetroNativeBuildTarget;
+  platform: NativeBuildTarget;
 }
 
 interface MetroConfigOptions extends MetroConfig {
@@ -28,6 +32,50 @@ interface MetroCliOptions {
 
 type MetroCommandArgs = [[MetroBundleOptions], MetroConfigOptions, MetroCliOptions];
 
+/** Warns about Metro setups that cannot deliver environment overrides on device. */
+function warnNativeEnvSetup(): void {
+  if (
+    !global.__ZEPHYR_METRO_ENV_REWRITE__ &&
+    Object.keys(collectZEPublicVars(process.env)).length > 0
+  ) {
+    ze_log.app(
+      'Zephyr native env: metro.config.js does not use withZephyr; ZE_PUBLIC_* reads are not rewritten and cannot receive environment overrides'
+    );
+  }
+}
+
+/**
+ * Runs `bundle` while every Module Federation options object MF Metro publishes on
+ * `global.__METRO_FEDERATION_CONFIG` receives Zephyr's overrides. MF's bundle commands
+ * reload the Metro config; for function-exported configs that rebuilds the options object
+ * its runtime modules are generated from, after `beforeBuild` already ran.
+ */
+async function withFederationOverrides<T>(
+  plugin: ZephyrMetroPlugin,
+  bundle: () => Promise<T>
+): Promise<T> {
+  let current = global.__METRO_FEDERATION_CONFIG;
+  Object.defineProperty(globalThis, '__METRO_FEDERATION_CONFIG', {
+    configurable: true,
+    enumerable: true,
+    get: () => current,
+    set: (next: typeof current) => {
+      plugin.applyToFederationConfig(next);
+      current = next;
+    },
+  });
+  try {
+    return await bundle();
+  } finally {
+    Object.defineProperty(globalThis, '__METRO_FEDERATION_CONFIG', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: current,
+    });
+  }
+}
+
 export async function zephyrCommandWrapper(
   bundleFederatedRemote: (...args: MetroCommandArgs) => Promise<any>,
   loadMetroConfig: (config: MetroConfig, options: MetroCliOptions) => Promise<any>,
@@ -38,7 +86,7 @@ export async function zephyrCommandWrapper(
 
     // Keep this outside the error wrapper: an unsupported platform must stop
     // before Metro config loading, dependency resolution, or asset publication.
-    assertMetroNativeBuildTarget(platform, 'Metro bundle platform');
+    assertNativeBuildTarget(platform, 'Metro bundle platform', 'metro');
 
     let zephyrMetroPlugin: ZephyrMetroPlugin | undefined;
     let wrapperOwnsRollback = false;
@@ -79,6 +127,7 @@ export async function zephyrCommandWrapper(
       if (!(global as any).__METRO_FEDERATION_CONFIG) {
         throw new ZephyrError(ERR_MISSING_METRO_FEDERATION_CONFIG);
       }
+      warnNativeEnvSetup();
 
       zephyrMetroPlugin = new ZephyrMetroPlugin({
         platform,
@@ -93,7 +142,9 @@ export async function zephyrCommandWrapper(
 
       updateManifest();
 
-      const res = await bundleFederatedRemote(...args);
+      const res = await withFederationOverrides(zephyrMetroPlugin, () =>
+        bundleFederatedRemote(...args)
+      );
 
       // afterBuild owns rollback from this point onward.
       wrapperOwnsRollback = false;

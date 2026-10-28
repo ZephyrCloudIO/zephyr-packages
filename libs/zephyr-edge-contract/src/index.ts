@@ -56,6 +56,7 @@ export type {
   ZephyrNativeCacheNamespace,
   ZephyrNativeCacheRefs,
   ZephyrNativeCacheState,
+  ZephyrNativeEnvStorage,
   ZephyrRuntimeNamespace,
 } from './lib/zephyr-global';
 export {

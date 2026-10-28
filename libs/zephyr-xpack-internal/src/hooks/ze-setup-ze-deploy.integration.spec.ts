@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, rs } from '@rstest/core';
-import type { ZephyrEngine } from 'zephyr-agent';
+import { ZeErrors, ZephyrError, type ZephyrEngine } from 'zephyr-agent';
 import type { Source } from 'zephyr-edge-contract';
 import { setupZeDeploy } from './ze-setup-ze-deploy';
 import { XPackBuildCoordinator } from '../xpack-extract/xpack-build-coordinator';
+import { onDeploymentDone } from '../lifecycle-events';
 
 rs.mock('../federation-dashboard-legacy/get-build-stats', () => ({
   getBuildStats: rs.fn(async () => ({ version: 'snapshot', app: { buildId: 'build' } })),
@@ -73,11 +74,15 @@ function compilation(name: string) {
 describe('coordinated deploy error policy', () => {
   afterEach(() => rs.restoreAllMocks());
 
-  it.each([false, true])(
-    'handles a late sibling after a build-ID outage with failBuild=%s and recovers',
-    async (failBuild) => {
+  it.each([
+    { failBuild: false, overlappingRecovery: false },
+    { failBuild: true, overlappingRecovery: false },
+    { failBuild: false, overlappingRecovery: true },
+  ])(
+    'handles a late sibling after an outage: %j',
+    async ({ failBuild, overlappingRecovery }) => {
       rs.spyOn(console, 'log').mockImplementation(() => undefined);
-      rs.spyOn(console, 'error').mockImplementation(() => undefined);
+      const errors = rs.spyOn(console, 'error').mockImplementation(() => undefined);
       const engine = {
         application_uid: 'coordinated.test',
         env: { target: 'web' },
@@ -104,16 +109,40 @@ describe('coordinated deploy error policy', () => {
       expect(engine.upload_assets).toHaveBeenCalledTimes(1);
 
       client.invalidate();
-      rs.mocked(engine.start_new_build).mockRejectedValueOnce(
-        new Error('build-ID outage')
-      );
+      const outage = new ZephyrError(ZeErrors.ERR_ZEPHYR_UNREACHABLE, {
+        method: 'GET',
+        url: 'https://example.test/build-id',
+        detail: 'build-ID outage',
+        hint: 'Retry later.',
+      });
+      rs.mocked(engine.start_new_build).mockRejectedValueOnce(outage);
       const upload = client.begin().upload();
       if (failBuild) {
-        await expect(upload).rejects.toThrow('build-ID outage');
-        expect(() => server.begin()).toThrow('belongs to a failed logical build');
+        await expect(upload).rejects.toBe(outage);
+        expect(() => server.begin()).toThrow(outage);
       } else {
         await expect(upload).resolves.toBeUndefined();
+        let recovery: ReturnType<typeof compilation> | undefined;
+        if (overlappingRecovery) {
+          client.invalidate();
+          recovery = client.begin();
+        }
+        const done = onDeploymentDone();
         await server.begin().upload();
+        await expect(done).resolves.toBeUndefined();
+        expect(errors).toHaveBeenCalledTimes(2);
+        for (const call of errors.mock.calls) {
+          expect(call.join(' ')).toContain('ZE50001');
+          expect(call.join(' ')).not.toContain('ZE20024');
+        }
+        if (recovery) {
+          await recovery.upload();
+          expect(engine.upload_assets).toHaveBeenCalledTimes(1);
+          server.invalidate();
+          await server.begin().upload();
+          expect(engine.upload_assets).toHaveBeenCalledTimes(2);
+          return;
+        }
       }
       expect(engine.upload_assets).toHaveBeenCalledTimes(1);
 

@@ -1,5 +1,6 @@
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
 import type { ModuleFederationPlugin } from '../xpack.types';
+import { ze_log } from 'zephyr-agent';
 
 interface PluginHolder {
   plugins?: unknown[];
@@ -20,14 +21,30 @@ function snapshotField(owner: object, key: string): () => void {
       : undefined;
   return () => {
     if (Array.isArray(original) && Array.isArray(contents)) {
-      original.splice(0, original.length, ...contents);
+      if (
+        original.length !== contents.length ||
+        original.some((value, index) => value !== contents[index])
+      )
+        original.splice(0, original.length, ...contents);
     } else if (original && typeof original === 'object' && contents) {
-      for (const field of Object.keys(original)) Reflect.deleteProperty(original, field);
-      Object.assign(original, contents);
+      for (const field of Object.keys(original)) {
+        if (!Object.hasOwn(contents, field)) Reflect.deleteProperty(original, field);
+      }
+      for (const [field, value] of Object.entries(contents)) {
+        if (Reflect.get(original, field) !== value) Reflect.set(original, field, value);
+      }
     }
     if (hadOwn) Reflect.set(owner, key, original);
     else Reflect.deleteProperty(owner, key);
   };
+}
+
+function restoreSafely(restore: () => void): void {
+  try {
+    restore();
+  } catch (error: unknown) {
+    ze_log.mf('Failed to restore Zephyr plugin configuration:', error);
+  }
 }
 
 /** Remember plugin lists and the federation fields changed during Zephyr setup. */
@@ -70,14 +87,16 @@ export function restorePlugins(
 ): void {
   for (const [index, config] of configs.entries()) {
     const entry = snapshot[index];
-    for (const restore of entry?.restoreFederation ?? []) restore();
+    for (const restore of entry?.restoreFederation ?? []) restoreSafely(restore);
     const original = entry?.plugins;
-    if (original === undefined) {
-      delete config.plugins;
-    } else if (config.plugins) {
-      config.plugins.splice(0, config.plugins.length, ...original);
-    } else {
-      config.plugins = [...original];
-    }
+    restoreSafely(() => {
+      if (original === undefined) {
+        delete config.plugins;
+      } else if (config.plugins) {
+        config.plugins.splice(0, config.plugins.length, ...original);
+      } else {
+        config.plugins = [...original];
+      }
+    });
   }
 }

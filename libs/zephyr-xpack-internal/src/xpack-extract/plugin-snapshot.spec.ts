@@ -4,6 +4,45 @@ import { configureZephyrRuntimePlugin } from './runtime-plugin-insert';
 import type { ModuleFederationPlugin, XFederatedRemotesConfig } from '../xpack.types';
 
 describe('plugin snapshots', () => {
+  it('ignores non-federation plugins without a prototype', () => {
+    const plugin = Object.assign(Object.create(null), { apply() {} });
+    const config = { plugins: [plugin] };
+    const snapshot = snapshotPlugins([config]);
+    expect(() => restorePlugins([config], snapshot)).not.toThrow();
+    expect(config.plugins).toEqual([plugin]);
+  });
+
+  it('restores other fields and plugin lists when an array cannot be restored', () => {
+    const options = {
+      name: 'host',
+      remotes: { remote: 'remote@http://localhost:3001/remoteEntry.js' },
+      runtimePlugins: ['user-runtime'],
+    };
+    const plugin = { name: 'ModuleFederationPlugin', apply() {}, _options: options };
+    const config = { plugins: [plugin] };
+    const snapshot = snapshotPlugins([config]);
+    options.runtimePlugins.push('zephyr-runtime');
+    Object.freeze(options.runtimePlugins);
+    options.remotes.remote = 'remote@https://example.test/remoteEntry.js';
+    config.plugins.push({ name: 'ZephyrPlugin', apply() {}, _options: options });
+
+    expect(() => restorePlugins([config], snapshot)).not.toThrow();
+    expect(options.remotes.remote).toBe('remote@http://localhost:3001/remoteEntry.js');
+    expect(config.plugins).toEqual([plugin]);
+  });
+
+  it('leaves unchanged frozen federation fields intact', () => {
+    const options = Object.freeze({
+      name: 'host',
+      remotes: Object.freeze({ remote: 'remote@http://localhost:3001/remoteEntry.js' }),
+      runtimePlugins: Object.freeze(['user-runtime']),
+    });
+    const config = { plugins: [{ name: 'ModuleFederationPlugin', _options: options }] };
+    const snapshot = snapshotPlugins([config]);
+    expect(() => restorePlugins([config], snapshot)).not.toThrow();
+    expect(config.plugins[0]?._options).toBe(options);
+  });
+
   it.each(['_options', 'options', 'config'] as const)(
     'restores mutated remotes and runtime plugins in %s without replacing the plugin',
     (key) => {

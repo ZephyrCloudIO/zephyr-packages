@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Configuration } from 'webpack';
 import type { ZeResolvedDependency } from 'zephyr-agent';
+import {
+  snapshotPlugins,
+  restorePlugins,
+} from '../../../zephyr-xpack-internal/src/xpack-extract/plugin-snapshot';
 
 const mocks = rs.hoisted(() => {
   const engine = {
@@ -115,6 +119,44 @@ describe('Webpack withZephyr compiler arrays', () => {
     ]);
   });
 
+  it('restores actual nested federation state after partial array configuration', async () => {
+    const remotes = { remote: 'remote@http://localhost:3001/remoteEntry.js' };
+    const runtimePlugins = ['user-runtime'];
+    const federation = {
+      name: 'ModuleFederationPlugin',
+      apply() {},
+      _options: { name: 'host', remotes, runtimePlugins },
+    };
+    const configs = [{ name: 'client', plugins: [federation] }, { name: 'broken' }];
+    mocks.snapshotPlugins.mockImplementationOnce(snapshotPlugins as never);
+    mocks.restorePlugins.mockImplementationOnce(restorePlugins);
+    mocks.mutWebpackFederatedRemotesConfig.mockImplementationOnce(() => {
+      remotes.remote = 'remote@https://example.test/remoteEntry.js';
+      runtimePlugins.push('zephyr-runtime');
+    });
+
+    await expect(withZephyr({ failBuild: false })(configs)).resolves.toBe(configs);
+
+    expect(configs[0]?.plugins).toEqual([federation]);
+    expect(remotes.remote).toBe('remote@http://localhost:3001/remoteEntry.js');
+    expect(runtimePlugins).toEqual(['user-runtime']);
+  });
+
+  it.each([false, true])(
+    'handles snapshot errors with failBuild=%s',
+    async (failBuild) => {
+      const error = new Error('snapshot failed');
+      mocks.snapshotPlugins.mockImplementationOnce(() => {
+        throw error;
+      });
+      const configs = [{ name: 'client' }, { name: 'server' }];
+      const result = withZephyr({ failBuild })(configs);
+      if (failBuild) await expect(result).rejects.toBe(error);
+      else await expect(result).resolves.toBe(configs);
+      expect(mocks.create).not.toHaveBeenCalled();
+    }
+  );
+
   it('sets tap-app before resolving a direct Webpack build', async () => {
     const config = { name: 'client', context: '/repo' } as Configuration;
 
@@ -209,7 +251,7 @@ describe('Webpack withZephyr compiler arrays', () => {
     });
   });
 
-  it('rolls back direct configuration errors before preserving fail-open semantics', async () => {
+  it('releases the direct build before logging configuration errors', async () => {
     const config = { name: 'broken', context: '/repo' } as Configuration;
 
     await expect(withZephyr({ failBuild: false })(config)).resolves.toBe(config);

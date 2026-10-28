@@ -72,9 +72,10 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
       return config;
     }
 
-    const pluginSnapshot = snapshotPlugins(config);
+    let pluginSnapshot: ReturnType<typeof snapshotPlugins> | undefined;
     let engine: ZephyrEngine | undefined;
     try {
+      pluginSnapshot = snapshotPlugins(config);
       engine = await ZephyrEngine.create({
         builder: 'webpack',
         context: config[0]?.context,
@@ -98,7 +99,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
     } catch (error: unknown) {
       // Without ZE_FAIL_BUILD the bundle is built without Zephyr, as for a single config.
       // A half-configured compiler array would wait for compilers that never report.
-      restorePlugins(config, pluginSnapshot);
+      if (pluginSnapshot) restorePlugins(config, pluginSnapshot);
       if (engine?.hasActiveBuild) engine.build_failed();
       handleGlobalError(error, { failBuild: zephyrPluginOptions?.failBuild });
     }

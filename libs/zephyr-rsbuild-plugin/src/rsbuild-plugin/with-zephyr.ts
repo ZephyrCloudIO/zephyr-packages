@@ -51,9 +51,10 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             disableZephyrForXpack(bundlerConfigs);
             return;
           }
-          const pluginSnapshot = snapshotPlugins(bundlerConfigs);
+          let pluginSnapshot: ReturnType<typeof snapshotPlugins> | undefined;
           let engine: ZephyrEngine | undefined;
           try {
+            pluginSnapshot = snapshotPlugins(bundlerConfigs);
             engine = await ZephyrEngine.create({
               builder: 'rspack',
               context: bundlerConfigs[0]?.context,
@@ -96,7 +97,7 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             }
           } catch (error: unknown) {
             // Without ZE_FAIL_BUILD the bundle is built without Zephyr.
-            restorePlugins(bundlerConfigs, pluginSnapshot);
+            if (pluginSnapshot) restorePlugins(bundlerConfigs, pluginSnapshot);
             if (engine?.hasActiveBuild) engine.build_failed();
             handleGlobalError(error);
           }

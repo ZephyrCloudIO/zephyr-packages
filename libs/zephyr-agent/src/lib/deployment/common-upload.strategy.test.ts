@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Snapshot, ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
+import type { AppHashCache } from '../node-persist/hash-cache';
 import { safeStringifyForLogging } from '../security/redaction';
 
 const mocks = rs.hoisted(() => ({
@@ -27,6 +28,7 @@ import { commonUploadStrategy } from './common-upload.strategy';
 
 const EDGE_URL = 'https://edge.example';
 const VERSION_URL = 'https://edge.example/version';
+const FETCHED_AT = Date.now();
 
 const appConfig = {
   application_uid: 'app-id',
@@ -122,8 +124,9 @@ describe('commonUploadStrategy missing assets recovery', () => {
     rs.clearAllMocks();
     mocks.getApplicationConfiguration.mockResolvedValue(appConfig);
     mocks.uploadBuildStatsAndEnableEnvs.mockResolvedValue(undefined);
-    let hashCache: { hashes: string[] } | undefined = {
+    let hashCache: AppHashCache | undefined = {
       hashes: ['hash-0', 'hash-1', 'hash-2'],
+      fetched_at: FETCHED_AT,
     };
     mocks.getAppHashCache.mockImplementation(async () => hashCache);
     mocks.setAppHashCache.mockImplementation(async (_key, value) => {
@@ -139,6 +142,7 @@ describe('commonUploadStrategy missing assets recovery', () => {
 
     expect(mocks.setAppHashCache).toHaveBeenCalledWith('app-id-edge.example', {
       hashes: ['hash-0'],
+      fetched_at: FETCHED_AT,
     });
     expect(fileUploadHashes().sort()).toEqual(['hash-1', 'hash-2']);
     expect(
@@ -181,6 +185,7 @@ describe('commonUploadStrategy missing assets recovery', () => {
     expect(fileUploadHashes()).toEqual(['hash-3', 'hash-1']);
     expect(mocks.setAppHashCache).toHaveBeenLastCalledWith('app-id-edge.example', {
       hashes: ['hash-0', 'hash-2', 'hash-3'],
+      fetched_at: FETCHED_AT,
     });
   });
 

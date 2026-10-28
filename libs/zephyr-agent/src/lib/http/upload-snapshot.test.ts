@@ -320,17 +320,18 @@ describe('uploadSnapshot missing assets recovery', () => {
     expect(onMissingAssets).toHaveBeenCalledTimes(1);
   });
 
-  it('fails with a retention error when restored assets stay missing after 3 retries', async () => {
+  it('fails with a retention error when restored assets stay missing for about a minute', async () => {
     rs.useFakeTimers();
     const onMissingAssets = rs.fn().mockResolvedValue(undefined);
     mocks.makeRequest.mockResolvedValue(missingAssetsReply(['asset-hash']));
 
     const result = uploadWithRestore(onMissingAssets);
 
+    // Retries at 0s, 1s, 3s, 8s, 23s and 63s after the restore: longer than a cached KV miss.
     await rs.advanceTimersByTimeAsync(1_000);
     expect(mocks.makeRequest).toHaveBeenCalledTimes(3);
-    await rs.advanceTimersByTimeAsync(1_999);
-    expect(mocks.makeRequest).toHaveBeenCalledTimes(3);
+    await rs.advanceTimersByTimeAsync(61_999);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(6);
     await rs.advanceTimersByTimeAsync(1);
     const error = await result;
 
@@ -338,7 +339,7 @@ describe('uploadSnapshot missing assets recovery', () => {
     expect((error as Error).message).toContain('build retention');
     expect((error as Error).message).toContain('rebuild');
     expect(onMissingAssets).toHaveBeenCalledTimes(1);
-    expect(mocks.makeRequest).toHaveBeenCalledTimes(4);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(7);
   });
 
   it('fails without waiting when a retry reports assets that were not restored', async () => {

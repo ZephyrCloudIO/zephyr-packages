@@ -22,10 +22,10 @@ const MISSING_ASSETS_RETRY_VALUE = 'retry';
 const MAX_REPORTED_HASHES = 20;
 /**
  * Delays before each snapshot retry after restoring missing files. The edge may store a
- * file and clear its deletion record after replying to the upload, so the first retry can
- * still see the file as missing.
+ * file and clear its deletion record after replying to the upload, and Cloudflare KV can
+ * serve a cached "not found" for up to 60s, so the retries span about a minute.
  */
-const MISSING_ASSETS_RETRY_DELAYS_MS = [0, 1_000, 2_000];
+const MISSING_ASSETS_RETRY_DELAYS_MS = [0, 1_000, 2_000, 5_000, 15_000, 40_000];
 
 export interface SnapshotMissingAssets {
   /** Content hashes (assetsMap keys) the edge reported as missing. */
@@ -104,7 +104,7 @@ export async function uploadSnapshot({
   /**
    * When set, the edge is asked to refuse a snapshot that references deleted files. A
    * `409 missing_assets` reply calls this handler and retries the target's snapshot
-   * upload up to 3 times while the edge still reports only restored files.
+   * upload for about a minute while the edge still reports only restored files.
    */
   onMissingAssets?: OnSnapshotMissingAssets;
 }): Promise<SnapshotUploadRes> {

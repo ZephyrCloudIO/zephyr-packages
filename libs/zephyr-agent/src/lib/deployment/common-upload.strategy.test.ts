@@ -196,7 +196,7 @@ describe('commonUploadStrategy missing assets recovery', () => {
   it('fails with a clear error when the retried snapshot is still rejected', async () => {
     rs.useFakeTimers();
     const { assetsMap } = createAssets(3);
-    mockEdge(...Array.from({ length: 4 }, () => missingReply(['hash-1'])));
+    mockEdge(...Array.from({ length: 7 }, () => missingReply(['hash-1'])));
 
     const result = runStrategy(assetsMap).catch((e: unknown) => e);
     await rs.runAllTimersAsync();
@@ -208,7 +208,7 @@ describe('commonUploadStrategy missing assets recovery', () => {
     expect(fileUploadHashes()).toEqual(['hash-1']);
     expect(
       mocks.makeRequest.mock.calls.filter(([url]) => snapshotRequest(url))
-    ).toHaveLength(4);
+    ).toHaveLength(7);
     expect(mocks.uploadBuildStatsAndEnableEnvs).not.toHaveBeenCalled();
   });
 

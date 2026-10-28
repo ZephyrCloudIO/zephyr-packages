@@ -2,6 +2,7 @@ import type { Configuration } from '@rspack/core';
 import {
   collectZEPublicVars,
   handleGlobalError,
+  isZephyrDisabled,
   ZephyrEngine,
   ze_log,
 } from 'zephyr-agent';
@@ -11,6 +12,7 @@ import {
 } from 'zephyr-native-internal';
 import {
   configureZephyrRuntimePlugin,
+  disableZephyrForXpack,
   extractFederatedConfig,
   extractFederatedDependencyPairs,
   extractLibraryType,
@@ -55,6 +57,11 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
         platform,
         mode: config.mode,
       });
+
+      // Skip mode: build the user's own config without any Zephyr step or request.
+      if (isZephyrDisabled()) {
+        return disableZephyrForXpack(userConfig);
+      }
 
       const updatedZephyrConfig = {
         ...zephyrPluginOptions,

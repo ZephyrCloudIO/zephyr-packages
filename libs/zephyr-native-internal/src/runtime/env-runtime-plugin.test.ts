@@ -10,6 +10,12 @@ type AfterResolveArgs = Parameters<
   NonNullable<ModuleFederationRuntimePlugin['afterResolve']>
 >[0];
 
+type BeforeRequestArgs = Parameters<
+  NonNullable<ModuleFederationRuntimePlugin['beforeRequest']>
+>[0];
+
+type TestRemote = { name: string; alias?: string; entry: string; type?: string };
+
 type Route = { status?: number; body?: unknown; hang?: boolean };
 
 const routes = new Map<string, Route>();
@@ -83,6 +89,21 @@ async function serveHost(
 ): Promise<void> {
   routes.set('/host/zephyr-manifest.json', { body: { dependencies, zeVars } });
   await resolveRemote('host', `${origin}/host/mf-manifest.json`);
+}
+
+/** Runs `beforeRequest` as the federation instance `instanceName` requesting `id`. */
+async function requestRemote(
+  instanceName: string,
+  remotes: TestRemote[],
+  id: string
+): Promise<void> {
+  const plugin = createNativeEnvRuntimePlugin({ host: HOST_UID });
+  const args = {
+    id,
+    options: { name: instanceName, remotes },
+  } as unknown as BeforeRequestArgs;
+  const result = await plugin.beforeRequest?.(args);
+  expect(result).toBe(args);
 }
 
 describe('zephyr env runtime plugin', () => {
@@ -270,6 +291,50 @@ describe('zephyr env runtime plugin', () => {
     expect(hits.get('/mini/zephyr-manifest.json')).toBe(2);
   });
 
+  it('keeps a pending persisted fallback from overwriting a newer network load', async () => {
+    const readStarted = Promise.withResolvers<void>();
+    const persistedRead = Promise.withResolvers<string | undefined>();
+    installEnvStorage({
+      getItem: async () => {
+        readStarted.resolve();
+        return persistedRead.promise;
+      },
+      setItem: async (key, value) => {
+        stored.set(key, value);
+      },
+    });
+    await serveHost({ mini: { application_uid: 'mini.p.o' } });
+    const entry = `${origin}/mini/mf-manifest.json`;
+    const manifestUrl = `${origin}/mini/zephyr-manifest.json`;
+    const fetchSpy = rs.spyOn(globalThis, 'fetch');
+    // `afterResolve` reaches `fetch` synchronously, so call counts need no waiting.
+    const manifestFetches = () =>
+      fetchSpy.mock.calls.filter(([url]) => url === manifestUrl).length;
+
+    try {
+      const first = resolveRemote('mini', entry);
+      await readStarted.promise;
+      routes.set('/mini/zephyr-manifest.json', {
+        body: { zeVars: { ZE_PUBLIC_DEMO: 'fresh' } },
+      });
+      const second = resolveRemote('mini', entry);
+      expect(manifestFetches()).toBe(1);
+
+      persistedRead.resolve(JSON.stringify({ zeVars: { ZE_PUBLIC_DEMO: 'stale' } }));
+      await Promise.all([first, second]);
+      expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'stale' });
+
+      await resolveRemote('mini', entry);
+      expect(manifestFetches()).toBe(2);
+      expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'fresh' });
+
+      await resolveRemote('mini', entry);
+      expect(manifestFetches()).toBe(2);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it('clears values loaded from another root when a remote switches roots', async () => {
     await serveHost({ mini: { application_uid: 'mini.p.o' } });
     routes.set('/a/zephyr-manifest.json', { body: { zeVars: { ZE_PUBLIC_DEMO: 'a' } } });
@@ -280,6 +345,78 @@ describe('zephyr env runtime plugin', () => {
     await resolveRemote('mini', `${origin}/b/mf-manifest.json`);
 
     expect(env('mini.p.o')).toBeUndefined();
+  });
+
+  it('points a requested remote at the entry its container environment lists', async () => {
+    await serveHost({
+      remote_blue: {
+        application_uid: 'blue.p.o',
+        remote_entry_url: `${origin}/blue-tag/remote_blue.bundle`,
+        library_type: 'var',
+      },
+      green: {
+        application_uid: 'green.p.o',
+        remote_entry_url: `remote_green@${origin}/green-tag/remote_green.bundle`,
+        manifest_url: `${origin}/green-tag/mf-manifest.json`,
+        library_type: 'var',
+      },
+    });
+    routes.set('/blue-tag/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'blue-tag' } },
+    });
+    const blue: TestRemote = {
+      alias: 'remote_blue',
+      name: 'remote_blue',
+      entry: `${origin}/blue-demo/mf-manifest.json`,
+    };
+    const green: TestRemote = {
+      alias: 'green',
+      name: 'remote_green',
+      entry: `${origin}/green-demo/mf-manifest.json`,
+      type: 'var',
+    };
+
+    await requestRemote('host', [blue, green], 'remote_blue/App');
+
+    expect(blue).toEqual({
+      alias: 'remote_blue',
+      name: 'remote_blue',
+      entry: `${origin}/blue-tag/remote_blue.bundle`,
+      type: 'var',
+    });
+    expect(green.entry).toBe(`${origin}/green-demo/mf-manifest.json`);
+
+    await requestRemote('host', [blue, green], 'green/App');
+
+    expect(green).toEqual({
+      alias: 'green',
+      name: 'remote_green',
+      entry: `${origin}/green-tag/mf-manifest.json`,
+    });
+
+    await resolveRemote('remote_blue', blue.entry, blue.alias);
+
+    expect(env('blue.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'blue-tag' });
+  });
+
+  it('keeps build-time entries for containers without a loaded environment', async () => {
+    await serveHost({
+      mini: {
+        application_uid: 'mini.p.o',
+        remote_entry_url: `${origin}/mini-tag/mini.bundle`,
+      },
+    });
+    const buildEntry = `${origin}/mini/mf-manifest.json`;
+    const mini: TestRemote = { name: 'mini', entry: buildEntry };
+
+    await requestRemote('shell', [mini], 'mini/App');
+    expect(mini.entry).toBe(buildEntry);
+
+    // The Host switches to a root whose manifest is missing: its old environment no longer applies.
+    await resolveRemote('host', `${origin}/host-b/mf-manifest.json`);
+    await requestRemote('host', [mini], 'mini/App');
+
+    expect(mini.entry).toBe(buildEntry);
   });
 
   it('resolves nested remotes from a remote manifest', async () => {

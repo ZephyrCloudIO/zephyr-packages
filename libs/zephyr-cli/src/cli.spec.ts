@@ -105,6 +105,42 @@ describe('parseArgs doctor', () => {
   });
 });
 
+describe('parseArgs doctor --online', () => {
+  it('stays offline unless --online is given', () => {
+    expect(parseArgs(['doctor'])).not.toHaveProperty('online');
+    expect(parseArgs(['doctor'])).not.toHaveProperty('timeoutMs');
+  });
+
+  it('accepts --online with a directory, a format and a timeout', () => {
+    expect(
+      parseArgs(['doctor', './app', '--online', '--timeout', '2500', '--format', 'json'])
+    ).toMatchObject({
+      command: 'doctor',
+      directory: './app',
+      format: 'json',
+      online: true,
+      timeoutMs: 2500,
+    });
+  });
+
+  it('rejects a timeout that is missing, not whole, or out of range', () => {
+    for (const value of ['0', '-1', '1.5', 'abc', '60001']) {
+      expect(() => parseArgs(['doctor', '--online', '--timeout', value])).toThrow(
+        '--timeout must be an integer from 1 to 60000'
+      );
+    }
+    expect(() => parseArgs(['doctor', '--online', '--timeout'])).toThrow(
+      '--timeout must be an integer'
+    );
+  });
+
+  it('rejects --timeout without --online', () => {
+    expect(() => parseArgs(['doctor', '--timeout', '100'])).toThrow(
+      '--timeout can only be used with --online'
+    );
+  });
+});
+
 describe('parseArgs deploy result format', () => {
   it('accepts a json result format for deploy', () => {
     expect(parseArgs(['deploy', './dist', '--format', 'json'])).toMatchObject({

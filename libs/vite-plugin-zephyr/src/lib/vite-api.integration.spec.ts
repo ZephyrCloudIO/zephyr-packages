@@ -106,6 +106,7 @@ rs.mock('zephyr-agent', () => {
     rewriteEnvReadsToVirtualModule: () => null,
     zeBuildDashData: async () => ({}),
     assertZephyrBuildTarget: rs.fn(),
+    isZephyrDisabled: () => false,
     readPackageJson: () => ({}),
     ze_log: { init: rs.fn(), remotes: rs.fn() },
     handleGlobalError: (error: unknown) => {

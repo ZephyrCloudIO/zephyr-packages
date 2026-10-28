@@ -3,7 +3,11 @@ import {
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
 import { assertZephyrBuildTarget } from 'zephyr-edge-contract';
-import type { ZephyrBuildTarget } from 'zephyr-agent';
+import {
+  isZephyrDisabled,
+  logZephyrDisabled,
+  type ZephyrBuildTarget,
+} from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
 import { moduleFederationPublicPathPlugin } from './internal/assets/moduleFederationPublicPathPlugin';
@@ -70,6 +74,11 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
     assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
   }
 
+  // Skip mode: no engine, no token, no git information, no request. Rspress builds the
+  // site as it is, and the SSG hook only says that nothing was deployed. A plain build
+  // still gets the Rsbuild plugin, which has its own skip mode.
+  const disabled = isZephyrDisabled();
+
   // Rspress materializes one configuration per compiler. Keep deployable browser
   // federation plugins in this mutable collection so the SSG hook can forward them to
   // xpack after the build, when snapshot and dashboard metadata are produced. The
@@ -87,7 +96,14 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
     async config(config, { addPlugin }) {
       const { ssg } = config;
 
-      if (isSsgEnabled(ssg)) {
+      if (disabled && isSsgEnabled(ssg)) {
+        addPlugin({
+          name: 'zephyr-rspress-plugin-ssg',
+          afterBuild() {
+            logZephyrDisabled();
+          },
+        } as RspressPlugin<TConfig>);
+      } else if (isSsgEnabled(ssg)) {
         if (isRspressV1(config)) {
           const existingPlugins = config.builderPlugins ?? [];
           if (!existingPlugins.some((plugin) => plugin === portableFederationPlugin)) {

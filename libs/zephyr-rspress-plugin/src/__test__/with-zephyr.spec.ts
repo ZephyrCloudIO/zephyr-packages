@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -300,5 +300,60 @@ describe('withZephyr', () => {
       expect(rsbuildPluginMock).toHaveBeenCalled();
       expect(addPlugin).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('withZephyr with ZE_DISABLED=true', () => {
+  beforeEach(() => {
+    rs.clearAllMocks();
+    process.env['ZE_DISABLED'] = 'true';
+  });
+
+  afterEach(() => {
+    delete process.env['ZE_DISABLED'];
+    rs.restoreAllMocks();
+  });
+
+  it('keeps option validation first', () => {
+    expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
+      'withZephyr({ target }) must be one of'
+    );
+  });
+
+  it('adds an inert SSG hook that only says the bundle was not deployed', async () => {
+    const warn = rs.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const addPlugin = rs.fn();
+    const config = { ssg: true, outDir: 'dist' };
+
+    const result = await withZephyr().config?.(
+      config as any,
+      { addPlugin, removePlugin: rs.fn() },
+      false
+    );
+
+    expect(result).toBe(config);
+    expect(result).not.toHaveProperty('builderConfig');
+    expect(rspressPluginMock).not.toHaveBeenCalled();
+    expect(addPlugin).toHaveBeenCalledTimes(1);
+    const hook = addPlugin.mock.calls[0]?.[0];
+    expect(warn).not.toHaveBeenCalled();
+
+    await hook.afterBuild();
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]?.[0])).toContain('Zephyr is disabled (ZE_DISABLED)');
+  });
+
+  it('leaves the Rsbuild plugin, which has its own skip mode, for plain builds', async () => {
+    const config = { ssg: false, builderConfig: { plugins: [] } };
+
+    const result = await withZephyr().config?.(
+      config as any,
+      { addPlugin: rs.fn(), removePlugin: rs.fn() },
+      false
+    );
+
+    expect(rspressPluginMock).not.toHaveBeenCalled();
+    expect(result?.builderConfig?.plugins).toEqual([{ name: 'mock-rsbuild-plugin' }]);
   });
 });

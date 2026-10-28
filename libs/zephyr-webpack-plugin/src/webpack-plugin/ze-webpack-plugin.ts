@@ -25,6 +25,7 @@ export interface ZephyrWebpackInternalPluginOptions {
   wait_for_index_html?: boolean;
   // outputPath?: string;
   hooks?: ZephyrBuildHooks;
+  failBuild?: boolean;
   coordinator?: XPackBuildCoordinator;
   participant?: string;
   assetPrefix?: string;

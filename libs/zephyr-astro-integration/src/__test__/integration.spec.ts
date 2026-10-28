@@ -16,6 +16,8 @@ rs.mock('zephyr-agent', () => ({
   },
   zeBuildDashData: rs.fn().mockResolvedValue({}),
   handleGlobalError: rs.fn(),
+  isZephyrDisabled: () => false,
+  logZephyrDisabled: rs.fn(),
 }));
 
 describe('Integration Export', () => {

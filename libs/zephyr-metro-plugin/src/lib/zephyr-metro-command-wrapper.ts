@@ -1,4 +1,4 @@
-import { ZephyrError, ZeErrors } from 'zephyr-agent';
+import { isZephyrDisabled, logZephyrDisabled, ZephyrError, ZeErrors } from 'zephyr-agent';
 import type { ZephyrPluginOptions } from 'zephyr-edge-contract';
 import { ERR_MISSING_METRO_FEDERATION_CONFIG } from './internal/metro-errors';
 import {
@@ -64,6 +64,17 @@ export async function zephyrCommandWrapper(
         resetCache: args[2].resetCache,
         config: args[2].config,
       });
+
+      // Skip mode: bundle as Metro would without Zephyr. No engine, no token, no git
+      // information, no remote resolution, no upload.
+      if (isZephyrDisabled()) {
+        if ((global as any).__METRO_FEDERATION_CONFIG) {
+          updateManifest();
+        }
+        const res = await bundleFederatedRemote(...args);
+        logZephyrDisabled();
+        return res;
+      }
 
       if (!(global as any).__METRO_FEDERATION_CONFIG) {
         throw new ZephyrError(ERR_MISSING_METRO_FEDERATION_CONFIG);

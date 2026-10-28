@@ -91,6 +91,26 @@ export async function getToken(git_config?: ZeGitInfo): Promise<string | undefin
   return undefined;
 }
 
+export type PreflightCredentials =
+  | { source: 'ZE_SECRET_TOKEN' | 'login'; token: string }
+  | { source: 'exchange' | 'none'; token?: undefined };
+
+/**
+ * Finds the credential a build would send, without changing anything. It reads
+ * `ZE_SECRET_TOKEN` or the stored login. The CI and server tokens need an exchange with
+ * Zephyr that stores its result, so they are reported as `exchange` and not used.
+ */
+export async function resolvePreflightCredentials(): Promise<PreflightCredentials> {
+  const tokenFromEnv = getSecretToken();
+  if (tokenFromEnv) return { source: 'ZE_SECRET_TOKEN', token: tokenFromEnv };
+
+  if (getCiToken() || getServerToken()) return { source: 'exchange' };
+
+  await storage;
+  const stored = await getItem<string>(StorageKeys.ze_auth_token);
+  return stored ? { source: 'login', token: stored } : { source: 'none' };
+}
+
 export async function removeToken(expectedToken?: string): Promise<void> {
   await withStorageLock(
     'auth-token',

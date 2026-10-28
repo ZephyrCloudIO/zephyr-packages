@@ -35,6 +35,7 @@ rs.mock('zephyr-agent', () => {
     handleGlobalError: rs.fn(),
     zeBuildDashData: rs.fn(),
     ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
+    isZephyrDisabled: () => false,
     ZephyrEngine: { defer_create: mocks.deferCreate },
     ZephyrError: MockZephyrError,
     ze_log: { init: rs.fn(), upload: rs.fn() },

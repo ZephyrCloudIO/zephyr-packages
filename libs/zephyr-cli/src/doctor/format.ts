@@ -32,7 +32,9 @@ function formatDoctorText(report: DoctorReport): string {
           `  Evidence: ${evidence.path}${evidence.line ? `:${evidence.line}` : ''}${evidence.detail ? ` — ${evidence.detail}` : ''}`
         );
       }
+      if (finding.target) lines.push(`  Target: ${finding.target}`);
       lines.push(`  Remediation: ${finding.remediation}`);
+      if (finding.nextAction) lines.push(`  Next action: ${finding.nextAction}`);
     }
   }
 
@@ -44,5 +46,13 @@ function formatDoctorText(report: DoctorReport): string {
     `DTS temporary artifacts: ${report.dts.temporaryArtifacts.join(', ') || 'none found'}`,
     `DTS diagnostic commands: ${report.dts.diagnosticCommands.join(' | ')}`
   );
+  if (report.online) {
+    lines.push('', `Online checks (limit ${report.online.timeoutMs} ms each):`);
+    for (const check of report.online.checks) {
+      lines.push(
+        `  ${check.id}: ${check.status}${check.findingCode ? ` ${check.findingCode}` : ''}${check.target ? ` ${check.target}` : ''}${check.httpStatus ? ` HTTP ${check.httpStatus}` : ''}`
+      );
+    }
+  }
   return lines.join('\n');
 }

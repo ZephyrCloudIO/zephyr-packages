@@ -108,6 +108,19 @@ export function mergeRemoteDependencies(
   };
 }
 
+/**
+ * Tells whether a Zephyr config file applies to `context`, without loading it. Loading
+ * runs the file, which read-only tools must not do.
+ */
+export function hasZephyrConfigFile(context?: string): boolean {
+  try {
+    return findConfigPath(resolveZephyrContextDirectory(context)) !== undefined;
+  } catch {
+    // Several config files at once is an error that loading would report.
+    return true;
+  }
+}
+
 function findConfigPath(startingDirectory: string): string | undefined {
   let directory = startingDirectory;
 

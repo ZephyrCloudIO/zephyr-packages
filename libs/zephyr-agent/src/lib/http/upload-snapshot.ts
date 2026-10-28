@@ -14,6 +14,12 @@ const MISSING_ASSETS_STATUS = 409;
 const MISSING_ASSETS_ERROR = 'missing_assets';
 /** Upper bound of hashes attached to error data, so terminal output stays readable. */
 const MAX_REPORTED_HASHES = 20;
+/**
+ * Delays before each snapshot retry after restoring missing files. The edge may store a
+ * file and clear its deletion record after replying to the upload, so the first retry can
+ * still see the file as missing.
+ */
+const MISSING_ASSETS_RETRY_DELAYS_MS = [0, 1_000, 2_000];
 
 export interface SnapshotMissingAssets {
   /** Content hashes (assetsMap keys) the edge reported as missing. */
@@ -91,7 +97,7 @@ export async function uploadSnapshot({
   application_uid: string;
   /**
    * When set, a `409 missing_assets` reply calls this handler and retries the target's
-   * snapshot upload once.
+   * snapshot upload up to 3 times while the edge still reports only restored files.
    */
   onMissingAssets?: OnSnapshotMissingAssets;
 }): Promise<SnapshotUploadRes> {
@@ -149,25 +155,47 @@ async function uploadSnapshotToTarget(
   );
   await onMissingAssets({ hashes, edgeUrl: target.edgeUrl });
 
-  const [retryOk, retryCause, retryResp] = await doUploadSnapshotRequest(request);
-  if (retryOk) {
-    ze_log.snapshot('Done: snapshot uploaded after restoring missing assets');
-    return retryResp;
+  const restored = new Set(hashes);
+  let stillMissing: string[] = [];
+  let retryCause: unknown;
+  for (const delayMs of MISSING_ASSETS_RETRY_DELAYS_MS) {
+    if (delayMs) {
+      ze_log.snapshot(
+        `Edge still reports restored asset(s) as missing, retrying in ${delayMs}ms`
+      );
+      await wait(delayMs);
+    }
+
+    const [retryOk, retryError, retryResp] = await doUploadSnapshotRequest(request);
+    if (retryOk) {
+      ze_log.snapshot('Done: snapshot uploaded after restoring missing assets');
+      return retryResp;
+    }
+
+    retryCause = retryError;
+    const missing = getMissingAssetHashes(retryError);
+    if (!missing) {
+      throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+        type: 'snapshot',
+        cause: retryError,
+      });
+    }
+    stillMissing = missing;
+    // Waiting only helps files we just uploaded; anything else stays missing.
+    if (!missing.every((hash) => restored.has(hash))) {
+      break;
+    }
   }
 
-  const stillMissing = getMissingAssetHashes(retryCause);
-  if (stillMissing) {
-    throw new ZephyrError(ZeErrors.ERR_SNAPSHOT_MISSING_ASSETS, {
-      count: stillMissing.length,
-      cause: retryCause,
-      data: { missing_hashes: stillMissing.slice(0, MAX_REPORTED_HASHES) },
-    });
-  }
-
-  throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
-    type: 'snapshot',
+  throw new ZephyrError(ZeErrors.ERR_SNAPSHOT_MISSING_ASSETS, {
+    count: stillMissing.length,
     cause: retryCause,
+    data: { missing_hashes: stillMissing.slice(0, MAX_REPORTED_HASHES) },
   });
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

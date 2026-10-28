@@ -7,7 +7,7 @@ import { green, yellow } from '../logging/picocolor';
 
 interface ZeUploadSnapshotProps {
   snapshot: Snapshot;
-  /** Restores files the edge reports as missing; the snapshot upload is retried once. */
+  /** Restores files the edge reports as missing before the snapshot upload is retried. */
   onMissingAssets?: OnSnapshotMissingAssets;
 }
 

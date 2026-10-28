@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Snapshot, ZeBuildAsset, ZeBuildAssetsMap } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import type { AppHashCache } from '../node-persist/hash-cache';
@@ -134,6 +134,10 @@ describe('commonUploadStrategy missing assets recovery', () => {
     });
   });
 
+  afterEach(() => {
+    rs.useRealTimers();
+  });
+
   it('invalidates the cache, uploads the missing files and retries the snapshot', async () => {
     const { assetsMap } = createAssets(3);
     mockEdge(missingReply(['hash-1', 'hash-2']), versionReply);
@@ -190,10 +194,13 @@ describe('commonUploadStrategy missing assets recovery', () => {
   });
 
   it('fails with a clear error when the retried snapshot is still rejected', async () => {
+    rs.useFakeTimers();
     const { assetsMap } = createAssets(3);
-    mockEdge(missingReply(['hash-1']), missingReply(['hash-1']));
+    mockEdge(...Array.from({ length: 4 }, () => missingReply(['hash-1'])));
 
-    const error = await runStrategy(assetsMap).catch((e: unknown) => e);
+    const result = runStrategy(assetsMap).catch((e: unknown) => e);
+    await rs.runAllTimersAsync();
+    const error = await result;
 
     expect(ZephyrError.is(error, ZeErrors.ERR_SNAPSHOT_MISSING_ASSETS)).toBe(true);
     expect((error as Error).message).toMatch(/build retention/);
@@ -201,7 +208,7 @@ describe('commonUploadStrategy missing assets recovery', () => {
     expect(fileUploadHashes()).toEqual(['hash-1']);
     expect(
       mocks.makeRequest.mock.calls.filter(([url]) => snapshotRequest(url))
-    ).toHaveLength(2);
+    ).toHaveLength(4);
     expect(mocks.uploadBuildStatsAndEnableEnvs).not.toHaveBeenCalled();
   });
 

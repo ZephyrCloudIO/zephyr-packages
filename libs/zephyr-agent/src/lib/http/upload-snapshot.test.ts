@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Snapshot } from 'zephyr-edge-contract';
 import {
   UploadProviderType,
@@ -205,7 +205,19 @@ describe('uploadSnapshot missing assets recovery', () => {
     mocks.getApplicationConfiguration.mockResolvedValue(applicationConfig());
   });
 
-  it('restores missing assets and retries the snapshot once', async () => {
+  afterEach(() => {
+    rs.useRealTimers();
+  });
+
+  function uploadWithRestore(onMissingAssets = rs.fn().mockResolvedValue(undefined)) {
+    return uploadSnapshot({
+      body: snapshot(),
+      application_uid: 'org.project.app',
+      onMissingAssets,
+    }).catch((e: unknown) => e);
+  }
+
+  it('restores missing assets and retries the snapshot', async () => {
     const onMissingAssets = rs.fn().mockResolvedValue(undefined);
     mocks.makeRequest
       .mockResolvedValueOnce(missingAssetsReply(['asset-hash']))
@@ -255,22 +267,69 @@ describe('uploadSnapshot missing assets recovery', () => {
     expect(mocks.makeRequest).toHaveBeenCalledTimes(3);
   });
 
-  it('fails with a retention error when assets are still missing after the retry', async () => {
+  it('waits for the edge to see restored assets before retrying again', async () => {
+    rs.useFakeTimers();
     const onMissingAssets = rs.fn().mockResolvedValue(undefined);
     mocks.makeRequest
       .mockResolvedValueOnce(missingAssetsReply(['asset-hash']))
-      .mockResolvedValueOnce(missingAssetsReply(['asset-hash']));
+      .mockResolvedValueOnce(missingAssetsReply(['asset-hash']))
+      .mockResolvedValueOnce([true, null, versionResponse]);
 
-    const error = await uploadSnapshot({
-      body: snapshot(),
-      application_uid: 'org.project.app',
-      onMissingAssets,
-    }).catch((e: unknown) => e);
+    const result = uploadWithRestore(onMissingAssets);
+
+    await rs.advanceTimersByTimeAsync(999);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(2);
+    await rs.advanceTimersByTimeAsync(1);
+    await expect(result).resolves.toBe(versionResponse);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(3);
+    expect(onMissingAssets).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails with a retention error when restored assets stay missing after 3 retries', async () => {
+    rs.useFakeTimers();
+    const onMissingAssets = rs.fn().mockResolvedValue(undefined);
+    mocks.makeRequest.mockResolvedValue(missingAssetsReply(['asset-hash']));
+
+    const result = uploadWithRestore(onMissingAssets);
+
+    await rs.advanceTimersByTimeAsync(1_000);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(3);
+    await rs.advanceTimersByTimeAsync(1_999);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(3);
+    await rs.advanceTimersByTimeAsync(1);
+    const error = await result;
 
     expect(ZephyrError.is(error, ZeErrors.ERR_SNAPSHOT_MISSING_ASSETS)).toBe(true);
     expect((error as Error).message).toContain('build retention');
     expect((error as Error).message).toContain('rebuild');
     expect(onMissingAssets).toHaveBeenCalledTimes(1);
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(4);
+  });
+
+  it('fails without waiting when a retry reports assets that were not restored', async () => {
+    mocks.makeRequest
+      .mockResolvedValueOnce(missingAssetsReply(['asset-hash']))
+      .mockResolvedValueOnce(missingAssetsReply(['asset-hash', 'other-hash']));
+
+    const error = await uploadWithRestore();
+
+    expect(ZephyrError.is(error, ZeErrors.ERR_SNAPSHOT_MISSING_ASSETS)).toBe(true);
+    expect((error as ZephyrError<'ERR_SNAPSHOT_MISSING_ASSETS'>).data).toMatchObject({
+      missing_hashes: ['asset-hash', 'other-hash'],
+    });
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps an unrelated retry failure as an upload error', async () => {
+    const cause = httpError(500, 'Internal Server Error');
+    mocks.makeRequest
+      .mockResolvedValueOnce(missingAssetsReply(['asset-hash']))
+      .mockResolvedValueOnce([false, cause]);
+
+    const error = await uploadWithRestore();
+
+    expect(ZephyrError.is(error, ZeErrors.ERR_FAILED_UPLOAD)).toBe(true);
+    expect((error as ZephyrError<'ERR_FAILED_UPLOAD'>).cause).toBe(cause);
     expect(mocks.makeRequest).toHaveBeenCalledTimes(2);
   });
 

@@ -1,10 +1,10 @@
 import type { Context } from '@rspack/core';
-import type { RepackNativeBuildTarget } from '../lib/native-target';
+import type { NativeBuildTarget } from 'zephyr-native-internal';
 export interface DelegateConfig {
   org: string;
   project: string;
   application?: undefined;
-  target?: RepackNativeBuildTarget;
+  target?: NativeBuildTarget;
 }
 
 export interface RepackEnv {
@@ -20,5 +20,5 @@ export interface RepackEnv {
     hmr?: boolean;
   };
   // Re.Pack is a React Native adapter, so generic browser/TAP targets are unsupported.
-  platform: RepackNativeBuildTarget | undefined;
+  platform: NativeBuildTarget | undefined;
 }

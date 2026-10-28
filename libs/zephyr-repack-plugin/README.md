@@ -146,6 +146,10 @@ plugins: [
       ...
 ```
 
+### Environment variables
+
+`withZephyr` rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value, and emits `zephyr-manifest.json` next to the bundle. `withZephyr` injects a Module Federation runtime plugin that loads the `zephyr-manifest.json` next to each resolved remote and applies its environment values before the remote's code runs; no setup is needed. With `zephyr-native-cache` registered, the last loaded values are kept for offline starts.
+
 ## Creation command
 
 To create a complete example of a React Native application, with Zephyr enabled, configured, you can use our creation command where you can find most of our examples.

@@ -30,6 +30,9 @@
     },
     {
       "path": "../zephyr-edge-contract/tsconfig.json"
+    },
+    {
+      "path": "../zephyr-native-internal/tsconfig.json"
     }
   ]
 }

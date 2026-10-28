@@ -2192,6 +2192,9 @@ importers:
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
+      zephyr-native-internal:
+        specifier: workspace:*
+        version: link:../zephyr-native-internal
       zephyr-xpack-internal:
         specifier: workspace:*
         version: link:../zephyr-xpack-internal

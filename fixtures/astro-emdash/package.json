@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "cross-env ZE_DISABLED=true astro build",
     "preview": "wrangler dev --test-scheduled --var EMDASH_MIGRATIONS_MODE:auto",
     "deploy": "astro build"
   },
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260911.1",
+    "cross-env": "catalog:",
     "vite": "8.3.1",
     "wrangler": "4.153.0"
   }

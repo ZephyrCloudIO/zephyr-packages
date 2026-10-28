@@ -99,9 +99,7 @@ adapter does not derive or alter SDK metadata. For non-TAP artifacts, both
 fields are optional. A complete singleton config also populates the legacy
 `mfConfig` snapshot field for backward compatibility.
 
-## Requirements
-
-### Cloudflare SSR preparation
+## Cloudflare SSR preparation
 
 For `output: 'server'` with `@astrojs/cloudflare`, the integration follows the
 adapter's generated `.wrangler/deploy/config.json` and collects complete server
@@ -122,8 +120,10 @@ import { collectCloudflareOutput } from 'zephyr-astro-integration';
 const { entrypoint, assetsMap, deployment } = await collectCloudflareOutput(process.cwd());
 ```
 
-See [`examples/astro-emdash`](../../examples/astro-emdash) for the published-package
+See [`fixtures/astro-emdash`](../../fixtures/astro-emdash) for the published-package
 fixture, local preview, migration boundary, and deployment prerequisites.
+
+## Requirements
 
 - Astro 4.0 or higher
 - Node.js 16 or higher

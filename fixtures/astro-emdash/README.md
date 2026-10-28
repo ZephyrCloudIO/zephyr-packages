@@ -9,9 +9,11 @@ From the repository root:
 ```sh
 pnpm install --frozen-lockfile
 pnpm exec turbo run build --filter=zephyr-astro-integration...
-ZE_DISABLED=true pnpm --filter astro-emdash build
+pnpm --filter astro-emdash build
 pnpm --filter astro-emdash preview
 ```
+
+The build command always disables upload. This local-only fixture is separate from the deployable examples until the managed runtime supports its contract. The explicit `deploy` command exercises the capability gate.
 
 The preview uses local resources and automatic local migrations. Open the
 reported local URL, then `/_emdash/admin` for setup. Test maintenance at
@@ -20,7 +22,7 @@ reported local URL, then `/_emdash/admin` for setup. Test maintenance at
 Inspect completed output without uploading:
 
 ```sh
-node --input-type=module -e "import {collectCloudflareOutput} from './libs/zephyr-astro-integration/dist/index.mjs'; const o = await collectCloudflareOutput('./examples/astro-emdash'); console.log({entrypoint:o.entrypoint, files:Object.keys(o.assetsMap).length, requirements:o.deployment});"
+node --input-type=module -e "import {collectCloudflareOutput} from './libs/zephyr-astro-integration/dist/index.mjs'; const o = await collectCloudflareOutput('./fixtures/astro-emdash'); console.log({entrypoint:o.entrypoint, files:Object.keys(o.assetsMap).length, requirements:o.deployment});"
 ```
 
 The collector follows the adapter's generated deployment pointer, verifies the

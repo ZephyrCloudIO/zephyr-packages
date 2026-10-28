@@ -207,12 +207,12 @@ describe('Rspack withZephyr compiler arrays', () => {
   it('rolls back direct configuration errors before preserving fail-open semantics', async () => {
     const config = { name: 'broken', context: '/repo' } as unknown as Configuration;
 
-    await expect(withZephyr()(config)).resolves.toBe(config);
+    await expect(withZephyr({ failBuild: false })(config)).resolves.toBe(config);
 
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'invalid federation config' }),
-      { failBuild: undefined }
+      { failBuild: false }
     );
   });
   it('skips every Zephyr step when ZE_DISABLED is set', async () => {

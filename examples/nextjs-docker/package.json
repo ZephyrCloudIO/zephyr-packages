@@ -1,0 +1,25 @@
+{
+  "name": "nextjs-docker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "cp -R .next/zephyr/. .next/standalone/ && node .next/standalone/zephyr-server.mjs",
+    "docker:build": "docker build -t nextjs-docker .",
+    "docker:run": "docker run --rm -p 3000:3000 nextjs-docker"
+  },
+  "dependencies": {
+    "next": "catalog:",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:typescript",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "typescript": "catalog:typescript",
+    "zephyr-nextjs-plugin": "workspace:*"
+  }
+}

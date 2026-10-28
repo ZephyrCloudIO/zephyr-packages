@@ -2037,6 +2037,9 @@ importers:
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract
+      zephyr-native-internal:
+        specifier: workspace:*
+        version: link:../zephyr-native-internal
     devDependencies:
       '@rslib/core':
         specifier: catalog:rslib

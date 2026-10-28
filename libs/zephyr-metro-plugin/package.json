@@ -65,7 +65,8 @@
   "dependencies": {
     "yaml": "catalog:",
     "zephyr-agent": "workspace:*",
-    "zephyr-edge-contract": "workspace:*"
+    "zephyr-edge-contract": "workspace:*",
+    "zephyr-native-internal": "workspace:*"
   },
   "devDependencies": {
     "@rslib/core": "catalog:rslib",

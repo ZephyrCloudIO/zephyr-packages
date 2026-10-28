@@ -251,6 +251,10 @@ Key OTA features:
 - Version management
 - Platform-specific updates
 
+## Environment Variables
+
+With `withZephyr` in `metro.config.js`, Zephyr rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value. `bundle-mf-host`/`bundle-mf-remote` inject a Module Federation runtime plugin that loads the `zephyr-manifest.json` next to each resolved remote and applies its environment values before the remote's code runs; no setup is needed. With `zephyr-native-cache` registered, the last loaded values are kept for offline starts.
+
 ## Project Structure
 
 Your React Native Metro project should follow this structure:

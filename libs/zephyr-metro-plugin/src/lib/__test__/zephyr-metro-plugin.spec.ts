@@ -1,6 +1,12 @@
+import * as path from 'node:path';
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
-
+import * as actualNativeInternal from 'zephyr-native-internal' with {
+  rstest: 'importActual',
+};
+const writeEnvPlugin = rs.hoisted(() =>
+  rs.fn().mockReturnValue('/project/node_modules/.zephyr-metro/env-plugin-abc.js')
+);
 /** Unit tests for ZephyrMetroPlugin class */
 
 // Mock zephyr-agent - must be before imports
@@ -26,6 +32,7 @@ rs.mock('zephyr-agent', () => ({
         {
           name: 'RemoteApp',
           version: 'latest',
+          application_uid: 'remote-app.project.org',
           resolved_url: 'http://cdn.example.com/remote.js',
         },
       ]),
@@ -47,6 +54,11 @@ rs.mock('zephyr-agent', () => ({
   },
   buildAssetsMap: rs.fn().mockReturnValue({}),
   resolveMfManifestPath: rs.fn().mockReturnValue('mf-manifest.json'),
+}));
+
+rs.mock('zephyr-native-internal', () => ({
+  ...actualNativeInternal,
+  writeNativeEnvRuntimePlugin: writeEnvPlugin,
 }));
 
 // Mock internal dependencies
@@ -137,6 +149,97 @@ describe('ZephyrMetroPlugin', () => {
   });
 
   describe('beforeBuild', () => {
+    it('registers resolved remote UIDs as a runtime plugin', async () => {
+      const { writeNativeEnvRuntimePlugin } = await import('zephyr-native-internal');
+      const mfConfig = {
+        name: 'TestApp',
+        remotes: {},
+        plugins: ['core'],
+      } as never;
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'development',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig,
+      });
+
+      await plugin.beforeBuild();
+
+      expect(writeNativeEnvRuntimePlugin).toHaveBeenCalledWith(
+        path.join('/project', 'node_modules', '.zephyr-metro'),
+        [
+          expect.objectContaining({
+            name: 'RemoteApp',
+            application_uid: 'remote-app.project.org',
+          }),
+        ]
+      );
+      expect((mfConfig as { plugins: string[] }).plugins).toEqual([
+        'core',
+        '/project/node_modules/.zephyr-metro/env-plugin-abc.js',
+      ]);
+    });
+    it('adds no env plugin when no remote resolves', async () => {
+      const { ZephyrEngine } = await import('zephyr-agent');
+      const engine = await ZephyrEngine.create({
+        builder: 'metro',
+        context: '/project',
+      } as never);
+      (engine.resolve_remote_dependencies as Mock).mockResolvedValueOnce([]);
+      writeEnvPlugin.mockReturnValueOnce(undefined);
+      const mfConfig = { name: 'TestApp', remotes: {}, plugins: ['core'] };
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'development',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig,
+      });
+
+      await plugin.beforeBuild();
+
+      expect(mfConfig.plugins).toEqual(['core']);
+    });
+
+    it('reapplies rewritten remotes and the env plugin to rebuilt federation options', async () => {
+      const { mutateMfConfig } = require('../internal/mutate-mf-config');
+      (mutateMfConfig as Mock).mockImplementationOnce(
+        (_engine: unknown, config: { remotes: Record<string, string> }) => {
+          config.remotes.RemoteApp = 'RemoteApp@https://edge.example/mf-manifest.json';
+        }
+      );
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'production',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig: {
+          name: 'TestApp',
+          remotes: { RemoteApp: 'RemoteApp@http://localhost:9000/mf-manifest.json' },
+        },
+      });
+      await plugin.beforeBuild();
+
+      const rebuilt = {
+        remotes: {
+          RemoteApp: 'RemoteApp@http://localhost:9000/mf-manifest.json',
+          Other: 'Other@http://localhost:9001/mf-manifest.json',
+        },
+        plugins: ['core'],
+      };
+      plugin.applyToFederationConfig(rebuilt);
+      plugin.applyToFederationConfig(rebuilt);
+
+      expect(rebuilt).toEqual({
+        remotes: {
+          RemoteApp: 'RemoteApp@https://edge.example/mf-manifest.json',
+          Other: 'Other@http://localhost:9001/mf-manifest.json',
+        },
+        plugins: ['core', '/project/node_modules/.zephyr-metro/env-plugin-abc.js'],
+      });
+    });
+
     it('should initialize ZephyrEngine with metro builder', async () => {
       const { ZephyrEngine } = await import('zephyr-agent');
 

@@ -12,6 +12,12 @@ import { type HttpResponse, makeRequest } from './http-request';
 /** Edge reply when a snapshot references files the edge no longer stores. */
 const MISSING_ASSETS_STATUS = 409;
 const MISSING_ASSETS_ERROR = 'missing_assets';
+/**
+ * Opts in to the `409 missing_assets` reply. Without it, the edge stores a snapshot that
+ * references deleted files, since older uploaders can't restore them.
+ */
+const MISSING_ASSETS_RETRY_HEADER = 'x-zephyr-missing-assets';
+const MISSING_ASSETS_RETRY_VALUE = 'retry';
 /** Upper bound of hashes attached to error data, so terminal output stays readable. */
 const MAX_REPORTED_HASHES = 20;
 /**
@@ -96,8 +102,9 @@ export async function uploadSnapshot({
   body: Snapshot;
   application_uid: string;
   /**
-   * When set, a `409 missing_assets` reply calls this handler and retries the target's
-   * snapshot upload up to 3 times while the edge still reports only restored files.
+   * When set, the edge is asked to refuse a snapshot that references deleted files. A
+   * `409 missing_assets` reply calls this handler and retries the target's snapshot
+   * upload up to 3 times while the edge still reports only restored files.
    */
   onMissingAssets?: OnSnapshotMissingAssets;
 }): Promise<SnapshotUploadRes> {
@@ -138,6 +145,7 @@ async function uploadSnapshotToTarget(
     json: JSON.stringify(target.snapshot),
     edge_url: target.edgeUrl,
     jwt,
+    retryMissingAssets: onMissingAssets !== undefined,
   };
 
   const [ok, cause, resp] = await doUploadSnapshotRequest(request);
@@ -243,19 +251,24 @@ async function doUploadSnapshotRequest({
   json,
   edge_url,
   jwt,
+  retryMissingAssets,
 }: {
   json: string;
   edge_url: string;
   jwt: string;
+  /** Whether the caller restores files the edge reports as missing. */
+  retryMissingAssets: boolean;
 }): Promise<HttpResponse<SnapshotUploadRes>> {
-  const options: RequestInit = {
-    method: 'POST',
-    headers: {
-      'Content-Length': Buffer.byteLength(json).toString(),
-      'Content-Type': 'application/json; charset=utf-8',
-      can_write_jwt: jwt,
-    },
+  const headers: Record<string, string> = {
+    'Content-Length': Buffer.byteLength(json).toString(),
+    'Content-Type': 'application/json; charset=utf-8',
+    can_write_jwt: jwt,
   };
+  if (retryMissingAssets) {
+    headers[MISSING_ASSETS_RETRY_HEADER] = MISSING_ASSETS_RETRY_VALUE;
+  }
+
+  const options: RequestInit = { method: 'POST', headers };
 
   const url = new URL('/upload', edge_url);
   url.searchParams.append('type', 'snapshot');

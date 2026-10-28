@@ -45,6 +45,13 @@ function missingAssetsReply(hashes: string[]) {
   return [false, httpError(409, { error: 'missing_assets', hashes })];
 }
 
+/** Headers of each snapshot request sent through `makeRequest`. */
+function requestHeaders(): Record<string, string>[] {
+  return mocks.makeRequest.mock.calls.map(
+    (call) => (call[1] as RequestInit).headers as Record<string, string>
+  );
+}
+
 function snapshot(): Snapshot {
   return {
     application_uid: 'org.project.app',
@@ -240,6 +247,34 @@ describe('uploadSnapshot missing assets recovery', () => {
     expect(mocks.makeRequest.mock.calls[1]?.[2]).toBe(
       mocks.makeRequest.mock.calls[0]?.[2]
     );
+  });
+
+  it('asks every edge for missing_assets replies on first and retried uploads', async () => {
+    mocks.getApplicationConfiguration.mockResolvedValue(
+      applicationConfig({
+        ENVIRONMENTS: { path: environment('https://path.example.test') },
+      })
+    );
+    mocks.makeRequest
+      .mockResolvedValueOnce(missingAssetsReply(['asset-hash']))
+      .mockResolvedValueOnce([true, null, versionResponse])
+      .mockResolvedValueOnce([true, null, versionResponse]);
+
+    await uploadWithRestore();
+
+    const headers = requestHeaders();
+    expect(headers).toHaveLength(3);
+    for (const header of headers) {
+      expect(header).toMatchObject({ 'x-zephyr-missing-assets': 'retry' });
+    }
+  });
+
+  it('lets the edge store the snapshot when the handler is not provided', async () => {
+    mocks.makeRequest.mockResolvedValueOnce([true, null, versionResponse]);
+
+    await uploadSnapshot({ body: snapshot(), application_uid: 'org.project.app' });
+
+    expect(requestHeaders()[0]).not.toHaveProperty('x-zephyr-missing-assets');
   });
 
   it('restores assets on the environment edge which rejected the snapshot', async () => {

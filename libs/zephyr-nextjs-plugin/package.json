@@ -1,0 +1,81 @@
+{
+  "name": "zephyr-nextjs-plugin",
+  "version": "1.7.0",
+  "description": "Next.js adapter for Zephyr Cloud: Zephyr serves /_next/static, your container renders",
+  "keywords": [
+    "deployment",
+    "docker",
+    "next-adapter",
+    "nextjs",
+    "standalone",
+    "zephyr"
+  ],
+  "homepage": "https://github.com/ZephyrCloudIO/zephyr-packages/tree/main/libs/zephyr-nextjs-plugin#readme",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ZephyrCloudIO",
+    "url": "https://github.com/ZephyrCloudIO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZephyrCloudIO/zephyr-packages.git",
+    "directory": "libs/zephyr-nextjs-plugin"
+  },
+  "files": [
+    "dist",
+    "runtime",
+    "README.md",
+    "LICENSE",
+    "!dist/**/*.map"
+  ],
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json",
+    "./adapter": {
+      "import": {
+        "types": "./dist/adapter.d.mts",
+        "default": "./dist/adapter.mjs"
+      },
+      "require": {
+        "types": "./dist/adapter.d.ts",
+        "default": "./dist/adapter.js"
+      }
+    },
+    "./runtime/zephyr-server.mjs": "./runtime/zephyr-server.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "rslib build --lib esm && rslib build --lib cjs --no-clean",
+    "patch-version": "pnpm version",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc -b",
+    "test": "rstest run"
+  },
+  "dependencies": {
+    "zephyr-agent": "workspace:*"
+  },
+  "devDependencies": {
+    "@rslib/core": "catalog:rslib",
+    "@rstest/core": "catalog:rstest",
+    "typescript": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "next": "catalog:peer-compat"
+  }
+}

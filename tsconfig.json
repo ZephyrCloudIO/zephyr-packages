@@ -38,6 +38,9 @@
       "path": "./libs/zephyr-metro-plugin/tsconfig.json"
     },
     {
+      "path": "./libs/zephyr-nextjs-plugin/tsconfig.json"
+    },
+    {
       "path": "./libs/zephyr-modernjs-plugin/tsconfig.json"
     },
     {

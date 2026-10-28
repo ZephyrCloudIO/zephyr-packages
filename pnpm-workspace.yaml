@@ -5,6 +5,8 @@ packages:
   - e2e/**
   - '!**/dist/**'
   - '!**/lib/**'
+  # Next.js copies package.json into .next/standalone; never a workspace package.
+  - '!**/.next/**'
 
 catalog:
   '@ast-grep/napi': ^0.45.0
@@ -51,6 +53,7 @@ catalog:
   lint-staged: ^17.4.1
   lucide-react: ^1.39.0
   magic-string: 1.2.3
+  next: ^16.4.3
   open: ^11.0.0
   oxfmt: 0.66.0
   oxlint: 1.81.0
@@ -193,6 +196,7 @@ catalogs:
     '@tanstack/react-start': ^1.0.0
     astro: ^4.0.0 || ^5.15.8 || ^6.4.6 || ^7.0.7
     metro: '>=0.70.0'
+    next: '>=16.4.0'
     nuxt: ^3.0.0 || ^4.0.0
     react: '>=19.0.0'
     react-native: '>=0.60.0'

@@ -1,6 +1,13 @@
 import { access, constants } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { ZephyrEngine, logFn, ZephyrError, ZeErrors } from 'zephyr-agent';
+import {
+  ZephyrEngine,
+  logFn,
+  ZephyrError,
+  ZeErrors,
+  isZephyrDisabled,
+  ZE_DISABLED_MESSAGE,
+} from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import { extractAssetsFromDirectory } from '../lib/extract-assets';
 import { loadPublicationMetadata } from '../lib/publication-metadata';
@@ -25,11 +32,19 @@ export interface DeployResult {
   targetUrls: string[];
 }
 
+/** What `deploy --format json` prints when `ZE_DISABLED=true` skipped the deployment. */
+export interface DeploySkippedResult {
+  skipped: true;
+  reason: 'ZE_DISABLED';
+}
+
 /**
  * Deploy command: Upload pre-built assets from a directory to Zephyr. This is similar to
  * the standalone zephyr-cli tool.
  */
-export async function deployCommand(options: DeployOptions): Promise<DeployResult> {
+export async function deployCommand(
+  options: DeployOptions
+): Promise<DeployResult | DeploySkippedResult> {
   const { directory, target, verbose, ssr, metadataPath, cwd } = options;
 
   // Resolve the directory path
@@ -42,6 +57,12 @@ export async function deployCommand(options: DeployOptions): Promise<DeployResul
     throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
       message: `Directory does not exist: ${directoryPath}`,
     });
+  }
+
+  // Skip mode: nothing is read, authenticated or sent to Zephyr.
+  if (isZephyrDisabled()) {
+    logFn('warn', ZE_DISABLED_MESSAGE);
+    return { skipped: true, reason: 'ZE_DISABLED' };
   }
 
   if (verbose) {

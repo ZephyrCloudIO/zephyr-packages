@@ -13,6 +13,8 @@ const mocks = rs.hoisted(() => ({
   assertTapModuleFederationMetadata: rs.fn(),
   onBuildSuccess: rs.fn(),
   reporter: rs.fn(),
+  isZephyrDisabled: rs.fn(() => false),
+  logZephyrDisabled: rs.fn(),
 }));
 
 rs.mock('@parcel/plugin', () => ({
@@ -26,6 +28,8 @@ rs.mock('@parcel/plugin', () => ({
 rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertZephyrBuildTarget,
   handleGlobalError: rs.fn(),
+  isZephyrDisabled: mocks.isZephyrDisabled,
+  logZephyrDisabled: mocks.logZephyrDisabled,
   ZephyrEngine: {
     defer_create: mocks.deferCreate,
   },
@@ -45,6 +49,53 @@ import { createZephyrReporter } from './index';
 describe('createZephyrReporter', () => {
   beforeEach(() => {
     rs.clearAllMocks();
+    mocks.isZephyrDisabled.mockReturnValue(false);
+  });
+
+  describe('with ZE_DISABLED', () => {
+    async function reportAll(types: string[]) {
+      createZephyrReporter();
+      const reporterOptions = mocks.reporter.mock.calls[0]?.[0] as {
+        report: (event: unknown) => Promise<void>;
+      };
+      for (const type of types) {
+        await reporterOptions.report({
+          event: { type },
+          options: { inputFS: { cwd: () => '/project' } },
+        });
+      }
+    }
+
+    it('does no Zephyr step and says once that a successful build was not deployed', async () => {
+      mocks.isZephyrDisabled.mockReturnValue(true);
+
+      await reportAll(['buildStart', 'buildSuccess', 'buildStart', 'buildSuccess']);
+
+      expect(mocks.onBuildSuccess).not.toHaveBeenCalled();
+      expect(mocks.logZephyrDisabled).toHaveBeenCalledTimes(1);
+    });
+
+    it('says nothing when the build fails', async () => {
+      mocks.isZephyrDisabled.mockReturnValue(true);
+
+      await reportAll(['buildStart', 'buildFailure']);
+
+      expect(mocks.logZephyrDisabled).not.toHaveBeenCalled();
+      expect(mocks.onBuildSuccess).not.toHaveBeenCalled();
+    });
+
+    it('still validates the target first', () => {
+      mocks.isZephyrDisabled.mockReturnValue(true);
+
+      expect(() => createZephyrReporter({ target: 'desktop' as never })).toThrow();
+    });
+
+    it('keeps publishing when skip mode is off', async () => {
+      await reportAll(['buildSuccess']);
+
+      expect(mocks.onBuildSuccess).toHaveBeenCalledTimes(1);
+      expect(mocks.logZephyrDisabled).not.toHaveBeenCalled();
+    });
   });
 
   it('rejects an unsupported untyped target before creating a reporter engine', () => {

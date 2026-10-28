@@ -29,6 +29,15 @@ rs.mock('zephyr-agent', () => ({
           resolved_url: 'http://cdn.example.com/remote.js',
         },
       ]),
+      zephyr_dependencies: {
+        RemoteApp: {
+          application_uid: 'remote-app.project.org',
+          remote_entry_url: 'http://cdn.example.com/remote.js',
+          default_url: 'http://cdn.example.com/remote.js',
+          name: 'RemoteApp',
+          library_type: 'module',
+        },
+      },
       build_id: Promise.resolve('build-id'),
       start_new_build: rs.fn().mockResolvedValue(undefined),
       upload_assets: rs.fn().mockResolvedValue(undefined),
@@ -281,6 +290,26 @@ describe('ZephyrMetroPlugin', () => {
 
       // The plugin should have called engine methods
       expect(ZephyrEngine.create).toHaveBeenCalled();
+    });
+
+    it('reports resolved remotes as zephyrDependencies in the uploaded build stats', async () => {
+      const plugin = new ZephyrMetroPlugin({
+        platform: 'ios',
+        mode: 'production',
+        context: '/project',
+        outDir: 'dist',
+        mfConfig: { name: 'TestApp', remotes: {} },
+      });
+      await plugin.beforeBuild();
+      await plugin.afterBuild();
+
+      expect(plugin.zephyr_engine.upload_assets).toHaveBeenCalledWith(
+        expect.objectContaining({
+          buildStats: expect.objectContaining({
+            zephyrDependencies: plugin.zephyr_engine.zephyr_dependencies,
+          }),
+        })
+      );
     });
 
     it('rolls back a failed upload and allows a fresh afterBuild retry', async () => {

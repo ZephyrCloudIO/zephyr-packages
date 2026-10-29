@@ -18,6 +18,7 @@ import {
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
+import { applyTargetPlaceholder } from '../lib/build-context/ze-util-parse-ze-dependencies';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
@@ -371,7 +372,10 @@ export class ZephyrEngine {
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,
-          version: ze_dependency?.version ?? dep.version,
+          version: applyTargetPlaceholder(
+            ze_dependency?.version ?? dep.version,
+            platform
+          ),
           platform,
           build_context,
           dependencyUrlMode: this.zephyrConfig.dependencyUrlMode,

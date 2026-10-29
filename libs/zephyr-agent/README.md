@@ -121,6 +121,25 @@ compiler participating in that application build. Restart the bundler after chan
 the file so an active `ApplicationContext` never changes identity between watch
 generations.
 
+### Build target placeholder
+
+A remote selector may contain `${target}`, which is replaced with the build target
+(`web`, `ios`, `android`, or `tap-app`) when the dependency is resolved. One selector
+then picks a per-target tag or environment, so a React Native host built for each
+platform consumes that platform's remote without editing `package.json`:
+
+```json
+{
+  "zephyr:dependencies": {
+    "remote": "zephyr:remote.project.org@dev-${target}"
+  }
+}
+```
+
+An iOS build resolves `dev-ios` and an Android build resolves `dev-android`. Those tags
+or environments must exist. In a JavaScript `zephyr.config.*` file, write the selector
+in plain quotes, not a template literal, so JavaScript does not interpolate it.
+
 ### Environment switches
 
 | Variable        | Effect                                                                                 |

@@ -58,6 +58,11 @@ This adapter publishes React Native bundles for `ios` and `android` only.
 because Re.Pack does not produce the generic ESM artifact required by TAP apps.
 Use an ESM-capable Zephyr adapter for TAP apps instead.
 
+Hosts that consume per-platform remote environments can use the `${target}` selector
+placeholder, for example `"remote": "zephyr:remote.project.org@dev-${target}"` in
+`zephyr:dependencies`. An iOS build resolves `dev-ios` and an Android build resolves
+`dev-android`.
+
 Using `zephyr-repack-plugin` by wrapping the Rspack configuration:
 
 ```js

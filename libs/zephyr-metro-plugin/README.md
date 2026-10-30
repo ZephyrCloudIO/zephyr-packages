@@ -213,6 +213,11 @@ module.exports = (async () => {
 })();
 ```
 
+Hosts that consume per-platform remote environments can use the `${target}` selector
+placeholder, for example `"remote": "zephyr:remote.project.org@dev-${target}"` in
+`zephyr:dependencies`. An iOS build resolves `dev-ios` and an Android build resolves
+`dev-android`.
+
 ### Build Scripts
 
 Add these scripts to your `package.json`:

@@ -1,0 +1,8 @@
+.astro/
+.emdash/
+.wrangler/
+dist/
+node_modules/
+.env*
+.dev.vars*
+emdash-env.d.ts

@@ -546,16 +546,22 @@ describe('zephyr env runtime plugin root manifest', () => {
     };
   }
 
-  /** Requests `host/App` from the shell container; returns the entry it was pointed at. */
-  async function requestHost(): Promise<string> {
-    const plugin = createNativeEnvRuntimePlugin(
+  function shellPlugin(name = 'shell', manifestUrl = rootUrl()) {
+    return createNativeEnvRuntimePlugin(
       { host: HOST_UID },
-      { name: 'shell', applicationUid: SHELL_UID, manifestUrl: rootUrl() }
+      { name, applicationUid: SHELL_UID, manifestUrl }
     );
+  }
+
+  /** Requests `host/App` from a shell container; returns the entry it was pointed at. */
+  async function requestHost(
+    plugin = shellPlugin(),
+    container = 'shell'
+  ): Promise<string> {
     const host: TestRemote = { name: 'host', entry: buildEntry() };
     const args = {
       id: 'host/App',
-      options: { name: 'shell', remotes: [host] },
+      options: { name: container, remotes: [host] },
     } as unknown as BeforeRequestArgs;
     await plugin.beforeRequest?.(args);
     return host.entry;
@@ -597,6 +603,59 @@ describe('zephyr env runtime plugin root manifest', () => {
     expect(env(SHELL_UID)).toBeUndefined();
     expect(JSON.parse(await written).dependencies.host.remote_entry_url).toBe(
       `${origin}/host-production/mf-manifest.json`
+    );
+  });
+
+  it('loads the environment of a remote the root switched to another application', async () => {
+    installEnvStorage();
+    rs.mocked(console.warn).mockClear();
+    const entry = `${origin}/replacement/mf-manifest.json`;
+    stored.set(
+      rootUrl(),
+      JSON.stringify({
+        dependencies: {
+          host: { application_uid: 'replacement.p.o', remote_entry_url: entry },
+        },
+      })
+    );
+    routes.set('/replacement/zephyr-manifest.json', {
+      body: { zeVars: { ZE_PUBLIC_DEMO: 'replacement' } },
+    });
+    const plugin = shellPlugin();
+
+    expect(await requestHost(plugin)).toBe(entry);
+    // A later plugin creation must not reseed the superseded build-time UID.
+    shellPlugin();
+    await plugin.afterResolve?.({
+      remote: { name: 'host', entry },
+    } as unknown as AfterResolveArgs);
+
+    expect(env('replacement.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'replacement' });
+    expect(console.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('maps to several applications')
+    );
+  });
+
+  it("applies each container's own root, whenever its plugin is created", async () => {
+    installEnvStorage();
+    const rootA = `${origin}/shell-a/zephyr-manifest.json`;
+    const rootB = `${origin}/shell-b/zephyr-manifest.json`;
+    const rootC = `${origin}/shell-c/zephyr-manifest.json`;
+    stored.set(rootA, JSON.stringify(hostOverride('a', 'a')));
+    stored.set(rootB, JSON.stringify(hostOverride('b', 'b')));
+    stored.set(rootC, JSON.stringify(hostOverride('c', 'c')));
+    const pluginA = shellPlugin('shellA', rootA);
+    const pluginB = shellPlugin('shellB', rootB);
+
+    expect(await requestHost(pluginA, 'shellA')).toBe(
+      `${origin}/host-a/mf-manifest.json`
+    );
+    expect(await requestHost(pluginB, 'shellB')).toBe(
+      `${origin}/host-b/mf-manifest.json`
+    );
+    const pluginC = shellPlugin('shellC', rootC);
+    expect(await requestHost(pluginC, 'shellC')).toBe(
+      `${origin}/host-c/mf-manifest.json`
     );
   });
 

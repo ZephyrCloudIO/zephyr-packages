@@ -62,10 +62,14 @@ interface NativeEnvState {
   manifests: Map<string, Promise<LoadedManifest | undefined>>;
   /** Container name → dependencies of the environment it was loaded from. */
   containerDependencies: Map<string, Record<string, ManifestDependency>>;
-  /** Set by the application's own plugin when it reads a root manifest. */
-  root?: NativeEnvRuntimeRoot;
+  /** Container name → root manifest its own plugin reads; set lazily. */
+  roots?: Map<string, RootState>;
+}
+
+interface RootState {
+  root: NativeEnvRuntimeRoot;
   /** Settles once the persisted root manifest, if any, is applied. */
-  rootApplied?: Promise<void>;
+  applied?: Promise<void>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -340,7 +344,11 @@ async function applyRootManifest(
   if (persisted) {
     setApplicationEnv(root.applicationUid, persisted.vars);
     state.containerDependencies.set(root.name, persisted.dependencies);
-    indexDependencies(state, persisted.dependencies);
+    // The root's selections supersede the build-time ones its plugin seeded, so a
+    // remote switched to another application is not mistaken for an ambiguous name.
+    for (const [name, { application_uid }] of Object.entries(persisted.dependencies)) {
+      state.dependencyUids.set(name, application_uid);
+    }
   }
   void loadManifest(root.manifestUrl).then(
     (manifest) => persistManifest(root.manifestUrl, manifest),
@@ -351,12 +359,12 @@ async function applyRootManifest(
   );
 }
 
-function rootApplied(state: NativeEnvState, root: NativeEnvRuntimeRoot): Promise<void> {
-  state.rootApplied ??= applyRootManifest(state, root).catch((error: unknown) => {
+function rootApplied(state: NativeEnvState, entry: RootState): Promise<void> {
+  entry.applied ??= applyRootManifest(state, entry.root).catch((error: unknown) => {
     const reason = error instanceof Error ? error.message : String(error);
-    console.warn(`${LOG_PREFIX} ${root.manifestUrl}: ${reason}`);
+    console.warn(`${LOG_PREFIX} ${entry.root.manifestUrl}: ${reason}`);
   });
-  return state.rootApplied;
+  return entry.applied;
 }
 
 /**
@@ -367,7 +375,8 @@ function rootApplied(state: NativeEnvState, root: NativeEnvRuntimeRoot): Promise
  */
 async function beforeRequest(args: BeforeRequestArgs): Promise<BeforeRequestArgs> {
   const state = getNativeEnvState();
-  if (state.root?.name === args.options.name) await rootApplied(state, state.root);
+  const root = state.roots?.get(args.options.name);
+  if (root) await rootApplied(state, root);
   const dependencies = state.containerDependencies.get(args.options.name);
   if (!dependencies) return args;
   const remote = args.options.remotes.find(
@@ -421,12 +430,23 @@ export function createNativeEnvRuntimePlugin(
   root?: NativeEnvRuntimeRoot
 ): ModuleFederationRuntimePlugin {
   const state = getNativeEnvState();
-  if (root) state.root = root;
+  let seed = Object.entries(remoteUids);
+  if (root) {
+    state.roots ??= new Map();
+    if (state.roots.get(root.name)?.root.manifestUrl !== root.manifestUrl) {
+      state.roots.set(root.name, { root });
+    }
+    // An applied root already selected these remotes; their build-time UIDs are stale.
+    const selected = state.containerDependencies.get(root.name);
+    if (selected) {
+      seed = seed.filter(
+        ([name]) => !Object.prototype.hasOwnProperty.call(selected, name)
+      );
+    }
+  }
   indexDependencies(
     state,
-    Object.fromEntries(
-      Object.entries(remoteUids).map(([name, uid]) => [name, { application_uid: uid }])
-    )
+    Object.fromEntries(seed.map(([name, uid]) => [name, { application_uid: uid }]))
   );
   return {
     name: PLUGIN_NAME,

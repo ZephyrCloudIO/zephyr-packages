@@ -1,6 +1,10 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Configuration } from 'webpack';
 import type { ZeResolvedDependency } from 'zephyr-agent';
+import {
+  snapshotPlugins,
+  restorePlugins,
+} from '../../../zephyr-xpack-internal/src/xpack-extract/plugin-snapshot';
 
 const mocks = rs.hoisted(() => {
   const engine = {
@@ -20,9 +24,13 @@ const mocks = rs.hoisted(() => {
     }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
+    handleGlobalError: rs.fn((error: unknown, options?: { failBuild?: boolean }) => {
+      if (options?.failBuild ?? process.env['ZE_FAIL_BUILD'] === 'true') throw error;
+    }),
+    snapshotPlugins: rs.fn(() => ['snapshot']),
+    restorePlugins: rs.fn(),
     isZephyrDisabled: rs.fn(() => false),
     disableZephyrForXpack: rs.fn((config: unknown) => config),
-    handleGlobalError: rs.fn(),
     extractFederatedDependencyPairs: rs.fn(),
     extractLibraryType: rs.fn(() => 'module'),
     mutWebpackFederatedRemotesConfig: rs.fn(),
@@ -47,6 +55,8 @@ rs.mock('zephyr-xpack-internal', () => ({
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
   coordinateXPackCompilers: mocks.coordinateXPackCompilers,
+  snapshotPlugins: mocks.snapshotPlugins,
+  restorePlugins: mocks.restorePlugins,
 }));
 
 rs.mock('./ze-webpack-plugin', () => ({
@@ -109,6 +119,44 @@ describe('Webpack withZephyr compiler arrays', () => {
     ]);
   });
 
+  it('restores actual nested federation state after partial array configuration', async () => {
+    const remotes = { remote: 'remote@http://localhost:3001/remoteEntry.js' };
+    const runtimePlugins = ['user-runtime'];
+    const federation = {
+      name: 'ModuleFederationPlugin',
+      apply() {},
+      _options: { name: 'host', remotes, runtimePlugins },
+    };
+    const configs = [{ name: 'client', plugins: [federation] }, { name: 'broken' }];
+    mocks.snapshotPlugins.mockImplementationOnce(snapshotPlugins as never);
+    mocks.restorePlugins.mockImplementationOnce(restorePlugins);
+    mocks.mutWebpackFederatedRemotesConfig.mockImplementationOnce(() => {
+      remotes.remote = 'remote@https://example.test/remoteEntry.js';
+      runtimePlugins.push('zephyr-runtime');
+    });
+
+    await expect(withZephyr({ failBuild: false })(configs)).resolves.toBe(configs);
+
+    expect(configs[0]?.plugins).toEqual([federation]);
+    expect(remotes.remote).toBe('remote@http://localhost:3001/remoteEntry.js');
+    expect(runtimePlugins).toEqual(['user-runtime']);
+  });
+
+  it.each([false, true])(
+    'handles snapshot errors with failBuild=%s',
+    async (failBuild) => {
+      const error = new Error('snapshot failed');
+      mocks.snapshotPlugins.mockImplementationOnce(() => {
+        throw error;
+      });
+      const configs = [{ name: 'client' }, { name: 'server' }];
+      const result = withZephyr({ failBuild })(configs);
+      if (failBuild) await expect(result).rejects.toBe(error);
+      else await expect(result).resolves.toBe(configs);
+      expect(mocks.create).not.toHaveBeenCalled();
+    }
+  );
+
   it('sets tap-app before resolving a direct Webpack build', async () => {
     const config = { name: 'client', context: '/repo' } as Configuration;
 
@@ -129,26 +177,89 @@ describe('Webpack withZephyr compiler arrays', () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it('rejects coordinated configuration errors instead of waiting for a missing compiler', async () => {
-    const configs = [
-      { name: 'client', context: '/repo' },
-      { name: 'broken', context: '/repo' },
-    ] as Configuration[];
+  describe('when Zephyr fails while configuring a compiler array', () => {
+    const originalFailBuild = process.env['ZE_FAIL_BUILD'];
 
-    await expect(withZephyr()(configs)).rejects.toThrow('invalid federation config');
-    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
-    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    function brokenArray(): Configuration[] {
+      return [
+        { name: 'client', context: '/repo' },
+        { name: 'broken', context: '/repo' },
+      ] as Configuration[];
+    }
+
+    afterEach(() => {
+      if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+      else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    });
+
+    it('lets the failBuild option override ZE_FAIL_BUILD in both directions', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      await expect(withZephyr({ failBuild: true })(brokenArray())).rejects.toThrow(
+        'invalid federation config'
+      );
+
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const configs = brokenArray();
+      await expect(withZephyr({ failBuild: false })(configs)).resolves.toBe(configs);
+    });
+
+    it('fails the build when ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+
+      await expect(withZephyr()(brokenArray())).rejects.toThrow(
+        'invalid federation config'
+      );
+      expect(mocks.handleGlobalError).toHaveBeenCalledTimes(1);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the build green without ZE_FAIL_BUILD and removes the partial plugins', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const configs = brokenArray();
+
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'invalid federation config' }),
+        { failBuild: undefined }
+      );
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('fails the build when Zephyr cannot start and ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const unreachable = new Error('Zephyr cannot be reached');
+      mocks.create.mockRejectedValueOnce(unreachable);
+
+      await expect(withZephyr()(brokenArray())).rejects.toBe(unreachable);
+      expect(mocks.engine.build_failed).not.toHaveBeenCalled();
+    });
+
+    it('keeps the build green when Zephyr cannot start and ZE_FAIL_BUILD is unset', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const unreachable = new Error('Zephyr cannot be reached');
+      mocks.create.mockRejectedValueOnce(unreachable);
+      const configs = brokenArray();
+
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(unreachable, {
+        failBuild: undefined,
+      });
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
+    });
   });
 
-  it('rolls back direct configuration errors before preserving fail-open semantics', async () => {
+  it('releases the direct build before logging configuration errors', async () => {
     const config = { name: 'broken', context: '/repo' } as Configuration;
 
-    await expect(withZephyr()(config)).resolves.toBe(config);
+    await expect(withZephyr({ failBuild: false })(config)).resolves.toBe(config);
 
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'invalid federation config' }),
-      { failBuild: undefined }
+      { failBuild: false }
     );
   });
   it('skips every Zephyr step when ZE_DISABLED is set', async () => {

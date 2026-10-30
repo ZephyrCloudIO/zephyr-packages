@@ -2,13 +2,16 @@ import { beforeEach } from '@rstest/core';
 import type { Mocked } from '@rstest/core';
 
 import { describe, expect, rs, it } from '@rstest/core';
-import { resolve_remote_dependency } from '../resolve_remote_dependency';
-import { ZephyrError } from '../../lib/errors';
-import axios from 'axios';
+import {
+  RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS,
+  resolve_remote_dependency,
+} from '../resolve_remote_dependency';
+import { ZeErrors, ZephyrError, getZephyrErrorCategory } from '../../lib/errors';
+import { fetchWithRetries } from '../../lib/http/fetch-with-retries';
+import { createUnreachableError } from '../../lib/http/http-failure';
 
-// Mock axios instead of fetch
-rs.mock('axios', { spy: true });
-const axiosMock = axios as Mocked<typeof axios>;
+rs.mock('../../lib/http/fetch-with-retries', { spy: true });
+const fetchMock = fetchWithRetries as Mocked<typeof fetchWithRetries>;
 
 const mockToken = 'test-token';
 const getTokenMock = rs.fn();
@@ -25,43 +28,64 @@ const mock_api_response = {
   remote_entry_url: 'https://test.default.com/remoteEntry.js',
 };
 
+function jsonResponse(status: number, body: unknown): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    text: async () => JSON.stringify(body),
+    json: async () => body,
+  } as Response;
+}
+
+function requestedUrl(call = 0): URL {
+  return fetchMock.mock.calls[call][0] as URL;
+}
+
 describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () => {
   beforeEach(() => {
     getTokenMock.mockReset();
-    axiosMock.get.mockReset();
+    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
+    fetchMock.mockReset();
   });
 
   it('should resolve a remote dependency successfully', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: mock_api_response }));
 
-    const result = await resolve_remote_dependency({ application_uid, version });
+    const result = await resolve_remote_dependency({
+      application_uid,
+      version,
+      build_context: 'local',
+    });
 
     expect(getTokenMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ ...mock_api_response, version });
-    expect(axiosMock.get).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`
-      ),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mockToken}`,
-          Accept: 'application/json',
-        },
-      }
+    expect(requestedUrl().pathname).toContain(
+      `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent(version)}`
     );
+    expect(fetchMock.mock.calls[0][1]).toEqual({
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${mockToken}`,
+        Accept: 'application/json',
+      },
+    });
+  });
+
+  it('bounds every lookup with a deadline so a silent gateway cannot stall the build', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: mock_api_response }));
+
+    await resolve_remote_dependency({ application_uid, version, build_context: 'local' });
+
+    expect(RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS).toBeGreaterThan(0);
+    expect(RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS).toBeLessThanOrEqual(30_000);
+    // (url, options, retries, deadlineMs): the retry count keeps its default.
+    expect(fetchMock.mock.calls[0][2]).toBeUndefined();
+    expect(fetchMock.mock.calls[0][3]).toBe(RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS);
   });
 
   it('sends tap-app as the dependency build target', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: mock_api_response }));
 
     await resolve_remote_dependency({
       application_uid,
@@ -70,17 +94,12 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
       build_context: 'local',
     });
 
-    const requestedUrl = new URL(axiosMock.get.mock.calls[0][0] as string);
-    expect(requestedUrl.searchParams.get('build_target')).toBe('tap-app');
-    expect(requestedUrl.searchParams.get('build_context')).toBe('local');
+    expect(requestedUrl().searchParams.get('build_target')).toBe('tap-app');
+    expect(requestedUrl().searchParams.get('build_context')).toBe('local');
   });
 
   it('requests immutable version URLs when configured', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: mock_api_response }));
 
     await resolve_remote_dependency({
       application_uid,
@@ -89,21 +108,15 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
       dependencyUrlMode: 'version',
     });
 
-    const requestedUrl = new URL(axiosMock.get.mock.calls[0][0] as string);
-    expect(requestedUrl.searchParams.get('url_mode')).toBe('version');
+    expect(requestedUrl().searchParams.get('url_mode')).toBe('version');
   });
 
   it('omits the URL mode when the default selector behavior is used', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: mock_api_response }));
 
-    await resolve_remote_dependency({ application_uid, version });
+    await resolve_remote_dependency({ application_uid, version, build_context: 'local' });
 
-    const requestedUrl = new URL(axiosMock.get.mock.calls[0][0] as string);
-    expect(requestedUrl.searchParams.has('url_mode')).toBe(false);
+    expect(requestedUrl().searchParams.has('url_mode')).toBe(false);
   });
 
   it('rejects an unsupported target before making a dependency request', async () => {
@@ -116,90 +129,113 @@ describe('libs/zephyr-agent/src/zephyr-engine/resolve_remote_dependency.ts', () 
       })
     ).rejects.toThrow('resolve_remote_dependency({ platform }) must be one of');
 
-    expect(axiosMock.get).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('should throw ZephyrError on not ok response', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockRejectedValueOnce({
-      response: {
-        status: 404,
-        data: { message: 'Not found' },
-      },
+  it('keeps a 404 as a remote resolution error, not an outage', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(404, { message: 'Not found' }));
+
+    const error = await resolve_remote_dependency({
+      application_uid,
+      version,
+      build_context: 'local',
+    }).catch((caught: unknown) => caught);
+
+    expect(ZephyrError.is(error, ZeErrors.ERR_RESOLVE_REMOTES)).toBe(true);
+    expect(getZephyrErrorCategory(error)).toBe('config');
+  });
+
+  it('reports a 503 from /resolve as unreachable, not as a missing remote', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(503, { message: 'Unavailable' }));
+
+    const error = await resolve_remote_dependency({
+      application_uid,
+      version,
+      build_context: 'local',
+    }).catch((caught: unknown) => caught);
+
+    expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
+    expect(getZephyrErrorCategory(error)).toBe('unreachable');
+    expect((error as Error).message).not.toContain('has not been built');
+  });
+
+  it('passes through the unreachable error raised for a network failure or timeout', async () => {
+    const unreachable = createUnreachableError({
+      method: 'GET',
+      url: 'https://api.example.com/resolve',
+      failure: 'timeout',
+      detail: 'The request timed out after retries (ECONNABORTED)',
     });
+    fetchMock.mockRejectedValueOnce(unreachable);
 
-    const promise = resolve_remote_dependency({ application_uid, version });
-
-    await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalled();
+    await expect(
+      resolve_remote_dependency({ application_uid, version, build_context: 'local' })
+    ).rejects.toBe(unreachable);
   });
 
   it('should throw ZephyrError when there is no response.value', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: null },
-    });
-
-    const promise = resolve_remote_dependency({ application_uid, version });
-
-    await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalled();
-  });
-
-  it('throws an error when request fails', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    const mockError = new Error('Network Error');
-    axiosMock.get.mockRejectedValueOnce(mockError);
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: null }));
 
     const promise = resolve_remote_dependency({
       application_uid,
       version,
+      build_context: 'local',
     });
 
     await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalled();
+  });
+
+  it('wraps an unclassified failure in a ZephyrError', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('Network Error'));
+
+    await expect(
+      resolve_remote_dependency({ application_uid, version, build_context: 'local' })
+    ).rejects.toThrow(ZephyrError);
   });
 
   it('falls back to the latest published version when a workspace build is not found', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
     // workspace:* has no matching build in the current context (e.g. host built alone)
-    axiosMock.get.mockRejectedValueOnce({
-      response: { status: 404, data: { message: 'Not found' } },
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse(404, { message: 'Not found' }));
     // fallback to "*" resolves against the latest published version
-    axiosMock.get.mockResolvedValueOnce({
-      status: 200,
-      data: { value: mock_api_response },
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { value: mock_api_response }));
 
     const result = await resolve_remote_dependency({
       application_uid,
       version: 'workspace:*',
+      build_context: 'local',
     });
 
     expect(result).toEqual({ ...mock_api_response, version: '*' });
-    expect(axiosMock.get).toHaveBeenCalledTimes(2);
-    expect(axiosMock.get).toHaveBeenLastCalledWith(
-      expect.stringContaining(
-        `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent('*')}`
-      ),
-      expect.anything()
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(requestedUrl(1).pathname).toContain(
+      `/resolve/${encodeURIComponent(application_uid)}/${encodeURIComponent('*')}`
     );
   });
 
   it('throws when both the workspace resolution and the fallback fail', async () => {
-    getTokenMock.mockImplementation(() => Promise.resolve(mockToken));
-    axiosMock.get.mockRejectedValue({
-      response: { status: 404, data: { message: 'Not found' } },
-    });
+    fetchMock.mockResolvedValue(jsonResponse(404, { message: 'Not found' }));
 
-    const promise = resolve_remote_dependency({
+    await expect(
+      resolve_remote_dependency({
+        application_uid,
+        version: 'workspace:*',
+        build_context: 'local',
+      })
+    ).rejects.toThrow(ZephyrError);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not repeat the lookup for the fallback version when Zephyr is unreachable', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(503, { message: 'Unavailable' }));
+
+    const error = await resolve_remote_dependency({
       application_uid,
       version: 'workspace:*',
-    });
+      build_context: 'local',
+    }).catch((caught: unknown) => caught);
 
-    await expect(promise).rejects.toThrow(ZephyrError);
-    expect(axiosMock.get).toHaveBeenCalledTimes(2);
+    expect(getZephyrErrorCategory(error)).toBe('unreachable');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

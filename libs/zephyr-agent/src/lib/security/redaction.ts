@@ -5,22 +5,42 @@ const MAX_DEPTH = 10;
 const MAX_NODES = 2_000;
 
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s<>"'`\p{Cc}]+/giu;
-const BEARER_TOKEN = /\b(Bearer\s+)[^\s,;"'}\]]+/giu;
+// An existing marker is matched whole inside every value pattern so that redacting twice
+// never splits it at its `]` and leaves a stray bracket behind.
+const REDACTED_MARKER = String.raw`\[REDACTED\]`;
+const BEARER_TOKEN = new RegExp(
+  String.raw`\b(Bearer\s+)(?:${REDACTED_MARKER}|[^\s,;"'}\]])+`,
+  'giu'
+);
 const JWT_TOKEN = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu;
 const COOKIE_HEADER = /\b(cookie|set-cookie)(\s*:\s*)[^\r\n]*/giu;
-const SENSITIVE_ASSIGNMENT =
-  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
-const SENSITIVE_WORD_VALUE =
-  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)([^\s,;"'}\]]+)/giu;
+const SENSITIVE_ASSIGNMENT = new RegExp(
+  String.raw`((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)("[^"]*"|'[^']*'|(?:${REDACTED_MARKER}|[^,\s;&}\]])+)`,
+  'giu'
+);
+const SENSITIVE_WORD_VALUE = new RegExp(
+  String.raw`\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)((?:${REDACTED_MARKER}|[^\s,;"'}\]])+)`,
+  'giu'
+);
+/** HTTP status codes, and `-1` for a request that was canceled before any response. */
+const HTTP_STATUS_CODE = /^(?:[1-5]\d{2}|-1)$/u;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/**
+ * A `code` is safe to log when it names a diagnostic (`ZE40035`, `ECONNREFUSED`) or an
+ * HTTP status (`503`). OAuth authorization codes are opaque and longer, so they stay
+ * redacted.
+ */
 function isSafeDiagnosticCode(value: unknown): boolean {
+  if (typeof value === 'number') return HTTP_STATUS_CODE.test(String(value));
   return (
     typeof value === 'string' &&
-    (/^ZE\d{5}$/u.test(value) || /^E[A-Z][A-Z0-9_]{2,}$/u.test(value))
+    (/^ZE\d{5}$/u.test(value) ||
+      /^E[A-Z][A-Z0-9_]{2,}$/u.test(value) ||
+      HTTP_STATUS_CODE.test(value))
   );
 }
 
@@ -54,7 +74,12 @@ function splitTrailingPunctuation(value: string): [url: string, trailing: string
   let url = value;
   let trailing = '';
 
-  while (url.length > 0 && /[),.;\]}]/u.test(url.at(-1) ?? '')) {
+  // The `]` of a previous `[REDACTED]` marker is part of the URL, not punctuation after it.
+  while (
+    url.length > 0 &&
+    !url.endsWith(REDACTED) &&
+    /[),.;\]}]/u.test(url.at(-1) ?? '')
+  ) {
     trailing = `${url.at(-1)}${trailing}`;
     url = url.slice(0, -1);
   }
@@ -116,13 +141,16 @@ function redactNonUrlText(value: string): string {
     .replace(BEARER_TOKEN, `$1${REDACTED}`)
     .replace(JWT_TOKEN, REDACTED)
     .replace(SENSITIVE_ASSIGNMENT, (match, prefix: string, assignedValue: string) =>
-      isSafeCodeAssignment(prefix, assignedValue) ? match : `${prefix}${REDACTED}`
+      assignedValue === REDACTED || isSafeCodeAssignment(prefix, assignedValue)
+        ? match
+        : `${prefix}${REDACTED}`
     )
     .replace(
       SENSITIVE_WORD_VALUE,
       (match, key: string, whitespace: string, assignedValue: string) =>
-        normalizeKey(key) === 'code' &&
-        isSafeDiagnosticCode(unquote(assignedValue).replace(/[).]+$/u, ''))
+        assignedValue === REDACTED ||
+        (normalizeKey(key) === 'code' &&
+          isSafeDiagnosticCode(unquote(assignedValue).replace(/[).]+$/u, '')))
           ? match
           : `${key}${whitespace}${REDACTED}`
     );

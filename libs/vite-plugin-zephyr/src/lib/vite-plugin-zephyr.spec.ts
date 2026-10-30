@@ -4,7 +4,13 @@ import type * as NodeModule from 'node:module';
 import type { Plugin, ResolvedConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
-import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
+import {
+  applyBaseHrefToAssets,
+  isZephyrUnreachableError,
+  ZeErrors,
+  ZephyrError,
+  type ZeBuildAssetsMap,
+} from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
   viteVersion: '7.0.0',
@@ -16,6 +22,7 @@ const mocks = rs.hoisted(() => ({
   rollbackPartialAssetMapClaimBatch: rs.fn(),
   zeBuildDashData: rs.fn(async () => ({})),
   deferCreate: rs.fn(),
+  deferredEngine: undefined as Promise<unknown> | undefined,
   zeLogInit: rs.fn(),
   logFn: rs.fn(),
   engine: {
@@ -67,7 +74,7 @@ rs.mock('zephyr-agent', () => {
     },
     ZephyrEngine: {
       defer_create: () => ({
-        zephyr_engine_defer: Promise.resolve(mocks.engine),
+        zephyr_engine_defer: mocks.deferredEngine ?? Promise.resolve(mocks.engine),
         zephyr_defer_create: mocks.deferCreate,
       }),
     },
@@ -245,6 +252,7 @@ describe('vite-plugin-zephyr', () => {
     });
     mocks.engine.upload_assets.mockResolvedValue(undefined);
     mocks.extractAssets.mockResolvedValue(asset('app.js'));
+    mocks.deferredEngine = undefined;
     delete process.env['ZE_FAIL_BUILD'];
     delete process.env['ZE_BUILD_INVOCATION_ID'];
   });
@@ -1230,6 +1238,78 @@ describe('vite-plugin-zephyr', () => {
     expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(2);
     expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(1);
     expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
+  });
+
+  describe('when Zephyr is unreachable', () => {
+    function unreachableError(): ZephyrError<'ERR_ZEPHYR_UNREACHABLE'> {
+      return new ZephyrError(ZeErrors.ERR_ZEPHYR_UNREACHABLE, {
+        method: 'GET',
+        url: 'https://api.example.test/application-config/app',
+        detail: 'HTTP 503',
+        hint: 'Try again later.',
+      });
+    }
+
+    test.each(['true', undefined])(
+      'follows ZE_FAIL_BUILD=%s when the upload cannot reach Zephyr',
+      async (failBuild) => {
+        if (failBuild) process.env['ZE_FAIL_BUILD'] = failBuild;
+        const errorLog = rs.spyOn(console, 'error').mockImplementation(() => {});
+        const outage = unreachableError();
+        expect(isZephyrUnreachableError(outage)).toBe(true);
+        mocks.engine.upload_assets.mockRejectedValue(outage);
+        const plugin = await configuredPlugin(
+          { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
+          true
+        );
+
+        const write = writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist/client' },
+          {}
+        );
+
+        if (failBuild) {
+          await expect(write).rejects.toBe(outage);
+        } else {
+          await expect(write).resolves.toBeUndefined();
+          expect(errorLog).toHaveBeenCalledWith(expect.stringContaining('ZE50001'));
+        }
+        expect(mocks.engine.build_finished).not.toHaveBeenCalled();
+      }
+    );
+
+    test.each(['true', undefined])(
+      'follows ZE_FAIL_BUILD=%s when the engine cannot start',
+      async (failBuild) => {
+        if (failBuild) process.env['ZE_FAIL_BUILD'] = failBuild;
+        const errorLog = rs.spyOn(console, 'error').mockImplementation(() => {});
+        const startFailure = new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+          message: 'Stable Git branch and commit information is required in CI',
+        });
+        const rejected = Promise.reject(startFailure);
+        rejected.catch(() => undefined);
+        mocks.deferredEngine = rejected;
+        const plugin = await configuredPlugin(
+          { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
+          true
+        );
+
+        const write = writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist/client' },
+          {}
+        );
+
+        if (failBuild) {
+          await expect(write).rejects.toBe(startFailure);
+        } else {
+          await expect(write).resolves.toBeUndefined();
+          expect(errorLog).toHaveBeenCalledWith(expect.stringContaining('ZE10016'));
+        }
+        expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+      }
+    );
   });
 
   test('allocates a new coordinated generation after publication failure', async () => {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 const mocks = rs.hoisted(() => ({
   engine: {
@@ -10,6 +10,11 @@ const mocks = rs.hoisted(() => ({
   },
   create: rs.fn(),
   coordinate: rs.fn(),
+  handleGlobalError: rs.fn((error: unknown) => {
+    if (process.env['ZE_FAIL_BUILD'] === 'true') throw error;
+  }),
+  snapshotPlugins: rs.fn(() => ['snapshot']),
+  restorePlugins: rs.fn(),
   configure: rs.fn(),
   rspackWithZephyr: rs.fn(),
   isZephyrDisabled: rs.fn(() => false),
@@ -23,6 +28,7 @@ const mocks = rs.hoisted(() => ({
 
 rs.mock('zephyr-agent', () => ({
   assertZephyrBuildTarget: mocks.assertBuildTarget,
+  handleGlobalError: mocks.handleGlobalError,
   isZephyrDisabled: mocks.isZephyrDisabled,
   ZephyrEngine: { create: mocks.create },
 }));
@@ -30,6 +36,8 @@ rs.mock('zephyr-agent', () => ({
 rs.mock('zephyr-xpack-internal', () => ({
   disableZephyrForXpack: mocks.disableZephyrForXpack,
   coordinateXPackCompilers: mocks.coordinate,
+  snapshotPlugins: mocks.snapshotPlugins,
+  restorePlugins: mocks.restorePlugins,
 }));
 
 rs.mock('zephyr-rspack-plugin', () => ({
@@ -127,23 +135,68 @@ describe('Rsbuild withZephyr compiler coordination', () => {
     expect(mocks.rspackWithZephyr).not.toHaveBeenCalled();
   });
 
-  it('releases the shared engine when coordinated configuration fails', async () => {
-    let hook:
-      | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
-      | undefined;
-    const error = new Error('configuration failed');
-    mocks.configure.mockRejectedValueOnce(error);
-    const plugin = withZephyr();
-    await plugin.setup({
-      onBeforeCreateCompiler(options: { handler: typeof hook }) {
-        hook = options.handler;
-      },
-    } as never);
+  describe('when Zephyr fails while configuring the bundler configs', () => {
+    const originalFailBuild = process.env['ZE_FAIL_BUILD'];
 
-    await expect(
-      hook?.({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
-    ).rejects.toBe(error);
-    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    async function registeredHook() {
+      let hook:
+        | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
+        | undefined;
+      await withZephyr().setup({
+        onBeforeCreateCompiler(options: { handler: typeof hook }) {
+          hook = options.handler;
+        },
+      } as never);
+      return hook!;
+    }
+
+    afterEach(() => {
+      if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+      else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    });
+
+    it('releases the shared engine and fails the build when ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const error = new Error('configuration failed');
+      mocks.configure.mockRejectedValueOnce(error);
+      const hook = await registeredHook();
+
+      await expect(
+        hook({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
+      ).rejects.toBe(error);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('releases the engine, removes the plugins and keeps the build green otherwise', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const error = new Error('configuration failed');
+      mocks.configure.mockRejectedValueOnce(error);
+      const bundlerConfigs = [{ name: 'web', context: '/repo' }];
+      const hook = await registeredHook();
+
+      await expect(hook({ bundlerConfigs })).resolves.toBeUndefined();
+
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(error);
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(bundlerConfigs, ['snapshot']);
+    });
+
+    it('follows ZE_FAIL_BUILD when Zephyr cannot start at all', async () => {
+      const unreachable = new Error('Zephyr cannot be reached');
+      const hook = await registeredHook();
+
+      mocks.create.mockRejectedValueOnce(unreachable);
+      delete process.env['ZE_FAIL_BUILD'];
+      await expect(
+        hook({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
+      ).resolves.toBeUndefined();
+
+      mocks.create.mockRejectedValueOnce(unreachable);
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      await expect(
+        hook({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
+      ).rejects.toBe(unreachable);
+    });
   });
 
   it('rejects unsupported targets before registering a compiler hook', () => {

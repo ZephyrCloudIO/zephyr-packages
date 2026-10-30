@@ -17,6 +17,25 @@ export interface CliOptions {
 }
 
 /**
+ * Whether the arguments ask for `deploy --format json`. It does not validate the
+ * arguments, so a parse error can still be reported as the one JSON document.
+ */
+export function isJsonDeploy(args: string[]): boolean {
+  const optionsWithValue = new Set(['--target', '-t', '--metadata', '--debounce']);
+  let index = 0;
+  while (index < args.length && args[index].startsWith('-')) {
+    index += optionsWithValue.has(args[index]) ? 2 : 1;
+  }
+  if (args[index] !== 'deploy') return false;
+  // The last `--format` wins, as in parseArgs.
+  let format: string | undefined;
+  for (let i = index + 1; i < args.length; i++) {
+    if (args[i] === '--format') format = args[++i];
+  }
+  return format === 'json';
+}
+
+/**
  * Parse command line arguments.
  *
  * Syntax:
@@ -215,7 +234,8 @@ Options:
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output
   --format <json|text>     Doctor report format, or deploy result format; json prints
-                           one result line on stdout and logs on stderr (default: text)
+                           one JSON document on stdout and logs on stderr, also when
+                           deploy fails (default: text)
   --online                 Doctor only: also check that Zephyr can be reached and that
                            the token and application work (read-only network requests)
   --timeout <milliseconds> Doctor --online only: limit for each check (default: 5000)

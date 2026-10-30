@@ -758,7 +758,7 @@ describe('XPackBuildCoordinator', () => {
     coordinator.failParticipant('client', new Error('client compilation failed'));
 
     expect(() => coordinator.beginParticipant('server', 1)).toThrow(
-      'belongs to a failed logical build'
+      'client compilation failed'
     );
     expect(zephyrEngine.upload_assets).toHaveBeenCalledTimes(1);
 

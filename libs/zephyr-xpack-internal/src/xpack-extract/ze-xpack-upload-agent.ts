@@ -27,9 +27,9 @@ export interface UploadAgentPluginOptions {
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin | undefined;
   hooks?: ZephyrBuildHooks;
   /**
-   * Overrides `ZE_FAIL_BUILD` for errors routed through `handleGlobalError`. Compilation
-   * errors, `start_new_build` failures, and coordinated-build errors throw independently
-   * of this option.
+   * Overrides `ZE_FAIL_BUILD` for errors routed through `handleGlobalError`: upload,
+   * `start_new_build` and coordinated-build failures. Compilation errors throw
+   * independently of this option.
    */
   failBuild?: boolean;
   coordinator?: XPackBuildCoordinator;
@@ -131,14 +131,27 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     await zephyr_engine.build_finished();
   } catch (err) {
     if (coordinator) {
-      throw err;
-    }
-    // setupZeDeploy starts direct builds. Any failure before build_finished must release
-    // that generation so watch mode can retry with fresh identity and logger state.
-    if (zephyr_engine.hasActiveBuild !== false) {
+      // Release the shared build so the other compilers stop waiting for this one. A
+      // contribution failure has already failed it, which makes this a no-op.
+      if (pluginOptions.participant) {
+        try {
+          coordinator.failParticipant(pluginOptions.participant, err);
+        } catch (releaseError) {
+          ze_log.upload('Failed to release coordinated participant:', releaseError);
+        }
+      }
+    } else if (zephyr_engine.hasActiveBuild !== false) {
+      // setupZeDeploy starts direct builds. Any failure before build_finished must release
+      // that generation so watch mode can retry with fresh identity and logger state.
       zephyr_engine.build_failed();
     }
+    // Throws only when the build must fail (ZE_FAIL_BUILD or the failBuild option).
+    // Otherwise the bundle stays valid and the failure is logged, the same for direct and
+    // coordinated builds.
     handleGlobalError(err, { failBuild: pluginOptions.failBuild });
+    // Reached only when the failure was logged. Anyone awaiting onDeploymentDone() must
+    // not wait for a logical build that will never publish.
+    logicalDeploymentCompleted = true;
   } finally {
     if (logicalDeploymentCompleted) {
       emitDeploymentDone();

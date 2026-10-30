@@ -9,8 +9,8 @@ export function isModuleFederationPlugin(
   if (!plugin || typeof plugin !== 'object') return false;
 
   if (
-    typeof plugin.constructor.name?.includes === 'function' &&
-    plugin.constructor.name?.includes('ModuleFederationPlugin')
+    typeof plugin.constructor?.name?.includes === 'function' &&
+    plugin.constructor?.name?.includes('ModuleFederationPlugin')
   ) {
     return true;
   }

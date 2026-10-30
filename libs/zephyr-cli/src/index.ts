@@ -2,17 +2,20 @@
 
 import { cwd } from 'node:process';
 import { ZeErrors, ZephyrError } from 'zephyr-agent';
-import { parseArgs } from './cli';
+import { isJsonDeploy, parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
 import { doctorCommand } from './commands/doctor';
 import { runCommand } from './commands/run';
 import { watchCommand } from './commands/watch';
+import { createFailureDocument } from './lib/failure-document';
 import { reserveStdout } from './lib/stdout';
 
 async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  // Keep stdout to the one JSON document; logs and login prompts go to stderr.
+  const writeJson = isJsonDeploy(args) ? reserveStdout() : undefined;
   try {
     // Parse command line arguments
-    const args = process.argv.slice(2);
     const options = parseArgs(args);
 
     // Get current working directory
@@ -36,8 +39,6 @@ async function main(): Promise<void> {
       }
 
       if (options.command === 'deploy') {
-        // Keep stdout to the one result line; logs and login prompts go to stderr.
-        const writeResult = options.format === 'json' ? reserveStdout() : undefined;
         const result = await deployCommand({
           directory: options.directory,
           target: options.target,
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
           metadataPath: options.metadataPath,
           cwd: workingDir,
         });
-        writeResult?.(`${JSON.stringify(result)}\n`);
+        await writeJson?.(`${JSON.stringify(result)}\n`);
       } else {
         await watchCommand({
           directory: options.directory,
@@ -76,6 +77,8 @@ async function main(): Promise<void> {
     }
   } catch (error) {
     console.error('[ze-cli] Error:', ZephyrError.format(error));
+    // The document goes after the logs, so stdout holds exactly one JSON document.
+    await writeJson?.(`${JSON.stringify(createFailureDocument(error))}\n`);
     process.exit(1);
   }
 }

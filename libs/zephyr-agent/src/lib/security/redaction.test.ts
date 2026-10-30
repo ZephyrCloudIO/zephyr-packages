@@ -101,4 +101,64 @@ describe('logging redaction', () => {
     expect(result).toContain('code ECONNRESET');
     expect(result).not.toContain(secrets.code);
   });
+  it('keeps HTTP status codes readable', () => {
+    const result = redactString(
+      'HTTP request for GET https://api.example.com/x failed with status code 503.'
+    );
+
+    expect(result).toContain('status code 503.');
+    expect(result).not.toContain(REDACTED);
+    expect(redactString('response code=404 and code: 502')).toBe(
+      'response code=404 and code: 502'
+    );
+    expect(sanitizeForLogging({ code: 503, status: 503 })).toEqual({
+      code: 503,
+      status: 503,
+    });
+  });
+
+  it('keeps the -1 status of a canceled request', () => {
+    expect(redactString('Request failed with status code -1.')).toBe(
+      'Request failed with status code -1.'
+    );
+  });
+
+  it('still redacts opaque codes that are not HTTP statuses', () => {
+    expect(redactString(`authorization code ${secrets.code}`)).not.toContain(
+      secrets.code
+    );
+    expect(redactString('code 123456')).toBe(`code ${REDACTED}`);
+    expect(sanitizeForLogging({ code: 123456 })).toEqual({ code: REDACTED });
+  });
+
+  it('is idempotent: redacting again never changes or grows the result', () => {
+    const inputs = [
+      'HTTP request failed with status code 503.',
+      `Authorization: Bearer ${secrets.token}`,
+      `Bearer ${secrets.token}, then token ${secrets.token}.`,
+      `token=${secrets.token}; secret: ${secrets.secret}`,
+      `session ${secrets.session} and state ${secrets.state}`,
+      `code=${secrets.code} oauthCode=${secrets.code}`,
+      `Cookie: sid=${secrets.session}; opaque=${secrets.token}`,
+      `GET https://uploads.example.com/file?X-Amz-Signature=${secrets.signature}#frag`,
+      'Token found in environment. Using secret token for authentication.',
+      '{"token":"abc","code":"x1y2z3","nested":{"password":"hunter2"}}',
+      'jwt: eyJhbGciOiJIUzI1NiJ9.c2VjcmV0.c2lnbmF0dXJl',
+    ];
+
+    for (const input of inputs) {
+      const once = redactString(input);
+      expect(redactString(once)).toBe(once);
+      expect(redactString(redactString(once))).toBe(once);
+      expect(once).not.toContain(`${REDACTED}]`);
+    }
+  });
+
+  it('does not leave a stray bracket when a marker is redacted again', () => {
+    const once = redactString('Token found in environment');
+    expect(redactString(once)).toBe(once);
+    expect(redactString('token [REDACTED]')).toBe('token [REDACTED]');
+    expect(redactString('password=[REDACTED]')).toBe('password=[REDACTED]');
+    expect(redactString('Bearer [REDACTED]')).toBe('Bearer [REDACTED]');
+  });
 });

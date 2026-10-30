@@ -31,7 +31,13 @@ import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
-import { ZeErrors, ZephyrError } from '../lib/errors';
+import {
+  type HandleGlobalErrorOptions,
+  ZeErrors,
+  ZephyrError,
+  isZephyrUnreachableError,
+  shouldFailBuild,
+} from '../lib/errors';
 import { ze_log } from '../lib/logging';
 import { cyanBright, greenBright, white, yellow } from '../lib/logging/picocolor';
 import { type ZeLogger, logFn, logger } from '../lib/logging/ze-log-event';
@@ -318,7 +324,8 @@ export class ZephyrEngine {
    */
   async resolve_remote_dependencies(
     deps: ZeDependencyPair[],
-    defaultLibraryType = 'var'
+    defaultLibraryType = 'var',
+    options: HandleGlobalErrorOptions = {}
   ): Promise<ZeResolvedDependency[] | null> {
     if (!deps) {
       return null;
@@ -433,6 +440,16 @@ ${errorSummary}\n
 More information on remote dependency resolution please check:
 https://docs.zephyr-cloud.io/features/remote-dependencies`,
       });
+    }
+
+    // A remote that does not exist is skipped, so a host can build before its remote.
+    // An unreachable Zephyr is different: the remote may exist, and ZE_FAIL_BUILD=true
+    // means a Zephyr failure must stop the build instead of shipping unresolved remotes.
+    if (shouldFailBuild(options)) {
+      const outage = resolution_errors.find(({ error }) =>
+        isZephyrUnreachableError(error)
+      );
+      if (outage) throw outage.error;
     }
 
     this.federated_dependencies = resolution_results.filter(

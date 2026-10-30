@@ -19,7 +19,14 @@ export interface ZeResolvedDependency {
   remote_entry_url: string;
   manifest_url?: string;
   library_type: string;
+  /** Build target this dependency was requested for. */
   platform?: ZephyrBuildTarget;
+  /** What the selector matched; absent from older resolver APIs. */
+  entity_type?: 'version' | 'tag' | 'environment';
+  /** Tag or environment name for label matches; absent from older resolver APIs. */
+  entity_name?: string | null;
+  /** Platform of the matched version (`web` on a mobile fallback); absent from older APIs. */
+  resolved_platform?: string | null;
 }
 
 export async function resolve_remote_dependency(params: {
@@ -126,7 +133,11 @@ async function request_remote_dependency({
         'version: ',
         version
       );
-      return Object.assign({}, response.value, { version, platform });
+      return Object.assign({}, response.value, {
+        version,
+        platform,
+        resolved_platform: response.value.platform,
+      });
     }
 
     throw new ZephyrError(ZeErrors.ERR_RESOLVE_REMOTES, {

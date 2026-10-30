@@ -20,6 +20,13 @@ export interface ZephyrRepackPluginOptions {
 export interface ZephyrRepackOptions {
   target?: NativeBuildTarget;
   hooks?: ZephyrBuildHooks;
+  /**
+   * Tag or environment whose `zephyr-manifest.json` this app reads at runtime, in
+   * `zephyr:dependencies` selector syntax: `@production-${target}` for this app's own
+   * label, `app@label` for another app's. Its remote overrides and `ZE_PUBLIC_*` values
+   * apply from the launch after they are fetched.
+   */
+  runtimeManifest?: string;
 }
 
 export class ZeRepackPlugin {

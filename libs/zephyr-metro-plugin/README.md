@@ -260,6 +260,16 @@ Key OTA features:
 
 With `withZephyr` in `metro.config.js`, Zephyr rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value. `bundle-mf-host`/`bundle-mf-remote` inject a Module Federation runtime plugin that loads the `zephyr-manifest.json` next to each resolved remote and applies its environment values before the remote's code runs; no setup is needed. With `zephyr-native-cache` registered, the last loaded values are kept for offline starts.
 
+### Runtime manifest
+
+A shell app whose bundle ships inside the native binary can follow a Zephyr tag or environment instead of its build-time remotes. Set `runtimeManifest` to a selector in `zephyr:dependencies` syntax: `@label` for this app's own tag or environment, `app@label` for another app's, with `${target}` replaced by the build platform:
+
+```js
+withZephyr({ target: 'ios', runtimeManifest: '@production-${target}' });
+```
+
+`bundle-mf-host`/`bundle-mf-remote` resolve the label's alias URL (never a version URL) and fail when the label does not exist for that platform. At runtime, the app's first remote request applies the `zephyr-manifest.json` persisted by the previous launch (its remote overrides and `ZE_PUBLIC_*` values), then refreshes the stored copy in the background; changes made in the dashboard apply on the next launch or `ZephyrNativeCache.reloadApp()`. The first launch, and apps without `zephyr-native-cache` registered, keep the build-time remotes and values. Use separate iOS and Android labels.
+
 ## Project Structure
 
 Your React Native Metro project should follow this structure:
@@ -371,6 +381,7 @@ Main configuration wrapper for Metro config.
 | `manifestPath`        | `string`                 | Custom manifest endpoint path (default: `/zephyr-manifest.json`) |
 | `entryFiles`          | `string[]`               | Custom entry file patterns for runtime injection (optional)      |
 | `failOnManifestError` | `boolean`                | Throw error if manifest generation fails (default: `false`)      |
+| `runtimeManifest`     | `string`                 | Tag or environment whose manifest the app follows at runtime     |
 
 **Returns:** Async function that takes Metro `ConfigT` and returns enhanced config
 

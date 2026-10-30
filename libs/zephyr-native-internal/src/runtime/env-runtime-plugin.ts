@@ -43,6 +43,16 @@ interface LoadedManifest extends ParsedManifest {
   persisted: boolean;
 }
 
+/** The application's own manifest, read from its Zephyr tag or environment alias. */
+export interface NativeEnvRuntimeRoot {
+  /** Module Federation name of the application's container. */
+  name: string;
+  /** Application UID its `ZE_PUBLIC_*` lookups are scoped by. */
+  applicationUid: string;
+  /** `zephyr-manifest.json` URL of the tag or environment alias. */
+  manifestUrl: string;
+}
+
 interface NativeEnvState {
   /** Consumer-side remote name → application UID; `null` when ambiguous. */
   dependencyUids: Map<string, string | null>;
@@ -52,6 +62,10 @@ interface NativeEnvState {
   manifests: Map<string, Promise<LoadedManifest | undefined>>;
   /** Container name → dependencies of the environment it was loaded from. */
   containerDependencies: Map<string, Record<string, ManifestDependency>>;
+  /** Set by the application's own plugin when it reads a root manifest. */
+  root?: NativeEnvRuntimeRoot;
+  /** Settles once the persisted root manifest, if any, is applied. */
+  rootApplied?: Promise<void>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -307,12 +321,54 @@ async function loadRemoteEnv(remote: {
 }
 
 /**
+ * Applies the root manifest persisted by the previous launch, then refreshes the stored
+ * copy in the background. The refresh only applies on the next launch, so the remotes the
+ * application loads never change mid-session. Without a persisted copy the build-time
+ * remotes and values stay in place.
+ */
+async function applyRootManifest(
+  state: NativeEnvState,
+  root: NativeEnvRuntimeRoot
+): Promise<void> {
+  if (!envStorage()) {
+    console.warn(
+      `${LOG_PREFIX} ${root.manifestUrl}: zephyr-native-cache is not registered; keeping build-time remotes and values`
+    );
+    return;
+  }
+  const persisted = await readPersistedManifest(root.manifestUrl);
+  if (persisted) {
+    setApplicationEnv(root.applicationUid, persisted.vars);
+    state.containerDependencies.set(root.name, persisted.dependencies);
+    indexDependencies(state, persisted.dependencies);
+  }
+  void loadManifest(root.manifestUrl).then(
+    (manifest) => persistManifest(root.manifestUrl, manifest),
+    (error: unknown) => {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`${LOG_PREFIX} ${root.manifestUrl}: ${reason}`);
+    }
+  );
+}
+
+function rootApplied(state: NativeEnvState, root: NativeEnvRuntimeRoot): Promise<void> {
+  state.rootApplied ??= applyRootManifest(state, root).catch((error: unknown) => {
+    const reason = error instanceof Error ? error.message : String(error);
+    console.warn(`${LOG_PREFIX} ${root.manifestUrl}: ${reason}`);
+  });
+  return state.rootApplied;
+}
+
+/**
  * Points the requested remote at the deployment its container's environment lists, the
  * way the xpack runtime plugin does from the page's zephyr-manifest.json: environment
- * remote overrides replace the entries resolved at build time.
+ * remote overrides replace the entries resolved at build time. The application's own
+ * container reads them from its root manifest.
  */
-function beforeRequest(args: BeforeRequestArgs): BeforeRequestArgs {
-  const dependencies = getNativeEnvState().containerDependencies.get(args.options.name);
+async function beforeRequest(args: BeforeRequestArgs): Promise<BeforeRequestArgs> {
+  const state = getNativeEnvState();
+  if (state.root?.name === args.options.name) await rootApplied(state, state.root);
+  const dependencies = state.containerDependencies.get(args.options.name);
   if (!dependencies) return args;
   const remote = args.options.remotes.find(
     (candidate) =>
@@ -356,13 +412,18 @@ async function afterResolve(args: AfterResolveArgs): Promise<AfterResolveArgs> {
  * MF runtime plugin applying each resolved remote's Zephyr environment: its values from
  * the zephyr-manifest.json next to its entry, and the remote entries that environment
  * lists for the remotes it loads. `remoteUids` (remote name → application UID) seeds the
- * lookup; loaded manifests add nested remotes.
+ * lookup; loaded manifests add nested remotes. `root` applies the application's own tag
+ * or environment manifest, as persisted by the previous launch, to its remotes and
+ * values.
  */
 export function createNativeEnvRuntimePlugin(
-  remoteUids: Readonly<Record<string, string>>
+  remoteUids: Readonly<Record<string, string>>,
+  root?: NativeEnvRuntimeRoot
 ): ModuleFederationRuntimePlugin {
+  const state = getNativeEnvState();
+  if (root) state.root = root;
   indexDependencies(
-    getNativeEnvState(),
+    state,
     Object.fromEntries(
       Object.entries(remoteUids).map(([name, uid]) => [name, { application_uid: uid }])
     )

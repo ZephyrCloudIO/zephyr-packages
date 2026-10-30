@@ -12,6 +12,9 @@ const mocks = rs.hoisted(() => {
     application_uid: 'host.project.org',
     build_failed: rs.fn(),
     resolve_remote_dependencies: rs.fn().mockResolvedValue([]),
+    resolve_runtime_manifest_url: rs
+      .fn()
+      .mockResolvedValue('https://production-ios-host.example/zephyr-manifest.json'),
   };
 
   return {
@@ -171,9 +174,34 @@ describe('Re.Pack native target boundaries', () => {
           remote_entry_url: '',
           library_type: 'var',
         },
-      ]
+      ],
+      undefined
     );
     expect(mocks.configureRuntimePlugin).toHaveBeenCalledTimes(1);
+    expect(mocks.configureRuntimePlugin).toHaveBeenCalledWith(
+      mfPlugin,
+      '/repo/node_modules/.zephyr-repack/env-plugin-abc.js'
+    );
+  });
+
+  it('binds the runtimeManifest root to each Module Federation plugin with remotes', async () => {
+    const mfPlugin = { isMf: true, name: 'shell', remotes: { host: 'host@x' } };
+    const config = { context: '/repo', plugins: [mfPlugin] } as Configuration;
+
+    await withZephyr({ runtimeManifest: '@production-${target}' })(() => config)({
+      platform: 'ios',
+      mode: 'production',
+    });
+
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+    expect(mocks.engine.resolve_runtime_manifest_url).toHaveBeenCalledWith(
+      '@production-${target}'
+    );
+    expect(mocks.writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), [], {
+      name: 'shell',
+      applicationUid: 'host.project.org',
+      manifestUrl: 'https://production-ios-host.example/zephyr-manifest.json',
+    });
     expect(mocks.configureRuntimePlugin).toHaveBeenCalledWith(
       mfPlugin,
       '/repo/node_modules/.zephyr-repack/env-plugin-abc.js'

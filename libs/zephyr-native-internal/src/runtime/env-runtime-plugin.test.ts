@@ -527,3 +527,98 @@ describe('zephyr env runtime plugin', () => {
     expect(env('mini.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'mini-env' });
   });
 });
+
+describe('zephyr env runtime plugin root manifest', () => {
+  const SHELL_UID = 'shell.p.o';
+  const rootPath = '/shell-production/zephyr-manifest.json';
+  const rootUrl = () => `${origin}${rootPath}`;
+  const buildEntry = () => `${origin}/host-build/mf-manifest.json`;
+
+  function hostOverride(tag: string, value: string) {
+    return {
+      dependencies: {
+        host: {
+          application_uid: HOST_UID,
+          remote_entry_url: `${origin}/host-${tag}/mf-manifest.json`,
+        },
+      },
+      zeVars: { ZE_PUBLIC_DEMO: value },
+    };
+  }
+
+  /** Requests `host/App` from the shell container; returns the entry it was pointed at. */
+  async function requestHost(): Promise<string> {
+    const plugin = createNativeEnvRuntimePlugin(
+      { host: HOST_UID },
+      { name: 'shell', applicationUid: SHELL_UID, manifestUrl: rootUrl() }
+    );
+    const host: TestRemote = { name: 'host', entry: buildEntry() };
+    const args = {
+      id: 'host/App',
+      options: { name: 'shell', remotes: [host] },
+    } as unknown as BeforeRequestArgs;
+    await plugin.beforeRequest?.(args);
+    return host.entry;
+  }
+
+  /** Native-cache store whose next write settles the returned promise. */
+  function installStorageAwaitingWrite(): Promise<string> {
+    const written = Promise.withResolvers<string>();
+    installEnvStorage({
+      getItem: async (key) => stored.get(key),
+      setItem: async (key, value) => {
+        stored.set(key, value);
+        written.resolve(value);
+      },
+    });
+    return written.promise;
+  }
+
+  it('applies the persisted manifest and stores the fresh one for the next launch', async () => {
+    const written = installStorageAwaitingWrite();
+    stored.set(rootUrl(), JSON.stringify(hostOverride('staging', 'persisted')));
+    routes.set(rootPath, { body: hostOverride('production', 'fresh') });
+
+    expect(await requestHost()).toBe(`${origin}/host-staging/mf-manifest.json`);
+    expect(env(SHELL_UID)).toEqual({ ZE_PUBLIC_DEMO: 'persisted' });
+
+    expect(JSON.parse(await written).zeVars).toEqual({ ZE_PUBLIC_DEMO: 'fresh' });
+    // The fresh manifest never swaps the host mid-session.
+    expect(await requestHost()).toBe(`${origin}/host-staging/mf-manifest.json`);
+    expect(env(SHELL_UID)).toEqual({ ZE_PUBLIC_DEMO: 'persisted' });
+    expect(hits.get(rootPath)).toBe(1);
+  });
+
+  it('keeps build-time remotes on the first launch', async () => {
+    const written = installStorageAwaitingWrite();
+    routes.set(rootPath, { body: hostOverride('production', 'fresh') });
+
+    expect(await requestHost()).toBe(buildEntry());
+    expect(env(SHELL_UID)).toBeUndefined();
+    expect(JSON.parse(await written).dependencies.host.remote_entry_url).toBe(
+      `${origin}/host-production/mf-manifest.json`
+    );
+  });
+
+  it('keeps the persisted manifest when the fresh one cannot be loaded', async () => {
+    installEnvStorage();
+    stored.set(rootUrl(), JSON.stringify(hostOverride('staging', 'persisted')));
+    routes.set(rootPath, { status: 500 });
+
+    expect(await requestHost()).toBe(`${origin}/host-staging/mf-manifest.json`);
+    await rs.waitFor(() => expect(hits.get(rootPath)).toBe(1));
+    expect(JSON.parse(stored.get(rootUrl()) ?? '{}').zeVars).toEqual({
+      ZE_PUBLIC_DEMO: 'persisted',
+    });
+  });
+
+  it('neither fetches nor applies the manifest without the native-cache store', async () => {
+    routes.set(rootPath, { body: hostOverride('production', 'fresh') });
+
+    expect(await requestHost()).toBe(buildEntry());
+    expect(hits.get(rootPath)).toBeUndefined();
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining('zephyr-native-cache is not registered')
+    );
+  });
+});

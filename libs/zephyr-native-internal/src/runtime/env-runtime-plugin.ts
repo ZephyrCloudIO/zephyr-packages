@@ -280,17 +280,31 @@ function indexDependencies(
   }
 }
 
-async function loadRemoteEnv(remote: {
-  name: string;
-  alias?: string;
-  entry?: string;
-}): Promise<void> {
+/** Manifest dependencies are keyed by the consumer-side name: the alias when set. */
+function consumerDependency(
+  dependencies: Record<string, ManifestDependency>,
+  remote: { name: string; alias?: string }
+): ManifestDependency | undefined {
+  return remote.alias !== undefined &&
+    Object.prototype.hasOwnProperty.call(dependencies, remote.alias)
+    ? dependencies[remote.alias]
+    : dependencies[remote.name];
+}
+
+async function loadRemoteEnv(
+  remote: { name: string; alias?: string; entry?: string },
+  container: string | undefined
+): Promise<void> {
   const state = getNativeEnvState();
-  // Manifest dependencies are keyed by the consumer-side name: the alias when set.
+  // The consuming container's environment names the application it selected; the
+  // process-wide map covers containers without one (build-time seeds).
+  const selected =
+    container === undefined ? undefined : state.containerDependencies.get(container);
   const uid =
-    remote.alias !== undefined && state.dependencyUids.has(remote.alias)
+    (selected && consumerDependency(selected, remote)?.application_uid) ??
+    (remote.alias !== undefined && state.dependencyUids.has(remote.alias)
       ? state.dependencyUids.get(remote.alias)
-      : state.dependencyUids.get(remote.name);
+      : state.dependencyUids.get(remote.name));
   if (typeof uid !== 'string' || typeof remote.entry !== 'string') return;
 
   const url = siblingManifestUrl(remote.entry);
@@ -343,12 +357,9 @@ async function applyRootManifest(
   const persisted = await readPersistedManifest(root.manifestUrl);
   if (persisted) {
     setApplicationEnv(root.applicationUid, persisted.vars);
+    // Scoped to this container: `beforeRequest` points its remotes at these entries and
+    // `afterResolve` loads their environments under these UIDs.
     state.containerDependencies.set(root.name, persisted.dependencies);
-    // The root's selections supersede the build-time ones its plugin seeded, so a
-    // remote switched to another application is not mistaken for an ambiguous name.
-    for (const [name, { application_uid }] of Object.entries(persisted.dependencies)) {
-      state.dependencyUids.set(name, application_uid);
-    }
   }
   void loadManifest(root.manifestUrl).then(
     (manifest) => persistManifest(root.manifestUrl, manifest),
@@ -387,12 +398,7 @@ async function beforeRequest(args: BeforeRequestArgs): Promise<BeforeRequestArgs
       )
   );
   if (!remote || !('entry' in remote)) return args;
-  // Manifest dependencies are keyed by the consumer-side name: the alias when set.
-  const dependency =
-    remote.alias !== undefined &&
-    Object.prototype.hasOwnProperty.call(dependencies, remote.alias)
-      ? dependencies[remote.alias]
-      : dependencies[remote.name];
+  const dependency = consumerDependency(dependencies, remote);
   const entry = dependency?.manifest_url ?? dependency?.remote_entry_url;
   if (entry === undefined) return args;
   const url = stripRemoteNamePrefix(entry);
@@ -409,7 +415,10 @@ async function beforeRequest(args: BeforeRequestArgs): Promise<BeforeRequestArgs
 
 async function afterResolve(args: AfterResolveArgs): Promise<AfterResolveArgs> {
   try {
-    await loadRemoteEnv(args.remote as { name: string; alias?: string; entry?: string });
+    await loadRemoteEnv(
+      args.remote as { name: string; alias?: string; entry?: string },
+      args.options?.name
+    );
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     console.warn(`${LOG_PREFIX} ${args.remote.name}: ${reason}`);
@@ -430,23 +439,17 @@ export function createNativeEnvRuntimePlugin(
   root?: NativeEnvRuntimeRoot
 ): ModuleFederationRuntimePlugin {
   const state = getNativeEnvState();
-  let seed = Object.entries(remoteUids);
   if (root) {
     state.roots ??= new Map();
     if (state.roots.get(root.name)?.root.manifestUrl !== root.manifestUrl) {
       state.roots.set(root.name, { root });
     }
-    // An applied root already selected these remotes; their build-time UIDs are stale.
-    const selected = state.containerDependencies.get(root.name);
-    if (selected) {
-      seed = seed.filter(
-        ([name]) => !Object.prototype.hasOwnProperty.call(selected, name)
-      );
-    }
   }
   indexDependencies(
     state,
-    Object.fromEntries(seed.map(([name, uid]) => [name, { application_uid: uid }]))
+    Object.fromEntries(
+      Object.entries(remoteUids).map(([name, uid]) => [name, { application_uid: uid }])
+    )
   );
   return {
     name: PLUGIN_NAME,

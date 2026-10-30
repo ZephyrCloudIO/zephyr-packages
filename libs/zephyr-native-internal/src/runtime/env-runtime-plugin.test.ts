@@ -624,16 +624,50 @@ describe('zephyr env runtime plugin root manifest', () => {
     const plugin = shellPlugin();
 
     expect(await requestHost(plugin)).toBe(entry);
-    // A later plugin creation must not reseed the superseded build-time UID.
+    // Re-creating the plugin reseeds the build-time UID; the container's selection wins.
     shellPlugin();
     await plugin.afterResolve?.({
       remote: { name: 'host', entry },
+      options: { name: 'shell' },
     } as unknown as AfterResolveArgs);
 
     expect(env('replacement.p.o')).toEqual({ ZE_PUBLIC_DEMO: 'replacement' });
     expect(console.warn).not.toHaveBeenCalledWith(
       expect.stringContaining('maps to several applications')
     );
+  });
+
+  it("keeps each container's application when roots map one alias differently", async () => {
+    installEnvStorage();
+    const roots = { shellA: 'a', shellB: 'b' } as const;
+    for (const [container, id] of Object.entries(roots)) {
+      stored.set(
+        `${origin}/${container}/zephyr-manifest.json`,
+        JSON.stringify({
+          dependencies: {
+            host: {
+              application_uid: `${id}.p.o`,
+              remote_entry_url: `${origin}/${id}/mf-manifest.json`,
+            },
+          },
+        })
+      );
+      routes.set(`/${id}/zephyr-manifest.json`, {
+        body: { zeVars: { ZE_PUBLIC_OWNER: id.toUpperCase() } },
+      });
+    }
+    const pluginA = shellPlugin('shellA', `${origin}/shellA/zephyr-manifest.json`);
+    const pluginB = shellPlugin('shellB', `${origin}/shellB/zephyr-manifest.json`);
+
+    const entryA = await requestHost(pluginA, 'shellA');
+    await requestHost(pluginB, 'shellB');
+    await pluginA.afterResolve?.({
+      remote: { name: 'host', entry: entryA },
+      options: { name: 'shellA' },
+    } as unknown as AfterResolveArgs);
+
+    expect(env('a.p.o')).toEqual({ ZE_PUBLIC_OWNER: 'A' });
+    expect(env('b.p.o')).toBeUndefined();
   });
 
   it("applies each container's own root, whenever its plugin is created", async () => {

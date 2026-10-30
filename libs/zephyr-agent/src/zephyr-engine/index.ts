@@ -369,13 +369,14 @@ export class ZephyrEngine {
       // if default url is url - set as default, if not use app remote_host as default
       // if default url is not url - send it as a semver to deps resolution
 
+      // `${target}` is expanded for the resolver only: adapters match the resolved
+      // dependency to its declaration by the selector as written.
+      const selector = ze_dependency?.version ?? dep.version;
+      const requested = applyTargetPlaceholder(selector, platform);
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,
-          version: applyTargetPlaceholder(
-            ze_dependency?.version ?? dep.version,
-            platform
-          ),
+          version: requested,
           platform,
           build_context,
           dependencyUrlMode: this.zephyrConfig.dependencyUrlMode,
@@ -395,7 +396,9 @@ export class ZephyrEngine {
       ze_log.remotes(`Resolved dependency: ${tuple[1].default_url}`);
 
       if (dep.name === tuple[1].name) {
-        return tuple[1];
+        return tuple[1].version === requested && requested !== selector
+          ? Object.assign({}, tuple[1], { version: selector })
+          : tuple[1];
       }
 
       return Object.assign({ library_type: defaultLibraryType }, tuple[1], {

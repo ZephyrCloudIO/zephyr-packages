@@ -48,6 +48,7 @@ import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-na
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
+  create_dependency_build_context,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
 import type {
@@ -324,24 +325,10 @@ export class ZephyrEngine {
       return null;
     }
 
-    const app_config = await this.application_configuration;
     const ze_dependencies = this.npmProperties.zephyrDependencies;
     const platform = this.env.target ?? 'web';
     assertZephyrBuildTarget(platform, 'ZephyrEngine.env.target');
-    const build_context_json = {
-      target: platform,
-      isCI,
-      branch: this.gitProperties.git.branch,
-      username: app_config.username,
-      env: this.env.env,
-    };
-    if (this.env.env) {
-      ze_log.config('Using environment:', this.env.env);
-    }
-    // convert to base64
-    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
-      'base64'
-    );
+    const build_context = await create_dependency_build_context(this, platform);
 
     ze_log.remotes(
       'resolve_remote_dependencies.deps',

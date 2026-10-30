@@ -155,6 +155,16 @@ plugins: [
 
 `withZephyr` rewrites `process.env.ZE_PUBLIC_*` and `import.meta.env.ZE_PUBLIC_*` reads in your app sources (not `node_modules`) into runtime lookups that fall back to the build-time value, and emits `zephyr-manifest.json` next to the bundle. `withZephyr` injects a Module Federation runtime plugin that loads the `zephyr-manifest.json` next to each resolved remote and applies its environment values before the remote's code runs; no setup is needed. With `zephyr-native-cache` registered, the last loaded values are kept for offline starts.
 
+### Runtime manifest
+
+A shell app whose bundle ships inside the native binary can follow a Zephyr tag or environment instead of its build-time remotes. Set `runtimeManifest` to a selector in `zephyr:dependencies` syntax: `@label` for this app's own tag or environment, `app@label` for another app's, with `${target}` replaced by the build platform:
+
+```js
+withZephyr({ runtimeManifest: '@production-${target}' })(config);
+```
+
+The build resolves the label's alias URL (never a version URL) and reports a Zephyr error when the label does not exist for that platform (fatal in CI or with `ZE_FAIL_BUILD=true`, like other Zephyr configuration errors). At runtime, the app's first remote request applies the `zephyr-manifest.json` persisted by the previous launch (its remote overrides and `ZE_PUBLIC_*` values), then refreshes the stored copy in the background; changes made in the dashboard apply on the next launch or `ZephyrNativeCache.reloadApp()`. The first launch, and apps without `zephyr-native-cache` registered, keep the build-time remotes and values. Use separate iOS and Android labels.
+
 ## Creation command
 
 To create a complete example of a React Native application, with Zephyr enabled, configured, you can use our creation command where you can find most of our examples.

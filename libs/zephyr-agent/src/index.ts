@@ -147,7 +147,15 @@ export {
   type ZephyrEngineOptions,
 } from './zephyr-engine';
 export type { Platform, ZephyrBuildHooks, DeploymentInfo } from './zephyr-engine';
-export type { ZeResolvedDependency } from './zephyr-engine/resolve_remote_dependency';
+export {
+  create_dependency_build_context,
+  resolve_remote_dependency,
+  type ZeResolvedDependency,
+} from './zephyr-engine/resolve_remote_dependency';
+export {
+  applyTargetPlaceholder,
+  parseZeDependency,
+} from './lib/build-context/ze-util-parse-ze-dependencies';
 export { assertZephyrBuildTarget, ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
 export type {
   ZephyrBuildTarget,

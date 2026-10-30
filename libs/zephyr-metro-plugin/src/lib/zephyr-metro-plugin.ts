@@ -8,6 +8,8 @@ import {
 import {
   assertNativeBuildTarget,
   type NativeBuildTarget,
+  type NativeEnvRuntimeRoot,
+  resolveRuntimeManifestUrl,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
 import * as path from 'node:path';
@@ -39,6 +41,7 @@ export interface ZephyrCommandWrapperConfig {
 
 /** Normalized MF options fields Zephyr rewrites before bundling. */
 interface FederationConfigTarget {
+  name?: string;
   remotes?: Record<string, string>;
   plugins?: string[];
 }
@@ -107,10 +110,26 @@ export class ZephyrMetroPlugin {
           const value = remotes[name];
           if (typeof value === 'string') this.#federationOverrides.remotes[name] = value;
         }
+        const runtimeManifest = global.__ZEPHYR_METRO_RUNTIME_MANIFEST__;
+        let root: NativeEnvRuntimeRoot | undefined;
+        if (runtimeManifest !== undefined) {
+          if (!mfConfig.name) {
+            throw new TypeError('runtimeManifest requires a Module Federation name');
+          }
+          root = {
+            name: mfConfig.name,
+            applicationUid: this.zephyr_engine.application_uid,
+            manifestUrl: await resolveRuntimeManifestUrl(
+              this.zephyr_engine,
+              runtimeManifest
+            ),
+          };
+        }
         // Metro MF calls runtime plugins without params, so the UID map ships in a generated module.
         const envRuntimePlugin = writeNativeEnvRuntimePlugin(
           path.join(this.#config.context, 'node_modules', '.zephyr-metro'),
-          resolved_dependency_pairs
+          resolved_dependency_pairs,
+          root
         );
         if (envRuntimePlugin) {
           this.#federationOverrides.runtimePlugin = envRuntimePlugin

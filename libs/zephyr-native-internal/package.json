@@ -50,6 +50,7 @@
     "@babel/parser": "catalog:",
     "hermes-parser": "catalog:",
     "magic-string": "catalog:",
+    "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
   "devDependencies": {

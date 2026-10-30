@@ -8,6 +8,7 @@ import {
 } from 'zephyr-agent';
 import {
   assertNativeBuildTarget,
+  resolveRuntimeManifestUrl,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
 import {
@@ -109,19 +110,34 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-    const envRuntimePlugin = writeNativeEnvRuntimePlugin(
-      path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
-      resolved_dependency_pairs
-    );
-    if (envRuntimePlugin) {
-      for (const plugin of config.plugins ?? []) {
-        if (!isModuleFederationPlugin(plugin)) continue;
-        const remotes = extractFederatedConfig(plugin)?.remotes;
-        const remoteCount = Array.isArray(remotes)
-          ? remotes.length
-          : Object.keys(remotes ?? {}).length;
-        if (remoteCount > 0) configureZephyrRuntimePlugin(plugin, envRuntimePlugin);
+    const runtimeManifest = _zephyrOptions?.runtimeManifest;
+    const runtimeManifestUrl =
+      runtimeManifest === undefined
+        ? undefined
+        : await resolveRuntimeManifestUrl(zephyr_engine, runtimeManifest);
+    for (const plugin of config.plugins ?? []) {
+      if (!isModuleFederationPlugin(plugin)) continue;
+      const federatedConfig = extractFederatedConfig(plugin);
+      const remotes = federatedConfig?.remotes;
+      const remoteCount = Array.isArray(remotes)
+        ? remotes.length
+        : Object.keys(remotes ?? {}).length;
+      if (remoteCount === 0) continue;
+      if (runtimeManifestUrl !== undefined && !federatedConfig?.name) {
+        throw new TypeError('runtimeManifest requires a Module Federation name');
       }
+      const envRuntimePlugin = writeNativeEnvRuntimePlugin(
+        path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
+        resolved_dependency_pairs,
+        runtimeManifestUrl === undefined || !federatedConfig?.name
+          ? undefined
+          : {
+              name: federatedConfig.name,
+              applicationUid: zephyr_engine.application_uid,
+              manifestUrl: runtimeManifestUrl,
+            }
+      );
+      if (envRuntimePlugin) configureZephyrRuntimePlugin(plugin, envRuntimePlugin);
     }
 
     // Rewrite ZE_PUBLIC_* reads before the JS transform rules so SWC/Babel and

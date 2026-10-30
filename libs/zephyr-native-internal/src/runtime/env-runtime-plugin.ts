@@ -43,6 +43,16 @@ interface LoadedManifest extends ParsedManifest {
   persisted: boolean;
 }
 
+/** The application's own manifest, read from its Zephyr tag or environment alias. */
+export interface NativeEnvRuntimeRoot {
+  /** Module Federation name of the application's container. */
+  name: string;
+  /** Application UID its `ZE_PUBLIC_*` lookups are scoped by. */
+  applicationUid: string;
+  /** `zephyr-manifest.json` URL of the tag or environment alias. */
+  manifestUrl: string;
+}
+
 interface NativeEnvState {
   /** Consumer-side remote name → application UID; `null` when ambiguous. */
   dependencyUids: Map<string, string | null>;
@@ -52,6 +62,14 @@ interface NativeEnvState {
   manifests: Map<string, Promise<LoadedManifest | undefined>>;
   /** Container name → dependencies of the environment it was loaded from. */
   containerDependencies: Map<string, Record<string, ManifestDependency>>;
+  /** Container name → root manifest its own plugin reads; set lazily. */
+  roots?: Map<string, RootState>;
+}
+
+interface RootState {
+  root: NativeEnvRuntimeRoot;
+  /** Settles once the persisted root manifest, if any, is applied. */
+  applied?: Promise<void>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -262,17 +280,31 @@ function indexDependencies(
   }
 }
 
-async function loadRemoteEnv(remote: {
-  name: string;
-  alias?: string;
-  entry?: string;
-}): Promise<void> {
+/** Manifest dependencies are keyed by the consumer-side name: the alias when set. */
+function consumerDependency(
+  dependencies: Record<string, ManifestDependency>,
+  remote: { name: string; alias?: string }
+): ManifestDependency | undefined {
+  return remote.alias !== undefined &&
+    Object.prototype.hasOwnProperty.call(dependencies, remote.alias)
+    ? dependencies[remote.alias]
+    : dependencies[remote.name];
+}
+
+async function loadRemoteEnv(
+  remote: { name: string; alias?: string; entry?: string },
+  container: string | undefined
+): Promise<void> {
   const state = getNativeEnvState();
-  // Manifest dependencies are keyed by the consumer-side name: the alias when set.
+  // The consuming container's environment names the application it selected; the
+  // process-wide map covers containers without one (build-time seeds).
+  const selected =
+    container === undefined ? undefined : state.containerDependencies.get(container);
   const uid =
-    remote.alias !== undefined && state.dependencyUids.has(remote.alias)
+    (selected && consumerDependency(selected, remote)?.application_uid) ??
+    (remote.alias !== undefined && state.dependencyUids.has(remote.alias)
       ? state.dependencyUids.get(remote.alias)
-      : state.dependencyUids.get(remote.name);
+      : state.dependencyUids.get(remote.name));
   if (typeof uid !== 'string' || typeof remote.entry !== 'string') return;
 
   const url = siblingManifestUrl(remote.entry);
@@ -307,12 +339,56 @@ async function loadRemoteEnv(remote: {
 }
 
 /**
+ * Applies the root manifest persisted by the previous launch, then refreshes the stored
+ * copy in the background. The refresh only applies on the next launch, so the remotes the
+ * application loads never change mid-session. Without a persisted copy the build-time
+ * remotes and values stay in place.
+ */
+async function applyRootManifest(
+  state: NativeEnvState,
+  root: NativeEnvRuntimeRoot
+): Promise<void> {
+  if (!envStorage()) {
+    console.warn(
+      `${LOG_PREFIX} ${root.manifestUrl}: zephyr-native-cache is not registered; keeping build-time remotes and values`
+    );
+    return;
+  }
+  const persisted = await readPersistedManifest(root.manifestUrl);
+  if (persisted) {
+    setApplicationEnv(root.applicationUid, persisted.vars);
+    // Scoped to this container: `beforeRequest` points its remotes at these entries and
+    // `afterResolve` loads their environments under these UIDs.
+    state.containerDependencies.set(root.name, persisted.dependencies);
+  }
+  void loadManifest(root.manifestUrl).then(
+    (manifest) => persistManifest(root.manifestUrl, manifest),
+    (error: unknown) => {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.warn(`${LOG_PREFIX} ${root.manifestUrl}: ${reason}`);
+    }
+  );
+}
+
+function rootApplied(state: NativeEnvState, entry: RootState): Promise<void> {
+  entry.applied ??= applyRootManifest(state, entry.root).catch((error: unknown) => {
+    const reason = error instanceof Error ? error.message : String(error);
+    console.warn(`${LOG_PREFIX} ${entry.root.manifestUrl}: ${reason}`);
+  });
+  return entry.applied;
+}
+
+/**
  * Points the requested remote at the deployment its container's environment lists, the
  * way the xpack runtime plugin does from the page's zephyr-manifest.json: environment
- * remote overrides replace the entries resolved at build time.
+ * remote overrides replace the entries resolved at build time. The application's own
+ * container reads them from its root manifest.
  */
-function beforeRequest(args: BeforeRequestArgs): BeforeRequestArgs {
-  const dependencies = getNativeEnvState().containerDependencies.get(args.options.name);
+async function beforeRequest(args: BeforeRequestArgs): Promise<BeforeRequestArgs> {
+  const state = getNativeEnvState();
+  const root = state.roots?.get(args.options.name);
+  if (root) await rootApplied(state, root);
+  const dependencies = state.containerDependencies.get(args.options.name);
   if (!dependencies) return args;
   const remote = args.options.remotes.find(
     (candidate) =>
@@ -322,12 +398,7 @@ function beforeRequest(args: BeforeRequestArgs): BeforeRequestArgs {
       )
   );
   if (!remote || !('entry' in remote)) return args;
-  // Manifest dependencies are keyed by the consumer-side name: the alias when set.
-  const dependency =
-    remote.alias !== undefined &&
-    Object.prototype.hasOwnProperty.call(dependencies, remote.alias)
-      ? dependencies[remote.alias]
-      : dependencies[remote.name];
+  const dependency = consumerDependency(dependencies, remote);
   const entry = dependency?.manifest_url ?? dependency?.remote_entry_url;
   if (entry === undefined) return args;
   const url = stripRemoteNamePrefix(entry);
@@ -344,7 +415,10 @@ function beforeRequest(args: BeforeRequestArgs): BeforeRequestArgs {
 
 async function afterResolve(args: AfterResolveArgs): Promise<AfterResolveArgs> {
   try {
-    await loadRemoteEnv(args.remote as { name: string; alias?: string; entry?: string });
+    await loadRemoteEnv(
+      args.remote as { name: string; alias?: string; entry?: string },
+      args.options?.name
+    );
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     console.warn(`${LOG_PREFIX} ${args.remote.name}: ${reason}`);
@@ -356,13 +430,23 @@ async function afterResolve(args: AfterResolveArgs): Promise<AfterResolveArgs> {
  * MF runtime plugin applying each resolved remote's Zephyr environment: its values from
  * the zephyr-manifest.json next to its entry, and the remote entries that environment
  * lists for the remotes it loads. `remoteUids` (remote name → application UID) seeds the
- * lookup; loaded manifests add nested remotes.
+ * lookup; loaded manifests add nested remotes. `root` applies the application's own tag
+ * or environment manifest, as persisted by the previous launch, to its remotes and
+ * values.
  */
 export function createNativeEnvRuntimePlugin(
-  remoteUids: Readonly<Record<string, string>>
+  remoteUids: Readonly<Record<string, string>>,
+  root?: NativeEnvRuntimeRoot
 ): ModuleFederationRuntimePlugin {
+  const state = getNativeEnvState();
+  if (root) {
+    state.roots ??= new Map();
+    if (state.roots.get(root.name)?.root.manifestUrl !== root.manifestUrl) {
+      state.roots.set(root.name, { root });
+    }
+  }
   indexDependencies(
-    getNativeEnvState(),
+    state,
     Object.fromEntries(
       Object.entries(remoteUids).map(([name, uid]) => [name, { application_uid: uid }])
     )

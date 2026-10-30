@@ -2139,6 +2139,9 @@ importers:
       magic-string:
         specifier: 'catalog:'
         version: 1.2.3
+      zephyr-agent:
+        specifier: workspace:*
+        version: link:../zephyr-agent
       zephyr-edge-contract:
         specifier: workspace:*
         version: link:../zephyr-edge-contract

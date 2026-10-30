@@ -7,6 +7,9 @@ import * as actualNativeInternal from 'zephyr-native-internal' with {
 const writeEnvPlugin = rs.hoisted(() =>
   rs.fn().mockReturnValue('/project/node_modules/.zephyr-metro/env-plugin-abc.js')
 );
+const resolveRuntimeManifest = rs.hoisted(() =>
+  rs.fn().mockResolvedValue('https://production-ios-shell.example/zephyr-manifest.json')
+);
 /** Unit tests for ZephyrMetroPlugin class */
 
 // Mock zephyr-agent - must be before imports
@@ -59,6 +62,7 @@ rs.mock('zephyr-agent', () => ({
 rs.mock('zephyr-native-internal', () => ({
   ...actualNativeInternal,
   writeNativeEnvRuntimePlugin: writeEnvPlugin,
+  resolveRuntimeManifestUrl: resolveRuntimeManifest,
 }));
 
 // Mock internal dependencies
@@ -173,12 +177,45 @@ describe('ZephyrMetroPlugin', () => {
             name: 'RemoteApp',
             application_uid: 'remote-app.project.org',
           }),
-        ]
+        ],
+        undefined
       );
       expect((mfConfig as { plugins: string[] }).plugins).toEqual([
         'core',
         '/project/node_modules/.zephyr-metro/env-plugin-abc.js',
       ]);
+    });
+
+    it('binds the runtimeManifest set by withZephyr as the root manifest', async () => {
+      const { ZephyrEngine } = await import('zephyr-agent');
+      const engine = await ZephyrEngine.create({
+        builder: 'metro',
+        context: '/project',
+      } as never);
+      global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ = '@production-${target}';
+      try {
+        const plugin = new ZephyrMetroPlugin({
+          platform: 'ios',
+          mode: 'production',
+          context: '/project',
+          outDir: 'dist',
+          mfConfig: { name: 'shell', remotes: {}, plugins: [] } as never,
+        });
+
+        await plugin.beforeBuild();
+      } finally {
+        global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ = undefined;
+      }
+
+      expect(resolveRuntimeManifest).toHaveBeenCalledWith(
+        engine,
+        '@production-${target}'
+      );
+      expect(writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), expect.any(Array), {
+        name: 'shell',
+        applicationUid: 'test-app-uid',
+        manifestUrl: 'https://production-ios-shell.example/zephyr-manifest.json',
+      });
     });
     it('adds no env plugin when no remote resolves', async () => {
       const { ZephyrEngine } = await import('zephyr-agent');

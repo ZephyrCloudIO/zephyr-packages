@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import * as actualResolver from '../resolve_remote_dependency' with {
+  rstest: 'importActual',
+};
 
 import { ZephyrEngine } from '../index';
 
@@ -7,6 +10,7 @@ const mocks = rs.hoisted(() => ({
 }));
 
 rs.mock('../resolve_remote_dependency', () => ({
+  ...actualResolver,
   resolve_remote_dependency: mocks.resolve,
 }));
 

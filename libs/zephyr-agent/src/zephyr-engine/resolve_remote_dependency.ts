@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isCI } from 'ci-info';
 import {
   assertZephyrBuildTarget,
   ZE_API_ENDPOINT,
@@ -27,6 +28,29 @@ export interface ZeResolvedDependency {
   entity_name?: string | null;
   /** Platform of the matched version (`web` on a mobile fallback); absent from older APIs. */
   resolved_platform?: string | null;
+}
+
+/** Base64 build context the resolver matches `workspace:*` and environments against. */
+export async function create_dependency_build_context(
+  engine: {
+    application_configuration: Promise<{ username: string }>;
+    gitProperties: { git: { branch: string } };
+    env: { env?: string | null };
+  },
+  target: ZephyrBuildTarget
+): Promise<string> {
+  const app_config = await engine.application_configuration;
+  if (engine.env.env) {
+    ze_log.config('Using environment:', engine.env.env);
+  }
+  const build_context_json = {
+    target,
+    isCI,
+    branch: engine.gitProperties.git.branch,
+    username: app_config.username,
+    env: engine.env.env,
+  };
+  return Buffer.from(JSON.stringify(build_context_json)).toString('base64');
 }
 
 export async function resolve_remote_dependency(params: {

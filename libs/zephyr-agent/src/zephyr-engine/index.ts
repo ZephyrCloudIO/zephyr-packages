@@ -18,10 +18,7 @@ import {
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
-import {
-  applyTargetPlaceholder,
-  parseZeDependency,
-} from '../lib/build-context/ze-util-parse-ze-dependencies';
+import { applyTargetPlaceholder } from '../lib/build-context/ze-util-parse-ze-dependencies';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
@@ -51,6 +48,7 @@ import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-na
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
+  create_dependency_build_context,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
 import type {
@@ -330,7 +328,8 @@ export class ZephyrEngine {
     const ze_dependencies = this.npmProperties.zephyrDependencies;
     const platform = this.env.target ?? 'web';
     assertZephyrBuildTarget(platform, 'ZephyrEngine.env.target');
-    const build_context = await this.dependency_build_context(platform);
+    const build_context = await create_dependency_build_context(this, platform);
+
     ze_log.remotes(
       'resolve_remote_dependencies.deps',
       deps,
@@ -436,103 +435,6 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     }
 
     return this.federated_dependencies;
-  }
-
-  /**
-   * Resolves a `runtimeManifest` selector to the `zephyr-manifest.json` URL of a tag or
-   * environment alias. The selector uses `zephyr:dependencies` syntax: `@label` selects
-   * this application's label, `app@label` another application's, and `${target}` is
-   * replaced with the build target. Selector URLs are always requested, whatever
-   * `dependencyUrlMode` says: a version URL would freeze what the runtime reads.
-   */
-  async resolve_runtime_manifest_url(selector: string): Promise<string> {
-    const platform = this.env.target ?? 'web';
-    assertZephyrBuildTarget(platform, 'ZephyrEngine.env.target');
-    const { app_uid, version } = parseZeDependency('', selector);
-    const label = applyTargetPlaceholder(version, platform);
-    const invalid = (reason: string) =>
-      new ZephyrError(ZeErrors.ERR_ZEPHYR_CONFIG_NOT_VALID, {
-        message: `runtimeManifest "${selector}" ${reason}`,
-      });
-    if (!label) throw invalid('must name a tag or environment, e.g. "@production"');
-
-    let application_uid = this.application_uid;
-    if (app_uid) {
-      const [name, project, org] = app_uid.split('.', 3);
-      application_uid = createApplicationUid({
-        org: org ?? this.gitProperties.app.org,
-        project: project ?? this.gitProperties.app.project,
-        name,
-      });
-    }
-
-    const resolved = await resolve_remote_dependency({
-      application_uid,
-      version: label,
-      platform,
-      build_context: await this.dependency_build_context(platform),
-      dependencyUrlMode: 'selector',
-    });
-
-    if (resolved.entity_type === 'version') {
-      throw invalid(
-        `resolved to a version of ${application_uid}; select a tag or environment`
-      );
-    }
-    if (typeof resolved.entity_name === 'string' && resolved.entity_name !== label) {
-      throw invalid(
-        `resolved to ${resolved.entity_type ?? 'label'} "${resolved.entity_name}" of ${application_uid}; no ${platform} tag or environment is named "${label}"`
-      );
-    }
-    if (
-      typeof resolved.resolved_platform === 'string' &&
-      resolved.resolved_platform !== platform
-    ) {
-      throw invalid(
-        `resolved to a ${resolved.resolved_platform} deployment of ${application_uid}; use a ${platform} tag or environment, e.g. "@${version}-\${target}"`
-      );
-    }
-    if (!resolved.default_url) {
-      throw invalid(`resolved to "${label}" of ${application_uid}, which has no URL`);
-    }
-    if (
-      resolved.entity_type === undefined ||
-      resolved.entity_name === undefined ||
-      resolved.resolved_platform === undefined
-    ) {
-      logFn(
-        'warn',
-        `runtimeManifest "${selector}": the Zephyr API did not report the matched label and platform; check that "${label}" is a ${platform} tag or environment of ${application_uid}`
-      );
-    }
-    if (this.zephyrConfig.dependencyUrlMode === 'version') {
-      logFn(
-        'warn',
-        'runtimeManifest with dependencyUrlMode "version": the manifest lists pinned version URLs, so only dashboard remote overrides change the loaded remotes'
-      );
-    }
-
-    const base = resolved.default_url.endsWith('/')
-      ? resolved.default_url
-      : `${resolved.default_url}/`;
-    const url = new URL(ZEPHYR_MANIFEST_FILENAME, base).toString();
-    logFn('info', `Runtime manifest: ${url}`);
-    return url;
-  }
-
-  private async dependency_build_context(platform: ZephyrBuildTarget): Promise<string> {
-    const app_config = await this.application_configuration;
-    if (this.env.env) {
-      ze_log.config('Using environment:', this.env.env);
-    }
-    const build_context_json = {
-      target: platform,
-      isCI,
-      branch: this.gitProperties.git.branch,
-      username: app_config.username,
-      env: this.env.env,
-    };
-    return Buffer.from(JSON.stringify(build_context_json)).toString('base64');
   }
 
   async start_new_build(): Promise<void> {

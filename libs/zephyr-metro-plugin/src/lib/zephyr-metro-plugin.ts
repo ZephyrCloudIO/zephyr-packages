@@ -9,6 +9,7 @@ import {
   assertNativeBuildTarget,
   type NativeBuildTarget,
   type NativeEnvRuntimeRoot,
+  resolveRuntimeManifestUrl,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
 import * as path from 'node:path';
@@ -118,8 +119,10 @@ export class ZephyrMetroPlugin {
           root = {
             name: mfConfig.name,
             applicationUid: this.zephyr_engine.application_uid,
-            manifestUrl:
-              await this.zephyr_engine.resolve_runtime_manifest_url(runtimeManifest),
+            manifestUrl: await resolveRuntimeManifestUrl(
+              this.zephyr_engine,
+              runtimeManifest
+            ),
           };
         }
         // Metro MF calls runtime plugins without params, so the UID map ships in a generated module.

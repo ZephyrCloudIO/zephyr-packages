@@ -12,9 +12,6 @@ const mocks = rs.hoisted(() => {
     application_uid: 'host.project.org',
     build_failed: rs.fn(),
     resolve_remote_dependencies: rs.fn().mockResolvedValue([]),
-    resolve_runtime_manifest_url: rs
-      .fn()
-      .mockResolvedValue('https://production-ios-host.example/zephyr-manifest.json'),
   };
 
   return {
@@ -30,6 +27,9 @@ const mocks = rs.hoisted(() => {
     writeEnvPlugin: rs
       .fn()
       .mockReturnValue('/repo/node_modules/.zephyr-repack/env-plugin-abc.js'),
+    resolveRuntimeManifest: rs
+      .fn()
+      .mockResolvedValue('https://production-ios-host.example/zephyr-manifest.json'),
     configureRuntimePlugin: rs.fn(),
     isModuleFederationPlugin: rs.fn(
       (plugin: { isMf?: boolean } | undefined) => plugin?.isMf === true
@@ -55,6 +55,7 @@ rs.mock('zephyr-agent', () => ({
 rs.mock('zephyr-native-internal', () => ({
   ...actualNativeInternal,
   writeNativeEnvRuntimePlugin: mocks.writeEnvPlugin,
+  resolveRuntimeManifestUrl: mocks.resolveRuntimeManifest,
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
@@ -194,7 +195,8 @@ describe('Re.Pack native target boundaries', () => {
     });
 
     expect(mocks.handleGlobalError).not.toHaveBeenCalled();
-    expect(mocks.engine.resolve_runtime_manifest_url).toHaveBeenCalledWith(
+    expect(mocks.resolveRuntimeManifest).toHaveBeenCalledWith(
+      mocks.engine,
       '@production-${target}'
     );
     expect(mocks.writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), [], {

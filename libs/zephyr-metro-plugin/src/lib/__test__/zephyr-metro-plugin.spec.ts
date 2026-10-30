@@ -7,6 +7,9 @@ import * as actualNativeInternal from 'zephyr-native-internal' with {
 const writeEnvPlugin = rs.hoisted(() =>
   rs.fn().mockReturnValue('/project/node_modules/.zephyr-metro/env-plugin-abc.js')
 );
+const resolveRuntimeManifest = rs.hoisted(() =>
+  rs.fn().mockResolvedValue('https://production-ios-shell.example/zephyr-manifest.json')
+);
 /** Unit tests for ZephyrMetroPlugin class */
 
 // Mock zephyr-agent - must be before imports
@@ -36,9 +39,6 @@ rs.mock('zephyr-agent', () => ({
           resolved_url: 'http://cdn.example.com/remote.js',
         },
       ]),
-      resolve_runtime_manifest_url: rs
-        .fn()
-        .mockResolvedValue('https://production-ios-shell.example/zephyr-manifest.json'),
       zephyr_dependencies: {
         RemoteApp: {
           application_uid: 'remote-app.project.org',
@@ -62,6 +62,7 @@ rs.mock('zephyr-agent', () => ({
 rs.mock('zephyr-native-internal', () => ({
   ...actualNativeInternal,
   writeNativeEnvRuntimePlugin: writeEnvPlugin,
+  resolveRuntimeManifestUrl: resolveRuntimeManifest,
 }));
 
 // Mock internal dependencies
@@ -206,7 +207,8 @@ describe('ZephyrMetroPlugin', () => {
         global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ = undefined;
       }
 
-      expect(engine.resolve_runtime_manifest_url).toHaveBeenCalledWith(
+      expect(resolveRuntimeManifest).toHaveBeenCalledWith(
+        engine,
         '@production-${target}'
       );
       expect(writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), expect.any(Array), {

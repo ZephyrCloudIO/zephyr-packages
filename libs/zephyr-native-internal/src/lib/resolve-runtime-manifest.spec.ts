@@ -1,38 +1,35 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
-
+import * as actualAgent from 'zephyr-agent' with { rstest: 'importActual' };
+import type { ZeResolvedDependency } from 'zephyr-agent';
 import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
-import type { ZeResolvedDependency } from '../resolve_remote_dependency';
-import { ZephyrEngine } from '../index';
 
 const mocks = rs.hoisted(() => ({
   resolve: rs.fn(),
   logFn: rs.fn(),
 }));
 
-rs.mock('../resolve_remote_dependency', () => ({
+rs.mock('zephyr-agent', () => ({
+  ...actualAgent,
   resolve_remote_dependency: mocks.resolve,
+  logFn: mocks.logFn,
 }));
 
-rs.mock('../../lib/logging/ze-log-event', () => ({
-  formatLogMsg: rs.fn((message: string) => message),
-  logFn: mocks.logFn,
-  logger: rs.fn(),
-}));
+import { resolveRuntimeManifestUrl } from './resolve-runtime-manifest';
 
 function engine(
   target: ZephyrBuildTarget = 'ios',
   dependencyUrlMode?: 'selector' | 'version'
-): ZephyrEngine {
-  const value = Object.create(ZephyrEngine.prototype) as ZephyrEngine;
-  value.application_uid = 'shell.project.org';
-  value.application_configuration = Promise.resolve({ username: 'dev' } as never);
-  value.gitProperties = {
-    app: { org: 'org', project: 'project' },
-    git: { branch: 'main' },
-  } as never;
-  value.zephyrConfig = dependencyUrlMode ? { dependencyUrlMode } : {};
-  value.env = { isCI: false, target, ssr: false };
-  return value;
+): Parameters<typeof resolveRuntimeManifestUrl>[0] {
+  return {
+    application_uid: 'shell.project.org',
+    application_configuration: Promise.resolve({ username: 'dev' } as never),
+    gitProperties: {
+      app: { org: 'org', project: 'project' },
+      git: { branch: 'main' },
+    } as never,
+    zephyrConfig: dependencyUrlMode ? { dependencyUrlMode } : {},
+    env: { isCI: false, target, ssr: false },
+  };
 }
 
 function resolved(overrides: Partial<ZeResolvedDependency> = {}): ZeResolvedDependency {
@@ -50,7 +47,7 @@ function resolved(overrides: Partial<ZeResolvedDependency> = {}): ZeResolvedDepe
   };
 }
 
-describe('ZephyrEngine.resolve_runtime_manifest_url', () => {
+describe('resolveRuntimeManifestUrl', () => {
   beforeEach(() => {
     mocks.resolve.mockReset();
     mocks.logFn.mockReset();
@@ -59,7 +56,8 @@ describe('ZephyrEngine.resolve_runtime_manifest_url', () => {
   it("resolves the app's own label alias in selector mode", async () => {
     mocks.resolve.mockResolvedValueOnce(resolved());
 
-    const url = await engine('ios', 'version').resolve_runtime_manifest_url(
+    const url = await resolveRuntimeManifestUrl(
+      engine('ios', 'version'),
       '@production-${target}'
     );
 
@@ -90,7 +88,7 @@ describe('ZephyrEngine.resolve_runtime_manifest_url', () => {
       })
     );
 
-    const url = await engine().resolve_runtime_manifest_url('zephyr:shell_config@prod');
+    const url = await resolveRuntimeManifestUrl(engine(), 'zephyr:shell_config@prod');
 
     expect(url).toBe('https://prod-config.zephyr.example/zephyr-manifest.json');
     expect(mocks.resolve).toHaveBeenCalledWith(
@@ -118,7 +116,7 @@ describe('ZephyrEngine.resolve_runtime_manifest_url', () => {
     mocks.resolve.mockResolvedValueOnce(response);
 
     await expect(
-      engine().resolve_runtime_manifest_url('@production-${target}')
+      resolveRuntimeManifestUrl(engine(), '@production-${target}')
     ).rejects.toThrow(message);
   });
 
@@ -127,7 +125,7 @@ describe('ZephyrEngine.resolve_runtime_manifest_url', () => {
       resolved({ entity_name: undefined, resolved_platform: undefined })
     );
 
-    await engine().resolve_runtime_manifest_url('@production-ios');
+    await resolveRuntimeManifestUrl(engine(), '@production-ios');
 
     expect(mocks.logFn).toHaveBeenCalledWith(
       'warn',

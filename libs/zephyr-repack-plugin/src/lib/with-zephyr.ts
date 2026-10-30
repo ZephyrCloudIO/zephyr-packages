@@ -8,6 +8,7 @@ import {
 } from 'zephyr-agent';
 import {
   assertNativeBuildTarget,
+  resolveRuntimeManifestUrl,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
 import {
@@ -113,7 +114,7 @@ async function _zephyr_configuration(
     const runtimeManifestUrl =
       runtimeManifest === undefined
         ? undefined
-        : await zephyr_engine.resolve_runtime_manifest_url(runtimeManifest);
+        : await resolveRuntimeManifestUrl(zephyr_engine, runtimeManifest);
     for (const plugin of config.plugins ?? []) {
       if (!isModuleFederationPlugin(plugin)) continue;
       const federatedConfig = extractFederatedConfig(plugin);

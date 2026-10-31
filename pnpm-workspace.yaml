@@ -40,7 +40,7 @@ catalog:
   dotenv-cli: ^11.0.0
   elysia: ^1.4.30
   eventsource: ^5.0.0
-  glob: ^13.0.6
+  glob: ^14.0.0
   globby: ^16.2.4
   hermes-parser: ^0.36.1
   hono: ^4.13.5
@@ -130,6 +130,8 @@ minimumReleaseAgeExclude:
   - qs@6.16.1
   # Renovate security update: follow-redirects@1.16.2
   - follow-redirects@1.16.2
+  # Renovate security update: glob@14.0.2
+  - glob@14.0.2
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

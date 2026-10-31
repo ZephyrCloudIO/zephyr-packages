@@ -440,7 +440,7 @@ node ./libs/with-zephyr/dist/index.js --bundlers repack /path/to/react-native-pr
 ```
 src/
 ├── bundlers/          # Per-bundler configs + registry
-├── engine/            # ast-grep execution layer
+├── engine/            # swc-next parsing and text-edit layer
 ├── operations.ts      # Ordered operation handlers per bundler
 ├── package-manager.ts # Package management utilities
 ├── index.ts           # CLI entry point and orchestration

@@ -1,10 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 import {
-  hasExportedConfigCall,
-  rewriteWithAstGrep,
-  searchWithAstGrep,
-} from './engine/ast-grep.js';
+  applyEdits,
+  isCallTo,
+  isFunction,
+  isIdentifier,
+  isKeyValueProperty,
+  isModuleExports,
+  isModuleExportsAssignment,
+  parseSource,
+  type AstNode,
+  type ParsedSource,
+} from './engine/ast.js';
 import type { PackageRequirement } from './nextjs-vinext.js';
 import {
   getDeclaredPackageVersion,
@@ -179,25 +186,215 @@ function getMetroResolutionDirectories(directory: string): string[] {
   );
 }
 
+function tryParse(filePath: string, content: string): ParsedSource | undefined {
+  try {
+    return parseSource(content, filePath);
+  } catch {
+    return undefined;
+  }
+}
+
 function hasModuleFederationSetup(filePath: string): boolean {
   const content = fs.readFileSync(filePath, 'utf8');
   if ((content.match(/module\.exports\s*=/g)?.length ?? 0) > 1) {
     return false;
   }
+  const parsed = tryParse(filePath, content);
+  if (!parsed) return false;
   const localName = findImportedHelperExpression(
-    filePath,
-    content,
+    parsed,
     '@module-federation/metro',
     'withModuleFederation'
   );
   return Boolean(
     localName &&
-    hasExportedConfigCall({
-      filePath,
-      pattern: `${localName}($$$ARGS)`,
-      allowDirectExport: true,
-    })
+    hasExportedConfigCall(parsed, { callee: localName, allowDirectExport: true })
   );
+}
+
+interface ExportedConfigCallOptions {
+  /**
+   * Identifier or dotted path of the helper, e.g. `withModuleFederation` or
+   * `mf.withModuleFederation`.
+   */
+  callee: string;
+  propertyName?: 'commands' | 'plugins';
+  allowDirectExport?: boolean;
+}
+
+/**
+ * Whether a call to `callee` reaches the module's exported config: exported directly
+ * (possibly through wrapping calls, a top-level exported binding, or a returned local),
+ * or registered in the exported object's `commands` / `plugins` property.
+ */
+function hasExportedConfigCall(
+  parsed: ParsedSource,
+  options: ExportedConfigCallOptions
+): boolean {
+  const program = parsed.program;
+  const calls = parsed
+    .ofType('CallExpression')
+    .filter((call) => isCallTo(call, options.callee));
+  const exportedIdentifiers = new Set<string>();
+  for (const node of parsed.nodes) {
+    const exported =
+      node.type === 'ExportDefaultDeclaration'
+        ? node.declaration
+        : isModuleExportsAssignment(node)
+          ? node.right
+          : undefined;
+    if (isIdentifier(exported)) exportedIdentifiers.add(exported.name);
+  }
+
+  const declaredName = (declarator: AstNode): string | undefined =>
+    isIdentifier(declarator.id) ? declarator.id.name : undefined;
+
+  const isTopLevelDeclaration = (declarator: AstNode): boolean => {
+    const container = parsed.parent(parsed.parent(declarator)!);
+    return Boolean(
+      container === program ||
+      (container?.type === 'ExportNamedDeclaration' &&
+        parsed.parent(container) === program)
+    );
+  };
+
+  const isExportedValue = (value: AstNode, parent: AstNode | null): boolean =>
+    Boolean(
+      (isModuleExportsAssignment(parent) && parent!.right === value) ||
+      (parent?.type === 'ExportDefaultDeclaration' && parent.declaration === value)
+    );
+
+  const isExportedObject = (object: AstNode | null): boolean => {
+    if (object?.type !== 'ObjectExpression') return false;
+    const parent = parsed.parent(object);
+    if (isExportedValue(object, parent)) return true;
+    if (parent?.type !== 'VariableDeclarator' || !isTopLevelDeclaration(parent))
+      return false;
+    const identifier = declaredName(parent);
+    return Boolean(identifier && exportedIdentifiers.has(identifier));
+  };
+
+  const references = (name: string) =>
+    parsed
+      .ofType('Identifier')
+      .filter((identifier) => identifier.name === name && parsed.isReference(identifier));
+
+  const isReturnedFromFunction = (bindingName: string, functionNode: AstNode): boolean =>
+    references(bindingName).some((identifier) => {
+      for (
+        let ancestor = parsed.parent(identifier);
+        ancestor && ancestor !== functionNode;
+        ancestor = parsed.parent(ancestor)
+      ) {
+        if (isFunction(ancestor)) return false;
+        if (ancestor.type === 'ReturnStatement') return true;
+      }
+      return false;
+    });
+
+  const isDirectlyExportedExpression = (call: AstNode): boolean => {
+    let expression = call;
+    let parent = parsed.parent(expression);
+    while (parent) {
+      if (isExportedValue(expression, parent)) return true;
+
+      if (parent.type === 'VariableDeclarator') {
+        const identifier = declaredName(parent);
+        if (!identifier || parent.init !== expression) return false;
+        if (isTopLevelDeclaration(parent) && exportedIdentifiers.has(identifier)) {
+          return true;
+        }
+
+        const functionNode = parsed
+          .ancestors(parent)
+          .find(
+            (ancestor) =>
+              ancestor.type === 'ArrowFunctionExpression' ||
+              ancestor.type === 'FunctionExpression'
+          );
+        return Boolean(
+          functionNode &&
+          isReturnedFromFunction(identifier, functionNode) &&
+          isDirectlyExportedExpression(functionNode)
+        );
+      }
+
+      if (
+        parent.type !== 'CallExpression' &&
+        parent.type !== 'ParenthesizedExpression' &&
+        parent.type !== 'AwaitExpression'
+      ) {
+        return false;
+      }
+      expression = parent;
+      parent = parsed.parent(parent);
+    }
+    return false;
+  };
+
+  const isRegisteredInExportedProperty = (value: AstNode): boolean => {
+    const property = parsed
+      .ancestors(value)
+      .find((ancestor) => isKeyValueProperty(ancestor, options.propertyName));
+    if (!property || !isExportedObject(parsed.parent(property))) return false;
+
+    const container = parsed.parent(value);
+    if (options.propertyName === 'plugins') {
+      return Boolean(
+        container?.type === 'ArrayExpression' && property.value === container
+      );
+    }
+
+    if (property.value === value) return true;
+    const array = container && parsed.parent(container);
+    return Boolean(
+      container?.type === 'SpreadElement' &&
+      array?.type === 'ArrayExpression' &&
+      property.value === array
+    );
+  };
+
+  const isCommandsMember = (node: AstNode | null, object?: AstNode): boolean =>
+    Boolean(
+      node?.type === 'MemberExpression' &&
+      !node.computed &&
+      isIdentifier(node.property, 'commands') &&
+      (object === undefined || node.object === object)
+    );
+
+  return calls.some((call) => {
+    if (options.allowDirectExport && isDirectlyExportedExpression(call)) {
+      return true;
+    }
+
+    if (!options.propertyName) return false;
+
+    if (options.propertyName === 'plugins') {
+      if (isRegisteredInExportedProperty(call)) return true;
+    } else {
+      const member = parsed.parent(call);
+      if (isCommandsMember(member, call) && isRegisteredInExportedProperty(member!)) {
+        return true;
+      }
+    }
+
+    const declaration = parsed.parent(call);
+    if (declaration?.type !== 'VariableDeclarator' || declaration.init !== call)
+      return false;
+    if (!isTopLevelDeclaration(declaration)) return false;
+    const bindingName = declaredName(declaration);
+    if (!bindingName) return false;
+
+    if (options.propertyName === 'commands') {
+      return parsed
+        .ofType('MemberExpression')
+        .filter(
+          (member) => isIdentifier(member.object, bindingName) && isCommandsMember(member)
+        )
+        .some(isRegisteredInExportedProperty);
+    }
+    return references(bindingName).some(isRegisteredInExportedProperty);
+  });
 }
 
 function discoverConfigFiles(
@@ -216,11 +413,15 @@ function discoverConfigFiles(
 }
 
 function findImportedHelperExpression(
-  filePath: string,
-  content: string,
+  parsed: ParsedSource,
   packageName: string,
   importName: string
 ): string | undefined {
+  const content = parsed.source;
+  // The regexes below locate candidates; only real top-level statements count.
+  const topLevelStarts = new Set(
+    (parsed.program.body as AstNode[]).map((statement) => statement.start)
+  );
   const escapedPackageName = packageName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const importPatterns = [
     new RegExp(`import\\s*\\{([^}]*)\\}\\s*from\\s*["']${escapedPackageName}["']`, 'g'),
@@ -232,11 +433,7 @@ function findImportedHelperExpression(
 
   for (const pattern of importPatterns) {
     for (const match of content.matchAll(pattern)) {
-      if (
-        !match[0] ||
-        searchWithAstGrep({ filePath, pattern: match[0], topLevel: true }).status !==
-          'match'
-      ) {
+      if (!match[0] || !topLevelStarts.has(match.index)) {
         continue;
       }
       const specifiers = match[1]?.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
@@ -262,12 +459,7 @@ function findImportedHelperExpression(
   for (const pattern of namespacePatterns) {
     for (const match of content.matchAll(pattern)) {
       const namespace = match[1];
-      if (
-        namespace &&
-        match[0] &&
-        searchWithAstGrep({ filePath, pattern: match[0], topLevel: true }).status ===
-          'match'
-      ) {
+      if (namespace && match[0] && topLevelStarts.has(match.index)) {
         return `${namespace}.${importName}`;
       }
     }
@@ -277,14 +469,12 @@ function findImportedHelperExpression(
 }
 
 function hasExportedHelperCall(
-  filePath: string,
-  content: string,
+  parsed: ParsedSource,
   importName: string,
   propertyName: 'commands' | 'plugins'
 ): boolean {
   const localName = findImportedHelperExpression(
-    filePath,
-    content,
+    parsed,
     'zephyr-metro-plugin',
     importName
   );
@@ -292,9 +482,8 @@ function hasExportedHelperCall(
     .filter((name): name is string => Boolean(name))
     .some((name) => {
       if (name.startsWith('$')) return false;
-      return hasExportedConfigCall({
-        filePath,
-        pattern: `${name}($$$ARGS)`,
+      return hasExportedConfigCall(parsed, {
+        callee: name,
         propertyName,
         allowDirectExport: propertyName === 'commands',
       });
@@ -308,9 +497,8 @@ function addImport(
   localName: string,
   esm: boolean
 ): string {
-  if (
-    findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName)
-  ) {
+  const parsed = tryParse(filePath, content);
+  if (parsed && findImportedHelperExpression(parsed, 'zephyr-metro-plugin', importName)) {
     return content;
   }
 
@@ -341,19 +529,24 @@ function updateCommonJsConfig(
   if ((content.match(/module\.exports\s*=/g)?.length ?? 0) !== 1) {
     return 'unsupported';
   }
-  if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
+  const parsed = tryParse(filePath, content);
+  if (!parsed) return 'unsupported';
+  if (hasExportedHelperCall(parsed, importName, propertyName)) {
     return 'already-configured';
   }
   const localName =
-    findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName) ??
+    findImportedHelperExpression(parsed, 'zephyr-metro-plugin', importName) ??
     getUniqueBindingName(content, importName);
   bindingName = getUniqueBindingName(content, bindingName);
-  if (
-    searchWithAstGrep({
-      filePath,
-      pattern: 'module.exports = {$$$PROPS}',
-    }).status !== 'match'
-  ) {
+  const exportsObject = parsed
+    .ofType('AssignmentExpression')
+    .some(
+      (assignment) =>
+        isModuleExports(assignment.left) &&
+        assignment.operator === '=' &&
+        assignment.right.type === 'ObjectExpression'
+    );
+  if (!exportsObject) {
     return 'unsupported';
   }
 
@@ -383,36 +576,42 @@ function updateEsmConfig(
   dryRun: boolean
 ): ConfigUpdateResult {
   const content = fs.readFileSync(filePath, 'utf8');
-  if (hasExportedHelperCall(filePath, content, importName, propertyName)) {
+  const parsed = tryParse(filePath, content);
+  if (!parsed) return 'unsupported';
+  if (hasExportedHelperCall(parsed, importName, propertyName)) {
     return 'already-configured';
   }
   const localName =
-    findImportedHelperExpression(filePath, content, 'zephyr-metro-plugin', importName) ??
+    findImportedHelperExpression(parsed, 'zephyr-metro-plugin', importName) ??
     getUniqueBindingName(content, importName);
   bindingName = getUniqueBindingName(content, bindingName);
 
-  const result = rewriteWithAstGrep({
-    filePath,
-    pattern: 'export default {$$$PROPS}',
-    rewrite: `const ${bindingName} = {$$$PROPS};
+  const exports = parsed
+    .ofType('ExportDefaultDeclaration')
+    .filter((statement) => statement.declaration.type === 'ObjectExpression');
+  if (exports.length === 0) {
+    return 'unsupported';
+  }
+  const nextContent = applyEdits(
+    content,
+    exports.map((statement) => ({
+      start: statement.start,
+      end: statement.end,
+      text: `const ${bindingName} = ${parsed.text(statement.declaration)};
 export default {
   ...${bindingName},
   ${propertyName}: [
     ...(${bindingName}.${propertyName} ?? []),
     ${integrationExpression.replace(importName, localName)},
   ],
-}`,
-    updateAll: !dryRun,
-  });
-  if (result.status !== 'match') {
-    return 'unsupported';
-  }
+};`,
+    }))
+  );
 
   if (!dryRun) {
-    const updatedContent = fs.readFileSync(filePath, 'utf8');
     fs.writeFileSync(
       filePath,
-      addImport(filePath, updatedContent, importName, localName, true)
+      addImport(filePath, nextContent, importName, localName, true)
     );
   }
   return 'updated';

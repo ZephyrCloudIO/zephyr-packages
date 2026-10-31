@@ -7,7 +7,6 @@ packages:
   - '!**/lib/**'
 
 catalog:
-  '@ast-grep/napi': ^0.45.0
   '@bybrave/proper-lockfile2': 5.0.0
   '@astrojs/markdown-satteri': ^0.4.0
   '@astrojs/mdx': ^8.0.0
@@ -22,6 +21,8 @@ catalog:
   '@lynx-js/rspeedy': ^0.17.0
   '@lynx-js/types': ^4.2.1
   '@sentry/react': ^10.73.0
+  '@swc-next/parser': ^0.4.0
+  '@swc-next/walker': ^0.4.0
   '@toon-format/toon': ^4.0.0
   '@types/debug': ^4.1.13
   '@vitejs/plugin-rsc': ^0.5.38

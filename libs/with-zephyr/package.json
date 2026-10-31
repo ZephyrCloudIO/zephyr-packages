@@ -50,7 +50,8 @@
     "test:coverage": "rstest run --coverage"
   },
   "dependencies": {
-    "@ast-grep/napi": "catalog:",
+    "@swc-next/parser": "catalog:",
+    "@swc-next/walker": "catalog:",
     "chalk": "catalog:",
     "commander": "catalog:",
     "glob": "catalog:"

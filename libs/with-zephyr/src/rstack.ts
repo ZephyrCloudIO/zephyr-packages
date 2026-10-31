@@ -1,393 +1,363 @@
-import type { Edit, SgNode } from '@ast-grep/napi';
 import fs from 'fs';
-import { parseConfigWithAstGrep } from './engine/ast-grep.js';
+import {
+  applyEdits,
+  isFunction,
+  isIdentifier,
+  isStringLiteral,
+  parseFile,
+  unwrapExpression as unwrap,
+  type AstNode,
+  type ParsedSource,
+  type TextEdit,
+} from './engine/ast.js';
 import type { BundlerConfig, OperationResult } from './types.js';
 
 type RstackSection = NonNullable<BundlerConfig['rstackSection']>;
 
-function isFunctionBoundary(node: SgNode): boolean {
-  return [
-    'arrow_function',
-    'function_expression',
-    'function_declaration',
-    'generator_function',
-    'generator_function_declaration',
-    'method_definition',
-  ].includes(String(node.kind()));
-}
+const isFunctionBoundary = isFunction;
 
-function readConfig(filePath: string): SgNode {
-  const root = parseConfigWithAstGrep(filePath);
-  if (root.find({ rule: { kind: 'ERROR' } })) {
+function readConfig(filePath: string): ParsedSource {
+  try {
+    return parseFile(filePath);
+  } catch {
     throw new Error('Cannot parse Rstack configuration');
   }
-  return root;
 }
 
-function importBindings(root: SgNode, source: string, name: string): string[] {
+function valueImports(parsed: ParsedSource): AstNode[] {
+  return parsed
+    .ofType('ImportDeclaration')
+    .filter((statement) => statement.importKind !== 'type');
+}
+
+function importBindings(parsed: ParsedSource, source: string, name: string): string[] {
   const bindings: string[] = [];
-  for (const statement of root.findAll({ rule: { kind: 'import_statement' } })) {
-    if (statement.field('source')?.text().slice(1, -1) !== source) continue;
-    if (/^import\s+type\b/.test(statement.text())) continue;
-    for (const specifier of statement.findAll({ rule: { kind: 'import_specifier' } })) {
-      if (specifier.field('name')?.text() !== name) continue;
-      if (/^type\s/.test(specifier.text())) continue;
-      bindings.push((specifier.field('alias') ?? specifier.field('name'))!.text());
-    }
-    for (const namespace of statement.findAll({ rule: { kind: 'namespace_import' } })) {
-      const identifier = namespace.namedChildren().at(-1);
-      if (identifier) bindings.push(`${identifier.text()}.${name}`);
+  for (const statement of valueImports(parsed)) {
+    if (statement.source.value !== source) continue;
+    for (const specifier of statement.specifiers as AstNode[]) {
+      if (
+        specifier.type === 'ImportSpecifier' &&
+        specifier.importKind !== 'type' &&
+        (specifier.imported.name ?? specifier.imported.value) === name
+      ) {
+        bindings.push(specifier.local.name);
+      }
+      if (specifier.type === 'ImportNamespaceSpecifier') {
+        bindings.push(`${specifier.local.name}.${name}`);
+      }
     }
   }
   return bindings;
 }
 
-function sectionCalls(root: SgNode, section: RstackSection): SgNode[] {
-  const bindings = importBindings(root, 'rstack', 'define');
-  return root.findAll({ rule: { kind: 'call_expression' } }).filter((call) => {
-    const callee = call.field('function');
+function sectionCalls(parsed: ParsedSource, section: RstackSection): AstNode[] {
+  const bindings = importBindings(parsed, 'rstack', 'define');
+  return parsed.ofType('CallExpression').filter((call) => {
+    const callee = call.callee;
     return (
-      !call.ancestors().some(isFunctionBoundary) &&
-      callee?.kind() === 'member_expression' &&
-      callee.field('property')?.text() === section &&
-      bindings.includes(callee.field('object')?.text() ?? '') &&
-      !shadowsBinding(call, callee.field('object')!.text())
+      callee.type === 'MemberExpression' &&
+      !callee.computed &&
+      isIdentifier(callee.property, section) &&
+      bindings.includes(parsed.text(callee.object)) &&
+      !parsed.ancestors(call).some(isFunctionBoundary) &&
+      !shadowsBinding(parsed, call, parsed.text(callee.object))
     );
   });
 }
 
-function unwrap(expression: SgNode | null): SgNode | null {
-  while (
-    expression &&
-    ['parenthesized_expression', 'as_expression', 'satisfies_expression'].includes(
-      String(expression.kind())
-    )
-  ) {
-    expression = expression.namedChildren()[0] ?? null;
-  }
-  return expression;
-}
-
-function configObjects(call: SgNode): SgNode[] | null {
-  const args = call
-    .field('arguments')
-    ?.namedChildren()
-    .filter((node) => node.kind() !== 'comment');
-  if (args?.length !== 1) return null;
-  const config = unwrap(args[0]);
-  if (config?.kind() === 'object') return [config];
+function configObjects(parsed: ParsedSource, call: AstNode): AstNode[] | null {
+  if (call.arguments.length !== 1) return null;
+  const config = unwrap(call.arguments[0]);
+  if (config?.type === 'ObjectExpression') return [config];
   if (
     !config ||
-    !['arrow_function', 'function_expression'].includes(String(config.kind()))
+    (config.type !== 'ArrowFunctionExpression' && config.type !== 'FunctionExpression')
   ) {
     return null;
   }
-  const body = unwrap(config.field('body'));
-  if (body?.kind() === 'object') return [body];
-  const returns = body
-    ?.findAll({ rule: { kind: 'return_statement' } })
-    .filter((node) => node.ancestors().find(isFunctionBoundary)?.id() === config.id());
-  if (!returns?.length) return null;
-  const objects = returns.map((node) => unwrap(node.namedChildren()[0] ?? null));
-  return objects.every((node) => node?.kind() === 'object')
-    ? (objects as SgNode[])
+  const body = unwrap(config.body);
+  if (body?.type === 'ObjectExpression') return [body];
+  if (body?.type !== 'BlockStatement') return null;
+  const returns = parsed
+    .ofType('ReturnStatement')
+    .filter(
+      (node) =>
+        node.start >= body.start &&
+        node.end <= body.end &&
+        parsed.ancestors(node).find(isFunctionBoundary) === config
+    );
+  if (!returns.length) return null;
+  const objects = returns.map((node) => unwrap(node.argument));
+  return objects.every((node) => node?.type === 'ObjectExpression')
+    ? (objects as AstNode[])
     : null;
 }
 
-function pluginsProperty(object: SgNode): SgNode | undefined {
-  return object
-    .namedChildren()
-    .filter((node) => {
-      if (node.kind() === 'shorthand_property_identifier')
-        return node.text() === 'plugins';
-      return (
-        node.kind() === 'pair' &&
-        ['plugins', '"plugins"', "'plugins'"].includes(node.field('key')?.text() ?? '')
-      );
-    })
+function pluginsProperty(object: AstNode): AstNode | undefined {
+  return (object.properties as AstNode[])
+    .filter(
+      (node) =>
+        node.type === 'Property' &&
+        node.kind === 'init' &&
+        !node.method &&
+        !node.computed &&
+        (isIdentifier(node.key, 'plugins') ||
+          (isStringLiteral(node.key) && node.key.value === 'plugins'))
+    )
     .at(-1);
 }
 
-function boundNames(pattern: SgNode | null): string[] {
+function boundNames(pattern: AstNode | null | undefined): string[] {
   if (!pattern) return [];
-  if (
-    ['identifier', 'type_identifier', 'shorthand_property_identifier_pattern'].includes(
-      String(pattern.kind())
-    )
-  )
-    return [pattern.text()];
-  if (pattern.kind() === 'pair_pattern') return boundNames(pattern.field('value'));
-  if (
-    pattern.kind() === 'assignment_pattern' ||
-    pattern.kind() === 'object_assignment_pattern'
-  )
-    return boundNames(pattern.field('left'));
-  if (['required_parameter', 'optional_parameter'].includes(String(pattern.kind())))
-    return boundNames(pattern.field('pattern'));
-  if (
-    ['formal_parameters', 'object_pattern', 'array_pattern', 'rest_pattern'].includes(
-      String(pattern.kind())
-    )
-  )
-    return pattern.namedChildren().flatMap(boundNames);
-  return [];
+  switch (pattern.type) {
+    case 'Identifier':
+      return pattern.name ? [pattern.name] : [];
+    case 'Property':
+      return boundNames(pattern.value);
+    case 'AssignmentPattern':
+      return boundNames(pattern.left);
+    case 'RestElement':
+      return boundNames(pattern.argument);
+    case 'TSParameterProperty':
+      return boundNames(pattern.parameter);
+    case 'ObjectPattern':
+      return (pattern.properties as AstNode[]).flatMap(boundNames);
+    case 'ArrayPattern':
+      return (pattern.elements as (AstNode | null)[]).flatMap(boundNames);
+    default:
+      return [];
+  }
 }
 
-function isLexicalScope(node: SgNode): boolean {
-  return (
-    isFunctionBoundary(node) ||
-    [
-      'program',
-      'statement_block',
-      'for_statement',
-      'for_in_statement',
-      'catch_clause',
-      'switch_body',
-    ].includes(String(node.kind()))
-  );
+const LEXICAL_SCOPES = new Set([
+  'Program',
+  'BlockStatement',
+  'ForStatement',
+  'ForInStatement',
+  'ForOfStatement',
+  'CatchClause',
+  'SwitchStatement',
+]);
+
+function isLexicalScope(node: AstNode): boolean {
+  return isFunctionBoundary(node) || LEXICAL_SCOPES.has(node.type);
 }
 
-function visibleDeclaration(reference: SgNode, name: string): SgNode | undefined {
-  const ancestors = reference.ancestors();
-  const root = ancestors.at(-1)!;
-  const declarations: { declaration: SgNode; scope: SgNode; names: string[] }[] = [];
-  for (const declaration of root.findAll({ rule: { kind: 'variable_declarator' } })) {
-    const isVar = declaration.parent()?.kind() === 'variable_declaration';
-    const scope = declaration
-      .ancestors()
+/** Per scope node: the first declaration of each name, in declaration-kind priority order. */
+type ScopeIndex = Map<AstNode, Map<string, AstNode>>;
+
+const scopeIndexes = new WeakMap<ParsedSource, ScopeIndex>();
+
+function scopeIndex(parsed: ParsedSource): ScopeIndex {
+  const cached = scopeIndexes.get(parsed);
+  if (cached) return cached;
+  const index: ScopeIndex = new Map();
+  const declare = (scope: AstNode | undefined, declaration: AstNode, names: string[]) => {
+    if (!scope) return;
+    let scoped = index.get(scope);
+    if (!scoped) index.set(scope, (scoped = new Map()));
+    for (const name of names) if (!scoped.has(name)) scoped.set(name, declaration);
+  };
+  for (const declarator of parsed.ofType('VariableDeclarator')) {
+    const isVar = parsed.parent(declarator)?.kind === 'var';
+    const scope = parsed
+      .ancestors(declarator)
       .find((node) =>
-        isVar
-          ? isFunctionBoundary(node) || node.kind() === 'program'
-          : isLexicalScope(node)
+        isVar ? isFunctionBoundary(node) || node.type === 'Program' : isLexicalScope(node)
       );
-    if (scope)
-      declarations.push({
-        declaration,
-        scope,
-        names: boundNames(declaration.field('name')),
-      });
+    declare(scope, declarator, boundNames(declarator.id));
   }
-  for (const declaration of root.findAll({ rule: { kind: 'for_in_statement' } })) {
-    const kind = declaration.field('kind')?.text();
-    if (!kind || !['const', 'let', 'var'].includes(kind)) continue;
-    const scope =
-      kind === 'var'
-        ? declaration
-            .ancestors()
-            .find((node) => isFunctionBoundary(node) || node.kind() === 'program')
-        : declaration;
-    if (scope)
-      declarations.push({
-        declaration,
-        scope,
-        names: boundNames(declaration.field('left')),
-      });
-  }
-  for (const declaration of root.findAll({
-    rule: {
-      any: [
-        { kind: 'function_declaration' },
-        { kind: 'generator_function_declaration' },
-        { kind: 'class_declaration' },
-      ],
-    },
-  })) {
-    const scope = declaration.ancestors().find(isLexicalScope);
-    if (scope)
-      declarations.push({
-        declaration,
-        scope,
-        names: boundNames(declaration.field('name')),
-      });
-  }
-  for (const scope of root.findAll({
-    rule: {
-      any: [
-        { kind: 'arrow_function' },
-        { kind: 'function_expression' },
-        { kind: 'function_declaration' },
-        { kind: 'generator_function' },
-        { kind: 'generator_function_declaration' },
-        { kind: 'method_definition' },
-        { kind: 'catch_clause' },
-      ],
-    },
-  })) {
-    declarations.push({
-      declaration: scope,
-      scope,
-      names: boundNames(scope.field('parameters') ?? scope.field('parameter')),
-    });
-    if (['function_expression', 'generator_function'].includes(String(scope.kind())))
-      declarations.push({
-        declaration: scope,
-        scope,
-        names: boundNames(scope.field('name')),
-      });
-  }
-  for (const scope of ancestors.filter(isLexicalScope)) {
-    const match = declarations.find(
-      (entry) => entry.scope.id() === scope.id() && entry.names.includes(name)
+  for (const declaration of parsed.ofType('FunctionDeclaration', 'ClassDeclaration')) {
+    declare(
+      parsed.ancestors(declaration).find(isLexicalScope),
+      declaration,
+      boundNames(declaration.id)
     );
-    if (match) return match.declaration;
+  }
+  for (const scope of parsed.nodes.filter(
+    (node) => isFunctionBoundary(node) || node.type === 'CatchClause'
+  )) {
+    declare(
+      scope,
+      scope,
+      scope.type === 'CatchClause'
+        ? boundNames(scope.param)
+        : scope.params.flatMap(boundNames)
+    );
+    if (scope.type === 'FunctionExpression') declare(scope, scope, boundNames(scope.id));
+  }
+  scopeIndexes.set(parsed, index);
+  return index;
+}
+
+function visibleDeclaration(
+  parsed: ParsedSource,
+  reference: AstNode,
+  name: string
+): AstNode | undefined {
+  const index = scopeIndex(parsed);
+  for (const scope of parsed.ancestors(reference)) {
+    if (!isLexicalScope(scope)) continue;
+    const declaration = index.get(scope)?.get(name);
+    if (declaration) return declaration;
   }
   return undefined;
 }
 
-function shadowsBinding(reference: SgNode, binding: string): boolean {
-  return Boolean(visibleDeclaration(reference, binding.split('.')[0]));
+function shadowsBinding(
+  parsed: ParsedSource,
+  reference: AstNode,
+  binding: string
+): boolean {
+  return Boolean(visibleDeclaration(parsed, reference, binding.split('.')[0]));
 }
 
-function dynamicPluginBindings(reference: SgNode, plugin: string): string[] {
-  const root = reference.ancestors().at(-1)!;
+/** `const { withZephyr } = await import(plugin)` declarators. */
+function dynamicPluginImports(parsed: ParsedSource, plugin: string): AstNode[] {
+  return parsed.ofType('VariableDeclarator').filter((declaration) => {
+    let value = declaration.init;
+    if (value?.type === 'AwaitExpression') value = value.argument;
+    return (
+      value?.type === 'ImportExpression' &&
+      isStringLiteral(value.source) &&
+      value.source.value === plugin &&
+      declaration.id.type === 'ObjectPattern'
+    );
+  });
+}
+
+function dynamicPluginBindings(
+  parsed: ParsedSource,
+  reference: AstNode,
+  plugin: string
+): string[] {
   const bindings: string[] = [];
-  for (const declaration of root.findAll({ rule: { kind: 'variable_declarator' } })) {
-    let value = declaration.field('value');
-    if (value?.kind() === 'await_expression') value = value.namedChildren()[0];
-    if (value?.field('function')?.text() !== 'import') continue;
-    if (value.field('arguments')?.namedChildren()[0]?.text().slice(1, -1) !== plugin)
-      continue;
-    const pattern = declaration.field('name');
-    if (pattern?.kind() !== 'object_pattern') continue;
-    for (const property of pattern.namedChildren()) {
-      if (
-        property.text() === 'withZephyr' &&
-        visibleDeclaration(reference, 'withZephyr')?.id() === declaration.id()
-      )
-        bindings.push('withZephyr');
-      if (
-        property.field('key')?.text() === 'withZephyr' &&
-        property.field('value')?.kind() === 'identifier' &&
-        visibleDeclaration(reference, property.field('value')!.text())?.id() ===
-          declaration.id()
-      )
-        bindings.push(property.field('value')!.text());
+  for (const declaration of dynamicPluginImports(parsed, plugin)) {
+    for (const property of declaration.id.properties as AstNode[]) {
+      if (property.type !== 'Property' || !isIdentifier(property.key, 'withZephyr'))
+        continue;
+      const local = property.value;
+      if (property.shorthand) {
+        if (
+          isIdentifier(local, 'withZephyr') &&
+          visibleDeclaration(parsed, reference, 'withZephyr') === declaration
+        )
+          bindings.push('withZephyr');
+      } else if (
+        isIdentifier(local) &&
+        visibleDeclaration(parsed, reference, local.name) === declaration
+      ) {
+        bindings.push(local.name);
+      }
     }
   }
   return bindings;
 }
 
-function registeredPluginCalls(
-  object: SgNode,
-  bindings: string[],
-  plugin: string
-): SgNode[] {
-  const property = pluginsProperty(object);
-  if (!property) return [];
-  if (
-    object
-      .namedChildren()
-      .some(
-        (node) =>
-          node.kind() === 'spread_element' &&
-          node.range().start.index > property.range().start.index
-      )
-  )
-    return [];
-  const collect = (expression: SgNode | null, isList: boolean): SgNode[] => {
-    const node = unwrap(expression);
-    if (!node) return [];
-    if (node.kind() === 'array')
-      return node.namedChildren().flatMap((child) => collect(child, false));
-    if (node.kind() === 'spread_element')
-      return collect(node.namedChildren()[0] ?? null, true);
-    if (node.kind() === 'ternary_expression')
-      return [
-        ...collect(node.field('consequence'), isList),
-        ...collect(node.field('alternative'), isList),
-      ];
-    if (node.kind() === 'binary_expression') {
-      const operator = node.field('operator')?.text();
-      if (operator === '&&') return collect(node.field('right'), isList);
-      if (operator === '||' || operator === '??')
-        return [
-          ...collect(node.field('left'), isList),
-          ...collect(node.field('right'), isList),
-        ];
-    }
-    if (node.kind() === 'await_expression')
-      return collect(node.namedChildren()[0] ?? null, isList);
-    if (isList || node.kind() !== 'call_expression') return [];
-    const available = [
-      ...bindings.filter((binding) => !shadowsBinding(node, binding)),
-      ...dynamicPluginBindings(node, plugin),
-    ];
-    return available.includes(unwrap(node.field('function'))?.text() ?? '') ? [node] : [];
-  };
-  return collect(property.kind() === 'pair' ? property.field('value') : property, true);
+function spreadsAfter(object: AstNode, property: AstNode): boolean {
+  return (object.properties as AstNode[]).some(
+    (node) => node.type === 'SpreadElement' && node.start > property.start
+  );
 }
 
-function testGuarded(call: SgNode, envBindings: string[]): boolean {
-  return call.ancestors().some((ancestor) => {
-    if (ancestor.kind() !== 'ternary_expression') return false;
-    const condition = unwrap(ancestor.field('condition'));
-    const environment = unwrap(condition?.field('object') ?? null);
-    const object = environment?.text();
+function registeredPluginCalls(
+  parsed: ParsedSource,
+  object: AstNode,
+  bindings: string[],
+  plugin: string
+): AstNode[] {
+  const property = pluginsProperty(object);
+  if (!property || spreadsAfter(object, property)) return [];
+  const collect = (expression: AstNode | null, isList: boolean): AstNode[] => {
+    const node = unwrap(expression);
+    if (!node) return [];
+    switch (node.type) {
+      case 'ArrayExpression':
+        return (node.elements as (AstNode | null)[]).flatMap((child) =>
+          collect(child, false)
+        );
+      case 'SpreadElement':
+        return collect(node.argument, true);
+      case 'ConditionalExpression':
+        return [...collect(node.consequent, isList), ...collect(node.alternate, isList)];
+      case 'LogicalExpression':
+        if (node.operator === '&&') return collect(node.right, isList);
+        return [...collect(node.left, isList), ...collect(node.right, isList)];
+      case 'AwaitExpression':
+        return collect(node.argument, isList);
+    }
+    if (isList || node.type !== 'CallExpression') return [];
+    const available = [
+      ...bindings.filter((binding) => !shadowsBinding(parsed, node, binding)),
+      ...dynamicPluginBindings(parsed, node, plugin),
+    ];
+    return available.includes(parsed.text(unwrap(node.callee))) ? [node] : [];
+  };
+  return collect(property.value, true);
+}
+
+/** Whether a value import (default, namespace, or named) binds `process`. */
+function importsProcess(parsed: ParsedSource): boolean {
+  return valueImports(parsed).some((statement) =>
+    (statement.specifiers as AstNode[]).some(
+      (specifier) =>
+        specifier.importKind !== 'type' && isIdentifier(specifier.local, 'process')
+    )
+  );
+}
+
+function testGuarded(
+  parsed: ParsedSource,
+  call: AstNode,
+  envBindings: string[]
+): boolean {
+  return parsed.ancestors(call).some((ancestor) => {
+    if (ancestor.type !== 'ConditionalExpression') return false;
+    const condition = unwrap(ancestor.test);
+    if (condition?.type !== 'MemberExpression') return false;
+    const environment = unwrap(condition.object);
+    const object = parsed.text(environment);
     const globalProcessEnvironment =
-      environment?.kind() === 'member_expression' &&
-      environment.field('object')?.text() === 'process' &&
-      environment.field('property')?.text() === 'env' &&
-      !call
-        .ancestors()
-        .at(-1)!
-        .findAll({ rule: { kind: 'import_statement' } })
-        .some((statement) => {
-          if (/^import\s+type\b/.test(statement.text())) return false;
-          const clause = statement
-            .namedChildren()
-            .find((node) => node.kind() === 'import_clause');
-          if (
-            clause
-              ?.namedChildren()
-              .some((node) => node.kind() === 'identifier' && node.text() === 'process')
-          )
-            return true;
-          if (
-            statement
-              .findAll({ rule: { kind: 'namespace_import' } })
-              .some((namespace) => namespace.namedChildren().at(-1)?.text() === 'process')
-          )
-            return true;
-          return statement
-            .findAll({ rule: { kind: 'import_specifier' } })
-            .some(
-              (specifier) =>
-                !/^type\s/.test(specifier.text()) &&
-                (specifier.field('alias') ?? specifier.field('name'))?.text() ===
-                  'process'
-            );
-        });
-    const key =
-      condition?.kind() === 'subscript_expression'
-        ? condition.field('index')?.text().slice(1, -1)
-        : condition?.field('property')?.text();
+      environment?.type === 'MemberExpression' &&
+      !environment.computed &&
+      isIdentifier(environment.object, 'process') &&
+      isIdentifier(environment.property, 'env') &&
+      !importsProcess(parsed);
+    const key = condition.computed
+      ? parsed.text(condition.property).slice(1, -1)
+      : parsed.text(condition.property);
     if (
       key !== 'RSTEST' ||
       !object ||
       (!envBindings.includes(object) && !globalProcessEnvironment) ||
-      shadowsBinding(call, globalProcessEnvironment ? 'process' : object)
+      shadowsBinding(parsed, call, globalProcessEnvironment ? 'process' : object)
     )
       return false;
-    return Boolean(
-      ancestor
-        .field('alternative')
-        ?.findAll({ rule: { kind: 'call_expression' } })
-        .some((candidate) => candidate.id() === call.id())
-    );
+    const alternate = ancestor.alternate;
+    return call.start >= alternate.start && call.end <= alternate.end;
   });
 }
 
-function appendItem(container: SgNode, item: string): string {
-  const text = container.text();
-  const children = container.children().filter((node) => node.kind() !== 'comment');
-  const needsComma = children.length > 2 && children.at(-2)?.kind() !== ',';
+function appendItem(parsed: ParsedSource, container: AstNode, item: string): string {
+  const text = parsed.text(container);
+  const items: (AstNode | null)[] =
+    container.type === 'ArrayExpression' ? container.elements : container.properties;
+  const last = items.at(-1);
+  const trailingComma =
+    items.length > 0 &&
+    (!last ||
+      parsed.source
+        .slice(last.end, container.end - 1)
+        .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, '')
+        .includes(','));
+  const needsComma = items.length > 0 && !trailingComma;
   return `${text.slice(0, -1)}\n${needsComma ? ',' : ''}${item}\n${text.at(-1)}`;
 }
 
 export function findRstackSections(filePath: string): RstackSection[] {
-  const root = readConfig(filePath);
+  const parsed = readConfig(filePath);
   return (['app', 'lib', 'doc'] as const).filter(
-    (section) => sectionCalls(root, section).length > 0
+    (section) => sectionCalls(parsed, section).length > 0
   );
 }
 
@@ -396,21 +366,28 @@ export function hasRstackZephyr(
   config: Pick<BundlerConfig, 'plugin' | 'rstackSection'>
 ): boolean {
   if (!config.rstackSection) return false;
-  const root = readConfig(filePath);
-  const calls = sectionCalls(root, config.rstackSection);
-  const bindings = importBindings(root, config.plugin, 'withZephyr');
-  const envBindings = importBindings(root, 'node:process', 'env');
+  const parsed = readConfig(filePath);
+  const calls = sectionCalls(parsed, config.rstackSection);
+  const bindings = importBindings(parsed, config.plugin, 'withZephyr');
+  const envBindings = importBindings(parsed, 'node:process', 'env');
   return (
     calls.length > 0 &&
     calls.every((call) => {
-      const objects = configObjects(call);
+      const objects = configObjects(parsed, call);
       return Boolean(
         objects?.every((object) => {
-          const registered = registeredPluginCalls(object, bindings, config.plugin);
+          const registered = registeredPluginCalls(
+            parsed,
+            object,
+            bindings,
+            config.plugin
+          );
           return (
             registered.length > 0 &&
             (config.rstackSection === 'doc' ||
-              registered.every((pluginCall) => testGuarded(pluginCall, envBindings)))
+              registered.every((pluginCall) =>
+                testGuarded(parsed, pluginCall, envBindings)
+              ))
           );
         })
       );
@@ -425,32 +402,25 @@ export function transformRstackSection(
 ): OperationResult {
   try {
     if (!config.rstackSection) return { status: 'no-match' };
-    const root = readConfig(filePath);
-    const calls = sectionCalls(root, config.rstackSection);
-    const configs = calls.map(configObjects);
+    const parsed = readConfig(filePath);
+    const calls = sectionCalls(parsed, config.rstackSection);
+    const configs = calls.map((call) => configObjects(parsed, call));
     if (configs.some((objects) => !objects)) {
       return {
         status: 'error',
         error: `Configure define.${config.rstackSection}() manually: use an inline object or a function returning inline objects.`,
       };
     }
-    const bindings = importBindings(root, config.plugin, 'withZephyr');
+    const bindings = importBindings(parsed, config.plugin, 'withZephyr');
     const objects = configs.flatMap((configObjects) => configObjects ?? []);
     const existingBinding = bindings.find((binding) =>
-      objects.every((object) => !shadowsBinding(object, binding))
+      objects.every((object) => !shadowsBinding(parsed, object, binding))
     );
     const identifiers = new Set(
-      root
-        .findAll({
-          rule: {
-            any: [
-              { kind: 'identifier' },
-              ...(/\.m?ts$/.test(filePath) ? [{ kind: 'type_identifier' }] : []),
-              { kind: 'shorthand_property_identifier_pattern' },
-            ],
-          },
-        })
-        .map((node) => node.text())
+      parsed
+        .ofType('Identifier')
+        .filter((node) => parsed.isReference(node))
+        .map((node) => node.name as string)
     );
     const preferredBinding =
       config.rstackSection === 'doc' ? 'withZephyrRspress' : 'withZephyrRsbuild';
@@ -460,9 +430,9 @@ export function transformRstackSection(
       while (identifiers.has(binding)) binding = `${preferredBinding}${suffix++}`;
     }
     const needsTestGuard = config.rstackSection !== 'doc';
-    const envBindings = importBindings(root, 'node:process', 'env');
+    const envBindings = importBindings(parsed, 'node:process', 'env');
     const existingEnvBinding = envBindings.find((candidate) =>
-      objects.every((object) => !shadowsBinding(object, candidate))
+      objects.every((object) => !shadowsBinding(parsed, object, candidate))
     );
     let envBinding = existingEnvBinding ?? 'zephyrEnv';
     if (!existingEnvBinding) {
@@ -473,56 +443,50 @@ export function transformRstackSection(
     const pluginItem = needsTestGuard
       ? `...(${envBinding}['RSTEST'] ? [] : [${binding}()])`
       : `${binding}()`;
-    const edits: Edit[] = [];
+    const edits: TextEdit[] = [];
+    const replace = (node: AstNode, text: string) =>
+      edits.push({ start: node.start, end: node.end, text });
     let addsPlugin = false;
     for (const object of objects) {
-      const registered = registeredPluginCalls(object, bindings, config.plugin);
+      const registered = registeredPluginCalls(parsed, object, bindings, config.plugin);
       if (registered.length) {
         if (needsTestGuard) {
           for (const pluginCall of registered.filter(
-            (candidate) => !testGuarded(candidate, envBindings)
+            (candidate) => !testGuarded(parsed, candidate, envBindings)
           ))
-            edits.push(
-              pluginCall.replace(
-                `(${envBinding}['RSTEST'] ? undefined : ${pluginCall.text()})`
-              )
+            replace(
+              pluginCall,
+              `(${envBinding}['RSTEST'] ? undefined : ${parsed.text(pluginCall)})`
             );
         }
         continue;
       }
       addsPlugin = true;
       const property = pluginsProperty(object);
-      if (
-        property &&
-        object
-          .namedChildren()
-          .some(
-            (node) =>
-              node.kind() === 'spread_element' &&
-              node.range().start.index > property.range().start.index
-          )
-      ) {
+      if (property && spreadsAfter(object, property)) {
         return {
           status: 'error',
           error: `Configure define.${config.rstackSection}().plugins after configuration spreads so inherited plugins cannot override Zephyr.`,
         };
       }
       if (!property) {
-        if (object.namedChildren().some((node) => node.kind() === 'spread_element')) {
+        if (
+          (object.properties as AstNode[]).some((node) => node.type === 'SpreadElement')
+        ) {
           return {
             status: 'error',
             error: `Configure define.${config.rstackSection}().plugins explicitly before running with-zephyr on a spread configuration.`,
           };
         }
-        edits.push(object.replace(appendItem(object, `plugins: [${pluginItem}]`)));
+        replace(object, appendItem(parsed, object, `plugins: [${pluginItem}]`));
       } else {
-        const value = property.kind() === 'pair' ? property.field('value')! : property;
-        const array = unwrap(value);
-        if (array?.kind() === 'array') {
-          edits.push(array.replace(appendItem(array, pluginItem)));
+        const array = unwrap(property.value);
+        if (array?.type === 'ArrayExpression') {
+          replace(array, appendItem(parsed, array, pluginItem));
         } else {
-          edits.push(
-            property.replace(`plugins: [...(${value.text()} ?? []), ${pluginItem}]`)
+          replace(
+            property,
+            `plugins: [...(${parsed.text(property.value)} ?? []), ${pluginItem}]`
           );
         }
       }
@@ -536,17 +500,14 @@ export function transformRstackSection(
     if (needsTestGuard && !existingEnvBinding)
       importStatements.push(`import { env as ${envBinding} } from 'node:process';\n`);
     if (importStatements.length) {
-      const insertionPoint = root.find({ rule: { kind: 'import_statement' } })!.range()
-        .start.index;
+      const insertionPoint = parsed.ofType('ImportDeclaration')[0]!.start;
       edits.push({
-        startPos: insertionPoint,
-        endPos: insertionPoint,
-        insertedText: importStatements.join(''),
+        start: insertionPoint,
+        end: insertionPoint,
+        text: importStatements.join(''),
       });
     }
-    const source = fs.readFileSync(filePath, 'utf8');
-    const range = root.range();
-    const output = `${source.slice(0, range.start.index)}${root.commitEdits(edits)}${source.slice(range.end.index)}`;
+    const output = applyEdits(parsed.source, edits);
     if (!dryRun) fs.writeFileSync(filePath, output);
     return { status: 'changed' };
   } catch (error) {

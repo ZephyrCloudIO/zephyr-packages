@@ -87,6 +87,13 @@ describe('Zephyr Codemod CLI', () => {
       const output = runCodemod('--version');
       expect(output.trim()).toMatch(/^\d+\.\d+\.\d+$/);
     });
+
+    it('should load the native parser without the test runner NODE_PATH', () => {
+      // pnpm bin shims export NODE_PATH with its hidden hoist directory, which can mask a
+      // bundled napi loader that cannot find its platform binding from dist/.
+      const output = runCodemod('--version', false, { NODE_PATH: undefined });
+      expect(output.trim()).toMatch(/^\d+\.\d+\.\d+$/);
+    });
   });
 
   describe('File Detection', () => {

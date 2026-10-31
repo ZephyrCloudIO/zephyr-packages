@@ -118,8 +118,8 @@ minimumReleaseAgeExclude:
   - sharp@0.35.5
   # Renovate security update: shell-quote@1.11.0
   - shell-quote@1.11.0
-  # Renovate security update: nuxt@4.6.2
-  - nuxt@4.6.2
+  # Renovate security update: nuxt@4.6.2 || 4.6.3
+  - nuxt@4.6.2 || 4.6.3
   # Renovate security update: fast-uri@3.1.9
   - fast-uri@3.1.9
   # Renovate security update: undici@8.12.2

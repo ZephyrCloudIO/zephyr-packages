@@ -1,6 +1,6 @@
 {
   "name": "zephyr-native-internal",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "React Native internals shared by the Zephyr Metro and Re.Pack plugins",
   "license": "Apache-2.0",
   "author": {

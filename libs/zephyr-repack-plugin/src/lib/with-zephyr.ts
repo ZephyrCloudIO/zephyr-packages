@@ -110,7 +110,8 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
-    const runtimeManifest = _zephyrOptions?.runtimeManifest;
+    const runtimeManifest =
+      _zephyrOptions?.runtimeManifest ?? zephyr_engine.zephyrConfig.runtimeManifest;
     const runtimeManifestUrl =
       runtimeManifest === undefined
         ? undefined

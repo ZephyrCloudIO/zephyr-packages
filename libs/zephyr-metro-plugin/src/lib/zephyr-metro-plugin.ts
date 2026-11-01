@@ -110,7 +110,9 @@ export class ZephyrMetroPlugin {
           const value = remotes[name];
           if (typeof value === 'string') this.#federationOverrides.remotes[name] = value;
         }
-        const runtimeManifest = global.__ZEPHYR_METRO_RUNTIME_MANIFEST__;
+        const runtimeManifest =
+          global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ ??
+          this.zephyr_engine.zephyrConfig.runtimeManifest;
         let root: NativeEnvRuntimeRoot | undefined;
         if (runtimeManifest !== undefined) {
           if (!mfConfig.name) {

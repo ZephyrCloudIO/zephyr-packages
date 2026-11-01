@@ -19,6 +19,13 @@ export interface ZephyrConfig {
   remoteDependencies?: Record<string, string>;
   /** Chooses mutable selector URLs or immutable version URLs for resolved remotes. */
   dependencyUrlMode?: ZephyrDependencyUrlMode;
+  /**
+   * Tag or environment whose `zephyr-manifest.json` a native app reads at runtime, in
+   * `zephyr:dependencies` selector syntax: `@production-${target}` for this app's own
+   * label, `app@label` for another app's. Accepted by every integration; only the Metro
+   * and Re.Pack plugins act on it. Their `withZephyr({ runtimeManifest })` option wins.
+   */
+  runtimeManifest?: string;
 }
 
 export type ResolvedZephyrConfig = Readonly<
@@ -42,6 +49,7 @@ const CONFIG_FIELDS = new Set<keyof ZephyrConfig>([
   'appName',
   'remoteDependencies',
   'dependencyUrlMode',
+  'runtimeManifest',
 ]);
 
 const CONFIG_ERROR_MAX_LENGTH = 1_000;
@@ -228,6 +236,11 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     configPath
   );
   const dependencyUrlMode = readDependencyUrlMode(value['dependencyUrlMode'], configPath);
+  const runtimeManifest = readOptionalString(
+    value['runtimeManifest'],
+    'runtimeManifest',
+    configPath
+  );
 
   return Object.freeze({
     ...(org ? { org } : {}),
@@ -235,6 +248,7 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     ...(appName ? { appName } : {}),
     ...(remoteDependencies ? { remoteDependencies } : {}),
     ...(dependencyUrlMode ? { dependencyUrlMode } : {}),
+    ...(runtimeManifest ? { runtimeManifest } : {}),
   });
 }
 
@@ -256,7 +270,7 @@ function readDependencyUrlMode(
 
 function readOptionalString(
   value: unknown,
-  field: 'org' | 'project' | 'appName',
+  field: 'org' | 'project' | 'appName' | 'runtimeManifest',
   configPath: string
 ): string | undefined {
   if (value === undefined) {

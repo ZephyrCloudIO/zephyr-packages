@@ -25,6 +25,7 @@ rs.mock('zephyr-agent', () => ({
       env: { target: 'ios' as const },
       applicationProperties: { name: 'TestApp' },
       application_uid: 'test-app-uid',
+      zephyrConfig: {},
       npmProperties: {
         dependencies: { react: '^18.0.0' },
         devDependencies: { typescript: '^5.0.0' },
@@ -186,13 +187,14 @@ describe('ZephyrMetroPlugin', () => {
       ]);
     });
 
-    it('binds the runtimeManifest set by withZephyr as the root manifest', async () => {
+    it('binds the runtimeManifest set by withZephyr over the config file', async () => {
       const { ZephyrEngine } = await import('zephyr-agent');
       const engine = await ZephyrEngine.create({
         builder: 'metro',
         context: '/project',
       } as never);
       global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ = '@production-${target}';
+      engine.zephyrConfig = { runtimeManifest: '@dev-${target}' };
       try {
         const plugin = new ZephyrMetroPlugin({
           platform: 'ios',
@@ -205,12 +207,42 @@ describe('ZephyrMetroPlugin', () => {
         await plugin.beforeBuild();
       } finally {
         global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ = undefined;
+        engine.zephyrConfig = {};
       }
 
       expect(resolveRuntimeManifest).toHaveBeenCalledWith(
         engine,
         '@production-${target}'
       );
+      expect(writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), expect.any(Array), {
+        name: 'shell',
+        applicationUid: 'test-app-uid',
+        manifestUrl: 'https://production-ios-shell.example/zephyr-manifest.json',
+      });
+    });
+
+    it('binds the zephyr.config runtimeManifest when withZephyr sets none', async () => {
+      const { ZephyrEngine } = await import('zephyr-agent');
+      const engine = await ZephyrEngine.create({
+        builder: 'metro',
+        context: '/project',
+      } as never);
+      engine.zephyrConfig = { runtimeManifest: '@dev-${target}' };
+      try {
+        const plugin = new ZephyrMetroPlugin({
+          platform: 'ios',
+          mode: 'production',
+          context: '/project',
+          outDir: 'dist',
+          mfConfig: { name: 'shell', remotes: {}, plugins: [] } as never,
+        });
+
+        await plugin.beforeBuild();
+      } finally {
+        engine.zephyrConfig = {};
+      }
+
+      expect(resolveRuntimeManifest).toHaveBeenCalledWith(engine, '@dev-${target}');
       expect(writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), expect.any(Array), {
         name: 'shell',
         applicationUid: 'test-app-uid',

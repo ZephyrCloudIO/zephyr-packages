@@ -268,6 +268,16 @@ A shell app whose bundle ships inside the native binary can follow a Zephyr tag 
 withZephyr({ target: 'ios', runtimeManifest: '@production-${target}' });
 ```
 
+It can also live in `zephyr.config.*` next to `appName` and `remoteDependencies`. Write the selector in plain quotes, not a template literal, so JavaScript does not interpolate `${target}`. The `withZephyr` option wins when both set it:
+
+```js
+// zephyr.config.cjs
+module.exports = {
+  appName: 'mobile-shell',
+  runtimeManifest: '@production-${target}',
+};
+```
+
 `bundle-mf-host`/`bundle-mf-remote` resolve the label's alias URL (never a version URL) and fail when the label does not exist for that platform. At runtime, the app's first remote request applies the `zephyr-manifest.json` persisted by the previous launch (its remote overrides and `ZE_PUBLIC_*` values), then refreshes the stored copy in the background; changes made in the dashboard apply on the next launch or `ZephyrNativeCache.reloadApp()`. The first launch, and apps without `zephyr-native-cache` registered, keep the build-time remotes and values. Use separate iOS and Android labels.
 
 ## Project Structure

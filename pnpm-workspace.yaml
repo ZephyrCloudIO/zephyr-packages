@@ -160,7 +160,7 @@ catalogs:
   module-federation:
     '@module-federation/enhanced': 2.9.0
     '@module-federation/metro': 2.9.2
-    '@module-federation/rsbuild-plugin': 2.9.0
+    '@module-federation/rsbuild-plugin': 2.9.2
     '@module-federation/runtime': 2.9.0
   module-federation-vite:
     '@module-federation/runtime': 2.9.0

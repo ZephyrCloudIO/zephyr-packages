@@ -19,7 +19,7 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   fun restart() {
-    val activity = currentActivity ?: return
+    val activity = reactApplicationContext.currentActivity ?: return
     val app = activity.application as? ReactApplication ?: return
 
     activity.runOnUiThread {

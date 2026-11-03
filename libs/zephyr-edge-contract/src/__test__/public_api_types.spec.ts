@@ -1,6 +1,8 @@
 import { describe, expect, test } from '@rstest/core';
 
 import type {
+  GatewayPublishRequest,
+  PublishGrantClaims,
   PublishRequest,
   StageZeroPublishRequest,
   PublishTarget,
@@ -38,6 +40,37 @@ describe('type exports', () => {
     type TestStageZeroPublishRequest = StageZeroPublishRequest;
     const obj: TestStageZeroPublishRequest = {} as TestStageZeroPublishRequest;
     expect(obj).toBeDefined();
+  });
+
+  test('should carry publish grants on publish requests', () => {
+    const gateway: Pick<GatewayPublishRequest, 'publishGrant' | 'publishGrants'> = {
+      publishGrant: 'grant',
+      publishGrants: ['grant-a', 'grant-b'],
+    };
+    const publish: Pick<PublishRequest, 'publishGrant' | 'publishGrants'> = {
+      publishGrants: ['grant-a'],
+    };
+    const stageZero: Pick<StageZeroPublishRequest, 'publishGrant'> = {
+      publishGrant: 'grant',
+    };
+
+    expect(gateway.publishGrants).toHaveLength(2);
+    expect(publish.publishGrants).toEqual(['grant-a']);
+    expect(stageZero.publishGrant).toBe('grant');
+  });
+
+  test('should export PublishGrantClaims type', () => {
+    const claims: PublishGrantClaims = {
+      token_use: 'zephyr_publish_grant',
+      jti: 'grant-id',
+      exp: 1_800_000_000,
+      application_uid: 'app.repo.org',
+      snapshot_id: 'snapshot-id',
+      hostnames: ['app.zephyrcloud.app'],
+      edge_url: 'https://edge.example.com',
+    };
+
+    expect(claims.token_use).toBe('zephyr_publish_grant');
   });
 
   test('should export PublishTarget type', () => {

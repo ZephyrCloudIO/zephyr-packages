@@ -10,12 +10,26 @@
  *   monorepo references where `*`, `^`, `~`, and the bare protocol keep the branch-aware
  *   `workspace:*` token (resolved against the build context, i.e. the remote just built
  *   on the same branch); explicit ranges pass through as semver.
+ * - Build target placeholder: "zephyr:remote_app_uid@dev-${target}" selects the `dev-ios`,
+ *   `dev-android` or `dev-web` tag/environment depending on the build target. The
+ *   placeholder survives parsing and is replaced when the dependency is resolved.
  *
  * @param ze_dependencies - Object with dependency name as key and version/reference as
  *   value
  * @returns Parsed zephyr dependencies with structured information
  */
+import type { ZephyrBuildTarget } from 'zephyr-edge-contract';
 import type { ZeDependency } from './ze-package-json.type';
+
+const ZE_TARGET_PLACEHOLDER = '${target}';
+
+/** Replaces every `${target}` placeholder in a dependency selector with the build target. */
+export function applyTargetPlaceholder(
+  selector: string,
+  target: ZephyrBuildTarget
+): string {
+  return selector.replaceAll(ZE_TARGET_PLACEHOLDER, target);
+}
 
 export function parseZeDependencies(
   ze_dependencies: Record<string, string>

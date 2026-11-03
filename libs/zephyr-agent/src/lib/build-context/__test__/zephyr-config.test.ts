@@ -51,6 +51,7 @@ describe('zephyr config', () => {
           remote: ' zephyr:remote.remote-project.remote-org@latest ',
         },
         dependencyUrlMode: 'version',
+        runtimeManifest: ' @dev-\${target} ',
       } satisfies Record<string, unknown>;`
     );
 
@@ -64,6 +65,7 @@ describe('zephyr config', () => {
         remote: 'zephyr:remote.remote-project.remote-org@latest',
       },
       dependencyUrlMode: 'version',
+      runtimeManifest: '@dev-${target}',
     });
     expect(Object.isFrozen(config)).toBe(true);
     expect(Object.isFrozen(config.remoteDependencies)).toBe(true);
@@ -153,6 +155,8 @@ describe('zephyr config', () => {
         "export default { dependencyUrlMode: 'tag' }",
         /dependencyUrlMode must be either "selector" or "version"/,
       ],
+      ["export default { runtimeManifest: '' }", /runtimeManifest must not be empty/],
+      ['export default { runtimeManifest: 42 }', /runtimeManifest must be a string/],
     ] as const;
 
     for (const [source, expected] of cases) {

@@ -52,6 +52,29 @@ describe('writeNativeEnvRuntimePlugin', () => {
     );
   });
 
+  it('binds the root manifest, even without resolved remotes', () => {
+    const root = {
+      name: 'shell',
+      applicationUid: 'shell.p.o',
+      manifestUrl: 'https://production-shell.example/zephyr-manifest.json',
+    };
+    const file = writeNativeEnvRuntimePlugin(outDir, [], root);
+    if (!file) throw new Error('expected a generated module');
+
+    const module = { exports: {} as unknown };
+    vm.runInNewContext(readFileSync(file, 'utf8'), {
+      module,
+      require: () => ({
+        createNativeEnvRuntimePlugin: (uids: unknown, boundRoot: unknown) => ({
+          uids,
+          boundRoot,
+        }),
+      }),
+    });
+
+    expect((module.exports as () => unknown)()).toEqual({ uids: {}, boundRoot: root });
+  });
+
   it('names the file by its content', () => {
     const first = writeNativeEnvRuntimePlugin(outDir, [
       { name: 'host', application_uid: 'host.p.o' },

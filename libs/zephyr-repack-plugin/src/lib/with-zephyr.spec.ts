@@ -10,6 +10,7 @@ const mocks = rs.hoisted(() => {
     env: { target: 'ios' },
     hasActiveBuild: true,
     application_uid: 'host.project.org',
+    zephyrConfig: {} as { runtimeManifest?: string },
     build_failed: rs.fn(),
     resolve_remote_dependencies: rs.fn().mockResolvedValue([]),
   };
@@ -27,6 +28,9 @@ const mocks = rs.hoisted(() => {
     writeEnvPlugin: rs
       .fn()
       .mockReturnValue('/repo/node_modules/.zephyr-repack/env-plugin-abc.js'),
+    resolveRuntimeManifest: rs
+      .fn()
+      .mockResolvedValue('https://production-ios-host.example/zephyr-manifest.json'),
     configureRuntimePlugin: rs.fn(),
     isModuleFederationPlugin: rs.fn(
       (plugin: { isMf?: boolean } | undefined) => plugin?.isMf === true
@@ -52,6 +56,7 @@ rs.mock('zephyr-agent', () => ({
 rs.mock('zephyr-native-internal', () => ({
   ...actualNativeInternal,
   writeNativeEnvRuntimePlugin: mocks.writeEnvPlugin,
+  resolveRuntimeManifestUrl: mocks.resolveRuntimeManifest,
 }));
 
 rs.mock('zephyr-xpack-internal', () => ({
@@ -171,13 +176,67 @@ describe('Re.Pack native target boundaries', () => {
           remote_entry_url: '',
           library_type: 'var',
         },
-      ]
+      ],
+      undefined
     );
     expect(mocks.configureRuntimePlugin).toHaveBeenCalledTimes(1);
     expect(mocks.configureRuntimePlugin).toHaveBeenCalledWith(
       mfPlugin,
       '/repo/node_modules/.zephyr-repack/env-plugin-abc.js'
     );
+  });
+
+  it('binds the runtimeManifest root to each Module Federation plugin with remotes', async () => {
+    const mfPlugin = { isMf: true, name: 'shell', remotes: { host: 'host@x' } };
+    const config = { context: '/repo', plugins: [mfPlugin] } as Configuration;
+    mocks.engine.zephyrConfig = { runtimeManifest: '@dev-${target}' };
+
+    try {
+      await withZephyr({ runtimeManifest: '@production-${target}' })(() => config)({
+        platform: 'ios',
+        mode: 'production',
+      });
+    } finally {
+      mocks.engine.zephyrConfig = {};
+    }
+
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+    expect(mocks.resolveRuntimeManifest).toHaveBeenCalledWith(
+      mocks.engine,
+      '@production-${target}'
+    );
+    expect(mocks.writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), [], {
+      name: 'shell',
+      applicationUid: 'host.project.org',
+      manifestUrl: 'https://production-ios-host.example/zephyr-manifest.json',
+    });
+    expect(mocks.configureRuntimePlugin).toHaveBeenCalledWith(
+      mfPlugin,
+      '/repo/node_modules/.zephyr-repack/env-plugin-abc.js'
+    );
+  });
+
+  it('binds the zephyr.config runtimeManifest when withZephyr sets none', async () => {
+    const mfPlugin = { isMf: true, name: 'shell', remotes: { host: 'host@x' } };
+    const config = { context: '/repo', plugins: [mfPlugin] } as Configuration;
+    mocks.engine.zephyrConfig = { runtimeManifest: '@dev-${target}' };
+
+    try {
+      await withZephyr()(() => config)({ platform: 'ios', mode: 'production' });
+    } finally {
+      mocks.engine.zephyrConfig = {};
+    }
+
+    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
+    expect(mocks.resolveRuntimeManifest).toHaveBeenCalledWith(
+      mocks.engine,
+      '@dev-${target}'
+    );
+    expect(mocks.writeEnvPlugin).toHaveBeenCalledWith(expect.any(String), [], {
+      name: 'shell',
+      applicationUid: 'host.project.org',
+      manifestUrl: 'https://production-ios-host.example/zephyr-manifest.json',
+    });
   });
 
   describe('ZE_DISABLED=true', () => {

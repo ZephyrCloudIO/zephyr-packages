@@ -27,6 +27,13 @@ export interface ZephyrMetroOptions {
   manifestPath?: string;
   /** Throw an error if manifest generation fails (default: false - logs warning only) */
   failOnManifestError?: boolean;
+  /**
+   * Tag or environment whose `zephyr-manifest.json` this app reads at runtime, in
+   * `zephyr:dependencies` selector syntax: `@production-${target}` for this app's own
+   * label, `app@label` for another app's. Its remote overrides and `ZE_PUBLIC_*` values
+   * apply from the launch after they are fetched.
+   */
+  runtimeManifest?: string;
 }
 
 export interface ZephyrModuleFederationConfig {
@@ -50,6 +57,9 @@ export function withZephyr(zephyrOptions: ZephyrMetroOptions = {}) {
     if (isZephyrDisabled()) {
       return metroConfig;
     }
+
+    // The publication command wrapper resolves it when it bundles with this config.
+    global.__ZEPHYR_METRO_RUNTIME_MANIFEST__ = zephyrOptions.runtimeManifest;
 
     try {
       return await applyZephyrToMetroConfig(metroConfig, zephyrOptions);

@@ -25,6 +25,12 @@ declare global {
    * `ZE_PUBLIC_*` reads. Read by zephyrCommandWrapper to warn when it is missing.
    */
   var __ZEPHYR_METRO_ENV_REWRITE__: string | undefined;
+
+  /**
+   * `runtimeManifest` selector set by `withZephyr`. Read by the publication command
+   * wrapper, which resolves it and binds the result into the env runtime plugin.
+   */
+  var __ZEPHYR_METRO_RUNTIME_MANIFEST__: string | undefined;
 }
 
 export {};

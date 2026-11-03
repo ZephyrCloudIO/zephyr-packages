@@ -1,6 +1,10 @@
 import { describe, expect, it } from '@rstest/core';
 
-import { parseZeDependencies, parseZeDependency } from '../ze-util-parse-ze-dependencies';
+import {
+  applyTargetPlaceholder,
+  parseZeDependencies,
+  parseZeDependency,
+} from '../ze-util-parse-ze-dependencies';
 
 describe('parseZeDependencies', () => {
   it('should parse multiple dependencies correctly', () => {
@@ -180,5 +184,25 @@ describe('parseZeDependency', () => {
       registry: 'custom-registry',
       app_uid: 'remote-app',
     });
+  });
+});
+
+describe('build target placeholder', () => {
+  it('selects the per-target label for every build target', () => {
+    const { app_uid, version } = parseZeDependency(
+      'remote',
+      'zephyr:remote@dev-${target}'
+    );
+
+    expect(app_uid).toBe('remote');
+    expect(applyTargetPlaceholder(version, 'ios')).toBe('dev-ios');
+    expect(applyTargetPlaceholder(version, 'android')).toBe('dev-android');
+    expect(applyTargetPlaceholder(version, 'web')).toBe('dev-web');
+  });
+
+  it('replaces every occurrence and leaves selectors without it unchanged', () => {
+    expect(applyTargetPlaceholder('${target}-dev-${target}', 'ios')).toBe('ios-dev-ios');
+    expect(applyTargetPlaceholder('dev', 'android')).toBe('dev');
+    expect(applyTargetPlaceholder('workspace:*', 'android')).toBe('workspace:*');
   });
 });

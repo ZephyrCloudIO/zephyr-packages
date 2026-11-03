@@ -26,6 +26,9 @@
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {
+      "path": "../zephyr-agent/tsconfig.json"
+    },
+    {
       "path": "../zephyr-edge-contract/tsconfig.json"
     }
   ]

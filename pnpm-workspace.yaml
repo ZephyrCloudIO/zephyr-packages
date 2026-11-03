@@ -40,7 +40,7 @@ catalog:
   dotenv-cli: ^11.0.0
   elysia: ^1.4.30
   eventsource: ^5.0.0
-  glob: ^13.0.6
+  glob: ^14.0.0
   globby: ^16.2.4
   hermes-parser: ^0.36.1
   hono: ^4.13.5
@@ -118,8 +118,8 @@ minimumReleaseAgeExclude:
   - sharp@0.35.5
   # Renovate security update: shell-quote@1.11.0
   - shell-quote@1.11.0
-  # Renovate security update: nuxt@4.6.2
-  - nuxt@4.6.2
+  # Renovate security update: nuxt@4.6.2 || 4.6.3
+  - nuxt@4.6.2 || 4.6.3
   # Renovate security update: fast-uri@3.1.9
   - fast-uri@3.1.9
   # Renovate security update: undici@8.12.2
@@ -128,13 +128,17 @@ minimumReleaseAgeExclude:
   - vite@8.2.4
   # Renovate security update: qs@6.16.1
   - qs@6.16.1
+  # Renovate security update: follow-redirects@1.16.2
+  - follow-redirects@1.16.2
+  # Renovate security update: glob@14.0.2
+  - glob@14.0.2
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
 auditConfig:
 catalogs:
   babel:
-    '@babel/core': 8.0.7
+    '@babel/core': 8.0.10
     '@babel/plugin-transform-runtime': ^8.0.0
     '@babel/preset-env': ^8.0.0
     '@babel/preset-react': ^8.0.0
@@ -155,8 +159,8 @@ catalogs:
     '@modern-js/tsconfig': 3.8.3
   module-federation:
     '@module-federation/enhanced': 2.9.0
-    '@module-federation/metro': 2.9.0
-    '@module-federation/rsbuild-plugin': 2.9.0
+    '@module-federation/metro': 2.9.2
+    '@module-federation/rsbuild-plugin': 2.9.2
     '@module-federation/runtime': 2.9.0
   module-federation-vite:
     '@module-federation/runtime': 2.9.0
@@ -274,7 +278,7 @@ catalogs:
 overrides:
   '@modern-js/runtime-utils>react-router': 7.18.3
   '@rspress/runtime@1.47.2>react-router-dom': 7.18.3
-  'astro>@astrojs/markdown-satteri': 0.4.5
+  'astro>@astrojs/markdown-satteri': 0.4.6
   '@humanfs/node@<0.16.8': 0.16.8
   adm-zip@<0.6.1: 0.6.1
   brace-expansion@>=3.0.0 <5.0.9: 5.0.12
@@ -282,7 +286,7 @@ overrides:
   fflate@>=0.7.0 <0.7.5: 0.7.5
   hono: 4.13.11
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.9
-  nuxt@>=4.0.0 <4.5.1: 4.6.2
+  nuxt@>=4.0.0 <4.5.1: 4.6.3
   postcss: 8.5.28
   postcss-selector-parser@>=6.1.0 <6.1.3: 7.1.6
   qs@>=2.2.5 <6.16.0: 6.16.1
@@ -307,7 +311,7 @@ overrides:
   axios@>=1.13.0 <1.20.0: 1.20.0
   compression@<1.8.2: 1.8.2
   dompurify@<3.4.17: 3.4.17
-  follow-redirects@>=1.16.0 <1.16.1: 1.16.1
+  follow-redirects@>=1.16.0 <1.16.1: 1.16.2
   http-cache-semantics@<=4.2.0: 4.3.0
   launch-editor@<2.14.2: 2.14.2
   markdown-it@>=15.0.0 <15.0.3: 15.0.3

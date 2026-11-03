@@ -18,6 +18,7 @@ import {
 } from 'zephyr-edge-contract';
 import { checkAuth } from '../lib/auth/login';
 import type { ZePackageJson } from '../lib/build-context/ze-package-json.type';
+import { applyTargetPlaceholder } from '../lib/build-context/ze-util-parse-ze-dependencies';
 import { type ZeGitInfo, getGitInfo } from '../lib/build-context/ze-util-get-git-info';
 import { getPackageJson } from '../lib/build-context/ze-util-read-package-json';
 import {
@@ -47,6 +48,7 @@ import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-na
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
+  create_dependency_build_context,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
 import type {
@@ -323,24 +325,10 @@ export class ZephyrEngine {
       return null;
     }
 
-    const app_config = await this.application_configuration;
     const ze_dependencies = this.npmProperties.zephyrDependencies;
     const platform = this.env.target ?? 'web';
     assertZephyrBuildTarget(platform, 'ZephyrEngine.env.target');
-    const build_context_json = {
-      target: platform,
-      isCI,
-      branch: this.gitProperties.git.branch,
-      username: app_config.username,
-      env: this.env.env,
-    };
-    if (this.env.env) {
-      ze_log.config('Using environment:', this.env.env);
-    }
-    // convert to base64
-    const build_context = Buffer.from(JSON.stringify(build_context_json)).toString(
-      'base64'
-    );
+    const build_context = await create_dependency_build_context(this, platform);
 
     ze_log.remotes(
       'resolve_remote_dependencies.deps',
@@ -368,10 +356,14 @@ export class ZephyrEngine {
       // if default url is url - set as default, if not use app remote_host as default
       // if default url is not url - send it as a semver to deps resolution
 
+      // `${target}` is expanded for the resolver only: adapters match the resolved
+      // dependency to its declaration by the selector as written.
+      const selector = ze_dependency?.version ?? dep.version;
+      const requested = applyTargetPlaceholder(selector, platform);
       const tuple = await ZeUtils.PromiseTuple(
         resolve_remote_dependency({
           application_uid: dep_application_uid,
-          version: ze_dependency?.version ?? dep.version,
+          version: requested,
           platform,
           build_context,
           dependencyUrlMode: this.zephyrConfig.dependencyUrlMode,
@@ -391,7 +383,9 @@ export class ZephyrEngine {
       ze_log.remotes(`Resolved dependency: ${tuple[1].default_url}`);
 
       if (dep.name === tuple[1].name) {
-        return tuple[1];
+        return tuple[1].version === requested && requested !== selector
+          ? Object.assign({}, tuple[1], { version: selector })
+          : tuple[1];
       }
 
       return Object.assign({ library_type: defaultLibraryType }, tuple[1], {

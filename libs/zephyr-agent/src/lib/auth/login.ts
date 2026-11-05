@@ -9,7 +9,7 @@ import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_debug, ze_log } from '../logging';
-import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picocolor';
+import { blue, bold, gray, green, white, yellow } from '../logging/picocolor';
 import { formatLogMsg, logFn } from '../logging/ze-log-event';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getSessionKey, waitForUnlock } from '../node-persist/session-lock';
@@ -169,11 +169,13 @@ async function promptForAuthAction(
  *
  * This value must never be passed to `logFn`, a debug logger, an error, or the file
  * logger. Keeping this as a dedicated terminal prompt preserves the copy/paste login flow
- * while making persistent logging paths redact the state parameter.
+ * while making persistent logging paths redact the state parameter. Visibility follows
+ * the real stdout TTY, not color support: task runners such as Nx set FORCE_COLOR while
+ * piping stdout into captured, persisted output.
  */
 export function formatAuthenticationPromptForTerminal(
   authUrl: string,
-  interactive = isTTY
+  interactive = isatty(process.stdout.fd)
 ): string {
   if (!interactive) {
     return formatLogMsg(

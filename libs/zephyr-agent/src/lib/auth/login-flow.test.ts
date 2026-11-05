@@ -105,14 +105,18 @@ describe('interactive authentication cleanup', () => {
     expect(mocks.waitForToken).not.toHaveBeenCalled();
   });
 
-  // Nx on Windows runs tasks with stdio ['inherit', 'pipe', 'pipe'].
-  it('starts browser login when stdin is a terminal but stdout is piped', async () => {
+  // Nx on Windows runs tasks with stdio ['inherit', 'pipe', 'pipe'] and FORCE_COLOR set
+  // (picocolor's `isTTY` is mocked truthy here), capturing stdout to disk.
+  it('starts browser login without printing the URL when stdout is piped', async () => {
     mocks.stdoutTTY = false;
     mocks.waitForToken.mockResolvedValue({ token: 'raw-new-token' });
 
     await expect(checkAuth()).resolves.toBeUndefined();
     expect(mocks.makeRequest).toHaveBeenCalledTimes(1);
     expect(mocks.saveToken).toHaveBeenCalledWith('raw-new-token');
+    const prompt = String(mocks.question.mock.calls[0]?.[0]);
+    expect(prompt).toContain('Enter');
+    expect(prompt).not.toContain('server-one-time-state');
   });
 
   it('removes the private fallback artifact when authentication fails or times out', async () => {

@@ -7,7 +7,8 @@ const mocks = rs.hoisted(() => ({
   debugLog: rs.fn(),
   disposeSession: rs.fn(),
   getToken: rs.fn().mockResolvedValue(undefined),
-  interactive: true,
+  stdinTTY: true,
+  stdoutTTY: true,
   logFn: rs.fn(),
   makeRequest: rs
     .fn()
@@ -28,7 +29,9 @@ rs.mock('ci-info', () => ({ isCI: false }));
 rs.mock('node:readline', () => ({
   createInterface: rs.fn(() => ({ question: mocks.question })),
 }));
-rs.mock('node:tty', () => ({ isatty: rs.fn(() => mocks.interactive) }));
+rs.mock('node:tty', () => ({
+  isatty: rs.fn((fd: number) => (fd === 0 ? mocks.stdinTTY : mocks.stdoutTTY)),
+}));
 rs.mock('zephyr-edge-contract', () => ({
   ZE_API_ENDPOINT: rs.fn(() => 'https://api.example/'),
   formatString: rs.fn((message: string) => message),
@@ -85,11 +88,12 @@ import { checkAuth } from './login';
 describe('interactive authentication cleanup', () => {
   beforeEach(() => {
     rs.clearAllMocks();
-    mocks.interactive = true;
+    mocks.stdinTTY = true;
+    mocks.stdoutTTY = true;
   });
 
-  it('fails with authentication guidance instead of waiting outside a terminal', async () => {
-    mocks.interactive = false;
+  it('fails with authentication guidance instead of waiting without an interactive stdin', async () => {
+    mocks.stdinTTY = false;
 
     await expect(checkAuth()).rejects.toMatchObject({
       code: 'ZE10018',
@@ -99,6 +103,16 @@ describe('interactive authentication cleanup', () => {
     });
     expect(mocks.makeRequest).not.toHaveBeenCalled();
     expect(mocks.waitForToken).not.toHaveBeenCalled();
+  });
+
+  // Nx on Windows runs tasks with stdio ['inherit', 'pipe', 'pipe'].
+  it('starts browser login when stdin is a terminal but stdout is piped', async () => {
+    mocks.stdoutTTY = false;
+    mocks.waitForToken.mockResolvedValue({ token: 'raw-new-token' });
+
+    await expect(checkAuth()).resolves.toBeUndefined();
+    expect(mocks.makeRequest).toHaveBeenCalledTimes(1);
+    expect(mocks.saveToken).toHaveBeenCalledWith('raw-new-token');
   });
 
   it('removes the private fallback artifact when authentication fails or times out', async () => {

@@ -5,13 +5,15 @@ const MAX_DEPTH = 10;
 const MAX_NODES = 2_000;
 
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s<>"'`\p{Cc}]+/giu;
-const BEARER_TOKEN = /\b(Bearer\s+)[^\s,;"'}\]]+/giu;
+// Values that are already the redaction marker must be left alone so that text passing
+// through several logging layers is not mangled into `[REDACTED]]]`.
+const BEARER_TOKEN = /\b(Bearer\s+)(?!\[REDACTED\])[^\s,;"'}\]]+/giu;
 const JWT_TOKEN = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu;
 const COOKIE_HEADER = /\b(cookie|set-cookie)(\s*:\s*)[^\r\n]*/giu;
 const SENSITIVE_ASSIGNMENT =
-  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
+  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)(?!\[REDACTED\])("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
 const SENSITIVE_WORD_VALUE =
-  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)([^\s,;"'}\]]+)/giu;
+  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)(?!\[REDACTED\])([^\s,;"'}\]]+)/giu;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');

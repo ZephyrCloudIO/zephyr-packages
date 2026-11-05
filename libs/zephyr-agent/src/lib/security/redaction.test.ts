@@ -101,4 +101,13 @@ describe('logging redaction', () => {
     expect(result).toContain('code ECONNRESET');
     expect(result).not.toContain(secrets.code);
   });
+
+  it('is idempotent when text passes through several logging layers', () => {
+    const once = redactString(
+      `Authorization: Bearer ${secrets.token}; token ${secrets.token}; state=${secrets.state}`
+    );
+
+    expect(redactString(redactString(once))).toBe(once);
+    expect(once).not.toContain(`${REDACTED}]`);
+  });
 });

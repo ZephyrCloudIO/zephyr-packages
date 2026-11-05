@@ -67,9 +67,11 @@ export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
     await removeToken();
   }
 
-  // In non-TTY environments it's expected that a ZE_SECRET_TOKEN is present
-  // since user cannot interact with it.
-  if (isCI || !isatty(process.stdin.fd) || !isatty(process.stdout.fd)) {
+  // Without an interactive stdin (CI, detached jobs) nobody can complete the login,
+  // so a ZE_SECRET_TOKEN is required. stdout is deliberately not checked: task
+  // runners such as Nx on Windows pipe stdout while still inheriting the terminal's
+  // stdin, and the browser login works there.
+  if (isCI || !isatty(process.stdin.fd)) {
     logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
     throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
       message:
@@ -175,7 +177,7 @@ export function formatAuthenticationPromptForTerminal(
 ): string {
   if (!interactive) {
     return formatLogMsg(
-      '\nA private authentication link was generated. Waiting for browser authentication.\n'
+      `\nA private authentication link was generated. ${gray(`Hit ${bold(white('Enter'))} to open it in your browser.`)}\n`
     );
   }
 

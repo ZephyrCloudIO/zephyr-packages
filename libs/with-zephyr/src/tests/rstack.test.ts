@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { rstackConfig } from '../bundlers/rstack.js';
-import { parseConfigWithAstGrep } from '../engine/ast-grep.js';
+import { applyEdits, parseFile } from '../engine/ast.js';
 import { applyBundlerOperations, hasZephyrCall } from '../operations.js';
 import { findRstackSections } from '../rstack.js';
 import type { BundlerConfig } from '../types.js';
@@ -20,7 +20,7 @@ type RuntimeDefinition =
   | ((options: { command: string }) => RuntimeConfig | Promise<RuntimeConfig>);
 
 function executeConfiguration(filePath: string, env: Record<string, string> = {}) {
-  const root = parseConfigWithAstGrep(filePath);
+  const parsed = parseFile(filePath);
   const definitions: Partial<Record<'app' | 'lib' | 'doc', RuntimeDefinition>> = {};
   const define = Object.fromEntries(
     ['app', 'lib', 'doc'].map((section) => [
@@ -45,16 +45,20 @@ function executeConfiguration(filePath: string, env: Record<string, string> = {}
     pluginReact: () => ({ name: 'react' }),
     process: { env },
   };
-  const imports = root.findAll({ rule: { kind: 'import_statement' } });
+  const imports = parsed.ofType('ImportDeclaration');
   for (const statement of imports) {
-    const module = modules[statement.field('source')!.text().slice(1, -1)];
-    for (const specifier of statement.findAll({ rule: { kind: 'import_specifier' } }))
-      values[(specifier.field('alias') ?? specifier.field('name'))!.text()] =
-        module[specifier.field('name')!.text()];
-    for (const namespace of statement.findAll({ rule: { kind: 'namespace_import' } }))
-      values[namespace.namedChildren().at(-1)!.text()] = module;
+    const module = modules[statement.source.value];
+    for (const specifier of statement.specifiers) {
+      if (specifier.type === 'ImportSpecifier')
+        values[specifier.local.name] = module[specifier.imported.name];
+      if (specifier.type === 'ImportNamespaceSpecifier')
+        values[specifier.local.name] = module;
+    }
   }
-  const script = root.commitEdits(imports.map((statement) => statement.replace('')));
+  const script = applyEdits(
+    parsed.source,
+    imports.map((statement) => ({ start: statement.start, end: statement.end, text: '' }))
+  );
   new Function(...Object.keys(values), script)(...Object.values(values));
   return { definitions, factoryCalls: () => factoryCalls };
 }
@@ -126,11 +130,7 @@ describe('Rstack configuration', () => {
     );
     for (const section of findRstackSections(filePath)) {
       expect(transform(section)).toEqual({ status: 'changed' });
-      expect(
-        parseConfigWithAstGrep(filePath)
-          .find({ rule: { kind: 'ERROR' } })
-          ?.text()
-      ).toBeUndefined();
+      expect(() => parseFile(filePath)).not.toThrow();
     }
     const output = fs.readFileSync(filePath, 'utf8');
     expect(output.match(/from 'zephyr-rsbuild-plugin'/g)).toHaveLength(1);
@@ -140,7 +140,7 @@ describe('Rstack configuration', () => {
     expect(output).toContain('builderConfig: { plugins: [pluginSass()] }');
     expect(output).toContain('define.test({ plugins: [testPlugin()] });');
     expect(output).toContain('define.lint(({ js }) => [js.configs.recommended]);');
-    expect(parseConfigWithAstGrep(filePath).find({ rule: { kind: 'ERROR' } })).toBeNull();
+    expect(() => parseFile(filePath)).not.toThrow();
   });
 
   it.each([
@@ -156,7 +156,7 @@ describe('Rstack configuration', () => {
     expect(transform('app').status).toBe('changed');
     const output = fs.readFileSync(filePath, 'utf8');
     expect(output).toContain('withZephyrRsbuild()');
-    expect(parseConfigWithAstGrep(filePath).find({ rule: { kind: 'ERROR' } })).toBeNull();
+    expect(() => parseFile(filePath)).not.toThrow();
     expect(hasZephyrCall(filePath, configFor('app')).status).toBe('changed');
     if (configuration.includes('const nested'))
       expect(output).toContain('const nested = () => ({ plugins: [] });');

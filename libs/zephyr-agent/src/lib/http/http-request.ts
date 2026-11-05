@@ -2,6 +2,7 @@ import {
   safe_json_parse,
   ZE_API_ENDPOINT_HOST,
   ZE_IS_PREVIEW,
+  ze_api_gateway,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
@@ -23,8 +24,21 @@ export interface HttpRequestOptions extends RequestInit {
    * header; omitting it falls back to invalidating all stored authentication.
    */
   credentialToken?: string;
-  /** Internal requests which are themselves refreshing credentials must not recurse. */
-  skipTokenCleanup?: boolean;
+  /**
+   * Whether a 401 from this endpoint proves the credential itself is dead.
+   *
+   * Only endpoints that authoritatively validate the credential may opt in, because
+   * invalidation deletes persisted authentication for every later request in the process.
+   * An endpoint can reject an otherwise-valid credential for its own reasons — it is not
+   * authorized for that route, the route is misconfigured, the route is unavailable on
+   * that deployment — and optional work such as log upload must never turn that into a
+   * failed deployment.
+   *
+   * Leaving this off is safe: `checkAuth` invalidates expired credentials by expiry
+   * before any request runs, and `/application-config` and `/user-info` — which every
+   * deployment reaches — invalidate revoked ones.
+   */
+  invalidateCredentialOn401?: boolean;
 }
 
 export type UrlString =
@@ -89,7 +103,11 @@ export async function makeHttpRequest<T = void>(
   data?: string | Buffer
 ): Promise<HttpResponse<T>> {
   const startTime = Date.now();
-  const { credentialToken, skipTokenCleanup = false, ...requestOptions } = options;
+  const {
+    credentialToken,
+    invalidateCredentialOn401 = false,
+    ...requestOptions
+  } = options;
 
   try {
     const response = await fetchWithRetries(url, {
@@ -104,7 +122,7 @@ export async function makeHttpRequest<T = void>(
         message: 'The request authentication is invalid or expired.',
       });
 
-      if (!skipTokenCleanup) {
+      if (invalidateCredentialOn401) {
         try {
           await cleanTokens(credentialToken);
         } catch (error) {
@@ -129,7 +147,8 @@ export async function makeHttpRequest<T = void>(
       });
     }
 
-    if (!url.pathname.includes('application/logs')) {
+    // Log upload is itself triggered by logging, so tracing it would recurse.
+    if (!url.pathname.endsWith(ze_api_gateway.logs)) {
       ze_log.http(message);
     }
 

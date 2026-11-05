@@ -130,7 +130,7 @@ Failed to load git information:
     message: `
 Zephyr authentication is missing, invalid, or expired.
 
-Run the deployment in an interactive terminal to complete normal browser login, or provide a valid authentication token in non-interactive environments.
+Run the deployment in an interactive terminal to complete normal browser login, or set ZE_SECRET_TOKEN in non-interactive environments.
 
 {{ message }}
 `,

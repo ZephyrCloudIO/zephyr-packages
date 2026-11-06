@@ -103,3 +103,4 @@ tasks/
 
 # Legacy Nx tooling can still create a local cache through transitive packages.
 .nx
+.worktrees/

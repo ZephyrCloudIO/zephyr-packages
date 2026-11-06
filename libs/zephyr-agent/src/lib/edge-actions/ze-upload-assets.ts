@@ -102,6 +102,7 @@ export async function zeUploadAssets(
     const hash_set = await getApplicationHashList({
       application_uid: zephyr_engine.application_uid,
       edge_url: envCfg.edgeUrl,
+      jwt: appConfig.jwt,
     });
     const missingAssets = get_missing_assets({
       assetsMap,

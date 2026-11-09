@@ -10,6 +10,7 @@ const mocks = rs.hoisted(() => ({
   stdinTTY: true,
   stdoutTTY: true,
   stderrTTY: true,
+  sessionOwner: true,
   logFn: rs.fn(),
   makeRequest: rs
     .fn()
@@ -69,7 +70,7 @@ rs.mock('../node-persist/server-token', () => ({ getServerToken: rs.fn() }));
 rs.mock('../node-persist/ci-token', () => ({ getCiToken: rs.fn() }));
 rs.mock('../node-persist/session-lock', () => ({
   getSessionKey: rs.fn(() => ({
-    owner: true,
+    owner: mocks.sessionOwner,
     session: 'raw-local-session-id',
     [Symbol.dispose]: mocks.disposeSession,
   })),
@@ -96,6 +97,7 @@ describe('interactive authentication cleanup', () => {
     mocks.stdinTTY = true;
     mocks.stdoutTTY = true;
     mocks.stderrTTY = true;
+    mocks.sessionOwner = true;
   });
 
   it('fails with authentication guidance instead of waiting without an interactive stdin', async () => {
@@ -149,6 +151,20 @@ describe('interactive authentication cleanup', () => {
       }
     }
   );
+
+  // Concurrent logins (e.g. `nx run-many` over a host and its remotes) share one session.
+  it('waits for the session owner without opening another browser tab when stdout is piped', async () => {
+    mocks.stdoutTTY = false;
+    mocks.sessionOwner = false;
+    mocks.getToken
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce('owner-saved-token');
+
+    await expect(checkAuth()).resolves.toBeUndefined();
+    expect(mocks.openUrl).not.toHaveBeenCalled();
+    expect(mocks.question).not.toHaveBeenCalled();
+    expect(JSON.stringify(mocks.logFn.mock.calls)).not.toContain('Opening your browser');
+  });
 
   it('removes the private fallback artifact when authentication fails or times out', async () => {
     mocks.waitForToken.mockImplementation(

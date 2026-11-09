@@ -85,7 +85,8 @@ export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
   const authUrl = await getAuthenticationURL(sessionKey.session);
 
   if (!sessionKey.owner) {
-    tellUser(gray('Waiting for session unlock...'));
+    // Avoid "session <word>": log redaction treats the word after it as a secret.
+    tellUser(gray('Waiting for another Zephyr login in progress to finish...'));
   }
 
   const browserController = new AbortController();
@@ -94,29 +95,35 @@ export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
   // In a terminal, show the URL and wait for Enter before opening the browser. When
   // stdout is not a terminal (`> build.log`, Nx holding or piping task output) the
   // prompt would be invisible, or Enter may never reach us, so open the browser directly.
+  // Concurrent logins share the owner's session (see getSessionKey), so only the owner
+  // does that; the others wait for its token instead of each opening a tab, e.g. under
+  // `nx run-many` over a host and its remotes.
   const promptInTerminal = isatty(process.stdout.fd);
-  if (!promptInTerminal) {
+  const openBrowserNow = !promptInTerminal && sessionKey.owner;
+  if (openBrowserNow) {
     tellUser(`${blue('⏳')} Opening your browser to complete authentication...`);
   }
 
-  void (
-    promptInTerminal
-      ? promptForAuthAction(authUrl, browserController.signal)
-      : Promise.resolve()
-  )
-    .then(() => openUrl(authUrl))
-    .catch(() => {
-      // Aborting the prompt after a successful login is expected and must not print a
-      // fallback link or create a credential-bearing artifact.
-      if (!browserController.signal.aborted) {
-        privateAuthenticationArtifact = fallbackManualLogin(authUrl);
-      }
-    })
-    .finally(() => {
-      if (browserController.signal.aborted) {
-        privateAuthenticationArtifact?.cleanup();
-      }
-    });
+  if (promptInTerminal || openBrowserNow) {
+    void (
+      promptInTerminal
+        ? promptForAuthAction(authUrl, browserController.signal)
+        : Promise.resolve()
+    )
+      .then(() => openUrl(authUrl))
+      .catch(() => {
+        // Aborting the prompt after a successful login is expected and must not print a
+        // fallback link or create a credential-bearing artifact.
+        if (!browserController.signal.aborted) {
+          privateAuthenticationArtifact = fallbackManualLogin(authUrl);
+        }
+      })
+      .finally(() => {
+        if (browserController.signal.aborted) {
+          privateAuthenticationArtifact?.cleanup();
+        }
+      });
+  }
 
   try {
     // We are the owner of the session request, join websocket room

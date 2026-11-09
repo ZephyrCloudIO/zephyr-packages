@@ -5,13 +5,15 @@ const MAX_DEPTH = 10;
 const MAX_NODES = 2_000;
 
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s<>"'`\p{Cc}]+/giu;
-const BEARER_TOKEN = /\b(Bearer\s+)[^\s,;"'}\]]+/giu;
+// Values that are already the redaction marker must be left alone so that text passing
+// through several logging layers is not mangled into `[REDACTED]]]`.
+const BEARER_TOKEN = /\b(Bearer\s+)(?!\[REDACTED\])[^\s,;"'}\]]+/giu;
 const JWT_TOKEN = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu;
 const COOKIE_HEADER = /\b(cookie|set-cookie)(\s*:\s*)[^\r\n]*/giu;
 const SENSITIVE_ASSIGNMENT =
-  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
+  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)(?!\[REDACTED\])("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
 const SENSITIVE_WORD_VALUE =
-  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)([^\s,;"'}\]]+)/giu;
+  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)(?!\[REDACTED\])([^\s,;"'}\]]+)/giu;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -50,12 +52,26 @@ function isSensitiveKey(key: string, value: unknown): boolean {
   );
 }
 
+const CLOSING_BRACKETS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+
+/**
+ * Split sentence punctuation off a URL found in prose. A closing bracket stays part of
+ * the URL when it balances an opening one inside it (e.g. `?sig=[REDACTED]` or
+ * `http://[::1]`), so already-redacted text is not re-redacted into `[REDACTED]]`.
+ */
 function splitTrailingPunctuation(value: string): [url: string, trailing: string] {
   let url = value;
   let trailing = '';
 
-  while (url.length > 0 && /[),.;\]}]/u.test(url.at(-1) ?? '')) {
-    trailing = `${url.at(-1)}${trailing}`;
+  while (url.length > 0) {
+    const last = url.at(-1) ?? '';
+    const opening = CLOSING_BRACKETS[last];
+    const isTrailing = opening
+      ? url.split(last).length > url.split(opening).length
+      : /[,.;]/u.test(last);
+    if (!isTrailing) break;
+
+    trailing = `${last}${trailing}`;
     url = url.slice(0, -1);
   }
 

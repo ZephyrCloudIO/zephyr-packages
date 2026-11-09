@@ -5,15 +5,25 @@ const MAX_DEPTH = 10;
 const MAX_NODES = 2_000;
 
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s<>"'`\p{Cc}]+/giu;
-// Values that are already the redaction marker must be left alone so that text passing
-// through several logging layers is not mangled into `[REDACTED]]]`.
-const BEARER_TOKEN = /\b(Bearer\s+)(?!\[REDACTED\])[^\s,;"'}\]]+/giu;
+// Values that are already the redaction marker, bare or quoted as in serialized JSON,
+// must be left alone so that text passing through several logging layers stays stable
+// instead of being mangled into `[REDACTED]]]` or losing its quotes.
+const ESCAPED_REDACTED = REDACTED.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+const NOT_ALREADY_REDACTED = String.raw`(?!["']?${ESCAPED_REDACTED})`;
+const BEARER_TOKEN = new RegExp(
+  String.raw`\b(Bearer\s+)${NOT_ALREADY_REDACTED}[^\s,;"'}\]]+`,
+  'giu'
+);
 const JWT_TOKEN = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu;
 const COOKIE_HEADER = /\b(cookie|set-cookie)(\s*:\s*)[^\r\n]*/giu;
-const SENSITIVE_ASSIGNMENT =
-  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)(?!\[REDACTED\])("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
-const SENSITIVE_WORD_VALUE =
-  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)(?!\[REDACTED\])([^\s,;"'}\]]+)/giu;
+const SENSITIVE_ASSIGNMENT = new RegExp(
+  String.raw`((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)${NOT_ALREADY_REDACTED}("[^"]*"|'[^']*'|[^,\s;&}\]]+)`,
+  'giu'
+);
+const SENSITIVE_WORD_VALUE = new RegExp(
+  String.raw`\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)${NOT_ALREADY_REDACTED}([^\s,;"'}\]]+)`,
+  'giu'
+);
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -131,9 +141,12 @@ function redactNonUrlText(value: string): string {
     )
     .replace(BEARER_TOKEN, `$1${REDACTED}`)
     .replace(JWT_TOKEN, REDACTED)
-    .replace(SENSITIVE_ASSIGNMENT, (match, prefix: string, assignedValue: string) =>
-      isSafeCodeAssignment(prefix, assignedValue) ? match : `${prefix}${REDACTED}`
-    )
+    .replace(SENSITIVE_ASSIGNMENT, (match, prefix: string, assignedValue: string) => {
+      if (isSafeCodeAssignment(prefix, assignedValue)) return match;
+      // Keep the value's quotes so redacted JSON stays valid JSON.
+      const quote = /^["']/u.test(assignedValue) ? assignedValue[0] : '';
+      return `${prefix}${quote}${REDACTED}${quote}`;
+    })
     .replace(
       SENSITIVE_WORD_VALUE,
       (match, key: string, whitespace: string, assignedValue: string) =>

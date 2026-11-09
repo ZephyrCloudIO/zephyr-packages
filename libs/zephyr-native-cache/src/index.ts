@@ -28,6 +28,7 @@ export type {
   CachedBundleResult,
   MFECacheConfig,
   UpdatePolicy,
+  ZephyrVersionInfo,
 } from './types';
 export { CacheEvents } from './events';
 export type {

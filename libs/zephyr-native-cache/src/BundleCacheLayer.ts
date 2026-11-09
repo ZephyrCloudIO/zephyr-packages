@@ -9,6 +9,7 @@ import type {
   CheckForUpdatesResult,
   MFECacheConfig,
   UpdatePolicy,
+  ZephyrVersionInfo,
 } from './types';
 import { ensureZephyrNativeCacheRefs } from './zephyr-global';
 import { getBundleCacheKey } from './cache-key';
@@ -135,6 +136,7 @@ export class BundleCacheLayer {
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'skipped',
+        undefined,
         undefined
       );
       return { status: 'skipped' };
@@ -144,6 +146,7 @@ export class BundleCacheLayer {
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'skipped',
+        undefined,
         undefined
       );
       return { status: 'skipped' };
@@ -338,13 +341,15 @@ export class BundleCacheLayer {
     bundleUrl: string,
     remoteName: string,
     status: 'cache-hit' | 'downloaded' | 'skipped',
-    hash: string | undefined
+    hash: string | undefined,
+    version: ZephyrVersionInfo | undefined
   ): void {
     this.status.remotes[remoteName] = {
       remoteName,
       bundleUrl,
       status,
       hash,
+      version,
       loadedAt: Date.now(),
     };
     if (status === 'cache-hit' || status === 'downloaded') {
@@ -387,7 +392,8 @@ export class BundleCacheLayer {
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'cache-hit',
-        expectedHash
+        expectedHash,
+        cached.metadata.version
       );
       return { status: 'cache-hit' };
     }
@@ -399,24 +405,30 @@ export class BundleCacheLayer {
       bundleUrl,
       expectedHash
     );
-    const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
+    const downloaded = await this.cacheManager!.downloadVerifiedBundle(
+      bundleUrl,
+      destPath,
+      expectedHash
+    );
 
-    if (sha256 !== expectedHash) {
-      try {
-        await NativeMFECache!.deleteFile(destPath);
-      } catch {
-        /* ok */
-      }
-      this.recordBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
+    if (!downloaded) {
+      this.recordBundleLoad(bundleUrl, remoteName, 'skipped', undefined, undefined);
       return { status: 'skipped' };
     }
 
     await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
       bundleUrl,
-      bundleHash: sha256,
+      bundleHash: expectedHash,
+      version: downloaded.version,
     });
     await this.evalFromFile(destPath);
-    this.recordBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
+    this.recordBundleLoad(
+      bundleUrl,
+      remoteName,
+      'downloaded',
+      expectedHash,
+      downloaded.version
+    );
     return { status: 'downloaded' };
   }
 

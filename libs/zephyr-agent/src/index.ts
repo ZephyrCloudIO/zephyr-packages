@@ -112,6 +112,10 @@ export {
   type PreflightCredentials,
 } from './lib/node-persist/token';
 
+// The access token a build used. Post-build tools (e.g. the preview environment action)
+// call it in the same job to reuse the cached ZE_CI_TOKEN exchange.
+export { getToken } from './lib/node-persist/token';
+
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
 

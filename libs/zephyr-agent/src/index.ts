@@ -114,6 +114,7 @@ export {
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
+export { setAuthOrigin, type ZeAuthOrigin } from './lib/auth/auth-origin';
 
 // Zephyr Edge is the main class which should be used
 export {

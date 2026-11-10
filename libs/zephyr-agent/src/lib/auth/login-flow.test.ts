@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 const mocks = rs.hoisted(() => ({
   authLog: rs.fn(),
@@ -83,6 +83,7 @@ rs.mock('./sse', () => ({
   },
 }));
 
+import { setAuthOrigin } from './auth-origin';
 import { checkAuth } from './login';
 
 describe('interactive authentication cleanup', () => {
@@ -181,5 +182,41 @@ describe('interactive authentication cleanup', () => {
     expect(persistedOutput).not.toContain('raw-new-token');
     expect(persistedOutput).not.toContain('raw-session-id');
     expect(mocks.disposeSession).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('authorize-link origin', () => {
+  beforeEach(() => {
+    rs.clearAllMocks();
+    mocks.stdinTTY = true;
+    mocks.stdoutTTY = true;
+    mocks.waitForToken.mockResolvedValue({ token: 'raw-new-token' });
+  });
+
+  afterEach(() => {
+    setAuthOrigin('plugin');
+  });
+
+  it('identifies bundler plugins so the login confirmation page names them', async () => {
+    await checkAuth();
+
+    expect(mocks.makeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/authorize-link',
+        query: { state: 'raw-local-session-id', origin: 'plugin' },
+      })
+    );
+  });
+
+  it('identifies the Zephyr CLI once it declares itself', async () => {
+    setAuthOrigin('cli');
+
+    await checkAuth();
+
+    expect(mocks.makeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: { state: 'raw-local-session-id', origin: 'cli' },
+      })
+    );
   });
 });

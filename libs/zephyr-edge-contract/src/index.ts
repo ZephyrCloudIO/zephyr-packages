@@ -11,6 +11,7 @@ export type {
   GatewayPublishRequest,
   PublishGrantClaims,
   PublishGrantTokenUse,
+  PublishGrantVersion,
   PublishRequest,
   PublishTarget,
   PublishTargets,

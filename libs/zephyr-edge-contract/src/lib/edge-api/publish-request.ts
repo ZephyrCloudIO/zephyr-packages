@@ -101,15 +101,26 @@ export interface PublishRequest {
 export type PublishGrantTokenUse = 'zephyr_publish_grant';
 
 /**
+ * Claims format version (`ver`). Edges refuse versions they do not know, so the API signs
+ * a new version only once every enforcing edge understands it.
+ */
+export type PublishGrantVersion = 1;
+
+/**
  * Claims the Zephyr API signs into a publish grant. A grant names exactly what one
  * publish may change, so the edge does not trust destinations built by clients.
  */
 export interface PublishGrantClaims {
+  /** Claims format version. */
+  ver: PublishGrantVersion;
   token_use: PublishGrantTokenUse;
-  /** Unique grant id, used for replay protection. */
+  /** Unique grant id, for logs and audit. */
   jti: string;
-  /** Issued-at time in seconds since epoch. */
-  iat?: number;
+  /**
+   * Issued-at time in seconds since epoch. Orders grants for the same hostname: the edge
+   * refuses a grant older than the one that last wrote a hostname.
+   */
+  iat: number;
   /** Expiry time in seconds since epoch. */
   exp: number;
   /** Actor uid the API allowed to publish. */

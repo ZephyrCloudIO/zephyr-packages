@@ -61,8 +61,10 @@ describe('type exports', () => {
 
   test('should export PublishGrantClaims type', () => {
     const claims: PublishGrantClaims = {
+      ver: 1,
       token_use: 'zephyr_publish_grant',
       jti: 'grant-id',
+      iat: 1_799_999_100,
       exp: 1_800_000_000,
       application_uid: 'app.repo.org',
       snapshot_id: 'snapshot-id',

@@ -132,6 +132,8 @@ minimumReleaseAgeExclude:
   - follow-redirects@1.16.2
   # Renovate security update: glob@14.0.2
   - glob@14.0.2
+  # Renovate security update: fast-xml-parser@5.12.0
+  - fast-xml-parser@5.12.0
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 
@@ -282,7 +284,7 @@ overrides:
   '@humanfs/node@<0.16.8': 0.16.8
   adm-zip@<0.6.1: 0.6.1
   brace-expansion@>=3.0.0 <5.0.9: 5.0.12
-  fast-xml-parser@>=5.9.3 <5.10.1: 5.11.1
+  fast-xml-parser@>=5.9.3 <5.10.1: 5.12.0
   fflate@>=0.7.0 <0.7.5: 0.7.5
   hono: 4.13.11
   immutable@>=5.0.0-beta.1 <5.1.8: 5.1.9

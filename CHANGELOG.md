@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.8.0 (2026-11-11)
+
+## What's Changed
+* fix: remove change attribution from packages by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/675
+* chore(deps): update actions/upload-artifact action to v7.0.2 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/679
+* refactor(skills): remove TanStack Intent and move Agent Skills to ZephyrCloudIO/skills by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/677
+* fix(metro-plugin): report resolved remotes as zephyrDependencies by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/690
+* chore(deps): update dependency hono to v4.13.11 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/682
+* chore(deps): update dependency nuxt to v4.6.2 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/696
+* chore(deps): update dependency nuxt@>=4.0.0 <4.5.1 to v4.6.2 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/697
+* feat(agent): add a failBuild option to withZephyr by @BleedingDev in https://github.com/ZephyrCloudIO/zephyr-packages/pull/629
+* chore(deps): bump Node.js to 24.22.1 for October 2026 security release by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/686
+* feat: add ZE_DISABLED skip mode and ze-cli doctor --online by @zackarychapple in https://github.com/ZephyrCloudIO/zephyr-packages/pull/694
+* fix(deps): resolve high and critical Dependabot alerts by @SvetlanaMuravlova in https://github.com/ZephyrCloudIO/zephyr-packages/pull/698
+* chore(deps): pin pullfrog/pullfrog action to ad4283a by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/678
+* chore(deps): update dependency fast-uri@>=3.0.0 <3.1.8 to v3.1.9 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/699
+* chore(deps): update dependency undici@>=7.24.1 <7.29.1 to v8 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/701
+* chore(deps): update dependency undici@>=8.0.0 <8.10.2 to v8.12.2 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/700
+* chore(deps): update dependency vite to v8.2.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/683
+* chore(deps): update astro monorepo by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/666
+* feat(native-internal): share React Native env rewrite and on-device env loading by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/635
+* chore(deps): update dependency qs@>=2.2.5 <6.16.0 to v6.16.1 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/708
+* feat(agent): resolve ${target} placeholder in remote dependency selectors by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/711
+* feat(native): follow a tag or environment manifest from native shells by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/712
+* chore(deps): update dependency nuxt to v4.6.3 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/715
+* chore(deps): update dependency follow-redirects@>=1.16.0 <1.16.1 to v1.16.2 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/714
+* chore(deps): update dependency nuxt@>=4.0.0 <4.5.1 to v4.6.3 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/716
+* chore(deps): update dependency glob to v14 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/717
+* feat(agent): accept runtimeManifest in zephyr.config.* by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/719
+* chore(deps): update babel monorepo by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/721
+* chore(deps): update astro monorepo by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/720
+* chore(deps): update dependency @module-federation/metro to v2.9.2 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/722
+* chore(deps): update dependency @module-federation/rsbuild-plugin to v2.9.2 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/723
+* fix(zephyr-native-cache): read the current activity from the React context on Android by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/726
+* fix(xpack): resolve remotes declared in zephyr:dependencies and MF remotes once by @leooliveirax in https://github.com/ZephyrCloudIO/zephyr-packages/pull/705
+* fix(agent): send the write token on hash-list reads by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/754
+* chore(deps): update dependency @module-federation/metro to v2.9.3 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/756
+* chore(deps): update astro monorepo by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/755
+* fix(agent): allow browser login when only stdout is piped (Nx on Windows) by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/753
+* chore(deps): update dependency @module-federation/rsbuild-plugin to v2.9.3 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/757
+* feat(agent): export getToken for post-build tools by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/763
+* feat(zephyr-edge-contract): add publish grant fields and claims type by @SvetlanaMuravlova in https://github.com/ZephyrCloudIO/zephyr-packages/pull/724
+
+## New Contributors
+* @BleedingDev made their first contribution in https://github.com/ZephyrCloudIO/zephyr-packages/pull/629
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.7.0...v1.8.0
+
 ## 1.7.0 (2026-10-18)
 
 ## What's Changed

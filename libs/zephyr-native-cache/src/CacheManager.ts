@@ -1,6 +1,12 @@
 import NativeMFECache from './NativeMFECache';
-import type { BundleMetadata, CachedBundleResult, MFECacheConfig } from './types';
+import type {
+  BundleMetadata,
+  CachedBundleResult,
+  MFECacheConfig,
+  ZephyrVersionInfo,
+} from './types';
 import { getBundleCacheKey, getBundleCacheVariant } from './cache-key';
+import { fetchVersionInfo, toVersionedBundleUrl } from './version-info';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -102,14 +108,14 @@ export class CacheManager {
     metadata: {
       bundleUrl: string;
       bundleHash?: string;
-      buildVersion?: string;
+      version?: ZephyrVersionInfo;
     }
   ): Promise<BundleMetadata> {
     const now = Date.now();
     const meta: BundleMetadata = {
       remoteName,
       bundleHash: metadata.bundleHash ?? '',
-      buildVersion: metadata.buildVersion ?? '',
+      version: metadata.version,
       filePath,
       bundleUrl: getBundleCacheKey(metadata.bundleUrl),
       downloadedAt: now,
@@ -129,6 +135,36 @@ export class CacheManager {
     }
 
     return meta;
+  }
+
+  /**
+   * Download `bundleUrl` to `destPath` and verify it against `expectedHash`. The bytes
+   * are fetched from the Zephyr version the URL's host currently serves (its immutable
+   * version URL) when the edge reports one, so the returned version provably describes
+   * the file. Falls back to `bundleUrl` itself, without a version, when the version
+   * lookup or the versioned download fails or doesn't match. Returns null when nothing
+   * matched.
+   */
+  async downloadVerifiedBundle(
+    bundleUrl: string,
+    destPath: string,
+    expectedHash: string
+  ): Promise<{ version: ZephyrVersionInfo | undefined } | null> {
+    const version = await fetchVersionInfo(bundleUrl);
+    const versionedUrl = version && toVersionedBundleUrl(bundleUrl, version.versionUrl);
+    if (versionedUrl) {
+      try {
+        if (await this.downloadMatching(versionedUrl, destPath, expectedHash)) {
+          return { version };
+        }
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} versioned download failed: ${versionedUrl}`, error);
+      }
+    }
+    if (await this.downloadMatching(bundleUrl, destPath, expectedHash)) {
+      return { version: undefined };
+    }
+    return null;
   }
 
   async updateLastUsedAt(bundleUrl: string): Promise<void> {
@@ -174,21 +210,13 @@ export class CacheManager {
     const destPath = await this.getBundleDestPath(remoteName, bundleUrl, newHash);
 
     try {
-      const { sha256 } = await NativeMFECache.downloadFile(bundleUrl, destPath);
-
-      // Verify downloaded content matches expected hash
-      if (sha256 !== newHash) {
-        try {
-          await NativeMFECache.deleteFile(destPath);
-        } catch {
-          /* ok */
-        }
-        return false;
-      }
+      const downloaded = await this.downloadVerifiedBundle(bundleUrl, destPath, newHash);
+      if (!downloaded) return false;
 
       await this.saveBundleToCache(remoteName, destPath, {
         bundleUrl,
-        bundleHash: sha256,
+        bundleHash: newHash,
+        version: downloaded.version,
       });
 
       console.info(`${LOG_PREFIX} pre-downloaded updated bundle: ${bundleUrl}`);
@@ -219,6 +247,21 @@ export class CacheManager {
   }
 
   // --- Private helpers ---
+
+  private async downloadMatching(
+    url: string,
+    destPath: string,
+    expectedHash: string
+  ): Promise<boolean> {
+    const { sha256 } = await NativeMFECache!.downloadFile(url, destPath);
+    if (sha256 === expectedHash) return true;
+    try {
+      await NativeMFECache!.deleteFile(destPath);
+    } catch {
+      /* ok */
+    }
+    return false;
+  }
 
   private get manifestPath(): string {
     return `${this.bundleDir}/cache-manifest.json`;

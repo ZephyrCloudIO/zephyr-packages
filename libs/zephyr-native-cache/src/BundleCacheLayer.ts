@@ -1,6 +1,7 @@
 import { CacheManager } from './CacheManager';
 import { CacheEvents } from './events';
 import NativeMFECache from './NativeMFECache';
+import type { BundleLoadEvent } from './events/types';
 import type {
   BundleMetadata,
   CacheStatusListener,
@@ -147,6 +148,26 @@ export class BundleCacheLayer {
         undefined
       );
       return { status: 'skipped' };
+    }
+  }
+
+  /** Reports a bundle loaded from the copy embedded in the app (`embedRemotes`). */
+  recordEmbeddedLoad(bundleUrl: string, remoteName: string): void {
+    this.recordBundleLoad(bundleUrl, remoteName, 'embedded', undefined);
+  }
+
+  /** True when the bundle is cached, and its hash matches `expectedHash` when given. */
+  async hasCachedBundle(bundleUrl: string, expectedHash?: string): Promise<boolean> {
+    if (!NativeMFECache) return false;
+    try {
+      await this.ensureInitialized();
+      const cached = await this.cacheManager!.getCachedBundle(bundleUrl);
+      return (
+        !!cached &&
+        (expectedHash === undefined || cached.metadata.bundleHash === expectedHash)
+      );
+    } catch {
+      return false;
     }
   }
 
@@ -337,7 +358,7 @@ export class BundleCacheLayer {
   private recordBundleLoad(
     bundleUrl: string,
     remoteName: string,
-    status: 'cache-hit' | 'downloaded' | 'skipped',
+    status: BundleLoadEvent['status'],
     hash: string | undefined
   ): void {
     this.status.remotes[remoteName] = {

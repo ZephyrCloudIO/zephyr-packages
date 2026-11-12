@@ -18,6 +18,8 @@ interface MetroBundleOptions {
   dev?: boolean;
   mode?: string | boolean;
   platform: NativeBuildTarget;
+  bundleOutput?: string;
+  assetsDest?: string;
 }
 
 interface MetroConfigOptions extends MetroConfig {
@@ -135,6 +137,8 @@ export async function zephyrCommandWrapper(
         context,
         outDir: 'dist',
         mfConfig: (global as any).__METRO_FEDERATION_CONFIG,
+        bundleOutput: args[0][0].bundleOutput,
+        assetsDest: args[0][0].assetsDest,
       });
 
       await zephyrMetroPlugin.beforeBuild();

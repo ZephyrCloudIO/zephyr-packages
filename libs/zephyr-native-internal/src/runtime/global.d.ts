@@ -8,6 +8,8 @@ declare global {
    * exactly as zephyr-native-cache does so both can share a program.
    */
   var __FEDERATION__: Federation;
+  /** Hermes: evaluates `source` with `url` as its source URL (React Native). */
+  var globalEvalWithSourceUrl: ((source: string, url: string) => unknown) | undefined;
 }
 
 export {};

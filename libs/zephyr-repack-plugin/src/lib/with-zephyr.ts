@@ -3,12 +3,17 @@ import {
   collectZEPublicVars,
   handleGlobalError,
   isZephyrDisabled,
+  ZeErrors,
   ZephyrEngine,
+  ZephyrError,
   ze_log,
 } from 'zephyr-agent';
 import {
   assertNativeBuildTarget,
+  type DownloadedRemote,
+  downloadEmbeddedRemotes,
   resolveRuntimeManifestUrl,
+  writeEmbeddedRemotesRuntimePlugin,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
 import {
@@ -21,6 +26,7 @@ import {
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import type { RepackEnv } from '../type/zephyr-internal-types';
 import { verify_mf_fastly_config } from './utils/ze-util-verification';
@@ -72,14 +78,15 @@ export function withZephyr(zephyrPluginOptions?: ZephyrRepackOptions): (
       ze_log.init('updatedZephyrConfig: ', updatedZephyrConfig);
 
       // Return the final processed configuration
-      return _zephyr_configuration(userConfig, updatedZephyrConfig);
+      return _zephyr_configuration(userConfig, updatedZephyrConfig, config.mode);
     };
   };
 }
 async function _zephyr_configuration(
   config: Configuration,
 
-  _zephyrOptions?: ZephyrRepackOptions
+  _zephyrOptions?: ZephyrRepackOptions,
+  mode?: RepackEnv['mode']
 ): Promise<Configuration> {
   const target = _zephyrOptions?.target;
   // Keep unsupported targets out of the error handler below. The handler is
@@ -110,6 +117,19 @@ async function _zephyr_configuration(
       extractLibraryType(config.output?.library)
     );
     mutWebpackFederatedRemotesConfig(zephyr_engine, config, resolved_dependency_pairs);
+    let embeddedRemotes: DownloadedRemote[] = [];
+    const embed = zephyr_engine.zephyrConfig.embedRemotes;
+    if (embed && mode !== 'production') {
+      ze_log.init(`embedRemotes: skipped for ${mode ?? 'unknown'} builds`);
+    } else if (embed) {
+      assertRepackSupportsEmbeddedRemotes(config.context ?? process.cwd());
+      embeddedRemotes = await downloadEmbeddedRemotes({
+        declared: dependency_pairs.map((pair) => pair.name),
+        resolved: resolved_dependency_pairs ?? [],
+        exclude: embed.exclude,
+        bundler: 'repack',
+      });
+    }
     const runtimeManifest =
       _zephyrOptions?.runtimeManifest ?? zephyr_engine.zephyrConfig.runtimeManifest;
     const runtimeManifestUrl =
@@ -139,6 +159,16 @@ async function _zephyr_configuration(
             }
       );
       if (envRuntimePlugin) configureZephyrRuntimePlugin(plugin, envRuntimePlugin);
+      if (embeddedRemotes.length > 0) {
+        configureZephyrRuntimePlugin(
+          plugin,
+          writeEmbeddedRemotesRuntimePlugin(
+            path.join(config.context ?? process.cwd(), 'node_modules', '.zephyr-repack'),
+            embeddedRemotes,
+            'repack'
+          )
+        );
+      }
     }
 
     // Rewrite ZE_PUBLIC_* reads before the JS transform rules so SWC/Babel and
@@ -175,14 +205,42 @@ async function _zephyr_configuration(
         mfConfig: makeCopyOfModuleFederationOptions(config),
         target,
         hooks: _zephyrOptions?.hooks,
+        embeddedRemotes,
       })
     );
   } catch (error) {
     if (zephyr_engine?.hasActiveBuild !== false) {
       zephyr_engine?.build_failed();
     }
+    // handleGlobalError only logs outside CI; an app without its embedded remotes must not build.
+    if (ZephyrError.is(error, ZeErrors.ERR_EMBED_REMOTES)) throw error;
     handleGlobalError(error);
   }
 
   return config;
+}
+
+/**
+ * ScriptManager hooks, which the embedded-remotes runtime plugin taps, start in Re.Pack
+ * 5.1.
+ */
+function assertRepackSupportsEmbeddedRemotes(context: string): void {
+  let found: string | undefined;
+  try {
+    const manifest: unknown = createRequire(path.join(context, 'package.json'))(
+      '@callstack/repack/package.json'
+    );
+    const version = (manifest as { version?: unknown }).version;
+    found = typeof version === 'string' ? version : undefined;
+  } catch {
+    found = undefined;
+  }
+  const [major = 0, minor = 0] = (found ?? '')
+    .split('.')
+    .map((part) => parseInt(part, 10));
+  if (found === undefined || major < 5 || (major === 5 && minor < 1)) {
+    throw new ZephyrError(ZeErrors.ERR_EMBED_REMOTES, {
+      detail: `embedRemotes requires @callstack/repack 5.1 or newer (found ${found ?? 'none'})`,
+    });
+  }
 }

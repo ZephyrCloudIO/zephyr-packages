@@ -50,6 +50,7 @@ export type {
   ZeUploadAssetsOptions,
 } from './lib/zephyr-edge-contract';
 export type {
+  ZephyrEmbeddedRemotes,
   ZephyrGlobalNamespace,
   ZephyrNativeCacheControls,
   ZephyrNativeCacheNamespace,

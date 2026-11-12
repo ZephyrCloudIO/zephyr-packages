@@ -1,17 +1,24 @@
-import type { ZeBuildAssetsMap } from 'zephyr-agent';
+import type { ZeBuildAssetsMap, ZeResolvedDependency } from 'zephyr-agent';
 import {
   buildAssetsMap,
+  logFn,
   resolveMfManifestPath,
   ze_log,
+  ZeErrors,
   ZephyrEngine,
+  ZephyrError,
 } from 'zephyr-agent';
 import {
   assertNativeBuildTarget,
+  downloadEmbeddedRemotes,
   type NativeBuildTarget,
   type NativeEnvRuntimeRoot,
   resolveRuntimeManifestUrl,
+  writeEmbeddedRemoteFiles,
+  writeEmbeddedRemotesRuntimePlugin,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import type {
   ApplicationConsumes,
@@ -37,6 +44,10 @@ export interface ZephyrCommandWrapperConfig {
   context: string;
   outDir: string;
   mfConfig: Pick<ZephyrPluginOptions, 'mfConfig'>['mfConfig'];
+  /** `--bundle-output` of the bundle command; embedded remotes are written next to it. */
+  bundleOutput?: string;
+  /** `--assets-dest` of the bundle command; iOS embedded remotes go here when set. */
+  assetsDest?: string;
 }
 
 /** Normalized MF options fields Zephyr rewrites before bundling. */
@@ -48,9 +59,10 @@ interface FederationConfigTarget {
 
 export class ZephyrMetroPlugin {
   #config: ZephyrCommandWrapperConfig;
-  /** Rewritten remotes and the env runtime plugin path, set by `beforeBuild`. */
-  #federationOverrides: { remotes: Record<string, string>; runtimePlugin?: string } = {
+  /** Rewritten remotes and generated runtime plugin paths, set by `beforeBuild`. */
+  #federationOverrides: { remotes: Record<string, string>; runtimePlugins: string[] } = {
     remotes: {},
+    runtimePlugins: [],
   };
   zephyr_engine!: ZephyrEngine;
 
@@ -60,7 +72,7 @@ export class ZephyrMetroPlugin {
   }
 
   /**
-   * Applies the remote rewrites and env runtime plugin resolved by `beforeBuild` to a
+   * Applies the remote rewrites and runtime plugins resolved by `beforeBuild` to a
    * normalized MF options object. Idempotent. MF Metro's bundle commands reload the Metro
    * config, and a function-exported config creates fresh options there, so the command
    * wrapper reapplies the overrides to that object as well.
@@ -70,10 +82,12 @@ export class ZephyrMetroPlugin {
     for (const [name, value] of Object.entries(this.#federationOverrides.remotes)) {
       if (config.remotes && name in config.remotes) config.remotes[name] = value;
     }
-    const { runtimePlugin } = this.#federationOverrides;
-    if (runtimePlugin === undefined) return;
+    const { runtimePlugins } = this.#federationOverrides;
+    if (runtimePlugins.length === 0) return;
     config.plugins ??= [];
-    if (!config.plugins.includes(runtimePlugin)) config.plugins.push(runtimePlugin);
+    for (const runtimePlugin of runtimePlugins) {
+      if (!config.plugins.includes(runtimePlugin)) config.plugins.push(runtimePlugin);
+    }
   }
 
   async beforeBuild() {
@@ -134,10 +148,11 @@ export class ZephyrMetroPlugin {
           root
         );
         if (envRuntimePlugin) {
-          this.#federationOverrides.runtimePlugin = envRuntimePlugin
-            .split(path.sep)
-            .join('/');
+          this.#federationOverrides.runtimePlugins.push(
+            envRuntimePlugin.split(path.sep).join('/')
+          );
         }
+        await this.embedRemotes(dependency_pairs, resolved_dependency_pairs);
         this.applyToFederationConfig(mfConfig);
       }
 
@@ -147,6 +162,60 @@ export class ZephyrMetroPlugin {
         this.zephyr_engine.build_failed();
       }
       throw error;
+    }
+  }
+
+  /** `embedRemotes` in zephyr.config.*: ships the resolved remotes inside the app. */
+  private async embedRemotes(
+    dependency_pairs: ReadonlyArray<{ name: string }>,
+    resolved_dependency_pairs: readonly ZeResolvedDependency[] | null
+  ): Promise<void> {
+    const embed = this.zephyr_engine.zephyrConfig.embedRemotes;
+    if (!embed) return;
+    const { mode, context, platform, bundleOutput, assetsDest } = this.#config;
+    if (mode !== 'production') {
+      ze_log.config('embedRemotes: skipped for development bundles');
+      return;
+    }
+    try {
+      createRequire(path.join(context, 'package.json')).resolve(
+        'zephyr-native-cache/package.json'
+      );
+    } catch {
+      logFn(
+        'warn',
+        `embedRemotes: zephyr-native-cache is not installed in ${context}. Metro apps load embedded remotes through zephyr-native-cache: install it and call ZephyrNativeCache.register() at startup, or the embedded copies are never used.`
+      );
+    }
+    if (!bundleOutput) {
+      throw new ZephyrError(ZeErrors.ERR_EMBED_REMOTES, {
+        detail: 'the bundle command did not receive --bundle-output',
+      });
+    }
+
+    const downloaded = await downloadEmbeddedRemotes({
+      declared: dependency_pairs.map((pair) => pair.name),
+      resolved: resolved_dependency_pairs ?? [],
+      exclude: embed.exclude,
+      bundler: 'metro',
+    });
+    // Where the RN build packages files next to the bundle: the Xcode bundle phase copies
+    // --assets-dest into the .app; the Gradle task adds the bundle directory to assets.
+    writeEmbeddedRemoteFiles(
+      downloaded,
+      platform === 'ios'
+        ? path.resolve(assetsDest ?? path.dirname(bundleOutput))
+        : path.dirname(path.resolve(bundleOutput))
+    );
+    if (downloaded.length > 0) {
+      const runtimePlugin = writeEmbeddedRemotesRuntimePlugin(
+        path.join(context, 'node_modules', '.zephyr-metro'),
+        downloaded,
+        'metro'
+      );
+      this.#federationOverrides.runtimePlugins.push(
+        runtimePlugin.split(path.sep).join('/')
+      );
     }
   }
 

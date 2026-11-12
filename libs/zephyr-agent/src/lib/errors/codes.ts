@@ -453,6 +453,12 @@ Also check:
     kind: 'build',
   },
 
+  ERR_EMBED_REMOTES: {
+    id: '038',
+    message: 'Cannot embed remotes in the app: {{ detail }}',
+    kind: 'build',
+  },
+
   ERR_RESOLVE_REMOTES: {
     id: '001',
     message: `

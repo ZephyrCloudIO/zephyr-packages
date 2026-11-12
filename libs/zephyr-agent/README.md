@@ -109,8 +109,9 @@ export default defineConfig({
 ```
 
 Name the file `zephyr.config.ts`, `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs`. Only
-`org`, `project`, `appName`, `remoteDependencies`, `dependencyUrlMode`, and
-`runtimeManifest` are valid.
+`org`, `project`, `appName`, `remoteDependencies`, `dependencyUrlMode`,
+`runtimeManifest`, and `embedRemotes` (typed and documented by the Metro and Re.Pack
+plugins) are valid.
 Config identity wins over Git inference, `appName` wins over the package name, and
 config remotes win by key over `package.json` `zephyr:dependencies`.
 `dependencyUrlMode: 'version'` keeps tag, environment, and workspace selection while

@@ -57,8 +57,13 @@ export default defineConfig({
 ```
 
 The loader searches upward from the bundler's project context. The config is strict:
-only `org`, `project`, `appName`, `remoteDependencies`, and `dependencyUrlMode` are
-accepted, and invalid or ambiguous config files fail before a deployment starts.
+only `org`, `project`, `appName`, `remoteDependencies`, `dependencyUrlMode`,
+`runtimeManifest`, and `embedRemotes` (Metro and Re.Pack only) are accepted, and invalid
+or ambiguous config files fail before a deployment starts.
+
+New Zephyr options are added to this file rather than to plugin `withZephyr(...)`
+parameters. Each integration exports the type for its fields, e.g. `ZephyrMetroConfig`
+from `zephyr-metro-plugin`.
 
 Precedence is deterministic:
 

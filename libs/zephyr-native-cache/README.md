@@ -250,6 +250,7 @@ const SOURCE_LABELS: Record<string, string> = {
   'cache-hit': 'from cache',
   downloaded: 'from network',
   skipped: 'from network',
+  embedded: 'from app',
   pending: 'loading...',
 };
 
@@ -279,6 +280,14 @@ export function RemoteSourceBadge({ name }: { name: string }) {
 ```
 
 For a fuller reference, see the [`zephyr-native-cache-test` host app](https://github.com/ZephyrCloudIO/zephyr-native-cache-test/tree/main/apps/host), which combines these patterns into a dev tools panel and source overlay.
+
+## Embedded remotes
+
+With `embedRemotes` set in a Metro host's `zephyr.config.*` (see the `zephyr-metro-plugin` README), production builds ship a copy of each remote inside the app, and `zephyr-native-cache` is what loads it: call `ZephyrNativeCache.register()` at startup.
+
+- Bundles loaded from the embedded copy report the status `embedded` in `status.remotes` and in `bundle:load` events.
+- Each manifest loaded from the network is persisted. When the manifest request fails later, the persisted manifest is reused if its container is still cached, so an offline launch after an online one keeps the newer cached version. The embedded copy is used only when neither the network nor the cache can serve the remote.
+- `zephyr-native-cache` caches Metro bundles only; Re.Pack hosts load embedded remotes without it.
 
 ## Requirements
 

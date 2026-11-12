@@ -175,6 +175,32 @@ module.exports = {
 
 The build resolves the label's alias URL (never a version URL) and reports a Zephyr error when the label does not exist for that platform (fatal in CI or with `ZE_FAIL_BUILD=true`, like other Zephyr configuration errors). At runtime, the app's first remote request applies the `zephyr-manifest.json` persisted by the previous launch (its remote overrides and `ZE_PUBLIC_*` values), then refreshes the stored copy in the background; changes made in the dashboard apply on the next launch or `ZephyrNativeCache.reloadApp()`. The first launch, and apps without `zephyr-native-cache` registered, keep the build-time remotes and values. Use separate iOS and Android labels.
 
+## Embedded remotes (first-launch offline)
+
+A fresh install opened without network has no remotes, because they load from the network. Set `embedRemotes` in `zephyr.config.*` to ship a copy of every declared remote inside the iOS/Android app. It is a `zephyr.config.*` option only, not a `withZephyr` option.
+
+```ts
+// zephyr.config.ts
+import type { ZephyrRepackConfig } from 'zephyr-repack-plugin';
+
+export default { embedRemotes: { exclude: ['analytics'] } } satisfies ZephyrRepackConfig;
+```
+
+```js
+// zephyr.config.mjs
+/** @type {import('zephyr-repack-plugin').ZephyrRepackConfig} */
+export default { embedRemotes: true };
+```
+
+`true` embeds every remote the host declares; `{ exclude: [...] }` leaves the named remotes out (they behave as today). `false` or no value turns it off, and nothing changes.
+
+- **Production builds only.** Other modes log `embedRemotes: skipped for <mode> builds` and do nothing else.
+- **Requires `@callstack/repack` 5.1 or newer**: the runtime loads embedded files through `ScriptManager` hooks. The build fails on older versions. `zephyr-native-cache` is not needed.
+- **Same version as the build.** Each remote is downloaded as the build resolved it for the target platform (the `${target}` selector included): its `mf-manifest.json` and every JS file it lists for its container, exposed modules, and shared modules. The files are written where Re.Pack copies local chunks (`--assets-dest` on iOS, the `--bundle-output` directory on Android), so the native build packages them.
+- **The build fails** with `ZE10038` naming the remote when a remote did not resolve, one of its files cannot be downloaded, or two of its files share a name (Re.Pack loads local files by name). Fix it, or add the remote to `exclude`.
+
+At runtime the embedded copy is the last resort, decided per remote: when the network cannot serve a remote's manifest (or its container), the app logs `[zephyr-embed] <remote>: network unavailable; using the copy embedded in the app` and loads every file of that remote from the app. Versions never mix within a remote. When a remote's manifest loads from the network but one of its chunks fails later, there is no embedded fallback. Remotes loaded by other remotes (nested remotes), and chunks a remote creates that its `mf-manifest.json` does not list, are not embedded.
+
 ## Creation command
 
 To create a complete example of a React Native application, with Zephyr enabled, configured, you can use our creation command where you can find most of our examples.

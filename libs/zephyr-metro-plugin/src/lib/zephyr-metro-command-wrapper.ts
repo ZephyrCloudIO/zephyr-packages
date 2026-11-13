@@ -162,6 +162,8 @@ export async function zephyrCommandWrapper(
       ) {
         zephyrMetroPlugin?.zephyr_engine.build_failed();
       }
+      // Keep the code: the message names the remote that cannot be embedded.
+      if (ZephyrError.is(error, ZeErrors.ERR_EMBED_REMOTES)) throw error;
       const detail =
         error instanceof Error
           ? `${error.message}\n${error.stack ?? ''}`

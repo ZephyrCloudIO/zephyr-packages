@@ -35,9 +35,9 @@ describe('register with embedded remotes', () => {
   });
 
   it('reports embedded loads in the cache status', () => {
-    refs?.recordEmbeddedLoad?.(EMBEDDED_URL, 'cart');
+    refs?.recordEmbeddedLoad?.(EMBEDDED_URL);
 
-    expect(cacheLayer.getStatus().remotes['cart']).toMatchObject({
+    expect(cacheLayer.getStatus().remotes['cart/exposed/Card']).toMatchObject({
       status: 'embedded',
       bundleUrl: EMBEDDED_URL,
     });

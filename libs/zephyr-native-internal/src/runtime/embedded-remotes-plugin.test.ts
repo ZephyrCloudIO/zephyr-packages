@@ -171,8 +171,40 @@ describe('Metro', () => {
 
     expect(readBundledFile).toHaveBeenCalledWith(CARD_FILE);
     expect((globalThis as Record<string, unknown>)['__EMBED_TEST__']).toBe('card');
-    expect(recordEmbeddedLoad).toHaveBeenCalledWith(url, 'cart');
+    expect(recordEmbeddedLoad).toHaveBeenCalledWith(url);
     Reflect.deleteProperty(globalThis, '__EMBED_TEST__');
+  });
+
+  it('keeps top-level vars of each bundle out of the global scope', async () => {
+    const files: Record<string, string> = {
+      [CARD_FILE]:
+        "var __METRO_GLOBAL_PREFIX__ = 'cart'; globalThis.__readCart = () => __METRO_GLOBAL_PREFIX__;",
+      'zephyr-remote-bb-remoteEntry.bundle':
+        "var __METRO_GLOBAL_PREFIX__ = 'shop'; globalThis.__readShop = () => __METRO_GLOBAL_PREFIX__;",
+    };
+    installNativeCache({ readBundledFile: async (name) => files[name] });
+    createEmbeddedRemotesPlugin(
+      [
+        metroRemote(),
+        {
+          ...metroRemote(),
+          name: 'shop',
+          files: { 'remoteEntry.bundle': 'zephyr-remote-bb-remoteEntry.bundle' },
+        },
+      ],
+      { bundler: 'metro' }
+    );
+    const embedded = globalThis.__ZEPHYR__?.runtime.embeddedRemotes;
+
+    await embedded?.load('https://zephyr-embedded.invalid/cart/exposed/Card.bundle');
+    await embedded?.load('https://zephyr-embedded.invalid/shop/remoteEntry.bundle');
+
+    const scope = globalThis as Record<string, unknown>;
+    expect((scope['__readCart'] as () => string)()).toBe('cart');
+    expect((scope['__readShop'] as () => string)()).toBe('shop');
+    expect('__METRO_GLOBAL_PREFIX__' in scope).toBe(false);
+    Reflect.deleteProperty(globalThis, '__readCart');
+    Reflect.deleteProperty(globalThis, '__readShop');
   });
 });
 

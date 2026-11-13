@@ -11,14 +11,18 @@ const { mockLogZephyrDisabled } = rs.hoisted(() => ({
 rs.mock('zephyr-agent', () => ({
   isZephyrDisabled: () => process.env['ZE_DISABLED'] === 'true',
   logZephyrDisabled: mockLogZephyrDisabled,
-  ZephyrError: rs.fn().mockImplementation((error, options) => {
-    const err = new Error(options?.message || error);
-    (err as any).code = error;
-    return err;
-  }),
+  ZephyrError: Object.assign(
+    rs.fn().mockImplementation((error, options) => {
+      const err = new Error(options?.message || error);
+      (err as any).code = error;
+      return err;
+    }),
+    { is: (error: unknown, code: string) => (error as any)?.code === code }
+  ),
   ZeErrors: {
     ERR_UNKNOWN: 'ERR_UNKNOWN',
     ERR_INVALID_MF_CONFIG: 'ERR_INVALID_MF_CONFIG',
+    ERR_EMBED_REMOTES: 'ERR_EMBED_REMOTES',
   },
   collectZEPublicVars: rs.fn().mockReturnValue({}),
   ze_log: { app: rs.fn() },
@@ -356,6 +360,21 @@ describe('zephyrCommandWrapper', () => {
       );
 
       await expect(wrapper(...createMockArgs())).rejects.toThrow();
+    });
+
+    it('keeps the embedRemotes error code that names the remote', async () => {
+      const embedError = Object.assign(new Error('remote "cart" did not resolve'), {
+        code: 'ERR_EMBED_REMOTES',
+      });
+      mockBeforeBuild.mockRejectedValue(embedError);
+
+      const wrapper = await zephyrCommandWrapper(
+        mockBundleFederatedRemote,
+        mockLoadMetroConfig,
+        mockUpdateManifest
+      );
+
+      await expect(wrapper(...createMockArgs())).rejects.toBe(embedError);
     });
 
     it('should throw ZephyrError when afterBuild fails', async () => {

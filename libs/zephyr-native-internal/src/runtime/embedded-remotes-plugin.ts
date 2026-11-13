@@ -99,6 +99,18 @@ function containerUrl(manifest: ManifestShape, manifestUrl: string): string {
   return `${base}${typeof entryPath === 'string' && entryPath ? `${entryPath}/` : ''}${String(entryName)}`;
 }
 
+/**
+ * Evaluates a Metro bundle in its own function scope, as zephyr-native-cache does for
+ * cached bundles: the bundle's top-level `var`s (such as `__METRO_GLOBAL_PREFIX__`) stay
+ * out of the global scope, where the next remote's bundle would overwrite them.
+ * `Function` rather than a direct `eval`, which would stop the build from dropping unused
+ * helpers.
+ */
+function evaluateBundle(source: string): void {
+  // eslint-disable-next-line no-new-func
+  Function(source).call(globalThis);
+}
+
 function warnEmbedded(name: string): void {
   console.warn(
     `${LOG_PREFIX} ${name}: network unavailable; using the copy embedded in the app`
@@ -147,13 +159,8 @@ export function createEmbeddedRemotesPlugin(
       if (text === undefined) {
         throw new Error(`${LOG_PREFIX} ${name}: ${flat} is missing from the app binary`);
       }
-      if (typeof globalThis.globalEvalWithSourceUrl === 'function') {
-        globalThis.globalEvalWithSourceUrl(text, bundleUrl);
-      } else {
-        // eslint-disable-next-line no-eval
-        (0, eval)(text);
-      }
-      refs?.recordEmbeddedLoad?.(bundleUrl, name);
+      evaluateBundle(text);
+      refs?.recordEmbeddedLoad?.(bundleUrl);
     },
   };
 
@@ -269,7 +276,7 @@ export function createEmbeddedRemotesPlugin(
         }
       }
       await loadScript(load.scriptId, local);
-      nativeCacheRefs()?.recordEmbeddedLoad?.(script.locator.url, remote.name);
+      nativeCacheRefs()?.recordEmbeddedLoad?.(script.locator.url);
       return true;
     });
   }

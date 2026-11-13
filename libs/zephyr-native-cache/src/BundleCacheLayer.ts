@@ -151,9 +151,17 @@ export class BundleCacheLayer {
     }
   }
 
-  /** Reports a bundle loaded from the copy embedded in the app (`embedRemotes`). */
-  recordEmbeddedLoad(bundleUrl: string, remoteName: string): void {
-    this.recordBundleLoad(bundleUrl, remoteName, 'embedded', undefined);
+  /**
+   * Reports a bundle loaded from the copy embedded in the app (`embedRemotes`), keyed
+   * like the other statuses by the bundle URL path.
+   */
+  recordEmbeddedLoad(bundleUrl: string): void {
+    this.recordBundleLoad(
+      bundleUrl,
+      this.inferRemoteName(bundleUrl),
+      'embedded',
+      undefined
+    );
   }
 
   /** True when the bundle is cached, and its hash matches `expectedHash` when given. */

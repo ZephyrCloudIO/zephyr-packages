@@ -70,7 +70,7 @@ export interface ZephyrNativeCacheRefs {
   /** True when the bundle is cached (and matches `expectedHash` when given). */
   hasCachedBundle?: (bundleUrl: string, expectedHash?: string) => Promise<boolean>;
   /** Reports a bundle loaded from the copy embedded in the app. */
-  recordEmbeddedLoad?: (bundleUrl: string, remoteName: string) => void;
+  recordEmbeddedLoad?: (bundleUrl: string) => void;
   [key: string]: unknown;
 }
 

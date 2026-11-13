@@ -18,7 +18,7 @@ import {
   writeEmbeddedRemotesRuntimePlugin,
   writeNativeEnvRuntimePlugin,
 } from 'zephyr-native-internal';
-import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 import type {
   ApplicationConsumes,
@@ -177,11 +177,7 @@ export class ZephyrMetroPlugin {
       ze_log.config('embedRemotes: skipped for development bundles');
       return;
     }
-    try {
-      createRequire(path.join(context, 'package.json')).resolve(
-        'zephyr-native-cache/package.json'
-      );
-    } catch {
+    if (!isInstalledFrom(context, 'zephyr-native-cache')) {
       logFn(
         'warn',
         `embedRemotes: zephyr-native-cache is not installed in ${context}. Metro apps load embedded remotes through zephyr-native-cache: install it and call ZephyrNativeCache.register() at startup, or the embedded copies are never used.`
@@ -414,5 +410,17 @@ export class ZephyrMetroPlugin {
 
   private getAssetType(asset: OutputAsset): string {
     return asset.type ?? 'asset';
+  }
+}
+
+/**
+ * Whether `name` is in a `node_modules` directory at or above `context`, where Metro's
+ * resolver finds packages. Unlike `require.resolve`, it ignores `NODE_PATH`, which pnpm
+ * points at its hoisted store when it runs package binaries.
+ */
+function isInstalledFrom(context: string, name: string): boolean {
+  for (let dir = path.resolve(context); ; dir = path.dirname(dir)) {
+    if (existsSync(path.join(dir, 'node_modules', name, 'package.json'))) return true;
+    if (path.dirname(dir) === dir) return false;
   }
 }

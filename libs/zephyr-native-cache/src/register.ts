@@ -71,8 +71,7 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   if (envStorage) nativeCacheRefs.envStorage = envStorage;
   // Used by the embedded-remotes runtime plugin (embedRemotes in zephyr.config.*).
   nativeCacheRefs.hasCachedBundle = (url, hash) => cacheLayer.hasCachedBundle(url, hash);
-  nativeCacheRefs.recordEmbeddedLoad = (url, name) =>
-    cacheLayer.recordEmbeddedLoad(url, name);
+  nativeCacheRefs.recordEmbeddedLoad = (url) => cacheLayer.recordEmbeddedLoad(url);
   if (NativeMFECache && typeof NativeMFECache.readBundledFile === 'function') {
     const nativeModule = NativeMFECache;
     nativeCacheRefs.readBundledFile = async (name) =>

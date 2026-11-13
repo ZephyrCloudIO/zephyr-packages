@@ -19,12 +19,37 @@ Each provider adapter:
 2. Infers a Git provider actor identity from provider-native job identity data, using provider APIs from the runner when
    needed.
 3. Sends `{ provider, issuer, providerSubject, username, providerActorType, emails, email, source }` to `POST /v2/ci-token/exchange` on
-   cloud-io.
+   cloud-io. The GitLab adapter can add an optional `idToken`, described below.
 
 GitLab reads `CI_JOB_TOKEN` as a JWT when possible and extracts `user_id`, `user_login`, `user_email`, or `email`. If the token is legacy/non-JWT
 or has no email claim, it calls the inferred GitLab API v4 `/job` endpoint from the plugin using `CI_JOB_TOKEN`. If the
 API is unavailable, it falls back to GitLab's predefined `GITLAB_USER_EMAIL`. When job, project, or pipeline IDs are
 available from JWT claims or the `/job` response, they must match `CI_JOB_ID`, `CI_PROJECT_ID`, and `CI_PIPELINE_ID`.
+
+### Optional GitLab ID token
+
+The identity above is reported by the plugin. It is not proof of who ran the job. A GitLab pipeline can add proof by
+asking GitLab for a signed ID token:
+
+```yaml
+build:
+  id_tokens:
+    ZE_CI_ID_TOKEN:
+      aud: https://zephyr-cloud.io
+```
+
+GitLab then sets `ZE_CI_ID_TOKEN` to a JWT signed for that job. When the GitLab adapter runs and the value has the shape
+of a JWT, the plugin adds it to the exchange request as `idToken`, next to the identity fields. A server that supports
+the field verifies the token against the public keys of the GitLab instance. A server that does not know the field
+ignores it. The block is optional. Without it the exchange works as before.
+
+- Only `ZE_CI_ID_TOKEN` is read. `CI_JOB_TOKEN` is a GitLab API credential and is never sent to Zephyr.
+- A value that is not three dot-separated base64url parts is ignored. A `zephyr:auth` debug note names the variable and
+  never prints the value.
+- The ID token is a credential. It is not a field of `CiTokenIdentity`. It is not logged, not shown in errors and not
+  written to disk. The plugin reads it from the environment only when it builds the exchange request body.
+- The ID token changes on every job, so it is not part of the access-token cache scope. A job that reuses a cached
+  access token makes no exchange and sends no ID token.
 
 GitHub Actions reads the local webhook payload from `GITHUB_EVENT_PATH`. It prefers the matching commit author email,
 then commit committer email, then `head_commit`, then `pusher.email`. It always sends the stable GitHub actor ID from
@@ -64,7 +89,7 @@ Large monorepo builds run many plugin processes against the same `~/.zephyr` dir
 an identity-scoped, cross-process single-flight cache so those processes do not all exchange and write the same token:
 
 1. Hash the CI token together with the API gateway and normalized provider identity. The raw CI token is never written to
-   disk.
+   disk. The GitLab ID token is not part of the hash.
 2. Acquire the matching inter-process lock under `~/.zephyr/locks` with retries and stale-lock recovery.
 3. Re-read `ze-ci-auth-token:<scope>` from `~/.zephyr/storage` after acquiring the lock.
 4. Reuse the access token only when the record has the expected version and scope and its JWT remains valid beyond the

@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { inferCiTokenIdentity } from './ci-token-identity';
+import { inferCiTokenIdentity, readCiIdToken } from './ci-token-identity';
 
 function jwt(payload: Record<string, unknown>): string {
   return [
@@ -432,4 +432,60 @@ describe('inferCiTokenIdentity', () => {
     await writeFile(eventPath, JSON.stringify(payload), 'utf8');
     return eventPath;
   }
+});
+
+describe('readCiIdToken', () => {
+  const idToken = jwt({ aud: 'https://zephyr-cloud.io', user_id: '42' });
+  const gitLabEnv = {
+    GITLAB_CI: 'true',
+    CI_SERVER_URL: 'https://gitlab.example.com',
+    GITLAB_USER_EMAIL: 'builder@example.com',
+  };
+
+  it('returns a well-formed ZE_CI_ID_TOKEN for GitLab', () => {
+    expect(readCiIdToken('gitlab', { ...gitLabEnv, ZE_CI_ID_TOKEN: idToken })).toBe(
+      idToken
+    );
+  });
+
+  it('returns nothing when ZE_CI_ID_TOKEN is absent or malformed', () => {
+    expect(readCiIdToken('gitlab', gitLabEnv)).toBeUndefined();
+    expect(
+      readCiIdToken('gitlab', { ...gitLabEnv, ZE_CI_ID_TOKEN: 'not-a-jwt' })
+    ).toBeUndefined();
+  });
+
+  it('never falls back to CI_JOB_TOKEN', () => {
+    expect(
+      readCiIdToken('gitlab', {
+        ...gitLabEnv,
+        CI_JOB_TOKEN: jwt({ user_email: 'builder@example.com' }),
+      })
+    ).toBeUndefined();
+  });
+
+  it('returns nothing for providers without an ID token', () => {
+    const env = { ...gitLabEnv, ZE_CI_ID_TOKEN: idToken };
+
+    expect(readCiIdToken('github', env)).toBeUndefined();
+    expect(readCiIdToken('eas', env)).toBeUndefined();
+  });
+
+  it('keeps the ID token out of the inferred identity', async () => {
+    const identity = await inferCiTokenIdentity({
+      ...gitLabEnv,
+      ZE_CI_ID_TOKEN: idToken,
+    });
+
+    expect(identity).toEqual({
+      provider: 'gitlab',
+      email: 'builder@example.com',
+      emails: ['builder@example.com'],
+      issuer: 'https://gitlab.example.com',
+      providerSubject: undefined,
+      username: undefined,
+      source: 'env',
+    });
+    expect(JSON.stringify(identity)).not.toContain(idToken);
+  });
 });

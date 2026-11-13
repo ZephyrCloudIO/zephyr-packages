@@ -1,3 +1,4 @@
+import { ze_log } from '../../logging/debug';
 import type { CiIdentityProvider, CiTokenIdentity } from './types';
 import {
   claimMatchesEnv,
@@ -32,14 +33,39 @@ interface GitLabJobResponse {
 
 const GITLAB_JOB_FETCH_TIMEOUT_MS = 10_000;
 
+/**
+ * The variable a pipeline fills through GitLab's `id_tokens` keyword. It is the only
+ * source of the ID token. `CI_JOB_TOKEN` is a GitLab API credential and is never sent to
+ * Zephyr.
+ */
+const GITLAB_ID_TOKEN_ENV = 'ZE_CI_ID_TOKEN';
+const JWT_SHAPE = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
 export const gitLabCiIdentityProvider: CiIdentityProvider = {
   provider: 'gitlab',
   detect: isGitLabCi,
   infer: inferGitLabIdentity,
+  readIdToken: readGitLabIdToken,
 };
 
 function isGitLabCi(env: NodeJS.ProcessEnv): boolean {
   return env['GITLAB_CI'] === 'true' || env['CI_SERVER_NAME'] === 'GitLab';
+}
+
+function readGitLabIdToken(env: NodeJS.ProcessEnv): string | undefined {
+  const idToken = env[GITLAB_ID_TOKEN_ENV]?.trim();
+  if (!idToken) {
+    return undefined;
+  }
+
+  // Log messages name the variable only. The value is never logged.
+  if (!JWT_SHAPE.test(idToken)) {
+    ze_log.auth(`${GITLAB_ID_TOKEN_ENV} is not a well-formed JWT. It will not be sent.`);
+    return undefined;
+  }
+
+  ze_log.auth(`${GITLAB_ID_TOKEN_ENV} is set. It will be sent to verify the job actor.`);
+  return idToken;
 }
 
 async function inferGitLabIdentity(

@@ -132,14 +132,30 @@ describe('CI ID token', () => {
   const originalEnv = process.env;
   const temporaryFiles: string[] = [];
 
+  // The variables each platform needs to find the home and temporary directories. The
+  // error detail file is written to the temporary directory, which Windows resolves from
+  // TEMP, TMP or SystemRoot, not TMPDIR.
+  const PLATFORM_ENV = [
+    'PATH',
+    'HOME',
+    'TMPDIR',
+    'TEMP',
+    'TMP',
+    'USERPROFILE',
+    'SystemRoot',
+    'LOCALAPPDATA',
+    'APPDATA',
+  ];
+
   function setEnv(env: Record<string, string>): void {
-    process.env = {
-      PATH: originalEnv['PATH'],
-      HOME: originalEnv['HOME'],
-      TMPDIR: originalEnv['TMPDIR'],
-      ZE_CI_TOKEN: 'ci-token',
-      ...env,
-    };
+    const platformEnv: Record<string, string> = {};
+    for (const name of PLATFORM_ENV) {
+      const value = originalEnv[name];
+      if (value !== undefined) {
+        platformEnv[name] = value;
+      }
+    }
+    process.env = { ...platformEnv, ZE_CI_TOKEN: 'ci-token', ...env };
   }
 
   /** Collects every place a failed exchange is shown or written. */

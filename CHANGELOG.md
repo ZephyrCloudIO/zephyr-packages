@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.1 (2026-11-13)
+
+## What's Changed
+* chore(deps): update dependency fast-xml-parser@>=5.9.3 <5.10.1 to v5.12.0 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/764
+* chore(deps): update dependency hono to v4.13.16 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/769
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.8.0...v1.8.1
+
 ## 1.8.0 (2026-11-11)
 
 ## What's Changed

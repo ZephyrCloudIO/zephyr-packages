@@ -5,9 +5,14 @@ import { createJiti } from 'jiti';
 import { ZeErrors, ZephyrError } from '../errors';
 import { redactString } from '../security/redaction';
 
-/** User-authored Zephyr project configuration. */
 export type ZephyrDependencyUrlMode = 'selector' | 'version';
 
+/**
+ * Fields every integration accepts in zephyr.config._. Integration-specific fields (e.g.
+ * embedRemotes) are typed by the integration that acts on them and exported from it; the
+ * loader below still parses and validates them. New user-facing options belong in
+ * zephyr.config._, not in withZephyr(...) parameters.
+ */
 export interface ZephyrConfig {
   /** Overrides the organization inferred from the Git remote. */
   org?: string;
@@ -31,6 +36,11 @@ export interface ZephyrConfig {
 export type ResolvedZephyrConfig = Readonly<
   Omit<ZephyrConfig, 'remoteDependencies'> & {
     remoteDependencies?: Readonly<Record<string, string>>;
+    /**
+     * Parsed embedRemotes (typed for users as EmbedRemotesConfig in
+     * zephyr-native-internal); present only when enabled.
+     */
+    embedRemotes?: Readonly<{ exclude: readonly string[] }>;
   }
 >;
 
@@ -43,13 +53,14 @@ const CONFIG_FILE_NAMES = [
   'zephyr.config.cjs',
 ] as const;
 
-const CONFIG_FIELDS = new Set<keyof ZephyrConfig>([
+const CONFIG_FIELDS = new Set<string>([
   'org',
   'project',
   'appName',
   'remoteDependencies',
   'dependencyUrlMode',
   'runtimeManifest',
+  'embedRemotes',
 ]);
 
 const CONFIG_ERROR_MAX_LENGTH = 1_000;
@@ -218,9 +229,7 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     throwConfigError(configPath, 'default export must be an object');
   }
 
-  const unknownFields = Object.keys(value).filter(
-    (field) => !CONFIG_FIELDS.has(field as keyof ZephyrConfig)
-  );
+  const unknownFields = Object.keys(value).filter((field) => !CONFIG_FIELDS.has(field));
   if (unknownFields.length > 0) {
     throwConfigError(
       configPath,
@@ -241,6 +250,7 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     'runtimeManifest',
     configPath
   );
+  const embedRemotes = readEmbedRemotes(value['embedRemotes'], configPath);
 
   return Object.freeze({
     ...(org ? { org } : {}),
@@ -249,7 +259,50 @@ function parseConfig(value: unknown, configPath: string): ResolvedZephyrConfig {
     ...(remoteDependencies ? { remoteDependencies } : {}),
     ...(dependencyUrlMode ? { dependencyUrlMode } : {}),
     ...(runtimeManifest ? { runtimeManifest } : {}),
+    ...(embedRemotes ? { embedRemotes } : {}),
   });
+}
+
+function readEmbedRemotes(
+  value: unknown,
+  configPath: string
+): Readonly<{ exclude: readonly string[] }> | undefined {
+  if (value === undefined || value === false) {
+    return undefined;
+  }
+  if (value === true) {
+    return Object.freeze({ exclude: Object.freeze([]) });
+  }
+  if (!isObject(value)) {
+    throwConfigError(
+      configPath,
+      'embedRemotes must be true, false, or { exclude: string[] }'
+    );
+  }
+
+  const unknownFields = Object.keys(value).filter((field) => field !== 'exclude');
+  if (unknownFields.length > 0) {
+    throwConfigError(
+      configPath,
+      `embedRemotes has unknown field${unknownFields.length === 1 ? '' : 's'}: ${unknownFields.join(', ')}`
+    );
+  }
+
+  const exclude = value['exclude'];
+  if (exclude === undefined) {
+    return Object.freeze({ exclude: Object.freeze([]) });
+  }
+  if (
+    !Array.isArray(exclude) ||
+    !exclude.every((name) => typeof name === 'string' && name.trim() !== '')
+  ) {
+    throwConfigError(
+      configPath,
+      'embedRemotes.exclude must be an array of non-empty strings'
+    );
+  }
+  const names = [...new Set((exclude as string[]).map((name) => name.trim()))];
+  return Object.freeze({ exclude: Object.freeze(names) });
 }
 
 function readDependencyUrlMode(

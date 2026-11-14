@@ -80,6 +80,21 @@ class MFECacheModule(reactContext: ReactApplicationContext) :
     }.start()
   }
 
+  /** Reads a file shipped in the APK assets root (embedRemotes); resolves null when missing. */
+  @ReactMethod
+  fun readBundledFile(name: String, promise: Promise) {
+    Thread {
+      try {
+        val text = reactApplicationContext.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
+        promise.resolve(text)
+      } catch (e: java.io.FileNotFoundException) {
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("READ_ERROR", e.message, e)
+      }
+    }.start()
+  }
+
   @ReactMethod
   fun deleteFile(path: String, promise: Promise) {
     Thread {

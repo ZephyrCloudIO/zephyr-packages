@@ -13,3 +13,10 @@ export {
   assertNativeBuildTarget,
   type NativeBuildTarget,
 } from './lib/native-target';
+export {
+  downloadEmbeddedRemotes,
+  writeEmbeddedRemoteFiles,
+  writeEmbeddedRemotesRuntimePlugin,
+  type DownloadedRemote,
+} from './lib/embed-remotes';
+export type { EmbedRemotesConfig, ZephyrNativeConfig } from './lib/native-config';

@@ -1,14 +1,6 @@
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 import type { NativeEnvRuntimeRoot } from '../runtime/env-runtime-plugin';
-
-/** JSON that is also safe as JS source. */
-function jsLiteral(value: unknown): string {
-  return JSON.stringify(value)
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
-}
+import { jsLiteral, writeGeneratedModule } from './generated-module';
 
 /**
  * Writes the MF runtime plugin module the Metro and Re.Pack plugins inject, and returns
@@ -41,15 +33,5 @@ export function writeNativeEnvRuntimePlugin(
       })}`
     : '';
   const source = `'use strict';\nvar createNativeEnvRuntimePlugin = require(${JSON.stringify(runtimePath)}).createNativeEnvRuntimePlugin;\nvar REMOTE_UIDS = ${jsLiteral(remoteUids)};\nmodule.exports = function zephyrNativeEnvPlugin() {\n  return createNativeEnvRuntimePlugin(REMOTE_UIDS${rootArgument});\n};\n`;
-  const outPath = path.join(
-    outDir,
-    `env-plugin-${createHash('sha256').update(source).digest('hex').slice(0, 16)}.js`
-  );
-  if (existsSync(outPath)) return outPath;
-
-  mkdirSync(outDir, { recursive: true });
-  const tempPath = `${outPath}.${process.pid}.tmp`;
-  writeFileSync(tempPath, source, 'utf8');
-  renameSync(tempPath, outPath);
-  return outPath;
+  return writeGeneratedModule(outDir, 'env-plugin', source);
 }

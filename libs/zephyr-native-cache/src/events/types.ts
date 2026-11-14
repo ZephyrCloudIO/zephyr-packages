@@ -1,7 +1,7 @@
 export interface BundleLoadEvent {
   bundleUrl: string;
   remoteName: string;
-  status: 'cache-hit' | 'downloaded' | 'skipped';
+  status: 'cache-hit' | 'downloaded' | 'skipped' | 'embedded';
   hash: string | undefined;
   timestamp: number;
 }

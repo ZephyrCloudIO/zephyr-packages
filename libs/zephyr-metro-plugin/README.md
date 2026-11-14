@@ -280,6 +280,38 @@ module.exports = {
 
 `bundle-mf-host`/`bundle-mf-remote` resolve the label's alias URL (never a version URL) and fail when the label does not exist for that platform. At runtime, the app's first remote request applies the `zephyr-manifest.json` persisted by the previous launch (its remote overrides and `ZE_PUBLIC_*` values), then refreshes the stored copy in the background; changes made in the dashboard apply on the next launch or `ZephyrNativeCache.reloadApp()`. The first launch, and apps without `zephyr-native-cache` registered, keep the build-time remotes and values. Use separate iOS and Android labels.
 
+## Embedded remotes (first-launch offline)
+
+A fresh install opened without network has no remotes, because they load from the network. Set `embedRemotes` in `zephyr.config.*` to ship a copy of every declared remote inside the iOS/Android app. It is a `zephyr.config.*` option only, not a `withZephyr` option.
+
+```ts
+// zephyr.config.ts
+import type { ZephyrMetroConfig } from 'zephyr-metro-plugin';
+
+export default { embedRemotes: { exclude: ['analytics'] } } satisfies ZephyrMetroConfig;
+```
+
+```js
+// zephyr.config.mjs
+/** @type {import('zephyr-metro-plugin').ZephyrMetroConfig} */
+export default { embedRemotes: true };
+```
+
+`true` embeds every remote the host declares; `{ exclude: [...] }` leaves the named remotes out (they behave as today). `false` or no value turns it off, and nothing changes.
+
+- **Production bundles only.** `bundle-mf-host` in development mode skips it.
+- **Same version as the build.** Each remote is downloaded as the build resolved it for the target platform (the `${target}` selector included): its `mf-manifest.json`, container, exposed modules, and shared bundles. The files are written next to `--bundle-output` (iOS: `--assets-dest` when set), where the Xcode and Gradle bundle steps package them.
+- **The build fails** with `ZE10038` naming the remote when a remote did not resolve or one of its files cannot be downloaded. Fix it, or add the remote to `exclude`.
+- **Requires `zephyr-native-cache`.** The embedded files are app resources, and only `zephyr-native-cache`'s native module can read them. The build warns when `zephyr-native-cache` is not installed; at runtime, an app that does not call `ZephyrNativeCache.register()` logs `[zephyr-embed] <remote>: zephyr-native-cache is not registered…` and behaves as if the option were off.
+
+At runtime the embedded copy is the last resort, decided per remote when its manifest loads:
+
+1. **Network**: the latest released version, as today (bundles go through the `zephyr-native-cache` cache).
+2. **Cached version**: when the manifest request fails, the last manifest loaded online is reused if its container is still cached (`[zephyr-embed] <remote>: network unavailable; using the cached version`).
+3. **Embedded copy**: otherwise every bundle of that remote comes from the app (`[zephyr-embed] <remote>: network unavailable; using the copy embedded in the app`), and `useCacheStatus` reports the status `embedded`. Versions never mix within a remote.
+
+When a remote's manifest loads from the network but one of its bundles fails later, there is no embedded fallback. Remotes loaded by other remotes (nested remotes), and split bundles a remote creates that its `mf-manifest.json` does not list (lazy imports inside a remote), are not embedded.
+
 ## Project Structure
 
 Your React Native Metro project should follow this structure:

@@ -1,6 +1,11 @@
 export type BundleStatus = 'active' | 'pendingUpdate' | 'broken' | 'pendingCleanup';
 
-export type BundleLoadStatus = 'cache-hit' | 'downloaded' | 'skipped' | 'pending';
+export type BundleLoadStatus =
+  | 'cache-hit'
+  | 'downloaded'
+  | 'skipped'
+  | 'embedded'
+  | 'pending';
 
 export type UpdatePolicy = 'downloadOnly' | 'downloadAndApply';
 

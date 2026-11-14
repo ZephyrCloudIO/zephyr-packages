@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { cwd } from 'node:process';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { setAuthOrigin, ZeErrors, ZephyrError } from 'zephyr-agent';
 import { parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
 import { doctorCommand } from './commands/doctor';
@@ -10,6 +10,7 @@ import { watchCommand } from './commands/watch';
 import { reserveStdout } from './lib/stdout';
 
 async function main(): Promise<void> {
+  setAuthOrigin('cli');
   try {
     // Parse command line arguments
     const args = process.argv.slice(2);

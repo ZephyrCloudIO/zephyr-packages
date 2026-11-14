@@ -3,7 +3,7 @@ import type { Mock } from '@rstest/core';
 
 import * as jose from 'jose';
 import { cleanTokens, getToken, saveToken } from './token';
-import { inferCiTokenIdentity } from './ci-token-identity';
+import { inferCiTokenIdentity, readCiIdToken } from './ci-token-identity';
 import { makeRequest } from '../http/http-request';
 import { ZeErrors, ZephyrError } from '../errors';
 import { withStorageLock } from './storage-lock';
@@ -33,6 +33,7 @@ rs.mock('./storage', () => ({
 
 rs.mock('./ci-token-identity', () => ({
   inferCiTokenIdentity: rs.fn(),
+  readCiIdToken: rs.fn(),
 }));
 
 rs.mock('./storage-lock', () => ({
@@ -46,6 +47,7 @@ rs.mock('../http/http-request', () => ({
 const mockInferCiTokenIdentity = inferCiTokenIdentity as Mock<
   typeof inferCiTokenIdentity
 >;
+const mockReadCiIdToken = readCiIdToken as Mock<typeof readCiIdToken>;
 const mockMakeRequest = makeRequest as Mock<typeof makeRequest>;
 const mockDecodeJwt = jose.decodeJwt as Mock<typeof jose.decodeJwt>;
 const mockWithStorageLock = withStorageLock as Mock<typeof withStorageLock>;
@@ -58,6 +60,16 @@ const githubIdentity = {
   providerSubject: '12345',
   username: 'octocat',
   source: 'noreply' as const,
+};
+
+const gitlabIdentity = {
+  provider: 'gitlab' as const,
+  email: 'builder@example.com',
+  emails: ['builder@example.com'],
+  issuer: 'https://gitlab.example.com',
+  providerSubject: '42',
+  username: 'builder',
+  source: 'jwt' as const,
 };
 
 const githubBotIdentity = {
@@ -155,6 +167,63 @@ describe('getToken', () => {
       }),
       expect.objectContaining({ ttl: expect.any(Number) })
     );
+  });
+
+  it('adds the provider ID token to the exchange body without changing the identity', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(gitlabIdentity);
+    mockReadCiIdToken.mockReturnValue('header.payload.signature');
+    mockMakeRequest.mockResolvedValue([true, null, { access_token: 'ci-access-token' }]);
+
+    await getToken();
+
+    expect(mockReadCiIdToken).toHaveBeenCalledWith('gitlab');
+    const [, , body] = mockMakeRequest.mock.calls[0];
+    expect(JSON.parse(String(body))).toEqual({
+      ...gitlabIdentity,
+      idToken: 'header.payload.signature',
+    });
+    expect(gitlabIdentity).not.toHaveProperty('idToken');
+  });
+
+  it('sends only the identity when the provider has no ID token', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(gitlabIdentity);
+    mockMakeRequest.mockResolvedValue([true, null, { access_token: 'ci-access-token' }]);
+
+    await getToken();
+
+    const [, , body] = mockMakeRequest.mock.calls[0];
+    expect(JSON.parse(String(body))).toEqual(gitlabIdentity);
+  });
+
+  it('keeps the ID token out of the cache key, the cache scope and the stored record', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(gitlabIdentity);
+    mockMakeRequest.mockResolvedValue([true, null, { access_token: 'ci-access-token' }]);
+    const { setPrivateItem } = await import('./storage');
+
+    await getToken();
+    mockReadCiIdToken.mockReturnValue('header.payload.signature');
+    await getToken();
+
+    const [withoutIdToken, withIdToken] = (setPrivateItem as Mock<typeof setPrivateItem>)
+      .mock.calls;
+    expect(withIdToken[0]).toBe(withoutIdToken[0]);
+    expect(withIdToken[1]).toEqual(withoutIdToken[1]);
+    expect(JSON.stringify(withIdToken)).not.toContain('header.payload.signature');
+  });
+
+  it('does not read the ID token when a cached access token is reused', async () => {
+    mockInferCiTokenIdentity.mockResolvedValue(gitlabIdentity);
+    mockMakeRequest.mockResolvedValue([true, null, { access_token: 'cached-token' }]);
+    const { getItem } = await import('node-persist');
+    const { setPrivateItem } = await import('./storage');
+
+    await getToken();
+    const [, cachedValue] = (setPrivateItem as Mock<typeof setPrivateItem>).mock.calls[0];
+    (getItem as Mock<typeof getItem>).mockResolvedValue(cachedValue);
+    mockReadCiIdToken.mockClear();
+
+    await expect(getToken()).resolves.toBe('cached-token');
+    expect(mockReadCiIdToken).not.toHaveBeenCalled();
   });
 
   it('reuses a valid persisted CI access token without another exchange', async () => {

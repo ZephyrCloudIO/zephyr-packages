@@ -113,4 +113,16 @@ describe('logging redaction', () => {
     expect(once).not.toContain(`${REDACTED}]`);
     expect(once).toContain('(see https://docs.example/page). ');
   });
+
+  it('keeps serialized JSON valid and stable across redaction passes', () => {
+    const sanitized = safeStringifyForLogging({ token: secrets.token, status: 401 });
+    const raw = redactString(
+      `{"access_token": "${secrets.token}", 'state': '${secrets.state}'}`
+    );
+
+    expect(redactString(sanitized)).toBe(sanitized);
+    expect(JSON.parse(redactString(sanitized))).toEqual({ token: REDACTED, status: 401 });
+    expect(raw).toBe(`{"access_token": "${REDACTED}", 'state': '${REDACTED}'}`);
+    expect(redactString(raw)).toBe(raw);
+  });
 });

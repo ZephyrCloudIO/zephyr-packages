@@ -128,11 +128,11 @@ Failed to load git information:
   ERR_AUTH_ERROR: {
     id: '018',
     message: `
-Zephyr authentication is missing, invalid, or expired.
-
-Run the deployment in an interactive terminal to complete normal browser login, or set ZE_SECRET_TOKEN in non-interactive environments.
+Zephyr authentication failed: credentials are missing, invalid, or expired, or the login could not be completed.
 
 {{ message }}
+
+To log in, run the deployment in an interactive terminal. In non-interactive environments, set ZE_SECRET_TOKEN.
 `,
     kind: 'build',
   },

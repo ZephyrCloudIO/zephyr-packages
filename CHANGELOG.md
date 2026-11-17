@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.8.1 (2026-11-17)
+
+## What's Changed
+* chore(deps): update dependency fast-xml-parser@>=5.9.3 <5.10.1 to v5.12.0 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/764
+* chore(deps): update dependency hono to v4.13.16 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/769
+* chore(deps): update dependency @nuxt/schema to v4.6.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/770
+* chore(deps): update dependency nuxt to v4.6.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/773
+* chore(deps): update dependency nuxt@>=4.0.0 <4.5.1 to v4.6.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/774
+* fix: report an unreachable Zephyr honestly (redaction, ZE50001, /resolve timeout, ZE_FAIL_BUILD, CLI) by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/776
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.8.0...v1.8.1
+
 ## 1.8.0 (2026-11-11)
 
 ## What's Changed

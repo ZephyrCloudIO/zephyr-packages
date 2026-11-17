@@ -38,6 +38,10 @@ export class BundleCacheLayer {
     Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }>
   >();
 
+  // Hashes of bundles evaluated in this JS session: canonical bundle URL → hash.
+  // Only these can be "updated"; prefetching a never-loaded bundle is not an update.
+  private loadedHashes = new Map<string, string>();
+
   // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
@@ -211,19 +215,26 @@ export class BundleCacheLayer {
             this.bundleHashMap[getBundleCacheKey(bundleUrl)] = newHash;
 
             const remoteName = this.inferRemoteName(bundleUrl);
-            const didUpdate = await this.cacheManager!.preDownloadBundle(
+            const didDownload = await this.cacheManager!.preDownloadBundle(
               bundleUrl,
               newHash
             );
-            if (didUpdate) {
-              updated++;
-              this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
-              if (!this.status.pendingUpdates.includes(remoteName)) {
-                this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
-                this.notifyStatusChange();
-              }
-              this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
+            if (!didDownload) continue;
+
+            const loadedHash = this.loadedHashes.get(getBundleCacheKey(bundleUrl));
+            if (loadedHash === undefined || loadedHash === newHash) {
+              console.info(`${LOG_PREFIX} prefetched bundle: ${bundleUrl}`);
+              continue;
             }
+
+            updated++;
+            console.info(`${LOG_PREFIX} update available: ${bundleUrl}`);
+            this.events.emitUpdateAvailable(bundleUrl, remoteName, loadedHash, newHash);
+            if (!this.status.pendingUpdates.includes(remoteName)) {
+              this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
+              this.notifyStatusChange();
+            }
+            this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
           }
         } catch (manifestError) {
           console.warn(`${LOG_PREFIX} manifest error for ${manifestUrl}`, manifestError);
@@ -347,6 +358,9 @@ export class BundleCacheLayer {
       hash,
       loadedAt: Date.now(),
     };
+    if (hash && (status === 'cache-hit' || status === 'downloaded')) {
+      this.loadedHashes.set(getBundleCacheKey(bundleUrl), hash);
+    }
     if (status === 'cache-hit' || status === 'downloaded') {
       this.status.pendingUpdates = this.status.pendingUpdates.filter(
         (name) => name !== remoteName

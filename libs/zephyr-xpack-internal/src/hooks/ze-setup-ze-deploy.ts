@@ -116,11 +116,8 @@ export function setupZeDeploy<
         if (pluginOptions.zephyr_engine.hasActiveBuild !== false) {
           pluginOptions.zephyr_engine.build_failed();
         }
-        // Unless the build must fail (ZE_FAIL_BUILD or failBuild) a Zephyr failure (for example an unreachable build-id
-        // service) must not fail the bundle. Skip the upload and keep the output.
         handleGlobalError(error, { failBuild: pluginOptions.failBuild });
-        // Reached only when the failure was logged. Nobody awaiting onDeploymentDone()
-        // should wait for a build that will never publish.
+        // This build will never publish, so release anyone awaiting onDeploymentDone().
         emitDeploymentDone();
         return;
       }

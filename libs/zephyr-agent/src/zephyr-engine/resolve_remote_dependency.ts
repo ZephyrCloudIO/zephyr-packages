@@ -138,7 +138,6 @@ async function request_remote_dependency({
     ze_log.remotes('URL for resolving dependency:', resolveDependency.toString());
 
     const token = await getToken();
-    // GET lookups retry network errors and 5xx. The deadline bounds the whole lookup.
     const res = await fetchWithRetries(
       resolveDependency,
       {

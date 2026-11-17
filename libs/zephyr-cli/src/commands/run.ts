@@ -161,8 +161,6 @@ export async function runCommand(options: RunOptions): Promise<void> {
     outputDir = resolve(cwd, detectedCommands[0].outputDir);
   }
 
-  // The build ran but nothing was uploaded. Exit non-zero so a script or CI job does not
-  // take a skipped upload for a deployed build.
   if (!outputDir) {
     throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
       message:

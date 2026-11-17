@@ -12,6 +12,12 @@ import {
   type ZeBuildAssetsMap,
 } from 'zephyr-agent';
 
+interface DeferredEngineState {
+  deferredEngine?: Promise<unknown>;
+}
+
+const engineState = rs.hoisted((): DeferredEngineState => ({}));
+
 const mocks = rs.hoisted(() => ({
   viteVersion: '7.0.0',
   federation: rs.fn(),
@@ -22,7 +28,6 @@ const mocks = rs.hoisted(() => ({
   rollbackPartialAssetMapClaimBatch: rs.fn(),
   zeBuildDashData: rs.fn(async () => ({})),
   deferCreate: rs.fn(),
-  deferredEngine: undefined as Promise<unknown> | undefined,
   zeLogInit: rs.fn(),
   logFn: rs.fn(),
   engine: {
@@ -74,7 +79,7 @@ rs.mock('zephyr-agent', () => {
     },
     ZephyrEngine: {
       defer_create: () => ({
-        zephyr_engine_defer: mocks.deferredEngine ?? Promise.resolve(mocks.engine),
+        zephyr_engine_defer: engineState.deferredEngine ?? Promise.resolve(mocks.engine),
         zephyr_defer_create: mocks.deferCreate,
       }),
     },
@@ -252,7 +257,7 @@ describe('vite-plugin-zephyr', () => {
     });
     mocks.engine.upload_assets.mockResolvedValue(undefined);
     mocks.extractAssets.mockResolvedValue(asset('app.js'));
-    mocks.deferredEngine = undefined;
+    engineState.deferredEngine = undefined;
     delete process.env['ZE_FAIL_BUILD'];
     delete process.env['ZE_BUILD_INVOCATION_ID'];
   });
@@ -1289,7 +1294,7 @@ describe('vite-plugin-zephyr', () => {
         });
         const rejected = Promise.reject(startFailure);
         rejected.catch(() => undefined);
-        mocks.deferredEngine = rejected;
+        engineState.deferredEngine = rejected;
         const plugin = await configuredPlugin(
           { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
           true

@@ -12,10 +12,6 @@ export interface HandleGlobalErrorOptions {
   failBuild?: boolean;
 }
 
-/**
- * Whether a Zephyr failure must fail the build. The option wins over `ZE_FAIL_BUILD`;
- * when both are unset, token-authenticated CI fails and everything else logs.
- */
 export function shouldFailBuild(options: HandleGlobalErrorOptions = {}): boolean {
   return (
     options.failBuild ??

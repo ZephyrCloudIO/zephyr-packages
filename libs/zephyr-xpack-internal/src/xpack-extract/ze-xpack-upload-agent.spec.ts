@@ -311,10 +311,8 @@ describe('xpack_zephyr_agent', () => {
         })
       );
       expect(prepareParticipant).toHaveBeenCalledWith('client', 3);
-      // The shared build is released so the other compilers stop waiting for this one.
       expect(failParticipant).toHaveBeenCalledWith('client', error);
       expect(handleGlobalError).toHaveBeenCalledWith(error, { failBuild: undefined });
-      // Nobody awaiting onDeploymentDone() should wait for a build that cannot publish.
       expect(emitDeploymentDone).toHaveBeenCalled();
     });
 

@@ -6,7 +6,6 @@ import {
   type ZephyrErrorCategory,
 } from 'zephyr-agent';
 
-/** Version of the failure document. Bump the major version for a breaking change. */
 export const FAILURE_DOCUMENT_SCHEMA_VERSION = '1.0.0';
 
 /**
@@ -28,11 +27,6 @@ export interface FailureDocument {
      * `ZE20014`. Absent otherwise.
      */
     reason?: string;
-    /**
-     * Category of the root cause: `unreachable` (Zephyr cannot be reached or failed on
-     * its side), `auth`, `forbidden`, `config`, `build`, `deploy`, `browser` or
-     * `unknown`.
-     */
     kind: ZephyrErrorCategory;
     /** Redacted message without colors. */
     message: string;

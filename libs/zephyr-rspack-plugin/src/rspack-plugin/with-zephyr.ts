@@ -102,7 +102,6 @@ export function withZephyr(
         });
       }
     } catch (error: unknown) {
-      // Without ZE_FAIL_BUILD the bundle is built without Zephyr, as for a single config.
       // A half-configured compiler array would wait for compilers that never report.
       if (pluginSnapshot) restorePlugins(config, pluginSnapshot);
       if (engine?.hasActiveBuild) engine.build_failed();

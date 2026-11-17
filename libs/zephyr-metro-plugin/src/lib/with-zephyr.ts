@@ -91,7 +91,6 @@ async function applyZephyrToMetroConfig(
       context: projectRoot,
     });
   } catch (error) {
-    // Without ZE_FAIL_BUILD, Metro keeps its original config when Zephyr cannot start.
     handleGlobalError(error);
     return metroConfig;
   }

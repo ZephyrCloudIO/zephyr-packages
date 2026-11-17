@@ -96,7 +96,6 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
               }
             }
           } catch (error: unknown) {
-            // Without ZE_FAIL_BUILD the bundle is built without Zephyr.
             if (pluginSnapshot) restorePlugins(bundlerConfigs, pluginSnapshot);
             if (engine?.hasActiveBuild) engine.build_failed();
             handleGlobalError(error);

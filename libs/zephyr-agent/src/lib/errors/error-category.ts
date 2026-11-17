@@ -1,4 +1,4 @@
-import { ZeErrors, type ZeErrorCodes, type ZeErrorKeys } from './codes';
+import { ZeErrors, type ZeErrorCodes, type ZeErrorType } from './codes';
 import { ZephyrError } from './zephyr-error';
 
 /**
@@ -23,29 +23,20 @@ export type ZephyrErrorCategory =
   | 'unknown';
 
 /** Auth codes keep their historical `ZE10xxx` numbers, so the category is mapped here. */
-const AUTH_ERRORS: ReadonlySet<ZeErrorKeys> = new Set<ZeErrorKeys>([
-  'ERR_AUTH_ERROR',
-  'ERR_NO_JWT',
-  'ERR_JWT_INVALID',
-  'ERR_CI_TOKEN_AUTH',
+const AUTH_ERRORS: ReadonlySet<ZeErrorType> = new Set<ZeErrorType>([
+  ZeErrors.ERR_AUTH_ERROR,
+  ZeErrors.ERR_NO_JWT,
+  ZeErrors.ERR_JWT_INVALID,
+  ZeErrors.ERR_CI_TOKEN_AUTH,
 ]);
-
-const FORBIDDEN_ERRORS: ReadonlySet<ZeErrorKeys> = new Set<ZeErrorKeys>([
-  'ERR_AUTH_FORBIDDEN_ERROR',
-]);
-
-function keyOf(code: ZeErrorCodes): ZeErrorKeys | undefined {
-  const type = ZephyrError.fromZeCode(code);
-  return (Object.keys(ZeErrors) as ZeErrorKeys[]).find((key) => ZeErrors[key] === type);
-}
 
 /** Category of a Zephyr error code. Unlisted or malformed codes are `unknown`. */
 export function getZephyrErrorCodeCategory(code: ZeErrorCodes): ZephyrErrorCategory {
-  const key = keyOf(code);
-  if (!key || key === 'ERR_UNKNOWN') return 'unknown';
-  if (AUTH_ERRORS.has(key)) return 'auth';
-  if (FORBIDDEN_ERRORS.has(key)) return 'forbidden';
-  return ZeErrors[key].kind;
+  const type = ZephyrError.fromZeCode(code);
+  if (type === ZeErrors.ERR_UNKNOWN) return 'unknown';
+  if (AUTH_ERRORS.has(type)) return 'auth';
+  if (type === ZeErrors.ERR_AUTH_FORBIDDEN_ERROR) return 'forbidden';
+  return type.kind;
 }
 
 /**
@@ -55,13 +46,9 @@ export function getZephyrErrorCodeCategory(code: ZeErrorCodes): ZephyrErrorCateg
  */
 export function getZephyrErrorCategory(error: unknown): ZephyrErrorCategory {
   if (!ZephyrError.is(error)) return 'unknown';
-  return getZephyrErrorCodeCategory(error.reason ?? (error.code as ZeErrorCodes));
+  return getZephyrErrorCodeCategory(error.reason);
 }
 
-/**
- * Whether Zephyr could not be reached, or failed on its side (network, DNS, timeout,
- * 5xx).
- */
 export function isZephyrUnreachableError(error: unknown): boolean {
   return getZephyrErrorCategory(error) === 'unreachable';
 }

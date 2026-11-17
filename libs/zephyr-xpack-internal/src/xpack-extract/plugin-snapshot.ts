@@ -1,5 +1,4 @@
 import { isModuleFederationPlugin } from './is-module-federation-plugin';
-import type { ModuleFederationPlugin } from '../xpack.types';
 import { ze_log } from 'zephyr-agent';
 
 interface PluginHolder {
@@ -51,8 +50,7 @@ function restoreSafely(restore: () => void): void {
 export function snapshotPlugins(configs: readonly PluginHolder[]): PluginSnapshot {
   return configs.map((config) => {
     const restoreFederation: (() => void)[] = [];
-    for (const plugin of config.plugins ?? []) {
-      const federationPlugin = plugin as ModuleFederationPlugin | undefined;
+    for (const federationPlugin of config.plugins ?? []) {
       if (!isModuleFederationPlugin(federationPlugin)) continue;
       restoreFederation.push(snapshotField(federationPlugin, 'configOverride'));
       const containers = ['_options', 'options', 'config', 'configOverride'];

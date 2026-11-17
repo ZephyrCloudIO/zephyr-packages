@@ -4,10 +4,14 @@ export type UnreachableFailure = 'server_error' | 'timeout' | 'dns' | 'network';
 
 const NO_RESPONSE_HINT =
   'Check your network, proxy and DNS settings, then try again later. Your configuration and credentials are not the cause.';
-const DNS_HINT =
-  "Verify the hostname's DNS record and your DNS settings, then try again later. Your configuration and credentials are not the cause.";
-const SERVER_ERROR_HINT =
-  'Zephyr answered with a server error. Try again later. Your configuration and credentials are not the cause.';
+
+const HINTS: Record<UnreachableFailure, string> = {
+  server_error:
+    'Zephyr answered with a server error. Try again later. Your configuration and credentials are not the cause.',
+  dns: "Verify the hostname's DNS record and your DNS settings, then try again later. Your configuration and credentials are not the cause.",
+  timeout: NO_RESPONSE_HINT,
+  network: NO_RESPONSE_HINT,
+};
 
 export function isUnreachableStatus(status: number): boolean {
   return status >= 500 || status === 408;
@@ -20,7 +24,7 @@ export function createUnreachableError(params: {
   failure: UnreachableFailure;
   detail: string;
   status?: number;
-  content?: unknown;
+  content?: string;
 }): ZephyrError<'ERR_ZEPHYR_UNREACHABLE'> {
   const { method, url, failure, detail, status, content } = params;
 
@@ -28,16 +32,11 @@ export function createUnreachableError(params: {
     method,
     url,
     detail,
-    hint: {
-      server_error: SERVER_ERROR_HINT,
-      dns: DNS_HINT,
-      timeout: NO_RESPONSE_HINT,
-      network: NO_RESPONSE_HINT,
-    }[failure],
+    hint: HINTS[failure],
     data: {
       failure,
       ...(status === undefined ? {} : { status }),
-      ...(content === undefined || content === '' ? {} : { response: content }),
+      ...(content ? { response: content } : {}),
     },
   });
 }

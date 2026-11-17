@@ -15,6 +15,7 @@ import {
   coordinateXPackCompilers,
   restorePlugins,
   snapshotPlugins,
+  type PluginSnapshot,
   makeCopyOfModuleFederationOptions,
   mutWebpackFederatedRemotesConfig,
 } from 'zephyr-xpack-internal';
@@ -77,7 +78,7 @@ export function withZephyr(
       return config;
     }
 
-    let pluginSnapshot: ReturnType<typeof snapshotPlugins> | undefined;
+    let pluginSnapshot: PluginSnapshot | undefined;
     let engine: ZephyrEngine | undefined;
     try {
       pluginSnapshot = snapshotPlugins(config);

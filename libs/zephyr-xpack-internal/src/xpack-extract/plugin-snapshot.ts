@@ -10,32 +10,59 @@ export type PluginSnapshot = {
   restoreFederation: (() => void)[];
 }[];
 
+/** Where the Module Federation plugins of webpack, Rspack and Nx keep their options. */
+const FEDERATION_OPTION_KEYS = ['_options', 'options', 'config', 'configOverride'];
+
+/** Writes only what changed, so a frozen value that was never mutated is left alone. */
+function snapshotContents(value: unknown): () => void {
+  if (Array.isArray(value)) {
+    const items = [...value];
+    return () => {
+      const changed =
+        value.length !== items.length ||
+        value.some((item, index) => item !== items[index]);
+      if (changed) value.splice(0, value.length, ...items);
+    };
+  }
+  if (value && typeof value === 'object') {
+    const fields = { ...value };
+    return () => {
+      for (const field of Object.keys(value)) {
+        if (!Object.hasOwn(fields, field)) Reflect.deleteProperty(value, field);
+      }
+      for (const [field, original] of Object.entries(fields)) {
+        if (Reflect.get(value, field) !== original) Reflect.set(value, field, original);
+      }
+    };
+  }
+  return () => undefined;
+}
+
+/** Restores both what `owner[key]` points to and the contents of that value. */
 function snapshotField(owner: object, key: string): () => void {
   const hadOwn = Object.hasOwn(owner, key);
-  const original = Reflect.get(owner, key);
-  const contents = Array.isArray(original)
-    ? [...original]
-    : original && typeof original === 'object'
-      ? { ...original }
-      : undefined;
+  const original: unknown = Reflect.get(owner, key);
+  const restoreContents = snapshotContents(original);
   return () => {
-    if (Array.isArray(original) && Array.isArray(contents)) {
-      if (
-        original.length !== contents.length ||
-        original.some((value, index) => value !== contents[index])
-      )
-        original.splice(0, original.length, ...contents);
-    } else if (original && typeof original === 'object' && contents) {
-      for (const field of Object.keys(original)) {
-        if (!Object.hasOwn(contents, field)) Reflect.deleteProperty(original, field);
-      }
-      for (const [field, value] of Object.entries(contents)) {
-        if (Reflect.get(original, field) !== value) Reflect.set(original, field, value);
-      }
-    }
+    restoreContents();
     if (hadOwn) Reflect.set(owner, key, original);
     else Reflect.deleteProperty(owner, key);
   };
+}
+
+function snapshotFederationPlugin(plugin: object): (() => void)[] {
+  const restores = [snapshotField(plugin, 'configOverride')];
+  for (const key of FEDERATION_OPTION_KEYS) {
+    const options: unknown = Reflect.get(plugin, key);
+    if (!options || typeof options !== 'object') continue;
+    const fields: unknown = 'config' in options ? options.config : options;
+    if (!fields || typeof fields !== 'object') continue;
+    restores.push(
+      snapshotField(fields, 'remotes'),
+      snapshotField(fields, 'runtimePlugins')
+    );
+  }
+  return restores;
 }
 
 function restoreSafely(restore: () => void): void {
@@ -48,28 +75,12 @@ function restoreSafely(restore: () => void): void {
 
 /** Remember plugin lists and the federation fields changed during Zephyr setup. */
 export function snapshotPlugins(configs: readonly PluginHolder[]): PluginSnapshot {
-  return configs.map((config) => {
-    const restoreFederation: (() => void)[] = [];
-    for (const federationPlugin of config.plugins ?? []) {
-      if (!isModuleFederationPlugin(federationPlugin)) continue;
-      restoreFederation.push(snapshotField(federationPlugin, 'configOverride'));
-      const containers = ['_options', 'options', 'config', 'configOverride'];
-      for (const key of containers) {
-        const options = Reflect.get(federationPlugin, key);
-        if (!options || typeof options !== 'object') continue;
-        const fields = 'config' in options ? options.config : options;
-        if (!fields || typeof fields !== 'object') continue;
-        restoreFederation.push(
-          snapshotField(fields, 'remotes'),
-          snapshotField(fields, 'runtimePlugins')
-        );
-      }
-    }
-    return {
-      plugins: config.plugins ? [...config.plugins] : undefined,
-      restoreFederation,
-    };
-  });
+  return configs.map((config) => ({
+    plugins: config.plugins ? [...config.plugins] : undefined,
+    restoreFederation: (config.plugins ?? [])
+      .filter(isModuleFederationPlugin)
+      .flatMap((plugin) => snapshotFederationPlugin(plugin)),
+  }));
 }
 
 /**

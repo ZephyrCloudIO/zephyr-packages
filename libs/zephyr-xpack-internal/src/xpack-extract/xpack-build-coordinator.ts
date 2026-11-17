@@ -513,11 +513,8 @@ export class XPackBuildCoordinator {
   /** Fail and release the shared generation when a child never reaches contribution. */
   failParticipant(participant: string, error: unknown): void {
     this.assertParticipant(participant);
-    if (
-      this.activeBuild?.session.status === 'failed' ||
-      this.activeBuild?.session.status === 'aborted'
-    )
-      return;
+    const status = this.activeBuild?.session.status;
+    if (status === 'failed' || status === 'aborted') return;
     const active =
       !this.activeBuild || this.activeBuild.session.isTerminal
         ? this.createBuild()

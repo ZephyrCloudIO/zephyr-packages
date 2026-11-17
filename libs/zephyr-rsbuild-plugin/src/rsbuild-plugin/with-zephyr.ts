@@ -15,6 +15,7 @@ import {
   disableZephyrForXpack,
   restorePlugins,
   snapshotPlugins,
+  type PluginSnapshot,
 } from 'zephyr-xpack-internal';
 
 export interface ZephyrRsbuildPluginOptions {
@@ -51,7 +52,7 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             disableZephyrForXpack(bundlerConfigs);
             return;
           }
-          let pluginSnapshot: ReturnType<typeof snapshotPlugins> | undefined;
+          let pluginSnapshot: PluginSnapshot | undefined;
           let engine: ZephyrEngine | undefined;
           try {
             pluginSnapshot = snapshotPlugins(bundlerConfigs);

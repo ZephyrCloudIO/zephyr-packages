@@ -171,7 +171,7 @@ cause:
 | `unreachable`                | Zephyr cannot be reached or failed on its side: network, DNS, timeout, HTTP 5xx or 408 (`ZE50001`) | Retry later               |
 | `auth`                       | Credentials are missing, invalid or expired                                                        | Refresh the credentials   |
 | `forbidden`                  | Credentials are valid but the account lacks access                                                 | Change access             |
-| `config`                     | The project or Zephyr configuration is wrong (an HTTP 4xx response is `ZE40035`)                   | Correct the configuration |
+| `config`                     | The project or Zephyr configuration is wrong (most HTTP 4xx responses are `ZE40035`)               | Correct the configuration |
 | `build`, `deploy`, `browser` | A failure in that stage                                                                            | See the message           |
 | `unknown`                    | Not classified                                                                                     |                           |
 

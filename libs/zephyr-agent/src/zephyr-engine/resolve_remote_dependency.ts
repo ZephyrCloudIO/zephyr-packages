@@ -1,6 +1,7 @@
 import { isCI } from 'ci-info';
 import {
   assertZephyrBuildTarget,
+  safe_json_parse,
   ZE_API_ENDPOINT,
   ze_api_gateway,
   type ZephyrBuildTarget,
@@ -62,12 +63,8 @@ export async function create_dependency_build_context(
   return Buffer.from(JSON.stringify(build_context_json)).toString('base64');
 }
 
-function parseResponseBody(body: string): unknown {
-  try {
-    return JSON.parse(body);
-  } catch {
-    return body;
-  }
+function hasResolvedValue(data: unknown): data is { value: ZeResolvedDependency } {
+  return typeof data === 'object' && data !== null && 'value' in data && !!data.value;
 }
 
 export async function resolve_remote_dependency(params: {
@@ -152,7 +149,7 @@ async function request_remote_dependency({
       RESOLVE_REMOTE_DEPENDENCY_DEADLINE_MS
     );
     const responseBody = await res.text();
-    const responseData = parseResponseBody(responseBody);
+    const responseData = safe_json_parse<unknown>(responseBody) ?? responseBody;
 
     // used only for error logging
     const [appName, projectName, orgName] = application_uid.split('.');
@@ -182,21 +179,19 @@ async function request_remote_dependency({
       });
     }
 
-    const response = responseData as { value?: ZeResolvedDependency } | undefined;
-
-    if (response?.value) {
+    if (hasResolvedValue(responseData)) {
       ze_log.remotes(
         'resolved dependency:',
-        response.value,
+        responseData.value,
         'application_uid: ',
         application_uid,
         'version: ',
         version
       );
-      return Object.assign({}, response.value, {
+      return Object.assign({}, responseData.value, {
         version,
         platform,
-        resolved_platform: response.value.platform,
+        resolved_platform: responseData.value.platform,
       });
     }
 
@@ -206,7 +201,7 @@ async function request_remote_dependency({
       projectName,
       orgName,
       version,
-      data: { response },
+      data: { response: responseData },
     });
   } catch (cause) {
     if (cause instanceof ZephyrError) throw cause;

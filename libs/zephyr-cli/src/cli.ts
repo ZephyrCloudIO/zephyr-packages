@@ -16,20 +16,21 @@ export interface CliOptions {
   metadataPath?: string;
 }
 
+const OPTIONS_WITH_VALUE = new Set(['--target', '-t', '--metadata', '--debounce']);
+
 /**
  * Whether the arguments ask for `deploy --format json`. It does not validate the
  * arguments, so a parse error can still be reported as the one JSON document.
  */
 export function isJsonDeploy(args: string[]): boolean {
-  const optionsWithValue = new Set(['--target', '-t', '--metadata', '--debounce']);
   let index = 0;
   while (index < args.length && args[index].startsWith('-')) {
-    index += optionsWithValue.has(args[index]) ? 2 : 1;
+    index += OPTIONS_WITH_VALUE.has(args[index]) ? 2 : 1;
   }
   if (args[index] !== 'deploy') return false;
-  // The last `--format` wins, as in parseArgs.
+  // As in parseArgs: options start after the directory, and the last `--format` wins.
   let format: string | undefined;
-  for (let i = index + 1; i < args.length; i++) {
+  for (let i = index + 2; i < args.length; i++) {
     if (args[i] === '--format') format = args[++i];
   }
   return format === 'json';

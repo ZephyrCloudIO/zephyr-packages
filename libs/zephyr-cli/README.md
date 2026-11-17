@@ -107,7 +107,8 @@ the logs stay on stderr, and the exit code is 1:
 error hides it, and is absent otherwise. `kind` is the category of the root cause:
 `unreachable` (Zephyr cannot be reached, or failed on its side), `auth`, `forbidden`,
 `config`, `build`, `deploy`, `browser` or `unknown`. The message has no colors and no
-secrets. The exit code, not a field, tells a failure from a success.
+secrets. A successful result has no `ok` field, so use the exit code to tell a failure
+from a success.
 
 ### Watch Command
 
@@ -344,7 +345,9 @@ sidecar during the build. For `watch`, the sidecar is reread for every snapshot.
 2. **Detects configuration files** (e.g., `package.json`, `tsconfig.json`, etc.)
 3. **Warns about dynamic configs** (e.g., JavaScript config files) and suggests alternatives
 4. **Runs the command** with full stdio passthrough
-5. **Infers the output directory** from the configuration
+5. **Infers the output directory** from the configuration. If it cannot, the command
+   exits with code 1 (`ZE20024`) after the build, and you upload the output with
+   `ze-cli deploy <dir>`
 6. **Uploads assets** to Zephyr automatically
 
 ### Deploy Command

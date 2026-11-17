@@ -1,7 +1,7 @@
 import type { ModuleFederationPlugin } from '../xpack.types';
 
 export function isModuleFederationPlugin(
-  plugin?: unknown
+  plugin: unknown
 ): plugin is ModuleFederationPlugin {
   if (!plugin || typeof plugin !== 'object') return false;
 

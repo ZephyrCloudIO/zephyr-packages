@@ -168,6 +168,7 @@ describe('isJsonDeploy', () => {
       false
     );
     expect(isJsonDeploy(['deploy', './dist', '--format', 'text'])).toBe(false);
+    expect(isJsonDeploy(['deploy', '--format', 'json'])).toBe(false);
     expect(isJsonDeploy(['doctor', '.', '--format', 'json'])).toBe(false);
     expect(isJsonDeploy(['npm', 'run', 'deploy', '--format', 'json'])).toBe(false);
   });

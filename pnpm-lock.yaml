@@ -254,12 +254,12 @@ catalogs:
       specifier: 2.9.3
       version: 2.9.3
     '@module-federation/runtime':
-      specifier: 2.9.0
-      version: 2.9.0
+      specifier: 2.9.3
+      version: 2.9.3
   module-federation-vite:
     '@module-federation/runtime':
-      specifier: 2.9.0
-      version: 2.9.0
+      specifier: 2.9.3
+      version: 2.9.3
     '@module-federation/vite':
       specifier: 1.21.2
       version: 1.21.2
@@ -1459,7 +1459,7 @@ importers:
     dependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation-vite
-        version: 2.9.0
+        version: 2.9.3
       react:
         specifier: catalog:react19
         version: 19.3.1
@@ -1493,7 +1493,7 @@ importers:
     dependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation-vite
-        version: 2.9.0
+        version: 2.9.3
       react:
         specifier: catalog:react19
         version: 19.3.1
@@ -2108,7 +2108,7 @@ importers:
     devDependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation
-        version: 2.9.0
+        version: 2.9.3
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
@@ -2148,7 +2148,7 @@ importers:
     devDependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation
-        version: 2.9.0
+        version: 2.9.3
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
@@ -2319,7 +2319,7 @@ importers:
     devDependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation
-        version: 2.9.0
+        version: 2.9.3
       '@module-federation/runtime-core':
         specifier: 2.9.0
         version: 2.9.0

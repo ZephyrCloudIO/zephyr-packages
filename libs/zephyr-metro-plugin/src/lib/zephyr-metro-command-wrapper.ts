@@ -18,6 +18,8 @@ interface MetroBundleOptions {
   dev?: boolean;
   mode?: string | boolean;
   platform: NativeBuildTarget;
+  bundleOutput?: string;
+  assetsDest?: string;
 }
 
 interface MetroConfigOptions extends MetroConfig {
@@ -135,6 +137,8 @@ export async function zephyrCommandWrapper(
         context,
         outDir: 'dist',
         mfConfig: (global as any).__METRO_FEDERATION_CONFIG,
+        bundleOutput: args[0][0].bundleOutput,
+        assetsDest: args[0][0].assetsDest,
       });
 
       await zephyrMetroPlugin.beforeBuild();
@@ -158,6 +162,8 @@ export async function zephyrCommandWrapper(
       ) {
         zephyrMetroPlugin?.zephyr_engine.build_failed();
       }
+      // Keep the code: the message names the remote that cannot be embedded.
+      if (ZephyrError.is(error, ZeErrors.ERR_EMBED_REMOTES)) throw error;
       const detail =
         error instanceof Error
           ? `${error.message}\n${error.stack ?? ''}`

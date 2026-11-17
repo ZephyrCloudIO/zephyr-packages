@@ -7,6 +7,11 @@ export interface NativeMFECacheSpec {
   // File system operations
   writeFile(path: string, content: string, encoding: 'utf8' | 'base64'): Promise<void>;
   readFile(path: string, encoding: 'utf8' | 'base64'): Promise<string>;
+  /**
+   * UTF-8 text of a file in the app binary root (iOS bundle / Android assets); null when
+   * missing.
+   */
+  readBundledFile(name: string): Promise<string | null>;
   deleteFile(path: string): Promise<void>;
   fileExists(path: string): Promise<boolean>;
   getDocumentDirectory(): Promise<string>;

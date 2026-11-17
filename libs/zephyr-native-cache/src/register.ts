@@ -1,5 +1,6 @@
 import { BundleCacheLayer } from './BundleCacheLayer';
 import { createNativeEnvStorage } from './env-storage';
+import NativeMFECache from './NativeMFECache';
 import type {
   CacheStatusListener,
   CacheStatusSnapshot,
@@ -68,6 +69,14 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
   nativeCacheRefs.cacheLayer = cacheLayer;
   const envStorage = createNativeEnvStorage();
   if (envStorage) nativeCacheRefs.envStorage = envStorage;
+  // Used by the embedded-remotes runtime plugin (embedRemotes in zephyr.config.*).
+  nativeCacheRefs.hasCachedBundle = (url, hash) => cacheLayer.hasCachedBundle(url, hash);
+  nativeCacheRefs.recordEmbeddedLoad = (url) => cacheLayer.recordEmbeddedLoad(url);
+  if (NativeMFECache && typeof NativeMFECache.readBundledFile === 'function') {
+    const nativeModule = NativeMFECache;
+    nativeCacheRefs.readBundledFile = async (name) =>
+      (await nativeModule.readBundledFile(name)) ?? undefined;
+  }
 
   // Determine whether cache is active in the current environment.
   // Production: always enabled. Dev: only when forceCacheInDev is true.
@@ -99,6 +108,12 @@ export function register(config: MFECacheConfig = {}): BundleCacheLayer {
       fallback: (bundlePath: string) => Promise<void>,
       bundlePath: string
     ): Promise<void> => {
+      // Remotes embedded in the app (embedRemotes) load from the app binary.
+      const embedded = globalThis.__ZEPHYR__?.runtime?.embeddedRemotes;
+      if (embedded?.owns(bundlePath)) {
+        await embedded.load(bundlePath);
+        return;
+      }
       // Full URLs (container bundles + remote split bundles) go through cache.
       // Relative paths are host's own split bundles — handled by Expo directly.
       if (/^https?:\/\//.test(bundlePath)) {

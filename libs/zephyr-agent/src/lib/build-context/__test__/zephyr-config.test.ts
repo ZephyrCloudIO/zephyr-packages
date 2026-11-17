@@ -52,6 +52,7 @@ describe('zephyr config', () => {
         },
         dependencyUrlMode: 'version',
         runtimeManifest: ' @dev-\${target} ',
+        embedRemotes: { exclude: [' analytics ', 'analytics'] },
       } satisfies Record<string, unknown>;`
     );
 
@@ -66,9 +67,27 @@ describe('zephyr config', () => {
       },
       dependencyUrlMode: 'version',
       runtimeManifest: '@dev-${target}',
+      embedRemotes: { exclude: ['analytics'] },
     });
     expect(Object.isFrozen(config)).toBe(true);
     expect(Object.isFrozen(config.remoteDependencies)).toBe(true);
+    expect(Object.isFrozen(config.embedRemotes?.exclude)).toBe(true);
+  });
+
+  it('turns embedRemotes on with true and off with false', () => {
+    const enabled = createRoot('enabled');
+    writeFileSync(
+      join(enabled, 'zephyr.config.ts'),
+      'export default { embedRemotes: true }'
+    );
+    expect(getZephyrConfig(enabled)).toEqual({ embedRemotes: { exclude: [] } });
+
+    const disabled = createRoot('disabled');
+    writeFileSync(
+      join(disabled, 'zephyr.config.ts'),
+      'export default { embedRemotes: false }'
+    );
+    expect(getZephyrConfig(disabled)).toEqual({});
   });
 
   it('supports TypeScript and JavaScript ESM and CommonJS extensions', () => {
@@ -157,6 +176,15 @@ describe('zephyr config', () => {
       ],
       ["export default { runtimeManifest: '' }", /runtimeManifest must not be empty/],
       ['export default { runtimeManifest: 42 }', /runtimeManifest must be a string/],
+      ["export default { embedRemotes: 'yes' }", /embedRemotes must be true, false, or/],
+      [
+        "export default { embedRemotes: { exclude: [''] } }",
+        /embedRemotes.exclude must be an array of non-empty strings/,
+      ],
+      [
+        'export default { embedRemotes: { only: [] } }',
+        /embedRemotes has unknown field: only/,
+      ],
     ] as const;
 
     for (const [source, expected] of cases) {

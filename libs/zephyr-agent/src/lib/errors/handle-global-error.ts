@@ -12,6 +12,15 @@ export interface HandleGlobalErrorOptions {
   failBuild?: boolean;
 }
 
+export function shouldFailBuild(options: HandleGlobalErrorOptions = {}): boolean {
+  return (
+    options.failBuild ??
+    (process.env['ZE_FAIL_BUILD'] !== undefined
+      ? process.env['ZE_FAIL_BUILD'] === 'true'
+      : isCI && hasCiToken())
+  );
+}
+
 /**
  * Handles errors globally by either throwing them or logging them and allowing execution
  * to continue.
@@ -25,13 +34,7 @@ export function handleGlobalError(
   error: unknown,
   options: HandleGlobalErrorOptions = {}
 ): void {
-  const failBuild =
-    options.failBuild ??
-    (process.env['ZE_FAIL_BUILD'] !== undefined
-      ? process.env['ZE_FAIL_BUILD'] === 'true'
-      : isCI && hasCiToken());
-
-  if (failBuild) {
+  if (shouldFailBuild(options)) {
     throw error;
   }
 

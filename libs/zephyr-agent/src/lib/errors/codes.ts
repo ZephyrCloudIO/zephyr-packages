@@ -12,6 +12,8 @@ export const ZeErrorCategories = {
   browser: '30',
   /** Module Federation/Config related error */
   config: '40',
+  /** Zephyr could not serve a valid request: network, DNS, timeout, HTTP 5xx, rate limit. */
+  unreachable: '50',
 } as const satisfies {
   [name: string]: `${Digit}${Digit}`;
 };
@@ -267,7 +269,7 @@ Expected one of: {{ candidates }}.
 
 Could not upload {{ type }} to your Edge Provider. This error will affect your tags and environments and it might fail deployments to custom domains.
 
-Please check your network connection and try again.
+Check the reason below. If it is a network or server error, try again later.
 
     `,
     kind: 'deploy',
@@ -354,18 +356,33 @@ Git username or email is not configured
     kind: 'deploy',
   },
 
+  /**
+   * Statuses worth a retry (5xx, 408, 425, 429) use
+   * {@linkcode ZeErrors.ERR_ZEPHYR_UNREACHABLE}.
+   */
   ERR_HTTP_ERROR: {
     id: '035',
     message: `
 
 HTTP request for {{ method }} {{ url }} failed with status code {{ status }}.
 
-Please check your network connection and try again.
-
 {{ content }}
 
 `,
     kind: 'config',
+  },
+
+  ERR_ZEPHYR_UNREACHABLE: {
+    id: '001',
+    message: `
+Zephyr cannot be reached: {{ detail }}.
+
+Request: {{ method }} {{ url }}
+
+{{ hint }}
+Service status: https://status.zephyr-cloud.io
+`,
+    kind: 'unreachable',
   },
 
   ERR_NO_WRANGLER: {

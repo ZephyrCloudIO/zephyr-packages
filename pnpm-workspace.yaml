@@ -135,7 +135,7 @@ minimumReleaseAgeExclude:
   # Renovate security update: fast-xml-parser@5.12.0
   - fast-xml-parser@5.12.0
   # Renovate security update: @nuxt/schema@4.6.4
-  - "@nuxt/schema@4.6.4"
+  - '@nuxt/schema@4.6.4'
 # no git/tarball dependencies, only from trusted registry
 blockExoticSubdeps: true
 

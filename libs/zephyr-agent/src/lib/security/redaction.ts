@@ -6,23 +6,34 @@ const MAX_NODES = 2_000;
 
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s<>"'`\p{Cc}]+/giu;
 // Values that are already the redaction marker must be left alone so that text passing
-// through several logging layers is not mangled into `[REDACTED]]]`.
-const BEARER_TOKEN = /\b(Bearer\s+)(?!\[REDACTED\])[^\s,;"'}\]]+/giu;
+// through several logging layers is not mangled into `[REDACTED]]]`. A marker inside a
+// value (for example a URL fragment after a redacted query value) is consumed whole.
+const BEARER_TOKEN = /\b(Bearer\s+)(?!\[REDACTED\])(?:\[REDACTED\]|[^\s,;"'}\]])+/giu;
 const JWT_TOKEN = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu;
 const COOKIE_HEADER = /\b(cookie|set-cookie)(\s*:\s*)[^\r\n]*/giu;
 const SENSITIVE_ASSIGNMENT =
-  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)(?!\[REDACTED\])("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
+  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)(?!\[REDACTED\])("[^"]*"|'[^']*'|(?:\[REDACTED\]|[^,\s;&}\]])+)/giu;
 const SENSITIVE_WORD_VALUE =
-  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)(?!\[REDACTED\])([^\s,;"'}\]]+)/giu;
+  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)(?!\[REDACTED\])((?:\[REDACTED\]|[^\s,;"'}\]])+)/giu;
+/** HTTP status codes, and `-1` for a request that was canceled before any response. */
+const HTTP_STATUS_CODE = /^(?:[1-5]\d{2}|-1)$/u;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/**
+ * A `code` is safe to log when it names a diagnostic (`ZE40035`, `ECONNREFUSED`) or an
+ * HTTP status (`503`). OAuth authorization codes are opaque and longer, so they stay
+ * redacted.
+ */
 function isSafeDiagnosticCode(value: unknown): boolean {
+  if (typeof value === 'number') return HTTP_STATUS_CODE.test(String(value));
   return (
     typeof value === 'string' &&
-    (/^ZE\d{5}$/u.test(value) || /^E[A-Z][A-Z0-9_]{2,}$/u.test(value))
+    (/^ZE\d{5}$/u.test(value) ||
+      /^E[A-Z][A-Z0-9_]{2,}$/u.test(value) ||
+      HTTP_STATUS_CODE.test(value))
   );
 }
 
